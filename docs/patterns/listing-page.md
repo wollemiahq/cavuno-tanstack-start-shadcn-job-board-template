@@ -40,9 +40,9 @@ hand-rolled layouts.
 
 ## Composition
 
-The canonical assembly uses the Page family. `JobSearchPage` and
-`ProgrammaticJobsView` retain migration-only shells internally until their
-route migration; do not copy that implementation into new work:
+The canonical assembly uses the Page family. Job listing routes delegate to
+`JobSearchPage` through `ProgrammaticJobsView`, so jobs have one search-results
+system rather than parallel route shells:
 
 ```tsx
 <Page>
@@ -66,11 +66,11 @@ route migration; do not copy that implementation into new work:
 
 ## Do / Don't
 
-| Do | Don't |
-|---|---|
-| Compose `Page` → `PageContent`, using `Bleed` + `PageHeader` for the band. | Start new work on migration-only `PageBody` / `ListingPageHeader`, or hand-roll a container. |
-| Feed search through `ListingSearchBand` so all three headers stay identical. | Write bespoke search markup — the shared band exists precisely to stop this. |
-| Compose the existing `JobSearchPage` / `ProgrammaticJobsView` shell. | Add a **third** listing shell. `JobSearchPage` (jobs.index) and `ProgrammaticJobsView` (SEO listings) remain two parallel shells over the same primitives — the last structural duplication; do not grow it, and prefer folding new surfaces onto one of them. |
+| Do                                                                                     | Don't                                                                                        |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Compose `Page` → `PageContent`, using `Bleed` + `PageHeader` for the band.             | Start new work on migration-only `PageBody` / `ListingPageHeader`, or hand-roll a container. |
+| Feed search through `ListingSearchBand` so all three headers stay identical.           | Write bespoke search markup — the shared band exists precisely to stop this.                 |
+| Delegate job listings to `JobSearchPage`; `ProgrammaticJobsView` is the route adapter. | Add another job-listing shell or fork search behavior per SEO route.                         |
 
 ## Used by
 

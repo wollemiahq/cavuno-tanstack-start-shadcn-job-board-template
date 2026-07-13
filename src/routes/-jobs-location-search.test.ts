@@ -16,6 +16,15 @@ vi.mock("../server/queries", () => ({
   }),
 }));
 
+vi.mock("../components/programmatic-jobs-view", () => ({
+  PROGRAMMATIC_JOBS_PAGE_SIZE: 20,
+  ProgrammaticJobsView: () => null,
+}));
+
+vi.mock("./-use-location-suggestions", () => ({
+  useLocationSuggestions: vi.fn(),
+}));
+
 import { Route } from "./jobs.locations.$location.index";
 
 describe("location jobs route — combined keyword and place filtering", () => {

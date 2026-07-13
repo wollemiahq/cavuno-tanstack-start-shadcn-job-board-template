@@ -59,6 +59,7 @@ const job: JobCardVM = {
   title: "Senior Backend Engineer",
   companySlug: "technova-labs",
   jobSlug: "senior-backend-engineer",
+  detailHref: "/companies/technova-labs/jobs/senior-backend-engineer",
   hasDetailLink: true,
   companyName: "TechNova Labs",
   companyLogoUrl: null,
@@ -77,6 +78,7 @@ const productDesignerJob: JobCardVM = {
   title: "Product Designer",
   companySlug: "technova-labs",
   jobSlug: "product-designer",
+  detailHref: "/companies/technova-labs/jobs/product-designer",
   hasDetailLink: true,
   companyName: "TechNova Labs",
   companyLogoUrl: "https://cdn.example.com/technova-logo.png",
@@ -103,6 +105,7 @@ const machineLearningJob: JobCardVM = {
   title: "Machine Learning Engineer",
   companySlug: "technova-labs",
   jobSlug: "machine-learning-engineer",
+  detailHref: "/companies/technova-labs/jobs/machine-learning-engineer",
   hasDetailLink: true,
   companyName: "TechNova Labs",
   companyLogoUrl: null,
@@ -260,9 +263,10 @@ describe("HomeLanding — latest jobs carry detail links (read.jobs doctor)", ()
   it("shows a company avatar on every card, using the logo or company initials", async () => {
     renderLanding(baseProps);
 
-    expect(
-      await screen.findByRole("img", { name: "TechNova Labs" }),
-    ).toHaveAttribute("src", "https://cdn.example.com/technova-logo.png");
+    expect(await screen.findByRole("img", { name: "TechNova Labs" })).toHaveAttribute(
+      "src",
+      "https://cdn.example.com/technova-logo.png",
+    );
     expect((await screen.findAllByText("TL")).length).toBeGreaterThan(0);
   });
 });

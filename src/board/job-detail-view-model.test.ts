@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-import type { PublicBoard, PublicJob, PublicJobCard } from '@cavuno/board';
-import { boardCopy } from '#/copy';
+import type { PublicBoard, PublicJob, PublicJobCard } from "@cavuno/board";
+import { boardCopy } from "#/copy";
 
-import { toJobDetailVM } from './job-detail-view-model';
+import { toJobDetailVM } from "./job-detail-view-model";
 
-const copy = boardCopy('en').jobDetail;
+const copy = boardCopy("en").jobDetail;
 
 /**
  * The mapper is Layer 1b — it's where the correctness-critical derivations
@@ -15,109 +15,106 @@ const copy = boardCopy('en').jobDetail;
  * change the data the page renders.
  */
 const baseJob = {
-  id: 'job_1',
-  slug: 'senior-engineer',
-  title: 'Senior Engineer',
-  description: '<p>Build things.</p>',
+  id: "job_1",
+  slug: "senior-engineer",
+  title: "Senior Engineer",
+  description: "<p>Build things.</p>",
   publishedAt: null,
-  employmentType: 'full_time',
-  seniority: 'senior',
-  remoteOption: 'remote',
+  employmentType: "full_time",
+  seniority: "senior",
+  remoteOption: "remote",
   remoteWorldwide: false,
-  remoteWorkPermitCountryCodes: ['US', 'GB'],
-  remoteTimezones: [{ value: 'UTC+0' }],
+  remoteWorkPermitCountryCodes: ["US", "GB"],
+  remoteTimezones: [{ value: "UTC+0" }],
   remoteLocationLabel: null,
-  locationLabel: 'Remote',
+  locationLabel: "Remote",
   placeHierarchy: [],
   salaryMin: 100000,
   salaryMax: 140000,
-  salaryCurrency: 'USD',
-  salaryTimeframe: 'year',
+  salaryCurrency: "USD",
+  salaryTimeframe: "year",
   experienceMonths: 60,
-  educationRequirements: ['bachelors_degree'],
+  educationRequirements: ["bachelors_degree"],
   officeLocations: [
-    { displayName: null, city: 'Berlin', locality: null, region: 'BE', country: 'DE' },
+    { displayName: null, city: "Berlin", locality: null, region: "BE", country: "DE" },
   ],
-  categories: [{ slug: 'engineering', name: 'Engineering' }],
-  skills: [{ slug: 'react', name: 'React' }],
-  customFieldValues: { visa: true, team: 'Platform' },
+  categories: [{ slug: "engineering", name: "Engineering" }],
+  skills: [{ slug: "react", name: "React" }],
+  customFieldValues: { visa: true, team: "Platform" },
   company: {
-    slug: 'acme-co',
-    name: 'Acme Co',
-    logoUrl: 'https://logo.example/acme.png',
-    website: 'acme.example',
-    description: 'We build.',
+    slug: "acme-co",
+    name: "Acme Co",
+    logoUrl: "https://logo.example/acme.png",
+    website: "acme.example",
+    description: "We build.",
   },
-  links: { public: 'https://board.example/companies/acme-co/jobs/senior-engineer' },
+  links: { public: "https://board.example/companies/acme-co/jobs/senior-engineer" },
 } as unknown as PublicJob;
 
 const customFields = [
-  { key: 'visa', label: 'Visa sponsorship', type: 'boolean' },
-  { key: 'team', label: 'Team', type: 'short_text' },
-] as unknown as PublicBoard['customFields'];
+  { key: "visa", label: "Visa sponsorship", type: "boolean" },
+  { key: "team", label: "Team", type: "short_text" },
+] as unknown as PublicBoard["customFields"];
 
 const similar = [
   {
-    id: 'job_2',
-    slug: 'staff-engineer',
-    title: 'Staff Engineer',
-    company: { slug: 'beta-co', name: 'Beta Co', logoUrl: null },
+    id: "job_2",
+    slug: "staff-engineer",
+    title: "Staff Engineer",
+    company: { slug: "beta-co", name: "Beta Co", logoUrl: null },
     salaryMin: 150000,
     salaryMax: 200000,
-    salaryCurrency: 'USD',
-    salaryTimeframe: 'year',
+    salaryCurrency: "USD",
+    salaryTimeframe: "year",
   },
 ] as unknown as PublicJobCard[];
 
-describe('toJobDetailVM', () => {
-  const vm = toJobDetailVM(baseJob, customFields, similar, 'Acme intro.', 'en');
+describe("toJobDetailVM", () => {
+  const vm = toJobDetailVM(baseJob, customFields, similar, "Acme intro.", "en");
 
-  it('builds chip hrefs from the canonical path helpers', () => {
+  it("builds chip hrefs from the canonical path helpers", () => {
     expect(vm.categoryChips).toEqual([
-      { key: 'engineering', name: 'Engineering', href: '/jobs/engineering' },
+      { key: "engineering", name: "Engineering", href: "/jobs/engineering" },
     ]);
-    expect(vm.skillChips).toEqual([
-      { key: 'react', name: 'React', href: '/jobs/skills/react' },
-    ]);
+    expect(vm.skillChips).toEqual([{ key: "react", name: "React", href: "/jobs/skills/react" }]);
   });
 
-  it('assembles the facts rows (office, permits, timezones, education, experience)', () => {
+  it("assembles the facts rows (office, permits, timezones, education, experience)", () => {
     const byLabel = Object.fromEntries(vm.facts.map((f) => [f.label, f.value]));
     // Office label falls back to city/region/country when displayName is null.
-    expect(Object.values(byLabel)).toContain('Berlin, BE, DE');
-    expect(Object.values(byLabel)).toContain('US, GB');
-    expect(Object.values(byLabel)).toContain('UTC+0');
+    expect(Object.values(byLabel)).toContain("Berlin, BE, DE");
+    expect(Object.values(byLabel)).toContain("US, GB");
+    expect(Object.values(byLabel)).toContain("UTC+0");
     // 60 months → 5 years via copy.experienceYears — assert the experience
     // fact specifically, not a stray '5' anywhere in the facts.
-    expect(byLabel[copy.experienceLabel]).toContain('5');
+    expect(byLabel[copy.experienceLabel]).toContain("5");
   });
 
-  it('resolves a boolean custom field to its yes/no copy, text passes through', () => {
-    const visa = vm.customFields.find((f) => f.key === 'visa');
-    const team = vm.customFields.find((f) => f.key === 'team');
-    expect(visa?.value).not.toBe('true'); // resolved to a yes-copy string
+  it("resolves a boolean custom field to its yes/no copy, text passes through", () => {
+    const visa = vm.customFields.find((f) => f.key === "visa");
+    const team = vm.customFields.find((f) => f.key === "team");
+    expect(visa?.value).not.toBe("true"); // resolved to a yes-copy string
     expect(visa?.value.length).toBeGreaterThan(0);
-    expect(team?.value).toBe('Platform');
+    expect(team?.value).toBe("Platform");
   });
 
-  it('normalises the company website (adds https, strips protocol for the label) and builds the profile path', () => {
-    expect(vm.company?.websiteHref).toBe('https://acme.example');
-    expect(vm.company?.websiteLabel).toBe('acme.example');
-    expect(vm.company?.href).toBe('/companies/acme-co');
-    expect(vm.company?.intro).toBe('Acme intro.');
+  it("normalises the company website (adds https, strips protocol for the label) and builds the profile path", () => {
+    expect(vm.company?.websiteHref).toBe("https://acme.example");
+    expect(vm.company?.websiteLabel).toBe("acme.example");
+    expect(vm.company?.href).toBe("/companies/acme-co");
+    expect(vm.company?.intro).toBe("Acme intro.");
   });
 
   it('derives the similar-rail meta as "Company · Salary" with route slugs', () => {
-    expect(vm.similar[0].companySlug).toBe('beta-co');
-    expect(vm.similar[0].jobSlug).toBe('staff-engineer');
-    expect(vm.similar[0].meta).toContain('Beta Co');
-    expect(vm.similar[0].meta).toContain('·');
+    expect(vm.similar[0].companySlug).toBe("beta-co");
+    expect(vm.similar[0].jobSlug).toBe("staff-engineer");
+    expect(vm.similar[0].meta).toContain("Beta Co");
+    expect(vm.similar[0].meta).toContain("·");
   });
 
-  it('carries the API canonical URL and the raw sanitized description', () => {
-    expect(vm.canonicalUrl).toBe(
-      'https://board.example/companies/acme-co/jobs/senior-engineer',
-    );
-    expect(vm.descriptionHtml).toBe('<p>Build things.</p>');
+  it("carries the API canonical URL and the raw sanitized description", () => {
+    expect(vm.detailHref).toBe("/companies/acme-co/jobs/senior-engineer");
+    expect(vm.canonicalUrl).toBe("https://board.example/companies/acme-co/jobs/senior-engineer");
+    expect(vm.descriptionHtml).toBe("<p>Build things.</p>");
   });
 });

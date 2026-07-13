@@ -17,16 +17,12 @@ import {
   locationLabel,
   resolveCustomFieldDisplay,
   type BoardLabelOverrides,
-} from '@cavuno/board/format';
-import {
-  companyPath,
-  jobsCategoryPath,
-  jobsSkillPath,
-} from '@cavuno/board/paths';
-import { buildJobBreadcrumbs } from '@cavuno/board/seo';
-import { boardCopy } from '#/copy';
+} from "@cavuno/board/format";
+import { companyPath, jobDetailPath, jobsCategoryPath, jobsSkillPath } from "@cavuno/board/paths";
+import { buildJobBreadcrumbs } from "@cavuno/board/seo";
+import { boardCopy } from "#/copy";
 
-import type { PublicBoard, PublicJob, PublicJobCard } from '@cavuno/board';
+import type { PublicBoard, PublicJob, PublicJobCard } from "@cavuno/board";
 
 export interface JobDetailChipVM {
   key: string;
@@ -89,6 +85,8 @@ export interface JobDetailVM {
   publishedLabel: string | null;
   /** API canonical URL (for the copy-link control), or `null`. */
   canonicalUrl: string | null;
+  /** Canonical board-relative full-page detail href, or `null`. */
+  detailHref: string | null;
 
   // Body
   descriptionHtml: string | null;
@@ -109,7 +107,7 @@ export interface JobDetailVM {
 
 export function toJobDetailVM(
   job: PublicJob,
-  customFields: PublicBoard['customFields'],
+  customFields: PublicBoard["customFields"],
   similar: PublicJobCard[],
   companyIntro: string | null,
   language: string,
@@ -121,8 +119,7 @@ export function toJobDetailVM(
   const offices = job.officeLocations
     .map(
       (o) =>
-        o.displayName ??
-        [o.city ?? o.locality, o.region, o.country].filter(Boolean).join(', '),
+        o.displayName ?? [o.city ?? o.locality, o.region, o.country].filter(Boolean).join(", "),
     )
     .filter(Boolean);
 
@@ -131,7 +128,7 @@ export function toJobDetailVM(
     : job.remoteWorkPermitCountryCodes;
 
   const experience =
-    typeof job.experienceMonths === 'number'
+    typeof job.experienceMonths === "number"
       ? job.experienceMonths === 0
         ? copy.noExperienceRequiredLabel
         : copy.experienceYears(Math.round(job.experienceMonths / 12))
@@ -140,22 +137,18 @@ export function toJobDetailVM(
   const education =
     job.educationRequirements.length > 0
       ? job.educationRequirements
-          .map(
-            (value) =>
-              fieldLabel(language, value, labels) ?? value.replace(/_/g, ' '),
-          )
-          .join(', ')
+          .map((value) => fieldLabel(language, value, labels) ?? value.replace(/_/g, " "))
+          .join(", ")
       : null;
 
   const facts: JobDetailFactVM[] = [];
-  if (offices.length > 0)
-    facts.push({ label: copy.locationsLabel, value: offices.join(' · ') });
-  if (job.remoteOption === 'remote' && permitCountries.length > 0)
-    facts.push({ label: copy.workPermitsLabel, value: permitCountries.join(', ') });
+  if (offices.length > 0) facts.push({ label: copy.locationsLabel, value: offices.join(" · ") });
+  if (job.remoteOption === "remote" && permitCountries.length > 0)
+    facts.push({ label: copy.workPermitsLabel, value: permitCountries.join(", ") });
   if (job.remoteTimezones.length > 0)
     facts.push({
       label: copy.timezonesLabel,
-      value: job.remoteTimezones.map((tz) => tz.value).join(', '),
+      value: job.remoteTimezones.map((tz) => tz.value).join(", "),
     });
   if (education) facts.push({ label: copy.educationLabel, value: education });
   if (experience) facts.push({ label: copy.experienceLabel, value: experience });
@@ -167,7 +160,7 @@ export function toJobDetailVM(
     key: entry.key,
     label: entry.label,
     value:
-      entry.kind === 'boolean'
+      entry.kind === "boolean"
         ? entry.value
           ? copy.customFieldYesLabel
           : copy.customFieldNoLabel
@@ -185,7 +178,7 @@ export function toJobDetailVM(
         name: company.name ?? null,
         logoUrl: company.logoUrl ?? null,
         websiteHref: website,
-        websiteLabel: website ? website.replace(/^https?:\/\//, '') : null,
+        websiteLabel: website ? website.replace(/^https?:\/\//, "") : null,
         href: companyPath(company.slug),
         intro: companyIntro,
         viewProfileLabel: copy.viewCompanyProfileLabel,
@@ -218,12 +211,11 @@ export function toJobDetailVM(
     employmentTypeLabel: job.employmentType
       ? fieldLabel(language, job.employmentType, labels)
       : null,
-    seniorityLabel: job.seniority
-      ? fieldLabel(language, job.seniority, labels)
-      : null,
+    seniorityLabel: job.seniority ? fieldLabel(language, job.seniority, labels) : null,
     salaryLabel,
     publishedLabel: published ? copy.posted(published) : null,
     canonicalUrl: job.links?.public ?? null,
+    detailHref: company?.slug && job.slug ? jobDetailPath(company.slug, job.slug) : null,
 
     descriptionHtml: job.description ?? null,
     noDescriptionText: copy.noDescriptionText,
@@ -261,7 +253,7 @@ export function toJobDetailVM(
           ),
         ]
           .filter(Boolean)
-          .join(' · ') || null,
+          .join(" · ") || null,
     })),
     similarJobsHeading: copy.similarJobsHeading,
   };

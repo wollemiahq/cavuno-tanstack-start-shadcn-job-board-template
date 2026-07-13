@@ -14,13 +14,13 @@ import {
   formatPublishedRelativeDate,
   formatSalaryRange,
   type BoardLabelOverrides,
-} from '@cavuno/board/format';
-import { jobsCategoryPath, jobsSkillPath } from '@cavuno/board/paths';
-import { boardCopy } from '#/copy';
+} from "@cavuno/board/format";
+import { jobDetailPath, jobsCategoryPath, jobsSkillPath } from "@cavuno/board/paths";
+import { boardCopy } from "#/copy";
 
-import { deriveSummary } from '@/lib/derive-summary';
+import { deriveSummary } from "@/lib/derive-summary";
 
-import type { PublicJobCard } from '@cavuno/board';
+import type { PublicJobCard } from "@cavuno/board";
 
 export interface JobCardTagVM {
   key: string;
@@ -34,6 +34,8 @@ export interface JobCardVM {
   /** Slugs for the typed detail route, or `null` when unlinkable. */
   companySlug: string | null;
   jobSlug: string | null;
+  /** Canonical board-relative detail href, or `null` when unlinkable. */
+  detailHref: string | null;
   hasDetailLink: boolean;
   companyName: string | null;
   companyLogoUrl: string | null;
@@ -71,13 +73,14 @@ export function toJobCardVM(
       cardLocationLabel(language, job),
     ]
       .filter(Boolean)
-      .join(' · ') || null;
+      .join(" · ") || null;
 
   return {
     id: job.id,
     title: job.title,
     companySlug: company?.slug ?? null,
     jobSlug: job.slug ?? null,
+    detailHref: company?.slug && job.slug ? jobDetailPath(company.slug, job.slug) : null,
     hasDetailLink: Boolean(company?.slug && job.slug),
     companyName: company?.name ?? null,
     companyLogoUrl: company?.logoUrl ?? null,

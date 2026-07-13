@@ -1,122 +1,252 @@
 "use client";
 
-import { boardCopy } from "#/copy";
+import { Search } from "lucide-react";
 
-import { JobList } from "@/components/board/job-list";
-import { JobsResultsBar } from "@/components/board/jobs-results-bar";
-import { JobsSearchControls } from "@/components/board/jobs-search-controls";
-import { ListingPageHeader } from "@/components/board/listing-page-header";
-import { ListingPagination } from "@/components/board/listing-pagination";
-import { ListingRail, railHasContent } from "@/components/board/listing-rail";
-import { PageBody } from "@/components/board/page-body";
-import { relatedSearchesTitle, relatedSearchesToChips } from "@/board/related-searches";
-import { m } from "../../paraglide/messages";
-/**
- * The jobs browse surface (CAV-485, Lumen structure CAV-497, CAV-502) — a
- * `PageBody` whose full-bleed `band` is the shared `ListingPageHeader`
- * carrying the heading, subtitle, and the search panel, then the
- * constrained results section: the "Showing X–Y of Z" results bar, the
- * Lumen-style listing rows, and the page-based pagination nav (CAV-496).
- * The route must set `staticData.fullBleed`.
- *
- * Pure assembly + thin view-model binding: data and pagination state come
- * from your loader, edits go out through callbacks. Featured jobs are no
- * longer pulled into a bespoke hero card — they earn the brand ring/pill
- * inside the same `JobCard` system, in the grid (no fake-featuring the
- * first row when nothing is truly featured).
- */
-import type { BreadcrumbData } from "@/components/board/breadcrumb";
 import type { PublicJobCard, RelatedSearch } from "@cavuno/board";
 import type { ListingFilters } from "@cavuno/board/filters";
 import type { BoardLabelOverrides } from "@cavuno/board/format";
 
+import { boardCopy } from "#/copy";
+import { relatedSearchesTitle, relatedSearchesToChips } from "@/board/related-searches";
+import { toJobCardVM } from "@/board/job-view-model";
+import { PageBreadcrumb, type BreadcrumbData } from "@/components/board/breadcrumb";
+import { JobSearchResult } from "@/components/board/job-search-result";
+import { JobsResultsBar } from "@/components/board/jobs-results-bar";
+import { JobsSearchControls } from "@/components/board/jobs-search-controls";
+import { ListingPagination } from "@/components/board/listing-pagination";
+import type { LocationSuggestionState } from "@/components/location-combobox";
+import { Box } from "@/components/layout/box";
+import { Container } from "@/components/layout/container";
+import { Page, PageHeader } from "@/components/layout/page";
+import {
+  AdRail,
+  SearchResultDetail,
+  SearchResultsLayout,
+  SearchResultsList,
+} from "@/components/search-results/search-results";
+import { badgeVariants } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { useSearchSelection } from "@/hooks/use-search-selection";
+import { m } from "../../paraglide/messages";
+
+type AdPlacement = {
+  label: string;
+  content: React.ReactNode;
+};
+
+function JobsEmpty({ filters }: { filters: ListingFilters }) {
+  const hasFilters = Boolean(
+    filters.remoteOption || filters.employmentType || filters.seniority?.length,
+  );
+  const description = hasFilters
+    ? m.jobSearch_filteredEmptyText()
+    : filters.q
+      ? m.jobSearch_queryEmptyText()
+      : m.jobSearch_initialEmptyText();
+
+  return (
+    <Empty className="min-h-72 border">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <Search aria-hidden="true" />
+        </EmptyMedia>
+        <EmptyTitle>{m.jobSearch_headingJobs()}</EmptyTitle>
+        <EmptyDescription>{description}</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
+  );
+}
+
 export function JobSearchPage({
-    jobs,
-    count,
-    page,
-    pageSize,
-    filters,
-    language,
-    labels,
-    heading,
-    breadcrumb,
-    relatedSearches,
-    adSlot,
-    onFiltersChange,
-    onPageChange,
-    locationSlot,
+  jobs,
+  count,
+  gatedCount,
+  page,
+  pageSize,
+  filters,
+  language,
+  labels,
+  heading,
+  breadcrumb,
+  relatedSearches,
+  onFiltersChange,
+  onSearchSubmit,
+  onPageChange,
+  location,
+  locationSuggestions,
+  selectedJob,
+  onSelectedJobReplace,
+  onSelectedJobPush,
+  detail,
+  startAd,
+  endAd,
 }: {
-    jobs: PublicJobCard[];
-    /** Total result count when the API returned one. */
-    count?: number;
-    /** The current 1-based page. */
-    page: number;
-    /** Items per page — the loader `limit` for this surface. */
-    pageSize: number;
-    filters: ListingFilters;
-    /** Board language (ISO code) from `board.context()`. */
-    language: string;
-    /** Operator label overrides (`board.context().labels`), ADR-0059. */
-    labels?: BoardLabelOverrides;
-    heading?: string;
-    /** Resolved trail for the header band (pairs with the route's BreadcrumbList JSON-LD). */
-    breadcrumb?: BreadcrumbData;
-    /** Browse-list related searches (category/skill) → the rail card. Absent on text search. */
-    relatedSearches?: RelatedSearch[];
-    /** Optional operator ad unit for the listing rail (renders nothing when absent). */
-    adSlot?: React.ReactNode;
-    onFiltersChange: (next: ListingFilters) => void;
-    /** Navigate to a 1-based page (the route rewrites the `?page=` URL). */
-    onPageChange: (page: number) => void;
-    /** Optional location autocomplete (see jobs-search-controls). */
-    locationSlot?: React.ReactNode;
+  jobs: PublicJobCard[];
+  count?: number;
+  /** Honest count of paywalled results withheld from this viewer. */
+  gatedCount?: number;
+  page: number;
+  pageSize: number;
+  filters: ListingFilters;
+  language: string;
+  labels?: BoardLabelOverrides;
+  heading?: string;
+  breadcrumb?: BreadcrumbData;
+  relatedSearches?: RelatedSearch[];
+  onFiltersChange: (next: ListingFilters) => void;
+  onSearchSubmit: (next: ListingFilters, location: { slug: string; name: string } | null) => void;
+  onPageChange: (page: number) => void;
+  location?: { slug: string; label: string };
+  locationSuggestions: LocationSuggestionState;
+  selectedJob?: string;
+  onSelectedJobReplace: (jobSlug: string) => void;
+  onSelectedJobPush: (jobSlug: string) => void;
+  detail: React.ReactNode;
+  startAd?: AdPlacement;
+  endAd?: AdPlacement;
 }) {
-    const copy = boardCopy(language, labels);
+  const copy = boardCopy(language, labels);
+  const jobVms = jobs.map((job) => toJobCardVM(job, language, labels));
+  const selectableSlugs = jobVms.flatMap((vm) => (vm.jobSlug && vm.detailHref ? [vm.jobSlug] : []));
+  const selection = useSearchSelection({
+    selectedId: selectedJob,
+    resultIds: selectableSlugs,
+    onReplace: onSelectedJobReplace,
+    onPush: onSelectedJobPush,
+  });
+  const relatedChips = relatedSearchesToChips(relatedSearches);
 
-    // The browse envelope carries category/skill related searches; text search
-    // does not — the rail shows the card only when they exist (CAV-511).
-    const relatedChips = relatedSearchesToChips(relatedSearches);
-    const rail = railHasContent(adSlot, relatedChips) ? (
-        <ListingRail
-            adSlot={adSlot}
-            relatedTitle={relatedSearchesTitle(labels)}
-            relatedChips={relatedChips}
-        />
-    ) : undefined;
-
-    return (
-        <PageBody
-            band={
-                <ListingPageHeader
-                    breadcrumb={breadcrumb}
-                    title={heading ?? copy.jobSearch.headingJobs}
-                    subtitle={m.jobsHero_subtitle()}
-                    search={
-                        <JobsSearchControls
-                            filters={filters}
-                            language={language}
-                            labels={labels}
-                            onChange={onFiltersChange}
-                            locationSlot={locationSlot}
-                        />
-                    }
+  return (
+    <Page width="wide">
+      <main data-layout="job-search-page">
+        <Box background="muted" border="bottom">
+          {breadcrumb ? (
+            <PageBreadcrumb items={breadcrumb.items} ariaLabel={breadcrumb.ariaLabel} />
+          ) : null}
+          <Container width="wide">
+            <PageHeader
+              align="center"
+              title={heading ?? copy.jobSearch.headingJobs}
+              description={m.jobsHero_subtitle()}
+            >
+              <div className="mt-2 w-full max-w-5xl text-left">
+                <JobsSearchControls
+                  filters={filters}
+                  language={language}
+                  labels={labels}
+                  onChange={onFiltersChange}
+                  onSearchSubmit={onSearchSubmit}
+                  location={location}
+                  locationSuggestions={locationSuggestions}
                 />
+              </div>
+            </PageHeader>
+          </Container>
+        </Box>
+
+        <Box paddingX={{ base: "4", md: "8" }} paddingY={{ base: "6", md: "8" }}>
+          <SearchResultsLayout
+            startAd={startAd ? <AdRail label={startAd.label}>{startAd.content}</AdRail> : undefined}
+            endAd={endAd ? <AdRail label={endAd.label}>{endAd.content}</AdRail> : undefined}
+            list={
+              <SearchResultsList
+                label={m.jobSearch_resultsRegionLabel()}
+                scrollRestorationId="jobs-search-results"
+              >
+                <div className="space-y-4 p-4">
+                  <JobsResultsBar
+                    count={count}
+                    page={page}
+                    pageSize={pageSize}
+                    sort={filters.sort}
+                    language={language}
+                    labels={labels}
+                    onSortChange={(sort) => onFiltersChange({ ...filters, sort })}
+                  />
+
+                  {jobVms.length > 0 ? (
+                    <div className="space-y-3">
+                      {jobVms.map((vm) => (
+                        <JobSearchResult
+                          key={vm.id}
+                          vm={vm}
+                          selected={vm.jobSlug === selection.selectedId}
+                          onActivate={
+                            vm.jobSlug
+                              ? (event) => selection.onResultActivate(event, vm.jobSlug!)
+                              : undefined
+                          }
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <JobsEmpty filters={filters} />
+                  )}
+
+                  {gatedCount && gatedCount > 0 ? (
+                    <aside
+                      aria-label={m.jobSearch_unlockMoreLabel()}
+                      className="flex flex-col items-start gap-3 rounded-2xl border border-border bg-muted p-4"
+                    >
+                      <p className="text-sm text-muted-foreground">
+                        {m.jobSearch_gatedCountText({
+                          count: gatedCount.toLocaleString(language),
+                        })}
+                      </p>
+                      <a href="/account/access" className={buttonVariants({ size: "sm" })}>
+                        {m.jobSearch_unlockMoreLabel()}
+                      </a>
+                    </aside>
+                  ) : null}
+
+                  <ListingPagination
+                    page={page}
+                    count={count ?? 0}
+                    pageSize={pageSize}
+                    onPageChange={onPageChange}
+                  />
+
+                  {relatedChips.length > 0 ? (
+                    <section
+                      aria-label={relatedSearchesTitle(labels)}
+                      className="space-y-3 border-t border-border pt-4"
+                    >
+                      <h2 className="text-sm font-semibold">{relatedSearchesTitle(labels)}</h2>
+                      <div className="flex flex-wrap gap-1.5">
+                        {relatedChips.map((chip) => (
+                          <a
+                            key={chip.key}
+                            href={chip.href}
+                            className={badgeVariants({ variant: "outline" })}
+                          >
+                            {chip.name}
+                          </a>
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
+                </div>
+              </SearchResultsList>
             }
-            rail={rail}
-        >
-            <JobsResultsBar
-                count={count}
-                page={page}
-                pageSize={pageSize}
-                sort={filters.sort}
-                language={language}
-                labels={labels}
-                onSortChange={(sort) => onFiltersChange({ ...filters, sort })}
-            />
-
-            <JobList jobs={jobs} language={language} labels={labels} variant="rows" />
-
-            <ListingPagination page={page} count={count ?? 0} pageSize={pageSize} onPageChange={onPageChange} />
-        </PageBody>
-    );
+            detail={
+              <SearchResultDetail
+                ref={selection.detailRef}
+                label={m.jobSearch_selectedJobRegionLabel()}
+                scrollRestorationId="jobs-selected-detail"
+              >
+                {detail}
+              </SearchResultDetail>
+            }
+          />
+        </Box>
+      </main>
+    </Page>
+  );
 }

@@ -53,6 +53,10 @@ export function LocationCombobox({
   const listboxId = useId();
   const popupVisible = open && (loading || suggestions.length > 0);
 
+  useEffect(() => {
+    setText(valueLabel ?? value ?? "");
+  }, [value, valueLabel]);
+
   useEffect(() => setActive(0), [suggestions]);
 
   // Close the dropdown on an outside click.
@@ -90,9 +94,7 @@ export function LocationCombobox({
           aria-expanded={popupVisible}
           aria-controls={listboxId}
           aria-activedescendant={
-            popupVisible && suggestions[active]
-              ? `${listboxId}-option-${active}`
-              : undefined
+            popupVisible && suggestions[active] ? `${listboxId}-option-${active}` : undefined
           }
           aria-label={m.locationCombobox_locationAriaLabel()}
           placeholder={m.locationCombobox_placeholderText()}
@@ -142,8 +144,12 @@ export function LocationCombobox({
           className="absolute z-50 mt-1 max-h-72 w-full overflow-auto rounded-2xl bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/5 outline-none"
         >
           {loading && suggestions.length === 0 ? (
-            <li role="presentation" className="flex items-center gap-2 px-2 py-1.5 text-sm text-muted-foreground">
-              <LoaderCircle className="size-3.5 animate-spin" /> {m.locationCombobox_searchingText()}
+            <li
+              role="presentation"
+              className="flex items-center gap-2 px-2 py-1.5 text-sm text-muted-foreground"
+            >
+              <LoaderCircle className="size-3.5 animate-spin" />{" "}
+              {m.locationCombobox_searchingText()}
             </li>
           ) : (
             suggestions.map((place, index) => {
@@ -160,12 +166,16 @@ export function LocationCombobox({
                     }}
                     className={cn(
                       "flex w-full items-baseline gap-1.5 rounded-xl px-2 py-1.5 text-left text-sm outline-none",
-                      index === active ? "bg-accent text-accent-foreground" : "hover:bg-accent hover:text-accent-foreground",
+                      index === active
+                        ? "bg-accent text-accent-foreground"
+                        : "hover:bg-accent hover:text-accent-foreground",
                     )}
                   >
                     <span className="shrink-0 truncate">{place.name}</span>
                     {place.contextLabel ? (
-                      <span className="truncate text-xs text-muted-foreground">· {place.contextLabel}</span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        · {place.contextLabel}
+                      </span>
                     ) : null}
                   </button>
                 </li>

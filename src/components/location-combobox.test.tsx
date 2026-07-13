@@ -13,119 +13,171 @@
  * by the CI structural gate, kept out of this file so the final-proof source
  * grep stays clean.)
  */
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { LocationCombobox } from './location-combobox'
+import { LocationCombobox } from "./location-combobox";
 
-const suggestion = (over: Partial<{ id: string; name: string; slug: string; contextLabel: string | null }>) => ({
-  id: over.id ?? 'p1',
-  slug: over.slug === undefined ? 'london' : over.slug,
-  name: over.name ?? 'London',
-  contextLabel: over.contextLabel === undefined ? 'United Kingdom' : over.contextLabel,
-})
+const suggestion = (
+  over: Partial<{ id: string; name: string; slug: string; contextLabel: string | null }>,
+) => ({
+  id: over.id ?? "p1",
+  slug: over.slug === undefined ? "london" : over.slug,
+  name: over.name ?? "London",
+  contextLabel: over.contextLabel === undefined ? "United Kingdom" : over.contextLabel,
+});
 
 afterEach(() => {
-  cleanup()
-})
+  cleanup();
+});
 
-const locationInput = () => screen.getByLabelText('location') as HTMLInputElement
+const locationInput = () => screen.getByLabelText("location") as HTMLInputElement;
 
 const type = (value: string) => {
-  const input = locationInput()
-  fireEvent.change(input, { target: { value } })
-  return input
-}
+  const input = locationInput();
+  fireEvent.change(input, { target: { value } });
+  return input;
+};
 
 const locationSearchProps = {
   suggestions: [suggestion({})],
   loading: false,
   onQueryChange: vi.fn(),
-}
+};
 
-describe('LocationCombobox — resolved suggestion presentation', () => {
-  it('renders each suggestion name with disambiguating country context and no job count', () => {
-    render(<LocationCombobox {...locationSearchProps} onSelect={() => {}} onClear={() => {}} />)
-    type('Lon')
-    expect(screen.getByText('London')).toBeTruthy()
+describe("LocationCombobox — resolved suggestion presentation", () => {
+  it("renders each suggestion name with disambiguating country context and no job count", () => {
+    render(<LocationCombobox {...locationSearchProps} onSelect={() => {}} onClear={() => {}} />);
+    type("Lon");
+    expect(screen.getByText("London")).toBeTruthy();
     // The view model supplies country context without leaking an API job count.
-    expect(screen.getByText(/United Kingdom/)).toBeTruthy()
-    expect(screen.queryByText('42')).toBeNull()
-  })
-})
+    expect(screen.getByText(/United Kingdom/)).toBeTruthy();
+    expect(screen.queryByText("42")).toBeNull();
+  });
+});
 
-describe('LocationCombobox — selection and clear write the URL semantics', () => {
-  it('selecting a suggestion calls onSelect with its slug and name', () => {
-    const onSelect = vi.fn()
-    render(<LocationCombobox {...locationSearchProps} onSelect={onSelect} onClear={() => {}} />)
-    type('Lon')
-    fireEvent.mouseDown(screen.getByText('London'))
-    expect(onSelect).toHaveBeenCalledWith({ slug: 'london', name: 'London' })
-  })
+describe("LocationCombobox — selection and clear write the URL semantics", () => {
+  it("selecting a suggestion calls onSelect with its slug and name", () => {
+    const onSelect = vi.fn();
+    render(<LocationCombobox {...locationSearchProps} onSelect={onSelect} onClear={() => {}} />);
+    type("Lon");
+    fireEvent.mouseDown(screen.getByText("London"));
+    expect(onSelect).toHaveBeenCalledWith({ slug: "london", name: "London" });
+  });
 
-  it('clearing calls onClear and empties the field', async () => {
-    const onClear = vi.fn()
-    render(<LocationCombobox {...locationSearchProps} value="berlin" valueLabel="Berlin" onSelect={() => {}} onClear={onClear} />)
-    const clear = screen.getByLabelText('clear location')
-    fireEvent.click(clear)
-    expect(onClear).toHaveBeenCalledTimes(1)
-    expect(locationInput().value).toBe('')
-  })
+  it("clearing calls onClear and empties the field", async () => {
+    const onClear = vi.fn();
+    render(
+      <LocationCombobox
+        {...locationSearchProps}
+        value="berlin"
+        valueLabel="Berlin"
+        onSelect={() => {}}
+        onClear={onClear}
+      />,
+    );
+    const clear = screen.getByLabelText("clear location");
+    fireEvent.click(clear);
+    expect(onClear).toHaveBeenCalledTimes(1);
+    expect(locationInput().value).toBe("");
+  });
 
-  it('cold-loads the active slug label into the input', () => {
-    render(<LocationCombobox {...locationSearchProps} value="berlin" valueLabel="Berlin" onSelect={() => {}} onClear={() => {}} />)
-    expect(locationInput().value).toBe('Berlin')
-  })
+  it("cold-loads the active slug label into the input", () => {
+    render(
+      <LocationCombobox
+        {...locationSearchProps}
+        value="berlin"
+        valueLabel="Berlin"
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+    expect(locationInput().value).toBe("Berlin");
+  });
 
-  it('invalidates the selected place when its visible label is edited', () => {
-    const onClear = vi.fn()
-    render(<LocationCombobox {...locationSearchProps} value="sydney" valueLabel="Sydney" onSelect={() => {}} onClear={onClear} />)
+  it("restores the visible label when history changes the canonical location", () => {
+    const { rerender } = render(
+      <LocationCombobox
+        {...locationSearchProps}
+        value="sydney"
+        valueLabel="Sydney"
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
 
-    fireEvent.change(locationInput(), { target: { value: 'Melbourne' } })
+    rerender(
+      <LocationCombobox
+        {...locationSearchProps}
+        value="melbourne"
+        valueLabel="Melbourne"
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+    expect(locationInput().value).toBe("Melbourne");
 
-    expect(onClear).toHaveBeenCalledTimes(1)
-  })
-})
+    rerender(<LocationCombobox {...locationSearchProps} onSelect={() => {}} onClear={() => {}} />);
+    expect(locationInput().value).toBe("");
+  });
 
-describe('LocationCombobox — accessible autocomplete semantics', () => {
-  it('announces the suggestion popup and its keyboard-active option', () => {
-    render(<LocationCombobox {...locationSearchProps} onSelect={() => {}} onClear={() => {}} />)
+  it("invalidates the selected place when its visible label is edited", () => {
+    const onClear = vi.fn();
+    render(
+      <LocationCombobox
+        {...locationSearchProps}
+        value="sydney"
+        valueLabel="Sydney"
+        onSelect={() => {}}
+        onClear={onClear}
+      />,
+    );
 
-    const input = locationInput()
-    expect(input.getAttribute('role')).toBe('combobox')
-    expect(input.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.change(locationInput(), { target: { value: "Melbourne" } });
 
-    fireEvent.change(input, { target: { value: 'Lon' } })
+    expect(onClear).toHaveBeenCalledTimes(1);
+  });
+});
 
-    const listbox = screen.getByRole('listbox')
-    const option = screen.getByRole('option', { name: /London/ })
-    expect(input.getAttribute('aria-expanded')).toBe('true')
-    expect(input.getAttribute('aria-controls')).toBe(listbox.id)
-    expect(input.getAttribute('aria-activedescendant')).toBe(option.id)
-    expect(option.getAttribute('aria-selected')).toBe('true')
-  })
-})
+describe("LocationCombobox — accessible autocomplete semantics", () => {
+  it("announces the suggestion popup and its keyboard-active option", () => {
+    render(<LocationCombobox {...locationSearchProps} onSelect={() => {}} onClear={() => {}} />);
 
-describe('LocationCombobox — shadcn foundation', () => {
-  const source = readFileSync(join(import.meta.dirname, 'location-combobox.tsx'), 'utf8')
+    const input = locationInput();
+    expect(input.getAttribute("role")).toBe("combobox");
+    expect(input.getAttribute("aria-expanded")).toBe("false");
+
+    fireEvent.change(input, { target: { value: "Lon" } });
+
+    const listbox = screen.getByRole("listbox");
+    const option = screen.getByRole("option", { name: /London/ });
+    expect(input.getAttribute("aria-expanded")).toBe("true");
+    expect(input.getAttribute("aria-controls")).toBe(listbox.id);
+    expect(input.getAttribute("aria-activedescendant")).toBe(option.id);
+    expect(option.getAttribute("aria-selected")).toBe("true");
+  });
+});
+
+describe("LocationCombobox — shadcn foundation", () => {
+  const source = readFileSync(join(import.meta.dirname, "location-combobox.tsx"), "utf8");
 
   // Positive foundation assertions keep this search surface on the same
   // owned shadcn and Lucide vocabulary as the public header.
-  it('is built on Lucide icons', () => {
-    expect(source).toMatch(/from ['"]lucide-react['"]/)
-  })
+  it("is built on Lucide icons", () => {
+    expect(source).toMatch(/from ['"]lucide-react['"]/);
+  });
 
-  it('uses owned shadcn Input and Button primitives', () => {
-    expect(source).toMatch(/from ['"]@\/components\/ui\/input['"]/)
-    expect(source).toMatch(/from ['"]@\/components\/ui\/button['"]/)
-  })
+  it("uses owned shadcn Input and Button primitives", () => {
+    expect(source).toMatch(/from ['"]@\/components\/ui\/input['"]/);
+    expect(source).toMatch(/from ['"]@\/components\/ui\/button['"]/);
+  });
 
-  it('does not fetch from the Board API inside the presentational component', () => {
-    expect(source).not.toMatch(/server\/queries/)
-    expect(source).not.toMatch(/searchPlaces\s*\(/)
-    expect(source).not.toMatch(/PublicPlace/)
-  })
-})
+  it("does not fetch from the Board API inside the presentational component", () => {
+    expect(source).not.toMatch(/server\/queries/);
+    expect(source).not.toMatch(/searchPlaces\s*\(/);
+    expect(source).not.toMatch(/PublicPlace/);
+  });
+});

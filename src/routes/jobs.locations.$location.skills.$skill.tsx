@@ -6,25 +6,22 @@
  */
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 
-import { parseListingFilters } from "@cavuno/board/filters";
-
 import { JobsNotFound } from "@/components/board/jobs-not-found";
-import { ProgrammaticJobsView, PROGRAMMATIC_JOBS_PAGE_SIZE } from "../components/programmatic-jobs-view";
-import { pageSearchValue, pageToOffset, parsePageParam } from "../lib/pagination";
+import {
+  ProgrammaticJobsView,
+  PROGRAMMATIC_JOBS_PAGE_SIZE,
+} from "../components/programmatic-jobs-view";
+import { pageToOffset } from "../lib/pagination";
+import { jobsListingLoaderDeps, parseJobsSearch } from "../lib/jobs-search";
 import { listingHead } from "@cavuno/board/seo";
 import { m } from "../paraglide/messages";
 import { getSeoBase, listJobs, resolvePlace, resolveSkill } from "../server/queries";
 import { useLocationSuggestions } from "./-use-location-suggestions";
 
 export const Route = createFileRoute("/jobs/locations/$location/skills/$skill")({
-  staticData: { fullBleed: true },
-  validateSearch: (
-    search: Record<string, unknown>,
-  ): ReturnType<typeof parseListingFilters> & { page?: number } => ({
-    ...parseListingFilters(search),
-    page: pageSearchValue(parsePageParam(search.page)),
-  }),
-  loaderDeps: ({ search }) => search,
+  staticData: { fullBleed: true, ownsMain: true },
+  validateSearch: parseJobsSearch,
+  loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
   loader: async ({ params, deps }) => {
     const [place, skill] = await Promise.all([
       resolvePlace({ data: { slug: params.location } }),
@@ -85,6 +82,7 @@ function LocationSkillPage() {
         place: place.displayName,
       })}
       count={list.count}
+      gatedCount={list.gatedCount}
       jobs={list.data}
       page={search.page ?? 1}
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}

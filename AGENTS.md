@@ -73,11 +73,11 @@ need different grounding is a platform operation, not a code edit.
    data attributes, so adopters may swap in their own Base UI-backed shadcn
    source. Radix is an explicit migration, not a drop-in swap. Legacy Untitled
    UI may only shrink: never add its imports, icons, or tokens.
-   Portaled Rhea primitives are prohibited during the expand phase: Base UI
-   portals render under `body`, outside a route-local `.rhea-theme`. Do not add
-   Dialog, Menu, Menubar, Popover, Select, or Tooltip until the repo has an
-   explicit scoped-portal strategy or the CAV-511 contraction owns Rhea
-   globally.
+   A portaled Rhea primitive must put `.rhea-theme` on its owned portal root,
+   because Base UI portals render under `body`, outside a route-local theme
+   scope. `components/ui/sheet.tsx` is the reference implementation. Do not
+   add another portaled primitive until its owned wrapper applies the same
+   explicit scope or the CAV-511 contraction owns Rhea globally.
 7. **Board URL paths come from `@cavuno/board/paths`** (`jobDetailPath`,
    `jobsCategoryPath`, `jobsSkillPath`, `companyPath`, `companySalaryPath`,
    …) — never string-build a `/companies/…/jobs/…` or `/jobs/…` path.
@@ -106,13 +106,14 @@ pnpm run typecheck && pnpm test && pnpm run build
 
 Visual identity, design tokens, the component inventory, and design
 do's-and-don'ts live in **`DESIGN.md`** (generated from `src/theme.css`
-+ component source + the registry snapshot — regenerate with
-`pnpm run gen:design`, never hand-edit; CI rejects drift). The
-machine-interchange token export is `design/tokens.dtcg.json`. Select
-from the DESIGN.md component inventory before writing new components.
-Page-level compositions follow the patterns in **`docs/patterns/`** —
-select a pattern before composing a route; never hand-roll a
-listing/detail/form/empty surface.
+
+- component source + the registry snapshot — regenerate with
+  `pnpm run gen:design`, never hand-edit; CI rejects drift). The
+  machine-interchange token export is `design/tokens.dtcg.json`. Select
+  from the DESIGN.md component inventory before writing new components.
+  Page-level compositions follow the patterns in **`docs/patterns/`** —
+  select a pattern before composing a route; never hand-roll a
+  listing/detail/form/empty surface.
 
 Primitives, in order: use or add current shadcn Rhea components under
 `src/components/ui/`, backed by Base UI and styled from `src/theme.css`.

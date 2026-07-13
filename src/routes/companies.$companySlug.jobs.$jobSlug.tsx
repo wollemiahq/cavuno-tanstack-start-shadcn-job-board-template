@@ -7,7 +7,6 @@
  * assembly. The similar-jobs rail degrades to empty on a search outage,
  * matching the hosted page (the rail is never fatal to the render).
  */
-import { useState } from "react";
 import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 
 import { isNotFound } from "@cavuno/board";
@@ -22,8 +21,8 @@ import { SearchLg } from "@untitledui/icons";
 import { PageBody } from "@/components/board/page-body";
 import { JobDetail } from "@/components/board/job-detail";
 import { JobList } from "@/components/board/job-list";
+import { SaveJobButton } from "@/components/board/save-job-button";
 import { JsonLd } from "@/components/json-ld";
-import { Button } from "@/components/base/buttons/button";
 import { jobAlertDefaultsFromJob } from "../lib/job-alert-defaults";
 import { m } from "../paraglide/messages";
 import { getSessionUser, saveJob } from "../server/account";
@@ -112,70 +111,11 @@ export const Route = createFileRoute("/companies/$companySlug/jobs/$jobSlug")({
   ),
 });
 
-function SaveJobButton({
-  jobId,
-  user,
-}: {
-  jobId: string;
-  user: Awaited<ReturnType<typeof getSessionUser>>;
-}) {
-  const router = useRouter();
-  const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
-
-  // Label is always "Save" (CAV-500); the click still routes signed-out /
-  // unverified visitors to the sign-in / verify walls — behavior unchanged.
-  if (!user) {
-    return (
-      <Button color="secondary" size="lg" className="w-full" href="/auth/sign-in">
-        {m.companyJobDetail_saveJobLabel()}
-      </Button>
-    );
-  }
-  if (!user.emailVerified) {
-    return (
-      <Button color="secondary" size="lg" className="w-full" href="/auth/verify-email-required">
-        {m.companyJobDetail_saveJobLabel()}
-      </Button>
-    );
-  }
-  if (state === "saved") {
-    return (
-      <Button color="secondary" size="lg" className="w-full" href="/account">
-        {m.companyJobDetail_savedViewInAccountLabel()}
-      </Button>
-    );
-  }
-  return (
-    <Button
-      color="secondary"
-      size="lg"
-      className="w-full"
-      isDisabled={state === "saving"}
-      onClick={async () => {
-        setState("saving");
-        try {
-          await saveJob({ data: { jobId } });
-          await router.invalidate();
-          setState("saved");
-        } catch (error) {
-          setState("idle");
-          if (String(error).includes("EMAIL_UNVERIFIED")) {
-            await router.navigate({ to: "/auth/verify-email-required" });
-            return;
-          }
-          throw error;
-        }
-      }}
-    >
-      {state === "saving" ? m.companyJobDetail_savingLabel() : m.companyJobDetail_saveJobLabel()}
-    </Button>
-  );
-}
-
 function JobDetailPage() {
   const { job, board, user, similar, company, seo } = Route.useLoaderData();
   const { companySlug } = Route.useParams();
   const defaults = jobAlertDefaultsFromJob(job);
+  const router = useRouter();
 
   const vm = toJobDetailVM(
     job,
@@ -213,7 +153,21 @@ function JobDetailPage() {
             }}
           />
         }
-        secondaryActions={<SaveJobButton jobId={job.id} user={user} />}
+        secondaryActions={
+          <SaveJobButton
+            jobId={job.id}
+            viewer={user ? { emailVerified: user.emailVerified } : null}
+            labels={{
+              save: m.companyJobDetail_saveJobLabel(),
+              saving: m.companyJobDetail_savingLabel(),
+              saved: m.companyJobDetail_savedViewInAccountLabel(),
+            }}
+            onSave={async (jobId) => {
+              await saveJob({ data: { jobId } });
+            }}
+            onSaved={() => router.invalidate()}
+          />
+        }
         similarSlot={
           similar.length > 0 ? (
             <JobList

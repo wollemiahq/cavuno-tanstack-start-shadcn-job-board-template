@@ -519,16 +519,6 @@
     "icons": 1,
     "tokens": 0
   },
-  "src/components/board/jobs-results-bar.tsx": {
-    "imports": 1,
-    "icons": 0,
-    "tokens": 2
-  },
-  "src/components/board/jobs-search-controls.tsx": {
-    "imports": 2,
-    "icons": 0,
-    "tokens": 0
-  },
   "src/components/board/listing-page-header.tsx": {
     "imports": 2,
     "icons": 1,
@@ -885,7 +875,7 @@
     "tokens": 12
   },
   "src/routes/companies.$companySlug.jobs.$jobSlug.tsx": {
-    "imports": 2,
+    "imports": 1,
     "icons": 1,
     "tokens": 0
   },

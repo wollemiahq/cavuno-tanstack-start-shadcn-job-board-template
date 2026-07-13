@@ -2000,6 +2000,20 @@ Props:
 - `language: string`
 - `variant?: "grid" | "rows" | "compact" | undefined`
 
+### JobSearchDetailState — `src/components/board/job-search-detail-state.tsx`
+
+Props:
+
+- `applySlot?: ReactNode`
+- `errorTitle: string`
+- `fullPageLabel: string`
+- `loadingLabel: string`
+- `onRetry: () => void`
+- `retryLabel: string`
+- `saveSlot?: ReactNode`
+- `status: "error" | "idle" | "loading" | "ready"`
+- `vm?: JobDetailVM | undefined`
+
 ### JobSearchPage — `src/components/board/job-search-page.tsx`
 
 The board's main listing/search surface: heading + count, canonical filter controls (@cavuno/board/filters vocabulary), job cards, load-more. Data in, callbacks out — your loader owns fetching.
@@ -2008,20 +2022,56 @@ Usage: Fetch with board.jobs.list({ ...filters, cursor, limit: 20 }) (board.jobs
 
 Props:
 
-- `adSlot?: ReactNode`
 - `breadcrumb?: BreadcrumbData | undefined`
 - `count?: number | undefined`
+- `detail: ReactNode`
+- `endAd?: AdPlacement | undefined`
 - `filters: ListingFilters`
+- `gatedCount?: number | undefined`
 - `heading?: string | undefined`
 - `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "other" | …`
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
-- `locationSlot?: ReactNode`
+- `location?: { slug: string; label: string; } | undefined`
+- `locationSuggestions: LocationSuggestionState`
 - `onFiltersChange: (next: ListingFilters) => void`
 - `onPageChange: (page: number) => void`
+- `onSearchSubmit: (next: ListingFilters, location: { slug: string; name: string; } | null) => void`
+- `onSelectedJobPush: (jobSlug: string) => void`
+- `onSelectedJobReplace: (jobSlug: string) => void`
 - `page: number`
 - `pageSize: number`
 - `relatedSearches?: RelatedSearch[] | undefined`
+- `selectedJob?: string | undefined`
+- `startAd?: AdPlacement | undefined`
+
+### JobSearchResultDetail — `src/components/board/job-search-result-detail.tsx`
+
+Props:
+
+- `applySlot?: ReactNode`
+- `fullPageHref: string`
+- `fullPageLabel: string`
+- `saveSlot?: ReactNode`
+- `vm: JobDetailVM`
+
+### JobSearchResult — `src/components/board/job-search-result.tsx`
+
+Props:
+
+- `onActivate?: ((event: MouseEvent<HTMLAnchorElement, MouseEvent>) => void) | undefined`
+- `selected?: boolean | undefined`
+- `vm: JobCardVM`
+
+### JobsFilterToolbar — `src/components/board/jobs-filter-toolbar.tsx`
+
+Props:
+
+- `labels: JobsFilterToolbarLabels`
+- `onApply: (value: JobsFilterValues) => void`
+- `onReset: () => void`
+- `options: { workplace: JobsFilterOption[]; employmentType: JobsFilterOption[]; seniority: JobsFilterOption[]; }`
+- `value: JobsFilterValues`
 
 ### JobsNotFound — `src/components/board/jobs-not-found.tsx`
 
@@ -2054,8 +2104,10 @@ Props:
 - `filters: ListingFilters`
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
-- `locationSlot?: ReactNode`
+- `location?: { slug: string; label: string; } | undefined`
+- `locationSuggestions?: LocationSuggestionState | undefined`
 - `onChange: (next: ListingFilters) => void`
+- `onSearchSubmit?: ((next: ListingFilters, location: { slug: string; name: string; } | null) => void) | undefined`
 
 ### ListingPageHeader — `src/components/board/listing-page-header.tsx`
 
@@ -2227,6 +2279,16 @@ Props:
 Props:
 
 - `vm: SeniorityTableVM`
+
+### SaveJobButton — `src/components/board/save-job-button.tsx`
+
+Props:
+
+- `jobId: string`
+- `labels: { save: string; saving: string; saved: string; }`
+- `onSave: (jobId: string) => Promise<void>`
+- `onSaved?: (() => void | Promise<void>) | undefined`
+- `viewer: { emailVerified: boolean; } | null`
 
 ### TaxonomyTags — `src/components/board/taxonomy-tags.tsx`
 
@@ -2866,9 +2928,9 @@ Props:
 
 Props:
 
-- `adSlot?: ReactNode`
 - `count?: number | undefined`
-- `filters: ListingFilters`
+- `filters: JobsSearch`
+- `gatedCount?: number | undefined`
 - `heading: string`
 - `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "other" | …`
 - `location?: { slug: string; label: string; } | undefined`
@@ -2932,6 +2994,55 @@ Props:
 - `maxCharacters?: number | undefined`
 - `onChange: (html: string) => void`
 - `value: string`
+
+### AdRail — `src/components/search-results/ad-rail.tsx`
+
+A provider-neutral 160 × 600 advertising seam for very wide viewports.
+
+Props:
+
+- `children: ReactNode`
+- `label: string`
+- `side?: "start" | "end" | undefined`
+
+### SearchResultCard — `src/components/search-results/search-result-card.tsx`
+
+Shared compact interaction chrome; entity components own all card meaning.
+
+Props:
+
+- `selected?: boolean | undefined`
+
+### SearchResultDetail — `src/components/search-results/search-result-detail.tsx`
+
+The desktop-only, independently scrolling detail projection.
+
+Props:
+
+- `children: ReactNode`
+- `label: string`
+- `scrollRestorationId?: string | undefined`
+
+### SearchResultsLayout — `src/components/search-results/search-results-layout.tsx`
+
+Responsive master–detail geometry with optional outer advertising rails.
+
+Props:
+
+- `detail: ReactNode`
+- `endAd?: ReactElement<AdRailProps, string | JSXElementConstructor<any>> | undefined`
+- `list: ReactNode`
+- `startAd?: ReactElement<AdRailProps, string | JSXElementConstructor<any>> | undefined`
+
+### SearchResultsList — `src/components/search-results/search-results-list.tsx`
+
+The independently scrolling master region of a search-results surface.
+
+Props:
+
+- `children: ReactNode`
+- `label: string`
+- `scrollRestorationId?: string | undefined`
 
 ### Circle — `src/components/shared-assets/background-patterns/circle.tsx`
 
@@ -3093,16 +3204,24 @@ Props:
 
 ### AvatarImage — `src/components/ui/avatar.tsx`
 
+### Badge — `src/components/ui/badge.tsx`
+
+Props:
+
+- `variant?: "link" | "secondary" | "default" | "outline" | "destructive" | "ghost" | null | undefined`
+
+Variants — `variant`: default, secondary, destructive, outline, ghost, link
+
 ### Button — `src/components/ui/button.tsx`
 
 Props:
 
 - `size?: "icon" | "xs" | "sm" | "lg" | "default" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
-- `variant?: "link" | "secondary" | "default" | "outline" | "ghost" | "destructive" | null | undefined`
+- `variant?: "link" | "secondary" | "default" | "outline" | "destructive" | "ghost" | null | undefined`
 
 Variants — `variant`: default, outline, secondary, ghost, destructive, link
 
-Variants — `size`: default, xs, sm, lg, icon, 'icon-xs', 'icon-sm', 'icon-lg'
+Variants — `size`: default, xs, sm, lg, icon, "icon-xs", "icon-sm", "icon-lg"
 
 ### Card — `src/components/ui/card.tsx`
 
@@ -3121,6 +3240,8 @@ Props:
 ### CardHeader — `src/components/ui/card.tsx`
 
 ### CardTitle — `src/components/ui/card.tsx`
+
+### Checkbox — `src/components/ui/checkbox.tsx`
 
 ### Empty — `src/components/ui/empty.tsx`
 
@@ -3171,6 +3292,30 @@ Props:
 - `size?: "sm" | "default" | undefined`
 
 ### SelectValue — `src/components/ui/select.tsx`
+
+### Sheet — `src/components/ui/sheet.tsx`
+
+### SheetClose — `src/components/ui/sheet.tsx`
+
+### SheetContent — `src/components/ui/sheet.tsx`
+
+Props:
+
+- `closeLabel?: string | undefined`
+- `showCloseButton?: boolean | undefined`
+- `side?: "bottom" | "top" | "left" | "right" | undefined`
+
+### SheetDescription — `src/components/ui/sheet.tsx`
+
+### SheetFooter — `src/components/ui/sheet.tsx`
+
+### SheetHeader — `src/components/ui/sheet.tsx`
+
+### SheetTitle — `src/components/ui/sheet.tsx`
+
+### SheetTrigger — `src/components/ui/sheet.tsx`
+
+### Skeleton — `src/components/ui/skeleton.tsx`
 
 ### NotFound — `src/components/untitled-ui/not-found.tsx`
 
@@ -3356,6 +3501,12 @@ Primitives: LoadingIndicator, Button
 The honest "Showing X–Y of Z" count and sort control on a single row above the results.
 
 Primitives: JobsResultsBar, Select
+
+### Search results — `docs/patterns/search-results.md`
+
+A progressively enhanced directory that keeps dense results and a decision-complete detail visible together on desktop.
+
+Primitives: SearchResultsLayout, SearchResultsList, SearchResultDetail, SearchResultCard, AdRail
 
 ### Section heading — `docs/patterns/section-heading.md`
 
