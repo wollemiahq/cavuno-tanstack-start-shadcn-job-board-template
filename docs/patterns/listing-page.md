@@ -2,23 +2,25 @@
 name: Listing page
 purpose: The full-bleed header + search → results bar → list/grid → pagination browse surface every collection page shares.
 primitives: [Page, Bleed, PageHeader, PageContent, PageSection, ListingSearchBand, JobsResultsBar, JobList, ListingPagination]
-usedBy: [src/components/board/home-landing.tsx, src/components/board/job-search-page.tsx, src/components/programmatic-jobs-view.tsx, src/routes/index.tsx, src/routes/jobs.index.tsx, src/routes/jobs.$keyword.tsx, src/routes/jobs.locations.$location.index.tsx, src/routes/jobs.skills.$skill.tsx, src/routes/companies.index.tsx, src/routes/companies.markets.$market.tsx, src/routes/companies.$companySlug.jobs.index.tsx, src/routes/blog.index.tsx]
+usedBy: [src/components/board/home-landing.tsx, src/components/board/job-search-page.tsx, src/components/programmatic-jobs-view.tsx, src/routes/index.tsx, src/routes/jobs.index.tsx, src/routes/jobs.$keyword.tsx, src/routes/jobs.locations.$location.index.tsx, src/routes/jobs.skills.$skill.tsx, src/routes/companies.$companySlug.jobs.index.tsx, src/routes/blog.index.tsx]
 ---
 
 ## Purpose
 
-Every collection surface — jobs, companies, blog — opens the same way: a
+Collection surfaces that do not need a selectable desktop detail open the same way: a
 soft-gray full-bleed band carrying a centered display title, an optional
 one-line subtitle, and the page's search living inside the band, followed by a
 constrained results region. `Page` owns the width, `Bleed` creates the band,
 `PageHeader` owns the introduction, and `PageContent` owns the results and
-optional rail. `ListingSearchBand` remains the shared search panel. A visitor
-moving between /jobs, /companies, and /blog reads one system, not three
-hand-rolled layouts.
+optional rail. `ListingSearchBand` remains the shared search panel. Selectable
+job and company directories use the sibling [Search results](search-results.md)
+pattern while retaining the same Page and search-control vocabulary.
 
 ## When to use
 
 - Any page that lists a paginated collection the visitor can search or filter.
+- **When NOT to use** — a directory whose result opens an in-place desktop
+  detail. Use the [Search results](search-results.md) pattern.
 - **When NOT to use** — a single record (a job, a company profile, a post). That
   is the [Detail page](detail-page.md) pattern.
 
@@ -83,7 +85,8 @@ system rather than parallel route shells:
   results bar or pagination.
 - `JobSearchPage` — `jobs.index`.
 - `ProgrammaticJobsView` — `jobs.$keyword`, `jobs.locations.*`, `jobs.skills.*`.
-- `companies.index`, `companies.markets.$market` — existing migration-only listing shell.
+- `companies.index` and `companies.markets.$market` deliberately use the
+  sibling [Search results](search-results.md) pattern instead.
 - `companies.$companySlug.jobs.index` — the company-jobs subpage. As of CAV-512
   its hero is the shared [Company section](company-section.md) shell header (not
   a second centered header band — the two would double up), but it still

@@ -10,11 +10,13 @@ hand-roll a listing, detail, form, or empty surface — reach for the pattern th
 already owns it. Each page documents current reality, including where routes
 still drift (the "Don't" column of each Do / Don't table).
 
-Every new route starts with the sole canonical page-level composition family:
+Every new route starts with the canonical page-level composition family:
 `Page` → `PageContent`, with `PageHeader` and named `PageSection`s as needed.
-`Bleed` is the sanctioned full-width band. `PageBody` and
-`ListingPageHeader` remain migration-only compatibility components for older
-routes and are not primitives for new work.
+`Bleed` is the sanctioned full-width band. P18 Search results is the deliberate
+exception: its explicit `Page` → `main` shell keeps the full-width header and
+independently scrolling master-detail frame outside `PageContent`'s ordinary
+body grid. `PageBody` and `ListingPageHeader` remain migration-only
+compatibility components for older routes and are not primitives for new work.
 
 Every page follows [`_template.md`](_template.md): the section order (Purpose /
 When to use / Anatomy / Composition / Do / Don't / Used by / Related) and the
@@ -27,20 +29,20 @@ so docs and the design library stay in sync.
 
 | #   | Pattern                                 | Composes                                                                                            | Owns                                                                               |
 | --- | --------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| P1  | [Listing page](listing-page.md)         | Page, Bleed, PageHeader, PageContent, ListingSearchBand, JobsResultsBar, JobList, ListingPagination | Every searchable collection surface (jobs, companies, blog).                       |
+| P1  | [Listing page](listing-page.md)         | Page, Bleed, PageHeader, PageContent, ListingSearchBand, JobsResultsBar, JobList, ListingPagination | Searchable collection surfaces without an in-place desktop detail.                 |
 | P2  | [Results header](results-header.md)     | JobsResultsBar, Select                                                                              | The honest "Showing X–Y of Z" count + sort row.                                    |
 | P3  | [Detail page](detail-page.md)           | Page, Bleed, PageHeader, PageContent, JobDetail, Avatar, Badge, TaxonomyTags                        | A single record: header band over a two-column body with a sticky rail.            |
 | P4  | [Section heading](section-heading.md)   | Link, Button                                                                                        | A titled section row with an optional "view all" link.                             |
 | P5  | [Board card](board-card.md)             | Avatar, Badge, TaxonomyTags, initialsOf                                                             | The shared job/company/post card surface.                                          |
 | P6  | [Breadcrumb](breadcrumb.md)             | Breadcrumb, AriaLink                                                                                | The ancestor trail ending in the current page.                                     |
 | P7  | [Alert capture](alert-capture.md)       | AlertsBand, AlertSignupForm, JobAlertFloatingPrompt                                                 | The job-alert subscribe surfaces.                                                  |
-| P8  | [Empty state](empty-state.md)           | EmptyState, FeaturedIcon, JobsNotFound, SalaryEmptyState                                            | Zero-results and not-found treatments.                                             |
+| P8  | [Empty state](empty-state.md)           | Empty, EmptyState, FeaturedIcon, JobsNotFound, SalaryEmptyState                                     | Zero-results and not-found treatments.                                             |
 | P9  | [Form page](form-page.md)               | Input, Select, TextAreaBase, Label, Button, FileUpload                                              | Multi-field data-entry surfaces.                                                   |
 | P10 | [Auth page](auth-page.md)               | AuthCard, Field, FormError, AuthDivider, SocialButton                                               | The centered single-column auth shell.                                             |
 | P11 | [Account shell](account-shell.md)       | AccountShell, CandidateShell, EmployerCompanyShell                                                  | The logged-in surface chassis.                                                     |
 | P12 | [Form feedback](form-feedback.md)       | FormError                                                                                           | The success/error/pending status tied to an action.                                |
 | P13 | [Stat tile](stat-tile.md)               | OverallSalaryCard, MetricPanel                                                                      | Label + display-value metric tiles.                                                |
-| P14 | [Pending / loading](pending-loading.md) | LoadingIndicator, Button                                                                            | In-flight loader and action treatments.                                            |
+| P14 | [Pending / loading](pending-loading.md) | LoadingIndicator, Skeleton, Button                                                                  | Route, master-detail, and action pending treatments.                               |
 | P15 | [Listing rail](listing-rail.md)         | PageContent, ListingRail, TaxonomyTags                                                              | The sticky listing rail: operator ad seam + related-searches card.                 |
 | P16 | [Company section](company-section.md)   | Page, PageHeader, PageContent, PageSection, Avatar, Badge, Link, Breadcrumb                         | The shared company header + tab navigation across profile / jobs / salaries.       |
 | P17 | [Typography](typography.md)             | Text, Prose                                                                                         | The role-named heading/body primitive keeping authored text on the UUI type scale. |

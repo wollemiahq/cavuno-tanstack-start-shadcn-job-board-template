@@ -2,7 +2,7 @@
 name: Search results
 purpose: A progressively enhanced directory that keeps dense results and a decision-complete detail visible together on desktop.
 primitives: [SearchResultsLayout, SearchResultsList, SearchResultDetail, SearchResultCard, AdRail]
-usedBy: [src/components/search-results/search-results-layout.tsx, src/components/search-results/search-results-list.tsx, src/components/search-results/search-result-detail.tsx, src/components/search-results/search-result-card.tsx, src/components/search-results/ad-rail.tsx]
+usedBy: [src/components/search-results/search-results-layout.tsx, src/components/search-results/search-results-list.tsx, src/components/search-results/search-result-detail.tsx, src/components/search-results/search-result-card.tsx, src/components/search-results/ad-rail.tsx, src/components/board/job-search-page.tsx, src/components/board/company-search-page.tsx, src/components/board/job-search-result.tsx, src/components/board/company-search-result.tsx]
 ---
 
 ## Purpose
@@ -37,16 +37,25 @@ geometry and interaction chrome:
 
 ```tsx
 <SearchResultsLayout
-  startAd={startAd ? <AdRail label={startAdLabel}>{startAd}</AdRail> : undefined}
+  startAd={
+    startAd ? <AdRail label={startAdLabel}>{startAd}</AdRail> : undefined
+  }
   list={
     <SearchResultsList label={resultsLabel} scrollRestorationId="jobs-list">
       {jobs.map((job) => (
-        <JobSearchResult key={job.id} vm={job} selected={job.slug === selectedJob} />
+        <JobSearchResult
+          key={job.id}
+          vm={job}
+          selected={job.slug === selectedJob}
+        />
       ))}
     </SearchResultsList>
   }
   detail={
-    <SearchResultDetail label={selectedJobLabel} scrollRestorationId="job-detail">
+    <SearchResultDetail
+      label={selectedJobLabel}
+      scrollRestorationId="job-detail"
+    >
       <JobSearchResultDetail job={selectedJob} />
     </SearchResultDetail>
   }
@@ -67,10 +76,21 @@ different sticky-header stack sets `--search-results-height` on the layout.
 
 ## Used by
 
-- `SearchResultsLayout` — responsive geometry and optional outer ad columns.
-- `SearchResultsList` and `SearchResultDetail` — named, independently scrolling regions.
-- `SearchResultCard` — shared result interaction chrome.
-- `AdRail` — optional provider-neutral advertising seam.
+- `src/components/search-results/search-results-layout.tsx` — owns the shared
+  master-detail and optional ad-rail geometry.
+- `src/components/search-results/search-results-list.tsx` — owns the named,
+  independently scrolling results region.
+- `src/components/search-results/search-result-detail.tsx` — owns the named,
+  independently scrolling desktop detail region.
+- `src/components/search-results/search-result-card.tsx` — owns the selected,
+  hover, and focus interaction chrome.
+- `src/components/search-results/ad-rail.tsx` — owns the optional advertising seam.
+- `src/components/board/job-search-page.tsx` and
+  `src/components/board/company-search-page.tsx` — explicit entity-specific directory
+  compositions over the same responsive master–detail geometry.
+- `src/components/board/job-search-result.tsx` and
+  `src/components/board/company-search-result.tsx` — canonical anchors with
+  entity-specific facts inside the shared result-card chrome.
 
 ## Related
 

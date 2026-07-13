@@ -884,16 +884,6 @@
     "icons": 0,
     "tokens": 4
   },
-  "src/routes/companies.index.tsx": {
-    "imports": 2,
-    "icons": 1,
-    "tokens": 0
-  },
-  "src/routes/companies.markets.$market.tsx": {
-    "imports": 1,
-    "icons": 1,
-    "tokens": 0
-  },
   "src/routes/cookie-policy.tsx": {
     "imports": 0,
     "icons": 0,

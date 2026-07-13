@@ -1929,6 +1929,69 @@ Props:
 - `name: string`
 - `publishedJobCount: number`
 
+### CompanySearchControls — `src/components/board/company-search-controls.tsx`
+
+Props:
+
+- `labels: { query: string; queryPlaceholder: string; market: string; allMarkets: string; search: string; }`
+- `markets: { slug: string; name: string; }[]`
+- `marketSlug?: string | undefined`
+- `onMarketChange: (marketSlug: string | undefined, query: string) => void`
+- `onSubmit: (query: string) => void`
+- `query?: string | undefined`
+
+### CompanySearchDetailState — `src/components/board/company-search-detail-state.tsx`
+
+Props:
+
+- `detail?: ReactNode`
+- `errorTitle: string`
+- `loadingLabel: string`
+- `onRetry: () => void`
+- `retryLabel: string`
+- `status: "error" | "idle" | "loading" | "ready"`
+
+### CompanySearchPage — `src/components/board/company-search-page.tsx`
+
+Props:
+
+- `breadcrumb?: BreadcrumbData | undefined`
+- `companies: { id: string; object: "public_company"; name: string; slug: string; website: string | null; logoUrl: string | null; d…`
+- `count: number`
+- `description?: string | undefined`
+- `detail: ReactNode`
+- `endAd?: AdPlacement | undefined`
+- `hasMore?: boolean | undefined`
+- `heading?: string | undefined`
+- `markets: { slug: string; name: string; }[]`
+- `marketSlug?: string | undefined`
+- `onLoadMore?: (() => void) | undefined`
+- `onMarketChange: (marketSlug: string | undefined, query: string) => void`
+- `onPageChange: (page: number) => void`
+- `onSearchSubmit: (query: string) => void`
+- `onSelectedCompanyPush: (companySlug: string) => void`
+- `onSelectedCompanyReplace: (companySlug: string) => void`
+- `page: number`
+- `pageSize: number`
+- `query?: string | undefined`
+- `selectedCompany?: string | undefined`
+- `startAd?: AdPlacement | undefined`
+
+### CompanySearchResultDetail — `src/components/board/company-search-result-detail.tsx`
+
+Props:
+
+- `interactive?: boolean | undefined`
+- `vm: CompanyDetailVM`
+
+### CompanySearchResult — `src/components/board/company-search-result.tsx`
+
+Props:
+
+- `onActivate?: ((event: MouseEvent<HTMLAnchorElement, MouseEvent>) => void) | undefined`
+- `selected?: boolean | undefined`
+- `vm: CompanyCardVM`
+
 ### CompanySectionShell — `src/components/board/company-section-header.tsx`
 
 Props:
@@ -3492,9 +3555,9 @@ Primitives: PageContent, ListingRail, TaxonomyTags
 
 ### Pending / loading — `docs/patterns/pending-loading.md`
 
-The in-flight treatment for loader transitions and submitting actions.
+The in-flight treatment for route transitions, master-detail reads, and submitting actions.
 
-Primitives: LoadingIndicator, Button
+Primitives: LoadingIndicator, Skeleton, Button
 
 ### Results header — `docs/patterns/results-header.md`
 

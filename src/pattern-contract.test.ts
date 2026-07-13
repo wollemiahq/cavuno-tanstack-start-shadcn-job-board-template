@@ -127,6 +127,7 @@ describe("breadcrumb placement (P6 — one placement primitive)", () => {
   const PLACEMENT_ELEMENT = "<PageBreadcrumb";
   const BREADCRUMB_OWNERS = [join("src", "components", "board", "breadcrumb.tsx")];
   const PLACEMENT_OWNERS = [
+    join("src", "components", "board", "company-search-page.tsx"),
     join("src", "components", "board", "company-section-header.tsx"),
     join("src", "components", "board", "job-detail.tsx"),
     join("src", "components", "board", "job-search-page.tsx"),

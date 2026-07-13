@@ -2,7 +2,7 @@
 name: Empty state
 purpose: The zero-results / not-found treatment — a featured icon, title, and description, kept inside the page chrome.
 primitives: [Empty, EmptyState, FeaturedIcon, JobsNotFound, SalaryEmptyState]
-usedBy: [src/components/board/home-landing.tsx, src/components/board/jobs-not-found.tsx, src/components/board/salary-sections.tsx, src/routes/companies.index.tsx, src/routes/blog.index.tsx, src/routes/jobs.locations.index.tsx]
+usedBy: [src/components/board/home-landing.tsx, src/components/board/jobs-not-found.tsx, src/components/board/salary-sections.tsx, src/components/board/company-search-page.tsx, src/routes/companies.markets.$market.tsx, src/routes/blog.index.tsx, src/routes/jobs.locations.index.tsx]
 ---
 
 ## Purpose
@@ -26,9 +26,9 @@ a place to search again, not a wall.
   `EmptyContent` actions.
 - Migration-only surfaces may retain the Untitled UI `EmptyState` compound:
   `EmptyState.Header` → `EmptyState.FeaturedIcon` → `EmptyState.Content`.
-- For programmatic not-founds: composed with the Page family and
-  `ListingSearchBand` so the search stays available (`JobsNotFound`). The
-  current wrapper retains the migration-only legacy shell internally.
+- For programmatic not-founds: composed through the owning listing or search
+  pattern so search stays available (`JobsNotFound` and
+  `ProgrammaticCompaniesView`).
 
 ## Composition
 
@@ -38,7 +38,9 @@ The homepage uses the owned Rhea compound directly:
 <PageSection ariaLabel={copy.home.latestJobs}>
   <Empty>
     <EmptyHeader>
-      <EmptyMedia variant="icon"><Briefcase /></EmptyMedia>
+      <EmptyMedia variant="icon">
+        <Briefcase />
+      </EmptyMedia>
       <EmptyTitle>{copy.home.noJobsTitle}</EmptyTitle>
       <EmptyDescription>{copy.home.noJobsDescription}</EmptyDescription>
     </EmptyHeader>
@@ -67,18 +69,20 @@ puts the legacy `EmptyState` compound below it:
 
 ## Do / Don't
 
-| Do | Don't |
-|---|---|
-| Use owned shadcn `Empty` for new surfaces (or the existing `JobsNotFound` / `SalaryEmptyState` wrappers). | Hand-roll a `<p className="rounded-lg border border-dashed …">` message box. |
-| Keep the listing header + search in a programmatic `notFoundComponent`. | Drop the visitor onto a bare message with no way forward. |
-| Use semantic Rhea tokens on the empty surface. | Copy legacy styling from `untitled-ui/not-found.tsx`; migrate it when touching that surface. |
+| Do                                                                                                        | Don't                                                                                        |
+| --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Use owned shadcn `Empty` for new surfaces (or the existing `JobsNotFound` / `SalaryEmptyState` wrappers). | Hand-roll a `<p className="rounded-lg border border-dashed …">` message box.                 |
+| Keep the listing header + search in a programmatic `notFoundComponent`.                                   | Drop the visitor onto a bare message with no way forward.                                    |
+| Use semantic Rhea tokens on the empty surface.                                                            | Copy legacy styling from `untitled-ui/not-found.tsx`; migrate it when touching that surface. |
 
 ## Used by
 
 - `HomeLanding` — owned shadcn `Empty` for the no-jobs starter state.
 - `JobsNotFound` — programmatic jobs not-found (`jobs.$keyword`, `jobs.locations.*`).
 - `SalaryEmptyState` — the salary family.
-- `EmptyState` directly — `companies.index`, `blog.index`, `jobs.locations.index`, and the salary routes.
+- `CompanySearchPage` — company zero-results state inside the master list;
+  `companies.markets.$market` routes unknown markets through the same searchable shell.
+- `EmptyState` directly — `blog.index`, `jobs.locations.index`, and the salary routes.
 
 ## Related
 
