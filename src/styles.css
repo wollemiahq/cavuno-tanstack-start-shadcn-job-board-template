@@ -5,6 +5,7 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap");
 @import "./theme.css";
+@import "./typeset.css";
 
 @import "./styles/untitled-ui/theme.css";
 @import "./styles/untitled-ui/typography.css";
@@ -113,23 +114,4 @@ body,
 body {
   background: var(--background-color-primary);
   color: var(--text-color-primary);
-}
-
-/* ── Rich text (prose-uui) ──
-   The canonical rich-text class for rendered HTML (job descriptions, blog
-   bodies, company descriptions, legal pages). It layers on the stock
-   Untitled UI prose (`.prose`, the vendored typography.css type scale mapped
-   onto UUI tokens) and deviates only where the brief mandates it: links are
-   the brand link color (matching the Button `link` variant's
-   `text-brand-secondary`) instead of stock UUI's tertiary. Applied via the
-   `Prose` component as `prose prose-uui max-w-none`. Everything else —
-   heading scale, body/list rhythm, blockquote, code, tables — is the stock
-   Untitled UI prose, which adapts to dark through the UUI token var() chain. ── */
-.prose-uui {
-  --tw-prose-links: var(--color-text-brand-secondary);
-}
-
-.prose-uui
-  :where(a):not(:where([class~="not-prose"], [class~="not-prose"] *, :is(h1, h2, h3, h4, h5, h6) a)):hover {
-  color: var(--color-text-brand-secondary_hover);
 }

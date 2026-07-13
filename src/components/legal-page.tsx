@@ -55,7 +55,7 @@ export function LegalPageView({
           <JsonLd data={jsonLd} />
           <h1>{page.title}</h1>
           {page.legalEntity ? (
-            <section className="not-prose mb-6 rounded-lg border border-secondary p-4 text-sm">
+            <section className="not-typeset mb-6 rounded-lg border border-secondary p-4 text-sm">
               {page.legalEntity.legalName ? (
                 <p className="font-medium">{page.legalEntity.legalName}</p>
               ) : null}

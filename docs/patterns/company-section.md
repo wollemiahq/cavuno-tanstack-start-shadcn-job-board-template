@@ -1,7 +1,7 @@
 ---
 name: Company section
 purpose: A company's three public surfaces — profile, jobs, salaries — read as ONE entity behind a shared header with tab navigation.
-primitives: [PageBody, Avatar, Badge, Link, Breadcrumb]
+primitives: [Page, PageHeader, PageContent, PageSection, Avatar, Badge, Link, Breadcrumb]
 usedBy: [src/components/board/company-section-header.tsx, src/routes/companies.$companySlug.index.tsx, src/routes/companies.$companySlug.jobs.index.tsx, src/routes/companies.$companySlug.salaries.index.tsx]
 ---
 
@@ -28,11 +28,15 @@ click. Only the content BELOW the tabs changes per surface.
 
 ## Anatomy
 
-`CompanySectionShell` wraps `PageBody` and renders, top to bottom:
+The canonical anatomy is `Page` → `PageContent`, with the shared identity in
+`PageHeader` and each tab's body grouped by `PageSection`. The existing
+`CompanySectionShell` preserves that visible anatomy while it remains on the
+migration-only `PageBody` internally. New route composition must not consume
+`PageBody` directly.
 
-- The **breadcrumb**, seated through `PageBody`'s `breadcrumb` slot (the ONE
-  sanctioned placement — the shell passes resolved `BreadcrumbData`, never
-  hand-placed trail markup). See the codified rule below.
+- The **breadcrumb**, passed as resolved breadcrumb data to the company shell
+  and seated in the page header (never hand-placed trail markup). See the
+  codified rule below.
 - The **header block** — `Avatar` (logo / initials) + the company name as the
   page `h1` + a tag-stripped, one-line-clamped description. This block is
   byte-identical across the three sections.
@@ -58,8 +62,9 @@ Baked in verbatim from the operator design review:
 
 ## Composition
 
-`CompanySectionShell` is the canonical assembly — one `PageBody` with the
-breadcrumb slot, the shared header, the tab row, then the section content:
+`CompanySectionShell` is the domain assembly: it owns the resolved breadcrumb,
+shared header, tab row, and section content. Its current internal use of
+`PageBody` is a migration detail, not a public composition recommendation:
 
 ```tsx
 <CompanySectionShell
@@ -84,10 +89,10 @@ trap `TaxonomyTags` documents for `Tag`).
 | Do | Don't |
 |---|---|
 | End the breadcrumb at the entity — Home → Companies → {Company} — identical on all three tabs, with the matching `BreadcrumbList` JSON-LD. | Append the section as a final crumb (`… → Anduril → Jobs`) or diverge the visible trail from its JSON-LD. |
-| Seat the trail through `PageBody`'s `breadcrumb` slot; pass resolved `BreadcrumbData`. | Hand-place the trail element or its placement primitive in the shell / a route (the pattern-contract gate fails on it). |
+| Pass resolved `BreadcrumbData` to `CompanySectionShell`; for new entity shells use the `PageHeader` breadcrumb seam. | Consume migration-only `PageBody` directly or hand-place the trail in a route. |
 | Render the tabs as real `Link` anchors with the UUI underline visual; active = unlinked `aria-current`. | Use the react-aria `Tabs` component (role=tab + JS panels, no crawlable `<a href>`). |
 | Show the Jobs count Badge and gate the Salaries tab on real salary data (`getCompanySalaryPresence`). | Render a dead Salaries tab for a company with no salary data. |
-| On the jobs subpage let the shell header BE the hero and keep the search band below it. | Double up a centered `ListingPageHeader` hero above the shell header. |
+| On the jobs subpage let the shell header BE the hero and keep the search band below it. | Double up a second page header above the shell header. |
 
 ## Used by
 
@@ -97,7 +102,7 @@ trap `TaxonomyTags` documents for `Tag`).
   sticky facts rail + description + 6-job preview below the shell.
 - `routes/companies.$companySlug.jobs.index` — the jobs subpage (Jobs tab): the
   search band + honest count + results + pagination below the shell (the shell
-  header replaces the former `ListingPageHeader` band).
+  header replaces the former migration-only listing-header band).
 - `routes/companies.$companySlug.salaries.index` — the salary overview
   (Salaries tab): the salary cards + rails + FAQ below the shell.
 

@@ -13,7 +13,8 @@ import { ProgrammaticJobsView, PROGRAMMATIC_JOBS_PAGE_SIZE } from "../components
 import { pageSearchValue, pageToOffset, parsePageParam } from "../lib/pagination";
 import { listingHead } from "@cavuno/board/seo";
 import { m } from "../paraglide/messages";
-import { getSeoBase, listJobs, resolvePlace } from "../server/queries";
+import { getSeoBase, listJobs, resolvePlace, searchJobs } from "../server/queries";
+import { useLocationSuggestions } from "./-use-location-suggestions";
 
 export const Route = createFileRoute("/jobs/locations/$location/")({
   staticData: { fullBleed: true },
@@ -34,17 +35,32 @@ export const Route = createFileRoute("/jobs/locations/$location/")({
       });
     }
     const [list, seo] = await Promise.all([
-      listJobs({
-        data: {
-          location: params.location,
-          remoteOption: deps.remoteOption ? [deps.remoteOption] : undefined,
-          employmentType: deps.employmentType ? [deps.employmentType] : undefined,
-          seniority: deps.seniority?.length ? deps.seniority : undefined,
-          sort: deps.sort,
-          offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
-          limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
-        },
-      }),
+      deps.q
+        ? searchJobs({
+            data: {
+              query: deps.q,
+              filters: {
+                location: params.location,
+                remoteOption: deps.remoteOption ? [deps.remoteOption] : undefined,
+                employmentType: deps.employmentType ? [deps.employmentType] : undefined,
+                seniority: deps.seniority?.length ? deps.seniority : undefined,
+              },
+              sort: deps.sort,
+              offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
+              limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
+            },
+          })
+        : listJobs({
+            data: {
+              location: params.location,
+              remoteOption: deps.remoteOption ? [deps.remoteOption] : undefined,
+              employmentType: deps.employmentType ? [deps.employmentType] : undefined,
+              seniority: deps.seniority?.length ? deps.seniority : undefined,
+              sort: deps.sort,
+              offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
+              limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
+            },
+          }),
       getSeoBase(),
     ]);
     return { place, list, seo };
@@ -68,6 +84,7 @@ function LocationPage() {
   const { place, list, seo } = Route.useLoaderData();
   const { location } = Route.useParams();
   const search = Route.useSearch();
+  const locationSuggestions = useLocationSuggestions(seo.language);
   return (
     <ProgrammaticJobsView
       heading={m.locationPage_jobsHeading({ place: place.displayName })}
@@ -75,9 +92,12 @@ function LocationPage() {
       jobs={list.data}
       page={search.page ?? 1}
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
-      relatedSearches={list.relatedSearches}
+      relatedSearches={
+        "relatedSearches" in list ? list.relatedSearches : undefined
+      }
       origin={seo.origin}
       filters={search}
+      locationSuggestions={locationSuggestions}
       location={{ slug: location, label: place.displayName }}
     />
   );

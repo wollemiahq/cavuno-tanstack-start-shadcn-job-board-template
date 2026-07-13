@@ -10,6 +10,12 @@ hand-roll a listing, detail, form, or empty surface — reach for the pattern th
 already owns it. Each page documents current reality, including where routes
 still drift (the "Don't" column of each Do / Don't table).
 
+Every new route starts with the sole canonical page-level composition family:
+`Page` → `PageContent`, with `PageHeader` and named `PageSection`s as needed.
+`Bleed` is the sanctioned full-width band. `PageBody` and
+`ListingPageHeader` remain migration-only compatibility components for older
+routes and are not primitives for new work.
+
 Every page follows [`_template.md`](_template.md): the section order (Purpose /
 When to use / Anatomy / Composition / Do / Don't / Used by / Related) and the
 frontmatter keys (`name`, `purpose`, `primitives`, `usedBy`) are enforced by
@@ -21,9 +27,9 @@ so docs and the design library stay in sync.
 
 | # | Pattern | Composes | Owns |
 |---|---|---|---|
-| P1 | [Listing page](listing-page.md) | PageBody, ListingPageHeader, ListingSearchBand, JobsResultsBar, JobList, ListingPagination | Every searchable collection surface (jobs, companies, blog). |
+| P1 | [Listing page](listing-page.md) | Page, Bleed, PageHeader, PageContent, ListingSearchBand, JobsResultsBar, JobList, ListingPagination | Every searchable collection surface (jobs, companies, blog). |
 | P2 | [Results header](results-header.md) | JobsResultsBar, Select | The honest "Showing X–Y of Z" count + sort row. |
-| P3 | [Detail page](detail-page.md) | PageBody, JobDetail, Avatar, Badge, TaxonomyTags | A single record: header band over a two-column body with a sticky rail. |
+| P3 | [Detail page](detail-page.md) | Page, Bleed, PageHeader, PageContent, JobDetail, Avatar, Badge, TaxonomyTags | A single record: header band over a two-column body with a sticky rail. |
 | P4 | [Section heading](section-heading.md) | Link, Button | A titled section row with an optional "view all" link. |
 | P5 | [Board card](board-card.md) | Avatar, Badge, TaxonomyTags, initialsOf | The shared job/company/post card surface. |
 | P6 | [Breadcrumb](breadcrumb.md) | Breadcrumb, AriaLink | The ancestor trail ending in the current page. |
@@ -35,8 +41,8 @@ so docs and the design library stay in sync.
 | P12 | [Form feedback](form-feedback.md) | FormError | The success/error/pending status tied to an action. |
 | P13 | [Stat tile](stat-tile.md) | OverallSalaryCard, MetricPanel | Label + display-value metric tiles. |
 | P14 | [Pending / loading](pending-loading.md) | LoadingIndicator, Button | In-flight loader and action treatments. |
-| P15 | [Listing rail](listing-rail.md) | ListingRail, TaxonomyTags, PageBody | The sticky listing rail: operator ad seam + related-searches card. |
-| P16 | [Company section](company-section.md) | PageBody, Avatar, Badge, Link, Breadcrumb | The shared company header + tab navigation across profile / jobs / salaries. |
+| P15 | [Listing rail](listing-rail.md) | PageContent, ListingRail, TaxonomyTags | The sticky listing rail: operator ad seam + related-searches card. |
+| P16 | [Company section](company-section.md) | Page, PageHeader, PageContent, PageSection, Avatar, Badge, Link, Breadcrumb | The shared company header + tab navigation across profile / jobs / salaries. |
 | P17 | [Typography](typography.md) | Text, Prose | The role-named heading/body primitive keeping authored text on the UUI type scale. |
 
 ## Enforcement

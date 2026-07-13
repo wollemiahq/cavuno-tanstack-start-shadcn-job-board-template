@@ -140,6 +140,81 @@ describe('DESIGN.md + DTCG export (D15 generated artifacts)', () => {
     expect(design).toMatch(/JobCard[\s\S]{0,600}\bjob\b/)
   })
 
+  it('attributes a local cva contract only to the component that consumes it', () => {
+    const design = read('DESIGN.md')
+    const componentBlock = (name: string, nextName: string) =>
+      design.slice(
+        design.indexOf(`### ${name} —`),
+        design.indexOf(`### ${nextName} —`),
+      )
+
+    expect(componentBlock('Empty', 'EmptyContent')).not.toContain(
+      'Variants —',
+    )
+    expect(componentBlock('EmptyContent', 'EmptyDescription')).not.toContain(
+      'Variants —',
+    )
+    expect(componentBlock('EmptyDescription', 'EmptyHeader')).not.toContain(
+      'Variants —',
+    )
+    expect(componentBlock('EmptyHeader', 'EmptyMedia')).not.toContain(
+      'Variants —',
+    )
+    expect(componentBlock('EmptyMedia', 'EmptyTitle')).toContain(
+      'Variants — `variant`: default, icon',
+    )
+    expect(componentBlock('EmptyTitle', 'Input')).not.toContain('Variants —')
+  })
+
+  it('documents the token-to-pattern hierarchy and the constrained layout contracts', () => {
+    const design = read('DESIGN.md')
+    const sections = [
+      '## Layout primitives',
+      '## Components',
+      '## Layout compositions',
+      '## Patterns',
+    ]
+    let previous = -1
+    for (const section of sections) {
+      const current = design.indexOf(section)
+      expect(current, `${section} is missing`).toBeGreaterThan(previous)
+      previous = current
+    }
+    expect(design).toMatch(/### Box[\s\S]{0,1200}Defaults:/)
+    expect(design).toMatch(/### PageContent[\s\S]{0,1600}Invariants:/)
+  })
+
+  it('makes the Page family the sole canonical page-level composition for new work', async () => {
+    const design = read('DESIGN.md')
+    const patterns = design.slice(design.indexOf('## Patterns'))
+    const pageBody = read('src/components/board/page-body.tsx')
+
+    expect(design).toContain(
+      'Page, PageHeader, PageContent, and PageSection are the sole canonical page-level composition family for new work.',
+    )
+    expect(patterns).not.toMatch(
+      /^Primitives:.*(?:PageBody|ListingPageHeader)/m,
+    )
+    expect(design).toMatch(/PageBody[\s\S]{0,500}migration-only/i)
+    expect(design).toMatch(/ListingPageHeader[\s\S]{0,500}migration-only/i)
+    expect(pageBody).not.toMatch(/\bclassName\??:/)
+
+    const { readPatternDocs } = await generatorLib()
+    for (const pattern of readPatternDocs(root)) {
+      expect(pattern.primitives).not.toContain('PageBody')
+      expect(pattern.primitives).not.toContain('ListingPageHeader')
+    }
+  })
+
+  it('imports the owned shadcn Typeset stylesheet and exposes one content preset', () => {
+    const styles = read('src/styles.css')
+    const typeset = read('src/typeset.css')
+    expect(styles).toContain('@import "./typeset.css";')
+    expect(typeset).toContain('.typeset {')
+    expect(typeset).toContain('.typeset-content')
+    expect(typeset).not.toMatch(/\.typeset-(?:docs|article|compact)/)
+  })
+
   it('the DTCG export is valid 2025.10-shaped token JSON matching theme.css', () => {
     const dtcg = JSON.parse(read('design/tokens.dtcg.json'))
     const tokens = parseTokens(read('src/theme.css'))

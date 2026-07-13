@@ -25,7 +25,10 @@ import { relatedSearchesTitle, relatedSearchesToChips } from "@/board/related-se
 import { pageSearchValue } from "../lib/pagination";
 import { JobAlertFloatingPrompt } from "./job-alert-floating-prompt";
 import { JsonLd } from "./json-ld";
-import { LocationCombobox } from "./location-combobox";
+import {
+  LocationCombobox,
+  type LocationSuggestionState,
+} from "./location-combobox";
 import { jobAlertDefaultsFromSearch } from "../lib/job-alert-defaults";
 import { listingJsonLd } from "@cavuno/board/seo";
 
@@ -57,6 +60,7 @@ export function ProgrammaticJobsView({
   origin,
   filters,
   location,
+  locationSuggestions,
   adSlot,
 }: {
   heading: string;
@@ -73,6 +77,8 @@ export function ProgrammaticJobsView({
   filters: ListingFilters;
   /** Active location (on a `/jobs/locations/:location` page) for the field. */
   location?: { slug: string; label: string };
+  /** Route-owned autocomplete results for the location field. */
+  locationSuggestions: LocationSuggestionState;
   /** Optional operator ad unit for the listing rail (renders nothing when absent). */
   adSlot?: React.ReactNode;
 }) {
@@ -127,6 +133,7 @@ export function ProgrammaticJobsView({
                 }
                 locationSlot={
                   <LocationCombobox
+                    {...locationSuggestions}
                     value={location?.slug}
                     valueLabel={location?.label}
                     onSelect={({ slug }) =>

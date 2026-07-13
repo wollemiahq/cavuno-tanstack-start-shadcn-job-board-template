@@ -8,6 +8,8 @@ const SRC_ROOT = join(ROOT, 'src')
 const BASELINE_PATH = join(ROOT, 'legacy-token-baseline.json')
 
 const RHEA_PILOT = new Set([
+  'src/components/Header.tsx',
+  'src/components/board/home-landing.tsx',
   'src/components/rhea-auth-pilot.tsx',
   'src/routes/auth.join.tsx',
   'src/routes/auth.sign-up.tsx',
@@ -70,7 +72,9 @@ function legacyImportCount(file: string, source: string): number {
 
 function legacyTokenCount(file: string, source: string): number {
   const pattern =
-    RHEA_PILOT.has(file) || file.startsWith('src/components/ui/')
+    RHEA_PILOT.has(file) ||
+    file.startsWith('src/components/layout/') ||
+    file.startsWith('src/components/ui/')
       ? UNMISTAKABLE_UUI_TOKEN_RE
       : LEGACY_TOKEN_RE
   return occurrences(source, pattern)
@@ -86,6 +90,12 @@ function directBaseUiImportCount(file: string, source: string): number {
       return false
     }
     if (!isOwnedUiSource) return true
+    if (
+      specifier === '@base-ui/react/select' &&
+      !source.includes('SelectPrimitive.Portal')
+    ) {
+      return false
+    }
     return (
       specifier === BASE_UI_PACKAGE || PORTALED_BASE_UI_SUBPATH_RE.test(specifier)
     )
@@ -264,6 +274,15 @@ describe('pure legacy scanner fixtures', () => {
         `import { Dialog } from '@base-ui/react/dialog'`,
       ),
     ).toBe(1)
+  })
+
+  it('permits an owned Base UI Select when its popup stays in the themed tree', () => {
+    expect(
+      directBaseUiImportCount(
+        'src/components/ui/select.tsx',
+        `import { Select as SelectPrimitive } from '@base-ui/react/select'\n<SelectPrimitive.Positioner />`,
+      ),
+    ).toBe(0)
   })
 })
 

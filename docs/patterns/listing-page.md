@@ -1,7 +1,7 @@
 ---
 name: Listing page
 purpose: The full-bleed header + search → results bar → list/grid → pagination browse surface every collection page shares.
-primitives: [PageBody, ListingPageHeader, ListingSearchBand, JobsResultsBar, JobList, ListingPagination]
+primitives: [Page, Bleed, PageHeader, PageContent, PageSection, ListingSearchBand, JobsResultsBar, JobList, ListingPagination]
 usedBy: [src/components/board/home-landing.tsx, src/components/board/job-search-page.tsx, src/components/programmatic-jobs-view.tsx, src/routes/index.tsx, src/routes/jobs.index.tsx, src/routes/jobs.$keyword.tsx, src/routes/jobs.locations.$location.index.tsx, src/routes/jobs.skills.$skill.tsx, src/routes/companies.index.tsx, src/routes/companies.markets.$market.tsx, src/routes/companies.$companySlug.jobs.index.tsx, src/routes/blog.index.tsx]
 ---
 
@@ -10,10 +10,11 @@ usedBy: [src/components/board/home-landing.tsx, src/components/board/job-search-
 Every collection surface — jobs, companies, blog — opens the same way: a
 soft-gray full-bleed band carrying a centered display title, an optional
 one-line subtitle, and the page's search living inside the band, followed by a
-constrained results region. `PageBody` owns the page width and vertical rhythm;
-`ListingPageHeader` owns the band; `ListingSearchBand` owns the white search
-panel. A visitor moving between /jobs, /companies, and /blog reads one system,
-not three hand-rolled layouts.
+constrained results region. `Page` owns the width, `Bleed` creates the band,
+`PageHeader` owns the introduction, and `PageContent` owns the results and
+optional rail. `ListingSearchBand` remains the shared search panel. A visitor
+moving between /jobs, /companies, and /blog reads one system, not three
+hand-rolled layouts.
 
 ## When to use
 
@@ -23,9 +24,9 @@ not three hand-rolled layouts.
 
 ## Anatomy
 
-- `PageBody` — canonical `max-w-container` width, padding, and `gap-8` rhythm;
-  renders the `band` slot full-bleed above the constrained content.
-- `ListingPageHeader` — the `bg-secondary` band: an optional `eyebrow` above
+- `Page` + `PageContent` — canonical width, gutters, vertical rhythm, and the
+  optional named rail.
+- `Bleed` + `PageHeader` — the full-width band: an optional `eyebrow` above
   the title (the home landing's honest job-count `Badge`; absent on the plain
   listing pages), display `h1`, optional subtitle, and a `search` slot.
 - `ListingSearchBand` — the white rounded search panel inside the band (keyword
@@ -39,30 +40,35 @@ not three hand-rolled layouts.
 
 ## Composition
 
-`JobSearchPage` is the canonical assembly — `PageBody` wrapping the shared band
-and the constrained results region:
+The canonical assembly uses the Page family. `JobSearchPage` and
+`ProgrammaticJobsView` retain migration-only shells internally until their
+route migration; do not copy that implementation into new work:
 
 ```tsx
-<PageBody
-  band={
-    <ListingPageHeader
-      title={heading ?? copy.jobSearch.headingJobs}
-      subtitle={m.jobsHero_subtitle()}
-      search={<JobsSearchControls filters={filters} … />}
-    />
-  }
->
-  <JobsResultsBar count={count} page={page} pageSize={pageSize} sort={filters.sort} … />
-  <JobList jobs={jobs} language={language} labels={labels} variant="rows" />
-  <ListingPagination page={page} count={count ?? 0} pageSize={pageSize} onPageChange={onPageChange} />
-</PageBody>
+<Page>
+  <PageContent
+    header={
+      <Bleed>
+        <PageHeader title={heading ?? copy.jobSearch.headingJobs} description={m.jobsHero_subtitle()}>
+          <JobsSearchControls filters={filters} … />
+        </PageHeader>
+      </Bleed>
+    }
+    aside={rail}
+    asideLabel={relatedSearchesTitle}
+  >
+    <JobsResultsBar count={count} page={page} pageSize={pageSize} sort={filters.sort} … />
+    <JobList jobs={jobs} language={language} labels={labels} variant="rows" />
+    <ListingPagination page={page} count={count ?? 0} pageSize={pageSize} onPageChange={onPageChange} />
+  </PageContent>
+</Page>
 ```
 
 ## Do / Don't
 
 | Do | Don't |
 |---|---|
-| Wrap the page in `PageBody` and pass the header through the `band` slot. | Hand-roll a `max-w-*` container or a bespoke `<header>` (the pre-CAV-502 drift, now removed). |
+| Compose `Page` → `PageContent`, using `Bleed` + `PageHeader` for the band. | Start new work on migration-only `PageBody` / `ListingPageHeader`, or hand-roll a container. |
 | Feed search through `ListingSearchBand` so all three headers stay identical. | Write bespoke search markup — the shared band exists precisely to stop this. |
 | Compose the existing `JobSearchPage` / `ProgrammaticJobsView` shell. | Add a **third** listing shell. `JobSearchPage` (jobs.index) and `ProgrammaticJobsView` (SEO listings) remain two parallel shells over the same primitives — the last structural duplication; do not grow it, and prefer folding new surfaces onto one of them. |
 
@@ -77,14 +83,14 @@ and the constrained results region:
   results bar or pagination.
 - `JobSearchPage` — `jobs.index`.
 - `ProgrammaticJobsView` — `jobs.$keyword`, `jobs.locations.*`, `jobs.skills.*`.
-- `companies.index`, `companies.markets.$market` — `PageBody` + `ListingPageHeader` directly.
+- `companies.index`, `companies.markets.$market` — existing migration-only listing shell.
 - `companies.$companySlug.jobs.index` — the company-jobs subpage. As of CAV-512
   its hero is the shared [Company section](company-section.md) shell header (not
-  a centered `ListingPageHeader` band — the two would double up), but it still
+  a second centered header band — the two would double up), but it still
   composes this pattern's search + results primitives below that header: the
   shared `ListingSearchBand` (via `CompanyJobsSearchBar`), the honest count, the
   `JobList`, and `ListingPagination`.
-- `blog.index` — `PageBody` + `ListingPageHeader`.
+- `blog.index` — existing migration-only listing shell.
 
 ## Related
 

@@ -1,15 +1,14 @@
 import { PageBreadcrumb } from "@/components/board/breadcrumb";
-import { cx } from "@/utils/cx";
 
 import type { BreadcrumbData } from "@/components/board/breadcrumb";
 
 /**
- * The page-width primitive (CAV-502). One component owns the canonical
- * content width, horizontal padding, and vertical rhythm for every page,
- * so no route hand-rolls its own `max-w-*` container. Composing pages read
- * as one Untitled UI system rather than ad-hoc layouts.
+ * Migration-only compatibility shell for routes that predate the canonical
+ * `Page` / `PageHeader` / `PageContent` / `PageSection` family. Do not use
+ * `PageBody` for new page-level composition; migrate existing consumers to
+ * the Page family as those routes are touched.
  *
- * Structural slots:
+ * Preserved legacy slots:
  *  - `band` — a full-bleed section rendered edge-to-edge ABOVE the
  *    constrained container (the Lumen gray listing header, the job-detail
  *    header band). The band owns its own inner `max-w-container` wrapper and,
@@ -19,17 +18,16 @@ import type { BreadcrumbData } from "@/components/board/breadcrumb";
  *    profile, a blog article, a salary page). `PageBody` seats it through the
  *    shared `PageBreadcrumb` placement primitive, hugging the nav at the
  *    codified `pt-4 md:pt-5`, so the spacing is identical to the band pages'.
- *  - `children` — the constrained main content, on the shared container
+ *  - `children` — the constrained content, on the shared container
  *    width + padding + `gap-8` rhythm.
  *  - `rail` — an optional right-hand sticky column; when present the body
- *    becomes the canonical two-column `[1fr_20rem]` grid (the job-detail
+ *    becomes the legacy two-column `[1fr_20rem]` grid (the job-detail
  *    apply-rail pattern). On mobile the rail stacks above the content.
  */
 export function PageBody({
   band,
   breadcrumb,
   rail,
-  className,
   children,
 }: {
   /** Full-bleed section rendered above the constrained container. */
@@ -38,15 +36,13 @@ export function PageBody({
   breadcrumb?: BreadcrumbData;
   /** Optional sticky right rail — switches the body to the two-column grid. */
   rail?: React.ReactNode;
-  /** Extra classes for the constrained container. */
-  className?: string;
   children: React.ReactNode;
 }) {
   return (
     <>
       {band}
       {breadcrumb ? <PageBreadcrumb items={breadcrumb.items} ariaLabel={breadcrumb.ariaLabel} /> : null}
-      <div className={cx("mx-auto w-full max-w-container px-4 py-8 md:px-8 md:py-10", className)}>
+      <div className="mx-auto w-full max-w-container px-4 py-8 md:px-8 md:py-10">
         {rail ? (
           <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
             {/* Main content spans both rows on desktop so the rail

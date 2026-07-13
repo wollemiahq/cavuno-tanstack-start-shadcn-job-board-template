@@ -1,283 +1,352 @@
-"use client";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, Building2, Search } from "lucide-react";
 
-import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight } from "@untitledui/icons";
+import type { PublicBlogPostSummary, TalentDirectoryEntry } from "@cavuno/board";
 
-import type { PublicBlogPostSummary, PublicJobCard, TalentDirectoryEntry } from "@cavuno/board";
-import type { BoardLabelOverrides } from "@cavuno/board/format";
-import { boardCopy } from "#/copy";
+import type { JobCardVM } from "@/board/job-view-model";
+import { Bleed } from "@/components/layout/bleed";
+import { Box } from "@/components/layout/box";
+import { Container } from "@/components/layout/container";
+import { Grid } from "@/components/layout/grid";
+import { Page, PageContent, PageHeader, PageSection } from "@/components/layout/page";
+import { buttonVariants } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
-import { Badge } from "@/components/base/badges/badges";
-import { Button } from "@/components/base/buttons/button";
-import { CompanyCard } from "@/components/board/company-card";
-import { JobList } from "@/components/board/job-list";
-import { JobsSearchControls } from "@/components/board/jobs-search-controls";
-import { ListingPageHeader } from "@/components/board/listing-page-header";
-import { PageBody } from "@/components/board/page-body";
 import { PostCard } from "@/components/post-card";
 import { TalentCard } from "@/components/talent-card";
-import { LocationCombobox } from "@/components/location-combobox";
-import { Text } from "@/components/text";
-import { cx } from "@/utils/cx";
+import { initialsOf } from "@/lib/initials";
 import { m } from "../../paraglide/messages";
-/**
- * The home `/` LANDING (CAV-515) — a designed job-board front page that opens
- * with the SAME shared listing hero as /jobs, /companies, /blog (the
- * `ListingPageHeader` band: honest job-count eyebrow → display title →
- * subtitle → the shared search that hands off to /jobs), then previews the
- * board's collections as section-heading rows of the shared cards — latest
- * jobs, companies, blog, talent — each honestly feature/data gated, and
- * closes with a dual-path sign-up band (candidate / employer).
- *
- * Dumb, typed-props: every datum arrives from the route loader. A section
- * whose feature is off (blog/talent) or whose collection is empty
- * (companies/blog/talent) is OMITTED WHOLE — a board shows no empty rail. The
- * CTA band mirrors `resolveSignupDestination`'s flag logic: each role card
- * renders only when its role is enabled, pointing DIRECTLY at that role's
- * sign-up form; with neither role the band does not render.
- */
 
-const MAX_LANDING_JOBS = 8;
-const MAX_LANDING_COMPANIES = 6;
-const MAX_LANDING_POSTS = 3;
-const MAX_LANDING_TALENT = 6;
+const MAX_JOB_TAGS = 2;
 
-/** The slim company shape the strip needs — a subset of the list wire card. */
 export interface HomeCompanyCard {
-    id: string;
-    slug: string;
-    name: string;
-    logoUrl: string | null;
-    description: string | null;
-    publishedJobCount: number;
+  id: string;
+  slug: string;
+  name: string;
+  logoUrl: string | null;
+  description: string | null;
+  openJobsLabel: string;
 }
 
-/** Pre-resolve the pluralized "N open job(s)" label (mirrors companies.index). */
-function jobCountLabel(count: number) {
-    return count === 1
-        ? m.companyDetail_openJobsCountOne({ count })
-        : m.companyDetail_openJobsCountMany({ count });
+function ViewAllAction({ label, to }: { label: string; to: "/jobs" | "/blog" | "/talent" }) {
+  return (
+    <Link to={to} className={buttonVariants({ variant: "ghost", size: "sm" })}>
+      {label}
+      <ArrowRight aria-hidden="true" data-icon="inline-end" />
+    </Link>
+  );
 }
 
-/**
- * The hero search — the SAME `JobsSearchControls` /jobs renders, wired to hand
- * the query off to /jobs (any edit navigates there with the next filter set,
- * exactly as /jobs' own onChange does), so the home hero is byte-identical to
- * the listing hero.
- */
-function HomeHeroSearch({ language, labels }: { language: string; labels?: BoardLabelOverrides }) {
-    const navigate = useNavigate();
-    return (
-        <JobsSearchControls
-            filters={{}}
-            language={language}
-            labels={labels}
-            onChange={(next) => navigate({ to: "/jobs", search: () => ({ ...next }) })}
-            locationSlot={
-                <LocationCombobox
-                    onSelect={({ slug }) =>
-                        navigate({ to: "/jobs/locations/$location", params: { location: slug } })
-                    }
-                    onClear={() => {}}
+function HomeJobCard({ vm }: { vm: JobCardVM }) {
+  const title =
+    vm.hasDetailLink && vm.companySlug && vm.jobSlug ? (
+      <Link
+        to="/companies/$companySlug/jobs/$jobSlug"
+        params={{ companySlug: vm.companySlug, jobSlug: vm.jobSlug }}
+        className="rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/30"
+      >
+        {vm.title}
+      </Link>
+    ) : (
+      vm.title
+    );
+  const visibleTags = vm.tags.slice(0, MAX_JOB_TAGS);
+  const hiddenTagCount = Math.max(0, vm.tags.length - visibleTags.length);
+
+  return (
+    <article className="h-full">
+      <Card className="h-full transition-shadow hover:shadow-md">
+        <CardHeader>
+          <div className="flex items-start gap-3">
+            <Avatar size="lg">
+              {vm.companyLogoUrl ? (
+                <AvatarImage
+                  src={vm.companyLogoUrl}
+                  alt={vm.companyName ?? vm.title}
                 />
-            }
-        />
-    );
-}
-
-/** A section header row: a display sub-heading with a trailing "view all" link. */
-function SectionHeader({
-    title,
-    viewAllLabel,
-    to,
-}: {
-    title: string;
-    viewAllLabel: string;
-    to: "/jobs" | "/companies" | "/blog" | "/talent";
-}) {
-    return (
-        <div className="flex items-end justify-between gap-4">
-            <Text as="h2" variant="heading2" className="md:text-display-sm">
-                {title}
-            </Text>
-            <Link
-                to={to}
-                className="group inline-flex shrink-0 items-center gap-1 rounded-xs text-sm font-semibold text-brand-secondary outline-focus-ring transition duration-100 ease-linear hover:text-brand-secondary_hover hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
-            >
-                {viewAllLabel}
-                <ArrowRight className="size-4 transition-transform duration-100 ease-linear group-hover:translate-x-0.5" />
-            </Link>
-        </div>
-    );
-}
-
-/** One dual-path sign-up card — brand primary button, stock UUI card surface. */
-function SignupCtaCard({
-    heading,
-    supporting,
-    buttonLabel,
-    href,
-}: {
-    heading: string;
-    supporting: string;
-    buttonLabel: string;
-    href: string;
-}) {
-    return (
-        <div className="flex flex-col items-start gap-5 rounded-2xl bg-secondary p-8 ring-1 ring-secondary_alt">
-            <div className="flex flex-col gap-2">
-                <Text as="h2" variant="heading2">
-                    {heading}
-                </Text>
-                <p className="text-md text-tertiary">{supporting}</p>
+              ) : null}
+              <AvatarFallback>{initialsOf(vm.companyAvatarName)}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              {vm.companyName ? (
+                <p className="text-xs font-medium text-muted-foreground">
+                  {vm.companyName}
+                </p>
+              ) : null}
+              <CardTitle>
+                <h3 className="line-clamp-2 text-balance">{title}</h3>
+              </CardTitle>
+              {vm.summary ? (
+                <CardDescription className="line-clamp-2">
+                  {vm.summary}
+                </CardDescription>
+              ) : null}
             </div>
-            <Button color="primary" size="lg" href={href}>
-                {buttonLabel}
-            </Button>
-        </div>
-    );
+          </div>
+        </CardHeader>
+
+        {vm.compLine ? (
+          <CardContent>
+            <p className="text-sm font-medium">{vm.compLine}</p>
+          </CardContent>
+        ) : null}
+
+        {visibleTags.length > 0 || vm.postedAtLabel ? (
+          <CardFooter className="mt-auto flex-wrap gap-2">
+            {visibleTags.map((tag) => (
+              <a
+                key={tag.key}
+                href={tag.href}
+                className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/30"
+              >
+                {tag.name}
+              </a>
+            ))}
+            {hiddenTagCount > 0 ? (
+              <span className="text-xs text-muted-foreground">+{hiddenTagCount}</span>
+            ) : null}
+            {vm.postedAtLabel ? (
+              <span className="ml-auto text-xs text-muted-foreground">{vm.postedAtLabel}</span>
+            ) : null}
+          </CardFooter>
+        ) : null}
+      </Card>
+    </article>
+  );
+}
+
+function HiringIndex({ companies }: { companies: HomeCompanyCard[] }) {
+  return (
+    <PageSection title={m.home_companiesHeading()}>
+      <Grid as="ul" columns={{ base: 1, sm: 2 }} gap="3">
+        {companies.map((company) => (
+          <li key={company.id}>
+            <Card size="sm" className="h-full shadow-none">
+              <CardHeader>
+                <div className="flex items-start gap-3">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                    <Building2 aria-hidden="true" className="size-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <CardTitle>
+                      <h3 className="line-clamp-2">
+                        <Link
+                          to="/companies/$companySlug"
+                          params={{ companySlug: company.slug }}
+                          className="rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/30"
+                        >
+                          {company.name}
+                        </Link>
+                      </h3>
+                    </CardTitle>
+                    <CardDescription>{company.openJobsLabel}</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+          </li>
+        ))}
+      </Grid>
+    </PageSection>
+  );
+}
+
+function SignupCtaCard({
+  heading,
+  supporting,
+  buttonLabel,
+  href,
+}: {
+  heading: string;
+  supporting: string;
+  buttonLabel: string;
+  href: "/auth/sign-up" | "/auth/employer/sign-up";
+}) {
+  return (
+    <Card className="h-full bg-muted/50 shadow-none">
+      <CardHeader>
+        <CardTitle>
+          <h2>{heading}</h2>
+        </CardTitle>
+        <CardDescription>{supporting}</CardDescription>
+      </CardHeader>
+      <CardFooter className="mt-auto">
+        <Link to={href} className={buttonVariants({ size: "lg" })}>
+          {buttonLabel}
+        </Link>
+      </CardFooter>
+    </Card>
+  );
 }
 
 export function HomeLanding({
-    jobs,
-    count,
-    companies,
-    posts,
-    talent,
-    language,
-    labels,
-    boardName,
-    candidatesEnabled,
-    employersEnabled,
+  jobs,
+  countLabel,
+  companies,
+  posts,
+  talent,
+  boardName,
+  candidatesEnabled,
+  employersEnabled,
+  publicJobSubmission = false,
 }: {
-    jobs: PublicJobCard[];
-    /** Total open-role count when the API returned one (honest hero stat). */
-    count?: number;
-    /** Companies-hiring strip source — the section is omitted when empty. */
-    companies: HomeCompanyCard[];
-    /** Latest blog posts, or null when the blog feature is off (not fetched). */
-    posts: PublicBlogPostSummary[] | null;
-    /** Talent-directory cards, or null when the feature is off / restricted. */
-    talent: TalentDirectoryEntry[] | null;
-    language: string;
-    labels?: BoardLabelOverrides;
-    /** Board display name — the employer CTA supporting copy interpolates it. */
-    boardName: string;
-    /** Whether the board accepts candidate accounts (gates the candidate CTA). */
-    candidatesEnabled: boolean;
-    /** Whether the board accepts employer accounts (gates the employer CTA). */
-    employersEnabled: boolean;
+  jobs: JobCardVM[];
+  countLabel?: string;
+  companies: HomeCompanyCard[];
+  posts: PublicBlogPostSummary[] | null;
+  talent: TalentDirectoryEntry[] | null;
+  boardName: string;
+  candidatesEnabled: boolean;
+  employersEnabled: boolean;
+  publicJobSubmission?: boolean;
 }) {
-    const copy = boardCopy(language, labels);
-    const latestJobs = jobs.slice(0, MAX_LANDING_JOBS);
-    const strip = companies.slice(0, MAX_LANDING_COMPANIES);
-    const latestPosts = posts?.slice(0, MAX_LANDING_POSTS) ?? [];
-    const featuredTalent = talent?.slice(0, MAX_LANDING_TALENT) ?? [];
-    const showCtaBand = candidatesEnabled || employersEnabled;
+  const latestJobs = jobs;
+  const hiringCompanies = companies;
+  const latestPosts = posts ?? [];
+  const featuredTalent = talent ?? [];
+  const showCtaBand = candidatesEnabled || employersEnabled;
 
-    return (
-        <PageBody
-            band={
-                <ListingPageHeader
+  return (
+    <Page width="wide">
+      <PageContent
+        header={
+          <Bleed>
+            <Box background="muted" border="bottom" padding={{ base: "8", md: "12" }}>
+              <Container width="wide">
+                <Grid columns={hiringCompanies.length > 0 ? { base: 1, lg: 2 } : 1} gap="8">
+                  <PageHeader
                     eyebrow={
-                        typeof count === "number" ? (
-                            <Badge type="pill-color" color="brand" size="lg">
-                                {count.toLocaleString(language)}{" "}
-                                {count === 1 ? copy.entity.jobSingular : copy.entity.jobPlural}
-                            </Badge>
-                        ) : undefined
+                      countLabel ? (
+                        <p className="text-sm font-medium text-muted-foreground">
+                          {countLabel}
+                        </p>
+                      ) : undefined
                     }
                     title={m.home_heroHeadline()}
-                    subtitle={m.home_heroSupporting()}
-                    search={<HomeHeroSearch language={language} labels={labels} />}
-                />
-            }
-        >
-            {/* The landing keeps its generous section rhythm inside the shared
-                container (PageBody's own gap-8 wraps this single child). */}
-            <div className="flex flex-col gap-16 md:gap-20">
-                {/* ── Latest jobs — always; every card keeps its typed detail link ─ */}
-                <section className="flex flex-col gap-6">
-                    <SectionHeader title={m.home_latestJobsHeading()} viewAllLabel={m.home_viewAllJobsLabel()} to="/jobs" />
-                    <JobList jobs={latestJobs} language={language} labels={labels} />
-                </section>
-
-                {/* ── Companies (omitted whole when empty) ─────────────────────── */}
-                {strip.length > 0 ? (
-                    <section className="flex flex-col gap-6">
-                        <SectionHeader
-                            title={m.home_companiesHeading()}
-                            viewAllLabel={m.home_viewAllCompaniesLabel()}
-                            to="/companies"
-                        />
-                        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                            {strip.map((company) => (
-                                <CompanyCard
-                                    key={company.id}
-                                    companySlug={company.slug}
-                                    name={company.name}
-                                    logoUrl={company.logoUrl}
-                                    description={company.description}
-                                    publishedJobCount={company.publishedJobCount}
-                                    jobCountLabel={jobCountLabel(company.publishedJobCount)}
-                                />
-                            ))}
-                        </div>
-                    </section>
-                ) : null}
-
-                {/* ── Blog (only when the feature is on AND there are posts) ────── */}
-                {latestPosts.length > 0 ? (
-                    <section className="flex flex-col gap-6">
-                        <SectionHeader title={m.home_blogHeading()} viewAllLabel={m.home_viewAllBlogLabel()} to="/blog" />
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {latestPosts.map((post) => (
-                                <PostCard key={post.id} post={post} />
-                            ))}
-                        </div>
-                    </section>
-                ) : null}
-
-                {/* ── Talent (only when the feature is on AND there are profiles) ─ */}
-                {featuredTalent.length > 0 ? (
-                    <section className="flex flex-col gap-6">
-                        <SectionHeader
-                            title={m.home_talentHeading()}
-                            viewAllLabel={m.home_viewAllTalentLabel()}
-                            to="/talent"
-                        />
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {featuredTalent.map((candidate) => (
-                                <TalentCard key={candidate.handle ?? candidate.displayName} candidate={candidate} />
-                            ))}
-                        </div>
-                    </section>
-                ) : null}
-
-                {/* ── Dual-path sign-up band (mirrors resolveSignupDestination) ─── */}
-                {showCtaBand ? (
-                    <section
-                        className={cx("grid gap-5", candidatesEnabled && employersEnabled ? "md:grid-cols-2" : "")}
-                    >
-                        {candidatesEnabled ? (
-                            <SignupCtaCard
-                                heading={m.home_candidateCtaHeading()}
-                                supporting={m.home_candidateCtaSupporting()}
-                                buttonLabel={m.home_candidateCtaButton()}
-                                href="/auth/sign-up"
-                            />
+                    description={m.home_heroSupporting()}
+                    actions={
+                      <>
+                        <Link to="/jobs" className={buttonVariants({ size: "lg" })}>
+                          {m.home_viewAllJobsLabel()}
+                          <ArrowRight aria-hidden="true" data-icon="inline-end" />
+                        </Link>
+                        {publicJobSubmission ? (
+                          <Link
+                            to="/post"
+                            className={buttonVariants({
+                              variant: "outline",
+                              size: "lg",
+                            })}
+                          >
+                            {m.siteHeader_postJobLabel()}
+                          </Link>
                         ) : null}
-                        {employersEnabled ? (
-                            <SignupCtaCard
-                                heading={m.home_employerCtaHeading()}
-                                supporting={m.home_employerCtaSupporting({ boardName })}
-                                buttonLabel={m.home_employerCtaButton()}
-                                href="/auth/employer/sign-up"
-                            />
-                        ) : null}
-                    </section>
-                ) : null}
-            </div>
-        </PageBody>
-    );
+                      </>
+                    }
+                  />
+                  {hiringCompanies.length > 0 ? <HiringIndex companies={hiringCompanies} /> : null}
+                </Grid>
+              </Container>
+            </Box>
+          </Bleed>
+        }
+      >
+        {latestJobs.length > 0 ? (
+          <PageSection title={m.home_latestJobsHeading()}>
+            <Grid as="ul" columns={{ base: 1, md: 2 }} gap="5">
+              {latestJobs.map((vm) => (
+                <li key={vm.id}>
+                  <HomeJobCard vm={vm} />
+                </li>
+              ))}
+            </Grid>
+          </PageSection>
+        ) : (
+          <PageSection ariaLabel={m.home_emptyHeading()}>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Search aria-hidden="true" />
+                </EmptyMedia>
+                <EmptyTitle role="heading" aria-level={2}>
+                  {m.home_emptyHeading()}
+                </EmptyTitle>
+                <EmptyDescription>{m.home_emptySupporting()}</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          </PageSection>
+        )}
+
+        {featuredTalent.length > 0 ? (
+          <PageSection
+            title={m.home_talentHeading()}
+            actions={<ViewAllAction label={m.home_viewAllTalentLabel()} to="/talent" />}
+          >
+            <Grid as="ul" columns={{ base: 1, sm: 2, lg: 3 }} gap="4">
+              {featuredTalent.map((candidate) => (
+                <li key={candidate.handle ?? candidate.displayName}>
+                  <TalentCard candidate={candidate} />
+                </li>
+              ))}
+            </Grid>
+          </PageSection>
+        ) : null}
+
+        {latestPosts.length > 0 ? (
+          <PageSection
+            title={m.home_blogHeading()}
+            actions={<ViewAllAction label={m.home_viewAllBlogLabel()} to="/blog" />}
+          >
+            <Grid as="ul" columns={{ base: 1, md: 2, lg: 3 }} gap="6">
+              {latestPosts.map((post) => (
+                <li key={post.id}>
+                  <PostCard post={post} />
+                </li>
+              ))}
+            </Grid>
+          </PageSection>
+        ) : null}
+
+        {showCtaBand ? (
+          <Grid columns={candidatesEnabled && employersEnabled ? { base: 1, md: 2 } : 1} gap="5">
+            {candidatesEnabled ? (
+              <SignupCtaCard
+                heading={m.home_candidateCtaHeading()}
+                supporting={m.home_candidateCtaSupporting()}
+                buttonLabel={m.home_candidateCtaButton()}
+                href="/auth/sign-up"
+              />
+            ) : null}
+            {employersEnabled ? (
+              <SignupCtaCard
+                heading={m.home_employerCtaHeading()}
+                supporting={m.home_employerCtaSupporting({ boardName })}
+                buttonLabel={m.home_employerCtaButton()}
+                href="/auth/employer/sign-up"
+              />
+            ) : null}
+          </Grid>
+        ) : null}
+      </PageContent>
+    </Page>
+  );
 }

@@ -1,17 +1,17 @@
 ---
 name: Empty state
 purpose: The zero-results / not-found treatment — a featured icon, title, and description, kept inside the page chrome.
-primitives: [EmptyState, FeaturedIcon, JobsNotFound, SalaryEmptyState]
-usedBy: [src/components/board/jobs-not-found.tsx, src/components/board/salary-sections.tsx, src/routes/companies.index.tsx, src/routes/blog.index.tsx, src/routes/jobs.locations.index.tsx]
+primitives: [Empty, EmptyState, FeaturedIcon, JobsNotFound, SalaryEmptyState]
+usedBy: [src/components/board/home-landing.tsx, src/components/board/jobs-not-found.tsx, src/components/board/salary-sections.tsx, src/routes/companies.index.tsx, src/routes/blog.index.tsx, src/routes/jobs.locations.index.tsx]
 ---
 
 ## Purpose
 
 When a search returns nothing or a slug no longer resolves, the page shows a
-centered `EmptyState` — a `FeaturedIcon`, a title, and a description — rather
-than a bare paragraph. Critically, the not-found surface keeps the page's own
-chrome (the listing header + a working search band) so a dead end is a place to
-search again, not a wall.
+centered empty-state compound — media, title, description, and optional actions
+— rather than a bare paragraph. Critically, the not-found surface keeps the
+page's own chrome (the listing header + a working search band) so a dead end is
+a place to search again, not a wall.
 
 ## When to use
 
@@ -21,37 +21,61 @@ search again, not a wall.
 
 ## Anatomy
 
-- The Untitled UI `EmptyState` compound: `EmptyState.Header` →
-  `EmptyState.FeaturedIcon` → `EmptyState.Content` (`Title` + `Description`).
-- For programmatic not-founds: wrapped in `PageBody` + `ListingPageHeader` +
-  `ListingSearchBand` so the search stays available (`JobsNotFound`).
+- New Rhea surfaces use the owned shadcn `Empty` compound: `EmptyHeader` →
+  `EmptyMedia` → `EmptyTitle` + `EmptyDescription`, with optional
+  `EmptyContent` actions.
+- Migration-only surfaces may retain the Untitled UI `EmptyState` compound:
+  `EmptyState.Header` → `EmptyState.FeaturedIcon` → `EmptyState.Content`.
+- For programmatic not-founds: composed with the Page family and
+  `ListingSearchBand` so the search stays available (`JobsNotFound`). The
+  current wrapper retains the migration-only legacy shell internally.
 
 ## Composition
 
-`JobsNotFound` keeps the shared listing header and puts `EmptyState` below it:
+The homepage uses the owned Rhea compound directly:
 
 ```tsx
-<PageBody band={<ListingPageHeader title={…} search={<ListingSearchBand … />} />}>
-  <EmptyState size="sm" className="py-12">
-    <EmptyState.Header><EmptyState.FeaturedIcon icon={SearchLg} color="gray" theme="modern" /></EmptyState.Header>
-    <EmptyState.Content>
-      <EmptyState.Title>{copy.jobSearch.headingJobs}</EmptyState.Title>
-      <EmptyState.Description>{message}</EmptyState.Description>
-    </EmptyState.Content>
-  </EmptyState>
-</PageBody>
+<PageSection ariaLabel={copy.home.latestJobs}>
+  <Empty>
+    <EmptyHeader>
+      <EmptyMedia variant="icon"><Briefcase /></EmptyMedia>
+      <EmptyTitle>{copy.home.noJobsTitle}</EmptyTitle>
+      <EmptyDescription>{copy.home.noJobsDescription}</EmptyDescription>
+    </EmptyHeader>
+  </Empty>
+</PageSection>
+```
+
+The migration-only `JobsNotFound` wrapper keeps the shared listing header and
+puts the legacy `EmptyState` compound below it:
+
+```tsx
+<Page>
+  <PageContent
+    header={<PageHeader title={…}><ListingSearchBand … /></PageHeader>}
+  >
+    <EmptyState size="sm" className="py-12">
+      <EmptyState.Header><EmptyState.FeaturedIcon icon={SearchLg} color="gray" theme="modern" /></EmptyState.Header>
+      <EmptyState.Content>
+        <EmptyState.Title>{copy.jobSearch.headingJobs}</EmptyState.Title>
+        <EmptyState.Description>{message}</EmptyState.Description>
+      </EmptyState.Content>
+    </EmptyState>
+  </PageContent>
+</Page>
 ```
 
 ## Do / Don't
 
 | Do | Don't |
 |---|---|
-| Use `EmptyState` (or `JobsNotFound` / `SalaryEmptyState` wrappers). | Hand-roll a `<p className="rounded-lg border border-dashed …">` message box. |
+| Use owned shadcn `Empty` for new surfaces (or the existing `JobsNotFound` / `SalaryEmptyState` wrappers). | Hand-roll a `<p className="rounded-lg border border-dashed …">` message box. |
 | Keep the listing header + search in a programmatic `notFoundComponent`. | Drop the visitor onto a bare message with no way forward. |
-| Use UUI tokens on the empty surface. | Use legacy tokens — `untitled-ui/not-found.tsx` still uses `font-heading text-3xl`; migrate it. |
+| Use semantic Rhea tokens on the empty surface. | Copy legacy styling from `untitled-ui/not-found.tsx`; migrate it when touching that surface. |
 
 ## Used by
 
+- `HomeLanding` — owned shadcn `Empty` for the no-jobs starter state.
 - `JobsNotFound` — programmatic jobs not-found (`jobs.$keyword`, `jobs.locations.*`).
 - `SalaryEmptyState` — the salary family.
 - `EmptyState` directly — `companies.index`, `blog.index`, `jobs.locations.index`, and the salary routes.

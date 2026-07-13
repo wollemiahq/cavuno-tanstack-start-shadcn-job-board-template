@@ -32,16 +32,13 @@ is a real link — the internal-linking rail crawlers follow into the hubs.
 
 ## Anatomy
 
-- **Placement is owned by ONE primitive** — `PageBreadcrumb`
-  (`board/breadcrumb.tsx`). It is the ONLY sanctioned placement, and it is
-  seated by exactly three seams: the **`breadcrumb` slot on `PageBody`** (every
-  band-less page — a company profile, a blog article/tag/author, a salary
-  page), the **`breadcrumb` slot on `ListingPageHeader`** (the listing heroes —
-  jobs, companies, blog, markets, the company-jobs subpage), and the
-  **`JobDetail` band**. All three render the SAME `PageBreadcrumb`, so the
-  placement cannot be re-decided per page. A route never renders `<Breadcrumb>`
-  or `<PageBreadcrumb>` itself — it passes the resolved `{ items, ariaLabel }`
-  to a slot (`pattern-contract.test.ts` gates both).
+- **Placement is owned by one seam.** New compositions use `PageHeader`'s
+  `breadcrumb` slot; domain assemblies receive resolved breadcrumb data rather
+  than letting routes hand-place trail markup. Existing routes still seat
+  `PageBreadcrumb` through migration-only `PageBody` /
+  `ListingPageHeader` slots or the `JobDetail` band until they move to the Page
+  family. All paths render the same `Breadcrumb` markup, so the trail itself is
+  never forked (`pattern-contract.test.ts` gates it).
 - **Spacing** — `PageBreadcrumb` **hugs the top** at the codified `pt-4 md:pt-5`
   (compact, relative to the nav), identical on a band page and a band-less page.
   The generous whitespace lives BETWEEN the trail and the title/content, never
@@ -91,20 +88,18 @@ export function PageBreadcrumb({ items, ariaLabel }: BreadcrumbData) {
 }
 ```
 
-Seats: `page-body.tsx` renders it for its `breadcrumb` slot (band-less pages);
-`listing-page-header.tsx` renders it for its `breadcrumb` slot, above the
-centered hero title (jobs via `job-search-page.tsx`, companies, blog, markets,
-the company-jobs subpage, the programmatic jobs pages via
-`programmatic-jobs-view.tsx`); and `job-detail.tsx` seats it at the top of its
-header band. Every seam takes the resolved `BreadcrumbData` (`{ items,
-ariaLabel }`) — routes pass DATA, never JSX, so the trail element and its
-spacing live in one place.
+New Page-family assemblies seat their domain breadcrumb through
+`PageHeader.breadcrumb`. The current `page-body.tsx`,
+`listing-page-header.tsx`, and `job-detail.tsx` seats remain sanctioned only as
+migration seams. Every domain seam takes resolved `BreadcrumbData` (`{ items,
+ariaLabel }`) — routes pass data rather than reimplementing the trail or its
+spacing.
 
 ## Do / Don't
 
 | Do | Don't |
 |---|---|
-| Pass the resolved `{ items, ariaLabel }` to the `breadcrumb` slot on `PageBody` (band-less pages) or `ListingPageHeader` (listing heroes). | Render `<Breadcrumb>` / `<PageBreadcrumb>` yourself in a route with hand-rolled spacing (a `pt-*`/`mt-*` wrapper, or a loose first child leaning on the page container's `py-8`) — the placement gates in `pattern-contract.test.ts` fail on it. |
+| Pass resolved breadcrumb data into the domain assembly and seat its breadcrumb through `PageHeader` in new Page-family work. | Start new work on migration-only `PageBody` / `ListingPageHeader`, or hand-place `<Breadcrumb>` / `<PageBreadcrumb>` in a route. |
 | Let `PageBreadcrumb` own the `pt-4 md:pt-5` hug — the SAME on band and band-less pages. | Re-decide the top spacing per page, so the crumb hugs the nav on one surface and floats mid-page on the next. |
 | Hand-roll a second `<ol>` trail only inside `board/breadcrumb.tsx`. | Fork the trail markup anywhere else — the singleton gate fails on any duplicate `<ol>`. |
 | Emit the matching `BreadcrumbList` JSON-LD alongside every visible trail (and render a trail wherever the JSON-LD exists). | Ship a visible trail with no JSON-LD, or JSON-LD with no visible trail. |
@@ -115,19 +110,18 @@ spacing live in one place.
 
 - `board/breadcrumb.tsx` — `Breadcrumb` (the only trail markup) + `PageBreadcrumb`
   (the only placement primitive).
-- `board/page-body.tsx` — the `breadcrumb` slot for band-less pages (company
-  profile, blog article/tag/author, the salary tree).
-- `board/listing-page-header.tsx` — the `breadcrumb` slot for listing heroes.
+- `board/page-body.tsx` — migration-only breadcrumb seam for band-less routes.
+- `board/listing-page-header.tsx` — migration-only breadcrumb seam for listing routes.
 - `board/job-detail.tsx` — seats `PageBreadcrumb` at the top of the header band.
-- `board/job-search-page.tsx` — forwards the trail to `ListingPageHeader` (jobs).
+- `board/job-search-page.tsx` — forwards the trail through the current migration shell.
 - `programmatic-jobs-view.tsx` — the programmatic jobs pages (Jobs → heading).
 - `routes/blog.$postSlug.tsx`, `blog.index.tsx`, `blog.tag.$tagSlug.tsx`,
   `blog.author.$authorSlug.tsx` — the blog family (via a slot).
 - `routes/companies.index.tsx`, `companies.$companySlug.index.tsx`,
   `companies.markets.$market.tsx`, `companies.$companySlug.jobs.index.tsx` — the
   companies family (via a slot).
-- `routes/salaries.index.tsx` (+ the salary tree) — the salary family, via
-  `PageBody`'s slot with `toSalaryBreadcrumbVM`.
+- `routes/salaries.index.tsx` (+ the salary tree) — the salary family, through
+  its current migration seam with `toSalaryBreadcrumbVM`.
 
 ## Related
 

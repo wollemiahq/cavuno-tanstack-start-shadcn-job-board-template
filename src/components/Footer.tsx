@@ -2,6 +2,8 @@ import { Link } from "@tanstack/react-router";
 
 import type { BoardLabelOverrides } from "@cavuno/board/format";
 import { boardCopy } from "#/copy";
+import { Box } from "@/components/layout/box";
+import { Container } from "@/components/layout/container";
 import { m } from "../paraglide/messages";
 
 /**
@@ -90,11 +92,17 @@ function FooterLinkItem({ link }: { link: FooterLink }) {
   return (
     <li>
       {link.external ? (
-        <a href={link.href} className="rounded-xs text-md text-tertiary outline-focus-ring transition duration-100 ease-linear hover:text-secondary_hover hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2">
+        <a
+          href={link.href}
+          className="rounded-sm text-sm text-muted-foreground outline-none transition-colors hover:text-foreground hover:no-underline focus-visible:ring-3 focus-visible:ring-ring/30"
+        >
           {link.label}
         </a>
       ) : (
-        <Link to={link.href} className="rounded-xs text-md text-tertiary outline-focus-ring transition duration-100 ease-linear hover:text-secondary_hover hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2">
+        <Link
+          to={link.href}
+          className="rounded-sm text-sm text-muted-foreground outline-none transition-colors hover:text-foreground hover:no-underline focus-visible:ring-3 focus-visible:ring-ring/30"
+        >
           {link.label}
         </Link>
       )}
@@ -113,7 +121,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h3 className="text-sm font-semibold text-quaternary">{heading}</h3>
+      <h3 className="text-sm font-semibold text-foreground">{heading}</h3>
       <ul className="mt-4 space-y-3">
         {links.map((link) => (
           <FooterLinkItem key={`${link.href}${link.label}`} link={link} />
@@ -216,9 +224,7 @@ export default function Footer({
     systemItems: {
       home: { href: "/jobs", label: copy.nav.home },
       companies: { href: "/companies", label: copy.nav.companies },
-      pricing: hasEmployerOfferPage
-        ? { href: "/employers", label: copy.nav.pricing }
-        : null,
+      pricing: hasEmployerOfferPage ? { href: "/employers", label: copy.nav.pricing } : null,
       blog: features.blog ? { href: "/blog", label: copy.nav.blog } : null,
     },
   });
@@ -228,12 +234,8 @@ export default function Footer({
     ? talentDirectoryVisibility !== "off"
     : features.talentDirectory;
   const companyLinks: FooterLink[] = [
-    ...(features.publicJobSubmission
-      ? [{ href: "/post", label: copy.nav.post }]
-      : []),
-    ...(hasEmployerOfferPage
-      ? [{ href: "/employers", label: copy.nav.pricing }]
-      : []),
+    ...(features.publicJobSubmission ? [{ href: "/post", label: copy.nav.post }] : []),
+    ...(hasEmployerOfferPage ? [{ href: "/employers", label: copy.nav.pricing }] : []),
     ...(talentLinked ? [{ href: "/talent", label: copy.nav.talent }] : []),
   ];
 
@@ -287,9 +289,7 @@ export default function Footer({
     { href: "/terms-of-service", label: copy.footer.termsOfServiceLabel },
     { href: "/privacy-policy", label: copy.footer.privacyPolicyLabel },
     { href: "/cookie-policy", label: copy.footer.cookiePolicyLabel },
-    ...(features.impressum
-      ? [{ href: "/impressum", label: copy.footer.impressumLabel }]
-      : []),
+    ...(features.impressum ? [{ href: "/impressum", label: copy.footer.impressumLabel }] : []),
   ];
 
   const columns = [
@@ -304,79 +304,73 @@ export default function Footer({
   const marketingHref = `https://cavuno.com/?ref=${encodeURIComponent(primaryDomain ?? slug)}`;
 
   return (
-    <footer className="mt-16 border-t border-secondary bg-primary">
-      <div className="mx-auto max-w-container px-4 pt-12 pb-10 md:px-8">
-        <div className="grid gap-10 md:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,1fr))]">
-          <div className="max-w-xs space-y-4">
-            <Link
-              to="/"
-              className="flex items-center gap-2.5 rounded-md text-lg font-semibold text-primary outline-focus-ring hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
-            >
-              {logoUrl ? (
-                <img src={logoUrl} alt="" className="size-8 rounded-md" />
-              ) : null}
-              {boardName}
-            </Link>
-            <p className="text-md text-tertiary">{description}</p>
-            {showCavunoBranding ? (
-              <a
-                href={marketingHref}
-                rel="noopener noreferrer"
-                target="_blank"
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm text-tertiary ring-1 ring-secondary outline-focus-ring transition duration-100 ease-linear ring-inset hover:bg-primary_hover hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+    <footer className="rhea-theme mt-16 border-t border-border bg-background text-foreground">
+      <Container width="wide">
+        <Box paddingY={{ base: "10", md: "12" }}>
+          <div className="grid gap-10 md:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,1fr))]">
+            <div className="max-w-xs space-y-4">
+              <Link
+                to="/"
+                className="flex items-center gap-2.5 rounded-md text-lg font-semibold text-foreground outline-none hover:no-underline focus-visible:ring-3 focus-visible:ring-ring/30"
               >
-                {copy.footer.poweredByText}
-                <CavunoMark />
-                <span className="font-medium text-secondary">
-                  {m.siteFooter_cavunoLabel()}
-                </span>
-              </a>
-            ) : null}
+                {logoUrl ? <img src={logoUrl} alt="" className="size-8 rounded-md" /> : null}
+                {boardName}
+              </Link>
+              <p className="text-sm text-muted-foreground">{description}</p>
+              {showCavunoBranding ? (
+                <a
+                  href={marketingHref}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm text-muted-foreground ring-1 ring-border outline-none transition-colors ring-inset hover:bg-muted hover:text-foreground hover:no-underline focus-visible:ring-3 focus-visible:ring-ring/30"
+                >
+                  {copy.footer.poweredByText}
+                  <CavunoMark />
+                  <span className="font-medium text-foreground">{m.siteFooter_cavunoLabel()}</span>
+                </a>
+              ) : null}
+            </div>
+
+            {columns.map((column) => (
+              <FooterColumn key={column.heading} heading={column.heading} links={column.links} />
+            ))}
+
+            <FooterColumn heading={copy.footer.aboutHeading} links={aboutLinks}>
+              {socialLinks.length > 0 ? (
+                <div className="mt-4 flex items-center gap-3">
+                  {socialLinks.map((social) => (
+                    <a
+                      key={social.href}
+                      href={social.href}
+                      aria-label={social.label}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                      className="rounded-sm text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/30"
+                    >
+                      {social.icon}
+                    </a>
+                  ))}
+                </div>
+              ) : null}
+            </FooterColumn>
           </div>
 
-          {columns.map((column) => (
-            <FooterColumn
-              key={column.heading}
-              heading={column.heading}
-              links={column.links}
-            />
-          ))}
-
-          <FooterColumn heading={copy.footer.aboutHeading} links={aboutLinks}>
-            {socialLinks.length > 0 ? (
-              <div className="mt-4 flex items-center gap-3">
-                {socialLinks.map((social) => (
-                  <a
-                    key={social.href}
-                    href={social.href}
-                    aria-label={social.label}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                    className="rounded-xs text-fg-quaternary outline-focus-ring transition duration-100 ease-linear hover:text-fg-quaternary_hover focus-visible:outline-2 focus-visible:outline-offset-2"
-                  >
-                    {social.icon}
-                  </a>
-                ))}
-              </div>
-            ) : null}
-          </FooterColumn>
-        </div>
-
-        <div className="mt-12 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-secondary pt-8">
-          <span className="text-md text-quaternary">{copyright}</span>
-          <nav className="flex flex-wrap gap-x-6 gap-y-3">
-            {legalLinks.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                className="rounded-xs text-md text-tertiary outline-focus-ring transition duration-100 ease-linear hover:text-secondary_hover hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      </div>
+          <div className="mt-12 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border pt-8">
+            <span className="text-sm text-muted-foreground">{copyright}</span>
+            <nav className="flex flex-wrap gap-x-6 gap-y-3">
+              {legalLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className="rounded-sm text-sm text-muted-foreground outline-none transition-colors hover:text-foreground hover:no-underline focus-visible:ring-3 focus-visible:ring-ring/30"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </Box>
+      </Container>
     </footer>
   );
 }

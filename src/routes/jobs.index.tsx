@@ -17,6 +17,7 @@ import { JsonLd } from '../components/json-ld'
 import { jobAlertDefaultsFromSearch } from '../lib/job-alert-defaults'
 import { listingHead, listingJsonLd } from '@cavuno/board/seo'
 import { getSeoBase, listJobs, searchJobs } from '../server/queries'
+import { useLocationSuggestions } from './-use-location-suggestions'
 
 interface JobsSearch extends ListingFilters {
   /** 1-based page; page 1 drops from the URL (clean canonical). */
@@ -92,6 +93,7 @@ function JobsPage() {
   const search = Route.useSearch()
   const { board } = rootApi.useLoaderData()
   const navigate = useNavigate({ from: '/jobs/' })
+  const locationSuggestions = useLocationSuggestions(board.language)
 
   return (
     <>
@@ -131,6 +133,7 @@ function JobsPage() {
         }
         locationSlot={
           <LocationCombobox
+            {...locationSuggestions}
             onSelect={({ slug }) =>
               navigate({
                 to: '/jobs/locations/$location',

@@ -1,28 +1,141 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { Link } from "@tanstack/react-router";
-
-import { Menu02, XClose } from "@untitledui/icons";
+import { Menu, Search, X } from "lucide-react";
 
 import type { BoardUser } from "@cavuno/board";
 import type { BoardLabelOverrides } from "@cavuno/board/format";
 import { boardCopy } from "#/copy";
 
-import { Button } from "@/components/base/buttons/button";
-import { ButtonUtility } from "@/components/base/buttons/button-utility";
-import { cx } from "@/utils/cx";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Container } from "@/components/layout/container";
+import {
+  LocationCombobox,
+  type LocationSuggestionState,
+} from "@/components/location-combobox";
+import { cn } from "@/lib/utils";
+import type {
+  HeaderSearchState,
+  HeaderSearchSubmission,
+  HeaderSearchScope,
+} from "@/lib/header-search";
 import { resolveSignupDestination } from "../lib/signup-destination";
 import { m } from "../paraglide/messages";
 
 import { MessagesNavLink } from "./messages-nav-link";
 
-/** Nav item styled per the collection's app-navigation NavItemBase
- * (header variant): quiet secondary text, primary_hover wash, brand
- * focus outline. */
 const navItemClassName =
-  "rounded-md px-2 py-1 text-md font-semibold text-quaternary outline-focus-ring transition duration-100 ease-linear hover:bg-primary_hover hover:text-secondary_hover focus-visible:outline-2 focus-visible:outline-offset-2";
+  "rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30";
+
+function HeaderSearch({
+  search,
+  jobsLabel,
+  companiesLabel,
+  talentLabel,
+  talentEnabled,
+  jobsPlaceholder,
+  companiesPlaceholder,
+  talentPlaceholder,
+}: {
+  search: HeaderSearchState & {
+    onSubmit: (submission: HeaderSearchSubmission) => void;
+    locationSuggestions: LocationSuggestionState;
+  };
+  jobsLabel: string;
+  companiesLabel: string;
+  talentLabel: string;
+  talentEnabled: boolean;
+  jobsPlaceholder: string;
+  companiesPlaceholder: string;
+  talentPlaceholder: string;
+}) {
+  const [scope, setScope] = useState(search.scope);
+  const [value, setValue] = useState(search.query);
+  const [location, setLocation] = useState(search.location);
+
+  const scopeLabels: Record<HeaderSearchScope, string> = {
+    jobs: jobsLabel,
+    companies: companiesLabel,
+    talent: talentLabel,
+  };
+  const scopePlaceholders: Record<HeaderSearchScope, string> = {
+    jobs: jobsPlaceholder,
+    companies: companiesPlaceholder,
+    talent: talentPlaceholder,
+  };
+
+  function submitSearch(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const query = value.trim() || undefined;
+
+    search.onSubmit({ scope, query, location });
+  }
+
+  return (
+    <form
+      role="search"
+      onSubmit={submitSearch}
+      className="order-3 grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-t border-border py-2 md:order-none md:flex md:min-w-96 md:max-w-2xl md:flex-1 md:border-0 md:py-0"
+    >
+      <Select
+        value={scope}
+        onValueChange={(nextScope) => {
+          setScope(nextScope as HeaderSearchScope);
+          setValue("");
+          setLocation(null);
+        }}
+      >
+        <SelectTrigger
+          aria-label={m.siteHeader_searchTypeAriaLabel()}
+          className="shrink-0 border-border bg-background font-medium"
+        >
+          <SelectValue>{scopeLabels[scope]}</SelectValue>
+        </SelectTrigger>
+        <SelectContent align="start">
+          <SelectItem value="jobs">{jobsLabel}</SelectItem>
+          <SelectItem value="companies">{companiesLabel}</SelectItem>
+          {talentEnabled ? <SelectItem value="talent">{talentLabel}</SelectItem> : null}
+        </SelectContent>
+      </Select>
+      <Input
+        type="search"
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        aria-label={m.searchBar_keywordAriaLabel()}
+        placeholder={scopePlaceholders[scope]}
+        className="flex-1 border-border bg-background"
+      />
+      {scope === "jobs" ? (
+        <LocationCombobox
+          {...search.locationSuggestions}
+          value={location?.slug}
+          valueLabel={location?.name}
+          onSelect={setLocation}
+          onClear={() => setLocation(null)}
+          className="col-span-2 col-start-2 row-start-2 min-w-0 md:col-auto md:row-auto md:min-w-40 md:flex-1"
+        />
+      ) : null}
+      <Button
+        type="submit"
+        size="icon"
+        aria-label={m.searchBar_searchAriaLabel()}
+        className="col-start-3 row-start-1 md:col-auto md:row-auto"
+      >
+        <Search aria-hidden="true" />
+      </Button>
+    </form>
+  );
+}
 
 export default function Header({
   boardName,
@@ -31,121 +144,151 @@ export default function Header({
   language,
   labels,
   features,
+  search,
 }: {
   boardName: string;
   logoUrl: string | null;
   user: BoardUser | null;
   language: string;
   labels?: BoardLabelOverrides;
-  /**
-   * The board's enabled account roles + public-posting flag. `candidates`/
-   * `employers` drive the auth chrome: the hosted board hides Sign in/Sign up
-   * entirely when both are off (registration would be refused server-side —
-   * "Registration is not available for this role"), and the Sign up button
-   * links to the exact form for a single-role board via
-   * `resolveSignupDestination`. `publicJobSubmission` gates the "Post a job"
-   * CTA, which is independent of auth (anonymous posting is allowed).
-   */
-  features: { candidates: boolean; employers: boolean; publicJobSubmission: boolean };
+  features: {
+    candidates: boolean;
+    employers: boolean;
+    publicJobSubmission: boolean;
+    blog: boolean;
+    talentDirectory: boolean;
+  };
+  search: HeaderSearchState & {
+    onSubmit: (submission: HeaderSearchSubmission) => void;
+    locationSuggestions: LocationSuggestionState;
+  };
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const mobileMenuId = useId();
   const copy = boardCopy(language, labels);
-  // Nav chrome from the catalog ⊕ operator overrides (ADR-0059). The
-  // hosted nav has no "Locations" item — Locations rides the footer only.
   const navLinks = [
-    { to: "/jobs", label: copy.nav.home },
-    { to: "/companies", label: copy.nav.companies },
-    { to: "/blog", label: copy.nav.blog },
+    { to: "/jobs", label: copy.nav.home, enabled: true },
+    { to: "/companies", label: copy.nav.companies, enabled: true },
+    { to: "/talent", label: copy.nav.talent, enabled: features.talentDirectory },
+    { to: "/blog", label: copy.nav.blog, enabled: features.blog },
   ] as const;
-  // Auth chrome — stored as jobCardLabels.signInLabel/signUpLabel on the
-  // hosted board; catalog keys land with the authed-surface slice.
+  const visibleNavLinks = navLinks.filter((item) => item.enabled);
   const signInLabel = labels?.jobCardLabels?.signInLabel || m.siteHeader_signInLabel();
   const signUpLabel = labels?.jobCardLabels?.signUpLabel || m.siteHeader_signUpLabel();
-  // Auth entry points from the board's roles: whether to show sign-in/sign-up
-  // at all, and where Sign up points (single-role boards skip the chooser hop).
   const authEnabled = features.candidates || features.employers;
   const signUpHref = resolveSignupDestination(features);
-  // "Post a job" is gated on public submission only, not auth — anonymous
-  // visitors may post when the board allows it.
   const postJob = features.publicJobSubmission ? (
-    <Button color="secondary" size="md" href="/post">
+    <Link
+      to="/post"
+      className={cn(
+        buttonVariants({ variant: "outline", size: "default" }),
+        "hidden xl:inline-flex",
+      )}
+    >
       {m.siteHeader_postJobLabel()}
-    </Button>
+    </Link>
   ) : null;
 
   return (
-    <header className="border-b border-secondary bg-primary">
-      <div className="mx-auto flex h-18 max-w-container items-center gap-4 px-4 md:px-8">
-        <Link
-          to="/"
-          className="flex items-center gap-2.5 rounded-md text-lg font-semibold text-primary outline-focus-ring hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
-          {logoUrl ? <img src={logoUrl} alt="" className="size-8 rounded-md" /> : null}
-          {boardName}
-        </Link>
+    <header className="rhea-theme border-b border-border bg-background text-foreground">
+      <Container width="wide">
+        <div className="flex min-h-16 flex-wrap items-center gap-3 md:flex-nowrap">
+          <Link
+            to="/"
+            className="flex shrink-0 items-center gap-2.5 rounded-xl text-base font-semibold text-foreground outline-none hover:no-underline focus-visible:ring-3 focus-visible:ring-ring/30"
+          >
+            {logoUrl ? <img src={logoUrl} alt="" className="size-8 rounded-xl" /> : null}
+            <span className="max-w-48 truncate" title={boardName}>
+              {boardName}
+            </span>
+          </Link>
 
-        <nav className="ml-4 hidden items-center gap-0.5 md:flex">
-          {navLinks.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={cx(navItemClassName, "hover:no-underline")}
-              activeProps={{
-                className: cx(navItemClassName, "text-secondary hover:no-underline"),
-              }}
+          <nav className="hidden shrink-0 items-center gap-0.5 xl:flex">
+            {visibleNavLinks.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={cn(navItemClassName, "hover:no-underline")}
+                activeProps={{
+                  className: cn(navItemClassName, "bg-muted text-foreground hover:no-underline"),
+                }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          {search.visible ? (
+            <HeaderSearch
+              key={`${search.scope}:${search.query}:${search.location?.slug ?? ""}`}
+              search={search}
+              jobsLabel={copy.nav.home}
+              companiesLabel={copy.nav.companies}
+              talentLabel={copy.nav.talent}
+              talentEnabled={features.talentDirectory}
+              jobsPlaceholder={copy.jobSearch.keywordPlaceholder}
+              companiesPlaceholder={m.companySearchBar_placeholderText()}
+              talentPlaceholder={m.talentDirectory_searchPlaceholder()}
+            />
+          ) : null}
+
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            {user ? (
+              <>
+                <MessagesNavLink />
+                {postJob}
+                <Link to="/account" className={buttonVariants({ variant: "outline" })}>
+                  {m.siteHeader_accountLabel()}
+                </Link>
+              </>
+            ) : (
+              <>
+                {authEnabled ? (
+                  <Link
+                    to="/auth/sign-in"
+                    className={cn(buttonVariants({ variant: "ghost" }), "hidden md:inline-flex")}
+                  >
+                    {signInLabel}
+                  </Link>
+                ) : null}
+                {postJob}
+                {signUpHref ? (
+                  <Link to={signUpHref} className={buttonVariants()}>
+                    {signUpLabel}
+                  </Link>
+                ) : null}
+              </>
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={
+                menuOpen
+                  ? m.siteHeader_closeNavMenuAriaLabel()
+                  : m.siteHeader_openNavMenuAriaLabel()
+              }
+              aria-expanded={menuOpen}
+              aria-controls={mobileMenuId}
+              onClick={() => setMenuOpen((open) => !open)}
+              className="xl:hidden"
             >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="ml-auto flex items-center gap-3">
-          {user ? (
-            <>
-              <MessagesNavLink />
-              {postJob}
-              <Button color="secondary" size="md" href="/account">
-                {m.siteHeader_accountLabel()}
-              </Button>
-            </>
-          ) : (
-            <>
-              {authEnabled ? (
-                <Button
-                  color="tertiary"
-                  size="md"
-                  href="/auth/sign-in"
-                  className="hidden md:inline-flex"
-                >
-                  {signInLabel}
-                </Button>
-              ) : null}
-              {postJob}
-              {signUpHref ? (
-                <Button color="primary" size="md" href={signUpHref}>
-                  {signUpLabel}
-                </Button>
-              ) : null}
-            </>
-          )}
-          <ButtonUtility
-            size="sm"
-            color="tertiary"
-            icon={menuOpen ? XClose : Menu02}
-            aria-label={m.siteHeader_openNavMenuAriaLabel()}
-            onClick={() => setMenuOpen((open) => !open)}
-            className="md:hidden"
-          />
+              {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+            </Button>
+          </div>
         </div>
-      </div>
+      </Container>
 
       {menuOpen ? (
-        <nav className="flex flex-col gap-0.5 border-t border-secondary px-4 py-3 md:hidden">
-          {navLinks.map((item) => (
+        <nav
+          id={mobileMenuId}
+          className="flex flex-col gap-0.5 border-t border-border px-4 py-3 xl:hidden"
+        >
+          {visibleNavLinks.map((item) => (
             <Link
               key={item.to}
               to={item.to}
-              className={cx(navItemClassName, "hover:no-underline")}
+              className={cn(navItemClassName, "hover:no-underline")}
               onClick={() => setMenuOpen(false)}
             >
               {item.label}
@@ -154,7 +297,7 @@ export default function Header({
           {features.publicJobSubmission ? (
             <Link
               to="/post"
-              className={cx(navItemClassName, "hover:no-underline")}
+              className={cn(navItemClassName, "hover:no-underline")}
               onClick={() => setMenuOpen(false)}
             >
               {m.siteHeader_postJobLabel()}

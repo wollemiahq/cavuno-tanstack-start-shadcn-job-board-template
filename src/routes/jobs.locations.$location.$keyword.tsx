@@ -14,6 +14,7 @@ import { pageSearchValue, pageToOffset, parsePageParam } from "../lib/pagination
 import { listingHead } from "@cavuno/board/seo";
 import { m } from "../paraglide/messages";
 import { getSeoBase, listJobs, resolveCategory, resolvePlace } from "../server/queries";
+import { useLocationSuggestions } from "./-use-location-suggestions";
 
 export const Route = createFileRoute("/jobs/locations/$location/$keyword")({
   staticData: { fullBleed: true },
@@ -76,6 +77,7 @@ function LocationCategoryPage() {
   const { place, category, list, seo } = Route.useLoaderData();
   const { location } = Route.useParams();
   const search = Route.useSearch();
+  const locationSuggestions = useLocationSuggestions(seo.language);
   return (
     <ProgrammaticJobsView
       heading={m.locationCategoryPage_jobsHeading({
@@ -89,6 +91,7 @@ function LocationCategoryPage() {
       relatedSearches={list.relatedSearches}
       origin={seo.origin}
       filters={search}
+      locationSuggestions={locationSuggestions}
       location={{ slug: location, label: place.displayName }}
     />
   );

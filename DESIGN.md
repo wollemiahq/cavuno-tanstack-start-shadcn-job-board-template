@@ -139,10 +139,115 @@ Radius scale rides `--radius` in `src/styles.css` (cards use
 `--radius-xl`, controls `--radius-md`). Spacing is Tailwind default
 scale; no custom spacing tokens.
 
+## Layout primitives
+
+Token-backed geometry with constrained responsive APIs. These components deliberately omit `className` and `style`.
+
+### Bleed — `src/components/layout/bleed.tsx`
+
+Escapes the content columns of a Container or PageContent. Bleed must be a
+direct rendered child of that owning grid; it deliberately has no sizing
+or axis variants because full-width horizontal bands are the proven case.
+
+Props:
+
+- `as?: Element | undefined`
+- `children?: ReactNode`
+
+Defaults:
+
+- Renders a div without adding visual styling.
+
+Invariants:
+
+- Must be a direct rendered child of Container or PageContent.
+
+### Box — `src/components/layout/box.tsx`
+
+Token-backed surface for padding, background, border, and radius.
+
+Props:
+
+- `as?: Element | undefined`
+- `background?: BoxBackground | undefined`
+- `border?: BoxBorder | undefined`
+- `children?: ReactNode`
+- `padding?: Responsive<Space> | undefined`
+- `paddingX?: Responsive<Space> | undefined`
+- `paddingY?: Responsive<Space> | undefined`
+- `radius?: BoxRadius | undefined`
+
+Defaults:
+
+- Transparent div with zero padding, no border, and no radius.
+
+Invariants:
+
+- Visual geometry is expressed only through the constrained props; className and style are not public.
+
+### Container — `src/components/layout/container.tsx`
+
+Centers content on a named width while preserving full-width Bleed children.
+
+Props:
+
+- `as?: Element | undefined`
+- `children?: ReactNode`
+- `gutter?: Responsive<Space> | undefined`
+- `width?: ContainerWidth | undefined`
+
+Defaults:
+
+- Wide (80rem) content with 1rem mobile and 2rem desktop gutters.
+
+Invariants:
+
+- Bleed works only as a direct rendered child of this grid.
+
+### Grid — `src/components/layout/grid.tsx`
+
+Responsive equal-column grid for one to four columns.
+
+Props:
+
+- `as?: Element | undefined`
+- `children?: ReactNode`
+- `columns?: Responsive<GridColumns> | undefined`
+- `gap?: Responsive<Space> | undefined`
+
+Defaults:
+
+- One column with zero gap.
+
+Invariants:
+
+- Column count is constrained to one through four and spacing uses the shared token scale.
+
+### Stack — `src/components/layout/stack.tsx`
+
+Mobile-first flex layout for vertical or horizontal groups.
+
+Props:
+
+- `align?: Responsive<StackAlignment> | undefined`
+- `as?: Element | undefined`
+- `children?: ReactNode`
+- `direction?: Responsive<StackDirection> | undefined`
+- `gap?: Responsive<Space> | undefined`
+- `justify?: Responsive<StackJustification> | undefined`
+- `wrap?: "wrap" | "nowrap" | undefined`
+
+Defaults:
+
+- Column, zero gap, stretch alignment, start justification, and no wrapping.
+
+Invariants:
+
+- Responsive values always declare a base value and use the shared token scale.
+
 ## Components
 
-Generated inventory of every exported component under `src/components`.
-Select from this inventory before writing anything new.
+Generated inventory of reusable components under `src/components`. This inventory includes explicitly labelled migration-only compatibility components; never select those for new page-level composition.
 
 ### AccountShell — `src/components/account-shell.tsx`
 
@@ -156,6 +261,11 @@ Props:
 
 ### CandidateShell — `src/components/account-shell.tsx`
 
+Candidate shell (Paper "Candidate — Sidebar"): Profile / Saved jobs /
+Job alerts / Applications / Subscription (paywall boards only) /
+Settings. Identity falls back to the session user; /account passes the
+richer profile identity + strength meter.
+
 Props:
 
 - `active: string`
@@ -164,6 +274,11 @@ Props:
 - `rail?: ReactNode`
 
 ### EmployerCompanyShell — `src/components/account-shell.tsx`
+
+Employer company shell (Paper "Employer Sidebar"): the company identity
++ Jobs / Company profile nav for one connected company. Team and
+Settings from the Paper design are deliberately absent — the v1 API has
+no team or company-settings surface yet.
 
 Props:
 
@@ -351,6 +466,8 @@ Props:
 - `payload?: any`
 
 ### ChartLegendContent — `src/components/application/charts/charts-base.tsx`
+
+Renders the legend content for a chart.
 
 Props:
 
@@ -635,6 +752,15 @@ Props:
 
 ### AuthCard — `src/components/auth-form.tsx`
 
+Open, centered single-column auth shell — structured after Untitled UI's
+log-in page examples (logo mark → display heading + supporting text →
+form region). No card/ring wrapper: the auth surfaces sit on the bare
+page ground.
+
+Rhea pilot routes deliberately use `rhea-auth-pilot.tsx` instead. Keeping
+this inherited shell unchanged prevents a Rhea token scope from wrapping
+Untitled UI children while the remaining auth routes await migration.
+
 Props:
 
 - `children: ReactNode`
@@ -642,6 +768,9 @@ Props:
 - `title: string`
 
 ### AuthDivider — `src/components/auth-form.tsx`
+
+Hairline "OR" divider — the Untitled UI login separator between the
+primary email CTA and the social sign-in buttons.
 
 Props:
 
@@ -664,6 +793,10 @@ Props:
 - `message: string | null`
 
 ### AvatarUpload — `src/components/avatar-upload.tsx`
+
+Avatar uploader — mirrors the hosted `profile-avatar-uploader`: pick a
+file, POST it as multipart to the route-mediated upload, then refresh.
+The SDK call is `board.me.profile.uploadAvatar(file)`.
 
 Props:
 
@@ -1089,6 +1222,8 @@ Props:
 
 ### FileTrigger — `src/components/base/file-upload-trigger/file-upload-trigger.tsx`
 
+A FileTrigger allows a user to access the file system with any pressable React Aria or React Spectrum component, or custom components built with usePress.
+
 Props:
 
 - `acceptDirectory?: boolean | undefined`
@@ -1387,6 +1522,8 @@ Props:
 
 ### ProgressBar — `src/components/base/progress-indicators/progress-indicators.tsx`
 
+A progress bar component that displays the value text in various configurable layouts.
+
 Props:
 
 - `className?: string | undefined`
@@ -1398,6 +1535,8 @@ Props:
 - `valueFormatter?: ((value: number, valueInPercentage: number) => string | number) | undefined`
 
 ### ProgressBarBase — `src/components/base/progress-indicators/progress-indicators.tsx`
+
+A basic progress bar component.
 
 Props:
 
@@ -1696,6 +1835,12 @@ Props:
 
 ### BlogSearchBar — `src/components/blog-search-bar.tsx`
 
+The blog keyword search (CAV-487, CAV-502) — a thin wrapper of the shared
+`ListingSearchBand`, so it is the SAME white panel the jobs and companies
+headers use (no duplicate search-band markup). Present on every blog page
+(index, author, tag), all submitting to the blog index results.
+Route-agnostic: it navigates to `/blog?q=` regardless of where rendered.
+
 Props:
 
 - `defaultValue?: string | undefined`
@@ -1762,6 +1907,10 @@ Props:
 
 ### CompanyAvatar — `src/components/board/company-avatar.tsx`
 
+Company mark: the real logo when it exists, initials on the ink chip
+otherwise (direction-C stress fix S3/S5 — logos mostly exist on the
+wire; the initials fallback is still exercised by real companies).
+
 Props:
 
 - `className?: string | undefined`
@@ -1808,12 +1957,11 @@ Props:
 - `boardName: string`
 - `candidatesEnabled: boolean`
 - `companies: HomeCompanyCard[]`
-- `count?: number | undefined`
+- `countLabel?: string | undefined`
 - `employersEnabled: boolean`
-- `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "other" | …`
-- `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
-- `language: string`
+- `jobs: JobCardVM[]`
 - `posts: { id: string; object: "public_blog_post"; title: string; slug: string; featured: boolean; coverUrl: string | null; fe…`
+- `publicJobSubmission?: boolean | undefined`
 - `talent: { object: "talent_directory_entry"; handle: string | null; displayName: string | null; headline: string | null; locat…`
 
 ### JobCard — `src/components/board/job-card.tsx`
@@ -1877,6 +2025,12 @@ Props:
 
 ### JobsNotFound — `src/components/board/jobs-not-found.tsx`
 
+The not-found state for the programmatic jobs pages (CAV-502). A visitor
+can search a term and land on a slug that no longer resolves — so this
+keeps the SAME shared listing header + search band (never a bare message
+box), with an `EmptyState` below. The search re-runs against `/jobs`, so
+the dead end is a place to search again.
+
 Props:
 
 - `message: string`
@@ -1905,6 +2059,14 @@ Props:
 
 ### ListingPageHeader — `src/components/board/listing-page-header.tsx`
 
+Migration-only listing header for routes that predate the canonical
+`PageHeader`. Do not use `ListingPageHeader` for new pages; compose the
+header through the `Page` family and use `Bleed` when the band must span the
+viewport. Existing listing routes retain this component until migrated.
+
+The `search` slot still receives the shared `ListingSearchBand` (or a thin
+wrapper of it), preserving current route behavior during that migration.
+
 Props:
 
 - `breadcrumb?: BreadcrumbData | undefined`
@@ -1914,6 +2076,22 @@ Props:
 - `title: string`
 
 ### ListingSearchBand — `src/components/board/listing-page-header.tsx`
+
+The ONE search band (CAV-502, CAV-517) — the white rounded panel that lives
+inside every listing header: a keyword input with a leading search icon, an
+inline clear (the X inside the field), and a primary Search button, with
+optional slots for the extra controls a surface needs (the jobs location
+field, or the facet-pill row). Companies, blog, jobs, and the not-found
+headers all consume THIS markup — there is no duplicate search-band markup
+anywhere.
+
+SUBMIT-ONLY (CAV-517): the keyword is controlled local state owned by the
+parent; `onChange` mutates only that state (never the URL), and the URL is
+committed ONLY on form submit (Enter in the field or the Search button) via
+`onSubmit`. The inline X clears the field locally (`onChange("")`) and
+refocuses it — submit-only still applies, so clearing then requires a submit
+to move the URL. This shell is shared by the local-state surfaces (companies,
+blog, not-found) and the URL-seeded surface (jobs).
 
 Props:
 
@@ -1938,6 +2116,28 @@ Props:
 
 ### ListingRail — `src/components/board/listing-rail.tsx`
 
+Listing rail (CAV-511) — the sticky right-hand column of a search/browse
+listing (jobs search, the programmatic jobs pages, companies index). It
+seats, top to bottom:
+
+ 1. An optional **operator ad seam** (`adSlot`). It renders FIRST and
+    renders NOTHING when absent — no ad network ships in this template.
+    An operator wires their own unit here without touching the layout, e.g.
+
+      <PageBody rail={<ListingRail adSlot={<MyAdUnit slot="listing-rail" />} … />}>
+
+ 2. A **Related searches** card — the `relatedSearches` the browse API
+    already returns (jobs: category/skill terms; companies: market terms),
+    rendered as the same crawlable `TaxonomyTags` anchors used across the
+    board (the SEO internal-linking spine, never static text). The card is
+    omitted when there are no chips, so the rail stays honest.
+
+Pure markup over resolved props — the caller maps its `RelatedSearch[]` (or
+markets) to `{ key, name, href }` chips via the `@cavuno/board/paths`
+helpers, so this file never string-builds a path. `railHasContent` tells the
+route whether to switch `PageBody` into two-column rail mode at all (an empty
+rail must not leave a dead column).
+
 Props:
 
 - `adSlot?: ReactNode`
@@ -1946,15 +2146,43 @@ Props:
 
 ### PageBody — `src/components/board/page-body.tsx`
 
+Migration-only compatibility shell for routes that predate the canonical
+`Page` / `PageHeader` / `PageContent` / `PageSection` family. Do not use
+`PageBody` for new page-level composition; migrate existing consumers to
+the Page family as those routes are touched.
+
+Preserved legacy slots:
+ - `band` — a full-bleed section rendered edge-to-edge ABOVE the
+   constrained container (the Lumen gray listing header, the job-detail
+   header band). The band owns its own inner `max-w-container` wrapper and,
+   when it has one, its OWN breadcrumb (via `ListingPageHeader` / the
+   `JobDetail` band) — so `breadcrumb` below is for the band-less pages.
+ - `breadcrumb` — the resolved trail for a NON-band page (a company
+   profile, a blog article, a salary page). `PageBody` seats it through the
+   shared `PageBreadcrumb` placement primitive, hugging the nav at the
+   codified `pt-4 md:pt-5`, so the spacing is identical to the band pages'.
+ - `children` — the constrained content, on the shared container
+   width + padding + `gap-8` rhythm.
+ - `rail` — an optional right-hand sticky column; when present the body
+   becomes the legacy two-column `[1fr_20rem]` grid (the job-detail
+   apply-rail pattern). On mobile the rail stacks above the content.
+
 Props:
 
 - `band?: ReactNode`
 - `breadcrumb?: BreadcrumbData | undefined`
 - `children: ReactNode`
-- `className?: string | undefined`
 - `rail?: ReactNode`
 
 ### CompanySalarySummary — `src/components/board/salary-sections.tsx`
+
+The Overview-tab salary summary (CAV-516). The company Overview reads as a
+page of section summaries — it previews the company's jobs, and THIS block
+condenses the Salaries tab into the same rhythm: a titled "Salaries" section
+with the company's overall salary range (`OverallSalaryCard`) + a few top
+category rows (`SalaryRail`) + a "View salaries" link deferring to the full
+Salaries tab. It composes the existing salary display components — no new
+salary markup — so a restyle of the salary sections flows through here too.
 
 Props:
 
@@ -1971,6 +2199,11 @@ Props:
 - `vm: OverallSalaryVM`
 
 ### SalaryEmptyState — `src/components/board/salary-sections.tsx`
+
+No-data / not-found state for the salary route family — the stock UUI
+`EmptyState` so a page with no salary figures reads as an honest omission
+(never an invented number). The route supplies the already-localized
+title and optional description copy.
 
 Props:
 
@@ -2011,6 +2244,14 @@ Props:
 
 ### CompanyJobsSearchBar — `src/components/company-jobs-search-bar.tsx`
 
+The company-jobs subpage keyword search (CAV-501, CAV-511) — a thin wrapper
+of the shared `ListingSearchBand`, so it is the SAME white panel the jobs,
+companies, and blog headers use (no duplicate search-band markup). Scoped to
+ONE company: it submits to that company's jobs subpage
+(`/companies/$companySlug/jobs?q=`), backed by the jobs SEARCH endpoint with
+a `companyId` filter. Submitting a fresh `search` drops `?page=`, resetting
+pagination to page 1.
+
 Props:
 
 - `companySlug: string`
@@ -2018,19 +2259,37 @@ Props:
 
 ### CompanySearchBar — `src/components/company-search-bar.tsx`
 
+The companies index keyword search (CAV-487, CAV-502) — a thin wrapper of
+the shared `ListingSearchBand`, so it is the SAME white panel the jobs and
+blog headers use (no duplicate search-band markup). Semantics unchanged: a
+free-text query matched against company name, submitting to the companies
+index results (`/companies?query=`), backed by `companies.search`.
+
 Props:
 
 - `defaultValue?: string | undefined`
 
 ### DangerZone — `src/components/danger-zone.tsx`
 
+Danger zone — irreversible account delete (`board.me.delete()`). This is
+ahead-of-hosted (no hosted candidate delete UI); the typed confirmation
+guards against accidents. On success we clear the session and go home.
+
 ### EducationSection — `src/components/education-section.tsx`
+
+Education — list + add/edit/delete, over `board.me.profile`'s
+`listEducation` / `createEducation` / `updateEducation` /
+`deleteEducation`.
 
 Props:
 
 - `items: { id: string; object: "candidate_education"; institutionName: string; institutionUrl: string | null; degree: string |…`
 
 ### ExperienceSection — `src/components/experience-section.tsx`
+
+Work experience — list + add/edit/delete, over `board.me.profile`'s
+`listExperience` / `createExperience` / `updateExperience` /
+`deleteExperience`. The body is a merge-patch on edit (empty clears).
 
 Props:
 
@@ -2268,6 +2527,8 @@ Props:
 
 ### PlayButtonIcon — `src/components/foundations/play-button-icon.tsx`
 
+Rounded play icon with blurred background and a filled triangle in the middle.
+
 Props:
 
 - `isPlaying?: boolean | undefined`
@@ -2431,6 +2692,11 @@ Props:
 
 ### JobAlertFloatingPrompt — `src/components/job-alert-floating-prompt.tsx`
 
+The hosted board's dismissible bottom-corner job-alert prompt on listing
+pages. Renders only after mount (avoids an SSR/client mismatch) and stays
+hidden for 30 days after a dismiss (localStorage, mirroring the hosted
+suppression cookie).
+
 Props:
 
 - `defaults: JobAlertDefaults`
@@ -2439,17 +2705,34 @@ Props:
 
 ### JsonLd — `src/components/json-ld.tsx`
 
+Renders JSON-LD structured data as `<script type="application/ld+json">` in
+the document. Rendered in the component body (not TanStack `head`, whose
+`scripts` don't emit inline JSON-LD here).
+
+The payload is API-derived (job titles, slugs, names), so every `<` is escaped
+to `<` before injection — the standard JSON-LD hardening that prevents a
+`</script>` in any string from breaking out of the tag (XSS). JSON-LD parsers
+read the `<` escape transparently.
+
 Props:
 
 - `data: unknown[]`
 
 ### LanguagesSection — `src/components/languages-section.tsx`
 
+Languages — name + proficiency rows over the whole-set replace
+(`board.me.profile.updateLanguages`). Proficiency is a free string
+(the API takes any value); the datalist just suggests common levels.
+
 Props:
 
 - `languages: Language[]`
 
 ### LegalPageView — `src/components/legal-page.tsx`
+
+Shared render for the legal/about surfaces. Per ADR-0039 the starter owns the
+layout + JSON-LD; the Board API serves the portable-HTML prose (+ impressum
+legal-entity facts).
 
 Props:
 
@@ -2461,16 +2744,37 @@ Props:
 
 ### LocationCombobox — `src/components/location-combobox.tsx`
 
+Location search field — the hosted board's `board-place-search-field`: type a
+place name, pick from debounced `places.list({ q })` autocomplete suggestions
+(each with its live job count). Selecting one applies the place slug as the
+jobs filter (server defaults the radius to 50 km).
+
+Built from the starter's owned shadcn Input and Button with Lucide icons.
+The route owns the debounced API request and passes resolved suggestions;
+this component owns only popup interaction and the selected display value.
+
 Props:
 
+- `className?: string | undefined`
+- `loading: boolean`
 - `onClear: () => void`
+- `onQueryChange: (query: string) => void`
 - `onSelect: (place: { slug: string; name: string; }) => void`
+- `suggestions: LocationSuggestionVM[]`
 - `value?: string | undefined`
 - `valueLabel?: string | undefined`
 
 ### MessagesNavLink — `src/components/messages-nav-link.tsx`
 
+Nav "Messages" link with a live unread badge, polled while the tab is
+visible (ADR-0053 REST transport). Errors are swallowed so a walled or
+signed-out state simply shows no badge.
+
 ### Avatar — `src/components/messages/avatar.tsx`
+
+Round avatar with an initials fallback — used across the messaging
+surface. Thin wrapper over the Untitled UI Avatar so callsites keep
+the messaging-domain API (url + name).
 
 Props:
 
@@ -2485,6 +2789,9 @@ Props:
 - `initial: { id: string; object: "blocked_user"; boardUserId: string; displayName: string; avatarUrl: string | null; createdAt: …`
 
 ### Composer — `src/components/messages/composer.tsx`
+
+Reply composer. Disabled (not hidden) with a reason hint when the viewer is
+blocked or the cold-message rule is in effect — mirrors the hosted board.
 
 Props:
 
@@ -2501,6 +2808,9 @@ Props:
 - `initial: ListEnvelope<{ id: string; object: "conversation"; lastMessageAt: string; lastMessageSnippet: string; lastMessageAuth…`
 
 ### MessageBubble — `src/components/messages/message-bubble.tsx`
+
+One message + its inline actions (edit/unsend for the author within 15 min;
+report for the recipient, which auto-blocks the author → parent navigates).
 
 Props:
 
@@ -2519,6 +2829,10 @@ Props:
 - `messages: ListEnvelope<{ id: string; object: "message"; conversationId: string; authorBoardUserId: string; recipientBoardUserId…`
 
 ### NotificationSettings — `src/components/notification-settings.tsx`
+
+Email notification toggles — one checkbox per channel over
+`board.me.notificationPreferences` (retrieve / update). Each toggle
+PUTs immediately and refreshes.
 
 Props:
 
@@ -2539,6 +2853,11 @@ Props:
 
 ### ProfileForm — `src/components/profile-form.tsx`
 
+Profile edit form — recreates the hosted `/account` profile editor. One
+merge-patch via `board.me.profile.update`; handle availability is probed
+live on blur (`board.me.profile.handleAvailable`). The display-name field
+is part of the same patch (the SDK hides the two-mutation split).
+
 Props:
 
 - `profile: { id: string; object: "candidate_profile"; displayName: string | null; bio: string | null; avatarUrl: string | null; …`
@@ -2553,6 +2872,7 @@ Props:
 - `heading: string`
 - `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "other" | …`
 - `location?: { slug: string; label: string; } | undefined`
+- `locationSuggestions: LocationSuggestionState`
 - `origin?: string | undefined`
 - `page: number`
 - `pageSize: number`
@@ -2564,7 +2884,6 @@ Props:
 
 - `as?: ElementType | undefined`
 - `children?: ReactNode`
-- `className?: string | undefined`
 - `html?: string | undefined`
 
 ### ResumeUpload — `src/components/resume-upload.tsx`
@@ -2727,11 +3046,20 @@ Props:
 
 ### SkillsSection — `src/components/skills-section.tsx`
 
+Skills — a tag editor over the whole-set replace
+(`board.me.profile.updateSkills`). Edits are local; one PUT on save.
+
 Props:
 
 - `skills: string[]`
 
 ### TalentCard — `src/components/talent-card.tsx`
+
+One candidate as a talent-directory card. PURE MARKUP shared by the
+`/talent` directory grid and the home landing's "Featured talent" strip,
+so the two surfaces read as one system (mirrors how `JobCard` /
+`CompanyCard` / `PostCard` are shared). The avatar falls back to two-letter
+initials; location, headline, and skills are honestly omitted when absent.
 
 Props:
 
@@ -2748,6 +3076,22 @@ Props:
 - `size?: BodySize | undefined`
 - `truncate?: boolean | undefined`
 - `variant?: HeadingVariant | BodyVariant | undefined`
+
+### Avatar — `src/components/ui/avatar.tsx`
+
+Props:
+
+- `size?: "sm" | "lg" | "default" | undefined`
+
+### AvatarBadge — `src/components/ui/avatar.tsx`
+
+### AvatarFallback — `src/components/ui/avatar.tsx`
+
+### AvatarGroup — `src/components/ui/avatar.tsx`
+
+### AvatarGroupCount — `src/components/ui/avatar.tsx`
+
+### AvatarImage — `src/components/ui/avatar.tsx`
 
 ### Button — `src/components/ui/button.tsx`
 
@@ -2778,6 +3122,24 @@ Props:
 
 ### CardTitle — `src/components/ui/card.tsx`
 
+### Empty — `src/components/ui/empty.tsx`
+
+### EmptyContent — `src/components/ui/empty.tsx`
+
+### EmptyDescription — `src/components/ui/empty.tsx`
+
+### EmptyHeader — `src/components/ui/empty.tsx`
+
+### EmptyMedia — `src/components/ui/empty.tsx`
+
+Props:
+
+- `variant?: "icon" | "default" | null | undefined`
+
+Variants — `variant`: default, icon
+
+### EmptyTitle — `src/components/ui/empty.tsx`
+
 ### Input — `src/components/ui/input.tsx`
 
 ### Label — `src/components/ui/label.tsx`
@@ -2785,6 +3147,30 @@ Props:
 ### RadioGroup — `src/components/ui/radio-group.tsx`
 
 ### RadioGroupItem — `src/components/ui/radio-group.tsx`
+
+### Select — `src/components/ui/select.tsx`
+
+### SelectContent — `src/components/ui/select.tsx`
+
+### SelectGroup — `src/components/ui/select.tsx`
+
+### SelectItem — `src/components/ui/select.tsx`
+
+### SelectLabel — `src/components/ui/select.tsx`
+
+### SelectScrollDownButton — `src/components/ui/select.tsx`
+
+### SelectScrollUpButton — `src/components/ui/select.tsx`
+
+### SelectSeparator — `src/components/ui/select.tsx`
+
+### SelectTrigger — `src/components/ui/select.tsx`
+
+Props:
+
+- `size?: "sm" | "default" | undefined`
+
+### SelectValue — `src/components/ui/select.tsx`
 
 ### NotFound — `src/components/untitled-ui/not-found.tsx`
 
@@ -2794,11 +3180,98 @@ Props:
 
 - `children: ReactNode`
 
+## Layout compositions
+
+Page, PageHeader, PageContent, and PageSection are the sole canonical page-level composition family for new work. Compose these contracts instead of hand-rolling containers, headings, or rails; use Bleed for full-width bands.
+
+### Page — `src/components/layout/page.tsx`
+
+Establishes the Rhea token scope and shared page width for a route.
+
+Props:
+
+- `children: ReactNode`
+- `width?: ContainerWidth | undefined`
+
+Defaults:
+
+- width is `wide` (80rem) with 1rem mobile and 2rem desktop gutters.
+
+Invariants:
+
+- Page owns geometry; callers cannot pass className or style.
+
+### PageContent — `src/components/layout/page.tsx`
+
+Owns the page's single main landmark, constrained content column, and
+optional named complementary rail.
+
+Props:
+
+- `aside?: ReactNode`
+- `asideLabel?: string | undefined`
+- `asideOrder?: "before" | "after" | undefined`
+- `children: ReactNode`
+- `header?: ReactNode`
+
+Defaults:
+
+- asideOrder is `after`; without an aside the body is one column.
+
+Invariants:
+
+- A rendered aside always requires asideLabel and PageContent is the sole main landmark in the Page family.
+
+### PageHeader — `src/components/layout/page.tsx`
+
+Canonical page introduction with one title and optional context, actions,
+and search/filter controls.
+
+Props:
+
+- `actions?: ReactNode`
+- `align?: "start" | "center" | undefined`
+- `breadcrumb?: ReactNode`
+- `children?: ReactNode`
+- `description?: ReactNode`
+- `eyebrow?: ReactNode`
+- `title: ReactNode`
+
+Defaults:
+
+- Start aligned with no optional slots.
+
+Invariants:
+
+- Every PageHeader renders exactly one required h1.
+
+### PageSection — `src/components/layout/page.tsx`
+
+Groups one named region of a page with an optional description and action.
+
+Props:
+
+- `actions?: ReactNode`
+- `ariaLabel?: string | undefined`
+- `children: ReactNode`
+- `description?: ReactNode`
+- `title?: ReactNode`
+
+Defaults:
+
+- Sections use a visible h2 label; ariaLabel is the explicit label-only alternative.
+
+Invariants:
+
+- Exactly one labelling mode is required: title or ariaLabel.
+
 ## Patterns
 
 Named page-level compositions documented under `docs/patterns/`.
 Select a pattern before composing a route (index + drift notes in
-`docs/patterns/README.md`). Generated from each page’s frontmatter.
+`docs/patterns/README.md`). Every new page starts with the Page family;
+pattern frontmatter adds the components inside that anatomy. Generated
+from each page’s frontmatter.
 
 ### Account shell — `docs/patterns/account-shell.md`
 
@@ -2834,19 +3307,19 @@ Primitives: Breadcrumb, AriaLink
 
 A company's three public surfaces — profile, jobs, salaries — read as ONE entity behind a shared header with tab navigation.
 
-Primitives: PageBody, Avatar, Badge, Link, Breadcrumb
+Primitives: Page, PageHeader, PageContent, PageSection, Avatar, Badge, Link, Breadcrumb
 
 ### Detail page — `docs/patterns/detail-page.md`
 
 A single record shown as a full-bleed header band over a two-column body — prose main plus a sticky right rail.
 
-Primitives: PageBody, JobDetail, Prose, Avatar, Badge, TaxonomyTags
+Primitives: Page, Bleed, PageHeader, PageContent, JobDetail, Prose, Avatar, Badge, TaxonomyTags
 
 ### Empty state — `docs/patterns/empty-state.md`
 
 The zero-results / not-found treatment — a featured icon, title, and description, kept inside the page chrome.
 
-Primitives: EmptyState, FeaturedIcon, JobsNotFound, SalaryEmptyState
+Primitives: Empty, EmptyState, FeaturedIcon, JobsNotFound, SalaryEmptyState
 
 ### Form feedback — `docs/patterns/form-feedback.md`
 
@@ -2864,13 +3337,13 @@ Primitives: Input, Select, TextAreaBase, Label, Button, FileUpload
 
 The full-bleed header + search → results bar → list/grid → pagination browse surface every collection page shares.
 
-Primitives: PageBody, ListingPageHeader, ListingSearchBand, JobsResultsBar, JobList, ListingPagination
+Primitives: Page, Bleed, PageHeader, PageContent, PageSection, ListingSearchBand, JobsResultsBar, JobList, ListingPagination
 
 ### Listing rail — `docs/patterns/listing-rail.md`
 
 The sticky right-hand rail of a search/browse listing — an operator ad seam over a related-searches card.
 
-Primitives: ListingRail, TaxonomyTags, PageBody
+Primitives: PageContent, ListingRail, TaxonomyTags
 
 ### Pending / loading — `docs/patterns/pending-loading.md`
 
@@ -2909,6 +3382,9 @@ Primitives: Text, Prose
   `asChild`.
 - Do keep components presentational (typed props, no fetching);
   data arrives from route loaders and `src/server/` functions.
+- Do compose every new page with `Page`, `PageHeader`, `PageContent`,
+  and `PageSection`; do not start new work on migration-only
+  `PageBody` or `ListingPageHeader`.
 - Do reuse the inventory above; don't duplicate an existing
   component to change its style — extend via props/variants.
 - Do edit `src/theme.css` directly or with the shadcn CLI and regenerate

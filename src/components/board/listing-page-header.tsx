@@ -13,17 +13,13 @@ import { cx } from "@/utils/cx";
 import { m } from "../../paraglide/messages";
 
 /**
- * The ONE listing-page header (CAV-502). The soft-gray full-bleed band that
- * opens every listing surface — /jobs, /companies, /blog — with the SAME
- * anatomy, size, and rhythm: a centered display title, an optional one-line
- * subtitle, and the page's search living inside the band (the operator's
- * "hero is the search surface" directive). On `bg-secondary` so dark mode
- * follows for free.
+ * Migration-only listing header for routes that predate the canonical
+ * `PageHeader`. Do not use `ListingPageHeader` for new pages; compose the
+ * header through the `Page` family and use `Bleed` when the band must span the
+ * viewport. Existing listing routes retain this component until migrated.
  *
- * Rendered as the `band` slot of `PageBody`, so a new page gets width +
- * header correctness by default. The `search` slot receives the shared
- * `ListingSearchBand` (or a thin wrapper of it) — never bespoke search
- * markup, so all three headers stay identical.
+ * The `search` slot still receives the shared `ListingSearchBand` (or a thin
+ * wrapper of it), preserving current route behavior during that migration.
  */
 export function ListingPageHeader({
   breadcrumb,

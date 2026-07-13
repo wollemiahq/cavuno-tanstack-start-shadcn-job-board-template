@@ -1,14 +1,4 @@
 {
-  "src/components/Footer.tsx": {
-    "imports": 0,
-    "icons": 0,
-    "tokens": 19
-  },
-  "src/components/Header.tsx": {
-    "imports": 2,
-    "icons": 1,
-    "tokens": 8
-  },
   "src/components/account-shell.tsx": {
     "imports": 0,
     "icons": 0,
@@ -509,11 +499,6 @@
     "icons": 1,
     "tokens": 0
   },
-  "src/components/board/home-landing.tsx": {
-    "imports": 2,
-    "icons": 1,
-    "tokens": 5
-  },
   "src/components/board/job-card.tsx": {
     "imports": 2,
     "icons": 0,
@@ -547,7 +532,7 @@
   "src/components/board/listing-page-header.tsx": {
     "imports": 2,
     "icons": 1,
-    "tokens": 9
+    "tokens": 8
   },
   "src/components/board/listing-pagination.tsx": {
     "imports": 1,
@@ -688,11 +673,6 @@
     "imports": 0,
     "icons": 0,
     "tokens": 2
-  },
-  "src/components/location-combobox.tsx": {
-    "imports": 0,
-    "icons": 1,
-    "tokens": 16
   },
   "src/components/messages-nav-link.tsx": {
     "imports": 2,

@@ -66,18 +66,22 @@ function componentFiles(root) {
   return out
 }
 
-/** cva() variant maps in a source file: { variantName: [values] }. */
+/** cva() variant maps in a source file, keyed by the defining identifier. */
 function extractCvaVariants(sourceFile) {
-  const variants = {}
+  const definitions = {}
   const visit = (node) => {
     if (
-      ts.isCallExpression(node) &&
-      ts.isIdentifier(node.expression) &&
-      node.expression.text === 'cva' &&
-      node.arguments.length >= 2 &&
-      ts.isObjectLiteralExpression(node.arguments[1])
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.initializer &&
+      ts.isCallExpression(node.initializer) &&
+      ts.isIdentifier(node.initializer.expression) &&
+      node.initializer.expression.text === 'cva' &&
+      node.initializer.arguments.length >= 2 &&
+      ts.isObjectLiteralExpression(node.initializer.arguments[1])
     ) {
-      for (const prop of node.arguments[1].properties) {
+      const variants = {}
+      for (const prop of node.initializer.arguments[1].properties) {
         if (
           ts.isPropertyAssignment(prop) &&
           prop.name.getText(sourceFile) === 'variants' &&
@@ -96,11 +100,12 @@ function extractCvaVariants(sourceFile) {
           }
         }
       }
+      definitions[node.name.text] = variants
     }
     ts.forEachChild(node, visit)
   }
   visit(sourceFile)
-  return variants
+  return definitions
 }
 
 /**
@@ -129,17 +134,32 @@ export function extractComponents(root) {
     if (!source) continue
     const moduleSymbol = checker.getSymbolAtLocation(source)
     if (!moduleSymbol) continue
-    const variants = extractCvaVariants(source)
+    const variantDefinitions = extractCvaVariants(source)
 
     for (const symbol of checker.getExportsOfModule(moduleSymbol)) {
       const name = symbol.getName()
       if (!/^[A-Z]/.test(name)) continue
+      const componentSymbol =
+        symbol.flags & ts.SymbolFlags.Alias
+          ? checker.getAliasedSymbol(symbol)
+          : symbol
+      const declaration =
+        componentSymbol.valueDeclaration ?? componentSymbol.declarations?.[0]
       const type = checker.getTypeOfSymbolAtLocation(
-        symbol,
-        symbol.valueDeclaration ?? source,
+        componentSymbol,
+        declaration ?? source,
       )
       const signature = type.getCallSignatures()[0]
       if (!signature) continue // not a function component
+      const declarationText = declaration?.getText(source) ?? ''
+      const variants = {}
+      for (const [identifier, definition] of Object.entries(
+        variantDefinitions,
+      )) {
+        if (new RegExp(`\\b${identifier}\\b`).test(declarationText)) {
+          Object.assign(variants, definition)
+        }
+      }
       const props = []
       const propsParam = signature.getParameters()[0]
       if (propsParam) {
@@ -181,6 +201,15 @@ export function extractComponents(root) {
         file: relative(root, file).split('\\').join('/'),
         props,
         variants,
+        description: ts.displayPartsToString(
+          componentSymbol.getDocumentationComment(checker),
+        ),
+        documentation: componentSymbol.getJsDocTags(checker).map((tag) => ({
+          name: tag.name,
+          text: Array.isArray(tag.text)
+            ? tag.text.map((part) => part.text).join('')
+            : tag.text ?? '',
+        })),
       })
     }
   }
@@ -297,7 +326,9 @@ function patternsSection(patterns) {
   lines.push(
     'Named page-level compositions documented under `docs/patterns/`.',
     'Select a pattern before composing a route (index + drift notes in',
-    '`docs/patterns/README.md`). Generated from each page’s frontmatter.',
+    '`docs/patterns/README.md`). Every new page starts with the Page family;',
+    'pattern frontmatter adds the components inside that anatomy. Generated',
+    'from each page’s frontmatter.',
     '',
   )
   for (const pattern of patterns) {
@@ -335,19 +366,16 @@ function frontmatter(tokens) {
   return lines.join('\n')
 }
 
-function componentsSection(components, registry) {
-  const lines = ['## Components', '']
-  lines.push(
-    'Generated inventory of every exported component under `src/components`.',
-    'Select from this inventory before writing anything new.',
-    '',
-  )
+function componentEntries(components, registry, includeContracts = false) {
+  const lines = []
   for (const component of components) {
     lines.push(`### ${component.name} — \`${component.file}\``)
     const item = registry.get(fileBasename(component.file))
     if (item) {
       lines.push('', item.description.trim())
       if (item.docs) lines.push('', `Usage: ${item.docs.trim()}`)
+    } else if (component.description) {
+      lines.push('', component.description.trim())
     }
     if (component.props.length > 0) {
       lines.push('', 'Props:', '')
@@ -360,9 +388,37 @@ function componentsSection(components, registry) {
     for (const [variant, values] of Object.entries(component.variants)) {
       lines.push('', `Variants — \`${variant}\`: ${values.join(', ')}`)
     }
+    if (includeContracts) {
+      const defaults = component.documentation.filter(
+        (tag) => tag.name === 'default',
+      )
+      const invariants = component.documentation.filter(
+        (tag) => tag.name === 'invariant',
+      )
+      if (defaults.length > 0) {
+        lines.push('', 'Defaults:', '')
+        for (const entry of defaults) lines.push(`- ${entry.text}`)
+      }
+      if (invariants.length > 0) {
+        lines.push('', 'Invariants:', '')
+        for (const entry of invariants) lines.push(`- ${entry.text}`)
+      }
+    }
     lines.push('')
   }
   return lines.join('\n').replace(/\n+$/, '\n')
+}
+
+function componentsSection(title, intro, components, registry, contracts) {
+  return [
+    `## ${title}`,
+    '',
+    intro,
+    '',
+    componentEntries(components, registry, contracts),
+  ]
+    .join('\n')
+    .replace(/\n+$/, '\n')
 }
 
 export async function generateDesignArtifacts(root) {
@@ -370,6 +426,33 @@ export async function generateDesignArtifacts(root) {
   const tokens = parseTokens(css)
   const components = extractComponents(root)
   const registry = registryByBasename(root)
+  const layoutPrimitives = new Set([
+    'Bleed',
+    'Box',
+    'Container',
+    'Grid',
+    'Stack',
+  ])
+  const layoutCompositions = new Set([
+    'Page',
+    'PageContent',
+    'PageHeader',
+    'PageSection',
+  ])
+  const isLayoutComponent = (component) =>
+    component.file.startsWith('src/components/layout/')
+  const primitives = components.filter(
+    (component) =>
+      isLayoutComponent(component) && layoutPrimitives.has(component.name),
+  )
+  const compositions = components.filter(
+    (component) =>
+      isLayoutComponent(component) && layoutCompositions.has(component.name),
+  )
+  const uiComponents = components.filter(
+    (component) =>
+      !primitives.includes(component) && !compositions.includes(component),
+  )
 
   const designMd = [
     frontmatter(tokens),
@@ -417,7 +500,27 @@ export async function generateDesignArtifacts(root) {
     '`--radius-xl`, controls `--radius-md`). Spacing is Tailwind default',
     'scale; no custom spacing tokens.',
     '',
-    componentsSection(components, registry),
+    componentsSection(
+      'Layout primitives',
+      'Token-backed geometry with constrained responsive APIs. These components deliberately omit `className` and `style`.',
+      primitives,
+      registry,
+      true,
+    ),
+    componentsSection(
+      'Components',
+      'Generated inventory of reusable components under `src/components`. This inventory includes explicitly labelled migration-only compatibility components; never select those for new page-level composition.',
+      uiComponents,
+      registry,
+      false,
+    ),
+    componentsSection(
+      'Layout compositions',
+      'Page, PageHeader, PageContent, and PageSection are the sole canonical page-level composition family for new work. Compose these contracts instead of hand-rolling containers, headings, or rails; use Bleed for full-width bands.',
+      compositions,
+      registry,
+      true,
+    ),
     patternsSection(readPatternDocs(root)),
     "## Do's and Don'ts",
     '',
@@ -426,6 +529,9 @@ export async function generateDesignArtifacts(root) {
     '  `asChild`.',
     '- Do keep components presentational (typed props, no fetching);',
     '  data arrives from route loaders and `src/server/` functions.',
+    '- Do compose every new page with `Page`, `PageHeader`, `PageContent`,',
+    '  and `PageSection`; do not start new work on migration-only',
+    '  `PageBody` or `ListingPageHeader`.',
     "- Do reuse the inventory above; don't duplicate an existing",
     '  component to change its style — extend via props/variants.',
     '- Do edit `src/theme.css` directly or with the shadcn CLI and regenerate',

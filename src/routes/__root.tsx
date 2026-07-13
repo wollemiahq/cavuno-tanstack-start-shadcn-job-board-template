@@ -8,11 +8,17 @@ import {
   Outlet,
   Scripts,
   createRootRoute,
+  useNavigate,
   useRouterState,
 } from '@tanstack/react-router'
 
 import { themeModeScript } from '@/components/cavuno/board-theme'
 import { UntitledUiRouterProvider } from '@/components/untitled-ui/router-provider'
+import {
+  resolveHeaderSearchState,
+  type HeaderSearchSubmission,
+} from '@/lib/header-search'
+import { useLocationSuggestions } from './-use-location-suggestions'
 import { getLocale } from '../paraglide/runtime'
 import { themeMeta } from '../theme/resolved'
 
@@ -36,6 +42,8 @@ declare module '@tanstack/react-router' {
      * route owns its own `max-w-container` wrappers per section.
      */
     fullBleed?: boolean
+    /** Migrated PageContent renders the route's single main landmark. */
+    ownsMain?: boolean
   }
 }
 
@@ -118,6 +126,57 @@ function RootLayout() {
   const isFullBleed = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fullBleed),
   })
+  const ownsMain = useRouterState({
+    select: (s) => s.matches.some((match) => match.staticData?.ownsMain),
+  })
+  const location = useRouterState({ select: (s) => s.location })
+  const resolvedLocationLabel = useRouterState({
+    select: (state) => {
+      const match = [...state.matches]
+        .reverse()
+        .find((candidate) => candidate.routeId.startsWith('/jobs/locations/'))
+      const loaderData = match?.loaderData as
+        | { place?: { displayName?: unknown } }
+        | undefined
+      return typeof loaderData?.place?.displayName === 'string'
+        ? loaderData.place.displayName
+        : undefined
+    },
+  })
+  const navigate = useNavigate()
+  const headerSearch = resolveHeaderSearchState(
+    location.pathname,
+    location.search as Record<string, unknown>,
+    resolvedLocationLabel,
+  )
+  const locationSuggestions = useLocationSuggestions(board.language)
+
+  function submitHeaderSearch({
+    scope,
+    query,
+    location: selectedLocation,
+  }: HeaderSearchSubmission) {
+    if (scope === 'companies') {
+      void navigate({ to: '/companies', search: { query } })
+      return
+    }
+
+    if (scope === 'talent') {
+      void navigate({ to: '/talent', search: { q: query } })
+      return
+    }
+
+    if (selectedLocation) {
+      void navigate({
+        to: '/jobs/locations/$location',
+        params: { location: selectedLocation.slug },
+        search: { q: query },
+      })
+      return
+    }
+
+    void navigate({ to: '/jobs', search: { q: query } })
+  }
 
   // The embed widget is an iframe fragment dropped into a third-party site —
   // render it bare, WITHOUT the site header/footer (parity with the hosted
@@ -143,8 +202,17 @@ function RootLayout() {
         language={board.language}
         labels={board.labels}
         features={board.features}
+        search={{
+          ...headerSearch,
+          onSubmit: submitHeaderSearch,
+          locationSuggestions,
+        }}
       />
-      {isFullBleed ? (
+      {ownsMain ? (
+        <div className="flex-1">
+          <Outlet />
+        </div>
+      ) : isFullBleed ? (
         <main className="flex-1">
           <Outlet />
         </main>

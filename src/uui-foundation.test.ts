@@ -94,13 +94,12 @@ describe('Rhea foundation and inherited Untitled UI compatibility CSS', () => {
     expect(css).not.toContain('--font-heading')
   })
 
-  it('the canonical UUI rich-text class (prose-uui) is defined on the prose var system', () => {
-    // Directive 1: one repo-owned rich-text class layered on the stock
-    // Untitled UI prose (the vendored typography.css), deviating only where
-    // the brief mandates it — brand-colored links via the prose link var.
+  it('hands rich text to the single owned shadcn Typeset preset', () => {
     const css = read('src/styles.css')
-    expect(css).toContain('.prose-uui')
-    expect(css).toMatch(/--tw-prose-links:\s*var\(--color-text-brand-secondary\)/)
+    const typeset = read('src/typeset.css')
+    expect(css).toContain('@import "./typeset.css"')
+    expect(css).not.toContain('.prose-uui')
+    expect(typeset).toContain('.typeset-content')
   })
 
   it('keeps pre-Rhea names out of inherited application source', () => {
@@ -122,7 +121,7 @@ describe('Rhea foundation and inherited Untitled UI compatibility CSS', () => {
       'prose-invert',
     ]
     const SKIP =
-      /\.test\.tsx?$|routeTree\.gen\.ts$|resolved\.ts$|components\/ui\/|components\/(?:auth-form|rhea-auth-pilot)\.tsx$|routes\/auth\./
+      /\.test\.tsx?$|routeTree\.gen\.ts$|resolved\.ts$|components\/(?:ui|layout)\/|components\/(?:auth-form|rhea-auth-pilot)\.tsx$|routes\/auth\./
     const offenders: string[] = []
     for (const file of tsFilesUnder('src')) {
       if (SKIP.test(file)) continue

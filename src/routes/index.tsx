@@ -1,22 +1,22 @@
 /**
  * Home `/` — the designed LANDING (CAV-495), not the bare search page.
- * The loader keeps the hosted `/` URL/search contract intact (same
- * `parseListingFilters` validation, same `listingHead`/JSON-LD, cursor
- * param) and ADDITIVELY fetches a companies page for the strip; the page
- * renders `HomeLanding` (hero + browse rail + latest jobs + companies +
- * CTA). The full search surface lives at `/jobs`.
+ * The root is a pure landing page. Old root search/filter URLs redirect to
+ * `/jobs`, while the loader fetches only the latest jobs and the collections
+ * needed by enabled landing sections.
  */
-import { createFileRoute, getRouteApi } from '@tanstack/react-router'
+import { createFileRoute, getRouteApi, redirect } from '@tanstack/react-router'
 
 import { isForbidden } from '@cavuno/board'
 import { parseListingFilters, type ListingFilters } from '@cavuno/board/filters'
 import { boardCopy } from '#/copy'
 
+import { toJobCardVM } from '@/board/job-view-model'
 import { HomeLanding } from '@/components/board/home-landing'
 import { JobAlertFloatingPrompt } from '../components/job-alert-floating-prompt'
 import { JsonLd } from '../components/json-ld'
 import { jobAlertDefaultsFromSearch } from '../lib/job-alert-defaults'
-import { listingHead, listingJsonLd } from '@cavuno/board/seo'
+import { m } from '../paraglide/messages'
+import { listingJsonLd } from '@cavuno/board/seo'
 import {
   getBoardContext,
   getSeoBase,
@@ -24,7 +24,6 @@ import {
   listCompanies,
   listJobs,
   listTalent,
-  searchJobs,
 } from '../server/queries'
 
 interface JobsSearch extends ListingFilters {
@@ -32,9 +31,8 @@ interface JobsSearch extends ListingFilters {
 }
 
 export const Route = createFileRoute('/')({
-  // Full-bleed: the landing opens with the shared gray listing hero band
-  // (the same `ListingPageHeader` /jobs uses) and owns its own containers.
-  staticData: { fullBleed: true },
+  // Full-bleed: the landing owns its distinct hero and page containers.
+  staticData: { fullBleed: true, ownsMain: true },
   validateSearch: (search: Record<string, unknown>): JobsSearch => ({
     ...parseListingFilters(search),
     cursor:
@@ -42,45 +40,35 @@ export const Route = createFileRoute('/')({
         ? search.cursor
         : undefined,
   }),
-  loaderDeps: ({ search }) => search,
-  loader: async ({ deps }) => {
+  beforeLoad: ({ search }) => {
+    const { cursor, ...jobsSearch } = search
+    const hasLegacyIntent =
+      Boolean(cursor) ||
+      Boolean(jobsSearch.q) ||
+      Boolean(jobsSearch.remoteOption) ||
+      Boolean(jobsSearch.employmentType) ||
+      Boolean(jobsSearch.seniority?.length) ||
+      Boolean(jobsSearch.sort)
+
+    if (hasLegacyIntent) {
+      throw redirect({
+        to: '/jobs',
+        search: jobsSearch,
+        replace: true,
+      })
+    }
+  },
+  loader: async () => {
     // Board context first — its feature flags decide which additive section
     // reads to issue (the loader fetches only what an enabled section needs).
     // The jobs / companies / seo reads start in parallel, not behind it.
     const boardP = getBoardContext()
-    const jobsP = deps.q
-      ? searchJobs({
-          data: {
-            query: deps.q,
-            filters: {
-              remoteOption: deps.remoteOption
-                ? [deps.remoteOption]
-                : undefined,
-              employmentType: deps.employmentType
-                ? [deps.employmentType]
-                : undefined,
-              seniority: deps.seniority?.length ? deps.seniority : undefined,
-            },
-            sort: deps.sort,
-            cursor: deps.cursor,
-            limit: 20,
-          },
-        })
-      : listJobs({
-          data: {
-            remoteOption: deps.remoteOption ? [deps.remoteOption] : undefined,
-            employmentType: deps.employmentType
-              ? [deps.employmentType]
-              : undefined,
-            seniority: deps.seniority?.length ? deps.seniority : undefined,
-            sort: deps.sort,
-            cursor: deps.cursor,
-            limit: 20,
-            // Sparse fieldset (wire fact): descriptions ride on the slim
-            // cards — what makes the honest card one-liners possible (S6).
-            fields: '+description',
-          },
-        })
+    const jobsP = listJobs({
+      data: {
+        limit: 8,
+        fields: '+description',
+      },
+    })
     // Additive companies read for the landing's "companies hiring" strip.
     const companiesP = listCompanies({ data: { limit: 6 } })
     const seoP = getSeoBase()
@@ -112,16 +100,25 @@ export const Route = createFileRoute('/')({
       talent: talent?.data ?? null,
     }
   },
-  head: ({ loaderData }) =>
-    loaderData
-      ? listingHead({
-          ...loaderData.seo,
-          path: '/',
-          heading: boardCopy(loaderData.seo.language, loaderData.seo.labels)
-            .jobSearch.headingJobs,
-          count: loaderData.page.count,
-        })
-      : {},
+  head: ({ loaderData }) => {
+    if (!loaderData) return {}
+
+    const title = `${m.home_heroHeadline()} | ${loaderData.seo.boardName}`
+    const description = m.home_heroSupporting()
+    const canonical = `${loaderData.seo.origin}/`
+
+    return {
+      meta: [
+        { title },
+        { name: 'description', content: description },
+        { property: 'og:title', content: title },
+        { property: 'og:description', content: description },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:url', content: canonical },
+      ],
+      links: [{ rel: 'canonical', href: canonical }],
+    }
+  },
   component: HomePage,
 })
 
@@ -129,8 +126,34 @@ const rootApi = getRouteApi('__root__')
 
 function HomePage() {
   const { page, companies, seo, posts, talent } = Route.useLoaderData()
-  const search = Route.useSearch()
   const { board } = rootApi.useLoaderData()
+  const copy = boardCopy(board.language, board.labels)
+  const countLabel =
+    typeof page.count === 'number' && page.count > 0
+      ? `${page.count.toLocaleString(board.language)} ${
+          page.count === 1 ? copy.entity.jobSingular : copy.entity.jobPlural
+        }`
+      : undefined
+  const jobs = page.data.map((job) =>
+    toJobCardVM(job, board.language, board.labels),
+  )
+  const hiringCompanies = companies
+    .filter((company) => company.publishedJobCount > 0)
+    .map((company) => ({
+      id: company.id,
+      slug: company.slug,
+      name: company.name,
+      logoUrl: company.logoUrl,
+      description: company.description,
+      openJobsLabel:
+        company.publishedJobCount === 1
+          ? m.companyDetail_openJobsCountOne({
+              count: company.publishedJobCount,
+            })
+          : m.companyDetail_openJobsCountMany({
+              count: company.publishedJobCount,
+            }),
+    }))
 
   return (
     <>
@@ -144,25 +167,21 @@ function HomePage() {
         })}
       />
       <HomeLanding
-        jobs={page.data}
-        count={page.count}
-        companies={companies}
+        jobs={jobs}
+        countLabel={countLabel}
+        companies={hiringCompanies}
         posts={posts}
         talent={talent}
-        language={board.language}
-        labels={board.labels}
         boardName={board.name}
         candidatesEnabled={board.features.candidates}
         employersEnabled={board.features.employers}
+        publicJobSubmission={board.features.publicJobSubmission}
       />
       {board.features.jobAlerts ? (
         <JobAlertFloatingPrompt
           language={board.language}
           labels={board.labels}
-          defaults={jobAlertDefaultsFromSearch({
-            keyword: search.q,
-            source: 'board_home',
-          })}
+          defaults={jobAlertDefaultsFromSearch({ source: 'board_home' })}
         />
       ) : null}
     </>
