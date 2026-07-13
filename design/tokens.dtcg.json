@@ -3,191 +3,265 @@
   "color": {
     "background": {
       "$type": "color",
-      "$value": "#FFFFFF"
+      "$value": "oklch(1 0 0)"
     },
     "foreground": {
       "$type": "color",
-      "$value": "#18181B"
+      "$value": "oklch(0.145 0 0)"
     },
     "card": {
       "$type": "color",
-      "$value": "#FAFAFA"
+      "$value": "oklch(1 0 0)"
     },
     "card-foreground": {
       "$type": "color",
-      "$value": "#18181B"
+      "$value": "oklch(0.145 0 0)"
     },
     "popover": {
       "$type": "color",
-      "$value": "#FAFAFA"
+      "$value": "oklch(1 0 0)"
     },
     "popover-foreground": {
       "$type": "color",
-      "$value": "#18181B"
+      "$value": "oklch(0.145 0 0)"
     },
     "primary": {
       "$type": "color",
-      "$value": "#27272A"
+      "$value": "oklch(0.205 0 0)"
     },
     "primary-foreground": {
       "$type": "color",
-      "$value": "#FFFFFF"
+      "$value": "oklch(0.985 0 0)"
     },
     "secondary": {
       "$type": "color",
-      "$value": "#F4F4F5"
+      "$value": "oklch(0.97 0 0)"
     },
     "secondary-foreground": {
       "$type": "color",
-      "$value": "#18181B"
+      "$value": "oklch(0.205 0 0)"
     },
     "muted": {
       "$type": "color",
-      "$value": "#F4F4F5"
+      "$value": "oklch(0.97 0 0)"
     },
     "muted-foreground": {
       "$type": "color",
-      "$value": "#71717A"
+      "$value": "oklch(0.556 0 0)"
     },
     "accent": {
       "$type": "color",
-      "$value": "#E5E7EB"
+      "$value": "oklch(0.97 0 0)"
     },
     "accent-foreground": {
       "$type": "color",
-      "$value": "#18181B"
+      "$value": "oklch(0.205 0 0)"
     },
     "destructive": {
       "$type": "color",
-      "$value": "#DC2626"
+      "$value": "oklch(0.577 0.245 27.325)"
     },
     "border": {
       "$type": "color",
-      "$value": "#D4D4D8"
+      "$value": "oklch(0.922 0 0)"
     },
     "input": {
       "$type": "color",
-      "$value": "#D4D4D8"
+      "$value": "oklch(0.922 0 0)"
     },
     "ring": {
       "$type": "color",
-      "$value": "#52525B"
+      "$value": "oklch(0.708 0 0)"
     },
-    "contrast-background": {
+    "chart-1": {
       "$type": "color",
-      "$value": "#18181B"
+      "$value": "oklch(0.87 0 0)"
     },
-    "contrast-foreground": {
+    "chart-2": {
       "$type": "color",
-      "$value": "#FAFAFA"
+      "$value": "oklch(0.556 0 0)"
     },
-    "foreground-error": {
+    "chart-3": {
       "$type": "color",
-      "$value": "#DC2626"
+      "$value": "oklch(0.439 0 0)"
+    },
+    "chart-4": {
+      "$type": "color",
+      "$value": "oklch(0.371 0 0)"
+    },
+    "chart-5": {
+      "$type": "color",
+      "$value": "oklch(0.269 0 0)"
+    },
+    "sidebar": {
+      "$type": "color",
+      "$value": "oklch(0.985 0 0)"
+    },
+    "sidebar-foreground": {
+      "$type": "color",
+      "$value": "oklch(0.145 0 0)"
+    },
+    "sidebar-primary": {
+      "$type": "color",
+      "$value": "oklch(0.205 0 0)"
+    },
+    "sidebar-primary-foreground": {
+      "$type": "color",
+      "$value": "oklch(0.985 0 0)"
+    },
+    "sidebar-accent": {
+      "$type": "color",
+      "$value": "oklch(0.97 0 0)"
+    },
+    "sidebar-accent-foreground": {
+      "$type": "color",
+      "$value": "oklch(0.205 0 0)"
+    },
+    "sidebar-border": {
+      "$type": "color",
+      "$value": "oklch(0.922 0 0)"
+    },
+    "sidebar-ring": {
+      "$type": "color",
+      "$value": "oklch(0.708 0 0)"
     },
     "background-dark": {
       "$type": "color",
-      "$value": "#18181B"
+      "$value": "oklch(0.145 0 0)"
     },
     "foreground-dark": {
       "$type": "color",
-      "$value": "#FAFAFA"
+      "$value": "oklch(0.985 0 0)"
     },
     "card-dark": {
       "$type": "color",
-      "$value": "#27272A"
+      "$value": "oklch(0.205 0 0)"
     },
     "card-foreground-dark": {
       "$type": "color",
-      "$value": "#FAFAFA"
+      "$value": "oklch(0.985 0 0)"
     },
     "popover-dark": {
       "$type": "color",
-      "$value": "#27272A"
+      "$value": "oklch(0.205 0 0)"
     },
     "popover-foreground-dark": {
       "$type": "color",
-      "$value": "#FAFAFA"
+      "$value": "oklch(0.985 0 0)"
     },
     "primary-dark": {
       "$type": "color",
-      "$value": "#52525B"
+      "$value": "oklch(0.922 0 0)"
     },
     "primary-foreground-dark": {
       "$type": "color",
-      "$value": "#FAFAFA"
+      "$value": "oklch(0.205 0 0)"
     },
     "secondary-dark": {
       "$type": "color",
-      "$value": "#18181B"
+      "$value": "oklch(0.269 0 0)"
     },
     "secondary-foreground-dark": {
       "$type": "color",
-      "$value": "#FAFAFA"
+      "$value": "oklch(0.985 0 0)"
     },
     "muted-dark": {
       "$type": "color",
-      "$value": "#18181B"
+      "$value": "oklch(0.269 0 0)"
     },
     "muted-foreground-dark": {
       "$type": "color",
-      "$value": "#A1A1AA"
+      "$value": "oklch(0.708 0 0)"
     },
     "accent-dark": {
       "$type": "color",
-      "$value": "#34343A"
+      "$value": "oklch(0.269 0 0)"
     },
     "accent-foreground-dark": {
       "$type": "color",
-      "$value": "#FAFAFA"
+      "$value": "oklch(0.985 0 0)"
     },
     "destructive-dark": {
       "$type": "color",
-      "$value": "#F87171"
+      "$value": "oklch(0.704 0.191 22.216)"
     },
     "border-dark": {
       "$type": "color",
-      "$value": "#3F3F46"
+      "$value": "oklch(1 0 0 / 10%)"
     },
     "input-dark": {
       "$type": "color",
-      "$value": "#3F3F46"
+      "$value": "oklch(1 0 0 / 15%)"
     },
     "ring-dark": {
       "$type": "color",
-      "$value": "#ababab"
+      "$value": "oklch(0.556 0 0)"
     },
-    "contrast-background-dark": {
+    "chart-1-dark": {
       "$type": "color",
-      "$value": "#27272A"
+      "$value": "oklch(0.87 0 0)"
     },
-    "contrast-foreground-dark": {
+    "chart-2-dark": {
       "$type": "color",
-      "$value": "#FAFAFA"
+      "$value": "oklch(0.556 0 0)"
     },
-    "foreground-error-dark": {
+    "chart-3-dark": {
       "$type": "color",
-      "$value": "#F87171"
+      "$value": "oklch(0.439 0 0)"
+    },
+    "chart-4-dark": {
+      "$type": "color",
+      "$value": "oklch(0.371 0 0)"
+    },
+    "chart-5-dark": {
+      "$type": "color",
+      "$value": "oklch(0.269 0 0)"
+    },
+    "sidebar-dark": {
+      "$type": "color",
+      "$value": "oklch(0.205 0 0)"
+    },
+    "sidebar-foreground-dark": {
+      "$type": "color",
+      "$value": "oklch(0.985 0 0)"
+    },
+    "sidebar-primary-dark": {
+      "$type": "color",
+      "$value": "oklch(0.488 0.243 264.376)"
+    },
+    "sidebar-primary-foreground-dark": {
+      "$type": "color",
+      "$value": "oklch(0.985 0 0)"
+    },
+    "sidebar-accent-dark": {
+      "$type": "color",
+      "$value": "oklch(0.269 0 0)"
+    },
+    "sidebar-accent-foreground-dark": {
+      "$type": "color",
+      "$value": "oklch(0.985 0 0)"
+    },
+    "sidebar-border-dark": {
+      "$type": "color",
+      "$value": "oklch(1 0 0 / 10%)"
+    },
+    "sidebar-ring-dark": {
+      "$type": "color",
+      "$value": "oklch(0.556 0 0)"
     }
   },
   "fontFamily": {
     "sans": {
       "$type": "fontFamily",
       "$value": [
-        "Geist",
-        "ui-sans-serif",
-        "system-ui",
+        "Geist Variable",
         "sans-serif"
       ]
     },
     "heading": {
       "$type": "fontFamily",
       "$value": [
-        "Geist",
-        "Geist",
-        "ui-sans-serif",
-        "system-ui",
-        "sans-serif"
+        "var(--font-sans)"
       ]
     }
   }

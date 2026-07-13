@@ -1,104 +1,121 @@
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { join, posix, relative } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
-
-/**
- * Legacy shadcn-token ratchet (CAV-504; mirrors the copy-scan ratchet's
- * baseline mechanics).
- *
- * The public board surfaces run on the Untitled UI token set
- * (`text-tertiary`, `ring-secondary_alt`, `text-error-primary`,
- * `text-display-*`, `bg-secondary`, …). The logged-in / employer / messages
- * / legal surfaces still carry the pre-UUI shadcn tokens below. This freezes
- * that frontier: existing offenders are baselined per file, any NEW
- * occurrence fails CI. It does NOT migrate anything — burning offenders down
- * (the pattern Do/Don't tables name the UUI replacement per surface) requires
- * re-baselining DOWN with UPDATE_LEGACY_TOKEN_BASELINE=1, so the count only
- * ever decreases.
- */
 
 const ROOT = join(import.meta.dirname, '..')
 const SRC_ROOT = join(ROOT, 'src')
 const BASELINE_PATH = join(ROOT, 'legacy-token-baseline.json')
 
-/**
- * The frozen legacy-token frontier. Each is a Tailwind class from the
- * shadcn palette this template is migrating off. `text-primary-foreground`
- * has zero offenders today and is frozen at 0 — a new one fails immediately.
- */
-const LEGACY_TOKENS = [
-  'text-muted-foreground',
-  'border-border',
-  'text-destructive',
-  'bg-muted',
-  'text-foreground',
-  'font-heading',
-  'bg-background',
-  'text-primary-foreground',
-  // CAV-509: the last compat-bridge frontier, freed as the LEGACY COMPAT
-  // block was deleted. Frozen at 0 — a reintroduction fails immediately.
-  'bg-card',
-  'text-foreground-subtle',
-  'divide-border',
-  'border-destructive',
-  'bg-foreground',
-  'text-background',
-]
+const RHEA_PILOT = new Set([
+  'src/components/rhea-auth-pilot.tsx',
+  'src/routes/auth.join.tsx',
+  'src/routes/auth.sign-up.tsx',
+  'src/routes/auth.employer.sign-up.tsx',
+])
 
-// Guard each token so it matches the whole class only — `text-foreground`
-// must NOT match `text-foreground-subtle`, but a Tailwind opacity/variant
-// suffix (`bg-muted/50`) should still count. `(?<![\w-])`/`(?![\w-])` reject
-// a hyphenated continuation while allowing `/`, whitespace, quotes.
-const TOKEN_RE = new RegExp(
-  `(?<![\\w-])(?:${LEGACY_TOKENS.map((t) => t.replace(/[-]/g, '\\$&')).join('|')})(?![\\w-])`,
-  'g',
-)
+const LEGACY_ICON_RE = /from\s+['"]@untitledui\/(?:icons|file-icons)['"]/g
+const LEGACY_TOKEN_RE =
+  /(?<![\w-])(?:bg|text|border|ring|outline|fill|stroke)-(?:primary(?:[-_][\w]+)?|secondary(?:[-_][\w]+)?|tertiary(?:[-_][\w]+)?|quaternary(?:[-_][\w]+)?|brand(?:[-_][\w]+)?|fg(?:[-_][\w]+)?|error(?:[-_][\w]+)?|warning(?:[-_][\w]+)?|success(?:[-_][\w]+)?|utility(?:[-_][\w]+)?|placeholder)(?![\w-])/g
+const UNMISTAKABLE_UUI_TOKEN_RE =
+  /(?<![\w-])(?:bg|text|border|ring|outline|fill|stroke)-(?:fg(?:[-_][\w]+)?|brand(?:[-_][\w]+)?|error(?:[-_][\w]+)?|warning(?:[-_][\w]+)?|success(?:[-_][\w]+)?|utility(?:[-_][\w]+)?|tertiary(?:[-_][\w]+)?|quaternary(?:[-_][\w]+)?|placeholder(?:[-_][\w]+)?|(?:primary|secondary)_(?:hover|alt)(?:[-_][\w]+)?)(?![\w-])/g
+const RADIX_IMPORT_RE = /from\s+['"]@radix-ui\//
+const BASE_UI_PACKAGE = '@base-ui/react'
+const PORTALED_BASE_UI_SUBPATH_RE =
+  /^@base-ui\/react\/(?:dialog|menu|menubar|popover|select|tooltip)(?:\/|$)/
 
-/** Generated output the scan skips (not hand-edited; regenerated). */
-const SKIP_DIRS = new Set(['paraglide'])
-const SKIP_FILES = /\.test\.tsx?$|routeTree\.gen\.ts$|resolved\.ts$/
+type Counts = {
+  imports: number
+  icons: number
+  tokens: number
+}
 
 function sourceFiles(dir: string): string[] {
   const out: string[] = []
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (SKIP_DIRS.has(entry.name)) continue
+    if (entry.name === 'paraglide') continue
     const path = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      out.push(...sourceFiles(path))
-    } else if (/\.tsx?$/.test(entry.name) && !SKIP_FILES.test(entry.name)) {
+    if (entry.isDirectory()) out.push(...sourceFiles(path))
+    else if (/\.(ts|tsx)$/.test(entry.name) && !/\.test\./.test(entry.name))
       out.push(path)
-    }
   }
   return out
 }
 
-function countFile(path: string): number {
-  const matches = readFileSync(path, 'utf8').match(TOKEN_RE)
-  return matches ? matches.length : 0
+function occurrences(source: string, pattern: RegExp): number {
+  return source.match(pattern)?.length ?? 0
 }
 
-function scan(): Record<string, number> {
-  const counts: Record<string, number> = {}
+function importSpecifiers(source: string): string[] {
+  return Array.from(
+    source.matchAll(
+      /(?:\bfrom\s+|\bimport\s*(?:\(\s*)?)["']([^"']+)["']/g,
+    ),
+    (match) => match[1],
+  )
+}
+
+function legacyImportCount(file: string, source: string): number {
+  return importSpecifiers(source).filter((specifier) => {
+    const target = /^[@#]\//.test(specifier)
+      ? `src/${specifier.slice(2)}`
+      : specifier.startsWith('.')
+        ? posix.normalize(posix.join(posix.dirname(file), specifier))
+        : null
+    return /^src\/components\/(?:base|application|untitled-ui)(?:\/|$)/.test(
+      target ?? '',
+    )
+  }).length
+}
+
+function legacyTokenCount(file: string, source: string): number {
+  const pattern =
+    RHEA_PILOT.has(file) || file.startsWith('src/components/ui/')
+      ? UNMISTAKABLE_UUI_TOKEN_RE
+      : LEGACY_TOKEN_RE
+  return occurrences(source, pattern)
+}
+
+function directBaseUiImportCount(file: string, source: string): number {
+  const isOwnedUiSource = file.startsWith('src/components/ui/')
+  return importSpecifiers(source).filter((specifier) => {
+    if (
+      specifier !== BASE_UI_PACKAGE &&
+      !specifier.startsWith(`${BASE_UI_PACKAGE}/`)
+    ) {
+      return false
+    }
+    if (!isOwnedUiSource) return true
+    return (
+      specifier === BASE_UI_PACKAGE || PORTALED_BASE_UI_SUBPATH_RE.test(specifier)
+    )
+  }).length
+}
+
+function scan(): Record<string, Counts> {
+  const counts: Record<string, Counts> = {}
   for (const path of sourceFiles(SRC_ROOT)) {
-    const n = countFile(path)
-    if (n > 0) counts[relative(ROOT, path)] = n
+    const file = relative(ROOT, path)
+    const source = readFileSync(path, 'utf8')
+    const entry = {
+      imports: legacyImportCount(file, source),
+      icons: occurrences(source, LEGACY_ICON_RE),
+      tokens: legacyTokenCount(file, source),
+    }
+    if (entry.imports + entry.icons + entry.tokens > 0) counts[file] = entry
   }
   return counts
 }
 
-describe('legacy shadcn-token ratchet', () => {
+describe('legacy Untitled UI compatibility ratchet', () => {
   const counts = scan()
 
   if (process.env.UPDATE_LEGACY_TOKEN_BASELINE === '1') {
     it('baseline updated', () => {
       writeFileSync(
         BASELINE_PATH,
-        JSON.stringify(
-          Object.fromEntries(Object.entries(counts).sort()),
-          null,
-          2,
-        ) + '\n',
+        JSON.stringify(Object.fromEntries(Object.entries(counts).sort()), null, 2) +
+          '\n',
       )
       expect(true).toBe(true)
     })
@@ -107,35 +124,173 @@ describe('legacy shadcn-token ratchet', () => {
 
   const baseline = JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) as Record<
     string,
-    number
+    Counts
   >
 
-  it('no file gains legacy shadcn tokens', () => {
+  it('never increases legacy imports, icons, or tokens', () => {
     const regressions: string[] = []
-    for (const [file, count] of Object.entries(counts)) {
-      const allowed = baseline[file] ?? 0
-      if (count > allowed) {
-        regressions.push(`${file} — ${count} > baseline ${allowed}`)
+    for (const [file, current] of Object.entries(counts)) {
+      const allowed = baseline[file] ?? { imports: 0, icons: 0, tokens: 0 }
+      for (const key of ['imports', 'icons', 'tokens'] as const) {
+        if (current[key] > allowed[key]) {
+          regressions.push(
+            `${file} — ${key}: ${current[key]} > baseline ${allowed[key]}`,
+          )
+        }
       }
     }
     expect(
       regressions,
-      `New legacy shadcn tokens — compose Untitled UI tokens instead ` +
-        `(see the UUI replacement named in the relevant pattern's Do/Don't ` +
-        `table; index at docs/patterns/README.md):\n${regressions.join('\n')}`,
+      `New Untitled UI compatibility usage is forbidden:\n${regressions.join('\n')}`,
     ).toEqual([])
   })
 
-  it('the baseline ratchets down as surfaces migrate', () => {
+  it('requires the baseline to ratchet down with each migration', () => {
     const stale: string[] = []
     for (const [file, allowed] of Object.entries(baseline)) {
-      const current = counts[file] ?? 0
-      if (current < allowed) stale.push(`${file}: ${allowed} → ${current}`)
+      const current = counts[file] ?? { imports: 0, icons: 0, tokens: 0 }
+      for (const key of ['imports', 'icons', 'tokens'] as const) {
+        if (current[key] < allowed[key]) {
+          stale.push(`${file} — ${key}: ${allowed[key]} → ${current[key]}`)
+        }
+      }
     }
     expect(
       stale,
-      `Offender counts dropped — lock in the progress: ` +
-        `UPDATE_LEGACY_TOKEN_BASELINE=1 npx vitest run src/legacy-token-scan.test.ts\n${stale.join('\n')}`,
+      `Lock in removed legacy usage with UPDATE_LEGACY_TOKEN_BASELINE=1:\n${stale.join('\n')}`,
     ).toEqual([])
+  })
+})
+
+describe('pure legacy scanner fixtures', () => {
+  it('detects aliased and relative imports of inherited UUI components', () => {
+    expect(
+      legacyImportCount(
+        'src/routes/example.tsx',
+        `import { Input } from '@/components/base/input/input'`,
+      ),
+    ).toBe(1)
+    expect(
+      legacyImportCount(
+        'src/routes/example.tsx',
+        `import { Input } from '../components/base/input/input'`,
+      ),
+    ).toBe(1)
+  })
+
+  it('allows canonical Rhea tokens in pilots but detects unmistakable UUI tokens', () => {
+    const pilot = 'src/components/rhea-auth-pilot.tsx'
+    expect(
+      legacyTokenCount(
+        pilot,
+        'bg-primary text-primary-foreground border-border text-muted-foreground',
+      ),
+    ).toBe(0)
+    expect(
+      legacyTokenCount(
+        pilot,
+        'text-tertiary bg-brand-solid border-secondary_alt text-fg-quaternary',
+      ),
+    ).toBe(4)
+  })
+
+  it('rejects Base UI root-barrel imports outside owned UI components', () => {
+    expect(
+      directBaseUiImportCount(
+        'src/routes/example.tsx',
+        `import { Button } from '@base-ui/react'`,
+      ),
+    ).toBe(1)
+  })
+
+  it('rejects Base UI subpath imports outside owned UI components', () => {
+    expect(
+      directBaseUiImportCount(
+        'src/routes/example.tsx',
+        `import { Dialog } from '@base-ui/react/dialog'`,
+      ),
+    ).toBe(1)
+  })
+
+  it('rejects dynamic Base UI imports outside owned UI components', () => {
+    expect(
+      directBaseUiImportCount(
+        'src/components/example.tsx',
+        `const button = import('@base-ui/react/button')`,
+      ),
+    ).toBe(1)
+  })
+
+  it('rejects side-effect Base UI imports outside owned UI components', () => {
+    expect(
+      directBaseUiImportCount(
+        'src/components/example.tsx',
+        `import '@base-ui/react/button'`,
+      ),
+    ).toBe(1)
+  })
+
+  it('allows app code to consume owned UI components', () => {
+    expect(
+      directBaseUiImportCount(
+        'src/routes/example.tsx',
+        `import { Button } from '@/components/ui/button'`,
+      ),
+    ).toBe(0)
+  })
+
+  it('allows safe Base UI subpaths inside owned UI components', () => {
+    expect(
+      directBaseUiImportCount(
+        'src/components/ui/example.tsx',
+        `import { Button } from '@base-ui/react/button'`,
+      ),
+    ).toBe(0)
+  })
+
+  it('rejects Base UI root-barrel imports inside owned UI components', () => {
+    expect(
+      directBaseUiImportCount(
+        'src/components/ui/example.tsx',
+        `import { Button } from '@base-ui/react'`,
+      ),
+    ).toBe(1)
+  })
+
+  it('rejects portal-family subpaths inside owned UI components', () => {
+    expect(
+      directBaseUiImportCount(
+        'src/components/ui/example.tsx',
+        `import { Dialog } from '@base-ui/react/dialog'`,
+      ),
+    ).toBe(1)
+  })
+})
+
+describe('foundation dependency boundary', () => {
+  it('introduces neither a direct Radix dependency nor a Radix source import', () => {
+    const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
+    const directDependencies = {
+      ...pkg.dependencies,
+      ...pkg.devDependencies,
+    }
+    expect(
+      Object.keys(directDependencies).filter((name) => name.startsWith('@radix-ui/')),
+    ).toEqual([])
+
+    const offenders = sourceFiles(SRC_ROOT)
+      .filter((path) => RADIX_IMPORT_RE.test(readFileSync(path, 'utf8')))
+      .map((path) => relative(ROOT, path))
+    expect(offenders).toEqual([])
+  })
+
+  it('keeps direct Base UI imports behind owned shadcn components', () => {
+    const offenders = sourceFiles(SRC_ROOT)
+      .filter((path) => {
+        const file = relative(ROOT, path)
+        return directBaseUiImportCount(file, readFileSync(path, 'utf8')) > 0
+      })
+      .map((path) => relative(ROOT, path))
+    expect(offenders).toEqual([])
   })
 })

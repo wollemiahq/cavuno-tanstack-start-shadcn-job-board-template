@@ -10,7 +10,7 @@
  *    Labs design.md spec pinned at `alpha`; DTCG 2025.10 interchange).
  *    Hand-editing either must fail CI: the regeneration test asserts
  *    byte-identity between the committed files and a fresh generation
- *    from the canonical sources (src/tokens.css + component source +
+ *    from the canonical sources (src/theme.css + component source +
  *    the registry item snapshot).
  *  - The pnpm 11 supply-chain posture (D16): dependency lifecycle
  *    scripts blocked unless allowlisted, minimumReleaseAge cooldown on.
@@ -94,15 +94,16 @@ describe('DESIGN.md + DTCG export (D15 generated artifacts)', () => {
     },
   )
 
-  it('frontmatter tokens are derived from tokens.css (ADR-0065 D1 canonical)', async () => {
+  it('frontmatter tokens are derived from theme.css (ADR-0065 D1 canonical)', async () => {
     const { parseDesignFrontmatter } = await generatorLib()
     const fm = parseDesignFrontmatter(read('DESIGN.md'))
-    const tokens = parseTokens(read('src/tokens.css'))
+    const tokens = parseTokens(read('src/theme.css'))
     expect(fm.version).toBe('alpha')
     // Every :root color custom property surfaces as a frontmatter color.
     expect(fm.colors.background).toBe(tokens.light['--background'])
     expect(fm.colors.primary).toBe(tokens.light['--primary'])
     expect(fm.colors.accent).toBe(tokens.light['--accent'])
+    expect(fm.colors).not.toHaveProperty('radius')
     // Typography derives from the font vars.
     expect(fm.typography.sans.fontFamily).toContain('Geist')
   })
@@ -139,9 +140,9 @@ describe('DESIGN.md + DTCG export (D15 generated artifacts)', () => {
     expect(design).toMatch(/JobCard[\s\S]{0,600}\bjob\b/)
   })
 
-  it('the DTCG export is valid 2025.10-shaped token JSON matching tokens.css', () => {
+  it('the DTCG export is valid 2025.10-shaped token JSON matching theme.css', () => {
     const dtcg = JSON.parse(read('design/tokens.dtcg.json'))
-    const tokens = parseTokens(read('src/tokens.css'))
+    const tokens = parseTokens(read('src/theme.css'))
     expect(dtcg.color.background.$type).toBe('color')
     expect(dtcg.color.background.$value.toLowerCase()).toBe(
       tokens.light['--background'].toLowerCase(),

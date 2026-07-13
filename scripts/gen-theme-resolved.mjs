@@ -1,6 +1,6 @@
 /**
  * `npm run gen:theme` — derive src/theme/resolved.ts from the canonical
- * src/tokens.css (ADR-0065 D2). OG routes import the resolved values
+ * src/theme.css (ADR-0065 D2). OG routes import the resolved values
  * (Satori cannot read CSS variables); the module carries the source
  * hash so doctor can flag drift (D6). Never hand-edit the output.
  *
@@ -13,7 +13,7 @@ import { readFileSync, mkdirSync, writeFileSync } from 'node:fs'
 
 import { buildSyncPayload, parseTokens, tokensHash } from './theme-resolved-lib.mjs'
 
-const css = readFileSync('src/tokens.css', 'utf8')
+const css = readFileSync('src/theme.css', 'utf8')
 const parsed = parseTokens(css)
 const hash = tokensHash(css)
 
@@ -28,10 +28,10 @@ mkdirSync('src/theme', { recursive: true })
 writeFileSync(
   'src/theme/resolved.ts',
   `/**
- * GENERATED from src/tokens.css — do not edit (npm run gen:theme).
+ * GENERATED from src/theme.css — do not edit (npm run gen:theme).
  * Resolved theme values for renderers that cannot read CSS variables
  * (workers-og/Satori). The hash ties this module to its source; doctor
- * compares it against tokens.css and the platform snapshot (ADR-0065).
+ * compares it against theme.css and the platform snapshot (ADR-0065).
  */
 export const tokensHash = '${hash}'
 

@@ -1,4 +1,8 @@
 // @vitest-environment jsdom
+import '@testing-library/jest-dom/vitest'
+
+import { useState } from 'react'
+
 /**
  * auth-form native-form parity (CAV-482 chassis conversion).
  *
@@ -13,9 +17,33 @@
  * off the DOM node and every auth form would submit empty payloads.
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { AuthCard, Field, FormError } from './auth-form'
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-router')>()
+  return {
+    ...actual,
+    Link: ({
+      to,
+      children,
+      ...props
+    }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { to: string }) => (
+      <a href={to} {...props}>
+        {children}
+      </a>
+    ),
+  }
+})
+
+import {
+  AuthCard,
+  Field,
+  FormError,
+} from './auth-form'
+import {
+  RheaRegistrationPage,
+  RoleSelector,
+} from './rhea-auth-pilot'
 
 afterEach(cleanup)
 
@@ -86,5 +114,143 @@ describe('AuthCard + FormError chrome', () => {
     expect(container.textContent).toBe('')
     rerender(<FormError message="Invalid credentials" />)
     expect(screen.getByText('Invalid credentials')).toBeTruthy()
+  })
+})
+
+describe('RheaRegistrationPage', () => {
+  const copy = {
+    nameLabel: 'Name',
+    emailLabel: 'Email',
+    passwordLabel: 'Password',
+    submitLabel: 'Create account',
+    pendingLabel: 'Creating account…',
+    successTitle: 'Check your email',
+    successText: 'Open the verification link to continue.',
+    successActionLabel: 'Go to my account',
+  }
+
+  it('reports a registration error without losing the submitted values', async () => {
+    render(
+      <RheaRegistrationPage
+        title="Create your account"
+        supportingText="Join the board."
+        copy={copy}
+        successHref="/account"
+        onSubmit={async () => ({ ok: false, message: 'Email is already registered' })}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('Name'), {
+      target: { value: 'Alex Morgan' },
+    })
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'alex@example.com' },
+    })
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'correct-horse' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Email is already registered',
+    )
+    expect(screen.getByLabelText('Email')).toHaveValue('alex@example.com')
+  })
+
+  it('replaces the initial heading with one announced success heading', async () => {
+    render(
+      <RheaRegistrationPage
+        title="Create your account"
+        supportingText="Join the board."
+        copy={copy}
+        successHref="/account"
+        onSubmit={async () => ({ ok: true })}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('Name'), {
+      target: { value: 'Alex Morgan' },
+    })
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'alex@example.com' },
+    })
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'correct-horse' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
+
+    const status = await screen.findByRole('status')
+    expect(status).toHaveTextContent('Check your email')
+    expect(screen.queryByRole('heading', { name: 'Create your account' })).toBeNull()
+    expect(screen.getAllByRole('heading')).toHaveLength(1)
+    expect(
+      screen.getByRole('heading', { name: 'Check your email' }),
+    ).toBeInTheDocument()
+  })
+
+  it('keeps the pending Base UI submit in the tab order', async () => {
+    render(
+      <RheaRegistrationPage
+        title="Create your account"
+        supportingText="Join the board."
+        copy={copy}
+        successHref="/account"
+        onSubmit={() => new Promise(() => undefined)}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('Name'), {
+      target: { value: 'Alex Morgan' },
+    })
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'alex@example.com' },
+    })
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'correct-horse' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
+
+    const pending = await screen.findByRole('button', {
+      name: 'Creating account…',
+    })
+    expect(pending).toHaveAttribute('aria-disabled', 'true')
+    expect(pending).not.toHaveAttribute('disabled')
+    expect(pending).toHaveAttribute('tabindex', '0')
+  })
+})
+
+describe('RoleSelector', () => {
+  it('moves selection between the candidate and employer choices', () => {
+    function Harness() {
+      const [value, setValue] = useState<'candidate' | 'employer'>(
+        'candidate',
+      )
+      return (
+        <RoleSelector
+          value={value}
+          onValueChange={setValue}
+          ariaLabel="How would you like to get started?"
+          candidateTitle="I'm looking for a job"
+          candidateBody="Get matched with jobs for free"
+          employerTitle="I'm hiring"
+          employerBody="Post jobs and reach candidates"
+        />
+      )
+    }
+
+    render(<Harness />)
+    const candidate = screen.getByRole('radio', {
+      name: /I'm looking for a job/,
+    })
+    const employer = screen.getByRole('radio', { name: /I'm hiring/ })
+
+    expect(candidate).toBeChecked()
+    expect(candidate).toHaveAttribute(
+      'aria-label',
+      "I'm looking for a job. Get matched with jobs for free",
+    )
+    expect(candidate.closest('label')).toBeNull()
+    fireEvent.click(screen.getByText("I'm hiring"))
+    expect(employer).toBeChecked()
   })
 })

@@ -25,8 +25,8 @@ need different grounding is a platform operation, not a code edit.
 
 - `src/components/**` — presentational, dumb, typed-props components.
   Data arrives from loaders; components never fetch.
-- `src/tokens.css` — the canonical theme (colors, fonts). Edit this
-  file for restyling, then run `pnpm run gen:theme`; never edit
+- `src/theme.css` — the canonical, shadcn CLI-owned theme. Edit it
+  directly or with `shadcn apply`, then run `pnpm run gen:theme`; never edit
   `src/theme/resolved.ts` (generated).
 - `src/styles.css` — layout/radius/utility layer over the tokens.
 - `src/routes/*.tsx` — page composition (markup, layout, copy). Keep
@@ -67,12 +67,17 @@ need different grounding is a platform operation, not a code edit.
    interpolate other strings into `dangerouslySetInnerHTML`.
 5. Keep `head()` meta + the JobPosting JSON-LD on the job-detail route
    intact — they are the board's SEO contract.
-6. New components compose **Untitled UI primitives** (react-aria-based,
-   under `src/components/base/`; class merging via `cx` from
-   `@/utils/cx`) — the ADR-0072 expand–contract conversion is in
-   progress. The legacy Base UI palette serves existing surfaces only
-   until the contract step deletes it; never extend it, and never Radix
-   `asChild`.
+6. New components compose owned **shadcn/ui components on Base UI** under
+   `src/components/ui/`; merge classes with `cn` from `@/lib/utils`.
+   App code consumes their canonical public APIs, never Base UI internals or
+   data attributes, so adopters may swap in their own Base UI-backed shadcn
+   source. Radix is an explicit migration, not a drop-in swap. Legacy Untitled
+   UI may only shrink: never add its imports, icons, or tokens.
+   Portaled Rhea primitives are prohibited during the expand phase: Base UI
+   portals render under `body`, outside a route-local `.rhea-theme`. Do not add
+   Dialog, Menu, Menubar, Popover, Select, or Tooltip until the repo has an
+   explicit scoped-portal strategy or the CAV-511 contraction owns Rhea
+   globally.
 7. **Board URL paths come from `@cavuno/board/paths`** (`jobDetailPath`,
    `jobsCategoryPath`, `jobsSkillPath`, `companyPath`, `companySalaryPath`,
    …) — never string-build a `/companies/…/jobs/…` or `/jobs/…` path.
@@ -100,7 +105,7 @@ pnpm run typecheck && pnpm test && pnpm run build
 ## Design system
 
 Visual identity, design tokens, the component inventory, and design
-do's-and-don'ts live in **`DESIGN.md`** (generated from `src/tokens.css`
+do's-and-don'ts live in **`DESIGN.md`** (generated from `src/theme.css`
 + component source + the registry snapshot — regenerate with
 `pnpm run gen:design`, never hand-edit; CI rejects drift). The
 machine-interchange token export is `design/tokens.dtcg.json`. Select
@@ -109,15 +114,13 @@ Page-level compositions follow the patterns in **`docs/patterns/`** —
 select a pattern before composing a route; never hand-roll a
 listing/detail/form/empty surface.
 
-Primitives, in order: **Untitled UI components** (free/MIT set only —
-PRO code must never enter this repo) live under `src/components/base/`,
-entering via `npx untitledui@latest add <component>` or verbatim from
-untitleduico/react, adapted only for the repo's `.dark` class token.
-Reach for one of those before hand-rolling. The legacy shadcn/Base UI
-palette under `src/components/ui/` still serves unconverted surfaces —
-do not extend it (it is deleted at the ADR-0072 contract step). New
-dependencies cannot be added at build time, so compose from what is
-installed.
+Primitives, in order: use or add current shadcn Rhea components under
+`src/components/ui/`, backed by Base UI and styled from `src/theme.css`.
+Route and pattern code depends only on canonical shadcn component props.
+Inherited Untitled UI under `src/components/base/` and
+`src/components/application/` is compatibility code; the ratchet permits
+removal, never growth. New dependencies cannot be added at build time, so
+compose from what is installed.
 
 ## Framework skills
 

@@ -1,1 +1,1047 @@
-{}
+{
+  "src/components/Footer.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 19
+  },
+  "src/components/Header.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 8
+  },
+  "src/components/account-shell.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 7
+  },
+  "src/components/alert-manager.tsx": {
+    "imports": 5,
+    "icons": 0,
+    "tokens": 7
+  },
+  "src/components/application/app-navigation/base-components/mobile-header.tsx": {
+    "imports": 0,
+    "icons": 1,
+    "tokens": 8
+  },
+  "src/components/application/app-navigation/base-components/nav-account-card.tsx": {
+    "imports": 3,
+    "icons": 1,
+    "tokens": 21
+  },
+  "src/components/application/app-navigation/base-components/nav-button.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 9
+  },
+  "src/components/application/app-navigation/base-components/nav-item.tsx": {
+    "imports": 1,
+    "icons": 1,
+    "tokens": 12
+  },
+  "src/components/application/app-navigation/base-components/nav-list.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/components/application/app-navigation/header-navigation.tsx": {
+    "imports": 9,
+    "icons": 1,
+    "tokens": 5
+  },
+  "src/components/application/app-navigation/sidebar-navigation-base.tsx": {
+    "imports": 5,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/components/application/app-navigation/sidebar-navigation/sidebar-dual-tier.tsx": {
+    "imports": 6,
+    "icons": 1,
+    "tokens": 3
+  },
+  "src/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers.tsx": {
+    "imports": 5,
+    "icons": 1,
+    "tokens": 2
+  },
+  "src/components/application/app-navigation/sidebar-navigation/sidebar-sections-subheadings.tsx": {
+    "imports": 5,
+    "icons": 1,
+    "tokens": 3
+  },
+  "src/components/application/app-navigation/sidebar-navigation/sidebar-simple.tsx": {
+    "imports": 6,
+    "icons": 1,
+    "tokens": 2
+  },
+  "src/components/application/app-navigation/sidebar-navigation/sidebar-slim.tsx": {
+    "imports": 8,
+    "icons": 1,
+    "tokens": 9
+  },
+  "src/components/application/charts/charts-base.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/components/application/date-picker/calendar.tsx": {
+    "imports": 3,
+    "icons": 1,
+    "tokens": 2
+  },
+  "src/components/application/date-picker/cell.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 11
+  },
+  "src/components/application/date-picker/date-picker.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 3
+  },
+  "src/components/application/date-picker/date-range-picker.tsx": {
+    "imports": 3,
+    "icons": 1,
+    "tokens": 6
+  },
+  "src/components/application/date-picker/range-calendar.tsx": {
+    "imports": 4,
+    "icons": 1,
+    "tokens": 12
+  },
+  "src/components/application/empty-state/empty-state.tsx": {
+    "imports": 0,
+    "icons": 2,
+    "tokens": 5
+  },
+  "src/components/application/file-upload/draggable.tsx": {
+    "imports": 0,
+    "icons": 1,
+    "tokens": 3
+  },
+  "src/components/application/file-upload/file-upload-base.tsx": {
+    "imports": 3,
+    "icons": 3,
+    "tokens": 23
+  },
+  "src/components/application/loading-indicator/loading-indicator.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/application/modals/modal.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/application/pagination/pagination-dot.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/components/application/pagination/pagination-line.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/application/pagination/pagination.tsx": {
+    "imports": 6,
+    "icons": 1,
+    "tokens": 25
+  },
+  "src/components/application/slideout-menus/slideout-menu.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/components/application/table/table.tsx": {
+    "imports": 4,
+    "icons": 1,
+    "tokens": 16
+  },
+  "src/components/application/tabs/tabs.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 28
+  },
+  "src/components/auth-form.tsx": {
+    "imports": 1,
+    "icons": 1,
+    "tokens": 6
+  },
+  "src/components/avatar-upload.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/components/base/avatar/avatar-label-group.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/components/base/avatar/avatar-profile-photo.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 11
+  },
+  "src/components/base/avatar/avatar.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 5
+  },
+  "src/components/base/avatar/base-components/avatar-add-button.tsx": {
+    "imports": 1,
+    "icons": 1,
+    "tokens": 5
+  },
+  "src/components/base/avatar/base-components/avatar-company-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/base/avatar/base-components/index.tsx": {
+    "imports": 4,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/components/base/badges/badge-groups.tsx": {
+    "imports": 0,
+    "icons": 1,
+    "tokens": 11
+  },
+  "src/components/base/badges/badges.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 6
+  },
+  "src/components/base/button-group/button-group.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 12
+  },
+  "src/components/base/buttons/app-store-buttons-outline.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 8
+  },
+  "src/components/base/buttons/button-utility.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 8
+  },
+  "src/components/base/buttons/button.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 43
+  },
+  "src/components/base/buttons/close-button.tsx": {
+    "imports": 0,
+    "icons": 1,
+    "tokens": 5
+  },
+  "src/components/base/buttons/social-button.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 10
+  },
+  "src/components/base/checkbox/checkbox.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 9
+  },
+  "src/components/base/dropdown/dropdown-account-breadcrumb.tsx": {
+    "imports": 3,
+    "icons": 1,
+    "tokens": 10
+  },
+  "src/components/base/dropdown/dropdown-account-button.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 4
+  },
+  "src/components/base/dropdown/dropdown-account-card-md.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 9
+  },
+  "src/components/base/dropdown/dropdown-account-card-sm.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 10
+  },
+  "src/components/base/dropdown/dropdown-account-card-xs.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 4
+  },
+  "src/components/base/dropdown/dropdown-avatar.tsx": {
+    "imports": 4,
+    "icons": 1,
+    "tokens": 2
+  },
+  "src/components/base/dropdown/dropdown-button-advanced.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 0
+  },
+  "src/components/base/dropdown/dropdown-button-link.tsx": {
+    "imports": 1,
+    "icons": 1,
+    "tokens": 2
+  },
+  "src/components/base/dropdown/dropdown-button-simple.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 0
+  },
+  "src/components/base/dropdown/dropdown-icon-advanced.tsx": {
+    "imports": 1,
+    "icons": 1,
+    "tokens": 0
+  },
+  "src/components/base/dropdown/dropdown-icon-simple.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/components/base/dropdown/dropdown-integration.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 0
+  },
+  "src/components/base/dropdown/dropdown-search-advanced.tsx": {
+    "imports": 3,
+    "icons": 1,
+    "tokens": 2
+  },
+  "src/components/base/dropdown/dropdown-search-simple.tsx": {
+    "imports": 3,
+    "icons": 1,
+    "tokens": 1
+  },
+  "src/components/base/dropdown/dropdown.tsx": {
+    "imports": 4,
+    "icons": 1,
+    "tokens": 11
+  },
+  "src/components/base/input/hint-text.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 3
+  },
+  "src/components/base/input/input-date.tsx": {
+    "imports": 3,
+    "icons": 1,
+    "tokens": 17
+  },
+  "src/components/base/input/input-file.tsx": {
+    "imports": 3,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/base/input/input-group.tsx": {
+    "imports": 4,
+    "icons": 0,
+    "tokens": 3
+  },
+  "src/components/base/input/input-number.tsx": {
+    "imports": 3,
+    "icons": 1,
+    "tokens": 20
+  },
+  "src/components/base/input/input-payment.tsx": {
+    "imports": 4,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/components/base/input/input-tags-outer.tsx": {
+    "imports": 4,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/components/base/input/input-tags.tsx": {
+    "imports": 4,
+    "icons": 1,
+    "tokens": 10
+  },
+  "src/components/base/input/input.tsx": {
+    "imports": 3,
+    "icons": 1,
+    "tokens": 19
+  },
+  "src/components/base/input/label.tsx": {
+    "imports": 1,
+    "icons": 1,
+    "tokens": 7
+  },
+  "src/components/base/input/pin-input.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 12
+  },
+  "src/components/base/progress-indicators/progress-circles.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 11
+  },
+  "src/components/base/progress-indicators/progress-indicators.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 9
+  },
+  "src/components/base/progress-indicators/simple-circle.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/base/radio-buttons/radio-buttons.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 8
+  },
+  "src/components/base/select/combobox.tsx": {
+    "imports": 4,
+    "icons": 1,
+    "tokens": 9
+  },
+  "src/components/base/select/multi-select.tsx": {
+    "imports": 5,
+    "icons": 1,
+    "tokens": 17
+  },
+  "src/components/base/select/popover.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/components/base/select/select-item.tsx": {
+    "imports": 4,
+    "icons": 1,
+    "tokens": 4
+  },
+  "src/components/base/select/select-native.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 7
+  },
+  "src/components/base/select/select.tsx": {
+    "imports": 8,
+    "icons": 1,
+    "tokens": 8
+  },
+  "src/components/base/select/tag-select.tsx": {
+    "imports": 8,
+    "icons": 1,
+    "tokens": 11
+  },
+  "src/components/base/slider/slider.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 6
+  },
+  "src/components/base/tags/base-components/tag-checkbox.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 6
+  },
+  "src/components/base/tags/base-components/tag-close-x.tsx": {
+    "imports": 0,
+    "icons": 1,
+    "tokens": 3
+  },
+  "src/components/base/tags/tags.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 6
+  },
+  "src/components/base/textarea/textarea.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 8
+  },
+  "src/components/base/toggle/toggle.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 7
+  },
+  "src/components/base/tooltip/tooltip.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/board/alert-signup-form.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 6
+  },
+  "src/components/board/alerts-band.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 3
+  },
+  "src/components/board/apply-button.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/board/breadcrumb.tsx": {
+    "imports": 0,
+    "icons": 1,
+    "tokens": 5
+  },
+  "src/components/board/company-avatar.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/components/board/company-card.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 6
+  },
+  "src/components/board/company-section-header.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 8
+  },
+  "src/components/board/copy-link-button.tsx": {
+    "imports": 1,
+    "icons": 1,
+    "tokens": 0
+  },
+  "src/components/board/home-landing.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 5
+  },
+  "src/components/board/job-card.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 14
+  },
+  "src/components/board/job-detail.tsx": {
+    "imports": 3,
+    "icons": 0,
+    "tokens": 12
+  },
+  "src/components/board/job-list.tsx": {
+    "imports": 1,
+    "icons": 1,
+    "tokens": 0
+  },
+  "src/components/board/jobs-not-found.tsx": {
+    "imports": 1,
+    "icons": 1,
+    "tokens": 0
+  },
+  "src/components/board/jobs-results-bar.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/components/board/jobs-search-controls.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/components/board/listing-page-header.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 9
+  },
+  "src/components/board/listing-pagination.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/components/board/listing-rail.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 3
+  },
+  "src/components/board/salary-sections.tsx": {
+    "imports": 3,
+    "icons": 1,
+    "tokens": 29
+  },
+  "src/components/board/taxonomy-tags.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 6
+  },
+  "src/components/danger-zone.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 4
+  },
+  "src/components/education-section.tsx": {
+    "imports": 3,
+    "icons": 0,
+    "tokens": 5
+  },
+  "src/components/experience-section.tsx": {
+    "imports": 3,
+    "icons": 0,
+    "tokens": 5
+  },
+  "src/components/foundations/featured-icon/featured-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 27
+  },
+  "src/components/foundations/integration-icons/bolt-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/foundations/integration-icons/chatgpt-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/foundations/integration-icons/claude-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/foundations/integration-icons/cursor-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/foundations/integration-icons/figma-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/foundations/integration-icons/gemini-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/foundations/integration-icons/github-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/foundations/integration-icons/grok-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/foundations/integration-icons/lovable-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/foundations/integration-icons/perplexity-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/foundations/integration-icons/react-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/foundations/integration-icons/replit-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/foundations/integration-icons/tailwind-css-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/foundations/integration-icons/v0-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/foundations/integration-icons/vite-icon.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/components/foundations/logo/untitledui-logo.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 11
+  },
+  "src/components/foundations/rating-badge.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 5
+  },
+  "src/components/job-alert-floating-prompt.tsx": {
+    "imports": 1,
+    "icons": 1,
+    "tokens": 2
+  },
+  "src/components/languages-section.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 3
+  },
+  "src/components/legal-page.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/components/location-combobox.tsx": {
+    "imports": 0,
+    "icons": 1,
+    "tokens": 16
+  },
+  "src/components/messages-nav-link.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/components/messages/avatar.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/components/messages/blocked-list.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/messages/composer.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 5
+  },
+  "src/components/messages/inbox-list.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 4
+  },
+  "src/components/messages/message-bubble.tsx": {
+    "imports": 5,
+    "icons": 1,
+    "tokens": 7
+  },
+  "src/components/messages/thread-view.tsx": {
+    "imports": 1,
+    "icons": 1,
+    "tokens": 6
+  },
+  "src/components/notification-settings.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/post-card.tsx": {
+    "imports": 1,
+    "icons": 1,
+    "tokens": 10
+  },
+  "src/components/profile-form.tsx": {
+    "imports": 5,
+    "icons": 0,
+    "tokens": 4
+  },
+  "src/components/resume-upload.tsx": {
+    "imports": 3,
+    "icons": 0,
+    "tokens": 6
+  },
+  "src/components/rich-text-editor.tsx": {
+    "imports": 3,
+    "icons": 1,
+    "tokens": 12
+  },
+  "src/components/shared-assets/credit-card/credit-card.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/components/shared-assets/illustrations/box.tsx": {
+    "imports": 0,
+    "icons": 1,
+    "tokens": 3
+  },
+  "src/components/shared-assets/illustrations/cloud.tsx": {
+    "imports": 0,
+    "icons": 1,
+    "tokens": 3
+  },
+  "src/components/shared-assets/illustrations/credit-card.tsx": {
+    "imports": 0,
+    "icons": 1,
+    "tokens": 3
+  },
+  "src/components/shared-assets/illustrations/documents.tsx": {
+    "imports": 0,
+    "icons": 1,
+    "tokens": 3
+  },
+  "src/components/shared-assets/qr-code.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 3
+  },
+  "src/components/skills-section.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 4
+  },
+  "src/components/talent-card.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 7
+  },
+  "src/components/text.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 8
+  },
+  "src/components/untitled-ui/not-found.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/router.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/routes/__root.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/routes/about.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/routes/account.access.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 6
+  },
+  "src/routes/account.saved.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 3
+  },
+  "src/routes/account.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 5
+  },
+  "src/routes/alerts.confirm.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/routes/alerts.manage.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 7
+  },
+  "src/routes/auth.forgot-password.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/routes/auth.magic-link.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/routes/auth.oauth-complete.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/routes/auth.reset-password.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/routes/auth.sign-in.tsx": {
+    "imports": 3,
+    "icons": 0,
+    "tokens": 3
+  },
+  "src/routes/auth.verify-email-required.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/routes/auth.verify-email.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/routes/blog.$postSlug.tsx": {
+    "imports": 3,
+    "icons": 0,
+    "tokens": 26
+  },
+  "src/routes/blog.author.$authorSlug.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 4
+  },
+  "src/routes/blog.index.tsx": {
+    "imports": 3,
+    "icons": 1,
+    "tokens": 0
+  },
+  "src/routes/blog.tag.$tagSlug.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 4
+  },
+  "src/routes/companies.$companySlug.index.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 12
+  },
+  "src/routes/companies.$companySlug.jobs.$jobSlug.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 0
+  },
+  "src/routes/companies.$companySlug.jobs.index.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 4
+  },
+  "src/routes/companies.index.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 0
+  },
+  "src/routes/companies.markets.$market.tsx": {
+    "imports": 1,
+    "icons": 1,
+    "tokens": 0
+  },
+  "src/routes/cookie-policy.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/routes/embed.jobs.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 4
+  },
+  "src/routes/employers.companies.$slug.index.tsx": {
+    "imports": 5,
+    "icons": 1,
+    "tokens": 20
+  },
+  "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx": {
+    "imports": 4,
+    "icons": 0,
+    "tokens": 17
+  },
+  "src/routes/employers.companies.$slug.profile.tsx": {
+    "imports": 4,
+    "icons": 0,
+    "tokens": 13
+  },
+  "src/routes/employers.dashboard.tsx": {
+    "imports": 3,
+    "icons": 1,
+    "tokens": 22
+  },
+  "src/routes/employers.index.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 13
+  },
+  "src/routes/employers.onboarding.$slug.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 5
+  },
+  "src/routes/impressum.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/routes/jobs.locations.index.tsx": {
+    "imports": 2,
+    "icons": 1,
+    "tokens": 4
+  },
+  "src/routes/me.alerts.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/routes/me.applications.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 6
+  },
+  "src/routes/messages.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 4
+  },
+  "src/routes/p.$handle.tsx": {
+    "imports": 2,
+    "icons": 0,
+    "tokens": 12
+  },
+  "src/routes/password.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/routes/post.tsx": {
+    "imports": 10,
+    "icons": 0,
+    "tokens": 10
+  },
+  "src/routes/privacy-policy.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/routes/salaries.index.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 1
+  },
+  "src/routes/salaries.locations.index.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 4
+  },
+  "src/routes/settings.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 3
+  },
+  "src/routes/talent.index.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 10
+  },
+  "src/routes/terms-of-service.tsx": {
+    "imports": 0,
+    "icons": 0,
+    "tokens": 2
+  },
+  "src/utils/countries.tsx": {
+    "imports": 1,
+    "icons": 0,
+    "tokens": 0
+  },
+  "src/utils/timezones.tsx": {
+    "imports": 1,
+    "icons": 1,
+    "tokens": 0
+  }
+}

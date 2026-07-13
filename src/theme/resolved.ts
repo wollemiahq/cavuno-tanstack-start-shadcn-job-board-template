@@ -1,10 +1,10 @@
 /**
- * GENERATED from src/tokens.css — do not edit (npm run gen:theme).
+ * GENERATED from src/theme.css — do not edit (npm run gen:theme).
  * Resolved theme values for renderers that cannot read CSS variables
  * (workers-og/Satori). The hash ties this module to its source; doctor
- * compares it against tokens.css and the platform snapshot (ADR-0065).
+ * compares it against theme.css and the platform snapshot (ADR-0065).
  */
-export const tokensHash = 'bcb04fe2a0dba50fdca485a1f81d6c6d79e35e9826ee93d80dfcb1eecc406139'
+export const tokensHash = '9514757675ea2751591a098d951b0824494a057fe7aa645ec0cbc0c2a3d7b4e2'
 
 export const themeMeta: {
   mode: string | null
@@ -14,8 +14,8 @@ export const themeMeta: {
 } = {
   "mode": "system",
   "fontSans": "geist",
-  "fontHeading": "geist",
-  "fontsImport": "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap"
+  "fontHeading": "inherit",
+  "fontsImport": null
 }
 
 export const themeTokens: {
@@ -23,51 +23,72 @@ export const themeTokens: {
   dark: Record<string, string>
 } = {
   light: {
-  "--background": "#FFFFFF",
-  "--foreground": "#18181B",
-  "--card": "#FAFAFA",
-  "--card-foreground": "#18181B",
-  "--popover": "#FAFAFA",
-  "--popover-foreground": "#18181B",
-  "--primary": "#27272A",
-  "--primary-foreground": "#FFFFFF",
-  "--secondary": "#F4F4F5",
-  "--secondary-foreground": "#18181B",
-  "--muted": "#F4F4F5",
-  "--muted-foreground": "#71717A",
-  "--accent": "#E5E7EB",
-  "--accent-foreground": "#18181B",
-  "--destructive": "#DC2626",
-  "--border": "#D4D4D8",
-  "--input": "#D4D4D8",
-  "--ring": "#52525B",
-  "--contrast-background": "#18181B",
-  "--contrast-foreground": "#FAFAFA",
-  "--foreground-error": "#DC2626",
-  "--font-sans": "'Geist', ui-sans-serif, system-ui, sans-serif",
-  "--font-heading": "'Geist', 'Geist', ui-sans-serif, system-ui, sans-serif"
+  "--background": "oklch(1 0 0)",
+  "--foreground": "oklch(0.145 0 0)",
+  "--card": "oklch(1 0 0)",
+  "--card-foreground": "oklch(0.145 0 0)",
+  "--popover": "oklch(1 0 0)",
+  "--popover-foreground": "oklch(0.145 0 0)",
+  "--primary": "oklch(0.205 0 0)",
+  "--primary-foreground": "oklch(0.985 0 0)",
+  "--secondary": "oklch(0.97 0 0)",
+  "--secondary-foreground": "oklch(0.205 0 0)",
+  "--muted": "oklch(0.97 0 0)",
+  "--muted-foreground": "oklch(0.556 0 0)",
+  "--accent": "oklch(0.97 0 0)",
+  "--accent-foreground": "oklch(0.205 0 0)",
+  "--destructive": "oklch(0.577 0.245 27.325)",
+  "--border": "oklch(0.922 0 0)",
+  "--input": "oklch(0.922 0 0)",
+  "--ring": "oklch(0.708 0 0)",
+  "--chart-1": "oklch(0.87 0 0)",
+  "--chart-2": "oklch(0.556 0 0)",
+  "--chart-3": "oklch(0.439 0 0)",
+  "--chart-4": "oklch(0.371 0 0)",
+  "--chart-5": "oklch(0.269 0 0)",
+  "--radius": "0.625rem",
+  "--sidebar": "oklch(0.985 0 0)",
+  "--sidebar-foreground": "oklch(0.145 0 0)",
+  "--sidebar-primary": "oklch(0.205 0 0)",
+  "--sidebar-primary-foreground": "oklch(0.985 0 0)",
+  "--sidebar-accent": "oklch(0.97 0 0)",
+  "--sidebar-accent-foreground": "oklch(0.205 0 0)",
+  "--sidebar-border": "oklch(0.922 0 0)",
+  "--sidebar-ring": "oklch(0.708 0 0)",
+  "--font-sans": "\"Geist Variable\", sans-serif",
+  "--font-heading": "var(--font-sans)"
 },
   dark: {
-  "--background": "#18181B",
-  "--foreground": "#FAFAFA",
-  "--card": "#27272A",
-  "--card-foreground": "#FAFAFA",
-  "--popover": "#27272A",
-  "--popover-foreground": "#FAFAFA",
-  "--primary": "#52525B",
-  "--primary-foreground": "#FAFAFA",
-  "--secondary": "#18181B",
-  "--secondary-foreground": "#FAFAFA",
-  "--muted": "#18181B",
-  "--muted-foreground": "#A1A1AA",
-  "--accent": "#34343A",
-  "--accent-foreground": "#FAFAFA",
-  "--destructive": "#F87171",
-  "--border": "#3F3F46",
-  "--input": "#3F3F46",
-  "--ring": "#ababab",
-  "--contrast-background": "#27272A",
-  "--contrast-foreground": "#FAFAFA",
-  "--foreground-error": "#F87171"
+  "--background": "oklch(0.145 0 0)",
+  "--foreground": "oklch(0.985 0 0)",
+  "--card": "oklch(0.205 0 0)",
+  "--card-foreground": "oklch(0.985 0 0)",
+  "--popover": "oklch(0.205 0 0)",
+  "--popover-foreground": "oklch(0.985 0 0)",
+  "--primary": "oklch(0.922 0 0)",
+  "--primary-foreground": "oklch(0.205 0 0)",
+  "--secondary": "oklch(0.269 0 0)",
+  "--secondary-foreground": "oklch(0.985 0 0)",
+  "--muted": "oklch(0.269 0 0)",
+  "--muted-foreground": "oklch(0.708 0 0)",
+  "--accent": "oklch(0.269 0 0)",
+  "--accent-foreground": "oklch(0.985 0 0)",
+  "--destructive": "oklch(0.704 0.191 22.216)",
+  "--border": "oklch(1 0 0 / 10%)",
+  "--input": "oklch(1 0 0 / 15%)",
+  "--ring": "oklch(0.556 0 0)",
+  "--chart-1": "oklch(0.87 0 0)",
+  "--chart-2": "oklch(0.556 0 0)",
+  "--chart-3": "oklch(0.439 0 0)",
+  "--chart-4": "oklch(0.371 0 0)",
+  "--chart-5": "oklch(0.269 0 0)",
+  "--sidebar": "oklch(0.205 0 0)",
+  "--sidebar-foreground": "oklch(0.985 0 0)",
+  "--sidebar-primary": "oklch(0.488 0.243 264.376)",
+  "--sidebar-primary-foreground": "oklch(0.985 0 0)",
+  "--sidebar-accent": "oklch(0.269 0 0)",
+  "--sidebar-accent-foreground": "oklch(0.985 0 0)",
+  "--sidebar-border": "oklch(1 0 0 / 10%)",
+  "--sidebar-ring": "oklch(0.556 0 0)"
 },
 }

@@ -62,7 +62,7 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug/og')
 
           // Board theme (ADR-0065 D2): Satori can't read CSS variables, so
           // the card renders from the resolved tokens module derived from
-          // the canonical src/tokens.css. Light values by rule.
+          // the canonical src/theme.css. Light values by rule.
           const t = themeTokens.light
           const html = `
             <div style="display:flex;flex-direction:column;justify-content:space-between;width:1200px;height:630px;padding:80px;background:${t['--background']};font-family:Inter;">

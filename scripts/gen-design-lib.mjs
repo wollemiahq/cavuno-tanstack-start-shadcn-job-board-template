@@ -7,7 +7,7 @@
  *
  *   DESIGN.md               Google Labs design.md spec, pinned `alpha`:
  *                           YAML-frontmatter tokens derived from
- *                           src/tokens.css (ADR-0065 D1 canonical) +
+ *                           src/theme.css (ADR-0065 D1 canonical) +
  *                           body sections; the Components inventory is
  *                           extracted from src/components source with
  *                           the TypeScript checker (react-docgen-class
@@ -42,7 +42,9 @@ const FONT_VARS = new Set(['--font-sans', '--font-heading'])
 
 /** The color custom properties of a parsed block, in file order. */
 function colorEntries(block) {
-  return Object.entries(block).filter(([name]) => !FONT_VARS.has(name))
+  return Object.entries(block).filter(
+    ([name]) => !FONT_VARS.has(name) && name !== '--radius',
+  )
 }
 
 // ── component extraction (TypeScript checker) ───────────────────────
@@ -315,7 +317,7 @@ function frontmatter(tokens) {
   const lines = ['---', `version: ${DESIGN_SPEC_VERSION}`]
   lines.push('name: Cavuno board frontend')
   lines.push(
-    'description: Board frontend chassis (workshop direction) — generated design-system carrier; sources are src/tokens.css, src/components source, and the registry snapshot.',
+    'description: Board frontend chassis — generated design-system carrier; sources are src/theme.css, src/components source, and the registry snapshot.',
   )
   lines.push('colors:')
   for (const [name, value] of colorEntries(tokens.light)) {
@@ -364,7 +366,7 @@ function componentsSection(components, registry) {
 }
 
 export async function generateDesignArtifacts(root) {
-  const css = readFileSync(join(root, 'src', 'tokens.css'), 'utf8')
+  const css = readFileSync(join(root, 'src', 'theme.css'), 'utf8')
   const tokens = parseTokens(css)
   const components = extractComponents(root)
   const registry = registryByBasename(root)
@@ -373,13 +375,13 @@ export async function generateDesignArtifacts(root) {
     frontmatter(tokens),
     '',
     '<!-- GENERATED FILE — do not edit. `pnpm run gen:design` regenerates',
-    '     from src/tokens.css + component source + design/registry-items.json;',
+    '     from src/theme.css + component source + design/registry-items.json;',
     '     CI diffs the output and rejects hand-edits (ADR-0066 D15). -->',
     '',
     '## Overview',
     '',
     'A job-board frontend for one Cavuno board, grounded in the Board API',
-    `via its publishable key. Theme source of truth is \`src/tokens.css\``,
+    `via its publishable key. Theme source of truth is \`src/theme.css\``,
     '(mode: ' + (tokens.meta.mode ?? 'system') + '); this file carries the',
     'derived tokens and the component inventory for agents.',
     '',
@@ -389,7 +391,7 @@ export async function generateDesignArtifacts(root) {
     '',
     '## Colors',
     '',
-    'Light (`:root`) and dark (`.dark`) values from `src/tokens.css`.',
+    'Light (`:root`) and dark (`.dark`) values from `src/theme.css`.',
     'Always style through the CSS custom properties',
     '(`var(--primary)`, Tailwind theme utilities) — never hardcode hex',
     'values in components.',
@@ -426,7 +428,7 @@ export async function generateDesignArtifacts(root) {
     '  data arrives from route loaders and `src/server/` functions.',
     "- Do reuse the inventory above; don't duplicate an existing",
     '  component to change its style — extend via props/variants.',
-    '- Do edit `src/tokens.css` for theme changes and regenerate',
+    '- Do edit `src/theme.css` directly or with the shadcn CLI and regenerate',
     "  (`pnpm run gen:theme`); don't edit generated files.",
     "- Don't remove or alter the job-detail JSON-LD or `head()` meta.",
     '',
@@ -466,7 +468,7 @@ function dtcgExport(tokens) {
  * (plus the DTCG export, which has no body concept).
  */
 export async function generateDesignFrontmatter(root) {
-  const css = readFileSync(join(root, 'src', 'tokens.css'), 'utf8')
+  const css = readFileSync(join(root, 'src', 'theme.css'), 'utf8')
   const tokens = parseTokens(css)
   return { frontmatterBlock: frontmatter(tokens), dtcgJson: dtcgExport(tokens) }
 }

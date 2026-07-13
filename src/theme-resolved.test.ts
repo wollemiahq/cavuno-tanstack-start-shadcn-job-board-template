@@ -10,7 +10,7 @@ import {
 } from '../scripts/theme-resolved-lib.mjs'
 
 /**
- * ADR-0065 D2/D3 — tokens.css is canonical; everything else derives.
+ * ADR-0065 D2/D3 — theme.css is canonical; everything else derives.
  * These tests pin the two derivations: the resolved-values module OG
  * consumes (Satori can't read CSS variables) and the platform snapshot
  * payload (email-safe subset, themeConfig key names — the fixed contract
@@ -51,6 +51,22 @@ describe('parseTokens', () => {
     expect(parsed.meta.fontHeading).toBe('lora')
     expect(parsed.meta.fontsImport).toContain('fonts.googleapis.com')
   })
+
+  it('derives a non-Geist Fontsource family from shadcn-style theme CSS', () => {
+    const parsed = parseTokens(`
+@import "@fontsource-variable/roboto-slab";
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: "Roboto Slab Variable", serif;
+}
+:root { --background: white; }
+.dark { --background: black; }
+`)
+
+    expect(parsed.meta.fontSans).toBe('roboto-slab')
+    expect(parsed.meta.fontHeading).toBe('inherit')
+    expect(parsed.light['--font-sans']).toBe('"Roboto Slab Variable", serif')
+  })
 })
 
 describe('tokensHash', () => {
@@ -81,9 +97,9 @@ describe('buildSyncPayload', () => {
   })
 })
 
-describe('the committed resolved module matches the committed tokens.css', () => {
+describe('the committed resolved module matches the committed theme.css', () => {
   it('src/theme/resolved.ts carries the current tokens hash (npm run gen:theme)', async () => {
-    const css = readFileSync(join(import.meta.dirname, 'tokens.css'), 'utf8')
+    const css = readFileSync(join(import.meta.dirname, 'theme.css'), 'utf8')
     const resolved = await import('./theme/resolved')
     expect(resolved.tokensHash).toBe(tokensHash(css))
     expect(resolved.themeTokens.light['--background']).toBeDefined()

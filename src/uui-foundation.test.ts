@@ -1,5 +1,5 @@
 /**
- * Untitled UI foundation contract (CAV-480, the ADR-0072 "expand" step).
+ * Compatibility-layer contract after the shadcn Rhea expand step.
  *
  * The Untitled UI layer must coexist with the chassis without changing
  * how existing surfaces render, and must key off the SAME dark-mode
@@ -30,11 +30,16 @@ const tsFilesUnder = (dir: string): string[] => {
   return out
 }
 
-describe('Untitled UI foundation CSS (manual-installation layer)', () => {
-  it('imports the Untitled UI theme and typography layers into the one entry sheet', () => {
+describe('Rhea foundation and inherited Untitled UI compatibility CSS', () => {
+  it('loads the canonical Rhea theme before the inherited compatibility layers', () => {
     const css = read('src/styles.css')
+    expect(css).toContain(`@import "./theme.css"`)
     expect(css).toContain(`@import "./styles/untitled-ui/theme.css"`)
     expect(css).toContain(`@import "./styles/untitled-ui/typography.css"`)
+    expect(css.indexOf('@import "./theme.css"')).toBeLessThan(
+      css.indexOf('@import "./styles/untitled-ui/theme.css"'),
+    )
+    expect(css).toContain('.rhea-theme')
   })
 
   it('loads the react-aria and animate Tailwind plugins', () => {
@@ -65,22 +70,13 @@ describe('Untitled UI foundation CSS (manual-installation layer)', () => {
     expect(styles).toContain('@custom-variant dark (&:is(.dark, .dark *))')
   })
 
-  it('is STOCK Untitled UI: Inter loaded, no workshop design layer, no font aliasing', () => {
-    // Amended 2026-07-10 (operator directive): the entry sheet follows
-    // the manual installation exactly. Inter is the type stack (their
-    // theme.css resolves `var(--font-inter, "Inter")` once the font is
-    // loaded); the workshop fonts, palette, and signature treatments are
-    // gone. If Bricolage or a --font-body alias reappears, the stock
-    // claim is broken.
-    const css = read('src/styles.css')
-    expect(css).toContain('family=Inter')
-    expect(css).not.toContain('Bricolage')
-    expect(css).not.toContain('Source+Sans')
-    expect(css).not.toMatch(/--font-body:\s*var\(--font-sans\)/)
-    // Untitled UI components own ALL focus treatment — the chassis's
-    // global :focus-visible outline (source of the double focus ring)
-    // must not return.
-    expect(css).not.toMatch(/^:focus-visible/m)
+  it('owns Geist in the CLI theme while preserving Inter for inherited routes', () => {
+    const theme = read('src/theme.css')
+    const styles = read('src/styles.css')
+    expect(theme).toContain('@import "@fontsource-variable/geist"')
+    expect(theme).toContain('--font-sans: "Geist Variable", sans-serif')
+    expect(styles).toContain('family=Inter')
+    expect(styles).not.toMatch(/^:focus-visible/m)
   })
 
   it('has DELETED the legacy compat block at the contract step (CAV-509)', () => {
@@ -107,11 +103,10 @@ describe('Untitled UI foundation CSS (manual-installation layer)', () => {
     expect(css).toMatch(/--tw-prose-links:\s*var\(--color-text-brand-secondary\)/)
   })
 
-  it('no legacy shadcn class or variable name survives anywhere in src', () => {
-    // The whole point of the bridge deletion: the frozen frontier is gone
-    // from hand-authored source. Generated theme data (resolved.ts carries
-    // a --font-heading token string for the BoardTheme runtime, unrelated to
-    // the deleted Tailwind alias), paraglide, and the route tree are excluded.
+  it('keeps pre-Rhea names out of inherited application source', () => {
+    // The owned Rhea pilot intentionally uses canonical shadcn names such as
+    // bg-card. This guard remains scoped to the inherited application layer;
+    // the measured no-growth ratchet owns the complete legacy frontier.
     const LEGACY_NAMES = [
       'prose-workshop',
       'bench-card',
@@ -126,7 +121,8 @@ describe('Untitled UI foundation CSS (manual-installation layer)', () => {
       'prose-neutral',
       'prose-invert',
     ]
-    const SKIP = /\.test\.tsx?$|routeTree\.gen\.ts$|resolved\.ts$/
+    const SKIP =
+      /\.test\.tsx?$|routeTree\.gen\.ts$|resolved\.ts$|components\/ui\/|components\/(?:auth-form|rhea-auth-pilot)\.tsx$|routes\/auth\./
     const offenders: string[] = []
     for (const file of tsFilesUnder('src')) {
       if (SKIP.test(file)) continue

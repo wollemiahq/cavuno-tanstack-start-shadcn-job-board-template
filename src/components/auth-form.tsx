@@ -1,4 +1,4 @@
-/** Shared auth-page shell + field primitives. */
+/** Shared inherited auth-page shell + field primitives. */
 import { Briefcase01 } from '@untitledui/icons'
 
 import { Input } from '@/components/base/input/input'
@@ -9,6 +9,10 @@ import { Text } from '@/components/text'
  * log-in page examples (logo mark → display heading + supporting text →
  * form region). No card/ring wrapper: the auth surfaces sit on the bare
  * page ground.
+ *
+ * Rhea pilot routes deliberately use `rhea-auth-pilot.tsx` instead. Keeping
+ * this inherited shell unchanged prevents a Rhea token scope from wrapping
+ * Untitled UI children while the remaining auth routes await migration.
  */
 export function AuthCard({
   title,

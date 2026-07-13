@@ -1,21 +1,20 @@
 # cavuno-shadcn-ui-job-board-template
 
-An open-source (MIT) job board template built entirely from
-[Untitled UI React](https://www.untitledui.com/react) (free set) and
+An open-source (MIT) job board template built on the official
+**shadcn/ui Rhea** preset with **Base UI**, Geist, Lucide, and
 [Tailwind CSS 4](https://tailwindcss.com). Clone it, run it, and you have a
 complete, SEO-ready job board — every surface a real page, nothing stubbed.
 
-![Job board built with Untitled UI](docs/screenshot-home.png)
+![Job board built with shadcn/ui Rhea](docs/screenshot-home.png)
 
-**Stack**: React 19 · TanStack Start (SSR) · Cloudflare Workers · Vite+
-(`vp`) · Tailwind CSS 4 · Untitled UI React.
+**Stack**: React 19 · TanStack Start (SSR) · Cloudflare Workers · Vite+ (`vp`) · Tailwind CSS 4 · shadcn/ui Rhea · Base UI.
 
 ## What you get
 
-- **The full free Untitled UI collection, in-tree** — 230+ component files
-  under `src/components`, added the way the CLI adds them
-  (`npx untitledui@latest add …`), yours to edit. No design tokens hidden
-  behind a package.
+- **Owned shadcn/ui Rhea source, in-tree** — the Base UI-backed primitives
+  under `src/components/ui/` and their CLI-owned theme are yours to edit or
+  replace. Inherited Untitled UI is temporary migration-only compatibility
+  code and will be deleted before release.
 - **Every surface is a real page**, not a placeholder: jobs browse + search
   + filters, job detail + apply, companies, blog, salary explorer,
   programmatic SEO listings, candidate auth + account + messaging, the
@@ -25,7 +24,7 @@ complete, SEO-ready job board — every surface a real page, nothing stubbed.
 - **i18n chrome** — [Paraglide JS](https://paraglidejs.com) with `en`/`de`/`fr`
   catalogs (UI chrome only; board content stays its own language).
 - **Dark mode** keyed to a single `.dark` class, and **accessibility** from
-  the react-aria foundations every Untitled UI component is built on.
+  Base UI semantics and the owned components' explicit ARIA contracts.
 
 ## Quickstart
 
@@ -57,18 +56,24 @@ Deploy with `pnpm run deploy` (Cloudflare Workers).
 
 ## Design system
 
-This is **stock Untitled UI**: Inter, their `theme.css` + `typography.css`,
-their react-aria base components under `src/components/base/`, class merging
-via `cx` from `@/utils/cx`. Nothing is aliased or re-skinned.
+The design-system source is the current official **shadcn/ui Rhea preset**:
+Base UI primitives, Neutral colors, Geist, and Lucide icons. Components live
+under `src/components/ui/` and use the canonical shadcn public APIs, so you can
+replace that source with your own Base UI-backed shadcn components. Radix is a
+possible explicit migration, not a zero-change replacement: create a disposable
+Radix reference with `shadcn init -b radix`, replace the owned UI sources and
+dependencies deliberately, and adapt Base UI-only props such as
+`focusableWhenDisabled`.
 
-Rebrand the way Untitled UI documents — edit the `--color-brand-*` ramp
-(and the neutral scale) in `src/styles/untitled-ui/theme.css`. That is the
-supported theming path. A legacy runtime `BoardTheme` SDK override
-(`@cavuno/board/theme`, injected in `src/routes/__root.tsx`) still ships but
-is deprecated-bound; treat `theme.css` as canonical.
+`src/theme.css` is the one CLI-owned theme source. Apply the pinned preset with
+`pnpm exec shadcn apply b27Gcu6y --only theme --yes`, then run
+`pnpm run gen:theme && pnpm run gen:design`. `src/styles.css` owns only the app
+layout and the temporary Untitled UI compatibility bridge; inherited Untitled
+UI components may be removed as routes migrate, but new work does not extend
+that layer.
 
 The full component inventory, token reference, and design do's-and-don'ts
-live in **`DESIGN.md`** (generated from `src/tokens.css` + component source —
+live in **`DESIGN.md`** (generated from `src/theme.css` + component source —
 regenerate with `pnpm run gen:design`, never hand-edit; CI rejects drift).
 
 ## What's inside

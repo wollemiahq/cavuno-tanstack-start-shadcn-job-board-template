@@ -1,14 +1,15 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "base-vega",
+  "style": "base-rhea",
   "rsc": false,
   "tsx": true,
   "iconLibrary": "lucide",
   "tailwind": {
     "config": "",
-    "css": "src/styles.css",
+    "css": "src/theme.css",
     "baseColor": "neutral",
-    "cssVariables": true
+    "cssVariables": true,
+    "prefix": ""
   },
   "aliases": {
     "components": "@/components",
@@ -17,6 +18,9 @@
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
+  "menuColor": "default",
+  "menuAccent": "subtle",
+  "rtl": false,
   "registries": {
     "@cavuno": "https://cavuno.com/r/{name}.json"
   }

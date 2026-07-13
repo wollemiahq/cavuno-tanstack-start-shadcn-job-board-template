@@ -1,7 +1,7 @@
 /**
- * tokens.css derivation library (ADR-0065 D2/D3) — pure functions shared
+ * theme.css derivation library (ADR-0065 D2/D3) — pure functions shared
  * by `npm run gen:theme` (emits src/theme/resolved.ts) and the snapshot
- * sync payload printer. tokens.css is canonical; these are the only two
+ * sync payload printer. theme.css is canonical; these are the only two
  * derivations, both hash-stamped so doctor can detect drift (D6).
  */
 import { createHash } from 'node:crypto'
@@ -25,11 +25,21 @@ export function parseTokens(css) {
     }
     return vars
   }
+  const light = block(':root')
+  const dark = block('.dark')
+  for (const name of ['--font-sans', '--font-heading']) {
+    const value = css.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1]?.trim()
+    if (value) light[name] = value
+  }
   const meta = {}
   for (const key of ['mode', 'fontSans', 'fontHeading', 'fontsImport']) {
     meta[key] = css.match(new RegExp(`\\* ${key}: (.+)`))?.[1]?.trim() || null
   }
-  return { light: block(':root'), dark: block('.dark'), meta }
+  meta.mode ??= 'system'
+  meta.fontSans ??=
+    css.match(/@import\s+["']@fontsource-variable\/([^"']+)["'];?/)?.[1] ?? null
+  meta.fontHeading ??= light['--font-heading'] === 'var(--font-sans)' ? 'inherit' : null
+  return { light, dark, meta }
 }
 
 /** Lowercase sha-256 of the tokens file content — the freshness anchor. */
@@ -60,10 +70,10 @@ export function buildSyncPayload(parsed, hash) {
   for (const [key, variable] of Object.entries(SNAPSHOT_COLOR_SOURCES)) {
     const value = parsed.light[variable]
     if (key === 'buttonPrimaryText' && !value) continue // optional upstream
-    if (!value) throw new Error(`tokens.css is missing ${variable} (${key})`)
+    if (!value) throw new Error(`theme.css is missing ${variable} (${key})`)
     colors[key] = value
   }
-  if (!parsed.meta.fontSans) throw new Error('tokens.css banner missing fontSans')
+  if (!parsed.meta.fontSans) throw new Error('theme.css is missing fontSans')
   return {
     tokensHash: hash,
     colors,

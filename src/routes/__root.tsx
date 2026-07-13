@@ -27,7 +27,6 @@ import {
 } from '../server/queries'
 
 import appCss from '../styles.css?url'
-import tokensCss from '../tokens.css?url'
 
 declare module '@tanstack/react-router' {
   interface StaticDataRouteOption {
@@ -98,10 +97,6 @@ export const Route = createRootRoute({
       ],
       links: [
         { rel: 'stylesheet', href: appCss },
-        // The CANONICAL board theme (ADR-0065 D1) — statically linked
-        // AFTER the chassis stylesheet so tokens.css wins the cascade the
-        // way the runtime-injected <style> used to. No wire-theme fetch.
-        { rel: 'stylesheet', href: tokensCss },
         ...(themeMeta.fontsImport
           ? [{ rel: 'stylesheet', href: themeMeta.fontsImport }]
           : []),
@@ -177,7 +172,7 @@ function RootLayout() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const data = Route.useLoaderData()
-  // Theme mode is repo-canonical too (tokens.css banner → resolved
+  // Theme mode is repo-canonical too (theme.css → resolved
   // module), not the wire theme (ADR-0065 D5: migrated boards ignore it).
   const mode =
     themeMeta.mode === 'dark' || themeMeta.mode === 'light'

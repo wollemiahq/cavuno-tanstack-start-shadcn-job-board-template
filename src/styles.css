@@ -1,18 +1,41 @@
-/* Stock Untitled UI foundation (ADR-0072; CAV-480 amended 2026-07-10).
-   This sheet follows the Untitled UI manual installation exactly:
-   Inter, their theme.css + typography.css (verbatim from
-   untitleduico/react except one adaptation — their dark class token is
-   `.dark` here, keyed to the BoardTheme mode script), their plugins,
-   custom variants, utilities, and element resets. The workshop design
-   layer this repo was cloned with — and the shadcn compat bridge that
-   outlived it — have both been removed (CAV-509); the app renders
-   entirely on the stock Untitled UI token namespaces. */
+/* Expand-side Rhea foundation. The legacy Untitled UI layer remains intact
+   while routes migrate. Rhea's colliding primary/secondary semantics are
+   scoped to `.rhea-theme`, so adding the new foundation cannot restyle an
+   inherited page before its explicit contract migration. */
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap");
-@import "tailwindcss";
+@import "./theme.css";
 
 @import "./styles/untitled-ui/theme.css";
 @import "./styles/untitled-ui/typography.css";
+/* Temporary expand-side collision bridge. Official Rhea owns theme.css;
+   inherited UUI property namespaces keep legacy routes stable until CAV-511. */
+.rhea-theme {
+  --background-color-primary: var(--primary);
+  --background-color-secondary: var(--secondary);
+  --background-color-primary_hover: color-mix(
+    in oklch,
+    var(--primary),
+    transparent 20%
+  );
+  --text-color-primary: var(--primary);
+  --text-color-secondary: var(--secondary);
+  --border-color-primary: var(--primary);
+  --border-color-secondary: var(--secondary);
+  --ring-color-primary: var(--primary);
+  --ring-color-secondary: var(--secondary);
+  font-family: var(--font-sans);
+}
+
+/* The official Rhea base layer assigns every element its border and outline
+   colors. Before Rhea, Tailwind's preflight left those colors at currentColor;
+   restore that inherited behavior outside the explicitly migrated scope. */
+@layer base {
+  *:not(.rhea-theme, .rhea-theme *) {
+    border-color: currentColor;
+    outline-color: currentColor;
+  }
+}
 
 /* One dark variant for everything, matching .dark itself AND
    descendants, at :is() specificity. The BoardTheme mode script toggles

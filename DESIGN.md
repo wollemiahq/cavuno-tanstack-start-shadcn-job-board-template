@@ -1,65 +1,85 @@
 ---
 version: alpha
 name: Cavuno board frontend
-description: Board frontend chassis (workshop direction) — generated design-system carrier; sources are src/tokens.css, src/components source, and the registry snapshot.
+description: Board frontend chassis — generated design-system carrier; sources are src/theme.css, src/components source, and the registry snapshot.
 colors:
-  background: '#FFFFFF'
-  foreground: '#18181B'
-  card: '#FAFAFA'
-  card-foreground: '#18181B'
-  popover: '#FAFAFA'
-  popover-foreground: '#18181B'
-  primary: '#27272A'
-  primary-foreground: '#FFFFFF'
-  secondary: '#F4F4F5'
-  secondary-foreground: '#18181B'
-  muted: '#F4F4F5'
-  muted-foreground: '#71717A'
-  accent: '#E5E7EB'
-  accent-foreground: '#18181B'
-  destructive: '#DC2626'
-  border: '#D4D4D8'
-  input: '#D4D4D8'
-  ring: '#52525B'
-  contrast-background: '#18181B'
-  contrast-foreground: '#FAFAFA'
-  foreground-error: '#DC2626'
-  background-dark: '#18181B'
-  foreground-dark: '#FAFAFA'
-  card-dark: '#27272A'
-  card-foreground-dark: '#FAFAFA'
-  popover-dark: '#27272A'
-  popover-foreground-dark: '#FAFAFA'
-  primary-dark: '#52525B'
-  primary-foreground-dark: '#FAFAFA'
-  secondary-dark: '#18181B'
-  secondary-foreground-dark: '#FAFAFA'
-  muted-dark: '#18181B'
-  muted-foreground-dark: '#A1A1AA'
-  accent-dark: '#34343A'
-  accent-foreground-dark: '#FAFAFA'
-  destructive-dark: '#F87171'
-  border-dark: '#3F3F46'
-  input-dark: '#3F3F46'
-  ring-dark: '#ababab'
-  contrast-background-dark: '#27272A'
-  contrast-foreground-dark: '#FAFAFA'
-  foreground-error-dark: '#F87171'
+  background: 'oklch(1 0 0)'
+  foreground: 'oklch(0.145 0 0)'
+  card: 'oklch(1 0 0)'
+  card-foreground: 'oklch(0.145 0 0)'
+  popover: 'oklch(1 0 0)'
+  popover-foreground: 'oklch(0.145 0 0)'
+  primary: 'oklch(0.205 0 0)'
+  primary-foreground: 'oklch(0.985 0 0)'
+  secondary: 'oklch(0.97 0 0)'
+  secondary-foreground: 'oklch(0.205 0 0)'
+  muted: 'oklch(0.97 0 0)'
+  muted-foreground: 'oklch(0.556 0 0)'
+  accent: 'oklch(0.97 0 0)'
+  accent-foreground: 'oklch(0.205 0 0)'
+  destructive: 'oklch(0.577 0.245 27.325)'
+  border: 'oklch(0.922 0 0)'
+  input: 'oklch(0.922 0 0)'
+  ring: 'oklch(0.708 0 0)'
+  chart-1: 'oklch(0.87 0 0)'
+  chart-2: 'oklch(0.556 0 0)'
+  chart-3: 'oklch(0.439 0 0)'
+  chart-4: 'oklch(0.371 0 0)'
+  chart-5: 'oklch(0.269 0 0)'
+  sidebar: 'oklch(0.985 0 0)'
+  sidebar-foreground: 'oklch(0.145 0 0)'
+  sidebar-primary: 'oklch(0.205 0 0)'
+  sidebar-primary-foreground: 'oklch(0.985 0 0)'
+  sidebar-accent: 'oklch(0.97 0 0)'
+  sidebar-accent-foreground: 'oklch(0.205 0 0)'
+  sidebar-border: 'oklch(0.922 0 0)'
+  sidebar-ring: 'oklch(0.708 0 0)'
+  background-dark: 'oklch(0.145 0 0)'
+  foreground-dark: 'oklch(0.985 0 0)'
+  card-dark: 'oklch(0.205 0 0)'
+  card-foreground-dark: 'oklch(0.985 0 0)'
+  popover-dark: 'oklch(0.205 0 0)'
+  popover-foreground-dark: 'oklch(0.985 0 0)'
+  primary-dark: 'oklch(0.922 0 0)'
+  primary-foreground-dark: 'oklch(0.205 0 0)'
+  secondary-dark: 'oklch(0.269 0 0)'
+  secondary-foreground-dark: 'oklch(0.985 0 0)'
+  muted-dark: 'oklch(0.269 0 0)'
+  muted-foreground-dark: 'oklch(0.708 0 0)'
+  accent-dark: 'oklch(0.269 0 0)'
+  accent-foreground-dark: 'oklch(0.985 0 0)'
+  destructive-dark: 'oklch(0.704 0.191 22.216)'
+  border-dark: 'oklch(1 0 0 / 10%)'
+  input-dark: 'oklch(1 0 0 / 15%)'
+  ring-dark: 'oklch(0.556 0 0)'
+  chart-1-dark: 'oklch(0.87 0 0)'
+  chart-2-dark: 'oklch(0.556 0 0)'
+  chart-3-dark: 'oklch(0.439 0 0)'
+  chart-4-dark: 'oklch(0.371 0 0)'
+  chart-5-dark: 'oklch(0.269 0 0)'
+  sidebar-dark: 'oklch(0.205 0 0)'
+  sidebar-foreground-dark: 'oklch(0.985 0 0)'
+  sidebar-primary-dark: 'oklch(0.488 0.243 264.376)'
+  sidebar-primary-foreground-dark: 'oklch(0.985 0 0)'
+  sidebar-accent-dark: 'oklch(0.269 0 0)'
+  sidebar-accent-foreground-dark: 'oklch(0.985 0 0)'
+  sidebar-border-dark: 'oklch(1 0 0 / 10%)'
+  sidebar-ring-dark: 'oklch(0.556 0 0)'
 typography:
   sans:
-    fontFamily: 'Geist', ui-sans-serif, system-ui, sans-serif
+    fontFamily: "Geist Variable", sans-serif
   heading:
-    fontFamily: 'Geist', 'Geist', ui-sans-serif, system-ui, sans-serif
+    fontFamily: var(--font-sans)
 ---
 
 <!-- GENERATED FILE — do not edit. `pnpm run gen:design` regenerates
-     from src/tokens.css + component source + design/registry-items.json;
+     from src/theme.css + component source + design/registry-items.json;
      CI diffs the output and rejects hand-edits (ADR-0066 D15). -->
 
 ## Overview
 
 A job-board frontend for one Cavuno board, grounded in the Board API
-via its publishable key. Theme source of truth is `src/tokens.css`
+via its publishable key. Theme source of truth is `src/theme.css`
 (mode: system); this file carries the
 derived tokens and the component inventory for agents.
 
@@ -69,40 +89,49 @@ commits — structural constraints stay enforced in code.
 
 ## Colors
 
-Light (`:root`) and dark (`.dark`) values from `src/tokens.css`.
+Light (`:root`) and dark (`.dark`) values from `src/theme.css`.
 Always style through the CSS custom properties
 (`var(--primary)`, Tailwind theme utilities) — never hardcode hex
 values in components.
 
 | Token | Light | Dark |
 |---|---|---|
-| `--background` | `#FFFFFF` | `#18181B` |
-| `--foreground` | `#18181B` | `#FAFAFA` |
-| `--card` | `#FAFAFA` | `#27272A` |
-| `--card-foreground` | `#18181B` | `#FAFAFA` |
-| `--popover` | `#FAFAFA` | `#27272A` |
-| `--popover-foreground` | `#18181B` | `#FAFAFA` |
-| `--primary` | `#27272A` | `#52525B` |
-| `--primary-foreground` | `#FFFFFF` | `#FAFAFA` |
-| `--secondary` | `#F4F4F5` | `#18181B` |
-| `--secondary-foreground` | `#18181B` | `#FAFAFA` |
-| `--muted` | `#F4F4F5` | `#18181B` |
-| `--muted-foreground` | `#71717A` | `#A1A1AA` |
-| `--accent` | `#E5E7EB` | `#34343A` |
-| `--accent-foreground` | `#18181B` | `#FAFAFA` |
-| `--destructive` | `#DC2626` | `#F87171` |
-| `--border` | `#D4D4D8` | `#3F3F46` |
-| `--input` | `#D4D4D8` | `#3F3F46` |
-| `--ring` | `#52525B` | `#ababab` |
-| `--contrast-background` | `#18181B` | `#27272A` |
-| `--contrast-foreground` | `#FAFAFA` | `#FAFAFA` |
-| `--foreground-error` | `#DC2626` | `#F87171` |
+| `--background` | `oklch(1 0 0)` | `oklch(0.145 0 0)` |
+| `--foreground` | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` |
+| `--card` | `oklch(1 0 0)` | `oklch(0.205 0 0)` |
+| `--card-foreground` | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` |
+| `--popover` | `oklch(1 0 0)` | `oklch(0.205 0 0)` |
+| `--popover-foreground` | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` |
+| `--primary` | `oklch(0.205 0 0)` | `oklch(0.922 0 0)` |
+| `--primary-foreground` | `oklch(0.985 0 0)` | `oklch(0.205 0 0)` |
+| `--secondary` | `oklch(0.97 0 0)` | `oklch(0.269 0 0)` |
+| `--secondary-foreground` | `oklch(0.205 0 0)` | `oklch(0.985 0 0)` |
+| `--muted` | `oklch(0.97 0 0)` | `oklch(0.269 0 0)` |
+| `--muted-foreground` | `oklch(0.556 0 0)` | `oklch(0.708 0 0)` |
+| `--accent` | `oklch(0.97 0 0)` | `oklch(0.269 0 0)` |
+| `--accent-foreground` | `oklch(0.205 0 0)` | `oklch(0.985 0 0)` |
+| `--destructive` | `oklch(0.577 0.245 27.325)` | `oklch(0.704 0.191 22.216)` |
+| `--border` | `oklch(0.922 0 0)` | `oklch(1 0 0 / 10%)` |
+| `--input` | `oklch(0.922 0 0)` | `oklch(1 0 0 / 15%)` |
+| `--ring` | `oklch(0.708 0 0)` | `oklch(0.556 0 0)` |
+| `--chart-1` | `oklch(0.87 0 0)` | `oklch(0.87 0 0)` |
+| `--chart-2` | `oklch(0.556 0 0)` | `oklch(0.556 0 0)` |
+| `--chart-3` | `oklch(0.439 0 0)` | `oklch(0.439 0 0)` |
+| `--chart-4` | `oklch(0.371 0 0)` | `oklch(0.371 0 0)` |
+| `--chart-5` | `oklch(0.269 0 0)` | `oklch(0.269 0 0)` |
+| `--sidebar` | `oklch(0.985 0 0)` | `oklch(0.205 0 0)` |
+| `--sidebar-foreground` | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` |
+| `--sidebar-primary` | `oklch(0.205 0 0)` | `oklch(0.488 0.243 264.376)` |
+| `--sidebar-primary-foreground` | `oklch(0.985 0 0)` | `oklch(0.985 0 0)` |
+| `--sidebar-accent` | `oklch(0.97 0 0)` | `oklch(0.269 0 0)` |
+| `--sidebar-accent-foreground` | `oklch(0.205 0 0)` | `oklch(0.985 0 0)` |
+| `--sidebar-border` | `oklch(0.922 0 0)` | `oklch(1 0 0 / 10%)` |
+| `--sidebar-ring` | `oklch(0.708 0 0)` | `oklch(0.556 0 0)` |
 
 ## Typography
 
-- Sans: `'Geist', ui-sans-serif, system-ui, sans-serif`
-- Headings: `'Geist', 'Geist', ui-sans-serif, system-ui, sans-serif`
-- Webfont import: `https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap`
+- Sans: `"Geist Variable", sans-serif`
+- Headings: `var(--font-sans)`
 
 ## Layout
 
@@ -2544,6 +2573,38 @@ Props:
 
 - `resume: { object: "resume"; parseStatus: "failed" | "parsing" | "parsed" | null; parseFailureReason: string | null; parsedAt:…`
 
+### RheaAuthCard — `src/components/rhea-auth-pilot.tsx`
+
+Props:
+
+- `announceTitle?: boolean | undefined`
+- `children: ReactNode`
+- `supportingText?: ReactNode`
+- `title: string`
+
+### RheaRegistrationPage — `src/components/rhea-auth-pilot.tsx`
+
+Props:
+
+- `copy: RegistrationCopy`
+- `footer?: ReactNode`
+- `onSubmit: (values: { displayName: string; email: string; password: string; }) => Promise<RegistrationResult>`
+- `successHref: "/account" | "/employers/dashboard"`
+- `supportingText: ReactNode`
+- `title: string`
+
+### RoleSelector — `src/components/rhea-auth-pilot.tsx`
+
+Props:
+
+- `ariaLabel: string`
+- `candidateBody: string`
+- `candidateTitle: string`
+- `employerBody: string`
+- `employerTitle: string`
+- `onValueChange: (value: "candidate" | "employer") => void`
+- `value: "candidate" | "employer"`
+
 ### RichTextEditor — `src/components/rich-text-editor.tsx`
 
 Props:
@@ -2688,6 +2749,43 @@ Props:
 - `truncate?: boolean | undefined`
 - `variant?: HeadingVariant | BodyVariant | undefined`
 
+### Button — `src/components/ui/button.tsx`
+
+Props:
+
+- `size?: "icon" | "xs" | "sm" | "lg" | "default" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `variant?: "link" | "secondary" | "default" | "outline" | "ghost" | "destructive" | null | undefined`
+
+Variants — `variant`: default, outline, secondary, ghost, destructive, link
+
+Variants — `size`: default, xs, sm, lg, icon, 'icon-xs', 'icon-sm', 'icon-lg'
+
+### Card — `src/components/ui/card.tsx`
+
+Props:
+
+- `size?: "sm" | "default" | undefined`
+
+### CardAction — `src/components/ui/card.tsx`
+
+### CardContent — `src/components/ui/card.tsx`
+
+### CardDescription — `src/components/ui/card.tsx`
+
+### CardFooter — `src/components/ui/card.tsx`
+
+### CardHeader — `src/components/ui/card.tsx`
+
+### CardTitle — `src/components/ui/card.tsx`
+
+### Input — `src/components/ui/input.tsx`
+
+### Label — `src/components/ui/label.tsx`
+
+### RadioGroup — `src/components/ui/radio-group.tsx`
+
+### RadioGroupItem — `src/components/ui/radio-group.tsx`
+
 ### NotFound — `src/components/untitled-ui/not-found.tsx`
 
 ### UntitledUiRouterProvider — `src/components/untitled-ui/router-provider.tsx`
@@ -2813,6 +2911,6 @@ Primitives: Text, Prose
   data arrives from route loaders and `src/server/` functions.
 - Do reuse the inventory above; don't duplicate an existing
   component to change its style — extend via props/variants.
-- Do edit `src/tokens.css` for theme changes and regenerate
+- Do edit `src/theme.css` directly or with the shadcn CLI and regenerate
   (`pnpm run gen:theme`); don't edit generated files.
 - Don't remove or alter the job-detail JSON-LD or `head()` meta.
