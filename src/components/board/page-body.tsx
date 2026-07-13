@@ -1,0 +1,68 @@
+import { PageBreadcrumb } from "@/components/board/breadcrumb";
+import { cx } from "@/utils/cx";
+
+import type { BreadcrumbData } from "@/components/board/breadcrumb";
+
+/**
+ * The page-width primitive (CAV-502). One component owns the canonical
+ * content width, horizontal padding, and vertical rhythm for every page,
+ * so no route hand-rolls its own `max-w-*` container. Composing pages read
+ * as one Untitled UI system rather than ad-hoc layouts.
+ *
+ * Structural slots:
+ *  - `band` — a full-bleed section rendered edge-to-edge ABOVE the
+ *    constrained container (the Lumen gray listing header, the job-detail
+ *    header band). The band owns its own inner `max-w-container` wrapper and,
+ *    when it has one, its OWN breadcrumb (via `ListingPageHeader` / the
+ *    `JobDetail` band) — so `breadcrumb` below is for the band-less pages.
+ *  - `breadcrumb` — the resolved trail for a NON-band page (a company
+ *    profile, a blog article, a salary page). `PageBody` seats it through the
+ *    shared `PageBreadcrumb` placement primitive, hugging the nav at the
+ *    codified `pt-4 md:pt-5`, so the spacing is identical to the band pages'.
+ *  - `children` — the constrained main content, on the shared container
+ *    width + padding + `gap-8` rhythm.
+ *  - `rail` — an optional right-hand sticky column; when present the body
+ *    becomes the canonical two-column `[1fr_20rem]` grid (the job-detail
+ *    apply-rail pattern). On mobile the rail stacks above the content.
+ */
+export function PageBody({
+  band,
+  breadcrumb,
+  rail,
+  className,
+  children,
+}: {
+  /** Full-bleed section rendered above the constrained container. */
+  band?: React.ReactNode;
+  /** Resolved trail for a band-less page — rendered via `PageBreadcrumb`. */
+  breadcrumb?: BreadcrumbData;
+  /** Optional sticky right rail — switches the body to the two-column grid. */
+  rail?: React.ReactNode;
+  /** Extra classes for the constrained container. */
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      {band}
+      {breadcrumb ? <PageBreadcrumb items={breadcrumb.items} ariaLabel={breadcrumb.ariaLabel} /> : null}
+      <div className={cx("mx-auto w-full max-w-container px-4 py-8 md:px-8 md:py-10", className)}>
+        {rail ? (
+          <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
+            {/* Main content spans both rows on desktop so the rail
+                            and anything under it stack alongside it. */}
+            <div className="flex min-w-0 flex-col gap-8 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+              {children}
+            </div>
+            {/* Sticky rail — right column on desktop, first on mobile. */}
+            <aside className="flex flex-col gap-6 lg:sticky lg:top-8 lg:col-start-2 lg:row-start-1 lg:self-start">
+              {rail}
+            </aside>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-8">{children}</div>
+        )}
+      </div>
+    </>
+  );
+}

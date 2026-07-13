@@ -1,0 +1,382 @@
+import { Link } from "@tanstack/react-router";
+
+import type { BoardLabelOverrides } from "@cavuno/board/format";
+import { boardCopy } from "#/copy";
+import { m } from "../paraglide/messages";
+
+/**
+ * The board-context `footer` data group (hosted-footer parity slice) —
+ * description, contact, website + social links, and the operator's nav
+ * order/custom links. Not yet in the published SDK types, so the root
+ * loader picks it off the wire body defensively; `null` against an API
+ * that predates the slice (everything falls back to catalog defaults).
+ */
+export interface BoardContextFooter {
+  description: string | null;
+  contactEmail: string | null;
+  websiteUrl: string | null;
+  xUrl: string | null;
+  facebookUrl: string | null;
+  linkedinUrl: string | null;
+  navigationOrder: string[];
+  customLinks: Array<{ id: string; label: string; url: string }>;
+}
+
+interface FooterLink {
+  href: string;
+  label: string;
+  external?: boolean;
+}
+
+/**
+ * `{{board_name}}` / `{{year}}` placeholders in catalog templates
+ * (`footer.copyrightPrefix`, `footer.defaultDescription`) and the
+ * operator's custom footer description — same resolution the hosted
+ * footer applies (`resolveProgrammaticTemplate` / `resolveCopyrightPrefix`).
+ */
+function resolveTemplate(template: string, boardName: string): string {
+  return template
+    .replaceAll("{{board_name}}", boardName)
+    .replaceAll("{{year}}", new Date().getFullYear().toString());
+}
+
+/**
+ * The operator-ordered "For Candidates" links — a port of the hosted
+ * `buildBoardFooterNavigationLinks`: walk `navigationOrder` (system ids +
+ * `custom:<id>` refs), then append any system item and custom link the
+ * order missed. System items gate on their features.
+ */
+function buildNavigationLinks({
+  order,
+  customLinks,
+  systemItems,
+}: {
+  order: string[];
+  customLinks: BoardContextFooter["customLinks"];
+  systemItems: Record<string, FooterLink | null>;
+}): FooterLink[] {
+  const customById = new Map(customLinks.map((link) => [link.id, link]));
+  const links: FooterLink[] = [];
+  const seen = new Set<string>();
+
+  const add = (id: string, link: FooterLink | null | undefined) => {
+    if (!link || seen.has(id)) return;
+    links.push(link);
+    seen.add(id);
+  };
+
+  for (const entry of order) {
+    if (entry in systemItems) {
+      add(entry, systemItems[entry]);
+    } else if (entry.startsWith("custom:")) {
+      const custom = customById.get(entry.slice("custom:".length));
+      if (custom) {
+        add(entry, { href: custom.url, label: custom.label, external: true });
+      }
+    }
+  }
+  for (const [id, item] of Object.entries(systemItems)) add(id, item);
+  for (const custom of customLinks) {
+    add(`custom:${custom.id}`, {
+      href: custom.url,
+      label: custom.label,
+      external: true,
+    });
+  }
+  return links;
+}
+
+function FooterLinkItem({ link }: { link: FooterLink }) {
+  return (
+    <li>
+      {link.external ? (
+        <a href={link.href} className="rounded-xs text-md text-tertiary outline-focus-ring transition duration-100 ease-linear hover:text-secondary_hover hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2">
+          {link.label}
+        </a>
+      ) : (
+        <Link to={link.href} className="rounded-xs text-md text-tertiary outline-focus-ring transition duration-100 ease-linear hover:text-secondary_hover hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2">
+          {link.label}
+        </Link>
+      )}
+    </li>
+  );
+}
+
+function FooterColumn({
+  heading,
+  links,
+  children,
+}: {
+  heading: string;
+  links: FooterLink[];
+  children?: React.ReactNode;
+}) {
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-quaternary">{heading}</h3>
+      <ul className="mt-4 space-y-3">
+        {links.map((link) => (
+          <FooterLinkItem key={`${link.href}${link.label}`} link={link} />
+        ))}
+      </ul>
+      {children}
+    </div>
+  );
+}
+
+// Brand-glyph SVGs (same paths as the hosted board's footer icons).
+function XIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="size-4">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
+function FacebookIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="size-4">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+    </svg>
+  );
+}
+
+function LinkedInIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="size-4">
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+    </svg>
+  );
+}
+
+function CavunoMark() {
+  return (
+    <svg fill="none" viewBox="0 0 38 48" aria-hidden="true" className="size-3 shrink-0">
+      <circle cx="19" cy="24" r="16" stroke="currentColor" strokeWidth="6" />
+    </svg>
+  );
+}
+
+export default function Footer({
+  boardName,
+  logoUrl,
+  language,
+  labels,
+  showCavunoBranding,
+  primaryDomain,
+  slug,
+  features,
+  footer,
+  talentDirectoryVisibility,
+  hasEmployerOfferPage,
+}: {
+  boardName: string;
+  logoUrl: string | null;
+  language: string;
+  labels?: BoardLabelOverrides;
+  /**
+   * Board-context flag (`board.context().showCavunoBranding`, default
+   * true). Plan-gated server-side: lower-tier plans cannot set it false.
+   * Rendering it is a starter default, not an enforcement — a clone owner
+   * can delete this; durable "Powered by Cavuno" attribution lives in the
+   * server-controlled surfaces (emails, edge-injected on Cavuno-hosted
+   * deploys), never in owned frontend code.
+   */
+  showCavunoBranding: boolean;
+  primaryDomain: string | null;
+  slug: string;
+  features: {
+    blog: boolean;
+    talentDirectory: boolean;
+    publicJobSubmission: boolean;
+    impressum: boolean;
+  };
+  footer: BoardContextFooter | null;
+  /**
+   * The tri-state behind `features.talentDirectory` — hosted chrome links
+   * /talent whenever it is not 'off' (an employers-only directory renders
+   * a sign-in upsell). Null against an API that predates the field; fall
+   * back to the collapsed boolean.
+   */
+  talentDirectoryVisibility: "off" | "public" | "employers_only" | null;
+  /**
+   * Whether /employers has anything to sell (self-service, talent, or
+   * sales-led plans) — the hosted `hasEmployerOfferPage` gate on the
+   * Pricing links. `features.publicJobSubmission` is the hosted
+   * `hasEnabledPlans` gate on "Post a job" (same public-plan query).
+   */
+  hasEmployerOfferPage: boolean;
+}) {
+  const copy = boardCopy(language, labels);
+
+  // ── For Candidates — operator-ordered system + custom links ──
+  const navigationLinks = buildNavigationLinks({
+    order: footer?.navigationOrder ?? [],
+    customLinks: footer?.customLinks ?? [],
+    systemItems: {
+      home: { href: "/jobs", label: copy.nav.home },
+      companies: { href: "/companies", label: copy.nav.companies },
+      pricing: hasEmployerOfferPage
+        ? { href: "/employers", label: copy.nav.pricing }
+        : null,
+      blog: features.blog ? { href: "/blog", label: copy.nav.blog } : null,
+    },
+  });
+
+  // ── For Companies ──
+  const talentLinked = talentDirectoryVisibility
+    ? talentDirectoryVisibility !== "off"
+    : features.talentDirectory;
+  const companyLinks: FooterLink[] = [
+    ...(features.publicJobSubmission
+      ? [{ href: "/post", label: copy.nav.post }]
+      : []),
+    ...(hasEmployerOfferPage
+      ? [{ href: "/employers", label: copy.nav.pricing }]
+      : []),
+    ...(talentLinked ? [{ href: "/talent", label: copy.nav.talent }] : []),
+  ];
+
+  // ── Resources ──
+  const resourceLinks: FooterLink[] = [
+    { href: "/jobs/locations", label: copy.footer.locationsLabel },
+    { href: "/salaries", label: copy.footer.salariesLabel },
+    // sitemap.xml is a server route, not a router page → plain anchor
+    { href: "/sitemap.xml", label: copy.footer.sitemapLabel, external: true },
+  ];
+
+  // ── About ──
+  const aboutLinks: FooterLink[] = [
+    { href: "/about", label: copy.footer.aboutLabel },
+    ...(footer?.contactEmail
+      ? [
+          {
+            href: `mailto:${footer.contactEmail}`,
+            label: copy.footer.contactLabel,
+            external: true,
+          },
+        ]
+      : []),
+    ...(footer?.websiteUrl
+      ? [
+          {
+            href: footer.websiteUrl,
+            label: copy.footer.websiteLabel,
+            external: true,
+          },
+        ]
+      : []),
+  ];
+  const socialLinks = [
+    footer?.xUrl ? { href: footer.xUrl, label: "X", icon: <XIcon /> } : null,
+    footer?.facebookUrl
+      ? { href: footer.facebookUrl, label: "Facebook", icon: <FacebookIcon /> }
+      : null,
+    footer?.linkedinUrl
+      ? { href: footer.linkedinUrl, label: "LinkedIn", icon: <LinkedInIcon /> }
+      : null,
+  ].filter((link) => link !== null);
+
+  const description = resolveTemplate(
+    footer?.description || copy.footer.defaultDescription,
+    boardName,
+  );
+  const copyright = `${resolveTemplate(copy.footer.copyrightPrefix, boardName)} ${copy.footer.allRightsReservedText}`;
+
+  const legalLinks: FooterLink[] = [
+    { href: "/terms-of-service", label: copy.footer.termsOfServiceLabel },
+    { href: "/privacy-policy", label: copy.footer.privacyPolicyLabel },
+    { href: "/cookie-policy", label: copy.footer.cookiePolicyLabel },
+    ...(features.impressum
+      ? [{ href: "/impressum", label: copy.footer.impressumLabel }]
+      : []),
+  ];
+
+  const columns = [
+    { heading: copy.footer.forCandidatesHeading, links: navigationLinks },
+    ...(companyLinks.length > 0
+      ? [{ heading: copy.footer.forCompaniesHeading, links: companyLinks }]
+      : []),
+    { heading: copy.footer.resourcesHeading, links: resourceLinks },
+  ];
+
+  // Hosted referral attribution: ?ref= the board's public host.
+  const marketingHref = `https://cavuno.com/?ref=${encodeURIComponent(primaryDomain ?? slug)}`;
+
+  return (
+    <footer className="mt-16 border-t border-secondary bg-primary">
+      <div className="mx-auto max-w-container px-4 pt-12 pb-10 md:px-8">
+        <div className="grid gap-10 md:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,1fr))]">
+          <div className="max-w-xs space-y-4">
+            <Link
+              to="/"
+              className="flex items-center gap-2.5 rounded-md text-lg font-semibold text-primary outline-focus-ring hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+            >
+              {logoUrl ? (
+                <img src={logoUrl} alt="" className="size-8 rounded-md" />
+              ) : null}
+              {boardName}
+            </Link>
+            <p className="text-md text-tertiary">{description}</p>
+            {showCavunoBranding ? (
+              <a
+                href={marketingHref}
+                rel="noopener noreferrer"
+                target="_blank"
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm text-tertiary ring-1 ring-secondary outline-focus-ring transition duration-100 ease-linear ring-inset hover:bg-primary_hover hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+              >
+                {copy.footer.poweredByText}
+                <CavunoMark />
+                <span className="font-medium text-secondary">
+                  {m.siteFooter_cavunoLabel()}
+                </span>
+              </a>
+            ) : null}
+          </div>
+
+          {columns.map((column) => (
+            <FooterColumn
+              key={column.heading}
+              heading={column.heading}
+              links={column.links}
+            />
+          ))}
+
+          <FooterColumn heading={copy.footer.aboutHeading} links={aboutLinks}>
+            {socialLinks.length > 0 ? (
+              <div className="mt-4 flex items-center gap-3">
+                {socialLinks.map((social) => (
+                  <a
+                    key={social.href}
+                    href={social.href}
+                    aria-label={social.label}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    className="rounded-xs text-fg-quaternary outline-focus-ring transition duration-100 ease-linear hover:text-fg-quaternary_hover focus-visible:outline-2 focus-visible:outline-offset-2"
+                  >
+                    {social.icon}
+                  </a>
+                ))}
+              </div>
+            ) : null}
+          </FooterColumn>
+        </div>
+
+        <div className="mt-12 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-secondary pt-8">
+          <span className="text-md text-quaternary">{copyright}</span>
+          <nav className="flex flex-wrap gap-x-6 gap-y-3">
+            {legalLinks.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                className="rounded-xs text-md text-tertiary outline-focus-ring transition duration-100 ease-linear hover:text-secondary_hover hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      </div>
+    </footer>
+  );
+}

@@ -1,0 +1,112 @@
+/* Stock Untitled UI foundation (ADR-0072; CAV-480 amended 2026-07-10).
+   This sheet follows the Untitled UI manual installation exactly:
+   Inter, their theme.css + typography.css (verbatim from
+   untitleduico/react except one adaptation — their dark class token is
+   `.dark` here, keyed to the BoardTheme mode script), their plugins,
+   custom variants, utilities, and element resets. The workshop design
+   layer this repo was cloned with — and the shadcn compat bridge that
+   outlived it — have both been removed (CAV-509); the app renders
+   entirely on the stock Untitled UI token namespaces. */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap");
+@import "tailwindcss";
+
+@import "./styles/untitled-ui/theme.css";
+@import "./styles/untitled-ui/typography.css";
+
+/* One dark variant for everything, matching .dark itself AND
+   descendants, at :is() specificity. The BoardTheme mode script toggles
+   the class. */
+@custom-variant dark (&:is(.dark, .dark *));
+@custom-variant label (& [data-label]);
+@custom-variant focus-input-within (&:has(input:focus));
+@plugin "@tailwindcss/typography";
+@plugin "tailwindcss-react-aria-components";
+@plugin "tailwindcss-animate";
+
+/* ── Untitled UI globals — verbatim from styles/globals.css ── */
+
+@utility scrollbar-hide {
+  &::-webkit-scrollbar {
+    display: none;
+    -webkit-appearance: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@utility transition-inherit-all {
+  transition-property: inherit;
+  transition-duration: inherit;
+  transition-timing-function: inherit;
+}
+
+html,
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-variant-ligatures: contextual;
+  font-variant-ligatures: contextual;
+  -webkit-font-kerning: normal;
+  font-kerning: normal;
+}
+
+/* Hide the default expand arrow on Safari. */
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Hide default arrows from number inputs. */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Hide the default clear button (X) from search inputs. */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+/* Hide the default outline on chart elements. */
+.recharts-surface,
+.recharts-surface g,
+.recharts-surface path {
+  outline: none;
+}
+
+/* ── App shell ── */
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  background: var(--background-color-primary);
+  color: var(--text-color-primary);
+}
+
+/* ── Rich text (prose-uui) ──
+   The canonical rich-text class for rendered HTML (job descriptions, blog
+   bodies, company descriptions, legal pages). It layers on the stock
+   Untitled UI prose (`.prose`, the vendored typography.css type scale mapped
+   onto UUI tokens) and deviates only where the brief mandates it: links are
+   the brand link color (matching the Button `link` variant's
+   `text-brand-secondary`) instead of stock UUI's tertiary. Applied via the
+   `Prose` component as `prose prose-uui max-w-none`. Everything else —
+   heading scale, body/list rhythm, blockquote, code, tables — is the stock
+   Untitled UI prose, which adapts to dark through the UUI token var() chain. ── */
+.prose-uui {
+  --tw-prose-links: var(--color-text-brand-secondary);
+}
+
+.prose-uui
+  :where(a):not(:where([class~="not-prose"], [class~="not-prose"] *, :is(h1, h2, h3, h4, h5, h6) a)):hover {
+  color: var(--color-text-brand-secondary_hover);
+}

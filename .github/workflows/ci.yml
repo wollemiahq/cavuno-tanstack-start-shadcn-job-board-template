@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      # Structural contract gates (CAV-489): the legacy primitive stack is
+      # deleted — nothing under src/ may import it back, and the free-tier
+      # Untitled UI namespace is the only one allowed (no PRO imports).
+      - name: No legacy primitive-stack imports
+        run: |
+          if grep -rnE "@base-ui/react|lucide-react|components/ui/" src/; then
+            echo "::error::Legacy primitive-stack reference found in src/ — deleted at the CAV-489 contract step. Use the Untitled UI base components + @untitledui/icons."
+            exit 1
+          fi
+
+      - name: No Untitled UI PRO-namespace references
+        run: |
+          if grep -rnE "untitledui\.com/react/pro|@untitledui-pro" src/; then
+            echo "::error::Untitled UI PRO-namespace reference found in src/ — this starter ships the free tier only."
+            exit 1
+          fi
+
+      - name: Test
+        run: pnpm test
+
+      # D15 (ADR-0066): DESIGN.md + design/tokens.dtcg.json are generated
+      # artifacts — regenerate and reject any drift/hand-edit.
+      - name: Design artifacts check
+        run: pnpm run gen:design -- --check
+
+      - name: Build
+        run: pnpm run build
+
+  # Conformance gate (ADR-0061 decision 3): capability, not markup.
+  # Tier 1 static + tier 2 read probes against THIS starter's built
+  # frontend + tier 3 write probes against the platform sandbox board
+  # (writes are refused server-side unless the board is marked test, so
+  # the doctor job points the frontend at the sandbox pk).
+  doctor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Point the frontend at the sandbox board
+        run: |
+          printf 'CAVUNO_API_URL=https://api.cavuno.com\nCAVUNO_BOARD=%s\n' "$PUBLIC_CAVUNO_BOARD" > .dev.vars
+        env:
+          PUBLIC_CAVUNO_BOARD: pk_c2f66367a3abaa6bafd00fd3c2de3297
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Serve the built worker
+        run: |
+          pnpm exec vp preview --port 4173 &
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null http://localhost:4173/ && exit 0
+            sleep 1
+          done
+          echo 'preview server never became ready' >&2
+          exit 1
+
+      - name: Doctor (all three tiers)
+        run: pnpm exec cavuno-board doctor --frontend http://localhost:4173 --sandbox
+        env:
+          PUBLIC_CAVUNO_API_URL: https://api.cavuno.com
+          PUBLIC_CAVUNO_BOARD: pk_c2f66367a3abaa6bafd00fd3c2de3297
+
+      # en-XA coverage gate (Phase 1): catalog-backed chrome must render
+      # pseudo-localized on /en-XA/ — proves URL locale → middleware →
+      # seam → messages end to end. The static ratchet
+      # (src/copy-scan.test.ts) guards the hardcoded-string burn-down.
+      - name: Pseudo-locale gate
+        run: node scripts/pseudo-locale-gate.mjs http://localhost:4173

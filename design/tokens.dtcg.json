@@ -1,0 +1,194 @@
+{
+  "$schema": "https://tr.designtokens.org/format/",
+  "color": {
+    "background": {
+      "$type": "color",
+      "$value": "#FFFFFF"
+    },
+    "foreground": {
+      "$type": "color",
+      "$value": "#18181B"
+    },
+    "card": {
+      "$type": "color",
+      "$value": "#FAFAFA"
+    },
+    "card-foreground": {
+      "$type": "color",
+      "$value": "#18181B"
+    },
+    "popover": {
+      "$type": "color",
+      "$value": "#FAFAFA"
+    },
+    "popover-foreground": {
+      "$type": "color",
+      "$value": "#18181B"
+    },
+    "primary": {
+      "$type": "color",
+      "$value": "#27272A"
+    },
+    "primary-foreground": {
+      "$type": "color",
+      "$value": "#FFFFFF"
+    },
+    "secondary": {
+      "$type": "color",
+      "$value": "#F4F4F5"
+    },
+    "secondary-foreground": {
+      "$type": "color",
+      "$value": "#18181B"
+    },
+    "muted": {
+      "$type": "color",
+      "$value": "#F4F4F5"
+    },
+    "muted-foreground": {
+      "$type": "color",
+      "$value": "#71717A"
+    },
+    "accent": {
+      "$type": "color",
+      "$value": "#E5E7EB"
+    },
+    "accent-foreground": {
+      "$type": "color",
+      "$value": "#18181B"
+    },
+    "destructive": {
+      "$type": "color",
+      "$value": "#DC2626"
+    },
+    "border": {
+      "$type": "color",
+      "$value": "#D4D4D8"
+    },
+    "input": {
+      "$type": "color",
+      "$value": "#D4D4D8"
+    },
+    "ring": {
+      "$type": "color",
+      "$value": "#52525B"
+    },
+    "contrast-background": {
+      "$type": "color",
+      "$value": "#18181B"
+    },
+    "contrast-foreground": {
+      "$type": "color",
+      "$value": "#FAFAFA"
+    },
+    "foreground-error": {
+      "$type": "color",
+      "$value": "#DC2626"
+    },
+    "background-dark": {
+      "$type": "color",
+      "$value": "#18181B"
+    },
+    "foreground-dark": {
+      "$type": "color",
+      "$value": "#FAFAFA"
+    },
+    "card-dark": {
+      "$type": "color",
+      "$value": "#27272A"
+    },
+    "card-foreground-dark": {
+      "$type": "color",
+      "$value": "#FAFAFA"
+    },
+    "popover-dark": {
+      "$type": "color",
+      "$value": "#27272A"
+    },
+    "popover-foreground-dark": {
+      "$type": "color",
+      "$value": "#FAFAFA"
+    },
+    "primary-dark": {
+      "$type": "color",
+      "$value": "#52525B"
+    },
+    "primary-foreground-dark": {
+      "$type": "color",
+      "$value": "#FAFAFA"
+    },
+    "secondary-dark": {
+      "$type": "color",
+      "$value": "#18181B"
+    },
+    "secondary-foreground-dark": {
+      "$type": "color",
+      "$value": "#FAFAFA"
+    },
+    "muted-dark": {
+      "$type": "color",
+      "$value": "#18181B"
+    },
+    "muted-foreground-dark": {
+      "$type": "color",
+      "$value": "#A1A1AA"
+    },
+    "accent-dark": {
+      "$type": "color",
+      "$value": "#34343A"
+    },
+    "accent-foreground-dark": {
+      "$type": "color",
+      "$value": "#FAFAFA"
+    },
+    "destructive-dark": {
+      "$type": "color",
+      "$value": "#F87171"
+    },
+    "border-dark": {
+      "$type": "color",
+      "$value": "#3F3F46"
+    },
+    "input-dark": {
+      "$type": "color",
+      "$value": "#3F3F46"
+    },
+    "ring-dark": {
+      "$type": "color",
+      "$value": "#ababab"
+    },
+    "contrast-background-dark": {
+      "$type": "color",
+      "$value": "#27272A"
+    },
+    "contrast-foreground-dark": {
+      "$type": "color",
+      "$value": "#FAFAFA"
+    },
+    "foreground-error-dark": {
+      "$type": "color",
+      "$value": "#F87171"
+    }
+  },
+  "fontFamily": {
+    "sans": {
+      "$type": "fontFamily",
+      "$value": [
+        "Geist",
+        "ui-sans-serif",
+        "system-ui",
+        "sans-serif"
+      ]
+    },
+    "heading": {
+      "$type": "fontFamily",
+      "$value": [
+        "Geist",
+        "Geist",
+        "ui-sans-serif",
+        "system-ui",
+        "sans-serif"
+      ]
+    }
+  }
+}

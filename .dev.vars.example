@@ -1,0 +1,9 @@
+# Local development configuration — copy to .dev.vars (gitignored).
+# The production board API (local monorepo dev: http://localhost:3000/api —
+# note the /api prefix; only api.cavuno.com rewrites /v1 → /api/v1).
+CAVUNO_API_URL=https://api.cavuno.com
+# The board this frontend renders — its pk_… publishable key.
+# Default: the platform SANDBOX board (ADR-0058) — a deterministic
+# fixture tenant that is safe to write to (applies, alerts) and resets
+# nightly. Swap in your own board's key to render your data.
+CAVUNO_BOARD=pk_c2f66367a3abaa6bafd00fd3c2de3297

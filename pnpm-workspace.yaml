@@ -1,0 +1,24 @@
+# Supply-chain posture (ADR-0066 D16, pnpm 11):
+# - allowBuilds: dependency lifecycle scripts are blocked. The allowlist
+#   is EMPTY on purpose — entries below are pinned to false so pnpm 11's
+#   auto-append surfaces new build requests as reviewable diffs, never
+#   silent execution. Flipping one to true requires a reviewed PR.
+# - minimumReleaseAge: newly published versions wait a day before they
+#   are installable (fresh-compromise containment). Security patches can
+#   be excepted via minimumReleaseAgeExclude in a reviewed PR.
+minimumReleaseAge: 1440
+# TypeScript 7.0 GA (7.0.2, published 2026-07-08) excepted so the workshop can
+# adopt the native compiler before the 1-day maturity window elapses.
+# @cavuno/board is our own first-party SDK (not a supply-chain risk) — excepted
+# so the starter can adopt a freshly-published SDK immediately (cavuno-update-action).
+minimumReleaseAgeExclude:
+  - typescript
+  - "@typescript/*"
+  - "@cavuno/board"
+
+# esbuild/sharp/workerd all ship prebuilt binaries as optional
+# dependencies — their postinstall scripts are fallbacks we don't need.
+allowBuilds:
+  esbuild: false
+  sharp: false
+  workerd: false

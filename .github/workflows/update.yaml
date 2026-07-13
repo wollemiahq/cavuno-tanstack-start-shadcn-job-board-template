@@ -1,0 +1,26 @@
+name: cavuno-update
+on:
+  schedule:
+    - cron: '0 6 * * 1' # weekly, Monday 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install --frozen-lockfile
+      - uses: wollemiahq/cavuno-update-action@main
+        env:
+          PUBLIC_CAVUNO_API_URL: https://api.cavuno.com
+          PUBLIC_CAVUNO_BOARD: pk_d9ce40a106227b615ec710de3f3d73dc
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}

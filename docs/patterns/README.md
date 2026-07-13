@@ -1,0 +1,51 @@
+# Patterns
+
+Polaris-style **pattern** layer for the Cavuno board frontend. A *pattern* is a
+named, documented page-or-section composition — the level above a single
+component. Where `DESIGN.md` inventories the primitives (tokens + components),
+this folder documents how they assemble into the recurring surfaces of the app.
+
+**Select a pattern from the table below before composing a route.** Don't
+hand-roll a listing, detail, form, or empty surface — reach for the pattern that
+already owns it. Each page documents current reality, including where routes
+still drift (the "Don't" column of each Do / Don't table).
+
+Every page follows [`_template.md`](_template.md): the section order (Purpose /
+When to use / Anatomy / Composition / Do / Don't / Used by / Related) and the
+frontmatter keys (`name`, `purpose`, `primitives`, `usedBy`) are enforced by
+[`src/pattern-contract.test.ts`](../../src/pattern-contract.test.ts). The
+generated `## Patterns` section of `DESIGN.md` is derived from this frontmatter,
+so docs and the design library stay in sync.
+
+## Taxonomy
+
+| # | Pattern | Composes | Owns |
+|---|---|---|---|
+| P1 | [Listing page](listing-page.md) | PageBody, ListingPageHeader, ListingSearchBand, JobsResultsBar, JobList, ListingPagination | Every searchable collection surface (jobs, companies, blog). |
+| P2 | [Results header](results-header.md) | JobsResultsBar, Select | The honest "Showing X–Y of Z" count + sort row. |
+| P3 | [Detail page](detail-page.md) | PageBody, JobDetail, Avatar, Badge, TaxonomyTags | A single record: header band over a two-column body with a sticky rail. |
+| P4 | [Section heading](section-heading.md) | Link, Button | A titled section row with an optional "view all" link. |
+| P5 | [Board card](board-card.md) | Avatar, Badge, TaxonomyTags, initialsOf | The shared job/company/post card surface. |
+| P6 | [Breadcrumb](breadcrumb.md) | Breadcrumb, AriaLink | The ancestor trail ending in the current page. |
+| P7 | [Alert capture](alert-capture.md) | AlertsBand, AlertSignupForm, JobAlertFloatingPrompt | The job-alert subscribe surfaces. |
+| P8 | [Empty state](empty-state.md) | EmptyState, FeaturedIcon, JobsNotFound, SalaryEmptyState | Zero-results and not-found treatments. |
+| P9 | [Form page](form-page.md) | Input, Select, TextAreaBase, Label, Button, FileUpload | Multi-field data-entry surfaces. |
+| P10 | [Auth page](auth-page.md) | AuthCard, Field, FormError, AuthDivider, SocialButton | The centered single-column auth shell. |
+| P11 | [Account shell](account-shell.md) | AccountShell, CandidateShell, EmployerCompanyShell | The logged-in surface chassis. |
+| P12 | [Form feedback](form-feedback.md) | FormError | The success/error/pending status tied to an action. |
+| P13 | [Stat tile](stat-tile.md) | OverallSalaryCard, MetricPanel | Label + display-value metric tiles. |
+| P14 | [Pending / loading](pending-loading.md) | LoadingIndicator, Button | In-flight loader and action treatments. |
+| P15 | [Listing rail](listing-rail.md) | ListingRail, TaxonomyTags, PageBody | The sticky listing rail: operator ad seam + related-searches card. |
+| P16 | [Company section](company-section.md) | PageBody, Avatar, Badge, Link, Breadcrumb | The shared company header + tab navigation across profile / jobs / salaries. |
+| P17 | [Typography](typography.md) | Text, Prose | The role-named heading/body primitive keeping authored text on the UUI type scale. |
+
+## Enforcement
+
+- **Doc structure** — [`src/pattern-contract.test.ts`](../../src/pattern-contract.test.ts)
+  asserts every pattern page has the template's sections in order, parses the
+  required frontmatter keys, and appears in this index.
+- **Legacy-token ratchet** — the shadcn-token frontier (`text-muted-foreground`,
+  `border-border`, `text-destructive`, `bg-muted`, `text-foreground`,
+  `font-heading`, `bg-background`, `text-primary-foreground`) is frozen against a
+  baseline; a new occurrence fails CI. Migrate a drifting surface to the UUI
+  tokens named in the relevant pattern's Do / Don't table, then re-baseline down.
