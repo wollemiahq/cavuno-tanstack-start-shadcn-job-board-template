@@ -49,12 +49,16 @@ const allFeatures: HeaderFeatures = {
   talentDirectory: true,
 };
 
+type TalentDirectoryVisibility = "off" | "public" | "employers_only" | null;
+
 function renderHeader({
   initialEntry = "/",
   features = allFeatures,
+  talentDirectoryVisibility = features.talentDirectory ? "public" : "off",
 }: {
   initialEntry?: string;
   features?: HeaderFeatures;
+  talentDirectoryVisibility?: TalentDirectoryVisibility;
 } = {}) {
   const initialUrl = new URL(initialEntry, "https://board.example");
   const initialSearch = resolveHeaderSearchState(
@@ -98,6 +102,7 @@ function renderHeader({
               user={null}
               language="en"
               features={features}
+              talentDirectoryVisibility={talentDirectoryVisibility}
               search={{
                 ...initialSearch,
                 onSubmit: submitSearch,
@@ -120,6 +125,7 @@ function renderHeader({
       route("/jobs/locations/$location"),
       route("/companies"),
       route("/talent"),
+      route("/p/$handle"),
       route("/blog"),
       route("/post"),
       route("/auth/sign-in"),
@@ -155,6 +161,20 @@ describe("Header — feature-gated public collections", () => {
 
     expect((await screen.findByRole("link", { name: "Blog" })).getAttribute("href")).toBe("/blog");
     expect(screen.getByRole("link", { name: "Talent" }).getAttribute("href")).toBe("/talent");
+  });
+
+  it("keeps Talent navigation and search scope available for an employer-only directory", async () => {
+    renderHeader({
+      features: { ...allFeatures, talentDirectory: false },
+      talentDirectoryVisibility: "employers_only",
+    });
+
+    expect((await screen.findByRole("link", { name: "Talent" })).getAttribute("href")).toBe(
+      "/talent",
+    );
+
+    fireEvent.click(screen.getByRole("combobox", { name: "Search category" }));
+    expect(await screen.findByRole("option", { name: "Talent" })).toBeTruthy();
   });
 });
 
@@ -328,6 +348,13 @@ describe("Header — pathname-scoped submit-only search", () => {
     {
       name: "Talent",
       initialEntry: "/talent?q=designer",
+      initialValue: "designer",
+      nextValue: "researcher",
+      expectedHref: "/talent?q=researcher",
+    },
+    {
+      name: "Talent profile",
+      initialEntry: "/p/ada-lovelace?q=designer",
       initialValue: "designer",
       nextValue: "researcher",
       expectedHref: "/talent?q=researcher",

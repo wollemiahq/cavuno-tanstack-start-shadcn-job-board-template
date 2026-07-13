@@ -1,8 +1,8 @@
 ---
 name: Breadcrumb
 purpose: The chevron-separated trail of ancestor links ending in the current page — the internal-linking + SEO spine back up the hierarchy.
-primitives: [Breadcrumb, AriaLink]
-usedBy: [src/components/board/breadcrumb.tsx, src/components/board/page-body.tsx, src/components/board/listing-page-header.tsx, src/components/board/job-detail.tsx, src/components/board/job-search-page.tsx, src/components/programmatic-jobs-view.tsx, src/routes/blog.$postSlug.tsx, src/routes/blog.index.tsx, src/routes/blog.tag.$tagSlug.tsx, src/routes/blog.author.$authorSlug.tsx, src/routes/companies.index.tsx, src/routes/companies.$companySlug.index.tsx, src/routes/companies.markets.$market.tsx, src/routes/companies.$companySlug.jobs.index.tsx, src/routes/salaries.index.tsx]
+primitives: [Breadcrumb, PageBreadcrumb, PageHeaderWithBreadcrumb, AriaLink]
+usedBy: [src/components/board/breadcrumb.tsx, src/components/board/page-header-with-breadcrumb.tsx, src/components/board/page-body.tsx, src/components/board/listing-page-header.tsx, src/components/board/job-detail.tsx, src/components/board/job-search-page.tsx, src/components/board/talent-search-page.tsx, src/components/programmatic-jobs-view.tsx, src/routes/p.$handle.tsx, src/routes/blog.$postSlug.tsx, src/routes/blog.index.tsx, src/routes/blog.tag.$tagSlug.tsx, src/routes/blog.author.$authorSlug.tsx, src/routes/companies.index.tsx, src/routes/companies.$companySlug.index.tsx, src/routes/companies.markets.$market.tsx, src/routes/companies.$companySlug.jobs.index.tsx, src/routes/salaries.index.tsx]
 ---
 
 ## Purpose
@@ -32,9 +32,9 @@ is a real link — the internal-linking rail crawlers follow into the hubs.
 
 ## Anatomy
 
-- **Placement is owned by one seam.** New compositions use `PageHeader`'s
-  `breadcrumb` slot; domain assemblies receive resolved breadcrumb data rather
-  than letting routes hand-place trail markup. Existing routes still seat
+- **Placement is owned by one seam.** New compositions pass resolved data to
+  `PageHeaderWithBreadcrumb`, which seats the trail before the constrained
+  `PageHeader`; domain assemblies never hand-place trail markup. Existing routes still seat
   `PageBreadcrumb` through migration-only `PageBody` /
   `ListingPageHeader` slots or the `JobDetail` band until they move to the Page
   family. All paths render the same `Breadcrumb` markup, so the trail itself is
@@ -89,7 +89,7 @@ export function PageBreadcrumb({ items, ariaLabel }: BreadcrumbData) {
 ```
 
 New Page-family assemblies seat their domain breadcrumb through
-`PageHeader.breadcrumb`. The current `page-body.tsx`,
+`PageHeaderWithBreadcrumb`. The current `page-body.tsx`,
 `listing-page-header.tsx`, and `job-detail.tsx` seats remain sanctioned only as
 migration seams. Every domain seam takes resolved `BreadcrumbData` (`{ items,
 ariaLabel }`) — routes pass data rather than reimplementing the trail or its
@@ -99,7 +99,7 @@ spacing.
 
 | Do | Don't |
 |---|---|
-| Pass resolved breadcrumb data into the domain assembly and seat its breadcrumb through `PageHeader` in new Page-family work. | Start new work on migration-only `PageBody` / `ListingPageHeader`, or hand-place `<Breadcrumb>` / `<PageBreadcrumb>` in a route. |
+| Pass resolved breadcrumb data into `PageHeaderWithBreadcrumb` in new Page-family work. | Start new work on migration-only `PageBody` / `ListingPageHeader`, or hand-place `<Breadcrumb>` / `<PageBreadcrumb>` in a route. |
 | Let `PageBreadcrumb` own the `pt-4 md:pt-5` hug — the SAME on band and band-less pages. | Re-decide the top spacing per page, so the crumb hugs the nav on one surface and floats mid-page on the next. |
 | Hand-roll a second `<ol>` trail only inside `board/breadcrumb.tsx`. | Fork the trail markup anywhere else — the singleton gate fails on any duplicate `<ol>`. |
 | Emit the matching `BreadcrumbList` JSON-LD alongside every visible trail (and render a trail wherever the JSON-LD exists). | Ship a visible trail with no JSON-LD, or JSON-LD with no visible trail. |
@@ -110,6 +110,8 @@ spacing.
 
 - `board/breadcrumb.tsx` — `Breadcrumb` (the only trail markup) + `PageBreadcrumb`
   (the only placement primitive).
+- `board/page-header-with-breadcrumb.tsx` — the canonical Page-family seam for
+  resolved breadcrumb data plus `PageHeader`.
 - `board/page-body.tsx` — migration-only breadcrumb seam for band-less routes.
 - `board/listing-page-header.tsx` — migration-only breadcrumb seam for listing routes.
 - `board/job-detail.tsx` — seats `PageBreadcrumb` at the top of the header band.

@@ -1,13 +1,13 @@
 ---
 name: Detail page
-purpose: A single record shown as a full-bleed header band over a two-column body — prose main plus a sticky right rail.
-primitives: [Page, Bleed, PageHeader, PageContent, JobDetail, Prose, Avatar, Badge, TaxonomyTags]
-usedBy: [src/components/board/job-detail.tsx, src/routes/companies.$companySlug.index.tsx, src/routes/blog.$postSlug.tsx]
+purpose: A canonical single-record page with a page header and decision-complete content, optionally paired with a sticky action rail.
+primitives: [Page, Bleed, PageHeader, PageContent, JobDetail, TalentProfileContent, Prose, Avatar, Badge, TaxonomyTags]
+usedBy: [src/components/board/job-detail.tsx, src/components/board/talent-profile-content.tsx, src/routes/p.$handle.tsx, src/routes/companies.$companySlug.index.tsx, src/routes/blog.$postSlug.tsx]
 ---
 
 ## Purpose
 
-A single job, company, or post opens on a full-bleed gray header band
+A single job, company, public profile, or post opens on a clear page header
 (breadcrumbs + title + meta), then drops into a two-column body: the sanitized
 prose in the main column, a sticky action rail on the right. `PageContent`'s
 named `aside` owns the canonical two-column geometry, so no page re-derives the
@@ -18,6 +18,8 @@ under the header.
 
 - A single record with a primary action (apply, follow, read) and secondary
   context (salary, company, related items).
+- A public profile whose canonical URL must remain complete when opened from a
+  master–detail search in a new tab or on mobile.
 - **When NOT to use** — a searchable collection. That is the
   [Listing page](listing-page.md).
 
@@ -58,12 +60,16 @@ implementation without changing the domain component's public contract:
 | Use `PageContent`'s named `aside` for the sticky column. | Start new work on migration-only `PageBody`, or hand-roll the grid and sticky geometry in a route. |
 | Render sanitized API HTML (`job.description`, `post.html`) as-is through `Prose`. | Interpolate other strings into `dangerouslySetInnerHTML`, or hand-roll a `prose` class set per surface. |
 | Keep the job-detail `head()` meta + JobPosting JSON-LD in the route. | Move or drop the SEO contract. |
+| Reuse one profile-content projection in search detail and the canonical profile route. | Fork public profile fields or invent Message, Save, or Contact actions the API does not support. |
 
 ## Used by
 
 - `JobDetail` — the domain-level detail assembly; its internal `PageBody` use is migration-only.
 - `companies.$companySlug.index` — company profile (still hand-rolls part of the rail geometry).
 - `blog.$postSlug` — article (a third variant of the same skeleton).
+- `TalentProfileContent` and `p.$handle` — one rich public profile projection
+  with locale-aware dates, supported experience/education fields, and
+  ProfilePage/Person JSON-LD on its canonical route.
 - `Prose` — the shared rich-text primitive backing every main-column body here (and reused off-pattern by `employers.companies.$slug.profile` and `legal-page`).
 
 ## Related

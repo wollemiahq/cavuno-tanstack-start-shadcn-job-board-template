@@ -2,7 +2,7 @@
 name: Pending / loading
 purpose: The in-flight treatment for route transitions, master-detail reads, and submitting actions.
 primitives: [LoadingIndicator, Skeleton, Button]
-usedBy: [src/components/application/loading-indicator/loading-indicator.tsx, src/components/board/job-search-detail-state.tsx, src/components/board/company-search-detail-state.tsx, src/routes/post.tsx]
+usedBy: [src/components/application/loading-indicator/loading-indicator.tsx, src/components/board/job-search-detail-state.tsx, src/components/board/company-search-detail-state.tsx, src/components/board/talent-search-detail-state.tsx, src/routes/post.tsx]
 ---
 
 ## Purpose
@@ -51,6 +51,8 @@ The master-detail idiom preserves context whenever possible:
 - `src/components/application/loading-indicator/loading-indicator.tsx` — shared route-transition indicator.
 - `src/components/board/job-search-detail-state.tsx` — jobs detail first-load and stale-detail treatment.
 - `src/components/board/company-search-detail-state.tsx` — companies detail first-load and stale-detail treatment.
+- `src/components/board/talent-search-detail-state.tsx` — public-profile
+  first-load, read-only stale detail, recoverable error, and retry treatment.
 - `src/routes/post.tsx` — route-level pending indicator.
 
 ## Related

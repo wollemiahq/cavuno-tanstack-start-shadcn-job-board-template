@@ -2,7 +2,7 @@
 name: Empty state
 purpose: The zero-results / not-found treatment — a featured icon, title, and description, kept inside the page chrome.
 primitives: [Empty, EmptyState, FeaturedIcon, JobsNotFound, SalaryEmptyState]
-usedBy: [src/components/board/home-landing.tsx, src/components/board/jobs-not-found.tsx, src/components/board/salary-sections.tsx, src/components/board/company-search-page.tsx, src/routes/companies.markets.$market.tsx, src/routes/blog.index.tsx, src/routes/jobs.locations.index.tsx]
+usedBy: [src/components/board/home-landing.tsx, src/components/board/jobs-not-found.tsx, src/components/board/salary-sections.tsx, src/components/board/company-search-page.tsx, src/components/board/talent-search-page.tsx, src/routes/talent.index.tsx, src/routes/p.$handle.tsx, src/routes/companies.markets.$market.tsx, src/routes/blog.index.tsx, src/routes/jobs.locations.index.tsx]
 ---
 
 ## Purpose
@@ -82,6 +82,9 @@ puts the legacy `EmptyState` compound below it:
 - `SalaryEmptyState` — the salary family.
 - `CompanySearchPage` — company zero-results state inside the master list;
   `companies.markets.$market` routes unknown markets through the same searchable shell.
+- `TalentSearchPage` — filtered and unfiltered Talent empty states inside the
+  master list; disabled directories and missing public profiles use owned
+  recovery actions rather than bare paragraphs.
 - `EmptyState` directly — `blog.index`, `jobs.locations.index`, and the salary routes.
 
 ## Related

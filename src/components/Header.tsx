@@ -144,6 +144,7 @@ export default function Header({
   language,
   labels,
   features,
+  talentDirectoryVisibility,
   search,
 }: {
   boardName: string;
@@ -158,6 +159,7 @@ export default function Header({
     blog: boolean;
     talentDirectory: boolean;
   };
+  talentDirectoryVisibility: "off" | "public" | "employers_only" | null;
   search: HeaderSearchState & {
     onSubmit: (submission: HeaderSearchSubmission) => void;
     locationSuggestions: LocationSuggestionState;
@@ -166,10 +168,12 @@ export default function Header({
   const [menuOpen, setMenuOpen] = useState(false);
   const mobileMenuId = useId();
   const copy = boardCopy(language, labels);
+  const talentDirectoryEnabled =
+    features.talentDirectory || talentDirectoryVisibility === "employers_only";
   const navLinks = [
     { to: "/jobs", label: copy.nav.home, enabled: true },
     { to: "/companies", label: copy.nav.companies, enabled: true },
-    { to: "/talent", label: copy.nav.talent, enabled: features.talentDirectory },
+    { to: "/talent", label: copy.nav.talent, enabled: talentDirectoryEnabled },
     { to: "/blog", label: copy.nav.blog, enabled: features.blog },
   ] as const;
   const visibleNavLinks = navLinks.filter((item) => item.enabled);
@@ -225,7 +229,7 @@ export default function Header({
               jobsLabel={copy.nav.home}
               companiesLabel={copy.nav.companies}
               talentLabel={copy.nav.talent}
-              talentEnabled={features.talentDirectory}
+              talentEnabled={talentDirectoryEnabled}
               jobsPlaceholder={copy.jobSearch.keywordPlaceholder}
               companiesPlaceholder={m.companySearchBar_placeholderText()}
               talentPlaceholder={m.talentDirectory_searchPlaceholder()}

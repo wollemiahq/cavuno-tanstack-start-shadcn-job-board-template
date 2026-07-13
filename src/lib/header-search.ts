@@ -31,7 +31,11 @@ const compactShellPrefixes = [
 ] as const;
 
 function scopeFromPathname(pathname: string): HeaderSearchScope {
-  if (pathname === "/talent" || pathname.startsWith("/talent/")) {
+  if (
+    pathname === "/talent" ||
+    pathname.startsWith("/talent/") ||
+    pathname.startsWith("/p/")
+  ) {
     return "talent";
   }
 

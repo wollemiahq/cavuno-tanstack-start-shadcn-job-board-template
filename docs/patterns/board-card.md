@@ -1,13 +1,13 @@
 ---
 name: Board card
-purpose: The avatar/logo + title link + meta + pills card surface shared by job, company, and post cards.
+purpose: The avatar/logo + title link + meta + pills card surface shared by job, company, talent, and post cards.
 primitives: [Avatar, Badge, TaxonomyTags, initialsOf]
-usedBy: [src/components/board/job-card.tsx, src/components/board/company-card.tsx, src/components/post-card.tsx, src/components/board/salary-sections.tsx]
+usedBy: [src/components/board/job-card.tsx, src/components/board/company-card.tsx, src/components/board/talent-search-result.tsx, src/components/post-card.tsx, src/components/board/salary-sections.tsx]
 ---
 
 ## Purpose
 
-Jobs, companies, and posts all render as a card with the same surface: an
+Jobs, companies, public talent profiles, and posts all render as a card with the same surface: an
 avatar/logo, a title that links to the record, a line of meta, and a row of
 pills, on `rounded-xl` with a hover shadow lift. The avatar falls back to
 two-letter initials via the shared `initialsOf` helper.
@@ -45,8 +45,10 @@ import { initialsOf } from "@/lib/initials";
 
 ## Used by
 
-- `JobCard`, `CompanyCard`, `PostCard`, and the `SalaryRail` link-card.
-- The shared helper: `src/lib/initials.ts` (imported today by `avatar-upload`, `p.$handle`, `talent.index`).
+- `JobCard`, `CompanyCard`, `TalentSearchResult`, `PostCard`, and the
+  `SalaryRail` link-card.
+- The shared helper: `src/lib/initials.ts`, including avatar fallbacks in both
+  Talent result and profile projections.
 
 ## Related
 

@@ -133,6 +133,7 @@ describe("breadcrumb placement (P6 — one placement primitive)", () => {
     join("src", "components", "board", "job-search-page.tsx"),
     join("src", "components", "board", "listing-page-header.tsx"),
     join("src", "components", "board", "page-body.tsx"),
+    join("src", "components", "board", "page-header-with-breadcrumb.tsx"),
   ];
 
   it("renders the <Breadcrumb> trail element only inside the placement primitive", () => {

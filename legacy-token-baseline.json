@@ -949,11 +949,6 @@
     "icons": 0,
     "tokens": 4
   },
-  "src/routes/p.$handle.tsx": {
-    "imports": 2,
-    "icons": 0,
-    "tokens": 12
-  },
   "src/routes/password.tsx": {
     "imports": 1,
     "icons": 0,
@@ -983,11 +978,6 @@
     "imports": 1,
     "icons": 0,
     "tokens": 3
-  },
-  "src/routes/talent.index.tsx": {
-    "imports": 1,
-    "icons": 0,
-    "tokens": 10
   },
   "src/routes/terms-of-service.tsx": {
     "imports": 0,

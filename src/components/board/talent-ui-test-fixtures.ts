@@ -1,0 +1,53 @@
+import type { TalentProfileVM } from "@/board/talent-view-model";
+
+export const profileVm: TalentProfileVM = {
+  handle: "ada-lovelace",
+  detailHref: "/p/ada-lovelace",
+  displayName: "Ada Lovelace",
+  avatarUrl: "https://cdn.example/ada.jpg",
+  avatarName: "Ada Lovelace",
+  headline: "Computing pioneer",
+  location: "London, United Kingdom",
+  jobSearchStatusLabel: "Open to offers",
+  bio: "I translate ambitious ideas into working systems.",
+  experienceHeading: "Experience",
+  experiences: [
+    {
+      key: "analytical-engines",
+      title: "Analytical engineer",
+      companyName: "Analytical Engines",
+      companyHref: "https://analytical.example",
+      dateRangeLabel: "Jan 2022 – Present",
+      location: "London, United Kingdom",
+      employmentTypeLabel: "Full time",
+      locationTypeLabel: "Hybrid",
+      foundViaLabel: "Found via referral",
+      description: "Designed the first general-purpose computing programs.",
+      skills: ["TypeScript", "Mathematics"],
+    },
+  ],
+  educationHeading: "Education",
+  education: [
+    {
+      key: "university-of-london",
+      institutionName: "University of London",
+      institutionHref: "https://university.example",
+      qualificationLabel: "Bachelor of Mathematics",
+      grade: "First class honours",
+      activitiesAndSocieties: "Analytical Society",
+      dateRangeLabel: "Sep 2018 – Jun 2021",
+      description: "Studied mathematical foundations of computation.",
+    },
+  ],
+  skillsHeading: "Skills",
+  skills: ["TypeScript", "Mathematics"],
+  languagesHeading: "Languages",
+  languages: [
+    {
+      key: "english",
+      name: "English",
+      proficiencyLabel: "Fluent",
+    },
+  ],
+  viewProfileLabel: "View profile",
+};

@@ -2,7 +2,7 @@
 name: Search results
 purpose: A progressively enhanced directory that keeps dense results and a decision-complete detail visible together on desktop.
 primitives: [SearchResultsLayout, SearchResultsList, SearchResultDetail, SearchResultCard, AdRail]
-usedBy: [src/components/search-results/search-results-layout.tsx, src/components/search-results/search-results-list.tsx, src/components/search-results/search-result-detail.tsx, src/components/search-results/search-result-card.tsx, src/components/search-results/ad-rail.tsx, src/components/board/job-search-page.tsx, src/components/board/company-search-page.tsx, src/components/board/job-search-result.tsx, src/components/board/company-search-result.tsx]
+usedBy: [src/components/search-results/search-results-layout.tsx, src/components/search-results/search-results-list.tsx, src/components/search-results/search-result-detail.tsx, src/components/search-results/search-result-card.tsx, src/components/search-results/ad-rail.tsx, src/components/board/job-search-page.tsx, src/components/board/company-search-page.tsx, src/components/board/talent-search-page.tsx, src/components/board/job-search-result.tsx, src/components/board/company-search-result.tsx, src/components/board/talent-search-result.tsx]
 ---
 
 ## Purpose
@@ -86,11 +86,14 @@ different sticky-header stack sets `--search-results-height` on the layout.
   hover, and focus interaction chrome.
 - `src/components/search-results/ad-rail.tsx` — owns the optional advertising seam.
 - `src/components/board/job-search-page.tsx` and
-  `src/components/board/company-search-page.tsx` — explicit entity-specific directory
-  compositions over the same responsive master–detail geometry.
+  `src/components/board/company-search-page.tsx` and
+  `src/components/board/talent-search-page.tsx` — explicit entity-specific
+  directory compositions over the same responsive master–detail geometry.
 - `src/components/board/job-search-result.tsx` and
-  `src/components/board/company-search-result.tsx` — canonical anchors with
-  entity-specific facts inside the shared result-card chrome.
+  `src/components/board/company-search-result.tsx` and
+  `src/components/board/talent-search-result.tsx` — canonical anchors with
+  entity-specific facts inside the shared result-card chrome. Talent entries
+  without a public handle remain visible but intentionally non-selectable.
 
 ## Related
 

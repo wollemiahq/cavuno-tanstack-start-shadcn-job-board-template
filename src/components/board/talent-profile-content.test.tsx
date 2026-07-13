@@ -1,0 +1,81 @@
+// @vitest-environment jsdom
+
+import "@testing-library/jest-dom/vitest";
+
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
+
+import { TalentProfileContent } from "./talent-profile-content";
+import { profileVm } from "./talent-ui-test-fixtures";
+
+afterEach(cleanup);
+
+describe("TalentProfileContent", () => {
+  it("renders the complete public profile as a canonical h1 document without redundant actions", () => {
+    render(<TalentProfileContent vm={profileVm} headingAs="h1" />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "Ada Lovelace" })).toBeVisible();
+    expect(screen.getByText("Computing pioneer")).toBeVisible();
+    expect(screen.getAllByText("London, United Kingdom").length).toBeGreaterThan(0);
+    expect(screen.getByText("Open to offers")).toBeVisible();
+    expect(screen.getByText("I translate ambitious ideas into working systems.")).toBeVisible();
+
+    expect(screen.getByRole("heading", { name: "Experience" })).toBeVisible();
+    expect(screen.getByText("Analytical engineer")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Analytical Engines" })).toHaveAttribute(
+      "href",
+      "https://analytical.example",
+    );
+    expect(screen.getByText("Jan 2022 – Present")).toBeVisible();
+    expect(screen.getByText("Full time")).toBeVisible();
+    expect(screen.getByText("Hybrid")).toBeVisible();
+    expect(screen.getByText("Found via referral")).toBeVisible();
+    expect(
+      screen.getByText("Designed the first general-purpose computing programs."),
+    ).toBeVisible();
+
+    expect(screen.getByRole("heading", { name: "Education" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "University of London" })).toHaveAttribute(
+      "href",
+      "https://university.example",
+    );
+    expect(screen.getByText("Bachelor of Mathematics")).toBeVisible();
+    expect(screen.getByText("First class honours")).toBeVisible();
+    expect(screen.getByText("Analytical Society")).toBeVisible();
+    expect(
+      screen.getByText("Studied mathematical foundations of computation."),
+    ).toBeVisible();
+
+    expect(screen.getByRole("heading", { name: "Skills" })).toBeVisible();
+    expect(screen.getAllByText("TypeScript").length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: "Languages" })).toBeVisible();
+    expect(screen.getByText("English")).toBeVisible();
+    expect(screen.getByText("Fluent")).toBeVisible();
+
+    expect(screen.queryByRole("link", { name: "View profile" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /message|contact|save|apply/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /message|contact|save|apply/i })).toBeNull();
+  });
+
+  it("uses an h2 in the search detail projection and omits empty optional sections", () => {
+    render(
+      <TalentProfileContent
+        vm={{
+          ...profileVm,
+          bio: null,
+          experiences: [],
+          education: [],
+          skills: [],
+          languages: [],
+        }}
+        headingAs="h2"
+      />,
+    );
+
+    expect(screen.getByRole("heading", { level: 2, name: "Ada Lovelace" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Experience" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Education" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Skills" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Languages" })).toBeNull();
+  });
+});

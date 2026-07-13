@@ -2289,6 +2289,23 @@ Props:
 - `children: ReactNode`
 - `rail?: ReactNode`
 
+### PageHeaderWithBreadcrumb — `src/components/board/page-header-with-breadcrumb.tsx`
+
+The canonical Page-family seam for a page intro that owns a breadcrumb.
+Routes pass resolved breadcrumb data; this component alone seats the shared
+placement primitive before the constrained PageHeader.
+
+Props:
+
+- `actions?: ReactNode`
+- `align?: "start" | "center" | undefined`
+- `breadcrumb?: BreadcrumbData | undefined`
+- `children?: ReactNode`
+- `description?: ReactNode`
+- `eyebrow?: ReactNode`
+- `title: ReactNode`
+- `width?: ContainerWidth | undefined`
+
 ### CompanySalarySummary — `src/components/board/salary-sections.tsx`
 
 The Overview-tab salary summary (CAV-516). The company Overview reads as a
@@ -2352,6 +2369,70 @@ Props:
 - `onSave: (jobId: string) => Promise<void>`
 - `onSaved?: (() => void | Promise<void>) | undefined`
 - `viewer: { emailVerified: boolean; } | null`
+
+### TalentProfileContent — `src/components/board/talent-profile-content.tsx`
+
+Props:
+
+- `headingAs?: "h1" | "h2" | undefined`
+- `interactive?: boolean | undefined`
+- `showName?: boolean | undefined`
+- `vm: TalentProfileVM`
+
+### TalentSearchControls — `src/components/board/talent-search-controls.tsx`
+
+Props:
+
+- `labels: { query: string; queryPlaceholder: string; skill: string; skillPlaceholder: string; search: string; }`
+- `onSubmit: (search: { q: string; skill: string; }) => void`
+- `q?: string | undefined`
+- `skill?: string | undefined`
+
+### TalentSearchDetailState — `src/components/board/talent-search-detail-state.tsx`
+
+Props:
+
+- `detail?: ReactNode`
+- `errorTitle: string`
+- `loadingLabel: string`
+- `onRetry: () => void`
+- `retryLabel: string`
+- `status: "error" | "idle" | "loading" | "ready"`
+
+### TalentSearchPage — `src/components/board/talent-search-page.tsx`
+
+Props:
+
+- `breadcrumb?: BreadcrumbData | undefined`
+- `candidates: { object: "talent_directory_entry"; handle: string | null; displayName: string | null; headline: string | null; locat…`
+- `description?: string | undefined`
+- `detail: ReactNode`
+- `endAd?: AdPlacement | undefined`
+- `hasMore?: boolean | undefined`
+- `heading?: string | undefined`
+- `onNextResults?: (() => void) | undefined`
+- `onSearchSubmit: (search: { q: string; skill: string; }) => void`
+- `onSelectedTalentPush: (handle: string) => void`
+- `onSelectedTalentReplace: (handle: string) => void`
+- `q?: string | undefined`
+- `selectedTalent?: string | undefined`
+- `skill?: string | undefined`
+- `startAd?: AdPlacement | undefined`
+
+### TalentSearchResultDetail — `src/components/board/talent-search-result-detail.tsx`
+
+Props:
+
+- `interactive?: boolean | undefined`
+- `vm: TalentProfileVM`
+
+### TalentSearchResult — `src/components/board/talent-search-result.tsx`
+
+Props:
+
+- `onActivate?: ((event: MouseEvent<HTMLAnchorElement, MouseEvent>) => void) | undefined`
+- `selected?: boolean | undefined`
+- `vm: TalentCardVM`
 
 ### TaxonomyTags — `src/components/board/taxonomy-tags.tsx`
 
@@ -3501,7 +3582,7 @@ Primitives: AuthCard, Field, FormError, AuthDivider, SocialButton
 
 ### Board card — `docs/patterns/board-card.md`
 
-The avatar/logo + title link + meta + pills card surface shared by job, company, and post cards.
+The avatar/logo + title link + meta + pills card surface shared by job, company, talent, and post cards.
 
 Primitives: Avatar, Badge, TaxonomyTags, initialsOf
 
@@ -3509,7 +3590,7 @@ Primitives: Avatar, Badge, TaxonomyTags, initialsOf
 
 The chevron-separated trail of ancestor links ending in the current page — the internal-linking + SEO spine back up the hierarchy.
 
-Primitives: Breadcrumb, AriaLink
+Primitives: Breadcrumb, PageBreadcrumb, PageHeaderWithBreadcrumb, AriaLink
 
 ### Company section — `docs/patterns/company-section.md`
 
@@ -3519,9 +3600,9 @@ Primitives: Page, PageHeader, PageContent, PageSection, Avatar, Badge, Link, Bre
 
 ### Detail page — `docs/patterns/detail-page.md`
 
-A single record shown as a full-bleed header band over a two-column body — prose main plus a sticky right rail.
+A canonical single-record page with a page header and decision-complete content, optionally paired with a sticky action rail.
 
-Primitives: Page, Bleed, PageHeader, PageContent, JobDetail, Prose, Avatar, Badge, TaxonomyTags
+Primitives: Page, Bleed, PageHeader, PageContent, JobDetail, TalentProfileContent, Prose, Avatar, Badge, TaxonomyTags
 
 ### Empty state — `docs/patterns/empty-state.md`
 

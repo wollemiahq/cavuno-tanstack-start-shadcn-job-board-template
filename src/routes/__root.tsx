@@ -202,6 +202,7 @@ function RootLayout() {
         language={board.language}
         labels={board.labels}
         features={board.features}
+        talentDirectoryVisibility={board.talentDirectoryVisibility}
         search={{
           ...headerSearch,
           onSubmit: submitHeaderSearch,

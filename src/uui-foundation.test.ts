@@ -118,7 +118,7 @@ describe("Rhea foundation and inherited Untitled UI compatibility CSS", () => {
       "prose-invert",
     ];
     const SKIP =
-      /\.test\.tsx?$|routeTree\.gen\.ts$|resolved\.ts$|components\/(?:ui|layout|search-results)\/|components\/(?:auth-form|rhea-auth-pilot)\.tsx$|components\/board\/(?:company-search-controls|company-search-detail-state|company-search-page|company-search-result|company-search-result-detail|home-landing|job-search-page|job-search-result|job-search-result-detail|job-search-detail-state|jobs-filter-toolbar|jobs-results-bar|jobs-search-controls|save-job-button)\.tsx$|routes\/auth\./;
+      /\.test\.tsx?$|routeTree\.gen\.ts$|resolved\.ts$|components\/(?:ui|layout|search-results)\/|components\/(?:auth-form|rhea-auth-pilot)\.tsx$|components\/board\/(?:company-search-controls|company-search-detail-state|company-search-page|company-search-result|company-search-result-detail|home-landing|job-search-page|job-search-result|job-search-result-detail|job-search-detail-state|jobs-filter-toolbar|jobs-results-bar|jobs-search-controls|save-job-button|talent-profile-content|talent-search-controls|talent-search-detail-state|talent-search-page|talent-search-result|talent-search-result-detail)\.tsx$|routes\/auth\./;
     const offenders: string[] = [];
     for (const file of tsFilesUnder("src")) {
       if (SKIP.test(file)) continue;
