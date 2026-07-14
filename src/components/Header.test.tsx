@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import "@testing-library/jest-dom/vitest";
+
 /**
  * Public-header behavior (CAV-503).
  *
@@ -16,7 +18,7 @@ import {
   createRouter,
   useNavigate,
 } from "@tanstack/react-router";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Header imports the signed-in Messages link even for this anonymous public
@@ -29,10 +31,7 @@ vi.mock("../server/queries", () => ({
 
 import Header from "./Header";
 import { UntitledUiRouterProvider } from "./untitled-ui/router-provider";
-import {
-  resolveHeaderSearchState,
-  type HeaderSearchSubmission,
-} from "../lib/header-search";
+import { resolveHeaderSearchState, type HeaderSearchSubmission } from "../lib/header-search";
 
 afterEach(cleanup);
 
@@ -55,10 +54,17 @@ function renderHeader({
   initialEntry = "/",
   features = allFeatures,
   talentDirectoryVisibility = features.talentDirectory ? "public" : "off",
+  locationSuggestions = [],
 }: {
   initialEntry?: string;
   features?: HeaderFeatures;
   talentDirectoryVisibility?: TalentDirectoryVisibility;
+  locationSuggestions?: Array<{
+    id: string;
+    slug: string;
+    name: string;
+    contextLabel: string | null;
+  }>;
 } = {}) {
   const initialUrl = new URL(initialEntry, "https://board.example");
   const initialSearch = resolveHeaderSearchState(
@@ -74,15 +80,13 @@ function renderHeader({
       component: () => {
         const navigate = useNavigate();
 
-        function submitSearch({
-          scope,
-          query,
-          location,
-        }: HeaderSearchSubmission) {
+        function submitSearch({ scope, query, location }: HeaderSearchSubmission) {
           if (scope === "companies") {
             void navigate({ to: "/companies", search: { query } });
           } else if (scope === "talent") {
             void navigate({ to: "/talent", search: { q: query } });
+          } else if (scope === "blog") {
+            void navigate({ to: "/blog", search: { q: query } });
           } else if (location) {
             void navigate({
               to: "/jobs/locations/$location",
@@ -107,7 +111,7 @@ function renderHeader({
                 ...initialSearch,
                 onSubmit: submitSearch,
                 locationSuggestions: {
-                  suggestions: [],
+                  suggestions: locationSuggestions,
                   loading: false,
                   onQueryChange: vi.fn(),
                 },
@@ -163,8 +167,9 @@ describe("Header — feature-gated public collections", () => {
     expect(screen.getByRole("link", { name: "Talent" }).getAttribute("href")).toBe("/talent");
   });
 
-  it("keeps Talent navigation and search scope available for an employer-only directory", async () => {
+  it("keeps Talent navigation and contextual search available for an employer-only directory", async () => {
     renderHeader({
+      initialEntry: "/talent",
       features: { ...allFeatures, talentDirectory: false },
       talentDirectoryVisibility: "employers_only",
     });
@@ -172,9 +177,7 @@ describe("Header — feature-gated public collections", () => {
     expect((await screen.findByRole("link", { name: "Talent" })).getAttribute("href")).toBe(
       "/talent",
     );
-
-    fireEvent.click(screen.getByRole("combobox", { name: "Search category" }));
-    expect(await screen.findByRole("option", { name: "Talent" })).toBeTruthy();
+    expect(screen.getByRole("searchbox")).toHaveAttribute("placeholder", "Search candidates…");
   });
 });
 
@@ -271,42 +274,51 @@ describe("Header — mobile navigation disclosure", () => {
 describe("Header — pathname-scoped submit-only search", () => {
   it("uses the route-resolved place name without reconstructing it from the slug", () => {
     expect(
-      resolveHeaderSearchState(
-        "/jobs/locations/sao-paulo-sp",
-        {},
-        "São Paulo, SP",
-      ).location,
+      resolveHeaderSearchState("/jobs/locations/sao-paulo-sp", {}, "São Paulo, SP").location,
     ).toEqual({ slug: "sao-paulo-sp", name: "São Paulo, SP" });
   });
 
-  it("keeps the themed scope picker inside the Rhea theme rather than portaling to body", async () => {
+  it("uses a left search, geometrically centered primary navigation, and right actions", async () => {
     renderHeader();
 
-    fireEvent.click(await screen.findByRole("combobox", { name: "Search category" }));
-
-    const jobsOption = await screen.findByRole("option", { name: "Jobs" });
-    expect(jobsOption.closest(".rhea-theme")).toBeTruthy();
-  });
-
-  it("uses the themed non-native scope picker", async () => {
-    renderHeader();
-
-    const scopePicker = await screen.findByRole("combobox", {
-      name: "Search category",
+    await screen.findByRole("search");
+    const left = document.querySelector<HTMLElement>("[data-test='header-left']");
+    const primaryNavigation = screen.getByRole("navigation", {
+      name: "Primary navigation",
     });
-    expect(scopePicker.tagName).toBe("BUTTON");
-    expect(scopePicker.textContent).toContain("Jobs");
+    const actions = document.querySelector<HTMLElement>("[data-test='header-actions']");
+
+    expect(left).not.toBeNull();
+    expect(actions).not.toBeNull();
+    if (!left || !actions) throw new Error("Expected all three desktop header zones");
+    expect(left).toContainElement(screen.getByRole("search"));
+    expect(primaryNavigation).toHaveAttribute("data-slot", "header-primary-navigation");
+    expect(actions).toHaveAttribute("data-slot", "header-actions");
+    expect(screen.queryByRole("combobox", { name: "Search category" })).toBeNull();
+    expect(left.compareDocumentPosition(primaryNavigation) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(
+      primaryNavigation.compareDocumentPosition(actions) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
-  it("pairs keyword and location inputs for Jobs without leaking location into other scopes", async () => {
+  it("pairs keyword and location in one Jobs bar without leaking location into other scopes", async () => {
     renderHeader({ initialEntry: "/jobs" });
 
-    expect(await screen.findByRole("searchbox")).toBeTruthy();
-    expect(screen.getByRole("combobox", { name: /location/i })).toBeTruthy();
+    const jobsSearch = await screen.findByRole("search");
+    expect(within(jobsSearch).getByRole("searchbox")).toBeTruthy();
+    expect(within(jobsSearch).getByRole("combobox", { name: /location/i })).toBeTruthy();
+    expect(jobsSearch).toHaveAttribute("data-search-scope", "jobs");
 
     cleanup();
     renderHeader({ initialEntry: "/companies" });
-    await screen.findByRole("searchbox");
+    expect(await screen.findByRole("search")).toHaveAttribute("data-search-scope", "companies");
+    expect(screen.queryByRole("combobox", { name: /location/i })).toBeNull();
+
+    cleanup();
+    renderHeader({ initialEntry: "/blog?q=systems" });
+    expect(await screen.findByRole("search")).toHaveAttribute("data-search-scope", "blog");
     expect(screen.queryByRole("combobox", { name: /location/i })).toBeNull();
   });
 
@@ -324,9 +336,32 @@ describe("Header — pathname-scoped submit-only search", () => {
     fireEvent.submit(keyword.closest("form") as HTMLFormElement);
 
     await waitFor(() =>
-      expect(router.state.location.href).toBe(
-        "/jobs/locations/sydney?q=robotics",
-      ),
+      expect(router.state.location.href).toBe("/jobs/locations/sydney?q=robotics"),
+    );
+  });
+
+  it("submits a newly selected Jobs location with the keyword", async () => {
+    const router = renderHeader({
+      initialEntry: "/jobs?q=engineer",
+      locationSuggestions: [
+        {
+          id: "place-sydney",
+          slug: "sydney",
+          name: "Sydney",
+          contextLabel: "Australia",
+        },
+      ],
+    });
+    const keyword = (await screen.findByRole("searchbox")) as HTMLInputElement;
+    const location = screen.getByRole("combobox", { name: /location/i });
+
+    fireEvent.change(keyword, { target: { value: "robotics" } });
+    fireEvent.change(location, { target: { value: "Syd" } });
+    fireEvent.mouseDown(screen.getByRole("option", { name: /Sydney/ }));
+    fireEvent.submit(keyword.closest("form") as HTMLFormElement);
+
+    await waitFor(() =>
+      expect(router.state.location.href).toBe("/jobs/locations/sydney?q=robotics"),
     );
   });
 
@@ -358,6 +393,13 @@ describe("Header — pathname-scoped submit-only search", () => {
       initialValue: "designer",
       nextValue: "researcher",
       expectedHref: "/talent?q=researcher",
+    },
+    {
+      name: "Blog",
+      initialEntry: "/blog?q=design+systems",
+      initialValue: "design systems",
+      nextValue: "hiring",
+      expectedHref: "/blog?q=hiring",
     },
   ])(
     "derives the $name search destination from the pathname and navigates only on submit",

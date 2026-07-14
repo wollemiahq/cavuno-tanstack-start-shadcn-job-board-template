@@ -29,9 +29,9 @@ under the header.
   (switches the body to the two-column sticky grid).
 - Header band: breadcrumbs → `Avatar` + name link → display title → meta `Badge`
   pills → posted date.
-- Main column: sanitized-HTML prose in a `Prose` wrapper (the canonical
-  rich-text primitive — `prose prose-uui max-w-none` on the Untitled UI type
-  scale), facts (`<dl>`), `TaxonomyTags`, custom fields, related-record grid.
+- Main column: sanitized HTML in the canonical `Prose` wrapper
+  (`typeset typeset-content`), facts (`<dl>`), `TaxonomyTags`, custom fields,
+  and related-record grids.
 - Rail: the apply/action card on `rounded-xl bg-primary p-5 shadow-xs ring-1 ring-secondary_alt`.
 
 ## Composition
@@ -43,7 +43,13 @@ implementation without changing the domain component's public contract:
 ```tsx
 <Page>
   <PageContent
-    header={<Bleed><PageHeader title={vm.title} breadcrumb={breadcrumb}>…</PageHeader></Bleed>}
+    header={
+      <Bleed>
+        <PageHeader title={vm.title} breadcrumb={breadcrumb}>
+          …
+        </PageHeader>
+      </Bleed>
+    }
     aside={applyCard}
     asideLabel={vm.applyLabel}
     asideOrder="before"
@@ -55,18 +61,19 @@ implementation without changing the domain component's public contract:
 
 ## Do / Don't
 
-| Do | Don't |
-|---|---|
-| Use `PageContent`'s named `aside` for the sticky column. | Start new work on migration-only `PageBody`, or hand-roll the grid and sticky geometry in a route. |
-| Render sanitized API HTML (`job.description`, `post.html`) as-is through `Prose`. | Interpolate other strings into `dangerouslySetInnerHTML`, or hand-roll a `prose` class set per surface. |
-| Keep the job-detail `head()` meta + JobPosting JSON-LD in the route. | Move or drop the SEO contract. |
-| Reuse one profile-content projection in search detail and the canonical profile route. | Fork public profile fields or invent Message, Save, or Contact actions the API does not support. |
+| Do                                                                                     | Don't                                                                                                   |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Use `PageContent`'s named `aside` for the sticky column.                               | Start new work on migration-only `PageBody`, or hand-roll the grid and sticky geometry in a route.      |
+| Render sanitized API HTML (`job.description`, `post.html`) as-is through `Prose`.      | Interpolate other strings into `dangerouslySetInnerHTML`, or hand-roll a `prose` class set per surface. |
+| Keep the job-detail `head()` meta + JobPosting JSON-LD in the route.                   | Move or drop the SEO contract.                                                                          |
+| Reuse one profile-content projection in search detail and the canonical profile route. | Fork public profile fields or invent Message, Save, or Contact actions the API does not support.        |
 
 ## Used by
 
 - `JobDetail` — the domain-level detail assembly; its internal `PageBody` use is migration-only.
 - `companies.$companySlug.index` — company profile (still hand-rolls part of the rail geometry).
-- `blog.$postSlug` — article (a third variant of the same skeleton).
+- `blog.$postSlug` — complete Page-family article with an internal table of
+  contents and author rail; it still has one `PageContent` main landmark.
 - `TalentProfileContent` and `p.$handle` — one rich public profile projection
   with locale-aware dates, supported experience/education fields, and
   ProfilePage/Person JSON-LD on its canonical route.

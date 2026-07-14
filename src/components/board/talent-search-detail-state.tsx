@@ -82,7 +82,7 @@ export function TalentSearchDetailState({
 
   return (
     <div role="status" aria-busy="true" className="min-h-[28rem] space-y-6 p-6">
-      <span>{loadingLabel}</span>
+      <span className="sr-only">{loadingLabel}</span>
       <div className="flex items-center gap-3">
         <Skeleton className="size-12" />
         <Skeleton className="h-6 w-40" />

@@ -18,7 +18,6 @@ import { jobsListingLoaderDeps, parseJobsSearch } from "../lib/jobs-search";
 import { listingHead } from "@cavuno/board/seo";
 import { m } from "../paraglide/messages";
 import { getSeoBase, listJobs, resolveSkill } from "../server/queries";
-import { useLocationSuggestions } from "./-use-location-suggestions";
 
 export const Route = createFileRoute("/jobs/skills/$skill")({
   staticData: { fullBleed: true, ownsMain: true },
@@ -61,13 +60,12 @@ export const Route = createFileRoute("/jobs/skills/$skill")({
         })
       : {},
   component: SkillPage,
-  notFoundComponent: () => <JobsNotFound message={m.skillPage_notFoundText()} />,
+  notFoundComponent: () => <JobsNotFound />,
 });
 
 function SkillPage() {
   const { skill, list, seo } = Route.useLoaderData();
   const search = Route.useSearch();
-  const locationSuggestions = useLocationSuggestions(seo.language);
   return (
     <ProgrammaticJobsView
       heading={m.skillPage_jobsHeading({ skill: skill.displayName })}
@@ -79,7 +77,6 @@ function SkillPage() {
       relatedSearches={list.relatedSearches}
       origin={seo.origin}
       filters={search}
-      locationSuggestions={locationSuggestions}
     />
   );
 }

@@ -53,9 +53,28 @@ describe("JobSearchDetailState", () => {
       />,
     );
 
-    expect(screen.getByRole("status")).toHaveAttribute("aria-busy", "true");
-    expect(screen.getByText("Loading job details…")).toBeVisible();
+    expect(screen.getByRole("status")).not.toHaveAttribute("aria-busy");
+    expect(screen.getByText("Loading job details…")).toHaveClass("sr-only");
     expect(container.querySelectorAll("[data-slot='skeleton']").length).toBeGreaterThan(2);
+    expect(container.querySelector("[data-slot='skeleton']")).toHaveClass(
+      "motion-reduce:animate-none",
+    );
+  });
+
+  it("renders no loading state when there is no selected job", () => {
+    const { container } = render(
+      <JobSearchDetailState
+        status="idle"
+        loadingLabel="Loading job details…"
+        errorTitle="Could not load job"
+        retryLabel="Retry"
+        fullPageLabel="View full job"
+        onRetry={vi.fn()}
+      />,
+    );
+
+    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByRole("status")).toBeNull();
   });
 
   it("keeps preserved content read-only while the next selected job loads", () => {

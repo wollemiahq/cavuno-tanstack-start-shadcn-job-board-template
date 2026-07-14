@@ -1,25 +1,33 @@
-import { Text } from "@/components/text"
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 
 import { isNotFound } from "@cavuno/board";
-
-import { JsonLd } from "@/components/json-ld";
-import { PageBody } from "@/components/board/page-body";
-import { BlogSearchBar } from "../components/blog-search-bar";
-import { PostCard } from "../components/post-card";
 import { createBreadcrumbJsonLd } from "@cavuno/board/seo";
+
 import { boardCopy } from "#/copy";
-import { m } from "../paraglide/messages";
-import { getBlogTag, getSeoBase, listBlogPosts } from "../server/queries";
+import { BlogArchivePage } from "@/components/board/blog-archive-page";
+import { PublicContentPending } from "@/components/board/public-content-pending";
+import { JsonLd } from "@/components/json-ld";
+import { m } from "@/paraglide/messages";
+import { getBlogTag, getSeoBase, listBlogPosts } from "@/server/queries";
+
+interface BlogTagSearch {
+  cursor?: string;
+}
 
 export const Route = createFileRoute("/blog/tag/$tagSlug")({
-  // Full-bleed so PageBody owns the container + the breadcrumb placement.
-  staticData: { fullBleed: true },
-  loader: async ({ params }) => {
+  staticData: { fullBleed: true, ownsMain: true },
+  pendingComponent: () => <PublicContentPending label={m.publicContent_loadingLabel()} />,
+  validateSearch: (search: Record<string, unknown>): BlogTagSearch => ({
+    cursor: typeof search.cursor === "string" && search.cursor ? search.cursor : undefined,
+  }),
+  loaderDeps: ({ search }) => search,
+  loader: async ({ params, deps }) => {
     try {
       const [tag, posts, seo] = await Promise.all([
         getBlogTag({ data: { tagSlug: params.tagSlug } }),
-        listBlogPosts({ data: { tagSlug: params.tagSlug, limit: 24 } }),
+        listBlogPosts({
+          data: { tagSlug: params.tagSlug, cursor: deps.cursor, limit: 24 },
+        }),
         getSeoBase(),
       ]);
       return { tag, posts, seo };
@@ -52,12 +60,30 @@ export const Route = createFileRoute("/blog/tag/$tagSlug")({
         }
       : {},
   component: TagPage,
-  notFoundComponent: () => (
-    <p className="rounded-xl bg-primary p-10 text-center text-tertiary ring-1 ring-secondary_alt">
-      {m.blogTag_notFoundText()}
-    </p>
-  ),
+  notFoundComponent: BlogTagNotFound,
 });
+
+function BlogTagNotFound() {
+  return (
+    <BlogArchivePage
+      breadcrumb={{
+        ariaLabel: m.blogIndex_breadcrumbLabel(),
+        items: [
+          { name: m.blogIndex_homeLabel(), href: "/" },
+          { name: m.blogIndex_title(), href: "/blog" },
+          { name: m.blogTag_notFoundText() },
+        ],
+      }}
+      title={m.blogTag_notFoundText()}
+      posts={[]}
+      empty={{
+        title: m.blogTag_notFoundText(),
+        description: m.blogTag_notFoundDescription(),
+        action: { label: m.blogPost_backToBlogLabel(), href: "/blog" },
+      }}
+    />
+  );
+}
 
 function TagPage() {
   const { tag, posts, seo } = Route.useLoaderData();
@@ -69,33 +95,40 @@ function TagPage() {
       { label: crumbs.blog, href: `${seo.origin}/blog` },
       { label: tag.name },
     ]),
-  ].filter((e): e is Record<string, unknown> => e !== null);
+  ].filter((entry): entry is Record<string, unknown> => entry !== null);
+
   return (
-    <PageBody
-      breadcrumb={{
-        ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
-        items: [
-          { name: crumbs.home, href: "/" },
-          { name: crumbs.blog, href: "/blog" },
-          { name: tag.name },
-        ],
-      }}
-    >
+    <>
       <JsonLd data={jsonLd} />
-
-      <header className="flex max-w-3xl flex-col gap-4">
-        <Text as="h1" variant="display">{tag.name}</Text>
-        {tag.description ? <p className="text-lg text-tertiary">{tag.description}</p> : null}
-        <div className="mt-2">
-          <BlogSearchBar />
-        </div>
-      </header>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {posts.data.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
-      </div>
-    </PageBody>
+      <BlogArchivePage
+        breadcrumb={{
+          ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
+          items: [
+            { name: crumbs.home, href: "/" },
+            { name: crumbs.blog, href: "/blog" },
+            { name: tag.name },
+          ],
+        }}
+        title={tag.name}
+        description={tag.description}
+        posts={posts.data}
+        empty={{
+          title: m.blogIndex_emptyTitle(),
+          description: m.blogTag_emptyText({ tag: tag.name }),
+          action: { label: m.blogIndex_browseAllLabel(), href: "/blog" },
+        }}
+        nextLink={
+          posts.hasMore && posts.nextCursor ? (
+            <Link
+              to="/blog/tag/$tagSlug"
+              params={{ tagSlug: tag.slug }}
+              search={{ cursor: posts.nextCursor }}
+            >
+              {m.blogIndex_nextResultsLabel()}
+            </Link>
+          ) : undefined
+        }
+      />
+    </>
   );
 }

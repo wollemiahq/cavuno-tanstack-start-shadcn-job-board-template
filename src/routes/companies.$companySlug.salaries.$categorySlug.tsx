@@ -1,18 +1,17 @@
-import { Text } from '@/components/text'
-import { createFileRoute, getRouteApi, notFound, redirect } from '@tanstack/react-router'
+import { createFileRoute, getRouteApi, notFound, redirect } from "@tanstack/react-router";
 
-import { isNotFound } from '@cavuno/board'
-import { boardCopy } from '#/copy'
+import { isNotFound } from "@cavuno/board";
+import { boardCopy } from "#/copy";
 import {
   buildSalaryFaq,
   companyCategorySalaryJsonLd,
   createBreadcrumbJsonLd,
   faqJsonLd,
   formatRange,
-} from '@cavuno/board/seo'
+} from "@cavuno/board/seo";
 
-import { JsonLd } from '@/components/json-ld'
-import { PageBody } from '@/components/board/page-body'
+import { JsonLd } from "@/components/json-ld";
+import { PageSection } from "@/components/layout/page";
 import {
   SalaryEmptyState,
   OverallSalaryCard,
@@ -20,48 +19,47 @@ import {
   SalaryRail,
   SenioritySalaryTable,
   type RailItem,
-} from '@/components/board/salary-sections'
+} from "@/components/board/salary-sections";
 import {
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
   toSalaryRailVM,
   toSeniorityTableVM,
-} from '@/board/salary-view-model'
-import { m } from '../paraglide/messages'
-import { getCompanyCategorySalary, getSeoBase } from '../server/queries'
+} from "@/board/salary-view-model";
+import { m } from "../paraglide/messages";
+import { getCompanyCategorySalary, getSeoBase } from "../server/queries";
+import { SalaryNotFoundPage, SalaryPageLayout, SalaryPendingPage } from "./-salary-page-layout";
 
-export const Route = createFileRoute(
-  '/companies/$companySlug/salaries/$categorySlug',
-)({
-  staticData: { fullBleed: true },
+export const Route = createFileRoute("/companies/$companySlug/salaries/$categorySlug")({
+  staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
-    let salary
+    let salary;
     try {
       salary = await getCompanyCategorySalary({
         data: {
           companySlug: params.companySlug,
           categorySlug: params.categorySlug,
         },
-      })
+      });
     } catch (error) {
-      if (isNotFound(error)) throw notFound()
-      throw error
+      if (isNotFound(error)) throw notFound();
+      throw error;
     }
     // The API returns the board-language canonical category slug and never 308s;
     // the starter performs the redirect (S3). The company slug is never localized.
     if (salary.categoryCanonicalSlug !== params.categorySlug) {
       throw redirect({
-        to: '/companies/$companySlug/salaries/$categorySlug',
+        to: "/companies/$companySlug/salaries/$categorySlug",
         params: {
           companySlug: params.companySlug,
           categorySlug: salary.categoryCanonicalSlug,
         },
         statusCode: 308,
-      })
+      });
     }
-    const seo = await getSeoBase()
-    return { salary, seo }
+    const seo = await getSeoBase();
+    return { salary, seo };
   },
   head: ({ loaderData }) =>
     loaderData
@@ -75,7 +73,7 @@ export const Route = createFileRoute(
               }),
             },
             {
-              name: 'description',
+              name: "description",
               content: loaderData.salary.overallSalary
                 ? m.companySalaries_categoryMetaDescriptionWithData({
                     category: loaderData.salary.categoryName,
@@ -95,28 +93,32 @@ export const Route = createFileRoute(
           ],
           links: [
             {
-              rel: 'canonical',
+              rel: "canonical",
               href: `${loaderData.seo.origin}/companies/${loaderData.salary.companySlug}/salaries/${loaderData.salary.categoryCanonicalSlug}`,
             },
           ],
         }
       : {},
   component: CompanyCategorySalaryPage,
+  pendingComponent: SalaryPendingPage,
   notFoundComponent: () => (
-    <SalaryEmptyState title={m.companySalaries_notFoundCompanyCategory()} />
+    <SalaryNotFoundPage title={m.companySalaries_notFoundCompanyCategory()} />
   ),
-})
+});
 
-const rootApi = getRouteApi('__root__')
+const rootApi = getRouteApi("__root__");
 
 function CompanyCategorySalaryPage() {
-  const { salary, seo } = Route.useLoaderData()
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs
-  const { board } = rootApi.useLoaderData()
-  const locale = seo.language
-  const label = `${salary.categoryName} at ${salary.companyName}`
+  const { salary, seo } = Route.useLoaderData();
+  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const { board } = rootApi.useLoaderData();
+  const locale = seo.language;
+  const label = m.companySalaries_categoryAtCompanyLabel({
+    category: salary.categoryName,
+    company: salary.companyName,
+  });
 
-  const faqs = buildSalaryFaq(locale, label, salary.overallSalary)
+  const faqs = buildSalaryFaq(locale, label, salary.overallSalary);
   const jsonLd = [
     companyCategorySalaryJsonLd(locale, salary),
     faqJsonLd(faqs),
@@ -133,7 +135,7 @@ function CompanyCategorySalaryPage() {
       },
       { label: salary.categoryName },
     ]),
-  ].filter((e): e is Record<string, unknown> => e !== null)
+  ].filter((e): e is Record<string, unknown> => e !== null);
 
   const competitorItems: RailItem[] = salary.competitors.map((x) => ({
     name: x.companyName,
@@ -141,14 +143,21 @@ function CompanyCategorySalaryPage() {
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
     logoPath: x.logoPath,
-  }))
+  }));
+  const hasSalaryContent = Boolean(
+    salary.overallSalary || salary.bySeniority.length || competitorItems.length || faqs.length,
+  );
+  const heading = m.companySalaries_categoryHeading({
+    category: salary.categoryName,
+    company: salary.companyName,
+  });
 
   return (
-    <PageBody
+    <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
         [
-          { name: crumbs.home, href: '/' },
-          { name: crumbs.companies, href: '/companies' },
+          { name: crumbs.home, href: "/" },
+          { name: crumbs.companies, href: "/companies" },
           {
             name: salary.companyName,
             href: `/companies/${salary.companySlug}`,
@@ -162,49 +171,48 @@ function CompanyCategorySalaryPage() {
         seo.language,
         seo.labels,
       )}
+      title={heading}
     >
-      <div className="space-y-6">
       <JsonLd data={jsonLd} />
-      <header>
-        <Text as="h1" variant="heading1">
-          {m.companySalaries_categoryHeading({
-            category: salary.categoryName,
-            company: salary.companyName,
-          })}
-        </Text>
-      </header>
+      {hasSalaryContent ? (
+        <>
+          {salary.overallSalary ? (
+            <OverallSalaryCard
+              vm={toOverallSalaryVM(
+                {
+                  avgMin: salary.overallSalary.avgMin,
+                  avgMax: salary.overallSalary.avgMax,
+                  jobCount: salary.overallSalary.jobCount,
+                },
+                board.language,
+                seo.labels,
+              )}
+            />
+          ) : null}
 
-      {salary.overallSalary ? (
-        <OverallSalaryCard
-          vm={toOverallSalaryVM(
-            {
-              avgMin: salary.overallSalary.avgMin,
-              avgMax: salary.overallSalary.avgMax,
-              jobCount: salary.overallSalary.jobCount,
-            },
-            board.language,
-            seo.labels,
-          )}
-        />
-      ) : null}
+          {salary.bySeniority.length > 0 ? (
+            <PageSection title={m.companySalaries_seniorityHeading()}>
+              <SenioritySalaryTable
+                vm={toSeniorityTableVM(salary.bySeniority, board.language, seo.labels)}
+              />
+            </PageSection>
+          ) : null}
 
-      {salary.bySeniority.length > 0 ? (
-        <section className="space-y-3">
-          <Text as="h2" variant="heading4">{m.companySalaries_seniorityHeading()}</Text>
-          <SenioritySalaryTable vm={toSeniorityTableVM(salary.bySeniority, board.language, seo.labels)} />
-        </section>
-      ) : null}
-
-      <SalaryRail
-        vm={toSalaryRailVM(
-          m.companySalaries_otherCompaniesHiringLabel({ category: salary.categoryName }),
-          competitorItems,
-          seo.language,
-          seo.labels,
-        )}
-      />
-      <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
-      </div>
-    </PageBody>
-  )
+          <SalaryRail
+            vm={toSalaryRailVM(
+              m.companySalaries_otherCompaniesHiringLabel({
+                category: salary.categoryName,
+              }),
+              competitorItems,
+              seo.language,
+              seo.labels,
+            )}
+          />
+          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
+        </>
+      ) : (
+        <SalaryEmptyState title={heading} description={m.salaryHub_emptyDescription()} />
+      )}
+    </SalaryPageLayout>
+  );
 }

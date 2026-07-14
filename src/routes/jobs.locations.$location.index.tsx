@@ -16,7 +16,6 @@ import { jobsListingLoaderDeps, parseJobsSearch } from "../lib/jobs-search";
 import { listingHead } from "@cavuno/board/seo";
 import { m } from "../paraglide/messages";
 import { getSeoBase, listJobs, resolvePlace, searchJobs } from "../server/queries";
-import { useLocationSuggestions } from "./-use-location-suggestions";
 
 export const Route = createFileRoute("/jobs/locations/$location/")({
   staticData: { fullBleed: true, ownsMain: true },
@@ -74,14 +73,13 @@ export const Route = createFileRoute("/jobs/locations/$location/")({
         })
       : {},
   component: LocationPage,
-  notFoundComponent: () => <JobsNotFound message={m.locationPage_notFoundText()} />,
+  notFoundComponent: () => <JobsNotFound />,
 });
 
 function LocationPage() {
   const { place, list, seo } = Route.useLoaderData();
   const { location } = Route.useParams();
   const search = Route.useSearch();
-  const locationSuggestions = useLocationSuggestions(seo.language);
   return (
     <ProgrammaticJobsView
       heading={m.locationPage_jobsHeading({ place: place.displayName })}
@@ -93,7 +91,6 @@ function LocationPage() {
       relatedSearches={"relatedSearches" in list ? list.relatedSearches : undefined}
       origin={seo.origin}
       filters={search}
-      locationSuggestions={locationSuggestions}
       location={{ slug: location, label: place.displayName }}
     />
   );

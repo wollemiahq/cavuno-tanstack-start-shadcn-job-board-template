@@ -1833,18 +1833,6 @@ Props:
 
 ### TooltipTrigger — `src/components/base/tooltip/tooltip.tsx`
 
-### BlogSearchBar — `src/components/blog-search-bar.tsx`
-
-The blog keyword search (CAV-487, CAV-502) — a thin wrapper of the shared
-`ListingSearchBand`, so it is the SAME white panel the jobs and companies
-headers use (no duplicate search-band markup). Present on every blog page
-(index, author, tag), all submitting to the blog index results.
-Route-agnostic: it navigates to `/blog?q=` regardless of where rendered.
-
-Props:
-
-- `defaultValue?: string | undefined`
-
 ### AlertSignupForm — `src/components/board/alert-signup-form.tsx`
 
 Props:
@@ -1882,6 +1870,36 @@ Props:
 - `signInHref?: string | undefined`
 - `verifyEmailHref?: string | undefined`
 - `viewer: { emailVerified: boolean; } | null`
+
+### BlogArchivePage — `src/components/board/blog-archive-page.tsx`
+
+Shared Page-family presentation for the blog, tag, and author archives.
+
+Props:
+
+- `avatar?: ReactNode`
+- `breadcrumb: BreadcrumbData`
+- `description?: string | null | undefined`
+- `empty: BlogArchiveEmptyState`
+- `filters?: ReactNode`
+- `nextLink?: ReactNode`
+- `posts: { id: string; object: "public_blog_post"; title: string; slug: string; featured: boolean; coverUrl: string | null; fe…`
+- `search?: ReactNode`
+- `title: string`
+
+### BlogArticleContent — `src/components/board/blog-article-content.tsx`
+
+Complete reusable article presentation for the canonical post route.
+
+Props:
+
+- `adjacent?: { object: "blog_adjacent_posts"; previous: { id: string; object: "public_blog_post"; title: string; slug: string; fea…`
+- `breadcrumb: BreadcrumbData`
+- `language: string`
+- `missingBody: BlogArticleMissingBodyState`
+- `permalink: string`
+- `post: { id: string; object: "public_blog_post"; title: string; slug: string; featured: boolean; coverUrl: string | null; fe…`
+- `related?: { id: string; object: "public_blog_post"; title: string; slug: string; featured: boolean; coverUrl: string | null; fe…`
 
 ### Breadcrumb — `src/components/board/breadcrumb.tsx`
 
@@ -2085,7 +2103,6 @@ Usage: Fetch with board.jobs.list({ ...filters, cursor, limit: 20 }) (board.jobs
 
 Props:
 
-- `breadcrumb?: BreadcrumbData | undefined`
 - `count?: number | undefined`
 - `detail: ReactNode`
 - `endAd?: AdPlacement | undefined`
@@ -2095,11 +2112,8 @@ Props:
 - `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "other" | …`
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
-- `location?: { slug: string; label: string; } | undefined`
-- `locationSuggestions: LocationSuggestionState`
 - `onFiltersChange: (next: ListingFilters) => void`
 - `onPageChange: (page: number) => void`
-- `onSearchSubmit: (next: ListingFilters, location: { slug: string; name: string; } | null) => void`
 - `onSelectedJobPush: (jobSlug: string) => void`
 - `onSelectedJobReplace: (jobSlug: string) => void`
 - `page: number`
@@ -2126,6 +2140,15 @@ Props:
 - `selected?: boolean | undefined`
 - `vm: JobCardVM`
 
+### JobsFilterControls — `src/components/board/jobs-filter-controls.tsx`
+
+Props:
+
+- `filters: ListingFilters`
+- `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
+- `language: string`
+- `onChange: (next: ListingFilters) => void`
+
 ### JobsFilterToolbar — `src/components/board/jobs-filter-toolbar.tsx`
 
 Props:
@@ -2139,38 +2162,22 @@ Props:
 ### JobsNotFound — `src/components/board/jobs-not-found.tsx`
 
 The not-found state for the programmatic jobs pages (CAV-502). A visitor
-can search a term and land on a slug that no longer resolves — so this
-keeps the SAME shared listing header + search band (never a bare message
-box), with an `EmptyState` below. The search re-runs against `/jobs`, so
-the dead end is a place to search again.
-
-Props:
-
-- `message: string`
+can search a term and land on a slug that no longer resolves. The global
+header remains the single keyword/location search owner, while this state
+describes the failed search rather than exposing the missing taxonomy.
 
 ### JobsResultsBar — `src/components/board/jobs-results-bar.tsx`
 
 Props:
 
 - `count?: number | undefined`
+- `heading?: string | undefined`
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `onSortChange: (sort: JobSort | undefined) => void`
 - `page?: number | undefined`
 - `pageSize?: number | undefined`
 - `sort: JobSort | undefined`
-
-### JobsSearchControls — `src/components/board/jobs-search-controls.tsx`
-
-Props:
-
-- `filters: ListingFilters`
-- `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
-- `language: string`
-- `location?: { slug: string; label: string; } | undefined`
-- `locationSuggestions?: LocationSuggestionState | undefined`
-- `onChange: (next: ListingFilters) => void`
-- `onSearchSubmit?: ((next: ListingFilters, location: { slug: string; name: string; } | null) => void) | undefined`
 
 ### ListingPageHeader — `src/components/board/listing-page-header.tsx`
 
@@ -2306,15 +2313,13 @@ Props:
 - `title: ReactNode`
 - `width?: ContainerWidth | undefined`
 
-### CompanySalarySummary — `src/components/board/salary-sections.tsx`
+### PublicContentPending — `src/components/board/public-content-pending.tsx`
 
-The Overview-tab salary summary (CAV-516). The company Overview reads as a
-page of section summaries — it previews the company's jobs, and THIS block
-condenses the Salaries tab into the same rhythm: a titled "Salaries" section
-with the company's overall salary range (`OverallSalaryCard`) + a few top
-category rows (`SalaryRail`) + a "View salaries" link deferring to the full
-Salaries tab. It composes the existing salary display components — no new
-salary markup — so a restyle of the salary sections flows through here too.
+Props:
+
+- `label: string`
+
+### CompanySalarySummary — `src/components/board/salary-sections.tsx`
 
 Props:
 
@@ -2331,11 +2336,6 @@ Props:
 - `vm: OverallSalaryVM`
 
 ### SalaryEmptyState — `src/components/board/salary-sections.tsx`
-
-No-data / not-found state for the salary route family — the stock UUI
-`EmptyState` so a page with no salary figures reads as an honest omission
-(never an invented number). The route supplies the already-localized
-title and optional description copy.
 
 Props:
 
@@ -2962,6 +2962,7 @@ this component owns only popup interaction and the selected display value.
 Props:
 
 - `className?: string | undefined`
+- `inputClassName?: string | undefined`
 - `loading: boolean`
 - `onClear: () => void`
 - `onQueryChange: (query: string) => void`
@@ -3053,6 +3054,10 @@ Props:
 
 ### PostCard — `src/components/post-card.tsx`
 
+One crawlable blog summary. The card keeps post, tag, and every author as
+real links so a compact archive never throws away the blog's discovery
+graph. Long editorial labels wrap instead of being replaced by ellipses.
+
 Props:
 
 - `post: { id: string; object: "public_blog_post"; title: string; slug: string; featured: boolean; coverUrl: string | null; fe…`
@@ -3078,7 +3083,6 @@ Props:
 - `heading: string`
 - `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "other" | …`
 - `location?: { slug: string; label: string; } | undefined`
-- `locationSuggestions: LocationSuggestionState`
 - `origin?: string | undefined`
 - `page: number`
 - `pageSize: number`
@@ -3409,6 +3413,37 @@ Variants — `variant`: default, icon
 
 ### Label — `src/components/ui/label.tsx`
 
+### Pagination — `src/components/ui/pagination.tsx`
+
+### PaginationContent — `src/components/ui/pagination.tsx`
+
+### PaginationEllipsis — `src/components/ui/pagination.tsx`
+
+### PaginationItem — `src/components/ui/pagination.tsx`
+
+### PaginationLink — `src/components/ui/pagination.tsx`
+
+Props:
+
+- `isActive?: boolean | undefined`
+- `size?: "icon" | "xs" | "sm" | "lg" | "default" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+
+### PaginationNext — `src/components/ui/pagination.tsx`
+
+Props:
+
+- `isActive?: boolean | undefined`
+- `size?: "icon" | "xs" | "sm" | "lg" | "default" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `text: string`
+
+### PaginationPrevious — `src/components/ui/pagination.tsx`
+
+Props:
+
+- `isActive?: boolean | undefined`
+- `size?: "icon" | "xs" | "sm" | "lg" | "default" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `text: string`
+
 ### RadioGroup — `src/components/ui/radio-group.tsx`
 
 ### RadioGroupItem — `src/components/ui/radio-group.tsx`
@@ -3460,6 +3495,22 @@ Props:
 ### SheetTrigger — `src/components/ui/sheet.tsx`
 
 ### Skeleton — `src/components/ui/skeleton.tsx`
+
+### Table — `src/components/ui/table.tsx`
+
+### TableBody — `src/components/ui/table.tsx`
+
+### TableCaption — `src/components/ui/table.tsx`
+
+### TableCell — `src/components/ui/table.tsx`
+
+### TableFooter — `src/components/ui/table.tsx`
+
+### TableHead — `src/components/ui/table.tsx`
+
+### TableHeader — `src/components/ui/table.tsx`
+
+### TableRow — `src/components/ui/table.tsx`
 
 ### NotFound — `src/components/untitled-ui/not-found.tsx`
 
@@ -3582,9 +3633,9 @@ Primitives: AuthCard, Field, FormError, AuthDivider, SocialButton
 
 ### Board card — `docs/patterns/board-card.md`
 
-The avatar/logo + title link + meta + pills card surface shared by job, company, talent, and post cards.
+The avatar/logo + title link + meta + pills card surface shared by job, company, talent, post, and salary records.
 
-Primitives: Avatar, Badge, TaxonomyTags, initialsOf
+Primitives: Card, Avatar, Badge, TaxonomyTags, initialsOf
 
 ### Breadcrumb — `docs/patterns/breadcrumb.md`
 
@@ -3608,7 +3659,7 @@ Primitives: Page, Bleed, PageHeader, PageContent, JobDetail, TalentProfileConten
 
 The zero-results / not-found treatment — a featured icon, title, and description, kept inside the page chrome.
 
-Primitives: Empty, EmptyState, FeaturedIcon, JobsNotFound, SalaryEmptyState
+Primitives: Empty, JobsNotFound, SalaryEmptyState
 
 ### Form feedback — `docs/patterns/form-feedback.md`
 
@@ -3624,9 +3675,9 @@ Primitives: Input, Select, TextAreaBase, Label, Button, FileUpload
 
 ### Listing page — `docs/patterns/listing-page.md`
 
-The full-bleed header + search → results bar → list/grid → pagination browse surface every collection page shares.
+The canonical search/filter → contextual results heading → collection → pagination browse surface.
 
-Primitives: Page, Bleed, PageHeader, PageContent, PageSection, ListingSearchBand, JobsResultsBar, JobList, ListingPagination
+Primitives: Page, PageContent, JobsFilterControls, SearchResultsLayout, JobsResultsBar, JobList, ListingPagination
 
 ### Listing rail — `docs/patterns/listing-rail.md`
 
@@ -3638,11 +3689,11 @@ Primitives: PageContent, ListingRail, TaxonomyTags
 
 The in-flight treatment for route transitions, master-detail reads, and submitting actions.
 
-Primitives: LoadingIndicator, Skeleton, Button
+Primitives: PublicContentPending, Skeleton, Button
 
 ### Results header — `docs/patterns/results-header.md`
 
-The honest "Showing X–Y of Z" count and sort control on a single row above the results.
+The contextual results-count H1 and sort control on a single compact row above the results.
 
 Primitives: JobsResultsBar, Select
 
@@ -3658,17 +3709,23 @@ A titled section row with an optional trailing "view all / see all" link.
 
 Primitives: Link, Button
 
+### Site header — `docs/patterns/site-header.md`
+
+The public shell's context-aware search, centered discovery navigation, and account actions.
+
+Primitives: Header, HeaderSearch, LocationCombobox, Link, Input, Button
+
 ### Stat tile — `docs/patterns/stat-tile.md`
 
 A label + display-value tile for headline metrics and KPI rows.
 
-Primitives: OverallSalaryCard, MetricPanel
+Primitives: Card, OverallSalaryCard, MetricPanel
 
 ### Typography — `docs/patterns/typography.md`
 
-Author every heading (and, gradually, body copy) through one role-named primitive so text stays on the Untitled UI scale.
+Keep authored interface text on the Rhea/Geist theme scale and rendered HTML in one shadcn Typeset preset.
 
-Primitives: Text, Prose
+Primitives: PageHeader, PageSection, CardTitle, Prose
 
 ## Do's and Don'ts
 

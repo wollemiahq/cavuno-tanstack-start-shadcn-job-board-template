@@ -1,7 +1,7 @@
 ---
 name: Empty state
 purpose: The zero-results / not-found treatment — a featured icon, title, and description, kept inside the page chrome.
-primitives: [Empty, EmptyState, FeaturedIcon, JobsNotFound, SalaryEmptyState]
+primitives: [Empty, JobsNotFound, SalaryEmptyState]
 usedBy: [src/components/board/home-landing.tsx, src/components/board/jobs-not-found.tsx, src/components/board/salary-sections.tsx, src/components/board/company-search-page.tsx, src/components/board/talent-search-page.tsx, src/routes/talent.index.tsx, src/routes/p.$handle.tsx, src/routes/companies.markets.$market.tsx, src/routes/blog.index.tsx, src/routes/jobs.locations.index.tsx]
 ---
 
@@ -9,9 +9,9 @@ usedBy: [src/components/board/home-landing.tsx, src/components/board/jobs-not-fo
 
 When a search returns nothing or a slug no longer resolves, the page shows a
 centered empty-state compound — media, title, description, and optional actions
-— rather than a bare paragraph. Critically, the not-found surface keeps the
-page's own chrome (the listing header + a working search band) so a dead end is
-a place to search again, not a wall.
+— rather than a bare paragraph. Critically, a search not-found surface keeps
+the global contextual search and the page's filter chrome, so a dead end is a
+place to revise or reset the search rather than a wall.
 
 ## When to use
 
@@ -24,11 +24,11 @@ a place to search again, not a wall.
 - New Rhea surfaces use the owned shadcn `Empty` compound: `EmptyHeader` →
   `EmptyMedia` → `EmptyTitle` + `EmptyDescription`, with optional
   `EmptyContent` actions.
-- Migration-only surfaces may retain the Untitled UI `EmptyState` compound:
-  `EmptyState.Header` → `EmptyState.FeaturedIcon` → `EmptyState.Content`.
 - For programmatic not-founds: composed through the owning listing or search
-  pattern so search stays available (`JobsNotFound` and
+  pattern so contextual search stays available (`JobsNotFound` and
   `ProgrammaticCompaniesView`).
+- A job search with no results spans the full results canvas. It does not
+  reserve an empty master-detail column or an empty advertising rail.
 
 ## Composition
 
@@ -48,22 +48,24 @@ The homepage uses the owned Rhea compound directly:
 </PageSection>
 ```
 
-The migration-only `JobsNotFound` wrapper keeps the shared listing header and
-puts the legacy `EmptyState` compound below it:
+`JobsNotFound` keeps the global search and route filters, then uses the complete
+results width for one recovery action:
 
 ```tsx
 <Page>
-  <PageContent
-    header={<PageHeader title={…}><ListingSearchBand … /></PageHeader>}
-  >
-    <EmptyState size="sm" className="py-12">
-      <EmptyState.Header><EmptyState.FeaturedIcon icon={SearchLg} color="gray" theme="modern" /></EmptyState.Header>
-      <EmptyState.Content>
-        <EmptyState.Title>{copy.jobSearch.headingJobs}</EmptyState.Title>
-        <EmptyState.Description>{message}</EmptyState.Description>
-      </EmptyState.Content>
-    </EmptyState>
-  </PageContent>
+  <main>
+    <JobsFilterControls … />
+    <Empty>
+      <EmptyHeader>
+        <EmptyMedia variant="icon"><Search /></EmptyMedia>
+        <h1>{copy.jobSearch.noMatchingResultsHeading}</h1>
+        <EmptyDescription>{copy.jobSearch.queryEmptyText}</EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <Link to="/jobs">{copy.jobSearch.resetFiltersAction}</Link>
+      </EmptyContent>
+    </Empty>
+  </main>
 </Page>
 ```
 
@@ -72,20 +74,26 @@ puts the legacy `EmptyState` compound below it:
 | Do                                                                                                        | Don't                                                                                        |
 | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | Use owned shadcn `Empty` for new surfaces (or the existing `JobsNotFound` / `SalaryEmptyState` wrappers). | Hand-roll a `<p className="rounded-lg border border-dashed …">` message box.                 |
-| Keep the listing header + search in a programmatic `notFoundComponent`.                                   | Drop the visitor onto a bare message with no way forward.                                    |
+| Keep contextual header search + page filters in a programmatic `notFoundComponent`.                       | Drop the visitor onto a bare message with no way forward.                                    |
+| Describe the failed search and offer one primary reset action.                                            | Expose route concepts such as “skill not found” or “category not found” to visitors.         |
+| Give a no-match state the complete results canvas.                                                        | Leave a blank detail column, divider, or advertising slot beside it.                          |
 | Use semantic Rhea tokens on the empty surface.                                                            | Copy legacy styling from `untitled-ui/not-found.tsx`; migrate it when touching that surface. |
 
 ## Used by
 
 - `HomeLanding` — owned shadcn `Empty` for the no-jobs starter state.
-- `JobsNotFound` — programmatic jobs not-found (`jobs.$keyword`, `jobs.locations.*`).
+- `JobsNotFound` — one search-focused programmatic jobs recovery state
+  (`jobs.$keyword`, `jobs.locations.*`, and `jobs.skills.*`).
+- `JobSearchPage` — full-width no-match recovery for ordinary `/jobs` search
+  results; an unfiltered board with no open jobs keeps its honest collection-empty copy.
 - `SalaryEmptyState` — the salary family.
 - `CompanySearchPage` — company zero-results state inside the master list;
   `companies.markets.$market` routes unknown markets through the same searchable shell.
 - `TalentSearchPage` — filtered and unfiltered Talent empty states inside the
   master list; disabled directories and missing public profiles use owned
   recovery actions rather than bare paragraphs.
-- `EmptyState` directly — `blog.index`, `jobs.locations.index`, and the salary routes.
+- `BlogArchivePage` — blog, tag, and author zero-result recovery.
+- `jobs.locations.index` — the location taxonomy’s honest empty collection.
 
 ## Related
 

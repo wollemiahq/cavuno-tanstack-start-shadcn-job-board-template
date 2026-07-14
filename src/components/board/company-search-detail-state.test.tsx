@@ -22,7 +22,7 @@ describe("CompanySearchDetailState", () => {
     );
 
     expect(screen.getByRole("status")).toHaveAttribute("aria-busy", "true");
-    expect(screen.getByText("Loading company details…")).toBeVisible();
+    expect(screen.getByText("Loading company details…")).toHaveClass("sr-only");
     expect(container.querySelectorAll("[data-slot='skeleton']").length).toBeGreaterThan(2);
   });
 

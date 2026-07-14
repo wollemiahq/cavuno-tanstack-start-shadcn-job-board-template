@@ -1,16 +1,16 @@
 ---
 name: Board card
-purpose: The avatar/logo + title link + meta + pills card surface shared by job, company, talent, and post cards.
-primitives: [Avatar, Badge, TaxonomyTags, initialsOf]
+purpose: The avatar/logo + title link + meta + pills card surface shared by job, company, talent, post, and salary records.
+primitives: [Card, Avatar, Badge, TaxonomyTags, initialsOf]
 usedBy: [src/components/board/job-card.tsx, src/components/board/company-card.tsx, src/components/board/talent-search-result.tsx, src/components/post-card.tsx, src/components/board/salary-sections.tsx]
 ---
 
 ## Purpose
 
-Jobs, companies, public talent profiles, and posts all render as a card with the same surface: an
-avatar/logo, a title that links to the record, a line of meta, and a row of
-pills, on `rounded-xl` with a hover shadow lift. The avatar falls back to
-two-letter initials via the shared `initialsOf` helper.
+Jobs, companies, public talent profiles, posts, and salary records share the
+same owned shadcn vocabulary: `Card` for the surface, `Avatar` for identity,
+real title/taxonomy anchors, and semantic theme tokens for meta. The avatar
+falls back to two-letter initials through the shared `initialsOf` helper.
 
 ## When to use
 
@@ -21,9 +21,9 @@ two-letter initials via the shared `initialsOf` helper.
 
 ## Anatomy
 
-- The card surface: `rounded-xl … ring-1 ring-secondary_alt shadow-xs hover:shadow-md`.
-- `Avatar` with `initials={initialsOf(name)}` for the logo fallback.
-- A title `Link`/`AriaLink` to the record.
+- The owned `Card` surface and its theme-aware radius, ring, and shadow.
+- `Avatar` + `AvatarFallback` with `initialsOf(name)`.
+- A real title `Link` or `<a href>` to the record.
 - Meta text + a `Badge` / `TaxonomyTags` pill row.
 
 ## Composition
@@ -33,15 +33,21 @@ The initials fallback comes from one shared helper, `src/lib/initials.ts`:
 ```ts
 import { initialsOf } from "@/lib/initials";
 // …
-<Avatar size="xl" src={logoUrl} initials={initialsOf(name)} alt={name} />
+<Card>
+  <Avatar>
+    <AvatarImage src={logoUrl} alt={name} />
+    <AvatarFallback>{initialsOf(name)}</AvatarFallback>
+  </Avatar>
+</Card>
 ```
 
 ## Do / Don't
 
-| Do | Don't |
-|---|---|
-| Import `initialsOf` from `@/lib/initials`. | Re-declare a local `function initialsOf` — eight files still carry a byte-identical copy (`job-card`, `company-card`, `job-detail`, `salary-sections`, `post-card`, `blog.author.$authorSlug`, `companies.$companySlug.index`, `blog.$postSlug`); migrate them to the shared helper, do not add a ninth. |
-| Reuse the `ring-secondary_alt shadow-xs hover:shadow-md` surface. | Copy the surface class string into a new bespoke card. |
+| Do                                                          | Don't                                                                   |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Import `initialsOf` from `@/lib/initials`.                  | Re-declare a local initials helper.                                     |
+| Compose the owned `Card`, `Avatar`, and `Badge` primitives. | Copy a card shell or revive legacy ring/color tokens.                   |
+| Preserve complete names and real hrefs.                     | Truncate SEO-significant labels or replace anchors with click handlers. |
 
 ## Used by
 

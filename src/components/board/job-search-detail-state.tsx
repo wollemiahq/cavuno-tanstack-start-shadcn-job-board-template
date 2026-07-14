@@ -34,6 +34,8 @@ export function JobSearchDetailState({
   applySlot?: React.ReactNode;
   saveSlot?: React.ReactNode;
 }) {
+  if (status === "idle") return null;
+
   if (vm?.detailHref) {
     return (
       <div aria-busy={status === "loading"}>
@@ -84,8 +86,8 @@ export function JobSearchDetailState({
   }
 
   return (
-    <div role="status" aria-busy="true" className="min-h-[28rem] space-y-6 p-6">
-      <span>{loadingLabel}</span>
+    <div role="status" className="min-h-[28rem] space-y-6 p-6">
+      <span className="sr-only">{loadingLabel}</span>
       <div className="flex items-center gap-3">
         <Skeleton className="size-10" />
         <Skeleton className="h-5 w-32" />

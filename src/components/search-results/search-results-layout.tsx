@@ -52,7 +52,7 @@ export function SearchResultsLayout({
       <div
         data-slot="search-results-core"
         className={cn(
-          "grid min-w-0 grid-cols-1 overflow-hidden rounded-2xl border border-border bg-background md:grid-cols-[20rem_minmax(0,1fr)] xl:grid-cols-[24rem_minmax(0,1fr)]",
+          "grid min-w-0 grid-cols-1 md:grid-cols-[20rem_minmax(0,1fr)] xl:grid-cols-[24rem_minmax(0,1fr)]",
           hasStartAd && "min-[1600px]:col-start-2",
         )}
       >

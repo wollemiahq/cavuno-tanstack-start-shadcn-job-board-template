@@ -24,6 +24,7 @@ interface LocationComboboxProps extends LocationSuggestionState {
   onSelect: (place: { slug: string; name: string }) => void;
   onClear: () => void;
   className?: string;
+  inputClassName?: string;
 }
 
 /**
@@ -45,6 +46,7 @@ export function LocationCombobox({
   loading,
   onQueryChange,
   className,
+  inputClassName,
 }: LocationComboboxProps) {
   const [text, setText] = useState(valueLabel ?? value ?? "");
   const [open, setOpen] = useState(false);
@@ -121,7 +123,7 @@ export function LocationCombobox({
               setOpen(false);
             }
           }}
-          className="border-border bg-background pr-9 pl-8"
+          className={cn("border-border bg-background pr-9 pl-8", inputClassName)}
         />
         {(text || value) && (
           <Button

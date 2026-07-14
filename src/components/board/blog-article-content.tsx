@@ -1,0 +1,382 @@
+import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { FileWarning } from "lucide-react";
+
+import type { PublicBlogAdjacentPosts, PublicBlogPost, PublicBlogPostSummary } from "@cavuno/board";
+import { formatDate } from "@cavuno/board/format";
+
+import type { BreadcrumbData } from "@/components/board/breadcrumb";
+import { PageHeaderWithBreadcrumb } from "@/components/board/page-header-with-breadcrumb";
+import { Page, PageContent, PageSection } from "@/components/layout/page";
+import { PostCard } from "@/components/post-card";
+import { Prose } from "@/components/prose";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@/components/ui/empty";
+import { initialsOf } from "@/lib/initials";
+import { cn } from "@/lib/utils";
+import { extractToc, withHeadingAnchors, type TocEntry } from "@/lib/article-toc";
+import { m } from "@/paraglide/messages";
+
+export interface BlogArticleMissingBodyState {
+  title: string;
+  description: string;
+  action: { label: string; href: string };
+}
+
+export interface BlogArticleContentProps {
+  breadcrumb: BreadcrumbData;
+  post: PublicBlogPost;
+  language: string;
+  permalink: string;
+  missingBody: BlogArticleMissingBodyState;
+  adjacent?: PublicBlogAdjacentPosts;
+  related?: PublicBlogPostSummary[];
+}
+
+function shareLinks(permalink: string, title: string) {
+  const url = encodeURIComponent(permalink);
+  const text = encodeURIComponent(title);
+
+  return {
+    x: `https://x.com/intent/post?url=${url}&text=${text}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+    linkedin: `https://www.linkedin.com/shareArticle?mini=true&url=${url}`,
+  };
+}
+
+function ArticleToc({ headings, className }: { headings: TocEntry[]; className?: string }) {
+  const [activeId, setActiveId] = useState<string>();
+
+  useEffect(() => {
+    const targets = headings
+      .map((heading) => document.getElementById(heading.id))
+      .filter((element): element is HTMLElement => element !== null);
+    if (targets.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting);
+        if (visible.length === 0) return;
+        const topMost = visible.reduce((first, second) =>
+          first.boundingClientRect.top < second.boundingClientRect.top ? first : second,
+        );
+        setActiveId(topMost.target.id);
+      },
+      { rootMargin: "0px 0px -70% 0px" },
+    );
+
+    targets.forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, [headings]);
+
+  return (
+    <nav aria-label={m.blogPost_inThisArticleHeading()} className={className}>
+      <p className="mb-3 text-sm font-medium text-foreground">
+        {m.blogPost_inThisArticleHeading()}
+      </p>
+      <ul className="flex flex-col border-l border-border">
+        {headings.map((heading) => (
+          <li key={heading.id}>
+            <a
+              href={`#${heading.id}`}
+              aria-current={activeId === heading.id ? "true" : undefined}
+              className={cn(
+                "-ml-px block border-l-2 py-1.5 pl-4 text-sm outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/30",
+                activeId === heading.id
+                  ? "border-foreground font-medium text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+function ShareLinks({ links }: { links: ReturnType<typeof shareLinks> }) {
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm font-medium text-foreground">{m.blogPost_shareHeading()}</p>
+      <div className="flex flex-wrap gap-2">
+        <a
+          href={links.x}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={m.blogPost_shareOnX()}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
+          X
+        </a>
+        <a
+          href={links.facebook}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={m.blogPost_shareOnFacebook()}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
+          {m.blogPost_shareOnFacebook()}
+        </a>
+        <a
+          href={links.linkedin}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={m.blogPost_shareOnLinkedin()}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
+          {m.blogPost_shareOnLinkedin()}
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function AuthorLinks({ author }: { author: PublicBlogPost["authors"][number] }) {
+  const links = [
+    author.websiteUrl ? { href: author.websiteUrl, label: m.blogPost_authorWebsiteLabel() } : null,
+    author.twitterUrl ? { href: author.twitterUrl, label: m.blogPost_authorXLabel() } : null,
+    author.linkedinUrl
+      ? { href: author.linkedinUrl, label: m.blogPost_authorLinkedinLabel() }
+      : null,
+    author.githubUrl ? { href: author.githubUrl, label: m.blogPost_authorGithubLabel() } : null,
+  ].filter((link) => link !== null);
+
+  return links.length > 0 ? (
+    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+      {links.map((link) => (
+        <a
+          key={link.href}
+          href={link.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-sm text-muted-foreground outline-none hover:text-foreground hover:underline focus-visible:ring-3 focus-visible:ring-ring/30"
+        >
+          {link.label}
+        </a>
+      ))}
+    </div>
+  ) : null;
+}
+
+function PostMeta({
+  post,
+  language,
+  links,
+  className,
+}: {
+  post: PublicBlogPost;
+  language: string;
+  links: ReturnType<typeof shareLinks>;
+  className?: string;
+}) {
+  const dateLine = [
+    post.publishedAt ? formatDate(language, post.publishedAt) : null,
+    post.readingTimeMin ? m.blogPost_readingTimeText({ minutes: post.readingTimeMin }) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return (
+    <div className={cn("flex flex-col gap-6", className)}>
+      <div className="flex flex-col gap-4">
+        {post.authors.length > 0 ? (
+          <p className="text-sm font-medium text-foreground">{m.blogPost_updatedByHeading()}</p>
+        ) : null}
+        {post.authors.length > 0 ? (
+          post.authors.map((author) => (
+            <div key={author.id} className="flex gap-3">
+              <Avatar size="lg">
+                {author.avatarUrl ? <AvatarImage src={author.avatarUrl} alt={author.name} /> : null}
+                <AvatarFallback>{initialsOf(author.name)}</AvatarFallback>
+              </Avatar>
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <Link
+                  to="/blog/author/$authorSlug"
+                  params={{ authorSlug: author.slug }}
+                  className="w-fit rounded-sm font-medium text-foreground outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/30"
+                >
+                  {author.name}
+                </Link>
+                {dateLine ? (
+                  <span className="text-sm text-muted-foreground">{dateLine}</span>
+                ) : null}
+                {author.bio ? <p className="text-sm text-muted-foreground">{author.bio}</p> : null}
+                <AuthorLinks author={author} />
+              </div>
+            </div>
+          ))
+        ) : dateLine ? (
+          <span className="text-sm text-muted-foreground">{dateLine}</span>
+        ) : null}
+      </div>
+
+      <ShareLinks links={links} />
+    </div>
+  );
+}
+
+/** Complete reusable article presentation for the canonical post route. */
+export function BlogArticleContent({
+  breadcrumb,
+  post,
+  language,
+  permalink,
+  missingBody,
+  adjacent = { object: "blog_adjacent_posts", previous: null, next: null },
+  related = [],
+}: BlogArticleContentProps) {
+  const headings = extractToc(post.html);
+  const bodyHtml = withHeadingAnchors(post.html);
+  const links = shareLinks(permalink, post.title);
+  const hasToc = headings.length >= 2;
+
+  return (
+    <Page>
+      <PageContent
+        header={
+          <PageHeaderWithBreadcrumb
+            breadcrumb={breadcrumb}
+            title={post.title}
+            description={post.customExcerpt}
+          />
+        }
+      >
+        <article className="flex min-w-0 flex-col gap-10">
+          <PostMeta
+            post={post}
+            language={language}
+            links={links}
+            className="border-t border-border pt-6 lg:hidden"
+          />
+
+          {post.coverUrl ? (
+            <figure className="flex flex-col gap-2">
+              <img
+                src={post.coverUrl}
+                alt={post.featureImageAlt ?? post.title}
+                className="aspect-video w-full rounded-3xl object-cover shadow-sm ring-1 ring-foreground/5"
+              />
+              {post.featureImageCaption ? (
+                <figcaption className="text-sm text-muted-foreground">
+                  {post.featureImageCaption}
+                </figcaption>
+              ) : null}
+            </figure>
+          ) : null}
+
+          <div className="grid min-w-0 grid-cols-1 gap-x-10 gap-y-10 lg:grid-cols-[14rem_minmax(0,1fr)_16rem]">
+            {hasToc ? (
+              <aside className="hidden lg:col-start-1 lg:row-start-1 lg:block">
+                <ArticleToc
+                  headings={headings}
+                  className="sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto"
+                />
+              </aside>
+            ) : null}
+
+            <div className="flex min-w-0 flex-col gap-10 lg:col-start-2 lg:row-start-1">
+              {hasToc ? (
+                <ArticleToc headings={headings} className="rounded-3xl bg-muted p-5 lg:hidden" />
+              ) : null}
+
+              {bodyHtml ? (
+                <Prose aria-label={m.blogPost_articleBodyLabel()} html={bodyHtml} />
+              ) : (
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <FileWarning aria-hidden />
+                    </EmptyMedia>
+                    <h2 className="font-heading text-lg font-medium tracking-tight">
+                      {missingBody.title}
+                    </h2>
+                    <EmptyDescription>{missingBody.description}</EmptyDescription>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    <a
+                      href={missingBody.action.href}
+                      className={buttonVariants({ variant: "outline" })}
+                    >
+                      {missingBody.action.label}
+                    </a>
+                  </EmptyContent>
+                </Empty>
+              )}
+
+              {post.tags.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  {post.tags.map((tag) => (
+                    <Link
+                      key={tag.id}
+                      to="/blog/tag/$tagSlug"
+                      params={{ tagSlug: tag.slug }}
+                      className="rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+                    >
+                      <Badge variant="secondary" className="h-auto max-w-full whitespace-normal">
+                        {tag.name}
+                      </Badge>
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+
+              {adjacent.previous || adjacent.next ? (
+                <nav
+                  aria-label={m.blogPost_adjacentPostsLabel()}
+                  className="flex justify-between gap-4 border-t border-border pt-6 text-sm"
+                >
+                  {adjacent.previous ? (
+                    <Link
+                      to="/blog/$postSlug"
+                      params={{ postSlug: adjacent.previous.slug }}
+                      className="rounded-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/30"
+                    >
+                      ← {adjacent.previous.title}
+                    </Link>
+                  ) : (
+                    <span />
+                  )}
+                  {adjacent.next ? (
+                    <Link
+                      to="/blog/$postSlug"
+                      params={{ postSlug: adjacent.next.slug }}
+                      className="rounded-sm text-right text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/30"
+                    >
+                      {adjacent.next.title} →
+                    </Link>
+                  ) : (
+                    <span />
+                  )}
+                </nav>
+              ) : null}
+            </div>
+
+            <aside className="hidden lg:col-start-3 lg:row-start-1 lg:block">
+              <PostMeta post={post} language={language} links={links} className="sticky top-8" />
+            </aside>
+          </div>
+
+          {related.length > 0 ? (
+            <PageSection title={m.blogPost_relatedPostsHeading()}>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {related.map((relatedPost) => (
+                  <PostCard key={relatedPost.id} post={relatedPost} />
+                ))}
+              </div>
+            </PageSection>
+          ) : null}
+        </article>
+      </PageContent>
+    </Page>
+  );
+}

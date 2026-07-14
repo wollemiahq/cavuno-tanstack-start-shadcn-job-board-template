@@ -1,26 +1,39 @@
-import { Text } from "@/components/text"
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 
 import { isNotFound } from "@cavuno/board";
 import { createAuthorProfileJsonLd, createBreadcrumbJsonLd } from "@cavuno/board/seo";
 
-import { Avatar } from "@/components/base/avatar/avatar";
-import { JsonLd } from "@/components/json-ld";
-import { PageBody } from "@/components/board/page-body";
-import { BlogSearchBar } from "../components/blog-search-bar";
-import { PostCard } from "../components/post-card";
 import { boardCopy } from "#/copy";
-import { m } from "../paraglide/messages";
-import { getBlogAuthor, getSeoBase, listBlogPosts } from "../server/queries";
+import { BlogArchivePage } from "@/components/board/blog-archive-page";
+import { PublicContentPending } from "@/components/board/public-content-pending";
+import { JsonLd } from "@/components/json-ld";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { initialsOf } from "@/lib/initials";
+import { m } from "@/paraglide/messages";
+import { getBlogAuthor, getSeoBase, listBlogPosts } from "@/server/queries";
+
+interface BlogAuthorSearch {
+  cursor?: string;
+}
 
 export const Route = createFileRoute("/blog/author/$authorSlug")({
-  // Full-bleed so PageBody owns the container + the breadcrumb placement.
-  staticData: { fullBleed: true },
-  loader: async ({ params }) => {
+  staticData: { fullBleed: true, ownsMain: true },
+  pendingComponent: () => <PublicContentPending label={m.publicContent_loadingLabel()} />,
+  validateSearch: (search: Record<string, unknown>): BlogAuthorSearch => ({
+    cursor: typeof search.cursor === "string" && search.cursor ? search.cursor : undefined,
+  }),
+  loaderDeps: ({ search }) => search,
+  loader: async ({ params, deps }) => {
     try {
       const [author, posts, seo] = await Promise.all([
         getBlogAuthor({ data: { authorSlug: params.authorSlug } }),
-        listBlogPosts({ data: { authorSlug: params.authorSlug, limit: 24 } }),
+        listBlogPosts({
+          data: {
+            authorSlug: params.authorSlug,
+            cursor: deps.cursor,
+            limit: 24,
+          },
+        }),
         getSeoBase(),
       ]);
       return { author, posts, seo };
@@ -33,7 +46,9 @@ export const Route = createFileRoute("/blog/author/$authorSlug")({
     loaderData
       ? {
           meta: [
-            { title: m.blogAuthor_metaTitle({ author: loaderData.author.name }) },
+            {
+              title: m.blogAuthor_metaTitle({ author: loaderData.author.name }),
+            },
             {
               name: "description",
               content:
@@ -53,24 +68,56 @@ export const Route = createFileRoute("/blog/author/$authorSlug")({
         }
       : {},
   component: AuthorPage,
-  notFoundComponent: () => (
-    <p className="rounded-xl bg-primary p-10 text-center text-tertiary ring-1 ring-secondary_alt">
-      {m.blogAuthor_notFoundText()}
-    </p>
-  ),
+  notFoundComponent: BlogAuthorNotFound,
 });
 
-/** Two-letter author initials for the avatar fallback (mirrors JobCard). */
-function initialsOf(name: string) {
+function BlogAuthorNotFound() {
   return (
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .map((word) => word[0]!)
-      .slice(0, 2)
-      .join("")
-      .toUpperCase() || undefined
+    <BlogArchivePage
+      breadcrumb={{
+        ariaLabel: m.blogIndex_breadcrumbLabel(),
+        items: [
+          { name: m.blogIndex_homeLabel(), href: "/" },
+          { name: m.blogIndex_title(), href: "/blog" },
+          { name: m.blogAuthor_notFoundText() },
+        ],
+      }}
+      title={m.blogAuthor_notFoundText()}
+      posts={[]}
+      empty={{
+        title: m.blogAuthor_notFoundText(),
+        description: m.blogAuthor_notFoundDescription(),
+        action: { label: m.blogPost_backToBlogLabel(), href: "/blog" },
+      }}
+    />
   );
+}
+
+function AuthorLinks({ author }: { author: ReturnType<typeof Route.useLoaderData>["author"] }) {
+  const links = [
+    author.websiteUrl ? { href: author.websiteUrl, label: m.blogPost_authorWebsiteLabel() } : null,
+    author.twitterUrl ? { href: author.twitterUrl, label: m.blogPost_authorXLabel() } : null,
+    author.linkedinUrl
+      ? { href: author.linkedinUrl, label: m.blogPost_authorLinkedinLabel() }
+      : null,
+    author.githubUrl ? { href: author.githubUrl, label: m.blogPost_authorGithubLabel() } : null,
+  ].filter((link) => link !== null);
+
+  return links.length > 0 ? (
+    <div className="flex flex-wrap gap-3 text-sm">
+      {links.map((link) => (
+        <a
+          key={link.href}
+          href={link.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-sm text-muted-foreground outline-none hover:text-foreground hover:underline focus-visible:ring-3 focus-visible:ring-ring/30"
+        >
+          {link.label}
+        </a>
+      ))}
+    </div>
+  ) : null;
 }
 
 function AuthorPage() {
@@ -82,7 +129,6 @@ function AuthorPage() {
     createAuthorProfileJsonLd({
       author,
       canonical: permalink,
-      // Same copy as the page's meta description (hosted passes its bio/hero).
       description:
         author.bio ??
         m.blogAuthor_metaDescription({
@@ -98,38 +144,49 @@ function AuthorPage() {
       { label: crumbs.blog, href: `${seo.origin}/blog` },
       { label: author.name },
     ]),
-  ].filter((e): e is Record<string, unknown> => e !== null);
+  ].filter((entry): entry is Record<string, unknown> => entry !== null);
+
   return (
-    <PageBody
-      breadcrumb={{
-        ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
-        items: [
-          { name: crumbs.home, href: "/" },
-          { name: crumbs.blog, href: "/blog" },
-          { name: author.name },
-        ],
-      }}
-    >
+    <>
       <JsonLd data={jsonLd} />
-
-      <header className="flex flex-col gap-4">
-        <div className="flex items-center gap-4">
-          <Avatar size="xl" src={author.avatarUrl} initials={initialsOf(author.name)} alt={author.name} />
-          <div className="min-w-0 flex flex-col gap-1">
-            <Text as="h1" variant="heading2" className="md:text-display-sm">{author.name}</Text>
-            {author.bio ? <p className="text-tertiary">{author.bio}</p> : null}
+      <BlogArchivePage
+        breadcrumb={{
+          ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
+          items: [
+            { name: crumbs.home, href: "/" },
+            { name: crumbs.blog, href: "/blog" },
+            { name: author.name },
+          ],
+        }}
+        title={author.name}
+        description={author.bio}
+        avatar={
+          <div className="flex items-center gap-4">
+            <Avatar size="lg" className="size-14">
+              {author.avatarUrl ? <AvatarImage src={author.avatarUrl} alt={author.name} /> : null}
+              <AvatarFallback>{initialsOf(author.name)}</AvatarFallback>
+            </Avatar>
+            <AuthorLinks author={author} />
           </div>
-        </div>
-        <div className="mt-2 max-w-3xl">
-          <BlogSearchBar />
-        </div>
-      </header>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {posts.data.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
-      </div>
-    </PageBody>
+        }
+        posts={posts.data}
+        empty={{
+          title: m.blogIndex_emptyTitle(),
+          description: m.blogAuthor_emptyText({ author: author.name }),
+          action: { label: m.blogIndex_browseAllLabel(), href: "/blog" },
+        }}
+        nextLink={
+          posts.hasMore && posts.nextCursor ? (
+            <Link
+              to="/blog/author/$authorSlug"
+              params={{ authorSlug: author.slug }}
+              search={{ cursor: posts.nextCursor }}
+            >
+              {m.blogIndex_nextResultsLabel()}
+            </Link>
+          ) : undefined
+        }
+      />
+    </>
   );
 }

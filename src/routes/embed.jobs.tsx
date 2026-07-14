@@ -15,9 +15,10 @@ import type { EmploymentType, PublicJobCard, RemoteOption, Seniority } from "@ca
 
 import { toJobCardVM } from "@/board/job-view-model";
 import { JobCard } from "@/components/board/job-card";
-import { Badge } from "@/components/base/badges/badges";
-import { styles as buttonStyles } from "@/components/base/buttons/button";
-import { cx } from "@/utils/cx";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { cn } from "@/lib/utils";
 import { m } from "../paraglide/messages";
 import { embedJobs, getBoardContext } from "../server/queries";
 
@@ -175,25 +176,23 @@ function EmbedJobsPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-secondary bg-primary px-4 py-8 text-center">
-          <p className="text-sm font-medium text-primary">{m.embedJobs_noJobsMatchText()}</p>
-          <p className="mt-1 text-xs text-tertiary">
-            {m.embedJobs_tryRelaxingFiltersText()}
-          </p>
-        </div>
+        <Empty className="border py-8">
+          <EmptyHeader>
+            <EmptyTitle>{m.embedJobs_noJobsMatchText()}</EmptyTitle>
+            <EmptyDescription>{m.embedJobs_tryRelaxingFiltersText()}</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       )}
 
       {showCavunoBranding || cta ? (
         <div className="flex min-h-8 items-center justify-between gap-2">
           {showCavunoBranding ? (
-            <a
-              href="https://cavuno.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="no-underline"
+            <Badge
+              render={<a href="https://cavuno.com" target="_blank" rel="noopener noreferrer" />}
+              variant="secondary"
             >
-              <Badge size="sm" type="pill-color" color="gray">{m.embedJobs_poweredByCavunoLabel()}</Badge>
-            </a>
+              {m.embedJobs_poweredByCavunoLabel()}
+            </Badge>
           ) : (
             <span />
           )}
@@ -203,12 +202,7 @@ function EmbedJobsPage() {
               to="/"
               search={cta.search}
               target="_blank"
-              className={cx(
-                buttonStyles.common.root,
-                buttonStyles.sizes.sm.root,
-                buttonStyles.colors.secondary.root,
-                "hover:no-underline",
-              )}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "no-underline")}
             >
               {cta.label}
             </Link>

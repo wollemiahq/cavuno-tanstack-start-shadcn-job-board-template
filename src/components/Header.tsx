@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 
 import { Link } from "@tanstack/react-router";
-import { Menu, Search, X } from "lucide-react";
+import { BookOpenText, BriefcaseBusiness, Building2, Menu, Search, Users, X } from "lucide-react";
 
 import type { BoardUser } from "@cavuno/board";
 import type { BoardLabelOverrides } from "@cavuno/board/format";
@@ -11,18 +11,8 @@ import { boardCopy } from "#/copy";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Container } from "@/components/layout/container";
-import {
-  LocationCombobox,
-  type LocationSuggestionState,
-} from "@/components/location-combobox";
+import { LocationCombobox, type LocationSuggestionState } from "@/components/location-combobox";
 import { cn } from "@/lib/utils";
 import type {
   HeaderSearchState,
@@ -35,104 +25,81 @@ import { m } from "../paraglide/messages";
 import { MessagesNavLink } from "./messages-nav-link";
 
 const navItemClassName =
-  "rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30";
+  "relative flex min-w-16 flex-col items-center gap-0.5 border-b-2 border-transparent px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30";
 
 function HeaderSearch({
   search,
-  jobsLabel,
-  companiesLabel,
-  talentLabel,
-  talentEnabled,
   jobsPlaceholder,
   companiesPlaceholder,
   talentPlaceholder,
+  blogPlaceholder,
 }: {
   search: HeaderSearchState & {
     onSubmit: (submission: HeaderSearchSubmission) => void;
     locationSuggestions: LocationSuggestionState;
   };
-  jobsLabel: string;
-  companiesLabel: string;
-  talentLabel: string;
-  talentEnabled: boolean;
   jobsPlaceholder: string;
   companiesPlaceholder: string;
   talentPlaceholder: string;
+  blogPlaceholder: string;
 }) {
-  const [scope, setScope] = useState(search.scope);
   const [value, setValue] = useState(search.query);
   const [location, setLocation] = useState(search.location);
 
-  const scopeLabels: Record<HeaderSearchScope, string> = {
-    jobs: jobsLabel,
-    companies: companiesLabel,
-    talent: talentLabel,
-  };
   const scopePlaceholders: Record<HeaderSearchScope, string> = {
     jobs: jobsPlaceholder,
     companies: companiesPlaceholder,
     talent: talentPlaceholder,
+    blog: blogPlaceholder,
   };
 
   function submitSearch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const query = value.trim() || undefined;
 
-    search.onSubmit({ scope, query, location });
+    search.onSubmit({ scope: search.scope, query, location });
   }
 
   return (
     <form
       role="search"
+      data-search-scope={search.scope}
       onSubmit={submitSearch}
-      className="order-3 grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-t border-border py-2 md:order-none md:flex md:min-w-96 md:max-w-2xl md:flex-1 md:border-0 md:py-0"
+      className="col-span-2 row-start-2 w-full min-w-0 py-2 xl:col-auto xl:row-auto xl:max-w-xl xl:flex-1 xl:py-0"
     >
-      <Select
-        value={scope}
-        onValueChange={(nextScope) => {
-          setScope(nextScope as HeaderSearchScope);
-          setValue("");
-          setLocation(null);
-        }}
-      >
-        <SelectTrigger
-          aria-label={m.siteHeader_searchTypeAriaLabel()}
-          className="shrink-0 border-border bg-background font-medium"
+      <div className="flex min-w-0 items-center overflow-visible rounded-2xl border border-border bg-input/50 transition-[color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/30">
+        <div className="relative min-w-0 flex-1">
+          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+            aria-label={m.searchBar_keywordAriaLabel()}
+            placeholder={scopePlaceholders[search.scope]}
+            className="h-9 rounded-none border-0 bg-transparent pr-2 pl-8 focus-visible:ring-0"
+          />
+        </div>
+        {search.scope === "jobs" ? (
+          <LocationCombobox
+            {...search.locationSuggestions}
+            value={location?.slug}
+            valueLabel={location?.name}
+            onSelect={setLocation}
+            onClear={() => setLocation(null)}
+            className="min-w-0 flex-1 border-l border-border"
+            inputClassName="h-9 rounded-none border-0 bg-transparent focus-visible:ring-0"
+          />
+        ) : null}
+        <Button
+          type="submit"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={m.searchBar_searchAriaLabel()}
+          className="mr-1"
         >
-          <SelectValue>{scopeLabels[scope]}</SelectValue>
-        </SelectTrigger>
-        <SelectContent align="start">
-          <SelectItem value="jobs">{jobsLabel}</SelectItem>
-          <SelectItem value="companies">{companiesLabel}</SelectItem>
-          {talentEnabled ? <SelectItem value="talent">{talentLabel}</SelectItem> : null}
-        </SelectContent>
-      </Select>
-      <Input
-        type="search"
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        aria-label={m.searchBar_keywordAriaLabel()}
-        placeholder={scopePlaceholders[scope]}
-        className="flex-1 border-border bg-background"
-      />
-      {scope === "jobs" ? (
-        <LocationCombobox
-          {...search.locationSuggestions}
-          value={location?.slug}
-          valueLabel={location?.name}
-          onSelect={setLocation}
-          onClear={() => setLocation(null)}
-          className="col-span-2 col-start-2 row-start-2 min-w-0 md:col-auto md:row-auto md:min-w-40 md:flex-1"
-        />
-      ) : null}
-      <Button
-        type="submit"
-        size="icon"
-        aria-label={m.searchBar_searchAriaLabel()}
-        className="col-start-3 row-start-1 md:col-auto md:row-auto"
-      >
-        <Search aria-hidden="true" />
-      </Button>
+          <Search aria-hidden="true" />
+        </Button>
+      </div>
     </form>
   );
 }
@@ -171,10 +138,10 @@ export default function Header({
   const talentDirectoryEnabled =
     features.talentDirectory || talentDirectoryVisibility === "employers_only";
   const navLinks = [
-    { to: "/jobs", label: copy.nav.home, enabled: true },
-    { to: "/companies", label: copy.nav.companies, enabled: true },
-    { to: "/talent", label: copy.nav.talent, enabled: talentDirectoryEnabled },
-    { to: "/blog", label: copy.nav.blog, enabled: features.blog },
+    { to: "/jobs", label: copy.nav.home, icon: BriefcaseBusiness, enabled: true },
+    { to: "/companies", label: copy.nav.companies, icon: Building2, enabled: true },
+    { to: "/talent", label: copy.nav.talent, icon: Users, enabled: talentDirectoryEnabled },
+    { to: "/blog", label: copy.nav.blog, icon: BookOpenText, enabled: features.blog },
   ] as const;
   const visibleNavLinks = navLinks.filter((item) => item.enabled);
   const signInLabel = labels?.jobCardLabels?.signInLabel || m.siteHeader_signInLabel();
@@ -196,47 +163,68 @@ export default function Header({
   return (
     <header className="rhea-theme border-b border-border bg-background text-foreground">
       <Container width="wide">
-        <div className="flex min-h-16 flex-wrap items-center gap-3 md:flex-nowrap">
-          <Link
-            to="/"
-            className="flex shrink-0 items-center gap-2.5 rounded-xl text-base font-semibold text-foreground outline-none hover:no-underline focus-visible:ring-3 focus-visible:ring-ring/30"
+        <div className="grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+          <div
+            data-slot="header-left"
+            data-test="header-left"
+            className="contents xl:col-start-1 xl:row-start-1 xl:flex xl:min-w-0 xl:items-center xl:gap-3"
           >
-            {logoUrl ? <img src={logoUrl} alt="" className="size-8 rounded-xl" /> : null}
-            <span className="max-w-48 truncate" title={boardName}>
-              {boardName}
-            </span>
-          </Link>
+            <Link
+              to="/"
+              className="col-start-1 row-start-1 flex shrink-0 items-center gap-2.5 rounded-xl text-base font-semibold text-foreground outline-none hover:no-underline focus-visible:ring-3 focus-visible:ring-ring/30"
+            >
+              {logoUrl ? <img src={logoUrl} alt="" className="size-8 rounded-xl" /> : null}
+              <span
+                className={cn(
+                  "max-w-48 truncate",
+                  search.visible && logoUrl && "hidden sm:inline xl:hidden 2xl:inline",
+                )}
+                title={boardName}
+              >
+                {boardName}
+              </span>
+            </Link>
 
-          <nav className="hidden shrink-0 items-center gap-0.5 xl:flex">
+            {search.visible ? (
+              <HeaderSearch
+                key={`${search.scope}:${search.query}:${search.location?.slug ?? ""}`}
+                search={search}
+                jobsPlaceholder={copy.jobSearch.keywordPlaceholder}
+                companiesPlaceholder={m.companySearchBar_placeholderText()}
+                talentPlaceholder={m.talentDirectory_searchPlaceholder()}
+                blogPlaceholder={m.blogSearchBar_placeholderText()}
+              />
+            ) : null}
+          </div>
+
+          <nav
+            aria-label={m.siteHeader_primaryNavigationAriaLabel()}
+            data-slot="header-primary-navigation"
+            className="col-start-2 row-start-1 hidden shrink-0 items-stretch justify-self-center gap-0.5 self-stretch xl:flex"
+          >
             {visibleNavLinks.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
                 className={cn(navItemClassName, "hover:no-underline")}
                 activeProps={{
-                  className: cn(navItemClassName, "bg-muted text-foreground hover:no-underline"),
+                  className: cn(
+                    navItemClassName,
+                    "border-primary text-foreground hover:no-underline",
+                  ),
                 }}
               >
+                <item.icon className="size-5" aria-hidden="true" />
                 {item.label}
               </Link>
             ))}
           </nav>
 
-          {search.visible ? (
-            <HeaderSearch
-              key={`${search.scope}:${search.query}:${search.location?.slug ?? ""}`}
-              search={search}
-              jobsLabel={copy.nav.home}
-              companiesLabel={copy.nav.companies}
-              talentLabel={copy.nav.talent}
-              talentEnabled={talentDirectoryEnabled}
-              jobsPlaceholder={copy.jobSearch.keywordPlaceholder}
-              companiesPlaceholder={m.companySearchBar_placeholderText()}
-              talentPlaceholder={m.talentDirectory_searchPlaceholder()}
-            />
-          ) : null}
-
-          <div className="ml-auto flex shrink-0 items-center gap-2">
+          <div
+            data-slot="header-actions"
+            data-test="header-actions"
+            className="col-start-2 row-start-1 flex shrink-0 items-center justify-self-end gap-2 xl:col-start-3"
+          >
             {user ? (
               <>
                 <MessagesNavLink />

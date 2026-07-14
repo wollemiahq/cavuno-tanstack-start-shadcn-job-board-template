@@ -6,19 +6,24 @@
  * renders — roots and each node's children sorted by job count, descending
  * (identical to the hosted `buildHierarchy`).
  *
- * Recomposed as an Untitled UI page (CAV-488): an UUI page header, the nested
- * place tree with router-seam links + count Badges, and the stock UUI
- * `EmptyState` when no place has published jobs. The hierarchy build and SEO
- * head/JSON-LD are byte-intact.
+ * The owned Page family supplies the single main landmark and content width;
+ * shadcn Badge and Empty compositions present the nested directory without
+ * changing its route, hierarchy, or SEO data contracts.
  */
-import { Text } from "@/components/text"
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { MarkerPin01 } from "@untitledui/icons";
+import { MapPin } from "lucide-react";
 
 import type { PublicPlace } from "@cavuno/board";
 
-import { Badge } from "@/components/base/badges/badges";
-import { EmptyState } from "@/components/application/empty-state/empty-state";
+import { Page, PageContent, PageHeader } from "@/components/layout/page";
+import { Badge } from "@/components/ui/badge";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { JsonLd } from "../components/json-ld";
 import { listingHead, listingJsonLd } from "@cavuno/board/seo";
 import { boardCopy } from "#/copy";
@@ -26,6 +31,7 @@ import { m } from "../paraglide/messages";
 import { getSeoBase, listPlaces } from "../server/queries";
 
 export const Route = createFileRoute("/jobs/locations/")({
+  staticData: { ownsMain: true },
   loader: async () => {
     const [places, seo] = await Promise.all([listPlaces(), getSeoBase()]);
     return { places, seo };
@@ -78,19 +84,17 @@ function PlaceTree({ nodes }: { nodes: PlaceNode[] }) {
               <Link
                 to="/jobs/locations/$location"
                 params={{ location: node.place.slug }}
-                className="rounded-xs text-secondary outline-focus-ring transition-colors hover:text-primary hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+                className="rounded-sm text-foreground underline-offset-4 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
               >
                 {node.place.name}
               </Link>
             ) : (
-              <span className="text-tertiary">{node.place.name}</span>
+              <span className="text-muted-foreground">{node.place.name}</span>
             )}
-            <Badge type="pill-color" color="gray" size="sm">
-              {node.place.jobCount}
-            </Badge>
+            <Badge variant="secondary">{node.place.jobCount}</Badge>
           </div>
           {node.children.length > 0 ? (
-            <div className="mt-1 ml-4 border-l border-secondary pl-3">
+            <div className="mt-1 ml-4 border-l border-border pl-3">
               <PlaceTree nodes={node.children} />
             </div>
           ) : null}
@@ -106,29 +110,28 @@ function LocationsIndexPage() {
   const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
 
   return (
-    <div className="flex flex-col gap-8">
+    <Page width="content">
       <JsonLd
         data={listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [{ name: crumbs.jobs, path: "/" }, { name: crumbs.locations }],
         })}
       />
-      <header className="flex max-w-3xl flex-col gap-4">
-        <Text as="h1" variant="heading1" className="md:text-display-md">{m.jobsLocationsIndex_heading()}</Text>
-      </header>
-      {tree.length === 0 ? (
-        <EmptyState size="sm" className="py-12">
-          <EmptyState.Header>
-            <EmptyState.FeaturedIcon icon={MarkerPin01} color="gray" theme="modern" />
-          </EmptyState.Header>
-          <EmptyState.Content>
-            <EmptyState.Title>{m.jobsLocationsIndex_heading()}</EmptyState.Title>
-            <EmptyState.Description>{m.jobsLocationsIndex_emptyText()}</EmptyState.Description>
-          </EmptyState.Content>
-        </EmptyState>
-      ) : (
-        <PlaceTree nodes={tree} />
-      )}
-    </div>
+      <PageContent header={<PageHeader title={m.jobsLocationsIndex_heading()} />}>
+        {tree.length === 0 ? (
+          <Empty className="py-12">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <MapPin />
+              </EmptyMedia>
+              <EmptyTitle>{m.jobsLocationsIndex_heading()}</EmptyTitle>
+              <EmptyDescription>{m.jobsLocationsIndex_emptyText()}</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <PlaceTree nodes={tree} />
+        )}
+      </PageContent>
+    </Page>
   );
 }

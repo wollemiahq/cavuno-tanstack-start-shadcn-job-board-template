@@ -166,6 +166,11 @@ function RootLayout() {
       return
     }
 
+    if (scope === 'blog') {
+      void navigate({ to: '/blog', search: { q: query } })
+      return
+    }
+
     if (selectedLocation) {
       void navigate({
         to: '/jobs/locations/$location',

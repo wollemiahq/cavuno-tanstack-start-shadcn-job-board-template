@@ -97,14 +97,14 @@ spacing.
 
 ## Do / Don't
 
-| Do | Don't |
-|---|---|
-| Pass resolved breadcrumb data into `PageHeaderWithBreadcrumb` in new Page-family work. | Start new work on migration-only `PageBody` / `ListingPageHeader`, or hand-place `<Breadcrumb>` / `<PageBreadcrumb>` in a route. |
-| Let `PageBreadcrumb` own the `pt-4 md:pt-5` hug — the SAME on band and band-less pages. | Re-decide the top spacing per page, so the crumb hugs the nav on one surface and floats mid-page on the next. |
-| Hand-roll a second `<ol>` trail only inside `board/breadcrumb.tsx`. | Fork the trail markup anywhere else — the singleton gate fails on any duplicate `<ol>`. |
-| Emit the matching `BreadcrumbList` JSON-LD alongside every visible trail (and render a trail wherever the JSON-LD exists). | Ship a visible trail with no JSON-LD, or JSON-LD with no visible trail. |
-| Pass the resolved `{ name, href? }` crumbs; leave the current page's `href` empty. | Build hrefs by hand — crumb hrefs come from `@cavuno/board` path helpers / the view-model. |
-| Reuse a redundant "back to X" link's job with the penultimate crumb. | Keep a bespoke "Back to blog / Back to profile" link once the trail already links that ancestor. |
+| Do                                                                                                                         | Don't                                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Pass resolved breadcrumb data into `PageHeaderWithBreadcrumb` in new Page-family work.                                     | Start new work on migration-only `PageBody` / `ListingPageHeader`, or hand-place `<Breadcrumb>` / `<PageBreadcrumb>` in a route. |
+| Let `PageBreadcrumb` own the `pt-4 md:pt-5` hug — the SAME on band and band-less pages.                                    | Re-decide the top spacing per page, so the crumb hugs the nav on one surface and floats mid-page on the next.                    |
+| Hand-roll a second `<ol>` trail only inside `board/breadcrumb.tsx`.                                                        | Fork the trail markup anywhere else — the singleton gate fails on any duplicate `<ol>`.                                          |
+| Emit the matching `BreadcrumbList` JSON-LD alongside every visible trail (and render a trail wherever the JSON-LD exists). | Ship a visible trail with no JSON-LD, or JSON-LD with no visible trail.                                                          |
+| Pass the resolved `{ name, href? }` crumbs; leave the current page's `href` empty.                                         | Build hrefs by hand — crumb hrefs come from `@cavuno/board` path helpers / the view-model.                                       |
+| Reuse a redundant "back to X" link's job with the penultimate crumb.                                                       | Keep a bespoke "Back to blog / Back to profile" link once the trail already links that ancestor.                                 |
 
 ## Used by
 
@@ -118,12 +118,13 @@ spacing.
 - `board/job-search-page.tsx` — forwards the trail through the current migration shell.
 - `programmatic-jobs-view.tsx` — the programmatic jobs pages (Jobs → heading).
 - `routes/blog.$postSlug.tsx`, `blog.index.tsx`, `blog.tag.$tagSlug.tsx`,
-  `blog.author.$authorSlug.tsx` — the blog family (via a slot).
+  `blog.author.$authorSlug.tsx` — the blog family through
+  `PageHeaderWithBreadcrumb`.
 - `routes/companies.index.tsx`, `companies.$companySlug.index.tsx`,
   `companies.markets.$market.tsx`, `companies.$companySlug.jobs.index.tsx` — the
   companies family (via a slot).
-- `routes/salaries.index.tsx` (+ the salary tree) — the salary family, through
-  its current migration seam with `toSalaryBreadcrumbVM`.
+- `routes/salaries.index.tsx` (+ the salary tree) — the salary family through
+  `SalaryPageLayout`, `PageHeaderWithBreadcrumb`, and `toSalaryBreadcrumbVM`.
 
 ## Related
 

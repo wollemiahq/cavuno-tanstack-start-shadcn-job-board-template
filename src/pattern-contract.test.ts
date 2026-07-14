@@ -130,7 +130,6 @@ describe("breadcrumb placement (P6 — one placement primitive)", () => {
     join("src", "components", "board", "company-search-page.tsx"),
     join("src", "components", "board", "company-section-header.tsx"),
     join("src", "components", "board", "job-detail.tsx"),
-    join("src", "components", "board", "job-search-page.tsx"),
     join("src", "components", "board", "listing-page-header.tsx"),
     join("src", "components", "board", "page-body.tsx"),
     join("src", "components", "board", "page-header-with-breadcrumb.tsx"),

@@ -27,6 +27,7 @@ export function JobsResultsBar({
   count,
   page,
   pageSize,
+  heading,
   sort,
   language,
   labels,
@@ -37,6 +38,8 @@ export function JobsResultsBar({
   /** Current 1-based page + page size — renders the honest "Showing X–Y of Z" range. */
   page?: number;
   pageSize?: number;
+  /** Route context, such as “Engineering jobs” or “Jobs in Sydney”. */
+  heading?: string;
   sort: ListingFilters["sort"];
   language: string;
   /** Operator label overrides (`board.context().labels`), ADR-0059. */
@@ -51,22 +54,31 @@ export function JobsResultsBar({
     typeof page === "number" &&
     typeof pageSize === "number" &&
     count > pageSize;
-  const countLabel =
+  const totalLabel =
     typeof count === "number"
-      ? showRange
-        ? m.jobSearch_resultsShowingRange({
-            from: ((page - 1) * pageSize + 1).toLocaleString(language),
-            to: Math.min(page * pageSize, count).toLocaleString(language),
+      ? heading
+        ? m.jobSearch_contextualResultsHeading({
             count: count.toLocaleString(language),
+            heading,
           })
         : count === 1
           ? m.jobSearch_resultsCountOne({ count: count.toLocaleString(language) })
           : m.jobSearch_resultsCountMany({ count: count.toLocaleString(language) })
-      : null;
+      : (heading ?? boardCopy(language, labels).jobSearch.headingJobs);
+  const rangeLabel = showRange
+    ? m.jobSearch_resultsShowingRange({
+        from: ((page - 1) * pageSize + 1).toLocaleString(language),
+        to: Math.min(page * pageSize, count).toLocaleString(language),
+        count: count.toLocaleString(language),
+      })
+    : null;
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-      <p className="text-base font-semibold text-foreground">{countLabel}</p>
+      <div className="min-w-0">
+        <h1 className="text-lg font-semibold tracking-tight text-foreground">{totalLabel}</h1>
+        {rangeLabel ? <p className="text-xs text-muted-foreground">{rangeLabel}</p> : null}
+      </div>
       <Select
         items={sortItems}
         value={sort ?? DEFAULT_SORT}

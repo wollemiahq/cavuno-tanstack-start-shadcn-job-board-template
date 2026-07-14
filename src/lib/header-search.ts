@@ -1,4 +1,4 @@
-export type HeaderSearchScope = "jobs" | "companies" | "talent";
+export type HeaderSearchScope = "jobs" | "companies" | "talent" | "blog";
 
 export interface HeaderSearchLocation {
   slug: string;
@@ -31,11 +31,11 @@ const compactShellPrefixes = [
 ] as const;
 
 function scopeFromPathname(pathname: string): HeaderSearchScope {
-  if (
-    pathname === "/talent" ||
-    pathname.startsWith("/talent/") ||
-    pathname.startsWith("/p/")
-  ) {
+  if (pathname === "/blog" || pathname.startsWith("/blog/")) {
+    return "blog";
+  }
+
+  if (pathname === "/talent" || pathname.startsWith("/talent/") || pathname.startsWith("/p/")) {
     return "talent";
   }
 
@@ -80,9 +80,6 @@ export function resolveHeaderSearchState(
     ),
     scope,
     query: stringSearchValue(scope === "companies" ? search.query : search.q),
-    location:
-      scope === "jobs"
-        ? locationFromPathname(pathname, resolvedLocationLabel)
-        : null,
+    location: scope === "jobs" ? locationFromPathname(pathname, resolvedLocationLabel) : null,
   };
 }

@@ -1,60 +1,83 @@
 "use client";
 
-import { useState } from "react";
+import { getRouteApi, Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Search } from "lucide-react";
 
-import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { SearchLg } from "@untitledui/icons";
-
-import { boardCopy } from "#/copy";
-
-import { EmptyState } from "@/components/application/empty-state/empty-state";
-import { ListingPageHeader, ListingSearchBand } from "@/components/board/listing-page-header";
-import { PageBody } from "@/components/board/page-body";
+import { JobsFilterControls } from "@/components/board/jobs-filter-controls";
+import { Box } from "@/components/layout/box";
+import { Container } from "@/components/layout/container";
+import { Page } from "@/components/layout/page";
+import { buttonVariants } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@/components/ui/empty";
+import { parseJobsSearch } from "@/lib/jobs-search";
 import { m } from "../../paraglide/messages";
 
 const rootApi = getRouteApi("__root__");
 
 /**
  * The not-found state for the programmatic jobs pages (CAV-502). A visitor
- * can search a term and land on a slug that no longer resolves — so this
- * keeps the SAME shared listing header + search band (never a bare message
- * box), with an `EmptyState` below. The search re-runs against `/jobs`, so
- * the dead end is a place to search again.
+ * can search a term and land on a slug that no longer resolves. The global
+ * header remains the single keyword/location search owner, while this state
+ * describes the failed search rather than exposing the missing taxonomy.
  */
-export function JobsNotFound({ message }: { message: string }) {
+export function JobsNotFound() {
   const { board } = rootApi.useLoaderData();
-  const copy = boardCopy(board.language, board.labels);
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
+  const routeSearch = useRouterState({ select: (state) => state.location.search });
+  const filters = parseJobsSearch(routeSearch as Record<string, unknown>);
 
   return (
-    <PageBody
-      band={
-        <ListingPageHeader
-          title={copy.jobSearch.headingJobs}
-          subtitle={m.jobsHero_subtitle()}
-          search={
-            <ListingSearchBand
-              value={query}
-              onChange={setQuery}
-              onSubmit={() => navigate({ to: "/jobs", search: { q: query || undefined } })}
-              placeholder={copy.jobSearch.keywordPlaceholder}
-              inputAriaLabel={copy.jobSearch.keywordLabel}
-              searchLabel={m.jobSearch_searchButtonLabel()}
-            />
-          }
-        />
-      }
-    >
-      <EmptyState size="sm" className="py-12">
-        <EmptyState.Header>
-          <EmptyState.FeaturedIcon icon={SearchLg} color="gray" theme="modern" />
-        </EmptyState.Header>
-        <EmptyState.Content>
-          <EmptyState.Title>{copy.jobSearch.headingJobs}</EmptyState.Title>
-          <EmptyState.Description>{message}</EmptyState.Description>
-        </EmptyState.Content>
-      </EmptyState>
-    </PageBody>
+    <Page width="wide">
+      <main data-layout="job-search-not-found">
+        <Box border="bottom" paddingX={{ base: "4", md: "8" }}>
+          <Container width="wide">
+            <div className="py-3">
+              <JobsFilterControls
+                filters={filters}
+                language={board.language}
+                labels={board.labels}
+                onChange={(next) =>
+                  navigate({
+                    to: "/jobs",
+                    search: () => ({
+                      ...next,
+                      page: undefined,
+                      selectedJob: undefined,
+                    }),
+                  })
+                }
+              />
+            </div>
+          </Container>
+        </Box>
+
+        <Box paddingX={{ base: "4", md: "8" }} paddingY="4">
+          <div className="mx-auto w-full max-w-6xl">
+            <Empty className="min-h-[calc(100dvh-12rem)] border-0 p-6">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Search aria-hidden="true" />
+                </EmptyMedia>
+                <h1 className="font-heading text-xl font-semibold tracking-tight">
+                  {m.jobSearch_noMatchingResultsHeading()}
+                </h1>
+                <EmptyDescription>{m.jobSearch_queryEmptyText()}</EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Link to="/jobs" className={buttonVariants()}>
+                  {m.jobSearch_resetFiltersAction()}
+                </Link>
+              </EmptyContent>
+            </Empty>
+          </div>
+        </Box>
+      </main>
+    </Page>
   );
 }

@@ -16,7 +16,6 @@ import { JsonLd } from "../components/json-ld";
 import { jobAlertDefaultsFromSearch } from "../lib/job-alert-defaults";
 import { listingHead, listingJsonLd } from "@cavuno/board/seo";
 import { getSeoBase, listJobs, searchJobs } from "../server/queries";
-import { useLocationSuggestions } from "./-use-location-suggestions";
 import { useSelectedJob } from "./-use-selected-job";
 import { SelectedJobDetail } from "./-selected-job-detail";
 
@@ -79,7 +78,6 @@ function JobsPage() {
   const search = Route.useSearch();
   const { board, user } = rootApi.useLoaderData();
   const navigate = useNavigate({ from: "/jobs/" });
-  const locationSuggestions = useLocationSuggestions(board.language);
   const selectedJob = useSelectedJob(
     page.data.some((job) => job.slug === search.selectedJob) ? search.selectedJob : undefined,
   );
@@ -94,13 +92,6 @@ function JobsPage() {
         })}
       />
       <JobSearchPage
-        breadcrumb={{
-          ariaLabel: boardCopy(board.language, board.labels).jobDetail.breadcrumbAriaLabel,
-          items: [
-            { name: boardCopy(board.language, board.labels).breadcrumbs.home, href: "/" },
-            { name: boardCopy(board.language, board.labels).breadcrumbs.jobs },
-          ],
-        }}
         jobs={page.data}
         count={page.count}
         gatedCount={page.gatedCount}
@@ -130,29 +121,6 @@ function JobsPage() {
             }),
           })
         }
-        onSearchSubmit={(next, selectedLocation) => {
-          if (selectedLocation) {
-            void navigate({
-              to: "/jobs/locations/$location",
-              params: { location: selectedLocation.slug },
-              search: () => ({
-                ...next,
-                page: undefined,
-                selectedJob: undefined,
-              }),
-            });
-            return;
-          }
-          void navigate({
-            to: "/jobs",
-            search: () => ({
-              ...next,
-              page: undefined,
-              selectedJob: undefined,
-            }),
-          });
-        }}
-        locationSuggestions={locationSuggestions}
         selectedJob={search.selectedJob}
         onSelectedJobReplace={(jobSlug) =>
           navigate({

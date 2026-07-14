@@ -47,6 +47,7 @@ so docs and the design library stay in sync.
 | P16 | [Company section](company-section.md)   | Page, PageHeader, PageContent, PageSection, Avatar, Badge, Link, Breadcrumb                         | The shared company header + tab navigation across profile / jobs / salaries.       |
 | P17 | [Typography](typography.md)             | Text, Prose                                                                                         | The role-named heading/body primitive keeping authored text on the UUI type scale. |
 | P18 | [Search results](search-results.md)     | SearchResultsLayout, SearchResultsList, SearchResultDetail, SearchResultCard, AdRail                | Responsive master–detail directories with optional outer advertising rails.        |
+| P19 | [Site header](site-header.md)           | Header, HeaderSearch, LocationCombobox, Link, Input, Button                                         | Contextual public search, centered discovery navigation, and account actions.       |
 
 ## Enforcement
 

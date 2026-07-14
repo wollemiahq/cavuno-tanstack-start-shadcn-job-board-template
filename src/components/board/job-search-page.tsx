@@ -1,23 +1,21 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 
 import type { PublicJobCard, RelatedSearch } from "@cavuno/board";
 import type { ListingFilters } from "@cavuno/board/filters";
 import type { BoardLabelOverrides } from "@cavuno/board/format";
 
-import { boardCopy } from "#/copy";
 import { relatedSearchesTitle, relatedSearchesToChips } from "@/board/related-searches";
 import { toJobCardVM } from "@/board/job-view-model";
-import { PageBreadcrumb, type BreadcrumbData } from "@/components/board/breadcrumb";
 import { JobSearchResult } from "@/components/board/job-search-result";
+import { JobsFilterControls } from "@/components/board/jobs-filter-controls";
 import { JobsResultsBar } from "@/components/board/jobs-results-bar";
-import { JobsSearchControls } from "@/components/board/jobs-search-controls";
 import { ListingPagination } from "@/components/board/listing-pagination";
-import type { LocationSuggestionState } from "@/components/location-combobox";
 import { Box } from "@/components/layout/box";
 import { Container } from "@/components/layout/container";
-import { Page, PageHeader } from "@/components/layout/page";
+import { Page } from "@/components/layout/page";
 import {
   AdRail,
   SearchResultDetail,
@@ -28,6 +26,7 @@ import { badgeVariants } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -45,21 +44,28 @@ function JobsEmpty({ filters }: { filters: ListingFilters }) {
   const hasFilters = Boolean(
     filters.remoteOption || filters.employmentType || filters.seniority?.length,
   );
-  const description = hasFilters
-    ? m.jobSearch_filteredEmptyText()
-    : filters.q
-      ? m.jobSearch_queryEmptyText()
-      : m.jobSearch_initialEmptyText();
+  const noMatch = hasFilters || Boolean(filters.q);
 
   return (
-    <Empty className="min-h-72 border">
+    <Empty className="min-h-[calc(100dvh-16rem)] border-0">
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <Search aria-hidden="true" />
         </EmptyMedia>
-        <EmptyTitle>{m.jobSearch_headingJobs()}</EmptyTitle>
-        <EmptyDescription>{description}</EmptyDescription>
+        <EmptyTitle>
+          {noMatch ? m.jobSearch_noMatchingResultsHeading() : m.jobSearch_headingJobs()}
+        </EmptyTitle>
+        <EmptyDescription>
+          {noMatch ? m.jobSearch_queryEmptyText() : m.jobSearch_initialEmptyText()}
+        </EmptyDescription>
       </EmptyHeader>
+      {noMatch ? (
+        <EmptyContent>
+          <Link to="/jobs" className={buttonVariants()}>
+            {m.jobSearch_resetFiltersAction()}
+          </Link>
+        </EmptyContent>
+      ) : null}
     </Empty>
   );
 }
@@ -74,13 +80,9 @@ export function JobSearchPage({
   language,
   labels,
   heading,
-  breadcrumb,
   relatedSearches,
   onFiltersChange,
-  onSearchSubmit,
   onPageChange,
-  location,
-  locationSuggestions,
   selectedJob,
   onSelectedJobReplace,
   onSelectedJobPush,
@@ -98,13 +100,9 @@ export function JobSearchPage({
   language: string;
   labels?: BoardLabelOverrides;
   heading?: string;
-  breadcrumb?: BreadcrumbData;
   relatedSearches?: RelatedSearch[];
   onFiltersChange: (next: ListingFilters) => void;
-  onSearchSubmit: (next: ListingFilters, location: { slug: string; name: string } | null) => void;
   onPageChange: (page: number) => void;
-  location?: { slug: string; label: string };
-  locationSuggestions: LocationSuggestionState;
   selectedJob?: string;
   onSelectedJobReplace: (jobSlug: string) => void;
   onSelectedJobPush: (jobSlug: string) => void;
@@ -112,7 +110,6 @@ export function JobSearchPage({
   startAd?: AdPlacement;
   endAd?: AdPlacement;
 }) {
-  const copy = boardCopy(language, labels);
   const jobVms = jobs.map((job) => toJobCardVM(job, language, labels));
   const selectableSlugs = jobVms.flatMap((vm) => (vm.jobSlug && vm.detailHref ? [vm.jobSlug] : []));
   const selection = useSearchSelection({
@@ -122,56 +119,55 @@ export function JobSearchPage({
     onPush: onSelectedJobPush,
   });
   const relatedChips = relatedSearchesToChips(relatedSearches);
+  const resultsBar = (
+    <JobsResultsBar
+      count={count}
+      page={page}
+      pageSize={pageSize}
+      heading={heading}
+      sort={filters.sort}
+      language={language}
+      labels={labels}
+      onSortChange={(sort) => onFiltersChange({ ...filters, sort })}
+    />
+  );
 
   return (
     <Page width="wide">
       <main data-layout="job-search-page">
-        <Box background="muted" border="bottom">
-          {breadcrumb ? (
-            <PageBreadcrumb items={breadcrumb.items} ariaLabel={breadcrumb.ariaLabel} />
-          ) : null}
+        <Box border="bottom" paddingX={{ base: "4", md: "8" }}>
           <Container width="wide">
-            <PageHeader
-              align="center"
-              title={heading ?? copy.jobSearch.headingJobs}
-              description={m.jobsHero_subtitle()}
-            >
-              <div className="mt-2 w-full max-w-5xl text-left">
-                <JobsSearchControls
-                  filters={filters}
-                  language={language}
-                  labels={labels}
-                  onChange={onFiltersChange}
-                  onSearchSubmit={onSearchSubmit}
-                  location={location}
-                  locationSuggestions={locationSuggestions}
-                />
-              </div>
-            </PageHeader>
+            <div className="py-3">
+              <JobsFilterControls
+                filters={filters}
+                language={language}
+                labels={labels}
+                onChange={onFiltersChange}
+              />
+            </div>
           </Container>
         </Box>
 
-        <Box paddingX={{ base: "4", md: "8" }} paddingY={{ base: "6", md: "8" }}>
-          <SearchResultsLayout
-            startAd={startAd ? <AdRail label={startAd.label}>{startAd.content}</AdRail> : undefined}
-            endAd={endAd ? <AdRail label={endAd.label}>{endAd.content}</AdRail> : undefined}
-            list={
-              <SearchResultsList
-                label={m.jobSearch_resultsRegionLabel()}
-                scrollRestorationId="jobs-search-results"
-              >
-                <div className="space-y-4 p-4">
-                  <JobsResultsBar
-                    count={count}
-                    page={page}
-                    pageSize={pageSize}
-                    sort={filters.sort}
-                    language={language}
-                    labels={labels}
-                    onSortChange={(sort) => onFiltersChange({ ...filters, sort })}
-                  />
+        <Box paddingX={{ base: "4", md: "8" }} paddingY="4">
+          {jobVms.length === 0 ? (
+            <div className="mx-auto w-full max-w-6xl space-y-4">
+              {resultsBar}
+              <JobsEmpty filters={filters} />
+            </div>
+          ) : (
+            <SearchResultsLayout
+              startAd={
+                startAd ? <AdRail label={startAd.label}>{startAd.content}</AdRail> : undefined
+              }
+              endAd={endAd ? <AdRail label={endAd.label}>{endAd.content}</AdRail> : undefined}
+              list={
+                <SearchResultsList
+                  label={m.jobSearch_resultsRegionLabel()}
+                  scrollRestorationId="jobs-search-results"
+                >
+                  <div className="space-y-4 p-4">
+                    {resultsBar}
 
-                  {jobVms.length > 0 ? (
                     <div className="space-y-3">
                       {jobVms.map((vm) => (
                         <JobSearchResult
@@ -186,65 +182,63 @@ export function JobSearchPage({
                         />
                       ))}
                     </div>
-                  ) : (
-                    <JobsEmpty filters={filters} />
-                  )}
 
-                  {gatedCount && gatedCount > 0 ? (
-                    <aside
-                      aria-label={m.jobSearch_unlockMoreLabel()}
-                      className="flex flex-col items-start gap-3 rounded-2xl border border-border bg-muted p-4"
-                    >
-                      <p className="text-sm text-muted-foreground">
-                        {m.jobSearch_gatedCountText({
-                          count: gatedCount.toLocaleString(language),
-                        })}
-                      </p>
-                      <a href="/account/access" className={buttonVariants({ size: "sm" })}>
-                        {m.jobSearch_unlockMoreLabel()}
-                      </a>
-                    </aside>
-                  ) : null}
+                    {gatedCount && gatedCount > 0 ? (
+                      <aside
+                        aria-label={m.jobSearch_unlockMoreLabel()}
+                        className="flex flex-col items-start gap-3 rounded-2xl border border-border bg-muted p-4"
+                      >
+                        <p className="text-sm text-muted-foreground">
+                          {m.jobSearch_gatedCountText({
+                            count: gatedCount.toLocaleString(language),
+                          })}
+                        </p>
+                        <a href="/account/access" className={buttonVariants({ size: "sm" })}>
+                          {m.jobSearch_unlockMoreLabel()}
+                        </a>
+                      </aside>
+                    ) : null}
 
-                  <ListingPagination
-                    page={page}
-                    count={count ?? 0}
-                    pageSize={pageSize}
-                    onPageChange={onPageChange}
-                  />
+                    <ListingPagination
+                      page={page}
+                      count={count ?? 0}
+                      pageSize={pageSize}
+                      onPageChange={onPageChange}
+                    />
 
-                  {relatedChips.length > 0 ? (
-                    <section
-                      aria-label={relatedSearchesTitle(labels)}
-                      className="space-y-3 border-t border-border pt-4"
-                    >
-                      <h2 className="text-sm font-semibold">{relatedSearchesTitle(labels)}</h2>
-                      <div className="flex flex-wrap gap-1.5">
-                        {relatedChips.map((chip) => (
-                          <a
-                            key={chip.key}
-                            href={chip.href}
-                            className={badgeVariants({ variant: "outline" })}
-                          >
-                            {chip.name}
-                          </a>
-                        ))}
-                      </div>
-                    </section>
-                  ) : null}
-                </div>
-              </SearchResultsList>
-            }
-            detail={
-              <SearchResultDetail
-                ref={selection.detailRef}
-                label={m.jobSearch_selectedJobRegionLabel()}
-                scrollRestorationId="jobs-selected-detail"
-              >
-                {detail}
-              </SearchResultDetail>
-            }
-          />
+                    {relatedChips.length > 0 ? (
+                      <section
+                        aria-label={relatedSearchesTitle(labels)}
+                        className="space-y-3 border-t border-border pt-4"
+                      >
+                        <h2 className="text-sm font-semibold">{relatedSearchesTitle(labels)}</h2>
+                        <div className="flex flex-wrap gap-1.5">
+                          {relatedChips.map((chip) => (
+                            <a
+                              key={chip.key}
+                              href={chip.href}
+                              className={badgeVariants({ variant: "outline" })}
+                            >
+                              {chip.name}
+                            </a>
+                          ))}
+                        </div>
+                      </section>
+                    ) : null}
+                  </div>
+                </SearchResultsList>
+              }
+              detail={
+                <SearchResultDetail
+                  ref={selection.detailRef}
+                  label={m.jobSearch_selectedJobRegionLabel()}
+                  scrollRestorationId="jobs-selected-detail"
+                >
+                  {detail}
+                </SearchResultDetail>
+              }
+            />
+          )}
         </Box>
       </main>
     </Page>

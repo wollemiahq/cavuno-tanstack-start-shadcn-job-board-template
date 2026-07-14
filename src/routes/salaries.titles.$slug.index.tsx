@@ -1,18 +1,17 @@
-import { Text } from '@/components/text'
-import { createFileRoute, getRouteApi, notFound, redirect } from '@tanstack/react-router'
+import { createFileRoute, getRouteApi, notFound, redirect } from "@tanstack/react-router";
 
-import { isNotFound } from '@cavuno/board'
-import { boardCopy } from '#/copy'
+import { isNotFound } from "@cavuno/board";
+import { boardCopy } from "#/copy";
 import {
   buildSalaryFaq,
   createBreadcrumbJsonLd,
   faqJsonLd,
   formatRange,
   titleSalaryJsonLd,
-} from '@cavuno/board/seo'
+} from "@cavuno/board/seo";
 
-import { JsonLd } from '@/components/json-ld'
-import { PageBody } from '@/components/board/page-body'
+import { JsonLd } from "@/components/json-ld";
+import { PageSection } from "@/components/layout/page";
 import {
   SalaryEmptyState,
   OverallSalaryCard,
@@ -20,38 +19,39 @@ import {
   SalaryRail,
   SenioritySalaryTable,
   type RailItem,
-} from '@/components/board/salary-sections'
+} from "@/components/board/salary-sections";
 import {
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
   toSalaryRailVM,
   toSeniorityTableVM,
-} from '@/board/salary-view-model'
-import { m } from '../paraglide/messages'
-import { getSeoBase, getTitleSalary } from '../server/queries'
+} from "@/board/salary-view-model";
+import { m } from "../paraglide/messages";
+import { getSeoBase, getTitleSalary } from "../server/queries";
+import { SalaryNotFoundPage, SalaryPageLayout, SalaryPendingPage } from "./-salary-page-layout";
 
-export const Route = createFileRoute('/salaries/titles/$slug/')({
-  staticData: { fullBleed: true },
+export const Route = createFileRoute("/salaries/titles/$slug/")({
+  staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
-    let salary
+    let salary;
     try {
-      salary = await getTitleSalary({ data: { slug: params.slug } })
+      salary = await getTitleSalary({ data: { slug: params.slug } });
     } catch (error) {
-      if (isNotFound(error)) throw notFound()
-      throw error
+      if (isNotFound(error)) throw notFound();
+      throw error;
     }
     // The API returns the board-language canonical slug as data and never 308s;
     // the starter performs the redirect (S3), mirroring the hosted board.
     if (salary.canonicalSlug !== params.slug) {
       throw redirect({
-        to: '/salaries/titles/$slug',
+        to: "/salaries/titles/$slug",
         params: { slug: salary.canonicalSlug },
         statusCode: 308,
-      })
+      });
     }
-    const seo = await getSeoBase()
-    return { salary, seo }
+    const seo = await getSeoBase();
+    return { salary, seo };
   },
   head: ({ loaderData }) =>
     loaderData
@@ -64,7 +64,7 @@ export const Route = createFileRoute('/salaries/titles/$slug/')({
               }),
             },
             {
-              name: 'description',
+              name: "description",
               content: loaderData.salary.overallSalary
                 ? m.salaryDetail_titleMetaDescriptionWithData({
                     title: loaderData.salary.categoryName,
@@ -82,27 +82,26 @@ export const Route = createFileRoute('/salaries/titles/$slug/')({
           ],
           links: [
             {
-              rel: 'canonical',
+              rel: "canonical",
               href: `${loaderData.seo.origin}/salaries/titles/${loaderData.salary.canonicalSlug}`,
             },
           ],
         }
       : {},
   component: TitleSalaryPage,
-  notFoundComponent: () => (
-    <SalaryEmptyState title={m.salaryDetail_notFoundTitle()} />
-  ),
-})
+  pendingComponent: SalaryPendingPage,
+  notFoundComponent: () => <SalaryNotFoundPage title={m.salaryDetail_notFoundTitle()} />,
+});
 
-const rootApi = getRouteApi('__root__')
+const rootApi = getRouteApi("__root__");
 
 function TitleSalaryPage() {
-  const { salary, seo } = Route.useLoaderData()
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs
-  const { board } = rootApi.useLoaderData()
-  const locale = seo.language
+  const { salary, seo } = Route.useLoaderData();
+  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const { board } = rootApi.useLoaderData();
+  const locale = seo.language;
 
-  const faqs = buildSalaryFaq(locale, salary.categoryName, salary.overallSalary)
+  const faqs = buildSalaryFaq(locale, salary.categoryName, salary.overallSalary);
   const jsonLd = [
     titleSalaryJsonLd(locale, salary),
     faqJsonLd(faqs),
@@ -112,7 +111,7 @@ function TitleSalaryPage() {
       { label: crumbs.titles, href: `${seo.origin}/salaries/titles` },
       { label: salary.categoryName },
     ]),
-  ].filter((e): e is Record<string, unknown> => e !== null)
+  ].filter((e): e is Record<string, unknown> => e !== null);
 
   const companyItems: RailItem[] = salary.topCompanies.map((x) => ({
     name: x.companyName,
@@ -120,76 +119,108 @@ function TitleSalaryPage() {
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
     logoPath: x.logoPath,
-  }))
+  }));
   const locationItems: RailItem[] = salary.topLocations.map((x) => ({
     name: x.placeName,
     href: `/salaries/locations/${x.placeSlug}`,
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
-  }))
+  }));
   const skillItems: RailItem[] = salary.topSkills.map((x) => ({
     name: x.skillName,
     href: `/salaries/skills/${x.skillSlug}`,
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
-  }))
+  }));
   const relatedItems: RailItem[] = salary.relatedTitles.map((x) => ({
     name: x.categoryName,
     href: `/salaries/titles/${x.categorySlug}`,
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
-  }))
+  }));
+  const hasSalaryContent = Boolean(
+    salary.overallSalary ||
+    salary.bySeniority.length ||
+    companyItems.length ||
+    locationItems.length ||
+    skillItems.length ||
+    relatedItems.length ||
+    faqs.length,
+  );
 
   return (
-    <PageBody
+    <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
         [
-          { name: crumbs.home, href: '/' },
-          { name: crumbs.salaries, href: '/salaries' },
-          { name: crumbs.titles, href: '/salaries/titles' },
+          { name: crumbs.home, href: "/" },
+          { name: crumbs.salaries, href: "/salaries" },
+          { name: crumbs.titles, href: "/salaries/titles" },
           { name: salary.categoryName },
         ],
         seo.language,
         seo.labels,
       )}
+      title={m.salaryDetail_titleHeading({ title: salary.categoryName })}
     >
-      <div className="space-y-6">
       <JsonLd data={jsonLd} />
-      <header>
-        <Text as="h1" variant="heading1">
-          {m.salaryDetail_titleHeading({ title: salary.categoryName })}
-        </Text>
-      </header>
+      {hasSalaryContent ? (
+        <>
+          {salary.overallSalary ? (
+            <OverallSalaryCard
+              vm={toOverallSalaryVM(
+                {
+                  avgMin: salary.overallSalary.avgMin,
+                  avgMax: salary.overallSalary.avgMax,
+                  jobCount: salary.overallSalary.jobCount,
+                  p25Min: salary.overallSalary.p25Min,
+                  p75Max: salary.overallSalary.p75Max,
+                },
+                board.language,
+                seo.labels,
+              )}
+            />
+          ) : null}
 
-      {salary.overallSalary ? (
-        <OverallSalaryCard
-          vm={toOverallSalaryVM(
-            {
-              avgMin: salary.overallSalary.avgMin,
-              avgMax: salary.overallSalary.avgMax,
-              jobCount: salary.overallSalary.jobCount,
-              p25Min: salary.overallSalary.p25Min,
-              p75Max: salary.overallSalary.p75Max,
-            },
-            board.language,
-            seo.labels,
-          )}
-        />
-      ) : null}
+          {salary.bySeniority.length > 0 ? (
+            <PageSection title={m.salaryDetail_seniorityHeading()}>
+              <SenioritySalaryTable
+                vm={toSeniorityTableVM(salary.bySeniority, board.language, seo.labels)}
+              />
+            </PageSection>
+          ) : null}
 
-      {salary.bySeniority.length > 0 ? (
-        <section className="space-y-3">
-          <Text as="h2" variant="heading4">{m.salaryDetail_seniorityHeading()}</Text>
-          <SenioritySalaryTable vm={toSeniorityTableVM(salary.bySeniority, board.language, seo.labels)} />
-        </section>
-      ) : null}
-
-      <SalaryRail vm={toSalaryRailVM(m.salaryDetail_topCompanies(), companyItems, seo.language, seo.labels)} />
-      <SalaryRail vm={toSalaryRailVM(m.salaryDetail_topLocations(), locationItems, seo.language, seo.labels)} />
-      <SalaryRail vm={toSalaryRailVM(m.salaryDetail_topSkills(), skillItems, seo.language, seo.labels)} />
-      <SalaryRail vm={toSalaryRailVM(m.salaryDetail_relatedTitles(), relatedItems, seo.language, seo.labels)} />
-      <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
-      </div>
-    </PageBody>
-  )
+          <SalaryRail
+            vm={toSalaryRailVM(
+              m.salaryDetail_topCompanies(),
+              companyItems,
+              seo.language,
+              seo.labels,
+            )}
+          />
+          <SalaryRail
+            vm={toSalaryRailVM(
+              m.salaryDetail_topLocations(),
+              locationItems,
+              seo.language,
+              seo.labels,
+            )}
+          />
+          <SalaryRail
+            vm={toSalaryRailVM(m.salaryDetail_topSkills(), skillItems, seo.language, seo.labels)}
+          />
+          <SalaryRail
+            vm={toSalaryRailVM(
+              m.salaryDetail_relatedTitles(),
+              relatedItems,
+              seo.language,
+              seo.labels,
+            )}
+          />
+          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
+        </>
+      ) : (
+        <SalaryEmptyState title={m.salaryDetail_notFoundTitle()} />
+      )}
+    </SalaryPageLayout>
+  );
 }

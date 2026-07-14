@@ -1,19 +1,21 @@
-import { createFileRoute, getRouteApi, Link, useNavigate } from "@tanstack/react-router";
-import { File02 } from "@untitledui/icons";
+import { createFileRoute, getRouteApi, Link } from "@tanstack/react-router";
 
-import { Badge } from "@/components/base/badges/badges";
-import { Button } from "@/components/base/buttons/button";
-import { EmptyState } from "@/components/application/empty-state/empty-state";
-import { JsonLd } from "@/components/json-ld";
-import { AlertsBand } from "@/components/board/alerts-band";
-import { ListingPageHeader } from "@/components/board/listing-page-header";
-import { PageBody } from "@/components/board/page-body";
-import { BlogSearchBar } from "../components/blog-search-bar";
-import { PostCard } from "../components/post-card";
 import { createBreadcrumbJsonLd } from "@cavuno/board/seo";
+
 import { boardCopy } from "#/copy";
-import { m } from "../paraglide/messages";
-import { getSeoBase, listBlogPosts, listBlogTags, searchBlogPosts, subscribeJobAlert } from "../server/queries";
+import { AlertsBand } from "@/components/board/alerts-band";
+import { BlogArchivePage } from "@/components/board/blog-archive-page";
+import { PublicContentPending } from "@/components/board/public-content-pending";
+import { JsonLd } from "@/components/json-ld";
+import { Badge } from "@/components/ui/badge";
+import { m } from "@/paraglide/messages";
+import {
+  getSeoBase,
+  listBlogPosts,
+  listBlogTags,
+  searchBlogPosts,
+  subscribeJobAlert,
+} from "@/server/queries";
 
 interface BlogSearch {
   cursor?: string;
@@ -21,7 +23,8 @@ interface BlogSearch {
 }
 
 export const Route = createFileRoute("/blog/")({
-  staticData: { fullBleed: true },
+  staticData: { fullBleed: true, ownsMain: true },
+  pendingComponent: () => <PublicContentPending label={m.publicContent_loadingLabel()} />,
   validateSearch: (search: Record<string, unknown>): BlogSearch => ({
     cursor: typeof search.cursor === "string" && search.cursor ? search.cursor : undefined,
     q: typeof search.q === "string" && search.q ? search.q : undefined,
@@ -60,92 +63,65 @@ const rootApi = getRouteApi("__root__");
 function BlogPage() {
   const { page, tags, seo, q } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
-  const navigate = useNavigate({ from: "/blog/" });
   const copy = boardCopy(seo.language, seo.labels);
   const crumbs = copy.breadcrumbs;
-
   const jsonLd = [
     createBreadcrumbJsonLd([{ label: crumbs.home, href: seo.origin }, { label: crumbs.blog }]),
-  ].filter((e): e is Record<string, unknown> => e !== null);
+  ].filter((entry): entry is Record<string, unknown> => entry !== null);
 
   return (
     <>
       <JsonLd data={jsonLd} />
-
-      <PageBody
-        band={
-          <ListingPageHeader
-            breadcrumb={{
-              ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
-              items: [{ name: crumbs.home, href: "/" }, { name: crumbs.blog }],
-            }}
-            title={m.blogIndex_title()}
-            subtitle={m.blogIndex_subtitleText()}
-            search={<BlogSearchBar defaultValue={q ?? undefined} />}
-          />
+      <BlogArchivePage
+        breadcrumb={{
+          ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
+          items: [{ name: crumbs.home, href: "/" }, { name: crumbs.blog }],
+        }}
+        title={m.blogIndex_title()}
+        description={m.blogIndex_subtitleText()}
+        filters={
+          <nav aria-label={m.blogIndex_topicsLabel()} className="flex flex-wrap gap-2">
+            <Link
+              to="/blog"
+              search={{}}
+              className="rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+            >
+              <Badge variant={q ? "secondary" : "default"}>{m.blogIndex_allTagsLabel()}</Badge>
+            </Link>
+            {tags.map((tag) => (
+              <Link
+                key={tag.id}
+                to="/blog/tag/$tagSlug"
+                params={{ tagSlug: tag.slug }}
+                className="rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+              >
+                <Badge variant="secondary" className="h-auto max-w-full whitespace-normal">
+                  {tag.name}
+                </Badge>
+              </Link>
+            ))}
+          </nav>
         }
-      >
-      <div className="flex flex-wrap items-center gap-1.5">
-        <Link
-          to="/blog"
-          search={{}}
-          className="rounded-full outline-focus-ring transition duration-100 ease-linear hover:opacity-75 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-1"
-        >
-          <Badge type="pill-color" color={q ? "gray" : "brand"} size="md">
-            {m.blogIndex_allTagsLabel()}
-          </Badge>
-        </Link>
-        {tags.map((tag) => (
-          <Link
-            key={tag.id}
-            to="/blog/tag/$tagSlug"
-            params={{ tagSlug: tag.slug }}
-            className="rounded-full outline-focus-ring transition duration-100 ease-linear hover:opacity-75 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-1"
-          >
-            <Badge type="pill-color" color="gray" size="md">
-              {tag.name}
-            </Badge>
-          </Link>
-        ))}
-      </div>
-
-      {page.data.length === 0 ? (
-        <EmptyState size="sm" className="py-12">
-          <EmptyState.Header>
-            <EmptyState.FeaturedIcon icon={File02} color="gray" theme="modern" />
-          </EmptyState.Header>
-          <EmptyState.Content>
-            <EmptyState.Title>{m.blogIndex_title()}</EmptyState.Title>
-            <EmptyState.Description>
-              {q ? m.blogIndex_noMatchText({ query: q }) : m.blogIndex_emptyText()}
-            </EmptyState.Description>
-          </EmptyState.Content>
-        </EmptyState>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {page.data.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
-        </div>
-      )}
-
-      {page.hasMore && page.nextCursor ? (
-        <div className="flex justify-center">
-          <Button
-            color="secondary"
-            size="lg"
-            onClick={() =>
-              navigate({
-                to: "/blog",
-                search: (prev) => ({ ...prev, cursor: page.nextCursor ?? undefined }),
-              })
-            }
-          >
-            {m.blogIndex_loadMoreLabel()}
-          </Button>
-        </div>
-      ) : null}
-      </PageBody>
+        posts={page.data}
+        empty={{
+          title: m.blogIndex_emptyTitle(),
+          description: q ? m.blogIndex_noMatchText({ query: q }) : m.blogIndex_emptyText(),
+          action: q ? { label: m.blogIndex_browseAllLabel(), href: "/blog" } : undefined,
+        }}
+        nextLink={
+          page.hasMore && page.nextCursor ? (
+            <Link
+              to="/blog"
+              search={(previous) => ({
+                ...previous,
+                cursor: page.nextCursor ?? undefined,
+              })}
+            >
+              {m.blogIndex_nextResultsLabel()}
+            </Link>
+          ) : undefined
+        }
+      />
 
       {board.features.jobAlerts ? (
         <AlertsBand

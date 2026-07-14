@@ -46,6 +46,13 @@ describe("Search results composition", () => {
       "data-selected",
       "true",
     );
+
+    const core = container.querySelector('[data-slot="search-results-core"]');
+    expect(core).not.toHaveClass("rounded-2xl");
+    expect(core).not.toHaveClass("border");
+    expect(core).not.toHaveClass("overflow-hidden");
+    expect(core).not.toHaveClass("bg-background");
+    expect(list).toHaveClass("md:border-r");
   });
 
   it("renders only supplied advertising regions with explicit labels and sides", () => {

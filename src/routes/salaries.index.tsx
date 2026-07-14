@@ -1,28 +1,27 @@
-import { Text } from '@/components/text'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
 
-import { createBreadcrumbJsonLd, formatRange } from '@cavuno/board/seo'
-import { boardCopy } from '#/copy'
+import { createBreadcrumbJsonLd, formatRange } from "@cavuno/board/seo";
+import { boardCopy } from "#/copy";
 
-import { Button } from '@/components/base/buttons/button'
-import { JsonLd } from '@/components/json-ld'
-import { PageBody } from '@/components/board/page-body'
-import { SalaryRail, type RailItem } from '@/components/board/salary-sections'
-import { toSalaryBreadcrumbVM, toSalaryRailVM } from '@/board/salary-view-model'
-import { m } from '../paraglide/messages'
+import { JsonLd } from "@/components/json-ld";
+import { PageSection } from "@/components/layout/page";
+import { buttonVariants } from "@/components/ui/button";
+import { SalaryEmptyState, SalaryRail, type RailItem } from "@/components/board/salary-sections";
+import { toSalaryBreadcrumbVM, toSalaryRailVM } from "@/board/salary-view-model";
+import { SalaryPageLayout, SalaryPendingPage } from "./-salary-page-layout";
+import { m } from "../paraglide/messages";
 import {
   getSeoBase,
   listSalaryCompanies,
   listSalaryLocations,
   listSalarySkills,
   listSalaryTitles,
-} from '../server/queries'
+} from "../server/queries";
 
-const PREVIEW = 9
+const PREVIEW = 9;
 
-export const Route = createFileRoute('/salaries/')({
-  // Full-bleed so PageBody owns the container + the breadcrumb placement.
-  staticData: { fullBleed: true },
+export const Route = createFileRoute("/salaries/")({
+  staticData: { fullBleed: true, ownsMain: true },
   loader: async () => {
     const [companies, titles, skills, locations, seo] = await Promise.all([
       listSalaryCompanies(),
@@ -30,7 +29,7 @@ export const Route = createFileRoute('/salaries/')({
       listSalarySkills(),
       listSalaryLocations(),
       getSeoBase(),
-    ])
+    ]);
     return {
       companies: companies.data,
       titles: titles.data,
@@ -38,7 +37,7 @@ export const Route = createFileRoute('/salaries/')({
       // Top-level places only (the hub preview); the index page shows the tree.
       locations: locations.data.filter((l) => l.parentSlug === null),
       seo,
-    }
+    };
   },
   head: ({ loaderData }) =>
     loaderData
@@ -46,31 +45,27 @@ export const Route = createFileRoute('/salaries/')({
           meta: [
             { title: m.salaryHub_metaTitle({ boardName: loaderData.seo.boardName }) },
             {
-              name: 'description',
+              name: "description",
               content: m.salaryHub_metaDescription({
                 boardName: loaderData.seo.boardName,
               }),
             },
           ],
-          links: [
-            { rel: 'canonical', href: `${loaderData.seo.origin}/salaries` },
-          ],
+          links: [{ rel: "canonical", href: `${loaderData.seo.origin}/salaries` }],
         }
       : {},
   component: SalariesHub,
-})
+  pendingComponent: SalaryPendingPage,
+});
 
 function SalariesHub() {
-  const { companies, titles, skills, locations, seo } = Route.useLoaderData()
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs
-  const locale = seo.language
+  const { companies, titles, skills, locations, seo } = Route.useLoaderData();
+  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const locale = seo.language;
 
   const jsonLd = [
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      { label: crumbs.salaries },
-    ]),
-  ].filter((e): e is Record<string, unknown> => e !== null)
+    createBreadcrumbJsonLd([{ label: crumbs.home, href: seo.origin }, { label: crumbs.salaries }]),
+  ].filter((e): e is Record<string, unknown> => e !== null);
 
   const companyItems: RailItem[] = companies.slice(0, PREVIEW).map((x) => ({
     name: x.companyName,
@@ -78,44 +73,71 @@ function SalariesHub() {
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
     logoPath: x.logoPath,
-  }))
+  }));
   const titleItems: RailItem[] = titles.slice(0, PREVIEW).map((x) => ({
     name: x.name,
     href: `/salaries/titles/${x.slug}`,
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
-  }))
+  }));
   const skillItems: RailItem[] = skills.slice(0, PREVIEW).map((x) => ({
     name: x.name,
     href: `/salaries/skills/${x.slug}`,
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
-  }))
+  }));
   const locationItems: RailItem[] = locations.slice(0, PREVIEW).map((x) => ({
     name: x.placeName,
     href: `/salaries/locations/${x.placeSlug}`,
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
-  }))
+  }));
+  const hasSalaryData =
+    companyItems.length + titleItems.length + skillItems.length + locationItems.length > 0;
 
   return (
-    <PageBody breadcrumb={toSalaryBreadcrumbVM([{ name: crumbs.home, href: '/' }, { name: crumbs.salaries }], seo.language, seo.labels)}>
+    <SalaryPageLayout
+      breadcrumb={toSalaryBreadcrumbVM(
+        [{ name: crumbs.home, href: "/" }, { name: crumbs.salaries }],
+        seo.language,
+        seo.labels,
+      )}
+      title={crumbs.salaries}
+      description={m.salaryHub_subheading()}
+    >
       <JsonLd data={jsonLd} />
-      <header className="flex max-w-3xl flex-col gap-4">
-        <Text as="h1" variant="display">
-          {crumbs.salaries}
-        </Text>
-        <p className="text-lg text-tertiary">
-          {m.salaryHub_subheading()}
-        </p>
-      </header>
-
-      <HubSection title={crumbs.companies} seeAll="/salaries/companies" items={companyItems} seo={seo} />
-      <HubSection title={crumbs.titles} seeAll="/salaries/titles" items={titleItems} seo={seo} />
-      <HubSection title={crumbs.skills} seeAll="/salaries/skills" items={skillItems} seo={seo} />
-      <HubSection title={crumbs.locations} seeAll="/salaries/locations" items={locationItems} seo={seo} />
-    </PageBody>
-  )
+      {hasSalaryData ? (
+        <>
+          <HubSection
+            title={crumbs.companies}
+            seeAll="/salaries/companies"
+            items={companyItems}
+            seo={seo}
+          />
+          <HubSection
+            title={crumbs.titles}
+            seeAll="/salaries/titles"
+            items={titleItems}
+            seo={seo}
+          />
+          <HubSection
+            title={crumbs.skills}
+            seeAll="/salaries/skills"
+            items={skillItems}
+            seo={seo}
+          />
+          <HubSection
+            title={crumbs.locations}
+            seeAll="/salaries/locations"
+            items={locationItems}
+            seo={seo}
+          />
+        </>
+      ) : (
+        <SalaryEmptyState title={crumbs.salaries} description={m.salaryHub_emptyDescription()} />
+      )}
+    </SalaryPageLayout>
+  );
 }
 
 function HubSection({
@@ -124,21 +146,22 @@ function HubSection({
   items,
   seo,
 }: {
-  title: string
-  seeAll: string
-  items: RailItem[]
-  seo: { language: string; labels: Record<string, Record<string, string>> }
+  title: string;
+  seeAll: string;
+  items: RailItem[];
+  seo: { language: string; labels: Record<string, Record<string, string>> };
 }) {
-  if (items.length === 0) return null
+  if (items.length === 0) return null;
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-baseline justify-between gap-4">
-        <Text as="h2" variant="heading4">{title}</Text>
-        <Button color="link-color" size="sm" href={seeAll}>
+    <PageSection
+      title={title}
+      actions={
+        <a href={seeAll} className={buttonVariants({ variant: "link", size: "sm" })}>
           {m.salaryHub_seeAllLabel()}
-        </Button>
-      </div>
-      <SalaryRail vm={toSalaryRailVM('', items, seo.language, seo.labels)} />
-    </div>
-  )
+        </a>
+      }
+    >
+      <SalaryRail vm={toSalaryRailVM("", items, seo.language, seo.labels)} />
+    </PageSection>
+  );
 }

@@ -1,17 +1,18 @@
 ---
 name: Results header
-purpose: The honest "Showing X–Y of Z" count and sort control on a single row above the results.
+purpose: The contextual results-count H1 and sort control on a single compact row above the results.
 primitives: [JobsResultsBar, Select]
 usedBy: [src/components/board/jobs-results-bar.tsx, src/components/board/job-search-page.tsx, src/components/programmatic-jobs-view.tsx]
 ---
 
 ## Purpose
 
-Directly above the card grid sits one row: the honest total-result count on the
-left, the sort control on the right. The count is range-aware — it renders
-"Showing 1–20 of 340" when paginated, "1 result" / "340 results" otherwise —
-and localizes through the Paraglide message seam. `JobsResultsBar` is the single
-home of that count arithmetic.
+Directly above the card grid sits one compact row: the page’s only `h1` on the
+left and the sort control on the right. The heading combines the honest total
+with route context — “340 jobs”, “340 Engineering jobs”, or “340 Jobs in
+Sydney”. When paginated, the smaller supporting line remains range-aware
+(“Showing 1–20 of 340”). Both strings localize through the Paraglide message
+seam. `JobsResultsBar` is the single home of that arithmetic.
 
 ## When to use
 
@@ -21,9 +22,9 @@ home of that count arithmetic.
 
 ## Anatomy
 
-- A flex row with a bottom hairline (`border-b border-secondary pb-4`).
-- Left: `<p>` with the localized count label.
-- Right: the Untitled UI `Select` bound to `ListingFilters["sort"]`.
+- A flex row with a bottom hairline (`border-b border-border pb-4`).
+- Left: one contextual `<h1>` and an optional small range label.
+- Right: the owned shadcn `Select` bound to `ListingFilters["sort"]`.
 
 ## Composition
 
@@ -34,11 +35,14 @@ The count arithmetic lives entirely inside `JobsResultsBar`; routes pass raw
 const showRange =
   typeof count === "number" && typeof page === "number" &&
   typeof pageSize === "number" && count > pageSize;
-const countLabel = showRange
-  ? m.jobSearch_resultsShowingRange({ from, to, count })
+const totalLabel = heading
+  ? m.jobSearch_contextualResultsHeading({ count, heading })
   : count === 1
     ? m.jobSearch_resultsCountOne({ count })
     : m.jobSearch_resultsCountMany({ count });
+const rangeLabel = showRange
+  ? m.jobSearch_resultsShowingRange({ from, to, count })
+  : null;
 ```
 
 ## Do / Don't
