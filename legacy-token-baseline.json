@@ -594,41 +594,6 @@
     "icons": 0,
     "tokens": 2
   },
-  "src/components/messages-nav-link.tsx": {
-    "imports": 2,
-    "icons": 0,
-    "tokens": 0
-  },
-  "src/components/messages/avatar.tsx": {
-    "imports": 1,
-    "icons": 0,
-    "tokens": 0
-  },
-  "src/components/messages/blocked-list.tsx": {
-    "imports": 1,
-    "icons": 0,
-    "tokens": 1
-  },
-  "src/components/messages/composer.tsx": {
-    "imports": 2,
-    "icons": 1,
-    "tokens": 5
-  },
-  "src/components/messages/inbox-list.tsx": {
-    "imports": 1,
-    "icons": 0,
-    "tokens": 4
-  },
-  "src/components/messages/message-bubble.tsx": {
-    "imports": 5,
-    "icons": 1,
-    "tokens": 7
-  },
-  "src/components/messages/thread-view.tsx": {
-    "imports": 1,
-    "icons": 1,
-    "tokens": 6
-  },
   "src/components/post-card.tsx": {
     "imports": 0,
     "icons": 0,
@@ -758,11 +723,6 @@
     "imports": 0,
     "icons": 0,
     "tokens": 1
-  },
-  "src/routes/messages.tsx": {
-    "imports": 0,
-    "icons": 0,
-    "tokens": 4
   },
   "src/routes/password.tsx": {
     "imports": 1,

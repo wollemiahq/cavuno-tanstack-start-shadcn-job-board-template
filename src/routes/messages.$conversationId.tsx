@@ -1,46 +1,99 @@
-/**
- * `/messages/$conversationId` — one conversation thread. The loader fetches the
- * header, the messages, and the block status in one gated read; the thread view
- * then polls for updates (ADR-0053 REST transport). A missing/forbidden thread
- * bounces back to the inbox (which itself redirects to sign-in when signed out).
- */
+import { companyPath } from '@cavuno/board/paths';
 import {
   createFileRoute,
   isRedirect,
   redirect,
-} from '@tanstack/react-router'
+  useNavigate,
+} from '@tanstack/react-router';
 
-import { ThreadView } from '../components/messages/thread-view'
-import { getThread } from '../server/messaging'
+import {
+  MessagesSidebarController,
+  ThreadController,
+} from './-messages-runtime';
+
+import { Page, PageContent } from '@/components/layout/page';
+import { MessagingLayout } from '@/components/messages/messaging-layout';
+import { m } from '@/paraglide/messages';
+import { getInbox, getThread } from '@/server/messaging';
+
+type ThreadSearch = { view?: 'archived' };
 
 export const Route = createFileRoute('/messages/$conversationId')({
-  loader: async ({ params }) => {
+  staticData: { ownsMain: true },
+  validateSearch: (search: Record<string, unknown>): ThreadSearch =>
+    search.view === 'archived' ? { view: 'archived' } : {},
+  loaderDeps: ({ search }) => ({ view: search.view ?? 'inbox' }),
+  loader: async ({ params, deps }) => {
+    const returnTo = `/messages/${encodeURIComponent(params.conversationId)}${
+      deps.view === 'archived' ? '?view=archived' : ''
+    }`;
     try {
-      return await getThread({ data: { id: params.conversationId } })
+      const [thread, inbox] = await Promise.all([
+        getThread({ data: { id: params.conversationId } }),
+        getInbox({ data: { archived: deps.view === 'archived' } }),
+      ]);
+      return { ...thread, inbox, view: deps.view };
     } catch (error) {
-      if (isRedirect(error)) throw error
+      if (isRedirect(error)) throw error;
       if (String(error).includes('EMAIL_UNVERIFIED')) {
         throw redirect({
           to: '/auth/verify-email-required',
-          search: { returnTo: `/messages/${encodeURIComponent(params.conversationId)}` },
-        })
+          search: { returnTo },
+        });
       }
-      throw redirect({ to: '/messages' })
+      throw redirect({
+        to: '/messages',
+        search: deps.view === 'archived' ? { view: 'archived' } : {},
+      });
     }
   },
-  head: () => ({ meta: [{ title: 'Conversation' }] }),
+  head: () => ({ meta: [{ title: m.messagesPage_conversationTitle() }] }),
   component: ThreadPage,
-})
+});
 
 function ThreadPage() {
-  const { conversation, messages, blockStatus } = Route.useLoaderData()
+  const { conversation, messages, blockStatus, inbox, view } =
+    Route.useLoaderData();
+  const navigate = useNavigate();
+  const listView = view === 'archived' ? 'archived' : 'inbox';
+  const leaveThread = () =>
+    void navigate({
+      to: '/messages',
+      search: listView === 'archived' ? { view: 'archived' } : {},
+    });
+
   return (
-    <div className="mx-auto max-w-2xl">
-      <ThreadView
-        conversation={conversation}
-        messages={messages}
-        blockStatus={blockStatus}
-      />
-    </div>
-  )
+    <Page width="wide">
+      <PageContent>
+        <MessagingLayout
+          aria-label={m.messagesPage_title()}
+          listLabel={m.messagesPage_conversationsAriaLabel()}
+          conversationLabel={m.messagesPage_selectedConversationAriaLabel()}
+          list={
+            <MessagesSidebarController
+              view={listView}
+              initialInbox={inbox.conversations}
+              selectedConversationId={conversation.id}
+            />
+          }
+          conversation={
+            <ThreadController
+              key={conversation.id}
+              initialConversation={conversation}
+              initialMessages={messages}
+              initialBlockStatus={blockStatus}
+              companyHref={
+                conversation.counterparty.companySlug
+                  ? companyPath(conversation.counterparty.companySlug)
+                  : undefined
+              }
+              onBack={leaveThread}
+              onExit={leaveThread}
+            />
+          }
+          mobilePane="conversation"
+        />
+      </PageContent>
+    </Page>
+  );
 }

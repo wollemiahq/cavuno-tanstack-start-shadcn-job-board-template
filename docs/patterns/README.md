@@ -48,14 +48,14 @@ so docs and the design library stay in sync.
 | P17 | [Typography](typography.md)             | Text, Prose                                                                                         | The role-named heading/body primitive keeping authored text on the UUI type scale. |
 | P18 | [Search results](search-results.md)     | SearchResultsLayout, SearchResultsList, SearchResultDetail, SearchResultCard, AdRail                | Responsive master–detail directories with optional outer advertising rails.        |
 | P19 | [Site header](site-header.md)           | Header, HeaderSearch, LocationCombobox, Link, Input, Button                                         | Contextual public search, centered discovery navigation, and account actions.       |
+| P20 | [Messaging](messaging.md)               | MessagingLayout, MessagingDock, Message, Bubble, Marker, MessageScroller, Attachment, Avatar, Textarea, Button | Dedicated and floating board-user conversations with one responsive interaction model. |
 
 ## Enforcement
 
 - **Doc structure** — [`src/pattern-contract.test.ts`](../../src/pattern-contract.test.ts)
   asserts every pattern page has the template's sections in order, parses the
   required frontmatter keys, and appears in this index.
-- **Legacy-token ratchet** — the shadcn-token frontier (`text-muted-foreground`,
-  `border-border`, `text-destructive`, `bg-muted`, `text-foreground`,
-  `font-heading`, `bg-background`, `text-primary-foreground`) is frozen against a
-  baseline; a new occurrence fails CI. Migrate a drifting surface to the UUI
-  tokens named in the relevant pattern's Do / Don't table, then re-baseline down.
+- **Legacy-token ratchet** — inherited Untitled UI imports, icons, and tokens are
+  frozen against a baseline; a new occurrence fails CI. Migrate a drifting
+  surface to owned shadcn Rhea components and canonical theme tokens, then
+  re-baseline down.

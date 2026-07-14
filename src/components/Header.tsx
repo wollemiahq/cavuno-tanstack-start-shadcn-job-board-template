@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 
 import { Link } from "@tanstack/react-router";
 import { BookOpenText, BriefcaseBusiness, Building2, Menu, Search, Users, X } from "lucide-react";
@@ -22,7 +22,6 @@ import type {
 import { resolveSignupDestination } from "../lib/signup-destination";
 import { m } from "../paraglide/messages";
 
-import { MessagesNavLink } from "./messages-nav-link";
 
 const navItemClassName =
   "relative flex min-w-16 flex-col items-center gap-0.5 border-b-2 border-transparent px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30";
@@ -113,6 +112,7 @@ export default function Header({
   features,
   talentDirectoryVisibility,
   search,
+  messagesNav,
 }: {
   boardName: string;
   logoUrl: string | null;
@@ -127,6 +127,7 @@ export default function Header({
     talentDirectory: boolean;
   };
   talentDirectoryVisibility: "off" | "public" | "employers_only" | null;
+  messagesNav?: ReactNode;
   search: HeaderSearchState & {
     onSubmit: (submission: HeaderSearchSubmission) => void;
     locationSuggestions: LocationSuggestionState;
@@ -227,7 +228,7 @@ export default function Header({
           >
             {user ? (
               <>
-                <MessagesNavLink />
+                {messagesNav}
                 {postJob}
                 <Link to="/account" className={buttonVariants({ variant: "outline" })}>
                   {m.siteHeader_accountLabel()}

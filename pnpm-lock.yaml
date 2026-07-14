@@ -38,6 +38,9 @@ importers:
       '@react-types/shared':
         specifier: 3.32.1
         version: 3.32.1(react@19.2.7)
+      '@shadcn/react':
+        specifier: ^0.2.1
+        version: 0.2.1(@types/react@19.2.17)(react@19.2.7)
       '@stripe/stripe-js':
         specifier: 9.8.0
         version: 9.8.0
@@ -1550,6 +1553,17 @@ packages:
 
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
+
+  '@shadcn/react@0.2.1':
+    resolution: {integrity: sha512-5krgi3dRMKb5jH6a+qPzVJUy/54s0kKE4Rw4LjDfLqOdVQTWKUgxWf1kW8r912I0jX/Lzxqc+pgjkjWxUIK5BQ==}
+    peerDependencies:
+      '@types/react': '>=19'
+      react: '>=19'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      react:
+        optional: true
 
   '@shuding/opentype.js@1.4.0-beta.0':
     resolution: {integrity: sha512-3NgmNyH3l/Hv6EvsWJbsvpcpUba6R8IREQ83nH83cyakCw7uM1arZKNfHwv1Wz6jgqrF/j4x5ELvR6PnK9nTcA==}
@@ -5698,6 +5712,11 @@ snapshots:
   '@rolldown/pluginutils@1.0.1': {}
 
   '@sec-ant/readable-stream@0.4.1': {}
+
+  '@shadcn/react@0.2.1(@types/react@19.2.17)(react@19.2.7)':
+    optionalDependencies:
+      '@types/react': 19.2.17
+      react: 19.2.7
 
   '@shuding/opentype.js@1.4.0-beta.0':
     dependencies:

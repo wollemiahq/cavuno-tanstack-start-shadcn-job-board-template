@@ -18,6 +18,8 @@ import {
   resolveHeaderSearchState,
   type HeaderSearchSubmission,
 } from '@/lib/header-search'
+import { MessagesDockController } from './-messages-dock-controller'
+import { MessagesNavController } from './-messages-nav-controller'
 import { useLocationSuggestions } from './-use-location-suggestions'
 import { getLocale } from '../paraglide/runtime'
 import { themeMeta } from '../theme/resolved'
@@ -208,6 +210,7 @@ function RootLayout() {
         labels={board.labels}
         features={board.features}
         talentDirectoryVisibility={board.talentDirectoryVisibility}
+        messagesNav={user ? <MessagesNavController /> : undefined}
         search={{
           ...headerSearch,
           onSubmit: submitHeaderSearch,
@@ -240,6 +243,9 @@ function RootLayout() {
         talentDirectoryVisibility={board.talentDirectoryVisibility}
         hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
       />
+      {user && !location.pathname.startsWith('/messages') ? (
+        <MessagesDockController />
+      ) : null}
     </UntitledUiRouterProvider>
   )
 }

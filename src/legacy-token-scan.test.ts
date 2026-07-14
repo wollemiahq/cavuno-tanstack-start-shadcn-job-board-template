@@ -103,8 +103,12 @@ function legacyImportCount(file: string, source: string): number {
 function legacyTokenCount(file: string, source: string): number {
   const pattern =
     RHEA_PILOT.has(file) ||
+    file === "src/components/messages-nav-link.tsx" ||
+    file.startsWith("src/components/messages/") ||
     file.startsWith("src/components/layout/") ||
-    file.startsWith("src/components/ui/")
+    file.startsWith("src/components/ui/") ||
+    file.startsWith("src/routes/-messages") ||
+    file.startsWith("src/routes/messages.")
       ? UNMISTAKABLE_UUI_TOKEN_RE
       : LEGACY_TOKEN_RE;
   return occurrences(source, pattern);
@@ -122,6 +126,13 @@ function directBaseUiImportCount(file: string, source: string): number {
       specifier === "@base-ui/react/dialog" &&
       source.includes("<SheetPrimitive.Portal") &&
       source.includes('cn("rhea-theme", props.className)')
+    ) {
+      return false;
+    }
+    if (
+      file === "src/components/ui/dropdown-menu.tsx" &&
+      specifier === "@base-ui/react/menu" &&
+      source.includes('<MenuPrimitive.Portal className="rhea-theme">')
     ) {
       return false;
     }
@@ -226,6 +237,12 @@ describe("pure legacy scanner fixtures", () => {
         "text-tertiary bg-brand-solid border-secondary_alt text-fg-quaternary",
       ),
     ).toBe(4);
+    expect(
+      legacyTokenCount(
+        "src/routes/-messages-runtime.tsx",
+        "bg-primary text-primary-foreground border-border text-muted-foreground",
+      ),
+    ).toBe(0);
   });
 
   it("rejects Base UI root-barrel imports outside owned UI components", () => {
@@ -299,6 +316,15 @@ describe("pure legacy scanner fixtures", () => {
       directBaseUiImportCount(
         "src/components/ui/sheet.tsx",
         `import { Dialog as SheetPrimitive } from '@base-ui/react/dialog'\n<SheetPrimitive.Portal className={cn("rhea-theme", props.className)} />`,
+      ),
+    ).toBe(0);
+  });
+
+  it("permits the owned Dropdown Menu only when its portal root carries the Rhea scope", () => {
+    expect(
+      directBaseUiImportCount(
+        "src/components/ui/dropdown-menu.tsx",
+        `import { Menu as MenuPrimitive } from "@base-ui/react/menu"\n<MenuPrimitive.Portal className="rhea-theme">`,
       ),
     ).toBe(0);
   });

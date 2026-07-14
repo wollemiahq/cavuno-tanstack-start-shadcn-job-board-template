@@ -31,6 +31,7 @@
     "@react-stately/utils": "3.12.1",
     "@react-types/overlays": "3.9.2",
     "@react-types/shared": "3.32.1",
+    "@shadcn/react": "^0.2.1",
     "@stripe/stripe-js": "9.8.0",
     "@tailwindcss/vite": "4.3.0",
     "@tanstack/react-devtools": "0.10.5",

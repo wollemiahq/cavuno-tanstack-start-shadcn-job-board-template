@@ -2995,14 +2995,14 @@ Props:
 
 ### MessagesNavLink — `src/components/messages-nav-link.tsx`
 
-Nav "Messages" link with a live unread badge, polled while the tab is
-visible (ADR-0053 REST transport). Errors are swallowed so a walled or
-signed-out state simply shows no badge.
+Props:
+
+- `unreadCount: number`
 
 ### Avatar — `src/components/messages/avatar.tsx`
 
 Round avatar with an initials fallback — used across the messaging
-surface. Thin wrapper over the Untitled UI Avatar so callsites keep
+surface. Thin wrapper over the owned shadcn Avatar so callsites keep
 the messaging-domain API (url + name).
 
 Props:
@@ -3015,7 +3015,10 @@ Props:
 
 Props:
 
-- `initial: { id: string; object: "blocked_user"; boardUserId: string; displayName: string; avatarUrl: string | null; createdAt: …`
+- `emptyText?: string | undefined`
+- `onUnblock: (boardUserId: string) => void`
+- `pendingUserId: string | null`
+- `users: { id: string; object: "blocked_user"; boardUserId: string; displayName: string; avatarUrl: string | null; createdAt: …`
 
 ### Composer — `src/components/messages/composer.tsx`
 
@@ -3024,38 +3027,96 @@ blocked or the cold-message rule is in effect — mirrors the hosted board.
 
 Props:
 
-- `conversationId: string`
 - `disabled: boolean`
 - `hint: string | null`
+- `onSend: (body: string) => Promise<void>`
 - `onSent: () => void`
+
+### HydrationSafeDate — `src/components/messages/hydration-safe-date.tsx`
+
+Props:
+
+- `children?: ((formatted: string) => ReactNode) | undefined`
+- `iso: string`
+- `now?: number | undefined`
+- `presentation: DatePresentation`
 
 ### InboxList — `src/components/messages/inbox-list.tsx`
 
 Props:
 
 - `archived: boolean`
-- `initial: ListEnvelope<{ id: string; object: "conversation"; lastMessageAt: string; lastMessageSnippet: string; lastMessageAuth…`
+- `conversations: { id: string; object: "conversation"; lastMessageAt: string; lastMessageSnippet: string; lastMessageAuthorBoardUserId…`
+- `emptyText?: string | undefined`
+- `hasMore: boolean`
+- `loadingMore: boolean`
+- `onLoadMore: () => void`
+- `onSelect?: ((conversationId: string) => void) | undefined`
+- `selectedConversationId?: string | undefined`
 
 ### MessageBubble — `src/components/messages/message-bubble.tsx`
-
-One message + its inline actions (edit/unsend for the author within 15 min;
-report for the recipient, which auto-blocks the author → parent navigates).
 
 Props:
 
 - `message: { id: string; object: "message"; conversationId: string; authorBoardUserId: string; recipientBoardUserId: string; bod…`
 - `onChanged: () => void`
+- `onEdit: (body: string) => Promise<unknown>`
+- `onReport: (reason: Reason) => Promise<unknown>`
 - `onReported: () => void`
+- `onUnsend: () => Promise<unknown>`
 - `own: boolean`
 - `showSeen: boolean`
+
+### MessagingDock — `src/components/messages/messaging-dock.tsx`
+
+Props:
+
+- `closeConversationLabel: string`
+- `conversation?: ReactNode`
+- `conversationHasOwnHeader?: boolean | undefined`
+- `conversationLabel: string`
+- `inbox: ReactNode`
+- `messagesLabel: string`
+- `minimizeMessagesLabel: string`
+- `onCloseConversation: () => void`
+- `onOpenChange: (open: boolean) => void`
+- `open: boolean`
+- `openMessagesLabel: string`
+- `unreadCount: number`
+
+### MessagingLayout — `src/components/messages/messaging-layout.tsx`
+
+Props:
+
+- `aria-label: string`
+- `className?: string | undefined`
+- `conversation: ReactNode`
+- `conversationLabel?: string | undefined`
+- `list: ReactNode`
+- `listLabel?: string | undefined`
+- `mobilePane: "list" | "conversation"`
 
 ### ThreadView — `src/components/messages/thread-view.tsx`
 
 Props:
 
-- `blockStatus: { object: "block_status"; blocked: boolean; }`
+- `blocked: boolean`
+- `companyHref?: string | undefined`
 - `conversation: { id: string; object: "conversation"; lastMessageAt: string; lastMessageSnippet: string; lastMessageAuthorBoardUserId…`
-- `messages: ListEnvelope<{ id: string; object: "message"; conversationId: string; authorBoardUserId: string; recipientBoardUserId…`
+- `messages: { id: string; object: "message"; conversationId: string; authorBoardUserId: string; recipientBoardUserId: string; bod…`
+- `onArchive: () => Promise<unknown>`
+- `onBack?: (() => void) | undefined`
+- `onBlock: () => Promise<unknown>`
+- `onClose?: (() => void) | undefined`
+- `onEditMessage: (messageId: string, body: string) => Promise<unknown>`
+- `onRefresh: () => void`
+- `onReported: () => void`
+- `onReportMessage: (messageId: string, reason: ReportReason) => Promise<unknown>`
+- `onSend: (body: string) => Promise<void>`
+- `onUnarchive: () => Promise<unknown>`
+- `onUnblock: () => Promise<unknown>`
+- `onUnsendMessage: (messageId: string) => Promise<unknown>`
+- `statusError?: string | null | undefined`
 
 ### NotificationSettings — `src/components/notification-settings.tsx`
 
@@ -3358,6 +3419,45 @@ Props:
 - `truncate?: boolean | undefined`
 - `variant?: HeadingVariant | BodyVariant | undefined`
 
+### Attachment — `src/components/ui/attachment.tsx`
+
+Props:
+
+- `orientation?: "horizontal" | "vertical" | null | undefined`
+- `size?: "xs" | "sm" | "default" | null | undefined`
+- `state?: "error" | "done" | "idle" | "uploading" | "processing" | undefined`
+
+Variants — `size`: default, sm, xs
+
+Variants — `orientation`: horizontal, vertical
+
+### AttachmentAction — `src/components/ui/attachment.tsx`
+
+Props:
+
+- `size?: "icon" | "xs" | "sm" | "lg" | "default" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `variant?: "link" | "secondary" | "default" | "outline" | "ghost" | "destructive" | null | undefined`
+
+### AttachmentActions — `src/components/ui/attachment.tsx`
+
+### AttachmentContent — `src/components/ui/attachment.tsx`
+
+### AttachmentDescription — `src/components/ui/attachment.tsx`
+
+### AttachmentGroup — `src/components/ui/attachment.tsx`
+
+### AttachmentMedia — `src/components/ui/attachment.tsx`
+
+Props:
+
+- `variant?: "icon" | "image" | null | undefined`
+
+Variants — `variant`: icon, image
+
+### AttachmentTitle — `src/components/ui/attachment.tsx`
+
+### AttachmentTrigger — `src/components/ui/attachment.tsx`
+
 ### Avatar — `src/components/ui/avatar.tsx`
 
 Props:
@@ -3378,16 +3478,40 @@ Props:
 
 Props:
 
-- `variant?: "link" | "secondary" | "default" | "outline" | "destructive" | "ghost" | null | undefined`
+- `variant?: "link" | "secondary" | "default" | "outline" | "ghost" | "destructive" | null | undefined`
 
 Variants — `variant`: default, secondary, destructive, outline, ghost, link
+
+### Bubble — `src/components/ui/bubble.tsx`
+
+Props:
+
+- `align?: "start" | "end" | undefined`
+- `variant?: "secondary" | "default" | "outline" | "muted" | "ghost" | "destructive" | "tinted" | null | undefined`
+
+Variants — `variant`: default, secondary, muted, tinted, outline, ghost, destructive
+
+### BubbleContent — `src/components/ui/bubble.tsx`
+
+### BubbleGroup — `src/components/ui/bubble.tsx`
+
+### BubbleReactions — `src/components/ui/bubble.tsx`
+
+Props:
+
+- `align?: "start" | "end" | undefined`
+- `side?: "bottom" | "top" | undefined`
+
+Variants — `side`: top, bottom
+
+Variants — `align`: start, end
 
 ### Button — `src/components/ui/button.tsx`
 
 Props:
 
 - `size?: "icon" | "xs" | "sm" | "lg" | "default" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
-- `variant?: "link" | "secondary" | "default" | "outline" | "destructive" | "ghost" | null | undefined`
+- `variant?: "link" | "secondary" | "default" | "outline" | "ghost" | "destructive" | null | undefined`
 
 Variants — `variant`: default, outline, secondary, ghost, destructive, link
 
@@ -3412,6 +3536,24 @@ Props:
 ### CardTitle — `src/components/ui/card.tsx`
 
 ### Checkbox — `src/components/ui/checkbox.tsx`
+
+### DropdownMenu — `src/components/ui/dropdown-menu.tsx`
+
+### DropdownMenuContent — `src/components/ui/dropdown-menu.tsx`
+
+### DropdownMenuGroup — `src/components/ui/dropdown-menu.tsx`
+
+### DropdownMenuItem — `src/components/ui/dropdown-menu.tsx`
+
+Props:
+
+- `variant?: "default" | "destructive" | null | undefined`
+
+Variants — `variant`: default, destructive
+
+### DropdownMenuLabel — `src/components/ui/dropdown-menu.tsx`
+
+### DropdownMenuTrigger — `src/components/ui/dropdown-menu.tsx`
 
 ### Empty — `src/components/ui/empty.tsx`
 
@@ -3446,6 +3588,52 @@ Props:
 ### Input — `src/components/ui/input.tsx`
 
 ### Label — `src/components/ui/label.tsx`
+
+### Marker — `src/components/ui/marker.tsx`
+
+Props:
+
+- `variant?: "separator" | "default" | "border" | null | undefined`
+
+Variants — `variant`: default, separator, border
+
+### MarkerContent — `src/components/ui/marker.tsx`
+
+### MarkerIcon — `src/components/ui/marker.tsx`
+
+### MessageScroller — `src/components/ui/message-scroller.tsx`
+
+### MessageScrollerButton — `src/components/ui/message-scroller.tsx`
+
+Props:
+
+- `label: string`
+- `size?: "icon" | "xs" | "sm" | "lg" | "default" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `variant?: "link" | "secondary" | "default" | "outline" | "ghost" | "destructive" | null | undefined`
+
+### MessageScrollerContent — `src/components/ui/message-scroller.tsx`
+
+### MessageScrollerItem — `src/components/ui/message-scroller.tsx`
+
+### MessageScrollerProvider — `src/components/ui/message-scroller.tsx`
+
+### MessageScrollerViewport — `src/components/ui/message-scroller.tsx`
+
+### Message — `src/components/ui/message.tsx`
+
+Props:
+
+- `align?: "start" | "end" | undefined`
+
+### MessageAvatar — `src/components/ui/message.tsx`
+
+### MessageContent — `src/components/ui/message.tsx`
+
+### MessageFooter — `src/components/ui/message.tsx`
+
+### MessageGroup — `src/components/ui/message.tsx`
+
+### MessageHeader — `src/components/ui/message.tsx`
 
 ### Pagination — `src/components/ui/pagination.tsx`
 
@@ -3720,6 +3908,12 @@ Primitives: Page, PageContent, JobsFilterControls, SearchResultsLayout, JobsResu
 The sticky right-hand rail of a search/browse listing — an operator ad seam over a related-searches card.
 
 Primitives: PageContent, ListingRail, TaxonomyTags
+
+### Messaging — `docs/patterns/messaging.md`
+
+A responsive inbox that supports focused full-page conversations and lightweight desktop replies without losing the current page.
+
+Primitives: MessagingLayout, MessagingDock, Message, Bubble, Marker, MessageScroller, Attachment, Avatar, Textarea, Button
 
 ### Pending / loading — `docs/patterns/pending-loading.md`
 

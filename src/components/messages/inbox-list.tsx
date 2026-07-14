@@ -1,114 +1,160 @@
-"use client";
+import { Link } from '@tanstack/react-router';
 
-import { useState } from "react";
+import { m } from '../../paraglide/messages';
+import { Avatar } from './avatar';
+import { HydrationSafeDate } from './hydration-safe-date';
 
-import { Link } from "@tanstack/react-router";
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import type { Conversation } from '@cavuno/board';
 
-import type { Conversation, ListEnvelope } from "@cavuno/board";
-
-import { getInbox } from "../../server/messaging";
-import { relativeTime } from "../../lib/message-format";
-import { useVisiblePoll } from "../../lib/use-visible-poll";
-import { Avatar } from "./avatar";
-import { Button } from "@/components/base/buttons/button";
-import { m } from "../../paraglide/messages";
-
-/** Newest-first, de-duplicated by id (later occurrence wins the fresher copy). */
-function dedupeSort(list: Conversation[]): Conversation[] {
-  const byId = new Map<string, Conversation>();
-  for (const c of list) byId.set(c.id, c);
-  return [...byId.values()].sort((a, b) => b.lastMessageAt.localeCompare(a.lastMessageAt));
-}
-
-function counterpartyLabel(c: Conversation): string {
-  const { displayName, companyName } = c.counterparty;
+function counterpartyLabel(conversation: Conversation) {
+  const { displayName, companyName } = conversation.counterparty;
   return companyName ? `${displayName} · ${companyName}` : displayName;
 }
 
-export function InboxList({
-  initial,
-  archived,
+function ConversationRow({
+  conversation,
+  selected,
+  view,
+  onSelect,
 }: {
-  initial: ListEnvelope<Conversation>;
-  archived: boolean;
+  conversation: Conversation;
+  selected: boolean;
+  view: 'inbox' | 'archived';
+  onSelect?: (conversationId: string) => void;
 }) {
-  const [rows, setRows] = useState<Conversation[]>(initial.data);
-  const [nextCursor, setNextCursor] = useState<string | null>(initial.nextCursor);
-  const [hasMore, setHasMore] = useState(initial.hasMore);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const content = (
+    <>
+      <Avatar
+        url={conversation.counterparty.avatarUrl}
+        name={conversation.counterparty.displayName}
+        className="size-10"
+      />
+      <div className="min-w-0 flex-1 text-left">
+        <div className="flex items-center justify-between gap-2">
+          <p
+            className={cn(
+              'truncate',
+              conversation.hasUnread && 'font-semibold',
+            )}
+          >
+            {counterpartyLabel(conversation)}
+          </p>
+          <time
+            dateTime={conversation.lastMessageAt}
+            className="text-muted-foreground shrink-0 text-xs"
+          >
+            <HydrationSafeDate
+              iso={conversation.lastMessageAt}
+              presentation="relative"
+            />
+          </time>
+        </div>
+        <div className="flex items-center gap-2">
+          <p className="text-muted-foreground truncate text-sm">
+            {conversation.lastMessageSnippet ||
+              m.messageBubble_messageDeletedText()}
+          </p>
+          {conversation.hasUnread ? (
+            <span
+              className="bg-primary ml-auto size-2 shrink-0 rounded-full"
+              aria-label={m.inboxList_unreadAriaLabel()}
+              data-test="unread-dot"
+            />
+          ) : null}
+        </div>
+      </div>
+    </>
+  );
+  const className = cn(
+    'hover:bg-muted focus-visible:ring-ring/30 flex w-full items-center gap-3 px-3 py-3 text-left transition-colors outline-none focus-visible:ring-3',
+    selected && 'bg-muted',
+  );
 
-  // Poll page 1 and merge over the accumulated rows so load-more pages survive
-  // a refresh and a bumped conversation floats to the top.
-  useVisiblePoll(() => {
-    void getInbox({ data: { archived } }).then(({ conversations }) => {
-      setRows((prev) => dedupeSort([...prev, ...conversations.data]));
-    });
-  });
+  return onSelect ? (
+    <button
+      type="button"
+      aria-current={selected ? 'true' : undefined}
+      className={className}
+      data-conversation-id={conversation.id}
+      onClick={() => onSelect(conversation.id)}
+    >
+      {content}
+    </button>
+  ) : (
+    <Link
+      to="/messages/$conversationId"
+      params={{ conversationId: conversation.id }}
+      search={view === 'archived' ? { view: 'archived' } : {}}
+      aria-current={selected ? 'page' : undefined}
+      className={className}
+      data-conversation-id={conversation.id}
+    >
+      {content}
+    </Link>
+  );
+}
 
-  const loadMore = async () => {
-    if (!nextCursor) return;
-    setLoadingMore(true);
-    try {
-      const { conversations } = await getInbox({
-        data: { archived, cursor: nextCursor },
-      });
-      setRows((prev) => dedupeSort([...prev, ...conversations.data]));
-      setNextCursor(conversations.nextCursor);
-      setHasMore(conversations.hasMore);
-    } finally {
-      setLoadingMore(false);
-    }
-  };
-
-  if (rows.length === 0) {
+export function InboxList({
+  conversations,
+  archived,
+  selectedConversationId,
+  hasMore,
+  loadingMore,
+  onLoadMore,
+  onSelect,
+  emptyText,
+}: {
+  conversations: Conversation[];
+  archived: boolean;
+  selectedConversationId?: string;
+  hasMore: boolean;
+  loadingMore: boolean;
+  onLoadMore: () => void;
+  onSelect?: (conversationId: string) => void;
+  emptyText?: string;
+}) {
+  if (conversations.length === 0) {
     return (
-      <p className="text-tertiary py-10 text-center text-sm" data-test="inbox-empty">
-        {archived ? m.inboxList_noArchivedText() : m.inboxList_noConversationsText()}
+      <p
+        className="text-muted-foreground flex flex-1 items-center justify-center p-8 text-center text-sm"
+        data-test="inbox-empty"
+      >
+        {emptyText ??
+          (archived
+            ? m.inboxList_noArchivedText()
+            : m.inboxList_noConversationsText())}
       </p>
     );
   }
 
   return (
-    <div className="space-y-1" data-test="inbox-list">
-      <ul className="divide-secondary divide-y">
-        {rows.map((c) => (
-          <li key={c.id}>
-            <Link
-              to="/messages/$conversationId"
-              params={{ conversationId: c.id }}
-              className="flex items-center gap-3 rounded-lg px-2 py-3 outline-focus-ring hover:bg-secondary_hover focus-visible:outline-2 focus-visible:outline-offset-2"
-              data-conversation-id={c.id}
-            >
-              <Avatar url={c.counterparty.avatarUrl} name={c.counterparty.displayName} />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="truncate font-medium">{counterpartyLabel(c)}</p>
-                  <span className="text-tertiary shrink-0 text-xs">
-                    {relativeTime(c.lastMessageAt)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <p className="text-tertiary truncate text-sm">
-                    {c.lastMessageSnippet || m.messageBubble_messageDeletedText()}
-                  </p>
-                  {c.hasUnread ? (
-                    <span
-                      className="ml-auto size-2 shrink-0 rounded-full bg-red-500"
-                      aria-label={m.inboxList_unreadAriaLabel()}
-                      data-test="unread-dot"
-                    />
-                  ) : null}
-                </div>
-              </div>
-            </Link>
+    <div className="min-h-0 flex-1 overflow-y-auto" data-test="inbox-list">
+      <ul className="divide-border divide-y">
+        {conversations.map((conversation) => (
+          <li key={conversation.id}>
+            <ConversationRow
+              conversation={conversation}
+              selected={conversation.id === selectedConversationId}
+              view={archived ? 'archived' : 'inbox'}
+              onSelect={onSelect}
+            />
           </li>
         ))}
       </ul>
 
       {hasMore ? (
-        <div className="pt-2 text-center">
-          <Button color="secondary" size="sm" onClick={loadMore} isDisabled={loadingMore}>
-            {loadingMore ? m.inboxList_loadingLabel() : m.inboxList_loadMoreLabel()}
+        <div className="p-3 text-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onLoadMore}
+            disabled={loadingMore}
+          >
+            {loadingMore
+              ? m.inboxList_loadingLabel()
+              : m.inboxList_loadMoreLabel()}
           </Button>
         </div>
       ) : null}

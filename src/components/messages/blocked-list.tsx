@@ -1,53 +1,54 @@
-"use client";
+import { m } from '../../paraglide/messages';
+import { Avatar } from './avatar';
 
-import { useState } from "react";
+import { Button } from '@/components/ui/button';
+import type { BlockedUser } from '@cavuno/board';
 
-import type { BlockedUser } from "@cavuno/board";
-
-import { unblockUser } from "../../server/messaging";
-import { Avatar } from "./avatar";
-import { Button } from "@/components/base/buttons/button";
-import { m } from "../../paraglide/messages";
-
-export function BlockedList({ initial }: { initial: BlockedUser[] }) {
-  const [rows, setRows] = useState<BlockedUser[]>(initial);
-  const [pending, setPending] = useState<string | null>(null);
-
-  const unblock = async (boardUserId: string) => {
-    setPending(boardUserId);
-    try {
-      await unblockUser({ data: { boardUserId } });
-      setRows((prev) => prev.filter((r) => r.boardUserId !== boardUserId));
-    } finally {
-      setPending(null);
-    }
-  };
-
-  if (rows.length === 0) {
+export function BlockedList({
+  users,
+  pendingUserId,
+  onUnblock,
+  emptyText,
+}: {
+  users: BlockedUser[];
+  pendingUserId: string | null;
+  onUnblock: (boardUserId: string) => void;
+  emptyText?: string;
+}) {
+  if (users.length === 0) {
     return (
-      <p className="text-tertiary py-10 text-center text-sm" data-test="blocked-empty">
-        {m.blockedList_emptyText()}
+      <p
+        className="text-muted-foreground flex flex-1 items-center justify-center p-8 text-center text-sm"
+        data-test="blocked-empty"
+      >
+        {emptyText ?? m.blockedList_emptyText()}
       </p>
     );
   }
 
   return (
-    <ul className="divide-secondary divide-y" data-test="blocked-list">
-      {rows.map((u) => (
+    <ul className="divide-border divide-y" data-test="blocked-list">
+      {users.map((user) => (
         <li
-          key={u.id}
-          className="flex items-center gap-3 px-2 py-3"
-          data-blocked-user-id={u.boardUserId}
+          key={user.id}
+          className="flex items-center gap-3 px-3 py-3"
+          data-blocked-user-id={user.boardUserId}
         >
-          <Avatar url={u.avatarUrl} name={u.displayName} />
-          <p className="min-w-0 flex-1 truncate font-medium">{u.displayName}</p>
+          <Avatar
+            url={user.avatarUrl}
+            name={user.displayName}
+            className="size-10"
+          />
+          <p className="min-w-0 flex-1 truncate font-medium">
+            {user.displayName}
+          </p>
           <Button
-            color="secondary"
+            variant="outline"
             size="sm"
-            onClick={() => unblock(u.boardUserId)}
-            isDisabled={pending === u.boardUserId}
+            onClick={() => onUnblock(user.boardUserId)}
+            disabled={pendingUserId === user.boardUserId}
           >
-            {pending === u.boardUserId
+            {pendingUserId === user.boardUserId
               ? m.blockedList_unblockingLabel()
               : m.blockedList_unblockLabel()}
           </Button>
