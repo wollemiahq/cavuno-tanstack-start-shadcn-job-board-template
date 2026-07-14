@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from 'react';
 
-import type { PublicCompanyDetail } from "@cavuno/board";
+import { getCompany } from '../server/queries';
 
-import { getCompany } from "../server/queries";
+import type { PublicCompanyDetail } from '@cavuno/board';
 
 export type SelectedCompanyState = {
-  status: "idle" | "loading" | "ready" | "error";
+  status: 'idle' | 'loading' | 'ready' | 'error';
   company?: PublicCompanyDetail;
   error?: Error;
   retry: () => void;
@@ -13,28 +13,30 @@ export type SelectedCompanyState = {
 
 export function useSelectedCompany(companySlug?: string): SelectedCompanyState {
   const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState<Omit<SelectedCompanyState, "retry">>({ status: "idle" });
+  const [state, setState] = useState<Omit<SelectedCompanyState, 'retry'>>({
+    status: 'idle',
+  });
 
   useEffect(() => {
     if (!companySlug) {
-      setState({ status: "idle" });
+      setState({ status: 'idle' });
       return;
     }
 
     let cancelled = false;
     setState((previous) => ({
-      status: "loading",
+      status: 'loading',
       company: previous.company,
     }));
 
     void getCompany({ data: { companySlug } })
       .then((company) => {
-        if (!cancelled) setState({ status: "ready", company });
+        if (!cancelled) setState({ status: 'ready', company });
       })
       .catch((cause: unknown) => {
         if (cancelled) return;
         setState((previous) => ({
-          status: "error",
+          status: 'error',
           company: previous.company,
           error: cause instanceof Error ? cause : new Error(String(cause)),
         }));

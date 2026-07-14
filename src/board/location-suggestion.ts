@@ -1,4 +1,4 @@
-import type { PublicPlace } from "@cavuno/board";
+import type { PublicPlace } from '@cavuno/board';
 
 export interface LocationSuggestionVM {
   id: string;
@@ -12,7 +12,7 @@ function contextLabel(countryCode: string | null, locale: string) {
 
   try {
     return (
-      new Intl.DisplayNames([locale], { type: "region" }).of(countryCode) ??
+      new Intl.DisplayNames([locale], { type: 'region' }).of(countryCode) ??
       countryCode
     );
   } catch {

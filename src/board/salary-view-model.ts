@@ -1,3 +1,4 @@
+import { boardCopy } from '#/copy';
 /**
  * Salary VIEW-MODEL — the Layer-1b seam for the salary block (ADR-0070
  * Phase 2). These mappers are the ONLY place SDK formatters (`formatRange`,
@@ -12,7 +13,6 @@
  */
 import { fieldLabel, type BoardLabelOverrides } from '@cavuno/board/format';
 import { formatRange, formatUsd } from '@cavuno/board/seo';
-import { boardCopy } from '#/copy';
 
 export interface OverallSalary {
   avgMin: number;
@@ -122,7 +122,9 @@ export function toSeniorityTableVM(
     },
     rows: rows.map((r) => ({
       key: r.seniority,
-      level: fieldLabel(language, r.seniority, labels) ?? r.seniority.replace(/[-_]/g, ' '),
+      level:
+        fieldLabel(language, r.seniority, labels) ??
+        r.seniority.replace(/[-_]/g, ' '),
       avg: formatRange(language, r.avgSalaryMin, r.avgSalaryMax),
       baseline:
         r.boardAvgMin !== null && r.boardAvgMax !== null

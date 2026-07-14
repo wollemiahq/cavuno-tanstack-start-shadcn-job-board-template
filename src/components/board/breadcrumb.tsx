@@ -1,5 +1,15 @@
-import { ChevronRight } from "@untitledui/icons";
-import { Link as AriaLink } from "react-aria-components";
+import { Fragment } from 'react';
+
+import { Link as AriaLink } from 'react-aria-components';
+
+import {
+  Breadcrumb as BreadcrumbRoot,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 
 /**
  * The resolved trail: the ancestor crumbs (last one current/unlinked) plus the
@@ -17,7 +27,7 @@ export interface BreadcrumbData {
  * PageBreadcrumb — the ONE placement primitive for the trail (CAV-511). It
  * owns the codified position: the trail hugs the top (`pt-4 md:pt-5`, compact,
  * relative to the nav), left-aligned at the shared container edge
- * (`max-w-container` + the canonical horizontal padding). Every sanctioned
+ * (`max-w-7xl` + the canonical horizontal padding). Every sanctioned
  * seam renders THIS — `PageBody`'s `breadcrumb` slot (non-band pages),
  * `ListingPageHeader`'s `breadcrumb` slot (listing heroes), and the
  * `JobDetail` header band — so the placement literally cannot diverge per
@@ -28,14 +38,14 @@ export interface BreadcrumbData {
  */
 export function PageBreadcrumb({ items, ariaLabel }: BreadcrumbData) {
   return (
-    <div className="mx-auto w-full max-w-container px-4 pt-4 md:px-8 md:pt-5">
+    <div className="mx-auto w-full max-w-7xl px-4 pt-4 md:px-8 md:pt-5">
       <Breadcrumb items={items} ariaLabel={ariaLabel} />
     </div>
   );
 }
 
 /**
- * Breadcrumb — recomposed on the Untitled UI primitives (CAV-488), mirroring
+ * Breadcrumb — composed from the owned shadcn primitives, mirroring
  * the `JobDetail` breadcrumb (CAV-486): a `ChevronRight` separator, the trail
  * links riding the router seam as `AriaLink` (client-side, locale-aware nav),
  * and the current page as `aria-current` text. PURE MARKUP over the same
@@ -45,32 +55,32 @@ export function PageBreadcrumb({ items, ariaLabel }: BreadcrumbData) {
  */
 export function Breadcrumb({
   items,
-  ariaLabel = "Breadcrumb",
+  ariaLabel = 'Breadcrumb',
 }: {
   items: { name: string; href?: string }[];
   ariaLabel?: string;
 }) {
   return (
-    <nav aria-label={ariaLabel}>
-      <ol className="flex flex-wrap items-center gap-1.5 text-sm">
+    <BreadcrumbRoot aria-label={ariaLabel}>
+      <BreadcrumbList>
         {items.map((crumb, index) => (
-          <li key={`${crumb.name}-${index}`} className="flex items-center gap-1.5">
-            {index > 0 ? <ChevronRight aria-hidden className="size-4 shrink-0 text-fg-quaternary" /> : null}
-            {crumb.href ? (
-              <AriaLink
-                href={crumb.href}
-                className="rounded-xs text-tertiary outline-focus-ring transition-colors hover:text-secondary hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
-              >
-                {crumb.name}
-              </AriaLink>
-            ) : (
-              <span className="font-medium text-secondary" aria-current="page">
-                {crumb.name}
-              </span>
-            )}
-          </li>
+          <Fragment key={`${crumb.name}-${index}`}>
+            {index > 0 ? <BreadcrumbSeparator /> : null}
+            <BreadcrumbItem>
+              {crumb.href ? (
+                <BreadcrumbLink
+                  render={<AriaLink href={crumb.href} />}
+                  className="outline-ring rounded-xs hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+                >
+                  {crumb.name}
+                </BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage>{crumb.name}</BreadcrumbPage>
+              )}
+            </BreadcrumbItem>
+          </Fragment>
         ))}
-      </ol>
-    </nav>
+      </BreadcrumbList>
+    </BreadcrumbRoot>
   );
 }

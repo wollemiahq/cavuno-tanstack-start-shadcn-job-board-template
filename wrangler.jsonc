@@ -3,66 +3,64 @@
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "cavuno-shadcn-ui-job-board-template",
-	"compatibility_date": "2025-09-02",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
-	"main": "./src/server.ts",
-	// COMMITTED DEFAULT: the ADR-0058 platform sandbox (published,
-	// well-known pk). A fresh clone renders a live board with zero
-	// config, and every write a stranger triggers (apply, alerts) lands
-	// on the deterministic fixture tenant — never on a real board.
-	// Point at your own board by swapping CAVUNO_BOARD (one change).
-	"vars": {
-		"CAVUNO_API_URL": "https://api.cavuno.com",
-		"CAVUNO_BOARD": "pk_c2f66367a3abaa6bafd00fd3c2de3297"
-	},
-	// The hosted demo deploy (CAV-490): the production Robotics Engineer
-	// Jobs board — real content at full strength. Deploy with
-	// `wrangler deploy --env demo`. Tinybird tracker token (publishable,
-	// cutover runbook P2) rides only the demo env; unset ⇒ analytics off.
-	"env": {
-		"demo": {
-			"name": "cavuno-shadcn-ui-job-board-template-demo",
-			"vars": {
-				"CAVUNO_API_URL": "https://api.cavuno.com",
-				"CAVUNO_BOARD": "pk_d9ce40a106227b615ec710de3f3d73dc",
-				"CAVUNO_TRACKER_TOKEN": "p.eyJ1IjogImFlYTA1MjUxLWMzNDItNGM3ZC04OTU5LTc4YjVlMzIzZDAwOCIsICJpZCI6ICI0ZjlhYjIyNi1jMmE4LTRkOWEtODBmOC05NGE0OTFhZTBjMWIiLCAiaG9zdCI6ICJ1cy1lYXN0LWF3cyJ9.N2TgJClX6oaHP9utUxTqnbqc3aHQT32LCpeDbK_5Xdg"
-			}
-		}
-	},
-	"observability": {
-		"enabled": true
-	},
-	"upload_source_maps": true
-	/**
-	 * Smart Placement
-	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
-	 */
-	// "placement": {  "mode": "smart" }
-	/**
-	 * Bindings
-	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
-	 * databases, object storage, AI inference, real-time communication and more.
-	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
-	 */
-	/**
-	 * Environment Variables
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
-	 * Note: Use secrets to store sensitive data.
-	 * https://developers.cloudflare.com/workers/configuration/secrets/
-	 */
-	// "vars": {  "MY_VARIABLE": "production_value" }
-	/**
-	 * Static Assets
-	 * https://developers.cloudflare.com/workers/static-assets/binding/
-	 */
-	// "assets": {  "directory": "./public/",  "binding": "ASSETS" }
-	/**
-	 * Service Bindings (communicate between multiple Workers)
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
-	 */
-	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cavuno-shadcn-ui-job-board-template",
+  "compatibility_date": "2025-09-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./src/server.ts",
+  // COMMITTED DEFAULT: the ADR-0058 platform sandbox (published,
+  // well-known pk). A fresh clone renders a live board with zero
+  // config, and every write a stranger triggers (apply, alerts) lands
+  // on the deterministic fixture tenant — never on a real board.
+  // Point at your own board by swapping CAVUNO_BOARD (one change).
+  "vars": {
+    "CAVUNO_API_URL": "https://api.cavuno.com",
+    "CAVUNO_BOARD": "pk_c2f66367a3abaa6bafd00fd3c2de3297",
+  },
+  // The hosted demo deploy (CAV-490): the production Robotics Engineer
+  // Jobs board — real content at full strength. Deploy with
+  // `wrangler deploy --env demo`. Tinybird tracker token (publishable,
+  // cutover runbook P2) rides only the demo env; unset ⇒ analytics off.
+  "env": {
+    "demo": {
+      "name": "cavuno-shadcn-ui-job-board-template-demo",
+      "vars": {
+        "CAVUNO_API_URL": "https://api.cavuno.com",
+        "CAVUNO_BOARD": "pk_d9ce40a106227b615ec710de3f3d73dc",
+        "CAVUNO_TRACKER_TOKEN": "p.eyJ1IjogImFlYTA1MjUxLWMzNDItNGM3ZC04OTU5LTc4YjVlMzIzZDAwOCIsICJpZCI6ICI0ZjlhYjIyNi1jMmE4LTRkOWEtODBmOC05NGE0OTFhZTBjMWIiLCAiaG9zdCI6ICJ1cy1lYXN0LWF3cyJ9.N2TgJClX6oaHP9utUxTqnbqc3aHQT32LCpeDbK_5Xdg",
+      },
+    },
+  },
+  "observability": {
+    "enabled": true,
+  },
+  "upload_source_maps": true,
+  /**
+   * Smart Placement
+   * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+   */
+  // "placement": {  "mode": "smart" }
+  /**
+   * Bindings
+   * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
+   * databases, object storage, AI inference, real-time communication and more.
+   * https://developers.cloudflare.com/workers/runtime-apis/bindings/
+   */
+  /**
+   * Environment Variables
+   * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
+   * Note: Use secrets to store sensitive data.
+   * https://developers.cloudflare.com/workers/configuration/secrets/
+   */
+  // "vars": {  "MY_VARIABLE": "production_value" }
+  /**
+   * Static Assets
+   * https://developers.cloudflare.com/workers/static-assets/binding/
+   */
+  // "assets": {  "directory": "./public/",  "binding": "ASSETS" }
+  /**
+   * Service Bindings (communicate between multiple Workers)
+   * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
+   */
+  // "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
 }

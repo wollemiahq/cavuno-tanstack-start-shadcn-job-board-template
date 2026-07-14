@@ -9,14 +9,16 @@ export interface TalentSearch {
   selectedTalent?: string;
 }
 
-export type TalentListingSearch = Omit<TalentSearch, "selectedTalent">;
+export type TalentListingSearch = Omit<TalentSearch, 'selectedTalent'>;
 
 function stringSearchValue(value: unknown) {
-  if (typeof value !== "string") return undefined;
+  if (typeof value !== 'string') return undefined;
   return value.trim() || undefined;
 }
 
-export function parseTalentSearch(search: Record<string, unknown>): TalentSearch {
+export function parseTalentSearch(
+  search: Record<string, unknown>,
+): TalentSearch {
   return {
     q: stringSearchValue(search.q),
     skill: stringSearchValue(search.skill),
@@ -26,7 +28,9 @@ export function parseTalentSearch(search: Record<string, unknown>): TalentSearch
 }
 
 /** A detail-pane selection changes history, but never the directory request. */
-export function talentListingLoaderDeps(search: TalentSearch): TalentListingSearch {
+export function talentListingLoaderDeps(
+  search: TalentSearch,
+): TalentListingSearch {
   return {
     q: search.q,
     skill: search.skill,
@@ -36,7 +40,7 @@ export function talentListingLoaderDeps(search: TalentSearch): TalentListingSear
 
 export function talentSearchSubmission(
   _current: TalentSearch,
-  next: Pick<TalentSearch, "q" | "skill">,
+  next: Pick<TalentSearch, 'q' | 'skill'>,
 ): TalentSearch {
   return {
     q: stringSearchValue(next.q),

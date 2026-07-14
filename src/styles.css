@@ -1,73 +1,9 @@
-/* Expand-side Rhea foundation. The legacy Untitled UI layer remains intact
-   while routes migrate. Rhea's colliding primary/secondary semantics are
-   scoped to `.rhea-theme`, so adding the new foundation cannot restyle an
-   inherited page before its explicit contract migration. */
-
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap");
-@import "./theme.css";
-@import "./typeset.css";
-
-@import "./styles/untitled-ui/theme.css";
-@import "./styles/untitled-ui/typography.css";
-/* Temporary expand-side collision bridge. Official Rhea owns theme.css;
-   inherited UUI property namespaces keep legacy routes stable until CAV-511. */
-.rhea-theme {
-  --background-color-primary: var(--primary);
-  --background-color-secondary: var(--secondary);
-  --background-color-primary_hover: color-mix(
-    in oklch,
-    var(--primary),
-    transparent 20%
-  );
-  --text-color-primary: var(--primary);
-  --text-color-secondary: var(--secondary);
-  --border-color-primary: var(--primary);
-  --border-color-secondary: var(--secondary);
-  --ring-color-primary: var(--primary);
-  --ring-color-secondary: var(--secondary);
-  font-family: var(--font-sans);
-}
-
-/* The official Rhea base layer assigns every element its border and outline
-   colors. Before Rhea, Tailwind's preflight left those colors at currentColor;
-   restore that inherited behavior outside the explicitly migrated scope. */
-@layer base {
-  *:not(.rhea-theme, .rhea-theme *) {
-    border-color: currentColor;
-    outline-color: currentColor;
-  }
-}
-
-/* One dark variant for everything, matching .dark itself AND
-   descendants, at :is() specificity. The BoardTheme mode script toggles
-   the class. */
-@custom-variant dark (&:is(.dark, .dark *));
-@custom-variant label (& [data-label]);
-@custom-variant focus-input-within (&:has(input:focus));
-@plugin "@tailwindcss/typography";
-@plugin "tailwindcss-react-aria-components";
-@plugin "tailwindcss-animate";
-
-/* ── Untitled UI globals — verbatim from styles/globals.css ── */
-
-@utility scrollbar-hide {
-  &::-webkit-scrollbar {
-    display: none;
-    -webkit-appearance: none;
-  }
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-@utility transition-inherit-all {
-  transition-property: inherit;
-  transition-duration: inherit;
-  transition-timing-function: inherit;
-}
+@import './theme.css';
+@import './typeset.css';
 
 html,
 body {
-  font-family: var(--font-body);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-variant-ligatures: contextual;
@@ -87,12 +23,12 @@ input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-input[type="number"] {
+input[type='number'] {
   -moz-appearance: textfield;
 }
 
 /* Hide the default clear button (X) from search inputs. */
-input[type="search"]::-webkit-search-cancel-button {
+input[type='search']::-webkit-search-cancel-button {
   -webkit-appearance: none;
 }
 
@@ -112,6 +48,6 @@ body,
 }
 
 body {
-  background: var(--background-color-primary);
-  color: var(--text-color-primary);
+  background: var(--background);
+  color: var(--foreground);
 }

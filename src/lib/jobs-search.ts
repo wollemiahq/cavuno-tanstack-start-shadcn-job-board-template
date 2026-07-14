@@ -1,6 +1,9 @@
-import { parseListingFilters, type ListingFilters } from "@cavuno/board/filters";
+import {
+  parseListingFilters,
+  type ListingFilters,
+} from '@cavuno/board/filters';
 
-import { pageSearchValue, parsePageParam } from "@/lib/pagination";
+import { pageSearchValue, parsePageParam } from '@/lib/pagination';
 
 export interface JobsSearch extends ListingFilters {
   /** 1-based page; page 1 drops from the URL. */
@@ -11,7 +14,7 @@ export interface JobsSearch extends ListingFilters {
 
 export function parseJobsSearch(search: Record<string, unknown>): JobsSearch {
   const selectedJob =
-    typeof search.selectedJob === "string" && search.selectedJob.trim()
+    typeof search.selectedJob === 'string' && search.selectedJob.trim()
       ? search.selectedJob.trim()
       : undefined;
 

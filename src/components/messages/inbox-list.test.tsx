@@ -45,12 +45,34 @@ describe('InboxList', () => {
     );
 
     const row = screen.getByRole('button', { name: /Hue Le · Cavuno/ });
+    expect(row).toHaveAttribute('data-slot', 'item');
+    expect(row.querySelector('[data-slot="item-media"]')).not.toBeNull();
+    expect(row.querySelector('[data-slot="item-content"]')).not.toBeNull();
     expect(row).toHaveAttribute('aria-current', 'true');
     expect(row).toHaveClass('bg-muted');
     expect(screen.getByLabelText('Unread')).toBeInTheDocument();
 
     fireEvent.click(row);
     expect(onSelect).toHaveBeenCalledWith(conversation.id);
+  });
+
+  it('uses the shared empty-state composition when the inbox has no conversations', () => {
+    render(
+      <InboxList
+        conversations={[]}
+        archived={false}
+        hasMore={false}
+        loadingMore={false}
+        onLoadMore={vi.fn()}
+        emptyText="No matching conversations"
+      />,
+    );
+
+    const empty = screen
+      .getByText('No matching conversations')
+      .closest('[data-slot="empty"]');
+    expect(empty).not.toBeNull();
+    expect(empty).toHaveAttribute('data-test', 'inbox-empty');
   });
 
   it('hydrates inbox dates when the server and browser use different timezones', async () => {

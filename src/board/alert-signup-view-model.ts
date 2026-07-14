@@ -20,6 +20,7 @@
  * re-export — it's intentional.
  */
 import { boardCopy } from '#/copy';
+
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 export interface AlertSignupVM {

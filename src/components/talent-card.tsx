@@ -1,10 +1,12 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from '@tanstack/react-router';
 
-import type { TalentDirectoryEntry } from "@cavuno/board";
+import { initialsOf } from '../lib/initials';
+import { m } from '../paraglide/messages';
 
-import { Avatar } from "@/components/base/avatar/avatar";
-import { initialsOf } from "../lib/initials";
-import { m } from "../paraglide/messages";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import type { TalentDirectoryEntry } from '@cavuno/board';
 
 /**
  * One candidate as a talent-directory card. PURE MARKUP shared by the
@@ -14,49 +16,51 @@ import { m } from "../paraglide/messages";
  * initials; location, headline, and skills are honestly omitted when absent.
  */
 export function TalentCard({ candidate }: { candidate: TalentDirectoryEntry }) {
+  const displayName =
+    candidate.displayName ?? m.talentDirectory_candidateFallbackLabel();
+
   return (
-    <div className="border-secondary bg-primary space-y-3 rounded-xl border p-5 shadow-xs">
-      <div className="flex items-center gap-3">
-        <Avatar
-          size="md"
-          src={candidate.avatarUrl}
-          initials={initialsOf(candidate.displayName ?? "")}
-          alt={candidate.displayName ?? ""}
-        />
-        <div className="min-w-0">
-          {candidate.handle ? (
-            <Link
-              to="/p/$handle"
-              params={{ handle: candidate.handle }}
-              className="font-semibold hover:no-underline"
-            >
-              {candidate.displayName ?? m.talentDirectory_candidateFallbackLabel()}
-            </Link>
-          ) : (
-            <span className="font-semibold">
-              {candidate.displayName ?? m.talentDirectory_candidateFallbackLabel()}
-            </span>
-          )}
-          {candidate.location ? (
-            <p className="font-mono text-quaternary text-[13px]">{candidate.location}</p>
-          ) : null}
+    <Card role="article" className="h-full">
+      <CardContent className="space-y-3">
+        <div className="flex items-center gap-3">
+          <Avatar size="lg">
+            {candidate.avatarUrl ? (
+              <AvatarImage src={candidate.avatarUrl} alt={displayName} />
+            ) : null}
+            <AvatarFallback>{initialsOf(displayName)}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            {candidate.handle ? (
+              <Link
+                to="/p/$handle"
+                params={{ handle: candidate.handle }}
+                className="text-foreground font-semibold hover:no-underline"
+              >
+                {displayName}
+              </Link>
+            ) : (
+              <span className="font-semibold">{displayName}</span>
+            )}
+            {candidate.location ? (
+              <p className="text-muted-foreground text-sm">
+                {candidate.location}
+              </p>
+            ) : null}
+          </div>
         </div>
-      </div>
-      {candidate.headline ? (
-        <p className="text-tertiary text-sm">{candidate.headline}</p>
-      ) : null}
-      {candidate.skills.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5">
-          {candidate.skills.slice(0, 6).map((skill) => (
-            <span
-              key={skill}
-              className="font-mono border-secondary text-tertiary bg-primary rounded-md border px-2 py-0.5 text-[11.5px]"
-            >
-              {skill}
-            </span>
-          ))}
-        </div>
-      ) : null}
-    </div>
+        {candidate.headline ? (
+          <p className="text-muted-foreground text-sm">{candidate.headline}</p>
+        ) : null}
+        {candidate.skills.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {candidate.skills.slice(0, 6).map((skill) => (
+              <Badge key={skill} variant="outline">
+                {skill}
+              </Badge>
+            ))}
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }

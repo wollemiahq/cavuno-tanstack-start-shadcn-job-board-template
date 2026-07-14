@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from 'react';
 
-import type { PublicJob } from "@cavuno/board";
+import { myApplicationForJob } from '../server/applications';
+import { getJob } from '../server/queries';
 
-import { getJob } from "../server/queries";
-import { myApplicationForJob } from "../server/applications";
+import type { PublicJob } from '@cavuno/board';
 
 export type SelectedJobState = {
-  status: "idle" | "loading" | "ready" | "error";
+  status: 'idle' | 'loading' | 'ready' | 'error';
   job?: PublicJob;
   alreadyApplied: boolean;
   error?: Error;
@@ -18,20 +18,20 @@ export function useSelectedJob(
   includeApplicationState = false,
 ): SelectedJobState {
   const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState<Omit<SelectedJobState, "retry">>({
-    status: "idle",
+  const [state, setState] = useState<Omit<SelectedJobState, 'retry'>>({
+    status: 'idle',
     alreadyApplied: false,
   });
 
   useEffect(() => {
     if (!jobSlug) {
-      setState({ status: "idle", alreadyApplied: false });
+      setState({ status: 'idle', alreadyApplied: false });
       return;
     }
 
     let cancelled = false;
     setState((previous) => ({
-      status: "loading",
+      status: 'loading',
       job: previous.job,
       alreadyApplied: previous.alreadyApplied,
     }));
@@ -45,7 +45,7 @@ export function useSelectedJob(
       .then(([job, application]) => {
         if (!cancelled) {
           setState({
-            status: "ready",
+            status: 'ready',
             job,
             alreadyApplied: application !== null,
           });
@@ -54,7 +54,7 @@ export function useSelectedJob(
       .catch((cause: unknown) => {
         if (cancelled) return;
         setState((previous) => ({
-          status: "error",
+          status: 'error',
           job: previous.job,
           alreadyApplied: previous.alreadyApplied,
           error: cause instanceof Error ? cause : new Error(String(cause)),

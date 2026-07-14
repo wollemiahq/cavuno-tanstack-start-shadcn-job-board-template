@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useState } from 'react';
 
-import { AuthCard, Field, FormError } from "../components/auth-form";
-import { Button } from "@/components/base/buttons/button";
-import { safeRedirectPath } from "@cavuno/board/server";
-import { m } from "../paraglide/messages";
-import { verifyBoardPassword } from "../server/board-access";
+import { safeRedirectPath } from '@cavuno/board/server';
+import { createFileRoute, useRouter } from '@tanstack/react-router';
+
+import { AuthCard, Field, FormError } from '../components/auth-form';
+import { m } from '../paraglide/messages';
+import { verifyBoardPassword } from '../server/board-access';
+
+import { Button } from '@/components/ui/button';
 
 /**
  * The board-password challenge. A gated content read on a protected board
@@ -14,9 +16,9 @@ import { verifyBoardPassword } from "../server/board-access";
  * now rides every gated read) and navigate back. Parity with the hosted board's
  * /password page.
  */
-export const Route = createFileRoute("/password")({
+export const Route = createFileRoute('/password')({
   validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
-    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+    redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
   }),
   head: () => ({ meta: [{ title: m.passwordPage_title() }] }),
   component: PasswordPage,
@@ -38,7 +40,7 @@ function PasswordPage() {
           setError(null);
           const form = new FormData(event.currentTarget);
           const result = await verifyBoardPassword({
-            data: { password: String(form.get("password")) },
+            data: { password: String(form.get('password')) },
           });
           setPending(false);
           if (result.ok) {
@@ -56,8 +58,10 @@ function PasswordPage() {
           autoComplete="off"
         />
         <FormError message={error} />
-        <Button type="submit" className="w-full" isDisabled={pending}>
-          {pending ? m.passwordPage_checkingLabel() : m.passwordPage_continueLabel()}
+        <Button type="submit" className="w-full" disabled={pending}>
+          {pending
+            ? m.passwordPage_checkingLabel()
+            : m.passwordPage_continueLabel()}
         </Button>
       </form>
     </AuthCard>

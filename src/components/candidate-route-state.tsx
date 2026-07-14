@@ -1,17 +1,18 @@
-import type { ErrorComponentProps } from "@tanstack/react-router";
-import { CircleAlert } from "lucide-react";
+import { CircleAlert } from 'lucide-react';
 
-import { Page, PageContent } from "@/components/layout/page";
-import { Button } from "@/components/ui/button";
+import { m } from '../paraglide/messages';
+
+import { Page, PageContent } from '@/components/layout/page';
+import { Button } from '@/components/ui/button';
 import {
   Empty,
   EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
-} from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
-import { m } from "../paraglide/messages";
+} from '@/components/ui/empty';
+import { Skeleton } from '@/components/ui/skeleton';
+import type { ErrorComponentProps } from '@tanstack/react-router';
 
 export function CandidateRoutePending({ label }: { label: string }) {
   return (
@@ -21,7 +22,12 @@ export function CandidateRoutePending({ label }: { label: string }) {
         asideLabel={label}
         asideOrder="before"
       >
-        <div role="status" aria-label={label} aria-busy="true" className="space-y-6">
+        <div
+          role="status"
+          aria-label={label}
+          aria-busy="true"
+          className="space-y-6"
+        >
           <div className="space-y-3">
             <Skeleton className="h-8 w-1/2" />
             <Skeleton className="h-4 w-2/3" />
@@ -59,7 +65,9 @@ export function CandidateRouteError({
             <EmptyMedia variant="icon">
               <CircleAlert />
             </EmptyMedia>
-            <h1 className="font-heading text-lg font-medium tracking-tight">{title}</h1>
+            <h1 className="font-heading text-lg font-medium tracking-tight">
+              {title}
+            </h1>
             <EmptyDescription>{description}</EmptyDescription>
           </EmptyHeader>
           <EmptyContent>

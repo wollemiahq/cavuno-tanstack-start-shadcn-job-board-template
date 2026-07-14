@@ -24,22 +24,12 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
-      # Structural contract gates (CAV-489): the legacy primitive stack is
-      # deleted — nothing under src/ may import it back, and the free-tier
-      # Untitled UI namespace is the only one allowed (no PRO imports).
-      - name: No legacy primitive-stack imports
-        run: |
-          if grep -rnE "@base-ui/react|lucide-react|components/ui/" src/; then
-            echo "::error::Legacy primitive-stack reference found in src/ — deleted at the CAV-489 contract step. Use the Untitled UI base components + @untitledui/icons."
-            exit 1
-          fi
-
-      - name: No Untitled UI PRO-namespace references
-        run: |
-          if grep -rnE "untitledui\.com/react/pro|@untitledui-pro" src/; then
-            echo "::error::Untitled UI PRO-namespace reference found in src/ — this starter ships the free tier only."
-            exit 1
-          fi
+      # CAV-511: the release has one presentation system. These focused
+      # contracts reject retired Untitled UI source/dependencies, Radix or
+      # direct primitive leakage, compatibility CSS, and theme drift before
+      # the broader suite runs.
+      - name: Shadcn-only release boundary
+        run: pnpm exec vp test run src/shadcn-only-release.test.ts src/theme-foundation.test.ts src/legacy-token-scan.test.ts
 
       - name: Test
         run: pnpm test

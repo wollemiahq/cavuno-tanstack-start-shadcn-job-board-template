@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react';
 
 /**
  * Poll a callback on an interval while the tab is visible — the ADR-0053 REST
@@ -10,32 +10,32 @@ import { useEffect, useRef } from 'react'
  * when the tab becomes visible again so a returning user isn't stale.
  */
 export function useVisiblePoll(callback: () => void, intervalMs = 4000) {
-  const savedCallback = useRef(callback)
-  savedCallback.current = callback
+  const savedCallback = useRef(callback);
+  savedCallback.current = callback;
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined
-    let stopped = false
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let stopped = false;
 
     const tick = () => {
-      if (stopped) return
+      if (stopped) return;
       if (typeof document === 'undefined' || !document.hidden) {
-        savedCallback.current()
+        savedCallback.current();
       }
-      timer = setTimeout(tick, intervalMs)
-    }
+      timer = setTimeout(tick, intervalMs);
+    };
 
     const onVisibility = () => {
-      if (!document.hidden) savedCallback.current()
-    }
+      if (!document.hidden) savedCallback.current();
+    };
 
-    timer = setTimeout(tick, intervalMs)
-    document.addEventListener('visibilitychange', onVisibility)
+    timer = setTimeout(tick, intervalMs);
+    document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
-      stopped = true
-      if (timer) clearTimeout(timer)
-      document.removeEventListener('visibilitychange', onVisibility)
-    }
-  }, [intervalMs])
+      stopped = true;
+      if (timer) clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [intervalMs]);
 }

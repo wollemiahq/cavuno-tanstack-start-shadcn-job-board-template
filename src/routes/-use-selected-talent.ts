@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from 'react';
 
-import type { TalentProfile } from "@cavuno/board";
+import { getTalentProfile } from '../server/queries';
 
-import { getTalentProfile } from "../server/queries";
+import type { TalentProfile } from '@cavuno/board';
 
 export type SelectedTalentState = {
-  status: "idle" | "loading" | "ready" | "error";
+  status: 'idle' | 'loading' | 'ready' | 'error';
   profile?: TalentProfile;
   error?: Error;
   retry: () => void;
@@ -13,30 +13,30 @@ export type SelectedTalentState = {
 
 export function useSelectedTalent(handle?: string): SelectedTalentState {
   const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState<Omit<SelectedTalentState, "retry">>({
-    status: "idle",
+  const [state, setState] = useState<Omit<SelectedTalentState, 'retry'>>({
+    status: 'idle',
   });
 
   useEffect(() => {
     if (!handle) {
-      setState({ status: "idle" });
+      setState({ status: 'idle' });
       return;
     }
 
     let cancelled = false;
     setState((previous) => ({
-      status: "loading",
+      status: 'loading',
       profile: previous.profile,
     }));
 
     void getTalentProfile({ data: { handle } })
       .then((profile) => {
-        if (!cancelled) setState({ status: "ready", profile });
+        if (!cancelled) setState({ status: 'ready', profile });
       })
       .catch((cause: unknown) => {
         if (cancelled) return;
         setState((previous) => ({
-          status: "error",
+          status: 'error',
           profile: previous.profile,
           error: cause instanceof Error ? cause : new Error(String(cause)),
         }));

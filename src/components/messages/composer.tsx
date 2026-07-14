@@ -7,8 +7,14 @@ import { Send } from 'lucide-react';
 import { errorMessage } from '../../lib/message-error';
 import { m } from '../../paraglide/messages';
 
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Field, FieldError } from '@/components/ui/field';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupText,
+  InputGroupTextarea,
+} from '@/components/ui/input-group';
 
 const MAX_BODY = 8000;
 
@@ -65,42 +71,39 @@ export function Composer({
 
   return (
     <div className="border-border border-t p-3">
-      <div className="relative">
-        <Textarea
-          value={body}
-          onChange={(event) => setBody(event.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder={m.composer_placeholderText()}
-          aria-label={m.composer_placeholderText()}
-          rows={2}
-          maxLength={MAX_BODY}
-          className="min-h-20 resize-none pr-12"
-          data-test="composer"
-        />
-        <Button
-          type="button"
-          size="icon-sm"
-          className="absolute right-2 bottom-2"
-          onClick={send}
-          disabled={!body.trim() || sending}
-          aria-label={m.composer_sendAriaLabel()}
-          data-test="composer-send"
-        >
-          <Send aria-hidden="true" />
-        </Button>
-      </div>
-      {error ? (
-        <p
-          role="alert"
-          className="text-destructive mt-1 text-sm"
-          data-test="composer-error"
-        >
-          {error}
-        </p>
-      ) : null}
-      <p className="text-muted-foreground mt-1 text-xs">
-        {m.composer_hintText()}
-      </p>
+      <Field className="gap-1" data-invalid={Boolean(error)}>
+        <InputGroup className="h-auto">
+          <InputGroupTextarea
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder={m.composer_placeholderText()}
+            aria-label={m.composer_placeholderText()}
+            aria-invalid={Boolean(error)}
+            rows={2}
+            maxLength={MAX_BODY}
+            className="min-h-20"
+            data-test="composer"
+          />
+          <InputGroupAddon align="block-end" className="justify-between">
+            <InputGroupText>{m.composer_hintText()}</InputGroupText>
+            <InputGroupButton
+              type="button"
+              variant="default"
+              size="icon-sm"
+              onClick={send}
+              disabled={!body.trim() || sending}
+              aria-label={m.composer_sendAriaLabel()}
+              data-test="composer-send"
+            >
+              <Send aria-hidden="true" />
+            </InputGroupButton>
+          </InputGroupAddon>
+        </InputGroup>
+        {error ? (
+          <FieldError data-test="composer-error">{error}</FieldError>
+        ) : null}
+      </Field>
     </div>
   );
 }

@@ -14,7 +14,12 @@ import {
 import { BlockedList } from '@/components/messages/blocked-list';
 import { InboxList } from '@/components/messages/inbox-list';
 import { ThreadView } from '@/components/messages/thread-view';
-import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group';
 import { errorMessage } from '@/lib/message-error';
 import { useVisiblePoll } from '@/lib/use-visible-poll';
 import { cn } from '@/lib/utils';
@@ -105,12 +110,12 @@ export function InboxController({
   return (
     <>
       {loadError ? (
-        <p
-          role="alert"
-          className="border-border text-destructive border-b px-4 py-2 text-sm"
+        <Alert
+          variant="destructive"
+          className="rounded-none border-x-0 border-t-0"
         >
-          {loadError}
-        </p>
+          <AlertDescription>{loadError}</AlertDescription>
+        </Alert>
       ) : null}
       <InboxList
         conversations={visibleConversations}
@@ -163,12 +168,12 @@ export function BlockedController({
   return (
     <>
       {actionError ? (
-        <p
-          role="alert"
-          className="border-border text-destructive border-b px-4 py-2 text-sm"
+        <Alert
+          variant="destructive"
+          className="rounded-none border-x-0 border-t-0"
         >
-          {actionError}
-        </p>
+          <AlertDescription>{actionError}</AlertDescription>
+        </Alert>
       ) : null}
       <BlockedList
         users={visibleUsers}
@@ -218,20 +223,18 @@ export function MessagesSidebarController({
       ) : null}
 
       <div className="border-border shrink-0 border-b p-3">
-        <div className="relative">
-          <Search
-            aria-hidden="true"
-            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2"
-          />
-          <Input
+        <InputGroup>
+          <InputGroupAddon>
+            <Search aria-hidden="true" />
+          </InputGroupAddon>
+          <InputGroupInput
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={m.messagesPage_searchPlaceholder()}
             aria-label={m.messagesPage_searchPlaceholder()}
-            className="w-full pl-9"
           />
-        </div>
+        </InputGroup>
       </div>
 
       {showTabs ? (

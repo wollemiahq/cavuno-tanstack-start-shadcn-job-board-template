@@ -4,24 +4,32 @@
  * verification email (`board.auth.verifyEmailWithCode`) or opens the magic link
  * (which lands on `/auth/verify-email`). Resend re-sends both.
  */
-import { useState } from "react";
+import { useState } from 'react';
 
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from '@tanstack/react-router';
 
-import { AuthCard, FormError } from "../components/auth-form";
-import { m } from "../paraglide/messages";
-import { resendOtp, verifyOtpCode } from "../server/auth";
-import { candidateReturnTo, candidateSignInHref } from "../lib/candidate-return-to";
+import { AuthCard, FormError } from '../components/auth-form';
+import {
+  candidateReturnTo,
+  candidateSignInHref,
+} from '../lib/candidate-return-to';
+import { m } from '../paraglide/messages';
+import { resendOtp, verifyOtpCode } from '../server/auth';
 
-import { Button, buttonVariants } from "@/components/ui/button";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Field, FieldLabel } from '@/components/ui/field';
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '@/components/ui/input-otp';
+import { cn } from '@/lib/utils';
 
-export const Route = createFileRoute("/auth/verify-email-required")({
+export const Route = createFileRoute('/auth/verify-email-required')({
   validateSearch: (search: Record<string, unknown>) => ({
     returnTo:
-      typeof search.returnTo === "string" && search.returnTo
+      typeof search.returnTo === 'string' && search.returnTo
         ? candidateReturnTo(search.returnTo)
         : undefined,
   }),
@@ -52,7 +60,7 @@ function VerifyEmailRequiredPage() {
           const form = new FormData(event.currentTarget);
           try {
             const result = await verifyOtpCode({
-              data: { code: String(form.get("code")).trim() },
+              data: { code: String(form.get('code')).trim() },
             });
             if (result.ok) {
               await router.invalidate();
@@ -67,8 +75,10 @@ function VerifyEmailRequiredPage() {
           }
         }}
       >
-        <div className="grid gap-2">
-          <Label htmlFor="code">{m.authVerifyEmailRequired_codeLabel()}</Label>
+        <Field>
+          <FieldLabel htmlFor="code">
+            {m.authVerifyEmailRequired_codeLabel()}
+          </FieldLabel>
           <InputOTP
             id="code"
             name="code"
@@ -87,8 +97,8 @@ function VerifyEmailRequiredPage() {
               <InputOTPSlot index={5} className="size-10" />
             </InputOTPGroup>
           </InputOTP>
-        </div>
-        <FormError message={error} />
+          <FormError message={error} />
+        </Field>
         <Button
           type="submit"
           size="lg"
@@ -103,9 +113,11 @@ function VerifyEmailRequiredPage() {
       </form>
 
       {resent ? (
-        <p className="rounded-2xl bg-muted p-3 text-sm text-muted-foreground">
-          {m.authVerifyEmailRequired_resentText()}
-        </p>
+        <Alert role="status">
+          <AlertDescription>
+            {m.authVerifyEmailRequired_resentText()}
+          </AlertDescription>
+        </Alert>
       ) : null}
 
       <Button
@@ -140,7 +152,10 @@ function VerifyEmailRequiredPage() {
 
       <a
         href={candidateSignInHref(returnTo)}
-        className={cn(buttonVariants({ variant: "ghost", size: "lg" }), "w-full")}
+        className={cn(
+          buttonVariants({ variant: 'ghost', size: 'lg' }),
+          'w-full',
+        )}
       >
         {m.authVerifyEmailRequired_backToSignInLabel()}
       </a>

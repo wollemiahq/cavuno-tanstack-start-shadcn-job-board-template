@@ -1,24 +1,30 @@
+import { listingHead } from '@cavuno/board/seo';
 /**
  * Programmatic location + category page — `/jobs/locations/:location/:keyword`
  * (hosted parity: `…/jobs/locations/[location]/[keyword]/page.tsx`). Both the
  * place and the category must resolve; the API seeds the search with the
  * category's source name AND filters to the place's radius.
  */
-import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
-import { JobsNotFound } from "@/components/board/jobs-not-found";
 import {
   ProgrammaticJobsView,
   PROGRAMMATIC_JOBS_PAGE_SIZE,
-} from "../components/programmatic-jobs-view";
-import { pageToOffset } from "../lib/pagination";
-import { jobsListingLoaderDeps, parseJobsSearch } from "../lib/jobs-search";
-import { listingHead } from "@cavuno/board/seo";
-import { m } from "../paraglide/messages";
-import { getSeoBase, listJobs, resolveCategory, resolvePlace } from "../server/queries";
+} from '../components/programmatic-jobs-view';
+import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
+import { pageToOffset } from '../lib/pagination';
+import { m } from '../paraglide/messages';
+import {
+  getSeoBase,
+  listJobs,
+  resolveCategory,
+  resolvePlace,
+} from '../server/queries';
 
-export const Route = createFileRoute("/jobs/locations/$location/$keyword")({
-  staticData: { fullBleed: true, ownsMain: true },
+import { JobsNotFound } from '@/components/board/jobs-not-found';
+
+export const Route = createFileRoute('/jobs/locations/$location/$keyword')({
+  staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseJobsSearch,
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
   loader: async ({ params, deps }) => {
@@ -29,7 +35,7 @@ export const Route = createFileRoute("/jobs/locations/$location/$keyword")({
     if (!place || !category) throw notFound();
     if (place.redirectTo || category.redirectTo) {
       throw redirect({
-        to: "/jobs/locations/$location/$keyword",
+        to: '/jobs/locations/$location/$keyword',
         params: {
           location: place.redirectTo ?? params.location,
           keyword: category.redirectTo ?? params.keyword,
@@ -42,7 +48,9 @@ export const Route = createFileRoute("/jobs/locations/$location/$keyword")({
           location: params.location,
           category: params.keyword,
           remoteOption: deps.remoteOption ? [deps.remoteOption] : undefined,
-          employmentType: deps.employmentType ? [deps.employmentType] : undefined,
+          employmentType: deps.employmentType
+            ? [deps.employmentType]
+            : undefined,
           seniority: deps.seniority?.length ? deps.seniority : undefined,
           sort: deps.sort,
           offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),

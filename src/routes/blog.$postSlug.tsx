@@ -1,22 +1,36 @@
-import { createFileRoute, getRouteApi, notFound, redirect } from "@tanstack/react-router";
+import { boardCopy } from '#/copy';
+import { isNotFound } from '@cavuno/board';
+import {
+  createBlogArticleJsonLd,
+  createBreadcrumbJsonLd,
+} from '@cavuno/board/seo';
+import {
+  createFileRoute,
+  getRouteApi,
+  notFound,
+  redirect,
+} from '@tanstack/react-router';
 
-import { isNotFound } from "@cavuno/board";
-import { createBlogArticleJsonLd, createBreadcrumbJsonLd } from "@cavuno/board/seo";
+import { BlogArchivePage } from '@/components/board/blog-archive-page';
+import { BlogArticleContent } from '@/components/board/blog-article-content';
+import { PublicContentPending } from '@/components/board/public-content-pending';
+import { JsonLd } from '@/components/json-ld';
+import { selectRelatedPosts } from '@/lib/related-posts';
+import { m } from '@/paraglide/messages';
+import {
+  getBlogPost,
+  getBlogPostAdjacent,
+  getSeoBase,
+  listBlogPosts,
+} from '@/server/queries';
 
-import { boardCopy } from "#/copy";
-import { BlogArchivePage } from "@/components/board/blog-archive-page";
-import { BlogArticleContent } from "@/components/board/blog-article-content";
-import { PublicContentPending } from "@/components/board/public-content-pending";
-import { JsonLd } from "@/components/json-ld";
-import { selectRelatedPosts } from "@/lib/related-posts";
-import { m } from "@/paraglide/messages";
-import { getBlogPost, getBlogPostAdjacent, getSeoBase, listBlogPosts } from "@/server/queries";
+const rootApi = getRouteApi('__root__');
 
-const rootApi = getRouteApi("__root__");
-
-export const Route = createFileRoute("/blog/$postSlug")({
+export const Route = createFileRoute('/blog/$postSlug')({
   staticData: { fullBleed: true, ownsMain: true },
-  pendingComponent: () => <PublicContentPending label={m.publicContent_loadingLabel()} />,
+  pendingComponent: () => (
+    <PublicContentPending label={m.publicContent_loadingLabel()} />
+  ),
   loader: async ({ params }) => {
     let post;
     try {
@@ -27,10 +41,11 @@ export const Route = createFileRoute("/blog/$postSlug")({
     }
 
     const target =
-      (post.redirected ? post.newSlug : null) ?? (post.slug !== params.postSlug ? post.slug : null);
+      (post.redirected ? post.newSlug : null) ??
+      (post.slug !== params.postSlug ? post.slug : null);
     if (target && target !== params.postSlug) {
       throw redirect({
-        to: "/blog/$postSlug",
+        to: '/blog/$postSlug',
         params: { postSlug: target },
         statusCode: 308,
       });
@@ -66,18 +81,18 @@ export const Route = createFileRoute("/blog/$postSlug")({
         ...((post.seoDescription ?? post.customExcerpt)
           ? [
               {
-                name: "description",
+                name: 'description',
                 content: (post.seoDescription ?? post.customExcerpt)!,
               },
             ]
           : []),
-        { property: "og:image", content: ogImage },
-        { name: "twitter:card", content: "summary_large_image" },
-        { name: "twitter:image", content: ogImage },
+        { property: 'og:image', content: ogImage },
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:image', content: ogImage },
       ],
       links: [
         {
-          rel: "canonical",
+          rel: 'canonical',
           href: post.canonicalUrl ?? `${seo.origin}/blog/${post.slug}`,
         },
       ],
@@ -93,8 +108,8 @@ function BlogPostNotFound() {
       breadcrumb={{
         ariaLabel: m.blogIndex_breadcrumbLabel(),
         items: [
-          { name: m.blogIndex_homeLabel(), href: "/" },
-          { name: m.blogIndex_title(), href: "/blog" },
+          { name: m.blogIndex_homeLabel(), href: '/' },
+          { name: m.blogIndex_title(), href: '/blog' },
           { name: m.blogPost_notFoundText() },
         ],
       }}
@@ -103,7 +118,7 @@ function BlogPostNotFound() {
       empty={{
         title: m.blogPost_notFoundText(),
         description: m.blogPost_notFoundDescription(),
-        action: { label: m.blogPost_backToBlogLabel(), href: "/blog" },
+        action: { label: m.blogPost_backToBlogLabel(), href: '/blog' },
       }}
     />
   );
@@ -136,8 +151,8 @@ function PostPage() {
         breadcrumb={{
           ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
           items: [
-            { name: crumbs.home, href: "/" },
-            { name: crumbs.blog, href: "/blog" },
+            { name: crumbs.home, href: '/' },
+            { name: crumbs.blog, href: '/blog' },
             { name: post.title },
           ],
         }}
@@ -151,7 +166,7 @@ function PostPage() {
           description: m.blogPost_missingBodyDescription(),
           action: {
             label: m.blogPost_backToBlogLabel(),
-            href: "/blog",
+            href: '/blog',
           },
         }}
       />

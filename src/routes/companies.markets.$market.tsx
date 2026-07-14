@@ -1,26 +1,27 @@
-import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
-import { createBreadcrumbJsonLd } from "@cavuno/board/seo";
-import { boardCopy } from "#/copy";
+import { boardCopy } from '#/copy';
+import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
-import { JsonLd } from "@/components/json-ld";
-import { ProgrammaticCompaniesView } from "@/routes/-programmatic-companies-view";
-import {
-  companiesListingLoaderDeps,
-  parseCompaniesSearch,
-} from "@/lib/companies-search";
-import { pageToOffset } from "@/lib/pagination";
-import { m } from "../paraglide/messages";
+import { m } from '../paraglide/messages';
 import {
   getCompanyMarket,
   getCompanyMarkets,
   getSeoBase,
   listCompanies,
   searchCompanies,
-} from "../server/queries";
+} from '../server/queries';
+
+import { JsonLd } from '@/components/json-ld';
+import {
+  companiesListingLoaderDeps,
+  parseCompaniesSearch,
+} from '@/lib/companies-search';
+import { pageToOffset } from '@/lib/pagination';
+import { ProgrammaticCompaniesView } from '@/routes/-programmatic-companies-view';
 
 const COMPANIES_PAGE_SIZE = 24;
 
-export const Route = createFileRoute("/companies/markets/$market")({
+export const Route = createFileRoute('/companies/markets/$market')({
   staticData: { fullBleed: true, ownsMain: true },
   validateSearch: parseCompaniesSearch,
   loaderDeps: ({ search }) => companiesListingLoaderDeps(search),
@@ -29,7 +30,7 @@ export const Route = createFileRoute("/companies/markets/$market")({
     if (!market) throw notFound();
     if (market.redirectTo) {
       throw redirect({
-        to: "/companies/markets/$market",
+        to: '/companies/markets/$market',
         params: { market: market.redirectTo },
         statusCode: 308,
       });
@@ -67,7 +68,7 @@ export const Route = createFileRoute("/companies/markets/$market")({
               }),
             },
             {
-              name: "description",
+              name: 'description',
               content: m.marketPage_metaDescription({
                 market: loaderData.market.displayName,
                 boardName: loaderData.seo.boardName,
@@ -76,7 +77,7 @@ export const Route = createFileRoute("/companies/markets/$market")({
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: `${loaderData.seo.origin}/companies/markets/${params.market}`,
             },
           ],
@@ -127,8 +128,8 @@ function MarketPage() {
         breadcrumb={{
           ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
           items: [
-            { name: crumbs.home, href: "/" },
-            { name: crumbs.companies, href: "/companies" },
+            { name: crumbs.home, href: '/' },
+            { name: crumbs.companies, href: '/companies' },
             { name: market.displayName },
           ],
         }}

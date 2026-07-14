@@ -1,3 +1,4 @@
+import { boardCopy } from '#/copy';
 /**
  * Job card VIEW-MODEL — the Layer-1b seam for the job-card / job-search
  * block (ADR-0070 Phase 2). `toJobCardVM` is the ONLY place SDK wire
@@ -14,13 +15,15 @@ import {
   formatPublishedRelativeDate,
   formatSalaryRange,
   type BoardLabelOverrides,
-} from "@cavuno/board/format";
-import { jobDetailPath, jobsCategoryPath, jobsSkillPath } from "@cavuno/board/paths";
-import { boardCopy } from "#/copy";
+} from '@cavuno/board/format';
+import {
+  jobDetailPath,
+  jobsCategoryPath,
+  jobsSkillPath,
+} from '@cavuno/board/paths';
 
-import { deriveSummary } from "@/lib/derive-summary";
-
-import type { PublicJobCard } from "@cavuno/board";
+import { deriveSummary } from '@/lib/derive-summary';
+import type { PublicJobCard } from '@cavuno/board';
 
 export interface JobCardTagVM {
   key: string;
@@ -73,14 +76,15 @@ export function toJobCardVM(
       cardLocationLabel(language, job),
     ]
       .filter(Boolean)
-      .join(" · ") || null;
+      .join(' · ') || null;
 
   return {
     id: job.id,
     title: job.title,
     companySlug: company?.slug ?? null,
     jobSlug: job.slug ?? null,
-    detailHref: company?.slug && job.slug ? jobDetailPath(company.slug, job.slug) : null,
+    detailHref:
+      company?.slug && job.slug ? jobDetailPath(company.slug, job.slug) : null,
     hasDetailLink: Boolean(company?.slug && job.slug),
     companyName: company?.name ?? null,
     companyLogoUrl: company?.logoUrl ?? null,

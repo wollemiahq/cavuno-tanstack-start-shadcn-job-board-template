@@ -1,3 +1,5 @@
+import { jobsCategoryPath } from '@cavuno/board/paths';
+import { listingHead } from '@cavuno/board/seo';
 /**
  * Programmatic category page — `/jobs/:keyword` (hosted parity:
  * `boards/[slug]/(main)/jobs/[keyword]/page.tsx`). The keyword is a *category*
@@ -5,23 +7,21 @@
  * one isn't canonical), then the API seeds the search with the category's
  * English source name server-side — the consumer only passes the slug.
  */
-import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
-import { jobsCategoryPath } from "@cavuno/board/paths";
-
-import { JobsNotFound } from "@/components/board/jobs-not-found";
 import {
   ProgrammaticJobsView,
   PROGRAMMATIC_JOBS_PAGE_SIZE,
-} from "../components/programmatic-jobs-view";
-import { pageToOffset } from "../lib/pagination";
-import { jobsListingLoaderDeps, parseJobsSearch } from "../lib/jobs-search";
-import { listingHead } from "@cavuno/board/seo";
-import { m } from "../paraglide/messages";
-import { getSeoBase, listJobs, resolveCategory } from "../server/queries";
+} from '../components/programmatic-jobs-view';
+import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
+import { pageToOffset } from '../lib/pagination';
+import { m } from '../paraglide/messages';
+import { getSeoBase, listJobs, resolveCategory } from '../server/queries';
 
-export const Route = createFileRoute("/jobs/$keyword")({
-  staticData: { fullBleed: true, ownsMain: true },
+import { JobsNotFound } from '@/components/board/jobs-not-found';
+
+export const Route = createFileRoute('/jobs/$keyword')({
+  staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseJobsSearch,
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
   loader: async ({ params, deps }) => {
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/jobs/$keyword")({
     if (!category) throw notFound();
     if (category.redirectTo) {
       throw redirect({
-        to: "/jobs/$keyword",
+        to: '/jobs/$keyword',
         params: { keyword: category.redirectTo },
       });
     }
@@ -38,7 +38,9 @@ export const Route = createFileRoute("/jobs/$keyword")({
         data: {
           category: params.keyword,
           remoteOption: deps.remoteOption ? [deps.remoteOption] : undefined,
-          employmentType: deps.employmentType ? [deps.employmentType] : undefined,
+          employmentType: deps.employmentType
+            ? [deps.employmentType]
+            : undefined,
           seniority: deps.seniority?.length ? deps.seniority : undefined,
           sort: deps.sort,
           offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),

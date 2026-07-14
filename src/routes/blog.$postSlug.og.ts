@@ -1,3 +1,5 @@
+import { isNotFound } from '@cavuno/board';
+import { formatDate } from '@cavuno/board/format';
 /**
  * Open Graph image — 1200×630 card for a blog post, the starter's counterpart
  * to the hosted `…/blog/:slug/og` route (a `@takumi-rs` ImageResponse). As with
@@ -8,26 +10,23 @@
  * The card markup lives in `lib/blog-og.ts` (unit-tested); this route only
  * fetches the data, subsets the font, and returns the image.
  */
-import { createFileRoute, notFound } from '@tanstack/react-router'
-import { ImageResponse, loadGoogleFont } from 'workers-og'
+import { createFileRoute, notFound } from '@tanstack/react-router';
+import { ImageResponse, loadGoogleFont } from 'workers-og';
 
-import { isNotFound } from '@cavuno/board'
-import { formatDate } from '@cavuno/board/format'
-
-import { getBoard } from '../lib/board'
-import { buildBlogOgHtml, truncate } from '../lib/blog-og'
-import { themeTokens } from '../theme/resolved'
+import { buildBlogOgHtml, truncate } from '../lib/blog-og';
+import { getBoard } from '../lib/board';
+import { themeTokens } from '../theme/resolved';
 
 export const Route = createFileRoute('/blog/$postSlug/og')({
   server: {
     handlers: {
       GET: async ({ params }) => {
-        let post
+        let post;
         try {
-          post = await getBoard().blog.posts.retrieve(params.postSlug)
+          post = await getBoard().blog.posts.retrieve(params.postSlug);
         } catch (error) {
-          if (isNotFound(error)) throw notFound()
-          throw error
+          if (isNotFound(error)) throw notFound();
+          throw error;
         }
 
         // Board language for date formatting — the context read is cached by
@@ -35,8 +34,8 @@ export const Route = createFileRoute('/blog/$postSlug/og')({
         const [seo, { language }] = await Promise.all([
           getBoard().seo(),
           getBoard().context(),
-        ])
-        const author = post.authors[0] ?? null
+        ]);
+        const author = post.authors[0] ?? null;
 
         const card = {
           boardName: seo.manifest.name,
@@ -50,7 +49,7 @@ export const Route = createFileRoute('/blog/$postSlug/og')({
           dateLabel: post.publishedAt
             ? formatDate(language, post.publishedAt)
             : null,
-        }
+        };
 
         // Subset the font to exactly the glyphs the card renders (incl. the
         // "· Blog" eyebrow and the "…" truncation marker).
@@ -60,15 +59,19 @@ export const Route = createFileRoute('/blog/$postSlug/og')({
           card.excerpt ? truncate(card.excerpt, 140) : '',
           card.authorName ?? '',
           card.dateLabel ?? '',
-        ].join(' ')
-        const font = await loadGoogleFont({ family: 'Inter', weight: 600, text })
+        ].join(' ');
+        const font = await loadGoogleFont({
+          family: 'Inter',
+          weight: 600,
+          text,
+        });
 
         return new ImageResponse(buildBlogOgHtml(card), {
           width: 1200,
           height: 630,
           fonts: [{ name: 'Inter', data: font, weight: 600, style: 'normal' }],
-        })
+        });
       },
     },
   },
-})
+});

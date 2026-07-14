@@ -1,4 +1,8 @@
-# Real-data stress log — Untitled UI starter (CAV-492)
+# Real-data stress log — source baseline (CAV-492)
+
+This is a dated record of the pre-shadcn source baseline. The current starter
+uses the owned shadcn Rhea components and semantic tokens; historical component
+and token names below describe what was tested at the time, not current guidance.
 
 - **Date:** 2026-07-11
 - **Board:** `pk_d9ce40a106227b615ec710de3f3d73dc` — the **production robotics
@@ -26,18 +30,19 @@
 | `/companies` | absent-logo, sparse-description | Sparse companies (GableTek, Bear Robotics) drop the description line and hold rhythm via equal-height grid rows; initials chips fall back cleanly; market-count pills wrap. | none needed |
 | Company profile — `rivr` | avatar fallback | Full description, website link, jobs grid, "Similar companies" initials fallbacks (`L`, `N`) all clean. | none needed |
 | Company profile — `gabletek` (sparse) | sparse-description, absent-logo | No `about` text → page goes straight to "Open jobs 11", no empty block; dark GableTek logo legible. | none needed |
-| `/blog` | empty-collection | Board has **one** post (not empty). The single card sits left-aligned in the 3-col grid with no broken rhythm. `EmptyState` path present but not triggered on this board. | none needed |
+| `/blog` | empty-collection | Board has **one** post (not empty). The single card sits left-aligned in the 3-col grid with no broken rhythm. The empty-state path was present but not triggered on this board. | none needed |
 | `/salaries` + `/salaries/titles/robotics-engineer` | avatar fallback, data density | Index sections (companies/titles/skills/locations) and the detail (stat tiles, seniority "vs. board" table, FAQ) render clean with initials chips; both themes legible. | none needed |
 | `/jobs/locations` | data density | Nested place hierarchy renders tall (≈12.7k px) but correct — no clipping/overflow. Intentional hosted-parity `buildHierarchy`; not restructured (would be a redesign, out of surgical scope). | logged (no fix) |
 | `/jobs/locations/横浜市-kanagawa-japan` | CJK | "Jobs in Kanagawa, Japan" + 横浜市 card locations render correctly. | none needed |
 | `/jobs/skills/lidar` | taxonomy, long-title | "LiDAR jobs" (43) — taxonomy present; forager numeric-prefixed titles ("1.83 Robotics Software Engineer: LiDAR Mapping") clamp fine. | none needed |
 | Floating alert prompt (listing pages) | dark-mode contrast | Same panel as job detail — **failed dark contrast** (see below). | fixed (this branch) |
-| **Dark-mode alert-signup panel (CAV-486)** | **dark-mode contrast** | The subscribe panel (`AlertSignupForm`, used by both the inline "Get alerts" block and the floating "Never miss a job" prompt) used `bg-brand-primary`, a theme-**directional** token: light → `brand-50` (pale, legible), but dark → **solid brand-500**. On that fill the neutral text tokens collapsed (measured: description `oklch(0.708)` ≈1.5:1, heading white ≈2.6:1) and the brand bell icon was the **same colour as its background** (`rgb(158,119,237)` = `rgb(158,119,237)`, invisible); the X-close was near-invisible too. | **fixed** — swap to the theme-**adaptive** `bg-brand-primary_alt` (`brand-50` in light — pixel-identical to before; `bg-secondary`/neutral-900 in dark). Neutral text + brand bell + brand border all legible in dark; light unchanged. Regression-guarded by `alert-signup-form.test.tsx`. |
+| **Dark-mode alert-signup panel (CAV-486)** | **dark-mode contrast** | The source-baseline subscribe panel used a directional background token whose dark value collapsed text and icon contrast. | **fixed in the historical baseline**. The current `AlertSignupForm` instead composes shadcn `Card`, `FieldError`, and `FieldDescription` with `border-primary bg-primary/5`. |
 | White company logo (Alpine Eagle GmbH) | absent-logo | Company ships an **opaque-white JPG** logo (`…/kg2fdr87….jpg`, 200 OK, all-white pixels) → invisible on the white avatar chip, a glaring white box on dark. | logged (data-quality, out of scope) — an opaque-white raster can't be detected or mitigated in CSS without harming valid logos; the initials fallback only triggers when `logoUrl` is absent, and this URL resolves. Flagged for the ingest/enrichment layer, not markup. |
 
 ## Screenshots
 
-Captured under `shots-492/` (light + dark for each):
+The external CAV-492 run captured these artifacts (they are not stored in this
+repository):
 
 - Listings: `home-{light,dark}.png`, `jobs-{light,dark}.png`
 - Job details: `job-longtitle-{light,dark}.png` (longest title, no salary),
@@ -61,8 +66,8 @@ Captured under `shots-492/` (light + dark for each):
 | absent-logo | initials fallback held; white-on-white raster **logged** (data) |
 | tag overflow | held (3 pills + honest `+N`) — no fix |
 | CJK | held (横浜市/名古屋市 render, no tofu) — no fix |
-| empty-collection | not triggered (blog has 1 post; locations non-empty); `EmptyState` path present |
-| dark-mode contrast | **1 defect fixed** — `AlertSignupForm` `bg-brand-primary` → `bg-brand-primary_alt` (CAV-486) |
+| empty-collection | not triggered (blog has 1 post; locations non-empty); empty-state path present |
+| dark-mode contrast | **1 source-baseline defect fixed**; the current shadcn composition supersedes those retired tokens |
 
 **Summary:** 1 presentational defect found and fixed (dark-mode contrast,
 2 surfaces: inline panel + floating prompt); 2 items logged as out-of-scope

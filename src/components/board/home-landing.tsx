@@ -1,27 +1,24 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowRight, Building2, Search } from "lucide-react";
+import { Link } from '@tanstack/react-router';
+import { ArrowRight, Building2, Search } from 'lucide-react';
 
-import type { PublicBlogPostSummary, TalentDirectoryEntry } from "@cavuno/board";
+import { m } from '../../paraglide/messages';
 
-import type { JobCardVM } from "@/board/job-view-model";
-import { Bleed } from "@/components/layout/bleed";
-import { Box } from "@/components/layout/box";
-import { Container } from "@/components/layout/container";
-import { Grid } from "@/components/layout/grid";
-import { Page, PageContent, PageHeader, PageSection } from "@/components/layout/page";
-import { buttonVariants } from "@/components/ui/button";
+import type { JobCardVM } from '@/board/job-view-model';
+import { Bleed } from '@/components/layout/bleed';
+import { Box } from '@/components/layout/box';
+import { Container } from '@/components/layout/container';
+import { Grid } from '@/components/layout/grid';
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+  Page,
+  PageContent,
+  PageHeader,
+  PageSection,
+} from '@/components/layout/page';
+import { PostCard } from '@/components/post-card';
+import { TalentCard } from '@/components/talent-card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { buttonVariants } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -29,12 +26,19 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-
-import { PostCard } from "@/components/post-card";
-import { TalentCard } from "@/components/talent-card";
-import { initialsOf } from "@/lib/initials";
-import { m } from "../../paraglide/messages";
+} from '@/components/ui/card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { initialsOf } from '@/lib/initials';
+import type {
+  PublicBlogPostSummary,
+  TalentDirectoryEntry,
+} from '@cavuno/board';
 
 const MAX_JOB_TAGS = 2;
 
@@ -47,9 +51,15 @@ export interface HomeCompanyCard {
   openJobsLabel: string;
 }
 
-function ViewAllAction({ label, to }: { label: string; to: "/jobs" | "/blog" | "/talent" }) {
+function ViewAllAction({
+  label,
+  to,
+}: {
+  label: string;
+  to: '/jobs' | '/blog' | '/talent';
+}) {
   return (
-    <Link to={to} className={buttonVariants({ variant: "ghost", size: "sm" })}>
+    <Link to={to} className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
       {label}
       <ArrowRight aria-hidden="true" data-icon="inline-end" />
     </Link>
@@ -62,7 +72,7 @@ function HomeJobCard({ vm }: { vm: JobCardVM }) {
       <Link
         to="/companies/$companySlug/jobs/$jobSlug"
         params={{ companySlug: vm.companySlug, jobSlug: vm.jobSlug }}
-        className="rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/30"
+        className="focus-visible:ring-ring/30 rounded-sm outline-none hover:underline focus-visible:ring-3"
       >
         {vm.title}
       </Link>
@@ -84,11 +94,13 @@ function HomeJobCard({ vm }: { vm: JobCardVM }) {
                   alt={vm.companyName ?? vm.title}
                 />
               ) : null}
-              <AvatarFallback>{initialsOf(vm.companyAvatarName)}</AvatarFallback>
+              <AvatarFallback>
+                {initialsOf(vm.companyAvatarName)}
+              </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
               {vm.companyName ? (
-                <p className="text-xs font-medium text-muted-foreground">
+                <p className="text-muted-foreground text-xs font-medium">
                   {vm.companyName}
                 </p>
               ) : null}
@@ -113,19 +125,23 @@ function HomeJobCard({ vm }: { vm: JobCardVM }) {
         {visibleTags.length > 0 || vm.postedAtLabel ? (
           <CardFooter className="mt-auto flex-wrap gap-2">
             {visibleTags.map((tag) => (
-              <a
+              <Badge
                 key={tag.key}
-                href={tag.href}
-                className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/30"
+                variant="secondary"
+                render={<a href={tag.href} />}
               >
                 {tag.name}
-              </a>
+              </Badge>
             ))}
             {hiddenTagCount > 0 ? (
-              <span className="text-xs text-muted-foreground">+{hiddenTagCount}</span>
+              <span className="text-muted-foreground text-xs">
+                +{hiddenTagCount}
+              </span>
             ) : null}
             {vm.postedAtLabel ? (
-              <span className="ml-auto text-xs text-muted-foreground">{vm.postedAtLabel}</span>
+              <span className="text-muted-foreground ml-auto text-xs">
+                {vm.postedAtLabel}
+              </span>
             ) : null}
           </CardFooter>
         ) : null}
@@ -143,7 +159,7 @@ function HiringIndex({ companies }: { companies: HomeCompanyCard[] }) {
             <Card size="sm" className="h-full shadow-none">
               <CardHeader>
                 <div className="flex items-start gap-3">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                  <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-xl">
                     <Building2 aria-hidden="true" className="size-4" />
                   </span>
                   <div className="min-w-0">
@@ -152,7 +168,7 @@ function HiringIndex({ companies }: { companies: HomeCompanyCard[] }) {
                         <Link
                           to="/companies/$companySlug"
                           params={{ companySlug: company.slug }}
-                          className="rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/30"
+                          className="focus-visible:ring-ring/30 rounded-sm outline-none hover:underline focus-visible:ring-3"
                         >
                           {company.name}
                         </Link>
@@ -179,10 +195,10 @@ function SignupCtaCard({
   heading: string;
   supporting: string;
   buttonLabel: string;
-  href: "/auth/sign-up" | "/auth/employer/sign-up";
+  href: '/auth/sign-up' | '/auth/employer/sign-up';
 }) {
   return (
-    <Card className="h-full bg-muted/50 shadow-none">
+    <Card className="bg-muted/50 h-full shadow-none">
       <CardHeader>
         <CardTitle>
           <h2>{heading}</h2>
@@ -190,7 +206,7 @@ function SignupCtaCard({
         <CardDescription>{supporting}</CardDescription>
       </CardHeader>
       <CardFooter className="mt-auto">
-        <Link to={href} className={buttonVariants({ size: "lg" })}>
+        <Link to={href} className={buttonVariants({ size: 'lg' })}>
           {buttonLabel}
         </Link>
       </CardFooter>
@@ -230,13 +246,20 @@ export function HomeLanding({
       <PageContent
         header={
           <Bleed>
-            <Box background="muted" border="bottom" padding={{ base: "8", md: "12" }}>
+            <Box
+              background="muted"
+              border="bottom"
+              padding={{ base: '8', md: '12' }}
+            >
               <Container width="wide">
-                <Grid columns={hiringCompanies.length > 0 ? { base: 1, lg: 2 } : 1} gap="8">
+                <Grid
+                  columns={hiringCompanies.length > 0 ? { base: 1, lg: 2 } : 1}
+                  gap="8"
+                >
                   <PageHeader
                     eyebrow={
                       countLabel ? (
-                        <p className="text-sm font-medium text-muted-foreground">
+                        <p className="text-muted-foreground text-sm font-medium">
                           {countLabel}
                         </p>
                       ) : undefined
@@ -245,16 +268,22 @@ export function HomeLanding({
                     description={m.home_heroSupporting()}
                     actions={
                       <>
-                        <Link to="/jobs" className={buttonVariants({ size: "lg" })}>
+                        <Link
+                          to="/jobs"
+                          className={buttonVariants({ size: 'lg' })}
+                        >
                           {m.home_viewAllJobsLabel()}
-                          <ArrowRight aria-hidden="true" data-icon="inline-end" />
+                          <ArrowRight
+                            aria-hidden="true"
+                            data-icon="inline-end"
+                          />
                         </Link>
                         {publicJobSubmission ? (
                           <Link
                             to="/post"
                             className={buttonVariants({
-                              variant: "outline",
-                              size: "lg",
+                              variant: 'outline',
+                              size: 'lg',
                             })}
                           >
                             {m.siteHeader_postJobLabel()}
@@ -263,7 +292,9 @@ export function HomeLanding({
                       </>
                     }
                   />
-                  {hiringCompanies.length > 0 ? <HiringIndex companies={hiringCompanies} /> : null}
+                  {hiringCompanies.length > 0 ? (
+                    <HiringIndex companies={hiringCompanies} />
+                  ) : null}
                 </Grid>
               </Container>
             </Box>
@@ -299,7 +330,9 @@ export function HomeLanding({
         {featuredTalent.length > 0 ? (
           <PageSection
             title={m.home_talentHeading()}
-            actions={<ViewAllAction label={m.home_viewAllTalentLabel()} to="/talent" />}
+            actions={
+              <ViewAllAction label={m.home_viewAllTalentLabel()} to="/talent" />
+            }
           >
             <Grid as="ul" columns={{ base: 1, sm: 2, lg: 3 }} gap="4">
               {featuredTalent.map((candidate) => (
@@ -314,7 +347,9 @@ export function HomeLanding({
         {latestPosts.length > 0 ? (
           <PageSection
             title={m.home_blogHeading()}
-            actions={<ViewAllAction label={m.home_viewAllBlogLabel()} to="/blog" />}
+            actions={
+              <ViewAllAction label={m.home_viewAllBlogLabel()} to="/blog" />
+            }
           >
             <Grid as="ul" columns={{ base: 1, md: 2, lg: 3 }} gap="6">
               {latestPosts.map((post) => (
@@ -327,7 +362,12 @@ export function HomeLanding({
         ) : null}
 
         {showCtaBand ? (
-          <Grid columns={candidatesEnabled && employersEnabled ? { base: 1, md: 2 } : 1} gap="5">
+          <Grid
+            columns={
+              candidatesEnabled && employersEnabled ? { base: 1, md: 2 } : 1
+            }
+            gap="5"
+          >
             {candidatesEnabled ? (
               <SignupCtaCard
                 heading={m.home_candidateCtaHeading()}

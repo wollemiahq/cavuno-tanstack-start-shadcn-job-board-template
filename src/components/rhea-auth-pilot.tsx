@@ -1,13 +1,21 @@
-import { useState } from "react";
-import { BriefcaseBusiness } from "lucide-react";
+import { useState } from 'react';
 
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { cn } from "@/lib/utils";
-import { m } from "@/paraglide/messages";
+import { BriefcaseBusiness } from 'lucide-react';
+
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import {
+  Field as FormField,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { cn } from '@/lib/utils';
+import { m } from '@/paraglide/messages';
 
 export function RheaAuthCard({
   title,
@@ -21,25 +29,27 @@ export function RheaAuthCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rhea-theme mx-auto w-full max-w-md py-6 sm:py-12">
-      <Card className="overflow-hidden border-0 bg-card/95 shadow-xl shadow-foreground/5 backdrop-blur">
+    <div className="mx-auto w-full max-w-md py-6 sm:py-12">
+      <Card className="bg-card/95 shadow-foreground/5 overflow-hidden border-0 shadow-xl backdrop-blur">
         <CardHeader className="items-center gap-5 text-center">
           <div
             aria-hidden
-            className="flex size-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm"
+            className="bg-primary text-primary-foreground flex size-11 items-center justify-center rounded-2xl shadow-sm"
           >
             <BriefcaseBusiness className="size-5" />
           </div>
           <div
             className="grid gap-2"
-            role={announceTitle ? "status" : undefined}
-            aria-live={announceTitle ? "polite" : undefined}
+            role={announceTitle ? 'status' : undefined}
+            aria-live={announceTitle ? 'polite' : undefined}
           >
-            <h1 className="font-heading text-2xl font-medium tracking-tight text-foreground">
+            <h1 className="font-heading text-foreground text-2xl font-medium tracking-tight">
               {title}
             </h1>
             {supportingText ? (
-              <p className="text-sm leading-6 text-muted-foreground">{supportingText}</p>
+              <p className="text-muted-foreground text-sm leading-6">
+                {supportingText}
+              </p>
             ) : null}
           </div>
         </CardHeader>
@@ -58,8 +68,8 @@ export function RoleSelector({
   employerTitle,
   employerBody,
 }: {
-  value: "candidate" | "employer";
-  onValueChange: (value: "candidate" | "employer") => void;
+  value: 'candidate' | 'employer';
+  onValueChange: (value: 'candidate' | 'employer') => void;
   ariaLabel: string;
   candidateTitle: string;
   candidateBody: string;
@@ -67,21 +77,17 @@ export function RoleSelector({
   employerBody: string;
 }) {
   return (
-    <RadioGroup value={value} onValueChange={onValueChange} aria-label={ariaLabel}>
+    <RadioGroup
+      value={value}
+      onValueChange={onValueChange}
+      aria-label={ariaLabel}
+    >
       <RoleOption
         value="candidate"
         title={candidateTitle}
         body={candidateBody}
-        selected={value === "candidate"}
-        onSelect={() => onValueChange("candidate")}
       />
-      <RoleOption
-        value="employer"
-        title={employerTitle}
-        body={employerBody}
-        selected={value === "employer"}
-        onSelect={() => onValueChange("employer")}
-      />
+      <RoleOption value="employer" title={employerTitle} body={employerBody} />
     </RadioGroup>
   );
 }
@@ -90,29 +96,30 @@ function RoleOption({
   value,
   title,
   body,
-  selected,
-  onSelect,
 }: {
-  value: "candidate" | "employer";
+  value: 'candidate' | 'employer';
   title: string;
   body: string;
-  selected: boolean;
-  onSelect: () => void;
 }) {
+  const id = `role-${value}`;
+
   return (
-    <div
-      className={cn(
-        "group flex cursor-pointer items-start gap-3 rounded-2xl border bg-background p-4 transition-colors hover:bg-muted",
-        selected ? "border-primary bg-muted" : "border-border",
-      )}
-      onClick={onSelect}
+    <FieldLabel
+      htmlFor={id}
+      className="hover:bg-muted cursor-pointer transition-colors"
     >
-      <RadioGroupItem value={value} aria-label={`${title}. ${body}`} className="mt-0.5" />
-      <span className="grid gap-1">
-        <span className="text-sm font-medium text-foreground">{title}</span>
-        <span className="text-sm leading-5 text-muted-foreground">{body}</span>
-      </span>
-    </div>
+      <FormField orientation="horizontal">
+        <FieldContent>
+          <FieldTitle>{title}</FieldTitle>
+          <FieldDescription>{body}</FieldDescription>
+        </FieldContent>
+        <RadioGroupItem
+          id={id}
+          value={value}
+          aria-label={`${title}. ${body}`}
+        />
+      </FormField>
+    </FieldLabel>
   );
 }
 
@@ -130,10 +137,10 @@ type RegistrationCopy = {
 type RegistrationResult = { ok: true } | { ok: false; message: string };
 
 type RegistrationStatus =
-  | { state: "idle" }
-  | { state: "pending" }
-  | { state: "error"; message: string }
-  | { state: "success" };
+  | { state: 'idle' }
+  | { state: 'pending' }
+  | { state: 'error'; message: string }
+  | { state: 'success' };
 
 export function RheaRegistrationPage({
   title,
@@ -154,8 +161,8 @@ export function RheaRegistrationPage({
   }) => Promise<RegistrationResult>;
   footer?: React.ReactNode;
 }) {
-  const [status, setStatus] = useState<RegistrationStatus>({ state: "idle" });
-  const succeeded = status.state === "success";
+  const [status, setStatus] = useState<RegistrationStatus>({ state: 'idle' });
+  const succeeded = status.state === 'success';
 
   return (
     <RheaAuthCard
@@ -164,7 +171,10 @@ export function RheaRegistrationPage({
       announceTitle={succeeded}
     >
       {succeeded ? (
-        <a href={successHref} className={cn(buttonVariants({ size: "lg" }), "w-full")}>
+        <a
+          href={successHref}
+          className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
+        >
           {copy.successActionLabel}
         </a>
       ) : (
@@ -197,39 +207,55 @@ function RegistrationForm({
   }) => Promise<RegistrationResult>;
   onStatusChange: (status: RegistrationStatus) => void;
 }) {
-  const pending = status.state === "pending";
+  const pending = status.state === 'pending';
 
   return (
     <form
       className="grid gap-4"
       onSubmit={async (event) => {
         event.preventDefault();
-        onStatusChange({ state: "pending" });
+        onStatusChange({ state: 'pending' });
         const form = new FormData(event.currentTarget);
         try {
           const result = await onSubmit({
-            displayName: String(form.get("displayName")),
-            email: String(form.get("email")),
-            password: String(form.get("password")),
+            displayName: String(form.get('displayName')),
+            email: String(form.get('email')),
+            password: String(form.get('password')),
           });
           onStatusChange(
-            result.ok ? { state: "success" } : { state: "error", message: result.message },
+            result.ok
+              ? { state: 'success' }
+              : { state: 'error', message: result.message },
           );
         } catch {
-          onStatusChange({ state: "error", message: m.candidateAction_errorText() });
+          onStatusChange({
+            state: 'error',
+            message: m.candidateAction_errorText(),
+          });
         }
       }}
     >
-      <Field label={copy.nameLabel} name="displayName" autoComplete="name" />
-      <Field label={copy.emailLabel} name="email" type="email" autoComplete="email" />
-      <Field
+      <RegistrationField
+        label={copy.nameLabel}
+        name="displayName"
+        autoComplete="name"
+      />
+      <RegistrationField
+        label={copy.emailLabel}
+        name="email"
+        type="email"
+        autoComplete="email"
+      />
+      <RegistrationField
         label={copy.passwordLabel}
         name="password"
         type="password"
         autoComplete="new-password"
         minLength={8}
       />
-      <FormError message={status.state === "error" ? status.message : null} />
+      {status.state === 'error' ? (
+        <FieldError>{status.message}</FieldError>
+      ) : null}
       <Button
         type="submit"
         size="lg"
@@ -243,10 +269,10 @@ function RegistrationForm({
   );
 }
 
-function Field({
+function RegistrationField({
   label,
   name,
-  type = "text",
+  type = 'text',
   autoComplete,
   minLength,
 }: {
@@ -257,8 +283,8 @@ function Field({
   minLength?: number;
 }) {
   return (
-    <div className="grid gap-2">
-      <Label htmlFor={name}>{label}</Label>
+    <FormField>
+      <FieldLabel htmlFor={name}>{label}</FieldLabel>
       <Input
         id={name}
         name={name}
@@ -267,15 +293,6 @@ function Field({
         minLength={minLength}
         required
       />
-    </div>
-  );
-}
-
-function FormError({ message }: { message: string | null }) {
-  if (!message) return null;
-  return (
-    <p className="text-sm text-destructive" role="alert">
-      {message}
-    </p>
+    </FormField>
   );
 }

@@ -9,12 +9,12 @@
  * `rewrite.input` owns delocalization; feeding it an already-delocalized
  * URL loops the redirect.
  */
-import handler from '@tanstack/react-start/server-entry'
+import handler from '@tanstack/react-start/server-entry';
 
-import { paraglideMiddleware } from './paraglide/server'
+import { paraglideMiddleware } from './paraglide/server';
 
 export default {
   fetch(request: Request): Promise<Response> {
-    return paraglideMiddleware(request, () => handler.fetch(request))
+    return paraglideMiddleware(request, () => handler.fetch(request));
   },
-}
+};

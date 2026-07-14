@@ -1,17 +1,32 @@
-import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { boardCopy } from '#/copy';
+import { isNotFound } from '@cavuno/board';
+import {
+  createBreadcrumbJsonLd,
+  formatRange,
+  itemListJsonLd,
+} from '@cavuno/board/seo';
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
-import { isNotFound } from "@cavuno/board";
-import { boardCopy } from "#/copy";
-import { createBreadcrumbJsonLd, formatRange, itemListJsonLd } from "@cavuno/board/seo";
+import { m } from '../paraglide/messages';
+import { getSeoBase, getTitleLocations } from '../server/queries';
+import {
+  SalaryNotFoundPage,
+  SalaryPageLayout,
+  SalaryPendingPage,
+} from './-salary-page-layout';
 
-import { JsonLd } from "@/components/json-ld";
-import { SalaryEmptyState, SalaryRail, type RailItem } from "@/components/board/salary-sections";
-import { toSalaryBreadcrumbVM, toSalaryRailVM } from "@/board/salary-view-model";
-import { m } from "../paraglide/messages";
-import { getSeoBase, getTitleLocations } from "../server/queries";
-import { SalaryNotFoundPage, SalaryPageLayout, SalaryPendingPage } from "./-salary-page-layout";
+import {
+  toSalaryBreadcrumbVM,
+  toSalaryRailVM,
+} from '@/board/salary-view-model';
+import {
+  SalaryEmptyState,
+  SalaryRail,
+  type RailItem,
+} from '@/components/board/salary-sections';
+import { JsonLd } from '@/components/json-ld';
 
-export const Route = createFileRoute("/salaries/titles/$slug/locations")({
+export const Route = createFileRoute('/salaries/titles/$slug/locations')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
     let data;
@@ -23,7 +38,7 @@ export const Route = createFileRoute("/salaries/titles/$slug/locations")({
     }
     if (data.canonicalSlug !== params.slug) {
       throw redirect({
-        to: "/salaries/titles/$slug/locations",
+        to: '/salaries/titles/$slug/locations',
         params: { slug: data.canonicalSlug },
         statusCode: 308,
       });
@@ -42,7 +57,7 @@ export const Route = createFileRoute("/salaries/titles/$slug/locations")({
               }),
             },
             {
-              name: "description",
+              name: 'description',
               content: m.salaryDetail_titleLocationsMetaDescription({
                 title: loaderData.data.categoryName,
                 count: loaderData.data.locations.length,
@@ -51,7 +66,7 @@ export const Route = createFileRoute("/salaries/titles/$slug/locations")({
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: `${loaderData.seo.origin}/salaries/titles/${loaderData.data.canonicalSlug}/locations`,
             },
           ],
@@ -59,7 +74,9 @@ export const Route = createFileRoute("/salaries/titles/$slug/locations")({
       : {},
   component: TitleLocationsPage,
   pendingComponent: SalaryPendingPage,
-  notFoundComponent: () => <SalaryNotFoundPage title={m.salaryDetail_notFoundTitle()} />,
+  notFoundComponent: () => (
+    <SalaryNotFoundPage title={m.salaryDetail_notFoundTitle()} />
+  ),
 });
 
 function TitleLocationsPage() {
@@ -83,7 +100,10 @@ function TitleLocationsPage() {
       { label: crumbs.home, href: seo.origin },
       { label: crumbs.salaries, href: `${seo.origin}/salaries` },
       { label: crumbs.titles, href: `${seo.origin}/salaries/titles` },
-      { label: data.categoryName, href: `${seo.origin}/salaries/titles/${data.canonicalSlug}` },
+      {
+        label: data.categoryName,
+        href: `${seo.origin}/salaries/titles/${data.canonicalSlug}`,
+      },
       { label: crumbs.locations },
     ]),
   ].filter((e): e is Record<string, unknown> => e !== null);
@@ -92,10 +112,13 @@ function TitleLocationsPage() {
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
         [
-          { name: crumbs.home, href: "/" },
-          { name: crumbs.salaries, href: "/salaries" },
-          { name: crumbs.titles, href: "/salaries/titles" },
-          { name: data.categoryName, href: `/salaries/titles/${data.canonicalSlug}` },
+          { name: crumbs.home, href: '/' },
+          { name: crumbs.salaries, href: '/salaries' },
+          { name: crumbs.titles, href: '/salaries/titles' },
+          {
+            name: data.categoryName,
+            href: `/salaries/titles/${data.canonicalSlug}`,
+          },
           { name: crumbs.locations },
         ],
         seo.language,
@@ -106,11 +129,18 @@ function TitleLocationsPage() {
       <JsonLd data={jsonLd} />
       {items.length > 0 ? (
         <SalaryRail
-          vm={toSalaryRailVM(m.salaryDetail_locationsLabel(), items, seo.language, seo.labels)}
+          vm={toSalaryRailVM(
+            m.salaryDetail_locationsLabel(),
+            items,
+            seo.language,
+            seo.labels,
+          )}
         />
       ) : (
         <SalaryEmptyState
-          title={m.salaryDetail_titleLocationsHeading({ title: data.categoryName })}
+          title={m.salaryDetail_titleLocationsHeading({
+            title: data.categoryName,
+          })}
           description={m.salaryHub_emptyDescription()}
         />
       )}

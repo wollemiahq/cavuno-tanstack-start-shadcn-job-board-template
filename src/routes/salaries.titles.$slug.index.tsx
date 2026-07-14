@@ -1,17 +1,34 @@
-import { createFileRoute, getRouteApi, notFound, redirect } from "@tanstack/react-router";
-
-import { isNotFound } from "@cavuno/board";
-import { boardCopy } from "#/copy";
+import { boardCopy } from '#/copy';
+import { isNotFound } from '@cavuno/board';
 import {
   buildSalaryFaq,
   createBreadcrumbJsonLd,
   faqJsonLd,
   formatRange,
   titleSalaryJsonLd,
-} from "@cavuno/board/seo";
+} from '@cavuno/board/seo';
+import {
+  createFileRoute,
+  getRouteApi,
+  notFound,
+  redirect,
+} from '@tanstack/react-router';
 
-import { JsonLd } from "@/components/json-ld";
-import { PageSection } from "@/components/layout/page";
+import { m } from '../paraglide/messages';
+import { getSeoBase, getTitleSalary } from '../server/queries';
+import {
+  SalaryNotFoundPage,
+  SalaryPageLayout,
+  SalaryPendingPage,
+} from './-salary-page-layout';
+
+import {
+  toOverallSalaryVM,
+  toSalaryBreadcrumbVM,
+  toSalaryFaqVM,
+  toSalaryRailVM,
+  toSeniorityTableVM,
+} from '@/board/salary-view-model';
 import {
   SalaryEmptyState,
   OverallSalaryCard,
@@ -19,19 +36,11 @@ import {
   SalaryRail,
   SenioritySalaryTable,
   type RailItem,
-} from "@/components/board/salary-sections";
-import {
-  toOverallSalaryVM,
-  toSalaryBreadcrumbVM,
-  toSalaryFaqVM,
-  toSalaryRailVM,
-  toSeniorityTableVM,
-} from "@/board/salary-view-model";
-import { m } from "../paraglide/messages";
-import { getSeoBase, getTitleSalary } from "../server/queries";
-import { SalaryNotFoundPage, SalaryPageLayout, SalaryPendingPage } from "./-salary-page-layout";
+} from '@/components/board/salary-sections';
+import { JsonLd } from '@/components/json-ld';
+import { PageSection } from '@/components/layout/page';
 
-export const Route = createFileRoute("/salaries/titles/$slug/")({
+export const Route = createFileRoute('/salaries/titles/$slug/')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
     let salary;
@@ -45,7 +54,7 @@ export const Route = createFileRoute("/salaries/titles/$slug/")({
     // the starter performs the redirect (S3), mirroring the hosted board.
     if (salary.canonicalSlug !== params.slug) {
       throw redirect({
-        to: "/salaries/titles/$slug",
+        to: '/salaries/titles/$slug',
         params: { slug: salary.canonicalSlug },
         statusCode: 308,
       });
@@ -64,7 +73,7 @@ export const Route = createFileRoute("/salaries/titles/$slug/")({
               }),
             },
             {
-              name: "description",
+              name: 'description',
               content: loaderData.salary.overallSalary
                 ? m.salaryDetail_titleMetaDescriptionWithData({
                     title: loaderData.salary.categoryName,
@@ -82,7 +91,7 @@ export const Route = createFileRoute("/salaries/titles/$slug/")({
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: `${loaderData.seo.origin}/salaries/titles/${loaderData.salary.canonicalSlug}`,
             },
           ],
@@ -90,10 +99,12 @@ export const Route = createFileRoute("/salaries/titles/$slug/")({
       : {},
   component: TitleSalaryPage,
   pendingComponent: SalaryPendingPage,
-  notFoundComponent: () => <SalaryNotFoundPage title={m.salaryDetail_notFoundTitle()} />,
+  notFoundComponent: () => (
+    <SalaryNotFoundPage title={m.salaryDetail_notFoundTitle()} />
+  ),
 });
 
-const rootApi = getRouteApi("__root__");
+const rootApi = getRouteApi('__root__');
 
 function TitleSalaryPage() {
   const { salary, seo } = Route.useLoaderData();
@@ -101,7 +112,11 @@ function TitleSalaryPage() {
   const { board } = rootApi.useLoaderData();
   const locale = seo.language;
 
-  const faqs = buildSalaryFaq(locale, salary.categoryName, salary.overallSalary);
+  const faqs = buildSalaryFaq(
+    locale,
+    salary.categoryName,
+    salary.overallSalary,
+  );
   const jsonLd = [
     titleSalaryJsonLd(locale, salary),
     faqJsonLd(faqs),
@@ -152,9 +167,9 @@ function TitleSalaryPage() {
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
         [
-          { name: crumbs.home, href: "/" },
-          { name: crumbs.salaries, href: "/salaries" },
-          { name: crumbs.titles, href: "/salaries/titles" },
+          { name: crumbs.home, href: '/' },
+          { name: crumbs.salaries, href: '/salaries' },
+          { name: crumbs.titles, href: '/salaries/titles' },
           { name: salary.categoryName },
         ],
         seo.language,
@@ -184,7 +199,11 @@ function TitleSalaryPage() {
           {salary.bySeniority.length > 0 ? (
             <PageSection title={m.salaryDetail_seniorityHeading()}>
               <SenioritySalaryTable
-                vm={toSeniorityTableVM(salary.bySeniority, board.language, seo.labels)}
+                vm={toSeniorityTableVM(
+                  salary.bySeniority,
+                  board.language,
+                  seo.labels,
+                )}
               />
             </PageSection>
           ) : null}
@@ -206,7 +225,12 @@ function TitleSalaryPage() {
             )}
           />
           <SalaryRail
-            vm={toSalaryRailVM(m.salaryDetail_topSkills(), skillItems, seo.language, seo.labels)}
+            vm={toSalaryRailVM(
+              m.salaryDetail_topSkills(),
+              skillItems,
+              seo.language,
+              seo.labels,
+            )}
           />
           <SalaryRail
             vm={toSalaryRailVM(

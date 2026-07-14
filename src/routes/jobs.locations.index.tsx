@@ -1,3 +1,5 @@
+import { boardCopy } from '#/copy';
+import { listingHead, listingJsonLd } from '@cavuno/board/seo';
 /**
  * Locations directory — `/jobs/locations/` (hosted parity:
  * `boards/[slug]/(main)/jobs/locations/page.tsx`). The API's `/places` returns
@@ -10,27 +12,25 @@
  * shadcn Badge and Empty compositions present the nested directory without
  * changing its route, hierarchy, or SEO data contracts.
  */
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { MapPin } from "lucide-react";
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { MapPin } from 'lucide-react';
 
-import type { PublicPlace } from "@cavuno/board";
+import { JsonLd } from '../components/json-ld';
+import { m } from '../paraglide/messages';
+import { getSeoBase, listPlaces } from '../server/queries';
 
-import { Page, PageContent, PageHeader } from "@/components/layout/page";
-import { Badge } from "@/components/ui/badge";
+import { Page, PageContent, PageHeader } from '@/components/layout/page';
+import { Badge } from '@/components/ui/badge';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty";
-import { JsonLd } from "../components/json-ld";
-import { listingHead, listingJsonLd } from "@cavuno/board/seo";
-import { boardCopy } from "#/copy";
-import { m } from "../paraglide/messages";
-import { getSeoBase, listPlaces } from "../server/queries";
+} from '@/components/ui/empty';
+import type { PublicPlace } from '@cavuno/board';
 
-export const Route = createFileRoute("/jobs/locations/")({
+export const Route = createFileRoute('/jobs/locations/')({
   staticData: { ownsMain: true },
   loader: async () => {
     const [places, seo] = await Promise.all([listPlaces(), getSeoBase()]);
@@ -40,7 +40,7 @@ export const Route = createFileRoute("/jobs/locations/")({
     loaderData
       ? listingHead({
           ...loaderData.seo,
-          path: "/jobs/locations",
+          path: '/jobs/locations',
           heading: m.jobsLocationsIndex_heading(),
         })
       : {},
@@ -65,11 +65,15 @@ function buildHierarchy(places: PublicPlace[]): PlaceNode[] {
   }
 
   const buildNode = (place: PublicPlace): PlaceNode => {
-    const children = (childrenOf.get(place.id) ?? []).sort((a, b) => b.jobCount - a.jobCount);
+    const children = (childrenOf.get(place.id) ?? []).sort(
+      (a, b) => b.jobCount - a.jobCount,
+    );
     return { place, children: children.map(buildNode) };
   };
 
-  const roots = places.filter((place) => !place.parentId || !byId.has(place.parentId));
+  const roots = places.filter(
+    (place) => !place.parentId || !byId.has(place.parentId),
+  );
   roots.sort((a, b) => b.jobCount - a.jobCount);
   return roots.map(buildNode);
 }
@@ -84,7 +88,7 @@ function PlaceTree({ nodes }: { nodes: PlaceNode[] }) {
               <Link
                 to="/jobs/locations/$location"
                 params={{ location: node.place.slug }}
-                className="rounded-sm text-foreground underline-offset-4 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+                className="text-foreground hover:text-primary focus-visible:ring-ring/30 rounded-sm underline-offset-4 transition-colors hover:underline focus-visible:ring-3 focus-visible:outline-none"
               >
                 {node.place.name}
               </Link>
@@ -94,7 +98,7 @@ function PlaceTree({ nodes }: { nodes: PlaceNode[] }) {
             <Badge variant="secondary">{node.place.jobCount}</Badge>
           </div>
           {node.children.length > 0 ? (
-            <div className="mt-1 ml-4 border-l border-border pl-3">
+            <div className="border-border mt-1 ml-4 border-l pl-3">
               <PlaceTree nodes={node.children} />
             </div>
           ) : null}
@@ -114,10 +118,15 @@ function LocationsIndexPage() {
       <JsonLd
         data={listingJsonLd({
           origin: seo.origin,
-          breadcrumbs: [{ name: crumbs.jobs, path: "/" }, { name: crumbs.locations }],
+          breadcrumbs: [
+            { name: crumbs.jobs, path: '/' },
+            { name: crumbs.locations },
+          ],
         })}
       />
-      <PageContent header={<PageHeader title={m.jobsLocationsIndex_heading()} />}>
+      <PageContent
+        header={<PageHeader title={m.jobsLocationsIndex_heading()} />}
+      >
         {tree.length === 0 ? (
           <Empty className="py-12">
             <EmptyHeader>
@@ -125,7 +134,9 @@ function LocationsIndexPage() {
                 <MapPin />
               </EmptyMedia>
               <EmptyTitle>{m.jobsLocationsIndex_heading()}</EmptyTitle>
-              <EmptyDescription>{m.jobsLocationsIndex_emptyText()}</EmptyDescription>
+              <EmptyDescription>
+                {m.jobsLocationsIndex_emptyText()}
+              </EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (

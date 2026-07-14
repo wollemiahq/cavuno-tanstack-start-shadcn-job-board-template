@@ -1,33 +1,33 @@
-"use client";
+'use client';
 
-import { Users } from "lucide-react";
+import { Users } from 'lucide-react';
 
-import type { TalentDirectoryEntry } from "@cavuno/board";
+import { m } from '../../paraglide/messages';
 
-import { getTalentSearchLabels } from "@/board/talent-search-labels";
-import { toTalentCardVM } from "@/board/talent-view-model";
-import type { BreadcrumbData } from "@/components/board/breadcrumb";
-import { PageHeaderWithBreadcrumb } from "@/components/board/page-header-with-breadcrumb";
-import { TalentSearchControls } from "@/components/board/talent-search-controls";
-import { TalentSearchResult } from "@/components/board/talent-search-result";
-import { Box } from "@/components/layout/box";
-import { Page } from "@/components/layout/page";
+import { getTalentSearchLabels } from '@/board/talent-search-labels';
+import { toTalentCardVM } from '@/board/talent-view-model';
+import type { BreadcrumbData } from '@/components/board/breadcrumb';
+import { PageHeaderWithBreadcrumb } from '@/components/board/page-header-with-breadcrumb';
+import { TalentSearchControls } from '@/components/board/talent-search-controls';
+import { TalentSearchResult } from '@/components/board/talent-search-result';
+import { Box } from '@/components/layout/box';
+import { Page } from '@/components/layout/page';
 import {
   AdRail,
   SearchResultDetail,
   SearchResultsLayout,
   SearchResultsList,
-} from "@/components/search-results/search-results";
-import { Button } from "@/components/ui/button";
+} from '@/components/search-results/search-results';
+import { Button } from '@/components/ui/button';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty";
-import { useSearchSelection } from "@/hooks/use-search-selection";
-import { m } from "../../paraglide/messages";
+} from '@/components/ui/empty';
+import { useSearchSelection } from '@/hooks/use-search-selection';
+import type { TalentDirectoryEntry } from '@cavuno/board';
 
 type AdPlacement = {
   label: string;
@@ -109,8 +109,8 @@ export function TalentSearchPage({
         </Box>
 
         <Box
-          paddingX={{ base: "4", md: "8" }}
-          paddingY={{ base: "6", md: "8" }}
+          paddingX={{ base: '4', md: '8' }}
+          paddingY={{ base: '6', md: '8' }}
         >
           <SearchResultsLayout
             startAd={
@@ -129,7 +129,7 @@ export function TalentSearchPage({
                 scrollRestorationId="talent-search-results"
               >
                 <div className="space-y-4 p-4">
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-muted-foreground text-sm font-medium">
                     {m.talentSearch_resultsHeading()}
                   </p>
 

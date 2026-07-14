@@ -1,6 +1,4 @@
-import { useId, type ComponentPropsWithoutRef, type ReactNode } from "react";
-
-import { cn } from "@/lib/utils";
+import { useId, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
 import {
   containerGridClass,
@@ -9,12 +7,18 @@ import {
   responsiveTokenStyle,
   spaceValues,
   type ContainerWidth,
-} from "./layout.types";
+} from './layout.types';
 
-type PageNativeProps = Omit<ComponentPropsWithoutRef<"div">, "className" | "style">;
+import { cn } from '@/lib/utils';
+
+type PageNativeProps = Omit<
+  ComponentPropsWithoutRef<'div'>,
+  'className' | 'style'
+>;
 
 export type PageProps = PageNativeProps & {
   width?: ContainerWidth;
+  fill?: boolean;
   children: ReactNode;
 };
 
@@ -24,10 +28,14 @@ export type PageProps = PageNativeProps & {
  * @default width is `wide` (80rem) with 1rem mobile and 2rem desktop gutters.
  * @invariant Page owns geometry; callers cannot pass className or style.
  */
-export function Page({ width = "wide", ...props }: PageProps) {
+export function Page({ width = 'wide', fill = false, ...props }: PageProps) {
   const layoutStyle = {
-    "--layout-width": containerWidthValues[width],
-    ...responsiveTokenStyle("layout-gutter", { base: "4", md: "8" }, spaceValues),
+    '--layout-width': containerWidthValues[width],
+    ...responsiveTokenStyle(
+      'layout-gutter',
+      { base: '4', md: '8' },
+      spaceValues,
+    ),
   };
 
   return (
@@ -36,14 +44,14 @@ export function Page({ width = "wide", ...props }: PageProps) {
       data-slot="page"
       data-layout="page"
       style={layoutStyle}
-      className={`rhea-theme ${responsiveGutterClass}`}
+      className={cn(responsiveGutterClass, fill && 'md:h-full md:min-h-0')}
     />
   );
 }
 
 type PageHeaderNativeProps = Omit<
-  ComponentPropsWithoutRef<"header">,
-  "className" | "style" | "title" | "children"
+  ComponentPropsWithoutRef<'header'>,
+  'className' | 'style' | 'title' | 'children'
 >;
 
 export type PageHeaderProps = PageHeaderNativeProps & {
@@ -52,7 +60,7 @@ export type PageHeaderProps = PageHeaderNativeProps & {
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
-  align?: "start" | "center";
+  align?: 'start' | 'center';
   children?: ReactNode;
 };
 
@@ -69,11 +77,11 @@ export function PageHeader({
   title,
   description,
   actions,
-  align = "start",
+  align = 'start',
   children,
   ...props
 }: PageHeaderProps) {
-  const centered = align === "center";
+  const centered = align === 'center';
 
   return (
     <header
@@ -81,23 +89,38 @@ export function PageHeader({
       data-slot="page-header"
       data-layout="page-header"
       data-align={align}
-      className={cn("flex flex-col gap-4 py-8 md:py-10", centered && "items-center text-center")}
+      className={cn(
+        'flex flex-col gap-4 py-8 md:py-10',
+        centered && 'items-center text-center',
+      )}
     >
       {breadcrumb}
       {eyebrow}
       <div
         data-slot="page-header-heading"
         className={cn(
-          "flex w-full flex-col gap-4 md:flex-row md:items-start md:justify-between",
-          centered && "md:flex-col md:items-center",
+          'flex w-full flex-col gap-4 md:flex-row md:items-start md:justify-between',
+          centered && 'md:flex-col md:items-center',
         )}
       >
-        <div className={cn("flex min-w-0 flex-col gap-2", centered && "items-center")}>
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">{title}</h1>
-          {description ? <p className="text-muted-foreground text-base">{description}</p> : null}
+        <div
+          className={cn(
+            'flex min-w-0 flex-col gap-2',
+            centered && 'items-center',
+          )}
+        >
+          <h1 className="font-heading text-3xl font-semibold tracking-tight">
+            {title}
+          </h1>
+          {description ? (
+            <p className="text-muted-foreground text-base">{description}</p>
+          ) : null}
         </div>
         {actions ? (
-          <div data-slot="page-header-actions" className="flex shrink-0 flex-wrap gap-2">
+          <div
+            data-slot="page-header-actions"
+            className="flex shrink-0 flex-wrap gap-2"
+          >
             {actions}
           </div>
         ) : null}
@@ -108,8 +131,8 @@ export function PageHeader({
 }
 
 type PageContentNativeProps = Omit<
-  ComponentPropsWithoutRef<"main">,
-  "className" | "style" | "children"
+  ComponentPropsWithoutRef<'main'>,
+  'className' | 'style' | 'children'
 >;
 
 type PageContentBaseProps = PageContentNativeProps & {
@@ -126,7 +149,7 @@ export type PageContentProps =
   | (PageContentBaseProps & {
       aside: ReactNode;
       asideLabel: string;
-      asideOrder?: "before" | "after";
+      asideOrder?: 'before' | 'after';
     });
 
 /**
@@ -141,15 +164,15 @@ export function PageContent({
   children,
   aside,
   asideLabel,
-  asideOrder = "after",
+  asideOrder = 'after',
   ...props
 }: PageContentProps) {
   const primary = (
     <div
       data-slot="page-primary"
       className={cn(
-        "flex min-w-0 flex-col gap-8 lg:row-start-1",
-        aside && asideOrder === "before" ? "lg:col-start-2" : "lg:col-start-1",
+        'flex min-w-0 flex-col gap-8 lg:row-start-1',
+        aside && asideOrder === 'before' ? 'lg:col-start-2' : 'lg:col-start-1',
       )}
     >
       {children}
@@ -161,8 +184,8 @@ export function PageContent({
       data-slot="page-aside"
       aria-label={asideLabel}
       className={cn(
-        "flex flex-col gap-6 lg:sticky lg:top-8 lg:row-start-1 lg:self-start",
-        asideOrder === "before" ? "lg:col-start-1" : "lg:col-start-2",
+        'flex flex-col gap-6 lg:sticky lg:top-8 lg:row-start-1 lg:self-start',
+        asideOrder === 'before' ? 'lg:col-start-1' : 'lg:col-start-2',
       )}
     >
       {aside}
@@ -180,24 +203,29 @@ export function PageContent({
       <div
         data-slot="page-body"
         className={cn(
-          "grid gap-8 py-8 md:py-10",
+          'grid gap-8 py-8 md:py-10',
           complementary &&
-            (asideOrder === "before"
-              ? "lg:grid-cols-[20rem_minmax(0,1fr)]"
-              : "lg:grid-cols-[minmax(0,1fr)_20rem]"),
+            (asideOrder === 'before'
+              ? 'lg:grid-cols-[20rem_minmax(0,1fr)]'
+              : 'lg:grid-cols-[minmax(0,1fr)_20rem]'),
         )}
       >
-        {asideOrder === "before" ? complementary : null}
+        {asideOrder === 'before' ? complementary : null}
         {primary}
-        {asideOrder === "after" ? complementary : null}
+        {asideOrder === 'after' ? complementary : null}
       </div>
     </main>
   );
 }
 
 type PageSectionNativeProps = Omit<
-  ComponentPropsWithoutRef<"section">,
-  "className" | "style" | "title" | "children" | "aria-label" | "aria-labelledby"
+  ComponentPropsWithoutRef<'section'>,
+  | 'className'
+  | 'style'
+  | 'title'
+  | 'children'
+  | 'aria-label'
+  | 'aria-labelledby'
 >;
 
 type TitledPageSectionProps = PageSectionNativeProps & {
@@ -216,7 +244,9 @@ type AriaLabelledPageSectionProps = PageSectionNativeProps & {
   children: ReactNode;
 };
 
-export type PageSectionProps = TitledPageSectionProps | AriaLabelledPageSectionProps;
+export type PageSectionProps =
+  | TitledPageSectionProps
+  | AriaLabelledPageSectionProps;
 
 /**
  * Groups one named region of a page with an optional description and action.
@@ -246,12 +276,17 @@ export function PageSection(props: PageSectionProps) {
         aria-labelledby={headingId}
         className="flex flex-col gap-6"
       >
-        <div data-slot="page-section-header" className="flex items-start justify-between gap-4">
+        <div
+          data-slot="page-section-header"
+          className="flex items-start justify-between gap-4"
+        >
           <div className="flex min-w-0 flex-col gap-1">
             <h2 id={headingId} className="font-heading text-xl font-semibold">
               {title}
             </h2>
-            {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
+            {description ? (
+              <p className="text-muted-foreground text-sm">{description}</p>
+            ) : null}
           </div>
           {actions ? (
             <div data-slot="page-section-actions" className="shrink-0">

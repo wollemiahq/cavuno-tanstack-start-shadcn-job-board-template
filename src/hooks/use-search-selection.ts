@@ -1,15 +1,14 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from 'react';
+import type { MouseEvent as ReactMouseEvent, RefObject } from 'react';
 
-import type { MouseEvent as ReactMouseEvent, RefObject } from "react";
-
-const DESKTOP_QUERY = "(min-width: 48rem)";
+const DESKTOP_QUERY = '(min-width: 48rem)';
 
 function subscribeToDesktop(callback: () => void) {
   const media = window.matchMedia(DESKTOP_QUERY);
-  media.addEventListener("change", callback);
-  return () => media.removeEventListener("change", callback);
+  media.addEventListener('change', callback);
+  return () => media.removeEventListener('change', callback);
 }
 
 function getDesktopSnapshot() {
@@ -24,7 +23,10 @@ export interface SearchSelectionController {
   isDesktop: boolean;
   selectedId?: string;
   detailRef: RefObject<HTMLElement | null>;
-  onResultActivate: (event: ReactMouseEvent<HTMLAnchorElement>, resultId: string) => void;
+  onResultActivate: (
+    event: ReactMouseEvent<HTMLAnchorElement>,
+    resultId: string,
+  ) => void;
 }
 
 export function useSearchSelection({
@@ -45,7 +47,11 @@ export function useSearchSelection({
   );
   const detailRef = useRef<HTMLElement>(null);
   const selectedIsVisible = selectedId ? resultIds.includes(selectedId) : false;
-  const activeId = isDesktop ? (selectedIsVisible ? selectedId : resultIds[0]) : undefined;
+  const activeId = isDesktop
+    ? selectedIsVisible
+      ? selectedId
+      : resultIds[0]
+    : undefined;
 
   useEffect(() => {
     if (activeId && activeId !== selectedId) onReplace(activeId);

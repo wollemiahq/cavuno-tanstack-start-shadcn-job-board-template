@@ -1,37 +1,37 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from 'vitest';
 
 import {
   parseTalentSearch,
   talentListingLoaderDeps,
   talentSearchSubmission,
-} from "./talent-search";
+} from './talent-search';
 
-describe("parseTalentSearch", () => {
-  it("keeps only trimmed Talent listing and selection state", () => {
+describe('parseTalentSearch', () => {
+  it('keeps only trimmed Talent listing and selection state', () => {
     expect(
       parseTalentSearch({
-        q: "  product researcher  ",
-        skill: "  accessibility  ",
-        cursor: "  next-page-token  ",
-        selectedTalent: "  ada-lovelace  ",
-        query: "company-only query",
-        page: "3",
+        q: '  product researcher  ',
+        skill: '  accessibility  ',
+        cursor: '  next-page-token  ',
+        selectedTalent: '  ada-lovelace  ',
+        query: 'company-only query',
+        page: '3',
       }),
     ).toEqual({
-      q: "product researcher",
-      skill: "accessibility",
-      cursor: "next-page-token",
-      selectedTalent: "ada-lovelace",
+      q: 'product researcher',
+      skill: 'accessibility',
+      cursor: 'next-page-token',
+      selectedTalent: 'ada-lovelace',
     });
   });
 
-  it("drops blank and non-string URL values", () => {
+  it('drops blank and non-string URL values', () => {
     expect(
       parseTalentSearch({
-        q: "  ",
+        q: '  ',
         skill: 42,
         cursor: null,
-        selectedTalent: ["ada-lovelace"],
+        selectedTalent: ['ada-lovelace'],
       }),
     ).toEqual({
       q: undefined,
@@ -42,68 +42,68 @@ describe("parseTalentSearch", () => {
   });
 });
 
-describe("talentListingLoaderDeps", () => {
-  it("keeps listing inputs while excluding the selected detail pane", () => {
+describe('talentListingLoaderDeps', () => {
+  it('keeps listing inputs while excluding the selected detail pane', () => {
     const first = talentListingLoaderDeps(
       parseTalentSearch({
-        q: "researcher",
-        skill: "accessibility",
-        cursor: "next-page-token",
-        selectedTalent: "first-candidate",
+        q: 'researcher',
+        skill: 'accessibility',
+        cursor: 'next-page-token',
+        selectedTalent: 'first-candidate',
       }),
     );
     const second = talentListingLoaderDeps(
       parseTalentSearch({
-        q: "researcher",
-        skill: "accessibility",
-        cursor: "next-page-token",
-        selectedTalent: "second-candidate",
+        q: 'researcher',
+        skill: 'accessibility',
+        cursor: 'next-page-token',
+        selectedTalent: 'second-candidate',
       }),
     );
 
     expect(first).toEqual({
-      q: "researcher",
-      skill: "accessibility",
-      cursor: "next-page-token",
+      q: 'researcher',
+      skill: 'accessibility',
+      cursor: 'next-page-token',
     });
     expect(first).toEqual(second);
-    expect(first).not.toHaveProperty("selectedTalent");
+    expect(first).not.toHaveProperty('selectedTalent');
   });
 });
 
-describe("talentSearchSubmission", () => {
-  it("canonicalizes the submitted filters and clears pagination plus selection", () => {
+describe('talentSearchSubmission', () => {
+  it('canonicalizes the submitted filters and clears pagination plus selection', () => {
     expect(
       talentSearchSubmission(
         {
-          q: "designer",
-          skill: "Figma",
-          cursor: "next-page-token",
-          selectedTalent: "ada-lovelace",
+          q: 'designer',
+          skill: 'Figma',
+          cursor: 'next-page-token',
+          selectedTalent: 'ada-lovelace',
         },
         {
-          q: "  product researcher  ",
-          skill: "  accessibility  ",
+          q: '  product researcher  ',
+          skill: '  accessibility  ',
         },
       ),
     ).toEqual({
-      q: "product researcher",
-      skill: "accessibility",
+      q: 'product researcher',
+      skill: 'accessibility',
       cursor: undefined,
       selectedTalent: undefined,
     });
   });
 
-  it("removes blank submitted filters together with stale result state", () => {
+  it('removes blank submitted filters together with stale result state', () => {
     expect(
       talentSearchSubmission(
         {
-          q: "designer",
-          skill: "Figma",
-          cursor: "next-page-token",
-          selectedTalent: "ada-lovelace",
+          q: 'designer',
+          skill: 'Figma',
+          cursor: 'next-page-token',
+          selectedTalent: 'ada-lovelace',
         },
-        { q: "  ", skill: "" },
+        { q: '  ', skill: '' },
       ),
     ).toEqual({
       q: undefined,

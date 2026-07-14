@@ -2,11 +2,10 @@
 
 import { useState } from 'react';
 
-import { Copy01, Link01 } from '@untitledui/icons';
-
 import { boardCopy } from '#/copy';
+import { Copy, Link } from 'lucide-react';
 
-import { Button } from '@/components/base/buttons/button';
+import { Button } from '@/components/ui/button';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 export function CopyLinkButton({
@@ -28,12 +27,12 @@ export function CopyLinkButton({
 }) {
   const [copied, setCopied] = useState(false);
   const copy = boardCopy(language, labels).copyLink;
+  const buttonSize = size === 'md' ? 'default' : size;
   return (
     <Button
-      color="secondary"
-      size={size}
+      variant="secondary"
+      size={buttonSize}
       className={className}
-      iconLeading={copied ? Copy01 : Link01}
       aria-label={copy.ariaLabel}
       onClick={async () => {
         // Only claim success if the write actually landed — clipboard is
@@ -48,6 +47,11 @@ export function CopyLinkButton({
         }
       }}
     >
+      {copied ? (
+        <Copy data-icon="inline-start" aria-hidden="true" />
+      ) : (
+        <Link data-icon="inline-start" aria-hidden="true" />
+      )}
       {copied ? copy.copiedLabel : copy.copyLinkLabel}
     </Button>
   );

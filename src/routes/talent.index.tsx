@@ -1,18 +1,16 @@
-import {
-  createFileRoute,
-  notFound,
-  useNavigate,
-} from "@tanstack/react-router";
-import { LockKeyhole, Users } from "lucide-react";
+import { boardCopy } from '#/copy';
+import { isBoardApiError, isNotFound } from '@cavuno/board';
+import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
+import { createFileRoute, notFound, useNavigate } from '@tanstack/react-router';
+import { LockKeyhole, Users } from 'lucide-react';
 
-import { isBoardApiError, isNotFound } from "@cavuno/board";
-import { createBreadcrumbJsonLd } from "@cavuno/board/seo";
-import { boardCopy } from "#/copy";
+import { m } from '../paraglide/messages';
+import { getSeoBase, listTalent } from '../server/queries';
 
-import { TalentSearchPage } from "@/components/board/talent-search-page";
-import { JsonLd } from "@/components/json-ld";
-import { Page, PageContent, PageHeader } from "@/components/layout/page";
-import { buttonVariants } from "@/components/ui/button";
+import { TalentSearchPage } from '@/components/board/talent-search-page';
+import { JsonLd } from '@/components/json-ld';
+import { Page, PageContent, PageHeader } from '@/components/layout/page';
+import { buttonVariants } from '@/components/ui/button';
 import {
   Empty,
   EmptyContent,
@@ -20,20 +18,18 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty";
+} from '@/components/ui/empty';
 import {
   parseTalentSearch,
   talentListingLoaderDeps,
   talentSearchSubmission,
-} from "@/lib/talent-search";
-import { SelectedTalentDetail } from "@/routes/-selected-talent-detail";
-import { useSelectedTalent } from "@/routes/-use-selected-talent";
-import { m } from "../paraglide/messages";
-import { getSeoBase, listTalent } from "../server/queries";
+} from '@/lib/talent-search';
+import { SelectedTalentDetail } from '@/routes/-selected-talent-detail';
+import { useSelectedTalent } from '@/routes/-use-selected-talent';
 
 const TALENT_PAGE_SIZE = 24;
 
-export const Route = createFileRoute("/talent/")({
+export const Route = createFileRoute('/talent/')({
   staticData: { fullBleed: true, ownsMain: true },
   validateSearch: parseTalentSearch,
   loaderDeps: ({ search }) => talentListingLoaderDeps(search),
@@ -55,7 +51,7 @@ export const Route = createFileRoute("/talent/")({
       if (
         isBoardApiError(error) &&
         error.status === 403 &&
-        error.code === "talent_directory_restricted"
+        error.code === 'talent_directory_restricted'
       ) {
         return { seo, page: null, restricted: true as const };
       }
@@ -68,14 +64,14 @@ export const Route = createFileRoute("/talent/")({
           meta: [
             { title: m.talentDirectory_title() },
             {
-              name: "description",
+              name: 'description',
               content: m.talentDirectory_metaDescription({
                 boardName: loaderData.seo.boardName,
               }),
             },
           ],
           links: [
-            { rel: "canonical", href: `${loaderData.seo.origin}/talent` },
+            { rel: 'canonical', href: `${loaderData.seo.origin}/talent` },
           ],
         }
       : { meta: [{ title: m.talentDirectory_title() }] },
@@ -86,21 +82,17 @@ export const Route = createFileRoute("/talent/")({
 function TalentDirectoryNotFound() {
   return (
     <Page width="content">
-      <PageContent
-        header={<PageHeader title={m.talentDirectory_title()} />}
-      >
+      <PageContent header={<PageHeader title={m.talentDirectory_title()} />}>
         <Empty className="min-h-80 border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Users aria-hidden="true" />
             </EmptyMedia>
             <EmptyTitle>{m.talentDirectory_notFoundText()}</EmptyTitle>
-            <EmptyDescription>
-              {m.talentDirectory_emptyText()}
-            </EmptyDescription>
+            <EmptyDescription>{m.talentDirectory_emptyText()}</EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <a href="/jobs" className={buttonVariants({ variant: "outline" })}>
+            <a href="/jobs" className={buttonVariants({ variant: 'outline' })}>
               {m.meApplications_browseJobsLink()}
             </a>
           </EmptyContent>
@@ -113,9 +105,7 @@ function TalentDirectoryNotFound() {
 function RestrictedTalentDirectory({ boardName }: { boardName: string }) {
   return (
     <Page width="content">
-      <PageContent
-        header={<PageHeader title={m.talentDirectory_title()} />}
-      >
+      <PageContent header={<PageHeader title={m.talentDirectory_title()} />}>
         <Empty className="min-h-80 border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -140,12 +130,10 @@ function RestrictedTalentDirectory({ boardName }: { boardName: string }) {
 function TalentDirectoryPage() {
   const { seo, page, restricted } = Route.useLoaderData();
   const search = Route.useSearch();
-  const navigate = useNavigate({ from: "/talent/" });
+  const navigate = useNavigate({ from: '/talent/' });
   const copy = boardCopy(seo.language, seo.labels);
   const selectedTalent = useSelectedTalent(
-    page?.data.some(
-      (candidate) => candidate.handle === search.selectedTalent,
-    )
+    page?.data.some((candidate) => candidate.handle === search.selectedTalent)
       ? search.selectedTalent
       : undefined,
   );
@@ -165,7 +153,7 @@ function TalentDirectoryPage() {
     );
   }
 
-  if (!page) throw new Error("Public Talent directory data is missing");
+  if (!page) throw new Error('Public Talent directory data is missing');
 
   return (
     <>
@@ -179,7 +167,7 @@ function TalentDirectoryPage() {
         breadcrumb={{
           ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
           items: [
-            { name: copy.breadcrumbs.home, href: "/" },
+            { name: copy.breadcrumbs.home, href: '/' },
             { name: copy.breadcrumbs.talent },
           ],
         }}
@@ -200,8 +188,7 @@ function TalentDirectoryPage() {
         }
         onSearchSubmit={(next) =>
           navigate({
-            search: (previous) =>
-              talentSearchSubmission(previous, next),
+            search: (previous) => talentSearchSubmission(previous, next),
           })
         }
         selectedTalent={search.selectedTalent}

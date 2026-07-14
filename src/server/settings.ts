@@ -8,25 +8,29 @@
  * authorization and its endpoint is ungated, so it takes no session or grant
  * (mirrors the hosted one-click unsubscribe).
  */
-import { createServerFn } from '@tanstack/react-start'
-import type { UnsubscribeBody, UpdateNotificationPreferenceBody } from '@cavuno/board'
+import { createServerFn } from '@tanstack/react-start';
 
-import { getBoard } from '../lib/board'
+import { getBoard } from '../lib/board';
 import {
   boardAccessMiddleware,
   type BoardAccessContext,
-} from '../lib/board-access-middleware'
-import { gatedRead } from './board-access'
+} from '../lib/board-access-middleware';
 import {
   requireSessionMiddleware,
   type SessionContext,
-} from '../lib/session-middleware'
+} from '../lib/session-middleware';
+import { gatedRead } from './board-access';
+
+import type {
+  UnsubscribeBody,
+  UpdateNotificationPreferenceBody,
+} from '@cavuno/board';
 
 /** Bearer + board-access grant for one gated `/me/*` call. */
 function authedHeaders(
   context: SessionContext & BoardAccessContext,
 ): Record<string, string> {
-  return { ...context.authHeaders, ...context.boardAccessHeaders }
+  return { ...context.authHeaders, ...context.boardAccessHeaders };
 }
 
 export const getNotificationPreferences = createServerFn({ method: 'GET' })
@@ -37,7 +41,7 @@ export const getNotificationPreferences = createServerFn({ method: 'GET' })
         headers: authedHeaders(context),
       }),
     ),
-  )
+  );
 
 export const updateNotificationPreference = createServerFn({ method: 'POST' })
   .validator((input: UpdateNotificationPreferenceBody) => input)
@@ -45,13 +49,13 @@ export const updateNotificationPreference = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }) => {
     return getBoard().me.notificationPreferences.update(data, {
       headers: authedHeaders(context),
-    })
-  })
+    });
+  });
 
 /** Email-link one-click unsubscribe — the token is the authorization. */
 export const unsubscribeWithToken = createServerFn({ method: 'POST' })
   .validator((input: UnsubscribeBody) => input)
   .handler(async ({ data }) => {
-    await getBoard().me.notificationPreferences.unsubscribeWithToken(data)
-    return { ok: true as const }
-  })
+    await getBoard().me.notificationPreferences.unsubscribeWithToken(data);
+    return { ok: true as const };
+  });

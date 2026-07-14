@@ -1,3 +1,4 @@
+import { isNotFound } from '@cavuno/board';
 /**
  * Anonymous read server functions — the data layer route loaders call.
  *
@@ -12,15 +13,16 @@
  * hosted board's wall). The board context + SEO base stay OPEN (the hosted
  * board serves them publicly, and the /password challenge needs the brand).
  */
-import { createServerFn } from '@tanstack/react-start'
-import { getRequest } from '@tanstack/react-start/server'
+import { createServerFn } from '@tanstack/react-start';
+import { getRequest } from '@tanstack/react-start/server';
 
-import { getLocale } from '../paraglide/runtime'
+import { getBoard } from '../lib/board';
+import { boardAccessMiddleware } from '../lib/board-access-middleware';
+import { getServerEnv } from '../lib/env';
+import { getLocale } from '../paraglide/runtime';
+import { gatedRead } from './board-access';
 
-import { getServerEnv } from '../lib/env'
-
-import { isNotFound } from '@cavuno/board'
-import type { BoardContextFooter } from '../components/Footer'
+import type { BoardContextFooter } from '../components/Footer';
 import type {
   BlogPostsListQuery,
   BlogSearchBody,
@@ -41,11 +43,7 @@ import type {
   PublicBlogAdjacentPosts,
   TalentDirectoryQuery,
   TaxonomyResolution,
-} from '@cavuno/board'
-
-import { getBoard } from '../lib/board'
-import { boardAccessMiddleware } from '../lib/board-access-middleware'
-import { gatedRead } from './board-access'
+} from '@cavuno/board';
 
 /**
  * The wire theme's `colors` is typed loosely in the SDK
@@ -54,22 +52,22 @@ import { gatedRead } from './board-access'
  * and the theme mapper both get the real shape.
  */
 export interface SerializableThemeColors {
-  light?: Record<string, string>
-  dark?: Record<string, string>
+  light?: Record<string, string>;
+  dark?: Record<string, string>;
 }
 
 // ── OPEN reads (allowlisted-open on the hosted board, even when protected) ──
 
 export const getBoardContext = createServerFn({ method: 'GET' }).handler(
   async () => {
-    const context = await getBoard().context()
+    const context = await getBoard().context();
     // The `footer` group + talent tri-state (hosted-footer parity slice)
     // ride the wire ahead of the published SDK types — pick them off the
     // body defensively; null against an API deployment predating the slice.
     const parity = context as {
-      footer?: BoardContextFooter
-      talentDirectoryVisibility?: 'off' | 'public' | 'employers_only'
-    }
+      footer?: BoardContextFooter;
+      talentDirectoryVisibility?: 'off' | 'public' | 'employers_only';
+    };
     return {
       ...context,
       footer: parity.footer ?? null,
@@ -80,9 +78,9 @@ export const getBoardContext = createServerFn({ method: 'GET' }).handler(
             colors: context.theme.colors as SerializableThemeColors,
           }
         : null,
-    }
+    };
   },
-)
+);
 
 /**
  * Whether /employers has anything to sell — self-service plans, talent
@@ -97,18 +95,18 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
       const [plans, salesLed] = await Promise.all([
         getBoard().plans.list({}),
         getBoard().plans.salesLed(),
-      ])
+      ]);
       return {
         hasEmployerOfferPage: plans.data.length > 0 || salesLed.data.length > 0,
-      }
+      };
     } catch {
       // Fail closed: this gate runs on the root loader for every route, so a
       // transient plan-read failure (or a password-gated board) must only
       // hide the footer/nav Pricing links, never fault the whole page.
-      return { hasEmployerOfferPage: false }
+      return { hasEmployerOfferPage: false };
     }
   },
-)
+);
 
 /**
  * Deployment analytics config (cutover runbook P2): the publishable
@@ -118,7 +116,7 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
  */
 export const getAnalyticsConfig = createServerFn({ method: 'GET' }).handler(
   async () => ({ trackerToken: getServerEnv().trackerToken }),
-)
+);
 
 /**
  * SEO base for a listing page's `head` — the board name + language + the
@@ -129,7 +127,7 @@ export const getAnalyticsConfig = createServerFn({ method: 'GET' }).handler(
  */
 export const getSeoBase = createServerFn({ method: 'GET' }).handler(
   async () => {
-    const board = await getBoard().context()
+    const board = await getBoard().context();
     return {
       boardName: board.name,
       language: board.language,
@@ -137,9 +135,9 @@ export const getSeoBase = createServerFn({ method: 'GET' }).handler(
       // boardCopy(language, labels) same as the blocks.
       labels: board.labels,
       origin: new URL(getRequest().url).origin,
-    }
+    };
   },
-)
+);
 
 /**
  * Board SEO infra (resolved favicon/app-icon URLs + web-manifest meta + the
@@ -148,7 +146,7 @@ export const getSeoBase = createServerFn({ method: 'GET' }).handler(
  */
 export const getBoardSeo = createServerFn({ method: 'GET' }).handler(() =>
   getBoard().seo(),
-)
+);
 
 // ── GATED content reads (behind the board-password wall) ────────────────────
 
@@ -157,7 +155,7 @@ export const listJobs = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, (h) => getBoard().jobs.list(data, { headers: h })),
-  )
+  );
 
 export const searchJobs = createServerFn({ method: 'GET' })
   .validator((input: JobsSearchBody) => input)
@@ -166,7 +164,7 @@ export const searchJobs = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().jobs.search(data, undefined, { headers: h }),
     ),
-  )
+  );
 
 /**
  * Embeddable jobs widget read — UNGATED at the candidate-paywall level (the API
@@ -178,7 +176,7 @@ export const embedJobs = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, (h) => getBoard().embed.jobs(data, { headers: h })),
-  )
+  );
 
 export const getJob = createServerFn({ method: 'GET' })
   .validator((input: { jobSlug: string }) => input)
@@ -187,7 +185,7 @@ export const getJob = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().jobs.retrieve(data.jobSlug, undefined, { headers: h }),
     ),
-  )
+  );
 
 /**
  * Location autocomplete — `places.list({ q })` powers the listing search bar's
@@ -198,42 +196,44 @@ export const searchPlaces = createServerFn({ method: 'GET' })
   .validator((input: PlacesListQuery) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
-    gatedRead(context, (h) => getBoard().taxonomy.places.list(data, { headers: h })),
-  )
+    gatedRead(context, (h) =>
+      getBoard().taxonomy.places.list(data, { headers: h }),
+    ),
+  );
 
 // ── Job alerts (anonymous, double opt-in — public endpoints, no grant) ───────
 
 export const subscribeJobAlert = createServerFn({ method: 'POST' })
   .validator((input: JobAlertSubscribeInput) => input)
-  .handler(({ data }) => getBoard().jobAlerts.subscribe(data))
+  .handler(({ data }) => getBoard().jobAlerts.subscribe(data));
 
 export const confirmJobAlert = createServerFn({ method: 'POST' })
   .validator((input: { token: string }) => input)
-  .handler(({ data }) => getBoard().jobAlerts.confirm(data))
+  .handler(({ data }) => getBoard().jobAlerts.confirm(data));
 
 export const resendJobAlertConfirmation = createServerFn({ method: 'POST' })
   .validator((input: { email: string }) => input)
-  .handler(({ data }) => getBoard().jobAlerts.resendConfirmation(data))
+  .handler(({ data }) => getBoard().jobAlerts.resendConfirmation(data));
 
 export const getJobAlertManageState = createServerFn({ method: 'GET' })
   .validator((input: JobAlertManageQuery) => input)
-  .handler(({ data }) => getBoard().jobAlerts.manage(data))
+  .handler(({ data }) => getBoard().jobAlerts.manage(data));
 
 export const unsubscribeJobAlert = createServerFn({ method: 'POST' })
   .validator((input: JobAlertManageTokenInput) => input)
-  .handler(({ data }) => getBoard().jobAlerts.unsubscribe(data))
+  .handler(({ data }) => getBoard().jobAlerts.unsubscribe(data));
 
 export const resubscribeJobAlert = createServerFn({ method: 'POST' })
   .validator((input: JobAlertManageTokenInput) => input)
-  .handler(({ data }) => getBoard().jobAlerts.resubscribe(data))
+  .handler(({ data }) => getBoard().jobAlerts.resubscribe(data));
 
 export const updateJobAlertPreference = createServerFn({ method: 'POST' })
   .validator((input: JobAlertUpdatePreferenceInput) => input)
-  .handler(({ data }) => getBoard().jobAlerts.updatePreference(data))
+  .handler(({ data }) => getBoard().jobAlerts.updatePreference(data));
 
 export const deleteJobAlertPreference = createServerFn({ method: 'POST' })
   .validator((input: JobAlertDeletePreferenceInput) => input)
-  .handler(({ data }) => getBoard().jobAlerts.deletePreference(data))
+  .handler(({ data }) => getBoard().jobAlerts.deletePreference(data));
 
 export const getSimilarJobs = createServerFn({ method: 'GET' })
   .validator((input: { jobSlug: string; limit?: number }) => input)
@@ -246,7 +246,7 @@ export const getSimilarJobs = createServerFn({ method: 'GET' })
         { headers: h },
       ),
     ),
-  )
+  );
 
 export const resolveRedirect = createServerFn({ method: 'GET' })
   .validator((input: { path: string }) => input)
@@ -255,14 +255,14 @@ export const resolveRedirect = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().redirects.resolve(data.path, { headers: h }),
     ),
-  )
+  );
 
 export const listCompanies = createServerFn({ method: 'GET' })
   .validator((input: CompaniesListQuery) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, (h) => getBoard().companies.list(data, { headers: h })),
-  )
+  );
 
 export const searchCompanies = createServerFn({ method: 'GET' })
   .validator((input: CompaniesSearchBody) => input)
@@ -271,7 +271,7 @@ export const searchCompanies = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().companies.search(data, undefined, { headers: h }),
     ),
-  )
+  );
 
 export const getCompany = createServerFn({ method: 'GET' })
   .validator((input: { companySlug: string }) => input)
@@ -282,7 +282,7 @@ export const getCompany = createServerFn({ method: 'GET' })
         headers: h,
       }),
     ),
-  )
+  );
 
 // ── Candidate-profile / talent (roadmap §K, public read) ─────────────────────
 // The directory throws `talent_directory_restricted` (403) on an employers-only
@@ -294,7 +294,7 @@ export const listTalent = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, (h) => getBoard().talent.list(data, { headers: h })),
-  )
+  );
 
 export const getTalentProfile = createServerFn({ method: 'GET' })
   .validator((input: { handle: string }) => input)
@@ -303,7 +303,7 @@ export const getTalentProfile = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().talent.retrieve(data.handle, { headers: h }),
     ),
-  )
+  );
 
 // ── Employer pricing / plans (roadmap §L, ADR-0047) ──────────────────────────
 
@@ -312,13 +312,13 @@ export const listPlans = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, (h) => getBoard().plans.list(data, { headers: h })),
-  )
+  );
 
 export const listSalesLedPlans = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
     gatedRead(context, (h) => getBoard().plans.salesLed({ headers: h })),
-  )
+  );
 
 export const listCompanyJobs = createServerFn({ method: 'GET' })
   .validator((input: { companySlug: string; cursor?: string }) => input)
@@ -331,7 +331,7 @@ export const listCompanyJobs = createServerFn({ method: 'GET' })
         { headers: h },
       ),
     ),
-  )
+  );
 
 /**
  * Similar-companies rail — progressive enhancement on the company page. Degrades
@@ -348,7 +348,7 @@ export const getSimilarCompanies = createServerFn({ method: 'GET' })
           data.companySlug,
           { limit: data.limit },
           { headers: h },
-        )
+        );
       } catch (error) {
         if (isNotFound(error))
           return {
@@ -356,11 +356,11 @@ export const getSimilarCompanies = createServerFn({ method: 'GET' })
             data: [],
             hasMore: false,
             nextCursor: null,
-          }
-        throw error
+          };
+        throw error;
       }
     }),
-  )
+  );
 
 /** The board's company markets (sectors), ranked by company count. */
 export const getCompanyMarkets = createServerFn({ method: 'GET' })
@@ -370,7 +370,7 @@ export const getCompanyMarkets = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().companies.markets(data, { headers: h }),
     ),
-  )
+  );
 
 /**
  * Resolve a company-market slug to its page-meta — the canonical/source slug,
@@ -386,7 +386,7 @@ export const getCompanyMarket = createServerFn({ method: 'GET' })
         getBoard().companies.markets.resolve(data.market, { headers: h }),
       ),
     ),
-  )
+  );
 
 /**
  * A legal/about page — owner prose as portable HTML (+ impressum legal-entity
@@ -400,14 +400,14 @@ export const getLegalPage = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().legal.retrieve(data.type, { headers: h }),
     ),
-  )
+  );
 
 export const listBlogPosts = createServerFn({ method: 'GET' })
   .validator((input: BlogPostsListQuery) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, (h) => getBoard().blog.posts.list(data, { headers: h })),
-  )
+  );
 
 export const getBlogPost = createServerFn({ method: 'GET' })
   .validator((input: { postSlug: string }) => input)
@@ -416,20 +416,22 @@ export const getBlogPost = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().blog.posts.retrieve(data.postSlug, undefined, { headers: h }),
     ),
-  )
+  );
 
 export const searchBlogPosts = createServerFn({ method: 'GET' })
   .validator((input: BlogSearchBody) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
-    gatedRead(context, (h) => getBoard().blog.search(data, undefined, { headers: h })),
-  )
+    gatedRead(context, (h) =>
+      getBoard().blog.search(data, undefined, { headers: h }),
+    ),
+  );
 
 const EMPTY_ADJACENT: PublicBlogAdjacentPosts = {
   object: 'blog_adjacent_posts',
   previous: null,
   next: null,
-}
+};
 
 // prev/next + related are progressive-enhancement rails: if the endpoint is
 // absent (a deployment that predates them → 404), degrade to empty rather than
@@ -441,13 +443,15 @@ export const getBlogPostAdjacent = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, async (h) => {
       try {
-        return await getBoard().blog.posts.adjacent(data.postSlug, { headers: h })
+        return await getBoard().blog.posts.adjacent(data.postSlug, {
+          headers: h,
+        });
       } catch (error) {
-        if (isNotFound(error)) return EMPTY_ADJACENT
-        throw error
+        if (isNotFound(error)) return EMPTY_ADJACENT;
+        throw error;
       }
     }),
-  )
+  );
 
 export const listBlogTags = createServerFn({ method: 'GET' })
   .validator((input: Record<string, never>) => input)
@@ -456,7 +460,7 @@ export const listBlogTags = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().blog.tags.list(undefined, { headers: h }),
     ),
-  )
+  );
 
 export const getBlogTag = createServerFn({ method: 'GET' })
   .validator((input: { tagSlug: string }) => input)
@@ -465,7 +469,7 @@ export const getBlogTag = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().blog.tags.retrieve(data.tagSlug, undefined, { headers: h }),
     ),
-  )
+  );
 
 export const getBlogAuthor = createServerFn({ method: 'GET' })
   .validator((input: { authorSlug: string }) => input)
@@ -476,7 +480,7 @@ export const getBlogAuthor = createServerFn({ method: 'GET' })
         headers: h,
       }),
     ),
-  )
+  );
 
 // ── Programmatic taxonomy pages (ADR-0037 §7) ──────────────────────────────
 // resolve* return null on a 404 so the route loader can `throw notFound()`.
@@ -487,10 +491,10 @@ async function resolveOrNull(
   promise: Promise<TaxonomyResolution>,
 ): Promise<TaxonomyResolution | null> {
   try {
-    return await promise
+    return await promise;
   } catch (error) {
-    if (isNotFound(error)) return null
-    throw error
+    if (isNotFound(error)) return null;
+    throw error;
   }
 }
 
@@ -503,7 +507,7 @@ export const resolveCategory = createServerFn({ method: 'GET' })
         getBoard().taxonomy.categories.resolve(data.slug, { headers: h }),
       ),
     ),
-  )
+  );
 
 export const resolveSkill = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
@@ -514,7 +518,7 @@ export const resolveSkill = createServerFn({ method: 'GET' })
         getBoard().taxonomy.skills.resolve(data.slug, { headers: h }),
       ),
     ),
-  )
+  );
 
 export const resolvePlace = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
@@ -525,7 +529,7 @@ export const resolvePlace = createServerFn({ method: 'GET' })
         getBoard().taxonomy.places.resolve(data.slug, { headers: h }),
       ),
     ),
-  )
+  );
 
 export const listPlaces = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
@@ -533,7 +537,7 @@ export const listPlaces = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().taxonomy.places.list(undefined, { headers: h }),
     ),
-  )
+  );
 
 // ── Salary pages (ADR-0041) ─────────────────────────────────────────────────
 // Stats are English-keyed; the REQUEST locale drives the read-time overlay
@@ -551,9 +555,9 @@ export const getTitleSalary = createServerFn({ method: 'GET' })
         data.slug,
         { locale: getLocale() },
         { headers: h },
-      )
+      );
     }),
-  )
+  );
 
 export const getSkillSalary = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
@@ -564,9 +568,9 @@ export const getSkillSalary = createServerFn({ method: 'GET' })
         data.slug,
         { locale: getLocale() },
         { headers: h },
-      )
+      );
     }),
-  )
+  );
 
 export const getLocationSalary = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
@@ -577,9 +581,9 @@ export const getLocationSalary = createServerFn({ method: 'GET' })
         data.slug,
         { locale: getLocale() },
         { headers: h },
-      )
+      );
     }),
-  )
+  );
 
 // ── Salary index hubs (Tier 2) — the /salaries hub composes the four ────────
 
@@ -589,23 +593,29 @@ export const listSalaryCompanies = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().salaries.companies.list({ headers: h }),
     ),
-  )
+  );
 
 export const listSalaryTitles = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
     gatedRead(context, async (h) => {
-      return getBoard().salaries.titles.list({ locale: getLocale() }, { headers: h })
+      return getBoard().salaries.titles.list(
+        { locale: getLocale() },
+        { headers: h },
+      );
     }),
-  )
+  );
 
 export const listSalarySkills = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
     gatedRead(context, async (h) => {
-      return getBoard().salaries.skills.list({ locale: getLocale() }, { headers: h })
+      return getBoard().salaries.skills.list(
+        { locale: getLocale() },
+        { headers: h },
+      );
     }),
-  )
+  );
 
 export const listSalaryLocations = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
@@ -614,9 +624,9 @@ export const listSalaryLocations = createServerFn({ method: 'GET' })
       return getBoard().salaries.locations.list(
         { locale: getLocale() },
         { headers: h },
-      )
+      );
     }),
-  )
+  );
 
 // ── Salary cross-axis (Tier 3) — title×location, skill×location ─────────────
 
@@ -629,9 +639,9 @@ export const getTitleLocations = createServerFn({ method: 'GET' })
         data.slug,
         { locale: getLocale() },
         { headers: h },
-      )
+      );
     }),
-  )
+  );
 
 export const getSkillLocations = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
@@ -642,9 +652,9 @@ export const getSkillLocations = createServerFn({ method: 'GET' })
         data.slug,
         { locale: getLocale() },
         { headers: h },
-      )
+      );
     }),
-  )
+  );
 
 export const getLocationTitles = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
@@ -655,9 +665,9 @@ export const getLocationTitles = createServerFn({ method: 'GET' })
         data.slug,
         { locale: getLocale() },
         { headers: h },
-      )
+      );
     }),
-  )
+  );
 
 export const getLocationSkills = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
@@ -668,9 +678,9 @@ export const getLocationSkills = createServerFn({ method: 'GET' })
         data.slug,
         { locale: getLocale() },
         { headers: h },
-      )
+      );
     }),
-  )
+  );
 
 export const getTitleLocationSalary = createServerFn({ method: 'GET' })
   .validator((input: { slug: string; locationSlug: string }) => input)
@@ -682,9 +692,9 @@ export const getTitleLocationSalary = createServerFn({ method: 'GET' })
         data.locationSlug,
         { locale: getLocale() },
         { headers: h },
-      )
+      );
     }),
-  )
+  );
 
 export const getSkillLocationSalary = createServerFn({ method: 'GET' })
   .validator((input: { slug: string; locationSlug: string }) => input)
@@ -696,9 +706,9 @@ export const getSkillLocationSalary = createServerFn({ method: 'GET' })
         data.locationSlug,
         { locale: getLocale() },
         { headers: h },
-      )
+      );
     }),
-  )
+  );
 
 // ── Company salary pages (ADR-0046) ─────────────────────────────────────────
 // The overview takes no locale — the loader localizes `byCategory` by the board
@@ -713,7 +723,7 @@ export const getCompanySalary = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().companies.salaries(data.companySlug, { headers: h }),
     ),
-  )
+  );
 
 /**
  * Company salary presence (CAV-512) — the honest gate for the section shell's
@@ -733,14 +743,14 @@ export const getCompanySalaryPresence = createServerFn({ method: 'GET' })
       try {
         const salary = await getBoard().companies.salaries(data.companySlug, {
           headers: h,
-        })
-        return salary.overallSalary !== null || salary.byCategory.length > 0
+        });
+        return salary.overallSalary !== null || salary.byCategory.length > 0;
       } catch (error) {
-        if (isNotFound(error)) return false
-        throw error
+        if (isNotFound(error)) return false;
+        throw error;
       }
     }),
-  )
+  );
 
 /**
  * Company salary SUMMARY (CAV-516) — the condensed salary block for the
@@ -753,7 +763,7 @@ export const getCompanySalaryPresence = createServerFn({ method: 'GET' })
  * 404-is-no-data honesty as the presence gate; the byCategory rows are capped
  * to the summary's top N (the full list lives on the Salaries tab).
  */
-const COMPANY_SALARY_SUMMARY_CATEGORIES = 5
+const COMPANY_SALARY_SUMMARY_CATEGORIES = 5;
 
 export const getCompanySalarySummary = createServerFn({ method: 'GET' })
   .validator((input: { companySlug: string }) => input)
@@ -763,17 +773,20 @@ export const getCompanySalarySummary = createServerFn({ method: 'GET' })
       try {
         const salary = await getBoard().companies.salaries(data.companySlug, {
           headers: h,
-        })
+        });
         return {
           overallSalary: salary.overallSalary,
-          byCategory: salary.byCategory.slice(0, COMPANY_SALARY_SUMMARY_CATEGORIES),
-        }
+          byCategory: salary.byCategory.slice(
+            0,
+            COMPANY_SALARY_SUMMARY_CATEGORIES,
+          ),
+        };
       } catch (error) {
-        if (isNotFound(error)) return { overallSalary: null, byCategory: [] }
-        throw error
+        if (isNotFound(error)) return { overallSalary: null, byCategory: [] };
+        throw error;
       }
     }),
-  )
+  );
 
 export const getCompanyCategorySalary = createServerFn({ method: 'GET' })
   .validator((input: { companySlug: string; categorySlug: string }) => input)
@@ -785,6 +798,6 @@ export const getCompanyCategorySalary = createServerFn({ method: 'GET' })
         data.categorySlug,
         { locale: getLocale() },
         { headers: h },
-      )
+      );
     }),
-  )
+  );

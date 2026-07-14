@@ -1,10 +1,10 @@
-import type { MouseEvent as ReactMouseEvent } from "react";
+import type { MouseEvent as ReactMouseEvent } from 'react';
 
-import type { TalentCardVM } from "@/board/talent-view-model";
-import { SearchResultCard } from "@/components/search-results/search-results";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { initialsOf } from "@/lib/initials";
+import type { TalentCardVM } from '@/board/talent-view-model';
+import { SearchResultCard } from '@/components/search-results/search-results';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { initialsOf } from '@/lib/initials';
 
 export function TalentSearchResult({
   vm,
@@ -30,16 +30,16 @@ export function TalentSearchResult({
       </Avatar>
 
       <div className="min-w-0 flex-1">
-        <h2 className="line-clamp-2 text-base font-semibold text-foreground">
+        <h2 className="text-foreground line-clamp-2 text-base font-semibold">
           {vm.displayName}
         </h2>
         {vm.headline ? (
-          <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-0.5 line-clamp-2 text-sm">
             {vm.headline}
           </p>
         ) : null}
         {vm.location ? (
-          <p className="mt-2 text-sm text-muted-foreground">{vm.location}</p>
+          <p className="text-muted-foreground mt-2 text-sm">{vm.location}</p>
         ) : null}
 
         {vm.jobSearchStatusLabel || vm.skills.length > 0 ? (
@@ -63,7 +63,7 @@ export function TalentSearchResult({
       {vm.detailHref ? (
         <a
           href={vm.detailHref}
-          aria-current={selected ? "true" : undefined}
+          aria-current={selected ? 'true' : undefined}
           onClick={onActivate}
           className="block rounded-[inherit] p-4 outline-none"
         >

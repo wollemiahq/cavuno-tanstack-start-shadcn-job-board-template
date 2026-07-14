@@ -1,31 +1,30 @@
 // @vitest-environment jsdom
 
-import "@testing-library/jest-dom/vitest";
-
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import type { ErrorComponentProps } from "@tanstack/react-router";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import '@testing-library/jest-dom/vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   CandidateRouteError,
   CandidateRouteErrorPage,
   CandidateRoutePending,
-} from "./candidate-route-state";
+} from './candidate-route-state';
+
+import type { ErrorComponentProps } from '@tanstack/react-router';
 
 afterEach(cleanup);
 
-describe("candidate route states", () => {
-  it("announces a busy loading state without exposing fake content", () => {
+describe('candidate route states', () => {
+  it('announces a busy loading state without exposing fake content', () => {
     render(<CandidateRoutePending label="Loading your account…" />);
 
-    expect(screen.getByRole("status", { name: "Loading your account…" })).toHaveAttribute(
-      "aria-busy",
-      "true",
-    );
-    expect(screen.getByRole("main")).toBeInTheDocument();
+    expect(
+      screen.getByRole('status', { name: 'Loading your account…' }),
+    ).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('main')).toBeInTheDocument();
   });
 
-  it("offers an inline retry for a recoverable account load failure", () => {
+  it('offers an inline retry for a recoverable account load failure', () => {
     const reset = vi.fn();
     render(
       <CandidateRouteError
@@ -37,22 +36,26 @@ describe("candidate route states", () => {
       />,
     );
 
-    expect(screen.getByRole("complementary", { name: "Candidate account" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "We couldn't load this page" })).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(
+      screen.getByRole('complementary', { name: 'Candidate account' }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole('heading', { name: "We couldn't load this page" }),
+    ).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(reset).toHaveBeenCalledOnce();
   });
 
-  it("describes the placeholder that keeps the failed route layout stable", () => {
+  it('describes the placeholder that keeps the failed route layout stable', () => {
     const errorProps: ErrorComponentProps = {
-      error: new Error("account unavailable"),
+      error: new Error('account unavailable'),
       reset: vi.fn(),
     };
     render(<CandidateRouteErrorPage {...errorProps} />);
 
     expect(
       screen.getByText(
-        "Try again. A placeholder keeps the page layout stable while this content is unavailable.",
+        'Try again. A placeholder keeps the page layout stable while this content is unavailable.',
       ),
     ).toBeVisible();
     expect(screen.queryByText(/navigation will stay/i)).not.toBeInTheDocument();

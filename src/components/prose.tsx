@@ -1,6 +1,6 @@
-import type { ElementType, HTMLAttributes, ReactNode } from 'react'
+import type { ElementType, HTMLAttributes, ReactNode } from 'react';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 /**
  * The board's one rich-text surface. Wraps rendered HTML — job descriptions,
@@ -16,10 +16,10 @@ type ProseProps = Omit<
   HTMLAttributes<HTMLElement>,
   'children' | 'dangerouslySetInnerHTML'
 > & {
-  html?: string
-  children?: ReactNode
-  as?: ElementType
-}
+  html?: string;
+  children?: ReactNode;
+  as?: ElementType;
+};
 
 export function Prose({
   html,
@@ -28,7 +28,7 @@ export function Prose({
   className,
   ...props
 }: ProseProps) {
-  const classes = cn('typeset typeset-content', className)
+  const classes = cn('typeset typeset-content', className);
 
   if (html !== undefined) {
     return (
@@ -37,12 +37,12 @@ export function Prose({
         dangerouslySetInnerHTML={{ __html: html }}
         {...props}
       />
-    )
+    );
   }
 
   return (
     <Tag className={classes} {...props}>
       {children}
     </Tag>
-  )
+  );
 }

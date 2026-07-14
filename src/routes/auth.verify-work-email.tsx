@@ -1,6 +1,6 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
-import { confirmWorkEmail } from '../server/employers'
+import { confirmWorkEmail } from '../server/employers';
 
 /**
  * Work-email verification landing — the target of the link the API emails when
@@ -18,15 +18,15 @@ export const Route = createFileRoute('/auth/verify-work-email')({
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
     if (!deps.token || !deps.slug) {
-      throw redirect({ href: '/employers/dashboard?verified=invalid' })
+      throw redirect({ href: '/employers/dashboard?verified=invalid' });
     }
     const result = await confirmWorkEmail({
       data: { slug: deps.slug, body: { token: deps.token } },
-    })
+    });
     if (!result.ok) {
-      throw redirect({ href: '/employers/dashboard?verified=invalid' })
+      throw redirect({ href: '/employers/dashboard?verified=invalid' });
     }
-    const outcome = result.data.status === 'approved' ? 'approved' : 'pending'
-    throw redirect({ href: `/employers/dashboard?verified=${outcome}` })
+    const outcome = result.data.status === 'approved' ? 'approved' : 'pending';
+    throw redirect({ href: `/employers/dashboard?verified=${outcome}` });
   },
-})
+});

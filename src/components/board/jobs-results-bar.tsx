@@ -1,7 +1,9 @@
-"use client";
+'use client';
 
-import { DEFAULT_SORT, JOB_SORTS, sortLabels } from "@cavuno/board/filters";
-import { boardCopy } from "#/copy";
+import { boardCopy } from '#/copy';
+import { DEFAULT_SORT, JOB_SORTS, sortLabels } from '@cavuno/board/filters';
+
+import { m } from '../../paraglide/messages';
 
 import {
   Select,
@@ -10,8 +12,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { m } from "../../paraglide/messages";
+} from '@/components/ui/select';
 /**
  * The results header bar (CAV-495) — the Himalayas "count + sort on one line"
  * idiom. The honest total-result count sits on the left, the sort control on
@@ -20,8 +21,8 @@ import { m } from "../../paraglide/messages";
  * callback-driven: `sort` is the active `ListingFilters["sort"]`, edits go out
  * through `onSortChange` with the SAME sort enum the URL already carries.
  */
-import type { ListingFilters } from "@cavuno/board/filters";
-import type { BoardLabelOverrides } from "@cavuno/board/format";
+import type { ListingFilters } from '@cavuno/board/filters';
+import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 export function JobsResultsBar({
   count,
@@ -40,30 +41,37 @@ export function JobsResultsBar({
   pageSize?: number;
   /** Route context, such as “Engineering jobs” or “Jobs in Sydney”. */
   heading?: string;
-  sort: ListingFilters["sort"];
+  sort: ListingFilters['sort'];
   language: string;
   /** Operator label overrides (`board.context().labels`), ADR-0059. */
   labels?: BoardLabelOverrides;
-  onSortChange: (sort: ListingFilters["sort"]) => void;
+  onSortChange: (sort: ListingFilters['sort']) => void;
 }) {
   const sortLabel = sortLabels(language, labels);
-  const sortItems = JOB_SORTS.map((value) => ({ value, label: sortLabel[value] }));
+  const sortItems = JOB_SORTS.map((value) => ({
+    value,
+    label: sortLabel[value],
+  }));
 
   const showRange =
-    typeof count === "number" &&
-    typeof page === "number" &&
-    typeof pageSize === "number" &&
+    typeof count === 'number' &&
+    typeof page === 'number' &&
+    typeof pageSize === 'number' &&
     count > pageSize;
   const totalLabel =
-    typeof count === "number"
+    typeof count === 'number'
       ? heading
         ? m.jobSearch_contextualResultsHeading({
             count: count.toLocaleString(language),
             heading,
           })
         : count === 1
-          ? m.jobSearch_resultsCountOne({ count: count.toLocaleString(language) })
-          : m.jobSearch_resultsCountMany({ count: count.toLocaleString(language) })
+          ? m.jobSearch_resultsCountOne({
+              count: count.toLocaleString(language),
+            })
+          : m.jobSearch_resultsCountMany({
+              count: count.toLocaleString(language),
+            })
       : (heading ?? boardCopy(language, labels).jobSearch.headingJobs);
   const rangeLabel = showRange
     ? m.jobSearch_resultsShowingRange({
@@ -74,15 +82,19 @@ export function JobsResultsBar({
     : null;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+    <div className="border-border flex flex-wrap items-center justify-between gap-3 border-b pb-4">
       <div className="min-w-0">
-        <h1 className="text-lg font-semibold tracking-tight text-foreground">{totalLabel}</h1>
-        {rangeLabel ? <p className="text-xs text-muted-foreground">{rangeLabel}</p> : null}
+        <h1 className="text-foreground text-lg font-semibold tracking-tight">
+          {totalLabel}
+        </h1>
+        {rangeLabel ? (
+          <p className="text-muted-foreground text-xs">{rangeLabel}</p>
+        ) : null}
       </div>
       <Select
         items={sortItems}
         value={sort ?? DEFAULT_SORT}
-        onValueChange={(value) => onSortChange(value as ListingFilters["sort"])}
+        onValueChange={(value) => onSortChange(value as ListingFilters['sort'])}
       >
         <SelectTrigger
           aria-label={boardCopy(language, labels).jobSearch.sortPlaceholder}

@@ -1,16 +1,24 @@
-"use client";
+'use client';
 
-import { useRef } from "react";
+import { useRef } from 'react';
 
-import { SearchLg, XClose } from "@untitledui/icons";
-import { Button as AriaButton } from "react-aria-components";
+import { Search, X } from 'lucide-react';
 
-import { Button } from "@/components/base/buttons/button";
-import { Input } from "@/components/base/input/input";
-import { PageBreadcrumb, type BreadcrumbData } from "@/components/board/breadcrumb";
-import { Text } from "@/components/text";
-import { cx } from "@/utils/cx";
-import { m } from "../../paraglide/messages";
+import { m } from '../../paraglide/messages';
+
+import {
+  PageBreadcrumb,
+  type BreadcrumbData,
+} from '@/components/board/breadcrumb';
+import { Text } from '@/components/text';
+import { Button } from '@/components/ui/button';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group';
+import { cn } from '@/lib/utils';
 
 /**
  * Migration-only listing header for routes that predate the canonical
@@ -38,7 +46,7 @@ export function ListingPageHeader({
   search?: React.ReactNode;
 }) {
   return (
-    <section className="border-b border-secondary bg-secondary">
+    <section className="border-border bg-muted border-b">
       {/* With a breadcrumb, the trail hugs the top of the band (compact
           pt-4/5, left-aligned at the container edge) through the SHARED
           `PageBreadcrumb` placement primitive — the same one the band-less
@@ -46,11 +54,16 @@ export function ListingPageHeader({
           The generous whitespace lives BETWEEN the trail and the centered
           title, so the crumb anchors near the nav instead of floating
           mid-band (CAV-510). */}
-      {breadcrumb ? <PageBreadcrumb items={breadcrumb.items} ariaLabel={breadcrumb.ariaLabel} /> : null}
+      {breadcrumb ? (
+        <PageBreadcrumb
+          items={breadcrumb.items}
+          ariaLabel={breadcrumb.ariaLabel}
+        />
+      ) : null}
       <div
-        className={cx(
-          "mx-auto flex w-full max-w-container flex-col items-center gap-4 px-4 md:px-8",
-          breadcrumb ? "pt-8 pb-10 md:pt-10 md:pb-14" : "py-10 md:py-14",
+        className={cn(
+          'mx-auto flex w-full max-w-7xl flex-col items-center gap-4 px-4 md:px-8',
+          breadcrumb ? 'pt-8 pb-10 md:pt-10 md:pb-14' : 'py-10 md:py-14',
         )}
       >
         {eyebrow}
@@ -58,7 +71,9 @@ export function ListingPageHeader({
           {title}
         </Text>
         {subtitle ? (
-          <p className="max-w-2xl text-center text-lg text-tertiary">{subtitle}</p>
+          <p className="text-muted-foreground max-w-2xl text-center text-lg">
+            {subtitle}
+          </p>
         ) : null}
         {search ? <div className="mt-4 w-full max-w-5xl">{search}</div> : null}
       </div>
@@ -114,7 +129,7 @@ export function ListingSearchBand({
         event.preventDefault();
         onSubmit();
       }}
-      className="flex flex-col gap-3 rounded-2xl bg-primary p-4 shadow-lg ring-1 ring-secondary_alt"
+      className="bg-card ring-border flex flex-col gap-3 rounded-2xl p-4 shadow-lg ring-1"
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         {/* The keyword field carries its own inline clear: a leading search
@@ -122,40 +137,45 @@ export function ListingSearchBand({
             empties just this field and refocuses it. The X sits inside the
             input's own reserved right padding (pr-10), so it never shifts the
             layout as it appears/disappears. */}
-        <div className="relative lg:min-w-56 lg:flex-1">
-          <Input
-            ref={inputRef}
-            type="search"
-            icon={SearchLg}
-            aria-label={inputAriaLabel}
-            placeholder={placeholder}
-            value={value}
-            onChange={onChange}
-            inputClassName="pr-10"
-            wrapperClassName="w-full"
-          />
-          {value ? (
-            <AriaButton
-              aria-label={m.searchBar_clearAriaLabel()}
-              onPress={() => {
-                onChange("");
-                inputRef.current?.focus();
-              }}
-              className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer rounded-sm text-fg-quaternary transition duration-100 ease-linear hover:text-fg-quaternary_hover focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-hidden"
-            >
-              <XClose className="size-5" />
-            </AriaButton>
-          ) : null}
+        <div className="lg:min-w-56 lg:flex-1">
+          <InputGroup>
+            <InputGroupAddon>
+              <Search aria-hidden="true" />
+            </InputGroupAddon>
+            <InputGroupInput
+              ref={inputRef}
+              type="search"
+              aria-label={inputAriaLabel}
+              placeholder={placeholder}
+              value={value}
+              onChange={(event) => onChange(event.currentTarget.value)}
+            />
+            {value ? (
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  size="icon-xs"
+                  aria-label={m.searchBar_clearAriaLabel()}
+                  onClick={() => {
+                    onChange('');
+                    inputRef.current?.focus();
+                  }}
+                >
+                  <X aria-hidden="true" />
+                </InputGroupButton>
+              </InputGroupAddon>
+            ) : null}
+          </InputGroup>
         </div>
-        {leadingSlot ? <div className="lg:w-64 lg:shrink-0">{leadingSlot}</div> : null}
+        {leadingSlot ? (
+          <div className="lg:w-64 lg:shrink-0">{leadingSlot}</div>
+        ) : null}
         <Button
           type="submit"
-          color="primary"
-          size="md"
-          iconLeading={SearchLg}
+          size="lg"
           aria-label={searchAriaLabel}
           className="lg:shrink-0"
         >
+          <Search data-icon="inline-start" aria-hidden="true" />
           {searchLabel}
         </Button>
       </div>

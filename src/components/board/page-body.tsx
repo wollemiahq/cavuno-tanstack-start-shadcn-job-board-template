@@ -1,6 +1,5 @@
-import { PageBreadcrumb } from "@/components/board/breadcrumb";
-
-import type { BreadcrumbData } from "@/components/board/breadcrumb";
+import { PageBreadcrumb } from '@/components/board/breadcrumb';
+import type { BreadcrumbData } from '@/components/board/breadcrumb';
 
 /**
  * Migration-only compatibility shell for routes that predate the canonical
@@ -8,10 +7,10 @@ import type { BreadcrumbData } from "@/components/board/breadcrumb";
  * `PageBody` for new page-level composition; migrate existing consumers to
  * the Page family as those routes are touched.
  *
- * Preserved legacy slots:
+ * Preserved public slots:
  *  - `band` — a full-bleed section rendered edge-to-edge ABOVE the
  *    constrained container (the Lumen gray listing header, the job-detail
- *    header band). The band owns its own inner `max-w-container` wrapper and,
+ *    header band). The band owns its own inner `max-w-7xl` wrapper and,
  *    when it has one, its OWN breadcrumb (via `ListingPageHeader` / the
  *    `JobDetail` band) — so `breadcrumb` below is for the band-less pages.
  *  - `breadcrumb` — the resolved trail for a NON-band page (a company
@@ -21,7 +20,7 @@ import type { BreadcrumbData } from "@/components/board/breadcrumb";
  *  - `children` — the constrained content, on the shared container
  *    width + padding + `gap-8` rhythm.
  *  - `rail` — an optional right-hand sticky column; when present the body
- *    becomes the legacy two-column `[1fr_20rem]` grid (the job-detail
+ *    becomes the two-column `[1fr_20rem]` grid (the job-detail
  *    apply-rail pattern). On mobile the rail stacks above the content.
  */
 export function PageBody({
@@ -41,8 +40,13 @@ export function PageBody({
   return (
     <>
       {band}
-      {breadcrumb ? <PageBreadcrumb items={breadcrumb.items} ariaLabel={breadcrumb.ariaLabel} /> : null}
-      <div className="mx-auto w-full max-w-container px-4 py-8 md:px-8 md:py-10">
+      {breadcrumb ? (
+        <PageBreadcrumb
+          items={breadcrumb.items}
+          ariaLabel={breadcrumb.ariaLabel}
+        />
+      ) : null}
+      <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8 md:py-10">
         {rail ? (
           <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
             {/* Main content spans both rows on desktop so the rail

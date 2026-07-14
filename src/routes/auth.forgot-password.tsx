@@ -1,20 +1,22 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { useState } from 'react';
 
-import { AuthCard, Field, FormError } from "../components/auth-form";
-import { m } from "../paraglide/messages";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { forgotPassword } from "../server/auth";
+import { createFileRoute } from '@tanstack/react-router';
+
+import { AuthCard, Field, FormError } from '../components/auth-form';
 import {
   candidateReturnTo,
   candidateSignInHref,
-} from "../lib/candidate-return-to";
+} from '../lib/candidate-return-to';
+import { m } from '../paraglide/messages';
+import { forgotPassword } from '../server/auth';
 
-export const Route = createFileRoute("/auth/forgot-password")({
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+
+export const Route = createFileRoute('/auth/forgot-password')({
   validateSearch: (search: Record<string, unknown>) => ({
     returnTo:
-      typeof search.returnTo === "string" && search.returnTo
+      typeof search.returnTo === 'string' && search.returnTo
         ? candidateReturnTo(search.returnTo)
         : undefined,
   }),
@@ -36,7 +38,10 @@ function ForgotPasswordPage() {
       >
         <a
           href={candidateSignInHref(returnTo)}
-          className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}
+          className={cn(
+            buttonVariants({ variant: 'outline', size: 'lg' }),
+            'w-full',
+          )}
         >
           {m.authForgotPassword_backToSignInLabel()}
         </a>
@@ -55,7 +60,7 @@ function ForgotPasswordPage() {
           const form = new FormData(event.currentTarget);
           try {
             await forgotPassword({
-              data: { email: String(form.get("email")) },
+              data: { email: String(form.get('email')) },
             });
             setSent(true);
           } catch {
@@ -73,7 +78,9 @@ function ForgotPasswordPage() {
         />
         <FormError message={error} />
         <Button type="submit" size="lg" className="w-full" disabled={pending}>
-          {pending ? m.authForgotPassword_sendingLabel() : m.authForgotPassword_submitLabel()}
+          {pending
+            ? m.authForgotPassword_sendingLabel()
+            : m.authForgotPassword_submitLabel()}
         </Button>
       </form>
     </AuthCard>

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export interface TaxonomyChip {
   key: string;
@@ -10,19 +10,19 @@ export interface TaxonomyChip {
 }
 
 const chipSize = {
-  sm: "h-5 px-2 text-xs",
-  md: "h-6 px-2.5 text-sm",
-  lg: "h-7 px-3 text-sm",
+  sm: 'h-5 px-2 text-xs',
+  md: 'h-6 px-2.5 text-sm',
+  lg: 'h-7 px-3 text-sm',
 };
 
 export function TaxonomyTags({
   chips,
   overflow = 0,
-  size = "md",
+  size = 'md',
 }: {
   chips: TaxonomyChip[];
   overflow?: number;
-  size?: "sm" | "md" | "lg";
+  size?: 'sm' | 'md' | 'lg';
 }) {
   if (chips.length === 0 && overflow <= 0) return null;
 
@@ -33,7 +33,7 @@ export function TaxonomyTags({
           key={chip.key}
           render={<a href={chip.href} />}
           variant="outline"
-          className={cn(chipSize[size], "hover:no-underline")}
+          className={cn(chipSize[size], 'hover:no-underline')}
         >
           {chip.name}
         </Badge>

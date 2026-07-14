@@ -1,10 +1,10 @@
-import type { ComponentPropsWithRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from 'react';
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 export type SearchResultDetailProps = Omit<
-  ComponentPropsWithRef<"section">,
-  "aria-label" | "children"
+  ComponentPropsWithRef<'section'>,
+  'aria-label' | 'children'
 > & {
   label: string;
   scrollRestorationId?: string;
@@ -14,7 +14,7 @@ export type SearchResultDetailProps = Omit<
 /** The desktop-only, independently scrolling detail projection. */
 export function SearchResultDetail({
   label,
-  scrollRestorationId = "search-result-detail",
+  scrollRestorationId = 'search-result-detail',
   className,
   children,
   ref,
@@ -27,8 +27,9 @@ export function SearchResultDetail({
       aria-label={label}
       data-slot="search-result-detail"
       data-scroll-restoration-id={scrollRestorationId}
+      tabIndex={0}
       className={cn(
-        "hidden min-w-0 md:block md:h-[var(--search-results-height,calc(100dvh-12rem))] md:overflow-y-auto md:overscroll-contain",
+        'focus-visible:ring-ring hidden min-w-0 outline-none focus-visible:ring-2 focus-visible:ring-inset md:block md:h-full md:min-h-0 md:overflow-y-auto md:overscroll-contain',
         className,
       )}
     >

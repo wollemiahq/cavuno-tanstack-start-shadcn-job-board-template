@@ -6,46 +6,46 @@
  * so the embedded form renders that account's session — the mount the shared
  * hosted embed got wrong (doc 36 open-Q2).
  */
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react';
 
-import { loadStripe, type StripeEmbeddedCheckout } from '@stripe/stripe-js'
+import { loadStripe, type StripeEmbeddedCheckout } from '@stripe/stripe-js';
 
-import type { AccessCheckoutSession } from '@cavuno/board'
+import type { AccessCheckoutSession } from '@cavuno/board';
 
 export function EmbeddedCheckout({
   kit,
   onComplete,
 }: {
-  kit: AccessCheckoutSession
-  onComplete?: () => void
+  kit: AccessCheckoutSession;
+  onComplete?: () => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let instance: StripeEmbeddedCheckout | undefined
-    let cancelled = false
+    let instance: StripeEmbeddedCheckout | undefined;
+    let cancelled = false;
 
     void (async () => {
       const stripe = await loadStripe(kit.publishableKey, {
         stripeAccount: kit.stripeAccountId,
-      })
-      if (!stripe || cancelled || !ref.current) return
+      });
+      if (!stripe || cancelled || !ref.current) return;
       instance = await stripe.createEmbeddedCheckoutPage({
         clientSecret: kit.clientSecret,
         onComplete,
-      })
+      });
       if (cancelled) {
-        instance.destroy()
-        return
+        instance.destroy();
+        return;
       }
-      instance.mount(ref.current)
-    })()
+      instance.mount(ref.current);
+    })();
 
     return () => {
-      cancelled = true
-      instance?.destroy()
-    }
-  }, [kit.clientSecret, kit.publishableKey, kit.stripeAccountId, onComplete])
+      cancelled = true;
+      instance?.destroy();
+    };
+  }, [kit.clientSecret, kit.publishableKey, kit.stripeAccountId, onComplete]);
 
-  return <div ref={ref} data-testid="paywall-embedded-checkout" />
+  return <div ref={ref} data-testid="paywall-embedded-checkout" />;
 }

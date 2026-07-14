@@ -1,24 +1,30 @@
-"use client";
+'use client';
 
-import { getRouteApi, Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Search } from "lucide-react";
+import {
+  getRouteApi,
+  Link,
+  useNavigate,
+  useRouterState,
+} from '@tanstack/react-router';
+import { Search } from 'lucide-react';
 
-import { JobsFilterControls } from "@/components/board/jobs-filter-controls";
-import { Box } from "@/components/layout/box";
-import { Container } from "@/components/layout/container";
-import { Page } from "@/components/layout/page";
-import { buttonVariants } from "@/components/ui/button";
+import { m } from '../../paraglide/messages';
+
+import { JobsFilterControls } from '@/components/board/jobs-filter-controls';
+import { Box } from '@/components/layout/box';
+import { Container } from '@/components/layout/container';
+import { Page } from '@/components/layout/page';
+import { buttonVariants } from '@/components/ui/button';
 import {
   Empty,
   EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
-} from "@/components/ui/empty";
-import { parseJobsSearch } from "@/lib/jobs-search";
-import { m } from "../../paraglide/messages";
+} from '@/components/ui/empty';
+import { parseJobsSearch } from '@/lib/jobs-search';
 
-const rootApi = getRouteApi("__root__");
+const rootApi = getRouteApi('__root__');
 
 /**
  * The not-found state for the programmatic jobs pages (CAV-502). A visitor
@@ -29,13 +35,15 @@ const rootApi = getRouteApi("__root__");
 export function JobsNotFound() {
   const { board } = rootApi.useLoaderData();
   const navigate = useNavigate();
-  const routeSearch = useRouterState({ select: (state) => state.location.search });
+  const routeSearch = useRouterState({
+    select: (state) => state.location.search,
+  });
   const filters = parseJobsSearch(routeSearch as Record<string, unknown>);
 
   return (
     <Page width="wide">
       <main data-layout="job-search-not-found">
-        <Box border="bottom" paddingX={{ base: "4", md: "8" }}>
+        <Box border="bottom" paddingX={{ base: '4', md: '8' }}>
           <Container width="wide">
             <div className="py-3">
               <JobsFilterControls
@@ -44,7 +52,7 @@ export function JobsNotFound() {
                 labels={board.labels}
                 onChange={(next) =>
                   navigate({
-                    to: "/jobs",
+                    to: '/jobs',
                     search: () => ({
                       ...next,
                       page: undefined,
@@ -57,7 +65,7 @@ export function JobsNotFound() {
           </Container>
         </Box>
 
-        <Box paddingX={{ base: "4", md: "8" }} paddingY="4">
+        <Box paddingX={{ base: '4', md: '8' }} paddingY="4">
           <div className="mx-auto w-full max-w-6xl">
             <Empty className="min-h-[calc(100dvh-12rem)] border-0 p-6">
               <EmptyHeader>
@@ -67,7 +75,9 @@ export function JobsNotFound() {
                 <h1 className="font-heading text-xl font-semibold tracking-tight">
                   {m.jobSearch_noMatchingResultsHeading()}
                 </h1>
-                <EmptyDescription>{m.jobSearch_queryEmptyText()}</EmptyDescription>
+                <EmptyDescription>
+                  {m.jobSearch_queryEmptyText()}
+                </EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
                 <Link to="/jobs" className={buttonVariants()}>

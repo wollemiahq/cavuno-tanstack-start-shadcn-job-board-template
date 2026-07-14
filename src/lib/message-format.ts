@@ -5,7 +5,7 @@
  *   - `daySeparator`  — "Today" / "Yesterday" / weekday (last 7d) / "Mon 15".
  *   - `EDIT_WINDOW_MS` — the 15-minute edit/unsend window.
  */
-import { m } from "../paraglide/messages";
+import { m } from '../paraglide/messages';
 
 export const EDIT_WINDOW_MS = 15 * 60 * 1000;
 
@@ -21,15 +21,15 @@ export function relativeTime(iso: string, now = Date.now()): string {
   if (diff < DAY) return `${Math.floor(diff / HOUR)}h`;
   if (diff < 7 * DAY) return `${Math.floor(diff / DAY)}d`;
   return new Date(iso).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
+    month: 'short',
+    day: 'numeric',
   });
 }
 
 export function clockTime(iso: string): string {
   return new Date(iso).toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
+    hour: '2-digit',
+    minute: '2-digit',
   });
 }
 
@@ -42,15 +42,20 @@ function dayKey(iso: string): string {
 export function daySeparator(iso: string, now = Date.now()): string {
   const date = new Date(iso);
   const today = new Date(now);
-  if (dayKey(iso) === dayKey(today.toISOString())) return m.messageFormat_today();
+  if (dayKey(iso) === dayKey(today.toISOString()))
+    return m.messageFormat_today();
 
   const yesterday = new Date(now - DAY);
-  if (dayKey(iso) === dayKey(yesterday.toISOString())) return m.messageFormat_yesterday();
+  if (dayKey(iso) === dayKey(yesterday.toISOString()))
+    return m.messageFormat_yesterday();
 
   if (now - date.getTime() < 7 * DAY) {
-    return date.toLocaleDateString(undefined, { weekday: "long" });
+    return date.toLocaleDateString(undefined, { weekday: 'long' });
   }
-  return date.toLocaleDateString(undefined, { weekday: "short", day: "numeric" });
+  return date.toLocaleDateString(undefined, {
+    weekday: 'short',
+    day: 'numeric',
+  });
 }
 
 /** Whether a message is still inside its 15-minute edit/unsend window. */

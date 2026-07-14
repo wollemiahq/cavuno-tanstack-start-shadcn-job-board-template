@@ -13,37 +13,35 @@ export function escapeHtml(value: string): string {
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
+    .replaceAll('"', '&quot;');
 }
 
 /** Cap to `max` glyphs (ellipsis included), so text never overflows the frame. */
 export function truncate(value: string, max: number): string {
-  if (value.length <= max) return value
-  return `${value.slice(0, max - 1).trimEnd()}…`
+  if (value.length <= max) return value;
+  return `${value.slice(0, max - 1).trimEnd()}…`;
 }
 
 export interface BlogOgCard {
-  boardName: string
+  boardName: string;
   /** Board primary colour (hex), painted as the accent bar. */
-  themeColor: string
-  title: string
-  excerpt: string | null
-  authorName: string | null
-  authorAvatarUrl: string | null
+  themeColor: string;
+  title: string;
+  excerpt: string | null;
+  authorName: string | null;
+  authorAvatarUrl: string | null;
   /** Pre-formatted published date, or `null` to omit. */
-  dateLabel: string | null
+  dateLabel: string | null;
 }
 
 export function buildBlogOgHtml(card: BlogOgCard): string {
-  const title = escapeHtml(truncate(card.title, 70))
-  const excerpt = card.excerpt
-    ? escapeHtml(truncate(card.excerpt, 140))
-    : null
-  const boardName = escapeHtml(card.boardName)
-  const authorName = card.authorName ? escapeHtml(card.authorName) : null
-  const dateLabel = card.dateLabel ? escapeHtml(card.dateLabel) : null
-  const avatar = card.authorAvatarUrl ? escapeHtml(card.authorAvatarUrl) : null
-  const themeColor = escapeHtml(card.themeColor)
+  const title = escapeHtml(truncate(card.title, 70));
+  const excerpt = card.excerpt ? escapeHtml(truncate(card.excerpt, 140)) : null;
+  const boardName = escapeHtml(card.boardName);
+  const authorName = card.authorName ? escapeHtml(card.authorName) : null;
+  const dateLabel = card.dateLabel ? escapeHtml(card.dateLabel) : null;
+  const avatar = card.authorAvatarUrl ? escapeHtml(card.authorAvatarUrl) : null;
+  const themeColor = escapeHtml(card.themeColor);
 
   const footerLines = [
     authorName
@@ -52,7 +50,7 @@ export function buildBlogOgHtml(card: BlogOgCard): string {
     dateLabel
       ? `<div style="display:flex;font-size:24px;color:#6b7280;">${dateLabel}</div>`
       : '',
-  ].join('')
+  ].join('');
 
   return `
     <div style="display:flex;flex-direction:column;width:1200px;height:630px;background:#ffffff;font-family:Inter;">
@@ -80,5 +78,5 @@ export function buildBlogOgHtml(card: BlogOgCard): string {
             : ''
         }
       </div>
-    </div>`
+    </div>`;
 }

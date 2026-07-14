@@ -6,34 +6,42 @@
  * server function enforces auth; the redirect here is UX, not the
  * security boundary.
  */
-import { createFileRoute, isRedirect, Link, redirect, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  isRedirect,
+  Link,
+  redirect,
+  useRouter,
+} from '@tanstack/react-router';
 
-import { CandidateShell } from "@/components/candidate-shell";
+import { AvatarUpload } from '../components/avatar-upload';
+import { DangerZone } from '../components/danger-zone';
+import { EducationSection } from '../components/education-section';
+import { ExperienceSection } from '../components/experience-section';
+import { LanguagesSection } from '../components/languages-section';
+import { ProfileForm } from '../components/profile-form';
+import { ResumeUpload } from '../components/resume-upload';
+import { SkillsSection } from '../components/skills-section';
+import { m } from '../paraglide/messages';
+import { getAccount } from '../server/account';
+import { signOut } from '../server/auth';
+import { useCandidateShellContext } from './-candidate-shell-context';
+
 import {
   CandidateRouteErrorPage,
   CandidateRoutePendingPage,
-} from "@/components/candidate-route-state";
-import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { candidateLoaderError } from "@/lib/candidate-loader-error";
-import { AvatarUpload } from "../components/avatar-upload";
-import { DangerZone } from "../components/danger-zone";
-import { EducationSection } from "../components/education-section";
-import { ExperienceSection } from "../components/experience-section";
-import { LanguagesSection } from "../components/languages-section";
-import { ProfileForm } from "../components/profile-form";
-import { ResumeUpload } from "../components/resume-upload";
-import { SkillsSection } from "../components/skills-section";
-import { m } from "../paraglide/messages";
-import { getAccount } from "../server/account";
-import { signOut } from "../server/auth";
-import { useCandidateShellContext } from "./-candidate-shell-context";
+} from '@/components/candidate-route-state';
+import { CandidateShell } from '@/components/candidate-shell';
+import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { candidateLoaderError } from '@/lib/candidate-loader-error';
 
 function Divider() {
-  return <div className="h-px w-full bg-border" />;
+  return <div className="bg-border h-px w-full" />;
 }
 
-export const Route = createFileRoute("/account")({
+export const Route = createFileRoute('/account')({
   staticData: { ownsMain: true },
   pendingComponent: CandidateRoutePendingPage,
   errorComponent: CandidateRouteErrorPage,
@@ -45,14 +53,17 @@ export const Route = createFileRoute("/account")({
       // pass through — only a genuine load failure falls back to sign-in.
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
-      if (authFailure === "email-unverified") {
+      if (authFailure === 'email-unverified') {
         throw redirect({
-          to: "/auth/verify-email-required",
-          search: { returnTo: "/account" },
+          to: '/auth/verify-email-required',
+          search: { returnTo: '/account' },
         });
       }
-      if (authFailure === "unauthenticated") {
-        throw redirect({ to: "/auth/sign-in", search: { returnTo: "/account" } });
+      if (authFailure === 'unauthenticated') {
+        throw redirect({
+          to: '/auth/sign-in',
+          search: { returnTo: '/account' },
+        });
       }
       throw error;
     }
@@ -84,21 +95,24 @@ function profileStrength(data: {
 function StrengthMeter({ percent }: { percent: number }) {
   return (
     <div className="mt-6 hidden md:block">
-      <div className="border-t border-secondary pt-5">
-        <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+      <div className="border-border border-t pt-5">
+        <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
           {m.accountShell_profileStrengthLabel()}
         </p>
-        <p className="mt-1 text-sm font-medium text-foreground">{percent}%</p>
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-          <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
-        </div>
+        <p className="text-foreground mt-1 text-sm font-medium">{percent}%</p>
+        <Progress
+          value={percent}
+          aria-label={m.accountShell_profileStrengthLabel()}
+          className="mt-2 gap-0 [&_[data-slot=progress-track]]:h-1.5"
+        />
       </div>
     </div>
   );
 }
 
 function AccountPage() {
-  const { me, profile, experience, education, skills, languages, resume } = Route.useLoaderData();
+  const { me, profile, experience, education, skills, languages, resume } =
+    Route.useLoaderData();
   const candidateShell = useCandidateShellContext();
   const router = useRouter();
   const percent = profileStrength({
@@ -129,13 +143,19 @@ function AccountPage() {
       <div className="space-y-8">
         <header className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <AvatarUpload avatarUrl={profile.avatarUrl} displayName={profile.displayName} />
+            <AvatarUpload
+              avatarUrl={profile.avatarUrl}
+              displayName={profile.displayName}
+            />
             <h1 className="font-heading text-3xl font-semibold tracking-tight">
               {profile.displayName ?? me.email}
             </h1>
           </div>
           <div className="flex shrink-0 flex-wrap justify-end gap-2">
-            <Link to="/employers/dashboard" className={buttonVariants({ variant: "outline" })}>
+            <Link
+              to="/employers/dashboard"
+              className={buttonVariants({ variant: 'outline' })}
+            >
               {m.accountHome_forEmployersLink()}
             </Link>
             <Button
@@ -143,7 +163,7 @@ function AccountPage() {
               onClick={async () => {
                 await signOut();
                 await router.invalidate();
-                await router.navigate({ to: "/" });
+                await router.navigate({ to: '/' });
               }}
             >
               {m.accountHome_signOutLabel()}
@@ -154,7 +174,9 @@ function AccountPage() {
         <Divider />
 
         <section className="space-y-4">
-          <h2 className="font-heading text-xl font-semibold">{m.accountHome_profileHeading()}</h2>
+          <h2 className="font-heading text-xl font-semibold">
+            {m.accountHome_profileHeading()}
+          </h2>
           <ProfileForm profile={profile} />
         </section>
 

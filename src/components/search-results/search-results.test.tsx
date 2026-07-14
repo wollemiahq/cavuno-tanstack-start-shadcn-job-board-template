@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
-import "@testing-library/jest-dom/vitest";
-
-import { cleanup, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import '@testing-library/jest-dom/vitest';
+import { cleanup, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   AdRail,
@@ -10,64 +9,84 @@ import {
   SearchResultDetail,
   SearchResultsLayout,
   SearchResultsList,
-} from "./search-results";
+} from './search-results';
 
 afterEach(cleanup);
 
-describe("Search results composition", () => {
-  it("keeps the result list and selected detail as independently named regions", () => {
+describe('Search results composition', () => {
+  it('keeps the result list and selected detail as independently named regions', () => {
     const { container } = render(
       <SearchResultsLayout
         list={
-          <SearchResultsList label="Job results" scrollRestorationId="jobs-list">
+          <SearchResultsList
+            label="Job results"
+            scrollRestorationId="jobs-list"
+          >
             <SearchResultCard selected>
               <a href="/companies/acme/jobs/designer">Product designer</a>
             </SearchResultCard>
           </SearchResultsList>
         }
         detail={
-          <SearchResultDetail label="Selected job" scrollRestorationId="job-detail">
+          <SearchResultDetail
+            label="Selected job"
+            scrollRestorationId="job-detail"
+          >
             <h2>Product designer</h2>
           </SearchResultDetail>
         }
       />,
     );
 
-    const list = screen.getByRole("region", { name: "Job results" });
-    const detail = screen.getByRole("region", { name: "Selected job" });
+    const list = screen.getByRole('region', { name: 'Job results' });
+    const detail = screen.getByRole('region', { name: 'Selected job' });
 
-    expect(list).toHaveAttribute("data-scroll-restoration-id", "jobs-list");
-    expect(detail).toHaveAttribute("data-scroll-restoration-id", "job-detail");
-    expect(within(list).getByRole("link", { name: "Product designer" })).toHaveAttribute(
-      "href",
-      "/companies/acme/jobs/designer",
-    );
-    expect(container.querySelector('[data-slot="search-result-card"]')).toHaveAttribute(
-      "data-selected",
-      "true",
-    );
+    expect(list).toHaveAttribute('data-scroll-restoration-id', 'jobs-list');
+    expect(detail).toHaveAttribute('data-scroll-restoration-id', 'job-detail');
+    expect(
+      within(list).getByRole('link', { name: 'Product designer' }),
+    ).toHaveAttribute('href', '/companies/acme/jobs/designer');
+    expect(
+      container.querySelector('[data-slot="search-result-card"]'),
+    ).toHaveAttribute('data-selected', 'true');
+    expect(
+      container
+        .querySelector('[data-slot="search-result-card"]')
+        ?.querySelector('[data-slot="card"]'),
+    ).toBeInTheDocument();
 
+    const layout = container.querySelector(
+      '[data-slot="search-results-layout"]',
+    );
     const core = container.querySelector('[data-slot="search-results-core"]');
-    expect(core).not.toHaveClass("rounded-2xl");
-    expect(core).not.toHaveClass("border");
-    expect(core).not.toHaveClass("overflow-hidden");
-    expect(core).not.toHaveClass("bg-background");
-    expect(list).toHaveClass("md:border-r");
+    expect(layout).toHaveClass('max-w-[var(--layout-width)]', 'md:min-h-0');
+    expect(core).toHaveClass('md:h-full', 'md:min-h-0');
+    expect(core).not.toHaveClass('rounded-2xl');
+    expect(core).not.toHaveClass('border');
+    expect(core).not.toHaveClass('overflow-hidden');
+    expect(core).not.toHaveClass('bg-background');
+    expect(list).toHaveClass('md:border-r');
+    expect(list).toHaveClass('md:h-full');
+    expect(detail).toHaveClass('md:h-full');
+    expect(list.className).not.toContain('100dvh');
+    expect(detail.className).not.toContain('100dvh');
   });
 
-  it("renders only supplied advertising regions with explicit labels and sides", () => {
+  it('renders only supplied advertising regions with explicit labels and sides', () => {
     const { container, rerender } = render(
       <SearchResultsLayout
-        startAd={<AdRail label="Advertisement from Example">Start creative</AdRail>}
+        startAd={
+          <AdRail label="Advertisement from Example">Start creative</AdRail>
+        }
         list={<SearchResultsList label="Results">Results</SearchResultsList>}
         detail={<SearchResultDetail label="Detail">Detail</SearchResultDetail>}
       />,
     );
 
-    const startRail = screen.getByRole("complementary", {
-      name: "Advertisement from Example",
+    const startRail = screen.getByRole('complementary', {
+      name: 'Advertisement from Example',
     });
-    expect(startRail).toHaveAttribute("data-side", "start");
+    expect(startRail).toHaveAttribute('data-side', 'start');
     expect(container.querySelector('[data-side="end"]')).toBeNull();
 
     rerender(
@@ -78,10 +97,12 @@ describe("Search results composition", () => {
       />,
     );
 
-    expect(screen.getByRole("complementary", { name: "Advertisement" })).toHaveAttribute(
-      "data-side",
-      "end",
-    );
+    expect(
+      screen.getByRole('complementary', { name: 'Advertisement' }),
+    ).toHaveAttribute('data-side', 'end');
     expect(container.querySelector('[data-side="start"]')).toBeNull();
+    expect(
+      container.querySelector('[data-slot="search-results-layout"]')?.className,
+    ).not.toContain('72rem');
   });
 });

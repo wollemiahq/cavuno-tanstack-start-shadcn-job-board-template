@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 export function MessagingLayout({
@@ -20,10 +21,11 @@ export function MessagingLayout({
   className?: string;
 }) {
   return (
-    <section
+    <Card
+      role="region"
       aria-label={ariaLabel}
       className={cn(
-        'rhea-theme border-border bg-card text-card-foreground grid h-[min(44rem,calc(100dvh-10rem))] min-h-[32rem] overflow-hidden rounded-xl border md:grid-cols-[22rem_minmax(0,1fr)]',
+        'border-border grid h-[min(44rem,calc(100dvh-10rem))] min-h-[32rem] gap-0 overflow-hidden rounded-xl border py-0 shadow-none ring-0 md:grid-cols-[22rem_minmax(0,1fr)]',
         className,
       )}
     >
@@ -45,6 +47,6 @@ export function MessagingLayout({
       >
         {conversation}
       </section>
-    </section>
+    </Card>
   );
 }

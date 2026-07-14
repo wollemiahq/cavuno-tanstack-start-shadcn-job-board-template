@@ -1,90 +1,127 @@
 // @vitest-environment jsdom
-import "@testing-library/jest-dom/vitest";
+import '@testing-library/jest-dom/vitest';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
-
-import { SaveJobButton } from "./save-job-button";
+import { SaveJobButton } from './save-job-button';
 
 afterEach(cleanup);
 
-describe("SaveJobButton candidate continuation", () => {
-  it("keeps the complete job destination through candidate sign-in", () => {
-    const returnTo = "/jobs?q=design&location=Sydney&selectedJob=product-designer";
+describe('SaveJobButton candidate continuation', () => {
+  it('keeps the complete job destination through candidate sign-in', () => {
+    const returnTo =
+      '/jobs?q=design&location=Sydney&selectedJob=product-designer';
     render(
       <SaveJobButton
         jobId="job-1"
         viewer={null}
         returnTo={returnTo}
-        labels={{ save: "Save", saving: "Saving…", saved: "Saved", error: "Could not save." }}
+        labels={{
+          save: 'Save',
+          saving: 'Saving…',
+          saved: 'Saved',
+          error: 'Could not save.',
+        }}
         onSave={vi.fn(async () => {})}
       />,
     );
 
-    const href = screen.getByRole("link", { name: "Save" }).getAttribute("href");
+    const href = screen
+      .getByRole('link', { name: 'Save' })
+      .getAttribute('href');
     expect(href).not.toBeNull();
-    const signInUrl = new URL(href!, "https://board.example");
-    expect(signInUrl.pathname).toBe("/auth/sign-in");
-    expect(signInUrl.searchParams.get("returnTo")).toBe(returnTo);
+    const signInUrl = new URL(href!, 'https://board.example');
+    expect(signInUrl.pathname).toBe('/auth/sign-in');
+    expect(signInUrl.searchParams.get('returnTo')).toBe(returnTo);
   });
 
-  it("keeps the complete job destination through email verification", () => {
-    const returnTo = "/companies/acme/jobs/product-designer#apply";
+  it('keeps the complete job destination through email verification', () => {
+    const returnTo = '/companies/acme/jobs/product-designer#apply';
     render(
       <SaveJobButton
         jobId="job-1"
         viewer={{ emailVerified: false }}
         returnTo={returnTo}
-        labels={{ save: "Save", saving: "Saving…", saved: "Saved", error: "Could not save." }}
+        labels={{
+          save: 'Save',
+          saving: 'Saving…',
+          saved: 'Saved',
+          error: 'Could not save.',
+        }}
         onSave={vi.fn(async () => {})}
       />,
     );
 
-    const href = screen.getByRole("link", { name: "Save" }).getAttribute("href");
+    const href = screen
+      .getByRole('link', { name: 'Save' })
+      .getAttribute('href');
     expect(href).not.toBeNull();
-    const verifyUrl = new URL(href!, "https://board.example");
-    expect(verifyUrl.pathname).toBe("/auth/verify-email-required");
-    expect(verifyUrl.searchParams.get("returnTo")).toBe(returnTo);
+    const verifyUrl = new URL(href!, 'https://board.example');
+    expect(verifyUrl.pathname).toBe('/auth/verify-email-required');
+    expect(verifyUrl.searchParams.get('returnTo')).toBe(returnTo);
   });
 
-  it("opens the canonical saved-jobs collection after saving", async () => {
+  it('opens the canonical saved-jobs collection after saving', async () => {
     render(
       <SaveJobButton
         jobId="job-1"
         viewer={{ emailVerified: true }}
         returnTo="/companies/acme/jobs/product-designer"
-        labels={{ save: "Save", saving: "Saving…", saved: "Saved", error: "Could not save." }}
+        labels={{
+          save: 'Save',
+          saving: 'Saving…',
+          saved: 'Saved',
+          error: 'Could not save.',
+        }}
         onSave={vi.fn(async () => {})}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => {
-      expect(screen.getByRole("link", { name: "Saved" })).toHaveAttribute("href", "/account/saved");
+      expect(screen.getByRole('link', { name: 'Saved' })).toHaveAttribute(
+        'href',
+        '/account/saved',
+      );
     });
   });
 
-  it("surfaces a recoverable save failure and permits retry", async () => {
+  it('surfaces a recoverable save failure and permits retry', async () => {
     const onSave = vi
       .fn<() => Promise<void>>()
-      .mockRejectedValueOnce(new Error("Temporary outage"))
+      .mockRejectedValueOnce(new Error('Temporary outage'))
       .mockResolvedValueOnce();
     render(
       <SaveJobButton
         jobId="job-1"
         viewer={{ emailVerified: true }}
         returnTo="/companies/acme/jobs/product-designer"
-        labels={{ save: "Save", saving: "Saving…", saved: "Saved", error: "Could not save." }}
+        labels={{
+          save: 'Save',
+          saving: 'Saving…',
+          saved: 'Saved',
+          error: 'Could not save.',
+        }}
         onSave={onSave}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Could not save.");
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not save.',
+    );
 
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    await waitFor(() => expect(screen.getByRole("link", { name: "Saved" })).toBeVisible());
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() =>
+      expect(screen.getByRole('link', { name: 'Saved' })).toBeVisible(),
+    );
     expect(onSave).toHaveBeenCalledTimes(2);
   });
 });

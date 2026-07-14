@@ -1,39 +1,43 @@
 /**
- * Company workspace — Company profile tab (Paper "Employer Sidebar —
- * Profile View / Edit"): view mode renders the profile as candidates see
- * it (header, About prose, open roles, About card rail) with an "Edit
- * profile" button; edit mode swaps the text in place for inputs under an
- * editing banner. Saves through `me.companies.update`.
+ * Company workspace — Company profile tab. View mode mirrors the public
+ * company page; edit mode updates the fields supported by the v1 company API.
  *
- * `summary` (the tagline) and the social URLs are write-only on the v1
- * wire — the public read doesn't return them — so edit mode starts them
- * blank (same limitation the previous flat form had).
+ * `summary` is write-only on the v1 wire, so edit mode starts it blank.
  */
-import { Text } from '@/components/text'
-import { useState } from 'react'
+import { useState } from 'react';
+
 import {
   createFileRoute,
   getRouteApi,
-  isRedirect,
-  redirect,
   useRouter,
-} from '@tanstack/react-router'
+} from '@tanstack/react-router';
+import { ExternalLinkIcon, PencilIcon } from 'lucide-react';
 
-import type { BoardLabelOverrides } from '@cavuno/board/format'
+import { handleEmployerLoaderError } from '../lib/employer-loader-auth';
+import { m } from '../paraglide/messages';
+import { getCompanyWorkspace, updateCompany } from '../server/employers';
+import { getCompany, listCompanyJobs } from '../server/queries';
 
-import { toJobCardVM } from '@/board/job-view-model'
-import { EmployerCompanyShell } from '@/components/account-shell'
-import { JobCard } from '@/components/board/job-card'
-import { Prose } from '@/components/prose'
-import { getCompanyWorkspace, updateCompany } from '../server/employers'
-import { getCompany, listCompanyJobs } from '../server/queries'
-import { Button } from '@/components/base/buttons/button'
-import { Input } from '@/components/base/input/input'
-import { Label } from '@/components/base/input/label'
-import { TextAreaBase } from '@/components/base/textarea/textarea'
-import { m } from '../paraglide/messages'
+import { toJobCardVM } from '@/board/job-view-model';
+import { EmployerCompanyShell } from '@/components/account-shell';
+import { JobCard } from '@/components/board/job-card';
+import { Prose } from '@/components/prose';
+import { Alert, AlertAction, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import type { BoardLabelOverrides } from '@cavuno/board/format';
 
-const rootApi = getRouteApi('__root__')
+const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/employers/companies/$slug/profile')({
   loader: async ({ params }) => {
@@ -42,22 +46,25 @@ export const Route = createFileRoute('/employers/companies/$slug/profile')({
         getCompanyWorkspace({ data: { slug: params.slug } }),
         getCompany({ data: { companySlug: params.slug } }),
         listCompanyJobs({ data: { companySlug: params.slug } }),
-      ])
-      return { workspace, company, publicJobs }
+      ]);
+      return { workspace, company, publicJobs };
     } catch (error) {
-      if (isRedirect(error)) throw error
-      throw redirect({ to: '/auth/sign-in', search: { returnTo: undefined } })
+      handleEmployerLoaderError(
+        error,
+        `/employers/companies/${params.slug}/profile`,
+      );
     }
   },
   head: () => ({ meta: [{ title: m.employerCompany_metaTitle() }] }),
+  staticData: { ownsMain: true },
   component: CompanyProfilePage,
-})
+});
 
 function CompanyProfilePage() {
-  const { workspace, company, publicJobs } = Route.useLoaderData()
-  const { board } = rootApi.useLoaderData()
-  const [editing, setEditing] = useState(false)
-  const membershipCompany = workspace.membership?.company
+  const { workspace, company, publicJobs } = Route.useLoaderData();
+  const { board } = rootApi.useLoaderData();
+  const [editing, setEditing] = useState(false);
+  const membershipCompany = workspace.membership?.company;
 
   return (
     <EmployerCompanyShell
@@ -85,60 +92,66 @@ function CompanyProfilePage() {
         />
       )}
     </EmployerCompanyShell>
-  )
+  );
 }
 
-type PublicCompany = Awaited<ReturnType<typeof getCompany>>
-type PublicCompanyJobs = Awaited<ReturnType<typeof listCompanyJobs>>['data']
-type BoardLabels = BoardLabelOverrides | undefined
+type PublicCompany = Awaited<ReturnType<typeof getCompany>>;
+type PublicCompanyJobs = Awaited<ReturnType<typeof listCompanyJobs>>['data'];
+type BoardLabels = BoardLabelOverrides | undefined;
 
 function AboutCard({
   company,
   editing,
 }: {
-  company: PublicCompany
-  editing?: React.ReactNode
+  company: PublicCompany;
+  editing?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-secondary p-4">
-      <p className="text-tertiary text-xs font-semibold tracking-wide uppercase">
-        {m.employerProfile_aboutCardHeading({ company: company.name })}
-      </p>
-      {editing ?? (
-        <dl className="mt-3 space-y-3 text-sm">
-          {company.website ? (
-            <div>
-              <dt className="text-tertiary">
-                {m.employerCompany_websiteLabel()}
-              </dt>
-              <dd>
-                <a href={company.website} target="_blank" rel="noreferrer">
-                  {company.website}
-                </a>
-              </dd>
-            </div>
-          ) : null}
-          {company.markets.length > 0 ? (
-            <div>
-              <dt className="text-tertiary">
-                {m.employerProfile_marketsLabel()}
-              </dt>
-              <dd className="mt-1 flex flex-wrap gap-1.5">
-                {company.markets.map((market) => (
-                  <span
-                    key={market.slug}
-                    className="bg-secondary rounded-full px-2.5 py-0.5 text-xs"
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle>
+          {m.employerProfile_aboutCardHeading({ company: company.name })}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {editing ?? (
+          <dl className="space-y-4 text-sm">
+            {company.website ? (
+              <div className="space-y-1">
+                <dt className="text-muted-foreground">
+                  {m.employerCompany_websiteLabel()}
+                </dt>
+                <dd className="break-all">
+                  <a
+                    href={company.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-foreground font-medium underline-offset-4 hover:underline"
                   >
-                    {market.name}
-                  </span>
-                ))}
-              </dd>
-            </div>
-          ) : null}
-        </dl>
-      )}
-    </div>
-  )
+                    {company.website}
+                  </a>
+                </dd>
+              </div>
+            ) : null}
+            {company.markets.length > 0 ? (
+              <div className="space-y-2">
+                <dt className="text-muted-foreground">
+                  {m.employerProfile_marketsLabel()}
+                </dt>
+                <dd className="flex flex-wrap gap-1.5">
+                  {company.markets.map((market) => (
+                    <Badge key={market.slug} variant="secondary">
+                      {market.name}
+                    </Badge>
+                  ))}
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 function ViewMode({
@@ -148,71 +161,83 @@ function ViewMode({
   publicJobs,
   onEdit,
 }: {
-  company: PublicCompany
-  language: string
-  labels: BoardLabels
-  publicJobs: PublicCompanyJobs
-  onEdit: () => void
+  company: PublicCompany;
+  language: string;
+  labels: BoardLabels;
+  publicJobs: PublicCompanyJobs;
+  onEdit: () => void;
 }) {
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px]">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
       <div className="space-y-8">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <Text as="h1" variant="heading1">{company.name}</Text>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <h1 className="font-heading text-3xl font-semibold tracking-tight">
+              {company.name}
+            </h1>
             {company.website ? (
-              <p className="text-tertiary mt-1 text-sm">
-                {company.website}
-              </p>
+              <p className="text-muted-foreground text-sm">{company.website}</p>
             ) : null}
           </div>
-          <Button color="secondary" size="md" onClick={onEdit}>
+          <Button type="button" variant="outline" onClick={onEdit}>
+            <PencilIcon data-icon="inline-start" />
             {m.employerProfile_editProfileLabel()}
           </Button>
         </header>
 
-        <section className="space-y-3">
-          <Text as="h2" variant="heading4">
+        <section aria-labelledby="company-about-heading" className="space-y-3">
+          <h2
+            id="company-about-heading"
+            className="font-heading text-xl font-semibold"
+          >
             {m.employerProfile_aboutHeading()}
-          </Text>
+          </h2>
           {company.description ? (
-            // Company descriptions arrive pre-sanitized from the Board API;
-            // render as HTML so this view matches what candidates see.
+            // Company descriptions arrive pre-sanitized from the Board API.
             <Prose html={company.description} />
           ) : (
-            <p className="text-tertiary text-sm">
+            <p className="text-muted-foreground text-sm">
               {m.employerCompany_descriptionLabel()} —
             </p>
           )}
         </section>
 
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Text as="h2" variant="heading4">
+        <section
+          aria-labelledby="company-open-roles-heading"
+          className="space-y-4"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2
+              id="company-open-roles-heading"
+              className="font-heading text-xl font-semibold"
+            >
               {m.employerProfile_openRolesHeading()}
-            </Text>
+            </h2>
             {company.links.public ? (
               <a
                 href={company.links.public}
                 target="_blank"
                 rel="noreferrer"
-                className="text-sm"
+                className={buttonVariants({ variant: 'ghost', size: 'sm' })}
               >
                 {m.employerProfile_viewPublicLabel()}
+                <ExternalLinkIcon data-icon="inline-end" />
               </a>
             ) : null}
           </div>
           {publicJobs.length === 0 ? (
-            <p className="border-secondary text-tertiary rounded-lg border border-dashed p-8 text-center text-sm">
-              {m.employerCompany_noJobsText()}
-            </p>
+            <Empty className="border">
+              <EmptyHeader>
+                <EmptyTitle>{m.employerCompany_noJobsText()}</EmptyTitle>
+                <EmptyDescription>
+                  {m.employerCompany_draftNoticeText()}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <div className="space-y-3">
               {publicJobs.slice(0, 5).map((job) => (
-                <JobCard
-                  key={job.id}
-                  vm={toJobCardVM(job, language, labels)}
-                />
+                <JobCard key={job.id} vm={toJobCardVM(job, language, labels)} />
               ))}
             </div>
           )}
@@ -221,7 +246,7 @@ function ViewMode({
 
       <AboutCard company={company} />
     </div>
-  )
+  );
 }
 
 function EditMode({
@@ -229,23 +254,23 @@ function EditMode({
   company,
   onExit,
 }: {
-  slug: string
-  company: PublicCompany
-  onExit: () => void
+  slug: string;
+  company: PublicCompany;
+  onExit: () => void;
 }) {
-  const router = useRouter()
+  const router = useRouter();
   const [form, setForm] = useState({
     name: company.name,
     website: company.website ?? '',
     summary: '',
     description: company.description ?? '',
-  })
-  const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle')
-  const [message, setMessage] = useState('')
+  });
+  const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
+  const [message, setMessage] = useState('');
 
   async function save() {
-    setStatus('saving')
-    setMessage('')
+    setStatus('saving');
+    setMessage('');
     const result = await updateCompany({
       data: {
         slug,
@@ -256,82 +281,106 @@ function EditMode({
           ...(form.summary.trim() ? { summary: form.summary.trim() } : {}),
         },
       },
-    })
+    });
     if (!result.ok) {
-      setStatus('error')
-      setMessage(result.message)
-      return
+      setStatus('error');
+      setMessage(result.message);
+      return;
     }
-    await router.invalidate()
-    onExit()
+    await router.invalidate();
+    onExit();
   }
 
   return (
     <form
       className="space-y-6"
       onSubmit={(event) => {
-        event.preventDefault()
-        void save()
+        event.preventDefault();
+        void save();
       }}
     >
-      <div className="border-primary/30 bg-secondary/60 text-primary flex items-center justify-between gap-3 rounded-lg border px-4 py-2.5 text-sm">
-        <span>{m.employerProfile_editingBanner()}</span>
-        <Button type="button" color="secondary" size="sm" onClick={onExit}>
-          {m.employerProfile_exitEditLabel()}
-        </Button>
-      </div>
+      <Alert role="status">
+        <AlertDescription>{m.employerProfile_editingBanner()}</AlertDescription>
+        <AlertAction>
+          <Button type="button" variant="outline" size="sm" onClick={onExit}>
+            {m.employerProfile_exitEditLabel()}
+          </Button>
+        </AlertAction>
+      </Alert>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px]">
-        <div className="space-y-5">
-          <Input
-            label={m.employerCompany_nameLabel()}
-            value={form.name}
-            onChange={(value) => setForm({ ...form, name: value })}
-            isRequired
-          />
-          <Input
-            label={m.employerProfile_taglineLabel()}
-            value={form.summary}
-            onChange={(value) => setForm({ ...form, summary: value })}
-          />
-          <div className="space-y-1.5">
-            <Label htmlFor="profile-description">
-              {m.employerCompany_descriptionLabel()}
-            </Label>
-            <TextAreaBase
-              id="profile-description"
-              rows={8}
-              value={form.description}
-              onChange={(event) =>
-                setForm({ ...form, description: event.target.value })
-              }
-            />
-          </div>
-          <div className="flex items-center gap-3">
-            <Button type="submit" color="primary" size="md" isDisabled={status === 'saving'}>
-              {status === 'saving'
-                ? m.employerCompany_savingLabel()
-                : m.employerCompany_saveCompanyLabel()}
-            </Button>
-            {status === 'error' ? (
-              <p className="text-error-primary text-sm">{message}</p>
-            ) : null}
-          </div>
-        </div>
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <Card>
+          <CardHeader>
+            <CardTitle>{m.employerCompany_profileHeading()}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <Field>
+              <FieldLabel htmlFor="company-name">
+                {m.employerCompany_nameLabel()}
+              </FieldLabel>
+              <Input
+                id="company-name"
+                value={form.name}
+                onChange={(event) =>
+                  setForm({ ...form, name: event.target.value })
+                }
+                required
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="company-tagline">
+                {m.employerProfile_taglineLabel()}
+              </FieldLabel>
+              <Input
+                id="company-tagline"
+                value={form.summary}
+                onChange={(event) =>
+                  setForm({ ...form, summary: event.target.value })
+                }
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="profile-description">
+                {m.employerCompany_descriptionLabel()}
+              </FieldLabel>
+              <Textarea
+                id="profile-description"
+                rows={8}
+                value={form.description}
+                onChange={(event) =>
+                  setForm({ ...form, description: event.target.value })
+                }
+              />
+            </Field>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button type="submit" disabled={status === 'saving'}>
+                {status === 'saving'
+                  ? m.employerCompany_savingLabel()
+                  : m.employerCompany_saveCompanyLabel()}
+              </Button>
+              {status === 'error' ? <FieldError>{message}</FieldError> : null}
+            </div>
+          </CardContent>
+        </Card>
 
         <AboutCard
           company={company}
           editing={
-            <div className="mt-3">
+            <Field>
+              <FieldLabel htmlFor="company-website">
+                {m.employerCompany_websiteLabel()}
+              </FieldLabel>
               <Input
-                label={m.employerCompany_websiteLabel()}
+                id="company-website"
                 value={form.website}
-                onChange={(value) => setForm({ ...form, website: value })}
+                onChange={(event) =>
+                  setForm({ ...form, website: event.target.value })
+                }
               />
-            </div>
+            </Field>
           }
         />
       </div>
     </form>
-  )
+  );
 }

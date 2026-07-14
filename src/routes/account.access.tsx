@@ -10,67 +10,78 @@
  * `hasAccess`, then re-render the entitled state (with a Manage-subscription
  * link for recurring grants).
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from 'react';
 
-import { createFileRoute, isRedirect, redirect, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  isRedirect,
+  redirect,
+  useRouter,
+} from '@tanstack/react-router';
 
-import type { AccessCheckoutSession, PaywallOffer } from "@cavuno/board";
-
-import { EmbeddedCheckout } from "../components/paywall/embedded-checkout";
+import { EmbeddedCheckout } from '../components/paywall/embedded-checkout';
+import { m } from '../paraglide/messages';
 import {
   getAccessGrant,
   getPaywallOffers,
   openBillingPortal,
   startCheckout,
-} from "../server/paywall";
+} from '../server/paywall';
+import { useCandidateShellContext } from './-candidate-shell-context';
 
-import { CandidateShell } from "@/components/candidate-shell";
 import {
   CandidateActionFeedback,
   type CandidateActionFeedbackState,
-} from "@/components/candidate-action-feedback";
+} from '@/components/candidate-action-feedback';
 import {
   CandidateRouteErrorPage,
   CandidateRoutePendingPage,
-} from "@/components/candidate-route-state";
-import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { candidateLoaderError } from "@/lib/candidate-loader-error";
-import { m } from "../paraglide/messages";
-import { useCandidateShellContext } from "./-candidate-shell-context";
+} from '@/components/candidate-route-state';
+import { CandidateShell } from '@/components/candidate-shell';
+import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { candidateLoaderError } from '@/lib/candidate-loader-error';
+import type { AccessCheckoutSession, PaywallOffer } from '@cavuno/board';
 
-const RETURN_PATH = "/account/access";
+const RETURN_PATH = '/account/access';
 
 function formatPrice(amountCents: number, currency: string) {
   return new Intl.NumberFormat(undefined, {
-    style: "currency",
+    style: 'currency',
     currency: currency.toUpperCase(),
   }).format(amountCents / 100);
 }
 
-export const Route = createFileRoute("/account/access")({
+export const Route = createFileRoute('/account/access')({
   staticData: { ownsMain: true },
   pendingComponent: CandidateRoutePendingPage,
   errorComponent: CandidateRouteErrorPage,
   validateSearch: (search: Record<string, unknown>) => ({
-    session_id: typeof search.session_id === "string" ? search.session_id : undefined,
+    session_id:
+      typeof search.session_id === 'string' ? search.session_id : undefined,
   }),
   loader: async () => {
     try {
-      const [grant, offers] = await Promise.all([getAccessGrant(), getPaywallOffers()]);
+      const [grant, offers] = await Promise.all([
+        getAccessGrant(),
+        getPaywallOffers(),
+      ]);
       return { grant, offers: offers.data };
     } catch (error) {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
-      if (authFailure === "email-unverified") {
+      if (authFailure === 'email-unverified') {
         throw redirect({
-          to: "/auth/verify-email-required",
+          to: '/auth/verify-email-required',
           search: { returnTo: RETURN_PATH },
         });
       }
-      if (authFailure === "unauthenticated") {
-        throw redirect({ to: "/auth/sign-in", search: { returnTo: RETURN_PATH } });
+      if (authFailure === 'unauthenticated') {
+        throw redirect({
+          to: '/auth/sign-in',
+          search: { returnTo: RETURN_PATH },
+        });
       }
       throw error;
     }
@@ -97,10 +108,13 @@ export function AccessPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [exhausted, setExhausted] = useState(false);
-  const [feedback, setFeedback] = useState<CandidateActionFeedbackState>("idle");
+  const [feedback, setFeedback] =
+    useState<CandidateActionFeedbackState>('idle');
   // Returning from Stripe with a session id means a checkout just completed —
   // poll the grant until the webhook has recorded it.
-  const [polling, setPolling] = useState(Boolean(session_id) && !grant.hasAccess);
+  const [polling, setPolling] = useState(
+    Boolean(session_id) && !grant.hasAccess,
+  );
 
   const hasAccess = grant.hasAccess || confirmed;
 
@@ -120,14 +134,14 @@ export function AccessPage() {
         if (stop) return;
         setPolling(false);
         setExhausted(true);
-        setFeedback("error");
+        setFeedback('error');
         return;
       }
       if (stop) return;
       if (next.hasAccess) {
         setConfirmed(true);
         setPolling(false);
-        void router.invalidate().catch(() => setFeedback("error"));
+        void router.invalidate().catch(() => setFeedback('error'));
       } else if (attempts < 30) {
         timerId = window.setTimeout(tick, 2000);
       } else {
@@ -145,33 +159,35 @@ export function AccessPage() {
   // A stable reference so mounting the embedded checkout doesn't re-run its
   // effect (and destroy/remount the live Stripe iframe) on every render.
   const handleCheckoutComplete = useCallback(() => {
-    setFeedback("idle");
+    setFeedback('idle');
     setPolling(true);
   }, []);
 
   async function buy(offer: PaywallOffer) {
     setBusy(offer.offerKey);
-    setFeedback("idle");
+    setFeedback('idle');
     try {
       const mountKit = await startCheckout({
         data: { offerKey: offer.offerKey, returnPath: RETURN_PATH },
       });
       setKit(mountKit);
     } catch {
-      setFeedback("error");
+      setFeedback('error');
     } finally {
       setBusy(null);
     }
   }
 
   async function manage() {
-    setBusy("portal");
-    setFeedback("idle");
+    setBusy('portal');
+    setFeedback('idle');
     try {
-      const { url } = await openBillingPortal({ data: { returnPath: RETURN_PATH } });
+      const { url } = await openBillingPortal({
+        data: { returnPath: RETURN_PATH },
+      });
       window.location.href = url;
     } catch {
-      setFeedback("error");
+      setFeedback('error');
     } finally {
       setBusy(null);
     }
@@ -187,16 +203,19 @@ export function AccessPage() {
           <Badge>{m.accountAccess_activeBadge()}</Badge>
         </div>
         <p className="text-muted-foreground">{m.accountAccess_activeBody()}</p>
-        {grant.offerType === "recurring" ? (
-          <Button onClick={manage} disabled={busy === "portal"}>
-            {busy === "portal"
+        {grant.offerType === 'recurring' ? (
+          <Button onClick={manage} disabled={busy === 'portal'}>
+            {busy === 'portal'
               ? m.accountAccess_openingLabel()
               : m.accountAccess_manageSubscriptionLabel()}
           </Button>
         ) : null}
         <CandidateActionFeedback state={feedback} />
         <div>
-          <a href="/" className={buttonVariants({ variant: "link", size: "sm" })}>
+          <a
+            href="/"
+            className={buttonVariants({ variant: 'link', size: 'sm' })}
+          >
             {m.accountAccess_browseJobsLink()}
           </a>
         </div>
@@ -211,7 +230,11 @@ export function AccessPage() {
           {m.accountAccess_completePurchaseTitle()}
         </h1>
         <EmbeddedCheckout kit={kit} onComplete={handleCheckoutComplete} />
-        <button type="button" className="text-sm underline" onClick={() => setKit(null)}>
+        <button
+          type="button"
+          className="text-sm underline"
+          onClick={() => setKit(null)}
+        >
           {m.accountAccess_backToPlansLabel()}
         </button>
       </section>
@@ -221,7 +244,9 @@ export function AccessPage() {
   if (polling) {
     return (
       <section className="mx-auto max-w-xl py-10">
-        <p className="text-muted-foreground">{m.accountAccess_confirmingText()}</p>
+        <p className="text-muted-foreground">
+          {m.accountAccess_confirmingText()}
+        </p>
       </section>
     );
   }
@@ -232,14 +257,16 @@ export function AccessPage() {
         <h1 className="font-heading text-3xl font-semibold tracking-tight">
           {m.accountAccess_paymentReceivedTitle()}
         </h1>
-        <p className="text-muted-foreground">{m.accountAccess_paymentReceivedBody()}</p>
+        <p className="text-muted-foreground">
+          {m.accountAccess_paymentReceivedBody()}
+        </p>
         <Button
           onClick={async () => {
-            setFeedback("idle");
+            setFeedback('idle');
             try {
               await router.invalidate();
             } catch {
-              setFeedback("error");
+              setFeedback('error');
             }
           }}
         >
@@ -256,10 +283,14 @@ export function AccessPage() {
         <h1 className="font-heading text-3xl font-semibold tracking-tight">
           {m.accountAccess_unlockTitle()}
         </h1>
-        <p className="text-muted-foreground">{m.accountAccess_unlockSubtitle()}</p>
+        <p className="text-muted-foreground">
+          {m.accountAccess_unlockSubtitle()}
+        </p>
       </div>
       {offers.length === 0 ? (
-        <p className="text-muted-foreground">{m.accountAccess_noOffersText()}</p>
+        <p className="text-muted-foreground">
+          {m.accountAccess_noOffersText()}
+        </p>
       ) : (
         <ul className="space-y-3">
           {offers.map((offer) => (
@@ -269,10 +300,13 @@ export function AccessPage() {
                   <div>
                     <div className="flex items-center gap-2 font-medium">
                       {offer.label}
-                      {offer.isDefault ? <Badge>{m.accountAccess_popularBadge()}</Badge> : null}
+                      {offer.isDefault ? (
+                        <Badge>{m.accountAccess_popularBadge()}</Badge>
+                      ) : null}
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {formatPrice(offer.amountCents, offer.currency)} · {offer.billingLabel}
+                    <div className="text-muted-foreground text-sm">
+                      {formatPrice(offer.amountCents, offer.currency)} ·{' '}
+                      {offer.billingLabel}
                     </div>
                   </div>
                   <Button onClick={() => buy(offer)} disabled={busy !== null}>

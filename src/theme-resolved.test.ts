@@ -1,13 +1,13 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest';
 
 import {
   buildSyncPayload,
   parseTokens,
   tokensHash,
-} from '../scripts/theme-resolved-lib.mjs'
+} from '../scripts/theme-resolved-lib.mjs';
+
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 /**
  * ADR-0065 D2/D3 — theme.css is canonical; everything else derives.
@@ -38,19 +38,19 @@ const FIXTURE = `/*
   --background: #18181B;
   --foreground: #FAFAFA;
 }
-`
+`;
 
 describe('parseTokens', () => {
   it('extracts light/dark variable maps and banner metadata', () => {
-    const parsed = parseTokens(FIXTURE)
-    expect(parsed.light['--background']).toBe('#FFFFFF')
-    expect(parsed.light['--ring']).toBe('#52525B')
-    expect(parsed.dark['--background']).toBe('#18181B')
-    expect(parsed.meta.mode).toBe('system')
-    expect(parsed.meta.fontSans).toBe('geist')
-    expect(parsed.meta.fontHeading).toBe('lora')
-    expect(parsed.meta.fontsImport).toContain('fonts.googleapis.com')
-  })
+    const parsed = parseTokens(FIXTURE);
+    expect(parsed.light['--background']).toBe('#FFFFFF');
+    expect(parsed.light['--ring']).toBe('#52525B');
+    expect(parsed.dark['--background']).toBe('#18181B');
+    expect(parsed.meta.mode).toBe('system');
+    expect(parsed.meta.fontSans).toBe('geist');
+    expect(parsed.meta.fontHeading).toBe('lora');
+    expect(parsed.meta.fontsImport).toContain('fonts.googleapis.com');
+  });
 
   it('derives a non-Geist Fontsource family from shadcn-style theme CSS', () => {
     const parsed = parseTokens(`
@@ -61,26 +61,26 @@ describe('parseTokens', () => {
 }
 :root { --background: white; }
 .dark { --background: black; }
-`)
+`);
 
-    expect(parsed.meta.fontSans).toBe('roboto-slab')
-    expect(parsed.meta.fontHeading).toBe('inherit')
-    expect(parsed.light['--font-sans']).toBe('"Roboto Slab Variable", serif')
-  })
-})
+    expect(parsed.meta.fontSans).toBe('roboto-slab');
+    expect(parsed.meta.fontHeading).toBe('inherit');
+    expect(parsed.light['--font-sans']).toBe('"Roboto Slab Variable", serif');
+  });
+});
 
 describe('tokensHash', () => {
   it('is a stable lowercase sha-256 of the file content', () => {
-    expect(tokensHash(FIXTURE)).toMatch(/^[0-9a-f]{64}$/)
-    expect(tokensHash(FIXTURE)).toBe(tokensHash(FIXTURE))
-    expect(tokensHash(FIXTURE)).not.toBe(tokensHash(FIXTURE + ' '))
-  })
-})
+    expect(tokensHash(FIXTURE)).toMatch(/^[0-9a-f]{64}$/);
+    expect(tokensHash(FIXTURE)).toBe(tokensHash(FIXTURE));
+    expect(tokensHash(FIXTURE)).not.toBe(tokensHash(FIXTURE + ' '));
+  });
+});
 
 describe('buildSyncPayload', () => {
   it('maps shadcn vars to the themeConfig-keyed email-safe subset', () => {
-    const parsed = parseTokens(FIXTURE)
-    const payload = buildSyncPayload(parsed, tokensHash(FIXTURE))
+    const parsed = parseTokens(FIXTURE);
+    const payload = buildSyncPayload(parsed, tokensHash(FIXTURE));
     expect(payload.colors).toEqual({
       buttonPrimary: '#27272A',
       buttonPrimaryText: '#FDFDFD',
@@ -90,18 +90,18 @@ describe('buildSyncPayload', () => {
       text: '#18181B',
       textMuted: '#71717A',
       brandColor: '#52525B',
-    })
-    expect(payload.fontSans).toBe('geist')
-    expect(payload.fontHeading).toBe('lora')
-    expect(payload.tokensHash).toMatch(/^[0-9a-f]{64}$/)
-  })
-})
+    });
+    expect(payload.fontSans).toBe('geist');
+    expect(payload.fontHeading).toBe('lora');
+    expect(payload.tokensHash).toMatch(/^[0-9a-f]{64}$/);
+  });
+});
 
 describe('the committed resolved module matches the committed theme.css', () => {
   it('src/theme/resolved.ts carries the current tokens hash (npm run gen:theme)', async () => {
-    const css = readFileSync(join(import.meta.dirname, 'theme.css'), 'utf8')
-    const resolved = await import('./theme/resolved')
-    expect(resolved.tokensHash).toBe(tokensHash(css))
-    expect(resolved.themeTokens.light['--background']).toBeDefined()
-  })
-})
+    const css = readFileSync(join(import.meta.dirname, 'theme.css'), 'utf8');
+    const resolved = await import('./theme/resolved');
+    expect(resolved.tokensHash).toBe(tokensHash(css));
+    expect(resolved.themeTokens.light['--background']).toBeDefined();
+  });
+});

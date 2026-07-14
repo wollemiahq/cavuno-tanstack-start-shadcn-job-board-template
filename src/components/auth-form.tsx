@@ -1,8 +1,13 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 
-import { RheaAuthCard } from "@/components/rhea-auth-pilot";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { RheaAuthCard } from '@/components/rhea-auth-pilot';
+import {
+  Field as FormField,
+  FieldError,
+  FieldLabel,
+  FieldSeparator,
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 
 export function AuthCard({
   title,
@@ -23,7 +28,7 @@ export function AuthCard({
 export function Field({
   label,
   name,
-  type = "text",
+  type = 'text',
   autoComplete,
   minLength,
 }: {
@@ -34,8 +39,8 @@ export function Field({
   minLength?: number;
 }) {
   return (
-    <div className="grid gap-2">
-      <Label htmlFor={name}>{label}</Label>
+    <FormField>
+      <FieldLabel htmlFor={name}>{label}</FieldLabel>
       <Input
         id={name}
         name={name}
@@ -44,27 +49,15 @@ export function Field({
         minLength={minLength}
         required
       />
-    </div>
+    </FormField>
   );
 }
 
 export function FormError({ message }: { message: string | null }) {
   if (!message) return null;
-  return (
-    <p className="text-sm text-destructive" role="alert">
-      {message}
-    </p>
-  );
+  return <FieldError>{message}</FieldError>;
 }
 
 export function AuthDivider({ label }: { label: string }) {
-  return (
-    <div className="flex items-center gap-3" aria-hidden>
-      <span className="h-px flex-1 bg-border" />
-      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </span>
-      <span className="h-px flex-1 bg-border" />
-    </div>
-  );
+  return <FieldSeparator aria-hidden>{label}</FieldSeparator>;
 }

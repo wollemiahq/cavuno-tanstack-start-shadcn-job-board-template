@@ -1,9 +1,9 @@
-import type { ElementType } from "react";
+import type { ElementType } from 'react';
 
-import type { TalentProfileVM } from "@/board/talent-view-model";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { initialsOf } from "@/lib/initials";
+import type { TalentProfileVM } from '@/board/talent-view-model';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { initialsOf } from '@/lib/initials';
 
 function ProfileLink({
   href,
@@ -25,17 +25,17 @@ function ProfileLink({
 
 export function TalentProfileContent({
   vm,
-  headingAs = "h2",
+  headingAs = 'h2',
   interactive = true,
   showName = true,
 }: {
   vm: TalentProfileVM;
-  headingAs?: "h1" | "h2";
+  headingAs?: 'h1' | 'h2';
   interactive?: boolean;
   showName?: boolean;
 }) {
   const Heading = headingAs as ElementType;
-  const SectionHeading = (headingAs === "h1" ? "h2" : "h3") as ElementType;
+  const SectionHeading = (headingAs === 'h1' ? 'h2' : 'h3') as ElementType;
 
   return (
     <div className="space-y-8">
@@ -53,19 +53,23 @@ export function TalentProfileContent({
           </Avatar>
           <div className="min-w-0">
             {showName ? (
-              <Heading className="text-2xl font-semibold tracking-tight text-foreground">
+              <Heading className="text-foreground text-2xl font-semibold tracking-tight">
                 {vm.displayName}
               </Heading>
             ) : null}
             {vm.headline ? (
-              <p className="mt-1 text-sm text-muted-foreground">{vm.headline}</p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                {vm.headline}
+              </p>
             ) : null}
           </div>
         </div>
 
         {vm.location || vm.jobSearchStatusLabel ? (
           <div className="flex flex-wrap gap-1.5">
-            {vm.location ? <Badge variant="outline">{vm.location}</Badge> : null}
+            {vm.location ? (
+              <Badge variant="outline">{vm.location}</Badge>
+            ) : null}
             {vm.jobSearchStatusLabel ? (
               <Badge variant="secondary">{vm.jobSearchStatusLabel}</Badge>
             ) : null}
@@ -74,21 +78,26 @@ export function TalentProfileContent({
       </header>
 
       {vm.bio ? (
-        <p className="whitespace-pre-line text-sm leading-6 text-foreground">
+        <p className="text-foreground text-sm leading-6 whitespace-pre-line">
           {vm.bio}
         </p>
       ) : null}
 
       {vm.experiences.length > 0 ? (
         <section className="space-y-4">
-          <SectionHeading className="text-lg font-semibold text-foreground">
+          <SectionHeading className="text-foreground text-lg font-semibold">
             {vm.experienceHeading}
           </SectionHeading>
-          <div className="divide-y divide-border">
+          <div className="divide-border divide-y">
             {vm.experiences.map((experience) => (
-              <article key={experience.key} className="space-y-3 py-4 first:pt-0 last:pb-0">
+              <article
+                key={experience.key}
+                className="space-y-3 py-4 first:pt-0 last:pb-0"
+              >
                 <div>
-                  <h4 className="font-semibold text-foreground">{experience.title}</h4>
+                  <h4 className="text-foreground font-semibold">
+                    {experience.title}
+                  </h4>
                   <ProfileLink
                     href={experience.companyHref}
                     interactive={interactive}
@@ -97,7 +106,7 @@ export function TalentProfileContent({
                   </ProfileLink>
                 </div>
                 {experience.dateRangeLabel ? (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {experience.dateRangeLabel}
                   </p>
                 ) : null}
@@ -110,18 +119,24 @@ export function TalentProfileContent({
                       <Badge variant="outline">{experience.location}</Badge>
                     ) : null}
                     {experience.employmentTypeLabel ? (
-                      <Badge variant="outline">{experience.employmentTypeLabel}</Badge>
+                      <Badge variant="outline">
+                        {experience.employmentTypeLabel}
+                      </Badge>
                     ) : null}
                     {experience.locationTypeLabel ? (
-                      <Badge variant="outline">{experience.locationTypeLabel}</Badge>
+                      <Badge variant="outline">
+                        {experience.locationTypeLabel}
+                      </Badge>
                     ) : null}
                     {experience.foundViaLabel ? (
-                      <Badge variant="outline">{experience.foundViaLabel}</Badge>
+                      <Badge variant="outline">
+                        {experience.foundViaLabel}
+                      </Badge>
                     ) : null}
                   </div>
                 ) : null}
                 {experience.description ? (
-                  <p className="whitespace-pre-line text-sm leading-6 text-foreground">
+                  <p className="text-foreground text-sm leading-6 whitespace-pre-line">
                     {experience.description}
                   </p>
                 ) : null}
@@ -142,12 +157,15 @@ export function TalentProfileContent({
 
       {vm.education.length > 0 ? (
         <section className="space-y-4">
-          <SectionHeading className="text-lg font-semibold text-foreground">
+          <SectionHeading className="text-foreground text-lg font-semibold">
             {vm.educationHeading}
           </SectionHeading>
-          <div className="divide-y divide-border">
+          <div className="divide-border divide-y">
             {vm.education.map((education) => (
-              <article key={education.key} className="space-y-2 py-4 first:pt-0 last:pb-0">
+              <article
+                key={education.key}
+                className="space-y-2 py-4 first:pt-0 last:pb-0"
+              >
                 <ProfileLink
                   href={education.institutionHref}
                   interactive={interactive}
@@ -155,25 +173,25 @@ export function TalentProfileContent({
                   {education.institutionName}
                 </ProfileLink>
                 {education.qualificationLabel ? (
-                  <p className="font-medium text-foreground">
+                  <p className="text-foreground font-medium">
                     {education.qualificationLabel}
                   </p>
                 ) : null}
                 {education.dateRangeLabel ? (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {education.dateRangeLabel}
                   </p>
                 ) : null}
                 {education.grade ? (
-                  <p className="text-sm text-foreground">{education.grade}</p>
+                  <p className="text-foreground text-sm">{education.grade}</p>
                 ) : null}
                 {education.activitiesAndSocieties ? (
-                  <p className="text-sm text-foreground">
+                  <p className="text-foreground text-sm">
                     {education.activitiesAndSocieties}
                   </p>
                 ) : null}
                 {education.description ? (
-                  <p className="whitespace-pre-line text-sm leading-6 text-foreground">
+                  <p className="text-foreground text-sm leading-6 whitespace-pre-line">
                     {education.description}
                   </p>
                 ) : null}
@@ -185,7 +203,7 @@ export function TalentProfileContent({
 
       {vm.skills.length > 0 ? (
         <section className="space-y-3">
-          <SectionHeading className="text-lg font-semibold text-foreground">
+          <SectionHeading className="text-foreground text-lg font-semibold">
             {vm.skillsHeading}
           </SectionHeading>
           <div className="flex flex-wrap gap-1.5">
@@ -200,7 +218,7 @@ export function TalentProfileContent({
 
       {vm.languages.length > 0 ? (
         <section className="space-y-3">
-          <SectionHeading className="text-lg font-semibold text-foreground">
+          <SectionHeading className="text-foreground text-lg font-semibold">
             {vm.languagesHeading}
           </SectionHeading>
           <dl className="space-y-2">
@@ -209,9 +227,9 @@ export function TalentProfileContent({
                 key={language.key}
                 className="flex items-baseline justify-between gap-4"
               >
-                <dt className="font-medium text-foreground">{language.name}</dt>
+                <dt className="text-foreground font-medium">{language.name}</dt>
                 {language.proficiencyLabel ? (
-                  <dd className="text-sm text-muted-foreground">
+                  <dd className="text-muted-foreground text-sm">
                     {language.proficiencyLabel}
                   </dd>
                 ) : null}

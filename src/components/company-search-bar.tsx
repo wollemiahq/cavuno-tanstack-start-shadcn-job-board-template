@@ -1,11 +1,12 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate } from '@tanstack/react-router';
 
-import { ListingSearchBand } from "@/components/board/listing-page-header";
-import { m } from "../paraglide/messages";
+import { m } from '../paraglide/messages';
+
+import { ListingSearchBand } from '@/components/board/listing-page-header';
 
 /**
  * The companies index keyword search (CAV-487, CAV-502) — a thin wrapper of
@@ -16,13 +17,15 @@ import { m } from "../paraglide/messages";
  */
 export function CompanySearchBar({ defaultValue }: { defaultValue?: string }) {
   const navigate = useNavigate();
-  const [query, setQuery] = useState(defaultValue ?? "");
+  const [query, setQuery] = useState(defaultValue ?? '');
 
   return (
     <ListingSearchBand
       value={query}
       onChange={setQuery}
-      onSubmit={() => navigate({ to: "/companies", search: { query: query || undefined } })}
+      onSubmit={() =>
+        navigate({ to: '/companies', search: { query: query || undefined } })
+      }
       placeholder={m.companySearchBar_placeholderText()}
       inputAriaLabel={m.searchBar_keywordAriaLabel()}
       searchLabel={m.searchBar_searchLabel()}

@@ -67,7 +67,7 @@ colors:
   sidebar-ring-dark: 'oklch(0.556 0 0)'
 typography:
   sans:
-    fontFamily: "Geist Variable", sans-serif
+    fontFamily: 'Geist Variable', sans-serif
   heading:
     fontFamily: var(--font-sans)
 ---
@@ -130,12 +130,12 @@ values in components.
 
 ## Typography
 
-- Sans: `"Geist Variable", sans-serif`
+- Sans: `'Geist Variable', sans-serif`
 - Headings: `var(--font-sans)`
 
 ## Layout
 
-Radius scale rides `--radius` in `src/styles.css` (cards use
+Radius scale rides `--radius` in `src/theme.css` (cards use
 `--radius-xl`, controls `--radius-md`). Spacing is Tailwind default
 scale; no custom spacing tokens.
 
@@ -261,11 +261,6 @@ Props:
 
 ### EmployerCompanyShell — `src/components/account-shell.tsx`
 
-Employer company shell (Paper "Employer Sidebar"): the company identity
-+ Jobs / Company profile nav for one connected company. Team and
-Settings from the Paper design are deliberately absent — the v1 API has
-no team or company-settings surface yet.
-
 Props:
 
 - `active: string`
@@ -273,468 +268,29 @@ Props:
 - `company: { name: string; website: string | null; logoUrl: string | null; }`
 - `slug: string`
 
+### EmployerIdentityAvatar — `src/components/account-shell.tsx`
+
+Props:
+
+- `logoUrl?: string | null | undefined`
+- `name: string`
+- `size?: "default" | "sm" | "lg" | undefined`
+
 ### AlertManager — `src/components/alert-manager.tsx`
 
 Props:
 
 - `alerts: { id: string; object: "alert"; label: string | null; frequency: "daily" | "weekly"; isActive: boolean; filters: { job…`
 
-### MobileNavigationHeader — `src/components/application/app-navigation/base-components/mobile-header.tsx`
+### NotFound — `src/components/app-not-found.tsx`
 
-### NavAccountCard — `src/components/application/app-navigation/base-components/nav-account-card.tsx`
+### AppRouterProvider — `src/components/app-router-provider.tsx`
 
-Props:
-
-- `avatarRounded?: boolean | undefined`
-- `items?: NavAccountType[] | undefined`
-- `popoverPlacement?: Placement | undefined`
-- `selectedAccountId?: string | undefined`
-
-### NavAccountMenu — `src/components/application/app-navigation/base-components/nav-account-card.tsx`
+Keeps React Aria links on the TanStack Router and locale-aware URL seam.
 
 Props:
 
-- `accounts?: NavAccountType[] | undefined`
-- `selectedAccountId?: string | undefined`
-
-### NavButton — `src/components/application/app-navigation/base-components/nav-button.tsx`
-
-Props:
-
-- `children?: ReactNode`
-- `className?: string | undefined`
-- `current?: boolean | undefined`
-- `href?: string | undefined`
-- `icon?: FC<{ className?: string | undefined; }> | undefined`
-- `label?: string | undefined`
-- `onClick?: MouseEventHandler | undefined`
-- `open?: boolean | undefined`
-- `tooltipPlacement?: "bottom" | "top" | "left" | "right" | undefined`
-
-### NavItemBase — `src/components/application/app-navigation/base-components/nav-item.tsx`
-
-Props:
-
-- `badge?: ReactNode`
-- `children?: ReactNode`
-- `current?: boolean | undefined`
-- `href?: string | undefined`
-- `icon?: FC<HTMLAttributes<HTMLOrSVGElement>> | undefined`
-- `iconOnly?: boolean | undefined`
-- `onClick?: MouseEventHandler | undefined`
-- `open?: boolean | undefined`
-- `truncate?: boolean | undefined`
-- `type: "link" | "collapsible" | "collapsible-child"`
-
-### NavList — `src/components/application/app-navigation/base-components/nav-list.tsx`
-
-Props:
-
-- `activeUrl?: string | undefined`
-- `className?: string | undefined`
-- `items: (NavItemType | NavItemDividerType)[]`
-
-### HeaderNavigationBase — `src/components/application/app-navigation/header-navigation.tsx`
-
-Props:
-
-- `actions?: ReactNode`
-- `activeUrl?: string | undefined`
-- `centered?: boolean | undefined`
-- `hideBorder?: boolean | undefined`
-- `items: NavItem[]`
-- `secondaryType?: "buttons" | "tabs" | undefined`
-- `subItems?: NavItem[] | undefined`
-
-### MobileNavigationHeader — `src/components/application/app-navigation/sidebar-navigation-base.tsx`
-
-### NavAccountCard — `src/components/application/app-navigation/sidebar-navigation-base.tsx`
-
-Props:
-
-- `avatarRounded?: boolean | undefined`
-- `items?: NavAccountType[] | undefined`
-- `popoverPlacement?: Placement | undefined`
-- `selectedAccountId?: string | undefined`
-
-### NavButton — `src/components/application/app-navigation/sidebar-navigation-base.tsx`
-
-Props:
-
-- `children?: ReactNode`
-- `className?: string | undefined`
-- `current?: boolean | undefined`
-- `href?: string | undefined`
-- `icon?: FC<{ className?: string | undefined; }> | undefined`
-- `label?: string | undefined`
-- `onClick?: MouseEventHandler | undefined`
-- `open?: boolean | undefined`
-- `tooltipPlacement?: "bottom" | "top" | "left" | "right" | undefined`
-
-### NavItemBase — `src/components/application/app-navigation/sidebar-navigation-base.tsx`
-
-Props:
-
-- `badge?: ReactNode`
-- `children?: ReactNode`
-- `current?: boolean | undefined`
-- `href?: string | undefined`
-- `icon?: FC<HTMLAttributes<HTMLOrSVGElement>> | undefined`
-- `iconOnly?: boolean | undefined`
-- `onClick?: MouseEventHandler | undefined`
-- `open?: boolean | undefined`
-- `truncate?: boolean | undefined`
-- `type: "link" | "collapsible" | "collapsible-child"`
-
-### NavList — `src/components/application/app-navigation/sidebar-navigation-base.tsx`
-
-Props:
-
-- `activeUrl?: string | undefined`
-- `className?: string | undefined`
-- `items: (NavItemType | NavItemDividerType)[]`
-
-### SidebarNavigationDualTier — `src/components/application/app-navigation/sidebar-navigation/sidebar-dual-tier.tsx`
-
-Props:
-
-- `accountItems?: NavAccountType[] | undefined`
-- `activeUrl?: string | undefined`
-- `featureCard?: ReactNode`
-- `footerItems?: NavItemType[] | undefined`
-- `hideBorder?: boolean | undefined`
-- `items: NavItemType[]`
-- `selectedAccountId?: string | undefined`
-
-### SidebarNavigationSectionDividers — `src/components/application/app-navigation/sidebar-navigation/sidebar-section-dividers.tsx`
-
-Props:
-
-- `activeUrl?: string | undefined`
-- `items: (NavItemType | NavItemDividerType)[]`
-
-### SidebarNavigationSectionsSubheadings — `src/components/application/app-navigation/sidebar-navigation/sidebar-sections-subheadings.tsx`
-
-Props:
-
-- `activeUrl?: string | undefined`
-- `items: { label: string; items: NavItemType[]; }[]`
-
-### SidebarNavigationSimple — `src/components/application/app-navigation/sidebar-navigation/sidebar-simple.tsx`
-
-Props:
-
-- `activeUrl?: string | undefined`
-- `avatarRounded?: boolean | undefined`
-- `className?: string | undefined`
-- `featureCard?: ReactNode`
-- `footerItems?: NavItemType[] | undefined`
-- `hideBorder?: boolean | undefined`
-- `items: NavItemType[]`
-- `showAccountCard?: boolean | undefined`
-
-### SidebarNavigationSlim — `src/components/application/app-navigation/sidebar-navigation/sidebar-slim.tsx`
-
-Props:
-
-- `activeUrl?: string | undefined`
-- `footerItems?: (NavItemType & { icon: FC<{ className?: string | undefined; }>; })[] | undefined`
-- `hideBorder?: boolean | undefined`
-- `hideRightBorder?: boolean | undefined`
-- `items: (NavItemType & { icon: FC<{ className?: string | undefined; }>; })[]`
-
-### CarouselContext — `src/components/application/carousel/carousel-base.tsx`
-
-### ChartActiveDot — `src/components/application/charts/charts-base.tsx`
-
-Props:
-
-- `payload?: any`
-
-### ChartLegendContent — `src/components/application/charts/charts-base.tsx`
-
-Renders the legend content for a chart.
-
-Props:
-
-- `className?: string | undefined`
-- `reversed?: boolean | undefined`
-
-### ChartTooltipContent — `src/components/application/charts/charts-base.tsx`
-
-Props:
-
-- `isPieChart?: boolean | undefined`
-- `isRadialChart?: boolean | undefined`
-- `label?: string | undefined`
-- `payload?: any`
-
-### Calendar — `src/components/application/date-picker/calendar.tsx`
-
-Props:
-
-- `children?: ReactNode`
-- `highlightedDates?: DateValue[] | undefined`
-
-### CalendarContextProvider — `src/components/application/date-picker/calendar.tsx`
-
-### CalendarCell — `src/components/application/date-picker/cell.tsx`
-
-Props:
-
-- `isHighlighted?: boolean | undefined`
-- `isRangeCalendar?: boolean | undefined`
-- `showOutOfRangeDates?: boolean | undefined`
-
-### DatePicker — `src/components/application/date-picker/date-picker.tsx`
-
-Props:
-
-- `onApply?: (() => void) | undefined`
-- `onCancel?: (() => void) | undefined`
-- `size?: "xs" | "sm" | "md" | "lg" | "xl" | undefined`
-
-### DateRangePicker — `src/components/application/date-picker/date-range-picker.tsx`
-
-Props:
-
-- `onApply?: (() => void) | undefined`
-- `onCancel?: (() => void) | undefined`
-- `size?: "xs" | "sm" | "md" | "lg" | "xl" | undefined`
-
-### RangeCalendar — `src/components/application/date-picker/range-calendar.tsx`
-
-Props:
-
-- `highlightedDates?: DateValue[] | undefined`
-- `presets?: Record<string, { label: string; value: { start: DateValue; end: DateValue; }; }> | undefined`
-- `showOutOfRangeDates?: boolean | undefined`
-- `showPresetsOnDesktop?: boolean | undefined`
-
-### RangeCalendarContextProvider — `src/components/application/date-picker/range-calendar.tsx`
-
-### RangePresetButton — `src/components/application/date-picker/range-calendar.tsx`
-
-Props:
-
-- `value: { start: DateValue; end: DateValue; }`
-
-### EmptyState — `src/components/application/empty-state/empty-state.tsx`
-
-Props:
-
-- `size?: "sm" | "md" | "lg" | undefined`
-
-### Draggable — `src/components/application/file-upload/draggable.tsx`
-
-Props:
-
-- `fileIconType?: FileType | undefined`
-- `name: string`
-- `size: number`
-- `theme?: "default" | "gray" | "solid" | undefined`
-- `type: string`
-
-### FileListItemProgressBar — `src/components/application/file-upload/file-upload-base.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `failed?: boolean | undefined`
-- `fileIconVariant?: "default" | "gray" | "solid" | undefined`
-- `name: string`
-- `onDelete?: (() => void) | undefined`
-- `onRetry?: (() => void) | undefined`
-- `progress: number`
-- `size: number`
-- `type?: FileType | undefined`
-
-### FileListItemProgressFill — `src/components/application/file-upload/file-upload-base.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `failed?: boolean | undefined`
-- `fileIconVariant?: "default" | "gray" | "solid" | undefined`
-- `name: string`
-- `onDelete?: (() => void) | undefined`
-- `onRetry?: (() => void) | undefined`
-- `progress: number`
-- `size: number`
-- `type?: FileType | undefined`
-
-### FileUploadDropZone — `src/components/application/file-upload/file-upload-base.tsx`
-
-Props:
-
-- `accept?: string | undefined`
-- `allowsMultiple?: boolean | undefined`
-- `className?: string | undefined`
-- `hint?: string | undefined`
-- `isDisabled?: boolean | undefined`
-- `maxSize?: number | undefined`
-- `onDropFiles?: ((files: FileList) => void) | undefined`
-- `onDropUnacceptedFiles?: ((files: FileList) => void) | undefined`
-- `onSizeLimitExceed?: ((files: FileList) => void) | undefined`
-
-### LoadingIndicator — `src/components/application/loading-indicator/loading-indicator.tsx`
-
-Props:
-
-- `label?: string | undefined`
-- `size?: "sm" | "md" | "lg" | "xl" | undefined`
-- `type?: "line-simple" | "line-spinner" | "dot-circle" | undefined`
-
-### Dialog — `src/components/application/modals/modal.tsx`
-
-### DialogTrigger — `src/components/application/modals/modal.tsx`
-
-### Modal — `src/components/application/modals/modal.tsx`
-
-### ModalOverlay — `src/components/application/modals/modal.tsx`
-
-### PaginationDot — `src/components/application/pagination/pagination-dot.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `framed?: boolean | undefined`
-- `isBrand?: boolean | undefined`
-- `onPageChange?: ((page: number) => void) | undefined`
-- `page: number`
-- `siblingCount?: number | undefined`
-- `size?: "md" | "lg" | undefined`
-- `style?: CSSProperties | undefined`
-- `total: number`
-
-### PaginationLine — `src/components/application/pagination/pagination-line.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `framed?: boolean | undefined`
-- `onPageChange?: ((page: number) => void) | undefined`
-- `page: number`
-- `siblingCount?: number | undefined`
-- `size?: "md" | "lg" | undefined`
-- `style?: CSSProperties | undefined`
-- `total: number`
-
-### PaginationButtonGroup — `src/components/application/pagination/pagination.tsx`
-
-Props:
-
-- `align?: "left" | "right" | "center" | undefined`
-- `className?: string | undefined`
-- `onPageChange?: ((page: number) => void) | undefined`
-- `page?: number | undefined`
-- `siblingCount?: number | undefined`
-- `style?: CSSProperties | undefined`
-- `total?: number | undefined`
-
-### PaginationCardAdvanced — `src/components/application/pagination/pagination.tsx`
-
-Props:
-
-- `align?: "center" | "space-between" | undefined`
-- `className?: string | undefined`
-- `onPageChange?: ((page: number) => void) | undefined`
-- `onPageSizeChange?: ((pageSize: number) => void) | undefined`
-- `page?: number | undefined`
-- `pageSize?: number | undefined`
-- `total?: number | undefined`
-
-### PaginationCardDefault — `src/components/application/pagination/pagination.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `onPageChange?: ((page: number) => void) | undefined`
-- `page?: number | undefined`
-- `rounded?: boolean | undefined`
-- `siblingCount?: number | undefined`
-- `style?: CSSProperties | undefined`
-- `total?: number | undefined`
-
-### PaginationCardMinimal — `src/components/application/pagination/pagination.tsx`
-
-Props:
-
-- `align?: "left" | "right" | "center" | undefined`
-- `className?: string | undefined`
-- `onPageChange?: ((page: number) => void) | undefined`
-- `onPageSizeChange?: ((pageSize: number) => void) | undefined`
-- `page?: number | undefined`
-- `pageSize?: number | undefined`
-- `total?: number | undefined`
-
-### PaginationPageDefault — `src/components/application/pagination/pagination.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `onPageChange?: ((page: number) => void) | undefined`
-- `page?: number | undefined`
-- `rounded?: boolean | undefined`
-- `siblingCount?: number | undefined`
-- `style?: CSSProperties | undefined`
-- `total?: number | undefined`
-
-### PaginationPageMinimalCenter — `src/components/application/pagination/pagination.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `onPageChange?: ((page: number) => void) | undefined`
-- `page?: number | undefined`
-- `rounded?: boolean | undefined`
-- `siblingCount?: number | undefined`
-- `style?: CSSProperties | undefined`
-- `total?: number | undefined`
-
-### Dialog — `src/components/application/slideout-menus/slideout-menu.tsx`
-
-### Modal — `src/components/application/slideout-menus/slideout-menu.tsx`
-
-### ModalOverlay — `src/components/application/slideout-menus/slideout-menu.tsx`
-
-### SlideoutMenu — `src/components/application/slideout-menus/slideout-menu.tsx`
-
-Props:
-
-- `children: ReactNode | ((children: ModalRenderProps & { close: () => void; }) => ReactNode)`
-- `dialogClassName?: string | undefined`
-
-### Table — `src/components/application/table/table.tsx`
-
-Props:
-
-- `size?: "sm" | "md" | undefined`
-
-### TableRowActionsDropdown — `src/components/application/table/table.tsx`
-
-### Tab — `src/components/application/tabs/tabs.tsx`
-
-Props:
-
-- `badge?: string | number | undefined`
-- `children?: ReactNode | ((props: TabRenderProps) => ReactNode)`
-- `icon?: ReactNode | FC<{ className?: string | undefined; }>`
-- `label?: ReactNode`
-
-### TabList — `src/components/application/tabs/tabs.tsx`
-
-Props:
-
-- `fullWidth?: boolean | undefined`
-- `items?: TabComponentProps[] | undefined`
-- `orientation?: T | undefined`
-- `size?: "sm" | "md" | undefined`
-- `type?: TabTypeColors<T> | undefined`
-
-### TabPanel — `src/components/application/tabs/tabs.tsx`
-
-### Tabs — `src/components/application/tabs/tabs.tsx`
+- `children: ReactNode`
 
 ### AuthCard — `src/components/auth-form.tsx`
 
@@ -776,1036 +332,6 @@ Props:
 
 - `avatarUrl: string | null`
 - `displayName: string | null`
-
-### AvatarLabelGroup — `src/components/base/avatar/avatar-label-group.tsx`
-
-Props:
-
-- `alt?: string | undefined`
-- `avatarClassName?: string | undefined`
-- `badge?: ReactNode`
-- `border?: boolean | undefined`
-- `className?: string | undefined`
-- `contentClassName?: string | undefined`
-- `contrastBorder?: boolean | undefined`
-- `count?: number | undefined`
-- `focusable?: boolean | undefined`
-- `initials?: string | undefined`
-- `placeholder?: ReactNode`
-- `placeholderIcon?: FC<{ className?: string | undefined; }> | undefined`
-- `rounded?: boolean | undefined`
-- `size: "sm" | "md" | "lg"`
-- `src?: string | null | undefined`
-- `status?: "online" | "offline" | undefined`
-- `subtitle: ReactNode`
-- `title: ReactNode`
-- `verified?: boolean | undefined`
-
-### AvatarProfilePhoto — `src/components/base/avatar/avatar-profile-photo.tsx`
-
-Props:
-
-- `alt?: string | undefined`
-- `badge?: ReactNode`
-- `border?: boolean | undefined`
-- `className?: string | undefined`
-- `contentClassName?: string | undefined`
-- `contrastBorder?: boolean | undefined`
-- `count?: number | undefined`
-- `focusable?: boolean | undefined`
-- `initials?: string | undefined`
-- `placeholder?: ReactNode`
-- `placeholderIcon?: FC<{ className?: string | undefined; }> | undefined`
-- `rounded?: boolean | undefined`
-- `size: "sm" | "md" | "lg"`
-- `src?: string | null | undefined`
-- `status?: "online" | "offline" | undefined`
-- `verified?: boolean | undefined`
-
-### Avatar — `src/components/base/avatar/avatar.tsx`
-
-Props:
-
-- `alt?: string | undefined`
-- `badge?: ReactNode`
-- `border?: boolean | undefined`
-- `className?: string | undefined`
-- `contentClassName?: string | undefined`
-- `contrastBorder?: boolean | undefined`
-- `count?: number | undefined`
-- `focusable?: boolean | undefined`
-- `initials?: string | undefined`
-- `placeholder?: ReactNode`
-- `placeholderIcon?: FC<{ className?: string | undefined; }> | undefined`
-- `rounded?: boolean | undefined`
-- `size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | undefined`
-- `src?: string | null | undefined`
-- `status?: "online" | "offline" | undefined`
-- `verified?: boolean | undefined`
-
-### AvatarAddButton — `src/components/base/avatar/base-components/avatar-add-button.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `size: "xs" | "sm" | "md"`
-- `title?: string | undefined`
-
-### AvatarCompanyIcon — `src/components/base/avatar/base-components/avatar-company-icon.tsx`
-
-Props:
-
-- `alt?: string | undefined`
-- `size: "xs" | "sm" | "md" | "lg" | "xl" | "2xl"`
-- `src: string`
-
-### AvatarCount — `src/components/base/avatar/base-components/avatar-count.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `count: number`
-
-### AvatarOnlineIndicator — `src/components/base/avatar/base-components/avatar-online-indicator.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `size: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl"`
-- `status: "online" | "offline"`
-
-### AvatarAddButton — `src/components/base/avatar/base-components/index.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `size: "xs" | "sm" | "md"`
-- `title?: string | undefined`
-
-### AvatarCompanyIcon — `src/components/base/avatar/base-components/index.tsx`
-
-Props:
-
-- `alt?: string | undefined`
-- `size: "xs" | "sm" | "md" | "lg" | "xl" | "2xl"`
-- `src: string`
-
-### AvatarOnlineIndicator — `src/components/base/avatar/base-components/index.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `size: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl"`
-- `status: "online" | "offline"`
-
-### VerifiedTick — `src/components/base/avatar/base-components/index.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `size: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl"`
-
-### VerifiedTick — `src/components/base/avatar/base-components/verified-tick.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `size: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl"`
-
-### BadgeGroup — `src/components/base/badges/badge-groups.tsx`
-
-Props:
-
-- `addonText: string`
-- `align?: Align | undefined`
-- `children?: ReactNode`
-- `className?: string | undefined`
-- `color: Color`
-- `iconTrailing?: ReactNode | FC<{ className?: string | undefined; }>`
-- `size?: Size | undefined`
-- `theme?: Theme | undefined`
-
-### Badge — `src/components/base/badges/badges.tsx`
-
-Props:
-
-- `children: ReactNode`
-- `className?: string | undefined`
-- `color?: BadgeColor<T> | undefined`
-- `size?: Sizes | undefined`
-- `type?: T | undefined`
-
-### BadgeIcon — `src/components/base/badges/badges.tsx`
-
-Props:
-
-- `children?: ReactNode`
-- `color?: BadgeTypeToColorMap<{ "pill-color": { common: string; styles: Record<BadgeColors, { root: string; addon: string; addo…`
-- `icon: IconComponentType`
-- `size?: Sizes | undefined`
-- `type?: T | undefined`
-
-### BadgeWithButton — `src/components/base/badges/badges.tsx`
-
-Props:
-
-- `buttonLabel?: string | undefined`
-- `children: ReactNode`
-- `color?: BadgeTypeToColorMap<{ "pill-color": { common: string; styles: Record<BadgeColors, { root: string; addon: string; addo…`
-- `icon?: IconComponentType | undefined`
-- `onButtonClick?: MouseEventHandler<HTMLButtonElement> | undefined`
-- `size?: Sizes | undefined`
-- `type?: T | undefined`
-
-### BadgeWithDot — `src/components/base/badges/badges.tsx`
-
-Props:
-
-- `children: ReactNode`
-- `className?: string | undefined`
-- `color?: BadgeTypeToColorMap<{ "pill-color": { common: string; styles: Record<BadgeColors, { root: string; addon: string; addo…`
-- `size?: Sizes | undefined`
-- `type?: T | undefined`
-
-### BadgeWithFlag — `src/components/base/badges/badges.tsx`
-
-Props:
-
-- `children: ReactNode`
-- `color?: BadgeTypeToColorMap<{ "pill-color": { common: string; styles: Record<BadgeColors, { root: string; addon: string; addo…`
-- `flag?: FlagTypes | undefined`
-- `size?: Sizes | undefined`
-- `type?: T | undefined`
-
-### BadgeWithIcon — `src/components/base/badges/badges.tsx`
-
-Props:
-
-- `children: ReactNode`
-- `className?: string | undefined`
-- `color?: BadgeTypeToColorMap<{ "pill-color": { common: string; styles: Record<BadgeColors, { root: string; addon: string; addo…`
-- `iconLeading?: IconComponentType | undefined`
-- `iconTrailing?: IconComponentType | undefined`
-- `size?: Sizes | undefined`
-- `type?: T | undefined`
-
-### BadgeWithImage — `src/components/base/badges/badges.tsx`
-
-Props:
-
-- `children: ReactNode`
-- `color?: BadgeTypeToColorMap<{ "pill-color": { common: string; styles: Record<BadgeColors, { root: string; addon: string; addo…`
-- `imgSrc: string`
-- `size?: Sizes | undefined`
-- `type?: T | undefined`
-
-### ButtonGroup — `src/components/base/button-group/button-group.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-
-### ButtonGroupItem — `src/components/base/button-group/button-group.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `iconLeading?: ReactNode | FC<{ className?: string | undefined; }>`
-- `iconTrailing?: ReactNode | FC<{ className?: string | undefined; }>`
-- `onClick?: (() => void) | undefined`
-
-### AppGalleryButton — `src/components/base/buttons/app-store-buttons-outline.tsx`
-
-Props:
-
-- `size?: "md" | "lg" | undefined`
-
-### AppStoreButton — `src/components/base/buttons/app-store-buttons-outline.tsx`
-
-Props:
-
-- `size?: "md" | "lg" | undefined`
-
-### GalaxyStoreButton — `src/components/base/buttons/app-store-buttons-outline.tsx`
-
-Props:
-
-- `size?: "md" | "lg" | undefined`
-
-### GooglePlayButton — `src/components/base/buttons/app-store-buttons-outline.tsx`
-
-Props:
-
-- `size?: "md" | "lg" | undefined`
-
-### AppGalleryButton — `src/components/base/buttons/app-store-buttons.tsx`
-
-Props:
-
-- `size?: "md" | "lg" | undefined`
-
-### AppStoreButton — `src/components/base/buttons/app-store-buttons.tsx`
-
-Props:
-
-- `size?: "md" | "lg" | undefined`
-
-### GalaxyStoreButton — `src/components/base/buttons/app-store-buttons.tsx`
-
-Props:
-
-- `size?: "md" | "lg" | undefined`
-
-### GooglePlayButton — `src/components/base/buttons/app-store-buttons.tsx`
-
-Props:
-
-- `size?: "md" | "lg" | undefined`
-
-### GooglePlayWhiteButton — `src/components/base/buttons/app-store-buttons.tsx`
-
-Props:
-
-- `size?: "md" | "lg" | undefined`
-
-### ButtonUtility — `src/components/base/buttons/button-utility.tsx`
-
-Props:
-
-- `color?: "secondary" | "tertiary" | undefined`
-- `icon?: ReactNode | FC<{ className?: string | undefined; }>`
-- `isDisabled?: boolean | undefined`
-- `size?: "xs" | "sm" | undefined`
-- `slot?: string | null | undefined`
-- `tooltip?: string | undefined`
-- `tooltipPlacement?: Placement | undefined`
-
-### Button — `src/components/base/buttons/button.tsx`
-
-Props:
-
-- `children?: ReactNode`
-- `className?: string | undefined`
-- `color?: "primary" | "secondary" | "tertiary" | "link-color" | "link-gray" | "primary-destructive" | "secondary-destructive" |…`
-- `href: string`
-- `iconLeading?: ReactNode | FC<{ className?: string | undefined; }>`
-- `iconTrailing?: ReactNode | FC<{ className?: string | undefined; }>`
-- `isDisabled?: boolean | undefined`
-- `isLoading?: boolean | undefined`
-- `noTextPadding?: boolean | undefined`
-- `showTextWhileLoading?: boolean | undefined`
-- `size?: "xs" | "sm" | "md" | "lg" | "xl" | undefined`
-
-### CloseButton — `src/components/base/buttons/close-button.tsx`
-
-Props:
-
-- `label?: string | undefined`
-- `size?: "xs" | "sm" | "md" | "lg" | undefined`
-- `slot?: string | null | undefined`
-- `theme?: "light" | "dark" | undefined`
-
-### SocialButton — `src/components/base/buttons/social-button.tsx`
-
-Props:
-
-- `disabled?: boolean | undefined`
-- `size?: "md" | "lg" | undefined`
-- `slot?: string | null | undefined`
-- `social: "facebook" | "dribble" | "google" | "apple" | "twitter" | "figma"`
-- `theme?: "color" | "gray" | "brand" | undefined`
-
-### AppleLogo — `src/components/base/buttons/social-logos.tsx`
-
-### DribbleLogo — `src/components/base/buttons/social-logos.tsx`
-
-Props:
-
-- `colorful?: boolean | undefined`
-
-### FacebookLogo — `src/components/base/buttons/social-logos.tsx`
-
-Props:
-
-- `colorful?: boolean | undefined`
-
-### FigmaLogo — `src/components/base/buttons/social-logos.tsx`
-
-Props:
-
-- `colorful?: boolean | undefined`
-
-### FigmaLogoOutlined — `src/components/base/buttons/social-logos.tsx`
-
-### GoogleLogo — `src/components/base/buttons/social-logos.tsx`
-
-Props:
-
-- `colorful?: boolean | undefined`
-
-### TwitterLogo — `src/components/base/buttons/social-logos.tsx`
-
-### Checkbox — `src/components/base/checkbox/checkbox.tsx`
-
-Props:
-
-- `hint?: ReactNode`
-- `label?: ReactNode`
-- `ref?: Ref<HTMLLabelElement> | undefined`
-- `size?: "sm" | "md" | undefined`
-
-### CheckboxBase — `src/components/base/checkbox/checkbox.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `isDisabled?: boolean | undefined`
-- `isFocusVisible?: boolean | undefined`
-- `isIndeterminate?: boolean | undefined`
-- `isSelected?: boolean | undefined`
-- `size?: "sm" | "md" | undefined`
-
-### DropdownAccountBreadcrumb — `src/components/base/dropdown/dropdown-account-breadcrumb.tsx`
-
-### DropdownAccountButton — `src/components/base/dropdown/dropdown-account-button.tsx`
-
-### DropdownAccountCardMD — `src/components/base/dropdown/dropdown-account-card-md.tsx`
-
-### DropdownAccountCardSM — `src/components/base/dropdown/dropdown-account-card-sm.tsx`
-
-### DropdownAccountCardXS — `src/components/base/dropdown/dropdown-account-card-xs.tsx`
-
-### DropdownAvatar — `src/components/base/dropdown/dropdown-avatar.tsx`
-
-### DropdownButtonAdvanced — `src/components/base/dropdown/dropdown-button-advanced.tsx`
-
-### DropdownButtonLink — `src/components/base/dropdown/dropdown-button-link.tsx`
-
-### DropdownButtonSimple — `src/components/base/dropdown/dropdown-button-simple.tsx`
-
-### DropdownIconAdvanced — `src/components/base/dropdown/dropdown-icon-advanced.tsx`
-
-### DropdownIconSimple — `src/components/base/dropdown/dropdown-icon-simple.tsx`
-
-### DropdownIntegration — `src/components/base/dropdown/dropdown-integration.tsx`
-
-### DropdownSearchAdvanced — `src/components/base/dropdown/dropdown-search-advanced.tsx`
-
-### DropdownSearchSimple — `src/components/base/dropdown/dropdown-search-simple.tsx`
-
-### FileTrigger — `src/components/base/file-upload-trigger/file-upload-trigger.tsx`
-
-A FileTrigger allows a user to access the file system with any pressable React Aria or React Spectrum component, or custom components built with usePress.
-
-Props:
-
-- `acceptDirectory?: boolean | undefined`
-- `acceptedFileTypes?: string[] | undefined`
-- `allowsMultiple?: boolean | undefined`
-- `children: ReactNode`
-- `defaultCamera?: "user" | "environment" | undefined`
-- `onSelect?: ((files: FileList | null) => void) | undefined`
-
-### Form — `src/components/base/form/form.tsx`
-
-### FormField — `src/components/base/form/hook-form.tsx`
-
-Props:
-
-- `children: ReactNode | ((control: UseControllerReturn<TFieldValues, TName>) => ReactNode)`
-- `control: Control<TFieldValues>`
-- `name: TName`
-
-### HookForm — `src/components/base/form/hook-form.tsx`
-
-Props:
-
-- `children: ReactNode`
-- `form: UseFormReturn<TFieldValues>`
-
-### HintText — `src/components/base/input/hint-text.tsx`
-
-Props:
-
-- `children: ReactNode`
-- `isInvalid?: boolean | undefined`
-- `ref?: Ref<HTMLElement> | undefined`
-- `size?: "sm" | "md" | undefined`
-
-### InputDate — `src/components/base/input/input-date.tsx`
-
-Props:
-
-- `groupRef?: Ref<HTMLDivElement> | undefined`
-- `hideRequiredIndicator?: boolean | undefined`
-- `hint?: ReactNode`
-- `icon?: ComponentType<HTMLAttributes<HTMLOrSVGElement>> | undefined`
-- `iconClassName?: string | undefined`
-- `inputClassName?: string | undefined`
-- `label?: string | undefined`
-- `placeholder?: string | undefined`
-- `ref?: Ref<HTMLInputElement> | undefined`
-- `shortcut?: string | boolean | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `tooltip?: string | undefined`
-- `tooltipClassName?: string | undefined`
-- `wrapperClassName?: string | undefined`
-
-### InputDateBase — `src/components/base/input/input-date.tsx`
-
-Props:
-
-- `groupRef?: Ref<HTMLDivElement> | undefined`
-- `icon?: ComponentType<HTMLAttributes<HTMLOrSVGElement>> | undefined`
-- `iconClassName?: string | undefined`
-- `isDisabled?: boolean | undefined`
-- `isInvalid?: boolean | undefined`
-- `placeholder?: string | undefined`
-- `ref?: Ref<HTMLInputElement> | undefined`
-- `shortcut?: string | boolean | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `tooltip?: string | undefined`
-- `tooltipClassName?: string | undefined`
-- `wrapperClassName?: string | undefined`
-
-### InputFile — `src/components/base/input/input-file.tsx`
-
-Props:
-
-- `acceptedFileTypes?: string[] | undefined`
-- `allowsMultiple?: boolean | undefined`
-- `buttonText?: string | undefined`
-- `className?: string | undefined`
-- `hideRequiredIndicator?: boolean | undefined`
-- `hint?: ReactNode`
-- `isDisabled?: boolean | undefined`
-- `isInvalid?: boolean | undefined`
-- `isLoading?: boolean | undefined`
-- `isRequired?: boolean | undefined`
-- `label?: string | undefined`
-- `onChange?: ((files: FileList | null) => void) | undefined`
-- `placeholder?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-
-### InputGroup — `src/components/base/input/input-group.tsx`
-
-Props:
-
-- `children: ReactNode`
-- `className?: string | undefined`
-- `hideRequiredIndicator?: boolean | undefined`
-- `hint?: ReactNode`
-- `iconClassName?: string | undefined`
-- `inputClassName?: string | undefined`
-- `label?: string | undefined`
-- `leadingAddon?: ReactNode`
-- `prefix?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `tooltipClassName?: string | undefined`
-- `trailingAddon?: ReactNode`
-- `wrapperClassName?: string | undefined`
-
-### InputPrefix — `src/components/base/input/input-group.tsx`
-
-Props:
-
-- `isDisabled?: boolean | undefined`
-- `position?: "leading" | "trailing" | undefined`
-
-### InputNumber — `src/components/base/input/input-number.tsx`
-
-Props:
-
-- `groupRef?: Ref<HTMLDivElement> | undefined`
-- `hideRequiredIndicator?: boolean | undefined`
-- `hint?: ReactNode`
-- `inputClassName?: string | undefined`
-- `label?: string | undefined`
-- `orientation?: "horizontal" | "vertical" | undefined`
-- `placeholder?: string | undefined`
-- `ref?: Ref<HTMLInputElement> | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `wrapperClassName?: string | undefined`
-
-### InputNumberBase — `src/components/base/input/input-number.tsx`
-
-Props:
-
-- `groupRef?: Ref<HTMLDivElement> | undefined`
-- `inputClassName?: string | undefined`
-- `orientation?: "horizontal" | "vertical" | undefined`
-- `placeholder?: string | undefined`
-- `ref?: Ref<HTMLInputElement> | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `wrapperClassName?: string | undefined`
-
-### PaymentInput — `src/components/base/input/input-payment.tsx`
-
-Props:
-
-- `groupRef?: Ref<HTMLDivElement> | undefined`
-- `hideRequiredIndicator?: boolean | undefined`
-- `hint?: ReactNode`
-- `icon?: ComponentType<HTMLAttributes<HTMLOrSVGElement>> | undefined`
-- `iconClassName?: string | undefined`
-- `inputClassName?: string | undefined`
-- `label?: string | undefined`
-- `placeholder?: string | undefined`
-- `ref?: Ref<HTMLInputElement> | undefined`
-- `shortcut?: string | boolean | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `tooltip?: string | undefined`
-- `tooltipClassName?: string | undefined`
-- `wrapperClassName?: string | undefined`
-
-### InputTagsOuter — `src/components/base/input/input-tags-outer.tsx`
-
-Props:
-
-- `allowDuplicates?: boolean | undefined`
-- `className?: string | undefined`
-- `defaultValue?: string[] | undefined`
-- `hideRequiredIndicator?: boolean | undefined`
-- `hint?: ReactNode`
-- `isDisabled?: boolean | undefined`
-- `isInvalid?: boolean | undefined`
-- `isRequired?: boolean | undefined`
-- `label?: string | undefined`
-- `maxTags?: number | undefined`
-- `onChange?: ((tags: string[]) => void) | undefined`
-- `onTagAdded?: ((tag: string) => void) | undefined`
-- `onTagRemoved?: ((tag: string) => void) | undefined`
-- `placeholder?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `tooltip?: string | undefined`
-- `validate?: ((value: string) => boolean) | undefined`
-- `value?: string[] | undefined`
-
-### InputTags — `src/components/base/input/input-tags.tsx`
-
-Props:
-
-- `allowDuplicates?: boolean | undefined`
-- `className?: string | undefined`
-- `defaultValue?: string[] | undefined`
-- `hideRequiredIndicator?: boolean | undefined`
-- `hint?: ReactNode`
-- `isDisabled?: boolean | undefined`
-- `isInvalid?: boolean | undefined`
-- `isRequired?: boolean | undefined`
-- `label?: string | undefined`
-- `maxTags?: number | undefined`
-- `onChange?: ((tags: string[]) => void) | undefined`
-- `onTagAdded?: ((tag: string) => void) | undefined`
-- `onTagRemoved?: ((tag: string) => void) | undefined`
-- `placeholder?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `tooltip?: string | undefined`
-- `validate?: ((value: string) => boolean) | undefined`
-- `value?: string[] | undefined`
-
-### Input — `src/components/base/input/input.tsx`
-
-Props:
-
-- `groupRef?: Ref<HTMLDivElement> | undefined`
-- `hideRequiredIndicator?: boolean | undefined`
-- `hint?: ReactNode`
-- `icon?: ComponentType<HTMLAttributes<HTMLOrSVGElement>> | undefined`
-- `iconClassName?: string | undefined`
-- `inputClassName?: string | undefined`
-- `label?: string | undefined`
-- `placeholder?: string | undefined`
-- `ref?: Ref<HTMLInputElement> | undefined`
-- `shortcut?: string | boolean | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `tooltip?: string | undefined`
-- `tooltipClassName?: string | undefined`
-- `wrapperClassName?: string | undefined`
-
-### InputBase — `src/components/base/input/input.tsx`
-
-Props:
-
-- `groupRef?: Ref<HTMLDivElement> | undefined`
-- `icon?: ComponentType<HTMLAttributes<HTMLOrSVGElement>> | undefined`
-- `iconClassName?: string | undefined`
-- `inputClassName?: string | undefined`
-- `isDisabled?: boolean | undefined`
-- `isInvalid?: boolean | undefined`
-- `isRequired?: boolean | undefined`
-- `placeholder?: string | undefined`
-- `ref?: Ref<HTMLInputElement> | undefined`
-- `shortcut?: string | boolean | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `tooltip?: string | undefined`
-- `tooltipClassName?: string | undefined`
-- `wrapperClassName?: string | undefined`
-
-### TextField — `src/components/base/input/input.tsx`
-
-Props:
-
-- `iconClassName?: string | undefined`
-- `inputClassName?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `tooltipClassName?: string | undefined`
-- `wrapperClassName?: string | undefined`
-
-### Label — `src/components/base/input/label.tsx`
-
-Props:
-
-- `children: ReactNode`
-- `isInvalid?: boolean | undefined`
-- `isRequired?: boolean | undefined`
-- `ref?: Ref<HTMLLabelElement> | undefined`
-- `tooltip?: string | undefined`
-- `tooltipDescription?: string | undefined`
-
-### PinInput — `src/components/base/input/pin-input.tsx`
-
-Props:
-
-- `disabled?: boolean | undefined`
-- `invalid?: boolean | undefined`
-- `size?: PinInputSize | undefined`
-
-### ProgressBarCircle — `src/components/base/progress-indicators/progress-circles.tsx`
-
-Props:
-
-- `label?: string | undefined`
-- `max?: number | undefined`
-- `min?: number | undefined`
-- `size: "xs" | "sm" | "md" | "lg" | "xxs"`
-- `value: number`
-- `valueFormatter?: ((value: number, valueInPercentage: number) => string | number) | undefined`
-
-### ProgressBarHalfCircle — `src/components/base/progress-indicators/progress-circles.tsx`
-
-Props:
-
-- `label?: string | undefined`
-- `max?: number | undefined`
-- `min?: number | undefined`
-- `size: "xs" | "sm" | "md" | "lg" | "xxs"`
-- `value: number`
-- `valueFormatter?: ((value: number, valueInPercentage: number) => string | number) | undefined`
-
-### ProgressBar — `src/components/base/progress-indicators/progress-indicators.tsx`
-
-A progress bar component that displays the value text in various configurable layouts.
-
-Props:
-
-- `className?: string | undefined`
-- `labelPosition?: ProgressBarLabelPosition | undefined`
-- `max?: number | undefined`
-- `min?: number | undefined`
-- `progressClassName?: string | undefined`
-- `value: number`
-- `valueFormatter?: ((value: number, valueInPercentage: number) => string | number) | undefined`
-
-### ProgressBarBase — `src/components/base/progress-indicators/progress-indicators.tsx`
-
-A basic progress bar component.
-
-Props:
-
-- `className?: string | undefined`
-- `max?: number | undefined`
-- `min?: number | undefined`
-- `progressClassName?: string | undefined`
-- `value: number`
-- `valueFormatter?: ((value: number, valueInPercentage: number) => string | number) | undefined`
-
-### CircleProgressBar — `src/components/base/progress-indicators/simple-circle.tsx`
-
-Props:
-
-- `max?: 100 | undefined`
-- `min?: 0 | undefined`
-- `value: number`
-
-### RadioButton — `src/components/base/radio-buttons/radio-buttons.tsx`
-
-Props:
-
-- `hint?: ReactNode`
-- `label?: ReactNode`
-- `ref?: Ref<HTMLLabelElement> | undefined`
-- `size?: "sm" | "md" | undefined`
-
-### RadioButtonBase — `src/components/base/radio-buttons/radio-buttons.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `isDisabled?: boolean | undefined`
-- `isFocusVisible?: boolean | undefined`
-- `isSelected?: boolean | undefined`
-- `size?: "sm" | "md" | undefined`
-
-### RadioGroup — `src/components/base/radio-buttons/radio-buttons.tsx`
-
-Props:
-
-- `children: ReactNode`
-- `className?: string | undefined`
-- `size?: "sm" | "md" | undefined`
-
-### ComboBox — `src/components/base/select/combobox.tsx`
-
-Props:
-
-- `children: ReactNode | ((item: SelectItemType) => ReactNode)`
-- `hideRequiredIndicator?: boolean | undefined`
-- `hint?: string | undefined`
-- `icon?: ReactNode | FC`
-- `items?: SelectItemType[] | undefined`
-- `label?: string | undefined`
-- `placeholder?: string | undefined`
-- `popoverClassName?: string | undefined`
-- `shortcut?: boolean | undefined`
-- `shortcutClassName?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `tooltip?: string | undefined`
-
-### MultiSelect — `src/components/base/select/multi-select.tsx`
-
-Props:
-
-- `children: ReactNode | ((item: SelectItemType) => ReactNode)`
-- `className?: string | undefined`
-- `defaultSelectedKeys?: Selection | undefined`
-- `emptyStateDescription?: string | undefined`
-- `emptyStateTitle?: string | undefined`
-- `hideRequiredIndicator?: boolean | undefined`
-- `hint?: string | undefined`
-- `isDisabled?: boolean | undefined`
-- `isInvalid?: boolean | undefined`
-- `isRequired?: boolean | undefined`
-- `items?: SelectItemType[] | undefined`
-- `label?: string | undefined`
-- `onReset?: (() => void) | undefined`
-- `onSelectAll?: (() => void) | undefined`
-- `onSelectionChange?: ((keys: Selection) => void) | undefined`
-- `placeholder?: string | undefined`
-- `popoverClassName?: string | undefined`
-- `selectedCountFormatter?: ((count: number) => ReactNode) | undefined`
-- `selectedKeys?: Selection | undefined`
-- `showFooter?: boolean | undefined`
-- `showSearch?: boolean | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `supportingText?: ReactNode`
-- `tooltip?: string | undefined`
-
-### Popover — `src/components/base/select/popover.tsx`
-
-Props:
-
-- `size: "sm" | "md" | "lg"`
-
-### SelectItem — `src/components/base/select/select-item.tsx`
-
-Props:
-
-- `avatarUrl?: string | undefined`
-- `icon?: ReactNode | FC`
-- `id: string | number`
-- `label?: string | undefined`
-- `selectionIndicator?: "none" | "checkbox" | "checkmark" | undefined`
-- `selectionIndicatorAlign?: "left" | "right" | undefined`
-- `supportingText?: string | undefined`
-
-### NativeSelect — `src/components/base/select/select-native.tsx`
-
-Props:
-
-- `hint?: string | undefined`
-- `label?: string | undefined`
-- `options: { label: string; value: string; disabled?: boolean | undefined; }[]`
-- `selectClassName?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-
-### SelectContext — `src/components/base/select/select-shared.tsx`
-
-### Select — `src/components/base/select/select.tsx`
-
-Props:
-
-- `children: ReactNode | ((item: SelectItemType) => ReactNode)`
-- `hideRequiredIndicator?: boolean | undefined`
-- `hint?: string | undefined`
-- `icon?: ReactNode | FC`
-- `items?: SelectItemType[] | undefined`
-- `label?: string | undefined`
-- `popoverClassName?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `tooltip?: string | undefined`
-
-### SelectContext — `src/components/base/select/select.tsx`
-
-### TagSelect — `src/components/base/select/tag-select.tsx`
-
-Props:
-
-- `children: ReactNode | ((item: SelectItemType) => ReactNode)`
-- `hint?: string | undefined`
-- `icon?: IconComponentType | null | undefined`
-- `items?: SelectItemType[] | undefined`
-- `label?: string | undefined`
-- `onItemCleared?: ((key: Key) => void) | undefined`
-- `onItemInserted?: ((key: Key) => void) | undefined`
-- `placeholder?: string | undefined`
-- `popoverClassName?: string | undefined`
-- `selectedItems: ListData<SelectItemType>`
-- `shortcut?: boolean | undefined`
-- `shortcutClassName?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `tooltip?: string | undefined`
-- `valueFormatter?: ((item: SelectItemType) => string) | undefined`
-
-### TagSelectBase — `src/components/base/select/tag-select.tsx`
-
-Props:
-
-- `children: ReactNode | ((item: SelectItemType) => ReactNode)`
-- `hint?: string | undefined`
-- `icon?: IconComponentType | null | undefined`
-- `items?: SelectItemType[] | undefined`
-- `label?: string | undefined`
-- `onItemCleared?: ((key: Key) => void) | undefined`
-- `onItemInserted?: ((key: Key) => void) | undefined`
-- `placeholder?: string | undefined`
-- `popoverClassName?: string | undefined`
-- `selectedItems: ListData<SelectItemType>`
-- `shortcut?: boolean | undefined`
-- `shortcutClassName?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `tooltip?: string | undefined`
-- `valueFormatter?: ((item: SelectItemType) => string) | undefined`
-
-### TagSelectTagsValue — `src/components/base/select/tag-select.tsx`
-
-Props:
-
-- `icon?: IconComponentType | null | undefined`
-- `isDisabled?: boolean | undefined`
-- `onFocus?: FocusEventHandler | undefined`
-- `onPointerEnter?: PointerEventHandler | undefined`
-- `placeholder?: string | undefined`
-- `ref?: RefObject<HTMLDivElement | null> | undefined`
-- `shortcut?: boolean | undefined`
-- `shortcutClassName?: string | undefined`
-- `size: "sm" | "md" | "lg"`
-
-### Slider — `src/components/base/slider/slider.tsx`
-
-Props:
-
-- `labelFormatter?: ((value: number) => string) | undefined`
-- `labelPosition?: "bottom" | "default" | "top-floating" | undefined`
-
-### TagCheckbox — `src/components/base/tags/base-components/tag-checkbox.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `isDisabled?: boolean | undefined`
-- `isFocused?: boolean | undefined`
-- `isSelected?: boolean | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-
-### TagCloseX — `src/components/base/tags/base-components/tag-close-x.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-
-### Tag — `src/components/base/tags/tags.tsx`
-
-Props:
-
-- `avatarContrastBorder?: boolean | undefined`
-- `avatarSrc?: string | undefined`
-- `count?: number | undefined`
-- `dot?: boolean | undefined`
-- `dotClassName?: string | undefined`
-- `onClose?: ((id: string) => void) | undefined`
-
-### TagAvatar — `src/components/base/tags/tags.tsx`
-
-Props:
-
-- `contrastBorder?: boolean | undefined`
-
-### TagGroup — `src/components/base/tags/tags.tsx`
-
-Props:
-
-- `label: string`
-- `size?: "sm" | "md" | "lg" | undefined`
-
-### TagList — `src/components/base/tags/tags.tsx`
-
-### TextArea — `src/components/base/textarea/textarea.tsx`
-
-Props:
-
-- `cols?: number | undefined`
-- `hideRequiredIndicator?: boolean | undefined`
-- `hint?: ReactNode`
-- `label?: string | undefined`
-- `placeholder?: string | undefined`
-- `ref?: Ref<HTMLDivElement> | undefined`
-- `rows?: number | undefined`
-- `size?: "sm" | "md" | undefined`
-- `textAreaClassName?: ClassNameOrFunction<InputRenderProps> | undefined`
-- `textAreaRef?: Ref<HTMLTextAreaElement> | undefined`
-- `tooltip?: string | undefined`
-
-### TextAreaBase — `src/components/base/textarea/textarea.tsx`
-
-Props:
-
-- `ref?: Ref<HTMLTextAreaElement> | undefined`
-- `size?: "sm" | "md" | undefined`
-
-### Toggle — `src/components/base/toggle/toggle.tsx`
-
-Props:
-
-- `hint?: ReactNode`
-- `label?: string | undefined`
-- `size?: "sm" | "md" | undefined`
-- `slim?: boolean | undefined`
-
-### ToggleBase — `src/components/base/toggle/toggle.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `isDisabled?: boolean | undefined`
-- `isFocusVisible?: boolean | undefined`
-- `isHovered?: boolean | undefined`
-- `isSelected?: boolean | undefined`
-- `size?: "sm" | "md" | undefined`
-- `slim?: boolean | undefined`
-
-### Tooltip — `src/components/base/tooltip/tooltip.tsx`
-
-Props:
-
-- `arrow?: boolean | undefined`
-- `delay?: number | undefined`
-- `description?: ReactNode`
-- `title: ReactNode`
-
-### TooltipTrigger — `src/components/base/tooltip/tooltip.tsx`
 
 ### AlertSignupForm — `src/components/board/alert-signup-form.tsx`
 
@@ -1918,7 +444,7 @@ Props:
 - `className?: string | undefined`
 - `logoUrl?: string | null | undefined`
 - `name: string`
-- `size?: "sm" | "md" | "lg" | undefined`
+- `size?: "sm" | "lg" | "md" | undefined`
 
 ### CompanyCard — `src/components/board/company-card.tsx`
 
@@ -1951,7 +477,7 @@ Props:
 - `loadingLabel: string`
 - `onRetry: () => void`
 - `retryLabel: string`
-- `status: "error" | "idle" | "loading" | "ready"`
+- `status: "idle" | "loading" | "ready" | "error"`
 
 ### CompanySearchPage — `src/components/board/company-search-page.tsx`
 
@@ -2012,7 +538,7 @@ Props:
 - `className?: string | undefined`
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
-- `size?: "sm" | "md" | "lg" | undefined`
+- `size?: "sm" | "lg" | "md" | undefined`
 - `url: string`
 
 ### HomeLanding — `src/components/board/home-landing.tsx`
@@ -2039,7 +565,7 @@ Props:
 
 - `action?: ReactNode`
 - `compact?: boolean | undefined`
-- `layout?: "row" | "card" | undefined`
+- `layout?: "card" | "row" | undefined`
 - `vm: JobCardVM`
 
 ### JobDetail — `src/components/board/job-detail.tsx`
@@ -2060,7 +586,7 @@ Props:
 
 Props:
 
-- `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "other" | …`
+- `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "full_time…`
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `variant?: "grid" | "rows" | "compact" | undefined`
@@ -2071,12 +597,11 @@ Props:
 
 - `applySlot?: ReactNode`
 - `errorTitle: string`
-- `fullPageLabel: string`
 - `loadingLabel: string`
 - `onRetry: () => void`
 - `retryLabel: string`
 - `saveSlot?: ReactNode`
-- `status: "error" | "idle" | "loading" | "ready"`
+- `status: "idle" | "loading" | "ready" | "error"`
 - `vm?: JobDetailVM | undefined`
 
 ### JobSearchPage — `src/components/board/job-search-page.tsx`
@@ -2093,7 +618,7 @@ Props:
 - `filters: ListingFilters`
 - `gatedCount?: number | undefined`
 - `heading?: string | undefined`
-- `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "other" | …`
+- `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "full_time…`
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `onFiltersChange: (next: ListingFilters) => void`
@@ -2111,8 +636,7 @@ Props:
 Props:
 
 - `applySlot?: ReactNode`
-- `fullPageHref: string`
-- `fullPageLabel: string`
+- `loading?: boolean | undefined`
 - `saveSlot?: ReactNode`
 - `vm: JobDetailVM`
 
@@ -2257,10 +781,10 @@ Migration-only compatibility shell for routes that predate the canonical
 `PageBody` for new page-level composition; migrate existing consumers to
 the Page family as those routes are touched.
 
-Preserved legacy slots:
+Preserved public slots:
  - `band` — a full-bleed section rendered edge-to-edge ABOVE the
    constrained container (the Lumen gray listing header, the job-detail
-   header band). The band owns its own inner `max-w-container` wrapper and,
+   header band). The band owns its own inner `max-w-7xl` wrapper and,
    when it has one, its OWN breadcrumb (via `ListingPageHeader` / the
    `JobDetail` band) — so `breadcrumb` below is for the band-less pages.
  - `breadcrumb` — the resolved trail for a NON-band page (a company
@@ -2270,7 +794,7 @@ Preserved legacy slots:
  - `children` — the constrained content, on the shared container
    width + padding + `gap-8` rhythm.
  - `rail` — an optional right-hand sticky column; when present the body
-   becomes the legacy two-column `[1fr_20rem]` grid (the job-detail
+   becomes the two-column `[1fr_20rem]` grid (the job-detail
    apply-rail pattern). On mobile the rail stacks above the content.
 
 Props:
@@ -2289,7 +813,7 @@ placement primitive before the constrained PageHeader.
 Props:
 
 - `actions?: ReactNode`
-- `align?: "start" | "center" | undefined`
+- `align?: "center" | "start" | undefined`
 - `breadcrumb?: BreadcrumbData | undefined`
 - `children?: ReactNode`
 - `description?: ReactNode`
@@ -2382,7 +906,7 @@ Props:
 - `loadingLabel: string`
 - `onRetry: () => void`
 - `retryLabel: string`
-- `status: "error" | "idle" | "loading" | "ready"`
+- `status: "idle" | "loading" | "ready" | "error"`
 
 ### TalentSearchPage — `src/components/board/talent-search-page.tsx`
 
@@ -2425,7 +949,7 @@ Props:
 
 - `chips: TaxonomyChip[]`
 - `overflow?: number | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
+- `size?: "sm" | "lg" | "md" | undefined`
 
 ### CandidateActionFeedback — `src/components/candidate-action-feedback.tsx`
 
@@ -2523,401 +1047,6 @@ Props:
 
 - `items: { id: string; object: "candidate_experience"; title: string; companyName: string; companyUrl: string | null; location…`
 
-### Dot — `src/components/foundations/dot-icon.tsx`
-
-Props:
-
-- `size?: "sm" | "md" | undefined`
-
-### FeaturedIcon — `src/components/foundations/featured-icon/featured-icon.tsx`
-
-Props:
-
-- `children?: ReactNode`
-- `className?: string | undefined`
-- `color: "gray" | "brand" | "warning" | "error" | "success"`
-- `icon?: ReactNode | FC<{ className?: string | undefined; }>`
-- `ref?: Ref<HTMLDivElement> | undefined`
-- `size?: "sm" | "md" | "lg" | "xl" | undefined`
-- `theme?: "light" | "modern" | "dark" | "gradient" | "outline" | "modern-neue" | undefined`
-
-### BoltIcon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### ChatGPTIcon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### ClaudeIcon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### CursorIcon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### FigmaIcon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### GeminiIcon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### GitHubIcon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### GrokIcon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### LovableIcon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### NextjsIcon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### PerplexityIcon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### ReactIcon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### ReplitIcon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### TailwindCSSIcon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### V0Icon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### ViteIcon — `src/components/foundations/integration-icons/index.tsx`
-
-Props:
-
-- `grayscale?: boolean | undefined`
-
-### UntitledLogoMinimal — `src/components/foundations/logo/untitledui-logo-minimal.tsx`
-
-### UntitledLogo — `src/components/foundations/logo/untitledui-logo.tsx`
-
-### AffirmIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### AfterpayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### AlipayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### AmazonIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### AmexIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### ApplePayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### AydenIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### BancontactIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### BinancePayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### BitcoinCashIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### BitcoinIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### BitpayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### BraintreeIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### CashAppPayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### CitadeleIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### CoinbaseIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### DinersClubIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### DiscoverIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### EloIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### EtheriumIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### ForbrugsforeningenIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### GiropayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### GooglePayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### IdealIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### InteracIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### JCBIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### KlarnaIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### LightcoinIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### MaestroIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### MastercardIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### PayoneerIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### PayPalIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### PaysafeIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### QiwiIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### RazorpayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### RevolutIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### RuPayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### SamsungPayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### SEPAIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### ShopeePayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### ShopPayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### SkrillIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### SofortIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### StripeIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### UnionPayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### UPIIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### VenmoIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### VerifoneIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### VisaIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### WebmoneyIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### WeChatIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### WeChatPayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### WiseIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### YandexIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### ZelleIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### ZipPayIcon — `src/components/foundations/payment-icons/index.tsx`
-
-### PlayButtonIcon — `src/components/foundations/play-button-icon.tsx`
-
-Rounded play icon with blurred background and a filled triangle in the middle.
-
-Props:
-
-- `isPlaying?: boolean | undefined`
-
-### RatingBadge — `src/components/foundations/rating-badge.tsx`
-
-Props:
-
-- `rating?: number | undefined`
-- `subtitle?: string | undefined`
-- `theme?: "light" | "dark" | undefined`
-- `title?: string | undefined`
-
-### Wreath — `src/components/foundations/rating-badge.tsx`
-
-### RatingStars — `src/components/foundations/rating-stars.tsx`
-
-Props:
-
-- `rating?: number | undefined`
-- `starClassName?: string | undefined`
-- `stars?: number | undefined`
-
-### StarIcon — `src/components/foundations/rating-stars.tsx`
-
-Props:
-
-- `progress?: number | undefined`
-
-### AngelList — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Apple — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Clubhouse — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Discord — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Dribbble — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Facebook — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Figma — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### GitHub — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Google — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Instagram — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Layers — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### LinkedIn — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Pinterest — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Reddit — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Signal — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Snapchat — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Telegram — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### TikTok — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Tumblr — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### Twitter — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### X — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
-### YouTube — `src/components/foundations/social-icons/index.tsx`
-
-Props:
-
-- `size?: number | undefined`
-
 ### JobAlertFloatingPrompt — `src/components/job-alert-floating-prompt.tsx`
 
 The hosted board's dismissible bottom-corner job-alert prompt on listing
@@ -2973,13 +1102,11 @@ Props:
 ### LocationCombobox — `src/components/location-combobox.tsx`
 
 Location search field — the hosted board's `board-place-search-field`: type a
-place name, pick from debounced `places.list({ q })` autocomplete suggestions
-(each with its live job count). Selecting one applies the place slug as the
-jobs filter (server defaults the radius to 50 km).
+place name, pick from resolved `places.list({ q })` autocomplete suggestions,
+and apply its slug as the jobs location filter.
 
-Built from the starter's owned shadcn Input and Button with Lucide icons.
-The route owns the debounced API request and passes resolved suggestions;
-this component owns only popup interaction and the selected display value.
+The route owns the debounced API request. This component composes the owned
+shadcn Combobox and InputGroup primitives around that external async state.
 
 Props:
 
@@ -3145,6 +1272,18 @@ Props:
 
 - `post: { id: string; object: "public_blog_post"; title: string; slug: string; featured: boolean; coverUrl: string | null; fe…`
 
+### PostJobForm — `src/components/post-job-form.tsx`
+
+Props:
+
+- `initialPlanId?: string | undefined`
+- `locale: string`
+- `onCheckout: (url: string) => void`
+- `onLogoFetch: (domain: string) => Promise<LogoResult>`
+- `onLogoUpload: (data: FormData) => Promise<LogoResult>`
+- `onSubmit: (input: JobPostingFormInput) => Promise<SubmitJobResult>`
+- `plans: { object: "job_posting_plan"; id: string; name: string; description: string | null; kind: string; billingInterval: "m…`
+
 ### ProfileForm — `src/components/profile-form.tsx`
 
 Profile edit form — recreates the hosted `/account` profile editor. One
@@ -3164,7 +1303,7 @@ Props:
 - `filters: JobsSearch`
 - `gatedCount?: number | undefined`
 - `heading: string`
-- `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "other" | …`
+- `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "full_time…`
 - `location?: { slug: string; label: string; } | undefined`
 - `origin?: string | undefined`
 - `page: number`
@@ -3183,7 +1322,7 @@ Props:
 
 Props:
 
-- `resume: { object: "resume"; parseStatus: "failed" | "parsing" | "parsed" | null; parseFailureReason: string | null; parsedAt:…`
+- `resume: { object: "resume"; parseStatus: "parsing" | "parsed" | "failed" | null; parseFailureReason: string | null; parsedAt:…`
 
 ### RheaAuthCard — `src/components/rhea-auth-pilot.tsx`
 
@@ -3275,117 +1414,6 @@ Props:
 - `label: string`
 - `scrollRestorationId?: string | undefined`
 
-### Circle — `src/components/shared-assets/background-patterns/circle.tsx`
-
-Props:
-
-- `size?: "sm" | "md" | "lg" | undefined`
-
-### GridCheck — `src/components/shared-assets/background-patterns/grid-check.tsx`
-
-Props:
-
-- `size?: "sm" | "md" | undefined`
-
-### Grid — `src/components/shared-assets/background-patterns/grid.tsx`
-
-Props:
-
-- `size?: "sm" | "md" | "lg" | undefined`
-
-### BackgroundPattern — `src/components/shared-assets/background-patterns/index.tsx`
-
-Props:
-
-- `pattern: "circle" | "grid" | "square" | "grid-check"`
-- `size?: "sm" | "md" | "lg" | undefined`
-
-### Square — `src/components/shared-assets/background-patterns/square.tsx`
-
-Props:
-
-- `size?: "sm" | "md" | "lg" | undefined`
-
-### CreditCard — `src/components/shared-assets/credit-card/credit-card.tsx`
-
-Props:
-
-- `cardExpiration?: string | undefined`
-- `cardHolder?: string | undefined`
-- `cardNumber?: string | undefined`
-- `className?: string | undefined`
-- `company?: string | undefined`
-- `type?: CreditCardType | undefined`
-- `width?: number | undefined`
-
-### MastercardIcon — `src/components/shared-assets/credit-card/icons.tsx`
-
-### MastercardIconWhite — `src/components/shared-assets/credit-card/icons.tsx`
-
-### PaypassIcon — `src/components/shared-assets/credit-card/icons.tsx`
-
-### BoxIllustration — `src/components/shared-assets/illustrations/box.tsx`
-
-Props:
-
-- `childrenClassName?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `svgClassName?: string | undefined`
-
-### CloudIllustration — `src/components/shared-assets/illustrations/cloud.tsx`
-
-Props:
-
-- `childrenClassName?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `svgClassName?: string | undefined`
-
-### CreditCardIllustration — `src/components/shared-assets/illustrations/credit-card.tsx`
-
-Props:
-
-- `childrenClassName?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `svgClassName?: string | undefined`
-
-### DocumentsIllustration — `src/components/shared-assets/illustrations/documents.tsx`
-
-Props:
-
-- `childrenClassName?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `svgClassName?: string | undefined`
-
-### Illustration — `src/components/shared-assets/illustrations/index.tsx`
-
-Props:
-
-- `childrenClassName?: string | undefined`
-- `size?: "sm" | "md" | "lg" | undefined`
-- `svgClassName?: string | undefined`
-- `type: "box" | "cloud" | "documents" | "credit-card"`
-
-### IPhoneMockup — `src/components/shared-assets/iphone-mockup.tsx`
-
-Props:
-
-- `image: string`
-- `imageDark?: string | undefined`
-- `theme?: "light" | "dark" | undefined`
-
-### GradientScan — `src/components/shared-assets/qr-code.tsx`
-
-### QRCode — `src/components/shared-assets/qr-code.tsx`
-
-Props:
-
-- `className?: string | undefined`
-- `options?: Options | undefined`
-- `size?: "md" | "lg" | undefined`
-- `value: string`
-
-### SectionDivider — `src/components/shared-assets/section-divider.tsx`
-
 ### SkillsSection — `src/components/skills-section.tsx`
 
 Skills — a tag editor over the whole-set replace
@@ -3419,13 +1447,79 @@ Props:
 - `truncate?: boolean | undefined`
 - `variant?: HeadingVariant | BodyVariant | undefined`
 
+### Accordion — `src/components/ui/accordion.tsx`
+
+### AccordionContent — `src/components/ui/accordion.tsx`
+
+### AccordionItem — `src/components/ui/accordion.tsx`
+
+### AccordionTrigger — `src/components/ui/accordion.tsx`
+
+### AlertDialog — `src/components/ui/alert-dialog.tsx`
+
+### AlertDialogAction — `src/components/ui/alert-dialog.tsx`
+
+Props:
+
+- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
+
+### AlertDialogCancel — `src/components/ui/alert-dialog.tsx`
+
+Props:
+
+- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
+
+### AlertDialogContent — `src/components/ui/alert-dialog.tsx`
+
+Props:
+
+- `size?: "default" | "sm" | undefined`
+
+### AlertDialogDescription — `src/components/ui/alert-dialog.tsx`
+
+### AlertDialogFooter — `src/components/ui/alert-dialog.tsx`
+
+### AlertDialogHeader — `src/components/ui/alert-dialog.tsx`
+
+### AlertDialogMedia — `src/components/ui/alert-dialog.tsx`
+
+### AlertDialogOverlay — `src/components/ui/alert-dialog.tsx`
+
+### AlertDialogPortal — `src/components/ui/alert-dialog.tsx`
+
+### AlertDialogTitle — `src/components/ui/alert-dialog.tsx`
+
+### AlertDialogTrigger — `src/components/ui/alert-dialog.tsx`
+
+### Alert — `src/components/ui/alert.tsx`
+
+Props:
+
+- `variant?: "default" | "destructive" | null | undefined`
+
+Variants — `variant`: default, destructive
+
+### AlertAction — `src/components/ui/alert.tsx`
+
+### AlertDescription — `src/components/ui/alert.tsx`
+
+### AlertTitle — `src/components/ui/alert.tsx`
+
+### AspectRatio — `src/components/ui/aspect-ratio.tsx`
+
+Props:
+
+- `ratio: number`
+
 ### Attachment — `src/components/ui/attachment.tsx`
 
 Props:
 
 - `orientation?: "horizontal" | "vertical" | null | undefined`
-- `size?: "xs" | "sm" | "default" | null | undefined`
-- `state?: "error" | "done" | "idle" | "uploading" | "processing" | undefined`
+- `size?: "default" | "sm" | "xs" | null | undefined`
+- `state?: "idle" | "error" | "done" | "uploading" | "processing" | undefined`
 
 Variants — `size`: default, sm, xs
 
@@ -3435,8 +1529,8 @@ Variants — `orientation`: horizontal, vertical
 
 Props:
 
-- `size?: "icon" | "xs" | "sm" | "lg" | "default" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
-- `variant?: "link" | "secondary" | "default" | "outline" | "ghost" | "destructive" | null | undefined`
+- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
 
 ### AttachmentActions — `src/components/ui/attachment.tsx`
 
@@ -3450,7 +1544,7 @@ Props:
 
 Props:
 
-- `variant?: "icon" | "image" | null | undefined`
+- `variant?: "image" | "icon" | null | undefined`
 
 Variants — `variant`: icon, image
 
@@ -3462,7 +1556,7 @@ Variants — `variant`: icon, image
 
 Props:
 
-- `size?: "sm" | "lg" | "default" | undefined`
+- `size?: "default" | "sm" | "lg" | undefined`
 
 ### AvatarBadge — `src/components/ui/avatar.tsx`
 
@@ -3478,16 +1572,58 @@ Props:
 
 Props:
 
-- `variant?: "link" | "secondary" | "default" | "outline" | "ghost" | "destructive" | null | undefined`
+- `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
 
 Variants — `variant`: default, secondary, destructive, outline, ghost, link
+
+### Breadcrumb — `src/components/ui/breadcrumb.tsx`
+
+The shared breadcrumb trail (nav › ol › li) used by the job-detail and salary pages. Pass an ordered items list; a crumb with no href renders as the current page.
+
+Usage: Render <Breadcrumb items={[{ name, href? }, …]} />. Omit href on the last (current-page) crumb. Links are plain <a> — swap for your router's Link if desired.
+
+### BreadcrumbEllipsis — `src/components/ui/breadcrumb.tsx`
+
+The shared breadcrumb trail (nav › ol › li) used by the job-detail and salary pages. Pass an ordered items list; a crumb with no href renders as the current page.
+
+Usage: Render <Breadcrumb items={[{ name, href? }, …]} />. Omit href on the last (current-page) crumb. Links are plain <a> — swap for your router's Link if desired.
+
+### BreadcrumbItem — `src/components/ui/breadcrumb.tsx`
+
+The shared breadcrumb trail (nav › ol › li) used by the job-detail and salary pages. Pass an ordered items list; a crumb with no href renders as the current page.
+
+Usage: Render <Breadcrumb items={[{ name, href? }, …]} />. Omit href on the last (current-page) crumb. Links are plain <a> — swap for your router's Link if desired.
+
+### BreadcrumbLink — `src/components/ui/breadcrumb.tsx`
+
+The shared breadcrumb trail (nav › ol › li) used by the job-detail and salary pages. Pass an ordered items list; a crumb with no href renders as the current page.
+
+Usage: Render <Breadcrumb items={[{ name, href? }, …]} />. Omit href on the last (current-page) crumb. Links are plain <a> — swap for your router's Link if desired.
+
+### BreadcrumbList — `src/components/ui/breadcrumb.tsx`
+
+The shared breadcrumb trail (nav › ol › li) used by the job-detail and salary pages. Pass an ordered items list; a crumb with no href renders as the current page.
+
+Usage: Render <Breadcrumb items={[{ name, href? }, …]} />. Omit href on the last (current-page) crumb. Links are plain <a> — swap for your router's Link if desired.
+
+### BreadcrumbPage — `src/components/ui/breadcrumb.tsx`
+
+The shared breadcrumb trail (nav › ol › li) used by the job-detail and salary pages. Pass an ordered items list; a crumb with no href renders as the current page.
+
+Usage: Render <Breadcrumb items={[{ name, href? }, …]} />. Omit href on the last (current-page) crumb. Links are plain <a> — swap for your router's Link if desired.
+
+### BreadcrumbSeparator — `src/components/ui/breadcrumb.tsx`
+
+The shared breadcrumb trail (nav › ol › li) used by the job-detail and salary pages. Pass an ordered items list; a crumb with no href renders as the current page.
+
+Usage: Render <Breadcrumb items={[{ name, href? }, …]} />. Omit href on the last (current-page) crumb. Links are plain <a> — swap for your router's Link if desired.
 
 ### Bubble — `src/components/ui/bubble.tsx`
 
 Props:
 
 - `align?: "start" | "end" | undefined`
-- `variant?: "secondary" | "default" | "outline" | "muted" | "ghost" | "destructive" | "tinted" | null | undefined`
+- `variant?: "default" | "muted" | "secondary" | "outline" | "ghost" | "destructive" | "tinted" | null | undefined`
 
 Variants — `variant`: default, secondary, muted, tinted, outline, ghost, destructive
 
@@ -3500,28 +1636,52 @@ Variants — `variant`: default, secondary, muted, tinted, outline, ghost, destr
 Props:
 
 - `align?: "start" | "end" | undefined`
-- `side?: "bottom" | "top" | undefined`
+- `side?: "top" | "bottom" | undefined`
 
 Variants — `side`: top, bottom
 
 Variants — `align`: start, end
 
+### ButtonGroup — `src/components/ui/button-group.tsx`
+
+Props:
+
+- `orientation?: "horizontal" | "vertical" | null | undefined`
+
+Variants — `orientation`: horizontal, vertical
+
+### ButtonGroupSeparator — `src/components/ui/button-group.tsx`
+
+### ButtonGroupText — `src/components/ui/button-group.tsx`
+
 ### Button — `src/components/ui/button.tsx`
 
 Props:
 
-- `size?: "icon" | "xs" | "sm" | "lg" | "default" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
-- `variant?: "link" | "secondary" | "default" | "outline" | "ghost" | "destructive" | null | undefined`
+- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
 
 Variants — `variant`: default, outline, secondary, ghost, destructive, link
 
-Variants — `size`: default, xs, sm, lg, icon, "icon-xs", "icon-sm", "icon-lg"
+Variants — `size`: default, xs, sm, lg, icon, 'icon-xs', 'icon-sm', 'icon-lg'
+
+### Calendar — `src/components/ui/calendar.tsx`
+
+Props:
+
+- `buttonVariant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
+
+### CalendarDayButton — `src/components/ui/calendar.tsx`
+
+Props:
+
+- `locale?: Partial<DayPickerLocale> | undefined`
 
 ### Card — `src/components/ui/card.tsx`
 
 Props:
 
-- `size?: "sm" | "default" | undefined`
+- `size?: "default" | "sm" | undefined`
 
 ### CardAction — `src/components/ui/card.tsx`
 
@@ -3535,7 +1695,248 @@ Props:
 
 ### CardTitle — `src/components/ui/card.tsx`
 
+### Carousel — `src/components/ui/carousel.tsx`
+
+Props:
+
+- `opts?: Partial<OptionsType> | undefined`
+- `orientation?: "horizontal" | "vertical" | undefined`
+- `plugins?: CreatePluginType<LoosePluginType, {}>[] | undefined`
+- `setApi?: ((api: EmblaCarouselType | undefined) => void) | undefined`
+
+### CarouselContent — `src/components/ui/carousel.tsx`
+
+### CarouselItem — `src/components/ui/carousel.tsx`
+
+### CarouselNext — `src/components/ui/carousel.tsx`
+
+Props:
+
+- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
+
+### CarouselPrevious — `src/components/ui/carousel.tsx`
+
+Props:
+
+- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
+
+### ChartContainer — `src/components/ui/chart.tsx`
+
+Props:
+
+- `config: ChartConfig`
+- `initialDimension?: { width: number; height: number; } | undefined`
+
+### ChartLegend — `src/components/ui/chart.tsx`
+
+### ChartLegendContent — `src/components/ui/chart.tsx`
+
+Props:
+
+- `hideIcon?: boolean | undefined`
+- `nameKey?: string | undefined`
+
+### ChartStyle — `src/components/ui/chart.tsx`
+
+Props:
+
+- `config: ChartConfig`
+- `id: string`
+
+### ChartTooltip — `src/components/ui/chart.tsx`
+
+### ChartTooltipContent — `src/components/ui/chart.tsx`
+
+Props:
+
+- `hideIndicator?: boolean | undefined`
+- `hideLabel?: boolean | undefined`
+- `indicator?: "line" | "dot" | "dashed" | undefined`
+- `labelKey?: string | undefined`
+- `nameKey?: string | undefined`
+
 ### Checkbox — `src/components/ui/checkbox.tsx`
+
+### Collapsible — `src/components/ui/collapsible.tsx`
+
+### CollapsibleContent — `src/components/ui/collapsible.tsx`
+
+### CollapsibleTrigger — `src/components/ui/collapsible.tsx`
+
+### Combobox — `src/components/ui/combobox.tsx`
+
+### ComboboxChip — `src/components/ui/combobox.tsx`
+
+Props:
+
+- `showRemove?: boolean | undefined`
+
+### ComboboxChips — `src/components/ui/combobox.tsx`
+
+### ComboboxChipsInput — `src/components/ui/combobox.tsx`
+
+### ComboboxCollection — `src/components/ui/combobox.tsx`
+
+### ComboboxContent — `src/components/ui/combobox.tsx`
+
+### ComboboxEmpty — `src/components/ui/combobox.tsx`
+
+### ComboboxGroup — `src/components/ui/combobox.tsx`
+
+### ComboboxInput — `src/components/ui/combobox.tsx`
+
+Props:
+
+- `showClear?: boolean | undefined`
+- `showTrigger?: boolean | undefined`
+
+### ComboboxItem — `src/components/ui/combobox.tsx`
+
+### ComboboxLabel — `src/components/ui/combobox.tsx`
+
+### ComboboxList — `src/components/ui/combobox.tsx`
+
+### ComboboxSeparator — `src/components/ui/combobox.tsx`
+
+### ComboboxTrigger — `src/components/ui/combobox.tsx`
+
+### ComboboxValue — `src/components/ui/combobox.tsx`
+
+### Command — `src/components/ui/command.tsx`
+
+### CommandDialog — `src/components/ui/command.tsx`
+
+Props:
+
+- `children: ReactNode`
+- `className?: string | undefined`
+- `description?: string | undefined`
+- `showCloseButton?: boolean | undefined`
+- `title?: string | undefined`
+
+### CommandEmpty — `src/components/ui/command.tsx`
+
+### CommandGroup — `src/components/ui/command.tsx`
+
+### CommandInput — `src/components/ui/command.tsx`
+
+### CommandItem — `src/components/ui/command.tsx`
+
+### CommandList — `src/components/ui/command.tsx`
+
+### CommandSeparator — `src/components/ui/command.tsx`
+
+### CommandShortcut — `src/components/ui/command.tsx`
+
+### ContextMenu — `src/components/ui/context-menu.tsx`
+
+### ContextMenuCheckboxItem — `src/components/ui/context-menu.tsx`
+
+Props:
+
+- `inset?: boolean | undefined`
+
+### ContextMenuContent — `src/components/ui/context-menu.tsx`
+
+### ContextMenuGroup — `src/components/ui/context-menu.tsx`
+
+### ContextMenuItem — `src/components/ui/context-menu.tsx`
+
+Props:
+
+- `inset?: boolean | undefined`
+- `variant?: "default" | "destructive" | undefined`
+
+### ContextMenuLabel — `src/components/ui/context-menu.tsx`
+
+Props:
+
+- `inset?: boolean | undefined`
+
+### ContextMenuPortal — `src/components/ui/context-menu.tsx`
+
+### ContextMenuRadioGroup — `src/components/ui/context-menu.tsx`
+
+### ContextMenuRadioItem — `src/components/ui/context-menu.tsx`
+
+Props:
+
+- `inset?: boolean | undefined`
+
+### ContextMenuSeparator — `src/components/ui/context-menu.tsx`
+
+### ContextMenuShortcut — `src/components/ui/context-menu.tsx`
+
+### ContextMenuSub — `src/components/ui/context-menu.tsx`
+
+### ContextMenuSubContent — `src/components/ui/context-menu.tsx`
+
+### ContextMenuSubTrigger — `src/components/ui/context-menu.tsx`
+
+Props:
+
+- `inset?: boolean | undefined`
+
+### ContextMenuTrigger — `src/components/ui/context-menu.tsx`
+
+### Dialog — `src/components/ui/dialog.tsx`
+
+### DialogClose — `src/components/ui/dialog.tsx`
+
+### DialogContent — `src/components/ui/dialog.tsx`
+
+Props:
+
+- `closeLabel?: string | undefined`
+- `showCloseButton?: boolean | undefined`
+
+### DialogDescription — `src/components/ui/dialog.tsx`
+
+### DialogFooter — `src/components/ui/dialog.tsx`
+
+### DialogHeader — `src/components/ui/dialog.tsx`
+
+### DialogOverlay — `src/components/ui/dialog.tsx`
+
+### DialogPortal — `src/components/ui/dialog.tsx`
+
+### DialogTitle — `src/components/ui/dialog.tsx`
+
+### DialogTrigger — `src/components/ui/dialog.tsx`
+
+### DirectionProvider — `src/components/ui/direction.tsx`
+
+Enables RTL behavior for Base UI components.
+
+Documentation: [Base UI Direction Provider](https://base-ui.com/react/utils/direction-provider)
+
+### Drawer — `src/components/ui/drawer.tsx`
+
+Props:
+
+- `showSwipeHandle?: boolean | undefined`
+
+### DrawerClose — `src/components/ui/drawer.tsx`
+
+### DrawerContent — `src/components/ui/drawer.tsx`
+
+### DrawerDescription — `src/components/ui/drawer.tsx`
+
+### DrawerFooter — `src/components/ui/drawer.tsx`
+
+### DrawerHeader — `src/components/ui/drawer.tsx`
+
+### DrawerOverlay — `src/components/ui/drawer.tsx`
+
+### DrawerPortal — `src/components/ui/drawer.tsx`
+
+### DrawerSwipeHandle — `src/components/ui/drawer.tsx`
+
+### DrawerTitle — `src/components/ui/drawer.tsx`
+
+### DrawerTrigger — `src/components/ui/drawer.tsx`
 
 ### DropdownMenu — `src/components/ui/dropdown-menu.tsx`
 
@@ -3547,11 +1948,28 @@ Props:
 
 Props:
 
+- `inset?: boolean | undefined`
 - `variant?: "default" | "destructive" | null | undefined`
 
 Variants — `variant`: default, destructive
 
 ### DropdownMenuLabel — `src/components/ui/dropdown-menu.tsx`
+
+### DropdownMenuPortal — `src/components/ui/dropdown-menu.tsx`
+
+### DropdownMenuRadioGroup — `src/components/ui/dropdown-menu.tsx`
+
+### DropdownMenuSeparator — `src/components/ui/dropdown-menu.tsx`
+
+### DropdownMenuShortcut — `src/components/ui/dropdown-menu.tsx`
+
+### DropdownMenuSub — `src/components/ui/dropdown-menu.tsx`
+
+### DropdownMenuSubContent — `src/components/ui/dropdown-menu.tsx`
+
+### DropdownMenuSubTrigger — `src/components/ui/dropdown-menu.tsx`
+
+Variants — `variant`: default, destructive
 
 ### DropdownMenuTrigger — `src/components/ui/dropdown-menu.tsx`
 
@@ -3567,11 +1985,77 @@ Variants — `variant`: default, destructive
 
 Props:
 
-- `variant?: "icon" | "default" | null | undefined`
+- `variant?: "default" | "icon" | null | undefined`
 
 Variants — `variant`: default, icon
 
 ### EmptyTitle — `src/components/ui/empty.tsx`
+
+### Field — `src/components/ui/field.tsx`
+
+Props:
+
+- `orientation?: "horizontal" | "vertical" | "responsive" | null | undefined`
+
+Variants — `orientation`: vertical, horizontal, responsive
+
+### FieldContent — `src/components/ui/field.tsx`
+
+### FieldDescription — `src/components/ui/field.tsx`
+
+### FieldError — `src/components/ui/field.tsx`
+
+Props:
+
+- `errors?: ({ message?: string | undefined; } | undefined)[] | undefined`
+
+### FieldGroup — `src/components/ui/field.tsx`
+
+### FieldLabel — `src/components/ui/field.tsx`
+
+### FieldLegend — `src/components/ui/field.tsx`
+
+Props:
+
+- `variant?: "label" | "legend" | undefined`
+
+### FieldSeparator — `src/components/ui/field.tsx`
+
+### FieldSet — `src/components/ui/field.tsx`
+
+### FieldTitle — `src/components/ui/field.tsx`
+
+### HoverCard — `src/components/ui/hover-card.tsx`
+
+### HoverCardContent — `src/components/ui/hover-card.tsx`
+
+### HoverCardTrigger — `src/components/ui/hover-card.tsx`
+
+### InputGroup — `src/components/ui/input-group.tsx`
+
+### InputGroupAddon — `src/components/ui/input-group.tsx`
+
+Props:
+
+- `align?: "inline-start" | "inline-end" | "block-start" | "block-end" | null | undefined`
+
+Variants — `align`: 'inline-start', 'inline-end', 'block-start', 'block-end'
+
+### InputGroupButton — `src/components/ui/input-group.tsx`
+
+Props:
+
+- `size?: "sm" | "xs" | "icon-xs" | "icon-sm" | null | undefined`
+- `type?: "button" | "submit" | "reset" | undefined`
+- `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
+
+Variants — `size`: xs, sm, 'icon-xs', 'icon-sm'
+
+### InputGroupInput — `src/components/ui/input-group.tsx`
+
+### InputGroupText — `src/components/ui/input-group.tsx`
+
+### InputGroupTextarea — `src/components/ui/input-group.tsx`
 
 ### InputOTP — `src/components/ui/input-otp.tsx`
 
@@ -3587,19 +2071,111 @@ Props:
 
 ### Input — `src/components/ui/input.tsx`
 
+### Item — `src/components/ui/item.tsx`
+
+Props:
+
+- `size?: "default" | "sm" | "xs" | null | undefined`
+- `variant?: "default" | "muted" | "outline" | null | undefined`
+
+Variants — `variant`: default, outline, muted
+
+Variants — `size`: default, sm, xs
+
+### ItemActions — `src/components/ui/item.tsx`
+
+### ItemContent — `src/components/ui/item.tsx`
+
+### ItemDescription — `src/components/ui/item.tsx`
+
+### ItemFooter — `src/components/ui/item.tsx`
+
+### ItemGroup — `src/components/ui/item.tsx`
+
+### ItemHeader — `src/components/ui/item.tsx`
+
+### ItemMedia — `src/components/ui/item.tsx`
+
+Props:
+
+- `variant?: "default" | "image" | "icon" | null | undefined`
+
+Variants — `variant`: default, icon, image
+
+### ItemSeparator — `src/components/ui/item.tsx`
+
+### ItemTitle — `src/components/ui/item.tsx`
+
+### Kbd — `src/components/ui/kbd.tsx`
+
+### KbdGroup — `src/components/ui/kbd.tsx`
+
 ### Label — `src/components/ui/label.tsx`
 
 ### Marker — `src/components/ui/marker.tsx`
 
 Props:
 
-- `variant?: "separator" | "default" | "border" | null | undefined`
+- `variant?: "default" | "separator" | "border" | null | undefined`
 
 Variants — `variant`: default, separator, border
 
 ### MarkerContent — `src/components/ui/marker.tsx`
 
 ### MarkerIcon — `src/components/ui/marker.tsx`
+
+### Menubar — `src/components/ui/menubar.tsx`
+
+### MenubarCheckboxItem — `src/components/ui/menubar.tsx`
+
+Props:
+
+- `inset?: boolean | undefined`
+
+### MenubarContent — `src/components/ui/menubar.tsx`
+
+### MenubarGroup — `src/components/ui/menubar.tsx`
+
+### MenubarItem — `src/components/ui/menubar.tsx`
+
+Props:
+
+- `inset?: boolean | undefined`
+- `variant?: "default" | "destructive" | null | undefined`
+
+### MenubarLabel — `src/components/ui/menubar.tsx`
+
+Props:
+
+- `inset?: boolean | undefined`
+
+### MenubarMenu — `src/components/ui/menubar.tsx`
+
+### MenubarPortal — `src/components/ui/menubar.tsx`
+
+### MenubarRadioGroup — `src/components/ui/menubar.tsx`
+
+### MenubarRadioItem — `src/components/ui/menubar.tsx`
+
+Props:
+
+- `inset?: boolean | undefined`
+
+### MenubarSeparator — `src/components/ui/menubar.tsx`
+
+### MenubarShortcut — `src/components/ui/menubar.tsx`
+
+### MenubarSub — `src/components/ui/menubar.tsx`
+
+### MenubarSubContent — `src/components/ui/menubar.tsx`
+
+### MenubarSubTrigger — `src/components/ui/menubar.tsx`
+
+Props:
+
+- `inset?: boolean | undefined`
+
+### MenubarTrigger — `src/components/ui/menubar.tsx`
 
 ### MessageScroller — `src/components/ui/message-scroller.tsx`
 
@@ -3608,8 +2184,8 @@ Variants — `variant`: default, separator, border
 Props:
 
 - `label: string`
-- `size?: "icon" | "xs" | "sm" | "lg" | "default" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
-- `variant?: "link" | "secondary" | "default" | "outline" | "ghost" | "destructive" | null | undefined`
+- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
 
 ### MessageScrollerContent — `src/components/ui/message-scroller.tsx`
 
@@ -3635,6 +2211,32 @@ Props:
 
 ### MessageHeader — `src/components/ui/message.tsx`
 
+### NativeSelect — `src/components/ui/native-select.tsx`
+
+Props:
+
+- `size?: "default" | "sm" | undefined`
+
+### NativeSelectOptGroup — `src/components/ui/native-select.tsx`
+
+### NativeSelectOption — `src/components/ui/native-select.tsx`
+
+### NavigationMenu — `src/components/ui/navigation-menu.tsx`
+
+### NavigationMenuContent — `src/components/ui/navigation-menu.tsx`
+
+### NavigationMenuIndicator — `src/components/ui/navigation-menu.tsx`
+
+### NavigationMenuItem — `src/components/ui/navigation-menu.tsx`
+
+### NavigationMenuLink — `src/components/ui/navigation-menu.tsx`
+
+### NavigationMenuList — `src/components/ui/navigation-menu.tsx`
+
+### NavigationMenuPositioner — `src/components/ui/navigation-menu.tsx`
+
+### NavigationMenuTrigger — `src/components/ui/navigation-menu.tsx`
+
 ### Pagination — `src/components/ui/pagination.tsx`
 
 ### PaginationContent — `src/components/ui/pagination.tsx`
@@ -3648,14 +2250,14 @@ Props:
 Props:
 
 - `isActive?: boolean | undefined`
-- `size?: "icon" | "xs" | "sm" | "lg" | "default" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 
 ### PaginationNext — `src/components/ui/pagination.tsx`
 
 Props:
 
 - `isActive?: boolean | undefined`
-- `size?: "icon" | "xs" | "sm" | "lg" | "default" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 - `text: string`
 
 ### PaginationPrevious — `src/components/ui/pagination.tsx`
@@ -3663,12 +2265,48 @@ Props:
 Props:
 
 - `isActive?: boolean | undefined`
-- `size?: "icon" | "xs" | "sm" | "lg" | "default" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 - `text: string`
+
+### Popover — `src/components/ui/popover.tsx`
+
+### PopoverContent — `src/components/ui/popover.tsx`
+
+### PopoverDescription — `src/components/ui/popover.tsx`
+
+### PopoverHeader — `src/components/ui/popover.tsx`
+
+### PopoverTitle — `src/components/ui/popover.tsx`
+
+### PopoverTrigger — `src/components/ui/popover.tsx`
+
+### Progress — `src/components/ui/progress.tsx`
+
+### ProgressIndicator — `src/components/ui/progress.tsx`
+
+### ProgressLabel — `src/components/ui/progress.tsx`
+
+### ProgressTrack — `src/components/ui/progress.tsx`
+
+### ProgressValue — `src/components/ui/progress.tsx`
 
 ### RadioGroup — `src/components/ui/radio-group.tsx`
 
 ### RadioGroupItem — `src/components/ui/radio-group.tsx`
+
+### ResizableHandle — `src/components/ui/resizable.tsx`
+
+Props:
+
+- `withHandle?: boolean | undefined`
+
+### ResizablePanel — `src/components/ui/resizable.tsx`
+
+### ResizablePanelGroup — `src/components/ui/resizable.tsx`
+
+### ScrollArea — `src/components/ui/scroll-area.tsx`
+
+### ScrollBar — `src/components/ui/scroll-area.tsx`
 
 ### Select — `src/components/ui/select.tsx`
 
@@ -3690,9 +2328,11 @@ Props:
 
 Props:
 
-- `size?: "sm" | "default" | undefined`
+- `size?: "default" | "sm" | undefined`
 
 ### SelectValue — `src/components/ui/select.tsx`
+
+### Separator — `src/components/ui/separator.tsx`
 
 ### Sheet — `src/components/ui/sheet.tsx`
 
@@ -3704,7 +2344,7 @@ Props:
 
 - `closeLabel?: string | undefined`
 - `showCloseButton?: boolean | undefined`
-- `side?: "bottom" | "top" | "left" | "right" | undefined`
+- `side?: "top" | "right" | "bottom" | "left" | undefined`
 
 ### SheetDescription — `src/components/ui/sheet.tsx`
 
@@ -3716,7 +2356,106 @@ Props:
 
 ### SheetTrigger — `src/components/ui/sheet.tsx`
 
+### Sidebar — `src/components/ui/sidebar.tsx`
+
+Props:
+
+- `collapsible?: "none" | "icon" | "offcanvas" | undefined`
+- `side?: "right" | "left" | undefined`
+- `variant?: "sidebar" | "floating" | "inset" | undefined`
+
+### SidebarContent — `src/components/ui/sidebar.tsx`
+
+### SidebarFooter — `src/components/ui/sidebar.tsx`
+
+### SidebarGroup — `src/components/ui/sidebar.tsx`
+
+### SidebarGroupAction — `src/components/ui/sidebar.tsx`
+
+### SidebarGroupContent — `src/components/ui/sidebar.tsx`
+
+### SidebarGroupLabel — `src/components/ui/sidebar.tsx`
+
+### SidebarHeader — `src/components/ui/sidebar.tsx`
+
+### SidebarInput — `src/components/ui/sidebar.tsx`
+
+### SidebarInset — `src/components/ui/sidebar.tsx`
+
+### SidebarMenu — `src/components/ui/sidebar.tsx`
+
+### SidebarMenuAction — `src/components/ui/sidebar.tsx`
+
+Props:
+
+- `showOnHover?: boolean | undefined`
+
+### SidebarMenuBadge — `src/components/ui/sidebar.tsx`
+
+### SidebarMenuButton — `src/components/ui/sidebar.tsx`
+
+Props:
+
+- `isActive?: boolean | undefined`
+- `size?: "default" | "sm" | "lg" | null | undefined`
+- `tooltip?: string | (TooltipPopupProps & Pick<TooltipPositionerProps, "align" | "side" | "sideOffset" | "alignOffset">) | undefined`
+- `variant?: "default" | "outline" | null | undefined`
+
+Variants — `variant`: default, outline
+
+Variants — `size`: default, sm, lg
+
+### SidebarMenuItem — `src/components/ui/sidebar.tsx`
+
+### SidebarMenuSkeleton — `src/components/ui/sidebar.tsx`
+
+Props:
+
+- `showIcon?: boolean | undefined`
+
+### SidebarMenuSub — `src/components/ui/sidebar.tsx`
+
+### SidebarMenuSubButton — `src/components/ui/sidebar.tsx`
+
+Props:
+
+- `isActive?: boolean | undefined`
+- `size?: "sm" | "md" | undefined`
+
+### SidebarMenuSubItem — `src/components/ui/sidebar.tsx`
+
+### SidebarProvider — `src/components/ui/sidebar.tsx`
+
+Props:
+
+- `defaultOpen?: boolean | undefined`
+- `onOpenChange?: ((open: boolean) => void) | undefined`
+- `open?: boolean | undefined`
+
+### SidebarRail — `src/components/ui/sidebar.tsx`
+
+### SidebarSeparator — `src/components/ui/sidebar.tsx`
+
+### SidebarTrigger — `src/components/ui/sidebar.tsx`
+
+Props:
+
+- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
+
 ### Skeleton — `src/components/ui/skeleton.tsx`
+
+### Slider — `src/components/ui/slider.tsx`
+
+### Toaster — `src/components/ui/sonner.tsx`
+
+### Spinner — `src/components/ui/spinner.tsx`
+
+### Switch — `src/components/ui/switch.tsx`
+
+Props:
+
+- `size?: "default" | "sm" | undefined`
 
 ### Table — `src/components/ui/table.tsx`
 
@@ -3734,15 +2473,55 @@ Props:
 
 ### TableRow — `src/components/ui/table.tsx`
 
-### Textarea — `src/components/ui/textarea.tsx`
+### Tabs — `src/components/ui/tabs.tsx`
 
-### NotFound — `src/components/untitled-ui/not-found.tsx`
+### TabsContent — `src/components/ui/tabs.tsx`
 
-### UntitledUiRouterProvider — `src/components/untitled-ui/router-provider.tsx`
+### TabsList — `src/components/ui/tabs.tsx`
 
 Props:
 
-- `children: ReactNode`
+- `variant?: "default" | "line" | null | undefined`
+
+Variants — `variant`: default, line
+
+### TabsTrigger — `src/components/ui/tabs.tsx`
+
+### Textarea — `src/components/ui/textarea.tsx`
+
+### ToggleGroup — `src/components/ui/toggle-group.tsx`
+
+Props:
+
+- `size?: "default" | "sm" | "lg" | null | undefined`
+- `spacing?: number | undefined`
+- `variant?: "default" | "outline" | null | undefined`
+
+### ToggleGroupItem — `src/components/ui/toggle-group.tsx`
+
+Props:
+
+- `size?: "default" | "sm" | "lg" | null | undefined`
+- `variant?: "default" | "outline" | null | undefined`
+
+### Toggle — `src/components/ui/toggle.tsx`
+
+Props:
+
+- `size?: "default" | "sm" | "lg" | null | undefined`
+- `variant?: "default" | "outline" | null | undefined`
+
+Variants — `variant`: default, outline
+
+Variants — `size`: default, sm, lg
+
+### Tooltip — `src/components/ui/tooltip.tsx`
+
+### TooltipContent — `src/components/ui/tooltip.tsx`
+
+### TooltipProvider — `src/components/ui/tooltip.tsx`
+
+### TooltipTrigger — `src/components/ui/tooltip.tsx`
 
 ## Layout compositions
 
@@ -3755,6 +2534,7 @@ Establishes the Rhea token scope and shared page width for a route.
 Props:
 
 - `children: ReactNode`
+- `fill?: boolean | undefined`
 - `width?: ContainerWidth | undefined`
 
 Defaults:
@@ -3794,7 +2574,7 @@ and search/filter controls.
 Props:
 
 - `actions?: ReactNode`
-- `align?: "start" | "center" | undefined`
+- `align?: "center" | "start" | undefined`
 - `breadcrumb?: ReactNode`
 - `children?: ReactNode`
 - `description?: ReactNode`
@@ -3847,13 +2627,13 @@ Primitives: CandidateAccountShell, CandidateShell, AccountShell, EmployerCompany
 
 The email job-alert subscribe surfaces — dark band, inline form, and floating prompt — over one subscribe contract.
 
-Primitives: AlertsBand, AlertSignupForm, JobAlertFloatingPrompt
+Primitives: AlertsBand, AlertSignupForm, JobAlertFloatingPrompt, Card, Field, FieldLabel, FieldDescription, FieldError, InputGroup, ButtonGroup, Button, Spinner
 
 ### Auth page — `docs/patterns/auth-page.md`
 
 The centered single-column auth shell — mark, display heading, form, OR divider, social buttons.
 
-Primitives: AuthCard, Field, FormError, AuthDivider, Button, Input, RadioGroup, InputOTP
+Primitives: AuthCard, Field, FieldLabel, Input, FieldError, FieldSeparator, Button, RadioGroup, InputOTP
 
 ### Board card — `docs/patterns/board-card.md`
 
@@ -3889,13 +2669,13 @@ Primitives: Empty, JobsNotFound, SalaryEmptyState
 
 The success / error / pending message tied to a form action, announced to assistive tech.
 
-Primitives: FormError
+Primitives: Alert, AlertDescription, FieldError, FieldDescription, Spinner
 
 ### Form page — `docs/patterns/form-page.md`
 
 A page header, titled field sections, a field grid, and a submit with status — the shape of every data-entry surface.
 
-Primitives: Input, Select, Label, Button, Checkbox, CandidateActionFeedback
+Primitives: Card, Field, FieldSet, FieldLegend, FieldGroup, FieldLabel, FieldDescription, FieldError, Input, Select, Textarea, Checkbox, Button, Alert
 
 ### Listing page — `docs/patterns/listing-page.md`
 
@@ -3919,7 +2699,7 @@ Primitives: MessagingLayout, MessagingDock, Message, Bubble, Marker, MessageScro
 
 The in-flight treatment for route transitions, master-detail reads, and submitting actions.
 
-Primitives: PublicContentPending, Skeleton, Button
+Primitives: PublicContentPending, Skeleton, Spinner, Button
 
 ### Results header — `docs/patterns/results-header.md`
 
@@ -3937,7 +2717,7 @@ Primitives: SearchResultsLayout, SearchResultsList, SearchResultDetail, SearchRe
 
 A titled section row with an optional trailing "view all / see all" link.
 
-Primitives: Link, Button
+Primitives: PageSection, Link, Button
 
 ### Site header — `docs/patterns/site-header.md`
 

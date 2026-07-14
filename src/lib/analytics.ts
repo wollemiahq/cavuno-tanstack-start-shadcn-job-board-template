@@ -10,13 +10,13 @@
 declare global {
   interface Window {
     Tinybird?: {
-      trackEvent: (name: string, payload: Record<string, unknown>) => void
-    }
+      trackEvent: (name: string, payload: Record<string, unknown>) => void;
+    };
   }
 }
 
 /** Tinybird events API behind the first-party `/t` proxy (hosted parity). */
-export const TINYBIRD_API_HOST = 'https://api.us-east.aws.tinybird.co'
+export const TINYBIRD_API_HOST = 'https://api.us-east.aws.tinybird.co';
 
 /**
  * Map a `/t/*` request URL onto the Tinybird API, preserving the path
@@ -24,8 +24,8 @@ export const TINYBIRD_API_HOST = 'https://api.us-east.aws.tinybird.co'
  * is testable without a server.
  */
 export function tinybirdProxyTarget(url: URL): string {
-  const path = url.pathname.replace(/^\/t/, '')
-  return `${TINYBIRD_API_HOST}${path}${url.search}`
+  const path = url.pathname.replace(/^\/t/, '');
+  return `${TINYBIRD_API_HOST}${path}${url.search}`;
 }
 
 /**
@@ -38,15 +38,15 @@ export function trackJobApplyClick({
   jobId,
   companySlug,
 }: {
-  jobId: string
-  companySlug?: string
+  jobId: string;
+  companySlug?: string;
 }): void {
   try {
     window.Tinybird?.trackEvent('job_apply_click', {
       job_id: jobId,
       ...(companySlug ? { company_slug: companySlug } : {}),
-    })
+    });
   } catch (error) {
-    console.warn('[board-analytics] Failed to record apply click', error)
+    console.warn('[board-analytics] Failed to record apply click', error);
   }
 }

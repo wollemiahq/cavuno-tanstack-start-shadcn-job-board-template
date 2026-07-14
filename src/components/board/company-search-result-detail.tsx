@@ -1,13 +1,13 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from '@tanstack/react-router';
 
-import type { CompanyDetailVM } from "@/board/company-view-model";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge, badgeVariants } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import { Prose } from "@/components/prose";
-import { Text } from "@/components/text";
-import { initialsOf } from "@/lib/initials";
-import { cn } from "@/lib/utils";
+import type { CompanyDetailVM } from '@/board/company-view-model';
+import { Prose } from '@/components/prose';
+import { Text } from '@/components/text';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge, badgeVariants } from '@/components/ui/badge';
+import { buttonVariants } from '@/components/ui/button';
+import { initialsOf } from '@/lib/initials';
+import { cn } from '@/lib/utils';
 
 export function CompanySearchResultDetail({
   vm,
@@ -21,7 +21,7 @@ export function CompanySearchResultDetail({
       {interactive ? (
         <div
           data-slot="company-detail-actions"
-          className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-border bg-background/95 p-4 backdrop-blur"
+          className="border-border bg-background/95 sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b p-4 backdrop-blur"
         >
           <a href={vm.detailHref} className={buttonVariants()}>
             {vm.viewCompanyLabel}
@@ -30,7 +30,7 @@ export function CompanySearchResultDetail({
             <Link
               to="/companies/$companySlug/jobs"
               params={{ companySlug: vm.companySlug }}
-              className={buttonVariants({ variant: "outline" })}
+              className={buttonVariants({ variant: 'outline' })}
             >
               {vm.viewJobsLabel}
             </Link>
@@ -40,7 +40,7 @@ export function CompanySearchResultDetail({
               href={vm.websiteHref}
               target="_blank"
               rel="noreferrer"
-              className={buttonVariants({ variant: "outline" })}
+              className={buttonVariants({ variant: 'outline' })}
             >
               {vm.visitWebsiteLabel}
             </a>
@@ -80,7 +80,7 @@ export function CompanySearchResultDetail({
 
         {vm.marketChips.length > 0 ? (
           <section aria-label={vm.marketsHeading} className="space-y-2">
-            <h3 className="text-sm font-semibold text-foreground">
+            <h3 className="text-foreground text-sm font-semibold">
               {vm.marketsHeading}
             </h3>
             <div className="flex flex-wrap gap-1.5">
@@ -89,18 +89,18 @@ export function CompanySearchResultDetail({
                   <a
                     key={market.key}
                     href={market.href}
-                    className={badgeVariants({ variant: "outline" })}
+                    className={badgeVariants({ variant: 'outline' })}
                   >
                     {market.name}
                   </a>
                 ) : (
                   <span
                     key={market.key}
-                    className={badgeVariants({ variant: "outline" })}
+                    className={badgeVariants({ variant: 'outline' })}
                   >
                     {market.name}
                   </span>
-                )
+                ),
               )}
             </div>
           </section>
@@ -108,7 +108,7 @@ export function CompanySearchResultDetail({
 
         {vm.websiteHref && vm.websiteLabel ? (
           <dl className="grid gap-2 sm:grid-cols-[max-content_1fr] sm:gap-x-6">
-            <dt className="text-sm font-medium text-muted-foreground">
+            <dt className="text-muted-foreground text-sm font-medium">
               {vm.websiteHeading}
             </dt>
             <dd>
@@ -118,14 +118,14 @@ export function CompanySearchResultDetail({
                   target="_blank"
                   rel="noreferrer"
                   className={cn(
-                    badgeVariants({ variant: "link" }),
-                    "h-auto px-0"
+                    badgeVariants({ variant: 'link' }),
+                    'h-auto px-0',
                   )}
                 >
                   {vm.websiteLabel}
                 </a>
               ) : (
-                <span className="text-sm text-foreground">
+                <span className="text-foreground text-sm">
                   {vm.websiteLabel}
                 </span>
               )}

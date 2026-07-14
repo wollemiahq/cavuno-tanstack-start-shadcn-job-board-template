@@ -8,31 +8,31 @@
  * Workers), including module scope — but route through this helper so
  * validation fails loud and in one place.
  */
-import { env } from 'cloudflare:workers'
+import { env } from 'cloudflare:workers';
 
 export interface ServerEnv {
   /** Board API base, e.g. https://api.cavuno.com (local dev: http://localhost:3000/api). */
-  apiUrl: string
+  apiUrl: string;
   /** Board identifier — the deployment's pk_… publishable key. */
-  board: string
+  board: string;
   /**
    * Tinybird tracker token (publishable) — enables the flock analytics
    * script (cutover runbook P2). Optional: unset ⇒ no script tag, no
    * analytics; everything else works.
    */
-  trackerToken: string | null
+  trackerToken: string | null;
 }
 
 export function getServerEnv(): ServerEnv {
-  const raw = env as Record<string, unknown>
-  const apiUrl = raw.CAVUNO_API_URL
-  const board = raw.CAVUNO_BOARD
-  const trackerToken = raw.CAVUNO_TRACKER_TOKEN
+  const raw = env as Record<string, unknown>;
+  const apiUrl = raw.CAVUNO_API_URL;
+  const board = raw.CAVUNO_BOARD;
+  const trackerToken = raw.CAVUNO_TRACKER_TOKEN;
   if (typeof apiUrl !== 'string' || apiUrl.length === 0) {
-    throw new Error('CAVUNO_API_URL is not set (wrangler vars / .dev.vars)')
+    throw new Error('CAVUNO_API_URL is not set (wrangler vars / .dev.vars)');
   }
   if (typeof board !== 'string' || board.length === 0) {
-    throw new Error('CAVUNO_BOARD is not set (wrangler vars / .dev.vars)')
+    throw new Error('CAVUNO_BOARD is not set (wrangler vars / .dev.vars)');
   }
   return {
     apiUrl,
@@ -41,5 +41,5 @@ export function getServerEnv(): ServerEnv {
       typeof trackerToken === 'string' && trackerToken.length > 0
         ? trackerToken
         : null,
-  }
+  };
 }

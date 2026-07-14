@@ -1,3 +1,9 @@
+import {
+  isNotFound,
+  type ApplicationsListQuery,
+  type ApplyBody,
+  type UpdateApplicationFactsBody,
+} from '@cavuno/board';
 /**
  * Authenticated server functions — candidate applications (ADR-0054).
  * Native apply lives on `board.jobs.*` (apply / uploadApplicationResume /
@@ -5,38 +11,32 @@
  * `board.me.applications.*`. Same session-bearer + board-access pattern as the
  * `/account` dashboard.
  */
-import { createServerFn } from '@tanstack/react-start'
-import {
-  isNotFound,
-  type ApplicationsListQuery,
-  type ApplyBody,
-  type UpdateApplicationFactsBody,
-} from '@cavuno/board'
+import { createServerFn } from '@tanstack/react-start';
 
-import { getBoard } from '../lib/board'
+import { getBoard } from '../lib/board';
 import {
   boardAccessMiddleware,
   type BoardAccessContext,
-} from '../lib/board-access-middleware'
-import { gatedRead } from './board-access'
+} from '../lib/board-access-middleware';
 import {
   requireSessionMiddleware,
   type SessionContext,
-} from '../lib/session-middleware'
+} from '../lib/session-middleware';
+import { gatedRead } from './board-access';
 
 /** Bearer + board-access grant for one gated `/me/*` or authed apply call. */
 function authedHeaders(
-  context: SessionContext & BoardAccessContext
+  context: SessionContext & BoardAccessContext,
 ): Record<string, string> {
-  return { ...context.authHeaders, ...context.boardAccessHeaders }
+  return { ...context.authHeaders, ...context.boardAccessHeaders };
 }
 
 async function requireVerifiedBoardUser(headers: Record<string, string>) {
-  const me = await getBoard().me.retrieve(undefined, { headers })
+  const me = await getBoard().me.retrieve(undefined, { headers });
   if (!me.emailVerified) {
-    throw new Error('EMAIL_UNVERIFIED')
+    throw new Error('EMAIL_UNVERIFIED');
   }
-  return me
+  return me;
 }
 
 /** The candidate's applications across the board (newest first). */
@@ -45,11 +45,11 @@ export const getApplications = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async () => {
-      const headers = authedHeaders(context)
-      await requireVerifiedBoardUser(headers)
-      return getBoard().me.applications.list(data, { headers })
-    })
-  )
+      const headers = authedHeaders(context);
+      await requireVerifiedBoardUser(headers);
+      return getBoard().me.applications.list(data, { headers });
+    }),
+  );
 
 /** One application in detail (by application id). */
 export const getApplication = createServerFn({ method: 'GET' })
@@ -57,33 +57,33 @@ export const getApplication = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async () => {
-      const headers = authedHeaders(context)
-      await requireVerifiedBoardUser(headers)
-      return getBoard().me.applications.retrieve(data.id, { headers })
-    })
-  )
+      const headers = authedHeaders(context);
+      await requireVerifiedBoardUser(headers);
+      return getBoard().me.applications.retrieve(data.id, { headers });
+    }),
+  );
 
 /** Edit the candidate-supplied facts (cover note / name) on an application. */
 export const updateApplicationFacts = createServerFn({ method: 'POST' })
   .validator((input: { id: string; body: UpdateApplicationFactsBody }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
     return getBoard().me.applications.updateFacts(data.id, data.body, {
       headers,
-    })
-  })
+    });
+  });
 
 export const withdrawApplication = createServerFn({ method: 'POST' })
   .validator((input: { id: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    await getBoard().me.applications.withdraw(data.id, { headers })
-    return { ok: true as const }
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    await getBoard().me.applications.withdraw(data.id, { headers });
+    return { ok: true as const };
+  });
 
 /** My application to a specific job — null when I haven't applied yet. */
 export const myApplicationForJob = createServerFn({ method: 'GET' })
@@ -91,51 +91,51 @@ export const myApplicationForJob = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async () => {
-      const headers = authedHeaders(context)
-      await requireVerifiedBoardUser(headers)
+      const headers = authedHeaders(context);
+      await requireVerifiedBoardUser(headers);
       try {
-        return await getBoard().jobs.myApplication(data.jobSlug, { headers })
+        return await getBoard().jobs.myApplication(data.jobSlug, { headers });
       } catch (error) {
-        if (isNotFound(error)) return null
-        throw error
+        if (isNotFound(error)) return null;
+        throw error;
       }
-    })
-  )
+    }),
+  );
 
 /** Native apply — creates (or returns the existing) application for a job. */
 export const applyToJob = createServerFn({ method: 'POST' })
   .validator((input: { jobSlug: string; body?: ApplyBody }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    return getBoard().jobs.apply(data.jobSlug, data.body, { headers })
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().jobs.apply(data.jobSlug, data.body, { headers });
+  });
 
 /** Attach a resume file to an application — client posts FormData (`resume`). */
 export const uploadApplicationResume = createServerFn({ method: 'POST' })
   .validator((data) => {
     if (!(data instanceof FormData)) {
-      throw new Error('Expected FormData')
+      throw new Error('Expected FormData');
     }
-    const jobSlug = data.get('jobSlug')
+    const jobSlug = data.get('jobSlug');
     if (typeof jobSlug !== 'string' || !jobSlug) {
-      throw new Error('Expected a jobSlug')
+      throw new Error('Expected a jobSlug');
     }
-    const file = data.get('resume')
+    const file = data.get('resume');
     if (!(file instanceof File)) {
-      throw new Error('Expected a resume file')
+      throw new Error('Expected a resume file');
     }
-    return { jobSlug, file }
+    return { jobSlug, file };
   })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
     return getBoard().jobs.uploadApplicationResume(
       data.jobSlug,
       data.file,
       undefined,
-      { headers }
-    )
-  })
+      { headers },
+    );
+  });

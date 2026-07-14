@@ -28,7 +28,8 @@ need different grounding is a platform operation, not a code edit.
 - `src/theme.css` — the canonical, shadcn CLI-owned theme. Edit it
   directly or with `shadcn apply`, then run `pnpm run gen:theme`; never edit
   `src/theme/resolved.ts` (generated).
-- `src/styles.css` — layout/radius/utility layer over the tokens.
+- `src/styles.css` — global resets, app-shell defaults, and shared layout
+  utilities. Theme tokens and radii live in `src/theme.css`.
 - `src/routes/*.tsx` — page composition (markup, layout, copy). Keep
   loaders/server-function calls intact.
 - `messages/**` — UI copy catalogs (Paraglide). Run
@@ -71,13 +72,9 @@ need different grounding is a platform operation, not a code edit.
    `src/components/ui/`; merge classes with `cn` from `@/lib/utils`.
    App code consumes their canonical public APIs, never Base UI internals or
    data attributes, so adopters may swap in their own Base UI-backed shadcn
-   source. Radix is an explicit migration, not a drop-in swap. Legacy Untitled
-   UI may only shrink: never add its imports, icons, or tokens.
-   A portaled Rhea primitive must put `.rhea-theme` on its owned portal root,
-   because Base UI portals render under `body`, outside a route-local theme
-   scope. `components/ui/sheet.tsx` is the reference implementation. Do not
-   add another portaled primitive until its owned wrapper applies the same
-   explicit scope or the CAV-511 contraction owns Rhea globally.
+   source. Radix is an explicit migration, not a drop-in swap. The inherited
+   Untitled UI layer has been removed: never reintroduce its component paths,
+   icons, CSS utilities, or tokens.
 7. **Board URL paths come from `@cavuno/board/paths`** (`jobDetailPath`,
    `jobsCategoryPath`, `jobsSkillPath`, `companyPath`, `companySalaryPath`,
    …) — never string-build a `/companies/…/jobs/…` or `/jobs/…` path.
@@ -118,9 +115,9 @@ do's-and-don'ts live in **`DESIGN.md`** (generated from `src/theme.css`
 Primitives, in order: use or add current shadcn Rhea components under
 `src/components/ui/`, backed by Base UI and styled from `src/theme.css`.
 Route and pattern code depends only on canonical shadcn component props.
-Inherited Untitled UI under `src/components/base/` and
-`src/components/application/` is compatibility code; the ratchet permits
-removal, never growth. New dependencies cannot be added at build time, so
+There is no parallel component or token system: `src/components/base/`,
+`src/components/application/`, and the Untitled UI CSS compatibility layer are
+not part of the release. New dependencies cannot be added at build time, so
 compose from what is installed.
 
 ## Framework skills

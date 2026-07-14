@@ -1,3 +1,10 @@
+import { isNotFound } from '@cavuno/board';
+import { companyIntro } from '@cavuno/board/format';
+import {
+  buildJobBreadcrumbs,
+  createJobPostingJsonLd,
+  listingJsonLd,
+} from '@cavuno/board/seo';
 /**
  * Job detail — hosted-parity URL (/companies/:companySlug/jobs/:jobSlug),
  * rendered by the @cavuno registry `job-detail` block (Wave D, ADR-0058):
@@ -7,26 +14,18 @@
  * assembly. The similar-jobs rail degrades to empty on a search outage,
  * matching the hosted page (the rail is never fatal to the render).
  */
-import { createFileRoute, notFound, useLocation, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  notFound,
+  useLocation,
+  useRouter,
+} from '@tanstack/react-router';
+import { Search } from 'lucide-react';
 
-import { isNotFound } from "@cavuno/board";
-import { companyIntro } from "@cavuno/board/format";
-import { buildJobBreadcrumbs, createJobPostingJsonLd, listingJsonLd } from "@cavuno/board/seo";
-
-import { toJobDetailVM } from "@/board/job-detail-view-model";
-import { AlertSignupForm } from "@/components/board/alert-signup-form";
-import { ApplyButton } from "@/components/board/apply-button";
-import { EmptyState } from "@/components/application/empty-state/empty-state";
-import { SearchLg } from "@untitledui/icons";
-import { PageBody } from "@/components/board/page-body";
-import { JobDetail } from "@/components/board/job-detail";
-import { JobList } from "@/components/board/job-list";
-import { SaveJobButton } from "@/components/board/save-job-button";
-import { JsonLd } from "@/components/json-ld";
-import { jobAlertDefaultsFromJob } from "../lib/job-alert-defaults";
-import { m } from "../paraglide/messages";
-import { getSessionUser, saveJob } from "../server/account";
-import { applyToJob, myApplicationForJob } from "../server/applications";
+import { jobAlertDefaultsFromJob } from '../lib/job-alert-defaults';
+import { m } from '../paraglide/messages';
+import { getSessionUser, saveJob } from '../server/account';
+import { applyToJob, myApplicationForJob } from '../server/applications';
 import {
   getBoardContext,
   getCompany,
@@ -34,9 +33,24 @@ import {
   getSeoBase,
   getSimilarJobs,
   subscribeJobAlert,
-} from "../server/queries";
+} from '../server/queries';
 
-export const Route = createFileRoute("/companies/$companySlug/jobs/$jobSlug")({
+import { toJobDetailVM } from '@/board/job-detail-view-model';
+import { AlertSignupForm } from '@/components/board/alert-signup-form';
+import { ApplyButton } from '@/components/board/apply-button';
+import { JobDetail } from '@/components/board/job-detail';
+import { JobList } from '@/components/board/job-list';
+import { PageBody } from '@/components/board/page-body';
+import { SaveJobButton } from '@/components/board/save-job-button';
+import { JsonLd } from '@/components/json-ld';
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
+
+export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
   staticData: { fullBleed: true },
   loader: async ({ params }) => {
     try {
@@ -49,11 +63,15 @@ export const Route = createFileRoute("/companies/$companySlug/jobs/$jobSlug")({
         getSimilarJobs({ data: { jobSlug: params.jobSlug } })
           .then((r) => r.data)
           .catch(() => []),
-        getCompany({ data: { companySlug: params.companySlug } }).catch(() => null),
+        getCompany({ data: { companySlug: params.companySlug } }).catch(
+          () => null,
+        ),
         getSeoBase(),
       ]);
       const application = user?.emailVerified
-        ? await myApplicationForJob({ data: { jobSlug: params.jobSlug } }).catch(() => null)
+        ? await myApplicationForJob({
+            data: { jobSlug: params.jobSlug },
+          }).catch(() => null)
         : null;
       return {
         job,
@@ -72,11 +90,13 @@ export const Route = createFileRoute("/companies/$companySlug/jobs/$jobSlug")({
   head: ({ loaderData }) => {
     if (!loaderData) return {};
     const { job, board, seo } = loaderData;
-    const title = job.company?.name ? `${job.title} at ${job.company.name}` : job.title;
+    const title = job.company?.name
+      ? `${job.title} at ${job.company.name}`
+      : job.title;
     const description = job.description
       ? job.description
-          .replace(/<[^>]+>/g, " ")
-          .replace(/\s+/g, " ")
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
           .trim()
           .slice(0, 160)
       : title;
@@ -91,39 +111,40 @@ export const Route = createFileRoute("/companies/$companySlug/jobs/$jobSlug")({
     return {
       meta: [
         { title: `${title} — ${board.name}` },
-        { name: "description", content: description },
-        { property: "og:title", content: title },
-        { property: "og:description", content: description },
-        { property: "og:type", content: "website" },
-        ...(canonical ? [{ property: "og:url", content: canonical }] : []),
+        { name: 'description', content: description },
+        { property: 'og:title', content: title },
+        { property: 'og:description', content: description },
+        { property: 'og:type', content: 'website' },
+        ...(canonical ? [{ property: 'og:url', content: canonical }] : []),
         ...(ogImage
           ? [
-              { property: "og:image", content: ogImage },
-              { name: "twitter:card", content: "summary_large_image" },
-              { name: "twitter:image", content: ogImage },
+              { property: 'og:image', content: ogImage },
+              { name: 'twitter:card', content: 'summary_large_image' },
+              { name: 'twitter:image', content: ogImage },
             ]
           : []),
       ],
-      links: canonical ? [{ rel: "canonical", href: canonical }] : [],
+      links: canonical ? [{ rel: 'canonical', href: canonical }] : [],
     };
   },
   component: JobDetailPage,
   notFoundComponent: () => (
     <PageBody>
-      <EmptyState size="sm" className="py-12">
-        <EmptyState.Header>
-          <EmptyState.FeaturedIcon icon={SearchLg} color="gray" theme="modern" />
-        </EmptyState.Header>
-        <EmptyState.Content>
-          <EmptyState.Title>{m.companyJobDetail_notFoundText()}</EmptyState.Title>
-        </EmptyState.Content>
-      </EmptyState>
+      <Empty className="py-12">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Search />
+          </EmptyMedia>
+          <EmptyTitle>{m.companyJobDetail_notFoundText()}</EmptyTitle>
+        </EmptyHeader>
+      </Empty>
     </PageBody>
   ),
 });
 
 function JobDetailPage() {
-  const { job, board, user, similar, company, seo, alreadyApplied } = Route.useLoaderData();
+  const { job, board, user, similar, company, seo, alreadyApplied } =
+    Route.useLoaderData();
   const { companySlug } = Route.useParams();
   const defaults = jobAlertDefaultsFromJob(job);
   const router = useRouter();
@@ -139,7 +160,7 @@ function JobDetailPage() {
   );
 
   const jsonLd = [
-    createJobPostingJsonLd({ job, board, shareUrl: job.links.public ?? "" }),
+    createJobPostingJsonLd({ job, board, shareUrl: job.links.public ?? '' }),
     ...listingJsonLd({
       origin: seo.origin,
       breadcrumbs: buildJobBreadcrumbs(job, board.language, board.labels),

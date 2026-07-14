@@ -4,6 +4,7 @@ import { ChevronDown, MessageSquare, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 export function MessagingDock({
   open,
@@ -33,13 +34,14 @@ export function MessagingDock({
   conversationHasOwnHeader?: boolean;
 }) {
   return (
-    <div className="rhea-theme fixed right-6 bottom-0 z-50 hidden items-end gap-3 md:flex">
+    <div className="fixed right-6 bottom-0 z-50 hidden items-end gap-3 md:flex">
       {open ? (
         <>
           {conversation ? (
-            <aside
+            <Card
+              role="complementary"
               aria-label={conversationLabel}
-              className="border-border bg-card text-card-foreground flex h-[min(40rem,calc(100dvh-5rem))] w-[28rem] flex-col overflow-hidden rounded-t-xl border border-b-0 shadow-xl"
+              className="border-border h-[min(40rem,calc(100dvh-5rem))] w-[28rem] gap-0 rounded-t-xl rounded-b-none border border-b-0 py-0 shadow-xl ring-0"
             >
               {conversationHasOwnHeader ? (
                 conversation
@@ -62,12 +64,13 @@ export function MessagingDock({
                   <div className="min-h-0 flex-1">{conversation}</div>
                 </>
               )}
-            </aside>
+            </Card>
           ) : null}
 
-          <aside
+          <Card
+            role="complementary"
             aria-label={messagesLabel}
-            className="border-border bg-card text-card-foreground flex h-[min(40rem,calc(100dvh-5rem))] w-80 flex-col overflow-hidden rounded-t-xl border border-b-0 shadow-xl"
+            className="border-border h-[min(40rem,calc(100dvh-5rem))] w-80 gap-0 rounded-t-xl rounded-b-none border border-b-0 py-0 shadow-xl ring-0"
           >
             <header className="border-border flex h-14 shrink-0 items-center gap-3 border-b px-4">
               <MessageSquare className="size-5" aria-hidden="true" />
@@ -84,7 +87,7 @@ export function MessagingDock({
               </Button>
             </header>
             <div className="min-h-0 flex-1">{inbox}</div>
-          </aside>
+          </Card>
         </>
       ) : (
         <Button

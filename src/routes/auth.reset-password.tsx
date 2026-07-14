@@ -1,26 +1,31 @@
 /** Reset-password landing — the route reset emails link to (ADR-0035). */
-import { useState } from "react";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useState } from 'react';
 
-import { AuthCard, Field, FormError } from "../components/auth-form";
-import { m } from "../paraglide/messages";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { resetPassword } from "../server/auth";
+import { createFileRoute, useRouter } from '@tanstack/react-router';
+
+import { AuthCard, Field, FormError } from '../components/auth-form';
 import {
   candidateForgotPasswordHref,
   candidateReturnTo,
   candidateSignInHref,
-} from "../lib/candidate-return-to";
+} from '../lib/candidate-return-to';
+import { m } from '../paraglide/messages';
+import { resetPassword } from '../server/auth';
+
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface ResetSearch {
   token?: string;
   returnTo: string;
 }
 
-export const Route = createFileRoute("/auth/reset-password")({
+export const Route = createFileRoute('/auth/reset-password')({
   validateSearch: (search: Record<string, unknown>): ResetSearch => ({
-    token: typeof search.token === "string" && search.token ? search.token : undefined,
+    token:
+      typeof search.token === 'string' && search.token
+        ? search.token
+        : undefined,
     returnTo: candidateReturnTo(search.returnTo),
   }),
   head: () => ({ meta: [{ title: m.authResetPassword_title() }] }),
@@ -42,7 +47,10 @@ function ResetPasswordPage() {
       >
         <a
           href={candidateForgotPasswordHref(returnTo)}
-          className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}
+          className={cn(
+            buttonVariants({ variant: 'outline', size: 'lg' }),
+            'w-full',
+          )}
         >
           {m.authResetPassword_requestNewLinkLabel()}
         </a>
@@ -58,7 +66,7 @@ function ResetPasswordPage() {
       >
         <a
           href={candidateSignInHref(returnTo)}
-          className={cn(buttonVariants({ size: "lg" }), "w-full")}
+          className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
         >
           {m.authResetPassword_signInLabel()}
         </a>
@@ -77,7 +85,7 @@ function ResetPasswordPage() {
           const form = new FormData(event.currentTarget);
           try {
             const result = await resetPassword({
-              data: { token, password: String(form.get("password")) },
+              data: { token, password: String(form.get('password')) },
             });
             if (result.ok) {
               await router.invalidate();
@@ -101,7 +109,9 @@ function ResetPasswordPage() {
         />
         <FormError message={error} />
         <Button type="submit" size="lg" className="w-full" disabled={pending}>
-          {pending ? m.authResetPassword_updatingLabel() : m.authResetPassword_submitLabel()}
+          {pending
+            ? m.authResetPassword_updatingLabel()
+            : m.authResetPassword_submitLabel()}
         </Button>
       </form>
     </AuthCard>

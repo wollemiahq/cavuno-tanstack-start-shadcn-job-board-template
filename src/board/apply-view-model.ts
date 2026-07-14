@@ -1,3 +1,4 @@
+import { boardCopy } from '#/copy';
 /**
  * Apply-button VIEW-MODEL — the Layer-1b seam for the apply block
  * (ADR-0070 Phase 2). `toApplyButtonVM` is the ONLY place the apply
@@ -14,7 +15,7 @@
  * verify gate) stays sequestered in the SDK.
  */
 import { resolveApplyAction } from '@cavuno/board';
-import { boardCopy } from '#/copy';
+
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 export type { BoardLabelOverrides };

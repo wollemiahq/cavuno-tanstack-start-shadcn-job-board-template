@@ -1,7 +1,7 @@
 ---
 name: Pending / loading
 purpose: The in-flight treatment for route transitions, master-detail reads, and submitting actions.
-primitives: [PublicContentPending, Skeleton, Button]
+primitives: [PublicContentPending, Skeleton, Spinner, Button]
 usedBy: [src/components/board/public-content-pending.tsx, src/components/board/job-search-detail-state.tsx, src/components/board/company-search-detail-state.tsx, src/components/board/talent-search-detail-state.tsx, src/routes/blog.index.tsx, src/routes/salaries.index.tsx, src/routes/post.tsx]
 ---
 
@@ -15,15 +15,16 @@ its actions, or shows a structural `Skeleton` only when no detail has loaded.
 
 ## When to use
 
-- A submitting action (disable + label swap on the `Button`).
+- A submitting action (disable the `Button`, add `Spinner`, and update its label).
 - A route/loader transition that would otherwise show a blank frame — where a
-  skeleton or `LoadingIndicator` belongs.
+  structural `Skeleton` belongs.
 - **When NOT to use** — a resolved empty result; that is an
   [Empty state](empty-state.md).
 
 ## Anatomy
 
-- Action pending: `Button` `isDisabled={status === "pending"}` + a label swap.
+- Action pending: `Button` `disabled={status === "pending"}` + an inline
+  `Spinner` + a label swap.
 - Public route transition: `PublicContentPending`, a non-interactive Page-family
   composition of owned shadcn `Skeleton` blocks.
 - Master-detail first load: a shadcn `Skeleton` matching the detail structure.
@@ -40,6 +41,11 @@ its actions, or shows a structural `Skeleton` only when no detail has loaded.
 The master-detail idiom preserves context whenever possible:
 
 ```tsx
+<Button disabled={pending}>
+  {pending ? <Spinner data-icon="inline-start" /> : null}
+  {pending ? copy.saving : copy.save}
+</Button>
+
 <PublicContentPending label={copy.loadingContent} />
 ```
 
@@ -47,7 +53,7 @@ The master-detail idiom preserves context whenever possible:
 
 | Do                                                                                                                          | Don't                                                                      |
 | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Disable the control and swap its label while an action is in flight.                                                        | Leave a control live during submit.                                        |
+| Disable the control, add an inline `Spinner`, and swap its label while an action is in flight.                             | Leave a control live during submit or use a page loader for one button.    |
 | Preserve stale master-detail content as read-only during replacement.                                                       | Clear a useful detail pane for every selection.                            |
 | Use `PublicContentPending` for blog/salary route transitions and structural `Skeleton` blocks for master-detail first load. | Hand-roll a one-off spinner or make skeleton content interactive.          |
 | Keep a concise loading label available to assistive technology.                                                             | Put visible “Loading…” copy beside a skeleton that already communicates it. |

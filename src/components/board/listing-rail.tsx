@@ -1,4 +1,7 @@
-import { TaxonomyTags, type TaxonomyChip } from "@/components/board/taxonomy-tags";
+import {
+  TaxonomyTags,
+  type TaxonomyChip,
+} from '@/components/board/taxonomy-tags';
 
 /**
  * Listing rail (CAV-511) — the sticky right-hand column of a search/browse
@@ -41,9 +44,11 @@ export function ListingRail({
       {relatedChips.length > 0 ? (
         <section
           aria-label={relatedTitle}
-          className="flex flex-col gap-3 rounded-xl bg-primary p-5 shadow-xs ring-1 ring-secondary_alt"
+          className="bg-card ring-border flex flex-col gap-3 rounded-xl p-5 shadow-xs ring-1"
         >
-          <h2 className="text-sm font-semibold text-secondary">{relatedTitle}</h2>
+          <h2 className="text-foreground text-sm font-semibold">
+            {relatedTitle}
+          </h2>
           <TaxonomyTags chips={relatedChips} size="md" />
         </section>
       ) : null}
@@ -55,6 +60,9 @@ export function ListingRail({
  * Whether the rail has anything to show — drives whether the route hands
  * `PageBody` a `rail` (two-column mode) or lets the results run full width.
  */
-export function railHasContent(adSlot: React.ReactNode, relatedChips: TaxonomyChip[]) {
+export function railHasContent(
+  adSlot: React.ReactNode,
+  relatedChips: TaxonomyChip[],
+) {
   return Boolean(adSlot) || relatedChips.length > 0;
 }

@@ -1,3 +1,9 @@
+import {
+  buildSyncPayload,
+  parseTokens,
+  tokensHash,
+} from './theme-resolved-lib.mjs';
+
 /**
  * `npm run gen:theme` — derive src/theme/resolved.ts from the canonical
  * src/theme.css (ADR-0065 D2). OG routes import the resolved values
@@ -9,22 +15,20 @@
  * platform repo) after a theme change to keep server-rendered surfaces
  * (emails) in step with the repo theme (D3).
  */
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs'
+import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 
-import { buildSyncPayload, parseTokens, tokensHash } from './theme-resolved-lib.mjs'
-
-const css = readFileSync('src/theme.css', 'utf8')
-const parsed = parseTokens(css)
-const hash = tokensHash(css)
+const css = readFileSync('src/theme.css', 'utf8');
+const parsed = parseTokens(css);
+const hash = tokensHash(css);
 
 if (process.argv.includes('--payload')) {
-  const payload = buildSyncPayload(parsed, hash)
-  payload.key = process.env.CAVUNO_BOARD ?? '<pk_…>'
-  console.log(JSON.stringify(payload))
-  process.exit(0)
+  const payload = buildSyncPayload(parsed, hash);
+  payload.key = process.env.CAVUNO_BOARD ?? '<pk_…>';
+  console.log(JSON.stringify(payload));
+  process.exit(0);
 }
 
-mkdirSync('src/theme', { recursive: true })
+mkdirSync('src/theme', { recursive: true });
 writeFileSync(
   'src/theme/resolved.ts',
   `/**
@@ -50,5 +54,7 @@ export const themeTokens: {
   dark: ${JSON.stringify(parsed.dark, null, 2)},
 }
 `,
-)
-console.log(`src/theme/resolved.ts — ${Object.keys(parsed.light).length} light vars, hash ${hash.slice(0, 12)}…`)
+);
+console.log(
+  `src/theme/resolved.ts — ${Object.keys(parsed.light).length} light vars, hash ${hash.slice(0, 12)}…`,
+);

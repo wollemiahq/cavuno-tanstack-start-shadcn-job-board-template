@@ -3,35 +3,49 @@
  * `board.me.applications.*` (list / withdraw). Status is the coarse,
  * Himalayas-grounded candidate view (applied → interviewing → … → archived).
  */
-import { useState } from "react";
+import { useState } from 'react';
 
-import { createFileRoute, isRedirect, Link, redirect, useRouter } from "@tanstack/react-router";
-import type { Application } from "@cavuno/board";
+import {
+  createFileRoute,
+  isRedirect,
+  Link,
+  redirect,
+  useRouter,
+} from '@tanstack/react-router';
+
+import { m } from '../paraglide/messages';
+import { getApplications, withdrawApplication } from '../server/applications';
+import { useCandidateShellContext } from './-candidate-shell-context';
 
 import {
   CandidateActionFeedback,
   type CandidateActionFeedbackState,
-} from "@/components/candidate-action-feedback";
-import { CandidateShell } from "@/components/candidate-shell";
+} from '@/components/candidate-action-feedback';
 import {
   CandidateRouteErrorPage,
   CandidateRoutePendingPage,
-} from "@/components/candidate-route-state";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from '@/components/candidate-route-state';
+import { CandidateShell } from '@/components/candidate-shell';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Empty,
   EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
-} from "@/components/ui/empty";
-import { candidateLoaderError } from "@/lib/candidate-loader-error";
-import { m } from "../paraglide/messages";
-import { getApplications, withdrawApplication } from "../server/applications";
-import { useCandidateShellContext } from "./-candidate-shell-context";
+} from '@/components/ui/empty';
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from '@/components/ui/item';
+import { candidateLoaderError } from '@/lib/candidate-loader-error';
+import type { Application } from '@cavuno/board';
 
-const STATUS_LABEL: Record<Application["status"], () => string> = {
+const STATUS_LABEL: Record<Application['status'], () => string> = {
   applied: m.meApplications_statusApplied,
   interviewing: m.meApplications_statusInterviewing,
   negotiation: m.meApplications_statusNegotiation,
@@ -39,7 +53,7 @@ const STATUS_LABEL: Record<Application["status"], () => string> = {
   archived: m.meApplications_statusArchived,
 };
 
-export const Route = createFileRoute("/me/applications")({
+export const Route = createFileRoute('/me/applications')({
   staticData: { ownsMain: true },
   pendingComponent: CandidateRoutePendingPage,
   errorComponent: CandidateRouteErrorPage,
@@ -49,16 +63,16 @@ export const Route = createFileRoute("/me/applications")({
     } catch (error) {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
-      if (authFailure === "email-unverified") {
+      if (authFailure === 'email-unverified') {
         throw redirect({
-          to: "/auth/verify-email-required",
-          search: { returnTo: "/me/applications" },
+          to: '/auth/verify-email-required',
+          search: { returnTo: '/me/applications' },
         });
       }
-      if (authFailure === "unauthenticated") {
+      if (authFailure === 'unauthenticated') {
         throw redirect({
-          to: "/auth/sign-in",
-          search: { returnTo: "/me/applications" },
+          to: '/auth/sign-in',
+          search: { returnTo: '/me/applications' },
         });
       }
       throw error;
@@ -73,7 +87,8 @@ function ApplicationsPage() {
   const candidateShell = useCandidateShellContext();
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<CandidateActionFeedbackState>("idle");
+  const [feedback, setFeedback] =
+    useState<CandidateActionFeedbackState>('idle');
 
   return (
     <CandidateShell active="applications" {...candidateShell}>
@@ -82,7 +97,9 @@ function ApplicationsPage() {
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
             {m.meApplications_title()}
           </h1>
-          <p className="text-sm text-muted-foreground">{m.meApplications_subheading()}</p>
+          <p className="text-muted-foreground text-sm">
+            {m.meApplications_subheading()}
+          </p>
         </header>
 
         <CandidateActionFeedback state={feedback} />
@@ -91,12 +108,14 @@ function ApplicationsPage() {
           <Empty className="border">
             <EmptyHeader>
               <EmptyTitle>{m.meApplications_title()}</EmptyTitle>
-              <EmptyDescription>{m.meApplications_emptyText()}</EmptyDescription>
+              <EmptyDescription>
+                {m.meApplications_emptyText()}
+              </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
               <Link
                 to="/jobs/$keyword"
-                params={{ keyword: "all" }}
+                params={{ keyword: 'all' }}
                 className="font-medium underline underline-offset-4"
               >
                 {m.meApplications_browseJobsLink()}
@@ -106,64 +125,78 @@ function ApplicationsPage() {
         ) : (
           <ul className="space-y-3" data-test="applications-list">
             {applications.data.map((application) => (
-              <li
-                key={application.id}
-                className="flex items-start justify-between gap-4 rounded-3xl bg-card p-5 shadow-sm ring-1 ring-foreground/5"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    {application.job?.slug && application.job.companySlug ? (
-                      <Link
-                        to="/companies/$companySlug/jobs/$jobSlug"
-                        params={{
-                          companySlug: application.job.companySlug,
-                          jobSlug: application.job.slug,
-                        }}
-                        className="font-medium underline"
+              <li key={application.id}>
+                <Item variant="outline">
+                  <ItemContent>
+                    <ItemTitle className="flex-wrap">
+                      {application.job?.slug && application.job.companySlug ? (
+                        <Link
+                          to="/companies/$companySlug/jobs/$jobSlug"
+                          params={{
+                            companySlug: application.job.companySlug,
+                            jobSlug: application.job.slug,
+                          }}
+                          className="font-medium underline"
+                        >
+                          {application.job.title}
+                        </Link>
+                      ) : (
+                        <span className="font-medium">
+                          {application.job?.title ??
+                            m.meApplications_jobFallbackLabel()}
+                        </span>
+                      )}
+                      <Badge
+                        variant={
+                          application.status === 'archived'
+                            ? 'secondary'
+                            : 'default'
+                        }
                       >
-                        {application.job.title}
-                      </Link>
-                    ) : (
-                      <p className="font-medium">
-                        {application.job?.title ?? m.meApplications_jobFallbackLabel()}
-                      </p>
-                    )}
-                    <Badge variant={application.status === "archived" ? "secondary" : "default"}>
-                      {STATUS_LABEL[application.status]()}
-                    </Badge>
-                  </div>
-                  {application.job?.companyName ? (
-                    <p className="text-sm text-muted-foreground">{application.job.companyName}</p>
+                        {STATUS_LABEL[application.status]()}
+                      </Badge>
+                    </ItemTitle>
+                    {application.job?.companyName ? (
+                      <ItemDescription>
+                        {application.job.companyName}
+                      </ItemDescription>
+                    ) : null}
+                    <p className="text-muted-foreground text-xs">
+                      {m.meApplications_appliedOn({
+                        date: new Date(
+                          application.appliedAt,
+                        ).toLocaleDateString(),
+                      })}
+                    </p>
+                  </ItemContent>
+                  {application.status !== 'archived' ? (
+                    <ItemActions className="self-start">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        data-test="application-withdraw"
+                        disabled={pendingId === application.id}
+                        onClick={async () => {
+                          setPendingId(application.id);
+                          setFeedback('idle');
+                          try {
+                            await withdrawApplication({
+                              data: { id: application.id },
+                            });
+                            await router.invalidate();
+                            setFeedback('success');
+                          } catch {
+                            setFeedback('error');
+                          } finally {
+                            setPendingId(null);
+                          }
+                        }}
+                      >
+                        {m.meApplications_withdrawLabel()}
+                      </Button>
+                    </ItemActions>
                   ) : null}
-                  <p className="text-xs text-muted-foreground">
-                    {m.meApplications_appliedOn({
-                      date: new Date(application.appliedAt).toLocaleDateString(),
-                    })}
-                  </p>
-                </div>
-                {application.status !== "archived" ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    data-test="application-withdraw"
-                    disabled={pendingId === application.id}
-                    onClick={async () => {
-                      setPendingId(application.id);
-                      setFeedback("idle");
-                      try {
-                        await withdrawApplication({ data: { id: application.id } });
-                        await router.invalidate();
-                        setFeedback("success");
-                      } catch {
-                        setFeedback("error");
-                      } finally {
-                        setPendingId(null);
-                      }
-                    }}
-                  >
-                    {m.meApplications_withdrawLabel()}
-                  </Button>
-                ) : null}
+                </Item>
               </li>
             ))}
           </ul>

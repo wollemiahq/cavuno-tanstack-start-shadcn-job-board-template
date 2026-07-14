@@ -1,5 +1,6 @@
-import type { TalentViewModelLabels } from "@/board/talent-view-model";
-import { m } from "../paraglide/messages";
+import { m } from '../paraglide/messages';
+
+import type { TalentViewModelLabels } from '@/board/talent-view-model';
 
 export function getTalentSearchLabels(): TalentViewModelLabels {
   return {

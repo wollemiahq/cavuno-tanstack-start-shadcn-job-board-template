@@ -1,23 +1,33 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from '@tanstack/react-router';
 
-import { AuthCard, AuthDivider, Field, FormError } from "../components/auth-form";
-import { m } from "../paraglide/messages";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { getOAuthAuthorizationUrl, requestMagicLink, signIn } from "../server/auth";
+import {
+  AuthCard,
+  AuthDivider,
+  Field,
+  FormError,
+} from '../components/auth-form';
 import {
   candidateForgotPasswordHref,
   candidateReturnTo,
   candidateSignUpHref,
-} from "../lib/candidate-return-to";
-import { cn } from "@/lib/utils";
+} from '../lib/candidate-return-to';
+import { m } from '../paraglide/messages';
+import {
+  getOAuthAuthorizationUrl,
+  requestMagicLink,
+  signIn,
+} from '../server/auth';
 
-export const Route = createFileRoute("/auth/sign-in")({
+import { Button, buttonVariants } from '@/components/ui/button';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { cn } from '@/lib/utils';
+
+export const Route = createFileRoute('/auth/sign-in')({
   validateSearch: (search: Record<string, unknown>) => ({
     returnTo:
-      typeof search.returnTo === "string" && search.returnTo
+      typeof search.returnTo === 'string' && search.returnTo
         ? candidateReturnTo(search.returnTo)
         : undefined,
   }),
@@ -29,12 +39,12 @@ function SignInPage() {
   const router = useRouter();
   const search = Route.useSearch();
   const returnTo = candidateReturnTo(search.returnTo);
-  const [mode, setMode] = useState<"password" | "magic">("password");
+  const [mode, setMode] = useState<'password' | 'magic'>('password');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [sent, setSent] = useState(false);
 
-  async function startOAuth(provider: "google" | "linkedin") {
+  async function startOAuth(provider: 'google' | 'linkedin') {
     setPending(true);
     setError(null);
     try {
@@ -59,19 +69,19 @@ function SignInPage() {
         name="sign-in-method"
         value={mode}
         onValueChange={(next) => {
-          setMode(next as "password" | "magic");
+          setMode(next as 'password' | 'magic');
           setError(null);
           setSent(false);
         }}
-        className="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1"
+        className="bg-muted grid grid-cols-2 gap-1 rounded-2xl p-1"
         aria-label={m.authSignIn_title()}
       >
         <label
           className={cn(
-            "flex h-9 cursor-pointer items-center justify-center rounded-xl px-3 text-sm font-medium outline-none transition-colors has-focus-visible:ring-3 has-focus-visible:ring-ring/30",
-            mode === "password"
-              ? "bg-background text-foreground shadow-xs"
-              : "text-muted-foreground",
+            'has-focus-visible:ring-ring/30 flex h-9 cursor-pointer items-center justify-center rounded-xl px-3 text-sm font-medium transition-colors outline-none has-focus-visible:ring-3',
+            mode === 'password'
+              ? 'bg-background text-foreground shadow-xs'
+              : 'text-muted-foreground',
           )}
         >
           <RadioGroupItem value="password" className="sr-only" />
@@ -79,8 +89,10 @@ function SignInPage() {
         </label>
         <label
           className={cn(
-            "flex h-9 cursor-pointer items-center justify-center rounded-xl px-3 text-sm font-medium outline-none transition-colors has-focus-visible:ring-3 has-focus-visible:ring-ring/30",
-            mode === "magic" ? "bg-background text-foreground shadow-xs" : "text-muted-foreground",
+            'has-focus-visible:ring-ring/30 flex h-9 cursor-pointer items-center justify-center rounded-xl px-3 text-sm font-medium transition-colors outline-none has-focus-visible:ring-3',
+            mode === 'magic'
+              ? 'bg-background text-foreground shadow-xs'
+              : 'text-muted-foreground',
           )}
         >
           <RadioGroupItem value="magic" className="sr-only" />
@@ -89,7 +101,7 @@ function SignInPage() {
       </RadioGroup>
 
       {sent ? (
-        <p className="rounded-2xl bg-muted p-3 text-sm text-muted-foreground">
+        <p className="bg-muted text-muted-foreground rounded-2xl p-3 text-sm">
           {m.authSignIn_magicLinkSentText()}
         </p>
       ) : null}
@@ -101,14 +113,14 @@ function SignInPage() {
           setPending(true);
           setError(null);
           const form = new FormData(event.currentTarget);
-          const email = String(form.get("email"));
+          const email = String(form.get('email'));
           try {
             const result =
-              mode === "password"
+              mode === 'password'
                 ? await signIn({
                     data: {
                       email,
-                      password: String(form.get("password")),
+                      password: String(form.get('password')),
                     },
                   })
                 : await requestMagicLink({
@@ -117,7 +129,7 @@ function SignInPage() {
                       returnTo,
                     },
                   });
-            if (result.ok && mode === "password") {
+            if (result.ok && mode === 'password') {
               await router.invalidate();
               await router.navigate({ href: returnTo });
             } else if (result.ok) {
@@ -132,8 +144,13 @@ function SignInPage() {
           }
         }}
       >
-        <Field label={m.authSignIn_emailLabel()} name="email" type="email" autoComplete="email" />
-        {mode === "password" ? (
+        <Field
+          label={m.authSignIn_emailLabel()}
+          name="email"
+          type="email"
+          autoComplete="email"
+        />
+        {mode === 'password' ? (
           <Field
             label={m.authSignIn_passwordLabel()}
             name="password"
@@ -141,10 +158,10 @@ function SignInPage() {
             autoComplete="current-password"
           />
         ) : null}
-        {mode === "password" ? (
+        {mode === 'password' ? (
           <div className="flex justify-end">
             <a
-              className={buttonVariants({ variant: "link", size: "sm" })}
+              className={buttonVariants({ variant: 'link', size: 'sm' })}
               href={candidateForgotPasswordHref(returnTo)}
             >
               {m.authSignIn_forgotPasswordLink()}
@@ -154,10 +171,10 @@ function SignInPage() {
         <FormError message={error} />
         <Button type="submit" size="lg" className="w-full" disabled={pending}>
           {pending
-            ? mode === "password"
+            ? mode === 'password'
               ? m.authSignIn_signingInLabel()
               : m.authSignIn_sendingLabel()
-            : mode === "password"
+            : mode === 'password'
               ? m.authSignIn_submitLabel()
               : m.authSignIn_sendMagicLinkLabel()}
         </Button>
@@ -172,7 +189,7 @@ function SignInPage() {
           size="lg"
           className="w-full"
           disabled={pending}
-          onClick={() => void startOAuth("google")}
+          onClick={() => void startOAuth('google')}
         >
           {m.authSignIn_continueWithGoogleLabel()}
         </Button>
@@ -182,15 +199,15 @@ function SignInPage() {
           size="lg"
           className="w-full"
           disabled={pending}
-          onClick={() => void startOAuth("linkedin")}
+          onClick={() => void startOAuth('linkedin')}
         >
           {m.authSignIn_continueWithLinkedinLabel()}
         </Button>
       </div>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-center text-sm">
         <a
-          className={buttonVariants({ variant: "link", size: "sm" })}
+          className={buttonVariants({ variant: 'link', size: 'sm' })}
           href={candidateSignUpHref(returnTo)}
         >
           {m.authSignIn_createAccountLink()}

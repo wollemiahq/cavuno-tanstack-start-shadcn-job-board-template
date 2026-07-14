@@ -3,13 +3,15 @@ import {
   type ComponentPropsWithoutRef,
   type ReactElement,
   type ReactNode,
-} from "react";
+} from 'react';
 
-import { cn } from "@/lib/utils";
+import type { AdRailProps } from './ad-rail';
+import { cn } from '@/lib/utils';
 
-import type { AdRailProps } from "./ad-rail";
-
-export type SearchResultsLayoutProps = Omit<ComponentPropsWithoutRef<"div">, "children"> & {
+export type SearchResultsLayoutProps = Omit<
+  ComponentPropsWithoutRef<'div'>,
+  'children'
+> & {
   list: ReactNode;
   detail: ReactNode;
   startAd?: ReactElement<AdRailProps>;
@@ -35,31 +37,31 @@ export function SearchResultsLayout({
       data-start-ad={hasStartAd}
       data-end-ad={hasEndAd}
       className={cn(
-        "mx-auto grid w-full max-w-6xl grid-cols-1",
+        'mx-auto grid w-full max-w-[var(--layout-width)] grid-cols-1 md:h-full md:min-h-0',
         hasStartAd &&
           !hasEndAd &&
-          "min-[1600px]:max-w-[84rem] min-[1600px]:grid-cols-[10rem_minmax(0,72rem)] min-[1600px]:gap-8",
+          'min-[1600px]:max-w-[92rem] min-[1600px]:grid-cols-[10rem_minmax(0,80rem)] min-[1600px]:gap-8',
         !hasStartAd &&
           hasEndAd &&
-          "min-[1600px]:max-w-[84rem] min-[1600px]:grid-cols-[minmax(0,72rem)_10rem] min-[1600px]:gap-8",
+          'min-[1600px]:max-w-[92rem] min-[1600px]:grid-cols-[minmax(0,80rem)_10rem] min-[1600px]:gap-8',
         hasStartAd &&
           hasEndAd &&
-          "min-[1600px]:max-w-[96rem] min-[1600px]:grid-cols-[10rem_minmax(0,72rem)_10rem] min-[1600px]:gap-8",
+          'min-[1600px]:max-w-[104rem] min-[1600px]:grid-cols-[10rem_minmax(0,80rem)_10rem] min-[1600px]:gap-8',
         className,
       )}
     >
-      {startAd ? cloneElement(startAd, { side: "start" }) : null}
+      {startAd ? cloneElement(startAd, { side: 'start' }) : null}
       <div
         data-slot="search-results-core"
         className={cn(
-          "grid min-w-0 grid-cols-1 md:grid-cols-[20rem_minmax(0,1fr)] xl:grid-cols-[24rem_minmax(0,1fr)]",
-          hasStartAd && "min-[1600px]:col-start-2",
+          'grid min-w-0 grid-cols-1 md:h-full md:min-h-0 md:grid-cols-[20rem_minmax(0,1fr)] xl:grid-cols-[24rem_minmax(0,1fr)]',
+          hasStartAd && 'min-[1600px]:col-start-2',
         )}
       >
         {list}
         {detail}
       </div>
-      {endAd ? cloneElement(endAd, { side: "end" }) : null}
+      {endAd ? cloneElement(endAd, { side: 'end' }) : null}
     </div>
   );
 }

@@ -1,39 +1,39 @@
-"use client";
+'use client';
 
-import { Building2 } from "lucide-react";
+import { companyMarketPath } from '@cavuno/board/paths';
+import { Building2 } from 'lucide-react';
 
-import type { PublicCompany } from "@cavuno/board";
-import { companyMarketPath } from "@cavuno/board/paths";
+import { m } from '../../paraglide/messages';
 
-import { getCompanySearchLabels } from "@/board/company-search-labels";
-import { toCompanyCardVM } from "@/board/company-view-model";
+import { getCompanySearchLabels } from '@/board/company-search-labels';
+import { toCompanyCardVM } from '@/board/company-view-model';
 import {
   PageBreadcrumb,
   type BreadcrumbData,
-} from "@/components/board/breadcrumb";
-import { CompanySearchControls } from "@/components/board/company-search-controls";
-import { CompanySearchResult } from "@/components/board/company-search-result";
-import { ListingPagination } from "@/components/board/listing-pagination";
-import { Box } from "@/components/layout/box";
-import { Container } from "@/components/layout/container";
-import { Page, PageHeader } from "@/components/layout/page";
+} from '@/components/board/breadcrumb';
+import { CompanySearchControls } from '@/components/board/company-search-controls';
+import { CompanySearchResult } from '@/components/board/company-search-result';
+import { ListingPagination } from '@/components/board/listing-pagination';
+import { Box } from '@/components/layout/box';
+import { Container } from '@/components/layout/container';
+import { Page, PageHeader } from '@/components/layout/page';
 import {
   AdRail,
   SearchResultDetail,
   SearchResultsLayout,
   SearchResultsList,
-} from "@/components/search-results/search-results";
+} from '@/components/search-results/search-results';
+import { badgeVariants } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty";
-import { Button } from "@/components/ui/button";
-import { badgeVariants } from "@/components/ui/badge";
-import { useSearchSelection } from "@/hooks/use-search-selection";
-import { m } from "../../paraglide/messages";
+} from '@/components/ui/empty';
+import { useSearchSelection } from '@/hooks/use-search-selection';
+import type { PublicCompany } from '@cavuno/board';
 
 type AdPlacement = {
   label: string;
@@ -87,7 +87,7 @@ export function CompanySearchPage({
 }) {
   const labels = getCompanySearchLabels();
   const companyVms = companies.map((company) =>
-    toCompanyCardVM(company, labels)
+    toCompanyCardVM(company, labels),
   );
   const companySlugs = companies.map((company) => company.slug);
   const selection = useSearchSelection({
@@ -138,8 +138,8 @@ export function CompanySearchPage({
         </Box>
 
         <Box
-          paddingX={{ base: "4", md: "8" }}
-          paddingY={{ base: "6", md: "8" }}
+          paddingX={{ base: '4', md: '8' }}
+          paddingY={{ base: '6', md: '8' }}
         >
           <SearchResultsLayout
             startAd={
@@ -158,7 +158,7 @@ export function CompanySearchPage({
                 scrollRestorationId="companies-search-results"
               >
                 <div className="space-y-4 p-4">
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-muted-foreground text-sm font-medium">
                     {resultCountLabel}
                   </p>
 
@@ -218,7 +218,7 @@ export function CompanySearchPage({
                   {markets.length > 0 ? (
                     <section
                       aria-label={m.companiesIndex_browseByMarketHeading()}
-                      className="space-y-3 border-t border-border pt-4"
+                      className="border-border space-y-3 border-t pt-4"
                     >
                       <h2 className="text-sm font-semibold">
                         {m.companiesIndex_browseByMarketHeading()}
@@ -228,7 +228,7 @@ export function CompanySearchPage({
                           <a
                             key={market.slug}
                             href={companyMarketPath(market.slug)}
-                            className={badgeVariants({ variant: "outline" })}
+                            className={badgeVariants({ variant: 'outline' })}
                           >
                             {market.name}
                           </a>

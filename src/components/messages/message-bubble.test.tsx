@@ -3,8 +3,14 @@ import '@testing-library/jest-dom/vitest';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 
-import { act, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { MessageBubble } from './message-bubble';
 
@@ -27,6 +33,8 @@ const message: Message = {
   deletedAt: null,
   readAt: new Date().toISOString(),
 };
+
+afterEach(cleanup);
 
 describe('MessageBubble', () => {
   it('uses the official shadcn message and bubble composition with visible identity', () => {
@@ -61,6 +69,41 @@ describe('MessageBubble', () => {
       'data-slot',
       'message-footer',
     );
+  });
+
+  it('keeps a failed report available inside shadcn Card and Alert feedback', async () => {
+    const onReport = vi
+      .fn<(reason: string) => Promise<unknown>>()
+      .mockRejectedValue(new Error('Report failed'));
+
+    render(
+      <MessageBubble
+        message={{
+          ...message,
+          authorBoardUserId: 'other-1',
+          recipientBoardUserId: 'viewer-1',
+        }}
+        own={false}
+        showSeen={false}
+        onChanged={vi.fn()}
+        onReported={vi.fn()}
+        onEdit={vi.fn()}
+        onUnsend={vi.fn()}
+        onReport={onReport}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Message actions' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Report' }));
+
+    expect(
+      screen.getByText('Report this message').closest('[data-slot="card"]'),
+    ).not.toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Submit report' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Report failed');
+    expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
+    expect(onReport).toHaveBeenCalledWith('spam');
   });
 
   it('hydrates message timestamps when the server and browser use different timezones', async () => {

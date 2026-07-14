@@ -1,12 +1,14 @@
-import type { ReactNode } from "react";
-import { FileText } from "lucide-react";
+import type { ReactNode } from 'react';
 
-import type { PublicBlogPostSummary } from "@cavuno/board";
+import { FileText } from 'lucide-react';
 
-import type { BreadcrumbData } from "@/components/board/breadcrumb";
-import { PageHeaderWithBreadcrumb } from "@/components/board/page-header-with-breadcrumb";
-import { Page, PageContent, PageSection } from "@/components/layout/page";
-import { buttonVariants } from "@/components/ui/button";
+import { m } from '../../paraglide/messages';
+
+import type { BreadcrumbData } from '@/components/board/breadcrumb';
+import { PageHeaderWithBreadcrumb } from '@/components/board/page-header-with-breadcrumb';
+import { Page, PageContent, PageSection } from '@/components/layout/page';
+import { PostCard } from '@/components/post-card';
+import { buttonVariants } from '@/components/ui/button';
 import {
   Empty,
   EmptyContent,
@@ -14,8 +16,13 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty";
-import { PostCard } from "@/components/post-card";
+} from '@/components/ui/empty';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+} from '@/components/ui/pagination';
+import type { PublicBlogPostSummary } from '@cavuno/board';
 
 export interface BlogArchiveEmptyState {
   title: string;
@@ -82,7 +89,10 @@ export function BlogArchivePage({
               </EmptyHeader>
               {empty.action ? (
                 <EmptyContent>
-                  <a href={empty.action.href} className={buttonVariants({ variant: "outline" })}>
+                  <a
+                    href={empty.action.href}
+                    className={buttonVariants({ variant: 'outline' })}
+                  >
                     {empty.action.label}
                   </a>
                 </EmptyContent>
@@ -92,9 +102,11 @@ export function BlogArchivePage({
         </PageSection>
 
         {posts.length > 0 && nextLink ? (
-          <div className="flex justify-center [&_a]:rounded-2xl [&_a]:border [&_a]:border-border [&_a]:bg-background [&_a]:px-4 [&_a]:py-2 [&_a]:text-sm [&_a]:font-medium [&_a]:outline-none [&_a]:hover:bg-muted [&_a]:focus-visible:ring-3 [&_a]:focus-visible:ring-ring/30">
-            {nextLink}
-          </div>
+          <Pagination aria-label={m.pagination_ariaLabel()}>
+            <PaginationContent>
+              <PaginationItem>{nextLink}</PaginationItem>
+            </PaginationContent>
+          </Pagination>
         ) : null}
       </PageContent>
     </Page>

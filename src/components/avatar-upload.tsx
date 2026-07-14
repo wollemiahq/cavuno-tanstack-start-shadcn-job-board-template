@@ -1,14 +1,15 @@
-"use client";
+'use client';
 
-import { useRef, useState } from "react";
+import { useRef, useState } from 'react';
 
-import { useRouter } from "@tanstack/react-router";
+import { useRouter } from '@tanstack/react-router';
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { initialsOf } from "../lib/initials";
-import { m } from "../paraglide/messages";
-import { uploadAvatar } from "../server/account";
+import { initialsOf } from '../lib/initials';
+import { m } from '../paraglide/messages';
+import { uploadAvatar } from '../server/account';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 
 /**
  * Avatar uploader — mirrors the hosted `profile-avatar-uploader`: pick a
@@ -24,13 +25,15 @@ export function AvatarUpload({
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [status, setStatus] = useState<"idle" | "pending" | "error">("idle");
+  const [status, setStatus] = useState<'idle' | 'pending' | 'error'>('idle');
 
   return (
     <div className="flex items-center gap-4">
       <Avatar className="size-16">
-        {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName ?? ""} /> : null}
-        <AvatarFallback>{initialsOf(displayName ?? "")}</AvatarFallback>
+        {avatarUrl ? (
+          <AvatarImage src={avatarUrl} alt={displayName ?? ''} />
+        ) : null}
+        <AvatarFallback>{initialsOf(displayName ?? '')}</AvatarFallback>
       </Avatar>
       <div className="space-y-1.5">
         <input
@@ -42,32 +45,34 @@ export function AvatarUpload({
           onChange={async (event) => {
             const file = event.target.files?.[0];
             if (!file) return;
-            setStatus("pending");
+            setStatus('pending');
             const formData = new FormData();
-            formData.append("avatar", file);
+            formData.append('avatar', file);
             try {
               await uploadAvatar({ data: formData });
               await router.invalidate();
-              setStatus("idle");
+              setStatus('idle');
             } catch {
-              setStatus("error");
+              setStatus('error');
             }
-            if (inputRef.current) inputRef.current.value = "";
+            if (inputRef.current) inputRef.current.value = '';
           }}
         />
         <Button
           variant="outline"
           size="sm"
-          disabled={status === "pending"}
+          disabled={status === 'pending'}
           onClick={() => inputRef.current?.click()}
         >
-          {status === "pending"
+          {status === 'pending'
             ? m.avatarUpload_uploadingLabel()
             : m.avatarUpload_changePhotoLabel()}
         </Button>
-        <p className="text-xs text-muted-foreground">{m.avatarUpload_formatsText()}</p>
-        {status === "error" ? (
-          <p className="text-xs text-destructive" role="status">
+        <p className="text-muted-foreground text-xs">
+          {m.avatarUpload_formatsText()}
+        </p>
+        {status === 'error' ? (
+          <p className="text-destructive text-xs" role="status">
             {m.avatarUpload_uploadErrorText()}
           </p>
         ) : null}

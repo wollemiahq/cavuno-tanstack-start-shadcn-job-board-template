@@ -1,11 +1,12 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 
-import type { BreadcrumbData } from "@/components/board/breadcrumb";
-import { PageHeaderWithBreadcrumb } from "@/components/board/page-header-with-breadcrumb";
-import { PublicContentPending } from "@/components/board/public-content-pending";
-import { SalaryEmptyState } from "@/components/board/salary-sections";
-import { Page, PageContent, PageHeader } from "@/components/layout/page";
-import { m } from "../paraglide/messages";
+import { m } from '../paraglide/messages';
+
+import type { BreadcrumbData } from '@/components/board/breadcrumb';
+import { PageHeaderWithBreadcrumb } from '@/components/board/page-header-with-breadcrumb';
+import { PublicContentPending } from '@/components/board/public-content-pending';
+import { SalaryEmptyState } from '@/components/board/salary-sections';
+import { Page, PageContent, PageHeader } from '@/components/layout/page';
 
 export function SalaryPageLayout({
   breadcrumb,

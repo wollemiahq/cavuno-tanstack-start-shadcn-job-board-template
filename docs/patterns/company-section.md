@@ -78,11 +78,12 @@ shared header, tab row, and section content. Its current internal use of
 </CompanySectionShell>
 ```
 
-The tabs carry the vendored Untitled UI underline-tab VISUAL (`application/tabs`,
-`type="underline"`) on real router-seam `Link` anchors — NOT the react-aria
-`Tabs` component, whose `role="tab"` triggers over JS-only `TabPanel`s emit no
-`<a href>` and would break the crawlable section-nav spine (the same role=grid
-trap `TaxonomyTags` documents for `Tag`).
+The section navigation is an app-level composition of typed router `Link`
+anchors, shadcn `Badge`, and semantic `border-foreground`, `text-foreground`,
+and `text-muted-foreground` tokens. It deliberately does not use the shadcn
+`Tabs` primitive: these controls navigate to separately indexable pages rather
+than switching panels in the current document, so they must remain crawlable
+`<a href>` links. The active section is an unlinked `aria-current="page"` label.
 
 ## Do / Don't
 
@@ -90,7 +91,7 @@ trap `TaxonomyTags` documents for `Tag`).
 |---|---|
 | End the breadcrumb at the entity — Home → Companies → {Company} — identical on all three tabs, with the matching `BreadcrumbList` JSON-LD. | Append the section as a final crumb (`… → Anduril → Jobs`) or diverge the visible trail from its JSON-LD. |
 | Pass resolved `BreadcrumbData` to `CompanySectionShell`; for new entity shells use the `PageHeader` breadcrumb seam. | Consume migration-only `PageBody` directly or hand-place the trail in a route. |
-| Render the tabs as real `Link` anchors with the UUI underline visual; active = unlinked `aria-current`. | Use the react-aria `Tabs` component (role=tab + JS panels, no crawlable `<a href>`). |
+| Render section navigation as real `Link` anchors using semantic theme tokens; active = unlinked `aria-current="page"`. | Use the shadcn `Tabs` component for navigation between separately indexable routes. |
 | Show the Jobs count Badge and gate the Salaries tab on real salary data (`getCompanySalaryPresence`). | Render a dead Salaries tab for a company with no salary data. |
 | On the jobs subpage let the shell header BE the hero and keep the search band below it. | Double up a second page header above the shell header. |
 

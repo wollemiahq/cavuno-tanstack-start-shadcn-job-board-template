@@ -1,14 +1,15 @@
-import { useLocation, useRouter } from "@tanstack/react-router";
+import { useLocation, useRouter } from '@tanstack/react-router';
 
-import { toJobDetailVM } from "@/board/job-detail-view-model";
-import { ApplyButton } from "@/components/board/apply-button";
-import { JobSearchDetailState } from "@/components/board/job-search-detail-state";
-import { SaveJobButton } from "@/components/board/save-job-button";
-import { m } from "../paraglide/messages";
-import { getSessionUser, saveJob } from "../server/account";
-import { applyToJob } from "../server/applications";
-import { getBoardContext } from "../server/queries";
-import type { SelectedJobState } from "./-use-selected-job";
+import { m } from '../paraglide/messages';
+import { getSessionUser, saveJob } from '../server/account';
+import { applyToJob } from '../server/applications';
+import { getBoardContext } from '../server/queries';
+
+import type { SelectedJobState } from './-use-selected-job';
+import { toJobDetailVM } from '@/board/job-detail-view-model';
+import { ApplyButton } from '@/components/board/apply-button';
+import { JobSearchDetailState } from '@/components/board/job-search-detail-state';
+import { SaveJobButton } from '@/components/board/save-job-button';
 
 export function SelectedJobDetail({
   state,
@@ -22,7 +23,14 @@ export function SelectedJobDetail({
   const router = useRouter();
   const returnTo = useLocation({ select: (location) => location.href });
   const vm = state.job
-    ? toJobDetailVM(state.job, board.customFields, [], null, board.language, board.labels)
+    ? toJobDetailVM(
+        state.job,
+        board.customFields,
+        [],
+        null,
+        board.language,
+        board.labels,
+      )
     : undefined;
 
   return (
@@ -32,7 +40,6 @@ export function SelectedJobDetail({
       loadingLabel={m.jobSearch_detailLoadingLabel()}
       errorTitle={m.jobSearch_detailErrorTitle()}
       retryLabel={m.jobSearch_retryLabel()}
-      fullPageLabel={m.jobSearch_viewFullJobLabel()}
       onRetry={state.retry}
       applySlot={
         state.job ? (

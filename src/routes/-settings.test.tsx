@@ -1,32 +1,33 @@
 // @vitest-environment jsdom
-import "@testing-library/jest-dom/vitest";
+import '@testing-library/jest-dom/vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
-
-vi.mock("../server/settings", () => ({
+vi.mock('../server/settings', () => ({
   getNotificationPreferences: vi.fn(),
   unsubscribeWithToken: vi.fn(),
 }));
 
-import { Route } from "./settings";
+import { Route } from './settings';
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
 });
 
-describe("settings unsubscribe recovery", () => {
-  it("returns an expired-link recipient to settings after sign in", () => {
-    vi.spyOn(Route, "useLoaderData").mockReturnValue({ mode: "unsubscribe-failed" });
+describe('settings unsubscribe recovery', () => {
+  it('returns an expired-link recipient to settings after sign in', () => {
+    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
+      mode: 'unsubscribe-failed',
+    });
     const SettingsPage = Route.options.component;
-    if (!SettingsPage) throw new Error("The settings route needs a component");
+    if (!SettingsPage) throw new Error('The settings route needs a component');
 
     render(<SettingsPage />);
 
-    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
-      "href",
-      `/auth/sign-in?returnTo=${encodeURIComponent("/settings")}`,
+    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
+      'href',
+      `/auth/sign-in?returnTo=${encodeURIComponent('/settings')}`,
     );
   });
 });

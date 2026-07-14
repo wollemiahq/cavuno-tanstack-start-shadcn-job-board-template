@@ -5,7 +5,20 @@
  * headers the session middleware resolved, plus the board-access grant the
  * board-access middleware resolved (so a password-protected board answers).
  */
-import { createServerFn } from '@tanstack/react-start'
+import { createServerFn } from '@tanstack/react-start';
+
+import { getBoard } from '../lib/board';
+import {
+  boardAccessMiddleware,
+  type BoardAccessContext,
+} from '../lib/board-access-middleware';
+import {
+  requireSessionMiddleware,
+  sessionMiddleware,
+  type SessionContext,
+} from '../lib/session-middleware';
+import { gatedRead } from './board-access';
+
 import type {
   AlertBody,
   CreateEducationBody,
@@ -13,57 +26,45 @@ import type {
   UpdateCandidateProfileBody,
   UpdateEducationBody,
   UpdateExperienceBody,
-} from '@cavuno/board'
-
-import { getBoard } from '../lib/board'
-import {
-  boardAccessMiddleware,
-  type BoardAccessContext,
-} from '../lib/board-access-middleware'
-import { gatedRead } from './board-access'
-import {
-  requireSessionMiddleware,
-  sessionMiddleware,
-  type SessionContext,
-} from '../lib/session-middleware'
+} from '@cavuno/board';
 
 /** Bearer + board-access grant for one gated `/me/*` call. */
 function authedHeaders(
-  context: SessionContext & BoardAccessContext
+  context: SessionContext & BoardAccessContext,
 ): Record<string, string> {
-  return { ...context.authHeaders, ...context.boardAccessHeaders }
+  return { ...context.authHeaders, ...context.boardAccessHeaders };
 }
 
 async function requireVerifiedBoardUser(headers: Record<string, string>) {
-  const me = await getBoard().me.retrieve(undefined, { headers })
+  const me = await getBoard().me.retrieve(undefined, { headers });
   if (!me.emailVerified) {
-    throw new Error('EMAIL_UNVERIFIED')
+    throw new Error('EMAIL_UNVERIFIED');
   }
-  return me
+  return me;
 }
 
 /** Session probe for layouts/headers: null when signed out (or walled). */
 export const getSessionUser = createServerFn({ method: 'GET' })
   .middleware([sessionMiddleware, boardAccessMiddleware])
   .handler(async ({ context }) => {
-    if (!context.session) return null
+    if (!context.session) return null;
     try {
       return await getBoard().me.retrieve(undefined, {
         headers: authedHeaders(context),
-      })
+      });
     } catch {
-      return null
+      return null;
     }
-  })
+  });
 
 /** Everything the `/account` page renders, fetched in parallel. */
 export const getAccount = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) =>
     gatedRead(context, async () => {
-      const board = getBoard()
-      const headers = authedHeaders(context)
-      const me = await requireVerifiedBoardUser(headers)
+      const board = getBoard();
+      const headers = authedHeaders(context);
+      const me = await requireVerifiedBoardUser(headers);
       const [
         profile,
         experience,
@@ -80,7 +81,7 @@ export const getAccount = createServerFn({ method: 'GET' })
         board.me.profile.listLanguages({ headers }),
         board.me.savedJobs.list({ limit: 50 }, { headers }),
         board.me.resume.retrieve({ headers }),
-      ])
+      ]);
       return {
         me,
         profile,
@@ -90,158 +91,158 @@ export const getAccount = createServerFn({ method: 'GET' })
         languages,
         savedJobs,
         resume,
-      }
-    })
-  )
+      };
+    }),
+  );
 
 export const updateProfile = createServerFn({ method: 'POST' })
   .validator((input: UpdateCandidateProfileBody) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    return getBoard().me.profile.update(data, undefined, { headers })
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.profile.update(data, undefined, { headers });
+  });
 
 /** Live handle-availability check for the profile form. */
 export const checkHandle = createServerFn({ method: 'GET' })
   .validator((input: { handle: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    return getBoard().me.profile.handleAvailable(data.handle, { headers })
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.profile.handleAvailable(data.handle, { headers });
+  });
 
 export const createExperience = createServerFn({ method: 'POST' })
   .validator((input: CreateExperienceBody) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    return getBoard().me.profile.createExperience(data, { headers })
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.profile.createExperience(data, { headers });
+  });
 
 export const updateExperience = createServerFn({ method: 'POST' })
   .validator((input: { id: string; body: UpdateExperienceBody }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
     return getBoard().me.profile.updateExperience(data.id, data.body, {
       headers,
-    })
-  })
+    });
+  });
 
 export const deleteExperience = createServerFn({ method: 'POST' })
   .validator((input: { id: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    await getBoard().me.profile.deleteExperience(data.id, { headers })
-    return { ok: true as const }
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    await getBoard().me.profile.deleteExperience(data.id, { headers });
+    return { ok: true as const };
+  });
 
 export const createEducation = createServerFn({ method: 'POST' })
   .validator((input: CreateEducationBody) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    return getBoard().me.profile.createEducation(data, { headers })
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.profile.createEducation(data, { headers });
+  });
 
 export const updateEducation = createServerFn({ method: 'POST' })
   .validator((input: { id: string; body: UpdateEducationBody }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
     return getBoard().me.profile.updateEducation(data.id, data.body, {
       headers,
-    })
-  })
+    });
+  });
 
 export const deleteEducation = createServerFn({ method: 'POST' })
   .validator((input: { id: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    await getBoard().me.profile.deleteEducation(data.id, { headers })
-    return { ok: true as const }
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    await getBoard().me.profile.deleteEducation(data.id, { headers });
+    return { ok: true as const };
+  });
 
 /** Skills are replaced in full (whole-set PUT). */
 export const replaceSkills = createServerFn({ method: 'POST' })
   .validator((input: { skills: string[] }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    return getBoard().me.profile.updateSkills(data, { headers })
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.profile.updateSkills(data, { headers });
+  });
 
 /** Languages are replaced in full (whole-set PUT). */
 export const replaceLanguages = createServerFn({ method: 'POST' })
   .validator(
-    (input: { languages: { name: string; proficiency: string }[] }) => input
+    (input: { languages: { name: string; proficiency: string }[] }) => input,
   )
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    return getBoard().me.profile.updateLanguages(data, { headers })
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.profile.updateLanguages(data, { headers });
+  });
 
 /** Avatar upload — the client posts FormData with an `avatar` file. */
 export const uploadAvatar = createServerFn({ method: 'POST' })
   .validator((data) => {
     if (!(data instanceof FormData)) {
-      throw new Error('Expected FormData')
+      throw new Error('Expected FormData');
     }
-    const file = data.get('avatar')
+    const file = data.get('avatar');
     if (!(file instanceof File)) {
-      throw new Error('Expected an avatar file')
+      throw new Error('Expected an avatar file');
     }
-    return file
+    return file;
   })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    return getBoard().me.profile.uploadAvatar(data, { headers })
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.profile.uploadAvatar(data, { headers });
+  });
 
 /** Irreversible: deletes the candidate and all their data. */
 export const deleteAccount = createServerFn({ method: 'POST' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    await getBoard().me.delete({ headers })
-    return { ok: true as const }
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    await getBoard().me.delete({ headers });
+    return { ok: true as const };
+  });
 
 export const saveJob = createServerFn({ method: 'POST' })
   .validator((input: { jobId: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    return getBoard().me.savedJobs.save(data, undefined, { headers })
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.savedJobs.save(data, undefined, { headers });
+  });
 
 export const unsaveJob = createServerFn({ method: 'POST' })
   .validator((input: { jobId: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    await getBoard().me.savedJobs.unsave(data.jobId, undefined, { headers })
-    return { ok: true as const }
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    await getBoard().me.savedJobs.unsave(data.jobId, undefined, { headers });
+    return { ok: true as const };
+  });
 
 // ── Resume (onboarding async parse pipeline, ADR-0055) ───────────────────────
 
@@ -250,45 +251,45 @@ export const getResume = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) =>
     gatedRead(context, async () => {
-      const headers = authedHeaders(context)
-      await requireVerifiedBoardUser(headers)
-      return getBoard().me.resume.retrieve({ headers })
-    })
-  )
+      const headers = authedHeaders(context);
+      await requireVerifiedBoardUser(headers);
+      return getBoard().me.resume.retrieve({ headers });
+    }),
+  );
 
 /** Resume upload — the client posts FormData with a `resume` file. */
 export const uploadResume = createServerFn({ method: 'POST' })
   .validator((data) => {
     if (!(data instanceof FormData)) {
-      throw new Error('Expected FormData')
+      throw new Error('Expected FormData');
     }
-    const file = data.get('resume')
+    const file = data.get('resume');
     if (!(file instanceof File)) {
-      throw new Error('Expected a resume file')
+      throw new Error('Expected a resume file');
     }
-    const keepResumeOnFile = data.get('keepResumeOnFile') === 'true'
-    return { file, keepResumeOnFile }
+    const keepResumeOnFile = data.get('keepResumeOnFile') === 'true';
+    return { file, keepResumeOnFile };
   })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
     return getBoard().me.resume.upload(
       data.file,
       { keepResumeOnFile: data.keepResumeOnFile },
-      { headers }
-    )
-  })
+      { headers },
+    );
+  });
 
 /** GDPR erasure — delete the stored blob + withdraw keep-on-file consent. */
 export const deleteResume = createServerFn({ method: 'POST' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    await getBoard().me.resume.delete({ headers })
-    return { ok: true as const }
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    await getBoard().me.resume.delete({ headers });
+    return { ok: true as const };
+  });
 
 // ── Job-alert management (authed /me/alerts CRUD, ADR-0053) ───────────────────
 
@@ -296,37 +297,37 @@ export const getMyAlerts = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) =>
     gatedRead(context, async () => {
-      const headers = authedHeaders(context)
-      await requireVerifiedBoardUser(headers)
-      return getBoard().me.alerts.list({ headers })
-    })
-  )
+      const headers = authedHeaders(context);
+      await requireVerifiedBoardUser(headers);
+      return getBoard().me.alerts.list({ headers });
+    }),
+  );
 
 export const createMyAlert = createServerFn({ method: 'POST' })
   .validator((input: AlertBody) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    return getBoard().me.alerts.create(data, { headers })
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.alerts.create(data, { headers });
+  });
 
 /** Alerts are replaced in full (whole-object PUT). */
 export const updateMyAlert = createServerFn({ method: 'POST' })
   .validator((input: { id: string; body: AlertBody }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    return getBoard().me.alerts.update(data.id, data.body, { headers })
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.alerts.update(data.id, data.body, { headers });
+  });
 
 export const deleteMyAlert = createServerFn({ method: 'POST' })
   .validator((input: { id: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    const headers = authedHeaders(context)
-    await requireVerifiedBoardUser(headers)
-    await getBoard().me.alerts.remove(data.id, { headers })
-    return { ok: true as const }
-  })
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    await getBoard().me.alerts.remove(data.id, { headers });
+    return { ok: true as const };
+  });

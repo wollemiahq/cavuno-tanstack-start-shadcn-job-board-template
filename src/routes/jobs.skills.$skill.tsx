@@ -1,26 +1,26 @@
+import { jobsSkillPath } from '@cavuno/board/paths';
+import { listingHead } from '@cavuno/board/seo';
 /**
  * Programmatic skill page — `/jobs/skills/:skill` (hosted parity:
  * `boards/[slug]/(main)/jobs/skills/[skill]/page.tsx`). Same shape as the
  * category page, resolving the slug as a *skill*; the API seeds the search with
  * the skill's English source name server-side.
  */
-import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
-import { jobsSkillPath } from "@cavuno/board/paths";
-
-import { JobsNotFound } from "@/components/board/jobs-not-found";
 import {
   ProgrammaticJobsView,
   PROGRAMMATIC_JOBS_PAGE_SIZE,
-} from "../components/programmatic-jobs-view";
-import { pageToOffset } from "../lib/pagination";
-import { jobsListingLoaderDeps, parseJobsSearch } from "../lib/jobs-search";
-import { listingHead } from "@cavuno/board/seo";
-import { m } from "../paraglide/messages";
-import { getSeoBase, listJobs, resolveSkill } from "../server/queries";
+} from '../components/programmatic-jobs-view';
+import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
+import { pageToOffset } from '../lib/pagination';
+import { m } from '../paraglide/messages';
+import { getSeoBase, listJobs, resolveSkill } from '../server/queries';
 
-export const Route = createFileRoute("/jobs/skills/$skill")({
-  staticData: { fullBleed: true, ownsMain: true },
+import { JobsNotFound } from '@/components/board/jobs-not-found';
+
+export const Route = createFileRoute('/jobs/skills/$skill')({
+  staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseJobsSearch,
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
   loader: async ({ params, deps }) => {
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/jobs/skills/$skill")({
     if (!skill) throw notFound();
     if (skill.redirectTo) {
       throw redirect({
-        to: "/jobs/skills/$skill",
+        to: '/jobs/skills/$skill',
         params: { skill: skill.redirectTo },
       });
     }
@@ -37,7 +37,9 @@ export const Route = createFileRoute("/jobs/skills/$skill")({
         data: {
           skill: params.skill,
           remoteOption: deps.remoteOption ? [deps.remoteOption] : undefined,
-          employmentType: deps.employmentType ? [deps.employmentType] : undefined,
+          employmentType: deps.employmentType
+            ? [deps.employmentType]
+            : undefined,
           seniority: deps.seniority?.length ? deps.seniority : undefined,
           sort: deps.sort,
           offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),

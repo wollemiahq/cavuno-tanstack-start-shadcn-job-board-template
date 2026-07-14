@@ -1,16 +1,15 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate } from '@tanstack/react-router';
 
-import type { PublicCompany } from "@cavuno/board";
-
-import type { BreadcrumbData } from "@/components/board/breadcrumb";
-import { CompanySearchPage } from "@/components/board/company-search-page";
+import type { BreadcrumbData } from '@/components/board/breadcrumb';
+import { CompanySearchPage } from '@/components/board/company-search-page';
 import {
   includeSelectedCompanyMarket,
   type CompaniesSearch,
-} from "@/lib/companies-search";
-import { pageSearchValue } from "@/lib/pagination";
-import { SelectedCompanyDetail } from "@/routes/-selected-company-detail";
-import { useSelectedCompany } from "@/routes/-use-selected-company";
+} from '@/lib/companies-search';
+import { pageSearchValue } from '@/lib/pagination';
+import { SelectedCompanyDetail } from '@/routes/-selected-company-detail';
+import { useSelectedCompany } from '@/routes/-use-selected-company';
+import type { PublicCompany } from '@cavuno/board';
 
 type LooseNavigate = (options: {
   to?: string;
@@ -51,7 +50,7 @@ export function ProgrammaticCompaniesView({
   const selectedCompany = useSelectedCompany(
     page.data.some((company) => company.slug === search.selectedCompany)
       ? search.selectedCompany
-      : undefined
+      : undefined,
   );
 
   const navigateToMarket = (marketSlug: string | undefined, query: string) => {
@@ -64,14 +63,14 @@ export function ProgrammaticCompaniesView({
 
     if (marketSlug) {
       navigate({
-        to: "/companies/markets/$market",
+        to: '/companies/markets/$market',
         params: { market: marketSlug },
         search: nextSearch,
       });
       return;
     }
 
-    navigate({ to: "/companies", search: nextSearch });
+    navigate({ to: '/companies', search: nextSearch });
   };
 
   return (
@@ -96,14 +95,14 @@ export function ProgrammaticCompaniesView({
 
         if (market) {
           navigate({
-            to: "/companies/markets/$market",
+            to: '/companies/markets/$market',
             params: { market: market.slug },
             search: nextSearch,
           });
           return;
         }
 
-        navigate({ to: "/companies", search: nextSearch });
+        navigate({ to: '/companies', search: nextSearch });
       }}
       onMarketChange={navigateToMarket}
       onPageChange={(nextPage) =>

@@ -1,9 +1,8 @@
-import { companyMarketPath, companyPath } from "@cavuno/board/paths";
-import { normalizeWebsiteUrl } from "@cavuno/board/seo";
+import { companyMarketPath, companyPath } from '@cavuno/board/paths';
+import { normalizeWebsiteUrl } from '@cavuno/board/seo';
 
-import { deriveSummary } from "@/lib/derive-summary";
-
-import type { PublicCompany, PublicCompanyDetail } from "@cavuno/board";
+import { deriveSummary } from '@/lib/derive-summary';
+import type { PublicCompany, PublicCompanyDetail } from '@cavuno/board';
 
 export interface CompanySearchLabels {
   noDescriptionText: string;
@@ -32,8 +31,10 @@ export interface CompanyDetailMarketVM {
   href: string;
 }
 
-export interface CompanyDetailVM
-  extends Omit<CompanyCardVM, "descriptionText"> {
+export interface CompanyDetailVM extends Omit<
+  CompanyCardVM,
+  'descriptionText'
+> {
   companySlug: string;
   descriptionHtml: string | null;
   noDescriptionText: string;
@@ -49,7 +50,7 @@ export interface CompanyDetailVM
 
 export function toCompanyCardVM(
   company: PublicCompany,
-  labels: CompanySearchLabels
+  labels: CompanySearchLabels,
 ): CompanyCardVM {
   return {
     id: company.id,
@@ -68,10 +69,10 @@ export function toCompanyCardVM(
 
 export function toCompanyDetailVM(
   company: PublicCompanyDetail,
-  labels: CompanySearchLabels
+  labels: CompanySearchLabels,
 ): CompanyDetailVM {
   const card = toCompanyCardVM(company, labels);
-  const websiteHref = normalizeWebsiteUrl(company.website ?? "");
+  const websiteHref = normalizeWebsiteUrl(company.website ?? '');
 
   return {
     ...card,
@@ -85,7 +86,7 @@ export function toCompanyDetailVM(
     })),
     marketsHeading: labels.markets,
     websiteHref,
-    websiteLabel: websiteHref ? websiteHref.replace(/^https?:\/\//i, "") : null,
+    websiteLabel: websiteHref ? websiteHref.replace(/^https?:\/\//i, '') : null,
     openJobsLabel: labels.openJobs(company.publishedJobCount),
     viewCompanyLabel: labels.viewCompany,
     viewJobsLabel: labels.viewJobs,

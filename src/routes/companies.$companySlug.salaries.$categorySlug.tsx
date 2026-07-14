@@ -1,17 +1,34 @@
-import { createFileRoute, getRouteApi, notFound, redirect } from "@tanstack/react-router";
-
-import { isNotFound } from "@cavuno/board";
-import { boardCopy } from "#/copy";
+import { boardCopy } from '#/copy';
+import { isNotFound } from '@cavuno/board';
 import {
   buildSalaryFaq,
   companyCategorySalaryJsonLd,
   createBreadcrumbJsonLd,
   faqJsonLd,
   formatRange,
-} from "@cavuno/board/seo";
+} from '@cavuno/board/seo';
+import {
+  createFileRoute,
+  getRouteApi,
+  notFound,
+  redirect,
+} from '@tanstack/react-router';
 
-import { JsonLd } from "@/components/json-ld";
-import { PageSection } from "@/components/layout/page";
+import { m } from '../paraglide/messages';
+import { getCompanyCategorySalary, getSeoBase } from '../server/queries';
+import {
+  SalaryNotFoundPage,
+  SalaryPageLayout,
+  SalaryPendingPage,
+} from './-salary-page-layout';
+
+import {
+  toOverallSalaryVM,
+  toSalaryBreadcrumbVM,
+  toSalaryFaqVM,
+  toSalaryRailVM,
+  toSeniorityTableVM,
+} from '@/board/salary-view-model';
 import {
   SalaryEmptyState,
   OverallSalaryCard,
@@ -19,19 +36,13 @@ import {
   SalaryRail,
   SenioritySalaryTable,
   type RailItem,
-} from "@/components/board/salary-sections";
-import {
-  toOverallSalaryVM,
-  toSalaryBreadcrumbVM,
-  toSalaryFaqVM,
-  toSalaryRailVM,
-  toSeniorityTableVM,
-} from "@/board/salary-view-model";
-import { m } from "../paraglide/messages";
-import { getCompanyCategorySalary, getSeoBase } from "../server/queries";
-import { SalaryNotFoundPage, SalaryPageLayout, SalaryPendingPage } from "./-salary-page-layout";
+} from '@/components/board/salary-sections';
+import { JsonLd } from '@/components/json-ld';
+import { PageSection } from '@/components/layout/page';
 
-export const Route = createFileRoute("/companies/$companySlug/salaries/$categorySlug")({
+export const Route = createFileRoute(
+  '/companies/$companySlug/salaries/$categorySlug',
+)({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
     let salary;
@@ -50,7 +61,7 @@ export const Route = createFileRoute("/companies/$companySlug/salaries/$category
     // the starter performs the redirect (S3). The company slug is never localized.
     if (salary.categoryCanonicalSlug !== params.categorySlug) {
       throw redirect({
-        to: "/companies/$companySlug/salaries/$categorySlug",
+        to: '/companies/$companySlug/salaries/$categorySlug',
         params: {
           companySlug: params.companySlug,
           categorySlug: salary.categoryCanonicalSlug,
@@ -73,7 +84,7 @@ export const Route = createFileRoute("/companies/$companySlug/salaries/$category
               }),
             },
             {
-              name: "description",
+              name: 'description',
               content: loaderData.salary.overallSalary
                 ? m.companySalaries_categoryMetaDescriptionWithData({
                     category: loaderData.salary.categoryName,
@@ -93,7 +104,7 @@ export const Route = createFileRoute("/companies/$companySlug/salaries/$category
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: `${loaderData.seo.origin}/companies/${loaderData.salary.companySlug}/salaries/${loaderData.salary.categoryCanonicalSlug}`,
             },
           ],
@@ -106,7 +117,7 @@ export const Route = createFileRoute("/companies/$companySlug/salaries/$category
   ),
 });
 
-const rootApi = getRouteApi("__root__");
+const rootApi = getRouteApi('__root__');
 
 function CompanyCategorySalaryPage() {
   const { salary, seo } = Route.useLoaderData();
@@ -145,7 +156,10 @@ function CompanyCategorySalaryPage() {
     logoPath: x.logoPath,
   }));
   const hasSalaryContent = Boolean(
-    salary.overallSalary || salary.bySeniority.length || competitorItems.length || faqs.length,
+    salary.overallSalary ||
+    salary.bySeniority.length ||
+    competitorItems.length ||
+    faqs.length,
   );
   const heading = m.companySalaries_categoryHeading({
     category: salary.categoryName,
@@ -156,8 +170,8 @@ function CompanyCategorySalaryPage() {
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
         [
-          { name: crumbs.home, href: "/" },
-          { name: crumbs.companies, href: "/companies" },
+          { name: crumbs.home, href: '/' },
+          { name: crumbs.companies, href: '/companies' },
           {
             name: salary.companyName,
             href: `/companies/${salary.companySlug}`,
@@ -193,7 +207,11 @@ function CompanyCategorySalaryPage() {
           {salary.bySeniority.length > 0 ? (
             <PageSection title={m.companySalaries_seniorityHeading()}>
               <SenioritySalaryTable
-                vm={toSeniorityTableVM(salary.bySeniority, board.language, seo.labels)}
+                vm={toSeniorityTableVM(
+                  salary.bySeniority,
+                  board.language,
+                  seo.labels,
+                )}
               />
             </PageSection>
           ) : null}
@@ -211,7 +229,10 @@ function CompanyCategorySalaryPage() {
           <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
         </>
       ) : (
-        <SalaryEmptyState title={heading} description={m.salaryHub_emptyDescription()} />
+        <SalaryEmptyState
+          title={heading}
+          description={m.salaryHub_emptyDescription()}
+        />
       )}
     </SalaryPageLayout>
   );

@@ -1,11 +1,19 @@
 'use client';
 
+import type { ComponentProps, ComponentPropsWithoutRef } from 'react';
+
 import { Menu as MenuPrimitive } from '@base-ui/react/menu';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { ChevronRight } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
 const DropdownMenu = MenuPrimitive.Root;
+const DropdownMenuSub = MenuPrimitive.SubmenuRoot;
+
+function DropdownMenuPortal(props: MenuPrimitive.Portal.Props) {
+  return <MenuPrimitive.Portal {...props} />;
+}
 
 function DropdownMenuTrigger(props: MenuPrimitive.Trigger.Props) {
   return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />;
@@ -24,7 +32,7 @@ function DropdownMenuContent({
     'align' | 'alignOffset' | 'side' | 'sideOffset'
   >) {
   return (
-    <MenuPrimitive.Portal className="rhea-theme">
+    <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
@@ -64,15 +72,81 @@ const dropdownMenuItemVariants = cva(
 function DropdownMenuItem({
   className,
   variant,
+  inset,
   ...props
-}: MenuPrimitive.Item.Props & VariantProps<typeof dropdownMenuItemVariants>) {
+}: MenuPrimitive.Item.Props &
+  VariantProps<typeof dropdownMenuItemVariants> & { inset?: boolean }) {
   return (
     <MenuPrimitive.Item
       data-slot="dropdown-menu-item"
       data-variant={variant}
+      data-inset={inset}
       className={cn(dropdownMenuItemVariants({ variant }), className)}
       {...props}
     />
+  );
+}
+
+function DropdownMenuRadioGroup(props: MenuPrimitive.RadioGroup.Props) {
+  return (
+    <MenuPrimitive.RadioGroup
+      data-slot="dropdown-menu-radio-group"
+      {...props}
+    />
+  );
+}
+
+function DropdownMenuSeparator({
+  className,
+  ...props
+}: MenuPrimitive.Separator.Props) {
+  return (
+    <MenuPrimitive.Separator
+      data-slot="dropdown-menu-separator"
+      className={cn('bg-border/50 -mx-1 my-1 h-px', className)}
+      {...props}
+    />
+  );
+}
+
+function DropdownMenuShortcut({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<'span'>) {
+  return (
+    <span
+      data-slot="dropdown-menu-shortcut"
+      className={cn(
+        'text-muted-foreground ml-auto text-xs tracking-widest',
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function DropdownMenuSubTrigger({
+  className,
+  children,
+  ...props
+}: MenuPrimitive.SubmenuTrigger.Props) {
+  return (
+    <MenuPrimitive.SubmenuTrigger
+      data-slot="dropdown-menu-sub-trigger"
+      className={cn(dropdownMenuItemVariants(), className)}
+      {...props}
+    >
+      {children}
+      <ChevronRight className="ml-auto" aria-hidden="true" />
+    </MenuPrimitive.SubmenuTrigger>
+  );
+}
+
+function DropdownMenuSubContent(
+  props: ComponentProps<typeof DropdownMenuContent>,
+) {
+  return (
+    <DropdownMenuContent data-slot="dropdown-menu-sub-content" {...props} />
   );
 }
 
@@ -102,5 +176,12 @@ export {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuRadioGroup,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 };

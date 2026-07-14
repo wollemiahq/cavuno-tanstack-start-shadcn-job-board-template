@@ -1,8 +1,9 @@
+import { m } from '../paraglide/messages';
+
 import {
   CandidateAccountShell,
   type CandidateAccountNavigationItem,
-} from "@/components/board/candidate-account-shell";
-import { m } from "../paraglide/messages";
+} from '@/components/board/candidate-account-shell';
 
 export interface CandidateShellIdentity {
   avatarUrl?: string | null;
@@ -31,29 +32,33 @@ export function CandidateShell({
   viewer: CandidateShellViewer | null;
   children: React.ReactNode;
 }) {
-  const title = identity?.title ?? viewer?.displayName ?? viewer?.email ?? "";
+  const title = identity?.title ?? viewer?.displayName ?? viewer?.email ?? '';
   const navigation: CandidateAccountNavigationItem[] = [
-    { id: "profile", href: "/account", label: m.accountShell_profileNav() },
+    { id: 'profile', href: '/account', label: m.accountShell_profileNav() },
     {
-      id: "saved",
-      href: "/account/saved",
+      id: 'saved',
+      href: '/account/saved',
       label: m.accountShell_savedJobsNav(),
     },
-    { id: "alerts", href: "/me/alerts", label: m.accountShell_jobAlertsNav() },
+    { id: 'alerts', href: '/me/alerts', label: m.accountShell_jobAlertsNav() },
     {
-      id: "applications",
-      href: "/me/applications",
+      id: 'applications',
+      href: '/me/applications',
       label: m.accountShell_applicationsNav(),
     },
   ];
   if (candidatePaywall) {
     navigation.push({
-      id: "subscription",
-      href: "/account/access",
+      id: 'subscription',
+      href: '/account/access',
       label: m.accountShell_subscriptionNav(),
     });
   }
-  navigation.push({ id: "settings", href: "/settings", label: m.accountShell_settingsNav() });
+  navigation.push({
+    id: 'settings',
+    href: '/settings',
+    label: m.accountShell_settingsNav(),
+  });
 
   return (
     <CandidateAccountShell

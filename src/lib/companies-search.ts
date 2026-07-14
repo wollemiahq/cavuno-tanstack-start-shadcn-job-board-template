@@ -1,4 +1,4 @@
-import { pageSearchValue, parsePageParam } from "@/lib/pagination";
+import { pageSearchValue, parsePageParam } from '@/lib/pagination';
 
 export interface CompaniesSearch {
   /** Opaque cursor used by text-search pagination. */
@@ -10,17 +10,19 @@ export interface CompaniesSearch {
   selectedCompany?: string;
 }
 
-export type CompaniesListingSearch = Omit<CompaniesSearch, "selectedCompany">;
+export type CompaniesListingSearch = Omit<CompaniesSearch, 'selectedCompany'>;
 
 function stringSearchValue(value: unknown) {
-  return typeof value === "string" && value ? value : undefined;
+  return typeof value === 'string' && value ? value : undefined;
 }
 
 function selectedCompanySearchValue(value: unknown) {
-  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }
 
-export function parseCompaniesSearch(search: Record<string, unknown>): CompaniesSearch {
+export function parseCompaniesSearch(
+  search: Record<string, unknown>,
+): CompaniesSearch {
   return {
     query: stringSearchValue(search.query),
     cursor: stringSearchValue(search.cursor),
@@ -30,7 +32,9 @@ export function parseCompaniesSearch(search: Record<string, unknown>): Companies
 }
 
 /** A pane selection changes history, but never the companies listing request. */
-export function companiesListingLoaderDeps(search: CompaniesSearch): CompaniesListingSearch {
+export function companiesListingLoaderDeps(
+  search: CompaniesSearch,
+): CompaniesListingSearch {
   return {
     query: search.query,
     cursor: search.cursor,
@@ -44,7 +48,10 @@ export function includeSelectedCompanyMarket(
   markets: CompanyMarketOption[],
   selectedMarket?: CompanyMarketOption,
 ) {
-  if (!selectedMarket || markets.some((market) => market.slug === selectedMarket.slug)) {
+  if (
+    !selectedMarket ||
+    markets.some((market) => market.slug === selectedMarket.slug)
+  ) {
     return markets;
   }
 

@@ -1,21 +1,21 @@
-import { ArrowRight, ChartNoAxesColumn } from "lucide-react";
+import { ArrowRight, ChartNoAxesColumn } from 'lucide-react';
 
 import type {
   OverallSalaryVM,
   SalaryFaqVM,
   SalaryRailVM,
   SeniorityTableVM,
-} from "@/board/salary-view-model";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+} from '@/board/salary-view-model';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty";
+} from '@/components/ui/empty';
 import {
   Table,
   TableBody,
@@ -23,11 +23,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { initialsOf } from "@/lib/initials";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/table';
+import { initialsOf } from '@/lib/initials';
+import { cn } from '@/lib/utils';
 
-export type { RailItem } from "@/board/salary-view-model";
+export type { RailItem } from '@/board/salary-view-model';
 
 function MetricPanel({
   label,
@@ -43,16 +43,18 @@ function MetricPanel({
   return (
     <Card size="sm">
       <CardContent className="space-y-1">
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="text-muted-foreground text-sm">{label}</p>
         <p
           className={cn(
-            "text-2xl font-semibold tabular-nums",
-            emphasis ? "text-primary" : "text-card-foreground",
+            'text-2xl font-semibold tabular-nums',
+            emphasis ? 'text-foreground' : 'text-card-foreground',
           )}
         >
           {value}
           {suffix ? (
-            <span className="ml-1.5 text-sm font-normal text-muted-foreground">{suffix}</span>
+            <span className="text-muted-foreground ml-1.5 text-sm font-normal">
+              {suffix}
+            </span>
           ) : null}
         </p>
       </CardContent>
@@ -63,7 +65,11 @@ function MetricPanel({
 export function OverallSalaryCard({ vm }: { vm: OverallSalaryVM }) {
   return (
     <section className="flex flex-col gap-4">
-      <MetricPanel label={vm.headlineLabel} value={vm.headlineValue} suffix={vm.perYearSuffix} />
+      <MetricPanel
+        label={vm.headlineLabel}
+        value={vm.headlineValue}
+        suffix={vm.perYearSuffix}
+      />
       {vm.stats.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {vm.stats.map((stat) => (
@@ -98,18 +104,26 @@ export function SenioritySalaryTable({ vm }: { vm: SeniorityTableVM }) {
           <TableBody>
             {vm.rows.map((row) => (
               <TableRow key={row.key}>
-                <TableCell className="px-4 font-medium capitalize">{row.level}</TableCell>
+                <TableCell className="px-4 font-medium capitalize">
+                  {row.level}
+                </TableCell>
                 <TableCell className="px-4 tabular-nums">{row.avg}</TableCell>
-                <TableCell className="px-4 tabular-nums text-muted-foreground">
+                <TableCell className="text-muted-foreground px-4 tabular-nums">
                   {row.baseline}
                 </TableCell>
                 <TableCell className="px-4 tabular-nums">
                   {row.diff ? (
-                    <span className={row.diff.positive ? "font-medium" : "text-muted-foreground"}>
+                    <span
+                      className={
+                        row.diff.positive
+                          ? 'font-medium'
+                          : 'text-muted-foreground'
+                      }
+                    >
                       {row.diff.text}
                     </span>
                   ) : (
-                    "—"
+                    '—'
                   )}
                 </TableCell>
               </TableRow>
@@ -127,32 +141,47 @@ export function SalaryRail({ vm }: { vm: SalaryRailVM }) {
   return (
     <section className="flex flex-col gap-4">
       {vm.title ? (
-        <h2 className="font-heading text-lg font-medium tracking-tight">{vm.title}</h2>
+        <h2 className="font-heading text-lg font-medium tracking-tight">
+          {vm.title}
+        </h2>
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {vm.items.map((item) => (
           <a
             key={item.href}
             href={item.href}
-            className="group rounded-[min(var(--radius-4xl),24px)] outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+            className="group focus-visible:ring-ring/30 rounded-[min(var(--radius-4xl),24px)] outline-none focus-visible:ring-3"
           >
-            <Card size="sm" className="h-full transition-shadow group-hover:shadow-md">
+            <Card
+              size="sm"
+              className="h-full transition-shadow group-hover:shadow-md"
+            >
               <CardContent>
                 <div className="flex items-center gap-3">
                   <Avatar className="rounded-xl after:rounded-xl">
                     {item.logoPath ? (
-                      <AvatarImage className="rounded-xl" src={item.logoPath} alt={item.name} />
+                      <AvatarImage
+                        className="rounded-xl"
+                        src={item.logoPath}
+                        alt={item.name}
+                      />
                     ) : null}
-                    <AvatarFallback className="rounded-xl">{initialsOf(item.name)}</AvatarFallback>
+                    <AvatarFallback className="rounded-xl">
+                      {initialsOf(item.name)}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
-                    <p className="break-words text-sm font-medium">{item.name}</p>
-                    <p className="mt-0.5 break-words text-sm text-muted-foreground tabular-nums">
+                    <p className="text-sm font-medium break-words">
+                      {item.name}
+                    </p>
+                    <p className="text-muted-foreground mt-0.5 text-sm break-words tabular-nums">
                       {item.jobCountLabel}
                     </p>
                   </div>
                 </div>
-                <p className="mt-3 text-sm font-medium tabular-nums">{item.range}</p>
+                <p className="mt-3 text-sm font-medium tabular-nums">
+                  {item.range}
+                </p>
               </CardContent>
             </Card>
           </a>
@@ -178,10 +207,15 @@ export function CompanySalarySummary({
   return (
     <section aria-label={title} className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-heading text-lg font-medium tracking-tight">{title}</h2>
+        <h2 className="font-heading text-lg font-medium tracking-tight">
+          {title}
+        </h2>
         <a
           href={viewAllHref}
-          className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "no-underline")}
+          className={cn(
+            buttonVariants({ variant: 'ghost', size: 'sm' }),
+            'no-underline',
+          )}
         >
           {viewAllLabel}
           <ArrowRight data-icon="inline-end" />
@@ -198,13 +232,17 @@ export function SalaryFaq({ vm }: { vm: SalaryFaqVM }) {
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="font-heading text-lg font-medium tracking-tight">{vm.heading}</h2>
+      <h2 className="font-heading text-lg font-medium tracking-tight">
+        {vm.heading}
+      </h2>
       <dl className="flex flex-col gap-3">
         {vm.items.map((item) => (
           <Card key={item.q} size="sm">
             <CardContent>
               <dt className="font-medium">{item.q}</dt>
-              <dd className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{item.a}</dd>
+              <dd className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
+                {item.a}
+              </dd>
             </CardContent>
           </Card>
         ))}
@@ -213,7 +251,13 @@ export function SalaryFaq({ vm }: { vm: SalaryFaqVM }) {
   );
 }
 
-export function SalaryEmptyState({ title, description }: { title: string; description?: string }) {
+export function SalaryEmptyState({
+  title,
+  description,
+}: {
+  title: string;
+  description?: string;
+}) {
   return (
     <Empty className="py-12">
       <EmptyHeader>
@@ -221,7 +265,9 @@ export function SalaryEmptyState({ title, description }: { title: string; descri
           <ChartNoAxesColumn />
         </EmptyMedia>
         <EmptyTitle>{title}</EmptyTitle>
-        {description ? <EmptyDescription>{description}</EmptyDescription> : null}
+        {description ? (
+          <EmptyDescription>{description}</EmptyDescription>
+        ) : null}
       </EmptyHeader>
     </Empty>
   );

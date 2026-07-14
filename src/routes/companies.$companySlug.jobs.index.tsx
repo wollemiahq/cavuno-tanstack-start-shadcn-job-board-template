@@ -1,3 +1,6 @@
+import { boardCopy } from '#/copy';
+import { isNotFound } from '@cavuno/board';
+import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 /**
  * Company jobs subpage (CAV-501) — every open job at one company, with a
  * keyword search and page-based pagination. The `/companies/:slug/jobs/`
@@ -12,26 +15,27 @@
  * a fresh query drops `?page=` (see CompanyJobsSearchBar), resetting to
  * page 1.
  */
-import { createFileRoute, getRouteApi, notFound } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, notFound } from '@tanstack/react-router';
 
-import { isNotFound } from "@cavuno/board";
-import { createBreadcrumbJsonLd } from "@cavuno/board/seo";
-
-import { CompanySectionShell } from "@/components/board/company-section-header";
-import { JobList } from "@/components/board/job-list";
-import { ListingPagination } from "@/components/board/listing-pagination";
-import { JsonLd } from "@/components/json-ld";
-import { CompanyJobsSearchBar } from "../components/company-jobs-search-bar";
-import { boardCopy } from "#/copy";
-import { m } from "../paraglide/messages";
-import { pageSearchValue, pageToOffset, parsePageParam } from "../lib/pagination";
+import { CompanyJobsSearchBar } from '../components/company-jobs-search-bar';
+import {
+  pageSearchValue,
+  pageToOffset,
+  parsePageParam,
+} from '../lib/pagination';
+import { m } from '../paraglide/messages';
 import {
   getCompany,
   getCompanySalaryPresence,
   getSeoBase,
   listJobs,
   searchJobs,
-} from "../server/queries";
+} from '../server/queries';
+
+import { CompanySectionShell } from '@/components/board/company-section-header';
+import { JobList } from '@/components/board/job-list';
+import { ListingPagination } from '@/components/board/listing-pagination';
+import { JsonLd } from '@/components/json-ld';
 
 interface CompanyJobsSearch {
   /** Free-text keyword, scoped to this company via the jobs search endpoint. */
@@ -42,21 +46,23 @@ interface CompanyJobsSearch {
 
 const COMPANY_JOBS_PAGE_SIZE = 20;
 
-const rootApi = getRouteApi("__root__");
+const rootApi = getRouteApi('__root__');
 
-export const Route = createFileRoute("/companies/$companySlug/jobs/")({
+export const Route = createFileRoute('/companies/$companySlug/jobs/')({
   // Full-bleed: the shared company-section shell owns the page container +
   // breadcrumb placement (the shell header is the hero here — no centered
   // ListingPageHeader band — matching /companies + /companies/…/salaries).
   staticData: { fullBleed: true },
   validateSearch: (search: Record<string, unknown>): CompanyJobsSearch => ({
-    q: typeof search.q === "string" && search.q ? search.q : undefined,
+    q: typeof search.q === 'string' && search.q ? search.q : undefined,
     page: pageSearchValue(parsePageParam(search.page)),
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ params, deps }) => {
     try {
-      const company = await getCompany({ data: { companySlug: params.companySlug } });
+      const company = await getCompany({
+        data: { companySlug: params.companySlug },
+      });
       const offset = pageToOffset(deps.page ?? 1, COMPANY_JOBS_PAGE_SIZE);
       const [page, seo, hasSalaries] = await Promise.all([
         deps.q
@@ -95,7 +101,7 @@ export const Route = createFileRoute("/companies/$companySlug/jobs/")({
               }),
             },
             {
-              name: "description",
+              name: 'description',
               content: m.companyJobs_metaDescription({
                 company: loaderData.company.name,
                 boardName: loaderData.seo.boardName,
@@ -104,7 +110,7 @@ export const Route = createFileRoute("/companies/$companySlug/jobs/")({
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: `${loaderData.seo.origin}/companies/${loaderData.company.slug}/jobs`,
             },
           ],
@@ -112,7 +118,7 @@ export const Route = createFileRoute("/companies/$companySlug/jobs/")({
       : {},
   component: CompanyJobsPage,
   notFoundComponent: () => (
-    <p className="rounded-xl bg-primary p-10 text-center text-tertiary ring-1 ring-secondary_alt">
+    <p className="bg-card text-muted-foreground ring-border rounded-xl p-10 text-center ring-1">
       {m.companyDetail_notFoundText()}
     </p>
   ),
@@ -133,13 +139,22 @@ function CompanyJobsPage() {
   const showRange = count > COMPANY_JOBS_PAGE_SIZE;
   const countLabel = showRange
     ? m.jobSearch_resultsShowingRange({
-        from: ((currentPage - 1) * COMPANY_JOBS_PAGE_SIZE + 1).toLocaleString(board.language),
-        to: Math.min(currentPage * COMPANY_JOBS_PAGE_SIZE, count).toLocaleString(board.language),
+        from: ((currentPage - 1) * COMPANY_JOBS_PAGE_SIZE + 1).toLocaleString(
+          board.language,
+        ),
+        to: Math.min(
+          currentPage * COMPANY_JOBS_PAGE_SIZE,
+          count,
+        ).toLocaleString(board.language),
         count: count.toLocaleString(board.language),
       })
     : count === 1
-      ? m.jobSearch_resultsCountOne({ count: count.toLocaleString(board.language) })
-      : m.jobSearch_resultsCountMany({ count: count.toLocaleString(board.language) });
+      ? m.jobSearch_resultsCountOne({
+          count: count.toLocaleString(board.language),
+        })
+      : m.jobSearch_resultsCountMany({
+          count: count.toLocaleString(board.language),
+        });
 
   // The trail locates the ENTITY and stops there (Home → Companies →
   // {Company}) — IDENTICAL to the profile + salaries tabs; the tab row alone
@@ -157,8 +172,8 @@ function CompanyJobsPage() {
       breadcrumb={{
         ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
         items: [
-          { name: crumbs.home, href: "/" },
-          { name: crumbs.companies, href: "/companies" },
+          { name: crumbs.home, href: '/' },
+          { name: crumbs.companies, href: '/companies' },
           { name: company.name },
         ],
       }}
@@ -171,18 +186,28 @@ function CompanyJobsPage() {
 
       {/* The shared company header IS the hero here (no doubled-up centered
           listing hero); the search band stays, above the honest count + rows. */}
-      <CompanyJobsSearchBar companySlug={company.slug} defaultValue={q ?? undefined} />
+      <CompanyJobsSearchBar
+        companySlug={company.slug}
+        defaultValue={q ?? undefined}
+      />
 
-      <p className="text-md font-semibold text-primary">{countLabel}</p>
+      <p className="text-foreground text-base font-semibold">{countLabel}</p>
 
-      <JobList jobs={page.data} language={board.language} labels={board.labels} variant="grid" />
+      <JobList
+        jobs={page.data}
+        language={board.language}
+        labels={board.labels}
+        variant="grid"
+      />
 
       <ListingPagination
         page={currentPage}
         count={count}
         pageSize={COMPANY_JOBS_PAGE_SIZE}
         onPageChange={(next) =>
-          navigate({ search: (prev) => ({ ...prev, page: pageSearchValue(next) }) })
+          navigate({
+            search: (prev) => ({ ...prev, page: pageSearchValue(next) }),
+          })
         }
       />
     </CompanySectionShell>

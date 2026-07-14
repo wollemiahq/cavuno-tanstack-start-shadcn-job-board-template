@@ -1,17 +1,18 @@
-"use client";
+'use client';
 
+import { boardCopy } from '#/copy';
 import {
   EMPLOYMENT_TYPES,
   REMOTE_OPTIONS,
   SENIORITIES,
   seniorityLabels,
   type ListingFilters,
-} from "@cavuno/board/filters";
-import { fieldLabel, type BoardLabelOverrides } from "@cavuno/board/format";
-import { boardCopy } from "#/copy";
+} from '@cavuno/board/filters';
+import { fieldLabel, type BoardLabelOverrides } from '@cavuno/board/format';
 
-import { JobsFilterToolbar } from "@/components/board/jobs-filter-toolbar";
-import { m } from "../../paraglide/messages";
+import { m } from '../../paraglide/messages';
+
+import { JobsFilterToolbar } from '@/components/board/jobs-filter-toolbar';
 
 export function JobsFilterControls({
   filters,
@@ -65,9 +66,10 @@ export function JobsFilterControls({
         onApply={(value) =>
           onChange({
             ...filters,
-            remoteOption: value.workplace as ListingFilters["remoteOption"],
-            employmentType: value.employmentType as ListingFilters["employmentType"],
-            seniority: value.seniority as ListingFilters["seniority"],
+            remoteOption: value.workplace as ListingFilters['remoteOption'],
+            employmentType:
+              value.employmentType as ListingFilters['employmentType'],
+            seniority: value.seniority as ListingFilters['seniority'],
           })
         }
         onReset={() =>

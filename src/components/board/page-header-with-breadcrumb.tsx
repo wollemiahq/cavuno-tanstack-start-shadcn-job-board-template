@@ -1,13 +1,10 @@
 import {
   PageBreadcrumb,
   type BreadcrumbData,
-} from "@/components/board/breadcrumb";
-import { Container } from "@/components/layout/container";
-import {
-  PageHeader,
-  type PageHeaderProps,
-} from "@/components/layout/page";
-import type { ContainerWidth } from "@/components/layout/layout.types";
+} from '@/components/board/breadcrumb';
+import { Container } from '@/components/layout/container';
+import type { ContainerWidth } from '@/components/layout/layout.types';
+import { PageHeader, type PageHeaderProps } from '@/components/layout/page';
 
 /**
  * The canonical Page-family seam for a page intro that owns a breadcrumb.
@@ -16,9 +13,9 @@ import type { ContainerWidth } from "@/components/layout/layout.types";
  */
 export function PageHeaderWithBreadcrumb({
   breadcrumb,
-  width = "wide",
+  width = 'wide',
   ...props
-}: Omit<PageHeaderProps, "breadcrumb"> & {
+}: Omit<PageHeaderProps, 'breadcrumb'> & {
   breadcrumb?: BreadcrumbData;
   width?: ContainerWidth;
 }) {

@@ -10,7 +10,7 @@ export function initialsOf(name: string): string | undefined {
       .filter(Boolean)
       .map((word) => word[0]!)
       .slice(0, 2)
-      .join("")
+      .join('')
       .toUpperCase() || undefined
   );
 }

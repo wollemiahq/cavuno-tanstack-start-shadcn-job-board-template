@@ -18,14 +18,14 @@
  * Builder-2's layer-3 ejection (ADR-0059: per-board generated-code copy
  * overrides) is a regeneration of `messages/{locale}.json` + this file.
  */
-import { m } from './paraglide/messages'
+import { m } from './paraglide/messages';
 
-import type { BoardLabelOverrides, UiCopy } from '@cavuno/board/format'
+import type { BoardLabelOverrides, UiCopy } from '@cavuno/board/format';
 
-export type BoardCopy = UiCopy
-export type { BoardLabelOverrides }
+export type BoardCopy = UiCopy;
+export type { BoardLabelOverrides };
 
-type MessageFn = (inputs?: Record<string, unknown>) => string
+type MessageFn = (inputs?: Record<string, unknown>) => string;
 
 /**
  * The two parameterized catalog keys (positional callers) → their ICU
@@ -34,7 +34,7 @@ type MessageFn = (inputs?: Record<string, unknown>) => string
 const PARAM_KEYS: Record<string, string> = {
   jobDetail_experienceYears: 'years',
   jobDetail_posted: 'date',
-}
+};
 
 /**
  * Catalog keys that are `{{token}}` TEMPLATES on the UiCopy contract
@@ -46,7 +46,7 @@ const PARAM_KEYS: Record<string, string> = {
 const TEMPLATE_KEYS: Record<string, string[]> = {
   footer_copyrightPrefix: ['year', 'board_name'],
   footer_defaultDescription: ['board_name'],
-}
+};
 
 /**
  * Catalog group → the stored config group its operator overrides live in.
@@ -68,20 +68,20 @@ const GROUP_OVERRIDE_SOURCE: Record<string, keyof BoardLabelOverrides> = {
   pagination: 'globalPaginationLabels',
   blog: 'blogSharedLabels',
   entity: 'entityLabels',
-}
+};
 
 export function boardCopy(
   _language: string | undefined,
   labels?: BoardLabelOverrides,
 ): BoardCopy {
-  const copy: Record<string, Record<string, unknown>> = {}
+  const copy: Record<string, Record<string, unknown>> = {};
   for (const [flatKey, message] of Object.entries(m)) {
-    const split = flatKey.indexOf('_')
-    const group = flatKey.slice(0, split)
-    const key = flatKey.slice(split + 1)
-    const param = PARAM_KEYS[flatKey]
-    const templateTokens = TEMPLATE_KEYS[flatKey]
-    ;(copy[group] ??= {})[key] = param
+    const split = flatKey.indexOf('_');
+    const group = flatKey.slice(0, split);
+    const key = flatKey.slice(split + 1);
+    const param = PARAM_KEYS[flatKey];
+    const templateTokens = TEMPLATE_KEYS[flatKey];
+    (copy[group] ??= {})[key] = param
       ? (value: unknown) => (message as MessageFn)({ [param]: value })
       : templateTokens
         ? (message as MessageFn)(
@@ -89,23 +89,23 @@ export function boardCopy(
               templateTokens.map((token) => [token, `{{${token}}}`]),
             ),
           )
-        : (message as MessageFn)()
+        : (message as MessageFn)();
   }
   if (labels) {
     for (const [group, values] of Object.entries(copy)) {
-      const overrides = labels[GROUP_OVERRIDE_SOURCE[group]!]
-      if (!overrides) continue
+      const overrides = labels[GROUP_OVERRIDE_SOURCE[group]!];
+      if (!overrides) continue;
       for (const [key, value] of Object.entries(values)) {
-        const override = overrides[key]
+        const override = overrides[key];
         if (
           typeof value === 'string' &&
           typeof override === 'string' &&
           override.trim() !== ''
         ) {
-          values[key] = override
+          values[key] = override;
         }
       }
     }
   }
-  return copy as unknown as BoardCopy
+  return copy as unknown as BoardCopy;
 }

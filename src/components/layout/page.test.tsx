@@ -1,18 +1,17 @@
 // @vitest-environment jsdom
-import "@testing-library/jest-dom/vitest";
+import '@testing-library/jest-dom/vitest';
+import { cleanup, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 
-import { cleanup, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
-
-import { Bleed } from "./bleed";
-import { Box } from "./box";
-import { Container } from "./container";
-import { Page, PageContent, PageHeader, PageSection } from "./page";
+import { Bleed } from './bleed';
+import { Box } from './box';
+import { Container } from './container';
+import { Page, PageContent, PageHeader, PageSection } from './page';
 
 afterEach(cleanup);
 
-describe("Page composition", () => {
-  it("renders one main and one h1 while keeping the page header inside main", () => {
+describe('Page composition', () => {
+  it('renders one main and one h1 while keeping the page header inside main', () => {
     const { container } = render(
       <Page id="jobs-page" width="wide" data-test="jobs-page">
         <PageContent
@@ -35,18 +34,44 @@ describe("Page composition", () => {
       </Page>,
     );
 
-    expect(container.querySelectorAll("main")).toHaveLength(1);
-    expect(container.querySelectorAll("h1")).toHaveLength(1);
+    expect(container.querySelectorAll('main')).toHaveLength(1);
+    expect(container.querySelectorAll('h1')).toHaveLength(1);
 
-    const main = screen.getByRole("main");
-    expect(within(main).getByRole("heading", { level: 1, name: "Jobs" })).toBeInTheDocument();
-    expect(within(main).getByRole("navigation", { name: "Breadcrumb" })).toBeInTheDocument();
-    expect(within(main).getByRole("form", { name: "Job search" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Save search" })).toBeInTheDocument();
-    expect(container.querySelector('[data-test="jobs-page"]')).toHaveAttribute("id", "jobs-page");
+    const main = screen.getByRole('main');
+    expect(
+      within(main).getByRole('heading', { level: 1, name: 'Jobs' }),
+    ).toBeInTheDocument();
+    expect(
+      within(main).getByRole('navigation', { name: 'Breadcrumb' }),
+    ).toBeInTheDocument();
+    expect(
+      within(main).getByRole('form', { name: 'Job search' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Save search' }),
+    ).toBeInTheDocument();
+    expect(container.querySelector('[data-test="jobs-page"]')).toHaveAttribute(
+      'id',
+      'jobs-page',
+    );
   });
 
-  it("renders the optional aside as a named complementary landmark", () => {
+  it('can propagate a bounded viewport height without changing normal page flow', () => {
+    const { container } = render(
+      <Page fill>
+        <PageContent>
+          <p>Viewport workspace</p>
+        </PageContent>
+      </Page>,
+    );
+
+    expect(container.querySelector('[data-layout="page"]')).toHaveClass(
+      'md:h-full',
+      'md:min-h-0',
+    );
+  });
+
+  it('renders the optional aside as a named complementary landmark', () => {
     render(
       <Page>
         <PageContent aside={<p>Apply and save</p>} asideLabel="Job actions">
@@ -55,13 +80,13 @@ describe("Page composition", () => {
       </Page>,
     );
 
-    expect(screen.getByRole("main")).toHaveTextContent("Job description");
-    expect(screen.getByRole("complementary", { name: "Job actions" })).toHaveTextContent(
-      "Apply and save",
-    );
+    expect(screen.getByRole('main')).toHaveTextContent('Job description');
+    expect(
+      screen.getByRole('complementary', { name: 'Job actions' }),
+    ).toHaveTextContent('Apply and save');
   });
 
-  it("makes mobile aside priority explicit in DOM reading order", () => {
+  it('makes mobile aside priority explicit in DOM reading order', () => {
     const { rerender } = render(
       <Page>
         <PageContent
@@ -74,12 +99,13 @@ describe("Page composition", () => {
       </Page>,
     );
 
-    const beforeAside = screen.getByRole("complementary", {
-      name: "Job actions",
+    const beforeAside = screen.getByRole('complementary', {
+      name: 'Job actions',
     });
-    const beforePrimary = screen.getByTestId("primary-content").parentElement!;
+    const beforePrimary = screen.getByTestId('primary-content').parentElement!;
     expect(
-      beforeAside.compareDocumentPosition(beforePrimary) & Node.DOCUMENT_POSITION_FOLLOWING,
+      beforeAside.compareDocumentPosition(beforePrimary) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
 
     rerender(
@@ -94,16 +120,17 @@ describe("Page composition", () => {
       </Page>,
     );
 
-    const afterAside = screen.getByRole("complementary", {
-      name: "Related searches",
+    const afterAside = screen.getByRole('complementary', {
+      name: 'Related searches',
     });
-    const afterPrimary = screen.getByTestId("primary-content").parentElement!;
+    const afterPrimary = screen.getByTestId('primary-content').parentElement!;
     expect(
-      afterPrimary.compareDocumentPosition(afterAside) & Node.DOCUMENT_POSITION_FOLLOWING,
+      afterPrimary.compareDocumentPosition(afterAside) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 
-  it("labels sections through either a visible h2 or an explicit aria label", () => {
+  it('labels sections through either a visible h2 or an explicit aria label', () => {
     render(
       <Page>
         <PageContent>
@@ -122,21 +149,21 @@ describe("Page composition", () => {
       </Page>,
     );
 
-    const requirements = screen.getByRole("region", { name: "Requirements" });
-    expect(requirements).toHaveAttribute("id", "requirements");
+    const requirements = screen.getByRole('region', { name: 'Requirements' });
+    expect(requirements).toHaveAttribute('id', 'requirements');
     expect(
-      within(requirements).getByRole("heading", {
+      within(requirements).getByRole('heading', {
         level: 2,
-        name: "Requirements",
+        name: 'Requirements',
       }),
     ).toBeInTheDocument();
-    expect(requirements).toHaveTextContent("What the candidate needs");
-    expect(screen.getByRole("region", { name: "Company facts" })).toHaveTextContent(
-      "Founded in 2020",
-    );
+    expect(requirements).toHaveTextContent('What the candidate needs');
+    expect(
+      screen.getByRole('region', { name: 'Company facts' }),
+    ).toHaveTextContent('Founded in 2020');
   });
 
-  it("supports a full-width header through Bleed without changing header semantics", () => {
+  it('supports a full-width header through Bleed without changing header semantics', () => {
     render(
       <Page>
         <PageContent
@@ -155,9 +182,11 @@ describe("Page composition", () => {
       </Page>,
     );
 
-    const main = screen.getByRole("main");
-    expect(within(main).getByRole("heading", { level: 1, name: "Companies" })).toBeInTheDocument();
-    expect(within(main).getByText("Company results")).toBeInTheDocument();
+    const main = screen.getByRole('main');
+    expect(
+      within(main).getByRole('heading', { level: 1, name: 'Companies' }),
+    ).toBeInTheDocument();
+    expect(within(main).getByText('Company results')).toBeInTheDocument();
   });
 });
 

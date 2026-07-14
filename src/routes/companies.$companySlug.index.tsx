@@ -1,31 +1,50 @@
-import { Text } from "@/components/text"
-import { createFileRoute, getRouteApi, Link, notFound } from "@tanstack/react-router";
+import { boardCopy } from '#/copy';
+import { isNotFound } from '@cavuno/board';
+import { companySalaryPath } from '@cavuno/board/paths';
+import { createBreadcrumbJsonLd, formatRange } from '@cavuno/board/seo';
+import {
+  createFileRoute,
+  getRouteApi,
+  interpolatePath,
+  Link,
+  notFound,
+} from '@tanstack/react-router';
+import { Building2 } from 'lucide-react';
 
-import { isNotFound } from "@cavuno/board";
-
-import { toJobCardVM } from "@/board/job-view-model";
-import { toOverallSalaryVM, toSalaryRailVM, type RailItem } from "@/board/salary-view-model";
-import { Badge } from "@/components/base/badges/badges";
-import { Button } from "@/components/base/buttons/button";
-import { JsonLd } from "@/components/json-ld";
-import { Prose } from "@/components/prose";
-import { CompanyCard } from "@/components/board/company-card";
-import { CompanySectionShell } from "@/components/board/company-section-header";
-import { CompanySalarySummary } from "@/components/board/salary-sections";
-import { JobCard } from "@/components/board/job-card";
-import { companySalaryPath } from "@cavuno/board/paths";
-import { createBreadcrumbJsonLd, formatRange } from "@cavuno/board/seo";
-import { boardCopy } from "#/copy";
-import { m } from "../paraglide/messages";
+import { m } from '../paraglide/messages';
 import {
   getCompany,
   getCompanySalarySummary,
   getSeoBase,
   getSimilarCompanies,
   listCompanyJobs,
-} from "../server/queries";
+} from '../server/queries';
 
-export const Route = createFileRoute("/companies/$companySlug/")({
+import { toJobCardVM } from '@/board/job-view-model';
+import {
+  toOverallSalaryVM,
+  toSalaryRailVM,
+  type RailItem,
+} from '@/board/salary-view-model';
+import { CompanyCard } from '@/components/board/company-card';
+import { CompanySectionShell } from '@/components/board/company-section-header';
+import { JobCard } from '@/components/board/job-card';
+import { PageBody } from '@/components/board/page-body';
+import { CompanySalarySummary } from '@/components/board/salary-sections';
+import { JsonLd } from '@/components/json-ld';
+import { Prose } from '@/components/prose';
+import { Text } from '@/components/text';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
+
+export const Route = createFileRoute('/companies/$companySlug/')({
   // Full-bleed so the shared PageBody owns the container + the breadcrumb
   // placement (the trail hugs the nav at pt-4/5, same as every other page).
   staticData: { fullBleed: true },
@@ -44,8 +63,16 @@ export const Route = createFileRoute("/companies/$companySlug/")({
       // is real salary data (an overall aggregate or per-category rows), the
       // same condition the salary route renders its empty state against.
       const hasSalaries =
-        salarySummary.overallSalary !== null || salarySummary.byCategory.length > 0;
-      return { company, jobs, similar: similar.data, seo, salarySummary, hasSalaries };
+        salarySummary.overallSalary !== null ||
+        salarySummary.byCategory.length > 0;
+      return {
+        company,
+        jobs,
+        similar: similar.data,
+        seo,
+        salarySummary,
+        hasSalaries,
+      };
     } catch (error) {
       if (isNotFound(error)) throw notFound();
       throw error;
@@ -59,9 +86,9 @@ export const Route = createFileRoute("/companies/$companySlug/")({
             ...(loaderData.company.description
               ? [
                   {
-                    name: "description",
+                    name: 'description',
                     content: loaderData.company.description
-                      .replace(/<[^>]+>/g, " ")
+                      .replace(/<[^>]+>/g, ' ')
                       .trim()
                       .slice(0, 160),
                   },
@@ -70,7 +97,7 @@ export const Route = createFileRoute("/companies/$companySlug/")({
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: `${loaderData.seo.origin}/companies/${loaderData.company.slug}`,
             },
           ],
@@ -78,13 +105,20 @@ export const Route = createFileRoute("/companies/$companySlug/")({
       : {},
   component: CompanyPage,
   notFoundComponent: () => (
-    <p className="rounded-xl bg-primary p-10 text-center text-tertiary ring-1 ring-secondary_alt">
-      {m.companyDetail_notFoundText()}
-    </p>
+    <PageBody>
+      <Empty className="py-12">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Building2 />
+          </EmptyMedia>
+          <EmptyTitle>{m.companyDetail_notFoundText()}</EmptyTitle>
+        </EmptyHeader>
+      </Empty>
+    </PageBody>
   ),
 });
 
-const rootApi = getRouteApi("__root__");
+const rootApi = getRouteApi('__root__');
 
 /** Pre-resolve the pluralized "N open job(s)" label (shared across company cards). */
 function jobCountLabel(count: number) {
@@ -104,7 +138,8 @@ function viewAllJobsLabel(count: number) {
 const JOBS_PREVIEW_COUNT = 6;
 
 function CompanyPage() {
-  const { company, jobs, similar, seo, salarySummary, hasSalaries } = Route.useLoaderData();
+  const { company, jobs, similar, seo, salarySummary, hasSalaries } =
+    Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const copy = boardCopy(seo.language, seo.labels);
   const crumbs = copy.breadcrumbs;
@@ -123,13 +158,30 @@ function CompanyPage() {
         seo.labels,
       )
     : null;
-  const salaryCategoryItems: RailItem[] = salarySummary.byCategory.map((category) => ({
-    name: category.categoryName,
-    href: `/companies/${company.slug}/salaries/${category.categorySlug}`,
-    range: formatRange(seo.language, category.avgSalaryMin, category.avgSalaryMax),
-    jobCount: category.jobCount,
-  }));
-  const salaryCategoriesVM = toSalaryRailVM(undefined, salaryCategoryItems, seo.language, seo.labels);
+  const salaryCategoryItems: RailItem[] = salarySummary.byCategory.map(
+    (category) => ({
+      name: category.categoryName,
+      href: interpolatePath({
+        path: '/companies/$companySlug/salaries/$categorySlug',
+        params: {
+          companySlug: company.slug,
+          categorySlug: category.categorySlug,
+        },
+      }).interpolatedPath,
+      range: formatRange(
+        seo.language,
+        category.avgSalaryMin,
+        category.avgSalaryMax,
+      ),
+      jobCount: category.jobCount,
+    }),
+  );
+  const salaryCategoriesVM = toSalaryRailVM(
+    undefined,
+    salaryCategoryItems,
+    seo.language,
+    seo.labels,
+  );
 
   const canonical = `${seo.origin}/companies/${company.slug}`;
   const website = company.website
@@ -141,17 +193,17 @@ function CompanyPage() {
   // from the API's company fields (mirrors the hosted company page's JSON-LD).
   const jsonLd = [
     {
-      "@context": "https://schema.org",
-      "@type": "ProfilePage",
+      '@context': 'https://schema.org',
+      '@type': 'ProfilePage',
       url: canonical,
       mainEntity: {
-        "@type": "Organization",
-        "@id": `${canonical}#organization`,
+        '@type': 'Organization',
+        '@id': `${canonical}#organization`,
         name: company.name,
         identifier: company.id,
         ...(company.description
           ? {
-              description: company.description.replace(/<[^>]+>/g, " ").trim(),
+              description: company.description.replace(/<[^>]+>/g, ' ').trim(),
             }
           : {}),
         url: website ?? canonical,
@@ -173,8 +225,8 @@ function CompanyPage() {
       breadcrumb={{
         ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
         items: [
-          { name: crumbs.home, href: "/" },
-          { name: crumbs.companies, href: "/companies" },
+          { name: crumbs.home, href: '/' },
+          { name: crumbs.companies, href: '/companies' },
           { name: company.name },
         ],
       }}
@@ -189,53 +241,60 @@ function CompanyPage() {
         {/* Key-facts rail — right column on desktop, sticky as the profile
             scrolls; the primary CTA jumps to the full company jobs subpage. */}
         <aside className="lg:sticky lg:top-8 lg:col-start-2 lg:row-start-1 lg:self-start">
-          <div className="flex flex-col gap-4 rounded-xl bg-primary p-5 shadow-xs ring-1 ring-secondary_alt">
-            {website ? (
-              <div className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-tertiary">{m.footer_websiteLabel()}</span>
-                <Button
-                  color="link-color"
-                  size="sm"
-                  href={website}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-fit"
-                >
-                  {company.website}
-                </Button>
-              </div>
-            ) : null}
-
-            {company.markets.length > 0 ? (
-              <div className="flex flex-wrap items-center gap-1.5">
-                {company.markets.map((market) => (
-                  <Link
-                    key={market.slug}
-                    to="/companies/markets/$market"
-                    params={{ market: market.slug }}
-                    className="rounded-full outline-focus-ring transition duration-100 ease-linear hover:opacity-75 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-1"
+          <Card>
+            <CardContent className="flex flex-col gap-4">
+              {website ? (
+                <div className="flex flex-col gap-1">
+                  <span className="text-muted-foreground text-sm font-medium">
+                    {m.footer_websiteLabel()}
+                  </span>
+                  <Button
+                    render={
+                      <a href={website} target="_blank" rel="noreferrer" />
+                    }
+                    variant="link"
+                    size="sm"
+                    className="w-fit px-0"
                   >
-                    <Badge type="pill-color" color="gray" size="md">
-                      {market.name}
-                    </Badge>
-                  </Link>
-                ))}
-              </div>
-            ) : null}
+                    {company.website}
+                  </Button>
+                </div>
+              ) : null}
 
-            <p className="text-sm text-tertiary">{jobCountLabel(company.publishedJobCount)}</p>
+              {company.markets.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {company.markets.map((market) => (
+                    <Link
+                      key={market.slug}
+                      to="/companies/markets/$market"
+                      params={{ market: market.slug }}
+                      className="focus-visible:ring-ring rounded-full transition-opacity hover:no-underline hover:opacity-75 focus-visible:ring-2 focus-visible:outline-none"
+                    >
+                      <Badge variant="secondary">{market.name}</Badge>
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
 
-            {company.publishedJobCount > 0 ? (
-              <Button
-                color="primary"
-                size="md"
-                href={`/companies/${company.slug}/jobs`}
-                className="w-full"
-              >
-                {viewAllJobsLabel(company.publishedJobCount)}
-              </Button>
-            ) : null}
-          </div>
+              <p className="text-muted-foreground text-sm">
+                {jobCountLabel(company.publishedJobCount)}
+              </p>
+
+              {company.publishedJobCount > 0 ? (
+                <Button
+                  render={
+                    <Link
+                      to="/companies/$companySlug/jobs"
+                      params={{ companySlug: company.slug }}
+                    />
+                  }
+                  className="w-full"
+                >
+                  {viewAllJobsLabel(company.publishedJobCount)}
+                </Button>
+              ) : null}
+            </CardContent>
+          </Card>
         </aside>
 
         {/* Main column — description prose and the jobs preview; both columns
@@ -247,30 +306,42 @@ function CompanyPage() {
             <Prose html={company.description} />
           ) : null}
 
-          <section aria-label={m.companyDetail_openJobsHeading()} className="flex flex-col gap-4">
+          <section
+            aria-label={m.companyDetail_openJobsHeading()}
+            className="flex flex-col gap-4"
+          >
             <div className="flex flex-wrap items-center justify-between gap-3">
               <Text as="h2" variant="heading4">
                 {m.companyDetail_openJobsHeading()}
                 {company.publishedJobCount > 0 ? (
-                  <span className="ml-2 text-tertiary">{company.publishedJobCount}</span>
+                  <span className="text-muted-foreground ml-2">
+                    {company.publishedJobCount}
+                  </span>
                 ) : null}
               </Text>
               {company.publishedJobCount > previewJobs.length ? (
                 <Link
                   to="/companies/$companySlug/jobs"
                   params={{ companySlug: company.slug }}
-                  className="rounded-xs text-sm font-medium text-brand-secondary outline-focus-ring transition-colors hover:text-brand-secondary_hover focus-visible:outline-2 focus-visible:outline-offset-2"
+                  className="text-foreground hover:text-foreground/80 focus-visible:ring-ring rounded-sm text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
                 >
                   {viewAllJobsLabel(company.publishedJobCount)}
                 </Link>
               ) : null}
             </div>
             {previewJobs.length === 0 ? (
-              <p className="text-tertiary">{m.companyDetail_noOpenJobsText()}</p>
+              <Empty className="min-h-40 border">
+                <EmptyHeader>
+                  <EmptyTitle>{m.companyDetail_noOpenJobsText()}</EmptyTitle>
+                </EmptyHeader>
+              </Empty>
             ) : (
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 {previewJobs.map((job) => (
-                  <JobCard key={job.id} vm={toJobCardVM(job, board.language, board.labels)} />
+                  <JobCard
+                    key={job.id}
+                    vm={toJobCardVM(job, board.language, board.labels)}
+                  />
                 ))}
               </div>
             )}
@@ -294,7 +365,7 @@ function CompanyPage() {
       {similar.length > 0 ? (
         <section
           aria-label={m.companyDetail_similarCompaniesHeading()}
-          className="flex flex-col gap-4 border-t border-secondary pt-8"
+          className="border-border flex flex-col gap-4 border-t pt-8"
         >
           <Text as="h2" variant="heading4">
             {m.companyDetail_similarCompaniesHeading()}

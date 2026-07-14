@@ -15,19 +15,19 @@
  */
 
 /** Common currencies floated to the top of the list, in this order. */
-const FRONT_LOADED = ['USD', 'EUR', 'GBP', 'AUD', 'CAD']
+const FRONT_LOADED = ['USD', 'EUR', 'GBP', 'AUD', 'CAD'];
 
 export interface CurrencyOption {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
 export function salaryCurrencyOptions(): CurrencyOption[] {
-  const all = Intl.supportedValuesOf('currency')
-  const front = new Set(FRONT_LOADED)
-  const tail = all.filter((code) => !front.has(code)).sort()
+  const all = Intl.supportedValuesOf('currency');
+  const front = new Set(FRONT_LOADED);
+  const tail = all.filter((code) => !front.has(code)).sort();
   return [...FRONT_LOADED, ...tail].map((code) => ({
     value: code,
     label: code,
-  }))
+  }));
 }

@@ -1,26 +1,33 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { boardCopy } from '#/copy';
+import { isNotFound } from '@cavuno/board';
+import {
+  createAuthorProfileJsonLd,
+  createBreadcrumbJsonLd,
+} from '@cavuno/board/seo';
+import { createFileRoute, Link, notFound } from '@tanstack/react-router';
 
-import { isNotFound } from "@cavuno/board";
-import { createAuthorProfileJsonLd, createBreadcrumbJsonLd } from "@cavuno/board/seo";
-
-import { boardCopy } from "#/copy";
-import { BlogArchivePage } from "@/components/board/blog-archive-page";
-import { PublicContentPending } from "@/components/board/public-content-pending";
-import { JsonLd } from "@/components/json-ld";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { initialsOf } from "@/lib/initials";
-import { m } from "@/paraglide/messages";
-import { getBlogAuthor, getSeoBase, listBlogPosts } from "@/server/queries";
+import { BlogArchivePage } from '@/components/board/blog-archive-page';
+import { PublicContentPending } from '@/components/board/public-content-pending';
+import { JsonLd } from '@/components/json-ld';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { initialsOf } from '@/lib/initials';
+import { m } from '@/paraglide/messages';
+import { getBlogAuthor, getSeoBase, listBlogPosts } from '@/server/queries';
 
 interface BlogAuthorSearch {
   cursor?: string;
 }
 
-export const Route = createFileRoute("/blog/author/$authorSlug")({
+export const Route = createFileRoute('/blog/author/$authorSlug')({
   staticData: { fullBleed: true, ownsMain: true },
-  pendingComponent: () => <PublicContentPending label={m.publicContent_loadingLabel()} />,
+  pendingComponent: () => (
+    <PublicContentPending label={m.publicContent_loadingLabel()} />
+  ),
   validateSearch: (search: Record<string, unknown>): BlogAuthorSearch => ({
-    cursor: typeof search.cursor === "string" && search.cursor ? search.cursor : undefined,
+    cursor:
+      typeof search.cursor === 'string' && search.cursor
+        ? search.cursor
+        : undefined,
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ params, deps }) => {
@@ -50,7 +57,7 @@ export const Route = createFileRoute("/blog/author/$authorSlug")({
               title: m.blogAuthor_metaTitle({ author: loaderData.author.name }),
             },
             {
-              name: "description",
+              name: 'description',
               content:
                 loaderData.author.bio ??
                 m.blogAuthor_metaDescription({
@@ -61,7 +68,7 @@ export const Route = createFileRoute("/blog/author/$authorSlug")({
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: `${loaderData.seo.origin}/blog/author/${loaderData.author.slug}`,
             },
           ],
@@ -77,8 +84,8 @@ function BlogAuthorNotFound() {
       breadcrumb={{
         ariaLabel: m.blogIndex_breadcrumbLabel(),
         items: [
-          { name: m.blogIndex_homeLabel(), href: "/" },
-          { name: m.blogIndex_title(), href: "/blog" },
+          { name: m.blogIndex_homeLabel(), href: '/' },
+          { name: m.blogIndex_title(), href: '/blog' },
           { name: m.blogAuthor_notFoundText() },
         ],
       }}
@@ -87,20 +94,30 @@ function BlogAuthorNotFound() {
       empty={{
         title: m.blogAuthor_notFoundText(),
         description: m.blogAuthor_notFoundDescription(),
-        action: { label: m.blogPost_backToBlogLabel(), href: "/blog" },
+        action: { label: m.blogPost_backToBlogLabel(), href: '/blog' },
       }}
     />
   );
 }
 
-function AuthorLinks({ author }: { author: ReturnType<typeof Route.useLoaderData>["author"] }) {
+function AuthorLinks({
+  author,
+}: {
+  author: ReturnType<typeof Route.useLoaderData>['author'];
+}) {
   const links = [
-    author.websiteUrl ? { href: author.websiteUrl, label: m.blogPost_authorWebsiteLabel() } : null,
-    author.twitterUrl ? { href: author.twitterUrl, label: m.blogPost_authorXLabel() } : null,
+    author.websiteUrl
+      ? { href: author.websiteUrl, label: m.blogPost_authorWebsiteLabel() }
+      : null,
+    author.twitterUrl
+      ? { href: author.twitterUrl, label: m.blogPost_authorXLabel() }
+      : null,
     author.linkedinUrl
       ? { href: author.linkedinUrl, label: m.blogPost_authorLinkedinLabel() }
       : null,
-    author.githubUrl ? { href: author.githubUrl, label: m.blogPost_authorGithubLabel() } : null,
+    author.githubUrl
+      ? { href: author.githubUrl, label: m.blogPost_authorGithubLabel() }
+      : null,
   ].filter((link) => link !== null);
 
   return links.length > 0 ? (
@@ -111,7 +128,7 @@ function AuthorLinks({ author }: { author: ReturnType<typeof Route.useLoaderData
           href={link.href}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-sm text-muted-foreground outline-none hover:text-foreground hover:underline focus-visible:ring-3 focus-visible:ring-ring/30"
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/30 rounded-sm outline-none hover:underline focus-visible:ring-3"
         >
           {link.label}
         </a>
@@ -153,8 +170,8 @@ function AuthorPage() {
         breadcrumb={{
           ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
           items: [
-            { name: crumbs.home, href: "/" },
-            { name: crumbs.blog, href: "/blog" },
+            { name: crumbs.home, href: '/' },
+            { name: crumbs.blog, href: '/blog' },
             { name: author.name },
           ],
         }}
@@ -163,7 +180,9 @@ function AuthorPage() {
         avatar={
           <div className="flex items-center gap-4">
             <Avatar size="lg" className="size-14">
-              {author.avatarUrl ? <AvatarImage src={author.avatarUrl} alt={author.name} /> : null}
+              {author.avatarUrl ? (
+                <AvatarImage src={author.avatarUrl} alt={author.name} />
+              ) : null}
               <AvatarFallback>{initialsOf(author.name)}</AvatarFallback>
             </Avatar>
             <AuthorLinks author={author} />
@@ -173,7 +192,7 @@ function AuthorPage() {
         empty={{
           title: m.blogIndex_emptyTitle(),
           description: m.blogAuthor_emptyText({ author: author.name }),
-          action: { label: m.blogIndex_browseAllLabel(), href: "/blog" },
+          action: { label: m.blogIndex_browseAllLabel(), href: '/blog' },
         }}
         nextLink={
           posts.hasMore && posts.nextCursor ? (

@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest';
 
-import { resolveSignupDestination } from './signup-destination'
+import { resolveSignupDestination } from './signup-destination';
 
 /**
  * The single sign-up entry-point gate (CAV-514). One pure map from a board's
@@ -15,24 +15,24 @@ describe('resolveSignupDestination', () => {
   it('routes to the chooser when both roles are enabled', () => {
     expect(
       resolveSignupDestination({ candidates: true, employers: true }),
-    ).toBe('/auth/join')
-  })
+    ).toBe('/auth/join');
+  });
 
   it('routes straight to the candidate form when only candidates are enabled', () => {
     expect(
       resolveSignupDestination({ candidates: true, employers: false }),
-    ).toBe('/auth/sign-up')
-  })
+    ).toBe('/auth/sign-up');
+  });
 
   it('routes straight to the employer form when only employers are enabled', () => {
     expect(
       resolveSignupDestination({ candidates: false, employers: true }),
-    ).toBe('/auth/employer/sign-up')
-  })
+    ).toBe('/auth/employer/sign-up');
+  });
 
   it('returns null when neither role is enabled', () => {
     expect(
       resolveSignupDestination({ candidates: false, employers: false }),
-    ).toBeNull()
-  })
-})
+    ).toBeNull();
+  });
+});

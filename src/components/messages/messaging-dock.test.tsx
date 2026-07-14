@@ -28,12 +28,8 @@ describe('MessagingDock', () => {
     const launcher = screen.getByRole('button', {
       name: 'Open messages, 3 unread',
     });
-    expect(launcher.closest('div')).toHaveClass(
-      'rhea-theme',
-      'fixed',
-      'bottom-0',
-      'right-6',
-    );
+    expect(launcher.closest('div')).not.toHaveClass('rhea-theme');
+    expect(launcher.closest('div')).toHaveClass('fixed', 'bottom-0', 'right-6');
     fireEvent.click(launcher);
     expect(onOpenChange).toHaveBeenCalledWith(true);
 
@@ -59,6 +55,8 @@ describe('MessagingDock', () => {
     });
     const dockRow = inbox.parentElement;
 
+    expect(inbox).toHaveAttribute('data-slot', 'card');
+    expect(conversation).toHaveAttribute('data-slot', 'card');
     expect(dockRow).toHaveClass(
       'fixed',
       'bottom-0',

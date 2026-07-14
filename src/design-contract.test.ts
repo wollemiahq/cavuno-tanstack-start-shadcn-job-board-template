@@ -1,3 +1,7 @@
+import { describe, expect, it } from 'vitest';
+
+import { parseTokens } from '../scripts/theme-resolved-lib.mjs';
+
 /**
  * D15/D16 template-contract tests (Builder-2 Phase 1, ADR-0066).
  *
@@ -15,49 +19,45 @@
  *  - The pnpm 11 supply-chain posture (D16): dependency lifecycle
  *    scripts blocked unless allowlisted, minimumReleaseAge cooldown on.
  */
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-
-import { describe, expect, it } from 'vitest'
-
-import { parseTokens } from '../scripts/theme-resolved-lib.mjs'
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 // Lazy: the generator is the artifact under test — its absence should
 // fail the generator tests, not prevent the rest of the contract from
 // running.
-const generatorLib = () => import('../scripts/gen-design-lib.mjs')
+const generatorLib = () => import('../scripts/gen-design-lib.mjs');
 
-const root = join(import.meta.dirname, '..')
-const read = (p: string) => readFileSync(join(root, p), 'utf8')
+const root = join(import.meta.dirname, '..');
+const read = (p: string) => readFileSync(join(root, p), 'utf8');
 
 describe('AGENTS.md (D15 workflow rules)', () => {
-  const agents = read('AGENTS.md')
+  const agents = read('AGENTS.md');
 
   it('stays inside the ~150-line budget', () => {
-    expect(agents.split('\n').length).toBeLessThanOrEqual(150)
-  })
+    expect(agents.split('\n').length).toBeLessThanOrEqual(150);
+  });
 
   it('carries the five required rule anchors', () => {
     // Never-greenfield: generation customizes this template, never
     // rebuilds from scratch.
-    expect(agents).toMatch(/never.{0,40}(greenfield|from scratch)/i)
+    expect(agents).toMatch(/never.{0,40}(greenfield|from scratch)/i);
     // Grounding config is not editable by agents.
-    expect(agents).toContain('CAVUNO_BOARD')
-    expect(agents).toContain('CAVUNO_API_URL')
+    expect(agents).toContain('CAVUNO_BOARD');
+    expect(agents).toContain('CAVUNO_API_URL');
     // D16 dependency policy is stated where agents read rules.
-    expect(agents).toMatch(/minimumReleaseAge/)
-    expect(agents).toMatch(/allowBuilds/)
+    expect(agents).toMatch(/minimumReleaseAge/);
+    expect(agents).toMatch(/allowBuilds/);
     // Verify commands.
-    expect(agents).toMatch(/pnpm (run )?typecheck/)
-    expect(agents).toMatch(/pnpm (run )?test|pnpm test/)
+    expect(agents).toMatch(/pnpm (run )?typecheck/);
+    expect(agents).toMatch(/pnpm (run )?test|pnpm test/);
     // Pointer to DESIGN.md for visual/component rules (three-layer split).
-    expect(agents).toContain('DESIGN.md')
+    expect(agents).toContain('DESIGN.md');
     // Pattern layer (CAV-503): agents must select a documented page-level
     // pattern before composing a route. The builder loop derives its prompt
     // from this file, so the anchor is load-bearing.
-    expect(agents).toContain('docs/patterns/')
-    expect(agents).toMatch(/select a pattern before composing a route/i)
-  })
+    expect(agents).toContain('docs/patterns/');
+    expect(agents).toMatch(/select a pattern before composing a route/i);
+  });
 
   it('names the view-model seam layer boundary (ADR-0070 guard rule)', () => {
     // The builder loop derives its prompt from this file; it must be told
@@ -65,18 +65,18 @@ describe('AGENTS.md (D15 workflow rules)', () => {
     // and the SDK (Layer 1a) are CONSUMED, never rewritten — that is what
     // keeps a redesign from mis-calling the correctness functions. Layer 2
     // (`src/components`) is the redesign surface, free to restructure.
-    expect(agents).toContain('src/board')
-    expect(agents).toMatch(/Layer 1b|view-model/i)
+    expect(agents).toContain('src/board');
+    expect(agents).toMatch(/Layer 1b|view-model/i);
     // `[\s\S]` not `.` — the invariant must survive a prose reflow that
     // wraps "never rewrite" across a line break.
-    expect(agents).toMatch(/never[\s\S]{0,40}rewrit/i)
-    expect(agents).toMatch(/Layer 2|restructure/i)
-  })
+    expect(agents).toMatch(/never[\s\S]{0,40}rewrit/i);
+    expect(agents).toMatch(/Layer 2|restructure/i);
+  });
 
   it('is the single rule source — CLAUDE.md defers to it', () => {
-    expect(read('CLAUDE.md').trim()).toBe('@AGENTS.md')
-  })
-})
+    expect(read('CLAUDE.md').trim()).toBe('@AGENTS.md');
+  });
+});
 
 describe('DESIGN.md + DTCG export (D15 generated artifacts)', () => {
   // Timeout raised from the 5s default when the full Untitled UI free
@@ -87,29 +87,36 @@ describe('DESIGN.md + DTCG export (D15 generated artifacts)', () => {
     'regenerating from canonical sources reproduces the committed files byte-for-byte',
     { timeout: 30_000 },
     async () => {
-      const { generateDesignArtifacts } = await generatorLib()
-      const generated = await generateDesignArtifacts(root)
-      expect(read('DESIGN.md')).toBe(generated.designMd)
-      expect(read('design/tokens.dtcg.json')).toBe(generated.dtcgJson)
+      const { generateDesignArtifacts } = await generatorLib();
+      const generated = await generateDesignArtifacts(root);
+      expect(read('DESIGN.md')).toBe(generated.designMd);
+      expect(read('design/tokens.dtcg.json')).toBe(generated.dtcgJson);
     },
-  )
+  );
 
   it('frontmatter tokens are derived from theme.css (ADR-0065 D1 canonical)', async () => {
-    const { parseDesignFrontmatter } = await generatorLib()
-    const fm = parseDesignFrontmatter(read('DESIGN.md'))
-    const tokens = parseTokens(read('src/theme.css'))
-    expect(fm.version).toBe('alpha')
+    const { parseDesignFrontmatter } = await generatorLib();
+    const fm = parseDesignFrontmatter(read('DESIGN.md'));
+    const tokens = parseTokens(read('src/theme.css'));
+    expect(fm.version).toBe('alpha');
     // Every :root color custom property surfaces as a frontmatter color.
-    expect(fm.colors.background).toBe(tokens.light['--background'])
-    expect(fm.colors.primary).toBe(tokens.light['--primary'])
-    expect(fm.colors.accent).toBe(tokens.light['--accent'])
-    expect(fm.colors).not.toHaveProperty('radius')
+    expect(fm.colors.background).toBe(tokens.light['--background']);
+    expect(fm.colors.primary).toBe(tokens.light['--primary']);
+    expect(fm.colors.accent).toBe(tokens.light['--accent']);
+    expect(fm.colors).not.toHaveProperty('radius');
     // Typography derives from the font vars.
-    expect(fm.typography.sans.fontFamily).toContain('Geist')
-  })
+    expect(fm.typography.sans.fontFamily).toContain('Geist');
+  });
+
+  it('documents theme.css as the radius token source', () => {
+    const design = read('DESIGN.md');
+
+    expect(design).toContain('`--radius` in `src/theme.css`');
+    expect(design).not.toContain('`--radius` in `src/styles.css`');
+  });
 
   it('the Components section is a full inventory of the component source', () => {
-    const design = read('DESIGN.md')
+    const design = read('DESIGN.md');
     // Spot the required spec sections, in the spec's order.
     for (const section of [
       '## Overview',
@@ -118,7 +125,7 @@ describe('DESIGN.md + DTCG export (D15 generated artifacts)', () => {
       '## Components',
       "## Do's and Don'ts",
     ]) {
-      expect(design).toContain(section)
+      expect(design).toContain(section);
     }
     // Every component module under src/components appears by name.
     // (ChipLink dropped at the CAV-489 contract step — the dead
@@ -133,121 +140,113 @@ describe('DESIGN.md + DTCG export (D15 generated artifacts)', () => {
       'Button',
       'Card',
     ]) {
-      expect(design).toContain(name)
+      expect(design).toContain(name);
     }
     // Prop metadata is extracted from source, not hand-listed: a known
     // typed prop of a block component must be present.
-    expect(design).toMatch(/JobCard[\s\S]{0,600}\bjob\b/)
-  })
+    expect(design).toMatch(/JobCard[\s\S]{0,600}\bjob\b/);
+  });
 
   it('attributes a local cva contract only to the component that consumes it', () => {
-    const design = read('DESIGN.md')
-    const componentBlock = (name: string, nextName: string) =>
-      design.slice(
-        design.indexOf(`### ${name} —`),
-        design.indexOf(`### ${nextName} —`),
-      )
+    const design = read('DESIGN.md');
+    const componentBlock = (name: string) => {
+      const start = design.indexOf(`### ${name} —`);
+      const next = design.indexOf('\n### ', start + 1);
+      return design.slice(start, next === -1 ? undefined : next);
+    };
 
-    expect(componentBlock('Empty', 'EmptyContent')).not.toContain(
-      'Variants —',
-    )
-    expect(componentBlock('EmptyContent', 'EmptyDescription')).not.toContain(
-      'Variants —',
-    )
-    expect(componentBlock('EmptyDescription', 'EmptyHeader')).not.toContain(
-      'Variants —',
-    )
-    expect(componentBlock('EmptyHeader', 'EmptyMedia')).not.toContain(
-      'Variants —',
-    )
-    expect(componentBlock('EmptyMedia', 'EmptyTitle')).toContain(
+    expect(componentBlock('Empty')).not.toContain('Variants —');
+    expect(componentBlock('EmptyContent')).not.toContain('Variants —');
+    expect(componentBlock('EmptyDescription')).not.toContain('Variants —');
+    expect(componentBlock('EmptyHeader')).not.toContain('Variants —');
+    expect(componentBlock('EmptyMedia')).toContain(
       'Variants — `variant`: default, icon',
-    )
-    expect(componentBlock('EmptyTitle', 'Input')).not.toContain('Variants —')
-  })
+    );
+    expect(componentBlock('EmptyTitle')).not.toContain('Variants —');
+  });
 
   it('documents the token-to-pattern hierarchy and the constrained layout contracts', () => {
-    const design = read('DESIGN.md')
+    const design = read('DESIGN.md');
     const sections = [
       '## Layout primitives',
       '## Components',
       '## Layout compositions',
       '## Patterns',
-    ]
-    let previous = -1
+    ];
+    let previous = -1;
     for (const section of sections) {
-      const current = design.indexOf(section)
-      expect(current, `${section} is missing`).toBeGreaterThan(previous)
-      previous = current
+      const current = design.indexOf(section);
+      expect(current, `${section} is missing`).toBeGreaterThan(previous);
+      previous = current;
     }
-    expect(design).toMatch(/### Box[\s\S]{0,1200}Defaults:/)
-    expect(design).toMatch(/### PageContent[\s\S]{0,1600}Invariants:/)
-  })
+    expect(design).toMatch(/### Box[\s\S]{0,1200}Defaults:/);
+    expect(design).toMatch(/### PageContent[\s\S]{0,1600}Invariants:/);
+  });
 
   it('makes the Page family the sole canonical page-level composition for new work', async () => {
-    const design = read('DESIGN.md')
-    const patterns = design.slice(design.indexOf('## Patterns'))
-    const pageBody = read('src/components/board/page-body.tsx')
+    const design = read('DESIGN.md');
+    const patterns = design.slice(design.indexOf('## Patterns'));
+    const pageBody = read('src/components/board/page-body.tsx');
 
     expect(design).toContain(
       'Page, PageHeader, PageContent, and PageSection are the sole canonical page-level composition family for new work.',
-    )
+    );
     expect(patterns).not.toMatch(
       /^Primitives:.*(?:PageBody|ListingPageHeader)/m,
-    )
-    expect(design).toMatch(/PageBody[\s\S]{0,500}migration-only/i)
-    expect(design).toMatch(/ListingPageHeader[\s\S]{0,500}migration-only/i)
-    expect(pageBody).not.toMatch(/\bclassName\??:/)
+    );
+    expect(design).toMatch(/PageBody[\s\S]{0,500}migration-only/i);
+    expect(design).toMatch(/ListingPageHeader[\s\S]{0,500}migration-only/i);
+    expect(pageBody).not.toMatch(/\bclassName\??:/);
 
-    const { readPatternDocs } = await generatorLib()
+    const { readPatternDocs } = await generatorLib();
     for (const pattern of readPatternDocs(root)) {
-      expect(pattern.primitives).not.toContain('PageBody')
-      expect(pattern.primitives).not.toContain('ListingPageHeader')
+      expect(pattern.primitives).not.toContain('PageBody');
+      expect(pattern.primitives).not.toContain('ListingPageHeader');
     }
-  })
+  });
 
   it('imports the owned shadcn Typeset stylesheet and exposes one content preset', () => {
-    const styles = read('src/styles.css')
-    const typeset = read('src/typeset.css')
-    expect(styles).toContain('@import "./typeset.css";')
-    expect(typeset).toContain('.typeset {')
-    expect(typeset).toContain('.typeset-content')
-    expect(typeset).not.toMatch(/\.typeset-(?:docs|article|compact)/)
-  })
+    const styles = read('src/styles.css');
+    const typeset = read('src/typeset.css');
+    expect(styles).toMatch(/@import ['"]\.\/typeset\.css['"];?/);
+    expect(typeset).toContain('.typeset {');
+    expect(typeset).toContain('.typeset-content');
+    expect(typeset).not.toMatch(/\.typeset-(?:docs|article|compact)/);
+  });
 
   it('the DTCG export is valid 2025.10-shaped token JSON matching theme.css', () => {
-    const dtcg = JSON.parse(read('design/tokens.dtcg.json'))
-    const tokens = parseTokens(read('src/theme.css'))
-    expect(dtcg.color.background.$type).toBe('color')
+    const dtcg = JSON.parse(read('design/tokens.dtcg.json'));
+    const tokens = parseTokens(read('src/theme.css'));
+    expect(dtcg.color.background.$type).toBe('color');
     expect(dtcg.color.background.$value.toLowerCase()).toBe(
       tokens.light['--background'].toLowerCase(),
-    )
+    );
     expect(dtcg.color['background-dark'].$value.toLowerCase()).toBe(
       tokens.dark['--background'].toLowerCase(),
-    )
-    expect(dtcg.fontFamily.sans.$type).toBe('fontFamily')
-  })
-})
+    );
+    expect(dtcg.fontFamily.sans.$type).toBe('fontFamily');
+  });
+});
 
 describe('dependency posture (D16)', () => {
   it('pins pnpm 11 as the package manager', () => {
-    const pkg = JSON.parse(read('package.json'))
-    expect(pkg.packageManager).toMatch(/^pnpm@11\./)
-  })
+    const pkg = JSON.parse(read('package.json'));
+    expect(pkg.packageManager).toMatch(/^pnpm@11\./);
+  });
 
   it('blocks dependency lifecycle scripts and keeps the release-age cooldown', () => {
-    const workspace = read('pnpm-workspace.yaml')
+    const workspace = read('pnpm-workspace.yaml');
     // allowBuilds present and every entry explicitly false (empty
     // allowlist — nothing runs lifecycle scripts) unless a reviewed
     // exception is set to true with a comment.
-    expect(workspace).toMatch(/allowBuilds:/)
-    expect(workspace).not.toMatch(/allowBuilds:[\s\S]*?:\s*true/)
+    expect(workspace).toMatch(/allowBuilds:/);
+    expect(workspace).not.toMatch(/allowBuilds:[\s\S]*?:\s*true/);
     // The cooldown is stated explicitly at the pnpm 11 default or stricter.
-    const age = workspace.match(/minimumReleaseAge:\s*(\d+)/)
-    expect(age).not.toBeNull()
-    expect(Number(age![1])).toBeGreaterThanOrEqual(1440)
-  })
-})
+    const age = workspace.match(/minimumReleaseAge:\s*(\d+)/);
+    expect(age).not.toBeNull();
+    expect(Number(age![1])).toBeGreaterThanOrEqual(1440);
+  });
+});
 
 describe('gen:design --frontmatter (builder-workspace D15 parity)', () => {
   // In BUILDER WORKSPACES the DESIGN.md body accumulates per-workspace
@@ -262,32 +261,32 @@ describe('gen:design --frontmatter (builder-workspace D15 parity)', () => {
     { timeout: 60_000 },
     async () => {
       const { generateDesignArtifacts, generateDesignFrontmatter } =
-        await generatorLib()
-      const full = await generateDesignArtifacts(root)
-      const partial = await generateDesignFrontmatter(root)
+        await generatorLib();
+      const full = await generateDesignArtifacts(root);
+      const partial = await generateDesignFrontmatter(root);
       expect(full.designMd.startsWith(partial.frontmatterBlock + '\n')).toBe(
         true,
-      )
-      expect(partial.dtcgJson).toBe(full.dtcgJson)
+      );
+      expect(partial.dtcgJson).toBe(full.dtcgJson);
     },
-  )
+  );
 
   it('spliceDesignFrontmatter replaces only the frontmatter — an edited body survives byte-for-byte', async () => {
     const { generateDesignFrontmatter, spliceDesignFrontmatter } =
-      await generatorLib()
-    const { frontmatterBlock } = await generateDesignFrontmatter(root)
+      await generatorLib();
+    const { frontmatterBlock } = await generateDesignFrontmatter(root);
     const body =
-      '\n\n## Overview\n\nOperator intent: warm, trustworthy, sage green.\n'
-    const stale = '---\nversion: stale\ncolors:\n  primary: "#000"\n---' + body
+      '\n\n## Overview\n\nOperator intent: warm, trustworthy, sage green.\n';
+    const stale = '---\nversion: stale\ncolors:\n  primary: "#000"\n---' + body;
     expect(spliceDesignFrontmatter(stale, frontmatterBlock)).toBe(
       frontmatterBlock + body,
-    )
-  })
+    );
+  });
 
   it('spliceDesignFrontmatter fails loud when the document has no frontmatter block', async () => {
-    const { spliceDesignFrontmatter } = await generatorLib()
+    const { spliceDesignFrontmatter } = await generatorLib();
     expect(() =>
       spliceDesignFrontmatter('just a body, no block', '---\nx: y\n---'),
-    ).toThrow(/frontmatter/)
-  })
-})
+    ).toThrow(/frontmatter/);
+  });
+});

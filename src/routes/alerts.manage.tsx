@@ -9,34 +9,52 @@
  * editing would drop the location scope. Re-subscribe via the form to change
  * filters. Unsubscribe / resubscribe / delete are the full self-service set here.
  */
-import { useState } from "react";
+import { useState } from 'react';
 
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from '@tanstack/react-router';
 
-import type { JobAlertManageState, JobAlertStoredFilters } from "@cavuno/board";
-
-import { Page, PageContent } from "@/components/layout/page";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { m } from "../paraglide/messages";
-
+import { m } from '../paraglide/messages';
 import {
   deleteJobAlertPreference,
   getJobAlertManageState,
   resubscribeJobAlert,
   unsubscribeJobAlert,
-} from "../server/queries";
+} from '../server/queries';
+
+import { Page, PageContent } from '@/components/layout/page';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from '@/components/ui/item';
+import type { JobAlertManageState, JobAlertStoredFilters } from '@cavuno/board';
 
 type LoaderData = { state: JobAlertManageState } | { error: true };
 
-export const Route = createFileRoute("/alerts/manage")({
+export const Route = createFileRoute('/alerts/manage')({
   staticData: { ownsMain: true },
-  validateSearch: (search: Record<string, unknown>): { subscription?: string; token?: string } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { subscription?: string; token?: string } => ({
     subscription:
-      typeof search.subscription === "string" && search.subscription
+      typeof search.subscription === 'string' && search.subscription
         ? search.subscription
         : undefined,
-    token: typeof search.token === "string" && search.token ? search.token : undefined,
+    token:
+      typeof search.token === 'string' && search.token
+        ? search.token
+        : undefined,
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }): Promise<LoaderData> => {
@@ -51,7 +69,10 @@ export const Route = createFileRoute("/alerts/manage")({
     }
   },
   head: () => ({
-    meta: [{ title: m.alertsManage_title() }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: m.alertsManage_title() },
+      { name: 'robots', content: 'noindex' },
+    ],
   }),
   component: ManagePage,
 });
@@ -59,9 +80,11 @@ export const Route = createFileRoute("/alerts/manage")({
 function filtersSummary(filters: JobAlertStoredFilters): string {
   const parts = [
     ...(filters.jobFunctions ?? []),
-    ...(filters.remoteOptions ?? []).map((option) => option.replaceAll("_", " ")),
+    ...(filters.remoteOptions ?? []).map((option) =>
+      option.replaceAll('_', ' '),
+    ),
   ];
-  return parts.length ? parts.join(", ") : m.alertsManage_allJobsText();
+  return parts.length ? parts.join(', ') : m.alertsManage_allJobsText();
 }
 
 function ManagePage() {
@@ -71,16 +94,18 @@ function ManagePage() {
   const [pending, setPending] = useState(false);
   const [actionError, setActionError] = useState(false);
 
-  if ("error" in data) {
+  if ('error' in data) {
     return (
       <Page width="narrow">
         <PageContent>
-          <div className="space-y-3 py-8 text-center">
-            <h1 className="font-heading text-3xl font-semibold tracking-tight">
-              {m.alertsManage_invalidTitle()}
-            </h1>
-            <p className="text-muted-foreground">{m.alertsManage_invalidBody()}</p>
-          </div>
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>{m.alertsManage_invalidTitle()}</EmptyTitle>
+              <EmptyDescription>
+                {m.alertsManage_invalidBody()}
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         </PageContent>
       </Page>
     );
@@ -108,31 +133,35 @@ function ManagePage() {
             <h1 className="font-heading text-3xl font-semibold tracking-tight">
               {m.alertsManage_title()}
             </h1>
-            <p className="text-sm text-muted-foreground">{state.email}</p>
+            <p className="text-muted-foreground text-sm">{state.email}</p>
           </header>
 
           {actionError ? (
-            <p role="alert" className="text-sm text-destructive">
-              {m.alertsManage_actionErrorText()}
-            </p>
+            <Alert variant="destructive">
+              <AlertDescription>
+                {m.alertsManage_actionErrorText()}
+              </AlertDescription>
+            </Alert>
           ) : null}
 
           {state.unsubscribed ? (
-            <div className="space-y-2 rounded-2xl border border-border p-4">
-              <p className="text-sm text-muted-foreground">{m.alertsManage_unsubscribedText()}</p>
-              <Button
-                disabled={pending}
-                onClick={() =>
-                  run(() =>
-                    resubscribeJobAlert({
-                      data: { subscriptionId: subscription!, token: token! },
-                    }),
-                  )
-                }
-              >
-                {m.alertsManage_resubscribeLabel()}
-              </Button>
-            </div>
+            <Alert role="status">
+              <AlertDescription className="space-y-2">
+                <p>{m.alertsManage_unsubscribedText()}</p>
+                <Button
+                  disabled={pending}
+                  onClick={() =>
+                    run(() =>
+                      resubscribeJobAlert({
+                        data: { subscriptionId: subscription!, token: token! },
+                      }),
+                    )
+                  }
+                >
+                  {m.alertsManage_resubscribeLabel()}
+                </Button>
+              </AlertDescription>
+            </Alert>
           ) : (
             <Button
               variant="outline"
@@ -151,43 +180,48 @@ function ManagePage() {
 
           <ul className="space-y-3">
             {state.preferences.map((preference) => (
-              <li
-                key={preference.id}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-border p-4"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Badge variant={preference.isActive ? "default" : "secondary"}>
-                      {preference.isActive
-                        ? m.alertsManage_activeBadge()
-                        : m.alertsManage_pausedBadge()}
-                    </Badge>
-                    <span className="text-muted-foreground">
-                      {preference.frequency === "daily"
-                        ? m.alertManager_frequencyDaily()
-                        : m.alertManager_frequencyWeekly()}
-                    </span>
-                  </div>
-                  <p className="text-sm text-foreground">{filtersSummary(preference.filters)}</p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={pending}
-                  onClick={() =>
-                    run(() =>
-                      deleteJobAlertPreference({
-                        data: {
-                          subscriptionId: subscription!,
-                          preferenceId: preference.id,
-                          token: preference.manageToken,
-                        },
-                      }),
-                    )
-                  }
-                >
-                  {m.alertsManage_deleteLabel()}
-                </Button>
+              <li key={preference.id}>
+                <Item variant="outline">
+                  <ItemContent>
+                    <ItemTitle>
+                      <Badge
+                        variant={preference.isActive ? 'default' : 'secondary'}
+                      >
+                        {preference.isActive
+                          ? m.alertsManage_activeBadge()
+                          : m.alertsManage_pausedBadge()}
+                      </Badge>
+                      <span className="text-muted-foreground">
+                        {preference.frequency === 'daily'
+                          ? m.alertManager_frequencyDaily()
+                          : m.alertManager_frequencyWeekly()}
+                      </span>
+                    </ItemTitle>
+                    <ItemDescription>
+                      {filtersSummary(preference.filters)}
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={pending}
+                      onClick={() =>
+                        run(() =>
+                          deleteJobAlertPreference({
+                            data: {
+                              subscriptionId: subscription!,
+                              preferenceId: preference.id,
+                              token: preference.manageToken,
+                            },
+                          }),
+                        )
+                      }
+                    >
+                      {m.alertsManage_deleteLabel()}
+                    </Button>
+                  </ItemActions>
+                </Item>
               </li>
             ))}
           </ul>

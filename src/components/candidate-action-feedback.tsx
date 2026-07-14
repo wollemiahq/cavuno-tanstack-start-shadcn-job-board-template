@@ -1,21 +1,27 @@
-import { m } from "../paraglide/messages";
+import { m } from '../paraglide/messages';
 
-export type CandidateActionFeedbackState = "idle" | "success" | "error";
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-export function CandidateActionFeedback({ state }: { state: CandidateActionFeedbackState }) {
-  if (state === "idle") return null;
+export type CandidateActionFeedbackState = 'idle' | 'success' | 'error';
 
-  if (state === "error") {
+export function CandidateActionFeedback({
+  state,
+}: {
+  state: CandidateActionFeedbackState;
+}) {
+  if (state === 'idle') return null;
+
+  if (state === 'error') {
     return (
-      <p role="alert" className="text-sm text-destructive">
-        {m.candidateAction_errorText()}
-      </p>
+      <Alert variant="destructive">
+        <AlertDescription>{m.candidateAction_errorText()}</AlertDescription>
+      </Alert>
     );
   }
 
   return (
-    <p role="status" className="text-sm text-muted-foreground">
-      {m.candidateAction_successText()}
-    </p>
+    <Alert role="status">
+      <AlertDescription>{m.candidateAction_successText()}</AlertDescription>
+    </Alert>
   );
 }

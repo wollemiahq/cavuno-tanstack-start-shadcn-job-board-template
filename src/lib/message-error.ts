@@ -7,9 +7,9 @@
 export function errorMessage(error: unknown): string {
   if (error instanceof Error && error.message) {
     if (error.message.includes('EMAIL_UNVERIFIED')) {
-      return 'Verify your email before sending messages.'
+      return 'Verify your email before sending messages.';
     }
-    return error.message
+    return error.message;
   }
-  return 'Something went wrong. Please try again.'
+  return 'Something went wrong. Please try again.';
 }

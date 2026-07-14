@@ -9,38 +9,48 @@
  * frontend (ADR-0039 — the API is a data contract only); only the card data +
  * the branding flag come from the API.
  */
-import { createFileRoute, getRouteApi, Link } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, Link } from '@tanstack/react-router';
 
-import type { EmploymentType, PublicJobCard, RemoteOption, Seniority } from "@cavuno/board";
+import { m } from '../paraglide/messages';
+import { embedJobs, getBoardContext } from '../server/queries';
 
-import { toJobCardVM } from "@/board/job-view-model";
-import { JobCard } from "@/components/board/job-card";
-import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { cn } from "@/lib/utils";
-import { m } from "../paraglide/messages";
-import { embedJobs, getBoardContext } from "../server/queries";
+import { toJobCardVM } from '@/board/job-view-model';
+import { JobCard } from '@/components/board/job-card';
+import { Badge } from '@/components/ui/badge';
+import { buttonVariants } from '@/components/ui/button';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { cn } from '@/lib/utils';
+import type {
+  EmploymentType,
+  PublicJobCard,
+  RemoteOption,
+  Seniority,
+} from '@cavuno/board';
 
-const REMOTE_OPTIONS: readonly RemoteOption[] = ["on_site", "hybrid", "remote"];
+const REMOTE_OPTIONS: readonly RemoteOption[] = ['on_site', 'hybrid', 'remote'];
 const EMPLOYMENT_TYPES: readonly EmploymentType[] = [
-  "full_time",
-  "part_time",
-  "contract",
-  "internship",
-  "temporary",
-  "volunteer",
-  "other",
+  'full_time',
+  'part_time',
+  'contract',
+  'internship',
+  'temporary',
+  'volunteer',
+  'other',
 ];
 const SENIORITIES: readonly Seniority[] = [
-  "entry_level",
-  "associate",
-  "mid_level",
-  "senior",
-  "lead",
-  "principal",
-  "director",
-  "executive",
+  'entry_level',
+  'associate',
+  'mid_level',
+  'senior',
+  'lead',
+  'principal',
+  'director',
+  'executive',
 ];
 
 interface EmbedSearch {
@@ -53,30 +63,40 @@ interface EmbedSearch {
   cursor?: string;
 }
 
-export const Route = createFileRoute("/embed/jobs")({
+export const Route = createFileRoute('/embed/jobs')({
   validateSearch: (search: Record<string, unknown>): EmbedSearch => ({
     // The hosted embed widget's keyword URL param is `query` (it maps to the
     // API's `q`); accept it so an existing `<iframe …?query=…>` is a faithful
     // drop-in, falling back to the starter's own `q`.
     q:
-      typeof search.query === "string" && search.query
+      typeof search.query === 'string' && search.query
         ? search.query
-        : typeof search.q === "string" && search.q
+        : typeof search.q === 'string' && search.q
           ? search.q
           : undefined,
     remoteOption: REMOTE_OPTIONS.includes(search.remoteOption as RemoteOption)
       ? (search.remoteOption as RemoteOption)
       : undefined,
-    employmentType: EMPLOYMENT_TYPES.includes(search.employmentType as EmploymentType)
+    employmentType: EMPLOYMENT_TYPES.includes(
+      search.employmentType as EmploymentType,
+    )
       ? (search.employmentType as EmploymentType)
       : undefined,
     seniority: SENIORITIES.includes(search.seniority as Seniority)
       ? (search.seniority as Seniority)
       : undefined,
-    location: typeof search.location === "string" && search.location ? search.location : undefined,
+    location:
+      typeof search.location === 'string' && search.location
+        ? search.location
+        : undefined,
     limit:
-      typeof search.limit === "number" && Number.isFinite(search.limit) ? search.limit : undefined,
-    cursor: typeof search.cursor === "string" && search.cursor ? search.cursor : undefined,
+      typeof search.limit === 'number' && Number.isFinite(search.limit)
+        ? search.limit
+        : undefined,
+    cursor:
+      typeof search.cursor === 'string' && search.cursor
+        ? search.cursor
+        : undefined,
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
@@ -85,7 +105,9 @@ export const Route = createFileRoute("/embed/jobs")({
         data: {
           q: deps.q,
           remoteOption: deps.remoteOption ? [deps.remoteOption] : undefined,
-          employmentType: deps.employmentType ? [deps.employmentType] : undefined,
+          employmentType: deps.employmentType
+            ? [deps.employmentType]
+            : undefined,
           seniority: deps.seniority ? [deps.seniority] : undefined,
           location: deps.location,
           limit: deps.limit,
@@ -112,14 +134,14 @@ export const Route = createFileRoute("/embed/jobs")({
       ...(loaderData
         ? [
             {
-              name: "description",
+              name: 'description',
               content: m.embedJobs_metaDescription({
                 boardName: loaderData.boardName,
               }),
             },
           ]
         : []),
-      { name: "robots", content: "noindex" },
+      { name: 'robots', content: 'noindex' },
     ],
   }),
   component: EmbedJobsPage,
@@ -136,9 +158,13 @@ function buildEmbedCta(
   total: number | undefined,
 ): { label: string; search: Record<string, unknown> } | null {
   const hasFilters = Boolean(
-    search.q || search.location || search.employmentType || search.remoteOption || search.seniority,
+    search.q ||
+    search.location ||
+    search.employmentType ||
+    search.remoteOption ||
+    search.seniority,
   );
-  const hasMoreThanShown = typeof total === "number" && total > pageSize;
+  const hasMoreThanShown = typeof total === 'number' && total > pageSize;
 
   if (hasFilters && hasMoreThanShown) {
     return {
@@ -157,7 +183,7 @@ function buildEmbedCta(
   return null;
 }
 
-const rootApi = getRouteApi("__root__");
+const rootApi = getRouteApi('__root__');
 
 function EmbedJobsPage() {
   const { page, showCavunoBranding } = Route.useLoaderData();
@@ -172,14 +198,19 @@ function EmbedJobsPage() {
       {jobs.length > 0 ? (
         <div className="space-y-3" data-test="embed-jobs-list">
           {jobs.map((job) => (
-            <JobCard key={job.id} vm={toJobCardVM(job, board.language, board.labels)} />
+            <JobCard
+              key={job.id}
+              vm={toJobCardVM(job, board.language, board.labels)}
+            />
           ))}
         </div>
       ) : (
         <Empty className="border py-8">
           <EmptyHeader>
             <EmptyTitle>{m.embedJobs_noJobsMatchText()}</EmptyTitle>
-            <EmptyDescription>{m.embedJobs_tryRelaxingFiltersText()}</EmptyDescription>
+            <EmptyDescription>
+              {m.embedJobs_tryRelaxingFiltersText()}
+            </EmptyDescription>
           </EmptyHeader>
         </Empty>
       )}
@@ -188,7 +219,13 @@ function EmbedJobsPage() {
         <div className="flex min-h-8 items-center justify-between gap-2">
           {showCavunoBranding ? (
             <Badge
-              render={<a href="https://cavuno.com" target="_blank" rel="noopener noreferrer" />}
+              render={
+                <a
+                  href="https://cavuno.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
+              }
               variant="secondary"
             >
               {m.embedJobs_poweredByCavunoLabel()}
@@ -202,7 +239,10 @@ function EmbedJobsPage() {
               to="/"
               search={cta.search}
               target="_blank"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "no-underline")}
+              className={cn(
+                buttonVariants({ variant: 'outline', size: 'sm' }),
+                'no-underline',
+              )}
             >
               {cta.label}
             </Link>

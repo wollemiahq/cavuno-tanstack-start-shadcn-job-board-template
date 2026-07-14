@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * The dark job-alerts band (CAV-497) — the Lumen-style full-width dark
@@ -13,15 +13,15 @@
  * sibling, not a replacement — job listings keep their context-carrying
  * floating prompt instead.
  */
-import { useState } from "react";
+import { useState } from 'react';
 
-import { toAlertSignupVM } from "@/board/alert-signup-view-model";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import type { JobAlertSubscribeInput } from "@cavuno/board";
-import type { BoardLabelOverrides } from "@cavuno/board/format";
+import { toAlertSignupVM } from '@/board/alert-signup-view-model';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import type { JobAlertSubscribeInput } from '@cavuno/board';
+import type { BoardLabelOverrides } from '@cavuno/board/format';
 
-type Status = "idle" | "pending" | "created" | "duplicate" | "error";
+type Status = 'idle' | 'pending' | 'created' | 'duplicate' | 'error';
 
 export function AlertsBand({
   onSubscribe,
@@ -30,7 +30,9 @@ export function AlertsBand({
   source,
 }: {
   /** Perform the subscribe (see AlertSignupForm wiring docs). */
-  onSubscribe: (input: JobAlertSubscribeInput) => Promise<{ status: "created" | "duplicate" }>;
+  onSubscribe: (
+    input: JobAlertSubscribeInput,
+  ) => Promise<{ status: 'created' | 'duplicate' }>;
   /** Board language (ISO code) from `board.context()`. */
   language: string;
   /** Operator label overrides (`board.context().labels`), ADR-0059. */
@@ -38,33 +40,37 @@ export function AlertsBand({
   /** Attribution context for the subscription (e.g. "companies_list"). */
   source: string;
 }) {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<Status>("idle");
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<Status>('idle');
 
   const vm = toAlertSignupVM(language, labels);
 
   const message =
-    status === "created"
+    status === 'created'
       ? vm.messages.created
-      : status === "duplicate"
+      : status === 'duplicate'
         ? vm.messages.duplicate
-        : status === "error"
+        : status === 'error'
           ? vm.messages.error
           : null;
 
   return (
-    <div className="mx-auto w-full max-w-container px-4 pb-10 md:px-8">
+    <div className="mx-auto w-full max-w-7xl px-4 pb-10 md:px-8">
       <section
         aria-label={vm.sectionAriaLabel}
-        className="dark flex flex-col gap-5 rounded-2xl bg-background px-6 py-8 text-foreground md:flex-row md:items-center md:justify-between md:px-10 md:py-10"
+        className="dark bg-background text-foreground flex flex-col gap-5 rounded-2xl px-6 py-8 md:flex-row md:items-center md:justify-between md:px-10 md:py-10"
       >
         <div className="flex max-w-md flex-col gap-1.5">
-          <h2 className="font-heading text-xl font-semibold tracking-tight">{vm.defaultTitle}</h2>
+          <h2 className="font-heading text-xl font-semibold tracking-tight">
+            {vm.defaultTitle}
+          </h2>
           {message ? (
             <p
               role="status"
               className={
-                status === "error" ? "text-sm text-destructive" : "text-sm text-muted-foreground"
+                status === 'error'
+                  ? 'text-destructive text-sm'
+                  : 'text-muted-foreground text-sm'
               }
             >
               {message}
@@ -75,18 +81,18 @@ export function AlertsBand({
           className="flex w-full max-w-md gap-2"
           onSubmit={async (event) => {
             event.preventDefault();
-            setStatus("pending");
+            setStatus('pending');
             try {
               const result = await onSubscribe({
                 email,
                 consent: true,
-                frequency: "weekly",
+                frequency: 'weekly',
                 context: { source },
               });
-              setStatus(result.status === "created" ? "created" : "duplicate");
-              if (result.status === "created") setEmail("");
+              setStatus(result.status === 'created' ? 'created' : 'duplicate');
+              if (result.status === 'created') setEmail('');
             } catch {
-              setStatus("error");
+              setStatus('error');
             }
           }}
         >
@@ -99,15 +105,19 @@ export function AlertsBand({
             placeholder={vm.emailPlaceholder}
             required
             value={email}
-            disabled={status === "pending"}
+            disabled={status === 'pending'}
             onChange={(event) => {
               setEmail(event.target.value);
-              if (status !== "idle" && status !== "pending") setStatus("idle");
+              if (status !== 'idle' && status !== 'pending') setStatus('idle');
             }}
             className="flex-1"
           />
-          <Button type="submit" aria-label={vm.submitAriaLabel} disabled={status === "pending"}>
-            {status === "pending" ? vm.subscribingLabel : vm.buttonText}
+          <Button
+            type="submit"
+            aria-label={vm.submitAriaLabel}
+            disabled={status === 'pending'}
+          >
+            {status === 'pending' ? vm.subscribingLabel : vm.buttonText}
           </Button>
         </form>
       </section>

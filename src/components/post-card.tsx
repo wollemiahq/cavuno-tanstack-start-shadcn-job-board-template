@@ -1,15 +1,20 @@
-import { Link, getRouteApi } from "@tanstack/react-router";
-import { ArrowUpRight } from "lucide-react";
+import { formatDate } from '@cavuno/board/format';
+import { Link, getRouteApi } from '@tanstack/react-router';
+import { ArrowUpRight } from 'lucide-react';
 
-import type { PublicBlogPostSummary } from "@cavuno/board";
-import { formatDate } from "@cavuno/board/format";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { initialsOf } from '@/lib/initials';
+import type { PublicBlogPostSummary } from '@cavuno/board';
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { initialsOf } from "@/lib/initials";
-
-const rootApi = getRouteApi("__root__");
+const rootApi = getRouteApi('__root__');
 
 /**
  * One crawlable blog summary. The card keeps post, tag, and every author as
@@ -45,9 +50,12 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
             <Link
               to="/blog/tag/$tagSlug"
               params={{ tagSlug: eyebrow.slug }}
-              className="w-fit rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+              className="focus-visible:ring-ring/30 w-fit rounded-2xl outline-none focus-visible:ring-3"
             >
-              <Badge variant="secondary" className="h-auto max-w-full whitespace-normal">
+              <Badge
+                variant="secondary"
+                className="h-auto max-w-full whitespace-normal"
+              >
                 {eyebrow.name}
               </Badge>
             </Link>
@@ -57,15 +65,20 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
             <Link
               to="/blog/$postSlug"
               params={{ postSlug: post.slug }}
-              className="flex items-start justify-between gap-3 rounded-sm outline-none transition-colors hover:text-primary/70 focus-visible:ring-3 focus-visible:ring-ring/30"
+              className="hover:text-primary/70 focus-visible:ring-ring/30 flex items-start justify-between gap-3 rounded-sm transition-colors outline-none focus-visible:ring-3"
             >
               <span>{post.title}</span>
-              <ArrowUpRight aria-hidden className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+              <ArrowUpRight
+                aria-hidden
+                className="text-muted-foreground mt-0.5 size-5 shrink-0"
+              />
             </Link>
           </CardTitle>
 
           {post.customExcerpt ? (
-            <p className="line-clamp-2 text-sm text-muted-foreground">{post.customExcerpt}</p>
+            <p className="text-muted-foreground line-clamp-2 text-sm">
+              {post.customExcerpt}
+            </p>
           ) : null}
         </CardHeader>
 
@@ -74,29 +87,34 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
             {firstAuthor ? (
               <Avatar size="sm">
                 {firstAuthor.avatarUrl ? (
-                  <AvatarImage src={firstAuthor.avatarUrl} alt={firstAuthor.name} />
+                  <AvatarImage
+                    src={firstAuthor.avatarUrl}
+                    alt={firstAuthor.name}
+                  />
                 ) : null}
                 <AvatarFallback>{initialsOf(firstAuthor.name)}</AvatarFallback>
               </Avatar>
             ) : null}
             <div className="flex min-w-0 flex-col gap-0.5 text-sm">
               {post.authors.length > 0 ? (
-                <span className="flex flex-wrap gap-x-1 font-medium text-foreground">
+                <span className="text-foreground flex flex-wrap gap-x-1 font-medium">
                   {post.authors.map((author, index) => (
                     <span key={author.id}>
                       <Link
                         to="/blog/author/$authorSlug"
                         params={{ authorSlug: author.slug }}
-                        className="rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/30"
+                        className="focus-visible:ring-ring/30 rounded-sm outline-none hover:underline focus-visible:ring-3"
                       >
                         {author.name}
                       </Link>
-                      {index < post.authors.length - 1 ? "," : null}
+                      {index < post.authors.length - 1 ? ',' : null}
                     </span>
                   ))}
                 </span>
               ) : null}
-              {date ? <span className="text-muted-foreground">{date}</span> : null}
+              {date ? (
+                <span className="text-muted-foreground">{date}</span>
+              ) : null}
             </div>
           </CardFooter>
         ) : (

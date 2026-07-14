@@ -1,20 +1,21 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from '@tanstack/react-router';
 
-import { RheaRegistrationPage } from "@/components/rhea-auth-pilot";
-import { buttonVariants } from "@/components/ui/button";
-import { m } from "../paraglide/messages";
-import { signUp } from "../server/auth";
-import { getBoardContext } from "../server/queries";
 import {
   candidateReturnTo,
   candidateSignInHref,
   candidateVerifyEmailHref,
-} from "../lib/candidate-return-to";
+} from '../lib/candidate-return-to';
+import { m } from '../paraglide/messages';
+import { signUp } from '../server/auth';
+import { getBoardContext } from '../server/queries';
 
-export const Route = createFileRoute("/auth/sign-up")({
+import { RheaRegistrationPage } from '@/components/rhea-auth-pilot';
+import { buttonVariants } from '@/components/ui/button';
+
+export const Route = createFileRoute('/auth/sign-up')({
   validateSearch: (search: Record<string, unknown>) => ({
     returnTo:
-      typeof search.returnTo === "string" && search.returnTo
+      typeof search.returnTo === 'string' && search.returnTo
         ? candidateReturnTo(search.returnTo)
         : undefined,
   }),
@@ -53,11 +54,11 @@ function SignUpPage() {
         return result;
       }}
       footer={
-        <p className="text-center text-sm text-muted-foreground">
-          {m.authSignUp_alreadyHaveAccountText()}{" "}
+        <p className="text-muted-foreground text-center text-sm">
+          {m.authSignUp_alreadyHaveAccountText()}{' '}
           <a
             href={candidateSignInHref(returnTo)}
-            className={buttonVariants({ variant: "link", size: "sm" })}
+            className={buttonVariants({ variant: 'link', size: 'sm' })}
           >
             {m.authSignUp_signInLink()}
           </a>

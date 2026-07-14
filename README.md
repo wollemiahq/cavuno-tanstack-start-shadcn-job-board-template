@@ -13,8 +13,8 @@ complete, SEO-ready job board — every surface a real page, nothing stubbed.
 
 - **Owned shadcn/ui Rhea source, in-tree** — the Base UI-backed primitives
   under `src/components/ui/` and their CLI-owned theme are yours to edit or
-  replace. Inherited Untitled UI is temporary migration-only compatibility
-  code and will be deleted before release.
+  replace. Every release surface uses this one component and token system;
+  there is no inherited Untitled UI compatibility layer.
 - **Every surface is a real page**, not a placeholder: jobs browse + search
   + filters, job detail + apply, companies, blog, salary explorer,
   programmatic SEO listings, candidate auth + account + messaging, the
@@ -68,13 +68,18 @@ dependencies deliberately, and adapt Base UI-only props such as
 `src/theme.css` is the one CLI-owned theme source. Apply the pinned preset with
 `pnpm exec shadcn apply b27Gcu6y --only theme --yes`, then run
 `pnpm run gen:theme && pnpm run gen:design`. `src/styles.css` owns only the app
-layout and the temporary Untitled UI compatibility bridge; inherited Untitled
-UI components may be removed as routes migrate, but new work does not extend
-that layer.
+layout utilities that sit above the semantic shadcn tokens. Components use
+canonical utilities such as `bg-background`, `text-foreground`,
+`text-muted-foreground`, `border-border`, and `ring-ring`; changing the theme
+does not require a parallel compatibility stylesheet.
 
 The full component inventory, token reference, and design do's-and-don'ts
 live in **`DESIGN.md`** (generated from `src/theme.css` + component source —
 regenerate with `pnpm run gen:design`, never hand-edit; CI rejects drift).
+The human-reviewed [shadcn component cross-reference](docs/shadcn-component-cross-reference.md)
+records every installed official component, where the starter adopts it, and
+why some interaction-free primitives remain available rather than forced into
+the demo.
 
 ## What's inside
 

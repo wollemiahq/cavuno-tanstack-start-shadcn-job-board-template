@@ -1,8 +1,8 @@
 ---
 name: Form page
 purpose: A page header, titled field sections, a field grid, and a submit with status — the shape of every data-entry surface.
-primitives: [Input, Select, Label, Button, Checkbox, CandidateActionFeedback]
-usedBy: [src/components/profile-form.tsx, src/components/experience-section.tsx, src/components/education-section.tsx]
+primitives: [Card, Field, FieldSet, FieldLegend, FieldGroup, FieldLabel, FieldDescription, FieldError, Input, Select, Textarea, Checkbox, Button, Alert]
+usedBy: [src/components/profile-form.tsx, src/components/experience-section.tsx, src/components/education-section.tsx, src/components/post-job-form.tsx, src/routes/employers.onboarding.$slug.tsx, src/routes/employers.companies.$slug.profile.tsx, src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx, src/routes/employers.dashboard.tsx]
 ---
 
 ## Purpose
@@ -22,9 +22,13 @@ every form legible and accessible.
 ## Anatomy
 
 - Page header (display title + supporting text).
-- `<section>` blocks, each with an `h2` and a field grid.
-- Fields: `Input` / `Select` / `Checkbox` with an explicit `Label`.
-- Submit `Button` + `CandidateActionFeedback` (or the relevant domain-specific feedback component).
+- `Card` sections or semantic `FieldSet` groups, with `FieldLegend` where a
+  related control set needs a visible name.
+- `FieldGroup` for spacing groups of fields.
+- Each field composes `Field`, `FieldLabel`, a control (`Input`, `Select`,
+  `Textarea`, or `Checkbox`), optional `FieldDescription`, and `FieldError`.
+- Submit `Button` + an action-level `Alert` or the domain feedback component
+  that wraps it.
 
 ## Composition
 
@@ -32,23 +36,29 @@ Compose owned shadcn primitives explicitly so the label/control relationship
 and validation behavior remain visible to both people and coding agents:
 
 ```tsx
-<Label htmlFor="role">{label}</Label>
-<Input id="role" name="role" required />
-<CandidateActionFeedback state={feedback} />
+<Field data-invalid={Boolean(error)}>
+  <FieldLabel htmlFor="role">{label}</FieldLabel>
+  <Input id="role" name="role" aria-invalid={Boolean(error)} required />
+  <FieldDescription>{description}</FieldDescription>
+  {error ? <FieldError>{error}</FieldError> : null}
+</Field>
 ```
 
 ## Do / Don't
 
 | Do                                                                                                            | Don't                                                               |
 | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Build candidate fields from the owned shadcn `Input` / `Select` / `Checkbox` / `Label` primitives.            | Import a second presentation system into candidate forms.           |
+| Build fields from the owned shadcn `Field` family and canonical controls.                                     | Import a second presentation system or hand-roll label/error spacing. |
 | Use native validation and visible loading, success, and retryable error feedback.                             | Swallow rejected mutations or leave a control indefinitely pending. |
 | Style through semantic theme tokens such as `text-muted-foreground`, `border-border`, and `text-destructive`. | Hard-code palette values that bypass `theme.css`.                   |
 
 ## Used by
 
-- `profile-form`, `experience-section`, and `education-section`.
-- Employer and post-a-job forms remain legacy migration references; they are not consumers yet.
+- Candidate profile: `profile-form`, `experience-section`, and
+  `education-section`.
+- Public posting: `post-job-form`.
+- Employer onboarding, company profile, applicant management, and dashboard
+  forms under `src/routes/employers.*`.
 
 ## Related
 

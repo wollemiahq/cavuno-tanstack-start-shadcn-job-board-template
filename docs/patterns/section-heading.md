@@ -1,7 +1,7 @@
 ---
 name: Section heading
 purpose: A titled section row with an optional trailing "view all / see all" link.
-primitives: [Link, Button]
+primitives: [PageSection, Link, Button]
 usedBy: [src/components/board/home-landing.tsx, src/routes/salaries.index.tsx, src/routes/companies.$companySlug.index.tsx]
 ---
 
@@ -21,36 +21,39 @@ scannable rhythm.
 
 ## Anatomy
 
-- A flex row: `items-end justify-between`.
-- Left: `<h2 className="text-display-xs font-semibold text-primary md:text-display-sm">`.
-- Right (optional): a `Link` / `Button color="link-color"` with a trailing arrow.
+- `PageSection` with a visible `title`; it owns the semantic `h2` and spacing.
+- Optional `actions`, usually a typed `Link` styled with `buttonVariants`.
 
 ## Composition
 
-`home-landing`'s `SectionHeader` is the reference shape:
+`PageSection` is the reference shape:
 
 ```tsx
-<div className="flex items-end justify-between gap-4">
-  <h2 className="text-display-xs font-semibold text-primary md:text-display-sm">{title}</h2>
-  <Link to={to} className="group inline-flex shrink-0 items-center gap-1 … text-brand-secondary …">
-    {viewAllLabel}
-    <ArrowRight className="size-4 … group-hover:translate-x-0.5" />
-  </Link>
-</div>
+<PageSection
+  title={title}
+  actions={
+    <Link to={to} className={buttonVariants({ variant: "ghost", size: "sm" })}>
+      {viewAllLabel}
+      <ArrowRight aria-hidden="true" data-icon="inline-end" />
+    </Link>
+  }
+>
+  {children}
+</PageSection>
 ```
 
 ## Do / Don't
 
 | Do | Don't |
 |---|---|
-| Use `text-display-xs md:text-display-sm font-semibold text-primary` for the title. | Reach for `text-2xl` / `font-heading` (legacy heading sizing). |
+| Let `PageSection` own the heading level, theme typography, and action alignment. | Recreate the heading row with page-specific type and color classes. |
 | Route the trailing link through `Link` (typed route id) or `board/paths`. | String-build the target URL. |
 | Reuse one section-heading shape. | Keep three parallel copies — `home-landing` `SectionHeader`, `salaries.index` `HubSection`, and the `companies.$companySlug.index` inline "view all N jobs" each roll their own; consolidate as they are touched. |
 
 ## Used by
 
-- `home-landing` `SectionHeader` — latest jobs / featured companies.
-- `salaries.index` `HubSection` — the four salary hubs.
+- `home-landing` `PageSection` — latest jobs, featured talent, and blog.
+- `salaries.index` — the four salary hubs.
 - `companies.$companySlug.index` — inline "view all N jobs".
 
 ## Related

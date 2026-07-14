@@ -1,3 +1,14 @@
+import {
+  isBoardApiError,
+  type ConfirmWorkEmailBody,
+  type CreateCompanyBody,
+  type CreateEmployerJobBody,
+  type EmployerCheckoutBody,
+  type EmployerCompanySearchQuery,
+  type SendWorkEmailBody,
+  type UpdateEmployerCompanyBody,
+  type UpdateEmployerJobBody,
+} from '@cavuno/board';
 /**
  * Authenticated server functions — the `/employers/dashboard` employer surface
  * (the `board.me.companies.*` SDK, new in @cavuno/board 1.21.0). Auth is
@@ -12,44 +23,33 @@
  * the API's message (slug taken, payment required, stage limit, …) reaches the
  * form — the grant simply rides along (established by the page load).
  */
-import { createServerFn } from '@tanstack/react-start'
-import {
-  isBoardApiError,
-  type ConfirmWorkEmailBody,
-  type CreateCompanyBody,
-  type CreateEmployerJobBody,
-  type EmployerCheckoutBody,
-  type EmployerCompanySearchQuery,
-  type SendWorkEmailBody,
-  type UpdateEmployerCompanyBody,
-  type UpdateEmployerJobBody,
-} from '@cavuno/board'
+import { createServerFn } from '@tanstack/react-start';
 
-import { getBoard } from '../lib/board'
+import { getBoard } from '../lib/board';
 import {
   boardAccessMiddleware,
   type BoardAccessContext,
-} from '../lib/board-access-middleware'
-import { gatedRead } from './board-access'
+} from '../lib/board-access-middleware';
 import {
   requireSessionMiddleware,
   type SessionContext,
-} from '../lib/session-middleware'
+} from '../lib/session-middleware';
+import { gatedRead } from './board-access';
 
 export type ActionResult<T> =
   | { ok: true; data: T }
-  | { ok: false; message: string }
+  | { ok: false; message: string };
 
 async function run<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
   try {
-    return { ok: true, data: await fn() }
+    return { ok: true, data: await fn() };
   } catch (error) {
     return {
       ok: false,
       message: isBoardApiError(error)
         ? error.message
         : 'Something went wrong. Please try again.',
-    }
+    };
   }
 }
 
@@ -57,7 +57,7 @@ async function run<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
 function authedHeaders(
   context: SessionContext & BoardAccessContext,
 ): Record<string, string> {
-  return { ...context.authHeaders, ...context.boardAccessHeaders }
+  return { ...context.authHeaders, ...context.boardAccessHeaders };
 }
 
 // ── Companies & claims ──────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ export const listCompanies = createServerFn({ method: 'GET' })
     gatedRead(context, () =>
       getBoard().me.companies.list({ headers: authedHeaders(context) }),
     ),
-  )
+  );
 
 export const searchCompanies = createServerFn({ method: 'GET' })
   .validator((input: EmployerCompanySearchQuery) => input)
@@ -78,7 +78,7 @@ export const searchCompanies = createServerFn({ method: 'GET' })
     run(() =>
       getBoard().me.companies.search(data, { headers: authedHeaders(context) }),
     ),
-  )
+  );
 
 export const createCompany = createServerFn({ method: 'POST' })
   .validator((input: CreateCompanyBody) => input)
@@ -87,7 +87,7 @@ export const createCompany = createServerFn({ method: 'POST' })
     run(() =>
       getBoard().me.companies.create(data, { headers: authedHeaders(context) }),
     ),
-  )
+  );
 
 export const claimCompany = createServerFn({ method: 'POST' })
   .validator((input: { slug: string }) => input)
@@ -98,7 +98,7 @@ export const claimCompany = createServerFn({ method: 'POST' })
         headers: authedHeaders(context),
       }),
     ),
-  )
+  );
 
 export const cancelClaim = createServerFn({ method: 'POST' })
   .validator((input: { slug: string }) => input)
@@ -106,13 +106,17 @@ export const cancelClaim = createServerFn({ method: 'POST' })
   .handler(({ data, context }) =>
     run(() =>
       getBoard()
-        .me.companies.cancelClaim(data.slug, { headers: authedHeaders(context) })
+        .me.companies.cancelClaim(data.slug, {
+          headers: authedHeaders(context),
+        })
         .then(() => null),
     ),
-  )
+  );
 
 export const updateCompany = createServerFn({ method: 'POST' })
-  .validator((input: { slug: string; body: UpdateEmployerCompanyBody }) => input)
+  .validator(
+    (input: { slug: string; body: UpdateEmployerCompanyBody }) => input,
+  )
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ data, context }) =>
     run(() =>
@@ -120,7 +124,7 @@ export const updateCompany = createServerFn({ method: 'POST' })
         headers: authedHeaders(context),
       }),
     ),
-  )
+  );
 
 export const sendWorkEmail = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; body: SendWorkEmailBody }) => input)
@@ -131,7 +135,7 @@ export const sendWorkEmail = createServerFn({ method: 'POST' })
         headers: authedHeaders(context),
       }),
     ),
-  )
+  );
 
 /**
  * Confirm a work-email verification from the emailed link — the token IS the
@@ -144,7 +148,7 @@ export const confirmWorkEmail = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; body: ConfirmWorkEmailBody }) => input)
   .handler(({ data }) =>
     run(() => getBoard().me.companies.workEmail.confirm(data.slug, data.body)),
-  )
+  );
 
 // ── Jobs ────────────────────────────────────────────────────────────────────
 
@@ -156,8 +160,8 @@ export const getCompanyWorkspace = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async () => {
-      const headers = authedHeaders(context)
-      const board = getBoard()
+      const headers = authedHeaders(context);
+      const board = getBoard();
       const [memberships, jobs, billingOptions, plans] = await Promise.all([
         board.me.companies.list({ headers }),
         board.me.companies.jobs.list(data.slug, undefined, { headers }),
@@ -169,12 +173,12 @@ export const getCompanyWorkspace = createServerFn({ method: 'GET' })
           .plans(undefined, { headers })
           .then((result) => result.data)
           .catch(() => []),
-      ])
+      ]);
       const membership =
-        memberships.data.find((m) => m.company.slug === data.slug) ?? null
-      return { slug: data.slug, membership, jobs, billingOptions, plans }
+        memberships.data.find((m) => m.company.slug === data.slug) ?? null;
+      return { slug: data.slug, membership, jobs, billingOptions, plans };
     }),
-  )
+  );
 
 export const createJob = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; body: CreateEmployerJobBody }) => input)
@@ -185,7 +189,7 @@ export const createJob = createServerFn({ method: 'POST' })
         headers: authedHeaders(context),
       }),
     ),
-  )
+  );
 
 export const updateJob = createServerFn({ method: 'POST' })
   .validator(
@@ -198,7 +202,7 @@ export const updateJob = createServerFn({ method: 'POST' })
         headers: authedHeaders(context),
       }),
     ),
-  )
+  );
 
 export const deleteJob = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; id: string }) => input)
@@ -211,7 +215,7 @@ export const deleteJob = createServerFn({ method: 'POST' })
         })
         .then(() => null),
     ),
-  )
+  );
 
 export const publishJob = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; id: string }) => input)
@@ -222,7 +226,7 @@ export const publishJob = createServerFn({ method: 'POST' })
         headers: authedHeaders(context),
       }),
     ),
-  )
+  );
 
 export const unpublishJob = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; id: string }) => input)
@@ -233,7 +237,7 @@ export const unpublishJob = createServerFn({ method: 'POST' })
         headers: authedHeaders(context),
       }),
     ),
-  )
+  );
 
 /** Pay for / publish a held draft. Returns the checkout result — when
  * `status === 'checkout'` the caller sends the buyer to `checkoutUrl`. */
@@ -248,7 +252,7 @@ export const checkoutJob = createServerFn({ method: 'POST' })
         headers: authedHeaders(context),
       }),
     ),
-  )
+  );
 
 // ── ATS — applicants + pipeline stages ──────────────────────────────────────
 
@@ -264,7 +268,7 @@ export const getPipeline = createServerFn({ method: 'GET' })
         { headers: authedHeaders(context) },
       ),
     ),
-  )
+  );
 
 export const moveApplicant = createServerFn({ method: 'POST' })
   .validator(
@@ -282,7 +286,7 @@ export const moveApplicant = createServerFn({ method: 'POST' })
         )
         .then(() => null),
     ),
-  )
+  );
 
 export const bulkRejectApplicants = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; applicationIds: string[] }) => input)
@@ -297,7 +301,7 @@ export const bulkRejectApplicants = createServerFn({ method: 'POST' })
         )
         .then(() => null),
     ),
-  )
+  );
 
 export const addApplicantNote = createServerFn({ method: 'POST' })
   .validator(
@@ -315,7 +319,7 @@ export const addApplicantNote = createServerFn({ method: 'POST' })
         )
         .then(() => null),
     ),
-  )
+  );
 
 export const createStage = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; jobId: string; label: string }) => input)
@@ -330,7 +334,7 @@ export const createStage = createServerFn({ method: 'POST' })
         )
         .then(() => null),
     ),
-  )
+  );
 
 export const renameStage = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; stageId: string; label: string }) => input)
@@ -346,7 +350,7 @@ export const renameStage = createServerFn({ method: 'POST' })
         )
         .then(() => null),
     ),
-  )
+  );
 
 export const removeStage = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; stageId: string }) => input)
@@ -359,4 +363,4 @@ export const removeStage = createServerFn({ method: 'POST' })
         })
         .then(() => null),
     ),
-  )
+  );

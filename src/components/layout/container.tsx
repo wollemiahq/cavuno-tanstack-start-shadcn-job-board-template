@@ -1,6 +1,4 @@
-import type { ElementType } from "react";
-
-import { cn } from "@/lib/utils";
+import type { ElementType } from 'react';
 
 import {
   containerGridClass,
@@ -13,14 +11,16 @@ import {
   type LayoutProps,
   type Responsive,
   type Space,
-} from "./layout.types";
+} from './layout.types';
+
+import { cn } from '@/lib/utils';
 
 type ContainerOwnProps = {
   width?: ContainerWidth;
   gutter?: Responsive<Space>;
 };
 
-export type ContainerProps<Element extends LayoutElement = "div"> = LayoutProps<
+export type ContainerProps<Element extends LayoutElement = 'div'> = LayoutProps<
   Element,
   ContainerOwnProps
 >;
@@ -31,16 +31,16 @@ export type ContainerProps<Element extends LayoutElement = "div"> = LayoutProps<
  * @default Wide (80rem) content with 1rem mobile and 2rem desktop gutters.
  * @invariant Bleed works only as a direct rendered child of this grid.
  */
-export function Container<Element extends LayoutElement = "div">({
+export function Container<Element extends LayoutElement = 'div'>({
   as,
-  width = "wide",
-  gutter = { base: "4", md: "8" },
+  width = 'wide',
+  gutter = { base: '4', md: '8' },
   ...props
 }: ContainerProps<Element>) {
-  const Component = (as ?? "div") as ElementType;
+  const Component = (as ?? 'div') as ElementType;
   const layoutStyle = {
-    "--layout-width": containerWidthValues[width],
-    ...responsiveTokenStyle("layout-gutter", gutter, spaceValues),
+    '--layout-width': containerWidthValues[width],
+    ...responsiveTokenStyle('layout-gutter', gutter, spaceValues),
   };
 
   return (

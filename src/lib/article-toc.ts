@@ -20,10 +20,10 @@ function slugify(text: string): string {
   return (
     text
       .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/[\s_]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 80) || "section"
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/[\s_]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 80) || 'section'
   );
 }
 
@@ -52,15 +52,15 @@ interface ParsedHtml {
  * missing. Empty-text headings are skipped from both outputs.
  */
 function parse(html: string | null): ParsedHtml {
-  if (!html) return { entries: [], html: "" };
+  if (!html) return { entries: [], html: '' };
 
   const entries: TocEntry[] = [];
   const used = new Set<string>();
 
   const out = html.replace(H2, (match, attrs: string, inner: string) => {
     const text = inner
-      .replace(/<[^>]+>/g, "")
-      .replace(/\s+/g, " ")
+      .replace(/<[^>]+>/g, '')
+      .replace(/\s+/g, ' ')
       .trim();
     if (!text) return match;
 

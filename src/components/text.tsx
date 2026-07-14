@@ -1,6 +1,6 @@
-import type { ComponentPropsWithoutRef, ElementType, ReactNode } from 'react'
+import type { ComponentPropsWithoutRef, ElementType, ReactNode } from 'react';
 
-import { cx } from '@/utils/cx'
+import { cn } from '@/lib/utils';
 
 /**
  * The board's typography primitive. Where {@link Prose} owns rendered-HTML
@@ -8,11 +8,8 @@ import { cx } from '@/utils/cx'
  * every hand-written heading and, gradually, body paragraph flows through it.
  *
  * The API is ROLE-NAMED, not size-stepped: you ask for `heading2` or
- * `secondary`, never `text-display-xs`. Each role maps to exactly one Untitled
- * UI token (the mapping is documented in docs/patterns/typography.md), so an
- * off-scale heading is simply unexpressible — there is no `text-2xl` variant.
- * `heading1`-`heading4` are byte-aligned with the vendored `.prose` h1-h4, so a
- * `<Text as="h2" variant="heading2">` and a prose `<h2>` render identically.
+ * `secondary`, never a raw size token. Each role maps to the owned shadcn
+ * typeset scale, so heading hierarchy remains explicit at every call site.
  *
  * `as` (the rendered element) is decoupled from `variant` (the visual role):
  * a `display`/`heading*` variant REQUIRES `as` at the type level, forcing the
@@ -21,9 +18,14 @@ import { cx } from '@/utils/cx'
  * and `bold` tuning knobs — headings are locked correct-by-construction.
  */
 
-type HeadingVariant = 'display' | 'heading1' | 'heading2' | 'heading3' | 'heading4'
-type BodyVariant = 'body' | 'secondary' | 'error'
-type Variant = HeadingVariant | BodyVariant
+type HeadingVariant =
+  | 'display'
+  | 'heading1'
+  | 'heading2'
+  | 'heading3'
+  | 'heading4';
+type BodyVariant = 'body' | 'secondary' | 'error';
+type Variant = HeadingVariant | BodyVariant;
 
 type TextElement =
   | 'h1'
@@ -39,30 +41,30 @@ type TextElement =
   | 'li'
   | 'dt'
   | 'dd'
-  | 'figcaption'
+  | 'figcaption';
 
-type BodySize = 'xs' | 'sm' | 'base' | 'lg'
+type BodySize = 'xs' | 'sm' | 'base' | 'lg';
 
 /** The `text-*` size + `font-*` weight + default `text-*` color per role. */
 const VARIANT_CLASSES: Record<Variant, string> = {
-  display: 'text-display-md font-semibold text-primary md:text-display-lg',
-  heading1: 'text-display-sm font-semibold text-primary',
-  heading2: 'text-display-xs font-semibold text-primary',
-  heading3: 'text-xl font-semibold text-primary',
-  heading4: 'text-lg font-semibold text-primary',
-  body: 'text-md text-primary',
-  secondary: 'text-md text-tertiary',
-  error: 'text-sm text-error-primary',
-}
+  display: 'text-4xl font-semibold text-foreground md:text-5xl',
+  heading1: 'text-3xl font-semibold text-foreground',
+  heading2: 'text-2xl font-semibold text-foreground',
+  heading3: 'text-xl font-semibold text-foreground',
+  heading4: 'text-lg font-semibold text-foreground',
+  body: 'text-base text-foreground',
+  secondary: 'text-base text-muted-foreground',
+  error: 'text-sm text-destructive',
+};
 
 const BODY_SIZE_CLASSES: Record<BodySize, string> = {
   xs: 'text-xs',
   sm: 'text-sm',
-  base: 'text-md',
+  base: 'text-base',
   lg: 'text-lg',
-}
+};
 
-const BODY_VARIANTS = new Set<Variant>(['body', 'secondary', 'error'])
+const BODY_VARIANTS = new Set<Variant>(['body', 'secondary', 'error']);
 
 /**
  * Attributes forwarded to the rendered element. Sourced from `<label>` (a
@@ -72,31 +74,33 @@ const BODY_VARIANTS = new Set<Variant>(['body', 'secondary', 'error'])
 type PassthroughProps = Omit<
   ComponentPropsWithoutRef<'label'>,
   'className' | 'color' | 'children'
->
+>;
 
 type OwnProps = {
-  truncate?: boolean
-  className?: string
-  children?: ReactNode
-}
+  truncate?: boolean;
+  className?: string;
+  children?: ReactNode;
+};
 
 /** Headings: `as` is required, `size`/`bold` are forbidden. */
 type HeadingProps = {
-  variant: HeadingVariant
-  as: TextElement
-  size?: never
-  bold?: never
-}
+  variant: HeadingVariant;
+  as: TextElement;
+  size?: never;
+  bold?: never;
+};
 
 /** Body-family: `as` defaults to `<p>`, `size`/`bold` are available. */
 type BodyProps = {
-  variant?: BodyVariant
-  as?: TextElement
-  size?: BodySize
-  bold?: boolean
-}
+  variant?: BodyVariant;
+  as?: TextElement;
+  size?: BodySize;
+  bold?: boolean;
+};
 
-export type TextProps = (HeadingProps | BodyProps) & OwnProps & PassthroughProps
+export type TextProps = (HeadingProps | BodyProps) &
+  OwnProps &
+  PassthroughProps;
 
 export function Text({
   variant = 'body',
@@ -108,20 +112,20 @@ export function Text({
   children,
   ...rest
 }: TextProps) {
-  const Tag = (as ?? 'p') as ElementType
-  const isBody = BODY_VARIANTS.has(variant)
+  const Tag = (as ?? 'p') as ElementType;
+  const isBody = BODY_VARIANTS.has(variant);
 
-  const classes = cx(
+  const classes = cn(
     VARIANT_CLASSES[variant],
     isBody && size ? BODY_SIZE_CLASSES[size] : undefined,
     isBody && bold ? 'font-semibold' : undefined,
-    truncate ? 'truncate min-w-0' : undefined,
+    truncate ? 'min-w-0 truncate' : undefined,
     className,
-  )
+  );
 
   return (
     <Tag className={classes} {...rest}>
       {children}
     </Tag>
-  )
+  );
 }

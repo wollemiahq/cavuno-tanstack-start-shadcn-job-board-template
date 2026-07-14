@@ -39,10 +39,10 @@ The homepage uses the owned Rhea compound directly:
   <Empty>
     <EmptyHeader>
       <EmptyMedia variant="icon">
-        <Briefcase />
+        <Search aria-hidden="true" />
       </EmptyMedia>
-      <EmptyTitle>{copy.home.noJobsTitle}</EmptyTitle>
-      <EmptyDescription>{copy.home.noJobsDescription}</EmptyDescription>
+      <EmptyTitle role="heading" aria-level={2}>{m.home_emptyHeading()}</EmptyTitle>
+      <EmptyDescription>{m.home_emptySupporting()}</EmptyDescription>
     </EmptyHeader>
   </Empty>
 </PageSection>
@@ -77,7 +77,7 @@ results width for one recovery action:
 | Keep contextual header search + page filters in a programmatic `notFoundComponent`.                       | Drop the visitor onto a bare message with no way forward.                                    |
 | Describe the failed search and offer one primary reset action.                                            | Expose route concepts such as “skill not found” or “category not found” to visitors.         |
 | Give a no-match state the complete results canvas.                                                        | Leave a blank detail column, divider, or advertising slot beside it.                          |
-| Use semantic Rhea tokens on the empty surface.                                                            | Copy legacy styling from `untitled-ui/not-found.tsx`; migrate it when touching that surface. |
+| Use the owned `Empty` compound and semantic tokens on the empty surface.                                  | Reintroduce retired styling or hand-roll a parallel empty-state system.                      |
 
 ## Used by
 

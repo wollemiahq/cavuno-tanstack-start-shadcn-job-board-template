@@ -1,17 +1,20 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
-import { UserRoundX } from "lucide-react";
+import { boardCopy } from '#/copy';
+import { isNotFound } from '@cavuno/board';
+import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
+import { createFileRoute, notFound } from '@tanstack/react-router';
+import { UserRoundX } from 'lucide-react';
 
-import { isNotFound } from "@cavuno/board";
-import { createBreadcrumbJsonLd } from "@cavuno/board/seo";
-import { boardCopy } from "#/copy";
+import { m } from '../paraglide/messages';
+import { getSeoBase, getTalentProfile } from '../server/queries';
 
-import { getTalentSearchLabels } from "@/board/talent-search-labels";
-import { toTalentProfileVM } from "@/board/talent-view-model";
-import { PageHeaderWithBreadcrumb } from "@/components/board/page-header-with-breadcrumb";
-import { TalentProfileContent } from "@/components/board/talent-profile-content";
-import { JsonLd } from "@/components/json-ld";
-import { Page, PageContent, PageHeader } from "@/components/layout/page";
-import { buttonVariants } from "@/components/ui/button";
+import { getTalentSearchLabels } from '@/board/talent-search-labels';
+import { toTalentProfileVM } from '@/board/talent-view-model';
+import { PageHeaderWithBreadcrumb } from '@/components/board/page-header-with-breadcrumb';
+import { TalentProfileContent } from '@/components/board/talent-profile-content';
+import { JsonLd } from '@/components/json-ld';
+import { Page, PageContent, PageHeader } from '@/components/layout/page';
+import { buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Empty,
   EmptyContent,
@@ -19,11 +22,9 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty";
-import { m } from "../paraglide/messages";
-import { getSeoBase, getTalentProfile } from "../server/queries";
+} from '@/components/ui/empty';
 
-export const Route = createFileRoute("/p/$handle")({
+export const Route = createFileRoute('/p/$handle')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
     try {
@@ -52,7 +53,7 @@ export const Route = createFileRoute("/p/$handle")({
             ...(loaderData.profile.headline
               ? [
                   {
-                    name: "description",
+                    name: 'description',
                     content: loaderData.profile.headline,
                   },
                 ]
@@ -60,7 +61,7 @@ export const Route = createFileRoute("/p/$handle")({
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: `${loaderData.seo.origin}/p/${loaderData.profile.handle}`,
             },
           ],
@@ -87,7 +88,10 @@ function TalentProfileNotFound() {
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <a href="/talent" className={buttonVariants({ variant: "outline" })}>
+            <a
+              href="/talent"
+              className={buttonVariants({ variant: 'outline' })}
+            >
               {m.talentDirectory_title()}
             </a>
           </EmptyContent>
@@ -105,12 +109,12 @@ function TalentProfilePage() {
   const canonical = `${seo.origin}/p/${profile.handle}`;
   const jsonLd = [
     {
-      "@context": "https://schema.org",
-      "@type": "ProfilePage",
+      '@context': 'https://schema.org',
+      '@type': 'ProfilePage',
       url: canonical,
       mainEntity: {
-        "@type": "Person",
-        "@id": `${canonical}#person`,
+        '@type': 'Person',
+        '@id': `${canonical}#person`,
         ...(profile.displayName ? { name: profile.displayName } : {}),
         ...(profile.headline ? { jobTitle: profile.headline } : {}),
         ...(profile.bio ? { description: profile.bio } : {}),
@@ -134,8 +138,8 @@ function TalentProfilePage() {
         breadcrumb={{
           ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
           items: [
-            { name: copy.breadcrumbs.home, href: "/" },
-            { name: copy.breadcrumbs.talent, href: "/talent" },
+            { name: copy.breadcrumbs.home, href: '/' },
+            { name: copy.breadcrumbs.talent, href: '/talent' },
             { name: displayName },
           ],
         }}
@@ -143,16 +147,20 @@ function TalentProfilePage() {
       />
       <PageContent>
         <JsonLd data={jsonLd} />
-        <article className="rounded-3xl border border-border bg-background p-6 text-foreground shadow-sm md:p-8">
-          <TalentProfileContent
-            vm={toTalentProfileVM(
-              profile,
-              seo.language,
-              getTalentSearchLabels(),
-            )}
-            headingAs="h1"
-            showName={false}
-          />
+        <article>
+          <Card>
+            <CardContent className="py-1 md:px-8">
+              <TalentProfileContent
+                vm={toTalentProfileVM(
+                  profile,
+                  seo.language,
+                  getTalentSearchLabels(),
+                )}
+                headingAs="h1"
+                showName={false}
+              />
+            </CardContent>
+          </Card>
         </article>
       </PageContent>
     </Page>

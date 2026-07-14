@@ -1,58 +1,57 @@
-import { isBoardApiError, type BoardAuthSession } from '@cavuno/board'
+import { isBoardApiError, type BoardAuthSession } from '@cavuno/board';
+import {
+  clearSessionCookie,
+  serializeSessionCookie,
+  type BoardSession,
+} from '@cavuno/board/server';
 /**
  * Auth server functions — the host-app side of ADR-0006: the SDK never
  * stores tokens on the server; these functions move the bearer pair in
  * and out of the `__Host-` session cookie.
  */
-import { createServerFn } from '@tanstack/react-start'
-import { setResponseHeader } from '@tanstack/react-start/server'
+import { createServerFn } from '@tanstack/react-start';
+import { setResponseHeader } from '@tanstack/react-start/server';
 
-import {
-  clearSessionCookie,
-  serializeSessionCookie,
-  type BoardSession,
-} from '@cavuno/board/server'
-
-import { getBoard } from '../lib/board'
-import { sessionMiddleware } from '../lib/session-middleware'
+import { getBoard } from '../lib/board';
+import { sessionMiddleware } from '../lib/session-middleware';
 
 function storeSession(session: BoardAuthSession): BoardSession {
   const next: BoardSession = {
     accessToken: session.accessToken,
     refreshToken: session.refreshToken,
     expiresAt: session.expiresAt,
-  }
-  setResponseHeader('Set-Cookie', serializeSessionCookie(next))
-  return next
+  };
+  setResponseHeader('Set-Cookie', serializeSessionCookie(next));
+  return next;
 }
 
 /** Map API failures to a form-friendly result instead of a 500. */
 function authError(error: unknown): {
-  ok: false
-  code: string
-  message: string
+  ok: false;
+  code: string;
+  message: string;
 } {
   if (isBoardApiError(error)) {
-    return { ok: false, code: error.code, message: error.message }
+    return { ok: false, code: error.code, message: error.message };
   }
-  throw error
+  throw error;
 }
 
 export const signIn = createServerFn({ method: 'POST' })
   .validator((input: { email: string; password: string }) => input)
   .handler(async ({ data }) => {
     try {
-      const session = await getBoard().auth.login(data)
-      storeSession(session)
-      return { ok: true as const, boardUser: session.boardUser }
+      const session = await getBoard().auth.login(data);
+      storeSession(session);
+      return { ok: true as const, boardUser: session.boardUser };
     } catch (error) {
-      return authError(error)
+      return authError(error);
     }
-  })
+  });
 
 export const signUp = createServerFn({ method: 'POST' })
   .validator(
-    (input: { email: string; password: string; displayName: string }) => input
+    (input: { email: string; password: string; displayName: string }) => input,
   )
   .handler(async ({ data }) => {
     try {
@@ -60,13 +59,13 @@ export const signUp = createServerFn({ method: 'POST' })
         role: 'candidate',
         method: 'emailpass',
         ...data,
-      })
-      storeSession(session)
-      return { ok: true as const, boardUser: session.boardUser }
+      });
+      storeSession(session);
+      return { ok: true as const, boardUser: session.boardUser };
     } catch (error) {
-      return authError(error)
+      return authError(error);
     }
-  })
+  });
 
 /**
  * Employer sign-up — the branded `/auth/employer/sign-up` funnel. Same
@@ -76,7 +75,7 @@ export const signUp = createServerFn({ method: 'POST' })
  */
 export const signUpEmployer = createServerFn({ method: 'POST' })
   .validator(
-    (input: { email: string; password: string; displayName: string }) => input
+    (input: { email: string; password: string; displayName: string }) => input,
   )
   .handler(async ({ data }) => {
     try {
@@ -84,13 +83,13 @@ export const signUpEmployer = createServerFn({ method: 'POST' })
         role: 'employer',
         method: 'emailpass',
         ...data,
-      })
-      storeSession(session)
-      return { ok: true as const, boardUser: session.boardUser }
+      });
+      storeSession(session);
+      return { ok: true as const, boardUser: session.boardUser };
     } catch (error) {
-      return authError(error)
+      return authError(error);
     }
-  })
+  });
 
 export const signOut = createServerFn({ method: 'POST' })
   .middleware([sessionMiddleware])
@@ -99,26 +98,26 @@ export const signOut = createServerFn({ method: 'POST' })
       try {
         await getBoard().auth.logout({
           refreshToken: context.session.refreshToken,
-        })
+        });
       } catch {
         // Revoke is idempotent server-side; a network failure here must
         // not strand the user signed in locally.
       }
     }
-    setResponseHeader('Set-Cookie', clearSessionCookie())
-    return { ok: true as const }
-  })
+    setResponseHeader('Set-Cookie', clearSessionCookie());
+    return { ok: true as const };
+  });
 
 export const verifyEmail = createServerFn({ method: 'POST' })
   .validator((input: { token: string }) => input)
   .handler(async ({ data }) => {
     try {
-      await getBoard().auth.verifyEmail(data)
-      return { ok: true as const }
+      await getBoard().auth.verifyEmail(data);
+      return { ok: true as const };
     } catch (error) {
-      return authError(error)
+      return authError(error);
     }
-  })
+  });
 
 /**
  * OTP email verification (ADR-0055). The signed-in-but-unverified user submits
@@ -134,17 +133,17 @@ export const verifyOtpCode = createServerFn({ method: 'POST' })
         ok: false as const,
         code: 'unauthorized',
         message: 'Sign in first',
-      }
+      };
     }
     try {
       await getBoard().auth.verifyEmailWithCode(data, {
         headers: context.authHeaders,
-      })
-      return { ok: true as const }
+      });
+      return { ok: true as const };
     } catch (error) {
-      return authError(error)
+      return authError(error);
     }
-  })
+  });
 
 /** Re-send the verification email (fresh code + magic link) to the signed-in user. */
 export const resendOtp = createServerFn({ method: 'POST' })
@@ -155,85 +154,85 @@ export const resendOtp = createServerFn({ method: 'POST' })
         ok: false as const,
         code: 'unauthorized',
         message: 'Sign in first',
-      }
+      };
     }
     try {
       await getBoard().auth.resendVerification({
         headers: context.authHeaders,
-      })
-      return { ok: true as const }
+      });
+      return { ok: true as const };
     } catch (error) {
-      return authError(error)
+      return authError(error);
     }
-  })
+  });
 
 export const forgotPassword = createServerFn({ method: 'POST' })
   .validator((input: { email: string }) => input)
   .handler(async ({ data }) => {
     // Always 204 server-side (no account enumeration) — mirror that.
-    await getBoard().auth.forgotPassword(data)
-    return { ok: true as const }
-  })
+    await getBoard().auth.forgotPassword(data);
+    return { ok: true as const };
+  });
 
 export const resetPassword = createServerFn({ method: 'POST' })
   .validator((input: { token: string; password: string }) => input)
   .handler(async ({ data }) => {
     try {
-      await getBoard().auth.resetPassword(data)
-      return { ok: true as const }
+      await getBoard().auth.resetPassword(data);
+      return { ok: true as const };
     } catch (error) {
-      return authError(error)
+      return authError(error);
     }
-  })
+  });
 
 export const requestMagicLink = createServerFn({ method: 'POST' })
   .validator((input: { email: string; returnTo?: string }) => input)
   .handler(async ({ data }) => {
     try {
-      await getBoard().auth.requestMagicLink(data)
-      return { ok: true as const }
+      await getBoard().auth.requestMagicLink(data);
+      return { ok: true as const };
     } catch (error) {
-      return authError(error)
+      return authError(error);
     }
-  })
+  });
 
 export const consumeMagicLink = createServerFn({ method: 'POST' })
   .validator((input: { token: string }) => input)
   .handler(async ({ data }) => {
     try {
-      const session = await getBoard().auth.consumeMagicLink(data)
-      storeSession(session)
-      return { ok: true as const, boardUser: session.boardUser }
+      const session = await getBoard().auth.consumeMagicLink(data);
+      storeSession(session);
+      return { ok: true as const, boardUser: session.boardUser };
     } catch (error) {
-      return authError(error)
+      return authError(error);
     }
-  })
+  });
 
 export const getOAuthAuthorizationUrl = createServerFn({ method: 'GET' })
   .validator(
-    (input: { provider: 'google' | 'linkedin'; returnTo?: string }) => input
+    (input: { provider: 'google' | 'linkedin'; returnTo?: string }) => input,
   )
   .handler(async ({ data }) => {
     try {
-      const { provider, ...query } = data
+      const { provider, ...query } = data;
       const result = await getBoard().auth.getOAuthAuthorizationUrl(
         provider,
-        query
-      )
-      return { ok: true as const, authorizeUrl: result.authorizeUrl }
+        query,
+      );
+      return { ok: true as const, authorizeUrl: result.authorizeUrl };
     } catch (error) {
-      return authError(error)
+      return authError(error);
     }
-  })
+  });
 
 export const exchangeOAuth = createServerFn({ method: 'POST' })
   .validator((input: { token: string }) => input)
   .handler(async ({ data }) => {
     try {
-      const session = await getBoard().auth.exchangeOAuth(data)
-      storeSession(session)
-      return { ok: true as const, boardUser: session.boardUser }
+      const session = await getBoard().auth.exchangeOAuth(data);
+      storeSession(session);
+      return { ok: true as const, boardUser: session.boardUser };
     } catch (error) {
-      return authError(error)
+      return authError(error);
     }
-  })
+  });

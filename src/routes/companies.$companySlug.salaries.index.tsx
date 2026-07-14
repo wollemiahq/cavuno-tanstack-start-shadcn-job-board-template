@@ -1,18 +1,25 @@
-import { Text } from '@/components/text'
-import { createFileRoute, getRouteApi, notFound } from '@tanstack/react-router'
-
-import { isNotFound } from '@cavuno/board'
-import { boardCopy } from '#/copy'
+import { boardCopy } from '#/copy';
+import { isNotFound } from '@cavuno/board';
 import {
   buildSalaryFaq,
   companySalaryJsonLd,
   createBreadcrumbJsonLd,
   faqJsonLd,
   formatRange,
-} from '@cavuno/board/seo'
+} from '@cavuno/board/seo';
+import { createFileRoute, getRouteApi, notFound } from '@tanstack/react-router';
 
-import { JsonLd } from '@/components/json-ld'
-import { CompanySectionShell } from '@/components/board/company-section-header'
+import { m } from '../paraglide/messages';
+import { getCompany, getCompanySalary, getSeoBase } from '../server/queries';
+
+import {
+  toOverallSalaryVM,
+  toSalaryBreadcrumbVM,
+  toSalaryFaqVM,
+  toSalaryRailVM,
+  toSeniorityTableVM,
+} from '@/board/salary-view-model';
+import { CompanySectionShell } from '@/components/board/company-section-header';
 import {
   SalaryEmptyState,
   OverallSalaryCard,
@@ -20,28 +27,21 @@ import {
   SalaryRail,
   SenioritySalaryTable,
   type RailItem,
-} from '@/components/board/salary-sections'
-import {
-  toOverallSalaryVM,
-  toSalaryBreadcrumbVM,
-  toSalaryFaqVM,
-  toSalaryRailVM,
-  toSeniorityTableVM,
-} from '@/board/salary-view-model'
-import { m } from '../paraglide/messages'
-import { getCompany, getCompanySalary, getSeoBase } from '../server/queries'
+} from '@/components/board/salary-sections';
+import { JsonLd } from '@/components/json-ld';
+import { Text } from '@/components/text';
 
 export const Route = createFileRoute('/companies/$companySlug/salaries/')({
   staticData: { fullBleed: true },
   loader: async ({ params }) => {
-    let salary
+    let salary;
     try {
       salary = await getCompanySalary({
         data: { companySlug: params.companySlug },
-      })
+      });
     } catch (error) {
-      if (isNotFound(error)) throw notFound()
-      throw error
+      if (isNotFound(error)) throw notFound();
+      throw error;
     }
     // The full company powers the shared section header (logo + description),
     // byte-identical to the profile + jobs tabs. The company slug is never
@@ -49,8 +49,8 @@ export const Route = createFileRoute('/companies/$companySlug/salaries/')({
     const [company, seo] = await Promise.all([
       getCompany({ data: { companySlug: params.companySlug } }),
       getSeoBase(),
-    ])
-    return { salary, company, seo }
+    ]);
+    return { salary, company, seo };
   },
   head: ({ loaderData }) =>
     loaderData
@@ -91,17 +91,17 @@ export const Route = createFileRoute('/companies/$companySlug/salaries/')({
   notFoundComponent: () => (
     <SalaryEmptyState title={m.companySalaries_notFoundCompany()} />
   ),
-})
+});
 
-const rootApi = getRouteApi('__root__')
+const rootApi = getRouteApi('__root__');
 
 function CompanySalaryPage() {
-  const { salary, company, seo } = Route.useLoaderData()
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs
-  const { board } = rootApi.useLoaderData()
-  const locale = seo.language
+  const { salary, company, seo } = Route.useLoaderData();
+  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const { board } = rootApi.useLoaderData();
+  const locale = seo.language;
 
-  const faqs = buildSalaryFaq(locale, salary.companyName, salary.overallSalary)
+  const faqs = buildSalaryFaq(locale, salary.companyName, salary.overallSalary);
   // The trail locates the ENTITY and stops there (Home → Companies →
   // {Company}) — IDENTICAL to the profile + jobs tabs; the tab row alone says
   // we are on Salaries. The BreadcrumbList JSON-LD mirrors the visible trail.
@@ -113,27 +113,27 @@ function CompanySalaryPage() {
       { label: crumbs.companies, href: `${seo.origin}/companies` },
       { label: salary.companyName },
     ]),
-  ].filter((e): e is Record<string, unknown> => e !== null)
+  ].filter((e): e is Record<string, unknown> => e !== null);
 
   const categoryItems: RailItem[] = salary.byCategory.map((x) => ({
     name: x.categoryName,
     href: `/companies/${salary.companySlug}/salaries/${x.categorySlug}`,
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
-  }))
+  }));
   const competitorItems: RailItem[] = salary.competitors.map((x) => ({
     name: x.companyName,
     href: `/companies/${x.companySlug}`,
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
     logoPath: x.logoPath,
-  }))
+  }));
   const locationItems: RailItem[] = salary.topLocations.map((x) => ({
     name: x.locationName,
     href: `/salaries/locations/${x.placeSlug}`,
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
-  }))
+  }));
 
   return (
     <CompanySectionShell
@@ -154,39 +154,68 @@ function CompanySalaryPage() {
       }
     >
       <div className="space-y-6">
-      <JsonLd data={jsonLd} />
-      <header>
-        <Text as="h2" variant="heading1">
-          {m.companySalaries_heading({ company: salary.companyName })}
-        </Text>
-      </header>
+        <JsonLd data={jsonLd} />
+        <header>
+          <Text as="h2" variant="heading1">
+            {m.companySalaries_heading({ company: salary.companyName })}
+          </Text>
+        </header>
 
-      {salary.overallSalary ? (
-        <OverallSalaryCard
-          vm={toOverallSalaryVM(
-            {
-              avgMin: salary.overallSalary.avgMin,
-              avgMax: salary.overallSalary.avgMax,
-              jobCount: salary.overallSalary.jobCount,
-            },
-            board.language,
+        {salary.overallSalary ? (
+          <OverallSalaryCard
+            vm={toOverallSalaryVM(
+              {
+                avgMin: salary.overallSalary.avgMin,
+                avgMax: salary.overallSalary.avgMax,
+                jobCount: salary.overallSalary.jobCount,
+              },
+              board.language,
+              seo.labels,
+            )}
+          />
+        ) : null}
+
+        {salary.bySeniority.length > 0 ? (
+          <section className="space-y-3">
+            <Text as="h2" variant="heading4">
+              {m.companySalaries_seniorityHeading()}
+            </Text>
+            <SenioritySalaryTable
+              vm={toSeniorityTableVM(
+                salary.bySeniority,
+                board.language,
+                seo.labels,
+              )}
+            />
+          </section>
+        ) : null}
+
+        <SalaryRail
+          vm={toSalaryRailVM(
+            m.companySalaries_salariesByRoleLabel(),
+            categoryItems,
+            seo.language,
             seo.labels,
           )}
         />
-      ) : null}
-
-      {salary.bySeniority.length > 0 ? (
-        <section className="space-y-3">
-          <Text as="h2" variant="heading4">{m.companySalaries_seniorityHeading()}</Text>
-          <SenioritySalaryTable vm={toSeniorityTableVM(salary.bySeniority, board.language, seo.labels)} />
-        </section>
-      ) : null}
-
-      <SalaryRail vm={toSalaryRailVM(m.companySalaries_salariesByRoleLabel(), categoryItems, seo.language, seo.labels)} />
-      <SalaryRail vm={toSalaryRailVM(m.companySalaries_topLocationsLabel(), locationItems, seo.language, seo.labels)} />
-      <SalaryRail vm={toSalaryRailVM(m.companySalaries_otherCompaniesLabel(), competitorItems, seo.language, seo.labels)} />
-      <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
+        <SalaryRail
+          vm={toSalaryRailVM(
+            m.companySalaries_topLocationsLabel(),
+            locationItems,
+            seo.language,
+            seo.labels,
+          )}
+        />
+        <SalaryRail
+          vm={toSalaryRailVM(
+            m.companySalaries_otherCompaniesLabel(),
+            competitorItems,
+            seo.language,
+            seo.labels,
+          )}
+        />
+        <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
       </div>
     </CompanySectionShell>
-  )
+  );
 }

@@ -1,13 +1,13 @@
-import { JsonLd } from "@/components/json-ld";
-import { Prose } from "@/components/prose";
-import { PageBody } from "@/components/board/page-body";
+import { boardCopy } from '#/copy';
+import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 
-import type { PublicLegalPage } from "@cavuno/board";
-import type { BoardLabelOverrides } from "@cavuno/board/format";
+import { legalMetaDescription, type LegalPageMeta } from '../lib/legal';
 
-import { createBreadcrumbJsonLd } from "@cavuno/board/seo";
-import { boardCopy } from "#/copy";
-import { legalMetaDescription, type LegalPageMeta } from "../lib/legal";
+import { PageBody } from '@/components/board/page-body';
+import { JsonLd } from '@/components/json-ld';
+import { Prose } from '@/components/prose';
+import type { PublicLegalPage } from '@cavuno/board';
+import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 /**
  * Shared render for the legal/about surfaces. Per ADR-0039 the starter owns the
@@ -31,8 +31,8 @@ export function LegalPageView({
   const url = `${origin}${meta.path}`;
   const jsonLd = [
     {
-      "@context": "https://schema.org",
-      "@type": meta.jsonLdType,
+      '@context': 'https://schema.org',
+      '@type': meta.jsonLdType,
       name: page.title,
       description: legalMetaDescription(page.content),
       url,
@@ -55,12 +55,14 @@ export function LegalPageView({
           <JsonLd data={jsonLd} />
           <h1>{page.title}</h1>
           {page.legalEntity ? (
-            <section className="not-typeset mb-6 rounded-lg border border-secondary p-4 text-sm">
+            <section className="not-typeset border-border mb-6 rounded-lg border p-4 text-sm">
               {page.legalEntity.legalName ? (
                 <p className="font-medium">{page.legalEntity.legalName}</p>
               ) : null}
               {page.legalEntity.address ? (
-                <p className="whitespace-pre-line text-tertiary">{page.legalEntity.address}</p>
+                <p className="text-muted-foreground whitespace-pre-line">
+                  {page.legalEntity.address}
+                </p>
               ) : null}
             </section>
           ) : null}

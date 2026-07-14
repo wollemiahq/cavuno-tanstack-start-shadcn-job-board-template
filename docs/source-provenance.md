@@ -4,6 +4,15 @@ This standalone repository began as a tracked-content copy of the Cavuno
 Untitled UI job board template. It has fresh Git history and does not share
 Git metadata with the source repository.
 
+## Current release state
+
+The source information below is a historical provenance record, not a
+description of the current design system. The current starter is shadcn-only:
+all release surfaces compose the owned Rhea/Base UI source in
+`src/components/ui/`, theme through `src/theme.css`, and use semantic shadcn
+tokens. The inherited Untitled UI components, utilities, and CSS compatibility
+layer have been removed.
+
 ## Source snapshot
 
 | Field | Value |
@@ -52,10 +61,11 @@ All available Tier 1, Tier 2, and Tier 3 sandbox probes passed.
 
 ## Approved initial differences
 
-Before the first commit, the copy changes only repository identity in
+Before the first commit, the copy changed only repository identity in
 `package.json`, `README.md`, and `wrangler.jsonc`, plus this provenance record.
-The existing Untitled UI implementation remains intentionally unchanged; its
-replacement is handled by later tickets.
+At that bootstrap point the existing Untitled UI implementation remained
+intentionally unchanged; later tickets replaced it with the current shadcn-only
+release boundary described above.
 
 A recursive comparison against a fresh extraction of the source archive found
 no other tracked-content differences. Local verification generated only ignored

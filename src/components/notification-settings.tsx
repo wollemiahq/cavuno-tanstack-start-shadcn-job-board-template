@@ -1,20 +1,21 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 
-import { useRouter } from "@tanstack/react-router";
-import type { NotificationPreference } from "@cavuno/board";
+import { useRouter } from '@tanstack/react-router';
+
+import { m } from '../paraglide/messages';
+import { updateNotificationPreference } from '../server/settings';
 
 import {
   CandidateActionFeedback,
   type CandidateActionFeedbackState,
-} from "@/components/candidate-action-feedback";
-import { Checkbox } from "@/components/ui/checkbox";
-import { m } from "../paraglide/messages";
-import { updateNotificationPreference } from "../server/settings";
+} from '@/components/candidate-action-feedback';
+import { Checkbox } from '@/components/ui/checkbox';
+import type { NotificationPreference } from '@cavuno/board';
 
 const CHANNEL_LABELS: Record<
-  NotificationPreference["channel"],
+  NotificationPreference['channel'],
   { title: () => string; description: () => string }
 > = {
   messageEmails: {
@@ -32,21 +33,31 @@ const CHANNEL_LABELS: Record<
  * `board.me.notificationPreferences` (retrieve / update). Each toggle
  * PUTs immediately and refreshes.
  */
-export function NotificationSettings({ preferences }: { preferences: NotificationPreference[] }) {
+export function NotificationSettings({
+  preferences,
+}: {
+  preferences: NotificationPreference[];
+}) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<CandidateActionFeedbackState>("idle");
+  const [feedback, setFeedback] =
+    useState<CandidateActionFeedbackState>('idle');
 
   return (
     <div className="space-y-3">
-      <ul className="divide-y divide-border" data-test="notification-settings">
+      <ul className="divide-border divide-y" data-test="notification-settings">
         {preferences.map((pref) => {
           const label = CHANNEL_LABELS[pref.channel];
           return (
-            <li key={pref.channel} className="flex items-center justify-between gap-4 py-3">
+            <li
+              key={pref.channel}
+              className="flex items-center justify-between gap-4 py-3"
+            >
               <div>
                 <p className="font-medium">{label.title()}</p>
-                <p className="text-sm text-muted-foreground">{label.description()}</p>
+                <p className="text-muted-foreground text-sm">
+                  {label.description()}
+                </p>
               </div>
               <Checkbox
                 className="shrink-0"
@@ -55,7 +66,7 @@ export function NotificationSettings({ preferences }: { preferences: Notificatio
                 disabled={pending === pref.channel}
                 onCheckedChange={async (isSelected) => {
                   setPending(pref.channel);
-                  setFeedback("idle");
+                  setFeedback('idle');
                   try {
                     await updateNotificationPreference({
                       data: {
@@ -64,9 +75,9 @@ export function NotificationSettings({ preferences }: { preferences: Notificatio
                       },
                     });
                     await router.invalidate();
-                    setFeedback("success");
+                    setFeedback('success');
                   } catch {
-                    setFeedback("error");
+                    setFeedback('error');
                   } finally {
                     setPending(null);
                   }

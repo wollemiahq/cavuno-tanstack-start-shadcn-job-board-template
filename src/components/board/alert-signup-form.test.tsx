@@ -1,28 +1,12 @@
 // @vitest-environment jsdom
-/**
- * AlertSignupForm dark-mode contrast invariant (CAV-492, ref CAV-486).
- *
- * The subscribe panel is rendered on a brand-tinted surface. The bare
- * `bg-brand-primary` token is theme-DIRECTIONAL: light → brand-50 (a pale
- * lavender that keeps the neutral `text-primary`/`text-tertiary` labels and
- * the brand bell legible), but dark → the SOLID brand-500 fill. On that
- * solid fill the neutral text tokens collapse (measured on the robotics
- * board: description ≈1.5:1, heading ≈2.6:1) and the brand bell icon becomes
- * the SAME colour as its background — invisible.
- *
- * The panel must therefore use the theme-ADAPTIVE `bg-brand-primary_alt`
- * token instead: identical brand-50 in light, but a neutral elevated surface
- * (bg-secondary) in dark, so the same neutral text + brand bell stay legible
- * while the brand border keeps the callout's identity. This test locks that
- * choice — it fails the moment the panel is reverted to the directional
- * `bg-brand-primary` fill that fails dark contrast.
- */
-import { cleanup, render } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+/** AlertSignupForm shadcn Card and form-composition contract. */
+import '@testing-library/jest-dom/vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { AlertSignupForm } from './alert-signup-form'
+import { AlertSignupForm } from './alert-signup-form';
 
-afterEach(cleanup)
+afterEach(cleanup);
 
 function renderPanel() {
   const { container } = render(
@@ -30,24 +14,92 @@ function renderPanel() {
       language="en"
       onSubscribe={async () => ({ status: 'created' as const })}
     />,
-  )
-  const section = container.querySelector('section')
-  if (!section) throw new Error('AlertSignupForm did not render a <section>')
-  return section
+  );
+  const section = container.querySelector('section');
+  if (!section) throw new Error('AlertSignupForm did not render a <section>');
+  const card = section.querySelector("[data-slot='card']");
+  if (!card) throw new Error('AlertSignupForm did not render an owned Card');
+  return { card, section };
 }
 
-describe('AlertSignupForm dark-mode contrast', () => {
-  it('uses the theme-adaptive brand surface token, not the directional solid fill', () => {
-    const section = renderPanel()
-    // The adaptive token: pale in light, neutral-elevated (legible) in dark.
-    expect(section.classList.contains('bg-brand-primary_alt')).toBe(true)
-    // The directional token flips to a solid brand fill in dark that fails
-    // contrast against the neutral text/bell — it must NOT be the surface.
-    expect(section.classList.contains('bg-brand-primary')).toBe(false)
-  })
+describe('AlertSignupForm theme composition', () => {
+  it('uses the canonical primary tint instead of a parallel brand token system', () => {
+    const { card } = renderPanel();
+    expect(card.classList.contains('bg-primary/5')).toBe(true);
+    expect(card.className).not.toMatch(/bg-brand/);
+  });
 
-  it('keeps the brand border so the callout still reads as branded', () => {
-    const section = renderPanel()
-    expect(section.classList.contains('border-brand')).toBe(true)
-  })
-})
+  it('keeps the primary border so the callout still reads as emphasized', () => {
+    const { card } = renderPanel();
+    expect(card.classList.contains('border-primary')).toBe(true);
+  });
+
+  it('composes the email capture from the owned form families', () => {
+    const { section } = renderPanel();
+
+    expect(section.querySelector("[data-slot='field']")).toBeInTheDocument();
+    expect(
+      section.querySelector("[data-slot='input-group']"),
+    ).toBeInTheDocument();
+    expect(
+      section.querySelector("[data-slot='button-group']"),
+    ).toBeInTheDocument();
+    expect(
+      section.querySelector("[data-slot='input-group-control']"),
+    ).toHaveAttribute('type', 'email');
+  });
+});
+
+describe('AlertSignupForm submission', () => {
+  it('keeps the exact subscription payload visible as pending with an owned spinner', () => {
+    const onSubscribe = vi.fn(
+      () => new Promise<{ status: 'created' | 'duplicate' }>(() => {}),
+    );
+    const { container } = render(
+      <AlertSignupForm
+        language="en"
+        filters={{ jobFunctions: ['Design'] }}
+        context={{ source: 'jobs_list' }}
+        onSubscribe={onSubscribe}
+      />,
+    );
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'email' }), {
+      target: { value: 'designer@example.com' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'get job alerts' }));
+
+    expect(onSubscribe).toHaveBeenCalledWith({
+      email: 'designer@example.com',
+      consent: true,
+      frequency: 'weekly',
+      filters: { jobFunctions: ['Design'] },
+      context: { source: 'jobs_list' },
+    });
+    expect(
+      screen.getByRole('button', { name: 'get job alerts' }),
+    ).toBeDisabled();
+    expect(
+      container.querySelector("[data-slot='spinner']"),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Subscribing…')).toBeVisible();
+  });
+
+  it('announces a rejected subscription through the owned field error without clearing the email', async () => {
+    render(
+      <AlertSignupForm
+        language="en"
+        onSubscribe={vi.fn().mockRejectedValue(new Error('Unavailable'))}
+      />,
+    );
+
+    const input = screen.getByRole('textbox', { name: 'email' });
+    fireEvent.change(input, { target: { value: 'person@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'get job alerts' }));
+
+    const error = await screen.findByRole('alert');
+    expect(error).toHaveAttribute('data-slot', 'field-error');
+    expect(error).toHaveTextContent('Something went wrong. Please try again.');
+    expect(input).toHaveValue('person@example.com');
+  });
+});

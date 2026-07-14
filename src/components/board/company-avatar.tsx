@@ -1,4 +1,4 @@
-import { cx } from '@/utils/cx'
+import { cn } from '@/lib/utils';
 
 /**
  * Company mark: the real logo when it exists, initials on the ink chip
@@ -11,18 +11,22 @@ export function CompanyAvatar({
   size = 'sm',
   className,
 }: {
-  name: string
-  logoUrl?: string | null
-  size?: 'sm' | 'md' | 'lg'
-  className?: string
+  name: string;
+  logoUrl?: string | null;
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
 }) {
   const box =
-    size === 'lg' ? 'size-12 text-lg' : size === 'md' ? 'size-11 text-base' : 'size-10 text-sm'
+    size === 'lg'
+      ? 'size-12 text-lg'
+      : size === 'md'
+        ? 'size-11 text-base'
+        : 'size-10 text-sm';
   if (logoUrl) {
     return (
       <span
-        className={cx(
-          'border-secondary bg-white flex shrink-0 items-center justify-center overflow-hidden rounded-[9px] border',
+        className={cn(
+          'border-border bg-background flex shrink-0 items-center justify-center overflow-hidden rounded-[9px] border',
           box,
           className,
         )}
@@ -30,7 +34,7 @@ export function CompanyAvatar({
       >
         <img src={logoUrl} alt="" className="size-full object-contain" />
       </span>
-    )
+    );
   }
   const initials = name
     .split(/\s+/)
@@ -38,11 +42,11 @@ export function CompanyAvatar({
     .map((word) => word[0]!)
     .slice(0, 2)
     .join('')
-    .toUpperCase()
+    .toUpperCase();
   return (
     <span
-      className={cx(
-        'bg-primary-solid text-white flex shrink-0 items-center justify-center rounded-[9px] font-semibold tracking-wide',
+      className={cn(
+        'bg-foreground text-background flex shrink-0 items-center justify-center rounded-[9px] font-semibold tracking-wide',
         box,
         className,
       )}
@@ -50,5 +54,5 @@ export function CompanyAvatar({
     >
       {initials || '?'}
     </span>
-  )
+  );
 }

@@ -1,10 +1,10 @@
-import { getTalentSearchLabels } from "@/board/talent-search-labels";
-import { toTalentProfileVM } from "@/board/talent-view-model";
-import { TalentSearchDetailState } from "@/components/board/talent-search-detail-state";
-import { TalentSearchResultDetail } from "@/components/board/talent-search-result-detail";
-import { m } from "../paraglide/messages";
+import { m } from '../paraglide/messages';
 
-import type { SelectedTalentState } from "./-use-selected-talent";
+import type { SelectedTalentState } from './-use-selected-talent';
+import { getTalentSearchLabels } from '@/board/talent-search-labels';
+import { toTalentProfileVM } from '@/board/talent-view-model';
+import { TalentSearchDetailState } from '@/components/board/talent-search-detail-state';
+import { TalentSearchResultDetail } from '@/components/board/talent-search-result-detail';
 
 export function SelectedTalentDetail({
   state,
@@ -15,12 +15,8 @@ export function SelectedTalentDetail({
 }) {
   const detail = state.profile ? (
     <TalentSearchResultDetail
-      vm={toTalentProfileVM(
-        state.profile,
-        locale,
-        getTalentSearchLabels(),
-      )}
-      interactive={state.status === "ready"}
+      vm={toTalentProfileVM(state.profile, locale, getTalentSearchLabels())}
+      interactive={state.status === 'ready'}
     />
   ) : undefined;
 

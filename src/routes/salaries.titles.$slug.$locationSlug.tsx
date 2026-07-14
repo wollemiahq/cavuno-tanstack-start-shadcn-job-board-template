@@ -1,29 +1,42 @@
-import { createFileRoute, getRouteApi, notFound, redirect } from "@tanstack/react-router";
+import { boardCopy } from '#/copy';
+import { isNotFound } from '@cavuno/board';
+import {
+  createBreadcrumbJsonLd,
+  crossAxisSalaryJsonLd,
+  formatRange,
+} from '@cavuno/board/seo';
+import {
+  createFileRoute,
+  getRouteApi,
+  notFound,
+  redirect,
+} from '@tanstack/react-router';
 
-import { isNotFound } from "@cavuno/board";
-import { boardCopy } from "#/copy";
-import { createBreadcrumbJsonLd, crossAxisSalaryJsonLd, formatRange } from "@cavuno/board/seo";
+import { m } from '../paraglide/messages';
+import { getSeoBase, getTitleLocationSalary } from '../server/queries';
+import {
+  SalaryNotFoundPage,
+  SalaryPageLayout,
+  SalaryPendingPage,
+} from './-salary-page-layout';
 
-import { JsonLd } from "@/components/json-ld";
-import { PageSection } from "@/components/layout/page";
+import {
+  toOverallSalaryVM,
+  toSalaryBreadcrumbVM,
+  toSalaryRailVM,
+  toSeniorityTableVM,
+} from '@/board/salary-view-model';
 import {
   SalaryEmptyState,
   OverallSalaryCard,
   SalaryRail,
   SenioritySalaryTable,
   type RailItem,
-} from "@/components/board/salary-sections";
-import {
-  toOverallSalaryVM,
-  toSalaryBreadcrumbVM,
-  toSalaryRailVM,
-  toSeniorityTableVM,
-} from "@/board/salary-view-model";
-import { m } from "../paraglide/messages";
-import { getSeoBase, getTitleLocationSalary } from "../server/queries";
-import { SalaryNotFoundPage, SalaryPageLayout, SalaryPendingPage } from "./-salary-page-layout";
+} from '@/components/board/salary-sections';
+import { JsonLd } from '@/components/json-ld';
+import { PageSection } from '@/components/layout/page';
 
-export const Route = createFileRoute("/salaries/titles/$slug/$locationSlug")({
+export const Route = createFileRoute('/salaries/titles/$slug/$locationSlug')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
     let salary;
@@ -41,7 +54,7 @@ export const Route = createFileRoute("/salaries/titles/$slug/$locationSlug")({
       salary.locationCanonicalSlug !== params.locationSlug
     ) {
       throw redirect({
-        to: "/salaries/titles/$slug/$locationSlug",
+        to: '/salaries/titles/$slug/$locationSlug',
         params: {
           slug: salary.categoryCanonicalSlug,
           locationSlug: salary.locationCanonicalSlug,
@@ -64,7 +77,7 @@ export const Route = createFileRoute("/salaries/titles/$slug/$locationSlug")({
               }),
             },
             {
-              name: "description",
+              name: 'description',
               content: loaderData.salary.overallSalary
                 ? m.salaryDetail_titleInPlaceMetaDescriptionWithData({
                     title: loaderData.salary.categoryName,
@@ -84,7 +97,7 @@ export const Route = createFileRoute("/salaries/titles/$slug/$locationSlug")({
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: `${loaderData.seo.origin}/salaries/titles/${loaderData.salary.categoryCanonicalSlug}/${loaderData.salary.locationCanonicalSlug}`,
             },
           ],
@@ -92,10 +105,12 @@ export const Route = createFileRoute("/salaries/titles/$slug/$locationSlug")({
       : {},
   component: TitleLocationSalaryPage,
   pendingComponent: SalaryPendingPage,
-  notFoundComponent: () => <SalaryNotFoundPage title={m.salaryDetail_notFoundTitleAndPlace()} />,
+  notFoundComponent: () => (
+    <SalaryNotFoundPage title={m.salaryDetail_notFoundTitleAndPlace()} />
+  ),
 });
 
-const rootApi = getRouteApi("__root__");
+const rootApi = getRouteApi('__root__');
 
 function TitleLocationSalaryPage() {
   const { salary, seo } = Route.useLoaderData();
@@ -118,7 +133,10 @@ function TitleLocationSalaryPage() {
       { label: crumbs.home, href: seo.origin },
       { label: crumbs.salaries, href: `${seo.origin}/salaries` },
       { label: crumbs.titles, href: `${seo.origin}/salaries/titles` },
-      { label: salary.categoryName, href: `${seo.origin}/salaries/titles/${cat}` },
+      {
+        label: salary.categoryName,
+        href: `${seo.origin}/salaries/titles/${cat}`,
+      },
       { label: salary.placeName },
     ]),
   ].filter((e): e is Record<string, unknown> => e !== null);
@@ -160,9 +178,9 @@ function TitleLocationSalaryPage() {
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
         [
-          { name: crumbs.home, href: "/" },
-          { name: crumbs.salaries, href: "/salaries" },
-          { name: crumbs.titles, href: "/salaries/titles" },
+          { name: crumbs.home, href: '/' },
+          { name: crumbs.salaries, href: '/salaries' },
+          { name: crumbs.titles, href: '/salaries/titles' },
           { name: salary.categoryName, href: `/salaries/titles/${cat}` },
           { name: salary.placeName },
         ],
@@ -224,7 +242,12 @@ function TitleLocationSalaryPage() {
             )}
           />
           <SalaryRail
-            vm={toSalaryRailVM(m.salaryDetail_topSkills(), skillItems, seo.language, seo.labels)}
+            vm={toSalaryRailVM(
+              m.salaryDetail_topSkills(),
+              skillItems,
+              seo.language,
+              seo.labels,
+            )}
           />
           <SalaryRail
             vm={toSalaryRailVM(
@@ -236,7 +259,10 @@ function TitleLocationSalaryPage() {
           />
         </>
       ) : (
-        <SalaryEmptyState title={heading} description={m.salaryHub_emptyDescription()} />
+        <SalaryEmptyState
+          title={heading}
+          description={m.salaryHub_emptyDescription()}
+        />
       )}
     </SalaryPageLayout>
   );

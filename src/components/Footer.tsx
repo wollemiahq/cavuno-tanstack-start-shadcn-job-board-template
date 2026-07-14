@@ -1,10 +1,11 @@
-import { Link } from "@tanstack/react-router";
+import { boardCopy } from '#/copy';
+import { Link } from '@tanstack/react-router';
 
-import type { BoardLabelOverrides } from "@cavuno/board/format";
-import { boardCopy } from "#/copy";
-import { Box } from "@/components/layout/box";
-import { Container } from "@/components/layout/container";
-import { m } from "../paraglide/messages";
+import { m } from '../paraglide/messages';
+
+import { Box } from '@/components/layout/box';
+import { Container } from '@/components/layout/container';
+import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 /**
  * The board-context `footer` data group (hosted-footer parity slice) —
@@ -38,8 +39,8 @@ interface FooterLink {
  */
 function resolveTemplate(template: string, boardName: string): string {
   return template
-    .replaceAll("{{board_name}}", boardName)
-    .replaceAll("{{year}}", new Date().getFullYear().toString());
+    .replaceAll('{{board_name}}', boardName)
+    .replaceAll('{{year}}', new Date().getFullYear().toString());
 }
 
 /**
@@ -54,7 +55,7 @@ function buildNavigationLinks({
   systemItems,
 }: {
   order: string[];
-  customLinks: BoardContextFooter["customLinks"];
+  customLinks: BoardContextFooter['customLinks'];
   systemItems: Record<string, FooterLink | null>;
 }): FooterLink[] {
   const customById = new Map(customLinks.map((link) => [link.id, link]));
@@ -70,8 +71,8 @@ function buildNavigationLinks({
   for (const entry of order) {
     if (entry in systemItems) {
       add(entry, systemItems[entry]);
-    } else if (entry.startsWith("custom:")) {
-      const custom = customById.get(entry.slice("custom:".length));
+    } else if (entry.startsWith('custom:')) {
+      const custom = customById.get(entry.slice('custom:'.length));
       if (custom) {
         add(entry, { href: custom.url, label: custom.label, external: true });
       }
@@ -94,14 +95,14 @@ function FooterLinkItem({ link }: { link: FooterLink }) {
       {link.external ? (
         <a
           href={link.href}
-          className="rounded-sm text-sm text-muted-foreground outline-none transition-colors hover:text-foreground hover:no-underline focus-visible:ring-3 focus-visible:ring-ring/30"
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/30 rounded-sm text-sm transition-colors outline-none hover:no-underline focus-visible:ring-3"
         >
           {link.label}
         </a>
       ) : (
         <Link
           to={link.href}
-          className="rounded-sm text-sm text-muted-foreground outline-none transition-colors hover:text-foreground hover:no-underline focus-visible:ring-3 focus-visible:ring-ring/30"
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/30 rounded-sm text-sm transition-colors outline-none hover:no-underline focus-visible:ring-3"
         >
           {link.label}
         </Link>
@@ -121,7 +122,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h3 className="text-sm font-semibold text-foreground">{heading}</h3>
+      <h3 className="text-foreground text-sm font-semibold">{heading}</h3>
       <ul className="mt-4 space-y-3">
         {links.map((link) => (
           <FooterLinkItem key={`${link.href}${link.label}`} link={link} />
@@ -135,7 +136,12 @@ function FooterColumn({
 // Brand-glyph SVGs (same paths as the hosted board's footer icons).
 function XIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="size-4">
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className="size-4"
+    >
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
     </svg>
   );
@@ -143,7 +149,12 @@ function XIcon() {
 
 function FacebookIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="size-4">
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className="size-4"
+    >
       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
     </svg>
   );
@@ -151,7 +162,12 @@ function FacebookIcon() {
 
 function LinkedInIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="size-4">
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className="size-4"
+    >
       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
     </svg>
   );
@@ -159,7 +175,12 @@ function LinkedInIcon() {
 
 function CavunoMark() {
   return (
-    <svg fill="none" viewBox="0 0 38 48" aria-hidden="true" className="size-3 shrink-0">
+    <svg
+      fill="none"
+      viewBox="0 0 38 48"
+      aria-hidden="true"
+      className="size-3 shrink-0"
+    >
       <circle cx="19" cy="24" r="16" stroke="currentColor" strokeWidth="6" />
     </svg>
   );
@@ -206,7 +227,7 @@ export default function Footer({
    * a sign-in upsell). Null against an API that predates the field; fall
    * back to the collapsed boolean.
    */
-  talentDirectoryVisibility: "off" | "public" | "employers_only" | null;
+  talentDirectoryVisibility: 'off' | 'public' | 'employers_only' | null;
   /**
    * Whether /employers has anything to sell (self-service, talent, or
    * sales-led plans) — the hosted `hasEmployerOfferPage` gate on the
@@ -222,34 +243,40 @@ export default function Footer({
     order: footer?.navigationOrder ?? [],
     customLinks: footer?.customLinks ?? [],
     systemItems: {
-      home: { href: "/jobs", label: copy.nav.home },
-      companies: { href: "/companies", label: copy.nav.companies },
-      pricing: hasEmployerOfferPage ? { href: "/employers", label: copy.nav.pricing } : null,
-      blog: features.blog ? { href: "/blog", label: copy.nav.blog } : null,
+      home: { href: '/jobs', label: copy.nav.home },
+      companies: { href: '/companies', label: copy.nav.companies },
+      pricing: hasEmployerOfferPage
+        ? { href: '/employers', label: copy.nav.pricing }
+        : null,
+      blog: features.blog ? { href: '/blog', label: copy.nav.blog } : null,
     },
   });
 
   // ── For Companies ──
   const talentLinked = talentDirectoryVisibility
-    ? talentDirectoryVisibility !== "off"
+    ? talentDirectoryVisibility !== 'off'
     : features.talentDirectory;
   const companyLinks: FooterLink[] = [
-    ...(features.publicJobSubmission ? [{ href: "/post", label: copy.nav.post }] : []),
-    ...(hasEmployerOfferPage ? [{ href: "/employers", label: copy.nav.pricing }] : []),
-    ...(talentLinked ? [{ href: "/talent", label: copy.nav.talent }] : []),
+    ...(features.publicJobSubmission
+      ? [{ href: '/post', label: copy.nav.post }]
+      : []),
+    ...(hasEmployerOfferPage
+      ? [{ href: '/employers', label: copy.nav.pricing }]
+      : []),
+    ...(talentLinked ? [{ href: '/talent', label: copy.nav.talent }] : []),
   ];
 
   // ── Resources ──
   const resourceLinks: FooterLink[] = [
-    { href: "/jobs/locations", label: copy.footer.locationsLabel },
-    { href: "/salaries", label: copy.footer.salariesLabel },
+    { href: '/jobs/locations', label: copy.footer.locationsLabel },
+    { href: '/salaries', label: copy.footer.salariesLabel },
     // sitemap.xml is a server route, not a router page → plain anchor
-    { href: "/sitemap.xml", label: copy.footer.sitemapLabel, external: true },
+    { href: '/sitemap.xml', label: copy.footer.sitemapLabel, external: true },
   ];
 
   // ── About ──
   const aboutLinks: FooterLink[] = [
-    { href: "/about", label: copy.footer.aboutLabel },
+    { href: '/about', label: copy.footer.aboutLabel },
     ...(footer?.contactEmail
       ? [
           {
@@ -270,12 +297,12 @@ export default function Footer({
       : []),
   ];
   const socialLinks = [
-    footer?.xUrl ? { href: footer.xUrl, label: "X", icon: <XIcon /> } : null,
+    footer?.xUrl ? { href: footer.xUrl, label: 'X', icon: <XIcon /> } : null,
     footer?.facebookUrl
-      ? { href: footer.facebookUrl, label: "Facebook", icon: <FacebookIcon /> }
+      ? { href: footer.facebookUrl, label: 'Facebook', icon: <FacebookIcon /> }
       : null,
     footer?.linkedinUrl
-      ? { href: footer.linkedinUrl, label: "LinkedIn", icon: <LinkedInIcon /> }
+      ? { href: footer.linkedinUrl, label: 'LinkedIn', icon: <LinkedInIcon /> }
       : null,
   ].filter((link) => link !== null);
 
@@ -286,10 +313,12 @@ export default function Footer({
   const copyright = `${resolveTemplate(copy.footer.copyrightPrefix, boardName)} ${copy.footer.allRightsReservedText}`;
 
   const legalLinks: FooterLink[] = [
-    { href: "/terms-of-service", label: copy.footer.termsOfServiceLabel },
-    { href: "/privacy-policy", label: copy.footer.privacyPolicyLabel },
-    { href: "/cookie-policy", label: copy.footer.cookiePolicyLabel },
-    ...(features.impressum ? [{ href: "/impressum", label: copy.footer.impressumLabel }] : []),
+    { href: '/terms-of-service', label: copy.footer.termsOfServiceLabel },
+    { href: '/privacy-policy', label: copy.footer.privacyPolicyLabel },
+    { href: '/cookie-policy', label: copy.footer.cookiePolicyLabel },
+    ...(features.impressum
+      ? [{ href: '/impressum', label: copy.footer.impressumLabel }]
+      : []),
   ];
 
   const columns = [
@@ -304,35 +333,43 @@ export default function Footer({
   const marketingHref = `https://cavuno.com/?ref=${encodeURIComponent(primaryDomain ?? slug)}`;
 
   return (
-    <footer className="rhea-theme mt-16 border-t border-border bg-background text-foreground">
+    <footer className="border-border bg-background text-foreground mt-16 border-t">
       <Container width="wide">
-        <Box paddingY={{ base: "10", md: "12" }}>
+        <Box paddingY={{ base: '10', md: '12' }}>
           <div className="grid gap-10 md:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,1fr))]">
             <div className="max-w-xs space-y-4">
               <Link
                 to="/"
-                className="flex items-center gap-2.5 rounded-md text-lg font-semibold text-foreground outline-none hover:no-underline focus-visible:ring-3 focus-visible:ring-ring/30"
+                className="text-foreground focus-visible:ring-ring/30 flex items-center gap-2.5 rounded-md text-lg font-semibold outline-none hover:no-underline focus-visible:ring-3"
               >
-                {logoUrl ? <img src={logoUrl} alt="" className="size-8 rounded-md" /> : null}
+                {logoUrl ? (
+                  <img src={logoUrl} alt="" className="size-8 rounded-md" />
+                ) : null}
                 {boardName}
               </Link>
-              <p className="text-sm text-muted-foreground">{description}</p>
+              <p className="text-muted-foreground text-sm">{description}</p>
               {showCavunoBranding ? (
                 <a
                   href={marketingHref}
                   rel="noopener noreferrer"
                   target="_blank"
-                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm text-muted-foreground ring-1 ring-border outline-none transition-colors ring-inset hover:bg-muted hover:text-foreground hover:no-underline focus-visible:ring-3 focus-visible:ring-ring/30"
+                  className="text-muted-foreground ring-border hover:bg-muted hover:text-foreground focus-visible:ring-ring/30 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm ring-1 transition-colors outline-none ring-inset hover:no-underline focus-visible:ring-3"
                 >
                   {copy.footer.poweredByText}
                   <CavunoMark />
-                  <span className="font-medium text-foreground">{m.siteFooter_cavunoLabel()}</span>
+                  <span className="text-foreground font-medium">
+                    {m.siteFooter_cavunoLabel()}
+                  </span>
                 </a>
               ) : null}
             </div>
 
             {columns.map((column) => (
-              <FooterColumn key={column.heading} heading={column.heading} links={column.links} />
+              <FooterColumn
+                key={column.heading}
+                heading={column.heading}
+                links={column.links}
+              />
             ))}
 
             <FooterColumn heading={copy.footer.aboutHeading} links={aboutLinks}>
@@ -345,7 +382,7 @@ export default function Footer({
                       aria-label={social.label}
                       rel="noopener noreferrer"
                       target="_blank"
-                      className="rounded-sm text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/30"
+                      className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/30 rounded-sm transition-colors outline-none focus-visible:ring-3"
                     >
                       {social.icon}
                     </a>
@@ -355,14 +392,14 @@ export default function Footer({
             </FooterColumn>
           </div>
 
-          <div className="mt-12 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border pt-8">
-            <span className="text-sm text-muted-foreground">{copyright}</span>
+          <div className="border-border mt-12 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t pt-8">
+            <span className="text-muted-foreground text-sm">{copyright}</span>
             <nav className="flex flex-wrap gap-x-6 gap-y-3">
               {legalLinks.map((link) => (
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="rounded-sm text-sm text-muted-foreground outline-none transition-colors hover:text-foreground hover:no-underline focus-visible:ring-3 focus-visible:ring-ring/30"
+                  className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/30 rounded-sm text-sm transition-colors outline-none hover:no-underline focus-visible:ring-3"
                 >
                   {link.label}
                 </Link>

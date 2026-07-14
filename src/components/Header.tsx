@@ -1,30 +1,50 @@
-"use client";
+'use client';
 
-import { useId, useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from 'react';
 
-import { Link } from "@tanstack/react-router";
-import { BookOpenText, BriefcaseBusiness, Building2, Menu, Search, Users, X } from "lucide-react";
+import { boardCopy } from '#/copy';
+import { Link } from '@tanstack/react-router';
+import {
+  BookOpenText,
+  BriefcaseBusiness,
+  Building2,
+  Menu,
+  Search,
+  Users,
+  X,
+} from 'lucide-react';
 
-import type { BoardUser } from "@cavuno/board";
-import type { BoardLabelOverrides } from "@cavuno/board/format";
-import { boardCopy } from "#/copy";
+import { resolveSignupDestination } from '../lib/signup-destination';
+import { m } from '../paraglide/messages';
 
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Container } from "@/components/layout/container";
-import { LocationCombobox, type LocationSuggestionState } from "@/components/location-combobox";
-import { cn } from "@/lib/utils";
+import { Container } from '@/components/layout/container';
+import {
+  LocationCombobox,
+  type LocationSuggestionState,
+} from '@/components/location-combobox';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group';
 import type {
   HeaderSearchState,
   HeaderSearchSubmission,
   HeaderSearchScope,
-} from "@/lib/header-search";
-import { resolveSignupDestination } from "../lib/signup-destination";
-import { m } from "../paraglide/messages";
-
+} from '@/lib/header-search';
+import { cn } from '@/lib/utils';
+import type { BoardUser } from '@cavuno/board';
+import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 const navItemClassName =
-  "relative flex min-w-16 flex-col items-center gap-0.5 border-b-2 border-transparent px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30";
+  'relative flex min-w-16 flex-col items-center gap-0.5 border-b-2 border-transparent px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30';
 
 function HeaderSearch({
   search,
@@ -66,39 +86,43 @@ function HeaderSearch({
       onSubmit={submitSearch}
       className="col-span-2 row-start-2 w-full min-w-0 py-2 xl:col-auto xl:row-auto xl:max-w-xl xl:flex-1 xl:py-0"
     >
-      <div className="flex min-w-0 items-center overflow-visible rounded-2xl border border-border bg-input/50 transition-[color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/30">
-        <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
+      <ButtonGroup
+        aria-label={m.searchBar_searchAriaLabel()}
+        className="w-full min-w-0"
+      >
+        <InputGroup className="border-border bg-input/50 h-9 min-w-0 flex-1">
+          <InputGroupInput
             type="search"
             value={value}
             onChange={(event) => setValue(event.target.value)}
             aria-label={m.searchBar_keywordAriaLabel()}
             placeholder={scopePlaceholders[search.scope]}
-            className="h-9 rounded-none border-0 bg-transparent pr-2 pl-8 focus-visible:ring-0"
+            className="min-w-0"
           />
-        </div>
-        {search.scope === "jobs" ? (
+          <InputGroupAddon>
+            <Search aria-hidden="true" />
+          </InputGroupAddon>
+        </InputGroup>
+        {search.scope === 'jobs' ? (
           <LocationCombobox
             {...search.locationSuggestions}
             value={location?.slug}
             valueLabel={location?.name}
             onSelect={setLocation}
             onClear={() => setLocation(null)}
-            className="min-w-0 flex-1 border-l border-border"
-            inputClassName="h-9 rounded-none border-0 bg-transparent focus-visible:ring-0"
+            className="border-border bg-input/50 h-9 min-w-0 flex-1"
           />
         ) : null}
         <Button
           type="submit"
-          variant="ghost"
+          variant="outline"
           size="icon-sm"
           aria-label={m.searchBar_searchAriaLabel()}
-          className="mr-1"
+          className="h-9 shrink-0"
         >
           <Search aria-hidden="true" />
         </Button>
-      </div>
+      </ButtonGroup>
     </form>
   );
 }
@@ -126,7 +150,7 @@ export default function Header({
     blog: boolean;
     talentDirectory: boolean;
   };
-  talentDirectoryVisibility: "off" | "public" | "employers_only" | null;
+  talentDirectoryVisibility: 'off' | 'public' | 'employers_only' | null;
   messagesNav?: ReactNode;
   search: HeaderSearchState & {
     onSubmit: (submission: HeaderSearchSubmission) => void;
@@ -137,24 +161,46 @@ export default function Header({
   const mobileMenuId = useId();
   const copy = boardCopy(language, labels);
   const talentDirectoryEnabled =
-    features.talentDirectory || talentDirectoryVisibility === "employers_only";
+    features.talentDirectory || talentDirectoryVisibility === 'employers_only';
   const navLinks = [
-    { to: "/jobs", label: copy.nav.home, icon: BriefcaseBusiness, enabled: true },
-    { to: "/companies", label: copy.nav.companies, icon: Building2, enabled: true },
-    { to: "/talent", label: copy.nav.talent, icon: Users, enabled: talentDirectoryEnabled },
-    { to: "/blog", label: copy.nav.blog, icon: BookOpenText, enabled: features.blog },
+    {
+      to: '/jobs',
+      label: copy.nav.home,
+      icon: BriefcaseBusiness,
+      enabled: true,
+    },
+    {
+      to: '/companies',
+      label: copy.nav.companies,
+      icon: Building2,
+      enabled: true,
+    },
+    {
+      to: '/talent',
+      label: copy.nav.talent,
+      icon: Users,
+      enabled: talentDirectoryEnabled,
+    },
+    {
+      to: '/blog',
+      label: copy.nav.blog,
+      icon: BookOpenText,
+      enabled: features.blog,
+    },
   ] as const;
   const visibleNavLinks = navLinks.filter((item) => item.enabled);
-  const signInLabel = labels?.jobCardLabels?.signInLabel || m.siteHeader_signInLabel();
-  const signUpLabel = labels?.jobCardLabels?.signUpLabel || m.siteHeader_signUpLabel();
+  const signInLabel =
+    labels?.jobCardLabels?.signInLabel || m.siteHeader_signInLabel();
+  const signUpLabel =
+    labels?.jobCardLabels?.signUpLabel || m.siteHeader_signUpLabel();
   const authEnabled = features.candidates || features.employers;
   const signUpHref = resolveSignupDestination(features);
   const postJob = features.publicJobSubmission ? (
     <Link
       to="/post"
       className={cn(
-        buttonVariants({ variant: "outline", size: "default" }),
-        "hidden xl:inline-flex",
+        buttonVariants({ variant: 'outline', size: 'default' }),
+        'hidden xl:inline-flex',
       )}
     >
       {m.siteHeader_postJobLabel()}
@@ -162,7 +208,13 @@ export default function Header({
   ) : null;
 
   return (
-    <header className="rhea-theme border-b border-border bg-background text-foreground">
+    <Collapsible
+      open={menuOpen}
+      onOpenChange={setMenuOpen}
+      render={
+        <header className="border-border bg-background text-foreground border-b" />
+      }
+    >
       <Container width="wide">
         <div className="grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
           <div
@@ -172,13 +224,17 @@ export default function Header({
           >
             <Link
               to="/"
-              className="col-start-1 row-start-1 flex shrink-0 items-center gap-2.5 rounded-xl text-base font-semibold text-foreground outline-none hover:no-underline focus-visible:ring-3 focus-visible:ring-ring/30"
+              className="text-foreground focus-visible:ring-ring/30 col-start-1 row-start-1 flex shrink-0 items-center gap-2.5 rounded-xl text-base font-semibold outline-none hover:no-underline focus-visible:ring-3"
             >
-              {logoUrl ? <img src={logoUrl} alt="" className="size-8 rounded-xl" /> : null}
+              {logoUrl ? (
+                <img src={logoUrl} alt="" className="size-8 rounded-xl" />
+              ) : null}
               <span
                 className={cn(
-                  "max-w-48 truncate",
-                  search.visible && logoUrl && "hidden sm:inline xl:hidden 2xl:inline",
+                  'max-w-48 truncate',
+                  search.visible &&
+                    logoUrl &&
+                    'hidden sm:inline xl:hidden 2xl:inline',
                 )}
                 title={boardName}
               >
@@ -188,7 +244,7 @@ export default function Header({
 
             {search.visible ? (
               <HeaderSearch
-                key={`${search.scope}:${search.query}:${search.location?.slug ?? ""}`}
+                key={`${search.scope}:${search.query}:${search.location?.slug ?? ''}`}
                 search={search}
                 jobsPlaceholder={copy.jobSearch.keywordPlaceholder}
                 companiesPlaceholder={m.companySearchBar_placeholderText()}
@@ -201,17 +257,17 @@ export default function Header({
           <nav
             aria-label={m.siteHeader_primaryNavigationAriaLabel()}
             data-slot="header-primary-navigation"
-            className="col-start-2 row-start-1 hidden shrink-0 items-stretch justify-self-center gap-0.5 self-stretch xl:flex"
+            className="col-start-2 row-start-1 hidden shrink-0 items-stretch gap-0.5 self-stretch justify-self-center xl:flex"
           >
             {visibleNavLinks.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className={cn(navItemClassName, "hover:no-underline")}
+                className={cn(navItemClassName, 'hover:no-underline')}
                 activeProps={{
                   className: cn(
                     navItemClassName,
-                    "border-primary text-foreground hover:no-underline",
+                    'border-primary text-foreground hover:no-underline',
                   ),
                 }}
               >
@@ -224,13 +280,19 @@ export default function Header({
           <div
             data-slot="header-actions"
             data-test="header-actions"
-            className="col-start-2 row-start-1 flex shrink-0 items-center justify-self-end gap-2 xl:col-start-3"
+            className="col-start-2 row-start-1 flex shrink-0 items-center gap-2 justify-self-end xl:col-start-3"
           >
             {user ? (
               <>
                 {messagesNav}
                 {postJob}
-                <Link to="/account" className={buttonVariants({ variant: "outline" })}>
+                <Link
+                  to="/account"
+                  className={cn(
+                    buttonVariants({ variant: 'outline' }),
+                    'hidden xl:inline-flex',
+                  )}
+                >
                   {m.siteHeader_accountLabel()}
                 </Link>
               </>
@@ -240,65 +302,108 @@ export default function Header({
                   <Link
                     to="/auth/sign-in"
                     search={{ returnTo: undefined }}
-                    className={cn(buttonVariants({ variant: "ghost" }), "hidden md:inline-flex")}
+                    className={cn(
+                      buttonVariants({ variant: 'ghost' }),
+                      'hidden xl:inline-flex',
+                    )}
                   >
                     {signInLabel}
                   </Link>
                 ) : null}
                 {postJob}
                 {signUpHref ? (
-                  <Link to={signUpHref} className={buttonVariants()}>
+                  <Link
+                    to={signUpHref}
+                    className={cn(buttonVariants(), 'hidden xl:inline-flex')}
+                  >
                     {signUpLabel}
                   </Link>
                 ) : null}
               </>
             )}
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
+            <CollapsibleTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-foreground xl:hidden"
+                />
+              }
               aria-label={
                 menuOpen
                   ? m.siteHeader_closeNavMenuAriaLabel()
                   : m.siteHeader_openNavMenuAriaLabel()
               }
-              aria-expanded={menuOpen}
               aria-controls={mobileMenuId}
-              onClick={() => setMenuOpen((open) => !open)}
-              className="xl:hidden"
             >
-              {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
-            </Button>
+              {menuOpen ? (
+                <X aria-hidden="true" />
+              ) : (
+                <Menu aria-hidden="true" />
+              )}
+            </CollapsibleTrigger>
           </div>
         </div>
       </Container>
 
-      {menuOpen ? (
-        <nav
-          id={mobileMenuId}
-          className="flex flex-col gap-0.5 border-t border-border px-4 py-3 xl:hidden"
-        >
-          {visibleNavLinks.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={cn(navItemClassName, "hover:no-underline")}
-              onClick={() => setMenuOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
-          {features.publicJobSubmission ? (
-            <Link
-              to="/post"
-              className={cn(navItemClassName, "hover:no-underline")}
-              onClick={() => setMenuOpen(false)}
-            >
-              {m.siteHeader_postJobLabel()}
-            </Link>
-          ) : null}
-        </nav>
-      ) : null}
-    </header>
+      <CollapsibleContent
+        id={mobileMenuId}
+        render={
+          <nav className="border-border flex flex-col gap-0.5 border-t px-4 py-3 xl:hidden" />
+        }
+      >
+        {visibleNavLinks.map((item) => (
+          <Link
+            key={item.to}
+            to={item.to}
+            className={cn(navItemClassName, 'hover:no-underline')}
+            onClick={() => setMenuOpen(false)}
+          >
+            {item.label}
+          </Link>
+        ))}
+        {features.publicJobSubmission ? (
+          <Link
+            to="/post"
+            className={cn(navItemClassName, 'hover:no-underline')}
+            onClick={() => setMenuOpen(false)}
+          >
+            {m.siteHeader_postJobLabel()}
+          </Link>
+        ) : null}
+        {user ? (
+          <Link
+            to="/account"
+            className={cn(navItemClassName, 'hover:no-underline')}
+            onClick={() => setMenuOpen(false)}
+          >
+            {m.siteHeader_accountLabel()}
+          </Link>
+        ) : (
+          <>
+            {authEnabled ? (
+              <Link
+                to="/auth/sign-in"
+                search={{ returnTo: undefined }}
+                className={cn(navItemClassName, 'hover:no-underline')}
+                onClick={() => setMenuOpen(false)}
+              >
+                {signInLabel}
+              </Link>
+            ) : null}
+            {signUpHref ? (
+              <Link
+                to={signUpHref}
+                className={cn(navItemClassName, 'hover:no-underline')}
+                onClick={() => setMenuOpen(false)}
+              >
+                {signUpLabel}
+              </Link>
+            ) : null}
+          </>
+        )}
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

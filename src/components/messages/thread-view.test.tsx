@@ -142,6 +142,30 @@ describe('ThreadView', () => {
     expect(screen.getByText('Employer')).toBeInTheDocument();
   });
 
+  it('uses the shared empty-state composition before a conversation has messages', () => {
+    render(
+      <ThreadView
+        conversation={{ ...conversation, hasUnread: false }}
+        messages={[]}
+        blocked={false}
+        onArchive={vi.fn()}
+        onUnarchive={vi.fn()}
+        onBlock={vi.fn()}
+        onUnblock={vi.fn()}
+        onEditMessage={vi.fn()}
+        onUnsendMessage={vi.fn()}
+        onReportMessage={vi.fn()}
+        onSend={vi.fn()}
+        onRefresh={vi.fn()}
+        onReported={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText('No messages yet.').closest('[data-slot="empty"]'),
+    ).not.toBeNull();
+  });
+
   it('keeps company navigation inside the TanStack application', async () => {
     const rootRoute = createRootRoute();
     const indexRoute = createRoute({
@@ -221,6 +245,7 @@ describe('ThreadView', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Network failed',
     );
+    expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
     expect(onArchive).toHaveBeenCalledOnce();
   });
 

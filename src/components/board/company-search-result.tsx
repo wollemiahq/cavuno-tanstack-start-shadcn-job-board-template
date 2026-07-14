@@ -1,10 +1,10 @@
-import type { MouseEvent as ReactMouseEvent } from "react";
+import type { MouseEvent as ReactMouseEvent } from 'react';
 
-import type { CompanyCardVM } from "@/board/company-view-model";
-import { SearchResultCard } from "@/components/search-results/search-results";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { initialsOf } from "@/lib/initials";
+import type { CompanyCardVM } from '@/board/company-view-model';
+import { SearchResultCard } from '@/components/search-results/search-results';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { initialsOf } from '@/lib/initials';
 
 export function CompanySearchResult({
   vm,
@@ -19,7 +19,7 @@ export function CompanySearchResult({
     <SearchResultCard selected={selected} className="p-0">
       <a
         href={vm.detailHref}
-        aria-current={selected ? "true" : undefined}
+        aria-current={selected ? 'true' : undefined}
         onClick={onActivate}
         className="block rounded-[inherit] p-4 outline-none"
       >
@@ -39,11 +39,11 @@ export function CompanySearchResult({
           </Avatar>
 
           <div className="min-w-0 flex-1">
-            <h2 className="line-clamp-2 text-base font-semibold text-foreground">
+            <h2 className="text-foreground line-clamp-2 text-base font-semibold">
               {vm.name}
             </h2>
             {vm.descriptionText ? (
-              <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-2 line-clamp-2 text-sm">
                 {vm.descriptionText}
               </p>
             ) : null}

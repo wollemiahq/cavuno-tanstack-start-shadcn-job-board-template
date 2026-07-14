@@ -1,14 +1,15 @@
-/**
- * Sidebar-nav logged-in shell (Paper "B — Sidebar Nav"): identity block +
- * section nav in a left rail, content on the right. The public header and
- * footer stay — this renders inside the root <main>. On mobile the rail
- * stacks on top and the nav scrolls horizontally.
- */
-import { Link } from "@tanstack/react-router";
+import type { ReactNode } from 'react';
 
-import { CompanyAvatar } from "@/components/board/company-avatar";
-import { cx } from "@/utils/cx";
-import { m } from "../paraglide/messages";
+import { Link } from '@tanstack/react-router';
+
+import { m } from '../paraglide/messages';
+
+import { Page, PageContent } from '@/components/layout/page';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { initialsOf } from '@/lib/initials';
+import { cn } from '@/lib/utils';
 
 export interface ShellNavItem {
   key: string;
@@ -20,7 +21,7 @@ export interface ShellNavItem {
 export interface ShellIdentity {
   avatarUrl?: string | null;
   title: string;
-  badge?: React.ReactNode;
+  badge?: ReactNode;
   subtitle?: string | null;
 }
 
@@ -34,60 +35,101 @@ export function AccountShell({
   identity: ShellIdentity;
   nav: ShellNavItem[];
   active: string;
-  /** Extra rail content below the nav (e.g. the profile-strength meter). */
-  rail?: React.ReactNode;
-  children: React.ReactNode;
+  rail?: ReactNode;
+  children: ReactNode;
 }) {
-  return (
-    <div className="flex flex-col gap-8 md:flex-row md:gap-10">
-      <aside className="w-full shrink-0 md:w-60">
-        <div className="flex items-center gap-3 md:block md:space-y-3">
-          <CompanyAvatar name={identity.title || "?"} logoUrl={identity.avatarUrl} size="lg" />
-          <div>
-            <p className="text-primary flex flex-wrap items-center gap-2 font-semibold">
-              {identity.title}
+  const sidebar = (
+    <Card size="sm" data-slot="employer-account-sidebar">
+      <CardContent>
+        <div className="flex min-w-0 items-center gap-3">
+          <EmployerIdentityAvatar
+            name={identity.title}
+            logoUrl={identity.avatarUrl}
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <p className="text-foreground min-w-0 truncate font-medium">
+                {identity.title}
+              </p>
               {identity.badge}
-            </p>
+            </div>
             {identity.subtitle ? (
-              <p className="text-tertiary mt-0.5 text-sm break-all">{identity.subtitle}</p>
+              <p className="text-muted-foreground mt-0.5 text-sm break-words">
+                {identity.subtitle}
+              </p>
             ) : null}
           </div>
         </div>
 
-        <div className="my-5 border-t border-secondary" />
+        <Separator className="my-4" />
 
-        <nav className="-mx-1 flex flex-row gap-1 overflow-x-auto md:mx-0 md:flex-col">
-          {nav.map((item) => (
-            <Link
-              key={item.key}
-              to={item.to}
-              params={item.params}
-              className={cx(
-                "rounded-md px-3 py-2 text-[15px] whitespace-nowrap hover:no-underline",
-                item.key === active
-                  ? "bg-secondary text-primary font-medium"
-                  : "text-tertiary hover:text-primary",
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
+        <nav
+          aria-label={identity.title}
+          className="grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-1"
+        >
+          {nav.map((item) => {
+            const current = item.key === active;
+            return (
+              <Link
+                key={item.key}
+                to={item.to}
+                params={item.params}
+                aria-current={current ? 'page' : undefined}
+                className={cn(
+                  'text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring rounded-xl px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
+                  current && 'bg-muted text-foreground',
+                )}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        {rail}
-      </aside>
+        {rail ? (
+          <div
+            className="border-border mt-4 border-t pt-4"
+            data-slot="employer-account-rail"
+          >
+            {rail}
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
 
-      <div className="min-w-0 flex-1">{children}</div>
-    </div>
+  return (
+    <Page width="wide">
+      <PageContent
+        aside={sidebar}
+        asideLabel={identity.title}
+        asideOrder="before"
+      >
+        <div data-slot="employer-account-content" className="min-w-0">
+          {children}
+        </div>
+      </PageContent>
+    </Page>
   );
 }
 
-/**
- * Employer company shell (Paper "Employer Sidebar"): the company identity
- * + Jobs / Company profile nav for one connected company. Team and
- * Settings from the Paper design are deliberately absent — the v1 API has
- * no team or company-settings surface yet.
- */
+export function EmployerIdentityAvatar({
+  name,
+  logoUrl,
+  size = 'lg',
+}: {
+  name: string;
+  logoUrl?: string | null;
+  size?: 'default' | 'sm' | 'lg';
+}) {
+  return (
+    <Avatar size={size}>
+      {logoUrl ? <AvatarImage src={logoUrl} alt="" /> : null}
+      <AvatarFallback>{initialsOf(name) ?? '?'}</AvatarFallback>
+    </Avatar>
+  );
+}
+
 export function EmployerCompanyShell({
   slug,
   company,
@@ -97,22 +139,23 @@ export function EmployerCompanyShell({
   slug: string;
   company: { name: string; website: string | null; logoUrl: string | null };
   active: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const nav: ShellNavItem[] = [
     {
-      key: "jobs",
-      to: "/employers/companies/$slug",
+      key: 'jobs',
+      to: '/employers/companies/$slug',
       params: { slug },
       label: m.accountShell_jobsNav(),
     },
     {
-      key: "profile",
-      to: "/employers/companies/$slug/profile",
+      key: 'profile',
+      to: '/employers/companies/$slug/profile',
       params: { slug },
       label: m.accountShell_companyProfileNav(),
     },
   ];
+
   return (
     <AccountShell
       identity={{

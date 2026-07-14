@@ -94,6 +94,7 @@ describe('messaging runtime failures', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Network failed',
     );
+    expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
     expect(screen.getByRole('button', { name: 'Load more' })).toBeEnabled();
   });
 
@@ -106,6 +107,7 @@ describe('messaging runtime failures', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Network failed',
     );
+    expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
     expect(screen.getByText('Hue Le')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Unblock' })).toBeEnabled();
   });

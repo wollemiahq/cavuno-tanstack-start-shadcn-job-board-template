@@ -1,17 +1,18 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
-import { XIcon } from "lucide-react";
+import { XIcon } from 'lucide-react';
 
-import type { JobAlertDefaults } from "../lib/job-alert-defaults";
-import type { BoardLabelOverrides } from "@cavuno/board/format";
-import { AlertSignupForm } from "@/components/board/alert-signup-form";
-import { Button } from "@/components/ui/button";
-import { m } from "../paraglide/messages";
-import { subscribeJobAlert } from "../server/queries";
+import { m } from '../paraglide/messages';
+import { subscribeJobAlert } from '../server/queries';
 
-const SUPPRESS_KEY = "cavuno:job-alert-prompt-dismissed-until";
+import type { JobAlertDefaults } from '../lib/job-alert-defaults';
+import { AlertSignupForm } from '@/components/board/alert-signup-form';
+import { Button } from '@/components/ui/button';
+import type { BoardLabelOverrides } from '@cavuno/board/format';
+
+const SUPPRESS_KEY = 'cavuno:job-alert-prompt-dismissed-until';
 const SUPPRESS_MS = 30 * 24 * 60 * 60 * 1000;
 
 /**
@@ -41,7 +42,7 @@ export function JobAlertFloatingPrompt({
   return (
     <div
       data-test="job-alert-floating-prompt"
-      className="fixed right-4 bottom-4 z-40 w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-card text-card-foreground shadow-lg ring-1 ring-foreground/5 dark:ring-foreground/10"
+      className="fixed right-4 bottom-4 z-40 w-80 max-w-[calc(100vw-2rem)]"
     >
       <Button
         type="button"
@@ -68,7 +69,10 @@ export function JobAlertFloatingPrompt({
         // Listing-page alert variant — stored as jobCardLabels.jobAlert
         // {Title,Description} on the hosted board; the starter's English
         // is the floor (catalog variant keys land with the authed slice).
-        title={labels?.jobCardLabels?.jobAlertTitle || m.jobAlertFloatingPrompt_defaultTitle()}
+        title={
+          labels?.jobCardLabels?.jobAlertTitle ||
+          m.jobAlertFloatingPrompt_defaultTitle()
+        }
         description={
           labels?.jobCardLabels?.jobAlertDescription ||
           m.jobAlertFloatingPrompt_defaultDescription()

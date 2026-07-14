@@ -253,16 +253,11 @@
   "fontFamily": {
     "sans": {
       "$type": "fontFamily",
-      "$value": [
-        "Geist Variable",
-        "sans-serif"
-      ]
+      "$value": ["Geist Variable", "sans-serif"]
     },
     "heading": {
       "$type": "fontFamily",
-      "$value": [
-        "var(--font-sans)"
-      ]
+      "$value": ["var(--font-sans)"]
     }
   }
 }

@@ -1,19 +1,19 @@
-import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { boardCopy } from '#/copy';
+import { listingJsonLd } from '@cavuno/board/seo';
+import { getRouteApi, useNavigate } from '@tanstack/react-router';
 
-import type { PublicJobCard, RelatedSearch } from "@cavuno/board";
-import { listingJsonLd } from "@cavuno/board/seo";
-import { boardCopy } from "#/copy";
+import { jobAlertDefaultsFromSearch } from '../lib/job-alert-defaults';
+import { pageSearchValue } from '../lib/pagination';
+import { SelectedJobDetail } from '../routes/-selected-job-detail';
+import { useSelectedJob } from '../routes/-use-selected-job';
+import { JobAlertFloatingPrompt } from './job-alert-floating-prompt';
+import { JsonLd } from './json-ld';
 
-import { JobSearchPage } from "@/components/board/job-search-page";
-import type { JobsSearch } from "@/lib/jobs-search";
-import { pageSearchValue } from "../lib/pagination";
-import { JobAlertFloatingPrompt } from "./job-alert-floating-prompt";
-import { JsonLd } from "./json-ld";
-import { jobAlertDefaultsFromSearch } from "../lib/job-alert-defaults";
-import { SelectedJobDetail } from "../routes/-selected-job-detail";
-import { useSelectedJob } from "../routes/-use-selected-job";
+import { JobSearchPage } from '@/components/board/job-search-page';
+import type { JobsSearch } from '@/lib/jobs-search';
+import type { PublicJobCard, RelatedSearch } from '@cavuno/board';
 
-const rootApi = getRouteApi("__root__");
+const rootApi = getRouteApi('__root__');
 
 export const PROGRAMMATIC_JOBS_PAGE_SIZE = 20;
 
@@ -52,13 +52,18 @@ export function ProgrammaticJobsView({
   const copy = boardCopy(board.language, board.labels);
   const navigate = useNavigate() as unknown as LooseNavigate;
   const selectedJob = useSelectedJob(
-    jobs.some((job) => job.slug === filters.selectedJob) ? filters.selectedJob : undefined,
+    jobs.some((job) => job.slug === filters.selectedJob)
+      ? filters.selectedJob
+      : undefined,
     Boolean(user?.emailVerified),
   );
   const jsonLd = origin
     ? listingJsonLd({
         origin,
-        breadcrumbs: [{ name: copy.breadcrumbs.jobs, path: "/" }, { name: heading }],
+        breadcrumbs: [
+          { name: copy.breadcrumbs.jobs, path: '/' },
+          { name: heading },
+        ],
         jobs,
       })
     : null;
@@ -111,7 +116,9 @@ export function ProgrammaticJobsView({
             resetScroll: false,
           })
         }
-        detail={<SelectedJobDetail state={selectedJob} board={board} user={user} />}
+        detail={
+          <SelectedJobDetail state={selectedJob} board={board} user={user} />
+        }
       />
 
       {board.features.jobAlerts ? (
@@ -121,7 +128,7 @@ export function ProgrammaticJobsView({
           defaults={jobAlertDefaultsFromSearch({
             keyword: filters.q,
             locationSlug: location?.slug,
-            source: "jobs_list",
+            source: 'jobs_list',
           })}
         />
       ) : null}

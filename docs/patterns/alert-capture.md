@@ -1,7 +1,7 @@
 ---
 name: Alert capture
 purpose: The email job-alert subscribe surfaces — dark band, inline form, and floating prompt — over one subscribe contract.
-primitives: [AlertsBand, AlertSignupForm, JobAlertFloatingPrompt]
+primitives: [AlertsBand, AlertSignupForm, JobAlertFloatingPrompt, Card, Field, FieldLabel, FieldDescription, FieldError, InputGroup, ButtonGroup, Button, Spinner]
 usedBy: [src/components/board/alerts-band.tsx, src/components/board/alert-signup-form.tsx, src/components/job-alert-floating-prompt.tsx, src/routes/jobs.index.tsx, src/routes/companies.index.tsx, src/routes/blog.index.tsx]
 ---
 
@@ -25,14 +25,20 @@ listings. All three surface the idempotent subscribe statuses honestly
 
 - `AlertsBand` — a `dark`-scheme full-width panel: heading left, email +
   subscribe row right.
-- `AlertSignupForm` — the inline card variant.
+- `AlertSignupForm` — the inline shadcn `Card`; its email control composes
+  `Field`, `InputGroup`, `ButtonGroup`, and `Button`.
 - `JobAlertFloatingPrompt` — the floating, context-aware prompt.
 - All share the `toAlertSignupVM(language, labels)` copy + status model.
+- Pending submit uses `Spinner` inside the disabled button; failures use
+  `FieldError`, while created and duplicate outcomes use `FieldDescription`
+  with `role="status"`.
 
 ## Composition
 
-The dark look is the Untitled UI dark-section trick — the section wears the
-`dark` class so every token resolves to its dark value, no bespoke colors:
+The band creates an explicit shadcn dark-theme scope: the section wears the
+`dark` class and uses `bg-background`, `text-foreground`, and
+`text-muted-foreground`, so the same semantic tokens resolve to their dark
+values without bespoke colors:
 
 ```tsx
 const vm = toAlertSignupVM(language, labels);
@@ -48,7 +54,8 @@ const message =
 |---|---|
 | Route copy + statuses through `toAlertSignupVM`. | Hardcode English — `ProgrammaticJobsView` renders a "Related Searches" heading with a hardcoded English fallback that bypasses the copy seam; move it onto a message key. |
 | Reuse `AlertsBand` / `AlertSignupForm` / `JobAlertFloatingPrompt`. | Roll a fourth subscribe surface. |
-| Let the `dark` class resolve the band's palette. | Hardcode dark hex values. |
+| Compose field feedback with `FieldError` / `FieldDescription` and pending state with `Spinner`. | Add one-off status paragraphs or a second loading system. |
+| Let the `dark` class and semantic shadcn tokens resolve the band's palette. | Hardcode dark hex values or removed compatibility tokens. |
 
 ## Used by
 

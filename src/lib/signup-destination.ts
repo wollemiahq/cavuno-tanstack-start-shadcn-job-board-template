@@ -16,11 +16,11 @@ export function resolveSignupDestination({
   candidates,
   employers,
 }: {
-  candidates: boolean
-  employers: boolean
+  candidates: boolean;
+  employers: boolean;
 }): string | null {
-  if (candidates && employers) return '/auth/join'
-  if (candidates) return '/auth/sign-up'
-  if (employers) return '/auth/employer/sign-up'
-  return null
+  if (candidates && employers) return '/auth/join';
+  if (candidates) return '/auth/sign-up';
+  if (employers) return '/auth/employer/sign-up';
+  return null;
 }

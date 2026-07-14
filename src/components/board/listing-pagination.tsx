@@ -1,4 +1,6 @@
-"use client";
+'use client';
+
+import { m } from '../../paraglide/messages';
 
 import {
   Pagination,
@@ -8,19 +10,26 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
-import { shouldRenderPagination, totalPages } from "@/lib/pagination";
-import { m } from "../../paraglide/messages";
+} from '@/components/ui/pagination';
+import { shouldRenderPagination, totalPages } from '@/lib/pagination';
 
-type PaginationPage = number | "start-ellipsis" | "end-ellipsis";
+type PaginationPage = number | 'start-ellipsis' | 'end-ellipsis';
 
 function visiblePages(page: number, total: number): PaginationPage[] {
   if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1);
-  if (page <= 4) return [1, 2, 3, 4, 5, "end-ellipsis", total];
+  if (page <= 4) return [1, 2, 3, 4, 5, 'end-ellipsis', total];
   if (page >= total - 3) {
-    return [1, "start-ellipsis", total - 4, total - 3, total - 2, total - 1, total];
+    return [
+      1,
+      'start-ellipsis',
+      total - 4,
+      total - 3,
+      total - 2,
+      total - 1,
+      total,
+    ];
   }
-  return [1, "start-ellipsis", page - 1, page, page + 1, "end-ellipsis", total];
+  return [1, 'start-ellipsis', page - 1, page, page + 1, 'end-ellipsis', total];
 }
 
 export function ListingPagination({
@@ -37,10 +46,12 @@ export function ListingPagination({
   if (!shouldRenderPagination(count, pageSize)) return null;
 
   const total = totalPages(count, pageSize);
-  const navigate = (nextPage: number) => (event: React.MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    if (nextPage !== page && nextPage >= 1 && nextPage <= total) onPageChange(nextPage);
-  };
+  const navigate =
+    (nextPage: number) => (event: React.MouseEvent<HTMLAnchorElement>) => {
+      event.preventDefault();
+      if (nextPage !== page && nextPage >= 1 && nextPage <= total)
+        onPageChange(nextPage);
+    };
 
   return (
     <Pagination aria-label={m.pagination_ariaLabel()}>
@@ -57,7 +68,7 @@ export function ListingPagination({
         </PaginationItem>
         {visiblePages(page, total).map((item) => (
           <PaginationItem key={item}>
-            {typeof item === "number" ? (
+            {typeof item === 'number' ? (
               <PaginationLink
                 href="#"
                 isActive={item === page}

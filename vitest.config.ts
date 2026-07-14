@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   resolve: { tsconfigPaths: true },
@@ -7,4 +7,4 @@ export default defineConfig({
     include: ['src/**/*.test.{ts,tsx}'],
     exclude: ['dist/**', 'node_modules/**'],
   },
-})
+});

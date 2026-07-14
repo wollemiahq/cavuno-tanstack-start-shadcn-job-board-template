@@ -13,8 +13,8 @@ minimumReleaseAge: 1440
 # so the starter can adopt a freshly-published SDK immediately (cavuno-update-action).
 minimumReleaseAgeExclude:
   - typescript
-  - "@typescript/*"
-  - "@cavuno/board"
+  - '@typescript/*'
+  - '@cavuno/board'
 
 # esbuild/sharp/workerd all ship prebuilt binaries as optional
 # dependencies — their postinstall scripts are fallbacks we don't need.

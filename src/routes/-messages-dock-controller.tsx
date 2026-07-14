@@ -11,6 +11,12 @@ import {
 
 import { MessagingDock } from '@/components/messages/messaging-dock';
 import { Button } from '@/components/ui/button';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+} from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useVisiblePoll } from '@/lib/use-visible-poll';
 import { m } from '@/paraglide/messages';
@@ -53,14 +59,16 @@ function LoadFailure({
   onRetry: () => void;
 }) {
   return (
-    <div className="flex size-full flex-col items-center justify-center gap-3 p-6 text-center">
-      <p role="alert" className="text-muted-foreground text-sm">
-        {message}
-      </p>
-      <Button type="button" variant="outline" size="sm" onClick={onRetry}>
-        {m.messagingDock_retryLabel()}
-      </Button>
-    </div>
+    <Empty role="alert" className="size-full rounded-none border-0 p-6">
+      <EmptyHeader>
+        <EmptyDescription>{message}</EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+          {m.messagingDock_retryLabel()}
+        </Button>
+      </EmptyContent>
+    </Empty>
   );
 }
 

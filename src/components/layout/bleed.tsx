@@ -1,8 +1,8 @@
-import type { ElementType } from "react";
+import type { ElementType } from 'react';
 
-import type { LayoutElement, LayoutProps } from "./layout.types";
+import type { LayoutElement, LayoutProps } from './layout.types';
 
-export type BleedProps<Element extends LayoutElement = "div"> = LayoutProps<
+export type BleedProps<Element extends LayoutElement = 'div'> = LayoutProps<
   Element,
   Record<never, never>
 >;
@@ -15,11 +15,11 @@ export type BleedProps<Element extends LayoutElement = "div"> = LayoutProps<
  * @default Renders a div without adding visual styling.
  * @invariant Must be a direct rendered child of Container or PageContent.
  */
-export function Bleed<Element extends LayoutElement = "div">({
+export function Bleed<Element extends LayoutElement = 'div'>({
   as,
   ...props
 }: BleedProps<Element>) {
-  const Component = (as ?? "div") as ElementType;
+  const Component = (as ?? 'div') as ElementType;
 
   return <Component {...props} data-slot="bleed" data-layout="bleed" />;
 }

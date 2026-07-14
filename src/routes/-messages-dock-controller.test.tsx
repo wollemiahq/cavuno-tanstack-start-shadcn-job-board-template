@@ -138,6 +138,7 @@ describe('MessagesDockController', () => {
     expect(
       await screen.findByText("We couldn't load messages"),
     ).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'empty');
 
     vi.mocked(getUnreadCount).mockResolvedValue({
       object: 'unread_count',
@@ -186,6 +187,7 @@ describe('MessagesDockController', () => {
     expect(
       await screen.findByText("We couldn't load this conversation"),
     ).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'empty');
 
     vi.mocked(getThread).mockResolvedValue({
       conversation: detail,

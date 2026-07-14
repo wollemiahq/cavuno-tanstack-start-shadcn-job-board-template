@@ -24,7 +24,10 @@ describe('toApplyButtonVM — decision ladder', () => {
       applicationUrl: 'https://jobs.acme.com/123',
       viewer: null,
     });
-    expect(vm.action).toEqual({ kind: 'external', url: 'https://jobs.acme.com/123' });
+    expect(vm.action).toEqual({
+      kind: 'external',
+      url: 'https://jobs.acme.com/123',
+    });
   });
 
   it('sends an anonymous visitor on a native job to sign-in', () => {

@@ -1,23 +1,29 @@
-import type { JobAlertFiltersInput, JobAlertRemoteOption, PublicJob } from '@cavuno/board'
+import type {
+  JobAlertFiltersInput,
+  JobAlertRemoteOption,
+  PublicJob,
+} from '@cavuno/board';
 
-const MAX_JOB_FUNCTIONS = 8
-const REMOTE_OPTIONS: readonly string[] = ['on_site', 'hybrid', 'remote']
+const MAX_JOB_FUNCTIONS = 8;
+const REMOTE_OPTIONS: readonly string[] = ['on_site', 'hybrid', 'remote'];
 
 export interface JobAlertDefaults {
   /** Heading hint (job title / keyword) — display only. */
-  label?: string
-  filters: JobAlertFiltersInput
-  context: { source: string; jobId?: string; jobSlug?: string }
+  label?: string;
+  filters: JobAlertFiltersInput;
+  context: { source: string; jobId?: string; jobSlug?: string };
 }
 
 function dedupe(values: string[]): string[] {
-  return [...new Set(values.filter((value) => value.length > 0))]
+  return [...new Set(values.filter((value) => value.length > 0))];
 }
 
-function toRemoteOptions(value: string | null): JobAlertRemoteOption[] | undefined {
+function toRemoteOptions(
+  value: string | null,
+): JobAlertRemoteOption[] | undefined {
   return value && REMOTE_OPTIONS.includes(value)
     ? [value as JobAlertRemoteOption]
-    : undefined
+    : undefined;
 }
 
 /**
@@ -30,8 +36,8 @@ export function jobAlertDefaultsFromJob(job: PublicJob): JobAlertDefaults {
   const jobFunctions = dedupe([
     ...job.categories.map((category) => category.name),
     ...job.skills.map((skill) => skill.name),
-  ]).slice(0, MAX_JOB_FUNCTIONS)
-  const placeSlug = job.placeHierarchy.at(-1)?.slug
+  ]).slice(0, MAX_JOB_FUNCTIONS);
+  const placeSlug = job.placeHierarchy.at(-1)?.slug;
 
   return {
     label: job.title,
@@ -46,7 +52,7 @@ export function jobAlertDefaultsFromJob(job: PublicJob): JobAlertDefaults {
       jobId: job.id,
       jobSlug: job.slug ?? undefined,
     },
-  }
+  };
 }
 
 /**
@@ -54,9 +60,9 @@ export function jobAlertDefaultsFromJob(job: PublicJob): JobAlertDefaults {
  * the keyword becomes the job function and the active location slug the place.
  */
 export function jobAlertDefaultsFromSearch(opts: {
-  keyword?: string
-  locationSlug?: string
-  source?: string
+  keyword?: string;
+  locationSlug?: string;
+  source?: string;
 }): JobAlertDefaults {
   return {
     label: opts.keyword,
@@ -65,5 +71,5 @@ export function jobAlertDefaultsFromSearch(opts: {
       placeSlugs: opts.locationSlug ? [opts.locationSlug] : undefined,
     },
     context: { source: opts.source ?? 'jobs_list' },
-  }
+  };
 }

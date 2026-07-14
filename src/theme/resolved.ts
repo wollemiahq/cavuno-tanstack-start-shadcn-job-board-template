@@ -4,7 +4,7 @@
  * (workers-og/Satori). The hash ties this module to its source; doctor
  * compares it against theme.css and the platform snapshot (ADR-0065).
  */
-export const tokensHash = '9514757675ea2751591a098d951b0824494a057fe7aa645ec0cbc0c2a3d7b4e2'
+export const tokensHash = '4ef25f172715461ce321a1be29bbfcbfe5bdeb2c8cd8b520ffa2b4fbb5b4e72f'
 
 export const themeMeta: {
   mode: string | null
@@ -55,7 +55,7 @@ export const themeTokens: {
   "--sidebar-accent-foreground": "oklch(0.205 0 0)",
   "--sidebar-border": "oklch(0.922 0 0)",
   "--sidebar-ring": "oklch(0.708 0 0)",
-  "--font-sans": "\"Geist Variable\", sans-serif",
+  "--font-sans": "'Geist Variable', sans-serif",
   "--font-heading": "var(--font-sans)"
 },
   dark: {

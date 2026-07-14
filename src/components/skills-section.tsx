@@ -1,18 +1,19 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 
-import { useRouter } from "@tanstack/react-router";
-import { X } from "lucide-react";
+import { useRouter } from '@tanstack/react-router';
+import { X } from 'lucide-react';
+
+import { m } from '../paraglide/messages';
+import { replaceSkills } from '../server/account';
 
 import {
   CandidateActionFeedback,
   type CandidateActionFeedbackState,
-} from "@/components/candidate-action-feedback";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { m } from "../paraglide/messages";
-import { replaceSkills } from "../server/account";
+} from '@/components/candidate-action-feedback';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 /**
  * Skills — a tag editor over the whole-set replace
@@ -21,20 +22,22 @@ import { replaceSkills } from "../server/account";
 export function SkillsSection({ skills: initial }: { skills: string[] }) {
   const router = useRouter();
   const [skills, setSkills] = useState<string[]>(initial);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
-  const [feedback, setFeedback] = useState<CandidateActionFeedbackState>("idle");
+  const [feedback, setFeedback] =
+    useState<CandidateActionFeedbackState>('idle');
 
-  const dirty = skills.length !== initial.length || skills.some((s, i) => s !== initial[i]);
+  const dirty =
+    skills.length !== initial.length || skills.some((s, i) => s !== initial[i]);
 
   const add = () => {
     const name = input.trim();
     if (!name || skills.includes(name)) {
-      setInput("");
+      setInput('');
       return;
     }
     setSkills([...skills, name]);
-    setInput("");
+    setInput('');
   };
 
   return (
@@ -43,19 +46,21 @@ export function SkillsSection({ skills: initial }: { skills: string[] }) {
         {m.skillsSection_heading()}
       </h2>
       {skills.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{m.skillsSection_emptyText()}</p>
+        <p className="text-muted-foreground text-sm">
+          {m.skillsSection_emptyText()}
+        </p>
       ) : (
         <ul className="flex flex-wrap gap-2">
           {skills.map((skill) => (
             <li
               key={skill}
-              className="flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm text-secondary-foreground"
+              className="bg-secondary text-secondary-foreground flex items-center gap-1 rounded-full px-3 py-1 text-sm"
             >
               {skill}
               <button
                 type="button"
                 aria-label={m.skillsSection_removeSkillAriaLabel({ skill })}
-                className="text-muted-foreground transition-colors hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground transition-colors"
                 onClick={() => setSkills(skills.filter((s) => s !== skill))}
               >
                 <X className="size-3.5" />
@@ -72,7 +77,7 @@ export function SkillsSection({ skills: initial }: { skills: string[] }) {
           aria-label={m.skillsSection_addSkillLabel()}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
+            if (e.key === 'Enter') {
               e.preventDefault();
               add();
             }
@@ -88,19 +93,21 @@ export function SkillsSection({ skills: initial }: { skills: string[] }) {
           disabled={pending}
           onClick={async () => {
             setPending(true);
-            setFeedback("idle");
+            setFeedback('idle');
             try {
               await replaceSkills({ data: { skills } });
               await router.invalidate();
-              setFeedback("success");
+              setFeedback('success');
             } catch {
-              setFeedback("error");
+              setFeedback('error');
             } finally {
               setPending(false);
             }
           }}
         >
-          {pending ? m.skillsSection_savingLabel() : m.skillsSection_saveLabel()}
+          {pending
+            ? m.skillsSection_savingLabel()
+            : m.skillsSection_saveLabel()}
         </Button>
       ) : null}
       <CandidateActionFeedback state={feedback} />

@@ -1,14 +1,22 @@
-"use client";
+'use client';
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useState } from 'react';
 
-import { LoaderCircle, MapPin, X } from "lucide-react";
+import { MapPin, X } from 'lucide-react';
 
-import type { LocationSuggestionVM } from "@/board/location-suggestion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { m } from "../paraglide/messages";
+import { m } from '../paraglide/messages';
+
+import type { LocationSuggestionVM } from '@/board/location-suggestion';
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '@/components/ui/combobox';
+import { InputGroupAddon, InputGroupButton } from '@/components/ui/input-group';
+import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 
 export interface LocationSuggestionState {
   suggestions: LocationSuggestionVM[];
@@ -29,13 +37,11 @@ interface LocationComboboxProps extends LocationSuggestionState {
 
 /**
  * Location search field — the hosted board's `board-place-search-field`: type a
- * place name, pick from debounced `places.list({ q })` autocomplete suggestions
- * (each with its live job count). Selecting one applies the place slug as the
- * jobs filter (server defaults the radius to 50 km).
+ * place name, pick from resolved `places.list({ q })` autocomplete suggestions,
+ * and apply its slug as the jobs location filter.
  *
- * Built from the starter's owned shadcn Input and Button with Lucide icons.
- * The route owns the debounced API request and passes resolved suggestions;
- * this component owns only popup interaction and the selected display value.
+ * The route owns the debounced API request. This component composes the owned
+ * shadcn Combobox and InputGroup primitives around that external async state.
  */
 export function LocationCombobox({
   value,
@@ -48,144 +54,103 @@ export function LocationCombobox({
   className,
   inputClassName,
 }: LocationComboboxProps) {
-  const [text, setText] = useState(valueLabel ?? value ?? "");
+  const [text, setText] = useState(valueLabel ?? value ?? '');
   const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(0);
-  const boxRef = useRef<HTMLDivElement>(null);
-  const listboxId = useId();
-  const popupVisible = open && (loading || suggestions.length > 0);
 
   useEffect(() => {
-    setText(valueLabel ?? value ?? "");
+    setText(valueLabel ?? value ?? '');
   }, [value, valueLabel]);
 
-  useEffect(() => setActive(0), [suggestions]);
-
-  // Close the dropdown on an outside click.
-  useEffect(() => {
-    function onDocClick(event: MouseEvent) {
-      if (boxRef.current && !boxRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
-  }, []);
-
-  const pick = (place: LocationSuggestionVM) => {
-    setText(place.name);
-    setOpen(false);
-    onSelect({ slug: place.slug, name: place.name });
-  };
-
   const clear = () => {
-    setText("");
+    setText('');
     setOpen(false);
-    onQueryChange("");
+    onQueryChange('');
     onClear();
   };
 
   return (
-    <div ref={boxRef} className={cn("relative", className)}>
-      <div className="relative flex w-full items-center">
-        <MapPin className="pointer-events-none absolute top-1/2 left-2.5 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="text"
-          role="combobox"
-          aria-autocomplete="list"
-          aria-expanded={popupVisible}
-          aria-controls={listboxId}
-          aria-activedescendant={
-            popupVisible && suggestions[active] ? `${listboxId}-option-${active}` : undefined
-          }
-          aria-label={m.locationCombobox_locationAriaLabel()}
-          placeholder={m.locationCombobox_placeholderText()}
-          value={text}
-          onChange={(event) => {
-            const nextText = event.target.value;
-            setText(nextText);
-            onQueryChange(nextText);
-            if (value && nextText !== (valueLabel ?? value)) onClear();
-            setOpen(true);
-          }}
-          onFocus={() => suggestions.length > 0 && setOpen(true)}
-          onKeyDown={(event) => {
-            if (event.key === "ArrowDown") {
-              event.preventDefault();
-              setActive((a) => Math.min(a + 1, suggestions.length - 1));
-            } else if (event.key === "ArrowUp") {
-              event.preventDefault();
-              setActive((a) => Math.max(a - 1, 0));
-            } else if (event.key === "Enter" && open && suggestions[active]) {
-              event.preventDefault();
-              pick(suggestions[active]);
-            } else if (event.key === "Escape") {
-              setOpen(false);
-            }
-          }}
-          className={cn("border-border bg-background pr-9 pl-8", inputClassName)}
-        />
-        {(text || value) && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            aria-label={m.locationCombobox_clearAriaLabel()}
-            onClick={clear}
-            className="absolute top-1/2 right-1 -translate-y-1/2 text-muted-foreground"
-          >
-            <X aria-hidden="true" />
-          </Button>
+    <Combobox
+      items={suggestions}
+      filteredItems={suggestions}
+      filter={null}
+      autoComplete="none"
+      autoHighlight
+      open={open}
+      onOpenChange={setOpen}
+      inputValue={text}
+      itemToStringLabel={(place: LocationSuggestionVM) => place.name}
+      itemToStringValue={(place: LocationSuggestionVM) => place.slug}
+      isItemEqualToValue={(place, selected) => place.id === selected.id}
+      onInputValueChange={(nextText, details) => {
+        setText(nextText);
+        if (details.reason !== 'input-change') return;
+
+        onQueryChange(nextText);
+        if (value && nextText !== (valueLabel ?? value)) onClear();
+        setOpen(Boolean(nextText.trim()));
+      }}
+      onValueChange={(place) => {
+        if (!place) return;
+        setText(place.name);
+        setOpen(false);
+        onSelect({ slug: place.slug, name: place.name });
+      }}
+    >
+      <ComboboxInput
+        type="text"
+        aria-label={m.locationCombobox_locationAriaLabel()}
+        placeholder={m.locationCombobox_placeholderText()}
+        showTrigger={false}
+        onFocus={() => {
+          if (suggestions.length > 0) setOpen(true);
+        }}
+        className={cn(
+          'border-border bg-background w-full',
+          className,
+          inputClassName,
         )}
-      </div>
-      {popupVisible && (
-        <ul
-          id={listboxId}
-          role="listbox"
-          aria-busy={loading}
-          className="absolute z-50 mt-1 max-h-72 w-full overflow-auto rounded-2xl bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/5 outline-none"
-        >
-          {loading && suggestions.length === 0 ? (
-            <li
-              role="presentation"
-              className="flex items-center gap-2 px-2 py-1.5 text-sm text-muted-foreground"
+      >
+        <InputGroupAddon>
+          <MapPin aria-hidden="true" />
+        </InputGroupAddon>
+        {text || value ? (
+          <InputGroupAddon align="inline-end">
+            <InputGroupButton
+              type="button"
+              size="icon-xs"
+              aria-label={m.locationCombobox_clearAriaLabel()}
+              onClick={clear}
+              className="text-muted-foreground"
             >
-              <LoaderCircle className="size-3.5 animate-spin" />{" "}
-              {m.locationCombobox_searchingText()}
-            </li>
-          ) : (
-            suggestions.map((place, index) => {
-              return (
-                <li key={place.id} className="px-1.5 py-px">
-                  <button
-                    id={`${listboxId}-option-${index}`}
-                    role="option"
-                    aria-selected={index === active}
-                    type="button"
-                    onMouseDown={(event) => {
-                      event.preventDefault();
-                      pick(place);
-                    }}
-                    className={cn(
-                      "flex w-full items-baseline gap-1.5 rounded-xl px-2 py-1.5 text-left text-sm outline-none",
-                      index === active
-                        ? "bg-accent text-accent-foreground"
-                        : "hover:bg-accent hover:text-accent-foreground",
-                    )}
-                  >
-                    <span className="shrink-0 truncate">{place.name}</span>
-                    {place.contextLabel ? (
-                      <span className="truncate text-xs text-muted-foreground">
-                        · {place.contextLabel}
-                      </span>
-                    ) : null}
-                  </button>
-                </li>
-              );
-            })
-          )}
-        </ul>
-      )}
-    </div>
+              <X aria-hidden="true" />
+            </InputGroupButton>
+          </InputGroupAddon>
+        ) : null}
+      </ComboboxInput>
+      <ComboboxContent aria-busy={loading}>
+        {loading && suggestions.length === 0 ? (
+          <div
+            role="status"
+            className="text-muted-foreground flex items-center gap-2 px-3 py-2 text-sm"
+          >
+            <Spinner />
+            {m.locationCombobox_searchingText()}
+          </div>
+        ) : (
+          <ComboboxList>
+            {(place: LocationSuggestionVM) => (
+              <ComboboxItem key={place.id} value={place}>
+                <span className="shrink-0 truncate">{place.name}</span>
+                {place.contextLabel ? (
+                  <span className="text-muted-foreground truncate text-xs">
+                    · {place.contextLabel}
+                  </span>
+                ) : null}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        )}
+      </ComboboxContent>
+    </Combobox>
   );
 }

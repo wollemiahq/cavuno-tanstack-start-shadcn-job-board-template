@@ -1,22 +1,29 @@
-import { createFileRoute, getRouteApi } from "@tanstack/react-router";
+import { boardCopy } from '#/copy';
+import { type SalaryLocation } from '@cavuno/board';
+import {
+  createBreadcrumbJsonLd,
+  formatRange,
+  itemListJsonLd,
+} from '@cavuno/board/seo';
+import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
-import { type SalaryLocation } from "@cavuno/board";
-import { boardCopy } from "#/copy";
-import { createBreadcrumbJsonLd, formatRange, itemListJsonLd } from "@cavuno/board/seo";
+import { m } from '../paraglide/messages';
+import { getSeoBase, listSalaryLocations } from '../server/queries';
+import { SalaryPageLayout, SalaryPendingPage } from './-salary-page-layout';
 
-import { JsonLd } from "@/components/json-ld";
-import { SalaryEmptyState } from "@/components/board/salary-sections";
-import { toSalaryBreadcrumbVM } from "@/board/salary-view-model";
-import { SalaryPageLayout, SalaryPendingPage } from "./-salary-page-layout";
-import { m } from "../paraglide/messages";
-import { getSeoBase, listSalaryLocations } from "../server/queries";
+import { toSalaryBreadcrumbVM } from '@/board/salary-view-model';
+import { SalaryEmptyState } from '@/components/board/salary-sections';
+import { JsonLd } from '@/components/json-ld';
 
-const rootApi = getRouteApi("__root__");
+const rootApi = getRouteApi('__root__');
 
-export const Route = createFileRoute("/salaries/locations/")({
+export const Route = createFileRoute('/salaries/locations/')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async () => {
-    const [locations, seo] = await Promise.all([listSalaryLocations(), getSeoBase()]);
+    const [locations, seo] = await Promise.all([
+      listSalaryLocations(),
+      getSeoBase(),
+    ]);
     return { locations: locations.data, seo };
   },
   head: ({ loaderData }) =>
@@ -29,7 +36,7 @@ export const Route = createFileRoute("/salaries/locations/")({
               }),
             },
             {
-              name: "description",
+              name: 'description',
               content: m.salaryHub_locationsMetaDescription({
                 boardName: loaderData.seo.boardName,
               }),
@@ -37,7 +44,7 @@ export const Route = createFileRoute("/salaries/locations/")({
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: `${loaderData.seo.origin}/salaries/locations`,
             },
           ],
@@ -74,20 +81,20 @@ function LocationTree({
         <li key={n.placeSlug}>
           <a
             href={`/salaries/locations/${n.placeSlug}`}
-            className="rounded-xs font-medium text-secondary outline-focus-ring transition-colors hover:text-primary hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="text-foreground outline-ring hover:text-foreground/80 rounded-xs font-medium transition-colors hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             {n.placeName}
           </a>
-          <span className="text-sm tabular-nums text-tertiary">
-            {" · "}
+          <span className="text-muted-foreground text-sm tabular-nums">
+            {' · '}
             {formatRange(board.language, n.avgSalaryMin, n.avgSalaryMax)}
-            {" · "}
+            {' · '}
             {n.jobCount === 1
               ? m.salaryHub_jobCountSingular({ count: n.jobCount })
               : m.salaryHub_jobCountPlural({ count: n.jobCount })}
           </span>
           {byParent.has(n.placeSlug) ? (
-            <div className="mt-1 ml-3 border-l border-secondary pl-3">
+            <div className="border-border mt-1 ml-3 border-l pl-3">
               <LocationTree parentSlug={n.placeSlug} byParent={byParent} />
             </div>
           ) : null}
@@ -121,8 +128,8 @@ function SalaryLocationsIndex() {
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
         [
-          { name: crumbs.home, href: "/" },
-          { name: crumbs.salaries, href: "/salaries" },
+          { name: crumbs.home, href: '/' },
+          { name: crumbs.salaries, href: '/salaries' },
           { name: crumbs.locations },
         ],
         seo.language,

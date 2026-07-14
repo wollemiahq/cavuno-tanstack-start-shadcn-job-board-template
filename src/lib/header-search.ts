@@ -1,4 +1,4 @@
-export type HeaderSearchScope = "jobs" | "companies" | "talent" | "blog";
+export type HeaderSearchScope = 'jobs' | 'companies' | 'talent' | 'blog';
 
 export interface HeaderSearchLocation {
   slug: string;
@@ -19,38 +19,42 @@ export interface HeaderSearchSubmission {
 }
 
 const compactShellPrefixes = [
-  "/account",
-  "/alerts",
-  "/auth",
-  "/employers",
-  "/me",
-  "/messages",
-  "/password",
-  "/post",
-  "/settings",
+  '/account',
+  '/alerts',
+  '/auth',
+  '/employers',
+  '/me',
+  '/messages',
+  '/password',
+  '/post',
+  '/settings',
 ] as const;
 
 function scopeFromPathname(pathname: string): HeaderSearchScope {
-  if (pathname === "/blog" || pathname.startsWith("/blog/")) {
-    return "blog";
-  }
-
-  if (pathname === "/talent" || pathname.startsWith("/talent/") || pathname.startsWith("/p/")) {
-    return "talent";
+  if (pathname === '/blog' || pathname.startsWith('/blog/')) {
+    return 'blog';
   }
 
   if (
-    (pathname === "/companies" || pathname.startsWith("/companies/")) &&
-    !pathname.includes("/jobs/")
+    pathname === '/talent' ||
+    pathname.startsWith('/talent/') ||
+    pathname.startsWith('/p/')
   ) {
-    return "companies";
+    return 'talent';
   }
 
-  return "jobs";
+  if (
+    (pathname === '/companies' || pathname.startsWith('/companies/')) &&
+    !pathname.includes('/jobs/')
+  ) {
+    return 'companies';
+  }
+
+  return 'jobs';
 }
 
 function stringSearchValue(value: unknown) {
-  return typeof value === "string" ? value : "";
+  return typeof value === 'string' ? value : '';
 }
 
 function locationFromPathname(
@@ -79,7 +83,10 @@ export function resolveHeaderSearchState(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
     ),
     scope,
-    query: stringSearchValue(scope === "companies" ? search.query : search.q),
-    location: scope === "jobs" ? locationFromPathname(pathname, resolvedLocationLabel) : null,
+    query: stringSearchValue(scope === 'companies' ? search.query : search.q),
+    location:
+      scope === 'jobs'
+        ? locationFromPathname(pathname, resolvedLocationLabel)
+        : null,
   };
 }

@@ -4,10 +4,10 @@
  * `Sitemap:` on the board's canonical base (board.seo().canonicalBase), not the
  * request origin.
  */
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router';
 
-import { getBoard } from '../lib/board'
-import { robotsResponse } from '../lib/seo-handlers'
+import { getBoard } from '../lib/board';
+import { robotsResponse } from '../lib/seo-handlers';
 
 export const Route = createFileRoute('/robots.txt')({
   server: {
@@ -15,4 +15,4 @@ export const Route = createFileRoute('/robots.txt')({
       GET: async () => robotsResponse(await getBoard().seo()),
     },
   },
-})
+});

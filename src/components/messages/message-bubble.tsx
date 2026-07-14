@@ -10,8 +10,10 @@ import { m } from '../../paraglide/messages';
 import { Avatar } from './avatar';
 import { HydrationSafeDate } from './hydration-safe-date';
 
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Bubble, BubbleContent } from '@/components/ui/bubble';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -226,41 +228,47 @@ export function MessageBubble({
         </div>
 
         {mode === 'report' ? (
-          <div className="border-border w-64 max-w-full space-y-2 rounded-2xl border p-3">
-            <p className="text-sm font-medium">
-              {m.messageBubble_reportTitle()}
-            </p>
-            <Select
-              value={reason}
-              onValueChange={(value) => setReason(value as Reason)}
-            >
-              <SelectTrigger
-                size="sm"
-                className="w-full"
-                data-test="report-reason"
+          <Card size="sm" className="w-64 max-w-full gap-0 py-3">
+            <CardHeader className="px-3 pb-2">
+              <CardTitle>{m.messageBubble_reportTitle()}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 px-3">
+              <Select
+                value={reason}
+                onValueChange={(value) => setReason(value as Reason)}
               >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {REASONS.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label()}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-muted-foreground text-xs">
-              {m.messageBubble_reportBlocksText()}
-            </p>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={submitReport} disabled={busy}>
-                {m.messageBubble_submitReportLabel()}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setMode('view')}>
-                {m.messageBubble_cancelLabel()}
-              </Button>
-            </div>
-          </div>
+                <SelectTrigger
+                  size="sm"
+                  className="w-full"
+                  data-test="report-reason"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {REASONS.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label()}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-muted-foreground text-xs">
+                {m.messageBubble_reportBlocksText()}
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={submitReport} disabled={busy}>
+                  {m.messageBubble_submitReportLabel()}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setMode('view')}
+                >
+                  {m.messageBubble_cancelLabel()}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ) : null}
 
         <MessageFooter>
@@ -280,9 +288,9 @@ export function MessageBubble({
         </MessageFooter>
 
         {error ? (
-          <p role="alert" className="text-destructive text-xs">
-            {error}
-          </p>
+          <Alert variant="destructive" className="px-3 py-2 text-xs">
+            <AlertDescription className="text-xs">{error}</AlertDescription>
+          </Alert>
         ) : null}
       </MessageContent>
     </Message>

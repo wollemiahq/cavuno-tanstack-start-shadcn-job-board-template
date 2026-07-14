@@ -1,18 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+
+import { searchPlaces } from '../server/queries';
 
 import {
   toLocationSuggestionVM,
   type LocationSuggestionVM,
-} from "@/board/location-suggestion";
-import type { LocationSuggestionState } from "@/components/location-combobox";
-import { searchPlaces } from "../server/queries";
+} from '@/board/location-suggestion';
+import type { LocationSuggestionState } from '@/components/location-combobox';
 
 const MIN_QUERY = 2;
 const DEBOUNCE_MS = 200;
 
 /** Route-owned controller for the presentational location combobox. */
-export function useLocationSuggestions(locale: string): LocationSuggestionState {
-  const [query, setQuery] = useState("");
+export function useLocationSuggestions(
+  locale: string,
+): LocationSuggestionState {
+  const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<LocationSuggestionVM[]>([]);
   const [loading, setLoading] = useState(false);
 

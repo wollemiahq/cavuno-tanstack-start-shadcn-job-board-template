@@ -46,13 +46,13 @@ is a real link — the internal-linking rail crawlers follow into the hubs.
   padding — or by the page container's `py-8` — is the drift this owns away: the
   trail anchors near the nav everywhere.
 - **Alignment** — `PageBreadcrumb` is **left-aligned at the container edge**
-  (`max-w-container` + the canonical horizontal padding). On a **centered** hero
+  (`max-w-7xl` + the canonical horizontal padding). On a **centered** hero
   (companies / jobs / blog listing) the trail therefore stays left even though
   the title below is centered. Never center the trail.
 - `<nav aria-label>` → `<ol className="flex flex-wrap items-center gap-1.5 text-sm">`.
-- Each link: `AriaLink` with `text-tertiary hover:text-secondary`.
+- Each link: `AriaLink` with `text-muted-foreground hover:text-foreground`.
 - Current page: `<span aria-current="page">` (unlinked).
-- Separator: `ChevronRight` `text-fg-quaternary`.
+- Separator: owned `BreadcrumbSeparator` with `text-muted-foreground`.
 
 ## Composition
 
@@ -65,7 +65,7 @@ markup (the CAV-510 singleton, enforced in `pattern-contract.test.ts`):
   <ol className="flex flex-wrap items-center gap-1.5 text-sm">
     {items.map((crumb, index) => (
       <li key={`${crumb.name}-${index}`} className="flex items-center gap-1.5">
-        {index > 0 ? <ChevronRight aria-hidden className="size-4 shrink-0 text-fg-quaternary" /> : null}
+        {index > 0 ? <BreadcrumbSeparator /> : null}
         {crumb.href ? <AriaLink href={crumb.href} …>{crumb.name}</AriaLink>
                     : <span aria-current="page" …>{crumb.name}</span>}
       </li>

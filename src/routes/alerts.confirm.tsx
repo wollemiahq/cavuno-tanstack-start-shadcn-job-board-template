@@ -3,15 +3,23 @@
  * links to (the board's canonical domain, which this starter serves). Confirms
  * server-side in the loader and renders the outcome by status.
  */
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from '@tanstack/react-router';
 
-import { Page, PageContent } from "@/components/layout/page";
-import { m } from "../paraglide/messages";
-import { confirmJobAlert } from "../server/queries";
+import { m } from '../paraglide/messages';
+import { confirmJobAlert } from '../server/queries';
 
-type ConfirmStatus = "confirmed" | "already_confirmed" | "expired" | "not_found";
+import { Page, PageContent } from '@/components/layout/page';
 
-const COPY: Record<ConfirmStatus, { heading: () => string; body: () => string }> = {
+type ConfirmStatus =
+  | 'confirmed'
+  | 'already_confirmed'
+  | 'expired'
+  | 'not_found';
+
+const COPY: Record<
+  ConfirmStatus,
+  { heading: () => string; body: () => string }
+> = {
   confirmed: {
     heading: m.alertsConfirm_confirmedHeading,
     body: m.alertsConfirm_confirmedBody,
@@ -30,19 +38,25 @@ const COPY: Record<ConfirmStatus, { heading: () => string; body: () => string }>
   },
 };
 
-export const Route = createFileRoute("/alerts/confirm")({
+export const Route = createFileRoute('/alerts/confirm')({
   staticData: { ownsMain: true },
   validateSearch: (search: Record<string, unknown>): { token?: string } => ({
-    token: typeof search.token === "string" && search.token ? search.token : undefined,
+    token:
+      typeof search.token === 'string' && search.token
+        ? search.token
+        : undefined,
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }): Promise<{ status: ConfirmStatus }> => {
-    if (!deps.token) return { status: "not_found" };
+    if (!deps.token) return { status: 'not_found' };
     const result = await confirmJobAlert({ data: { token: deps.token } });
     return { status: result.status };
   },
   head: () => ({
-    meta: [{ title: m.alertsConfirm_title() }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: m.alertsConfirm_title() },
+      { name: 'robots', content: 'noindex' },
+    ],
   }),
   component: ConfirmPage,
 });
@@ -54,7 +68,9 @@ function ConfirmPage() {
     <Page width="narrow">
       <PageContent>
         <div className="space-y-3 py-8 text-center">
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">{copy.heading()}</h1>
+          <h1 className="font-heading text-3xl font-semibold tracking-tight">
+            {copy.heading()}
+          </h1>
           <p className="text-muted-foreground">{copy.body()}</p>
         </div>
       </PageContent>

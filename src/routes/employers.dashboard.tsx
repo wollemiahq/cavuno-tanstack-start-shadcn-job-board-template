@@ -1,358 +1,471 @@
-/**
- * Employer dashboard — the Paper onboarding flow (screens 1–9):
- *  - no memberships → "Connect your company" (screens 1–3): centered
- *    typeahead search + "Add … as a new company" → create modal.
- *  - memberships → "Your companies" (screen 9): row per membership with
- *    a role/status badge; pending rows continue at
- *    /employers/onboarding/$slug (screens 4–8).
- */
-import { Text } from '@/components/text'
-import { useEffect, useRef, useState } from 'react'
-import {
-  createFileRoute,
-  isRedirect,
-  Link,
-  redirect,
-  useRouter,
-} from '@tanstack/react-router'
-import { ChevronRight, Plus, SearchLg } from '@untitledui/icons'
-import type { CompanyMembership } from '@cavuno/board'
+import { useEffect, useRef, useState } from 'react';
 
-import { CompanyAvatar } from '@/components/board/company-avatar'
+import { Link, createFileRoute, useRouter } from '@tanstack/react-router';
+import { ChevronRight, Plus, Search } from 'lucide-react';
+
+import { handleEmployerLoaderError } from '../lib/employer-loader-auth';
+import { m } from '../paraglide/messages';
 import {
-  createCompany,
   claimCompany,
+  createCompany,
   listCompanies,
   searchCompanies,
-} from '../server/employers'
-import { Badge } from '@/components/base/badges/badges'
-import { Button } from '@/components/base/buttons/button'
-import { Input } from '@/components/base/input/input'
-import { m } from '../paraglide/messages'
+} from '../server/employers';
+
+import { EmployerIdentityAvatar } from '@/components/account-shell';
+import { Page, PageContent, PageHeader } from '@/components/layout/page';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '@/components/ui/combobox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { InputGroupAddon } from '@/components/ui/input-group';
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from '@/components/ui/item';
+import { Spinner } from '@/components/ui/spinner';
+import type { CompanyMembership } from '@cavuno/board';
 
 export const Route = createFileRoute('/employers/dashboard')({
   loader: async () => {
     try {
-      return await listCompanies()
+      return await listCompanies();
     } catch (error) {
-      if (isRedirect(error)) throw error
-      throw redirect({ to: '/auth/sign-in', search: { returnTo: undefined } })
+      handleEmployerLoaderError(error, '/employers/dashboard');
     }
   },
   head: () => ({ meta: [{ title: m.employerDashboard_metaTitle() }] }),
+  staticData: { ownsMain: true },
   component: EmployerDashboard,
-})
+});
 
 const STATUS_LABEL: Record<CompanyMembership['status'], () => string> = {
   approved: m.employerDashboard_statusApproved,
   pending_work_email: m.employerDashboard_statusPendingWorkEmail,
   awaiting_admin: m.employerDashboard_statusAwaitingAdmin,
   rejected: m.employerDashboard_statusRejected,
-}
+};
 
 function EmployerDashboard() {
-  const companies = Route.useLoaderData()
-  const [adding, setAdding] = useState(false)
+  const companies = Route.useLoaderData();
+  const [adding, setAdding] = useState(false);
 
   if (companies.data.length === 0 || adding) {
     return (
       <ConnectCompany
-        onBack={
-          companies.data.length > 0 ? () => setAdding(false) : undefined
-        }
+        onBack={companies.data.length > 0 ? () => setAdding(false) : undefined}
       />
-    )
+    );
   }
-  return <YourCompanies memberships={companies.data} onAdd={() => setAdding(true)} />
-}
 
-// ── Screen 9 — Your companies ────────────────────────────────────────────────
+  return (
+    <YourCompanies memberships={companies.data} onAdd={() => setAdding(true)} />
+  );
+}
 
 function YourCompanies({
   memberships,
   onAdd,
 }: {
-  memberships: CompanyMembership[]
-  onAdd: () => void
+  memberships: CompanyMembership[];
+  onAdd: () => void;
 }) {
   return (
-    <div className="mx-auto max-w-2xl space-y-6 py-10">
-      <header className="flex items-center justify-between gap-4">
-        <div>
-          <Text as="h1" variant="heading1">
-            {m.employerOnboarding_yourCompaniesTitle()}
-          </Text>
-          <p className="text-tertiary text-sm">
-            {m.employerOnboarding_yourCompaniesSubtitle()}
-          </p>
-        </div>
-        <Button color="primary" size="md" iconLeading={Plus} onClick={onAdd}>
-          {m.employerOnboarding_addCompanyLabel()}
-        </Button>
-      </header>
-
-      <div className="divide-y divide-secondary rounded-xl border border-secondary">
-        {memberships.map((membership) => (
-          <CompanyRow key={membership.id} membership={membership} />
-        ))}
-      </div>
-    </div>
-  )
+    <Page width="content">
+      <PageContent
+        header={
+          <PageHeader
+            title={m.employerOnboarding_yourCompaniesTitle()}
+            description={m.employerOnboarding_yourCompaniesSubtitle()}
+            actions={
+              <Button size="lg" onClick={onAdd}>
+                <Plus data-icon="inline-start" aria-hidden />
+                {m.employerOnboarding_addCompanyLabel()}
+              </Button>
+            }
+          />
+        }
+      >
+        <section
+          aria-label={m.employerOnboarding_yourCompaniesTitle()}
+          className="grid gap-3"
+        >
+          {memberships.map((membership) => (
+            <CompanyRow key={membership.id} membership={membership} />
+          ))}
+        </section>
+      </PageContent>
+    </Page>
+  );
 }
 
 function CompanyRow({ membership }: { membership: CompanyMembership }) {
-  const company = membership.company
-  const slug = company.slug
-  const approved = membership.status === 'approved'
-  const body = (
+  const { company } = membership;
+  const approved = membership.status === 'approved';
+  const content = (
     <>
-      <CompanyAvatar name={company.name} logoUrl={company.logoUrl} size="md" />
-      <div className="min-w-0 flex-1">
-        <p className="text-primary truncate font-semibold">{company.name}</p>
+      <ItemMedia>
+        <EmployerIdentityAvatar name={company.name} logoUrl={company.logoUrl} />
+      </ItemMedia>
+      <ItemContent>
+        <ItemTitle>{company.name}</ItemTitle>
         {company.website ? (
-          <p className="text-tertiary truncate text-sm">{company.website}</p>
+          <ItemDescription>{company.website}</ItemDescription>
         ) : null}
-      </div>
-      <Badge size="sm" type="pill-color" color={approved ? 'success' : 'gray'}>
-        {approved ? membership.role : STATUS_LABEL[membership.status]()}
-      </Badge>
-      <ChevronRight className="text-tertiary size-4 shrink-0" />
+      </ItemContent>
+      <ItemActions>
+        <Badge variant={approved ? 'default' : 'outline'}>
+          {approved ? membership.role : STATUS_LABEL[membership.status]()}
+        </Badge>
+        <ChevronRight
+          className="text-muted-foreground size-4 shrink-0"
+          aria-hidden
+        />
+      </ItemActions>
     </>
-  )
-  if (!slug) {
-    return <div className="flex items-center gap-3 p-4">{body}</div>
-  }
-  return approved ? (
-    <Link
-      to="/employers/companies/$slug"
-      params={{ slug }}
-      className="hover:bg-secondary/50 flex items-center gap-3 p-4 hover:no-underline"
-    >
-      {body}
-    </Link>
-  ) : (
-    <Link
-      to="/employers/onboarding/$slug"
-      params={{ slug }}
-      className="hover:bg-secondary/50 flex items-center gap-3 p-4 hover:no-underline"
-    >
-      {body}
-    </Link>
-  )
-}
+  );
 
-// ── Screens 1–3 — Connect your company ──────────────────────────────────────
+  return company.slug ? (
+    <Item
+      render={
+        <Link
+          to={
+            approved
+              ? '/employers/companies/$slug'
+              : '/employers/onboarding/$slug'
+          }
+          params={{ slug: company.slug }}
+        />
+      }
+      variant="outline"
+      size="sm"
+    >
+      {content}
+    </Item>
+  ) : (
+    <Item variant="outline" size="sm">
+      {content}
+    </Item>
+  );
+}
 
 type SearchResult = {
-  id: string
-  name: string
-  slug: string
-  website: string | null
-}
+  id: string;
+  name: string;
+  slug: string;
+  website: string | null;
+};
+
+type ConnectCompanyState = {
+  query: string;
+  results: SearchResult[];
+  open: boolean;
+  message: string;
+  modalOpen: boolean;
+};
 
 function ConnectCompany({ onBack }: { onBack?: () => void }) {
-  const router = useRouter()
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [searched, setSearched] = useState(false)
-  const [message, setMessage] = useState('')
-  const [modalOpen, setModalOpen] = useState(false)
-  const searchSeq = useRef(0)
+  const router = useRouter();
+  const [state, setState] = useState<ConnectCompanyState>({
+    query: '',
+    results: [],
+    open: false,
+    message: '',
+    modalOpen: false,
+  });
+  const searchSeq = useRef(0);
+  const { query, results, open, message, modalOpen } = state;
+  const updateState = (next: Partial<ConnectCompanyState>) => {
+    setState((current) => ({ ...current, ...next }));
+  };
 
-  // Debounced typeahead (Paper screen 2): search fires as you type; stale
-  // responses are dropped by sequence number.
   useEffect(() => {
-    const q = query.trim()
+    const q = query.trim();
     if (q.length < 2) {
-      setResults([])
-      setSearched(false)
-      return
+      setState((current) => ({
+        ...current,
+        results: [],
+        open: false,
+      }));
+      return;
     }
-    const seq = ++searchSeq.current
+    const seq = ++searchSeq.current;
     const timer = setTimeout(async () => {
-      const result = await searchCompanies({ data: { q } })
-      if (seq !== searchSeq.current) return
+      const result = await searchCompanies({ data: { q } });
+      if (seq !== searchSeq.current) return;
       if (result.ok) {
-        setResults(result.data.data)
-        setSearched(true)
+        setState((current) => ({
+          ...current,
+          results: result.data.data,
+          open: true,
+        }));
       } else {
-        setMessage(result.message)
+        setState((current) => ({
+          ...current,
+          message: result.message,
+          open: false,
+        }));
       }
-    }, 250)
-    return () => clearTimeout(timer)
-  }, [query])
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   async function claim(slug: string) {
-    setMessage('')
-    const result = await claimCompany({ data: { slug } })
+    updateState({ message: '', open: false });
+    const result = await claimCompany({ data: { slug } });
     if (!result.ok) {
-      setMessage(result.message)
-      return
+      updateState({ message: result.message });
+      return;
     }
-    await router.invalidate()
-    await router.navigate({ to: '/employers/onboarding/$slug', params: { slug } })
+    await router.invalidate();
+    await router.navigate({
+      to: '/employers/onboarding/$slug',
+      params: { slug },
+    });
   }
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col items-center py-24 text-center">
-      <Text as="h1" variant="heading1">
-        {m.employerOnboarding_connectTitle()}
-      </Text>
-      <p className="text-tertiary mt-2">
-        {m.employerOnboarding_connectSubtitle()}
-      </p>
-
-      <div className="relative mt-8 w-full max-w-md text-left">
-        <Input
-          icon={SearchLg}
-          value={query}
-          onChange={setQuery}
-          placeholder={m.employerOnboarding_searchPlaceholder()}
-          autoFocus
-        />
-        {searched ? (
-          <div className="bg-primary absolute inset-x-0 top-full z-10 mt-1 divide-y divide-secondary overflow-hidden rounded-lg border border-secondary shadow-sm">
-            {results.map((company) => (
-              <button
-                key={company.id}
-                type="button"
-                onClick={() => claim(company.slug)}
-                className="hover:bg-secondary/50 flex w-full items-center gap-3 p-3 text-left"
-              >
-                <CompanyAvatar name={company.name} logoUrl={null} size="sm" />
-                <span className="min-w-0">
-                  <span className="text-primary block truncate font-medium">
-                    {company.name}
-                  </span>
-                  {company.website ? (
-                    <span className="text-tertiary block truncate text-sm">
-                      {company.website}
-                    </span>
-                  ) : null}
-                </span>
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setModalOpen(true)}
-              className="hover:bg-secondary/50 text-primary flex w-full items-center gap-3 p-3 text-left"
+    <Page width="narrow">
+      <PageContent
+        header={
+          <PageHeader
+            align="center"
+            title={m.employerOnboarding_connectTitle()}
+            description={m.employerOnboarding_connectSubtitle()}
+          />
+        }
+      >
+        <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6">
+          <Field className="w-full" data-invalid={Boolean(message)}>
+            <FieldLabel htmlFor="company-search" className="sr-only">
+              {m.employerOnboarding_searchPlaceholder()}
+            </FieldLabel>
+            <Combobox
+              items={results}
+              filteredItems={results}
+              filter={null}
+              autoComplete="none"
+              autoHighlight
+              open={open}
+              onOpenChange={(nextOpen) => updateState({ open: nextOpen })}
+              inputValue={query}
+              itemToStringLabel={(company: SearchResult) => company.name}
+              itemToStringValue={(company: SearchResult) => company.slug}
+              isItemEqualToValue={(company, selected) =>
+                company.id === selected.id
+              }
+              onInputValueChange={(nextQuery, details) => {
+                if (details.reason !== 'input-change') return;
+                updateState({ query: nextQuery, open: false, message: '' });
+              }}
+              onValueChange={(company) => {
+                if (company) void claim(company.slug);
+              }}
             >
-              <span className="border-secondary flex size-10 shrink-0 items-center justify-center rounded-[9px] border border-dashed">
-                <Plus className="size-4" />
-              </span>
-              {m.employerOnboarding_addAsNewCompany({ query: query.trim() })}
-            </button>
-          </div>
+              <ComboboxInput
+                id="company-search"
+                type="text"
+                value={query}
+                showTrigger={false}
+                className="h-10 w-full"
+                placeholder={m.employerOnboarding_searchPlaceholder()}
+                aria-label={m.employerOnboarding_searchPlaceholder()}
+                autoFocus
+              >
+                <InputGroupAddon>
+                  <Search aria-hidden />
+                </InputGroupAddon>
+              </ComboboxInput>
+              <ComboboxContent>
+                <ComboboxList>
+                  {(company: SearchResult) => (
+                    <ComboboxItem
+                      key={company.id}
+                      value={company}
+                      className="min-h-12"
+                    >
+                      <EmployerIdentityAvatar
+                        name={company.name}
+                        logoUrl={null}
+                        size="default"
+                      />
+                      <span className="min-w-0">
+                        <span className="text-foreground block truncate font-medium">
+                          {company.name}
+                        </span>
+                        {company.website ? (
+                          <span className="text-muted-foreground block truncate text-sm">
+                            {company.website}
+                          </span>
+                        ) : null}
+                      </span>
+                    </ComboboxItem>
+                  )}
+                </ComboboxList>
+                <div className="border-border border-t p-1">
+                  <Button
+                    variant="ghost"
+                    className="h-auto w-full justify-start px-2 py-2"
+                    onClick={() =>
+                      updateState({ modalOpen: true, open: false })
+                    }
+                  >
+                    <span className="border-border flex size-8 shrink-0 items-center justify-center rounded-full border border-dashed">
+                      <Plus className="size-4" aria-hidden />
+                    </span>
+                    {m.employerOnboarding_addAsNewCompany({
+                      query: query.trim(),
+                    })}
+                  </Button>
+                </div>
+              </ComboboxContent>
+            </Combobox>
+          </Field>
+
+          {message ? (
+            <Alert variant="destructive">
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
+          ) : null}
+          {onBack ? (
+            <Button variant="ghost" onClick={onBack}>
+              {m.employerOnboarding_backLabel()}
+            </Button>
+          ) : null}
+        </div>
+
+        {modalOpen ? (
+          <CreateCompanyModal
+            initialName={query.trim()}
+            onClose={() => updateState({ modalOpen: false })}
+          />
         ) : null}
-      </div>
-
-      {message ? <p className="text-error-primary mt-4 text-sm">{message}</p> : null}
-      {onBack ? (
-        <Button color="tertiary" size="md" className="mt-8" onClick={onBack}>
-          {m.employerOnboarding_backLabel()}
-        </Button>
-      ) : null}
-
-      {modalOpen ? (
-        <CreateCompanyModal
-          initialName={query.trim()}
-          onClose={() => setModalOpen(false)}
-        />
-      ) : null}
-    </div>
-  )
+      </PageContent>
+    </Page>
+  );
 }
-
-// ── Screen 3 — Add a new company modal ───────────────────────────────────────
 
 function CreateCompanyModal({
   initialName,
   onClose,
 }: {
-  initialName: string
-  onClose: () => void
+  initialName: string;
+  onClose: () => void;
 }) {
-  const router = useRouter()
-  const [form, setForm] = useState({ name: initialName, website: '' })
-  const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle')
-  const [message, setMessage] = useState('')
-
+  const router = useRouter();
+  const [form, setForm] = useState({ name: initialName, website: '' });
+  const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
+  const [message, setMessage] = useState('');
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-      onClick={onClose}
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
     >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={m.employerOnboarding_modalTitle()}
-        className="bg-primary w-full max-w-md rounded-xl border border-secondary text-left shadow-lg"
-        onClick={(event) => event.stopPropagation()}
+      <DialogContent
+        showCloseButton
+        closeLabel={m.employerOnboarding_cancelLabel()}
       >
         <form
           onSubmit={async (event) => {
-            event.preventDefault()
-            setStatus('saving')
+            event.preventDefault();
+            setStatus('saving');
             const result = await createCompany({
               data: {
                 name: form.name.trim(),
-                ...(form.website.trim() ? { website: form.website.trim() } : {}),
+                ...(form.website.trim()
+                  ? { website: form.website.trim() }
+                  : {}),
               },
-            })
+            });
             if (!result.ok) {
-              setStatus('error')
-              setMessage(result.message)
-              return
+              setStatus('error');
+              setMessage(result.message);
+              return;
             }
-            await router.invalidate()
-            const slug = result.data.company.slug
+            await router.invalidate();
+            const slug = result.data.company.slug;
             if (slug && result.data.status !== 'approved') {
               await router.navigate({
                 to: '/employers/onboarding/$slug',
                 params: { slug },
-              })
+              });
             } else {
-              onClose()
+              onClose();
             }
           }}
         >
-          <div className="space-y-4 p-6">
-            <div>
-              <Text as="h2" variant="heading4">
-                {m.employerOnboarding_modalTitle()}
-              </Text>
-              <p className="text-tertiary text-sm">
-                {m.employerOnboarding_modalSubtitle()}
-              </p>
-            </div>
-            <Input
-              label={m.employerDashboard_nameLabel()}
-              value={form.name}
-              onChange={(value) => setForm({ ...form, name: value })}
-              isRequired
-            />
-            <Input
-              label={m.employerDashboard_websiteOptionalLabel()}
-              value={form.website}
-              placeholder={m.employerDashboard_websitePlaceholder()}
-              onChange={(value) => setForm({ ...form, website: value })}
-            />
-            {status === 'error' ? (
-              <p className="text-error-primary text-sm">{message}</p>
-            ) : null}
+          <DialogHeader>
+            <DialogTitle>{m.employerOnboarding_modalTitle()}</DialogTitle>
+            <DialogDescription>
+              {m.employerOnboarding_modalSubtitle()}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-5">
+            <Field>
+              <FieldLabel htmlFor="company-name">
+                {m.employerDashboard_nameLabel()}
+              </FieldLabel>
+              <Input
+                id="company-name"
+                value={form.name}
+                onChange={(event) =>
+                  setForm({ ...form, name: event.currentTarget.value })
+                }
+                required
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="company-website">
+                {m.employerDashboard_websiteOptionalLabel()}
+              </FieldLabel>
+              <Input
+                id="company-website"
+                value={form.website}
+                placeholder={m.employerDashboard_websitePlaceholder()}
+                onChange={(event) =>
+                  setForm({ ...form, website: event.currentTarget.value })
+                }
+              />
+            </Field>
+            {status === 'error' ? <FieldError>{message}</FieldError> : null}
           </div>
-          <div className="flex justify-end gap-2 border-t border-secondary px-6 py-4">
-            <Button type="button" color="secondary" size="md" onClick={onClose}>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
               {m.employerOnboarding_cancelLabel()}
             </Button>
-            <Button type="submit" color="primary" size="md" isDisabled={status === 'saving'}>
+            <Button type="submit" disabled={status === 'saving'}>
+              {status === 'saving' ? (
+                <Spinner data-icon="inline-start" />
+              ) : null}
               {status === 'saving'
                 ? m.employerDashboard_creatingLabel()
                 : m.employerDashboard_createCompanyLabel()}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
-  )
+      </DialogContent>
+    </Dialog>
+  );
 }

@@ -2,39 +2,44 @@
  * Saved jobs — its own tab in the candidate sidebar shell (moved out of
  * the profile page in the Paper layout-B restructure).
  */
-import { useState } from "react";
+import { useState } from 'react';
 
+import { fullJobToCard } from '@cavuno/board/format';
 import {
   createFileRoute,
   getRouteApi,
   isRedirect,
   redirect,
   useRouter,
-} from "@tanstack/react-router";
+} from '@tanstack/react-router';
 
-import { fullJobToCard } from "@cavuno/board/format";
+import { m } from '../paraglide/messages';
+import { getAccount, unsaveJob } from '../server/account';
+import { useCandidateShellContext } from './-candidate-shell-context';
 
-import { toJobCardVM } from "@/board/job-view-model";
+import { toJobCardVM } from '@/board/job-view-model';
+import { JobCard } from '@/components/board/job-card';
 import {
   CandidateActionFeedback,
   type CandidateActionFeedbackState,
-} from "@/components/candidate-action-feedback";
-import { CandidateShell } from "@/components/candidate-shell";
+} from '@/components/candidate-action-feedback';
 import {
   CandidateRouteErrorPage,
   CandidateRoutePendingPage,
-} from "@/components/candidate-route-state";
-import { JobCard } from "@/components/board/job-card";
-import { Button } from "@/components/ui/button";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { candidateLoaderError } from "@/lib/candidate-loader-error";
-import { m } from "../paraglide/messages";
-import { getAccount, unsaveJob } from "../server/account";
-import { useCandidateShellContext } from "./-candidate-shell-context";
+} from '@/components/candidate-route-state';
+import { CandidateShell } from '@/components/candidate-shell';
+import { Button } from '@/components/ui/button';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { candidateLoaderError } from '@/lib/candidate-loader-error';
 
-const rootApi = getRouteApi("__root__");
+const rootApi = getRouteApi('__root__');
 
-export const Route = createFileRoute("/account/saved")({
+export const Route = createFileRoute('/account/saved')({
   staticData: { ownsMain: true },
   pendingComponent: CandidateRoutePendingPage,
   errorComponent: CandidateRouteErrorPage,
@@ -44,16 +49,16 @@ export const Route = createFileRoute("/account/saved")({
     } catch (error) {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
-      if (authFailure === "email-unverified") {
+      if (authFailure === 'email-unverified') {
         throw redirect({
-          to: "/auth/verify-email-required",
-          search: { returnTo: "/account/saved" },
+          to: '/auth/verify-email-required',
+          search: { returnTo: '/account/saved' },
         });
       }
-      if (authFailure === "unauthenticated") {
+      if (authFailure === 'unauthenticated') {
         throw redirect({
-          to: "/auth/sign-in",
-          search: { returnTo: "/account/saved" },
+          to: '/auth/sign-in',
+          search: { returnTo: '/account/saved' },
         });
       }
       throw error;
@@ -69,7 +74,8 @@ function SavedJobsPage() {
   const candidateShell = useCandidateShellContext();
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<CandidateActionFeedbackState>("idle");
+  const [feedback, setFeedback] =
+    useState<CandidateActionFeedbackState>('idle');
 
   return (
     <CandidateShell
@@ -86,7 +92,7 @@ function SavedJobsPage() {
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
             {m.accountShell_savedJobsNav()}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {m.accountHome_savedJobsHeading({ count: savedJobs.data.length })}
           </p>
         </header>
@@ -95,7 +101,9 @@ function SavedJobsPage() {
           <Empty className="border">
             <EmptyHeader>
               <EmptyTitle>{m.accountShell_savedJobsNav()}</EmptyTitle>
-              <EmptyDescription>{m.accountHome_savedJobsEmptyText()}</EmptyDescription>
+              <EmptyDescription>
+                {m.accountHome_savedJobsEmptyText()}
+              </EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (
@@ -114,13 +122,13 @@ function SavedJobsPage() {
                   disabled={pendingId === saved.id}
                   onClick={async () => {
                     setPendingId(saved.id);
-                    setFeedback("idle");
+                    setFeedback('idle');
                     try {
                       await unsaveJob({ data: { jobId: saved.jobId } });
                       await router.invalidate();
-                      setFeedback("success");
+                      setFeedback('success');
                     } catch {
-                      setFeedback("error");
+                      setFeedback('error');
                     } finally {
                       setPendingId(null);
                     }

@@ -1,18 +1,19 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 
-import { useRouter } from "@tanstack/react-router";
-import { X } from "lucide-react";
+import { useRouter } from '@tanstack/react-router';
+import { X } from 'lucide-react';
+
+import { m } from '../paraglide/messages';
+import { replaceLanguages } from '../server/account';
 
 import {
   CandidateActionFeedback,
   type CandidateActionFeedbackState,
-} from "@/components/candidate-action-feedback";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { m } from "../paraglide/messages";
-import { replaceLanguages } from "../server/account";
+} from '@/components/candidate-action-feedback';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 type Language = { name: string; proficiency: string };
 
@@ -29,17 +30,24 @@ const LEVELS = [
  * (`board.me.profile.updateLanguages`). Proficiency is a free string
  * (the API takes any value); the datalist just suggests common levels.
  */
-export function LanguagesSection({ languages: initial }: { languages: Language[] }) {
+export function LanguagesSection({
+  languages: initial,
+}: {
+  languages: Language[];
+}) {
   const router = useRouter();
   const [languages, setLanguages] = useState<Language[]>(initial);
   const [pending, setPending] = useState(false);
-  const [feedback, setFeedback] = useState<CandidateActionFeedbackState>("idle");
+  const [feedback, setFeedback] =
+    useState<CandidateActionFeedbackState>('idle');
 
   const dirty = JSON.stringify(languages) !== JSON.stringify(initial);
   const valid = languages.every((l) => l.name.trim() && l.proficiency.trim());
 
   const update = (index: number, patch: Partial<Language>) =>
-    setLanguages(languages.map((l, i) => (i === index ? { ...l, ...patch } : l)));
+    setLanguages(
+      languages.map((l, i) => (i === index ? { ...l, ...patch } : l)),
+    );
 
   return (
     <section className="space-y-3" data-test="languages-section">
@@ -52,7 +60,9 @@ export function LanguagesSection({ languages: initial }: { languages: Language[]
         ))}
       </datalist>
       {languages.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{m.languagesSection_emptyText()}</p>
+        <p className="text-muted-foreground text-sm">
+          {m.languagesSection_emptyText()}
+        </p>
       ) : (
         <ul className="space-y-2">
           {languages.map((language, index) => (
@@ -75,8 +85,10 @@ export function LanguagesSection({ languages: initial }: { languages: Language[]
               <button
                 type="button"
                 aria-label={m.languagesSection_removeLanguageAriaLabel()}
-                className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
-                onClick={() => setLanguages(languages.filter((_, i) => i !== index))}
+                className="text-muted-foreground hover:text-foreground shrink-0 transition-colors"
+                onClick={() =>
+                  setLanguages(languages.filter((_, i) => i !== index))
+                }
               >
                 <X className="size-4" />
               </button>
@@ -89,7 +101,9 @@ export function LanguagesSection({ languages: initial }: { languages: Language[]
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => setLanguages([...languages, { name: "", proficiency: "" }])}
+          onClick={() =>
+            setLanguages([...languages, { name: '', proficiency: '' }])
+          }
         >
           {m.languagesSection_addLabel()}
         </Button>
@@ -99,19 +113,21 @@ export function LanguagesSection({ languages: initial }: { languages: Language[]
             disabled={pending || !valid}
             onClick={async () => {
               setPending(true);
-              setFeedback("idle");
+              setFeedback('idle');
               try {
                 await replaceLanguages({ data: { languages } });
                 await router.invalidate();
-                setFeedback("success");
+                setFeedback('success');
               } catch {
-                setFeedback("error");
+                setFeedback('error');
               } finally {
                 setPending(false);
               }
             }}
           >
-            {pending ? m.languagesSection_savingLabel() : m.languagesSection_saveLabel()}
+            {pending
+              ? m.languagesSection_savingLabel()
+              : m.languagesSection_saveLabel()}
           </Button>
         ) : null}
       </div>

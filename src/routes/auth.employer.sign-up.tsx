@@ -1,12 +1,19 @@
-import { Link, createFileRoute, notFound, useRouter } from "@tanstack/react-router";
+import {
+  Link,
+  createFileRoute,
+  notFound,
+  useRouter,
+} from '@tanstack/react-router';
 
-import { RheaRegistrationPage } from "@/components/rhea-auth-pilot";
-import { buttonVariants } from "@/components/ui/button";
-import { m } from "../paraglide/messages";
-import { signUpEmployer } from "../server/auth";
-import { getBoardContext } from "../server/queries";
+import { m } from '../paraglide/messages';
+import { signUpEmployer } from '../server/auth';
+import { getBoardContext } from '../server/queries';
 
-export const Route = createFileRoute("/auth/employer/sign-up")({
+import { RheaRegistrationPage } from '@/components/rhea-auth-pilot';
+import { buttonVariants } from '@/components/ui/button';
+import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
+
+export const Route = createFileRoute('/auth/employer/sign-up')({
   loader: async () => {
     const board = await getBoardContext();
     if (!board.features.employers) throw notFound();
@@ -15,10 +22,14 @@ export const Route = createFileRoute("/auth/employer/sign-up")({
   head: () => ({ meta: [{ title: m.authEmployerSignUp_title() }] }),
   component: EmployerSignUpPage,
   notFoundComponent: () => (
-    <div className="rhea-theme">
-      <p className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
-        {m.authEmployerSignUp_notAvailableText()}
-      </p>
+    <div>
+      <Empty className="border-border bg-card border">
+        <EmptyHeader>
+          <EmptyDescription>
+            {m.authEmployerSignUp_notAvailableText()}
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     </div>
   ),
 });
@@ -48,12 +59,12 @@ function EmployerSignUpPage() {
         return result;
       }}
       footer={
-        <p className="text-center text-sm text-muted-foreground">
-          {m.authEmployerSignUp_lookingForWorkText()}{" "}
+        <p className="text-muted-foreground text-center text-sm">
+          {m.authEmployerSignUp_lookingForWorkText()}{' '}
           <Link
             to="/auth/sign-up"
             search={{ returnTo: undefined }}
-            className={buttonVariants({ variant: "link", size: "sm" })}
+            className={buttonVariants({ variant: 'link', size: 'sm' })}
           >
             {m.authEmployerSignUp_joinAsCandidateLink()}
           </Link>

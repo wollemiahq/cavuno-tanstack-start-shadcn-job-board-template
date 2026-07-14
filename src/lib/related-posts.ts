@@ -12,20 +12,20 @@ export function selectRelatedPosts<T extends { id: string }>({
   latest,
   limit,
 }: {
-  currentId: string
+  currentId: string;
   /** Candidates sharing the current post's first tag (preferred). */
-  byTag: T[]
+  byTag: T[];
   /** Latest-post fallback when too few candidates share the tag. */
-  latest: T[]
-  limit: number
+  latest: T[];
+  limit: number;
 }): T[] {
-  const seen = new Set<string>([currentId])
-  const related: T[] = []
+  const seen = new Set<string>([currentId]);
+  const related: T[] = [];
   for (const post of [...byTag, ...latest]) {
-    if (related.length >= limit) break
-    if (seen.has(post.id)) continue
-    seen.add(post.id)
-    related.push(post)
+    if (related.length >= limit) break;
+    if (seen.has(post.id)) continue;
+    seen.add(post.id);
+    related.push(post);
   }
-  return related
+  return related;
 }

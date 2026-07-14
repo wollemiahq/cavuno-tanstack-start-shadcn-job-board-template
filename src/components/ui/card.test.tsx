@@ -1,11 +1,7 @@
 // @vitest-environment jsdom
-import '@testing-library/jest-dom/vitest'
-
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-
-import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import '@testing-library/jest-dom/vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   Card,
@@ -15,9 +11,12 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from './card'
+} from './card';
 
-afterEach(cleanup)
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+afterEach(cleanup);
 
 describe('official Rhea Card source', () => {
   it('owns the complete public API and small spacing variant', () => {
@@ -31,12 +30,12 @@ describe('official Rhea Card source', () => {
         <CardContent>Content</CardContent>
         <CardFooter>Footer</CardFooter>
       </Card>,
-    )
+    );
 
     expect(container.querySelector('[data-slot="card"]')).toHaveAttribute(
       'data-size',
       'sm',
-    )
+    );
     for (const slot of [
       'card-header',
       'card-title',
@@ -45,17 +44,17 @@ describe('official Rhea Card source', () => {
       'card-content',
       'card-footer',
     ]) {
-      expect(container.querySelector(`[data-slot="${slot}"]`)).not.toBeNull()
+      expect(container.querySelector(`[data-slot="${slot}"]`)).not.toBeNull();
     }
-    expect(screen.getByText('Starter title')).toBeInTheDocument()
-  })
+    expect(screen.getByText('Starter title')).toBeInTheDocument();
+  });
 
   it('carries the official Rhea spacing and media contracts', () => {
-    const source = readFileSync(join(import.meta.dirname, 'card.tsx'), 'utf8')
-    expect(source).toContain('gap-(--card-spacing)')
-    expect(source).toContain('[--card-spacing:--spacing(5)]')
-    expect(source).toContain('data-[size=sm]:[--card-spacing:--spacing(4)]')
-    expect(source).toContain('has-[>img:first-child]:pt-0')
-    expect(source).toContain('has-data-[slot=card-action]')
-  })
-})
+    const source = readFileSync(join(import.meta.dirname, 'card.tsx'), 'utf8');
+    expect(source).toContain('gap-(--card-spacing)');
+    expect(source).toContain('[--card-spacing:--spacing(5)]');
+    expect(source).toContain('data-[size=sm]:[--card-spacing:--spacing(4)]');
+    expect(source).toContain('has-[>img:first-child]:pt-0');
+    expect(source).toContain('has-data-[slot=card-action]');
+  });
+});

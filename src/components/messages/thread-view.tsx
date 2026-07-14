@@ -19,6 +19,7 @@ import { Composer } from './composer';
 import { HydrationSafeDate, useHydrated } from './hydration-safe-date';
 import { MessageBubble } from './message-bubble';
 
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -26,6 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
 import { Marker, MarkerContent } from '@/components/ui/marker';
 import {
   MessageScroller,
@@ -233,12 +235,12 @@ export function ThreadView({
       </header>
 
       {(actionError ?? statusError) ? (
-        <p
-          role="alert"
-          className="border-border text-destructive border-b px-4 py-2 text-sm"
+        <Alert
+          variant="destructive"
+          className="rounded-none border-x-0 border-t-0"
         >
-          {actionError ?? statusError}
-        </p>
+          <AlertDescription>{actionError ?? statusError}</AlertDescription>
+        </Alert>
       ) : null}
 
       <MessageScrollerProvider autoScroll defaultScrollPosition="end">
@@ -249,9 +251,13 @@ export function ThreadView({
           <MessageScrollerViewport aria-label={label}>
             <MessageScrollerContent className="gap-4 p-4">
               {messages.length === 0 ? (
-                <p className="text-muted-foreground m-auto text-center text-sm">
-                  {m.threadView_noMessagesText()}
-                </p>
+                <Empty className="m-auto flex-none rounded-none border-0 p-8">
+                  <EmptyHeader>
+                    <EmptyDescription>
+                      {m.threadView_noMessagesText()}
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               ) : null}
               {messages.map((message, index) => {
                 const previous = messages[index - 1];

@@ -1,11 +1,12 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate } from '@tanstack/react-router';
 
-import { ListingSearchBand } from "@/components/board/listing-page-header";
-import { m } from "../paraglide/messages";
+import { m } from '../paraglide/messages';
+
+import { ListingSearchBand } from '@/components/board/listing-page-header';
 
 /**
  * The company-jobs subpage keyword search (CAV-501, CAV-511) — a thin wrapper
@@ -24,7 +25,7 @@ export function CompanyJobsSearchBar({
   defaultValue?: string;
 }) {
   const navigate = useNavigate();
-  const [query, setQuery] = useState(defaultValue ?? "");
+  const [query, setQuery] = useState(defaultValue ?? '');
 
   return (
     <ListingSearchBand
@@ -32,7 +33,7 @@ export function CompanyJobsSearchBar({
       onChange={setQuery}
       onSubmit={() =>
         navigate({
-          to: "/companies/$companySlug/jobs",
+          to: '/companies/$companySlug/jobs',
           params: { companySlug },
           search: { q: query || undefined },
         })

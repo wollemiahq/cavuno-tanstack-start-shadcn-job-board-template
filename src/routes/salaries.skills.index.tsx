@@ -1,16 +1,27 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { boardCopy } from "#/copy";
+import { boardCopy } from '#/copy';
+import {
+  createBreadcrumbJsonLd,
+  formatRange,
+  itemListJsonLd,
+} from '@cavuno/board/seo';
+import { createFileRoute } from '@tanstack/react-router';
 
-import { createBreadcrumbJsonLd, formatRange, itemListJsonLd } from "@cavuno/board/seo";
+import { m } from '../paraglide/messages';
+import { getSeoBase, listSalarySkills } from '../server/queries';
+import { SalaryPageLayout, SalaryPendingPage } from './-salary-page-layout';
 
-import { JsonLd } from "@/components/json-ld";
-import { SalaryEmptyState, SalaryRail, type RailItem } from "@/components/board/salary-sections";
-import { toSalaryBreadcrumbVM, toSalaryRailVM } from "@/board/salary-view-model";
-import { SalaryPageLayout, SalaryPendingPage } from "./-salary-page-layout";
-import { m } from "../paraglide/messages";
-import { getSeoBase, listSalarySkills } from "../server/queries";
+import {
+  toSalaryBreadcrumbVM,
+  toSalaryRailVM,
+} from '@/board/salary-view-model';
+import {
+  SalaryEmptyState,
+  SalaryRail,
+  type RailItem,
+} from '@/components/board/salary-sections';
+import { JsonLd } from '@/components/json-ld';
 
-export const Route = createFileRoute("/salaries/skills/")({
+export const Route = createFileRoute('/salaries/skills/')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async () => {
     const [skills, seo] = await Promise.all([listSalarySkills(), getSeoBase()]);
@@ -26,7 +37,7 @@ export const Route = createFileRoute("/salaries/skills/")({
               }),
             },
             {
-              name: "description",
+              name: 'description',
               content: m.salaryHub_skillsMetaDescription({
                 boardName: loaderData.seo.boardName,
               }),
@@ -34,7 +45,7 @@ export const Route = createFileRoute("/salaries/skills/")({
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: `${loaderData.seo.origin}/salaries/skills`,
             },
           ],
@@ -74,8 +85,8 @@ function SalarySkillsIndex() {
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
         [
-          { name: crumbs.home, href: "/" },
-          { name: crumbs.salaries, href: "/salaries" },
+          { name: crumbs.home, href: '/' },
+          { name: crumbs.salaries, href: '/salaries' },
           { name: crumbs.skills },
         ],
         seo.language,
@@ -85,7 +96,7 @@ function SalarySkillsIndex() {
     >
       <JsonLd data={jsonLd} />
       {items.length > 0 ? (
-        <SalaryRail vm={toSalaryRailVM("", items, seo.language, seo.labels)} />
+        <SalaryRail vm={toSalaryRailVM('', items, seo.language, seo.labels)} />
       ) : (
         <SalaryEmptyState
           title={m.salaryHub_skillsHeading()}

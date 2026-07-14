@@ -1,8 +1,9 @@
-import { AlertCircle } from "lucide-react";
+import { AlertCircle } from 'lucide-react';
 
-import type { JobDetailVM } from "@/board/job-detail-view-model";
-import { JobSearchResultDetail } from "@/components/board/job-search-result-detail";
-import { Button } from "@/components/ui/button";
+import type { JobDetailVM } from '@/board/job-detail-view-model';
+import { JobSearchResultDetail } from '@/components/board/job-search-result-detail';
+import { Alert, AlertAction, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
   Empty,
   EmptyContent,
@@ -10,8 +11,8 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
+} from '@/components/ui/empty';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function JobSearchDetailState({
   status,
@@ -19,56 +20,76 @@ export function JobSearchDetailState({
   loadingLabel,
   errorTitle,
   retryLabel,
-  fullPageLabel,
   onRetry,
   applySlot,
   saveSlot,
 }: {
-  status: "idle" | "loading" | "ready" | "error";
+  status: 'idle' | 'loading' | 'ready' | 'error';
   vm?: JobDetailVM;
   loadingLabel: string;
   errorTitle: string;
   retryLabel: string;
-  fullPageLabel: string;
   onRetry: () => void;
   applySlot?: React.ReactNode;
   saveSlot?: React.ReactNode;
 }) {
-  if (status === "idle") return null;
+  if (status === 'idle') return null;
 
   if (vm?.detailHref) {
     return (
-      <div aria-busy={status === "loading"}>
-        {status === "error" ? (
-          <div
-            role="alert"
-            className="flex items-center justify-between gap-4 border-b border-destructive/30 bg-destructive/5 px-5 py-3 text-sm"
+      <div aria-busy={status === 'loading'}>
+        {status === 'error' ? (
+          <Alert
+            variant="destructive"
+            className="rounded-none border-x-0 border-t-0 px-5 py-3"
           >
-            <span>{errorTitle}</span>
-            <Button type="button" variant="outline" size="sm" onClick={onRetry}>
-              {retryLabel}
-            </Button>
-          </div>
+            <AlertDescription>{errorTitle}</AlertDescription>
+            <AlertAction>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onRetry}
+              >
+                {retryLabel}
+              </Button>
+            </AlertAction>
+          </Alert>
         ) : null}
-        {status === "loading" ? (
+        {status === 'loading' ? (
           <p role="status" className="sr-only">
             {loadingLabel}
           </p>
         ) : null}
         <JobSearchResultDetail
           vm={vm}
-          fullPageHref={vm.detailHref}
-          fullPageLabel={fullPageLabel}
-          applySlot={status === "ready" ? applySlot : undefined}
-          saveSlot={status === "ready" ? saveSlot : undefined}
+          loading={status === 'loading'}
+          applySlot={
+            status === 'error' ? (
+              <span data-inert="true" inert className="contents">
+                {applySlot}
+              </span>
+            ) : (
+              applySlot
+            )
+          }
+          saveSlot={
+            status === 'error' ? (
+              <span data-inert="true" inert className="contents">
+                {saveSlot}
+              </span>
+            ) : (
+              saveSlot
+            )
+          }
         />
       </div>
     );
   }
 
-  if (status === "error") {
+  if (status === 'error') {
     return (
-      <Empty className="min-h-[28rem]">
+      <Empty role="alert" className="min-h-[28rem]">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <AlertCircle aria-hidden="true" />

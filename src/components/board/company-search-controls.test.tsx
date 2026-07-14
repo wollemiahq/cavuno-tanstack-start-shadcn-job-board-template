@@ -1,29 +1,51 @@
 // @vitest-environment jsdom
 
-import "@testing-library/jest-dom/vitest";
+import '@testing-library/jest-dom/vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
-
-import { CompanySearchControls } from "./company-search-controls";
+import { CompanySearchControls } from './company-search-controls';
 
 const labels = {
-  query: "Company name",
-  queryPlaceholder: "Search companies…",
-  market: "Market",
-  allMarkets: "All markets",
-  search: "Search",
+  query: 'Company name',
+  queryPlaceholder: 'Search companies…',
+  market: 'Market',
+  allMarkets: 'All markets',
+  search: 'Search',
 };
 
 const markets = [
-  { slug: "technology", name: "Technology" },
-  { slug: "healthcare", name: "Healthcare" },
+  { slug: 'technology', name: 'Technology' },
+  { slug: 'healthcare', name: 'Healthcare' },
 ];
 
 afterEach(cleanup);
 
-describe("CompanySearchControls", () => {
-  it("submits the company query and exposes a non-native market filter", () => {
+describe('CompanySearchControls', () => {
+  it('composes the controls from canonical shadcn Card, Field, and InputGroup slots', () => {
+    render(
+      <CompanySearchControls
+        markets={markets}
+        labels={labels}
+        onSubmit={vi.fn()}
+        onMarketChange={vi.fn()}
+      />,
+    );
+
+    const form = screen
+      .getByRole('searchbox', { name: 'Company name' })
+      .closest('form');
+    if (!form) throw new Error('Expected the company search form');
+
+    expect(form.querySelector("[data-slot='card']")).not.toBeNull();
+    expect(form.querySelectorAll("[data-slot='field']")).toHaveLength(2);
+    expect(form.querySelectorAll("[data-slot='input-group']")).toHaveLength(1);
+    expect(form.querySelector("[data-slot='input-group-control']")).toBe(
+      screen.getByRole('searchbox', { name: 'Company name' }),
+    );
+  });
+
+  it('submits the company query and exposes a non-native market filter', () => {
     const onSubmit = vi.fn();
     render(
       <CompanySearchControls
@@ -35,17 +57,19 @@ describe("CompanySearchControls", () => {
       />,
     );
 
-    const query = screen.getByRole("searchbox", { name: "Company name" });
-    expect(query).toHaveValue("acme");
-    expect(screen.getByRole("combobox", { name: "Market" }).tagName).toBe("BUTTON");
+    const query = screen.getByRole('searchbox', { name: 'Company name' });
+    expect(query).toHaveValue('acme');
+    expect(screen.getByRole('combobox', { name: 'Market' }).tagName).toBe(
+      'BUTTON',
+    );
 
-    fireEvent.change(query, { target: { value: "orbital" } });
-    fireEvent.submit(query.closest("form") as HTMLFormElement);
+    fireEvent.change(query, { target: { value: 'orbital' } });
+    fireEvent.submit(query.closest('form') as HTMLFormElement);
 
-    expect(onSubmit).toHaveBeenCalledWith("orbital");
+    expect(onSubmit).toHaveBeenCalledWith('orbital');
   });
 
-  it("restores the submitted query when browser history changes route state", () => {
+  it('restores the submitted query when browser history changes route state', () => {
     const { rerender } = render(
       <CompanySearchControls
         query="acme"
@@ -66,10 +90,12 @@ describe("CompanySearchControls", () => {
       />,
     );
 
-    expect(screen.getByRole("searchbox", { name: "Company name" })).toHaveValue("harborline");
+    expect(screen.getByRole('searchbox', { name: 'Company name' })).toHaveValue(
+      'harborline',
+    );
   });
 
-  it("preserves the typed company query when the market filter navigates", () => {
+  it('preserves the typed company query when the market filter navigates', () => {
     const onMarketChange = vi.fn();
     render(
       <CompanySearchControls
@@ -81,14 +107,14 @@ describe("CompanySearchControls", () => {
       />,
     );
 
-    fireEvent.change(screen.getByRole("searchbox", { name: "Company name" }), {
-      target: { value: "orbital" },
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Company name' }), {
+      target: { value: 'orbital' },
     });
-    fireEvent.click(screen.getByRole("combobox", { name: "Market" }));
-    const technology = screen.getByRole("option", { name: "Technology" });
-    fireEvent.pointerDown(technology, { pointerType: "mouse" });
+    fireEvent.click(screen.getByRole('combobox', { name: 'Market' }));
+    const technology = screen.getByRole('option', { name: 'Technology' });
+    fireEvent.pointerDown(technology, { pointerType: 'mouse' });
     fireEvent.click(technology);
 
-    expect(onMarketChange).toHaveBeenCalledWith("technology", "orbital");
+    expect(onMarketChange).toHaveBeenCalledWith('technology', 'orbital');
   });
 });

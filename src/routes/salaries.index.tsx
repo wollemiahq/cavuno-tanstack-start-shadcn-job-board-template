@@ -1,26 +1,33 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { boardCopy } from '#/copy';
+import { createBreadcrumbJsonLd, formatRange } from '@cavuno/board/seo';
+import { createFileRoute } from '@tanstack/react-router';
 
-import { createBreadcrumbJsonLd, formatRange } from "@cavuno/board/seo";
-import { boardCopy } from "#/copy";
-
-import { JsonLd } from "@/components/json-ld";
-import { PageSection } from "@/components/layout/page";
-import { buttonVariants } from "@/components/ui/button";
-import { SalaryEmptyState, SalaryRail, type RailItem } from "@/components/board/salary-sections";
-import { toSalaryBreadcrumbVM, toSalaryRailVM } from "@/board/salary-view-model";
-import { SalaryPageLayout, SalaryPendingPage } from "./-salary-page-layout";
-import { m } from "../paraglide/messages";
+import { m } from '../paraglide/messages';
 import {
   getSeoBase,
   listSalaryCompanies,
   listSalaryLocations,
   listSalarySkills,
   listSalaryTitles,
-} from "../server/queries";
+} from '../server/queries';
+import { SalaryPageLayout, SalaryPendingPage } from './-salary-page-layout';
+
+import {
+  toSalaryBreadcrumbVM,
+  toSalaryRailVM,
+} from '@/board/salary-view-model';
+import {
+  SalaryEmptyState,
+  SalaryRail,
+  type RailItem,
+} from '@/components/board/salary-sections';
+import { JsonLd } from '@/components/json-ld';
+import { PageSection } from '@/components/layout/page';
+import { buttonVariants } from '@/components/ui/button';
 
 const PREVIEW = 9;
 
-export const Route = createFileRoute("/salaries/")({
+export const Route = createFileRoute('/salaries/')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async () => {
     const [companies, titles, skills, locations, seo] = await Promise.all([
@@ -43,15 +50,21 @@ export const Route = createFileRoute("/salaries/")({
     loaderData
       ? {
           meta: [
-            { title: m.salaryHub_metaTitle({ boardName: loaderData.seo.boardName }) },
             {
-              name: "description",
+              title: m.salaryHub_metaTitle({
+                boardName: loaderData.seo.boardName,
+              }),
+            },
+            {
+              name: 'description',
               content: m.salaryHub_metaDescription({
                 boardName: loaderData.seo.boardName,
               }),
             },
           ],
-          links: [{ rel: "canonical", href: `${loaderData.seo.origin}/salaries` }],
+          links: [
+            { rel: 'canonical', href: `${loaderData.seo.origin}/salaries` },
+          ],
         }
       : {},
   component: SalariesHub,
@@ -64,7 +77,10 @@ function SalariesHub() {
   const locale = seo.language;
 
   const jsonLd = [
-    createBreadcrumbJsonLd([{ label: crumbs.home, href: seo.origin }, { label: crumbs.salaries }]),
+    createBreadcrumbJsonLd([
+      { label: crumbs.home, href: seo.origin },
+      { label: crumbs.salaries },
+    ]),
   ].filter((e): e is Record<string, unknown> => e !== null);
 
   const companyItems: RailItem[] = companies.slice(0, PREVIEW).map((x) => ({
@@ -93,12 +109,16 @@ function SalariesHub() {
     jobCount: x.jobCount,
   }));
   const hasSalaryData =
-    companyItems.length + titleItems.length + skillItems.length + locationItems.length > 0;
+    companyItems.length +
+      titleItems.length +
+      skillItems.length +
+      locationItems.length >
+    0;
 
   return (
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
-        [{ name: crumbs.home, href: "/" }, { name: crumbs.salaries }],
+        [{ name: crumbs.home, href: '/' }, { name: crumbs.salaries }],
         seo.language,
         seo.labels,
       )}
@@ -134,7 +154,10 @@ function SalariesHub() {
           />
         </>
       ) : (
-        <SalaryEmptyState title={crumbs.salaries} description={m.salaryHub_emptyDescription()} />
+        <SalaryEmptyState
+          title={crumbs.salaries}
+          description={m.salaryHub_emptyDescription()}
+        />
       )}
     </SalaryPageLayout>
   );
@@ -156,12 +179,15 @@ function HubSection({
     <PageSection
       title={title}
       actions={
-        <a href={seeAll} className={buttonVariants({ variant: "link", size: "sm" })}>
+        <a
+          href={seeAll}
+          className={buttonVariants({ variant: 'link', size: 'sm' })}
+        >
           {m.salaryHub_seeAllLabel()}
         </a>
       }
     >
-      <SalaryRail vm={toSalaryRailVM("", items, seo.language, seo.labels)} />
+      <SalaryRail vm={toSalaryRailVM('', items, seo.language, seo.labels)} />
     </PageSection>
   );
 }

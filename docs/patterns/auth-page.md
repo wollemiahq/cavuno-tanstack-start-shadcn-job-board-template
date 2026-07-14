@@ -1,7 +1,7 @@
 ---
 name: Auth page
 purpose: The centered single-column auth shell — mark, display heading, form, OR divider, social buttons.
-primitives: [AuthCard, Field, FormError, AuthDivider, Button, Input, RadioGroup, InputOTP]
+primitives: [AuthCard, Field, FieldLabel, Input, FieldError, FieldSeparator, Button, RadioGroup, InputOTP]
 usedBy: [src/components/auth-form.tsx, src/routes/auth.sign-in.tsx, src/routes/auth.sign-up.tsx, src/routes/auth.forgot-password.tsx, src/routes/auth.reset-password.tsx, src/routes/auth.magic-link.tsx, src/routes/auth.employer.sign-up.tsx]
 ---
 
@@ -23,9 +23,11 @@ rewriting route behavior.
 ## Anatomy
 
 - `AuthCard` — the centered card: mark → semantic `h1` → supporting text → children.
-- `Field` — a labeled shadcn `Input` with native validation.
-- `FormError` — the destructive, live error line.
-- `AuthDivider` — the hairline "OR" separator before social buttons.
+- `Field` + `FieldLabel` + `Input` — one accessible control with native validation.
+- `FieldError` — the destructive validation or submission message. The local
+  `FormError` helper delegates to this canonical primitive.
+- `FieldSeparator` — the hairline "OR" separator before social buttons. The
+  local `AuthDivider` helper delegates to it.
 
 ## Composition
 
@@ -33,10 +35,13 @@ rewriting route behavior.
 
 ```tsx
 <AuthCard title={title} supportingText={supportingText}>
-  <Field label={emailLabel} name="email" type="email" autoComplete="email" />
-  <FormError message={error} />
+  <Field>
+    <FieldLabel htmlFor="email">{emailLabel}</FieldLabel>
+    <Input id="email" name="email" type="email" autoComplete="email" required />
+    {error ? <FieldError>{error}</FieldError> : null}
+  </Field>
   <Button type="submit">{submitLabel}</Button>
-  <AuthDivider label={orLabel} />
+  <FieldSeparator aria-hidden>{orLabel}</FieldSeparator>
   {/* social buttons */}
 </AuthCard>
 ```
@@ -45,14 +50,14 @@ rewriting route behavior.
 
 | Do                                                                                                           | Don't                                                                   |
 | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| Compose `AuthCard` / `Field` / `FormError` / `AuthDivider`.                                                  | Rebuild the centered column per route.                                  |
+| Compose `AuthCard` with the shadcn `Field` family and `FieldSeparator`.                                     | Rebuild the centered column or validation markup per route.             |
 | Preserve the validated `returnTo` value through sign-in, sign-up, verification, magic-link, and OAuth paths. | Link to a bare auth route from inside an in-progress candidate journey. |
 | Use Base UI-backed shadcn controls for composite widgets such as radio groups and OTP entry.                 | Recreate composite keyboard behavior with buttons and ARIA roles.       |
 
 ## Used by
 
 - `auth-form.tsx` — the shell + field primitives.
-- The listed `auth.*` routes. `password.tsx` remains a legacy migration reference.
+- The listed `auth.*` routes and `password.tsx`.
 
 ## Password-reset continuation boundary
 

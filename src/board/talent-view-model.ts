@@ -1,6 +1,6 @@
-import { normalizeWebsiteUrl } from "@cavuno/board/seo";
+import { normalizeWebsiteUrl } from '@cavuno/board/seo';
 
-import type { TalentDirectoryEntry, TalentProfile } from "@cavuno/board";
+import type { TalentDirectoryEntry, TalentProfile } from '@cavuno/board';
 
 export interface TalentViewModelLabels {
   anonymousCandidate: string;
@@ -80,24 +80,24 @@ function enumLabel(
   value: string | null,
   labels: Readonly<Record<string, string>>,
 ) {
-  return value ? labels[value] ?? null : null;
+  return value ? (labels[value] ?? null) : null;
 }
 
 function stableKey(...parts: Array<string | null>) {
   return parts
     .filter((part): part is string => Boolean(part))
-    .join("-")
-    .toLocaleLowerCase("en")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+    .join('-')
+    .toLocaleLowerCase('en')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 function formatMonth(value: string, language: string) {
-  const [year, month] = value.split("-").map(Number);
+  const [year, month] = value.split('-').map(Number);
   return new Intl.DateTimeFormat(language, {
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
   }).format(new Date(Date.UTC(year, month - 1, 1)));
 }
 
@@ -145,7 +145,7 @@ export function toTalentProfileVM(
   const card = toTalentCardVM(
     {
       ...profile,
-      object: "talent_directory_entry",
+      object: 'talent_directory_entry',
       skills: profile.skills.map((skill) => skill.name),
       experiences: profile.experiences,
       education: profile.education,
@@ -165,7 +165,7 @@ export function toTalentProfileVM(
       ),
       title: experience.title,
       companyName: experience.companyName,
-      companyHref: normalizeWebsiteUrl(experience.companyUrl ?? ""),
+      companyHref: normalizeWebsiteUrl(experience.companyUrl ?? ''),
       dateRangeLabel: formatMonthRange(
         experience.startDate,
         experience.endDate,
@@ -189,9 +189,9 @@ export function toTalentProfileVM(
     education: profile.education.map((education) => ({
       key: stableKey(education.institutionName, education.startDate),
       institutionName: education.institutionName,
-      institutionHref: normalizeWebsiteUrl(education.institutionUrl ?? ""),
+      institutionHref: normalizeWebsiteUrl(education.institutionUrl ?? ''),
       qualificationLabel:
-        [education.degree, education.fieldOfStudy].filter(Boolean).join(", ") ||
+        [education.degree, education.fieldOfStudy].filter(Boolean).join(', ') ||
         null,
       grade: education.grade,
       activitiesAndSocieties: education.activitiesAndSocieties,

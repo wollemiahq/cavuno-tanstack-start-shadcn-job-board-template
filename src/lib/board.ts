@@ -7,19 +7,19 @@
  * per call from the session middleware (ADR-0006 SSR pattern; the
  * Medusa-starter architecture the SDK was designed for).
  */
-import { createBoardClient, type BoardSdk } from '@cavuno/board'
-import { createSessionRefresher } from '@cavuno/board/server'
+import { createBoardClient, type BoardSdk } from '@cavuno/board';
+import { createSessionRefresher } from '@cavuno/board/server';
 
-import { getServerEnv } from './env'
+import { getServerEnv } from './env';
 
-let client: BoardSdk | null = null
+let client: BoardSdk | null = null;
 
 export function getBoard(): BoardSdk {
   if (!client) {
-    const { apiUrl, board } = getServerEnv()
-    client = createBoardClient({ baseUrl: apiUrl, board })
+    const { apiUrl, board } = getServerEnv();
+    client = createBoardClient({ baseUrl: apiUrl, board });
   }
-  return client
+  return client;
 }
 
 /**
@@ -28,16 +28,18 @@ export function getBoard(): BoardSdk {
  * single-flight slot that keeps concurrent requests from burning the
  * single-use refresh token).
  */
-let refresher: ReturnType<typeof createSessionRefresher> | null = null
+let refresher: ReturnType<typeof createSessionRefresher> | null = null;
 
-export function getSessionRefresher(): ReturnType<typeof createSessionRefresher> {
+export function getSessionRefresher(): ReturnType<
+  typeof createSessionRefresher
+> {
   if (!refresher) {
-    refresher = createSessionRefresher(getBoard())
+    refresher = createSessionRefresher(getBoard());
   }
-  return refresher
+  return refresher;
 }
 
 /** Bearer headers for one authenticated call. */
 export function authHeaders(accessToken: string): Record<string, string> {
-  return { authorization: `Bearer ${accessToken}` }
+  return { authorization: `Bearer ${accessToken}` };
 }

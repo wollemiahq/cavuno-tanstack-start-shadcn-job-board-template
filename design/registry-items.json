@@ -1,211 +1,180 @@
 {
-    "$schema": "https://ui.shadcn.com/schema/registry.json",
-    "name": "cavuno",
-    "homepage": "https://cavuno.com",
-    "items": [
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "cavuno",
+  "homepage": "https://cavuno.com",
+  "items": [
+    {
+      "name": "base",
+      "type": "registry:base",
+      "title": "Cavuno base",
+      "description": "Board design-system payload: the canonical shadcn token baseline plus the per-board runtime theme override (BoardTheme) consuming @cavuno/board/theme.",
+      "dependencies": ["@cavuno/board@^1.31.0"],
+      "files": [
         {
-            "name": "base",
-            "type": "registry:base",
-            "title": "Cavuno base",
-            "description": "Board design-system payload: the canonical shadcn token baseline plus the per-board runtime theme override (BoardTheme) consuming @cavuno/board/theme.",
-            "dependencies": [
-                "@cavuno/board@^1.31.0"
-            ],
-            "files": [
-                {
-                    "path": "src/base/board-theme.tsx",
-                    "type": "registry:component",
-                    "target": "components/cavuno/board-theme.tsx"
-                }
-            ],
-            "cssVars": {
-                "theme": {
-                    "radius": "0.625rem"
-                }
-            },
-            "docs": "Mount <BoardTheme theme={(await board.context()).theme} /> once in your app shell, after the static theme stylesheet \u2014 board colors then win the cascade. A null theme renders no CSS/fonts (static defaults apply) \u2014 only the mode script, which resolves the OS system preference."
-        },
-        {
-            "name": "job-card",
-            "type": "registry:component",
-            "title": "Job card",
-            "description": "One job in a list \u2014 a typed-props display card (logo, title, company, location/type/salary badges, taxonomy chip-links) with no fetching. Shared by the job-search-page and job-detail (Similar jobs) blocks; exports jobDetailPath.",
-            "dependencies": [
-                "@cavuno/board@^1.31.0"
-            ],
-            "registryDependencies": [
-                "badge",
-                "card",
-                "@cavuno/chip-link"
-            ],
-            "files": [
-                {
-                    "path": "src/shared/job-card.tsx",
-                    "type": "registry:component",
-                    "target": "components/cavuno/job-card.tsx"
-                }
-            ],
-            "docs": "Feed each card a PublicJobCard from board.jobs.list()/search(). Links are plain <a> on the canonical paths (jobDetailPath \u2192 /companies/{companySlug}/jobs/{jobSlug}) \u2014 swap for your router's Link for client navigation."
-        },
-        {
-            "name": "breadcrumb",
-            "type": "registry:component",
-            "title": "Breadcrumb",
-            "description": "The shared breadcrumb trail (nav \u203a ol \u203a li) used by the job-detail and salary pages. Pass an ordered items list; a crumb with no href renders as the current page.",
-            "files": [
-                {
-                    "path": "src/shared/breadcrumb.tsx",
-                    "type": "registry:component",
-                    "target": "components/cavuno/breadcrumb.tsx"
-                }
-            ],
-            "docs": "Render <Breadcrumb items={[{ name, href? }, \u2026]} />. Omit href on the last (current-page) crumb. Links are plain <a> \u2014 swap for your router's Link if desired."
-        },
-        {
-            "name": "chip-link",
-            "type": "registry:component",
-            "title": "Chip link",
-            "description": "A taxonomy chip that links to a listing route \u2014 the shared <a><Badge/></a> for category/skill chips on the job card and the job-detail page.",
-            "registryDependencies": [
-                "badge"
-            ],
-            "files": [
-                {
-                    "path": "src/shared/chip-link.tsx",
-                    "type": "registry:component",
-                    "target": "components/cavuno/chip-link.tsx"
-                }
-            ],
-            "docs": "Render <ChipLink href=\"/jobs/{slug}\" variant=\"outline\">{name}</ChipLink> (variant secondary|outline). The <a> is a plain path \u2014 swap for your router's Link for client navigation."
-        },
-        {
-            "name": "job-search-page",
-            "type": "registry:block",
-            "title": "Job search page",
-            "description": "The board's main listing/search surface: heading + count, canonical filter controls (@cavuno/board/filters vocabulary), job cards, load-more. Data in, callbacks out \u2014 your loader owns fetching.",
-            "dependencies": [
-                "@cavuno/board@^1.31.0",
-                "lucide-react"
-            ],
-            "registryDependencies": [
-                "badge",
-                "button",
-                "input",
-                "select",
-                "@cavuno/job-card"
-            ],
-            "files": [
-                {
-                    "path": "src/blocks/job-search-page/job-search-page.tsx",
-                    "type": "registry:component",
-                    "target": "components/cavuno/job-search-page.tsx"
-                },
-                {
-                    "path": "src/blocks/job-search-page/jobs-search-controls.tsx",
-                    "type": "registry:component",
-                    "target": "components/cavuno/jobs-search-controls.tsx"
-                },
-                {
-                    "path": "src/blocks/job-search-page/job-list.tsx",
-                    "type": "registry:component",
-                    "target": "components/cavuno/job-list.tsx"
-                }
-            ],
-            "docs": "Fetch with board.jobs.list({ ...filters, cursor, limit: 20 }) (board.jobs.search() when q is set). onFiltersChange \u2192 write filters to URL search params and refetch; onLoadMore \u2192 refetch with nextCursor and append. Links are plain <a> on the canonical paths \u2014 swap for your router's Link for client navigation."
-        },
-        {
-            "name": "job-detail",
-            "type": "registry:block",
-            "title": "Job detail page",
-            "description": "Full job page: breadcrumbs, header badges, facts, taxonomy chips, operator custom fields (CAV-294), sanitized description, company block, similar jobs. Server-renderable; apply/alert controls arrive via slots.",
-            "dependencies": [
-                "@cavuno/board@^1.31.0"
-            ],
-            "registryDependencies": [
-                "badge",
-                "button",
-                "separator",
-                "@cavuno/job-card",
-                "@cavuno/breadcrumb",
-                "@cavuno/chip-link"
-            ],
-            "files": [
-                {
-                    "path": "src/blocks/job-detail/job-detail.tsx",
-                    "type": "registry:component",
-                    "target": "components/cavuno/job-detail.tsx"
-                },
-                {
-                    "path": "src/blocks/job-detail/copy-link-button.tsx",
-                    "type": "registry:component",
-                    "target": "components/cavuno/copy-link-button.tsx"
-                }
-            ],
-            "docs": "Load with board.jobs.retrieve(jobSlug) + board.jobs.similar(jobSlug). Pass @cavuno/apply-flow's ApplyButton through `actions` and @cavuno/alert-signup's form through `alertSlot`. Render JSON-LD (createJobPostingJsonLd from @cavuno/board/seo) in your route's head \u2014 head management is framework-specific."
-        },
-        {
-            "name": "apply-flow",
-            "type": "registry:block",
-            "title": "Apply flow",
-            "description": "Native apply (ADR-0054) with the hosted board's exact fallback ladder: external-only jobs, anonymous visitors, unverified candidates, verified native apply. Idempotent against the Board API.",
-            "dependencies": [
-                "@cavuno/board@^1.31.0"
-            ],
-            "registryDependencies": [
-                "button"
-            ],
-            "files": [
-                {
-                    "path": "src/blocks/apply-flow/apply-button.tsx",
-                    "type": "registry:component",
-                    "target": "components/cavuno/apply-button.tsx"
-                }
-            ],
-            "docs": "Wire onApply to board.jobs.apply(jobSlug) with an authenticated client (or a server function forwarding the session bearer). viewer comes from your session state; the auth/verify/applications hrefs point at your app's routes."
-        },
-        {
-            "name": "alert-signup",
-            "type": "registry:block",
-            "title": "Job-alert signup",
-            "description": "Double-opt-in job-alert subscribe form (email + weekly frequency); the search/job context rides in as filters, matching the hosted capture form. Honest duplicate handling.",
-            "dependencies": [
-                "@cavuno/board@^1.31.0",
-                "lucide-react"
-            ],
-            "registryDependencies": [
-                "button",
-                "input"
-            ],
-            "files": [
-                {
-                    "path": "src/blocks/alert-signup/alert-signup-form.tsx",
-                    "type": "registry:component",
-                    "target": "components/cavuno/alert-signup-form.tsx"
-                }
-            ],
-            "docs": "Wire onSubscribe to board.jobAlerts.subscribe(input) (client-side) or a server function forwarding it. The API is idempotent per (email, filters) and returns created | duplicate."
-        },
-        {
-            "name": "salary-page",
-            "type": "registry:block",
-            "title": "Salary page sections",
-            "description": "The salary-page building blocks (ADR-0041): headline range card with percentiles, by-seniority comparison table, cross-link rails, FAQ, breadcrumb \u2014 typed against the board.salaries.* wire shapes.",
-            "dependencies": [
-                "@cavuno/board@^1.31.0"
-            ],
-            "registryDependencies": [
-                "badge",
-                "card",
-                "@cavuno/breadcrumb"
-            ],
-            "files": [
-                {
-                    "path": "src/blocks/salary-page/salary-sections.tsx",
-                    "type": "registry:component",
-                    "target": "components/cavuno/salary-sections.tsx"
-                }
-            ],
-            "docs": "Feed from board.salaries.titles.get(slug) (and the skills/locations/companies twins): overall \u2192 OverallSalaryCard, bySeniority \u2192 SenioritySalaryTable, index lists \u2192 SalaryRail items with your salary-route hrefs."
+          "path": "src/base/board-theme.tsx",
+          "type": "registry:component",
+          "target": "components/cavuno/board-theme.tsx"
         }
-    ]
+      ],
+      "cssVars": {
+        "theme": {
+          "radius": "0.625rem"
+        }
+      },
+      "docs": "Mount <BoardTheme theme={(await board.context()).theme} /> once in your app shell, after the static theme stylesheet \u2014 board colors then win the cascade. A null theme renders no CSS/fonts (static defaults apply) \u2014 only the mode script, which resolves the OS system preference."
+    },
+    {
+      "name": "job-card",
+      "type": "registry:component",
+      "title": "Job card",
+      "description": "One job in a list \u2014 a typed-props display card (logo, title, company, location/type/salary badges, taxonomy chip-links) with no fetching. Shared by the job-search-page and job-detail (Similar jobs) blocks; exports jobDetailPath.",
+      "dependencies": ["@cavuno/board@^1.31.0"],
+      "registryDependencies": ["badge", "card", "@cavuno/chip-link"],
+      "files": [
+        {
+          "path": "src/shared/job-card.tsx",
+          "type": "registry:component",
+          "target": "components/cavuno/job-card.tsx"
+        }
+      ],
+      "docs": "Feed each card a PublicJobCard from board.jobs.list()/search(). Links are plain <a> on the canonical paths (jobDetailPath \u2192 /companies/{companySlug}/jobs/{jobSlug}) \u2014 swap for your router's Link for client navigation."
+    },
+    {
+      "name": "breadcrumb",
+      "type": "registry:component",
+      "title": "Breadcrumb",
+      "description": "The shared breadcrumb trail (nav \u203a ol \u203a li) used by the job-detail and salary pages. Pass an ordered items list; a crumb with no href renders as the current page.",
+      "files": [
+        {
+          "path": "src/shared/breadcrumb.tsx",
+          "type": "registry:component",
+          "target": "components/cavuno/breadcrumb.tsx"
+        }
+      ],
+      "docs": "Render <Breadcrumb items={[{ name, href? }, \u2026]} />. Omit href on the last (current-page) crumb. Links are plain <a> \u2014 swap for your router's Link if desired."
+    },
+    {
+      "name": "chip-link",
+      "type": "registry:component",
+      "title": "Chip link",
+      "description": "A taxonomy chip that links to a listing route \u2014 the shared <a><Badge/></a> for category/skill chips on the job card and the job-detail page.",
+      "registryDependencies": ["badge"],
+      "files": [
+        {
+          "path": "src/shared/chip-link.tsx",
+          "type": "registry:component",
+          "target": "components/cavuno/chip-link.tsx"
+        }
+      ],
+      "docs": "Render <ChipLink href=\"/jobs/{slug}\" variant=\"outline\">{name}</ChipLink> (variant secondary|outline). The <a> is a plain path \u2014 swap for your router's Link for client navigation."
+    },
+    {
+      "name": "job-search-page",
+      "type": "registry:block",
+      "title": "Job search page",
+      "description": "The board's main listing/search surface: heading + count, canonical filter controls (@cavuno/board/filters vocabulary), job cards, load-more. Data in, callbacks out \u2014 your loader owns fetching.",
+      "dependencies": ["@cavuno/board@^1.31.0", "lucide-react"],
+      "registryDependencies": [
+        "badge",
+        "button",
+        "input",
+        "select",
+        "@cavuno/job-card"
+      ],
+      "files": [
+        {
+          "path": "src/blocks/job-search-page/job-search-page.tsx",
+          "type": "registry:component",
+          "target": "components/cavuno/job-search-page.tsx"
+        },
+        {
+          "path": "src/blocks/job-search-page/jobs-search-controls.tsx",
+          "type": "registry:component",
+          "target": "components/cavuno/jobs-search-controls.tsx"
+        },
+        {
+          "path": "src/blocks/job-search-page/job-list.tsx",
+          "type": "registry:component",
+          "target": "components/cavuno/job-list.tsx"
+        }
+      ],
+      "docs": "Fetch with board.jobs.list({ ...filters, cursor, limit: 20 }) (board.jobs.search() when q is set). onFiltersChange \u2192 write filters to URL search params and refetch; onLoadMore \u2192 refetch with nextCursor and append. Links are plain <a> on the canonical paths \u2014 swap for your router's Link for client navigation."
+    },
+    {
+      "name": "job-detail",
+      "type": "registry:block",
+      "title": "Job detail page",
+      "description": "Full job page: breadcrumbs, header badges, facts, taxonomy chips, operator custom fields (CAV-294), sanitized description, company block, similar jobs. Server-renderable; apply/alert controls arrive via slots.",
+      "dependencies": ["@cavuno/board@^1.31.0"],
+      "registryDependencies": [
+        "badge",
+        "button",
+        "separator",
+        "@cavuno/job-card",
+        "@cavuno/breadcrumb",
+        "@cavuno/chip-link"
+      ],
+      "files": [
+        {
+          "path": "src/blocks/job-detail/job-detail.tsx",
+          "type": "registry:component",
+          "target": "components/cavuno/job-detail.tsx"
+        },
+        {
+          "path": "src/blocks/job-detail/copy-link-button.tsx",
+          "type": "registry:component",
+          "target": "components/cavuno/copy-link-button.tsx"
+        }
+      ],
+      "docs": "Load with board.jobs.retrieve(jobSlug) + board.jobs.similar(jobSlug). Pass @cavuno/apply-flow's ApplyButton through `actions` and @cavuno/alert-signup's form through `alertSlot`. Render JSON-LD (createJobPostingJsonLd from @cavuno/board/seo) in your route's head \u2014 head management is framework-specific."
+    },
+    {
+      "name": "apply-flow",
+      "type": "registry:block",
+      "title": "Apply flow",
+      "description": "Native apply (ADR-0054) with the hosted board's exact fallback ladder: external-only jobs, anonymous visitors, unverified candidates, verified native apply. Idempotent against the Board API.",
+      "dependencies": ["@cavuno/board@^1.31.0"],
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "src/blocks/apply-flow/apply-button.tsx",
+          "type": "registry:component",
+          "target": "components/cavuno/apply-button.tsx"
+        }
+      ],
+      "docs": "Wire onApply to board.jobs.apply(jobSlug) with an authenticated client (or a server function forwarding the session bearer). viewer comes from your session state; the auth/verify/applications hrefs point at your app's routes."
+    },
+    {
+      "name": "alert-signup",
+      "type": "registry:block",
+      "title": "Job-alert signup",
+      "description": "Double-opt-in job-alert subscribe form (email + weekly frequency); the search/job context rides in as filters, matching the hosted capture form. Honest duplicate handling.",
+      "dependencies": ["@cavuno/board@^1.31.0", "lucide-react"],
+      "registryDependencies": ["button", "input"],
+      "files": [
+        {
+          "path": "src/blocks/alert-signup/alert-signup-form.tsx",
+          "type": "registry:component",
+          "target": "components/cavuno/alert-signup-form.tsx"
+        }
+      ],
+      "docs": "Wire onSubscribe to board.jobAlerts.subscribe(input) (client-side) or a server function forwarding it. The API is idempotent per (email, filters) and returns created | duplicate."
+    },
+    {
+      "name": "salary-page",
+      "type": "registry:block",
+      "title": "Salary page sections",
+      "description": "The salary-page building blocks (ADR-0041): headline range card with percentiles, by-seniority comparison table, cross-link rails, FAQ, breadcrumb \u2014 typed against the board.salaries.* wire shapes.",
+      "dependencies": ["@cavuno/board@^1.31.0"],
+      "registryDependencies": ["badge", "card", "@cavuno/breadcrumb"],
+      "files": [
+        {
+          "path": "src/blocks/salary-page/salary-sections.tsx",
+          "type": "registry:component",
+          "target": "components/cavuno/salary-sections.tsx"
+        }
+      ],
+      "docs": "Feed from board.salaries.titles.get(slug) (and the skills/locations/companies twins): overall \u2192 OverallSalaryCard, bySeniority \u2192 SenioritySalaryTable, index lists \u2192 SalaryRail items with your salary-route hrefs."
+    }
+  ]
 }

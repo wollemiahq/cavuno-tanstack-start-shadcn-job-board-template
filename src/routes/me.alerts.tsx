@@ -4,20 +4,21 @@
  * candidate's own alerts over `board.me.alerts.*` (list / create / update /
  * remove).
  */
-import { createFileRoute, isRedirect, redirect } from "@tanstack/react-router";
+import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router';
 
-import { CandidateShell } from "@/components/candidate-shell";
+import { AlertManager } from '../components/alert-manager';
+import { m } from '../paraglide/messages';
+import { getMyAlerts } from '../server/account';
+import { useCandidateShellContext } from './-candidate-shell-context';
+
 import {
   CandidateRouteErrorPage,
   CandidateRoutePendingPage,
-} from "@/components/candidate-route-state";
-import { candidateLoaderError } from "@/lib/candidate-loader-error";
-import { AlertManager } from "../components/alert-manager";
-import { m } from "../paraglide/messages";
-import { getMyAlerts } from "../server/account";
-import { useCandidateShellContext } from "./-candidate-shell-context";
+} from '@/components/candidate-route-state';
+import { CandidateShell } from '@/components/candidate-shell';
+import { candidateLoaderError } from '@/lib/candidate-loader-error';
 
-export const Route = createFileRoute("/me/alerts")({
+export const Route = createFileRoute('/me/alerts')({
   staticData: { ownsMain: true },
   pendingComponent: CandidateRoutePendingPage,
   errorComponent: CandidateRouteErrorPage,
@@ -27,16 +28,16 @@ export const Route = createFileRoute("/me/alerts")({
     } catch (error) {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
-      if (authFailure === "email-unverified") {
+      if (authFailure === 'email-unverified') {
         throw redirect({
-          to: "/auth/verify-email-required",
-          search: { returnTo: "/me/alerts" },
+          to: '/auth/verify-email-required',
+          search: { returnTo: '/me/alerts' },
         });
       }
-      if (authFailure === "unauthenticated") {
+      if (authFailure === 'unauthenticated') {
         throw redirect({
-          to: "/auth/sign-in",
-          search: { returnTo: "/me/alerts" },
+          to: '/auth/sign-in',
+          search: { returnTo: '/me/alerts' },
         });
       }
       throw error;
@@ -57,7 +58,9 @@ function AlertsPage() {
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
             {m.meAlerts_title()}
           </h1>
-          <p className="text-sm text-muted-foreground">{m.meAlerts_subtitleText()}</p>
+          <p className="text-muted-foreground text-sm">
+            {m.meAlerts_subtitleText()}
+          </p>
         </header>
 
         <AlertManager alerts={alerts.data} />

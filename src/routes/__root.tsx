@@ -10,42 +10,43 @@ import {
   createRootRoute,
   useNavigate,
   useRouterState,
-} from '@tanstack/react-router'
+} from '@tanstack/react-router';
 
-import { themeModeScript } from '@/components/cavuno/board-theme'
-import { UntitledUiRouterProvider } from '@/components/untitled-ui/router-provider'
-import {
-  resolveHeaderSearchState,
-  type HeaderSearchSubmission,
-} from '@/lib/header-search'
-import { MessagesDockController } from './-messages-dock-controller'
-import { MessagesNavController } from './-messages-nav-controller'
-import { useLocationSuggestions } from './-use-location-suggestions'
-import { getLocale } from '../paraglide/runtime'
-import { themeMeta } from '../theme/resolved'
-
-import Footer from '../components/Footer'
-import Header from '../components/Header'
-import { getSessionUser } from '../server/account'
+import Footer from '../components/Footer';
+import Header from '../components/Header';
+import { getLocale } from '../paraglide/runtime';
+import { getSessionUser } from '../server/account';
 import {
   getAnalyticsConfig,
   getBoardContext,
   getBoardSeo,
   getEmployerOfferGate,
-} from '../server/queries'
+} from '../server/queries';
+import appCss from '../styles.css?url';
+import { themeMeta } from '../theme/resolved';
+import { MessagesDockController } from './-messages-dock-controller';
+import { MessagesNavController } from './-messages-nav-controller';
+import { useLocationSuggestions } from './-use-location-suggestions';
 
-import appCss from '../styles.css?url'
+import { AppRouterProvider } from '@/components/app-router-provider';
+import { themeModeScript } from '@/components/cavuno/board-theme';
+import {
+  resolveHeaderSearchState,
+  type HeaderSearchSubmission,
+} from '@/lib/header-search';
 
 declare module '@tanstack/react-router' {
   interface StaticDataRouteOption {
     /**
      * Listing routes opt out of the root container so they can compose
      * full-bleed bands (the Lumen-style gray hero, CAV-497). A fullBleed
-     * route owns its own `max-w-container` wrappers per section.
+     * route owns its own `max-w-7xl` wrappers per section.
      */
-    fullBleed?: boolean
+    fullBleed?: boolean;
     /** Migrated PageContent renders the route's single main landmark. */
-    ownsMain?: boolean
+    ownsMain?: boolean;
+    /** Search workspaces fill the desktop viewport below their natural header. */
+    fillsViewport?: boolean;
   }
 }
 
@@ -57,13 +58,13 @@ export const Route = createRootRoute({
       getBoardSeo(),
       getAnalyticsConfig(),
       getEmployerOfferGate(),
-    ])
-    return { board, user, seo, analytics, offerGate }
+    ]);
+    return { board, user, seo, analytics, offerGate };
   },
   head: ({ loaderData }) => {
-    const board = loaderData?.board
-    const seo = loaderData?.seo
-    const icons = seo?.icons
+    const board = loaderData?.board;
+    const seo = loaderData?.seo;
+    const icons = seo?.icons;
     // Board-resolved favicons / app icons — only the configured variants.
     const iconLinks = icons
       ? [
@@ -95,7 +96,7 @@ export const Route = createRootRoute({
             ? [{ rel: 'apple-touch-icon', href: icons.appleTouch }]
             : []),
         ]
-      : []
+      : [];
     return {
       meta: [
         { charSet: 'utf-8' },
@@ -114,44 +115,47 @@ export const Route = createRootRoute({
         { rel: 'manifest', href: '/site.webmanifest' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
       ],
-    }
+    };
   },
   shellComponent: RootDocument,
   component: RootLayout,
-})
+});
 
 function RootLayout() {
-  const { board, user, offerGate } = Route.useLoaderData()
+  const { board, user, offerGate } = Route.useLoaderData();
   const isEmbed = useRouterState({
     select: (s) => s.location.pathname.startsWith('/embed'),
-  })
+  });
   const isFullBleed = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fullBleed),
-  })
+  });
   const ownsMain = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.ownsMain),
-  })
-  const location = useRouterState({ select: (s) => s.location })
+  });
+  const fillsViewport = useRouterState({
+    select: (s) => s.matches.some((match) => match.staticData?.fillsViewport),
+  });
+  const location = useRouterState({ select: (s) => s.location });
   const resolvedLocationLabel = useRouterState({
     select: (state) => {
       const match = [...state.matches]
         .reverse()
-        .find((candidate) => candidate.routeId.startsWith('/jobs/locations/'))
+        .find((candidate) => candidate.routeId.startsWith('/jobs/locations/'));
       const loaderData = match?.loaderData as
         | { place?: { displayName?: unknown } }
-        | undefined
+        | undefined;
       return typeof loaderData?.place?.displayName === 'string'
         ? loaderData.place.displayName
-        : undefined
+        : undefined;
     },
-  })
-  const navigate = useNavigate()
+  });
+  const navigate = useNavigate();
   const headerSearch = resolveHeaderSearchState(
     location.pathname,
     location.search as Record<string, unknown>,
     resolvedLocationLabel,
-  )
-  const locationSuggestions = useLocationSuggestions(board.language)
+  );
+  const locationSuggestions = useLocationSuggestions(board.language);
 
   function submitHeaderSearch({
     scope,
@@ -159,18 +163,18 @@ function RootLayout() {
     location: selectedLocation,
   }: HeaderSearchSubmission) {
     if (scope === 'companies') {
-      void navigate({ to: '/companies', search: { query } })
-      return
+      void navigate({ to: '/companies', search: { query } });
+      return;
     }
 
     if (scope === 'talent') {
-      void navigate({ to: '/talent', search: { q: query } })
-      return
+      void navigate({ to: '/talent', search: { q: query } });
+      return;
     }
 
     if (scope === 'blog') {
-      void navigate({ to: '/blog', search: { q: query } })
-      return
+      void navigate({ to: '/blog', search: { q: query } });
+      return;
     }
 
     if (selectedLocation) {
@@ -178,11 +182,11 @@ function RootLayout() {
         to: '/jobs/locations/$location',
         params: { location: selectedLocation.slug },
         search: { q: query },
-      })
-      return
+      });
+      return;
     }
 
-    void navigate({ to: '/jobs', search: { q: query } })
+    void navigate({ to: '/jobs', search: { q: query } });
   }
 
   // The embed widget is an iframe fragment dropped into a third-party site —
@@ -192,43 +196,57 @@ function RootLayout() {
   // hosted capabilities missing from the starter, not extra starter chrome).
   if (isEmbed) {
     return (
-      <UntitledUiRouterProvider>
+      <AppRouterProvider>
         <main className="p-4">
           <Outlet />
         </main>
-      </UntitledUiRouterProvider>
-    )
+      </AppRouterProvider>
+    );
   }
 
+  const header = (
+    <Header
+      boardName={board.name}
+      logoUrl={board.logoUrl}
+      user={user}
+      language={board.language}
+      labels={board.labels}
+      features={board.features}
+      talentDirectoryVisibility={board.talentDirectoryVisibility}
+      messagesNav={user ? <MessagesNavController /> : undefined}
+      search={{
+        ...headerSearch,
+        onSubmit: submitHeaderSearch,
+        locationSuggestions,
+      }}
+    />
+  );
+  const routeContent = ownsMain ? (
+    <div className={fillsViewport ? 'flex-1 md:min-h-0' : 'flex-1'}>
+      <Outlet />
+    </div>
+  ) : isFullBleed ? (
+    <main className="flex-1">
+      <Outlet />
+    </main>
+  ) : (
+    <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 md:px-8">
+      <Outlet />
+    </main>
+  );
+
   return (
-    <UntitledUiRouterProvider>
-      <Header
-        boardName={board.name}
-        logoUrl={board.logoUrl}
-        user={user}
-        language={board.language}
-        labels={board.labels}
-        features={board.features}
-        talentDirectoryVisibility={board.talentDirectoryVisibility}
-        messagesNav={user ? <MessagesNavController /> : undefined}
-        search={{
-          ...headerSearch,
-          onSubmit: submitHeaderSearch,
-          locationSuggestions,
-        }}
-      />
-      {ownsMain ? (
-        <div className="flex-1">
-          <Outlet />
+    <AppRouterProvider>
+      {fillsViewport ? (
+        <div className="md:grid md:h-dvh md:grid-rows-[auto_minmax(0,1fr)]">
+          {header}
+          {routeContent}
         </div>
-      ) : isFullBleed ? (
-        <main className="flex-1">
-          <Outlet />
-        </main>
       ) : (
-        <main className="mx-auto w-full max-w-container flex-1 px-4 py-8 md:px-8">
-          <Outlet />
-        </main>
+        <>
+          {header}
+          {routeContent}
+        </>
       )}
       <Footer
         boardName={board.name}
@@ -246,18 +264,18 @@ function RootLayout() {
       {user && !location.pathname.startsWith('/messages') ? (
         <MessagesDockController />
       ) : null}
-    </UntitledUiRouterProvider>
-  )
+    </AppRouterProvider>
+  );
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const data = Route.useLoaderData()
+  const data = Route.useLoaderData();
   // Theme mode is repo-canonical too (theme.css → resolved
   // module), not the wire theme (ADR-0065 D5: migrated boards ignore it).
   const mode =
     themeMeta.mode === 'dark' || themeMeta.mode === 'light'
       ? themeMeta.mode
-      : ('system' as const)
+      : ('system' as const);
   return (
     <html
       // The document declares the RUNTIME locale (ADR-0063): the base
@@ -293,12 +311,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           />
         ) : null}
       </head>
-      <body className="flex min-h-screen flex-col bg-primary font-sans text-primary antialiased">
+      <body className="bg-background text-foreground flex min-h-screen flex-col font-sans antialiased">
         {/* System-mode resolution before first paint (no theme flash). */}
         <script dangerouslySetInnerHTML={{ __html: themeModeScript(mode) }} />
         {children}
         <Scripts />
       </body>
     </html>
-  )
+  );
 }

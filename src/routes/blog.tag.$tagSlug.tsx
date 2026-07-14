@@ -1,24 +1,28 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { boardCopy } from '#/copy';
+import { isNotFound } from '@cavuno/board';
+import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
+import { createFileRoute, Link, notFound } from '@tanstack/react-router';
 
-import { isNotFound } from "@cavuno/board";
-import { createBreadcrumbJsonLd } from "@cavuno/board/seo";
-
-import { boardCopy } from "#/copy";
-import { BlogArchivePage } from "@/components/board/blog-archive-page";
-import { PublicContentPending } from "@/components/board/public-content-pending";
-import { JsonLd } from "@/components/json-ld";
-import { m } from "@/paraglide/messages";
-import { getBlogTag, getSeoBase, listBlogPosts } from "@/server/queries";
+import { BlogArchivePage } from '@/components/board/blog-archive-page';
+import { PublicContentPending } from '@/components/board/public-content-pending';
+import { JsonLd } from '@/components/json-ld';
+import { m } from '@/paraglide/messages';
+import { getBlogTag, getSeoBase, listBlogPosts } from '@/server/queries';
 
 interface BlogTagSearch {
   cursor?: string;
 }
 
-export const Route = createFileRoute("/blog/tag/$tagSlug")({
+export const Route = createFileRoute('/blog/tag/$tagSlug')({
   staticData: { fullBleed: true, ownsMain: true },
-  pendingComponent: () => <PublicContentPending label={m.publicContent_loadingLabel()} />,
+  pendingComponent: () => (
+    <PublicContentPending label={m.publicContent_loadingLabel()} />
+  ),
   validateSearch: (search: Record<string, unknown>): BlogTagSearch => ({
-    cursor: typeof search.cursor === "string" && search.cursor ? search.cursor : undefined,
+    cursor:
+      typeof search.cursor === 'string' && search.cursor
+        ? search.cursor
+        : undefined,
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ params, deps }) => {
@@ -42,7 +46,7 @@ export const Route = createFileRoute("/blog/tag/$tagSlug")({
           meta: [
             { title: m.blogTag_metaTitle({ tag: loaderData.tag.name }) },
             {
-              name: "description",
+              name: 'description',
               content:
                 loaderData.tag.description ??
                 m.blogTag_metaDescription({
@@ -53,7 +57,7 @@ export const Route = createFileRoute("/blog/tag/$tagSlug")({
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: `${loaderData.seo.origin}/blog/tag/${loaderData.tag.slug}`,
             },
           ],
@@ -69,8 +73,8 @@ function BlogTagNotFound() {
       breadcrumb={{
         ariaLabel: m.blogIndex_breadcrumbLabel(),
         items: [
-          { name: m.blogIndex_homeLabel(), href: "/" },
-          { name: m.blogIndex_title(), href: "/blog" },
+          { name: m.blogIndex_homeLabel(), href: '/' },
+          { name: m.blogIndex_title(), href: '/blog' },
           { name: m.blogTag_notFoundText() },
         ],
       }}
@@ -79,7 +83,7 @@ function BlogTagNotFound() {
       empty={{
         title: m.blogTag_notFoundText(),
         description: m.blogTag_notFoundDescription(),
-        action: { label: m.blogPost_backToBlogLabel(), href: "/blog" },
+        action: { label: m.blogPost_backToBlogLabel(), href: '/blog' },
       }}
     />
   );
@@ -104,8 +108,8 @@ function TagPage() {
         breadcrumb={{
           ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
           items: [
-            { name: crumbs.home, href: "/" },
-            { name: crumbs.blog, href: "/blog" },
+            { name: crumbs.home, href: '/' },
+            { name: crumbs.blog, href: '/blog' },
             { name: tag.name },
           ],
         }}
@@ -115,7 +119,7 @@ function TagPage() {
         empty={{
           title: m.blogIndex_emptyTitle(),
           description: m.blogTag_emptyText({ tag: tag.name }),
-          action: { label: m.blogIndex_browseAllLabel(), href: "/blog" },
+          action: { label: m.blogIndex_browseAllLabel(), href: '/blog' },
         }}
         nextLink={
           posts.hasMore && posts.nextCursor ? (

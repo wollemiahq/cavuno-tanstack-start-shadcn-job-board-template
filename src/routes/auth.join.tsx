@@ -1,22 +1,30 @@
-import { useState } from "react";
-import { Link, createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { useState } from 'react';
 
-import { createBreadcrumbJsonLd } from "@cavuno/board/seo";
-import { boardCopy } from "#/copy";
-import { RheaAuthCard, RoleSelector } from "@/components/rhea-auth-pilot";
-import { buttonVariants } from "@/components/ui/button";
-import { JsonLd } from "@/components/json-ld";
-import { cn } from "@/lib/utils";
-import { m } from "../paraglide/messages";
-import { resolveSignupDestination } from "../lib/signup-destination";
-import { getBoardContext, getSeoBase } from "../server/queries";
+import { boardCopy } from '#/copy';
+import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
+import {
+  Link,
+  createFileRoute,
+  notFound,
+  redirect,
+} from '@tanstack/react-router';
 
-export const Route = createFileRoute("/auth/join")({
+import { resolveSignupDestination } from '../lib/signup-destination';
+import { m } from '../paraglide/messages';
+import { getBoardContext, getSeoBase } from '../server/queries';
+
+import { JsonLd } from '@/components/json-ld';
+import { RheaAuthCard, RoleSelector } from '@/components/rhea-auth-pilot';
+import { buttonVariants } from '@/components/ui/button';
+import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
+import { cn } from '@/lib/utils';
+
+export const Route = createFileRoute('/auth/join')({
   loader: async () => {
     const board = await getBoardContext();
     const destination = resolveSignupDestination(board.features);
     if (destination === null) throw notFound();
-    if (destination !== "/auth/join") throw redirect({ href: destination });
+    if (destination !== '/auth/join') throw redirect({ href: destination });
     const seo = await getSeoBase();
     return { boardName: board.name, seo };
   },
@@ -26,7 +34,7 @@ export const Route = createFileRoute("/auth/join")({
           meta: [{ title: m.authJoin_title() }],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: `${loaderData.seo.origin}/auth/join`,
             },
           ],
@@ -34,17 +42,19 @@ export const Route = createFileRoute("/auth/join")({
       : { meta: [{ title: m.authJoin_title() }] },
   component: JoinPage,
   notFoundComponent: () => (
-    <div className="rhea-theme">
-      <p className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
-        {m.authJoin_notAvailableText()}
-      </p>
+    <div>
+      <Empty className="border-border bg-card border">
+        <EmptyHeader>
+          <EmptyDescription>{m.authJoin_notAvailableText()}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     </div>
   ),
 });
 
 function JoinPage() {
   const { boardName, seo } = Route.useLoaderData();
-  const [role, setRole] = useState<"candidate" | "employer">("candidate");
+  const [role, setRole] = useState<'candidate' | 'employer'>('candidate');
   const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
   const jsonLd = [
     createBreadcrumbJsonLd([
@@ -52,7 +62,8 @@ function JoinPage() {
       { label: m.breadcrumbJsonLd_joinLabel() },
     ]),
   ].filter((entry): entry is Record<string, unknown> => entry !== null);
-  const destination = role === "employer" ? "/auth/employer/sign-up" : "/auth/sign-up";
+  const destination =
+    role === 'employer' ? '/auth/employer/sign-up' : '/auth/sign-up';
 
   return (
     <RheaAuthCard
@@ -69,15 +80,18 @@ function JoinPage() {
         employerTitle={m.authJoin_employerCardTitle()}
         employerBody={m.authJoin_employerCardBody()}
       />
-      <Link to={destination} className={cn(buttonVariants({ size: "lg" }), "w-full")}>
+      <Link
+        to={destination}
+        className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
+      >
         {m.authJoin_continueLabel()}
       </Link>
-      <p className="text-center text-sm text-muted-foreground">
-        {m.authJoin_alreadyHaveAccountText()}{" "}
+      <p className="text-muted-foreground text-center text-sm">
+        {m.authJoin_alreadyHaveAccountText()}{' '}
         <Link
           to="/auth/sign-in"
           search={{ returnTo: undefined }}
-          className={buttonVariants({ variant: "link", size: "sm" })}
+          className={buttonVariants({ variant: 'link', size: 'sm' })}
         >
           {m.authJoin_logInLink()}
         </Link>

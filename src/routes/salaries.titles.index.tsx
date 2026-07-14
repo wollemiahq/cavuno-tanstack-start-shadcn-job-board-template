@@ -1,16 +1,27 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { boardCopy } from "#/copy";
+import { boardCopy } from '#/copy';
+import {
+  createBreadcrumbJsonLd,
+  formatRange,
+  itemListJsonLd,
+} from '@cavuno/board/seo';
+import { createFileRoute } from '@tanstack/react-router';
 
-import { createBreadcrumbJsonLd, formatRange, itemListJsonLd } from "@cavuno/board/seo";
+import { m } from '../paraglide/messages';
+import { getSeoBase, listSalaryTitles } from '../server/queries';
+import { SalaryPageLayout, SalaryPendingPage } from './-salary-page-layout';
 
-import { JsonLd } from "@/components/json-ld";
-import { SalaryEmptyState, SalaryRail, type RailItem } from "@/components/board/salary-sections";
-import { toSalaryBreadcrumbVM, toSalaryRailVM } from "@/board/salary-view-model";
-import { SalaryPageLayout, SalaryPendingPage } from "./-salary-page-layout";
-import { m } from "../paraglide/messages";
-import { getSeoBase, listSalaryTitles } from "../server/queries";
+import {
+  toSalaryBreadcrumbVM,
+  toSalaryRailVM,
+} from '@/board/salary-view-model';
+import {
+  SalaryEmptyState,
+  SalaryRail,
+  type RailItem,
+} from '@/components/board/salary-sections';
+import { JsonLd } from '@/components/json-ld';
 
-export const Route = createFileRoute("/salaries/titles/")({
+export const Route = createFileRoute('/salaries/titles/')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async () => {
     const [titles, seo] = await Promise.all([listSalaryTitles(), getSeoBase()]);
@@ -26,7 +37,7 @@ export const Route = createFileRoute("/salaries/titles/")({
               }),
             },
             {
-              name: "description",
+              name: 'description',
               content: m.salaryHub_titlesMetaDescription({
                 boardName: loaderData.seo.boardName,
               }),
@@ -34,7 +45,7 @@ export const Route = createFileRoute("/salaries/titles/")({
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: `${loaderData.seo.origin}/salaries/titles`,
             },
           ],
@@ -74,8 +85,8 @@ function SalaryTitlesIndex() {
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
         [
-          { name: crumbs.home, href: "/" },
-          { name: crumbs.salaries, href: "/salaries" },
+          { name: crumbs.home, href: '/' },
+          { name: crumbs.salaries, href: '/salaries' },
           { name: m.salaryHub_jobTitlesCrumbLabel() },
         ],
         seo.language,
@@ -85,7 +96,7 @@ function SalaryTitlesIndex() {
     >
       <JsonLd data={jsonLd} />
       {items.length > 0 ? (
-        <SalaryRail vm={toSalaryRailVM("", items, seo.language, seo.labels)} />
+        <SalaryRail vm={toSalaryRailVM('', items, seo.language, seo.labels)} />
       ) : (
         <SalaryEmptyState
           title={m.salaryHub_titlesHeading()}

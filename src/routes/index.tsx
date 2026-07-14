@@ -1,22 +1,22 @@
+import { boardCopy } from '#/copy';
+import { isForbidden } from '@cavuno/board';
+import {
+  parseListingFilters,
+  type ListingFilters,
+} from '@cavuno/board/filters';
+import { listingJsonLd } from '@cavuno/board/seo';
 /**
  * Home `/` — the designed LANDING (CAV-495), not the bare search page.
  * The root is a pure landing page. Old root search/filter URLs redirect to
  * `/jobs`, while the loader fetches only the latest jobs and the collections
  * needed by enabled landing sections.
  */
-import { createFileRoute, getRouteApi, redirect } from '@tanstack/react-router'
+import { createFileRoute, getRouteApi, redirect } from '@tanstack/react-router';
 
-import { isForbidden } from '@cavuno/board'
-import { parseListingFilters, type ListingFilters } from '@cavuno/board/filters'
-import { boardCopy } from '#/copy'
-
-import { toJobCardVM } from '@/board/job-view-model'
-import { HomeLanding } from '@/components/board/home-landing'
-import { JobAlertFloatingPrompt } from '../components/job-alert-floating-prompt'
-import { JsonLd } from '../components/json-ld'
-import { jobAlertDefaultsFromSearch } from '../lib/job-alert-defaults'
-import { m } from '../paraglide/messages'
-import { listingJsonLd } from '@cavuno/board/seo'
+import { JobAlertFloatingPrompt } from '../components/job-alert-floating-prompt';
+import { JsonLd } from '../components/json-ld';
+import { jobAlertDefaultsFromSearch } from '../lib/job-alert-defaults';
+import { m } from '../paraglide/messages';
 import {
   getBoardContext,
   getSeoBase,
@@ -24,10 +24,13 @@ import {
   listCompanies,
   listJobs,
   listTalent,
-} from '../server/queries'
+} from '../server/queries';
+
+import { toJobCardVM } from '@/board/job-view-model';
+import { HomeLanding } from '@/components/board/home-landing';
 
 interface JobsSearch extends ListingFilters {
-  cursor?: string
+  cursor?: string;
 }
 
 export const Route = createFileRoute('/')({
@@ -41,39 +44,39 @@ export const Route = createFileRoute('/')({
         : undefined,
   }),
   beforeLoad: ({ search }) => {
-    const { cursor, ...jobsSearch } = search
+    const { cursor, ...jobsSearch } = search;
     const hasLegacyIntent =
       Boolean(cursor) ||
       Boolean(jobsSearch.q) ||
       Boolean(jobsSearch.remoteOption) ||
       Boolean(jobsSearch.employmentType) ||
       Boolean(jobsSearch.seniority?.length) ||
-      Boolean(jobsSearch.sort)
+      Boolean(jobsSearch.sort);
 
     if (hasLegacyIntent) {
       throw redirect({
         to: '/jobs',
         search: jobsSearch,
         replace: true,
-      })
+      });
     }
   },
   loader: async () => {
     // Board context first — its feature flags decide which additive section
     // reads to issue (the loader fetches only what an enabled section needs).
     // The jobs / companies / seo reads start in parallel, not behind it.
-    const boardP = getBoardContext()
+    const boardP = getBoardContext();
     const jobsP = listJobs({
       data: {
         limit: 8,
         fields: '+description',
       },
-    })
+    });
     // Additive companies read for the landing's "companies hiring" strip.
-    const companiesP = listCompanies({ data: { limit: 6 } })
-    const seoP = getSeoBase()
+    const companiesP = listCompanies({ data: { limit: 6 } });
+    const seoP = getSeoBase();
 
-    const board = await boardP
+    const board = await boardP;
     const [page, companies, seo, blog, talent] = await Promise.all([
       jobsP,
       companiesP,
@@ -87,25 +90,25 @@ export const Route = createFileRoute('/')({
       // section is omitted rather than failing the page.
       board.features.talentDirectory
         ? listTalent({ data: { limit: 6 } }).catch((error) => {
-            if (isForbidden(error)) return null
-            throw error
+            if (isForbidden(error)) return null;
+            throw error;
           })
         : Promise.resolve(null),
-    ])
+    ]);
     return {
       page,
       companies: companies.data,
       seo,
       posts: blog?.data ?? null,
       talent: talent?.data ?? null,
-    }
+    };
   },
   head: ({ loaderData }) => {
-    if (!loaderData) return {}
+    if (!loaderData) return {};
 
-    const title = `${m.home_heroHeadline()} | ${loaderData.seo.boardName}`
-    const description = m.home_heroSupporting()
-    const canonical = `${loaderData.seo.origin}/`
+    const title = `${m.home_heroHeadline()} | ${loaderData.seo.boardName}`;
+    const description = m.home_heroSupporting();
+    const canonical = `${loaderData.seo.origin}/`;
 
     return {
       meta: [
@@ -117,26 +120,26 @@ export const Route = createFileRoute('/')({
         { property: 'og:url', content: canonical },
       ],
       links: [{ rel: 'canonical', href: canonical }],
-    }
+    };
   },
   component: HomePage,
-})
+});
 
-const rootApi = getRouteApi('__root__')
+const rootApi = getRouteApi('__root__');
 
 function HomePage() {
-  const { page, companies, seo, posts, talent } = Route.useLoaderData()
-  const { board } = rootApi.useLoaderData()
-  const copy = boardCopy(board.language, board.labels)
+  const { page, companies, seo, posts, talent } = Route.useLoaderData();
+  const { board } = rootApi.useLoaderData();
+  const copy = boardCopy(board.language, board.labels);
   const countLabel =
     typeof page.count === 'number' && page.count > 0
       ? `${page.count.toLocaleString(board.language)} ${
           page.count === 1 ? copy.entity.jobSingular : copy.entity.jobPlural
         }`
-      : undefined
+      : undefined;
   const jobs = page.data.map((job) =>
     toJobCardVM(job, board.language, board.labels),
-  )
+  );
   const hiringCompanies = companies
     .filter((company) => company.publishedJobCount > 0)
     .map((company) => ({
@@ -153,7 +156,7 @@ function HomePage() {
           : m.companyDetail_openJobsCountMany({
               count: company.publishedJobCount,
             }),
-    }))
+    }));
 
   return (
     <>
@@ -185,5 +188,5 @@ function HomePage() {
         />
       ) : null}
     </>
-  )
+  );
 }

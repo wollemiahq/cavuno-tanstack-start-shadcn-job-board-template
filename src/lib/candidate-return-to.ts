@@ -1,15 +1,15 @@
-import { safeRedirectPath } from "@cavuno/board/server";
+import { safeRedirectPath } from '@cavuno/board/server';
 
-const DEFAULT_CANDIDATE_RETURN_TO = "/account";
+const DEFAULT_CANDIDATE_RETURN_TO = '/account';
 
 export function candidateReturnTo(value: unknown) {
   const returnTo = safeRedirectPath(
-    typeof value === "string" ? value : undefined,
+    typeof value === 'string' ? value : undefined,
     DEFAULT_CANDIDATE_RETURN_TO,
   );
 
   const pathname = returnTo.split(/[?#]/, 1)[0];
-  if (pathname === "/auth" || pathname.startsWith("/auth/")) {
+  if (pathname === '/auth' || pathname.startsWith('/auth/')) {
     return DEFAULT_CANDIDATE_RETURN_TO;
   }
 
@@ -17,19 +17,19 @@ export function candidateReturnTo(value: unknown) {
 }
 
 export function candidateSignInHref(value: unknown) {
-  return candidateAuthHref("/auth/sign-in", value);
+  return candidateAuthHref('/auth/sign-in', value);
 }
 
 export function candidateVerifyEmailHref(value: unknown) {
-  return candidateAuthHref("/auth/verify-email-required", value);
+  return candidateAuthHref('/auth/verify-email-required', value);
 }
 
 export function candidateSignUpHref(value: unknown) {
-  return candidateAuthHref("/auth/sign-up", value);
+  return candidateAuthHref('/auth/sign-up', value);
 }
 
 export function candidateForgotPasswordHref(value: unknown) {
-  return candidateAuthHref("/auth/forgot-password", value);
+  return candidateAuthHref('/auth/forgot-password', value);
 }
 
 function candidateAuthHref(pathname: string, value: unknown) {

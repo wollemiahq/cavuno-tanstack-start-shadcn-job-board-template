@@ -1,10 +1,13 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 
-import { Button, buttonVariants } from "@/components/ui/button";
-import { candidateSignInHref, candidateVerifyEmailHref } from "@/lib/candidate-return-to";
-import { cn } from "@/lib/utils";
+import { Button, buttonVariants } from '@/components/ui/button';
+import {
+  candidateSignInHref,
+  candidateVerifyEmailHref,
+} from '@/lib/candidate-return-to';
+import { cn } from '@/lib/utils';
 
 export function SaveJobButton({
   jobId,
@@ -27,18 +30,20 @@ export function SaveJobButton({
   onSaved?: () => Promise<void> | void;
 }) {
   const [trackedJobId, setTrackedJobId] = useState(jobId);
-  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'error'>(
+    'idle',
+  );
 
   if (trackedJobId !== jobId) {
     setTrackedJobId(jobId);
-    setState("idle");
+    setState('idle');
   }
 
   if (!viewer) {
     return (
       <a
         href={candidateSignInHref(returnTo)}
-        className={buttonVariants({ variant: "outline", size: "lg" })}
+        className={buttonVariants({ variant: 'outline', size: 'lg' })}
       >
         {labels.save}
       </a>
@@ -49,16 +54,19 @@ export function SaveJobButton({
     return (
       <a
         href={candidateVerifyEmailHref(returnTo)}
-        className={buttonVariants({ variant: "outline", size: "lg" })}
+        className={buttonVariants({ variant: 'outline', size: 'lg' })}
       >
         {labels.save}
       </a>
     );
   }
 
-  if (state === "saved") {
+  if (state === 'saved') {
     return (
-      <a href="/account/saved" className={buttonVariants({ variant: "outline", size: "lg" })}>
+      <a
+        href="/account/saved"
+        className={buttonVariants({ variant: 'outline', size: 'lg' })}
+      >
         {labels.saved}
       </a>
     );
@@ -70,27 +78,27 @@ export function SaveJobButton({
         type="button"
         variant="outline"
         size="lg"
-        className={cn(state === "saving" && "cursor-wait")}
-        disabled={state === "saving"}
+        className={cn(state === 'saving' && 'cursor-wait')}
+        disabled={state === 'saving'}
         onClick={async () => {
-          setState("saving");
+          setState('saving');
           try {
             await onSave(jobId);
             await onSaved?.();
-            setState("saved");
+            setState('saved');
           } catch (error) {
-            if (String(error).includes("EMAIL_UNVERIFIED")) {
+            if (String(error).includes('EMAIL_UNVERIFIED')) {
               window.location.assign(candidateVerifyEmailHref(returnTo));
               return;
             }
-            setState("error");
+            setState('error');
           }
         }}
       >
-        {state === "saving" ? labels.saving : labels.save}
+        {state === 'saving' ? labels.saving : labels.save}
       </Button>
-      {state === "error" ? (
-        <p role="alert" className="text-sm text-destructive">
+      {state === 'error' ? (
+        <p role="alert" className="text-destructive text-sm">
           {labels.error}
         </p>
       ) : null}

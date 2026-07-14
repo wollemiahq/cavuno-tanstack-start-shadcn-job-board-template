@@ -1,16 +1,22 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { useSearchSelection } from "./use-search-selection";
+import { useSearchSelection } from './use-search-selection';
 
 function setDesktop(matches: boolean) {
-  Object.defineProperty(window, "matchMedia", {
+  Object.defineProperty(window, 'matchMedia', {
     configurable: true,
     value: vi.fn().mockImplementation(() => ({
       matches,
-      media: "(min-width: 48rem)",
+      media: '(min-width: 48rem)',
       onchange: null,
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
@@ -23,7 +29,7 @@ function setDesktop(matches: boolean) {
 
 function Harness({
   selectedJob,
-  jobSlugs = ["first-job", "second-job"],
+  jobSlugs = ['first-job', 'second-job'],
   onReplace = vi.fn(),
   onPush = vi.fn(),
 }: {
@@ -51,7 +57,7 @@ function Harness({
       />
       <a
         href="/companies/acme/jobs/second-job"
-        onClick={(event) => selection.onResultActivate(event, "second-job")}
+        onClick={(event) => selection.onResultActivate(event, 'second-job')}
       >
         Second job
       </a>
@@ -64,38 +70,38 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("useSearchSelection", () => {
-  it("replaces an absent or invalid desktop selection with the first result", async () => {
+describe('useSearchSelection', () => {
+  it('replaces an absent or invalid desktop selection with the first result', async () => {
     setDesktop(true);
     const onReplace = vi.fn();
 
     render(<Harness selectedJob="removed-job" onReplace={onReplace} />);
 
-    await waitFor(() => expect(onReplace).toHaveBeenCalledWith("first-job"));
+    await waitFor(() => expect(onReplace).toHaveBeenCalledWith('first-job'));
     expect(onReplace).toHaveBeenCalledTimes(1);
   });
 
-  it("pushes an explicit desktop selection and resets only the detail pane", () => {
+  it('pushes an explicit desktop selection and resets only the detail pane', () => {
     setDesktop(true);
     const onPush = vi.fn();
 
     render(<Harness selectedJob="first-job" onPush={onPush} />);
-    const detailPane = screen.getByTestId("detail-pane");
+    const detailPane = screen.getByTestId('detail-pane');
 
-    fireEvent.click(screen.getByRole("link", { name: "Second job" }));
+    fireEvent.click(screen.getByRole('link', { name: 'Second job' }));
 
-    expect(onPush).toHaveBeenCalledWith("second-job");
+    expect(onPush).toHaveBeenCalledWith('second-job');
     expect(detailPane.scrollTo).toHaveBeenCalledWith({ top: 0 });
   });
 
-  it("leaves modified activation to the canonical anchor", () => {
+  it('leaves modified activation to the canonical anchor', () => {
     setDesktop(true);
     const onPush = vi.fn();
 
     render(<Harness selectedJob="first-job" onPush={onPush} />);
-    const detailPane = screen.getByTestId("detail-pane");
+    const detailPane = screen.getByTestId('detail-pane');
 
-    fireEvent.click(screen.getByRole("link", { name: "Second job" }), {
+    fireEvent.click(screen.getByRole('link', { name: 'Second job' }), {
       metaKey: true,
     });
 
@@ -103,17 +109,17 @@ describe("useSearchSelection", () => {
     expect(detailPane.scrollTo).not.toHaveBeenCalled();
   });
 
-  it("does not inject a selection or intercept activation on mobile", async () => {
+  it('does not inject a selection or intercept activation on mobile', async () => {
     setDesktop(false);
     const onReplace = vi.fn();
     const onPush = vi.fn();
 
     render(<Harness onReplace={onReplace} onPush={onPush} />);
 
-    expect(screen.getByTestId("selected-job").textContent).toBe("");
+    expect(screen.getByTestId('selected-job').textContent).toBe('');
     await waitFor(() => expect(onReplace).not.toHaveBeenCalled());
 
-    fireEvent.click(screen.getByRole("link", { name: "Second job" }));
+    fireEvent.click(screen.getByRole('link', { name: 'Second job' }));
     expect(onPush).not.toHaveBeenCalled();
   });
 });

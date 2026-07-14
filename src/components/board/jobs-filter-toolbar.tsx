@@ -1,10 +1,17 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useId, useState } from 'react';
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from '@/components/ui/field';
 import {
   Select,
   SelectContent,
@@ -12,7 +19,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   Sheet,
   SheetContent,
@@ -20,9 +27,9 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from '@/components/ui/sheet';
 
-const ANY = "__any__";
+const ANY = '__any__';
 
 export type JobsFilterOption = {
   value: string;
@@ -67,36 +74,49 @@ function FilterSelect({
   options,
   value,
   onValueChange,
+  showLabel = false,
 }: {
   label: string;
   anyLabel: string;
   options: JobsFilterOption[];
   value?: string;
   onValueChange: (value: string | undefined) => void;
+  showLabel?: boolean;
 }) {
   const items = [{ value: ANY, label: anyLabel }, ...options];
+  const controlId = useId();
 
   return (
-    <Select
-      items={items}
-      value={value ?? ANY}
-      onValueChange={(nextValue) =>
-        onValueChange(nextValue === ANY || nextValue == null ? undefined : nextValue)
-      }
-    >
-      <SelectTrigger aria-label={label}>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          {items.map((item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectGroup>
-      </SelectContent>
-    </Select>
+    <Field className="w-auto gap-0">
+      <FieldLabel
+        htmlFor={controlId}
+        className={showLabel ? undefined : 'sr-only'}
+      >
+        {label}
+      </FieldLabel>
+      <Select
+        items={items}
+        value={value ?? ANY}
+        onValueChange={(nextValue) =>
+          onValueChange(
+            nextValue === ANY || nextValue == null ? undefined : nextValue,
+          )
+        }
+      >
+        <SelectTrigger id={controlId} aria-label={label}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            {items.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    </Field>
   );
 }
 
@@ -107,15 +127,18 @@ export function JobsFilterToolbar({
   onApply,
   onReset,
 }: JobsFilterToolbarProps) {
-  const [sheetMode, setSheetMode] = useState<"desktop" | "mobile" | null>(null);
+  const [sheetMode, setSheetMode] = useState<'desktop' | 'mobile' | null>(null);
   const [draft, setDraft] = useState<JobsFilterValues>({});
   const activeCount =
     Number(Boolean(value.workplace)) +
     Number(Boolean(value.employmentType)) +
     (value.seniority?.length ?? 0);
 
-  const openSheet = (mode: "desktop" | "mobile") => {
-    setDraft({ ...value, seniority: value.seniority ? [...value.seniority] : undefined });
+  const openSheet = (mode: 'desktop' | 'mobile') => {
+    setDraft({
+      ...value,
+      seniority: value.seniority ? [...value.seniority] : undefined,
+    });
     setSheetMode(mode);
   };
 
@@ -134,7 +157,9 @@ export function JobsFilterToolbar({
     const current = draft.seniority ?? [];
     setDraft({
       ...draft,
-      seniority: checked ? [...current, seniority] : current.filter((value) => value !== seniority),
+      seniority: checked
+        ? [...current, seniority]
+        : current.filter((value) => value !== seniority),
     });
   };
 
@@ -153,14 +178,16 @@ export function JobsFilterToolbar({
           anyLabel={labels.anyEmploymentType}
           options={options.employmentType}
           value={value.employmentType}
-          onValueChange={(employmentType) => onApply({ ...value, employmentType })}
+          onValueChange={(employmentType) =>
+            onApply({ ...value, employmentType })
+          }
         />
         <Button
           type="button"
           variant="outline"
           aria-haspopup="dialog"
-          aria-expanded={sheetMode === "desktop"}
-          onClick={() => openSheet("desktop")}
+          aria-expanded={sheetMode === 'desktop'}
+          onClick={() => openSheet('desktop')}
         >
           {labels.allFilters}
           {activeCount > 0 && <Badge variant="secondary">{activeCount}</Badge>}
@@ -177,8 +204,8 @@ export function JobsFilterToolbar({
         variant="outline"
         className="md:hidden"
         aria-haspopup="dialog"
-        aria-expanded={sheetMode === "mobile"}
-        onClick={() => openSheet("mobile")}
+        aria-expanded={sheetMode === 'mobile'}
+        onClick={() => openSheet('mobile')}
       >
         {labels.filters}
         {activeCount > 0 && <Badge variant="secondary">{activeCount}</Badge>}
@@ -192,49 +219,58 @@ export function JobsFilterToolbar({
       >
         <SheetContent side="right">
           <SheetHeader>
-            <SheetTitle>{sheetMode === "desktop" ? labels.allFilters : labels.filters}</SheetTitle>
+            <SheetTitle>
+              {sheetMode === 'desktop' ? labels.allFilters : labels.filters}
+            </SheetTitle>
             <SheetDescription>{labels.sheetDescription}</SheetDescription>
           </SheetHeader>
 
-          <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-6 py-2">
-            <div className="grid gap-2">
-              <span className="text-sm font-medium">{labels.workplace}</span>
-              <FilterSelect
-                label={labels.workplace}
-                anyLabel={labels.anyWorkplace}
-                options={options.workplace}
-                value={draft.workplace}
-                onValueChange={(workplace) => setDraft({ ...draft, workplace })}
-              />
-            </div>
+          <FieldGroup className="flex flex-1 gap-6 overflow-y-auto px-6 py-2">
+            <FilterSelect
+              label={labels.workplace}
+              anyLabel={labels.anyWorkplace}
+              options={options.workplace}
+              value={draft.workplace}
+              onValueChange={(workplace) => setDraft({ ...draft, workplace })}
+              showLabel
+            />
 
-            <div className="grid gap-2">
-              <span className="text-sm font-medium">{labels.employmentType}</span>
-              <FilterSelect
-                label={labels.employmentType}
-                anyLabel={labels.anyEmploymentType}
-                options={options.employmentType}
-                value={draft.employmentType}
-                onValueChange={(employmentType) => setDraft({ ...draft, employmentType })}
-              />
-            </div>
+            <FilterSelect
+              label={labels.employmentType}
+              anyLabel={labels.anyEmploymentType}
+              options={options.employmentType}
+              value={draft.employmentType}
+              onValueChange={(employmentType) =>
+                setDraft({ ...draft, employmentType })
+              }
+              showLabel
+            />
 
-            <fieldset className="grid gap-3">
-              <legend className="mb-2 text-sm font-medium">{labels.seniority}</legend>
+            <FieldSet className="gap-3">
+              <FieldLegend variant="label">{labels.seniority}</FieldLegend>
               {options.seniority.map((option) => (
-                <label
+                <Field
                   key={option.value}
-                  className="flex min-h-8 cursor-pointer items-center gap-3 text-sm"
+                  orientation="horizontal"
+                  className="min-h-8"
                 >
                   <Checkbox
+                    id={`seniority-${option.value}`}
                     checked={draft.seniority?.includes(option.value) ?? false}
-                    onCheckedChange={(checked) => setDraftSeniority(option.value, checked === true)}
+                    onCheckedChange={(checked) =>
+                      setDraftSeniority(option.value, checked === true)
+                    }
                   />
-                  {option.label}
-                </label>
+                  <FieldLabel
+                    htmlFor={`seniority-${option.value}`}
+                    className="cursor-pointer font-normal"
+                  >
+                    {option.label}
+                  </FieldLabel>
+                </Field>
               ))}
-            </fieldset>
-          </div>
+            </FieldSet>
+          </FieldGroup>
 
           <SheetFooter className="border-t">
             <Button type="button" variant="ghost" onClick={() => setDraft({})}>

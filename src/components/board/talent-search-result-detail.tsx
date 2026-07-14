@@ -1,6 +1,6 @@
-import type { TalentProfileVM } from "@/board/talent-view-model";
-import { TalentProfileContent } from "@/components/board/talent-profile-content";
-import { buttonVariants } from "@/components/ui/button";
+import type { TalentProfileVM } from '@/board/talent-view-model';
+import { TalentProfileContent } from '@/components/board/talent-profile-content';
+import { buttonVariants } from '@/components/ui/button';
 
 export function TalentSearchResultDetail({
   vm,
@@ -14,7 +14,7 @@ export function TalentSearchResultDetail({
       {interactive && vm.detailHref ? (
         <div
           data-slot="talent-detail-actions"
-          className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-border bg-background/95 p-4 backdrop-blur"
+          className="border-border bg-background/95 sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b p-4 backdrop-blur"
         >
           <a href={vm.detailHref} className={buttonVariants()}>
             {vm.viewProfileLabel}

@@ -1,30 +1,34 @@
+import { boardCopy } from '#/copy';
+import { listingHead, listingJsonLd } from '@cavuno/board/seo';
 /**
  * The canonical jobs listing at `/jobs` — parity with the hosted board,
  * whose canonical jobs listing is `/jobs` (the home `/` is a landing).
  * A board migrating hosted → headless keeps its indexed `/jobs` URL.
  * Same listing surface as `/`, distinct canonical.
  */
-import { createFileRoute, getRouteApi, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  getRouteApi,
+  useNavigate,
+} from '@tanstack/react-router';
 
-import { boardCopy } from "#/copy";
+import { JobAlertFloatingPrompt } from '../components/job-alert-floating-prompt';
+import { JsonLd } from '../components/json-ld';
+import { jobAlertDefaultsFromSearch } from '../lib/job-alert-defaults';
+import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
+import { pageSearchValue, pageToOffset } from '../lib/pagination';
+import { getSeoBase, listJobs, searchJobs } from '../server/queries';
+import { SelectedJobDetail } from './-selected-job-detail';
+import { useSelectedJob } from './-use-selected-job';
 
-import { pageSearchValue, pageToOffset } from "../lib/pagination";
-import { jobsListingLoaderDeps, parseJobsSearch } from "../lib/jobs-search";
-import { JobSearchPage } from "@/components/board/job-search-page";
-import { JobAlertFloatingPrompt } from "../components/job-alert-floating-prompt";
-import { JsonLd } from "../components/json-ld";
-import { jobAlertDefaultsFromSearch } from "../lib/job-alert-defaults";
-import { listingHead, listingJsonLd } from "@cavuno/board/seo";
-import { getSeoBase, listJobs, searchJobs } from "../server/queries";
-import { useSelectedJob } from "./-use-selected-job";
-import { SelectedJobDetail } from "./-selected-job-detail";
+import { JobSearchPage } from '@/components/board/job-search-page';
 
 const JOBS_PAGE_SIZE = 20;
 
-export const Route = createFileRoute("/jobs/")({
+export const Route = createFileRoute('/jobs/')({
   // Full-bleed: the page opens with the Lumen-style gray hero band
   // (CAV-497) and owns its own containers.
-  staticData: { fullBleed: true, ownsMain: true },
+  staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseJobsSearch,
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
   loader: async ({ deps }) => {
@@ -35,8 +39,12 @@ export const Route = createFileRoute("/jobs/")({
             data: {
               query: deps.q,
               filters: {
-                remoteOption: deps.remoteOption ? [deps.remoteOption] : undefined,
-                employmentType: deps.employmentType ? [deps.employmentType] : undefined,
+                remoteOption: deps.remoteOption
+                  ? [deps.remoteOption]
+                  : undefined,
+                employmentType: deps.employmentType
+                  ? [deps.employmentType]
+                  : undefined,
                 seniority: deps.seniority?.length ? deps.seniority : undefined,
               },
               sort: deps.sort,
@@ -47,12 +55,14 @@ export const Route = createFileRoute("/jobs/")({
         : listJobs({
             data: {
               remoteOption: deps.remoteOption ? [deps.remoteOption] : undefined,
-              employmentType: deps.employmentType ? [deps.employmentType] : undefined,
+              employmentType: deps.employmentType
+                ? [deps.employmentType]
+                : undefined,
               seniority: deps.seniority?.length ? deps.seniority : undefined,
               sort: deps.sort,
               offset,
               limit: JOBS_PAGE_SIZE,
-              fields: "+description",
+              fields: '+description',
             },
           }),
       getSeoBase(),
@@ -63,23 +73,26 @@ export const Route = createFileRoute("/jobs/")({
     loaderData
       ? listingHead({
           ...loaderData.seo,
-          path: "/jobs",
-          heading: boardCopy(loaderData.seo.language, loaderData.seo.labels).jobSearch.headingJobs,
+          path: '/jobs',
+          heading: boardCopy(loaderData.seo.language, loaderData.seo.labels)
+            .jobSearch.headingJobs,
           count: loaderData.page.count,
         })
       : {},
   component: JobsPage,
 });
 
-const rootApi = getRouteApi("__root__");
+const rootApi = getRouteApi('__root__');
 
 function JobsPage() {
   const { page, seo } = Route.useLoaderData();
   const search = Route.useSearch();
   const { board, user } = rootApi.useLoaderData();
-  const navigate = useNavigate({ from: "/jobs/" });
+  const navigate = useNavigate({ from: '/jobs/' });
   const selectedJob = useSelectedJob(
-    page.data.some((job) => job.slug === search.selectedJob) ? search.selectedJob : undefined,
+    page.data.some((job) => job.slug === search.selectedJob)
+      ? search.selectedJob
+      : undefined,
     Boolean(user?.emailVerified),
   );
 
@@ -88,7 +101,9 @@ function JobsPage() {
       <JsonLd
         data={listingJsonLd({
           origin: seo.origin,
-          breadcrumbs: [{ name: boardCopy(board.language, board.labels).breadcrumbs.jobs }],
+          breadcrumbs: [
+            { name: boardCopy(board.language, board.labels).breadcrumbs.jobs },
+          ],
           jobs: page.data,
         })}
       />
@@ -101,10 +116,12 @@ function JobsPage() {
         filters={search}
         language={board.language}
         labels={board.labels}
-        relatedSearches={"relatedSearches" in page ? page.relatedSearches : undefined}
+        relatedSearches={
+          'relatedSearches' in page ? page.relatedSearches : undefined
+        }
         onFiltersChange={(next) =>
           navigate({
-            to: "/jobs",
+            to: '/jobs',
             search: () => ({
               ...next,
               page: undefined,
@@ -114,7 +131,7 @@ function JobsPage() {
         }
         onPageChange={(next) =>
           navigate({
-            to: "/jobs",
+            to: '/jobs',
             search: (prev) => ({
               ...prev,
               page: pageSearchValue(next),
@@ -136,7 +153,9 @@ function JobsPage() {
             resetScroll: false,
           })
         }
-        detail={<SelectedJobDetail state={selectedJob} board={board} user={user} />}
+        detail={
+          <SelectedJobDetail state={selectedJob} board={board} user={user} />
+        }
       />
       {board.features.jobAlerts ? (
         <JobAlertFloatingPrompt
@@ -144,7 +163,7 @@ function JobsPage() {
           labels={board.labels}
           defaults={jobAlertDefaultsFromSearch({
             keyword: search.q,
-            source: "board_home",
+            source: 'board_home',
           })}
         />
       ) : null}

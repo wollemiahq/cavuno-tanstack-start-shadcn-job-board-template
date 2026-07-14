@@ -1,22 +1,22 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { isNotFound } from '@cavuno/board';
+import { createFileRoute, notFound } from '@tanstack/react-router';
 
-import { isNotFound } from "@cavuno/board";
+import { LegalPageView } from '../components/legal-page';
+import { LEGAL_PAGES, legalMetaDescription } from '../lib/legal';
+import { m } from '../paraglide/messages';
+import { getLegalPage, getSeoBase } from '../server/queries';
 
-import { LegalPageView } from "../components/legal-page";
-import { PageBody } from "@/components/board/page-body";
-import { LEGAL_PAGES, legalMetaDescription } from "../lib/legal";
-import { m } from "../paraglide/messages";
-import { getLegalPage, getSeoBase } from "../server/queries";
+import { PageBody } from '@/components/board/page-body';
 
 const META = LEGAL_PAGES.impressum;
 
-export const Route = createFileRoute("/impressum")({
+export const Route = createFileRoute('/impressum')({
   // Full-bleed: the shared `PageBody` owns the width (CAV-502).
   staticData: { fullBleed: true },
   loader: async () => {
     try {
       const [page, seo] = await Promise.all([
-        getLegalPage({ data: { type: "impressum" } }),
+        getLegalPage({ data: { type: 'impressum' } }),
         getSeoBase(),
       ]);
       return { page, seo };
@@ -32,17 +32,19 @@ export const Route = createFileRoute("/impressum")({
           meta: [
             { title: loaderData.page.title },
             {
-              name: "description",
+              name: 'description',
               content: legalMetaDescription(loaderData.page.content),
             },
           ],
-          links: [{ rel: "canonical", href: `${loaderData.seo.origin}${META.path}` }],
+          links: [
+            { rel: 'canonical', href: `${loaderData.seo.origin}${META.path}` },
+          ],
         }
       : {},
   component: ImpressumPage,
   notFoundComponent: () => (
     <PageBody>
-      <p className="rounded-lg border border-dashed border-secondary p-10 text-center text-tertiary">
+      <p className="border-border text-muted-foreground rounded-lg border border-dashed p-10 text-center">
         {m.notFound_pageNotFound()}
       </p>
     </PageBody>

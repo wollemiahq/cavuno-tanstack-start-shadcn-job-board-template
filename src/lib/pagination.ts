@@ -2,7 +2,7 @@
  * Page-based pagination for the listing surfaces (CAV-496) — the pure math
  * behind the `?page=N` URL contract. The loaders turn a 1-based page into the
  * Board API's zero-based `offset`; the components turn a result `count` into a
- * page total for the Untitled UI pagination nav.
+ * page total for the owned shadcn pagination nav.
  *
  * The `?page=` param is 1-based and public input, so parsing never throws:
  * anything invalid (missing, `< 1`, fractional, non-numeric) collapses to
@@ -12,7 +12,7 @@
 
 /** Coerce a raw `?page=` search value to a valid 1-based page number. */
 export function parsePageParam(raw: unknown): number {
-  const value = typeof raw === "number" ? raw : Number(raw);
+  const value = typeof raw === 'number' ? raw : Number(raw);
   return Number.isInteger(value) && value >= 1 ? value : 1;
 }
 
@@ -32,6 +32,9 @@ export function totalPages(count: number, pageSize: number): number {
 }
 
 /** Whether the pagination nav should render — only once a second page exists. */
-export function shouldRenderPagination(count: number, pageSize: number): boolean {
+export function shouldRenderPagination(
+  count: number,
+  pageSize: number,
+): boolean {
   return totalPages(count, pageSize) > 1;
 }

@@ -1,10 +1,10 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 export type SearchResultsListProps = Omit<
-  ComponentPropsWithoutRef<"section">,
-  "aria-label" | "children"
+  ComponentPropsWithoutRef<'section'>,
+  'aria-label' | 'children'
 > & {
   label: string;
   scrollRestorationId?: string;
@@ -14,7 +14,7 @@ export type SearchResultsListProps = Omit<
 /** The independently scrolling master region of a search-results surface. */
 export function SearchResultsList({
   label,
-  scrollRestorationId = "search-results-list",
+  scrollRestorationId = 'search-results-list',
   className,
   children,
   ...props
@@ -26,7 +26,7 @@ export function SearchResultsList({
       data-slot="search-results-list"
       data-scroll-restoration-id={scrollRestorationId}
       className={cn(
-        "min-w-0 md:h-[var(--search-results-height,calc(100dvh-12rem))] md:overflow-y-auto md:overscroll-contain md:border-r md:border-border",
+        'md:border-border min-w-0 md:h-full md:min-h-0 md:overflow-y-auto md:overscroll-contain md:border-r',
         className,
       )}
     >

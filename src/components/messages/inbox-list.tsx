@@ -5,6 +5,14 @@ import { Avatar } from './avatar';
 import { HydrationSafeDate } from './hydration-safe-date';
 
 import { Button } from '@/components/ui/button';
+import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from '@/components/ui/item';
 import { cn } from '@/lib/utils';
 import type { Conversation } from '@cavuno/board';
 
@@ -26,21 +34,23 @@ function ConversationRow({
 }) {
   const content = (
     <>
-      <Avatar
-        url={conversation.counterparty.avatarUrl}
-        name={conversation.counterparty.displayName}
-        className="size-10"
-      />
-      <div className="min-w-0 flex-1 text-left">
-        <div className="flex items-center justify-between gap-2">
-          <p
+      <ItemMedia>
+        <Avatar
+          url={conversation.counterparty.avatarUrl}
+          name={conversation.counterparty.displayName}
+          className="size-10"
+        />
+      </ItemMedia>
+      <ItemContent className="min-w-0 text-left">
+        <ItemTitle className="w-full justify-between gap-2">
+          <span
             className={cn(
               'truncate',
               conversation.hasUnread && 'font-semibold',
             )}
           >
             {counterpartyLabel(conversation)}
-          </p>
+          </span>
           <time
             dateTime={conversation.lastMessageAt}
             className="text-muted-foreground shrink-0 text-xs"
@@ -50,12 +60,12 @@ function ConversationRow({
               presentation="relative"
             />
           </time>
-        </div>
-        <div className="flex items-center gap-2">
-          <p className="text-muted-foreground truncate text-sm">
+        </ItemTitle>
+        <ItemDescription className="flex w-full items-center gap-2">
+          <span className="truncate">
             {conversation.lastMessageSnippet ||
               m.messageBubble_messageDeletedText()}
-          </p>
+          </span>
           {conversation.hasUnread ? (
             <span
               className="bg-primary ml-auto size-2 shrink-0 rounded-full"
@@ -63,36 +73,44 @@ function ConversationRow({
               data-test="unread-dot"
             />
           ) : null}
-        </div>
-      </div>
+        </ItemDescription>
+      </ItemContent>
     </>
   );
   const className = cn(
-    'hover:bg-muted focus-visible:ring-ring/30 flex w-full items-center gap-3 px-3 py-3 text-left transition-colors outline-none focus-visible:ring-3',
+    'hover:bg-muted flex-nowrap rounded-none border-0 px-3 py-3 text-left',
     selected && 'bg-muted',
   );
 
   return onSelect ? (
-    <button
-      type="button"
-      aria-current={selected ? 'true' : undefined}
+    <Item
       className={className}
-      data-conversation-id={conversation.id}
-      onClick={() => onSelect(conversation.id)}
+      render={
+        <button
+          type="button"
+          aria-current={selected ? 'true' : undefined}
+          data-conversation-id={conversation.id}
+          onClick={() => onSelect(conversation.id)}
+        />
+      }
     >
       {content}
-    </button>
+    </Item>
   ) : (
-    <Link
-      to="/messages/$conversationId"
-      params={{ conversationId: conversation.id }}
-      search={view === 'archived' ? { view: 'archived' } : {}}
-      aria-current={selected ? 'page' : undefined}
+    <Item
       className={className}
-      data-conversation-id={conversation.id}
+      render={
+        <Link
+          to="/messages/$conversationId"
+          params={{ conversationId: conversation.id }}
+          search={view === 'archived' ? { view: 'archived' } : {}}
+          aria-current={selected ? 'page' : undefined}
+          data-conversation-id={conversation.id}
+        />
+      }
     >
       {content}
-    </Link>
+    </Item>
   );
 }
 
@@ -117,15 +135,19 @@ export function InboxList({
 }) {
   if (conversations.length === 0) {
     return (
-      <p
-        className="text-muted-foreground flex flex-1 items-center justify-center p-8 text-center text-sm"
+      <Empty
+        className="flex-1 rounded-none border-0 p-8"
         data-test="inbox-empty"
       >
-        {emptyText ??
-          (archived
-            ? m.inboxList_noArchivedText()
-            : m.inboxList_noConversationsText())}
-      </p>
+        <EmptyHeader>
+          <EmptyDescription>
+            {emptyText ??
+              (archived
+                ? m.inboxList_noArchivedText()
+                : m.inboxList_noConversationsText())}
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 

@@ -1,14 +1,11 @@
-import { Text } from '@/components/text'
-import { useState } from 'react'
-import {
-  createFileRoute,
-  isRedirect,
-  Link,
-  redirect,
-  useRouter,
-} from '@tanstack/react-router'
-import type { EmployerApplicant, EmployerPipelineStage } from '@cavuno/board'
+import { useState } from 'react';
 
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
+import { ExternalLinkIcon, PencilIcon, Trash2Icon } from 'lucide-react';
+
+import { employerJobStatusLabel } from '../lib/employer-job-labels';
+import { handleEmployerLoaderError } from '../lib/employer-loader-auth';
+import { m } from '../paraglide/messages';
 import {
   addApplicantNote,
   bulkRejectApplicants,
@@ -17,13 +14,41 @@ import {
   moveApplicant,
   removeStage,
   renameStage,
-} from '../server/employers'
-import { Badge } from '@/components/base/badges/badges'
-import { Button, styles as buttonStyles } from '@/components/base/buttons/button'
-import { Input } from '@/components/base/input/input'
-import { Select } from '@/components/base/select/select'
-import { cx } from '@/utils/cx'
-import { m } from '../paraglide/messages'
+} from '../server/employers';
+
+import { Page, PageContent } from '@/components/layout/page';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group';
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+} from '@/components/ui/item';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import type { EmployerApplicant, EmployerPipelineStage } from '@cavuno/board';
 
 export const Route = createFileRoute(
   '/employers/companies/$slug/jobs/$jobId/applicants',
@@ -32,81 +57,107 @@ export const Route = createFileRoute(
     try {
       return await getPipeline({
         data: { slug: params.slug, job: params.jobId },
-      })
+      });
     } catch (error) {
-      if (isRedirect(error)) throw error
-      throw redirect({ to: '/auth/sign-in', search: { returnTo: undefined } })
+      handleEmployerLoaderError(
+        error,
+        `/employers/companies/${params.slug}/jobs/${params.jobId}/applicants`,
+      );
     }
   },
   head: () => ({ meta: [{ title: m.employerApplicants_title() }] }),
+  staticData: { ownsMain: true },
   component: ApplicantsPage,
-})
+});
 
 function ApplicantsPage() {
-  const { slug } = Route.useParams()
-  const pipeline = Route.useLoaderData()
-  const visibleStages = pipeline.stages.filter((stage) => !stage.hidden)
+  const { slug } = Route.useParams();
+  const pipeline = Route.useLoaderData();
+  const visibleStages = pipeline.stages.filter((stage) => !stage.hidden);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 py-8">
-      <header className="flex items-center justify-between gap-4">
-        <div>
-          <Text as="h1" variant="heading1">{pipeline.job.title}</Text>
-          <p className="text-tertiary text-sm capitalize">
-            {pipeline.job.status} ·{' '}
-            {pipeline.applicants.length === 1
-              ? m.employerApplicants_countOne({
-                  count: pipeline.applicants.length,
-                })
-              : m.employerApplicants_countMany({
-                  count: pipeline.applicants.length,
-                })}
-          </p>
-        </div>
-        <Link
-          to="/employers/companies/$slug"
-          params={{ slug }}
-          className={cx(
-            buttonStyles.common.root,
-            buttonStyles.sizes.md.root,
-            buttonStyles.colors.secondary.root,
-            'hover:no-underline',
-          )}
-        >
-          {m.employerApplicants_backToCompanyLabel()}
-        </Link>
-      </header>
+    <Page width="content">
+      <PageContent>
+        <div className="space-y-8">
+          <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-1">
+              <h1 className="font-heading text-3xl font-semibold tracking-tight">
+                {pipeline.job.title}
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                {employerJobStatusLabel(pipeline.job.status)} ·{' '}
+                {pipeline.applicants.length === 1
+                  ? m.employerApplicants_countOne({
+                      count: pipeline.applicants.length,
+                    })
+                  : m.employerApplicants_countMany({
+                      count: pipeline.applicants.length,
+                    })}
+              </p>
+            </div>
+            <Link
+              to="/employers/companies/$slug"
+              params={{ slug }}
+              className={buttonVariants({ variant: 'outline' })}
+            >
+              {m.employerApplicants_backToCompanyLabel()}
+            </Link>
+          </header>
 
-      <section className="space-y-3">
-        <Text as="h2" variant="heading4">{m.employerApplicants_stagesHeading()}</Text>
-        <StageManager
-          slug={slug}
-          jobId={pipeline.job.id}
-          stages={pipeline.stages}
-        />
-      </section>
-
-      <hr className="border-secondary" />
-
-      <section className="space-y-3">
-        <Text as="h2" variant="heading4">{m.employerApplicants_title()}</Text>
-        {pipeline.applicants.length === 0 ? (
-          <p className="border-secondary text-tertiary rounded-lg border border-dashed p-10 text-center">
-            {m.employerApplicants_noApplicantsText()}
-          </p>
-        ) : (
-          pipeline.applicants.map((applicant) => (
-            <ApplicantRow
-              key={applicant.id}
+          <section
+            aria-labelledby="pipeline-stages-heading"
+            className="space-y-4"
+          >
+            <h2
+              id="pipeline-stages-heading"
+              className="font-heading text-xl font-semibold"
+            >
+              {m.employerApplicants_stagesHeading()}
+            </h2>
+            <StageManager
               slug={slug}
-              applicant={applicant}
-              stages={visibleStages}
+              jobId={pipeline.job.id}
+              stages={pipeline.stages}
             />
-          ))
-        )}
-      </section>
-    </div>
-  )
+          </section>
+
+          <hr className="border-border" />
+
+          <section aria-labelledby="applicants-heading" className="space-y-4">
+            <h2
+              id="applicants-heading"
+              className="font-heading text-xl font-semibold"
+            >
+              {m.employerApplicants_title()}
+            </h2>
+            {pipeline.applicants.length === 0 ? (
+              <Empty className="border">
+                <EmptyHeader>
+                  <EmptyTitle>
+                    {m.employerApplicants_noApplicantsText()}
+                  </EmptyTitle>
+                  <EmptyDescription>
+                    {m.employerApplicants_stagesHeading()}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              <div className="space-y-4">
+                {pipeline.applicants.map((applicant) => (
+                  <ApplicantRow
+                    key={applicant.id}
+                    slug={slug}
+                    applicant={applicant}
+                    stages={visibleStages}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      </PageContent>
+    </Page>
+  );
 }
 
 function StageManager({
@@ -114,52 +165,77 @@ function StageManager({
   jobId,
   stages,
 }: {
-  slug: string
-  jobId: string
-  stages: EmployerPipelineStage[]
+  slug: string;
+  jobId: string;
+  stages: EmployerPipelineStage[];
 }) {
-  const router = useRouter()
-  const [label, setLabel] = useState('')
-  const [message, setMessage] = useState('')
+  const router = useRouter();
+  const [label, setLabel] = useState('');
+  const [createState, setCreateState] = useState({
+    pending: false,
+    message: '',
+  });
 
   async function act(fn: () => Promise<{ ok: boolean; message?: string }>) {
-    setMessage('')
-    const result = await fn()
-    if (result.ok) await router.invalidate()
-    else setMessage(result.message ?? m.employerApplicants_genericError())
+    try {
+      const result = await fn();
+      if (!result.ok)
+        return result.message ?? m.employerApplicants_genericError();
+      await router.invalidate();
+      return null;
+    } catch {
+      return m.employerApplicants_genericError();
+    }
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
-        {stages.map((stage) => (
-          <StagePill key={stage.id} slug={slug} stage={stage} onAct={act} />
-        ))}
-      </div>
+    <Card size="sm">
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap gap-2">
+          {stages.map((stage) => (
+            <StagePill key={stage.id} slug={slug} stage={stage} onAct={act} />
+          ))}
+        </div>
 
-      <form
-        className="flex items-end gap-2"
-        onSubmit={async (event) => {
-          event.preventDefault()
-          if (!label.trim()) return
-          await act(() =>
-            createStage({ data: { slug, jobId, label: label.trim() } }),
-          )
-          setLabel('')
-        }}
-      >
-        <Input
-          value={label}
-          placeholder={m.employerApplicants_newStagePlaceholder()}
-          onChange={setLabel}
-        />
-        <Button type="submit" color="secondary" size="md">
-          {m.employerApplicants_addStageLabel()}
-        </Button>
-      </form>
-      {message ? <p className="text-error-primary text-sm">{message}</p> : null}
-    </div>
-  )
+        <form
+          onSubmit={async (event) => {
+            event.preventDefault();
+            if (!label.trim() || createState.pending) return;
+            setCreateState({ pending: true, message: '' });
+            const message = await act(() =>
+              createStage({ data: { slug, jobId, label: label.trim() } }),
+            );
+            if (!message) setLabel('');
+            setCreateState({ pending: false, message: message ?? '' });
+          }}
+        >
+          <Field data-invalid={Boolean(createState.message)}>
+            <InputGroup>
+              <InputGroupInput
+                value={label}
+                aria-label={m.employerApplicants_newStagePlaceholder()}
+                placeholder={m.employerApplicants_newStagePlaceholder()}
+                onChange={(event) => setLabel(event.target.value)}
+              />
+              <InputGroupAddon align="inline-end" className="p-0">
+                <InputGroupButton
+                  type="submit"
+                  variant="outline"
+                  size="sm"
+                  disabled={createState.pending}
+                >
+                  {m.employerApplicants_addStageLabel()}
+                </InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
+            {createState.message ? (
+              <FieldError>{createState.message}</FieldError>
+            ) : null}
+          </Field>
+        </form>
+      </CardContent>
+    </Card>
+  );
 }
 
 function StagePill({
@@ -167,67 +243,115 @@ function StagePill({
   stage,
   onAct,
 }: {
-  slug: string
-  stage: EmployerPipelineStage
-  onAct: (fn: () => Promise<{ ok: boolean; message?: string }>) => Promise<void>
+  slug: string;
+  stage: EmployerPipelineStage;
+  onAct: (
+    fn: () => Promise<{ ok: boolean; message?: string }>,
+  ) => Promise<string | null>;
 }) {
-  const [editing, setEditing] = useState(false)
-  const [label, setLabel] = useState(stage.label)
+  const [editing, setEditing] = useState(false);
+  const [label, setLabel] = useState(stage.label);
+  const [actionState, setActionState] = useState({
+    pending: false,
+    message: '',
+  });
 
   if (editing) {
     return (
-      <form
-        className="flex items-center gap-1"
-        onSubmit={async (event) => {
-          event.preventDefault()
-          await onAct(() =>
-            renameStage({ data: { slug, stageId: stage.id, label: label.trim() } }),
-          )
-          setEditing(false)
-        }}
-      >
-        <Input
-          size="sm"
-          value={label}
-          onChange={setLabel}
-          className="w-36"
-        />
-        <Button type="submit" color="primary" size="sm">
-          {m.employerApplicants_saveLabel()}
-        </Button>
-      </form>
-    )
+      <div className="space-y-2">
+        <form
+          onSubmit={async (event) => {
+            event.preventDefault();
+            if (!label.trim() || actionState.pending) return;
+            setActionState({ pending: true, message: '' });
+            const message = await onAct(() =>
+              renameStage({
+                data: { slug, stageId: stage.id, label: label.trim() },
+              }),
+            );
+            setActionState({ pending: false, message: message ?? '' });
+            if (!message) setEditing(false);
+          }}
+        >
+          <InputGroup className="w-48">
+            <InputGroupInput
+              value={label}
+              aria-label={stage.label}
+              onChange={(event) => setLabel(event.target.value)}
+            />
+            <InputGroupAddon align="inline-end" className="p-0">
+              <InputGroupButton
+                type="submit"
+                size="sm"
+                disabled={actionState.pending}
+              >
+                {m.employerApplicants_saveLabel()}
+              </InputGroupButton>
+            </InputGroupAddon>
+          </InputGroup>
+        </form>
+        {actionState.message ? (
+          <Alert variant="destructive">
+            <AlertDescription>{actionState.message}</AlertDescription>
+          </Alert>
+        ) : null}
+      </div>
+    );
   }
 
   return (
-    <span className="border-secondary flex items-center gap-1 rounded-md border px-2 py-1 text-sm">
-      {stage.label}
-      {stage.isProtected ? (
-        <Badge size="sm" type="pill-color" color="gray">
-          {m.employerApplicants_systemBadge()}
-        </Badge>
-      ) : (
-        <>
-          <button
-            type="button"
-            className="text-tertiary hover:text-primary"
-            onClick={() => setEditing(true)}
-          >
-            {m.employerApplicants_editLabel()}
-          </button>
-          <button
-            type="button"
-            className="text-tertiary hover:text-error-primary"
-            onClick={() =>
-              onAct(() => removeStage({ data: { slug, stageId: stage.id } }))
-            }
-          >
-            ✕
-          </button>
-        </>
-      )}
-    </span>
-  )
+    <div className="space-y-2">
+      <ButtonGroup aria-label={stage.label}>
+        <ButtonGroupText>
+          {stage.label}
+          {stage.isProtected ? (
+            <Badge variant="secondary">
+              {m.employerApplicants_systemBadge()}
+            </Badge>
+          ) : null}
+        </ButtonGroupText>
+        {!stage.isProtected ? (
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              aria-label={`${m.employerApplicants_editLabel()} ${stage.label}`}
+              disabled={actionState.pending}
+              onClick={() => {
+                setActionState({ pending: false, message: '' });
+                setEditing(true);
+              }}
+            >
+              <PencilIcon />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              aria-label={`${m.employerCompany_deleteLabel()} ${stage.label}`}
+              disabled={actionState.pending}
+              onClick={async () => {
+                if (actionState.pending) return;
+                setActionState({ pending: true, message: '' });
+                const message = await onAct(() =>
+                  removeStage({ data: { slug, stageId: stage.id } }),
+                );
+                setActionState({ pending: false, message: message ?? '' });
+              }}
+            >
+              <Trash2Icon />
+            </Button>
+          </>
+        ) : null}
+      </ButtonGroup>
+      {actionState.message ? (
+        <Alert variant="destructive">
+          <AlertDescription>{actionState.message}</AlertDescription>
+        </Alert>
+      ) : null}
+    </div>
+  );
 }
 
 function ApplicantRow({
@@ -235,104 +359,147 @@ function ApplicantRow({
   applicant,
   stages,
 }: {
-  slug: string
-  applicant: EmployerApplicant
-  stages: EmployerPipelineStage[]
+  slug: string;
+  applicant: EmployerApplicant;
+  stages: EmployerPipelineStage[];
 }) {
-  const router = useRouter()
-  const [note, setNote] = useState('')
-  const [message, setMessage] = useState('')
+  const router = useRouter();
+  const [note, setNote] = useState('');
+  const [actionState, setActionState] = useState<{
+    scope: 'applicant' | 'note' | null;
+    pending: boolean;
+    message: string;
+  }>({ scope: null, pending: false, message: '' });
   const currentStageId =
     stages.find((stage) => (stage.systemStage ?? stage.id) === applicant.stage)
-      ?.id ?? ''
-  // Timeline entries carry a stage token (a custom stage id or a systemStage
-  // key like "applied"); resolve it to the human label, falling back to the
-  // raw token for a stage that was since hidden or deleted.
+      ?.id ?? '';
+  const selectedStage = currentStageId || '__current__';
+  const stageItems = Object.fromEntries<string>([
+    ...(currentStageId
+      ? []
+      : ([['__current__', applicant.stage]] as [string, string][])),
+    ...stages.map((stage): [string, string] => [stage.id, stage.label]),
+  ]);
+
   const stageLabel = (token: string | null) => {
-    if (!token) return '—'
+    if (!token) return '—';
     const match = stages.find(
       (stage) => stage.id === token || stage.systemStage === token,
-    )
-    return match?.label ?? token
-  }
+    );
+    return match?.label ?? token;
+  };
 
-  async function act(fn: () => Promise<{ ok: boolean; message?: string }>) {
-    setMessage('')
-    const result = await fn()
-    if (result.ok) await router.invalidate()
-    else setMessage(result.message ?? m.employerApplicants_genericError())
+  async function act(
+    scope: 'applicant' | 'note',
+    fn: () => Promise<{ ok: boolean; message?: string }>,
+  ) {
+    if (actionState.pending) return false;
+    setActionState({ scope, pending: true, message: '' });
+    try {
+      const result = await fn();
+      if (!result.ok) {
+        setActionState({
+          scope,
+          pending: false,
+          message: result.message ?? m.employerApplicants_genericError(),
+        });
+        return false;
+      }
+      await router.invalidate();
+      setActionState({ scope: null, pending: false, message: '' });
+      return true;
+    } catch {
+      setActionState({
+        scope,
+        pending: false,
+        message: m.employerApplicants_genericError(),
+      });
+      return false;
+    }
   }
 
   return (
-    <div className="rounded-xl bg-primary p-6 shadow-xs ring-1 ring-secondary_alt">
-      <div className="space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="font-semibold">
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <CardTitle>
               {applicant.candidateName ??
                 applicant.candidateEmail ??
                 m.employerApplicants_applicantFallbackName()}
-            </h3>
+            </CardTitle>
             {applicant.candidateEmail ? (
-              <p className="text-tertiary text-sm">
+              <p className="text-muted-foreground text-sm">
                 {applicant.candidateEmail}
               </p>
             ) : null}
             {applicant.candidateHeadline ? (
-              <p className="text-tertiary text-sm">
+              <p className="text-muted-foreground text-sm">
                 {applicant.candidateHeadline}
               </p>
             ) : null}
           </div>
           {applicant.resumeUrl ? (
-            <Button
-              color="tertiary"
-              size="sm"
+            <a
               href={applicant.resumeUrl}
               target="_blank"
               rel="noreferrer"
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
             >
               {m.employerApplicants_resumeLabel()}
-            </Button>
+              <ExternalLinkIcon data-icon="inline-end" />
+            </a>
           ) : null}
         </div>
-
+      </CardHeader>
+      <CardContent className="space-y-4">
         {applicant.coverNote ? (
           <p className="text-sm">{applicant.coverNote}</p>
         ) : null}
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-tertiary text-sm">
+        <Field orientation="responsive">
+          <FieldLabel htmlFor={`applicant-stage-${applicant.id}`}>
             {m.employerApplicants_stageLabel()}
-          </span>
+          </FieldLabel>
           <Select
-            aria-label={m.employerApplicants_stageLabel()}
-            size="sm"
-            className="w-48"
-            selectedKey={currentStageId}
-            onSelectionChange={(key) =>
-              act(() =>
+            items={stageItems}
+            value={selectedStage}
+            disabled={actionState.pending}
+            onValueChange={(value) => {
+              if (!value || value === '__current__') return;
+              void act('applicant', () =>
                 moveApplicant({
                   data: {
                     slug,
                     applicationId: applicant.id,
-                    stageId: String(key),
+                    stageId: value,
                   },
                 }),
-              )
-            }
-            items={[
-              ...(currentStageId ? [] : [{ id: '', label: applicant.stage }]),
-              ...stages.map((stage) => ({ id: stage.id, label: stage.label })),
-            ]}
+              );
+            }}
           >
-            {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+            <SelectTrigger
+              id={`applicant-stage-${applicant.id}`}
+              aria-label={m.employerApplicants_stageLabel()}
+              className="w-48"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(stageItems).map(([id, label]) => (
+                <SelectItem key={id} value={id} disabled={id === '__current__'}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
           <Button
-            color="tertiary"
+            type="button"
+            variant="destructive"
             size="sm"
+            disabled={actionState.pending}
             onClick={() =>
-              act(() =>
+              act('applicant', () =>
                 bulkRejectApplicants({
                   data: { slug, applicationIds: [applicant.id] },
                 }),
@@ -341,51 +508,81 @@ function ApplicantRow({
           >
             {m.employerApplicants_rejectLabel()}
           </Button>
-        </div>
+        </Field>
+        {actionState.scope === 'applicant' && actionState.message ? (
+          <div data-applicant-action-feedback>
+            <Alert variant="destructive">
+              <AlertDescription>{actionState.message}</AlertDescription>
+            </Alert>
+          </div>
+        ) : null}
 
         <form
-          className="flex items-end gap-2"
           onSubmit={async (event) => {
-            event.preventDefault()
-            if (!note.trim()) return
-            await act(() =>
+            event.preventDefault();
+            if (!note.trim()) return;
+            const succeeded = await act('note', () =>
               addApplicantNote({
                 data: { slug, applicationId: applicant.id, body: note.trim() },
               }),
-            )
-            setNote('')
+            );
+            if (succeeded) setNote('');
           }}
         >
-          <Input
-            value={note}
-            placeholder={m.employerApplicants_notePlaceholder()}
-            onChange={setNote}
-          />
-          <Button type="submit" color="secondary" size="sm">
-            {m.employerApplicants_noteLabel()}
-          </Button>
+          <Field
+            data-applicant-note-field
+            data-invalid={
+              actionState.scope === 'note' && Boolean(actionState.message)
+            }
+          >
+            <InputGroup>
+              <InputGroupInput
+                value={note}
+                aria-label={m.employerApplicants_notePlaceholder()}
+                placeholder={m.employerApplicants_notePlaceholder()}
+                onChange={(event) => setNote(event.target.value)}
+              />
+              <InputGroupAddon align="inline-end" className="p-0">
+                <InputGroupButton
+                  type="submit"
+                  variant="outline"
+                  size="sm"
+                  disabled={actionState.pending}
+                >
+                  {m.employerApplicants_noteLabel()}
+                </InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
+            {actionState.scope === 'note' && actionState.message ? (
+              <FieldError>{actionState.message}</FieldError>
+            ) : null}
+          </Field>
         </form>
 
-        {message ? <p className="text-error-primary text-sm">{message}</p> : null}
-
         {applicant.timeline.length > 0 ? (
-          <ul className="text-tertiary space-y-1 text-xs">
+          <ItemGroup>
             {applicant.timeline.slice(0, 5).map((entry) => (
-              <li key={entry.id}>
-                {entry.type === 'note_created' && entry.noteBody
-                  ? m.employerApplicants_timelineNote({ note: entry.noteBody })
-                  : entry.type === 'stage_changed'
-                    ? m.employerApplicants_timelineMoved({
-                        from: stageLabel(entry.fromStage),
-                        to: stageLabel(entry.toStage),
-                      })
-                    : entry.type}
-                {entry.actorName ? ` · ${entry.actorName}` : ''}
-              </li>
+              <Item key={entry.id} role="listitem" size="xs" variant="muted">
+                <ItemContent>
+                  <ItemDescription>
+                    {entry.type === 'note_created' && entry.noteBody
+                      ? m.employerApplicants_timelineNote({
+                          note: entry.noteBody,
+                        })
+                      : entry.type === 'stage_changed'
+                        ? m.employerApplicants_timelineMoved({
+                            from: stageLabel(entry.fromStage),
+                            to: stageLabel(entry.toStage),
+                          })
+                        : entry.type}
+                    {entry.actorName ? ` · ${entry.actorName}` : ''}
+                  </ItemDescription>
+                </ItemContent>
+              </Item>
             ))}
-          </ul>
+          </ItemGroup>
         ) : null}
-      </div>
-    </div>
-  )
+      </CardContent>
+    </Card>
+  );
 }

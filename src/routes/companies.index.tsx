@@ -1,30 +1,30 @@
-import { createFileRoute, getRouteApi } from "@tanstack/react-router";
+import { boardCopy } from '#/copy';
+import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
+import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
-import { createBreadcrumbJsonLd } from "@cavuno/board/seo";
-import { boardCopy } from "#/copy";
-
-import { AlertsBand } from "@/components/board/alerts-band";
-import { JsonLd } from "@/components/json-ld";
-import { ProgrammaticCompaniesView } from "@/routes/-programmatic-companies-view";
-import {
-  companiesListingLoaderDeps,
-  parseCompaniesSearch,
-} from "@/lib/companies-search";
-import { pageToOffset } from "@/lib/pagination";
-import { m } from "../paraglide/messages";
+import { m } from '../paraglide/messages';
 import {
   getCompanyMarkets,
   getSeoBase,
   listCompanies,
   searchCompanies,
   subscribeJobAlert,
-} from "../server/queries";
+} from '../server/queries';
+
+import { AlertsBand } from '@/components/board/alerts-band';
+import { JsonLd } from '@/components/json-ld';
+import {
+  companiesListingLoaderDeps,
+  parseCompaniesSearch,
+} from '@/lib/companies-search';
+import { pageToOffset } from '@/lib/pagination';
+import { ProgrammaticCompaniesView } from '@/routes/-programmatic-companies-view';
 
 const COMPANIES_PAGE_SIZE = 24;
 
-const rootApi = getRouteApi("__root__");
+const rootApi = getRouteApi('__root__');
 
-export const Route = createFileRoute("/companies/")({
+export const Route = createFileRoute('/companies/')({
   staticData: { fullBleed: true, ownsMain: true },
   validateSearch: parseCompaniesSearch,
   loaderDeps: ({ search }) => companiesListingLoaderDeps(search),
@@ -55,14 +55,14 @@ export const Route = createFileRoute("/companies/")({
           meta: [
             { title: m.companiesIndex_metaTitle() },
             {
-              name: "description",
+              name: 'description',
               content: m.companiesIndex_metaDescription({
                 boardName: loaderData.seo.boardName,
               }),
             },
           ],
           links: [
-            { rel: "canonical", href: `${loaderData.seo.origin}/companies` },
+            { rel: 'canonical', href: `${loaderData.seo.origin}/companies` },
           ],
         }
       : { meta: [{ title: m.companiesIndex_metaTitle() }] },
@@ -93,7 +93,7 @@ function CompaniesPage() {
         })}
         breadcrumb={{
           ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
-          items: [{ name: crumbs.home, href: "/" }, { name: crumbs.companies }],
+          items: [{ name: crumbs.home, href: '/' }, { name: crumbs.companies }],
         }}
         page={page}
         pageSize={COMPANIES_PAGE_SIZE}

@@ -1,12 +1,19 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Composer } from './composer';
 
 describe('Composer', () => {
   beforeEach(() => vi.clearAllMocks());
+  afterEach(cleanup);
 
   it('keeps the draft available for retry when sending fails', async () => {
     const onSend = vi
@@ -23,7 +30,8 @@ describe('Composer', () => {
     );
 
     const textarea = screen.getByRole('textbox', { name: 'Send a message' });
-    expect(textarea).toHaveAttribute('data-slot', 'textarea');
+    expect(textarea).toHaveAttribute('data-slot', 'input-group-control');
+    expect(textarea.closest('[data-slot="input-group"]')).not.toBeNull();
 
     fireEvent.change(textarea, { target: { value: 'Keep this draft' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
@@ -31,11 +39,32 @@ describe('Composer', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Message could not be sent.',
     );
+    expect(screen.getByRole('alert')).toHaveAttribute(
+      'data-slot',
+      'field-error',
+    );
     expect(textarea).toHaveValue('Keep this draft');
     await waitFor(() =>
       expect(
         screen.getByRole('button', { name: 'Send message' }),
       ).toBeEnabled(),
     );
+  });
+
+  it('sends a trimmed draft with the keyboard shortcut', async () => {
+    const onSend = vi.fn().mockResolvedValue(undefined);
+    const onSent = vi.fn();
+
+    render(
+      <Composer disabled={false} hint={null} onSend={onSend} onSent={onSent} />,
+    );
+
+    const textarea = screen.getByRole('textbox', { name: 'Send a message' });
+    fireEvent.change(textarea, { target: { value: '  Hello there  ' } });
+    fireEvent.keyDown(textarea, { key: 'Enter', ctrlKey: true });
+
+    await waitFor(() => expect(onSend).toHaveBeenCalledWith('Hello there'));
+    expect(onSent).toHaveBeenCalledOnce();
+    expect(textarea).toHaveValue('');
   });
 });

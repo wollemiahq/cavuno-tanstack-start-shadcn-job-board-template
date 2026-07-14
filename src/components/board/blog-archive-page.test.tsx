@@ -1,39 +1,38 @@
 // @vitest-environment jsdom
 
-import "@testing-library/jest-dom/vitest";
-
-import { cleanup, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import '@testing-library/jest-dom/vitest';
 import {
   RouterProvider,
   createMemoryHistory,
   createRootRoute,
   createRoute,
   createRouter,
-} from "@tanstack/react-router";
+} from '@tanstack/react-router';
+import { cleanup, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 
-import type { PublicBlogPostSummary } from "@cavuno/board";
+import { BlogArchivePage } from './blog-archive-page';
 
-import { BlogArchivePage } from "./blog-archive-page";
+import type { PublicBlogPostSummary } from '@cavuno/board';
 
 const post = {
-  id: "post-one",
-  object: "public_blog_post",
-  title: "Design-system decisions that survive product growth",
-  slug: "design-system-decisions",
+  id: 'post-one',
+  object: 'public_blog_post',
+  title: 'Design-system decisions that survive product growth',
+  slug: 'design-system-decisions',
   featured: false,
   coverUrl: null,
   featureImageAlt: null,
-  customExcerpt: "A complete account of the decisions and their trade-offs.",
+  customExcerpt: 'A complete account of the decisions and their trade-offs.',
   readingTimeMin: 11,
-  publishedAt: "2026-06-12T00:00:00.000Z",
+  publishedAt: '2026-06-12T00:00:00.000Z',
   canonicalUrl: null,
-  createdAt: "2026-06-10T00:00:00.000Z",
+  createdAt: '2026-06-10T00:00:00.000Z',
   authors: [
     {
-      id: "author-avery",
-      name: "Avery Montgomery-Smythe, Principal Editorial Research Fellow",
-      slug: "avery-montgomery-smythe",
+      id: 'author-avery',
+      name: 'Avery Montgomery-Smythe, Principal Editorial Research Fellow',
+      slug: 'avery-montgomery-smythe',
       bio: null,
       avatarUrl: null,
       websiteUrl: null,
@@ -44,54 +43,58 @@ const post = {
   ],
   tags: [
     {
-      id: "tag-design-systems",
-      name: "Design systems for international multi-product organizations",
-      slug: "design-systems",
+      id: 'tag-design-systems',
+      name: 'Design systems for international multi-product organizations',
+      slug: 'design-systems',
       description: null,
     },
   ],
 } satisfies PublicBlogPostSummary;
 
 const breadcrumb = {
-  ariaLabel: "Breadcrumb",
-  items: [{ name: "Home", href: "/" }, { name: "Blog" }],
+  ariaLabel: 'Breadcrumb',
+  items: [{ name: 'Home', href: '/' }, { name: 'Blog' }],
 };
 
 const empty = {
-  title: "No articles found",
-  description: "There are no published articles in this archive yet.",
-  action: { label: "Browse every article", href: "/blog" },
+  title: 'No articles found',
+  description: 'There are no published articles in this archive yet.',
+  action: { label: 'Browse every article', href: '/blog' },
 };
 
 afterEach(cleanup);
 
 function renderArchive(element: React.ReactNode) {
   const rootRoute = createRootRoute({
-    loader: () => ({ board: { language: "en" } }),
+    loader: () => ({ board: { language: 'en' } }),
   });
   const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
-    path: "/",
+    path: '/',
     component: () => element,
   });
   const route = (path: string) =>
-    createRoute({ getParentRoute: () => rootRoute, path, component: () => null });
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path,
+      component: () => null,
+    });
   const router = createRouter({
     routeTree: rootRoute.addChildren([
       indexRoute,
-      route("/blog"),
-      route("/blog/$postSlug"),
-      route("/blog/tag/$tagSlug"),
-      route("/blog/author/$authorSlug"),
+      route('/blog'),
+      route('/blog/$postSlug'),
+      route('/blog/tag/$tagSlug'),
+      route('/blog/author/$authorSlug'),
     ]),
-    history: createMemoryHistory({ initialEntries: ["/"] }),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
   });
 
   return render(<RouterProvider router={router} />);
 }
 
-describe("BlogArchivePage — Page-family archive presentation", () => {
-  it("owns one main and h1 while preserving real discovery and cursor anchors", async () => {
+describe('BlogArchivePage — Page-family archive presentation', () => {
+  it('owns one main and h1 while preserving real discovery and cursor anchors', async () => {
     const { container } = renderArchive(
       <BlogArchivePage
         breadcrumb={breadcrumb}
@@ -115,33 +118,40 @@ describe("BlogArchivePage — Page-family archive presentation", () => {
       />,
     );
 
-    const main = await screen.findByRole("main");
-    expect(container.querySelectorAll("main")).toHaveLength(1);
-    expect(container.querySelectorAll("h1")).toHaveLength(1);
+    const main = await screen.findByRole('main');
+    expect(container.querySelectorAll('main')).toHaveLength(1);
+    expect(container.querySelectorAll('h1')).toHaveLength(1);
     expect(
-      within(main).getByRole("heading", {
+      within(main).getByRole('heading', {
         level: 1,
-        name: "Research and field notes for international design-system teams",
+        name: 'Research and field notes for international design-system teams',
       }),
     ).toBeVisible();
     expect(
-      within(screen.getByRole("navigation", { name: "Article topics" })).getByRole("link", {
-        name: "Design systems for international multi-product organizations",
+      within(
+        screen.getByRole('navigation', { name: 'Article topics' }),
+      ).getByRole('link', {
+        name: 'Design systems for international multi-product organizations',
       }),
-    ).toHaveAttribute("href", "/blog/tag/design-systems");
+    ).toHaveAttribute('href', '/blog/tag/design-systems');
     expect(
-      screen.getByRole("link", {
+      screen.getByRole('link', {
         name: /Design-system decisions that survive product growth/i,
       }),
-    ).toHaveAttribute("href", "/blog/design-system-decisions");
-    expect(screen.getByRole("link", { name: "Next results" })).toHaveAttribute(
-      "href",
-      "/blog?cursor=opaque%3Apage%3A2",
+    ).toHaveAttribute('href', '/blog/design-system-decisions');
+    expect(screen.getByRole('link', { name: 'Next results' })).toHaveAttribute(
+      'href',
+      '/blog?cursor=opaque%3Apage%3A2',
     );
-    expect(screen.queryByRole("button", { name: "Next results" })).toBeNull();
+    expect(
+      screen
+        .getByRole('link', { name: 'Next results' })
+        .closest('[data-slot="pagination"]'),
+    ).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Next results' })).toBeNull();
   });
 
-  it("explains an empty archive and gives the visitor a crawlable recovery path", async () => {
+  it('explains an empty archive and gives the visitor a crawlable recovery path', async () => {
     renderArchive(
       <BlogArchivePage
         breadcrumb={breadcrumb}
@@ -151,11 +161,12 @@ describe("BlogArchivePage — Page-family archive presentation", () => {
       />,
     );
 
-    expect(await screen.findByText("No articles found")).toBeVisible();
-    expect(screen.getByText("There are no published articles in this archive yet.")).toBeVisible();
-    expect(screen.getByRole("link", { name: "Browse every article" })).toHaveAttribute(
-      "href",
-      "/blog",
-    );
+    expect(await screen.findByText('No articles found')).toBeVisible();
+    expect(
+      screen.getByText('There are no published articles in this archive yet.'),
+    ).toBeVisible();
+    expect(
+      screen.getByRole('link', { name: 'Browse every article' }),
+    ).toHaveAttribute('href', '/blog');
   });
 });

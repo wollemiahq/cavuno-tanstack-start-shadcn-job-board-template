@@ -1,6 +1,6 @@
-import { m } from "#/paraglide/messages";
+import { m } from '#/paraglide/messages';
 
-import type { CompanySearchLabels } from "./company-view-model";
+import type { CompanySearchLabels } from './company-view-model';
 
 export function getCompanySearchLabels(): CompanySearchLabels {
   return {

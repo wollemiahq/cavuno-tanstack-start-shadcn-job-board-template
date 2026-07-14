@@ -4,6 +4,53 @@
  * unit-tested without rendering the form.
  */
 
+import type { CreateJobPostingInput } from '@cavuno/board';
+
+export type JobPostingFormInput = {
+  companyName: string;
+  companyWebsite?: string;
+  contactName: string;
+  contactEmail: string;
+  title: string;
+  description: string;
+  employmentType: string;
+  remoteOption: string;
+  applicationUrl: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  salaryCurrency?: string;
+  selectedPlan?: string;
+  logoUrl?: string;
+};
+
+export function toCreateJobPostingInput(
+  data: JobPostingFormInput,
+): CreateJobPostingInput {
+  const salaryRangeEnabled =
+    data.salaryMin !== undefined && data.salaryMax !== undefined;
+
+  return {
+    submission: {
+      companyName: data.companyName,
+      companyWebsite: data.companyWebsite,
+      contactName: data.contactName,
+      contactEmail: data.contactEmail,
+      title: data.title,
+      description: data.description,
+      employmentType: data.employmentType,
+      remoteOption: data.remoteOption,
+      officeLocations: [],
+      applicationUrl: data.applicationUrl,
+      salaryRangeEnabled,
+      salaryMin: data.salaryMin,
+      salaryMax: data.salaryMax,
+      salaryCurrency: salaryRangeEnabled ? data.salaryCurrency : undefined,
+      selectedPlan: data.selectedPlan,
+    },
+    logoUrl: data.logoUrl,
+  };
+}
+
 /**
  * Prepend `https://` to a bare domain typed into a URL field that renders
  * with an `https://` leading addon (the poster types `acme.com`). A value
@@ -11,10 +58,10 @@
  * empty value becomes `undefined` so the field submits as absent.
  */
 export function ensureProtocol(value: string | undefined): string | undefined {
-  const trimmed = value?.trim()
-  if (!trimmed) return undefined
-  if (/^https?:\/\//i.test(trimmed)) return trimmed
-  return `https://${trimmed}`
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
 }
 
 /** Strip any protocol and path, leaving the bare host (for logo lookup). */
@@ -22,12 +69,12 @@ export function toDomain(value: string): string {
   return value
     .trim()
     .replace(/^https?:\/\//i, '')
-    .split('/')[0]
+    .split('/')[0];
 }
 
 /** Whether a value looks enough like a domain to auto-fetch a logo for it. */
 export function looksLikeDomain(value: string): boolean {
-  return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(toDomain(value))
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(toDomain(value));
 }
 
 /**
@@ -37,13 +84,13 @@ export function looksLikeDomain(value: string): boolean {
  * carry a script URL. Empty input returns `undefined` (used to unset).
  */
 export function sanitizeLinkUrl(value: string): string | undefined {
-  const trimmed = value.trim()
-  if (!trimmed) return undefined
-  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
   // A scheme is letters/digits with no dot before the colon; a bare
   // `host:port` (dot before the colon) is not a scheme and is allowed.
-  if (/^[a-z][a-z0-9+-]*:/i.test(trimmed)) return undefined
-  return `https://${trimmed}`
+  if (/^[a-z][a-z0-9+-]*:/i.test(trimmed)) return undefined;
+  return `https://${trimmed}`;
 }
 
 /**
@@ -55,6 +102,6 @@ export function isRichTextEmpty(html: string): boolean {
   const text = html
     .replace(/<[^>]*>/g, '')
     .replace(/&nbsp;/gi, '')
-    .replace(/\s+/g, '')
-  return text.length === 0
+    .replace(/\s+/g, '');
+  return text.length === 0;
 }

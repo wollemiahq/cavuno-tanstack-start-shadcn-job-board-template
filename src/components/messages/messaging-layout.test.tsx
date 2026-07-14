@@ -17,7 +17,8 @@ describe('MessagingLayout', () => {
     );
 
     const layout = screen.getByRole('region', { name: 'Messaging' });
-    expect(layout).toHaveClass('rhea-theme');
+    expect(layout).toHaveAttribute('data-slot', 'card');
+    expect(layout).not.toHaveClass('rhea-theme');
     expect(layout).toHaveClass('overflow-hidden', 'rounded-xl', 'border');
     expect(layout).toHaveClass('md:grid-cols-[22rem_minmax(0,1fr)]');
 

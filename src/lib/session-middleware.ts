@@ -1,3 +1,10 @@
+import {
+  clearSessionCookie,
+  isExpiringSoon,
+  parseSessionCookie,
+  serializeSessionCookie,
+  type BoardSession,
+} from '@cavuno/board/server';
 /**
  * Session middleware for authenticated server functions.
  *
@@ -13,68 +20,63 @@
  * (`createSessionRefresher`, module-scoped in `board.ts`) instead of
  * racing and burning the pair.
  */
-import { createMiddleware } from '@tanstack/react-start'
-import { getRequestHeader, setResponseHeader } from '@tanstack/react-start/server'
-
+import { createMiddleware } from '@tanstack/react-start';
 import {
-  clearSessionCookie,
-  isExpiringSoon,
-  parseSessionCookie,
-  serializeSessionCookie,
-  type BoardSession,
-} from '@cavuno/board/server'
+  getRequestHeader,
+  setResponseHeader,
+} from '@tanstack/react-start/server';
 
-import { authHeaders, getSessionRefresher } from './board'
+import { authHeaders, getSessionRefresher } from './board';
 
 export interface SessionContext {
-  session: BoardSession | null
+  session: BoardSession | null;
   /** Bearer headers for SDK calls; empty when signed out. */
-  authHeaders: Record<string, string>
+  authHeaders: Record<string, string>;
 }
 
 async function resolveSession(): Promise<SessionContext> {
-  const cookieHeader = getRequestHeader('cookie') ?? null
-  const session = parseSessionCookie(cookieHeader)
-  if (!session) return { session: null, authHeaders: {} }
+  const cookieHeader = getRequestHeader('cookie') ?? null;
+  const session = parseSessionCookie(cookieHeader);
+  if (!session) return { session: null, authHeaders: {} };
 
   if (!isExpiringSoon(session, Date.now())) {
-    return { session, authHeaders: authHeaders(session.accessToken) }
+    return { session, authHeaders: authHeaders(session.accessToken) };
   }
 
-  let next: BoardSession | null
+  let next: BoardSession | null;
   try {
-    next = await getSessionRefresher()(session)
+    next = await getSessionRefresher()(session);
   } catch {
     // Preserves the pre-SDK middleware's behavior: ANY refresh failure
     // (the refresher returns null only on a 401 and rethrows the rest)
     // clears the cookie and continues signed out — never loop.
-    next = null
+    next = null;
   }
 
   if (!next) {
     // Burned single-use token (parallel refresh won) or revoked session.
-    setResponseHeader('Set-Cookie', clearSessionCookie())
-    return { session: null, authHeaders: {} }
+    setResponseHeader('Set-Cookie', clearSessionCookie());
+    return { session: null, authHeaders: {} };
   }
 
-  setResponseHeader('Set-Cookie', serializeSessionCookie(next))
-  return { session: next, authHeaders: authHeaders(next.accessToken) }
+  setResponseHeader('Set-Cookie', serializeSessionCookie(next));
+  return { session: next, authHeaders: authHeaders(next.accessToken) };
 }
 
 /** Optional session: context carries null when signed out. */
 export const sessionMiddleware = createMiddleware({ type: 'function' }).server(
   async ({ next }) => {
-    const ctx = await resolveSession()
-    return next({ context: ctx })
+    const ctx = await resolveSession();
+    return next({ context: ctx });
   },
-)
+);
 
 /** Required session: throws 401-shaped error when signed out. */
 export const requireSessionMiddleware = createMiddleware({ type: 'function' })
   .middleware([sessionMiddleware])
   .server(async ({ next, context }) => {
     if (!context.session) {
-      throw new Error('UNAUTHENTICATED')
+      throw new Error('UNAUTHENTICATED');
     }
-    return next({ context })
-  })
+    return next({ context });
+  });
