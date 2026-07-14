@@ -1,9 +1,14 @@
 # cavuno-shadcn-ui-job-board-template
 
-An open-source (MIT) job board template built on the official
+An MIT-licensed job board template built on the official
 **shadcn/ui Rhea** preset with **Base UI**, Geist, Lucide, and
 [Tailwind CSS 4](https://tailwindcss.com). Clone it, run it, and you have a
 complete, SEO-ready job board — every surface a real page, nothing stubbed.
+
+This repository is currently a private preview. Authorized collaborators can
+clone and evaluate it, but no public release, hosted demo, announcement, or
+ad-network integration has been approved. The MIT license and release assets
+are being prepared now so a later public release can be an explicit decision.
 
 ![Job board built with shadcn/ui Rhea](docs/screenshot-home.png)
 
@@ -34,6 +39,11 @@ cd cavuno-shadcn-ui-job-board-template
 pnpm install
 pnpm dev            # http://localhost:3000
 ```
+
+The clone command requires access while the repository remains private.
+The repository also includes the 23 version-matched `@cavuno/board` agent
+skills under `.claude/skills`; re-run `pnpm exec cavuno-board setup` after an
+SDK upgrade so an LLM works from the same API contract as the installed code.
 
 With **zero config** it renders the platform **sandbox board** — a live,
 deterministic fixture tenant you can safely try everything on (applying,
@@ -85,7 +95,8 @@ the demo.
 
 | Surface | Route(s) |
 |---|---|
-| Jobs (hero + search + filters + load more) | `/` |
+| Home (company discovery + latest jobs) | `/` |
+| Jobs search (filters + master/detail) | `/jobs` |
 | Job detail (meta + Google for Jobs JSON-LD) | `/companies/:companySlug/jobs/:jobSlug` |
 | Programmatic listings | `/jobs/:keyword`, `/jobs/skills/:skill`, `/jobs/locations/:location` |
 | Companies | `/companies`, `/companies/:companySlug`, `/companies/markets/:market` |
@@ -105,9 +116,13 @@ handles messy data by construction: long titles clamp to keep card rhythm,
 absent salaries are omitted (never an empty label), 10–15 skill tags cap at
 3 + honest `+N`, missing logos fall back to initials, and one-line summaries
 are the real first sentence of the real description or omitted — never
-invented about a real employer. The full stress pass (production robotics
-board, 937 jobs, light + dark, CJK, sparse profiles) is recorded in
-[`docs/stress-log.md`](docs/stress-log.md).
+invented about a real employer. The historical source-baseline stress pass
+(production robotics board, 937 jobs, light + dark, CJK, sparse profiles) is
+recorded in [`docs/stress-log.md`](docs/stress-log.md). Current shadcn captures,
+route exercise, and interaction measurements live in
+[`docs/release-evidence/`](docs/release-evidence/README.md); the remaining
+private-delivery gates are recorded without overclaiming in
+[`docs/publish-gate.md`](docs/publish-gate.md).
 
 ## Upkeep
 
@@ -142,11 +157,24 @@ Path-prefixed `/de/` `/fr/` routing, SSR locale middleware, and per-locale
 `min-release-age` policy silently resolves `@cavuno/board@latest` down to an
 old version, so exact pins are load-bearing, not stylistic.
 
-## Tests
+## Verification
 
 ```sh
-pnpm test        # vitest via vp: session codec, theme mapper, JSON-LD,
-                 # copy-seam guard, view-models, derived-summary stress cases
 pnpm run typecheck
+pnpm test
+pnpm exec vp check
+pnpm run gen:design -- --check
 pnpm run build
+pnpm exec shadcn add --all --dry-run --yes
 ```
+
+After serving the production build on port 4173, the Board API conformance
+probe is:
+
+```sh
+pnpm exec cavuno-board doctor --frontend http://localhost:4173 --sandbox
+```
+
+Doctor is accepted for release only when the run has no failed or skipped
+suites. The latest private-delivery status, including any honest skips, lives
+in [`docs/publish-gate.md`](docs/publish-gate.md).

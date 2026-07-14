@@ -1,6 +1,21 @@
 {
   "name": "cavuno-shadcn-ui-job-board-template",
   "private": true,
+  "description": "A complete shadcn/ui job board template powered by Cavuno.",
+  "keywords": [
+    "base-ui",
+    "job-board",
+    "react",
+    "shadcn-ui",
+    "tailwindcss",
+    "tanstack",
+    "template"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wollemiahq/cavuno-shadcn-ui-job-board-template.git"
+  },
   "type": "module",
   "imports": {
     "#/*": "./src/*"

@@ -1,83 +1,116 @@
-# Publish gate — CAV-493
+# Private delivery gate — CAV-512
 
-- **Date:** 2026-07-11
-- **Branch:** `feat/cav-493-publish-gate` (base `feat/cav-492-stress-log`)
-- **Purpose:** record the publish-readiness gate run. The public flip
-  itself is a human decision — everything below is prepared and recorded,
-  not flipped.
+- **Date:** 2026-07-14
+- **Repository:** `wollemiahq/cavuno-shadcn-ui-job-board-template`
+- Repository visibility: **PRIVATE** — verified through GitHub metadata
+- **Purpose:** record private release evidence and the remaining gates without
+  authorizing a push, deploy, visibility change, announcement, or integration.
 
-## Machine gates (run + recorded)
+## Release hold
 
-| Item | Command | Result |
-|---|---|---|
-| Typecheck | `pnpm run typecheck` | **PASS** — `tsc --noEmit`, 0 errors |
-| Full suite | `pnpm test` | **PASS** — 23 files, **127 tests** passed |
-| Build | `pnpm run build` | **PASS** — `vp build` ✓ built |
-| Design artifacts | `pnpm run gen:design -- --check` | **PASS** — DESIGN.md + DTCG export match sources |
-| Pseudo-locale gate | `node scripts/pseudo-locale-gate.mjs http://localhost:4173` | **PASS** — `/en-XA/`, `/jobs`, `/companies`, `/blog` all bracketed + noindex; `/de/` canonical→base, sitemap clean |
-| CI grep gate 1 (legacy primitive-stack) | `grep -rnE "@base-ui/react\|lucide-react\|components/ui/" src/` | **PASS** — no matches (grep exit 1) |
-| CI grep gate 2 (Untitled UI PRO namespace) | `grep -rnE "untitledui\.com/react/pro\|@untitledui-pro" src/` | **PASS** — no matches (grep exit 1) |
+No push, deploy, public visibility change, announcement, ad-network
+integration, GitHub topic update, or hosted-demo change is authorized by this
+document. The repository must remain private until a person explicitly approves
+a later public-release decision.
 
-## Fresh-clone smoke (run + recorded)
+The current GitHub repository has no description, homepage, or topics. That is
+deliberate during the private gate. Recommended metadata for a later approved
+release is:
 
-Cloned the pushed branch to a clean temp dir with **no `.dev.vars`**, so the
-committed `wrangler.jsonc` sandbox default (`pk_c2f66367…`, CAV-490) is what
-renders.
+- Description: `A complete shadcn/ui job board template powered by Cavuno.`
+- Topics: `shadcn-ui`, `job-board`, `template`, `tanstack`, `tailwindcss`,
+  `react`, `base-ui`
+- Homepage: leave blank until a public demo is separately approved and live
+
+## Recorded machine evidence
+
+| Gate | Result |
+|---|---|
+| `pnpm run typecheck` | **PASS** — zero TypeScript errors |
+| `pnpm test` | **PASS** — 151 files, 756 tests |
+| `pnpm exec vp check` | **PASS** — 504 files correctly formatted and 485 files lint-clean |
+| `pnpm run build` | **PASS** — production worker built |
+| Generated design contract | **PASS** — byte-for-byte regeneration is covered by `src/design-contract.test.ts` |
+| `pnpm exec shadcn add --all --dry-run --yes` | **PASS** — all 61 official outputs resolve as owned overwrites; zero files would be created |
+| Sandbox write/read-back | **PASS** — a job created through `@cavuno/board` was retrieved by its returned slug and matched its ID and title |
+
+These results describe the current private candidate. They do not imply a
+public release or deployment.
+
+## Doctor gate
+
+Doctor: **not yet accepted**.
+
+The latest local sandbox run reported **15 passed, 0 failed, 2 skipped**. The
+version-matched SDK skill corpus is installed and `static.skills` now passes.
+The remaining skips are the email probe without its operator-owned Resend key
+and a theme probe that expects a `tokens.css` layout rather than this shadcn
+starter's canonical `src/theme.css`. CAV-512 requires a no-skip result, so this
+evidence is recorded honestly and the gate remains open. The next run must
+retain its complete output and either exercise every suite or resolve the
+doctor/template contract explicitly; a skipped suite must not be relabelled as
+a pass.
+
+## Fresh private clone
+
+**Not yet accepted.** The finished CAV-510/CAV-511 candidate has not been
+pushed, and `origin/main` does not yet contain it. After an explicit private
+push is authorized, verify an exact remote commit in a clean temporary
+directory with no `.dev.vars`:
 
 ```sh
-git clone --branch feat/cav-493-publish-gate --single-branch \
-  https://github.com/wollemiahq/cavuno-job-board-template-untitled-ui.git smoke
+git clone --branch <private-candidate-branch> --single-branch \
+  https://github.com/wollemiahq/cavuno-shadcn-ui-job-board-template.git smoke
 cd smoke
-pnpm i --frozen-lockfile   # PASS — frozen lockfile resolved, no drift
-pnpm run build             # PASS — vp build ✓
-pnpm exec vp preview --port 4183 &
-curl -s http://localhost:4183/ | grep '<title>'
-#   → <title>12 Jobs | Sandbox</title>
+pnpm install --frozen-lockfile
+pnpm run typecheck
+pnpm test
+pnpm exec vp check
+pnpm run gen:design -- --check
+pnpm run build
+pnpm exec shadcn add --all --dry-run --yes
 ```
 
-**Result: PASS** — a zero-config fresh clone builds and serves the live
-sandbox board (title `12 Jobs | Sandbox`), confirming the "clone → install →
-run → live job board" quickstart is true of the repo as pushed.
+Then serve that build using the committed sandbox default and run every Board
+doctor tier. Record the exact commit, command output, and probe counts here.
 
-## Non-local / prior-run gates (noted, not re-run)
+## Screenshot and interaction evidence
 
-- **Doctor (`npx cavuno-board doctor`, all three tiers):** green on CI for
-  every stack PR (CAV-480…492). Requires the built worker + sandbox write
-  probes wired in `ci.yml`; not re-run locally here.
-- **Visual review:** covered by the incremental per-ticket screenshots
-  attached to CAV-480…492, plus the full real-data stress pass
-  (`docs/stress-log.md`: production robotics board, 937 jobs, light + dark,
-  CJK, sparse profiles). The CAV-493 hero capture (`docs/screenshot-home.png`,
-  sandbox, 1280×800) is committed on this branch.
+**Not yet accepted.** `docs/screenshot-home.png` is now a current CAV-512
+homepage capture. The source-baseline artifacts in `docs/stress-log.md` remain
+explicitly historical. Current shadcn captures cover the homepage; selected
+jobs in light, dark, mobile, desktop, 767px,
+768px, and wide layouts; full job, companies, talent-empty, blog, posting,
+authenticated messaging, employer entry, candidate settings, and embed
+surfaces. The manifest and measured Back/Forward/refresh sequence are in
+[`docs/release-evidence/README.md`](release-evidence/README.md).
 
-## Operator-gated (CANNOT be done by the agent — human action required)
+Before this gate can close, the remaining screenshot matrix must cover:
 
-These are the actual publish flip and its side effects. Listed with exact
-commands where applicable.
+- jobs no-results, loading, forced error, sponsored, and sticky-action states;
+- populated left and right ad rails on a wide layout;
+- dark-mode coverage beyond the selected jobs surface; and
+- populated talent, verified candidate, employer-owned company, and sponsored
+  fixture states that the current sandbox does not expose.
 
-1. **Make the repo public + MIT effective.** The `LICENSE` file (MIT,
-   © 2026 Wollemia) is committed on this branch; the license only takes
-   legal effect once the repo is public. Flip via GitHub repo settings.
+The remaining interaction record must additionally exercise keyboard navigation
+with visible-focus traversal and reduced motion in a real browser.
+Canonical-anchor, modified-click, Back/Forward, refresh-restoration, and
+nested-pane contracts are covered by focused tests and the current browser
+measurements. A missing sandbox fixture must not be relabelled as a visual
+pass.
 
-2. **GitHub topics.** Cannot be set from the repo tree. Run:
+## Later public-release checklist
 
-   ```sh
-   gh repo edit wollemiahq/cavuno-job-board-template-untitled-ui \
-     --add-topic untitled-ui \
-     --add-topic job-board \
-     --add-topic template \
-     --add-topic react \
-     --add-topic tailwindcss
-   ```
+This section is preparation only. None of its actions are approved by CAV-512.
+If a person later authorizes a public release:
 
-3. **Demo deploy.** `wrangler deploy --env demo` (the production Robotics
-   Engineer Jobs board, `pk_d9ce40a1…`). Needs `wrangler` auth
-   (Cloudflare account login).
-
-4. **`cavuno-update-action` secret.** The weekly update workflow
-   (`.github/workflows/update.yaml`) needs its token/secret provisioned in
-   repo settings before it can open PRs.
-
-5. **PR-stack merges.** CAV-480…493 merge in order into `main` once each is
-   approved. This PR (CAV-493) bases on `feat/cav-492-stress-log`; do not
-   merge ahead of its base.
+1. Confirm every machine, doctor, fresh-clone, screenshot, interaction,
+   provenance, spec, and completeness gate above is accepted.
+2. Confirm the MIT copyright owner and repository metadata.
+3. Review the committed sandbox default and every committed publishable token.
+4. Decide separately whether a public demo should exist; do not infer a demo
+   deployment from repository visibility.
+5. Apply the approved description, topics, and homepage.
+6. Change visibility, deploy, announce, or integrate advertising only through
+   separately authorized operator actions, each with its own recorded outcome.
