@@ -27,8 +27,8 @@ release is:
 | Gate | Result |
 |---|---|
 | `pnpm run typecheck` | **PASS** — zero TypeScript errors |
-| `pnpm test` | **PASS** — 151 files, 756 tests |
-| `pnpm exec vp check` | **PASS** — 504 files correctly formatted and 485 files lint-clean |
+| `pnpm test` | **PASS** — 151 files, 757 tests |
+| `pnpm run check` | **PASS** — 505 files correctly formatted and 485 files lint-clean |
 | `pnpm run build` | **PASS** — production worker built |
 | Generated design contract | **PASS** — byte-for-byte regeneration is covered by `src/design-contract.test.ts` |
 | `pnpm exec shadcn add --all --dry-run --yes` | **PASS** — all 61 official outputs resolve as owned overwrites; zero files would be created |
@@ -65,7 +65,7 @@ cd smoke
 pnpm install --frozen-lockfile
 pnpm run typecheck
 pnpm test
-pnpm exec vp check
+pnpm run check
 pnpm run gen:design -- --check
 pnpm run build
 pnpm exec shadcn add --all --dry-run --yes

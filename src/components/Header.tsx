@@ -3,6 +3,7 @@
 import { useId, useState, type ReactNode } from 'react';
 
 import { boardCopy } from '#/copy';
+
 import { Link } from '@tanstack/react-router';
 import {
   BookOpenText,

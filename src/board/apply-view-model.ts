@@ -1,4 +1,5 @@
 import { boardCopy } from '#/copy';
+
 /**
  * Apply-button VIEW-MODEL — the Layer-1b seam for the apply block
  * (ADR-0070 Phase 2). `toApplyButtonVM` is the ONLY place the apply

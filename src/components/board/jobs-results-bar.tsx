@@ -1,6 +1,7 @@
 'use client';
 
 import { boardCopy } from '#/copy';
+
 import { DEFAULT_SORT, JOB_SORTS, sortLabels } from '@cavuno/board/filters';
 
 import { m } from '../../paraglide/messages';

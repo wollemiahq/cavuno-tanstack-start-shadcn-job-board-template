@@ -1,4 +1,5 @@
 import { boardCopy } from '#/copy';
+
 import { Search } from 'lucide-react';
 
 import { toJobCardVM } from '@/board/job-view-model';

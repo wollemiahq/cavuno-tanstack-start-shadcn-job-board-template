@@ -1,4 +1,5 @@
 import { boardCopy } from '#/copy';
+
 import {
   createBreadcrumbJsonLd,
   formatRange,

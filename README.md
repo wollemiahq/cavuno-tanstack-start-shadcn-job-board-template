@@ -162,7 +162,7 @@ old version, so exact pins are load-bearing, not stylistic.
 ```sh
 pnpm run typecheck
 pnpm test
-pnpm exec vp check
+pnpm run check
 pnpm run gen:design -- --check
 pnpm run build
 pnpm exec shadcn add --all --dry-run --yes

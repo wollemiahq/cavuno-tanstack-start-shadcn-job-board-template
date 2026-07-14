@@ -1,4 +1,5 @@
 import { boardCopy } from '#/copy';
+
 /**
  * Job card VIEW-MODEL — the Layer-1b seam for the job-card / job-search
  * block (ADR-0070 Phase 2). `toJobCardVM` is the ONLY place SDK wire

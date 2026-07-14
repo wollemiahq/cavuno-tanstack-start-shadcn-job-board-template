@@ -11,17 +11,39 @@ describe('CI quality gate', () => {
     );
 
     expect(workflow).toContain('- name: Lint and formatting');
-    expect(workflow).toContain('run: pnpm exec vp check');
-    expect(workflow).not.toContain('run: pnpm exec vp check --fix');
+    expect(workflow).toContain('run: pnpm run check');
+    expect(workflow).not.toContain('--fix');
   });
 
-  it('does not format generated source that its owner rewrites', () => {
-    const ignore = readFileSync(
-      resolve(process.cwd(), '.prettierignore'),
-      'utf8',
-    );
+  it('owns the formatter contract and generated ignores', () => {
+    const config = JSON.parse(
+      readFileSync(resolve(process.cwd(), '.oxfmtrc.json'), 'utf8'),
+    ) as {
+      ignorePatterns?: string[];
+      printWidth?: number;
+      singleQuote?: boolean;
+      sortImports?: {
+        customGroups?: Array<{ elementNamePattern?: string[] }>;
+        newlinesBetween?: boolean;
+      };
+    };
+    const packageJson = JSON.parse(
+      readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'),
+    ) as { scripts?: Record<string, string> };
 
-    expect(ignore).toContain('src/routeTree.gen.ts');
-    expect(ignore).toContain('src/theme/resolved.ts');
+    expect(config.printWidth).toBe(80);
+    expect(config.singleQuote).toBe(true);
+    expect(config.sortImports?.newlinesBetween).toBe(true);
+    expect(
+      config.sortImports?.customGroups?.flatMap(
+        ({ elementNamePattern }) => elementNamePattern ?? [],
+      ),
+    ).toContain('#/**');
+    expect(config.ignorePatterns).toEqual(
+      expect.arrayContaining(['src/routeTree.gen.ts', 'src/theme/resolved.ts']),
+    );
+    expect(packageJson.scripts?.check).toBe(
+      'vp fmt -c .oxfmtrc.json --check && vp check --no-fmt',
+    );
   });
 });

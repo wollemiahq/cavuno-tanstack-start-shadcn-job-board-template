@@ -1,4 +1,5 @@
 import { boardCopy } from '#/copy';
+
 import { Link } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';

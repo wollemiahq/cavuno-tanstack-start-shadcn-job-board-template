@@ -1,0 +1,59 @@
+{
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": true,
+  "arrowParens": "always",
+  "sortImports": {
+    "customGroups": [
+      {
+        "groupName": "server-only",
+        "elementNamePattern": ["server-only"]
+      },
+      {
+        "groupName": "react",
+        "elementNamePattern": ["react", "react-dom", "react-dom/**"]
+      },
+      {
+        "groupName": "next",
+        "elementNamePattern": ["next", "next/**"]
+      },
+      {
+        "groupName": "kit-packages",
+        "elementNamePattern": ["@kit/**"]
+      },
+      {
+        "groupName": "app-imports",
+        "elementNamePattern": ["~/**", "#/**"]
+      }
+    ],
+    "groups": [
+      "server-only",
+      "react",
+      "next",
+      "app-imports",
+      "value-external",
+      "kit-packages",
+      ["value-parent", "value-sibling", "value-index"]
+    ],
+    "newlinesBetween": true
+  },
+  "sortTailwindcss": {
+    "functions": ["tw", "clsx", "cn", "cva"]
+  },
+  "ignorePatterns": [
+    "database.types.ts",
+    "*.hbs",
+    "*.md",
+    "*.mdoc",
+    "dist",
+    "build",
+    ".next",
+    "next-env.d.ts",
+    "pnpm-lock.yaml",
+    "playwright-report",
+    "src/routeTree.gen.ts",
+    "src/theme/resolved.ts"
+  ]
+}

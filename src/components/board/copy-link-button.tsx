@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { boardCopy } from '#/copy';
+
 import { Copy, Link } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';

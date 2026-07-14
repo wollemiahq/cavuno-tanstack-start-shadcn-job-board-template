@@ -25,6 +25,7 @@
     "build": "vp build",
     "preview": "pnpm run build && vp preview",
     "test": "vp test run",
+    "check": "vp fmt -c .oxfmtrc.json --check && vp check --no-fmt",
     "deploy": "pnpm run build && wrangler deploy",
     "cf-typegen": "wrangler types",
     "typecheck": "tsc --noEmit",

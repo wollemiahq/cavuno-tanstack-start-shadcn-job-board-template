@@ -1,4 +1,5 @@
 import { boardCopy } from '#/copy';
+
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 

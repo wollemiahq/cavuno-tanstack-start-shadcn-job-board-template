@@ -1,4 +1,5 @@
 import { boardCopy } from '#/copy';
+
 import { listingHead, listingJsonLd } from '@cavuno/board/seo';
 /**
  * The canonical jobs listing at `/jobs` — parity with the hosted board,

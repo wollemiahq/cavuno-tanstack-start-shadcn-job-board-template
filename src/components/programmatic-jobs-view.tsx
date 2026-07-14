@@ -1,4 +1,5 @@
 import { boardCopy } from '#/copy';
+
 import { listingJsonLd } from '@cavuno/board/seo';
 import { getRouteApi, useNavigate } from '@tanstack/react-router';
 

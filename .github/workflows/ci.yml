@@ -22,7 +22,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Lint and formatting
-        run: pnpm exec vp check
+        run: pnpm run check
 
       - name: Typecheck
         run: pnpm run typecheck

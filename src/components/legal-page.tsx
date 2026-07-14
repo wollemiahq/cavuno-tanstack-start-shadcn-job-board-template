@@ -1,4 +1,5 @@
 import { boardCopy } from '#/copy';
+
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 
 import { legalMetaDescription, type LegalPageMeta } from '../lib/legal';

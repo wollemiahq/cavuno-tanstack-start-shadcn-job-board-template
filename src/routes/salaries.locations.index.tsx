@@ -1,4 +1,5 @@
 import { boardCopy } from '#/copy';
+
 import { type SalaryLocation } from '@cavuno/board';
 import {
   createBreadcrumbJsonLd,

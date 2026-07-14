@@ -1,4 +1,5 @@
 import { boardCopy } from '#/copy';
+
 import { isNotFound, type LocationSalaryDetail } from '@cavuno/board';
 import {
   buildSalaryFaq,

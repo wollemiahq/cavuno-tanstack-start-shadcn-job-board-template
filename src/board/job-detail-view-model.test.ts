@@ -1,4 +1,5 @@
 import { boardCopy } from '#/copy';
+
 import { describe, expect, it } from 'vitest';
 
 import { toJobDetailVM } from './job-detail-view-model';

@@ -1,4 +1,5 @@
 import { boardCopy } from '#/copy';
+
 /**
  * Salary VIEW-MODEL — the Layer-1b seam for the salary block (ADR-0070
  * Phase 2). These mappers are the ONLY place SDK formatters (`formatRange`,

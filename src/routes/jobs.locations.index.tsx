@@ -1,4 +1,5 @@
 import { boardCopy } from '#/copy';
+
 import { listingHead, listingJsonLd } from '@cavuno/board/seo';
 /**
  * Locations directory — `/jobs/locations/` (hosted parity:

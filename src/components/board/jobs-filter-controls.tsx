@@ -1,6 +1,7 @@
 'use client';
 
 import { boardCopy } from '#/copy';
+
 import {
   EMPLOYMENT_TYPES,
   REMOTE_OPTIONS,

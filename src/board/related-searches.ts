@@ -1,4 +1,5 @@
 import { m } from '#/paraglide/messages';
+
 import {
   companyMarketPath,
   jobsCategoryPath,

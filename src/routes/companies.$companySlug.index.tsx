@@ -1,4 +1,5 @@
 import { boardCopy } from '#/copy';
+
 import { isNotFound } from '@cavuno/board';
 import { companySalaryPath } from '@cavuno/board/paths';
 import { createBreadcrumbJsonLd, formatRange } from '@cavuno/board/seo';

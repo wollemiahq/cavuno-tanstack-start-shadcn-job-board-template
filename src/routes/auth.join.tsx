@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { boardCopy } from '#/copy';
+
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import {
   Link,
