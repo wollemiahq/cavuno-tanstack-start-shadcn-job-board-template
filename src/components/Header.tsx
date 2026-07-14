@@ -238,6 +238,7 @@ export default function Header({
                 {authEnabled ? (
                   <Link
                     to="/auth/sign-in"
+                    search={{ returnTo: undefined }}
                     className={cn(buttonVariants({ variant: "ghost" }), "hidden md:inline-flex")}
                   >
                     {signInLabel}

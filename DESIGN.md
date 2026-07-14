@@ -259,20 +259,6 @@ Props:
 - `nav: ShellNavItem[]`
 - `rail?: ReactNode`
 
-### CandidateShell — `src/components/account-shell.tsx`
-
-Candidate shell (Paper "Candidate — Sidebar"): Profile / Saved jobs /
-Job alerts / Applications / Subscription (paywall boards only) /
-Settings. Identity falls back to the session user; /account passes the
-richer profile identity + strength meter.
-
-Props:
-
-- `active: string`
-- `children: ReactNode`
-- `identity?: Partial<ShellIdentity> | undefined`
-- `rail?: ReactNode`
-
 ### EmployerCompanyShell — `src/components/account-shell.tsx`
 
 Employer company shell (Paper "Employer Sidebar"): the company identity
@@ -752,15 +738,6 @@ Props:
 
 ### AuthCard — `src/components/auth-form.tsx`
 
-Open, centered single-column auth shell — structured after Untitled UI's
-log-in page examples (logo mark → display heading + supporting text →
-form region). No card/ring wrapper: the auth surfaces sit on the bare
-page ground.
-
-Rhea pilot routes deliberately use `rhea-auth-pilot.tsx` instead. Keeping
-this inherited shell unchanged prevents a Rhea token scope from wrapping
-Untitled UI children while the remaining auth routes await migration.
-
 Props:
 
 - `children: ReactNode`
@@ -768,9 +745,6 @@ Props:
 - `title: string`
 
 ### AuthDivider — `src/components/auth-form.tsx`
-
-Hairline "OR" divider — the Untitled UI login separator between the
-primary email CTA and the social sign-in buttons.
 
 Props:
 
@@ -1867,8 +1841,7 @@ Props:
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `onApply: (jobSlug: string) => Promise<void>`
-- `signInHref?: string | undefined`
-- `verifyEmailHref?: string | undefined`
+- `returnTo: string`
 - `viewer: { emailVerified: boolean; } | null`
 
 ### BlogArchivePage — `src/components/board/blog-archive-page.tsx`
@@ -1922,6 +1895,17 @@ Props:
 
 - `ariaLabel: string`
 - `items: { name: string; href?: string | undefined; }[]`
+
+### CandidateAccountShell — `src/components/board/candidate-account-shell.tsx`
+
+Props:
+
+- `activeSection: string`
+- `children: ReactNode`
+- `identity: CandidateAccountIdentity`
+- `navigation: CandidateAccountNavigationItem[]`
+- `navigationLabel: string`
+- `rail?: ReactNode`
 
 ### CompanyAvatar — `src/components/board/company-avatar.tsx`
 
@@ -2365,9 +2349,10 @@ Props:
 Props:
 
 - `jobId: string`
-- `labels: { save: string; saving: string; saved: string; }`
+- `labels: { save: string; saving: string; saved: string; error: string; }`
 - `onSave: (jobId: string) => Promise<void>`
 - `onSaved?: (() => void | Promise<void>) | undefined`
+- `returnTo: string`
 - `viewer: { emailVerified: boolean; } | null`
 
 ### TalentProfileContent — `src/components/board/talent-profile-content.tsx`
@@ -2441,6 +2426,43 @@ Props:
 - `chips: TaxonomyChip[]`
 - `overflow?: number | undefined`
 - `size?: "sm" | "md" | "lg" | undefined`
+
+### CandidateActionFeedback — `src/components/candidate-action-feedback.tsx`
+
+Props:
+
+- `state: CandidateActionFeedbackState`
+
+### CandidateRouteError — `src/components/candidate-route-state.tsx`
+
+Props:
+
+- `description: string`
+- `navigationLabel: string`
+- `reset: () => void`
+- `retryLabel: string`
+- `title: string`
+
+### CandidateRouteErrorPage — `src/components/candidate-route-state.tsx`
+
+### CandidateRoutePending — `src/components/candidate-route-state.tsx`
+
+Props:
+
+- `label: string`
+
+### CandidateRoutePendingPage — `src/components/candidate-route-state.tsx`
+
+### CandidateShell — `src/components/candidate-shell.tsx`
+
+Props:
+
+- `active: string`
+- `candidatePaywall: boolean`
+- `children: ReactNode`
+- `identity?: Partial<CandidateShellIdentity> | undefined`
+- `rail?: ReactNode`
+- `viewer: CandidateShellViewer | null`
 
 ### BoardTheme — `src/components/cavuno/board-theme.tsx`
 
@@ -3118,7 +3140,7 @@ Props:
 - `copy: RegistrationCopy`
 - `footer?: ReactNode`
 - `onSubmit: (values: { displayName: string; email: string; password: string; }) => Promise<RegistrationResult>`
-- `successHref: "/account" | "/employers/dashboard"`
+- `successHref: string`
 - `supportingText: ReactNode`
 - `title: string`
 
@@ -3409,6 +3431,18 @@ Variants — `variant`: default, icon
 
 ### EmptyTitle — `src/components/ui/empty.tsx`
 
+### InputOTP — `src/components/ui/input-otp.tsx`
+
+### InputOTPGroup — `src/components/ui/input-otp.tsx`
+
+### InputOTPSeparator — `src/components/ui/input-otp.tsx`
+
+### InputOTPSlot — `src/components/ui/input-otp.tsx`
+
+Props:
+
+- `index: number`
+
 ### Input — `src/components/ui/input.tsx`
 
 ### Label — `src/components/ui/label.tsx`
@@ -3511,6 +3545,8 @@ Props:
 ### TableHeader — `src/components/ui/table.tsx`
 
 ### TableRow — `src/components/ui/table.tsx`
+
+### Textarea — `src/components/ui/textarea.tsx`
 
 ### NotFound — `src/components/untitled-ui/not-found.tsx`
 
@@ -3617,7 +3653,7 @@ from each page’s frontmatter.
 
 The logged-in surface chassis — an identity rail, section nav, and content region.
 
-Primitives: AccountShell, CandidateShell, EmployerCompanyShell
+Primitives: CandidateAccountShell, CandidateShell, AccountShell, EmployerCompanyShell, Page, PageContent
 
 ### Alert capture — `docs/patterns/alert-capture.md`
 
@@ -3629,7 +3665,7 @@ Primitives: AlertsBand, AlertSignupForm, JobAlertFloatingPrompt
 
 The centered single-column auth shell — mark, display heading, form, OR divider, social buttons.
 
-Primitives: AuthCard, Field, FormError, AuthDivider, SocialButton
+Primitives: AuthCard, Field, FormError, AuthDivider, Button, Input, RadioGroup, InputOTP
 
 ### Board card — `docs/patterns/board-card.md`
 
@@ -3671,7 +3707,7 @@ Primitives: FormError
 
 A page header, titled field sections, a field grid, and a submit with status — the shape of every data-entry surface.
 
-Primitives: Input, Select, TextAreaBase, Label, Button, FileUpload
+Primitives: Input, Select, Label, Button, Checkbox, CandidateActionFeedback
 
 ### Listing page — `docs/patterns/listing-page.md`
 

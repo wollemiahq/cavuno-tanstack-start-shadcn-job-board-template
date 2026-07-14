@@ -4,28 +4,42 @@
  * candidate's own alerts over `board.me.alerts.*` (list / create / update /
  * remove).
  */
-import { Text } from "@/components/text"
 import { createFileRoute, isRedirect, redirect } from "@tanstack/react-router";
 
-import { CandidateShell } from "@/components/account-shell";
+import { CandidateShell } from "@/components/candidate-shell";
+import {
+  CandidateRouteErrorPage,
+  CandidateRoutePendingPage,
+} from "@/components/candidate-route-state";
+import { candidateLoaderError } from "@/lib/candidate-loader-error";
 import { AlertManager } from "../components/alert-manager";
 import { m } from "../paraglide/messages";
 import { getMyAlerts } from "../server/account";
-
-function isEmailUnverified(error: unknown) {
-  return String(error).includes("EMAIL_UNVERIFIED");
-}
+import { useCandidateShellContext } from "./-candidate-shell-context";
 
 export const Route = createFileRoute("/me/alerts")({
+  staticData: { ownsMain: true },
+  pendingComponent: CandidateRoutePendingPage,
+  errorComponent: CandidateRouteErrorPage,
   loader: async () => {
     try {
       return await getMyAlerts();
     } catch (error) {
       if (isRedirect(error)) throw error;
-      if (isEmailUnverified(error)) {
-        throw redirect({ to: "/auth/verify-email-required" });
+      const authFailure = candidateLoaderError(error);
+      if (authFailure === "email-unverified") {
+        throw redirect({
+          to: "/auth/verify-email-required",
+          search: { returnTo: "/me/alerts" },
+        });
       }
-      throw redirect({ to: "/auth/sign-in" });
+      if (authFailure === "unauthenticated") {
+        throw redirect({
+          to: "/auth/sign-in",
+          search: { returnTo: "/me/alerts" },
+        });
+      }
+      throw error;
     }
   },
   head: () => ({ meta: [{ title: m.meAlerts_title() }] }),
@@ -34,13 +48,16 @@ export const Route = createFileRoute("/me/alerts")({
 
 function AlertsPage() {
   const alerts = Route.useLoaderData();
+  const candidateShell = useCandidateShellContext();
 
   return (
-    <CandidateShell active="alerts">
+    <CandidateShell active="alerts" {...candidateShell}>
       <div className="space-y-6">
         <header>
-          <Text as="h1" variant="heading3">{m.meAlerts_title()}</Text>
-          <p className="text-tertiary text-sm">{m.meAlerts_subtitleText()}</p>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">
+            {m.meAlerts_title()}
+          </h1>
+          <p className="text-sm text-muted-foreground">{m.meAlerts_subtitleText()}</p>
         </header>
 
         <AlertManager alerts={alerts.data} />

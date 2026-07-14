@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Native apply (ADR-0054) with the hosted board's fallback ladder. Now
@@ -17,12 +17,14 @@
  * The auth/verify/applications paths are plain hrefs — point them at
  * your app's routes and swap `<a>` for your router's Link if desired.
  */
-import { useState } from 'react';
+import { useState } from "react";
 
-import { Button } from '@/components/base/buttons/button';
-import { trackJobApplyClick } from '@/lib/analytics';
-import { toApplyButtonVM, type BoardLabelOverrides } from '@/board/apply-view-model';
-import { m } from '../../paraglide/messages';
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { trackJobApplyClick } from "@/lib/analytics";
+import { candidateSignInHref, candidateVerifyEmailHref } from "@/lib/candidate-return-to";
+import { toApplyButtonVM, type BoardLabelOverrides } from "@/board/apply-view-model";
+import { m } from "../../paraglide/messages";
 
 export function ApplyButton({
   jobId,
@@ -31,12 +33,11 @@ export function ApplyButton({
   applicationUrl,
   viewer,
   language,
+  returnTo,
   labels,
   onApply,
   alreadyApplied = false,
-  signInHref = '/auth/sign-in',
-  verifyEmailHref = '/auth/verify-email-required',
-  applicationsHref = '/me/applications',
+  applicationsHref = "/me/applications",
 }: {
   /** Convex job _id — keys the `job_apply_click` analytics event (P2). */
   jobId: string;
@@ -50,6 +51,8 @@ export function ApplyButton({
   viewer: { emailVerified: boolean } | null;
   /** Board language (ISO code) from `board.context()`. */
   language: string;
+  /** Complete internal URL to restore after candidate authentication. */
+  returnTo: string;
   /** Operator label overrides (`board.context().labels`), ADR-0059. */
   labels?: BoardLabelOverrides;
   /**
@@ -64,8 +67,6 @@ export function ApplyButton({
    * a returning visitor sees "Applied" instead of the apply button again.
    */
   alreadyApplied?: boolean;
-  signInHref?: string;
-  verifyEmailHref?: string;
   applicationsHref?: string;
 }) {
   // Only the transient in-session interaction lives in state; the
@@ -73,36 +74,32 @@ export function ApplyButton({
   // prop (server data). Reset the transient state when the job changes —
   // a component instance reused across client-side navigation (same tree
   // position, new `jobSlug`) must not carry Job A's "applied" onto Job B.
-  const [state, setState] = useState<'idle' | 'applying' | 'applied' | 'error'>(
-    'idle',
-  );
+  const [state, setState] = useState<"idle" | "applying" | "applied" | "error">("idle");
   const [trackedJob, setTrackedJob] = useState(jobSlug);
   if (jobSlug !== trackedJob) {
     setTrackedJob(jobSlug);
-    setState('idle');
+    setState("idle");
   }
 
   const { action, copy } = toApplyButtonVM({
     jobSlug,
     applicationUrl,
     viewer,
-    applied: alreadyApplied || state === 'applied',
+    applied: alreadyApplied || state === "applied",
     language,
     labels,
   });
 
   switch (action.kind) {
-    case 'none':
+    case "none":
       return null;
-    case 'external':
+    case "external":
       return (
-        <Button
+        <a
           href={action.url}
           target="_blank"
           rel="noreferrer"
-          color="primary"
-          size="lg"
-          className="w-full"
+          className={cn(buttonVariants({ size: "lg" }), "w-full")}
           // The outbound click IS the apply for external jobs — record it
           // for employer reporting (hosted parity; P2).
           onClick={() => trackJobApplyClick({ jobId, companySlug })}
@@ -110,59 +107,67 @@ export function ApplyButton({
           {/* Primary apply label is just "Apply" (CAV-500); the SDK's
               longer applyOnEmployerSiteLabel is dropped from the CTA. */}
           {m.applyButton_applyLabel()}
-        </Button>
+        </a>
       );
-    case 'sign-in':
+    case "sign-in":
       return (
-        <Button href={signInHref} color="primary" size="lg" className="w-full">
+        <a
+          href={candidateSignInHref(returnTo)}
+          className={cn(buttonVariants({ size: "lg" }), "w-full")}
+        >
           {copy.signInToApplyLabel}
-        </Button>
+        </a>
       );
-    case 'verify-email':
+    case "verify-email":
       return (
-        <Button href={verifyEmailHref} color="primary" size="lg" className="w-full">
+        <a
+          href={candidateVerifyEmailHref(returnTo)}
+          className={cn(buttonVariants({ size: "lg" }), "w-full")}
+        >
           {copy.verifyEmailToApplyLabel}
-        </Button>
+        </a>
       );
-    case 'applied':
+    case "applied":
       return (
-        <Button href={applicationsHref} color="secondary" size="lg" className="w-full">
+        <a
+          href={applicationsHref}
+          className={cn(buttonVariants({ variant: "secondary", size: "lg" }), "w-full")}
+        >
           {copy.appliedViewApplicationsLabel}
-        </Button>
+        </a>
       );
-    case 'native':
+    case "native":
       return (
         <div className="flex flex-col gap-1">
           <Button
-            color="primary"
             size="lg"
             className="w-full"
-            isDisabled={state === 'applying'}
+            disabled={state === "applying"}
             onClick={async () => {
               // Fired only on the press that performs the apply — the
               // sign-in/verify walls above never emit ("forcing sign-up
               // isn't an apply"), and the applied state renders a link.
               trackJobApplyClick({ jobId, companySlug });
-              setState('applying');
+              setState("applying");
               try {
                 await onApply(action.jobSlug);
-                setState('applied');
+                setState("applied");
               } catch (error) {
                 // A stale verification state routes to the verify page;
                 // any other failure surfaces loudly (never a silent
                 // revert — "fail loud", and never an unhandled rejection).
-                if (String(error).includes('EMAIL_UNVERIFIED')) {
-                  window.location.assign(verifyEmailHref);
+                if (String(error).includes("EMAIL_UNVERIFIED")) {
+                  window.location.assign(candidateVerifyEmailHref(returnTo));
                   return;
                 }
-                setState('error');
+                setState("error");
               }
             }}
           >
-            {state === 'applying' ? copy.applyingLabel : m.applyButton_applyLabel()}
+            {state === "applying" ? copy.applyingLabel : m.applyButton_applyLabel()}
           </Button>
-          {state === 'error' ? (
-            <p role="alert" className="text-sm text-error-primary">
+          {state === "error" ? (
+            <p role="alert" className="text-sm text-destructive">
               {copy.applicationSubmitError}
             </p>
           ) : null}

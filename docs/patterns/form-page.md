@@ -1,16 +1,17 @@
 ---
 name: Form page
 purpose: A page header, titled field sections, a field grid, and a submit with status — the shape of every data-entry surface.
-primitives: [Input, Select, TextAreaBase, Label, Button, FileUpload]
-usedBy: [src/routes/post.tsx, src/components/profile-form.tsx, src/routes/employers.onboarding.$slug.tsx, src/routes/employers.companies.$slug.profile.tsx]
+primitives: [Input, Select, Label, Button, Checkbox, CandidateActionFeedback]
+usedBy: [src/components/profile-form.tsx, src/components/experience-section.tsx, src/components/education-section.tsx]
 ---
 
 ## Purpose
 
-Data-entry surfaces (post a job, edit a profile, onboard an employer) share a
+Candidate data-entry surfaces share a
 shape: a page header, one or more titled sections, a grid of labeled fields
-built on the Untitled UI form primitives, and a submit control that surfaces its
-status. Consistent field anatomy keeps every form legible and accessible.
+built on owned shadcn/Base UI primitives, and a submit control that surfaces its
+loading, success, and recoverable error status. Consistent field anatomy keeps
+every form legible and accessible.
 
 ## When to use
 
@@ -22,31 +23,32 @@ status. Consistent field anatomy keeps every form legible and accessible.
 
 - Page header (display title + supporting text).
 - `<section>` blocks, each with an `h2` and a field grid.
-- Fields: `Input` / `Select` / `TextAreaBase` / `FileUpload` with a `Label`.
-- Submit `Button` + a [Form feedback](form-feedback.md) status line.
+- Fields: `Input` / `Select` / `Checkbox` with an explicit `Label`.
+- Submit `Button` + `CandidateActionFeedback` (or the relevant domain-specific feedback component).
 
 ## Composition
 
-The Untitled UI field primitives carry the label, hint, and validation styling —
-compose them rather than wrapping raw inputs:
+Compose owned shadcn primitives explicitly so the label/control relationship
+and validation behavior remain visible to both people and coding agents:
 
 ```tsx
-<Input label={label} name={name} isRequired validationBehavior="native" />
-<Select aria-label={…} items={items}>{(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}</Select>
+<Label htmlFor="role">{label}</Label>
+<Input id="role" name="role" required />
+<CandidateActionFeedback state={feedback} />
 ```
 
 ## Do / Don't
 
-| Do | Don't |
-|---|---|
-| Build fields from the Untitled UI `Input` / `Select` / `TextAreaBase`. | Hand-roll `Labeled` / `SelectField` wrappers — `post.tsx` still does, and is the largest single deviation. |
-| Use `text-display-*` for the page title and `gap-*` for spacing. | Use `text-2xl` + `space-y-*` (legacy sizing/rhythm), as `post.tsx` still does. |
-| Style with UUI tokens (`text-tertiary`, `ring-secondary_alt`). | Use `text-muted-foreground` / `border-border` / `text-destructive` — `post.tsx`, the employer profile/onboarding/dashboard forms still carry these (frozen by the [legacy-token ratchet](README.md)). |
+| Do                                                                                                            | Don't                                                               |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Build candidate fields from the owned shadcn `Input` / `Select` / `Checkbox` / `Label` primitives.            | Import a second presentation system into candidate forms.           |
+| Use native validation and visible loading, success, and retryable error feedback.                             | Swallow rejected mutations or leave a control indefinitely pending. |
+| Style through semantic theme tokens such as `text-muted-foreground`, `border-border`, and `text-destructive`. | Hard-code palette values that bypass `theme.css`.                   |
 
 ## Used by
 
-- `post.tsx` — post-a-job (the reference deviation to migrate).
-- `profile-form`, `employers.onboarding.$slug`, `employers.companies.$slug.profile`.
+- `profile-form`, `experience-section`, and `education-section`.
+- Employer and post-a-job forms remain legacy migration references; they are not consumers yet.
 
 ## Related
 

@@ -27,7 +27,7 @@ export const Route = createFileRoute('/employers/onboarding/$slug')({
       memberships = await listCompanies()
     } catch (error) {
       if (isRedirect(error)) throw error
-      throw redirect({ to: '/auth/sign-in' })
+      throw redirect({ to: '/auth/sign-in', search: { returnTo: undefined } })
     }
     const membership = memberships.data.find(
       (candidate) => candidate.company.slug === params.slug,

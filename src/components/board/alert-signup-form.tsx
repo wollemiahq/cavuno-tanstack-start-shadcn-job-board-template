@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Job-alert subscribe form: one email field, weekly frequency, double
@@ -21,17 +21,17 @@
  * idempotent per (email, filters): a repeat subscribe returns
  * `duplicate`, which this form surfaces honestly.
  */
-import { useState } from 'react';
+import { useState } from "react";
 
-import { Bell01 } from '@untitledui/icons';
+import { BellIcon } from "lucide-react";
 
-import { Button } from '@/components/base/buttons/button';
-import { InputBase } from '@/components/base/input/input';
-import { toAlertSignupVM } from '@/board/alert-signup-view-model';
-import type { JobAlertSubscribeInput } from '@cavuno/board';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
+import { toAlertSignupVM } from "@/board/alert-signup-view-model";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import type { JobAlertSubscribeInput } from "@cavuno/board";
+import type { BoardLabelOverrides } from "@cavuno/board/format";
 
-type Status = 'idle' | 'pending' | 'created' | 'duplicate' | 'error';
+type Status = "idle" | "pending" | "created" | "duplicate" | "error";
 
 export function AlertSignupForm({
   filters,
@@ -42,12 +42,10 @@ export function AlertSignupForm({
   title,
   description,
 }: {
-  filters?: JobAlertSubscribeInput['filters'];
-  context?: JobAlertSubscribeInput['context'];
+  filters?: JobAlertSubscribeInput["filters"];
+  context?: JobAlertSubscribeInput["context"];
   /** Perform the subscribe (see wiring docs); resolve with the API status. */
-  onSubscribe: (
-    input: JobAlertSubscribeInput,
-  ) => Promise<{ status: 'created' | 'duplicate' }>;
+  onSubscribe: (input: JobAlertSubscribeInput) => Promise<{ status: "created" | "duplicate" }>;
   /** Board language (ISO code) from `board.context()`. */
   language: string;
   /** Operator label overrides (`board.context().labels`), ADR-0059. */
@@ -55,87 +53,77 @@ export function AlertSignupForm({
   title?: string;
   description?: string;
 }) {
-  const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<Status>('idle');
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<Status>("idle");
 
   const vm = toAlertSignupVM(language, labels);
 
   const message =
-    status === 'created'
+    status === "created"
       ? vm.messages.created
-      : status === 'duplicate'
+      : status === "duplicate"
         ? vm.messages.duplicate
-        : status === 'error'
+        : status === "error"
           ? vm.messages.error
           : null;
 
   return (
     <section
       aria-label={vm.sectionAriaLabel}
-      className="space-y-3 rounded-xl border border-brand bg-brand-primary_alt p-5"
+      className="space-y-3 rounded-2xl border border-brand bg-brand-primary_alt p-5"
     >
-      <h2 className="flex items-center gap-2 text-md font-semibold text-primary">
-        <Bell01 className="size-4 text-fg-brand-primary" />
+      <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
+        <BellIcon className="size-4 text-primary" aria-hidden="true" />
         {title ?? vm.defaultTitle}
       </h2>
-      {description ? (
-        <p className="text-sm text-tertiary">{description}</p>
-      ) : null}
+      {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
       <form
         className="flex gap-2"
         onSubmit={async (event) => {
           event.preventDefault();
-          setStatus('pending');
+          setStatus("pending");
           try {
             const result = await onSubscribe({
               email,
               consent: true,
-              frequency: 'weekly',
+              frequency: "weekly",
               filters,
               context,
             });
-            setStatus(result.status === 'created' ? 'created' : 'duplicate');
-            if (result.status === 'created') setEmail('');
+            setStatus(result.status === "created" ? "created" : "duplicate");
+            if (result.status === "created") setEmail("");
           } catch {
-            setStatus('error');
+            setStatus("error");
           }
         }}
       >
-        <InputBase
+        <Input
           type="email"
           name="email"
           aria-label={vm.emailAriaLabel}
           inputMode="email"
           autoComplete="email"
           placeholder={vm.emailPlaceholder}
-          isRequired
+          required
           value={email}
-          isDisabled={status === 'pending'}
+          disabled={status === "pending"}
           onChange={(event) => {
             setEmail(event.target.value);
             // Clear a stale created/duplicate/error message once the
             // user edits the address.
-            if (status !== 'idle' && status !== 'pending') setStatus('idle');
+            if (status !== "idle" && status !== "pending") setStatus("idle");
           }}
-          wrapperClassName="flex-1"
+          className="flex-1"
         />
-        <Button
-          type="submit"
-          color="primary"
-          size="md"
-          aria-label={vm.submitAriaLabel}
-          isDisabled={status === 'pending'}
-        >
-          {status === 'pending' ? vm.subscribingLabel : vm.buttonText}
+        <Button type="submit" aria-label={vm.submitAriaLabel} disabled={status === "pending"}>
+          {status === "pending" ? vm.subscribingLabel : vm.buttonText}
         </Button>
       </form>
       {message ? (
         <p
           role="status"
           className={
-            status === 'error'
-              ? 'text-sm text-error-primary'
-              : 'text-sm text-tertiary'
+            status === "error" ? "text-sm text-destructive" : "text-sm text-muted-foreground"
           }
         >
           {message}

@@ -47,7 +47,7 @@ export const Route = createFileRoute('/employers/companies/$slug/')({
       return await getCompanyWorkspace({ data: { slug: params.slug } })
     } catch (error) {
       if (isRedirect(error)) throw error
-      throw redirect({ to: '/auth/sign-in' })
+      throw redirect({ to: '/auth/sign-in', search: { returnTo: undefined } })
     }
   },
   head: () => ({ meta: [{ title: m.employerCompany_metaTitle() }] }),

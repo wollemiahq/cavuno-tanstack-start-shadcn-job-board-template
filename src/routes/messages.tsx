@@ -46,9 +46,21 @@ export const Route = createFileRoute("/messages")({
     } catch (error) {
       if (isRedirect(error)) throw error;
       if (String(error).includes("EMAIL_UNVERIFIED")) {
-        throw redirect({ to: "/auth/verify-email-required" });
+        throw redirect({
+          to: "/auth/verify-email-required",
+          search: {
+            returnTo:
+              deps.view === "inbox" ? "/messages" : `/messages?view=${deps.view}`,
+          },
+        });
       }
-      throw redirect({ to: "/auth/sign-in" });
+      throw redirect({
+        to: "/auth/sign-in",
+        search: {
+          returnTo:
+            deps.view === "inbox" ? "/messages" : `/messages?view=${deps.view}`,
+        },
+      });
     }
   },
   head: () => ({ meta: [{ title: m.messagesPage_title() }] }),

@@ -59,10 +59,10 @@ describe("shadcn Rhea foundation", () => {
     expect(pilot[3]).toContain("RheaRegistrationPage");
   });
 
-  it("does not wrap inherited auth routes in the Rhea token scope", () => {
-    const inherited = read("src/components/auth-form.tsx");
-    expect(inherited).not.toMatch(/rhea-theme|components\/ui\//);
-    expect(inherited).toMatch(/@untitledui|components\/base\//);
+  it("keeps the migrated candidate auth shell entirely on owned Rhea components", () => {
+    const candidateAuth = read("src/components/auth-form.tsx");
+    expect(candidateAuth).toMatch(/rhea-auth-pilot|components\/ui\//);
+    expect(candidateAuth).not.toMatch(/@untitledui|components\/base\//);
   });
 
   it("loads the static tokens through the one global stylesheet entry", () => {

@@ -1,4 +1,4 @@
-import { useRouter } from "@tanstack/react-router";
+import { useLocation, useRouter } from "@tanstack/react-router";
 
 import { toJobDetailVM } from "@/board/job-detail-view-model";
 import { ApplyButton } from "@/components/board/apply-button";
@@ -20,6 +20,7 @@ export function SelectedJobDetail({
   user: Awaited<ReturnType<typeof getSessionUser>>;
 }) {
   const router = useRouter();
+  const returnTo = useLocation({ select: (location) => location.href });
   const vm = state.job
     ? toJobDetailVM(state.job, board.customFields, [], null, board.language, board.labels)
     : undefined;
@@ -41,8 +42,10 @@ export function SelectedJobDetail({
             jobSlug={state.job.slug}
             applicationUrl={state.job.applicationUrl}
             language={board.language}
+            returnTo={returnTo}
             labels={board.labels}
             viewer={user ? { emailVerified: user.emailVerified } : null}
+            alreadyApplied={state.alreadyApplied}
             onApply={async (jobSlug) => {
               await applyToJob({ data: { jobSlug } });
             }}
@@ -54,10 +57,12 @@ export function SelectedJobDetail({
           <SaveJobButton
             jobId={state.job.id}
             viewer={user ? { emailVerified: user.emailVerified } : null}
+            returnTo={returnTo}
             labels={{
               save: m.companyJobDetail_saveJobLabel(),
               saving: m.companyJobDetail_savingLabel(),
               saved: m.companyJobDetail_savedViewInAccountLabel(),
+              error: m.saveJobButton_errorText(),
             }}
             onSave={async (jobId) => {
               await saveJob({ data: { jobId } });

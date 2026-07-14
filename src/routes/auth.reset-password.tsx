@@ -1,33 +1,38 @@
 /** Reset-password landing — the route reset emails link to (ADR-0035). */
-import { useState } from 'react'
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { useState } from "react";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 
-import { AuthCard, Field, FormError } from '../components/auth-form'
-import { m } from '../paraglide/messages'
-import { Button } from '@/components/base/buttons/button'
-import { resetPassword } from '../server/auth'
+import { AuthCard, Field, FormError } from "../components/auth-form";
+import { m } from "../paraglide/messages";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { resetPassword } from "../server/auth";
+import {
+  candidateForgotPasswordHref,
+  candidateReturnTo,
+  candidateSignInHref,
+} from "../lib/candidate-return-to";
 
 interface ResetSearch {
-  token?: string
+  token?: string;
+  returnTo: string;
 }
 
-export const Route = createFileRoute('/auth/reset-password')({
+export const Route = createFileRoute("/auth/reset-password")({
   validateSearch: (search: Record<string, unknown>): ResetSearch => ({
-    token:
-      typeof search.token === 'string' && search.token
-        ? search.token
-        : undefined,
+    token: typeof search.token === "string" && search.token ? search.token : undefined,
+    returnTo: candidateReturnTo(search.returnTo),
   }),
   head: () => ({ meta: [{ title: m.authResetPassword_title() }] }),
   component: ResetPasswordPage,
-})
+});
 
 function ResetPasswordPage() {
-  const { token } = Route.useSearch()
-  const router = useRouter()
-  const [error, setError] = useState<string | null>(null)
-  const [pending, setPending] = useState(false)
-  const [done, setDone] = useState(false)
+  const { token, returnTo } = Route.useSearch();
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [done, setDone] = useState(false);
 
   if (!token) {
     return (
@@ -35,11 +40,14 @@ function ResetPasswordPage() {
         title={m.authResetPassword_invalidTitle()}
         supportingText={m.authResetPassword_invalidBody()}
       >
-        <Button color="secondary" size="lg" className="w-full" href="/auth/forgot-password">
+        <a
+          href={candidateForgotPasswordHref(returnTo)}
+          className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}
+        >
           {m.authResetPassword_requestNewLinkLabel()}
-        </Button>
+        </a>
       </AuthCard>
-    )
+    );
   }
 
   if (done) {
@@ -48,31 +56,39 @@ function ResetPasswordPage() {
         title={m.authResetPassword_updatedTitle()}
         supportingText={m.authResetPassword_updatedBody()}
       >
-        <Button color="primary" size="lg" className="w-full" href="/auth/sign-in">
+        <a
+          href={candidateSignInHref(returnTo)}
+          className={cn(buttonVariants({ size: "lg" }), "w-full")}
+        >
           {m.authResetPassword_signInLabel()}
-        </Button>
+        </a>
       </AuthCard>
-    )
+    );
   }
 
   return (
     <AuthCard title={m.authResetPassword_title()}>
       <form
-        className="flex flex-col gap-4"
+        className="grid gap-4"
         onSubmit={async (event) => {
-          event.preventDefault()
-          setPending(true)
-          setError(null)
-          const form = new FormData(event.currentTarget)
-          const result = await resetPassword({
-            data: { token, password: String(form.get('password')) },
-          })
-          setPending(false)
-          if (result.ok) {
-            await router.invalidate()
-            setDone(true)
-          } else {
-            setError(m.authResetPassword_expiredError())
+          event.preventDefault();
+          setPending(true);
+          setError(null);
+          const form = new FormData(event.currentTarget);
+          try {
+            const result = await resetPassword({
+              data: { token, password: String(form.get("password")) },
+            });
+            if (result.ok) {
+              await router.invalidate();
+              setDone(true);
+            } else {
+              setError(m.authResetPassword_expiredError());
+            }
+          } catch {
+            setError(m.candidateAction_errorText());
+          } finally {
+            setPending(false);
           }
         }}
       >
@@ -84,10 +100,10 @@ function ResetPasswordPage() {
           minLength={8}
         />
         <FormError message={error} />
-        <Button type="submit" color="primary" size="lg" className="w-full" isDisabled={pending}>
+        <Button type="submit" size="lg" className="w-full" disabled={pending}>
           {pending ? m.authResetPassword_updatingLabel() : m.authResetPassword_submitLabel()}
         </Button>
       </form>
     </AuthCard>
-  )
+  );
 }

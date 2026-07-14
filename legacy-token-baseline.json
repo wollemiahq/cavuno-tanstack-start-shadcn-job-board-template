@@ -4,11 +4,6 @@
     "icons": 0,
     "tokens": 7
   },
-  "src/components/alert-manager.tsx": {
-    "imports": 5,
-    "icons": 0,
-    "tokens": 7
-  },
   "src/components/application/app-navigation/base-components/mobile-header.tsx": {
     "imports": 0,
     "icons": 1,
@@ -153,16 +148,6 @@
     "imports": 1,
     "icons": 0,
     "tokens": 28
-  },
-  "src/components/auth-form.tsx": {
-    "imports": 1,
-    "icons": 1,
-    "tokens": 6
-  },
-  "src/components/avatar-upload.tsx": {
-    "imports": 2,
-    "icons": 0,
-    "tokens": 2
   },
   "src/components/base/avatar/avatar-label-group.tsx": {
     "imports": 1,
@@ -460,19 +445,9 @@
     "tokens": 1
   },
   "src/components/board/alert-signup-form.tsx": {
-    "imports": 2,
-    "icons": 1,
-    "tokens": 6
-  },
-  "src/components/board/alerts-band.tsx": {
-    "imports": 2,
+    "imports": 0,
     "icons": 0,
-    "tokens": 3
-  },
-  "src/components/board/apply-button.tsx": {
-    "imports": 1,
-    "icons": 0,
-    "tokens": 1
+    "tokens": 2
   },
   "src/components/board/breadcrumb.tsx": {
     "imports": 0,
@@ -499,11 +474,6 @@
     "icons": 1,
     "tokens": 0
   },
-  "src/components/board/job-card.tsx": {
-    "imports": 2,
-    "icons": 0,
-    "tokens": 14
-  },
   "src/components/board/job-detail.tsx": {
     "imports": 3,
     "icons": 0,
@@ -528,21 +498,6 @@
     "imports": 0,
     "icons": 0,
     "tokens": 1
-  },
-  "src/components/danger-zone.tsx": {
-    "imports": 2,
-    "icons": 0,
-    "tokens": 4
-  },
-  "src/components/education-section.tsx": {
-    "imports": 3,
-    "icons": 0,
-    "tokens": 5
-  },
-  "src/components/experience-section.tsx": {
-    "imports": 3,
-    "icons": 0,
-    "tokens": 5
   },
   "src/components/foundations/featured-icon/featured-icon.tsx": {
     "imports": 0,
@@ -634,16 +589,6 @@
     "icons": 0,
     "tokens": 5
   },
-  "src/components/job-alert-floating-prompt.tsx": {
-    "imports": 1,
-    "icons": 1,
-    "tokens": 2
-  },
-  "src/components/languages-section.tsx": {
-    "imports": 2,
-    "icons": 1,
-    "tokens": 3
-  },
   "src/components/legal-page.tsx": {
     "imports": 0,
     "icons": 0,
@@ -684,25 +629,10 @@
     "icons": 1,
     "tokens": 6
   },
-  "src/components/notification-settings.tsx": {
-    "imports": 1,
-    "icons": 0,
-    "tokens": 1
-  },
   "src/components/post-card.tsx": {
     "imports": 0,
     "icons": 0,
     "tokens": 1
-  },
-  "src/components/profile-form.tsx": {
-    "imports": 5,
-    "icons": 0,
-    "tokens": 4
-  },
-  "src/components/resume-upload.tsx": {
-    "imports": 3,
-    "icons": 0,
-    "tokens": 6
   },
   "src/components/rich-text-editor.tsx": {
     "imports": 3,
@@ -739,11 +669,6 @@
     "icons": 0,
     "tokens": 3
   },
-  "src/components/skills-section.tsx": {
-    "imports": 2,
-    "icons": 1,
-    "tokens": 4
-  },
   "src/components/talent-card.tsx": {
     "imports": 1,
     "icons": 0,
@@ -773,66 +698,6 @@
     "imports": 0,
     "icons": 0,
     "tokens": 2
-  },
-  "src/routes/account.access.tsx": {
-    "imports": 2,
-    "icons": 0,
-    "tokens": 6
-  },
-  "src/routes/account.saved.tsx": {
-    "imports": 1,
-    "icons": 0,
-    "tokens": 3
-  },
-  "src/routes/account.tsx": {
-    "imports": 2,
-    "icons": 0,
-    "tokens": 5
-  },
-  "src/routes/alerts.confirm.tsx": {
-    "imports": 0,
-    "icons": 0,
-    "tokens": 1
-  },
-  "src/routes/alerts.manage.tsx": {
-    "imports": 2,
-    "icons": 0,
-    "tokens": 7
-  },
-  "src/routes/auth.forgot-password.tsx": {
-    "imports": 1,
-    "icons": 0,
-    "tokens": 0
-  },
-  "src/routes/auth.magic-link.tsx": {
-    "imports": 1,
-    "icons": 0,
-    "tokens": 0
-  },
-  "src/routes/auth.oauth-complete.tsx": {
-    "imports": 1,
-    "icons": 0,
-    "tokens": 0
-  },
-  "src/routes/auth.reset-password.tsx": {
-    "imports": 1,
-    "icons": 0,
-    "tokens": 0
-  },
-  "src/routes/auth.sign-in.tsx": {
-    "imports": 3,
-    "icons": 0,
-    "tokens": 3
-  },
-  "src/routes/auth.verify-email-required.tsx": {
-    "imports": 2,
-    "icons": 0,
-    "tokens": 2
-  },
-  "src/routes/auth.verify-email.tsx": {
-    "imports": 1,
-    "icons": 0,
-    "tokens": 0
   },
   "src/routes/companies.$companySlug.index.tsx": {
     "imports": 2,
@@ -894,16 +759,6 @@
     "icons": 0,
     "tokens": 1
   },
-  "src/routes/me.alerts.tsx": {
-    "imports": 0,
-    "icons": 0,
-    "tokens": 1
-  },
-  "src/routes/me.applications.tsx": {
-    "imports": 2,
-    "icons": 0,
-    "tokens": 6
-  },
   "src/routes/messages.tsx": {
     "imports": 0,
     "icons": 0,
@@ -928,11 +783,6 @@
     "imports": 0,
     "icons": 0,
     "tokens": 4
-  },
-  "src/routes/settings.tsx": {
-    "imports": 1,
-    "icons": 0,
-    "tokens": 3
   },
   "src/routes/terms-of-service.tsx": {
     "imports": 0,

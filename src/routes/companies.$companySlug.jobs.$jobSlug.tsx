@@ -7,7 +7,7 @@
  * assembly. The similar-jobs rail degrades to empty on a search outage,
  * matching the hosted page (the rail is never fatal to the render).
  */
-import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
+import { createFileRoute, notFound, useLocation, useRouter } from "@tanstack/react-router";
 
 import { isNotFound } from "@cavuno/board";
 import { companyIntro } from "@cavuno/board/format";
@@ -26,7 +26,7 @@ import { JsonLd } from "@/components/json-ld";
 import { jobAlertDefaultsFromJob } from "../lib/job-alert-defaults";
 import { m } from "../paraglide/messages";
 import { getSessionUser, saveJob } from "../server/account";
-import { applyToJob } from "../server/applications";
+import { applyToJob, myApplicationForJob } from "../server/applications";
 import {
   getBoardContext,
   getCompany,
@@ -52,7 +52,18 @@ export const Route = createFileRoute("/companies/$companySlug/jobs/$jobSlug")({
         getCompany({ data: { companySlug: params.companySlug } }).catch(() => null),
         getSeoBase(),
       ]);
-      return { job, board, user, similar, company, seo };
+      const application = user?.emailVerified
+        ? await myApplicationForJob({ data: { jobSlug: params.jobSlug } }).catch(() => null)
+        : null;
+      return {
+        job,
+        board,
+        user,
+        similar,
+        company,
+        seo,
+        alreadyApplied: application !== null,
+      };
     } catch (error) {
       if (isNotFound(error)) throw notFound();
       throw error;
@@ -112,10 +123,11 @@ export const Route = createFileRoute("/companies/$companySlug/jobs/$jobSlug")({
 });
 
 function JobDetailPage() {
-  const { job, board, user, similar, company, seo } = Route.useLoaderData();
+  const { job, board, user, similar, company, seo, alreadyApplied } = Route.useLoaderData();
   const { companySlug } = Route.useParams();
   const defaults = jobAlertDefaultsFromJob(job);
   const router = useRouter();
+  const returnTo = useLocation({ select: (location) => location.href });
 
   const vm = toJobDetailVM(
     job,
@@ -146,8 +158,10 @@ function JobDetailPage() {
             jobSlug={job.slug}
             applicationUrl={job.applicationUrl}
             language={board.language}
+            returnTo={returnTo}
             labels={board.labels}
             viewer={user ? { emailVerified: user.emailVerified } : null}
+            alreadyApplied={alreadyApplied}
             onApply={async (jobSlug) => {
               await applyToJob({ data: { jobSlug } });
             }}
@@ -157,10 +171,12 @@ function JobDetailPage() {
           <SaveJobButton
             jobId={job.id}
             viewer={user ? { emailVerified: user.emailVerified } : null}
+            returnTo={returnTo}
             labels={{
               save: m.companyJobDetail_saveJobLabel(),
               saving: m.companyJobDetail_savingLabel(),
               saved: m.companyJobDetail_savedViewInAccountLabel(),
+              error: m.saveJobButton_errorText(),
             }}
             onSave={async (jobId) => {
               await saveJob({ data: { jobId } });

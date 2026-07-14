@@ -3,9 +3,13 @@
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getJob } = vi.hoisted(() => ({ getJob: vi.fn() }));
+const { getJob, myApplicationForJob } = vi.hoisted(() => ({
+  getJob: vi.fn(),
+  myApplicationForJob: vi.fn(),
+}));
 
 vi.mock("../server/queries", () => ({ getJob }));
+vi.mock("../server/applications", () => ({ myApplicationForJob }));
 
 import { useSelectedJob } from "./-use-selected-job";
 
@@ -23,7 +27,10 @@ function deferred<T>() {
   return { promise, resolve, reject };
 }
 
-beforeEach(() => getJob.mockReset());
+beforeEach(() => {
+  getJob.mockReset();
+  myApplicationForJob.mockReset();
+});
 afterEach(cleanup);
 
 describe("useSelectedJob", () => {
@@ -67,5 +74,39 @@ describe("useSelectedJob", () => {
 
     expect(result.current.status).toBe("idle");
     expect(getJob).not.toHaveBeenCalled();
+  });
+
+  it("seeds a verified returning candidate's existing application", async () => {
+    getJob.mockResolvedValue(job("first-job"));
+    myApplicationForJob.mockResolvedValue({ id: "application-1" });
+
+    const { result } = renderHook(() => useSelectedJob("first-job", true));
+
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+    expect(myApplicationForJob).toHaveBeenCalledWith({
+      data: { jobSlug: "first-job" },
+    });
+    expect(result.current.alreadyApplied).toBe(true);
+  });
+
+  it("still renders the public job when private application state is unavailable", async () => {
+    getJob.mockResolvedValue(job("first-job"));
+    myApplicationForJob.mockRejectedValue(new Error("Private state unavailable"));
+
+    const { result } = renderHook(() => useSelectedJob("first-job", true));
+
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+    expect(result.current.job?.slug).toBe("first-job");
+    expect(result.current.alreadyApplied).toBe(false);
+  });
+
+  it("does not request private application state for anonymous or unverified viewers", async () => {
+    getJob.mockResolvedValue(job("first-job"));
+
+    const { result } = renderHook(() => useSelectedJob("first-job", false));
+
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+    expect(myApplicationForJob).not.toHaveBeenCalled();
+    expect(result.current.alreadyApplied).toBe(false);
   });
 });

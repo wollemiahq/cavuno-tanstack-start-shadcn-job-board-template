@@ -20,7 +20,10 @@ export const Route = createFileRoute('/messages/$conversationId')({
     } catch (error) {
       if (isRedirect(error)) throw error
       if (String(error).includes('EMAIL_UNVERIFIED')) {
-        throw redirect({ to: '/auth/verify-email-required' })
+        throw redirect({
+          to: '/auth/verify-email-required',
+          search: { returnTo: `/messages/${encodeURIComponent(params.conversationId)}` },
+        })
       }
       throw redirect({ to: '/messages' })
     }

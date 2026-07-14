@@ -53,6 +53,7 @@ export function ProgrammaticJobsView({
   const navigate = useNavigate() as unknown as LooseNavigate;
   const selectedJob = useSelectedJob(
     jobs.some((job) => job.slug === filters.selectedJob) ? filters.selectedJob : undefined,
+    Boolean(user?.emailVerified),
   );
   const jsonLd = origin
     ? listingJsonLd({

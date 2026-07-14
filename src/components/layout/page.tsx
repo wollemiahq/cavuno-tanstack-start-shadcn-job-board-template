@@ -147,7 +147,10 @@ export function PageContent({
   const primary = (
     <div
       data-slot="page-primary"
-      className="flex min-w-0 flex-col gap-8 lg:col-start-1 lg:row-start-1"
+      className={cn(
+        "flex min-w-0 flex-col gap-8 lg:row-start-1",
+        aside && asideOrder === "before" ? "lg:col-start-2" : "lg:col-start-1",
+      )}
     >
       {children}
     </div>
@@ -157,7 +160,10 @@ export function PageContent({
     <aside
       data-slot="page-aside"
       aria-label={asideLabel}
-      className="flex flex-col gap-6 lg:sticky lg:top-8 lg:col-start-2 lg:row-start-1 lg:self-start"
+      className={cn(
+        "flex flex-col gap-6 lg:sticky lg:top-8 lg:row-start-1 lg:self-start",
+        asideOrder === "before" ? "lg:col-start-1" : "lg:col-start-2",
+      )}
     >
       {aside}
     </aside>
@@ -175,7 +181,10 @@ export function PageContent({
         data-slot="page-body"
         className={cn(
           "grid gap-8 py-8 md:py-10",
-          complementary && "lg:grid-cols-[minmax(0,1fr)_20rem]",
+          complementary &&
+            (asideOrder === "before"
+              ? "lg:grid-cols-[20rem_minmax(0,1fr)]"
+              : "lg:grid-cols-[minmax(0,1fr)_20rem]"),
         )}
       >
         {asideOrder === "before" ? complementary : null}

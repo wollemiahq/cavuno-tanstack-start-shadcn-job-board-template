@@ -7,38 +7,41 @@
  *    (`?boardUserId&channel&token`) — handled in the loader BEFORE the auth
  *    branch, so an unauthenticated recipient is never bounced to sign-in.
  */
-import { Text } from '@/components/text'
-import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router'
+import { createFileRoute, isRedirect, Link, redirect } from "@tanstack/react-router";
 
-import { CandidateShell } from '@/components/account-shell'
-import { NotificationSettings } from '../components/notification-settings'
-import { m } from '../paraglide/messages'
+import { CandidateShell } from "@/components/candidate-shell";
 import {
-  getNotificationPreferences,
-  unsubscribeWithToken,
-} from '../server/settings'
+  CandidateRouteErrorPage,
+  CandidateRoutePendingPage,
+} from "@/components/candidate-route-state";
+import { Page, PageContent } from "@/components/layout/page";
+import { buttonVariants } from "@/components/ui/button";
+import { candidateLoaderError } from "@/lib/candidate-loader-error";
+import { candidateSignInHref } from "@/lib/candidate-return-to";
+import { NotificationSettings } from "../components/notification-settings";
+import { m } from "../paraglide/messages";
+import { getNotificationPreferences, unsubscribeWithToken } from "../server/settings";
+import { useCandidateShellContext } from "./-candidate-shell-context";
 
-import { Button } from '@/components/base/buttons/button'
-
-type Channel = 'messageEmails' | 'applicationEmails'
+type Channel = "messageEmails" | "applicationEmails";
 
 type Search = {
-  token?: string
-  boardUserId?: string
-  channel?: Channel
-}
+  token?: string;
+  boardUserId?: string;
+  channel?: Channel;
+};
 
 function asChannel(value: unknown): Channel | undefined {
-  return value === 'messageEmails' || value === 'applicationEmails'
-    ? value
-    : undefined
+  return value === "messageEmails" || value === "applicationEmails" ? value : undefined;
 }
 
-export const Route = createFileRoute('/settings')({
+export const Route = createFileRoute("/settings")({
+  staticData: { ownsMain: true },
+  pendingComponent: CandidateRoutePendingPage,
+  errorComponent: CandidateRouteErrorPage,
   validateSearch: (search: Record<string, unknown>): Search => ({
-    token: typeof search.token === 'string' ? search.token : undefined,
-    boardUserId:
-      typeof search.boardUserId === 'string' ? search.boardUserId : undefined,
+    token: typeof search.token === "string" ? search.token : undefined,
+    boardUserId: typeof search.boardUserId === "string" ? search.boardUserId : undefined,
     channel: asChannel(search.channel),
   }),
   loaderDeps: ({ search }) => search,
@@ -51,71 +54,106 @@ export const Route = createFileRoute('/settings')({
             boardUserId: deps.boardUserId,
             channel: deps.channel,
           },
-        })
-        return { mode: 'unsubscribed' as const, channel: deps.channel }
+        });
+        return { mode: "unsubscribed" as const, channel: deps.channel };
       } catch {
-        return { mode: 'unsubscribe-failed' as const }
+        return { mode: "unsubscribe-failed" as const };
       }
     }
     try {
-      const preferences = await getNotificationPreferences()
-      return { mode: 'settings' as const, preferences: preferences.data }
+      const preferences = await getNotificationPreferences();
+      return { mode: "settings" as const, preferences: preferences.data };
     } catch (error) {
-      if (isRedirect(error)) throw error
-      throw redirect({ to: '/auth/sign-in' })
+      if (isRedirect(error)) throw error;
+      const authFailure = candidateLoaderError(error);
+      if (authFailure === "email-unverified") {
+        throw redirect({
+          to: "/auth/verify-email-required",
+          search: { returnTo: "/settings" },
+        });
+      }
+      if (authFailure === "unauthenticated") {
+        throw redirect({ to: "/auth/sign-in", search: { returnTo: "/settings" } });
+      }
+      throw error;
     }
   },
   head: () => ({ meta: [{ title: m.settings_title() }] }),
   component: SettingsPage,
-})
+});
 
 const CHANNEL_NAMES: Record<Channel, () => string> = {
   messageEmails: m.settings_channelMessage,
   applicationEmails: m.settings_channelApplicationUpdate,
-}
+};
 
 function SettingsPage() {
-  const data = Route.useLoaderData()
+  const data = Route.useLoaderData();
 
-  if (data.mode === 'unsubscribed') {
+  if (data.mode === "unsubscribed") {
     return (
-      <div className="mx-auto max-w-md space-y-3 text-center">
-        <Text as="h1" variant="heading1">{m.settings_unsubscribedHeading()}</Text>
-        <p className="text-tertiary text-sm">
-          {m.settings_unsubscribedBody({ channel: CHANNEL_NAMES[data.channel]() })}
-        </p>
-        <Button color="secondary" size="md" href="/account">
-          {m.settings_goToAccountLabel()}
-        </Button>
-      </div>
-    )
+      <Page width="narrow">
+        <PageContent>
+          <div className="space-y-3 py-10 text-center">
+            <h1 className="font-heading text-3xl font-semibold tracking-tight">
+              {m.settings_unsubscribedHeading()}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {m.settings_unsubscribedBody({ channel: CHANNEL_NAMES[data.channel]() })}
+            </p>
+            <Link to="/account" className={buttonVariants({ variant: "outline" })}>
+              {m.settings_goToAccountLabel()}
+            </Link>
+          </div>
+        </PageContent>
+      </Page>
+    );
   }
 
-  if (data.mode === 'unsubscribe-failed') {
+  if (data.mode === "unsubscribe-failed") {
     return (
-      <div className="mx-auto max-w-md space-y-3 text-center">
-        <Text as="h1" variant="heading1">{m.settings_linkExpiredHeading()}</Text>
-        <p className="text-tertiary text-sm">
-          {m.settings_linkExpiredBody()}
-        </p>
-        <Button color="secondary" size="md" href="/auth/sign-in">
-          {m.settings_signInLabel()}
-        </Button>
-      </div>
-    )
+      <Page width="narrow">
+        <PageContent>
+          <div className="space-y-3 py-10 text-center">
+            <h1 className="font-heading text-3xl font-semibold tracking-tight">
+              {m.settings_linkExpiredHeading()}
+            </h1>
+            <p className="text-sm text-muted-foreground">{m.settings_linkExpiredBody()}</p>
+            <a
+              href={candidateSignInHref("/settings")}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              {m.settings_signInLabel()}
+            </a>
+          </div>
+        </PageContent>
+      </Page>
+    );
   }
 
   // Signed-in mode renders inside the candidate shell; the anonymous
   // unsubscribe-token branches above stay bare (no session, no sidebar).
+  return <SignedInSettings preferences={data.preferences} />;
+}
+
+function SignedInSettings({
+  preferences,
+}: {
+  preferences: Parameters<typeof NotificationSettings>[0]["preferences"];
+}) {
+  const candidateShell = useCandidateShellContext();
+
   return (
-    <CandidateShell active="settings">
+    <CandidateShell active="settings" {...candidateShell}>
       <div className="space-y-6">
         <header>
-          <Text as="h1" variant="heading3">{m.settings_title()}</Text>
-          <p className="text-tertiary text-sm">{m.settings_emailNotificationsText()}</p>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">
+            {m.settings_title()}
+          </h1>
+          <p className="text-sm text-muted-foreground">{m.settings_emailNotificationsText()}</p>
         </header>
-        <NotificationSettings preferences={data.preferences} />
+        <NotificationSettings preferences={preferences} />
       </div>
     </CandidateShell>
-  )
+  );
 }

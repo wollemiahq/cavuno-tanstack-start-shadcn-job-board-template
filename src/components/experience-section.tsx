@@ -1,50 +1,50 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
+import { useState } from "react";
 
-import { useRouter } from '@tanstack/react-router'
-import type { CandidateExperience } from '@cavuno/board'
+import { useRouter } from "@tanstack/react-router";
+import type { CandidateExperience } from "@cavuno/board";
 
-import { Button } from '@/components/base/buttons/button'
-import { Input } from '@/components/base/input/input'
-import { TextArea } from '@/components/base/textarea/textarea'
-import { Text } from '@/components/text'
-import { m } from '../paraglide/messages'
 import {
-  createExperience,
-  deleteExperience,
-  updateExperience,
-} from '../server/account'
+  CandidateActionFeedback,
+  type CandidateActionFeedbackState,
+} from "@/components/candidate-action-feedback";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { m } from "../paraglide/messages";
+import { createExperience, deleteExperience, updateExperience } from "../server/account";
 
-type Editing = { id: string | null } | null
+type Editing = { id: string | null } | null;
 
 type Draft = {
-  title: string
-  companyName: string
-  location: string
-  startDate: string
-  endDate: string
-  description: string
-}
+  title: string;
+  companyName: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+};
 
 const EMPTY: Draft = {
-  title: '',
-  companyName: '',
-  location: '',
-  startDate: '',
-  endDate: '',
-  description: '',
-}
+  title: "",
+  companyName: "",
+  location: "",
+  startDate: "",
+  endDate: "",
+  description: "",
+};
 
 function toDraft(item: CandidateExperience): Draft {
   return {
     title: item.title,
     companyName: item.companyName,
-    location: item.location ?? '',
+    location: item.location ?? "",
     startDate: item.startDate,
-    endDate: item.endDate ?? '',
-    description: item.description ?? '',
-  }
+    endDate: item.endDate ?? "",
+    description: item.description ?? "",
+  };
 }
 
 /**
@@ -53,18 +53,20 @@ function toDraft(item: CandidateExperience): Draft {
  * `deleteExperience`. The body is a merge-patch on edit (empty clears).
  */
 export function ExperienceSection({ items }: { items: CandidateExperience[] }) {
-  const router = useRouter()
-  const [editing, setEditing] = useState<Editing>(null)
-  const [draft, setDraft] = useState<Draft>(EMPTY)
-  const [pending, setPending] = useState(false)
+  const router = useRouter();
+  const [editing, setEditing] = useState<Editing>(null);
+  const [draft, setDraft] = useState<Draft>(EMPTY);
+  const [pending, setPending] = useState(false);
+  const [feedback, setFeedback] = useState<CandidateActionFeedbackState>("idle");
 
   const open = (item: CandidateExperience | null) => {
-    setEditing({ id: item ? item.id : null })
-    setDraft(item ? toDraft(item) : EMPTY)
-  }
+    setEditing({ id: item ? item.id : null });
+    setDraft(item ? toDraft(item) : EMPTY);
+  };
 
   const submit = async () => {
-    setPending(true)
+    setPending(true);
+    setFeedback("idle");
     const body = {
       title: draft.title.trim(),
       companyName: draft.companyName.trim(),
@@ -72,63 +74,78 @@ export function ExperienceSection({ items }: { items: CandidateExperience[] }) {
       startDate: draft.startDate,
       endDate: draft.endDate,
       description: draft.description.trim(),
-    }
+    };
     try {
       if (editing?.id) {
-        await updateExperience({ data: { id: editing.id, body } })
+        await updateExperience({ data: { id: editing.id, body } });
       } else {
-        await createExperience({ data: body })
+        await createExperience({ data: body });
       }
-      await router.invalidate()
-      setEditing(null)
-      setDraft(EMPTY)
+      await router.invalidate();
+      setEditing(null);
+      setDraft(EMPTY);
+      setFeedback("success");
+    } catch {
+      setFeedback("error");
     } finally {
-      setPending(false)
+      setPending(false);
     }
-  }
+  };
 
   return (
     <section className="space-y-3" data-test="experience-section">
       <div className="flex items-center justify-between">
-        <Text as="h2" variant="heading4">{m.experienceSection_heading()}</Text>
+        <h2 className="font-heading text-lg font-semibold tracking-tight">
+          {m.experienceSection_heading()}
+        </h2>
         {editing === null ? (
-          <Button color="secondary" size="sm" onClick={() => open(null)}>
+          <Button variant="outline" size="sm" onClick={() => open(null)}>
             {m.experienceSection_addLabel()}
           </Button>
         ) : null}
       </div>
 
       {items.length === 0 && editing === null ? (
-        <p className="text-tertiary text-sm">{m.experienceSection_emptyText()}</p>
+        <p className="text-sm text-muted-foreground">{m.experienceSection_emptyText()}</p>
       ) : null}
 
       <ul className="space-y-2">
         {items.map((item) => (
           <li
             key={item.id}
-            className="border-secondary flex items-start justify-between gap-3 rounded-lg border p-3"
+            className="flex items-start justify-between gap-3 rounded-2xl border border-border p-3"
           >
             <div>
               <p className="font-medium">{item.title}</p>
-              <p className="text-tertiary text-sm">
+              <p className="text-sm text-muted-foreground">
                 {item.companyName}
-                {item.location ? ` · ${item.location}` : ''}
+                {item.location ? ` · ${item.location}` : ""}
               </p>
-              <p className="text-tertiary text-xs">
+              <p className="text-xs text-muted-foreground">
                 {item.startDate}
                 {item.endDate ? ` – ${item.endDate}` : ` – ${m.experienceSection_presentLabel()}`}
               </p>
             </div>
             <div className="flex shrink-0 gap-1">
-              <Button color="tertiary" size="sm" onClick={() => open(item)}>
+              <Button variant="ghost" size="sm" onClick={() => open(item)}>
                 {m.experienceSection_editLabel()}
               </Button>
               <Button
-                color="tertiary"
+                variant="ghost"
                 size="sm"
+                disabled={pending}
                 onClick={async () => {
-                  await deleteExperience({ data: { id: item.id } })
-                  await router.invalidate()
+                  setPending(true);
+                  setFeedback("idle");
+                  try {
+                    await deleteExperience({ data: { id: item.id } });
+                    await router.invalidate();
+                    setFeedback("success");
+                  } catch {
+                    setFeedback("error");
+                  } finally {
+                    setPending(false);
+                  }
                 }}
               >
                 {m.experienceSection_deleteLabel()}
@@ -140,64 +157,82 @@ export function ExperienceSection({ items }: { items: CandidateExperience[] }) {
 
       {editing !== null ? (
         <form
-          className="border-secondary space-y-3 rounded-lg border p-3"
+          className="space-y-3 rounded-2xl border border-border p-3"
           onSubmit={(event) => {
-            event.preventDefault()
-            void submit()
+            event.preventDefault();
+            void submit();
           }}
         >
           <div className="grid gap-3 sm:grid-cols-2">
-            <Input
-              label={m.experienceSection_titleLabel()}
-              isRequired
-              value={draft.title}
-              onChange={(value) => setDraft({ ...draft, title: value })}
-            />
-            <Input
-              label={m.experienceSection_companyLabel()}
-              isRequired
-              value={draft.companyName}
-              onChange={(value) => setDraft({ ...draft, companyName: value })}
-            />
-            <Input
-              label={m.experienceSection_locationLabel()}
-              value={draft.location}
-              onChange={(value) => setDraft({ ...draft, location: value })}
-            />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="experience-title">{m.experienceSection_titleLabel()}</Label>
               <Input
-                label={m.experienceSection_startLabel()}
-                type="date"
-                isRequired
-                value={draft.startDate}
-                onChange={(value) => setDraft({ ...draft, startDate: value })}
-              />
-              <Input
-                label={m.experienceSection_endLabel()}
-                type="date"
-                value={draft.endDate}
-                onChange={(value) => setDraft({ ...draft, endDate: value })}
+                id="experience-title"
+                required
+                value={draft.title}
+                onChange={(event) => setDraft({ ...draft, title: event.target.value })}
               />
             </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="experience-company">{m.experienceSection_companyLabel()}</Label>
+              <Input
+                id="experience-company"
+                required
+                value={draft.companyName}
+                onChange={(event) => setDraft({ ...draft, companyName: event.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="experience-location">{m.experienceSection_locationLabel()}</Label>
+              <Input
+                id="experience-location"
+                value={draft.location}
+                onChange={(event) => setDraft({ ...draft, location: event.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="experience-start">{m.experienceSection_startLabel()}</Label>
+                <Input
+                  id="experience-start"
+                  type="date"
+                  required
+                  value={draft.startDate}
+                  onChange={(event) => setDraft({ ...draft, startDate: event.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="experience-end">{m.experienceSection_endLabel()}</Label>
+                <Input
+                  id="experience-end"
+                  type="date"
+                  value={draft.endDate}
+                  onChange={(event) => setDraft({ ...draft, endDate: event.target.value })}
+                />
+              </div>
+            </div>
           </div>
-          <TextArea
-            label={m.experienceSection_descriptionLabel()}
-            rows={3}
-            value={draft.description}
-            onChange={(value) => setDraft({ ...draft, description: value })}
-          />
+          <div className="space-y-1.5">
+            <Label htmlFor="experience-description">{m.experienceSection_descriptionLabel()}</Label>
+            <Textarea
+              id="experience-description"
+              rows={3}
+              value={draft.description}
+              onChange={(event) => setDraft({ ...draft, description: event.target.value })}
+            />
+          </div>
           <div className="flex gap-2">
-            <Button type="submit" size="sm" isDisabled={pending}>
+            <Button type="submit" size="sm" disabled={pending}>
               {pending ? m.experienceSection_savingLabel() : m.experienceSection_saveLabel()}
             </Button>
             <Button
               type="button"
-              color="tertiary"
+              variant="ghost"
               size="sm"
-              isDisabled={pending}
+              disabled={pending}
               onClick={() => {
-                setEditing(null)
-                setDraft(EMPTY)
+                setEditing(null);
+                setDraft(EMPTY);
               }}
             >
               {m.experienceSection_cancelLabel()}
@@ -205,6 +240,7 @@ export function ExperienceSection({ items }: { items: CandidateExperience[] }) {
           </div>
         </form>
       ) : null}
+      <CandidateActionFeedback state={feedback} />
     </section>
-  )
+  );
 }

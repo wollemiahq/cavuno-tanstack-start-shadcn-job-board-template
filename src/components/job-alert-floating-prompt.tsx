@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-import { XClose } from "@untitledui/icons";
+import { XIcon } from "lucide-react";
 
 import type { JobAlertDefaults } from "../lib/job-alert-defaults";
 import type { BoardLabelOverrides } from "@cavuno/board/format";
 import { AlertSignupForm } from "@/components/board/alert-signup-form";
-import { ButtonUtility } from "@/components/base/buttons/button-utility";
+import { Button } from "@/components/ui/button";
 import { m } from "../paraglide/messages";
 import { subscribeJobAlert } from "../server/queries";
 
@@ -41,19 +41,21 @@ export function JobAlertFloatingPrompt({
   return (
     <div
       data-test="job-alert-floating-prompt"
-      className="fixed right-4 bottom-4 z-40 w-80 max-w-[calc(100vw-2rem)] rounded-xl bg-primary shadow-lg ring-1 ring-secondary_alt"
+      className="fixed right-4 bottom-4 z-40 w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-card text-card-foreground shadow-lg ring-1 ring-foreground/5 dark:ring-foreground/10"
     >
-      <ButtonUtility
-        size="xs"
-        color="tertiary"
-        icon={XClose}
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-xs"
         aria-label={m.jobAlertFloatingPrompt_dismissAriaLabel()}
         onClick={() => {
           localStorage.setItem(SUPPRESS_KEY, String(Date.now() + SUPPRESS_MS));
           setVisible(false);
         }}
         className="absolute top-2 right-2"
-      />
+      >
+        <XIcon aria-hidden="true" />
+      </Button>
       <AlertSignupForm
         filters={defaults.filters}
         context={defaults.context}

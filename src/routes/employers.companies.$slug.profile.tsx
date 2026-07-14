@@ -46,7 +46,7 @@ export const Route = createFileRoute('/employers/companies/$slug/profile')({
       return { workspace, company, publicJobs }
     } catch (error) {
       if (isRedirect(error)) throw error
-      throw redirect({ to: '/auth/sign-in' })
+      throw redirect({ to: '/auth/sign-in', search: { returnTo: undefined } })
     }
   },
   head: () => ({ meta: [{ title: m.employerCompany_metaTitle() }] }),

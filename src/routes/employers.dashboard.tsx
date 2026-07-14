@@ -36,7 +36,7 @@ export const Route = createFileRoute('/employers/dashboard')({
       return await listCompanies()
     } catch (error) {
       if (isRedirect(error)) throw error
-      throw redirect({ to: '/auth/sign-in' })
+      throw redirect({ to: '/auth/sign-in', search: { returnTo: undefined } })
     }
   },
   head: () => ({ meta: [{ title: m.employerDashboard_metaTitle() }] }),

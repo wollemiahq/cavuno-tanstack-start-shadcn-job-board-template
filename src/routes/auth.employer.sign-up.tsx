@@ -1,21 +1,16 @@
-import {
-  Link,
-  createFileRoute,
-  notFound,
-  useRouter,
-} from '@tanstack/react-router'
+import { Link, createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 
-import { RheaRegistrationPage } from '@/components/rhea-auth-pilot'
-import { buttonVariants } from '@/components/ui/button'
-import { m } from '../paraglide/messages'
-import { signUpEmployer } from '../server/auth'
-import { getBoardContext } from '../server/queries'
+import { RheaRegistrationPage } from "@/components/rhea-auth-pilot";
+import { buttonVariants } from "@/components/ui/button";
+import { m } from "../paraglide/messages";
+import { signUpEmployer } from "../server/auth";
+import { getBoardContext } from "../server/queries";
 
-export const Route = createFileRoute('/auth/employer/sign-up')({
+export const Route = createFileRoute("/auth/employer/sign-up")({
   loader: async () => {
-    const board = await getBoardContext()
-    if (!board.features.employers) throw notFound()
-    return { boardName: board.name }
+    const board = await getBoardContext();
+    if (!board.features.employers) throw notFound();
+    return { boardName: board.name };
   },
   head: () => ({ meta: [{ title: m.authEmployerSignUp_title() }] }),
   component: EmployerSignUpPage,
@@ -26,11 +21,11 @@ export const Route = createFileRoute('/auth/employer/sign-up')({
       </p>
     </div>
   ),
-})
+});
 
 function EmployerSignUpPage() {
-  const router = useRouter()
-  const { boardName } = Route.useLoaderData()
+  const router = useRouter();
+  const { boardName } = Route.useLoaderData();
 
   return (
     <RheaRegistrationPage
@@ -48,21 +43,22 @@ function EmployerSignUpPage() {
       }}
       successHref="/employers/dashboard"
       onSubmit={async (values) => {
-        const result = await signUpEmployer({ data: values })
-        if (result.ok) await router.invalidate()
-        return result
+        const result = await signUpEmployer({ data: values });
+        if (result.ok) await router.invalidate();
+        return result;
       }}
       footer={
         <p className="text-center text-sm text-muted-foreground">
-          {m.authEmployerSignUp_lookingForWorkText()}{' '}
+          {m.authEmployerSignUp_lookingForWorkText()}{" "}
           <Link
             to="/auth/sign-up"
-            className={buttonVariants({ variant: 'link', size: 'sm' })}
+            search={{ returnTo: undefined }}
+            className={buttonVariants({ variant: "link", size: "sm" })}
           >
             {m.authEmployerSignUp_joinAsCandidateLink()}
           </Link>
         </p>
       }
     />
-  )
+  );
 }

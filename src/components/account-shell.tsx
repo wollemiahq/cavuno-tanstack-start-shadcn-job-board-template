@@ -4,7 +4,7 @@
  * footer stay — this renders inside the root <main>. On mobile the rail
  * stacks on top and the nav scrolls horizontally.
  */
-import { Link, getRouteApi } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 
 import { CompanyAvatar } from "@/components/board/company-avatar";
 import { cx } from "@/utils/cx";
@@ -42,20 +42,14 @@ export function AccountShell({
     <div className="flex flex-col gap-8 md:flex-row md:gap-10">
       <aside className="w-full shrink-0 md:w-60">
         <div className="flex items-center gap-3 md:block md:space-y-3">
-          <CompanyAvatar
-            name={identity.title || "?"}
-            logoUrl={identity.avatarUrl}
-            size="lg"
-          />
+          <CompanyAvatar name={identity.title || "?"} logoUrl={identity.avatarUrl} size="lg" />
           <div>
             <p className="text-primary flex flex-wrap items-center gap-2 font-semibold">
               {identity.title}
               {identity.badge}
             </p>
             {identity.subtitle ? (
-              <p className="text-tertiary mt-0.5 text-sm break-all">
-                {identity.subtitle}
-              </p>
+              <p className="text-tertiary mt-0.5 text-sm break-all">{identity.subtitle}</p>
             ) : null}
           </div>
         </div>
@@ -85,68 +79,6 @@ export function AccountShell({
 
       <div className="min-w-0 flex-1">{children}</div>
     </div>
-  );
-}
-
-const rootApi = getRouteApi("__root__");
-
-/**
- * Candidate shell (Paper "Candidate — Sidebar"): Profile / Saved jobs /
- * Job alerts / Applications / Subscription (paywall boards only) /
- * Settings. Identity falls back to the session user; /account passes the
- * richer profile identity + strength meter.
- */
-export function CandidateShell({
-  active,
-  identity,
-  rail,
-  children,
-}: {
-  active: string;
-  identity?: Partial<ShellIdentity>;
-  rail?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  const { board, user } = rootApi.useLoaderData();
-  const title = identity?.title ?? user?.displayName ?? user?.email ?? "";
-  const nav: ShellNavItem[] = [
-    { key: "profile", to: "/account", label: m.accountShell_profileNav() },
-    {
-      key: "saved",
-      to: "/account/saved",
-      label: m.accountShell_savedJobsNav(),
-    },
-    { key: "alerts", to: "/me/alerts", label: m.accountShell_jobAlertsNav() },
-    {
-      key: "applications",
-      to: "/me/applications",
-      label: m.accountShell_applicationsNav(),
-    },
-    ...(board.features.candidatePaywall
-      ? [
-          {
-            key: "subscription",
-            to: "/account/access",
-            label: m.accountShell_subscriptionNav(),
-          },
-        ]
-      : []),
-    { key: "settings", to: "/settings", label: m.accountShell_settingsNav() },
-  ];
-  return (
-    <AccountShell
-      identity={{
-        avatarUrl: identity?.avatarUrl ?? null,
-        title,
-        subtitle: identity?.subtitle ?? user?.email ?? null,
-        badge: identity?.badge,
-      }}
-      nav={nav}
-      active={active}
-      rail={rail}
-    >
-      {children}
-    </AccountShell>
   );
 }
 

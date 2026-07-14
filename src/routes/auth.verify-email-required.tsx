@@ -4,28 +4,39 @@
  * verification email (`board.auth.verifyEmailWithCode`) or opens the magic link
  * (which lands on `/auth/verify-email`). Resend re-sends both.
  */
-import { useState } from 'react'
+import { useState } from "react";
 
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 
-import { AuthCard, FormError } from '../components/auth-form'
-import { m } from '../paraglide/messages'
-import { resendOtp, verifyOtpCode } from '../server/auth'
+import { AuthCard, FormError } from "../components/auth-form";
+import { m } from "../paraglide/messages";
+import { resendOtp, verifyOtpCode } from "../server/auth";
+import { candidateReturnTo, candidateSignInHref } from "../lib/candidate-return-to";
 
-import { Button } from '@/components/base/buttons/button'
-import { PinInput } from '@/components/base/input/pin-input'
+import { Button, buttonVariants } from "@/components/ui/button";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute('/auth/verify-email-required')({
+export const Route = createFileRoute("/auth/verify-email-required")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    returnTo:
+      typeof search.returnTo === "string" && search.returnTo
+        ? candidateReturnTo(search.returnTo)
+        : undefined,
+  }),
   head: () => ({ meta: [{ title: m.authVerifyEmailRequired_title() }] }),
   component: VerifyEmailRequiredPage,
-})
+});
 
 function VerifyEmailRequiredPage() {
-  const router = useRouter()
-  const [error, setError] = useState<string | null>(null)
-  const [pending, setPending] = useState(false)
-  const [resending, setResending] = useState(false)
-  const [resent, setResent] = useState(false)
+  const router = useRouter();
+  const search = Route.useSearch();
+  const returnTo = candidateReturnTo(search.returnTo);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
 
   return (
     <AuthCard
@@ -33,89 +44,106 @@ function VerifyEmailRequiredPage() {
       supportingText={m.authVerifyEmailRequired_introText()}
     >
       <form
-        className="flex flex-col gap-4"
+        className="grid gap-4"
         onSubmit={async (event) => {
-          event.preventDefault()
-          setPending(true)
-          setError(null)
-          const form = new FormData(event.currentTarget)
-          const result = await verifyOtpCode({
-            data: { code: String(form.get('code')).trim() },
-          })
-          setPending(false)
-          if (result.ok) {
-            await router.invalidate()
-            await router.navigate({ to: '/account' })
-          } else {
-            setError(result.message)
+          event.preventDefault();
+          setPending(true);
+          setError(null);
+          const form = new FormData(event.currentTarget);
+          try {
+            const result = await verifyOtpCode({
+              data: { code: String(form.get("code")).trim() },
+            });
+            if (result.ok) {
+              await router.invalidate();
+              await router.navigate({ href: returnTo });
+            } else {
+              setError(result.message);
+            }
+          } catch {
+            setError(m.candidateAction_errorText());
+          } finally {
+            setPending(false);
           }
         }}
       >
-        <PinInput size="xs" className="items-center">
-          <PinInput.Label>{m.authVerifyEmailRequired_codeLabel()}</PinInput.Label>
-          {/* The vendored OTP input renders one real `<input name="code">`
-              (visually hidden) carrying the typed digits, so the existing
-              FormData submit path is unchanged. */}
-          <PinInput.Group
+        <div className="grid gap-2">
+          <Label htmlFor="code">{m.authVerifyEmailRequired_codeLabel()}</Label>
+          <InputOTP
+            id="code"
             name="code"
             maxLength={6}
             inputMode="numeric"
             autoComplete="one-time-code"
             data-test="otp-code"
+            containerClassName="justify-center"
           >
-            <PinInput.Slot index={0} />
-            <PinInput.Slot index={1} />
-            <PinInput.Slot index={2} />
-            <PinInput.Slot index={3} />
-            <PinInput.Slot index={4} />
-            <PinInput.Slot index={5} />
-          </PinInput.Group>
-        </PinInput>
+            <InputOTPGroup>
+              <InputOTPSlot index={0} className="size-10" />
+              <InputOTPSlot index={1} className="size-10" />
+              <InputOTPSlot index={2} className="size-10" />
+              <InputOTPSlot index={3} className="size-10" />
+              <InputOTPSlot index={4} className="size-10" />
+              <InputOTPSlot index={5} className="size-10" />
+            </InputOTPGroup>
+          </InputOTP>
+        </div>
         <FormError message={error} />
         <Button
           type="submit"
-          color="primary"
           size="lg"
           className="w-full"
-          isDisabled={pending}
+          disabled={pending}
           data-test="otp-verify"
         >
-          {pending ? m.authVerifyEmailRequired_verifyingLabel() : m.authVerifyEmailRequired_verifyLabel()}
+          {pending
+            ? m.authVerifyEmailRequired_verifyingLabel()
+            : m.authVerifyEmailRequired_verifyLabel()}
         </Button>
       </form>
 
       {resent ? (
-        <p className="rounded-lg bg-secondary p-3 text-sm text-tertiary">
+        <p className="rounded-2xl bg-muted p-3 text-sm text-muted-foreground">
           {m.authVerifyEmailRequired_resentText()}
         </p>
       ) : null}
 
       <Button
         type="button"
-        color="secondary"
+        variant="outline"
         size="lg"
         className="w-full"
         data-test="otp-resend"
-        isDisabled={resending}
+        disabled={resending}
         onClick={async () => {
-          setError(null)
-          setResent(false)
-          setResending(true)
-          const result = await resendOtp()
-          setResending(false)
-          if (result.ok) {
-            setResent(true)
-          } else {
-            setError(result.message)
+          setError(null);
+          setResent(false);
+          setResending(true);
+          try {
+            const result = await resendOtp();
+            if (result.ok) {
+              setResent(true);
+            } else {
+              setError(result.message);
+            }
+          } catch {
+            setError(m.candidateAction_errorText());
+          } finally {
+            setResending(false);
           }
         }}
       >
-        {resending ? m.authVerifyEmailRequired_sendingLabel() : m.authVerifyEmailRequired_resendLabel()}
+        {resending
+          ? m.authVerifyEmailRequired_sendingLabel()
+          : m.authVerifyEmailRequired_resendLabel()}
       </Button>
 
-      <Button color="tertiary" size="lg" className="w-full" href="/auth/sign-in">
+      <a
+        href={candidateSignInHref(returnTo)}
+        className={cn(buttonVariants({ variant: "ghost", size: "lg" }), "w-full")}
+      >
         {m.authVerifyEmailRequired_backToSignInLabel()}
-      </Button>
+      </a>
     </AuthCard>
-  )
+  );
 }

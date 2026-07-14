@@ -35,7 +35,7 @@ function tsxFiles(dir: string): string[] {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) {
       out.push(...tsxFiles(path));
-    } else if (entry.name.endsWith(".tsx") && !/\.test\.tsx$/.test(entry.name)) {
+    } else if (entry.name.endsWith(".tsx") && !entry.name.endsWith(".test.tsx")) {
       out.push(path);
     }
   }
@@ -52,7 +52,7 @@ describe("pattern docs (docs/patterns/)", () => {
   });
 
   it("the folder holds only markdown (template, index, and pattern pages)", () => {
-    const stray = readdirSync(PATTERNS_DIR).filter((f) => !/\.md$/.test(f));
+    const stray = readdirSync(PATTERNS_DIR).filter((f) => !f.endsWith(".md"));
     expect(stray, `non-markdown files in docs/patterns: ${stray}`).toEqual([]);
   });
 
@@ -160,33 +160,35 @@ describe("breadcrumb placement (P6 — one placement primitive)", () => {
   });
 });
 
-describe("typography scale (P17 — authored headings route through <Text>)", () => {
-  // The role-named `Text` primitive (src/components/text.tsx) makes off-scale
-  // headings unexpressible: there is no `text-2xl` heading variant, so an
-  // authored `<h1>`–`<h6>` in a route or a board component must never carry a
-  // raw off-scale Tailwind size (the `text-2xl … text-6xl` drift that CAV-513
-  // burned down). A heading needing a size reaches for `<Text variant=…>`,
-  // whose token is on the Untitled UI scale by construction.
+describe("typography scale (P17 — authored headings use the Rhea heading role)", () => {
+  // Rhea uses explicit semantic headings with the Geist heading role. Larger
+  // Tailwind sizes are valid only when the same authored heading also carries
+  // `font-heading`; this keeps interface typography explicit without routing
+  // shadcn surfaces back through the inherited Untitled Text component.
   //
   // Scope is authored surfaces ONLY — `src/routes` + `src/components/board`.
   // It deliberately excludes the vendored UUI collection
   // (`base`/`application`/`foundations`, which ship their own scale) and the
   // `Prose` rich-text surface (whose headings come from rendered HTML strings,
   // never authored `<hN className>` JSX).
-  const OFF_SCALE = /<h[1-6][^>]*\btext-(?:2xl|3xl|4xl|5xl|6xl)\b/;
+  const HEADING = /<h[1-6]\b[^>]*>/g;
+  const LARGE_SIZE = /\btext-(?:2xl|3xl|4xl|5xl|6xl)\b/;
   const SCANNED = [join(root, "src", "routes"), join(root, "src", "components", "board")];
 
   it("no authored heading in routes/board carries a raw off-scale size class", () => {
     const offenders = tsxFiles(SRC_DIR)
       .filter((path) => SCANNED.some((dir) => path.startsWith(dir + "/")))
-      .filter((path) => OFF_SCALE.test(read(path)))
+      .filter((path) =>
+        Array.from(read(path).matchAll(HEADING), ([tag]) => tag).some(
+          (tag) => LARGE_SIZE.test(tag) && !tag.includes("font-heading"),
+        ),
+      )
       .map((path) => relative(root, path))
       .sort();
     expect(
       offenders,
-      "an authored heading carries a raw off-scale size (text-2xl…text-6xl) — " +
-        'render it through <Text as="hN" variant="…"> so the size stays on the ' +
-        "Untitled UI scale (see docs/patterns/typography.md)",
+      "an authored heading carries a large size without the Rhea font-heading role " +
+        "(see docs/patterns/typography.md)",
     ).toEqual([]);
   });
 });

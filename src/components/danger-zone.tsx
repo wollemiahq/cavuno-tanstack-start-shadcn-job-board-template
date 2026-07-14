@@ -1,17 +1,17 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
+import { useState } from "react";
 
-import { useRouter } from '@tanstack/react-router'
+import { useRouter } from "@tanstack/react-router";
 
-import { Button } from '@/components/base/buttons/button'
-import { Input } from '@/components/base/input/input'
-import { Text } from '@/components/text'
-import { m } from '../paraglide/messages'
-import { deleteAccount } from '../server/account'
-import { signOut } from '../server/auth'
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { m } from "../paraglide/messages";
+import { deleteAccount } from "../server/account";
+import { signOut } from "../server/auth";
 
-const CONFIRM_WORD = 'DELETE'
+const CONFIRM_WORD = "DELETE";
 
 /**
  * Danger zone — irreversible account delete (`board.me.delete()`). This is
@@ -19,72 +19,79 @@ const CONFIRM_WORD = 'DELETE'
  * guards against accidents. On success we clear the session and go home.
  */
 export function DangerZone() {
-  const router = useRouter()
-  const [open, setOpen] = useState(false)
-  const [confirm, setConfirm] = useState('')
-  const [status, setStatus] = useState<'idle' | 'deleting' | 'error'>('idle')
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [confirm, setConfirm] = useState("");
+  const [status, setStatus] = useState<"idle" | "deleting" | "error">("idle");
 
   return (
     <section
-      className="border-error/40 space-y-3 rounded-lg border p-4"
+      className="space-y-3 rounded-2xl p-4 ring-1 ring-destructive/40"
       data-test="danger-zone"
     >
       <div>
-        <Text as="h2" variant="heading4" className="text-error-primary">{m.dangerZone_heading()}</Text>
-        <p className="text-tertiary text-sm">
-          {m.dangerZone_warningText()}
-        </p>
+        <h2 className="font-heading text-lg font-semibold tracking-tight text-destructive">
+          {m.dangerZone_heading()}
+        </h2>
+        <p className="text-sm text-muted-foreground">{m.dangerZone_warningText()}</p>
       </div>
 
       {open ? (
         <div className="space-y-2">
-          <Input
-            label={m.dangerZone_confirmLabel({ word: CONFIRM_WORD })}
-            value={confirm}
-            autoComplete="off"
-            onChange={(value) => setConfirm(value)}
-          />
+          <div className="space-y-1.5">
+            <Label htmlFor="delete-account-confirmation">
+              {m.dangerZone_confirmLabel({ word: CONFIRM_WORD })}
+            </Label>
+            <Input
+              id="delete-account-confirmation"
+              value={confirm}
+              autoComplete="off"
+              onChange={(event) => setConfirm(event.target.value)}
+            />
+          </div>
           <div className="flex gap-2">
             <Button
-              color="primary-destructive"
-              isDisabled={confirm !== CONFIRM_WORD || status === 'deleting'}
+              variant="destructive"
+              disabled={confirm !== CONFIRM_WORD || status === "deleting"}
               onClick={async () => {
-                setStatus('deleting')
+                setStatus("deleting");
                 try {
-                  await deleteAccount()
-                  await signOut()
-                  await router.invalidate()
-                  await router.navigate({ to: '/' })
+                  await deleteAccount();
+                  await signOut();
+                  await router.invalidate();
+                  await router.navigate({ to: "/" });
                 } catch {
-                  setStatus('error')
+                  setStatus("error");
                 }
               }}
             >
-              {status === 'deleting' ? m.dangerZone_deletingLabel() : m.dangerZone_deleteConfirmLabel()}
+              {status === "deleting"
+                ? m.dangerZone_deletingLabel()
+                : m.dangerZone_deleteConfirmLabel()}
             </Button>
             <Button
-              color="tertiary"
-              isDisabled={status === 'deleting'}
+              variant="ghost"
+              disabled={status === "deleting"}
               onClick={() => {
-                setOpen(false)
-                setConfirm('')
-                setStatus('idle')
+                setOpen(false);
+                setConfirm("");
+                setStatus("idle");
               }}
             >
               {m.dangerZone_cancelLabel()}
             </Button>
           </div>
-          {status === 'error' ? (
-            <p className="text-error-primary text-sm" role="status">
+          {status === "error" ? (
+            <p className="text-sm text-destructive" role="status">
               {m.dangerZone_deleteError()}
             </p>
           ) : null}
         </div>
       ) : (
-        <Button color="primary-destructive" onClick={() => setOpen(true)}>
+        <Button variant="destructive" onClick={() => setOpen(true)}>
           {m.dangerZone_deleteAccountLabel()}
         </Button>
       )}
     </section>
-  )
+  );
 }

@@ -4,8 +4,8 @@ import { useRef, useState } from "react";
 
 import { useRouter } from "@tanstack/react-router";
 
-import { Avatar } from "@/components/base/avatar/avatar";
-import { Button } from "@/components/base/buttons/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { initialsOf } from "../lib/initials";
 import { m } from "../paraglide/messages";
 import { uploadAvatar } from "../server/account";
@@ -28,7 +28,10 @@ export function AvatarUpload({
 
   return (
     <div className="flex items-center gap-4">
-      <Avatar size="xl" src={avatarUrl} initials={initialsOf(displayName ?? "")} alt={displayName ?? ""} />
+      <Avatar className="size-16">
+        {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName ?? ""} /> : null}
+        <AvatarFallback>{initialsOf(displayName ?? "")}</AvatarFallback>
+      </Avatar>
       <div className="space-y-1.5">
         <input
           ref={inputRef}
@@ -53,18 +56,18 @@ export function AvatarUpload({
           }}
         />
         <Button
-          color="secondary"
+          variant="outline"
           size="sm"
-          isDisabled={status === "pending"}
+          disabled={status === "pending"}
           onClick={() => inputRef.current?.click()}
         >
           {status === "pending"
             ? m.avatarUpload_uploadingLabel()
             : m.avatarUpload_changePhotoLabel()}
         </Button>
-        <p className="text-tertiary text-xs">{m.avatarUpload_formatsText()}</p>
+        <p className="text-xs text-muted-foreground">{m.avatarUpload_formatsText()}</p>
         {status === "error" ? (
-          <p className="text-error-primary text-xs" role="status">
+          <p className="text-xs text-destructive" role="status">
             {m.avatarUpload_uploadErrorText()}
           </p>
         ) : null}

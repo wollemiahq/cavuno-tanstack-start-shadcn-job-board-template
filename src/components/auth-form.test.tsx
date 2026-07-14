@@ -157,6 +157,36 @@ describe('RheaRegistrationPage', () => {
     expect(screen.getByLabelText('Email')).toHaveValue('alex@example.com')
   })
 
+  it('recovers when the registration request rejects unexpectedly', async () => {
+    render(
+      <RheaRegistrationPage
+        title="Create your account"
+        supportingText="Join the board."
+        copy={copy}
+        successHref="/account"
+        onSubmit={async () => {
+          throw new Error('network unavailable')
+        }}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('Name'), {
+      target: { value: 'Alex Morgan' },
+    })
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'alex@example.com' },
+    })
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'correct-horse' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Something went wrong. Try again.',
+    )
+    expect(screen.getByRole('button', { name: 'Create account' })).toBeEnabled()
+  })
+
   it('replaces the initial heading with one announced success heading', async () => {
     render(
       <RheaRegistrationPage

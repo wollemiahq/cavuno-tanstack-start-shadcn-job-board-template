@@ -80,6 +80,7 @@ function JobsPage() {
   const navigate = useNavigate({ from: "/jobs/" });
   const selectedJob = useSelectedJob(
     page.data.some((job) => job.slug === search.selectedJob) ? search.selectedJob : undefined,
+    Boolean(user?.emailVerified),
   );
 
   return (

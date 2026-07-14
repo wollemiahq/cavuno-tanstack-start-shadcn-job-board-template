@@ -1,16 +1,17 @@
 ---
 name: Auth page
 purpose: The centered single-column auth shell — mark, display heading, form, OR divider, social buttons.
-primitives: [AuthCard, Field, FormError, AuthDivider, SocialButton]
-usedBy: [src/components/auth-form.tsx, src/routes/auth.sign-in.tsx, src/routes/auth.sign-up.tsx, src/routes/auth.forgot-password.tsx, src/routes/auth.reset-password.tsx, src/routes/auth.magic-link.tsx, src/routes/auth.employer.sign-up.tsx, src/routes/password.tsx]
+primitives: [AuthCard, Field, FormError, AuthDivider, Button, Input, RadioGroup, InputOTP]
+usedBy: [src/components/auth-form.tsx, src/routes/auth.sign-in.tsx, src/routes/auth.sign-up.tsx, src/routes/auth.forgot-password.tsx, src/routes/auth.reset-password.tsx, src/routes/auth.magic-link.tsx, src/routes/auth.employer.sign-up.tsx]
 ---
 
 ## Purpose
 
-Every auth surface uses one open, centered single-column shell: a logo mark, a
+Every auth surface uses one centered single-column Rhea card: a logo mark, a
 display heading with supporting text, the form region, an "OR" divider, and the
-social sign-in buttons. No card/ring wrapper — the auth surfaces sit on the bare
-page ground, matching the Untitled UI log-in examples.
+social sign-in buttons. The shell and controls use owned shadcn/Base UI
+primitives, so adopters can replace the component implementations without
+rewriting route behavior.
 
 ## When to use
 
@@ -21,9 +22,9 @@ page ground, matching the Untitled UI log-in examples.
 
 ## Anatomy
 
-- `AuthCard` — the centered `max-w-sm` column: mark → `h1` (`text-display-xs md:text-display-sm`) → supporting text → children.
-- `Field` — a required `Input` with native validation.
-- `FormError` — the error line (`text-error-primary`).
+- `AuthCard` — the centered card: mark → semantic `h1` → supporting text → children.
+- `Field` — a labeled shadcn `Input` with native validation.
+- `FormError` — the destructive, live error line.
 - `AuthDivider` — the hairline "OR" separator before social buttons.
 
 ## Composition
@@ -42,15 +43,24 @@ page ground, matching the Untitled UI log-in examples.
 
 ## Do / Don't
 
-| Do | Don't |
-|---|---|
-| Compose `AuthCard` / `Field` / `FormError` / `AuthDivider`. | Rebuild the centered column per route. |
-| Surface success/pending through a shared feedback line. | Hand-roll the "magic-link sent" banner — `auth.sign-in` still rolls a bespoke `rounded-lg bg-secondary p-3` banner; fold it onto [Form feedback](form-feedback.md). |
+| Do                                                                                                           | Don't                                                                   |
+| ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| Compose `AuthCard` / `Field` / `FormError` / `AuthDivider`.                                                  | Rebuild the centered column per route.                                  |
+| Preserve the validated `returnTo` value through sign-in, sign-up, verification, magic-link, and OAuth paths. | Link to a bare auth route from inside an in-progress candidate journey. |
+| Use Base UI-backed shadcn controls for composite widgets such as radio groups and OTP entry.                 | Recreate composite keyboard behavior with buttons and ARIA roles.       |
 
 ## Used by
 
 - `auth-form.tsx` — the shell + field primitives.
-- All `auth.*` routes and `password.tsx`.
+- The listed `auth.*` routes. `password.tsx` remains a legacy migration reference.
+
+## Password-reset continuation boundary
+
+The forgot-password and reset-password pages retain a validated `returnTo`
+value in their local links. `@cavuno/board` 1.34 accepts only `email` for the
+forgot-password request, so the emailed reset URL cannot carry that destination
+yet. Until the SDK exposes a reset callback destination, a reset completed from
+email resumes at the candidate account default rather than the exact job.
 
 ## Related
 
