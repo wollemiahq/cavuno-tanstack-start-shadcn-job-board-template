@@ -148,7 +148,9 @@ describe('BlogArticleContent — complete article presentation', () => {
     expect(author).toHaveTextContent(authorName);
     // The author's own social links belong to the author page, not each post —
     // the byline here links through to that profile instead.
-    expect(container.querySelector('a[href="https://avery.example"]')).toBeNull();
+    expect(
+      container.querySelector('a[href="https://avery.example"]'),
+    ).toBeNull();
     expect(container.querySelector('a[href="https://x.com/avery"]')).toBeNull();
     expect(
       container.querySelector('a[href="https://www.linkedin.com/in/avery"]'),

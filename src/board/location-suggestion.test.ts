@@ -21,6 +21,8 @@ describe('toLocationSuggestionVM', () => {
       slug: 'london',
       name: 'London',
       contextLabel: 'United Kingdom',
+      countryCode: 'GB',
+      regionCode: null,
     });
   });
 

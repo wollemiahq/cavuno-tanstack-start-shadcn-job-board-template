@@ -142,6 +142,7 @@
         "src/components/board/taxonomy-tags.tsx",
         "src/components/messages-nav-link.tsx",
         "src/components/messages/messaging-dock.tsx",
+        "src/components/place-tags-field.tsx",
         "src/components/post-card.tsx",
         "src/components/post-job-form.tsx",
         "src/components/resume-upload.tsx",
@@ -219,6 +220,7 @@
         "src/components/messages/messaging-dock.tsx",
         "src/components/messages/thread-view.tsx",
         "src/components/month-year-field.tsx",
+        "src/components/place-tags-field.tsx",
         "src/components/post-job-form.tsx",
         "src/components/profile-form.tsx",
         "src/components/resume-upload.tsx",
@@ -277,7 +279,6 @@
       "status": "used",
       "productionReferences": [
         "src/components/account-shell.tsx",
-        "src/components/alert-manager.tsx",
         "src/components/board/alert-signup-form.tsx",
         "src/components/board/company-card.tsx",
         "src/components/board/company-search-result-detail.tsx",
@@ -345,6 +346,7 @@
         "src/components/keyword-combobox.tsx",
         "src/components/location-combobox.tsx",
         "src/components/location-suggest-field.tsx",
+        "src/components/place-tags-field.tsx",
         "src/routes/employers.dashboard.tsx"
       ]
     },
@@ -362,6 +364,7 @@
       "name": "dialog",
       "status": "used",
       "productionReferences": [
+        "src/components/alert-manager.tsx",
         "src/routes/employers.dashboard.tsx"
       ]
     },
@@ -491,6 +494,7 @@
         "src/components/location-combobox.tsx",
         "src/components/location-suggest-field.tsx",
         "src/components/messages/composer.tsx",
+        "src/components/place-tags-field.tsx",
         "src/components/post-job-form.tsx",
         "src/routes/-messages-runtime.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
@@ -637,6 +641,7 @@
       "status": "used",
       "productionReferences": [
         "src/components/Header.tsx",
+        "src/components/alert-manager.tsx",
         "src/components/board/jobs-filter-toolbar.tsx"
       ]
     },
@@ -676,6 +681,7 @@
         "src/components/keyword-combobox.tsx",
         "src/components/location-combobox.tsx",
         "src/components/location-suggest-field.tsx",
+        "src/components/place-tags-field.tsx",
         "src/components/post-job-form.tsx",
         "src/routes/employers.companies.$slug.index.tsx",
         "src/routes/employers.dashboard.tsx",

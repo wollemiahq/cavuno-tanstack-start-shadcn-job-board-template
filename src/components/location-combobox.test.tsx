@@ -28,6 +28,8 @@ const suggestion = (
     contextLabel: string | null;
   }>,
 ) => ({
+  countryCode: null,
+  regionCode: null,
   id: over.id ?? 'p1',
   slug: over.slug === undefined ? 'london' : over.slug,
   name: over.name ?? 'London',

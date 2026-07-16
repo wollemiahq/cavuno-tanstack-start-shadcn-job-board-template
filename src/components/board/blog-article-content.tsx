@@ -4,12 +4,8 @@ import { formatDate } from '@cavuno/board/format';
 import { Link } from '@tanstack/react-router';
 import { FileWarning } from 'lucide-react';
 
-import {
-  FacebookIcon,
-  LinkedInIcon,
-  XIcon,
-} from '@/components/brand-icons';
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
+import { FacebookIcon, LinkedInIcon, XIcon } from '@/components/brand-icons';
 import {
   Page,
   PageContent,

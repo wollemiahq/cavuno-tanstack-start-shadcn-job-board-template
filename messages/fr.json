@@ -1080,5 +1080,15 @@
   "profileCompleteness_introText": "Téléversez votre CV ou remplissez les sections ci-dessous — les profils complets attirent l’attention des employeurs.",
   "profileCompleteness_percentText": "{percent} % complet",
   "profileCompleteness_regionLabel": "Complétude du profil",
-  "profileCompleteness_itemPhotoLabel": "Photo de profil"
+  "profileCompleteness_itemPhotoLabel": "Photo de profil",
+  "postJob_officeLocationsLabel": "Bureaux",
+  "postJob_officeLocationsPlaceholder": "Ajouter une ville…",
+  "postJob_officeLocationsRemoteHelperText": "Facultatif pour les postes en télétravail — ajoutez les villes où un bureau est disponible.",
+  "postJob_officeLocationsRequiredError": "Ajoutez au moins un bureau.",
+  "placeTags_removeAriaLabel": "Supprimer {name}",
+  "alertManager_locationsLabel": "Lieux",
+  "alertManager_locationsPlaceholder": "Ajouter un lieu…",
+  "alertManager_locationsHelperText": "Ne recevoir que les offres dans ces lieux.",
+  "alertManager_editAlertTitle": "Modifier l'alerte",
+  "talentDirectory_restrictedSignedInBody": "La recherche de candidats nécessite un compte employeur. Ajoutez votre entreprise pour parcourir les candidats sur {boardName}."
 }

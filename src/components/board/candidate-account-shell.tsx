@@ -1,24 +1,33 @@
 import type { ReactNode } from 'react';
 
-import { Page, PageContent } from '@/components/layout/page';
+import { Page, PageContent, PageHeader } from '@/components/layout/page';
 
 /**
  * Candidate account content wrapper. Account navigation now lives in the
  * signed-in header's avatar menu (CAV-510), so this shell owns only the page's
- * single main landmark and content column. Pages with a complementary rail
- * (e.g. the profile-completeness card on /account) pass `aside` + `asideLabel`
- * and get the wide two-column PageContent geometry; without one the shell
- * stays a single reading-width column.
+ * single main landmark and content column. `title`/`description`/`actions`
+ * render the canonical PageHeader; pages with a complementary rail (e.g. the
+ * profile-completeness card on /account) pass `aside` + `asideLabel` and get
+ * the wide two-column PageContent geometry.
  */
 export function CandidateAccountShell({
   children,
+  title,
+  description,
+  actions,
   aside,
   asideLabel,
 }: {
   children: ReactNode;
+  title?: ReactNode;
+  description?: ReactNode;
+  actions?: ReactNode;
   aside?: ReactNode;
   asideLabel?: string;
 }) {
+  const header = title ? (
+    <PageHeader title={title} description={description} actions={actions} />
+  ) : undefined;
   const content = (
     <div data-slot="candidate-account-content" className="min-w-0">
       {children}
@@ -27,7 +36,7 @@ export function CandidateAccountShell({
   if (aside && asideLabel) {
     return (
       <Page width="wide">
-        <PageContent aside={aside} asideLabel={asideLabel}>
+        <PageContent header={header} aside={aside} asideLabel={asideLabel}>
           {content}
         </PageContent>
       </Page>
@@ -35,7 +44,7 @@ export function CandidateAccountShell({
   }
   return (
     <Page width="content">
-      <PageContent>{content}</PageContent>
+      <PageContent header={header}>{content}</PageContent>
     </Page>
   );
 }

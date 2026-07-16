@@ -128,6 +128,15 @@ describe('talent directory route — query and capability contracts', () => {
     expect(screen.queryByRole('heading', { name: 'Talent' })).toBeNull();
   });
 
+  it('offers a signed-in candidate the add-company path instead of another sign-in', () => {
+    render(<RestrictedTalentDirectory boardName="Acme Careers" signedIn />);
+
+    const addCompany = screen.getByRole('link', { name: 'Add company' });
+    expect(addCompany).toHaveAttribute('href', '/employers/dashboard?add=true');
+    expect(screen.queryByRole('link', { name: 'Sign up' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
+  });
+
   it('does not disguise an unrelated forbidden response as an employer-only directory', async () => {
     const error = apiError(403, 'auth_forbidden');
     listTalent.mockRejectedValue(error);

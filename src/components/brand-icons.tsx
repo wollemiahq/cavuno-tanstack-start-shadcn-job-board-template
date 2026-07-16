@@ -59,11 +59,7 @@ export function FacebookIcon() {
   );
 }
 
-export function LinkedInIcon({
-  className = 'size-4',
-}: {
-  className?: string;
-}) {
+export function LinkedInIcon({ className = 'size-4' }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"

@@ -61,6 +61,9 @@ import type {
   SubmitJobInput,
   SubmitJobResult,
 } from '../server/post';
+import type { LocationSuggestionVM } from '@/board/location-suggestion';
+import type { LocationSuggestionState } from '@/components/location-combobox';
+import { PlaceTagsField } from '@/components/place-tags-field';
 import type { JobPostingPlan } from '@cavuno/board';
 
 const EMPLOYMENT_TYPES = [
@@ -85,6 +88,13 @@ type LogoStatus =
   | { kind: 'working' }
   | { kind: 'error'; message: string };
 
+type OfficeLocationDraft = {
+  key: string;
+  displayName: string;
+  countryCode?: string;
+  region?: string;
+};
+
 type PostJobFormState = {
   status: Status;
   logoUrl: string | null;
@@ -93,11 +103,15 @@ type PostJobFormState = {
   currency: string;
   salaryTimeframe: SalaryTimeframe;
   companyName: string;
+  remoteOption: (typeof REMOTE_OPTIONS)[number];
+  officeLocations: OfficeLocationDraft[];
+  officeLocationsError: boolean;
 };
 
 export type PostJobFormProps = {
   locale: Parameters<typeof fieldLabel>[0];
   plans: JobPostingPlan[];
+  officeLocationSuggestions: LocationSuggestionState;
   initialPlanId?: string;
   onSubmit: (input: SubmitJobInput) => Promise<SubmitJobResult>;
   onLogoFetch: (domain: string) => Promise<LogoResult>;
@@ -132,6 +146,7 @@ function readString(form: FormData, name: string) {
 export function PostJobForm({
   locale,
   plans,
+  officeLocationSuggestions,
   initialPlanId,
   onSubmit,
   onLogoFetch,
@@ -148,6 +163,9 @@ export function PostJobForm({
     currency: 'USD',
     salaryTimeframe: DEFAULT_SALARY_TIMEFRAME,
     companyName: '',
+    remoteOption: REMOTE_OPTIONS[0],
+    officeLocations: [],
+    officeLocationsError: false,
   });
   const {
     status,
@@ -157,10 +175,25 @@ export function PostJobForm({
     currency,
     salaryTimeframe,
     companyName,
+    remoteOption,
+    officeLocations,
+    officeLocationsError,
   } = formState;
 
   function updateFormState(patch: Partial<PostJobFormState>) {
     setFormState((current) => ({ ...current, ...patch }));
+  }
+
+  function addOfficeLocation(location: OfficeLocationDraft) {
+    setFormState((current) =>
+      current.officeLocations.some((entry) => entry.key === location.key)
+        ? current
+        : {
+            ...current,
+            officeLocations: [...current.officeLocations, location],
+            officeLocationsError: false,
+          },
+    );
   }
 
   const selectedPlan = plans.some((plan) => plan.id === initialPlanId)
@@ -265,6 +298,19 @@ export function PostJobForm({
       return;
     }
 
+    // On-site and hybrid roles need somewhere to be on-site AT — mirror the
+    // hosted submission wizard's requirement. Remote roles may leave it empty.
+    if (remoteOption !== 'remote' && officeLocations.length === 0) {
+      updateFormState({
+        officeLocationsError: true,
+        status: {
+          kind: 'error',
+          message: m.postJob_officeLocationsRequiredError(),
+        },
+      });
+      return;
+    }
+
     const form = new FormData(event.currentTarget);
     const salaryMin = readNumber(form, 'salaryMin');
     const salaryMax = readNumber(form, 'salaryMax');
@@ -280,6 +326,9 @@ export function PostJobForm({
         description,
         employmentType: String(form.get('employmentType')),
         remoteOption: String(form.get('remoteOption')),
+        officeLocations: officeLocations.map(
+          ({ key: _key, ...location }) => location,
+        ),
         applicationUrl:
           ensureProtocol(readString(form, 'applicationUrl')) ?? '',
         salaryMin,
@@ -473,8 +522,61 @@ export function PostJobForm({
               label={m.postJob_remoteOptionLabel()}
               name="remoteOption"
               items={remoteItems}
+              value={remoteOption}
+              onValueChange={(value) =>
+                updateFormState({
+                  remoteOption:
+                    (value as (typeof REMOTE_OPTIONS)[number] | null) ??
+                    REMOTE_OPTIONS[0],
+                  officeLocationsError: false,
+                })
+              }
             />
           </div>
+          <Field data-invalid={officeLocationsError || undefined}>
+            <FieldLabel htmlFor="officeLocations">
+              {m.postJob_officeLocationsLabel()}
+            </FieldLabel>
+            <PlaceTagsField
+              id="officeLocations"
+              tags={officeLocations.map((location) => ({
+                key: location.key,
+                label: location.displayName,
+              }))}
+              onAddSuggestion={(place: LocationSuggestionVM) =>
+                addOfficeLocation({
+                  key: place.id,
+                  displayName: place.name,
+                  countryCode: place.countryCode ?? undefined,
+                  region: place.regionCode ?? undefined,
+                })
+              }
+              onAddFreeText={(text) =>
+                addOfficeLocation({ key: `text:${text}`, displayName: text })
+              }
+              onRemove={(key) =>
+                updateFormState({
+                  officeLocations: officeLocations.filter(
+                    (location) => location.key !== key,
+                  ),
+                })
+              }
+              placeholder={m.postJob_officeLocationsPlaceholder()}
+              searchingText={m.locationCombobox_searchingText()}
+              removeAriaLabel={(name) => m.placeTags_removeAriaLabel({ name })}
+              {...officeLocationSuggestions}
+            />
+            {remoteOption === 'remote' ? (
+              <FieldDescription>
+                {m.postJob_officeLocationsRemoteHelperText()}
+              </FieldDescription>
+            ) : null}
+            {officeLocationsError ? (
+              <FieldError>
+                {m.postJob_officeLocationsRequiredError()}
+              </FieldError>
+            ) : null}
+          </Field>
           <LabeledUrlInput
             label={m.postJob_applicationUrlLabel()}
             name="applicationUrl"

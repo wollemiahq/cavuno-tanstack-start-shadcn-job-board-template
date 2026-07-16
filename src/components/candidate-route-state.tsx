@@ -14,14 +14,43 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import type { ErrorComponentProps } from '@tanstack/react-router';
 
-export function CandidateRoutePending({ label }: { label: string }) {
+export function CandidateRoutePending({
+  label,
+  withRail = false,
+}: {
+  label: string;
+  /** The /account profile page loads into a wide body + completeness rail. */
+  withRail?: boolean;
+}) {
+  if (withRail) {
+    return (
+      <Page width="wide">
+        <PageContent
+          aside={<Skeleton className="h-96 rounded-3xl" />}
+          asideLabel={label}
+        >
+          <div
+            role="status"
+            aria-label={label}
+            aria-busy="true"
+            className="space-y-6"
+          >
+            <div className="flex items-center gap-4">
+              <Skeleton className="size-16 rounded-full" />
+              <Skeleton className="h-8 w-1/3" />
+            </div>
+            <Skeleton className="h-72 rounded-3xl" />
+            <Skeleton className="h-40 rounded-3xl" />
+            <Skeleton className="h-40 rounded-3xl" />
+          </div>
+        </PageContent>
+      </Page>
+    );
+  }
+
   return (
-    <Page width="wide">
-      <PageContent
-        aside={<Skeleton className="h-72 rounded-3xl" />}
-        asideLabel={label}
-        asideOrder="before"
-      >
+    <Page width="content">
+      <PageContent>
         <div
           role="status"
           aria-label={label}
@@ -83,6 +112,13 @@ export function CandidateRouteError({
 
 export function CandidateRoutePendingPage() {
   return <CandidateRoutePending label={m.candidateAccount_loadingLabel()} />;
+}
+
+/** Pending state matching the /account profile layout (cards + right rail). */
+export function CandidateProfilePendingPage() {
+  return (
+    <CandidateRoutePending label={m.candidateAccount_loadingLabel()} withRail />
+  );
 }
 
 export function CandidateRouteErrorPage({ reset }: ErrorComponentProps) {

@@ -257,7 +257,10 @@ function AccountMenu({
         >
           {m.accountShell_savedJobsNav()}
         </DropdownMenuItem>
-        <DropdownMenuItem nativeButton={false} render={<Link to="/me/alerts" />}>
+        <DropdownMenuItem
+          nativeButton={false}
+          render={<Link to="/me/alerts" />}
+        >
           {m.accountShell_jobAlertsNav()}
         </DropdownMenuItem>
         <DropdownMenuItem

@@ -11,7 +11,10 @@ export function MessagesNavLink({ unreadCount }: { unreadCount: number }) {
   return (
     <Link
       to="/messages"
-      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'relative')}
+      className={cn(
+        buttonVariants({ variant: 'ghost', size: 'icon' }),
+        'relative',
+      )}
       data-test="nav-messages"
     >
       <MessageSquare aria-hidden="true" />

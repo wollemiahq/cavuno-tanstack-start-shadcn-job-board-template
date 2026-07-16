@@ -5,6 +5,9 @@ export interface LocationSuggestionVM {
   slug: string;
   name: string;
   contextLabel: string | null;
+  /** ISO country code — the job-posting office-location payload carries it. */
+  countryCode: string | null;
+  regionCode: string | null;
 }
 
 function contextLabel(countryCode: string | null, locale: string) {
@@ -32,5 +35,7 @@ export function toLocationSuggestionVM(
     slug: place.slug,
     name: place.name,
     contextLabel: contextLabel(place.countryCode, locale),
+    countryCode: place.countryCode,
+    regionCode: place.regionCode,
   };
 }

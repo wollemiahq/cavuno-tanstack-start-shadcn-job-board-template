@@ -20,7 +20,7 @@ import {
   useNavigate,
   useRouter,
 } from '@tanstack/react-router';
-import { BookmarkMinus } from 'lucide-react';
+import { Bookmark, BookmarkMinus } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getSavedJobs, unsaveJob } from '../server/account';
@@ -43,11 +43,13 @@ import {
   SearchResultsLayout,
   SearchResultsList,
 } from '@/components/search-results/search-results';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
+  EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
@@ -158,11 +160,22 @@ function SavedJobsPage() {
                   {header}
                   <Empty className="border">
                     <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <Bookmark aria-hidden="true" />
+                      </EmptyMedia>
                       <EmptyTitle>{m.accountShell_savedJobsNav()}</EmptyTitle>
                       <EmptyDescription>
                         {m.accountHome_savedJobsEmptyText()}
                       </EmptyDescription>
                     </EmptyHeader>
+                    <EmptyContent>
+                      <a
+                        href="/jobs"
+                        className={buttonVariants({ variant: 'outline' })}
+                      >
+                        {m.meApplications_browseJobsLink()}
+                      </a>
+                    </EmptyContent>
                   </Empty>
                 </div>
               }

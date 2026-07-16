@@ -376,7 +376,6 @@ function CompanyPage() {
           ) : null}
         </aside>
       </div>
-
     </CompanySectionShell>
   );
 }

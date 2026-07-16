@@ -24,7 +24,6 @@ import {
 } from '@tanstack/react-router';
 
 import { CompanyJobsSearchBar } from '../components/company-jobs-search-bar';
-import { useLocationSuggestions } from './-use-location-suggestions';
 import {
   listingPageHref,
   pageSearchValue,
@@ -39,6 +38,7 @@ import {
   listJobs,
   searchJobs,
 } from '../server/queries';
+import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobList } from '@/components/board/job-list';
@@ -223,7 +223,9 @@ function CompanyJobsPage() {
       <CompanyJobsSearchBar
         companySlug={company.slug}
         defaultValue={q ?? undefined}
-        location={location ? { slug: location, name: locationName ?? '' } : null}
+        location={
+          location ? { slug: location, name: locationName ?? '' } : null
+        }
         locationSuggestions={locationSuggestions}
       />
 

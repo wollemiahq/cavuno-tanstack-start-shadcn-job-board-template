@@ -12,6 +12,7 @@ import {
   redirect,
   useRouter,
 } from '@tanstack/react-router';
+import { Send } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getApplications, withdrawApplication } from '../server/applications';
@@ -26,13 +27,14 @@ import {
 } from '@/components/candidate-route-state';
 import { CandidateShell } from '@/components/candidate-shell';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Empty,
   EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
+  EmptyMedia,
 } from '@/components/ui/empty';
 import {
   Item,
@@ -89,22 +91,19 @@ function ApplicationsPage() {
     useState<CandidateActionFeedbackState>('idle');
 
   return (
-    <CandidateShell>
+    <CandidateShell
+      title={m.meApplications_title()}
+      description={m.meApplications_subheading()}
+    >
       <div className="space-y-6">
-        <header>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            {m.meApplications_title()}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {m.meApplications_subheading()}
-          </p>
-        </header>
-
         <CandidateActionFeedback state={feedback} />
 
         {applications.data.length === 0 ? (
           <Empty className="border">
             <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Send aria-hidden="true" />
+              </EmptyMedia>
               <EmptyTitle>{m.meApplications_title()}</EmptyTitle>
               <EmptyDescription>
                 {m.meApplications_emptyText()}
@@ -114,7 +113,7 @@ function ApplicationsPage() {
               <Link
                 to="/jobs/$keyword"
                 params={{ keyword: 'all' }}
-                className="font-medium underline underline-offset-4"
+                className={buttonVariants({ variant: 'outline' })}
               >
                 {m.meApplications_browseJobsLink()}
               </Link>

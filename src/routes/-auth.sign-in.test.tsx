@@ -189,9 +189,7 @@ describe('/auth/sign-in search contract', () => {
     // Get started goes to the join gate, not straight to the candidate form —
     // the role is unknown here, so `/auth/join` resolves it. The destination
     // still has to survive the hop.
-    expect(
-      screen.getByRole('link', { name: 'Get started' }),
-    ).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Get started' })).toHaveAttribute(
       'href',
       `/auth/join?returnTo=${encodeURIComponent(returnTo)}`,
     );

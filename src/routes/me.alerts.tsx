@@ -2,13 +2,21 @@
  * `/me/alerts` — authenticated job-alert management (ADR-0053). Distinct from
  * the anonymous `/alerts/manage` (token-based) flow: this is the signed-in
  * candidate's own alerts over `board.me.alerts.*` (list / create / update /
- * remove).
+ * remove). The loader also pulls the board places directory once so stored
+ * `placeIds` render as names (the alert payload carries ids only).
  */
-import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  getRouteApi,
+  isRedirect,
+  redirect,
+} from '@tanstack/react-router';
 
 import { AlertManager } from '../components/alert-manager';
 import { m } from '../paraglide/messages';
 import { getMyAlerts } from '../server/account';
+import { searchPlaces } from '../server/queries';
+import { useLocationSuggestions } from './-use-location-suggestions';
 
 import {
   CandidateRouteErrorPage,
@@ -17,13 +25,21 @@ import {
 import { CandidateShell } from '@/components/candidate-shell';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 
+const rootApi = getRouteApi('__root__');
+
 export const Route = createFileRoute('/me/alerts')({
   staticData: { ownsMain: true },
   pendingComponent: CandidateRoutePendingPage,
   errorComponent: CandidateRouteErrorPage,
   loader: async () => {
     try {
-      return await getMyAlerts();
+      const [alerts, places] = await Promise.all([
+        getMyAlerts(),
+        // Name resolution only — an unavailable directory must not take the
+        // alerts page down (ids render as-is instead).
+        searchPlaces({ data: {} }).catch(() => ({ data: [] })),
+      ]);
+      return { alerts, places };
     } catch (error) {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
@@ -47,22 +63,23 @@ export const Route = createFileRoute('/me/alerts')({
 });
 
 function AlertsPage() {
-  const alerts = Route.useLoaderData();
+  const { alerts, places } = Route.useLoaderData();
+  const { board } = rootApi.useLoaderData();
+  const locationSuggestions = useLocationSuggestions(board.language);
+  const placeNames = Object.fromEntries(
+    places.data.map((place) => [place.id, place.name]),
+  );
 
   return (
-    <CandidateShell>
-      <div className="space-y-6">
-        <header>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            {m.meAlerts_title()}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {m.meAlerts_subtitleText()}
-          </p>
-        </header>
-
-        <AlertManager alerts={alerts.data} />
-      </div>
+    <CandidateShell
+      title={m.meAlerts_title()}
+      description={m.meAlerts_subtitleText()}
+    >
+      <AlertManager
+        alerts={alerts.data}
+        placeNames={placeNames}
+        locationSuggestions={locationSuggestions}
+      />
     </CandidateShell>
   );
 }

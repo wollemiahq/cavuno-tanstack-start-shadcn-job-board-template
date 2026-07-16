@@ -84,6 +84,11 @@ describe('PostJobForm', () => {
     render(
       <PostJobForm
         locale="en"
+        officeLocationSuggestions={{
+          suggestions: [],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
         plans={plans}
         onSubmit={onSubmit}
         onLogoFetch={vi.fn()}
@@ -132,6 +137,7 @@ describe('PostJobForm', () => {
         description: '<p>Lead product design across the company.</p>',
         employmentType: 'full_time',
         remoteOption: 'remote',
+        officeLocations: [],
         applicationUrl: 'https://acme.example/careers/staff-designer',
         salaryMin: 140000,
         salaryMax: 180000,
@@ -151,6 +157,11 @@ describe('PostJobForm', () => {
     render(
       <PostJobForm
         locale="en"
+        officeLocationSuggestions={{
+          suggestions: [],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
         plans={[]}
         onSubmit={vi.fn()}
         onLogoFetch={vi.fn()}
@@ -171,6 +182,11 @@ describe('PostJobForm', () => {
     const { container } = render(
       <PostJobForm
         locale="en"
+        officeLocationSuggestions={{
+          suggestions: [],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
         plans={plans}
         onSubmit={vi.fn()}
         onLogoFetch={vi.fn()}
@@ -196,6 +212,11 @@ describe('PostJobForm', () => {
     render(
       <PostJobForm
         locale="en"
+        officeLocationSuggestions={{
+          suggestions: [],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
         plans={plans}
         initialPlanId="plan-premium"
         onSubmit={vi.fn()}
@@ -218,6 +239,11 @@ describe('PostJobForm', () => {
     render(
       <PostJobForm
         locale="en"
+        officeLocationSuggestions={{
+          suggestions: [],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
         plans={plans}
         onSubmit={vi.fn()}
         onLogoFetch={vi.fn()}
@@ -251,6 +277,11 @@ describe('PostJobForm', () => {
     const { container } = render(
       <PostJobForm
         locale="en"
+        officeLocationSuggestions={{
+          suggestions: [],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
         plans={plans}
         onSubmit={vi.fn()}
         onLogoFetch={vi.fn()}
@@ -279,6 +310,11 @@ describe('PostJobForm', () => {
     render(
       <PostJobForm
         locale="en-AU"
+        officeLocationSuggestions={{
+          suggestions: [],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
         plans={[
           {
             ...plans[0]!,

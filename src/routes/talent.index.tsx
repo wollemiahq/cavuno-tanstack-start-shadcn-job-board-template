@@ -2,7 +2,12 @@ import { boardCopy } from '#/copy';
 
 import { isNotFound } from '@cavuno/board';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
-import { createFileRoute, notFound, useNavigate } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  getRouteApi,
+  notFound,
+  useNavigate,
+} from '@tanstack/react-router';
 import { LockKeyhole, Users } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
@@ -29,6 +34,8 @@ import { SelectedTalentDetail } from '@/routes/-selected-talent-detail';
 import { useSelectedTalent } from '@/routes/-use-selected-talent';
 
 const TALENT_PAGE_SIZE = 24;
+
+const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/talent/')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
@@ -101,8 +108,11 @@ function TalentDirectoryNotFound() {
 
 export function RestrictedTalentDirectory({
   boardName,
+  signedIn = false,
 }: {
   boardName: string;
+  /** A signed-in candidate needs a company, not another sign-in. */
+  signedIn?: boolean;
 }) {
   return (
     <Page width="wide" fill>
@@ -117,19 +127,32 @@ export function RestrictedTalentDirectory({
                 <h1>{m.talentDirectory_restrictedHeading()}</h1>
               </EmptyTitle>
               <EmptyDescription>
-                {m.talentDirectory_restrictedBody({ boardName })}
+                {signedIn
+                  ? m.talentDirectory_restrictedSignedInBody({ boardName })
+                  : m.talentDirectory_restrictedBody({ boardName })}
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent className="flex-row justify-center gap-2">
-              <a href="/auth/employer/sign-up" className={buttonVariants()}>
-                {m.siteHeader_signUpLabel()}
-              </a>
-              <a
-                href="/auth/sign-in"
-                className={buttonVariants({ variant: 'outline' })}
-              >
-                {m.talentDirectory_signInLabel()}
-              </a>
+              {signedIn ? (
+                <a
+                  href="/employers/dashboard?add=true"
+                  className={buttonVariants()}
+                >
+                  {m.employerOnboarding_addCompanyLabel()}
+                </a>
+              ) : (
+                <>
+                  <a href="/auth/employer/sign-up" className={buttonVariants()}>
+                    {m.siteHeader_signUpLabel()}
+                  </a>
+                  <a
+                    href="/auth/sign-in"
+                    className={buttonVariants({ variant: 'outline' })}
+                  >
+                    {m.talentDirectory_signInLabel()}
+                  </a>
+                </>
+              )}
             </EmptyContent>
           </Empty>
         </div>
@@ -140,6 +163,7 @@ export function RestrictedTalentDirectory({
 
 function TalentDirectoryPage() {
   const { seo, page, restricted } = Route.useLoaderData();
+  const { user } = rootApi.useLoaderData();
   const search = Route.useSearch();
   const navigate = useNavigate({ from: '/talent/' });
   const copy = boardCopy(seo.language, seo.labels);
@@ -159,7 +183,10 @@ function TalentDirectoryPage() {
     return (
       <>
         <JsonLd data={jsonLd} />
-        <RestrictedTalentDirectory boardName={seo.boardName} />
+        <RestrictedTalentDirectory
+          boardName={seo.boardName}
+          signedIn={user !== null}
+        />
       </>
     );
   }

@@ -28,8 +28,8 @@ import { getAccount } from '../server/account';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import {
+  CandidateProfilePendingPage,
   CandidateRouteErrorPage,
-  CandidateRoutePendingPage,
 } from '@/components/candidate-route-state';
 import { CandidateShell } from '@/components/candidate-shell';
 import {
@@ -194,7 +194,7 @@ function AccountPage() {
 
 export const Route = createFileRoute('/account')({
   staticData: { ownsMain: true },
-  pendingComponent: CandidateRoutePendingPage,
+  pendingComponent: CandidateProfilePendingPage,
   errorComponent: CandidateRouteErrorPage,
   loader: async () => {
     try {

@@ -162,7 +162,6 @@ function SignedInSettings({
 }: {
   preferences: Parameters<typeof NotificationSettings>[0]['preferences'];
 }) {
-
   return (
     <CandidateShell>
       <div className="space-y-6">

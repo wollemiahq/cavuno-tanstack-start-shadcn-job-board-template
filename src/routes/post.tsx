@@ -8,6 +8,7 @@ import {
   submitJobPosting,
   uploadLogo,
 } from '../server/post';
+import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { PostJobForm } from '@/components/post-job-form';
@@ -28,6 +29,7 @@ export const Route = createFileRoute('/post')({
 function PostJobPage() {
   const plans = Route.useLoaderData();
   const search = Route.useSearch();
+  const officeLocationSuggestions = useLocationSuggestions(getLocale());
 
   return (
     <Page width="content">
@@ -43,6 +45,7 @@ function PostJobPage() {
           <PostJobForm
             locale={getLocale()}
             plans={plans.data}
+            officeLocationSuggestions={officeLocationSuggestions}
             initialPlanId={search.plan}
             onSubmit={(input) => submitJobPosting({ data: input })}
             onLogoFetch={(domain) => fetchLogoByDomain({ data: { domain } })}

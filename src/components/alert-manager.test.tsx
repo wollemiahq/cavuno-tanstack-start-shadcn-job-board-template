@@ -9,6 +9,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import type { Alert } from '@cavuno/board';
 
 const mocks = vi.hoisted(() => ({
@@ -56,6 +57,33 @@ const secondAlert = {
   label: 'Design roles',
 } satisfies Alert;
 
+const berlin: LocationSuggestionVM = {
+  id: 'place-berlin',
+  slug: 'berlin',
+  name: 'Berlin',
+  contextLabel: 'Germany',
+  countryCode: 'DE',
+  regionCode: null,
+};
+
+function renderManager({
+  alerts = [] as Alert[],
+  placeNames = {} as Record<string, string>,
+  suggestions = [] as LocationSuggestionVM[],
+} = {}) {
+  return render(
+    <AlertManager
+      alerts={alerts}
+      placeNames={placeNames}
+      locationSuggestions={{
+        suggestions,
+        loading: false,
+        onQueryChange: vi.fn(),
+      }}
+    />,
+  );
+}
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -63,7 +91,7 @@ afterEach(() => {
 
 describe('AlertManager', () => {
   it('uses the owned Empty composition when there are no alerts', () => {
-    render(<AlertManager alerts={[]} />);
+    renderManager();
 
     expect(
       screen
@@ -73,7 +101,7 @@ describe('AlertManager', () => {
   });
 
   it('uses the owned Item composition for each saved alert', () => {
-    render(<AlertManager alerts={[alert]} />);
+    renderManager({ alerts: [alert] });
 
     const item = screen
       .getByText('Frontend roles')
@@ -83,26 +111,39 @@ describe('AlertManager', () => {
     expect(item?.querySelector('[data-slot="item-actions"]')).not.toBeNull();
   });
 
-  it('uses the owned Card and Field compositions for the alert editor', () => {
-    const { container } = render(<AlertManager alerts={[]} />);
+  it('opens creation in the owned dialog with Field compositions', () => {
+    renderManager();
 
     fireEvent.click(screen.getByRole('button', { name: 'New alert' }));
 
-    const form = container.querySelector('[data-test="alert-form"]');
+    const form = document.querySelector('[data-test="alert-form"]');
     expect(form).not.toBeNull();
-    expect(form?.closest('[data-slot="card"]')).not.toBeNull();
+    expect(form?.closest('[data-slot="dialog-content"]')).not.toBeNull();
     expect(
       screen.getByLabelText('Name (optional)').closest('[data-slot="field"]'),
     ).not.toBeNull();
     expect(screen.queryByLabelText('Frequency')).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('group', { name: 'Remote options' }),
-    ).toHaveAttribute('data-slot', 'field-set');
+    expect(screen.getByRole('group', { name: 'Workplace' })).toHaveAttribute(
+      'data-slot',
+      'field-set',
+    );
+  });
+
+  it('opens editing in the owned right-hand sheet', () => {
+    renderManager({ alerts: [alert] });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+
+    const form = document.querySelector('[data-test="alert-form"]');
+    expect(form).not.toBeNull();
+    const sheet = form?.closest('[data-slot="sheet-content"]');
+    expect(sheet).not.toBeNull();
+    expect(sheet).toHaveAttribute('data-side', 'right');
   });
 
   it('creates the only supported weekly cadence', async () => {
     mocks.createMyAlert.mockResolvedValue(undefined);
-    render(<AlertManager alerts={[]} />);
+    renderManager();
 
     fireEvent.click(screen.getByRole('button', { name: 'New alert' }));
     fireEvent.click(screen.getByRole('button', { name: 'Create alert' }));
@@ -114,6 +155,47 @@ describe('AlertManager', () => {
     );
   });
 
+  it('ties the alert to picked locations once a workplace type is chosen', async () => {
+    mocks.createMyAlert.mockResolvedValue(undefined);
+    renderManager({ suggestions: [berlin] });
+
+    fireEvent.click(screen.getByRole('button', { name: 'New alert' }));
+    // No workplace type chosen — no location filter offered yet.
+    expect(screen.queryByLabelText('Locations')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Remote' }));
+    const locations = screen.getByLabelText('Locations');
+    fireEvent.change(locations, { target: { value: 'Ber' } });
+    fireEvent.click(await screen.findByRole('option', { name: /Berlin/ }));
+
+    expect(screen.getByText('Berlin')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create alert' }));
+    await waitFor(() =>
+      expect(mocks.createMyAlert).toHaveBeenCalledWith({
+        data: {
+          frequency: 'weekly',
+          remoteOptions: ['remote'],
+          placeIds: ['place-berlin'],
+        },
+      }),
+    );
+  });
+
+  it('resolves stored place ids to names in the alert summary', () => {
+    renderManager({
+      alerts: [
+        {
+          ...alert,
+          filters: { ...alert.filters, placeIds: ['place-berlin'] },
+        },
+      ],
+      placeNames: { 'place-berlin': 'Berlin' },
+    });
+
+    expect(screen.getByText(/Berlin/)).toBeInTheDocument();
+  });
+
   it('prevents duplicate deletes, then shows a retryable error without invalidating', async () => {
     let rejectDelete: (error: Error) => void = () => undefined;
     mocks.deleteMyAlert.mockImplementation(
@@ -122,7 +204,7 @@ describe('AlertManager', () => {
           rejectDelete = reject;
         }),
     );
-    render(<AlertManager alerts={[alert, secondAlert]} />);
+    renderManager({ alerts: [alert, secondAlert] });
 
     const [deleteButton, otherDeleteButton] = screen.getAllByRole('button', {
       name: 'Delete',

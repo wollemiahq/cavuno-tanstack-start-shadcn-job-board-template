@@ -110,7 +110,9 @@ describe('toSavedJobCardVM', () => {
     salaryTimeframe: null,
     isFeatured: false,
     company: { slug: 'acme-co', name: 'Acme Co', logoUrl: null },
-    links: { public: 'https://board.example/companies/acme-co/jobs/staff-engineer' },
+    links: {
+      public: 'https://board.example/companies/acme-co/jobs/staff-engineer',
+    },
   } as unknown as PublicJob;
 
   it('maps the slim saved-list embed without the arrays the type promises', () => {

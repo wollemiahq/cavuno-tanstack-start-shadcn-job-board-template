@@ -18,6 +18,10 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('../server/post', () => mocks);
 
+// post.tsx pulls the location-suggestion controller, whose server fn module
+// resolves cloudflare:workers — stub the seam for the jsdom suite.
+vi.mock('../server/queries', () => ({ searchPlaces: vi.fn() }));
+
 vi.mock('@/components/post-job-form', () => ({
   PostJobForm: ({
     plans,

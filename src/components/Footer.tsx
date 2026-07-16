@@ -6,11 +6,7 @@ import { Link } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 
-import {
-  FacebookIcon,
-  LinkedInIcon,
-  XIcon,
-} from '@/components/brand-icons';
+import { FacebookIcon, LinkedInIcon, XIcon } from '@/components/brand-icons';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { cn } from '@/lib/utils';

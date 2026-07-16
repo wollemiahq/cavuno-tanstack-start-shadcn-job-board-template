@@ -3,21 +3,38 @@
 import { useId, useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
+import { BellRing } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { createMyAlert, deleteMyAlert, updateMyAlert } from '../server/account';
 
+import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import {
   CandidateActionFeedback,
   type CandidateActionFeedbackState,
 } from '@/components/candidate-action-feedback';
+import type { LocationSuggestionState } from '@/components/location-combobox';
+import { PlaceTagsField } from '@/components/place-tags-field';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import {
   Field,
+  FieldDescription,
   FieldGroup,
   FieldLabel,
   FieldLegend,
@@ -31,6 +48,12 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/components/ui/item';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import type { Alert, AlertBody } from '@cavuno/board';
 
 const REMOTE_OPTIONS = ['on_site', 'hybrid', 'remote'] as const;
@@ -40,10 +63,14 @@ const REMOTE_LABEL: Record<string, () => string> = {
   remote: m.alertManager_remoteRemote,
 };
 
+/** Resolved place-id → display-name map from the board places directory. */
+export type PlaceNameMap = Record<string, string>;
+
 interface FormState {
   label: string;
   jobFunctions: string;
   remoteOptions: string[];
+  places: { id: string; name: string }[];
 }
 
 function toBody(form: FormState, initial: Alert | null): AlertBody {
@@ -57,13 +84,15 @@ function toBody(form: FormState, initial: Alert | null): AlertBody {
     frequency: 'weekly',
     ...(jobFunctions.length ? { jobFunctions } : {}),
     ...(form.remoteOptions.length ? { remoteOptions: form.remoteOptions } : {}),
+    ...(form.places.length
+      ? { placeIds: form.places.map((place) => place.id) }
+      : {}),
     // `update` is a whole-object PUT — round-trip the filters this simplified
-    // UI doesn't edit (seniority / places / salary) so editing the visible
-    // fields doesn't silently wipe them.
+    // UI doesn't edit (seniority / salary) so editing the visible fields
+    // doesn't silently wipe them.
     ...(filters?.seniorityLevels.length
       ? { seniorityLevels: filters.seniorityLevels }
       : {}),
-    ...(filters?.placeIds.length ? { placeIds: filters.placeIds } : {}),
     ...(filters?.salaryMin != null ? { salaryMin: filters.salaryMin } : {}),
     ...(filters?.salaryMax != null ? { salaryMax: filters.salaryMax } : {}),
     ...(filters?.salaryCurrency != null
@@ -72,141 +101,188 @@ function toBody(form: FormState, initial: Alert | null): AlertBody {
   };
 }
 
-function fromAlert(alert: Alert | null): FormState {
+function fromAlert(alert: Alert | null, placeNames: PlaceNameMap): FormState {
   return {
     label: alert?.label ?? '',
     jobFunctions: alert?.filters.jobFunctions.join(', ') ?? '',
     remoteOptions: alert?.filters.remoteOptions ?? [],
+    places: (alert?.filters.placeIds ?? []).map((id) => ({
+      id,
+      name: placeNames[id] ?? id,
+    })),
   };
 }
 
 function AlertForm({
   initial,
+  placeNames,
+  locationSuggestions,
   submitLabel,
   onSubmit,
   onCancel,
 }: {
   initial: Alert | null;
+  placeNames: PlaceNameMap;
+  locationSuggestions: LocationSuggestionState;
   submitLabel: string;
   onSubmit: (body: AlertBody) => Promise<void>;
   onCancel?: () => void;
 }) {
   const id = useId();
-  const [form, setForm] = useState<FormState>(() => fromAlert(initial));
+  const [form, setForm] = useState<FormState>(() =>
+    fromAlert(initial, placeNames),
+  );
   const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
 
+  // The location filter reveals once the alert names a workplace type (or
+  // already carries places) — "remote in Germany", "on-site in Munich".
+  const showLocations = form.remoteOptions.length > 0 || form.places.length > 0;
+
   return (
-    <Card size="sm">
-      <CardContent>
-        <form
-          data-test="alert-form"
-          className="space-y-4"
-          onSubmit={async (event) => {
-            event.preventDefault();
-            setStatus('saving');
-            try {
-              await onSubmit(toBody(form, initial));
-              setStatus('idle');
-            } catch {
-              setStatus('error');
+    <form
+      data-test="alert-form"
+      className="space-y-4"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        setStatus('saving');
+        try {
+          await onSubmit(toBody(form, initial));
+          setStatus('idle');
+        } catch {
+          setStatus('error');
+        }
+      }}
+    >
+      <FieldGroup className="gap-4">
+        <Field>
+          <FieldLabel htmlFor={`${id}-name`}>
+            {m.alertManager_nameLabel()}
+          </FieldLabel>
+          <Input
+            id={`${id}-name`}
+            name="label"
+            value={form.label}
+            placeholder={m.alertManager_namePlaceholder()}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, label: event.target.value }))
             }
-          }}
-        >
-          <FieldGroup className="gap-4">
-            <Field>
-              <FieldLabel htmlFor={`${id}-name`}>
-                {m.alertManager_nameLabel()}
-              </FieldLabel>
-              <Input
-                id={`${id}-name`}
-                name="label"
-                value={form.label}
-                placeholder={m.alertManager_namePlaceholder()}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, label: event.target.value }))
-                }
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor={`${id}-roles`}>
-                {m.alertManager_rolesLabel()}
-              </FieldLabel>
-              <Input
-                id={`${id}-roles`}
-                name="jobFunctions"
-                value={form.jobFunctions}
-                placeholder={m.alertManager_rolesPlaceholder()}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    jobFunctions: event.target.value,
-                  }))
-                }
-              />
-            </Field>
-            <FieldSet>
-              <FieldLegend variant="label">
-                {m.alertManager_remoteOptionsLegend()}
-              </FieldLegend>
-              <FieldGroup className="flex-row flex-wrap gap-4">
-                {REMOTE_OPTIONS.map((option) => {
-                  const optionId = `${id}-${option}`;
-                  return (
-                    <Field
-                      key={option}
-                      orientation="horizontal"
-                      className="w-auto"
-                    >
-                      <Checkbox
-                        id={optionId}
-                        name="remoteOptions"
-                        value={option}
-                        checked={form.remoteOptions.includes(option)}
-                        onCheckedChange={(checked) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            remoteOptions: checked
-                              ? [...prev.remoteOptions, option]
-                              : prev.remoteOptions.filter(
-                                  (value) => value !== option,
-                                ),
-                          }))
-                        }
-                      />
-                      <FieldLabel htmlFor={optionId} className="font-normal">
-                        {REMOTE_LABEL[option]()}
-                      </FieldLabel>
-                    </Field>
-                  );
-                })}
-              </FieldGroup>
-            </FieldSet>
-          </FieldGroup>
-          <div className="flex gap-2">
-            <Button type="submit" size="sm" disabled={status === 'saving'}>
-              {status === 'saving' ? m.alertManager_savingLabel() : submitLabel}
-            </Button>
-            {onCancel ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={onCancel}
-              >
-                {m.alertManager_cancelLabel()}
-              </Button>
-            ) : null}
-          </div>
-          <CandidateActionFeedback
-            state={status === 'error' ? 'error' : 'idle'}
           />
-        </form>
-      </CardContent>
-    </Card>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${id}-roles`}>
+            {m.alertManager_rolesLabel()}
+          </FieldLabel>
+          <Input
+            id={`${id}-roles`}
+            name="jobFunctions"
+            value={form.jobFunctions}
+            placeholder={m.alertManager_rolesPlaceholder()}
+            onChange={(event) =>
+              setForm((prev) => ({
+                ...prev,
+                jobFunctions: event.target.value,
+              }))
+            }
+          />
+        </Field>
+        <FieldSet>
+          <FieldLegend variant="label">
+            {m.alertManager_remoteOptionsLegend()}
+          </FieldLegend>
+          <FieldGroup className="flex-row flex-wrap gap-4">
+            {REMOTE_OPTIONS.map((option) => {
+              const optionId = `${id}-${option}`;
+              return (
+                <Field key={option} orientation="horizontal" className="w-auto">
+                  <Checkbox
+                    id={optionId}
+                    name="remoteOptions"
+                    value={option}
+                    checked={form.remoteOptions.includes(option)}
+                    onCheckedChange={(checked) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        remoteOptions: checked
+                          ? [...prev.remoteOptions, option]
+                          : prev.remoteOptions.filter(
+                              (value) => value !== option,
+                            ),
+                      }))
+                    }
+                  />
+                  <FieldLabel htmlFor={optionId} className="font-normal">
+                    {REMOTE_LABEL[option]()}
+                  </FieldLabel>
+                </Field>
+              );
+            })}
+          </FieldGroup>
+        </FieldSet>
+        {showLocations ? (
+          <Field>
+            <FieldLabel htmlFor={`${id}-locations`}>
+              {m.alertManager_locationsLabel()}
+            </FieldLabel>
+            <PlaceTagsField
+              id={`${id}-locations`}
+              tags={form.places.map((place) => ({
+                key: place.id,
+                label: place.name,
+              }))}
+              onAddSuggestion={(place: LocationSuggestionVM) =>
+                setForm((prev) =>
+                  prev.places.some((entry) => entry.id === place.id)
+                    ? prev
+                    : {
+                        ...prev,
+                        places: [
+                          ...prev.places,
+                          { id: place.id, name: place.name },
+                        ],
+                      },
+                )
+              }
+              onRemove={(key) =>
+                setForm((prev) => ({
+                  ...prev,
+                  places: prev.places.filter((place) => place.id !== key),
+                }))
+              }
+              placeholder={m.alertManager_locationsPlaceholder()}
+              searchingText={m.locationCombobox_searchingText()}
+              removeAriaLabel={(name) => m.placeTags_removeAriaLabel({ name })}
+              {...locationSuggestions}
+            />
+            <FieldDescription>
+              {m.alertManager_locationsHelperText()}
+            </FieldDescription>
+          </Field>
+        ) : null}
+      </FieldGroup>
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" disabled={status === 'saving'}>
+          {status === 'saving' ? m.alertManager_savingLabel() : submitLabel}
+        </Button>
+        {onCancel ? (
+          <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+            {m.alertManager_cancelLabel()}
+          </Button>
+        ) : null}
+      </div>
+      <CandidateActionFeedback state={status === 'error' ? 'error' : 'idle'} />
+    </form>
   );
 }
 
-export function AlertManager({ alerts }: { alerts: Alert[] }) {
+export function AlertManager({
+  alerts,
+  placeNames,
+  locationSuggestions,
+}: {
+  alerts: Alert[];
+  placeNames: PlaceNameMap;
+  locationSuggestions: LocationSuggestionState;
+}) {
   const router = useRouter();
   const [editing, setEditing] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -214,33 +290,56 @@ export function AlertManager({ alerts }: { alerts: Alert[] }) {
   const [feedback, setFeedback] =
     useState<CandidateActionFeedbackState>('idle');
 
+  const editingAlert = alerts.find((alert) => alert.id === editing) ?? null;
+
+  const describeAlert = (alert: Alert) => {
+    const parts = [
+      alert.filters.jobFunctions.length
+        ? alert.filters.jobFunctions.join(', ')
+        : m.alertManager_anyRoleText(),
+    ];
+    if (alert.filters.remoteOptions.length) {
+      parts.push(
+        alert.filters.remoteOptions
+          .map((option) => REMOTE_LABEL[option]?.() ?? option)
+          .join(', '),
+      );
+    }
+    if (alert.filters.placeIds.length) {
+      parts.push(
+        alert.filters.placeIds.map((id) => placeNames[id] ?? id).join(', '),
+      );
+    }
+    return parts.join(' · ');
+  };
+
+  const newAlertButton = (
+    <Button
+      variant="outline"
+      data-test="alert-create"
+      onClick={() => setCreating(true)}
+    >
+      {m.alertManager_newAlertLabel()}
+    </Button>
+  );
+
   return (
     <div className="space-y-4" data-test="alert-manager">
       {alerts.length === 0 ? (
         <Empty className="border">
           <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <BellRing aria-hidden="true" />
+            </EmptyMedia>
+            <EmptyTitle>{m.meAlerts_title()}</EmptyTitle>
             <EmptyDescription>{m.alertManager_emptyText()}</EmptyDescription>
           </EmptyHeader>
+          <EmptyContent>{newAlertButton}</EmptyContent>
         </Empty>
       ) : (
-        <ul className="space-y-3">
-          {alerts.map((alert) =>
-            editing === alert.id ? (
-              <li key={alert.id}>
-                <AlertForm
-                  initial={alert}
-                  submitLabel={m.alertManager_saveChangesLabel()}
-                  onCancel={() => setEditing(null)}
-                  onSubmit={async (body) => {
-                    setFeedback('idle');
-                    await updateMyAlert({ data: { id: alert.id, body } });
-                    setEditing(null);
-                    await router.invalidate();
-                    setFeedback('success');
-                  }}
-                />
-              </li>
-            ) : (
+        <>
+          <ul className="space-y-3">
+            {alerts.map((alert) => (
               <li key={alert.id}>
                 <Item variant="outline">
                   <ItemContent>
@@ -255,16 +354,7 @@ export function AlertManager({ alerts }: { alerts: Alert[] }) {
                         </Badge>
                       ) : null}
                     </ItemTitle>
-                    <ItemDescription>
-                      {alert.filters.jobFunctions.length
-                        ? alert.filters.jobFunctions.join(', ')
-                        : m.alertManager_anyRoleText()}
-                      {alert.filters.remoteOptions.length
-                        ? ` · ${alert.filters.remoteOptions
-                            .map((option) => REMOTE_LABEL[option]?.() ?? option)
-                            .join(', ')}`
-                        : ''}
-                    </ItemDescription>
+                    <ItemDescription>{describeAlert(alert)}</ItemDescription>
                     {alert.lastSentAt ? (
                       <p className="text-muted-foreground text-xs">
                         {m.alertManager_lastSentText({
@@ -305,35 +395,68 @@ export function AlertManager({ alerts }: { alerts: Alert[] }) {
                   </ItemActions>
                 </Item>
               </li>
-            ),
-          )}
-        </ul>
+            ))}
+          </ul>
+          {newAlertButton}
+        </>
       )}
 
       <CandidateActionFeedback state={feedback} />
 
-      {creating ? (
-        <AlertForm
-          initial={null}
-          submitLabel={m.alertManager_createAlertLabel()}
-          onCancel={() => setCreating(false)}
-          onSubmit={async (body) => {
-            setFeedback('idle');
-            await createMyAlert({ data: body });
-            setCreating(false);
-            await router.invalidate();
-            setFeedback('success');
-          }}
-        />
-      ) : (
-        <Button
-          variant="outline"
-          data-test="alert-create"
-          onClick={() => setCreating(true)}
-        >
-          {m.alertManager_newAlertLabel()}
-        </Button>
-      )}
+      <Dialog open={creating} onOpenChange={setCreating}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{m.alertManager_newAlertLabel()}</DialogTitle>
+          </DialogHeader>
+          <AlertForm
+            key={creating ? 'open' : 'closed'}
+            initial={null}
+            placeNames={placeNames}
+            locationSuggestions={locationSuggestions}
+            submitLabel={m.alertManager_createAlertLabel()}
+            onCancel={() => setCreating(false)}
+            onSubmit={async (body) => {
+              setFeedback('idle');
+              await createMyAlert({ data: body });
+              setCreating(false);
+              await router.invalidate();
+              setFeedback('success');
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Sheet
+        open={editing !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditing(null);
+        }}
+      >
+        <SheetContent side="right" className="w-full gap-0 sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>{m.alertManager_editAlertTitle()}</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto p-4 pt-2">
+            {editingAlert ? (
+              <AlertForm
+                key={editingAlert.id}
+                initial={editingAlert}
+                placeNames={placeNames}
+                locationSuggestions={locationSuggestions}
+                submitLabel={m.alertManager_saveChangesLabel()}
+                onCancel={() => setEditing(null)}
+                onSubmit={async (body) => {
+                  setFeedback('idle');
+                  await updateMyAlert({ data: { id: editingAlert.id, body } });
+                  setEditing(null);
+                  await router.invalidate();
+                  setFeedback('success');
+                }}
+              />
+            ) : null}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

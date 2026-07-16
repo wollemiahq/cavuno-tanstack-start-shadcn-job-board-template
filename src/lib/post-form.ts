@@ -28,6 +28,12 @@ export type JobPostingFormInput = {
   description: string;
   employmentType: string;
   remoteOption: string;
+  /** Resolved office places (display name + optional geo codes). */
+  officeLocations: {
+    displayName: string;
+    countryCode?: string;
+    region?: string;
+  }[];
   applicationUrl: string;
   salaryMin?: number;
   salaryMax?: number;
@@ -54,7 +60,7 @@ export function toCreateJobPostingInput(
       description: data.description,
       employmentType: data.employmentType,
       remoteOption: data.remoteOption,
-      officeLocations: [],
+      officeLocations: data.officeLocations,
       applicationUrl: data.applicationUrl,
       salaryRangeEnabled,
       salaryMin: data.salaryMin,

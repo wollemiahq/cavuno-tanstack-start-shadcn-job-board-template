@@ -1080,5 +1080,15 @@
   "profileCompleteness_introText": "Lade deinen Lebenslauf hoch oder fülle die Abschnitte unten aus — vollständige Profile fallen Arbeitgebern auf.",
   "profileCompleteness_percentText": "{percent} % vollständig",
   "profileCompleteness_regionLabel": "Profilvollständigkeit",
-  "profileCompleteness_itemPhotoLabel": "Profilfoto"
+  "profileCompleteness_itemPhotoLabel": "Profilfoto",
+  "postJob_officeLocationsLabel": "Bürostandorte",
+  "postJob_officeLocationsPlaceholder": "Stadt hinzufügen…",
+  "postJob_officeLocationsRemoteHelperText": "Optional bei Remote-Stellen — füge Städte hinzu, in denen ein Büro verfügbar ist.",
+  "postJob_officeLocationsRequiredError": "Füge mindestens einen Bürostandort hinzu.",
+  "placeTags_removeAriaLabel": "{name} entfernen",
+  "alertManager_locationsLabel": "Standorte",
+  "alertManager_locationsPlaceholder": "Standort hinzufügen…",
+  "alertManager_locationsHelperText": "Nur Treffer an diesen Orten erhalten.",
+  "alertManager_editAlertTitle": "Benachrichtigung bearbeiten",
+  "talentDirectory_restrictedSignedInBody": "Die Kandidatensuche erfordert ein Arbeitgeberkonto. Füge dein Unternehmen hinzu, um Kandidat:innen auf {boardName} zu durchsuchen."
 }

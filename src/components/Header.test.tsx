@@ -81,6 +81,8 @@ function renderHeader({
     slug: string;
     name: string;
     contextLabel: string | null;
+    countryCode?: string | null;
+    regionCode?: string | null;
   }>;
   keywordSuggestions?: Array<{
     id: string;
@@ -170,7 +172,11 @@ function renderHeader({
                 ...initialSearch,
                 onSubmit: submitSearch,
                 locationSuggestions: {
-                  suggestions: locationSuggestions,
+                  suggestions: locationSuggestions.map((place) => ({
+                    countryCode: null,
+                    regionCode: null,
+                    ...place,
+                  })),
                   loading: false,
                   onQueryChange: vi.fn(),
                 },

@@ -281,6 +281,8 @@ Props:
 Props:
 
 - `alerts: { id: string; object: "alert"; label: string | null; frequency: "weekly"; isActive: boolean; filters: { jobFunctions:…`
+- `locationSuggestions: LocationSuggestionState`
+- `placeNames: PlaceNameMap`
 
 ### NotFound — `src/components/app-not-found.tsx`
 
@@ -427,16 +429,19 @@ Props:
 
 Candidate account content wrapper. Account navigation now lives in the
 signed-in header's avatar menu (CAV-510), so this shell owns only the page's
-single main landmark and content column. Pages with a complementary rail
-(e.g. the profile-completeness card on /account) pass `aside` + `asideLabel`
-and get the wide two-column PageContent geometry; without one the shell
-stays a single reading-width column.
+single main landmark and content column. `title`/`description`/`actions`
+render the canonical PageHeader; pages with a complementary rail (e.g. the
+profile-completeness card on /account) pass `aside` + `asideLabel` and get
+the wide two-column PageContent geometry.
 
 Props:
 
+- `actions?: ReactNode`
 - `aside?: ReactNode`
 - `asideLabel?: string | undefined`
 - `children: ReactNode`
+- `description?: ReactNode`
+- `title?: ReactNode`
 
 ### CompanyAvatar — `src/components/board/company-avatar.tsx`
 
@@ -980,6 +985,10 @@ Props:
 
 - `state: CandidateActionFeedbackState`
 
+### CandidateProfilePendingPage — `src/components/candidate-route-state.tsx`
+
+Pending state matching the /account profile layout (cards + right rail).
+
 ### CandidateRouteError — `src/components/candidate-route-state.tsx`
 
 Props:
@@ -997,6 +1006,7 @@ Props:
 Props:
 
 - `label: string`
+- `withRail?: boolean | undefined`
 
 ### CandidateRoutePendingPage — `src/components/candidate-route-state.tsx`
 
@@ -1004,14 +1014,18 @@ Props:
 
 Thin wrapper for the candidate account pages. The account navigation moved to
 the signed-in header avatar menu (CAV-510); this simply renders the page
-content inside the shared account content shell. An optional `aside` (with
-its accessible `asideLabel`) renders as the shell's complementary rail.
+content inside the shared account content shell. `title`/`description`/
+`actions` render the canonical PageHeader; an optional `aside` (with its
+accessible `asideLabel`) renders as the shell's complementary rail.
 
 Props:
 
+- `actions?: ReactNode`
 - `aside?: ReactNode`
 - `asideLabel?: string | undefined`
 - `children: ReactNode`
+- `description?: ReactNode`
+- `title?: ReactNode`
 
 ### CompanyJobsSearchBar — `src/components/company-jobs-search-bar.tsx`
 
@@ -1367,6 +1381,30 @@ Props:
 - `kit: { object: "checkout_session"; sessionId: string; clientSecret: string; stripeAccountId: string; publishableKey: strin…`
 - `onComplete?: (() => void) | undefined`
 
+### PlaceTagsField — `src/components/place-tags-field.tsx`
+
+Multi-place picker: committed places render as removable tags over one
+board place-suggest input (the SDK `places.list({ q })` autocomplete the
+route owns via `useLocationSuggestions`). Suggestion picks commit resolved
+places; when the caller passes `onAddFreeText`, pressing Enter on
+unresolved text commits it verbatim (the job-posting payload accepts
+display-name-only office locations). Enter never submits the host form.
+
+Props:
+
+- `className?: string | undefined`
+- `id: string`
+- `loading: boolean`
+- `onAddFreeText?: ((text: string) => void) | undefined`
+- `onAddSuggestion: (place: LocationSuggestionVM) => void`
+- `onQueryChange: (query: string) => void`
+- `onRemove: (key: string) => void`
+- `placeholder?: string | undefined`
+- `removeAriaLabel: (label: string) => string`
+- `searchingText: string`
+- `suggestions: LocationSuggestionVM[]`
+- `tags: PlaceTag[]`
+
 ### PostCard — `src/components/post-card.tsx`
 
 One crawlable blog summary. The card keeps post, tag, and every author as
@@ -1383,6 +1421,7 @@ Props:
 
 - `initialPlanId?: string | undefined`
 - `locale: string`
+- `officeLocationSuggestions: LocationSuggestionState`
 - `onCheckout: (url: string) => void`
 - `onLogoFetch: (domain: string) => Promise<LogoResult>`
 - `onLogoUpload: (data: FormData) => Promise<LogoResult>`

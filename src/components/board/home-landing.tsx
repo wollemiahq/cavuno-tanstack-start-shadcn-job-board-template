@@ -200,10 +200,7 @@ function HiringIndex({ companies }: { companies: HomeCompanyCard[] }) {
     <PageSection
       title={m.home_companiesHeading()}
       actions={
-        <ViewAllAction
-          label={m.home_viewAllCompaniesLabel()}
-          to="/companies"
-        />
+        <ViewAllAction label={m.home_viewAllCompaniesLabel()} to="/companies" />
       }
     >
       <Grid as="ul" columns={{ base: 1, sm: 2, lg: 3 }} gap="3">
