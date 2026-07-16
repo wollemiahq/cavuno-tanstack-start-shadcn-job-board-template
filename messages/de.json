@@ -300,7 +300,7 @@
   "postJob_recommendedLabel": "Empfohlen",
   "postJob_priceUnavailableLabel": "Nicht verfügbar",
   "postJob_submittingLabel": "Wird gesendet …",
-  "postJob_submitButtonLabel": "Job absenden",
+  "postJob_submitButtonLabel": "Stelle veröffentlichen",
   "postJob_publishedTitle": "Ihr Job ist online",
   "postJob_publishedBody": "Er wurde auf dem Jobboard veröffentlicht.",
   "postJob_pendingTitle": "Zur Prüfung eingereicht",
@@ -1090,5 +1090,12 @@
   "alertManager_locationsPlaceholder": "Standort hinzufügen…",
   "alertManager_locationsHelperText": "Nur Treffer an diesen Orten erhalten.",
   "alertManager_editAlertTitle": "Benachrichtigung bearbeiten",
-  "talentDirectory_restrictedSignedInBody": "Die Kandidatensuche erfordert ein Arbeitgeberkonto. Füge dein Unternehmen hinzu, um Kandidat:innen auf {boardName} zu durchsuchen."
+  "talentDirectory_restrictedSignedInBody": "Die Kandidatensuche erfordert ein Arbeitgeberkonto. Füge dein Unternehmen hinzu, um Kandidat:innen auf {boardName} zu durchsuchen.",
+  "postJob_seniorityLabel": "Karrierestufe",
+  "postJob_seniorityPlaceholder": "Optional",
+  "postJob_remoteRestrictionLabel": "Geografische Einschränkung",
+  "postJob_remoteRestrictionWorldwide": "Weltweit",
+  "postJob_remoteRestrictionCountries": "Bestimmte Länder",
+  "postJob_remoteCountriesLabel": "Länder",
+  "postJob_remoteCountriesPlaceholder": "Land hinzufügen…"
 }

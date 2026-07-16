@@ -300,7 +300,7 @@
   "postJob_recommendedLabel": "⟦Ŕéçóɱɱéñðéð⟧",
   "postJob_priceUnavailableLabel": "⟦Úñáṽáíĺáƀĺé⟧",
   "postJob_submittingLabel": "⟦Šúƀɱíţţíñğ…⟧",
-  "postJob_submitButtonLabel": "⟦Šúƀɱíţ ĵóƀ⟧",
+  "postJob_submitButtonLabel": "⟦Þóšţ ĵóƀ⟧",
   "postJob_publishedTitle": "⟦Ýóúŕ ĵóƀ íš ĺíṽé⟧",
   "postJob_publishedBody": "⟦Íţ ĥáš ƀééñ þúƀĺíšĥéð ţó ţĥé ƀóáŕð.⟧",
   "postJob_pendingTitle": "⟦Šúƀɱíţţéð ƒóŕ ŕéṽíéŵ⟧",
@@ -1090,5 +1090,12 @@
   "alertManager_locationsPlaceholder": "⟦Áðð á ĺóçáţíóñ…⟧",
   "alertManager_locationsHelperText": "⟦Óñĺý ğéţ ɱáţçĥéš íñ ţĥéšé þĺáçéš.⟧",
   "alertManager_editAlertTitle": "⟦Éðíţ áĺéŕţ⟧",
-  "talentDirectory_restrictedSignedInBody": "⟦Ɓŕóŵšíñğ çáñðíðáţéš ŕéɋúíŕéš áñ éɱþĺóýéŕ áççóúñţ. Áðð ýóúŕ çóɱþáñý ţó ğéţ áççéšš óñ {boardName}.⟧"
+  "talentDirectory_restrictedSignedInBody": "⟦Ɓŕóŵšíñğ çáñðíðáţéš ŕéɋúíŕéš áñ éɱþĺóýéŕ áççóúñţ. Áðð ýóúŕ çóɱþáñý ţó ğéţ áççéšš óñ {boardName}.⟧",
+  "postJob_seniorityLabel": "⟦Šéñíóŕíţý⟧",
+  "postJob_seniorityPlaceholder": "⟦Óþţíóñáĺ⟧",
+  "postJob_remoteRestrictionLabel": "⟦Ğéóğŕáþĥíç ŕéšţŕíçţíóñ⟧",
+  "postJob_remoteRestrictionWorldwide": "⟦Ŵóŕĺðŵíðé⟧",
+  "postJob_remoteRestrictionCountries": "⟦Šþéçíƒíç çóúñţŕíéš⟧",
+  "postJob_remoteCountriesLabel": "⟦Çóúñţŕíéš⟧",
+  "postJob_remoteCountriesPlaceholder": "⟦Áðð á çóúñţŕý…⟧"
 }

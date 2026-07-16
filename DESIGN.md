@@ -1078,6 +1078,21 @@ Props:
 - `suggestions: CompanyMarketSuggestion[]`
 - `value: string`
 
+### CustomFieldsGroup — `src/components/custom-fields-group.tsx`
+
+Board-defined custom fields for the public posting form (ADR-0008: they
+render as their own group after the built-in fields, in operator-config
+order). Uncontrolled per-field values roll up into one `customFieldValues`
+record keyed by the definition's immutable `key`; select values store
+option KEYS, never labels — the same contract `resolveCustomFieldDisplay`
+reads back on the job page.
+
+Props:
+
+- `definitions: { key: string; label: string; type: "number" | "boolean" | "short_text" | "long_text" | "single_select" | "multi_sele…`
+- `onChange: (values: CustomFieldValues) => void`
+- `values: CustomFieldValues`
+
 ### DangerZone — `src/components/danger-zone.tsx`
 
 Danger zone — irreversible account delete (`board.me.delete()`). This is
@@ -1419,6 +1434,7 @@ Props:
 
 Props:
 
+- `customFields: { key: string; label: string; type: "number" | "boolean" | "short_text" | "long_text" | "single_select" | "multi_sele…`
 - `initialPlanId?: string | undefined`
 - `locale: string`
 - `officeLocationSuggestions: LocationSuggestionState`

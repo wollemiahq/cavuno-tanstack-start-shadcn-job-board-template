@@ -22,6 +22,18 @@ vi.mock('../server/post', () => mocks);
 // resolves cloudflare:workers — stub the seam for the jsdom suite.
 vi.mock('../server/queries', () => ({ searchPlaces: vi.fn() }));
 
+// The route reads board custom-field definitions from the root loader.
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@tanstack/react-router')>();
+  return {
+    ...actual,
+    getRouteApi: () => ({
+      useLoaderData: () => ({ board: { customFields: [] } }),
+    }),
+  };
+});
+
 vi.mock('@/components/post-job-form', () => ({
   PostJobForm: ({
     plans,

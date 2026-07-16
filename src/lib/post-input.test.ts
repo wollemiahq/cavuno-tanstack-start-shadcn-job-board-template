@@ -11,7 +11,11 @@ const posting: JobPostingFormInput = {
   description: '<p>Lead product design.</p>',
   employmentType: 'full_time',
   remoteOption: 'remote',
+  seniority: 'senior',
   officeLocations: [{ displayName: 'Berlin', countryCode: 'DE' }],
+  remoteWorkingPermits: [{ type: 'country', value: 'DE', label: 'Germany' }],
+  remoteWorkPermitCountryCodes: ['DE'],
+  customFieldValues: { visa_support: true, stack: ['react', 'ros'] },
   applicationUrl: 'https://acme.example/apply',
   salaryMin: 140000,
   salaryMax: 180000,
@@ -32,7 +36,12 @@ describe('toCreateJobPostingInput', () => {
         description: '<p>Lead product design.</p>',
         employmentType: 'full_time',
         remoteOption: 'remote',
+        seniority: 'senior',
         officeLocations: [{ displayName: 'Berlin', countryCode: 'DE' }],
+        remoteWorkingPermits: [
+          { type: 'country', value: 'DE', label: 'Germany' },
+        ],
+        customFieldValues: { visa_support: true, stack: ['react', 'ros'] },
         applicationUrl: 'https://acme.example/apply',
         salaryRangeEnabled: true,
         salaryMin: 140000,
@@ -40,6 +49,7 @@ describe('toCreateJobPostingInput', () => {
         salaryCurrency: 'AUD',
         selectedPlan: 'plan-standard',
       },
+      remoteWorkPermitCountryCodes: ['DE'],
       logoUrl: 'https://cdn.example/logo.webp',
     });
 

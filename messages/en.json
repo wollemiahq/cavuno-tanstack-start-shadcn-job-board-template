@@ -300,7 +300,7 @@
   "postJob_recommendedLabel": "Recommended",
   "postJob_priceUnavailableLabel": "Unavailable",
   "postJob_submittingLabel": "Submitting…",
-  "postJob_submitButtonLabel": "Submit job",
+  "postJob_submitButtonLabel": "Post job",
   "postJob_publishedTitle": "Your job is live",
   "postJob_publishedBody": "It has been published to the board.",
   "postJob_pendingTitle": "Submitted for review",
@@ -1090,5 +1090,12 @@
   "alertManager_locationsPlaceholder": "Add a location…",
   "alertManager_locationsHelperText": "Only get matches in these places.",
   "alertManager_editAlertTitle": "Edit alert",
-  "talentDirectory_restrictedSignedInBody": "Browsing candidates requires an employer account. Add your company to get access on {boardName}."
+  "talentDirectory_restrictedSignedInBody": "Browsing candidates requires an employer account. Add your company to get access on {boardName}.",
+  "postJob_seniorityLabel": "Seniority",
+  "postJob_seniorityPlaceholder": "Optional",
+  "postJob_remoteRestrictionLabel": "Geographic restriction",
+  "postJob_remoteRestrictionWorldwide": "Worldwide",
+  "postJob_remoteRestrictionCountries": "Specific countries",
+  "postJob_remoteCountriesLabel": "Countries",
+  "postJob_remoteCountriesPlaceholder": "Add a country…"
 }

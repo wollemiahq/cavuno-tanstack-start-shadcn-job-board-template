@@ -328,6 +328,7 @@
       "productionReferences": [
         "src/components/alert-manager.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/custom-fields-group.tsx",
         "src/components/notification-settings.tsx",
         "src/components/profile-form.tsx",
         "src/components/resume-upload.tsx"
@@ -439,6 +440,7 @@
         "src/components/board/alert-signup-form.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
         "src/components/board/talent-filter-controls.tsx",
+        "src/components/custom-fields-group.tsx",
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",
         "src/components/experience-section.tsx",
@@ -466,6 +468,7 @@
         "src/components/alert-manager.tsx",
         "src/components/auth-form.tsx",
         "src/components/board/alerts-band.tsx",
+        "src/components/custom-fields-group.tsx",
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",
         "src/components/experience-section.tsx",
@@ -619,6 +622,7 @@
       "productionReferences": [
         "src/components/board/jobs-filter-controls.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/custom-fields-group.tsx",
         "src/components/languages-section.tsx",
         "src/components/messages/message-bubble.tsx",
         "src/components/month-year-field.tsx",
@@ -710,6 +714,7 @@
       "name": "textarea",
       "status": "used",
       "productionReferences": [
+        "src/components/custom-fields-group.tsx",
         "src/components/education-section.tsx",
         "src/components/experience-section.tsx",
         "src/components/messages/message-bubble.tsx",

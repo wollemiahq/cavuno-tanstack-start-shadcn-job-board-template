@@ -83,6 +83,7 @@ describe('PostJobForm', () => {
 
     render(
       <PostJobForm
+        customFields={[]}
         locale="en"
         officeLocationSuggestions={{
           suggestions: [],
@@ -118,6 +119,11 @@ describe('PostJobForm', () => {
     fireEvent.change(screen.getByLabelText('Application URL'), {
       target: { value: 'acme.example/careers/staff-designer' },
     });
+    // Hybrid (the default) requires somewhere to be on-site at — commit a
+    // free-text office location through the place picker.
+    const officeLocations = screen.getByLabelText('Office locations');
+    fireEvent.change(officeLocations, { target: { value: 'Berlin' } });
+    fireEvent.keyDown(officeLocations, { key: 'Enter' });
     fireEvent.change(screen.getByLabelText('Salary min'), {
       target: { value: '140000' },
     });
@@ -125,7 +131,7 @@ describe('PostJobForm', () => {
       target: { value: '180000' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Submit job' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Post job' }));
 
     await waitFor(() =>
       expect(onSubmit).toHaveBeenCalledWith({
@@ -136,8 +142,8 @@ describe('PostJobForm', () => {
         title: 'Staff Product Designer',
         description: '<p>Lead product design across the company.</p>',
         employmentType: 'full_time',
-        remoteOption: 'remote',
-        officeLocations: [],
+        remoteOption: 'hybrid',
+        officeLocations: [{ displayName: 'Berlin' }],
         applicationUrl: 'https://acme.example/careers/staff-designer',
         salaryMin: 140000,
         salaryMax: 180000,
@@ -156,6 +162,7 @@ describe('PostJobForm', () => {
   it('explains when posting is unavailable instead of rendering an unusable form', () => {
     render(
       <PostJobForm
+        customFields={[]}
         locale="en"
         officeLocationSuggestions={{
           suggestions: [],
@@ -174,13 +181,14 @@ describe('PostJobForm', () => {
       screen.getByText('No job posting plans are available.'),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Submit job' }),
+      screen.queryByRole('button', { name: 'Post job' }),
     ).not.toBeInTheDocument();
   });
 
   it('uses the owned Field and InputGroup anatomy for every labelled control', () => {
     const { container } = render(
       <PostJobForm
+        customFields={[]}
         locale="en"
         officeLocationSuggestions={{
           suggestions: [],
@@ -211,6 +219,7 @@ describe('PostJobForm', () => {
   it('keeps a deep-linked posting plan selected when the form opens', () => {
     render(
       <PostJobForm
+        customFields={[]}
         locale="en"
         officeLocationSuggestions={{
           suggestions: [],
@@ -238,6 +247,7 @@ describe('PostJobForm', () => {
     });
     render(
       <PostJobForm
+        customFields={[]}
         locale="en"
         officeLocationSuggestions={{
           suggestions: [],
@@ -276,6 +286,7 @@ describe('PostJobForm', () => {
     );
     const { container } = render(
       <PostJobForm
+        customFields={[]}
         locale="en"
         officeLocationSuggestions={{
           suggestions: [],
@@ -309,6 +320,7 @@ describe('PostJobForm', () => {
   it('never presents an inactive paid plan as free', () => {
     render(
       <PostJobForm
+        customFields={[]}
         locale="en-AU"
         officeLocationSuggestions={{
           suggestions: [],

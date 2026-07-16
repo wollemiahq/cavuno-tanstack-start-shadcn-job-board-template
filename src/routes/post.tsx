@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -12,6 +12,8 @@ import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { PostJobForm } from '@/components/post-job-form';
+
+const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/post')({
   staticData: { ownsMain: true },
@@ -29,6 +31,7 @@ export const Route = createFileRoute('/post')({
 function PostJobPage() {
   const plans = Route.useLoaderData();
   const search = Route.useSearch();
+  const { board } = rootApi.useLoaderData();
   const officeLocationSuggestions = useLocationSuggestions(getLocale());
 
   return (
@@ -46,6 +49,7 @@ function PostJobPage() {
             locale={getLocale()}
             plans={plans.data}
             officeLocationSuggestions={officeLocationSuggestions}
+            customFields={board.customFields}
             initialPlanId={search.plan}
             onSubmit={(input) => submitJobPosting({ data: input })}
             onLogoFetch={(domain) => fetchLogoByDomain({ data: { domain } })}

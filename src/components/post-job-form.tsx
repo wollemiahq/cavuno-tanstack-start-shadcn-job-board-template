@@ -1,10 +1,11 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { fieldLabel, getSalaryLexicon } from '@cavuno/board/format';
 import { ImagePlus } from 'lucide-react';
 
+import { COUNTRY_CODES } from '../lib/country-codes';
 import {
   DEFAULT_SALARY_TIMEFRAME,
   ensureProtocol,
@@ -62,9 +63,13 @@ import type {
   SubmitJobResult,
 } from '../server/post';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
+import {
+  CustomFieldsGroup,
+  type CustomFieldValues,
+} from '@/components/custom-fields-group';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { PlaceTagsField } from '@/components/place-tags-field';
-import type { JobPostingPlan } from '@cavuno/board';
+import type { JobPostingPlan, PublicBoard } from '@cavuno/board';
 
 const EMPLOYMENT_TYPES = [
   'full_time',
@@ -75,6 +80,17 @@ const EMPLOYMENT_TYPES = [
 ] as const;
 
 const REMOTE_OPTIONS = ['remote', 'hybrid', 'on_site'] as const;
+
+const SENIORITIES = [
+  'entry_level',
+  'associate',
+  'mid_level',
+  'senior',
+  'lead',
+  'principal',
+  'director',
+  'executive',
+] as const;
 const PROTOCOL_PREFIX = 'https://';
 
 type Status =
@@ -104,14 +120,20 @@ type PostJobFormState = {
   salaryTimeframe: SalaryTimeframe;
   companyName: string;
   remoteOption: (typeof REMOTE_OPTIONS)[number];
+  remoteRestriction: 'worldwide' | 'countries';
+  remoteCountries: { code: string; name: string }[];
+  seniority: string | null;
   officeLocations: OfficeLocationDraft[];
   officeLocationsError: boolean;
+  customFieldValues: CustomFieldValues;
 };
 
 export type PostJobFormProps = {
   locale: Parameters<typeof fieldLabel>[0];
   plans: JobPostingPlan[];
   officeLocationSuggestions: LocationSuggestionState;
+  /** Board-defined custom field definitions, in operator-config order. */
+  customFields: PublicBoard['customFields'];
   initialPlanId?: string;
   onSubmit: (input: SubmitJobInput) => Promise<SubmitJobResult>;
   onLogoFetch: (domain: string) => Promise<LogoResult>;
@@ -147,6 +169,7 @@ export function PostJobForm({
   locale,
   plans,
   officeLocationSuggestions,
+  customFields,
   initialPlanId,
   onSubmit,
   onLogoFetch,
@@ -163,9 +186,13 @@ export function PostJobForm({
     currency: 'USD',
     salaryTimeframe: DEFAULT_SALARY_TIMEFRAME,
     companyName: '',
-    remoteOption: REMOTE_OPTIONS[0],
+    remoteOption: 'hybrid',
+    remoteRestriction: 'worldwide',
+    remoteCountries: [],
+    seniority: null,
     officeLocations: [],
     officeLocationsError: false,
+    customFieldValues: {},
   });
   const {
     status,
@@ -176,8 +203,12 @@ export function PostJobForm({
     salaryTimeframe,
     companyName,
     remoteOption,
+    remoteRestriction,
+    remoteCountries,
+    seniority,
     officeLocations,
     officeLocationsError,
+    customFieldValues,
   } = formState;
 
   function updateFormState(patch: Partial<PostJobFormState>) {
@@ -207,6 +238,39 @@ export function PostJobForm({
     value,
     label: fieldLabel(locale, value) ?? value,
   }));
+  const seniorityItems = SENIORITIES.map((value) => ({
+    value,
+    label: fieldLabel(locale, value) ?? value,
+  }));
+  const restrictionItems = [
+    { value: 'worldwide', label: m.postJob_remoteRestrictionWorldwide() },
+    { value: 'countries', label: m.postJob_remoteRestrictionCountries() },
+  ];
+  // Country picker suggestions are synthesized locally (ISO codes + Intl
+  // labels) but reuse the async-shaped PlaceTagsField contract.
+  const [countryQuery, setCountryQuery] = useState('');
+  const countryOptions = useMemo(() => {
+    const names = new Intl.DisplayNames([locale], { type: 'region' });
+    return COUNTRY_CODES.map((code) => ({
+      code,
+      name: names.of(code) ?? code,
+    })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [locale]);
+  const countrySuggestions = useMemo(() => {
+    const query = countryQuery.trim().toLowerCase();
+    if (!query) return [];
+    return countryOptions
+      .filter((country) => country.name.toLowerCase().includes(query))
+      .slice(0, 10)
+      .map((country) => ({
+        id: country.code,
+        slug: country.code.toLowerCase(),
+        name: country.name,
+        contextLabel: null,
+        countryCode: country.code,
+        regionCode: null,
+      }));
+  }, [countryOptions, countryQuery]);
   const currencyItems = salaryCurrencyOptions().map(({ value, label }) => ({
     value,
     label,
@@ -316,6 +380,13 @@ export function PostJobForm({
     const salaryMax = readNumber(form, 'salaryMax');
     updateFormState({ status: { kind: 'pending' } });
 
+    // Empty strings / empty selections are "unanswered", not values.
+    const submittableCustomFieldValues = Object.fromEntries(
+      Object.entries(customFieldValues).filter(([, value]) =>
+        Array.isArray(value) ? value.length > 0 : value !== '',
+      ),
+    );
+
     try {
       const result = await onSubmit({
         companyName: String(form.get('companyName')),
@@ -326,9 +397,35 @@ export function PostJobForm({
         description,
         employmentType: String(form.get('employmentType')),
         remoteOption: String(form.get('remoteOption')),
+        ...(seniority ? { seniority } : {}),
         officeLocations: officeLocations.map(
           ({ key: _key, ...location }) => location,
         ),
+        ...(remoteOption === 'remote'
+          ? remoteRestriction === 'countries' && remoteCountries.length
+            ? {
+                remoteWorkingPermits: remoteCountries.map((country) => ({
+                  type: 'country',
+                  value: country.code,
+                  label: country.name,
+                })),
+                remoteWorkPermitCountryCodes: remoteCountries.map(
+                  (country) => country.code,
+                ),
+              }
+            : {
+                remoteWorkingPermits: [
+                  {
+                    type: 'worldwide',
+                    value: 'worldwide',
+                    label: m.postJob_remoteRestrictionWorldwide(),
+                  },
+                ],
+              }
+          : {}),
+        ...(Object.keys(submittableCustomFieldValues).length
+          ? { customFieldValues: submittableCustomFieldValues }
+          : {}),
         applicationUrl:
           ensureProtocol(readString(form, 'applicationUrl')) ?? '',
         salaryMin,
@@ -499,40 +596,57 @@ export function PostJobForm({
 
       <PageSection title={m.postJob_roleHeading()}>
         <div className="grid gap-5">
-          <LabeledInput
-            label={m.postJob_jobTitleLabel()}
-            name="title"
-            required
-          />
-          <Field>
-            <FieldLabel>{m.postJob_descriptionLabel()}</FieldLabel>
-            <RichTextEditor
-              value={description}
-              onChange={(value) => updateFormState({ description: value })}
-              ariaLabel={m.postJob_descriptionLabel()}
-            />
-          </Field>
           <div className="grid gap-5 sm:grid-cols-2">
             <SelectField
               label={m.postJob_employmentTypeLabel()}
               name="employmentType"
               items={employmentItems}
             />
-            <SelectField
-              label={m.postJob_remoteOptionLabel()}
-              name="remoteOption"
-              items={remoteItems}
-              value={remoteOption}
-              onValueChange={(value) =>
-                updateFormState({
-                  remoteOption:
-                    (value as (typeof REMOTE_OPTIONS)[number] | null) ??
-                    REMOTE_OPTIONS[0],
-                  officeLocationsError: false,
-                })
-              }
-            />
+            <Field>
+              <FieldLabel htmlFor="seniority">
+                {m.postJob_seniorityLabel()}
+              </FieldLabel>
+              <Select
+                items={seniorityItems}
+                name="seniority"
+                value={seniority}
+                onValueChange={(value) =>
+                  updateFormState({
+                    seniority: (value as string | null) ?? null,
+                  })
+                }
+              >
+                <SelectTrigger id="seniority" className="w-full">
+                  <SelectValue placeholder={m.postJob_seniorityPlaceholder()} />
+                </SelectTrigger>
+                <SelectContent>
+                  {seniorityItems.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
           </div>
+          <LabeledInput
+            label={m.postJob_jobTitleLabel()}
+            name="title"
+            required
+          />
+          <SelectField
+            label={m.postJob_remoteOptionLabel()}
+            name="remoteOption"
+            items={remoteItems}
+            value={remoteOption}
+            onValueChange={(value) =>
+              updateFormState({
+                remoteOption:
+                  (value as (typeof REMOTE_OPTIONS)[number] | null) ?? 'hybrid',
+                officeLocationsError: false,
+              })
+            }
+          />
           <Field data-invalid={officeLocationsError || undefined}>
             <FieldLabel htmlFor="officeLocations">
               {m.postJob_officeLocationsLabel()}
@@ -577,11 +691,75 @@ export function PostJobForm({
               </FieldError>
             ) : null}
           </Field>
-          <LabeledUrlInput
-            label={m.postJob_applicationUrlLabel()}
-            name="applicationUrl"
-            required
-          />
+          {remoteOption === 'remote' ? (
+            <div className="grid gap-5 sm:grid-cols-2">
+              <SelectField
+                label={m.postJob_remoteRestrictionLabel()}
+                name="remoteRestriction"
+                items={restrictionItems}
+                value={remoteRestriction}
+                onValueChange={(value) =>
+                  updateFormState({
+                    remoteRestriction:
+                      (value as 'worldwide' | 'countries' | null) ??
+                      'worldwide',
+                  })
+                }
+              />
+              {remoteRestriction === 'countries' ? (
+                <Field>
+                  <FieldLabel htmlFor="remoteCountries">
+                    {m.postJob_remoteCountriesLabel()}
+                  </FieldLabel>
+                  <PlaceTagsField
+                    id="remoteCountries"
+                    tags={remoteCountries.map((country) => ({
+                      key: country.code,
+                      label: country.name,
+                    }))}
+                    onAddSuggestion={(country: LocationSuggestionVM) =>
+                      setFormState((current) =>
+                        current.remoteCountries.some(
+                          (entry) => entry.code === country.id,
+                        )
+                          ? current
+                          : {
+                              ...current,
+                              remoteCountries: [
+                                ...current.remoteCountries,
+                                { code: country.id, name: country.name },
+                              ],
+                            },
+                      )
+                    }
+                    onRemove={(code) =>
+                      updateFormState({
+                        remoteCountries: remoteCountries.filter(
+                          (country) => country.code !== code,
+                        ),
+                      })
+                    }
+                    suggestions={countrySuggestions}
+                    loading={false}
+                    onQueryChange={setCountryQuery}
+                    placeholder={m.postJob_remoteCountriesPlaceholder()}
+                    searchingText={m.locationCombobox_searchingText()}
+                    removeAriaLabel={(name) =>
+                      m.placeTags_removeAriaLabel({ name })
+                    }
+                  />
+                </Field>
+              ) : null}
+            </div>
+          ) : null}
+          <Field>
+            <FieldLabel>{m.postJob_descriptionLabel()}</FieldLabel>
+            <RichTextEditor
+              value={description}
+              onChange={(value) => updateFormState({ description: value })}
+              ariaLabel={m.postJob_descriptionLabel()}
+            />
+          </Field>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <SelectField
               label={m.postJob_currencyLabel()}
@@ -590,19 +768,6 @@ export function PostJobForm({
               value={currency}
               onValueChange={(value) =>
                 updateFormState({ currency: value ?? 'USD' })
-              }
-            />
-            <SelectField
-              label={m.postJob_salaryTimeframeLabel()}
-              name="salaryTimeframe"
-              items={timeframeItems}
-              value={salaryTimeframe}
-              onValueChange={(value) =>
-                updateFormState({
-                  salaryTimeframe:
-                    (value as SalaryTimeframe | null) ??
-                    DEFAULT_SALARY_TIMEFRAME,
-                })
               }
             />
             <LabeledInput
@@ -617,7 +782,34 @@ export function PostJobForm({
               type="number"
               min={0}
             />
+            <SelectField
+              label={m.postJob_salaryTimeframeLabel()}
+              name="salaryTimeframe"
+              items={timeframeItems}
+              value={salaryTimeframe}
+              onValueChange={(value) =>
+                updateFormState({
+                  salaryTimeframe:
+                    (value as SalaryTimeframe | null) ??
+                    DEFAULT_SALARY_TIMEFRAME,
+                })
+              }
+            />
           </div>
+          <LabeledUrlInput
+            label={m.postJob_applicationUrlLabel()}
+            name="applicationUrl"
+            required
+          />
+          {/* ADR-0008: board-defined custom fields render as their own group
+              after the built-in fields, in operator-config order. */}
+          <CustomFieldsGroup
+            definitions={customFields}
+            values={customFieldValues}
+            onChange={(values) =>
+              updateFormState({ customFieldValues: values })
+            }
+          />
         </div>
       </PageSection>
 

@@ -28,12 +28,16 @@ export type JobPostingFormInput = {
   description: string;
   employmentType: string;
   remoteOption: string;
+  seniority?: string;
   /** Resolved office places (display name + optional geo codes). */
   officeLocations: {
     displayName: string;
     countryCode?: string;
     region?: string;
   }[];
+  /** Remote geographic restriction: worldwide, or specific countries. */
+  remoteWorkingPermits?: { type: string; value: string; label: string }[];
+  remoteWorkPermitCountryCodes?: string[];
   applicationUrl: string;
   salaryMin?: number;
   salaryMax?: number;
@@ -42,6 +46,8 @@ export type JobPostingFormInput = {
   salaryTimeframe?: SalaryTimeframe;
   selectedPlan?: string;
   logoUrl?: string;
+  /** Board-defined custom field answers, keyed by definition key. */
+  customFieldValues?: Record<string, string | string[] | boolean | number>;
 };
 
 export function toCreateJobPostingInput(
@@ -60,7 +66,10 @@ export function toCreateJobPostingInput(
       description: data.description,
       employmentType: data.employmentType,
       remoteOption: data.remoteOption,
+      seniority: data.seniority,
       officeLocations: data.officeLocations,
+      remoteWorkingPermits: data.remoteWorkingPermits,
+      customFieldValues: data.customFieldValues,
       applicationUrl: data.applicationUrl,
       salaryRangeEnabled,
       salaryMin: data.salaryMin,
@@ -71,6 +80,7 @@ export function toCreateJobPostingInput(
       salaryTimeframe: salaryRangeEnabled ? data.salaryTimeframe : undefined,
       selectedPlan: data.selectedPlan,
     },
+    remoteWorkPermitCountryCodes: data.remoteWorkPermitCountryCodes,
     logoUrl: data.logoUrl,
   };
 }

@@ -300,7 +300,7 @@
   "postJob_recommendedLabel": "Recommandé",
   "postJob_priceUnavailableLabel": "Indisponible",
   "postJob_submittingLabel": "Envoi en cours…",
-  "postJob_submitButtonLabel": "Soumettre l'offre",
+  "postJob_submitButtonLabel": "Publier l'offre",
   "postJob_publishedTitle": "Votre offre est en ligne",
   "postJob_publishedBody": "Elle a été publiée sur le site.",
   "postJob_pendingTitle": "Soumise pour validation",
@@ -1090,5 +1090,12 @@
   "alertManager_locationsPlaceholder": "Ajouter un lieu…",
   "alertManager_locationsHelperText": "Ne recevoir que les offres dans ces lieux.",
   "alertManager_editAlertTitle": "Modifier l'alerte",
-  "talentDirectory_restrictedSignedInBody": "La recherche de candidats nécessite un compte employeur. Ajoutez votre entreprise pour parcourir les candidats sur {boardName}."
+  "talentDirectory_restrictedSignedInBody": "La recherche de candidats nécessite un compte employeur. Ajoutez votre entreprise pour parcourir les candidats sur {boardName}.",
+  "postJob_seniorityLabel": "Niveau d'expérience",
+  "postJob_seniorityPlaceholder": "Facultatif",
+  "postJob_remoteRestrictionLabel": "Restriction géographique",
+  "postJob_remoteRestrictionWorldwide": "Monde entier",
+  "postJob_remoteRestrictionCountries": "Pays spécifiques",
+  "postJob_remoteCountriesLabel": "Pays",
+  "postJob_remoteCountriesPlaceholder": "Ajouter un pays…"
 }
