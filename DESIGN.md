@@ -427,10 +427,15 @@ Props:
 
 Candidate account content wrapper. Account navigation now lives in the
 signed-in header's avatar menu (CAV-510), so this shell owns only the page's
-single main landmark and reading-width content column — no sidebar rail.
+single main landmark and content column. Pages with a complementary rail
+(e.g. the profile-completeness card on /account) pass `aside` + `asideLabel`
+and get the wide two-column PageContent geometry; without one the shell
+stays a single reading-width column.
 
 Props:
 
+- `aside?: ReactNode`
+- `asideLabel?: string | undefined`
 - `children: ReactNode`
 
 ### CompanyAvatar — `src/components/board/company-avatar.tsx`
@@ -999,10 +1004,13 @@ Props:
 
 Thin wrapper for the candidate account pages. The account navigation moved to
 the signed-in header avatar menu (CAV-510); this simply renders the page
-content inside the shared account content shell.
+content inside the shared account content shell. An optional `aside` (with
+its accessible `asideLabel`) renders as the shell's complementary rail.
 
 Props:
 
+- `aside?: ReactNode`
+- `asideLabel?: string | undefined`
 - `children: ReactNode`
 
 ### CompanyJobsSearchBar — `src/components/company-jobs-search-bar.tsx`
@@ -1066,21 +1074,26 @@ guards against accidents. On success we clear the session and go home.
 
 Education — list + add/edit/delete, over `board.me.profile`'s
 `listEducation` / `createEducation` / `updateEducation` /
-`deleteEducation`.
+`deleteEducation`. Dates are month-granular (stored as `YYYY-MM-01`).
 
 Props:
 
 - `items: { id: string; object: "candidate_education"; institutionName: string; institutionUrl: string | null; degree: string |…`
+- `language: string`
 
 ### ExperienceSection — `src/components/experience-section.tsx`
 
 Work experience — list + add/edit/delete, over `board.me.profile`'s
 `listExperience` / `createExperience` / `updateExperience` /
 `deleteExperience`. The body is a merge-patch on edit (empty clears).
+Dates are month-granular (stored as `YYYY-MM-01`); location offers board
+place suggestions but stays a free string on the API.
 
 Props:
 
 - `items: { id: string; object: "candidate_experience"; title: string; companyName: string; companyUrl: string | null; location…`
+- `language: string`
+- `locationSuggestions: LocationSuggestionState`
 
 ### JobAlertFloatingPrompt — `src/components/job-alert-floating-prompt.tsx`
 
@@ -1129,8 +1142,9 @@ Props:
 ### LanguagesSection — `src/components/languages-section.tsx`
 
 Languages — name + proficiency rows over the whole-set replace
-(`board.me.profile.updateLanguages`). Proficiency is a free string
-(the API takes any value); the datalist just suggests common levels.
+(`board.me.profile.updateLanguages`). Proficiency is a free string on the
+API; the select offers the five common levels and keeps any previously
+stored custom value selectable so an edit round-trip cannot lose it.
 
 Props:
 
@@ -1170,6 +1184,27 @@ Props:
 - `suggestions: LocationSuggestionVM[]`
 - `value?: string | undefined`
 - `valueLabel?: string | undefined`
+
+### LocationSuggestField — `src/components/location-suggest-field.tsx`
+
+Free-text location field with board place suggestions — the profile-form
+variant of `LocationCombobox`. Profile locations are free strings on the
+API, so unlike the jobs filter (which only commits a resolved place slug)
+every keystroke IS the value; picking a suggestion just replaces it with
+the resolved place name. The route owns the debounced suggestion request
+and passes the `LocationSuggestionState` down.
+
+Props:
+
+- `className?: string | undefined`
+- `id: string`
+- `loading: boolean`
+- `onQueryChange: (query: string) => void`
+- `onValueChange: (text: string) => void`
+- `placeholder?: string | undefined`
+- `searchingText: string`
+- `suggestions: LocationSuggestionVM[]`
+- `value: string`
 
 ### MessagesNavLink — `src/components/messages-nav-link.tsx`
 
@@ -1296,6 +1331,23 @@ Props:
 - `onUnsendMessage: (messageId: string) => Promise<unknown>`
 - `statusError?: string | null | undefined`
 
+### MonthYearField — `src/components/month-year-field.tsx`
+
+Props:
+
+- `clearable?: boolean | undefined`
+- `clearAriaLabel: string`
+- `defaultValue?: string | undefined`
+- `idPrefix: string`
+- `label: string`
+- `language: string`
+- `monthAriaLabel: string`
+- `monthPlaceholder: string`
+- `onChange: (value: string) => void`
+- `required?: boolean | undefined`
+- `yearAriaLabel: string`
+- `yearPlaceholder: string`
+
 ### NavigationProgress — `src/components/navigation-progress.tsx`
 
 ### NotificationSettings — `src/components/notification-settings.tsx`
@@ -1337,6 +1389,18 @@ Props:
 - `onSubmit: (input: JobPostingFormInput) => Promise<SubmitJobResult>`
 - `plans: { object: "job_posting_plan"; id: string; name: string; description: string | null; kind: string; billingInterval: "m…`
 
+### ProfileCompletenessCard — `src/components/profile-completeness-card.tsx`
+
+Profile-completeness rail card: one progress read-out over the checklist of
+profile parts, with the resume uploader embedded — "complete your profile by
+uploading your resume or filling it out". The caller derives the checklist
+from the account loader data; this stays pure presentation.
+
+Props:
+
+- `items: ProfileChecklistItem[]`
+- `resume: { object: "resume"; parseStatus: "parsing" | "parsed" | "failed" | null; parseFailureReason: string | null; parsedAt:…`
+
 ### ProfileForm — `src/components/profile-form.tsx`
 
 Profile edit form — recreates the hosted `/account` profile editor. One
@@ -1346,6 +1410,7 @@ is part of the same patch (the SDK hides the two-mutation split).
 
 Props:
 
+- `locationSuggestions: LocationSuggestionState`
 - `profile: { id: string; object: "candidate_profile"; displayName: string | null; bio: string | null; avatarUrl: string | null; …`
 
 ### ProgrammaticJobsView — `src/components/programmatic-jobs-view.tsx`
@@ -1376,6 +1441,7 @@ Props:
 Props:
 
 - `resume: { object: "resume"; parseStatus: "parsing" | "parsed" | "failed" | null; parseFailureReason: string | null; parsedAt:…`
+- `variant?: "section" | "embedded" | undefined`
 
 ### RheaAuthCard — `src/components/rhea-auth-pilot.tsx`
 

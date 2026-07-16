@@ -64,7 +64,10 @@ function SelectContent({
   sideOffset = 4,
   align = 'center',
   alignOffset = 0,
-  alignItemWithTrigger = true,
+  // Popper positioning (below the trigger, flip only on real collision) is
+  // the app-wide default; Base UI's item-aligned mode made selects open
+  // upward whenever the selected item sat low in the list.
+  alignItemWithTrigger = false,
   ...props
 }: SelectPrimitive.Popup.Props &
   Pick<

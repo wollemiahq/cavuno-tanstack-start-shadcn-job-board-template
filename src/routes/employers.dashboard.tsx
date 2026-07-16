@@ -48,6 +48,10 @@ import { Spinner } from '@/components/ui/spinner';
 import type { CompanyMembership } from '@cavuno/board';
 
 export const Route = createFileRoute('/employers/dashboard')({
+  // `?add` deep-links the connect-a-company view (the candidate account's
+  // "For employers" menu targets it directly).
+  validateSearch: (search: Record<string, unknown>): { add?: boolean } =>
+    search.add === true || search.add === 'true' ? { add: true } : {},
   loader: async () => {
     try {
       return await listCompanies();
@@ -69,7 +73,8 @@ const STATUS_LABEL: Record<CompanyMembership['status'], () => string> = {
 
 function EmployerDashboard() {
   const companies = Route.useLoaderData();
-  const [adding, setAdding] = useState(false);
+  const { add } = Route.useSearch();
+  const [adding, setAdding] = useState(add === true);
 
   if (companies.data.length === 0 || adding) {
     return (

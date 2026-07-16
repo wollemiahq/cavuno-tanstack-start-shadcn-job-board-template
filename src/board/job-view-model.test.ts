@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { toJobCardVM } from './job-view-model';
+import { toJobCardVM, toSavedJobCardVM } from './job-view-model';
 
-import type { PublicJobCard } from '@cavuno/board';
+import type { PublicJob, PublicJobCard } from '@cavuno/board';
 
 /**
  * The card mapper is Layer 1b — it owns the derivations (compLine, honest
@@ -88,5 +88,44 @@ describe('toJobCardVM', () => {
     expect(noCompany.hasDetailLink).toBe(false);
     expect(noCompany.detailHref).toBeNull();
     expect(noCompany.companyAvatarName).toBe('Senior Engineer');
+  });
+});
+
+describe('toSavedJobCardVM', () => {
+  // The saved-jobs list embeds a SLIMMER job projection than the PublicJob
+  // type promises: officeLocations / categories / skills can be absent on the
+  // wire. That shape crashed the SDK's fullJobToCard (`officeLocations[0]`)
+  // and took the whole /account/saved page down (CAV-510 regression).
+  const slimSavedJob = {
+    id: 'job_2',
+    slug: 'staff-engineer',
+    title: 'Staff Engineer',
+    publishedAt: null,
+    employmentType: 'full_time',
+    remoteOption: 'remote',
+    remoteWorldwide: true,
+    salaryMin: null,
+    salaryMax: null,
+    salaryCurrency: null,
+    salaryTimeframe: null,
+    isFeatured: false,
+    company: { slug: 'acme-co', name: 'Acme Co', logoUrl: null },
+    links: { public: 'https://board.example/companies/acme-co/jobs/staff-engineer' },
+  } as unknown as PublicJob;
+
+  it('maps the slim saved-list embed without the arrays the type promises', () => {
+    const vm = toSavedJobCardVM(slimSavedJob, 'en');
+
+    expect(vm).not.toBeNull();
+    expect(vm?.title).toBe('Staff Engineer');
+    expect(vm?.jobSlug).toBe('staff-engineer');
+    expect(vm?.detailHref).toBe('/companies/acme-co/jobs/staff-engineer');
+    expect(vm?.tags).toEqual([]);
+  });
+
+  it('returns null instead of throwing when a row cannot map at all', () => {
+    expect(
+      toSavedJobCardVM(undefined as unknown as PublicJob, 'en'),
+    ).toBeNull();
   });
 });

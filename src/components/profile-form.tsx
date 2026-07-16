@@ -7,6 +7,8 @@ import { useRouter } from '@tanstack/react-router';
 import { m } from '../paraglide/messages';
 import { checkHandle, updateProfile } from '../server/account';
 
+import type { LocationSuggestionState } from '@/components/location-combobox';
+import { LocationSuggestField } from '@/components/location-suggest-field';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -62,7 +64,13 @@ type HandleState = { checking: boolean; available: boolean | null };
  * live on blur (`board.me.profile.handleAvailable`). The display-name field
  * is part of the same patch (the SDK hides the two-mutation split).
  */
-export function ProfileForm({ profile }: { profile: CandidateProfile }) {
+export function ProfileForm({
+  profile,
+  locationSuggestions,
+}: {
+  profile: CandidateProfile;
+  locationSuggestions: LocationSuggestionState;
+}) {
   const visibilityLabels: Record<
     CandidateProfile['profileVisibility'],
     string
@@ -201,11 +209,13 @@ export function ProfileForm({ profile }: { profile: CandidateProfile }) {
             <FieldLabel htmlFor="profile-location">
               {m.profileForm_locationLabel()}
             </FieldLabel>
-            <Input
+            <LocationSuggestField
               id="profile-location"
               value={form.location}
               placeholder={m.profileForm_locationPlaceholder()}
-              onChange={(event) => set('location', event.target.value)}
+              searchingText={m.locationCombobox_searchingText()}
+              onValueChange={(location) => set('location', location)}
+              {...locationSuggestions}
             />
           </Field>
         </div>

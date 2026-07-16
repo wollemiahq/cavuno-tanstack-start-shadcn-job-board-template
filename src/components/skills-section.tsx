@@ -14,6 +14,7 @@ import {
 } from '@/components/candidate-action-feedback';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 /**
@@ -42,80 +43,84 @@ export function SkillsSection({ skills: initial }: { skills: string[] }) {
   };
 
   return (
-    <section className="space-y-3" data-test="skills-section">
-      <h2 className="font-heading text-lg font-semibold tracking-tight">
-        {m.skillsSection_heading()}
-      </h2>
-      {skills.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          {m.skillsSection_emptyText()}
-        </p>
-      ) : (
-        <ul className="flex flex-wrap gap-2">
-          {skills.map((skill) => (
-            <Badge
-              key={skill}
-              variant="secondary"
-              render={<li />}
-              className="h-6 gap-0.5 pr-0.5"
-            >
-              {skill}
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label={m.skillsSection_removeSkillAriaLabel({ skill })}
-                className="text-muted-foreground hover:text-foreground size-5 rounded-full"
-                onClick={() => setSkills(skills.filter((s) => s !== skill))}
+    <Card data-test="skills-section" id="skills">
+      <CardHeader>
+        <CardTitle>
+          <h2>{m.skillsSection_heading()}</h2>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {skills.length === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            {m.skillsSection_emptyText()}
+          </p>
+        ) : (
+          <ul className="flex flex-wrap gap-2">
+            {skills.map((skill) => (
+              <Badge
+                key={skill}
+                variant="secondary"
+                render={<li />}
+                className="h-6 gap-0.5 pr-0.5"
               >
-                <X className="size-3.5" />
-              </Button>
-            </Badge>
-          ))}
-        </ul>
-      )}
-      <div className="flex gap-2">
-        <Input
-          className="flex-1"
-          value={input}
-          placeholder={m.skillsSection_addSkillLabel()}
-          aria-label={m.skillsSection_addSkillLabel()}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              add();
-            }
-          }}
-        />
-        <Button type="button" variant="outline" onClick={add}>
-          {m.skillsSection_addLabel()}
-        </Button>
-      </div>
-      {dirty ? (
-        <Button
-          size="sm"
-          disabled={pending}
-          onClick={async () => {
-            setPending(true);
-            setFeedback('idle');
-            try {
-              await replaceSkills({ data: { skills } });
-              await router.invalidate();
-              setFeedback('success');
-            } catch {
-              setFeedback('error');
-            } finally {
-              setPending(false);
-            }
-          }}
-        >
-          {pending
-            ? m.skillsSection_savingLabel()
-            : m.skillsSection_saveLabel()}
-        </Button>
-      ) : null}
-      <CandidateActionFeedback state={feedback} />
-    </section>
+                {skill}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={m.skillsSection_removeSkillAriaLabel({ skill })}
+                  className="text-muted-foreground hover:text-foreground size-5 rounded-full"
+                  onClick={() => setSkills(skills.filter((s) => s !== skill))}
+                >
+                  <X className="size-3.5" />
+                </Button>
+              </Badge>
+            ))}
+          </ul>
+        )}
+        <div className="flex gap-2">
+          <Input
+            className="flex-1"
+            value={input}
+            placeholder={m.skillsSection_addSkillLabel()}
+            aria-label={m.skillsSection_addSkillLabel()}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                add();
+              }
+            }}
+          />
+          <Button type="button" variant="outline" onClick={add}>
+            {m.skillsSection_addLabel()}
+          </Button>
+        </div>
+        {dirty ? (
+          <Button
+            size="sm"
+            disabled={pending}
+            onClick={async () => {
+              setPending(true);
+              setFeedback('idle');
+              try {
+                await replaceSkills({ data: { skills } });
+                await router.invalidate();
+                setFeedback('success');
+              } catch {
+                setFeedback('error');
+              } finally {
+                setPending(false);
+              }
+            }}
+          >
+            {pending
+              ? m.skillsSection_savingLabel()
+              : m.skillsSection_saveLabel()}
+          </Button>
+        ) : null}
+        <CandidateActionFeedback state={feedback} />
+      </CardContent>
+    </Card>
   );
 }

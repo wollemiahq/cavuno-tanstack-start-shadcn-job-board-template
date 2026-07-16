@@ -109,7 +109,7 @@ function FilterSelect({
         <SelectTrigger id={controlId} aria-label={label}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent align="start" alignItemWithTrigger={false}>
+        <SelectContent align="start">
           <SelectGroup>
             {items.map((item) => (
               <SelectItem key={item.value} value={item.value}>

@@ -111,7 +111,7 @@ export function JobsFilterControls({
           <span>{copy.jobSearch.sortPlaceholder}:</span>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent align="start" alignItemWithTrigger={false}>
+        <SelectContent align="start">
           <SelectGroup>
             {sortItems.map((item) => (
               <SelectItem key={item.value} value={item.value}>

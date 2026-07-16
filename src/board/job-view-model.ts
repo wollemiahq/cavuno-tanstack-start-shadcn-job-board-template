@@ -16,6 +16,7 @@ import {
   fieldLabel,
   formatPublishedRelativeDate,
   formatSalaryRange,
+  fullJobToCard,
   type BoardLabelOverrides,
 } from '@cavuno/board/format';
 import {
@@ -26,7 +27,7 @@ import {
 
 import { deriveSummary } from '@/lib/derive-summary';
 import { m } from '@/paraglide/messages';
-import type { PublicJobCard } from '@cavuno/board';
+import type { PublicJob, PublicJobCard } from '@cavuno/board';
 
 export interface JobCardTagVM {
   key: string;
@@ -126,4 +127,30 @@ export function toJobCardVM(
       })),
     ],
   };
+}
+
+/**
+ * Card VM for a saved-jobs row. The saved-list embed is a slimmer projection
+ * than the `PublicJob` type promises — the arrays the card pipeline
+ * dereferences (`officeLocations`, `categories`, `skills`) can be absent on
+ * the wire — so they are defaulted before the SDK card mapper runs. Returns
+ * `null` when a row still cannot map, so one stale embed never fails the
+ * whole saved-jobs page.
+ */
+export function toSavedJobCardVM(
+  job: PublicJob,
+  language: string,
+  labels?: BoardLabelOverrides,
+): JobCardVM | null {
+  try {
+    const card = fullJobToCard(language, {
+      ...job,
+      officeLocations: job.officeLocations ?? [],
+      categories: job.categories ?? [],
+      skills: job.skills ?? [],
+    });
+    return toJobCardVM(card, language, labels);
+  } catch {
+    return null;
+  }
 }

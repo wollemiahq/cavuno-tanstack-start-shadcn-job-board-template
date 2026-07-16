@@ -45,7 +45,14 @@ function formatBytes(bytes: number): string {
   });
 }
 
-export function ResumeUpload({ resume }: { resume: Resume }) {
+export function ResumeUpload({
+  resume,
+  variant = 'section',
+}: {
+  resume: Resume;
+  /** `embedded` drops the section heading — the host surface provides it. */
+  variant?: 'section' | 'embedded';
+}) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [keepOnFile, setKeepOnFile] = useState(
@@ -55,22 +62,26 @@ export function ResumeUpload({ resume }: { resume: Resume }) {
     'idle' | 'uploading' | 'deleting' | 'upload-error' | 'delete-error'
   >('idle');
 
+  const parseStatusBadge = resume.parseStatus ? (
+    <Badge
+      variant={resume.parseStatus === 'failed' ? 'destructive' : 'secondary'}
+    >
+      {PARSE_STATUS_LABEL[resume.parseStatus]?.() ?? resume.parseStatus}
+    </Badge>
+  ) : null;
+
   return (
     <section className="space-y-3" data-test="resume-upload">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="font-heading text-lg font-semibold tracking-tight">
-          {m.resumeUpload_heading()}
-        </h2>
-        {resume.parseStatus ? (
-          <Badge
-            variant={
-              resume.parseStatus === 'failed' ? 'destructive' : 'secondary'
-            }
-          >
-            {PARSE_STATUS_LABEL[resume.parseStatus]?.() ?? resume.parseStatus}
-          </Badge>
-        ) : null}
-      </div>
+      {variant === 'section' ? (
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="font-heading text-lg font-semibold tracking-tight">
+            {m.resumeUpload_heading()}
+          </h2>
+          {parseStatusBadge}
+        </div>
+      ) : (
+        parseStatusBadge
+      )}
 
       {resume.parseStatus === 'parsing' ? (
         <p className="text-muted-foreground text-sm" role="status">

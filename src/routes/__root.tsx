@@ -35,10 +35,10 @@ import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { AppRouterProvider } from '@/components/app-router-provider';
 import { ShellBreadcrumb } from '@/components/board/breadcrumb';
-import { NavigationProgress } from '@/components/navigation-progress';
 import { themeModeScript } from '@/components/cavuno/board-theme';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
+import { NavigationProgress } from '@/components/navigation-progress';
 import {
   MainContentTarget,
   SkipToContentLink,

@@ -13,7 +13,15 @@ import {
   type CandidateActionFeedbackState,
 } from '@/components/candidate-action-feedback';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type Language = { name: string; proficiency: string };
 
@@ -27,8 +35,9 @@ const LEVELS = [
 
 /**
  * Languages — name + proficiency rows over the whole-set replace
- * (`board.me.profile.updateLanguages`). Proficiency is a free string
- * (the API takes any value); the datalist just suggests common levels.
+ * (`board.me.profile.updateLanguages`). Proficiency is a free string on the
+ * API; the select offers the five common levels and keeps any previously
+ * stored custom value selectable so an edit round-trip cannot lose it.
  */
 export function LanguagesSection({
   languages: initial,
@@ -49,91 +58,119 @@ export function LanguagesSection({
       languages.map((l, i) => (i === index ? { ...l, ...patch } : l)),
     );
 
+  const levelLabels: string[] = LEVELS.map((level) => level());
+
   return (
-    <section className="space-y-3" data-test="languages-section">
-      <h2 className="font-heading text-lg font-semibold tracking-tight">
-        {m.languagesSection_heading()}
-      </h2>
-      <datalist id="proficiency-levels">
-        {LEVELS.map((level) => (
-          <option key={level()} value={level()} />
-        ))}
-      </datalist>
-      {languages.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          {m.languagesSection_emptyText()}
-        </p>
-      ) : (
-        <ul className="space-y-2">
-          {languages.map((language, index) => (
-            <li key={index} className="flex items-center gap-2">
-              <Input
-                className="flex-1"
-                value={language.name}
-                placeholder={m.languagesSection_languageLabel()}
-                aria-label={m.languagesSection_languageLabel()}
-                onChange={(e) => update(index, { name: e.target.value })}
-              />
-              <Input
-                className="flex-1"
-                value={language.proficiency}
-                placeholder={m.languagesSection_proficiencyLabel()}
-                aria-label={m.languagesSection_proficiencyLabel()}
-                list="proficiency-levels"
-                onChange={(e) => update(index, { proficiency: e.target.value })}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label={m.languagesSection_removeLanguageAriaLabel()}
-                className="text-muted-foreground hover:text-foreground shrink-0"
-                onClick={() =>
-                  setLanguages(languages.filter((_, i) => i !== index))
-                }
-              >
-                <X className="size-4" />
-              </Button>
-            </li>
-          ))}
-        </ul>
-      )}
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            setLanguages([...languages, { name: '', proficiency: '' }])
-          }
-        >
-          {m.languagesSection_addLabel()}
-        </Button>
-        {dirty ? (
+    <Card data-test="languages-section" id="languages">
+      <CardHeader>
+        <CardTitle>
+          <h2>{m.languagesSection_heading()}</h2>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {languages.length === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            {m.languagesSection_emptyText()}
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {languages.map((language, index) => {
+              const levels = levelLabels.includes(language.proficiency)
+                ? levelLabels
+                : language.proficiency
+                  ? [language.proficiency, ...levelLabels]
+                  : levelLabels;
+              return (
+                <li key={index} className="flex items-center gap-2">
+                  <Input
+                    className="flex-1"
+                    value={language.name}
+                    placeholder={m.languagesSection_languageLabel()}
+                    aria-label={m.languagesSection_languageLabel()}
+                    onChange={(e) => update(index, { name: e.target.value })}
+                  />
+                  <Select
+                    items={levels.map((level) => ({
+                      label: level,
+                      value: level,
+                    }))}
+                    value={language.proficiency || null}
+                    onValueChange={(proficiency) =>
+                      update(index, {
+                        proficiency: (proficiency as string | null) ?? '',
+                      })
+                    }
+                  >
+                    <SelectTrigger
+                      aria-label={m.languagesSection_proficiencyLabel()}
+                      className="flex-1"
+                    >
+                      <SelectValue
+                        placeholder={m.languagesSection_proficiencyLabel()}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {levels.map((level) => (
+                        <SelectItem key={level} value={level}>
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label={m.languagesSection_removeLanguageAriaLabel()}
+                    className="text-muted-foreground hover:text-foreground shrink-0"
+                    onClick={() =>
+                      setLanguages(languages.filter((_, i) => i !== index))
+                    }
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        <div className="flex gap-2">
           <Button
+            type="button"
+            variant="outline"
             size="sm"
-            disabled={pending || !valid}
-            onClick={async () => {
-              setPending(true);
-              setFeedback('idle');
-              try {
-                await replaceLanguages({ data: { languages } });
-                await router.invalidate();
-                setFeedback('success');
-              } catch {
-                setFeedback('error');
-              } finally {
-                setPending(false);
-              }
-            }}
+            onClick={() =>
+              setLanguages([...languages, { name: '', proficiency: '' }])
+            }
           >
-            {pending
-              ? m.languagesSection_savingLabel()
-              : m.languagesSection_saveLabel()}
+            {m.languagesSection_addLabel()}
           </Button>
-        ) : null}
-      </div>
-      <CandidateActionFeedback state={feedback} />
-    </section>
+          {dirty ? (
+            <Button
+              size="sm"
+              disabled={pending || !valid}
+              onClick={async () => {
+                setPending(true);
+                setFeedback('idle');
+                try {
+                  await replaceLanguages({ data: { languages } });
+                  await router.invalidate();
+                  setFeedback('success');
+                } catch {
+                  setFeedback('error');
+                } finally {
+                  setPending(false);
+                }
+              }}
+            >
+              {pending
+                ? m.languagesSection_savingLabel()
+                : m.languagesSection_saveLabel()}
+            </Button>
+          ) : null}
+        </div>
+        <CandidateActionFeedback state={feedback} />
+      </CardContent>
+    </Card>
   );
 }

@@ -16,8 +16,8 @@
     "total": 61
   },
   "summary": {
-    "used": 36,
-    "available": 24
+    "used": 37,
+    "available": 23
   },
   "registryCompositions": [
     {
@@ -218,6 +218,7 @@
         "src/components/messages/message-bubble.tsx",
         "src/components/messages/messaging-dock.tsx",
         "src/components/messages/thread-view.tsx",
+        "src/components/month-year-field.tsx",
         "src/components/post-job-form.tsx",
         "src/components/profile-form.tsx",
         "src/components/resume-upload.tsx",
@@ -288,14 +289,18 @@
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",
         "src/components/experience-section.tsx",
+        "src/components/languages-section.tsx",
         "src/components/messages/message-bubble.tsx",
         "src/components/messages/messaging-dock.tsx",
         "src/components/messages/messaging-layout.tsx",
         "src/components/post-card.tsx",
         "src/components/post-job-form.tsx",
+        "src/components/profile-completeness-card.tsx",
         "src/components/rhea-auth-pilot.tsx",
         "src/components/search-results/search-result-card.tsx",
+        "src/components/skills-section.tsx",
         "src/components/talent-card.tsx",
+        "src/routes/account.tsx",
         "src/routes/account_.access.tsx",
         "src/routes/companies.$companySlug.index.tsx",
         "src/routes/employers.companies.$slug.index.tsx",
@@ -339,6 +344,7 @@
         "src/components/company-search-combobox.tsx",
         "src/components/keyword-combobox.tsx",
         "src/components/location-combobox.tsx",
+        "src/components/location-suggest-field.tsx",
         "src/routes/employers.dashboard.tsx"
       ]
     },
@@ -375,7 +381,8 @@
       "productionReferences": [
         "src/components/Header.tsx",
         "src/components/messages/message-bubble.tsx",
-        "src/components/messages/thread-view.tsx"
+        "src/components/messages/thread-view.tsx",
+        "src/routes/account.tsx"
       ]
     },
     {
@@ -433,6 +440,7 @@
         "src/components/education-section.tsx",
         "src/components/experience-section.tsx",
         "src/components/messages/composer.tsx",
+        "src/components/month-year-field.tsx",
         "src/components/post-job-form.tsx",
         "src/components/profile-form.tsx",
         "src/components/rhea-auth-pilot.tsx",
@@ -481,6 +489,7 @@
         "src/components/company-search-combobox.tsx",
         "src/components/keyword-combobox.tsx",
         "src/components/location-combobox.tsx",
+        "src/components/location-suggest-field.tsx",
         "src/components/messages/composer.tsx",
         "src/components/post-job-form.tsx",
         "src/routes/-messages-runtime.tsx",
@@ -576,8 +585,10 @@
     },
     {
       "name": "progress",
-      "status": "available",
-      "productionReferences": []
+      "status": "used",
+      "productionReferences": [
+        "src/components/profile-completeness-card.tsx"
+      ]
     },
     {
       "name": "radio-group",
@@ -604,7 +615,9 @@
       "productionReferences": [
         "src/components/board/jobs-filter-controls.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/languages-section.tsx",
         "src/components/messages/message-bubble.tsx",
+        "src/components/month-year-field.tsx",
         "src/components/post-job-form.tsx",
         "src/components/profile-form.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx"
@@ -615,6 +628,7 @@
       "status": "used",
       "productionReferences": [
         "src/components/account-shell.tsx",
+        "src/components/profile-completeness-card.tsx",
         "src/components/rich-text-editor.tsx"
       ]
     },
@@ -661,6 +675,7 @@
         "src/components/company-search-combobox.tsx",
         "src/components/keyword-combobox.tsx",
         "src/components/location-combobox.tsx",
+        "src/components/location-suggest-field.tsx",
         "src/components/post-job-form.tsx",
         "src/routes/employers.companies.$slug.index.tsx",
         "src/routes/employers.dashboard.tsx",

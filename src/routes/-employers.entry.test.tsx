@@ -247,6 +247,7 @@ describe('employer entry surfaces', () => {
   });
 
   it('presents approved memberships as an authenticated company workspace list', () => {
+    vi.spyOn(DashboardRoute, 'useSearch').mockReturnValue({});
     vi.spyOn(DashboardRoute, 'useLoaderData').mockReturnValue({
       data: [membership],
     });
@@ -269,6 +270,8 @@ describe('employer entry surfaces', () => {
 
   it('uses the owned focus-managed dialog when adding a company', async () => {
     vi.useFakeTimers();
+    vi.spyOn(DashboardRoute, 'useSearch').mockReturnValue({});
+    vi.spyOn(DashboardRoute, 'useSearch').mockReturnValue({});
     vi.spyOn(DashboardRoute, 'useLoaderData').mockReturnValue({ data: [] });
     vi.mocked(searchCompanies).mockResolvedValue({
       ok: true,
