@@ -2,6 +2,13 @@
  * ISO 3166-1 alpha-2 country codes — the option space for the remote
  * geographic-restriction picker on /post. Labels come from
  * `Intl.DisplayNames` at render time, so no display copy lives here.
+ *
+ * Mirrors the platform's canonical remote-permit country set
+ * (`GET /v1/taxonomies/remote-permits`: world-countries minus `KP`, plus
+ * `XK`/Kosovo) — values outside that set are rejected/dropped by the API.
+ * Once `@cavuno/board` ships `COUNTRY_CODES`/`countryOptions` in its format
+ * module (landed platform-side, next SDK release), replace this file with
+ * that import.
  */
 export const COUNTRY_CODES = [
   'AD',
@@ -12,6 +19,7 @@ export const COUNTRY_CODES = [
   'AL',
   'AM',
   'AO',
+  'AQ',
   'AR',
   'AS',
   'AT',
@@ -36,6 +44,7 @@ export const COUNTRY_CODES = [
   'BR',
   'BS',
   'BT',
+  'BV',
   'BW',
   'BY',
   'BZ',
@@ -91,11 +100,13 @@ export const COUNTRY_CODES = [
   'GP',
   'GQ',
   'GR',
+  'GS',
   'GT',
   'GU',
   'GW',
   'GY',
   'HK',
+  'HM',
   'HN',
   'HR',
   'HT',
@@ -120,7 +131,6 @@ export const COUNTRY_CODES = [
   'KI',
   'KM',
   'KN',
-  'KP',
   'KR',
   'KW',
   'KY',
@@ -215,6 +225,7 @@ export const COUNTRY_CODES = [
   'SZ',
   'TC',
   'TD',
+  'TF',
   'TG',
   'TH',
   'TJ',
@@ -230,6 +241,7 @@ export const COUNTRY_CODES = [
   'TZ',
   'UA',
   'UG',
+  'UM',
   'US',
   'UY',
   'UZ',
@@ -242,6 +254,7 @@ export const COUNTRY_CODES = [
   'VU',
   'WF',
   'WS',
+  'XK',
   'YE',
   'YT',
   'ZA',
