@@ -1296,6 +1296,8 @@ Props:
 - `onUnsendMessage: (messageId: string) => Promise<unknown>`
 - `statusError?: string | null | undefined`
 
+### NavigationProgress — `src/components/navigation-progress.tsx`
+
 ### NotificationSettings — `src/components/notification-settings.tsx`
 
 Email notification toggles — one checkbox per channel over
