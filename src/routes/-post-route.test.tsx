@@ -20,7 +20,10 @@ vi.mock('../server/post', () => mocks);
 
 // post.tsx pulls the location-suggestion controller, whose server fn module
 // resolves cloudflare:workers — stub the seam for the jsdom suite.
-vi.mock('../server/queries', () => ({ searchPlaces: vi.fn() }));
+vi.mock('../server/queries', () => ({
+  searchPlaces: vi.fn(),
+  getRemotePermits: vi.fn().mockResolvedValue({ data: [] }),
+}));
 
 // The route reads board custom-field definitions from the root loader.
 vi.mock('@tanstack/react-router', async (importOriginal) => {
@@ -70,28 +73,31 @@ afterEach(() => {
 describe('/post route composition', () => {
   it('keeps API calls in the route and passes loaded plans to the owned form', async () => {
     vi.spyOn(Route, 'useLoaderData').mockReturnValue({
-      object: 'list',
-      url: '/v1/job-posting/plans',
-      data: [
-        {
-          object: 'job_posting_plan',
-          id: 'plan-standard',
-          name: 'Standard listing',
-          description: null,
-          kind: 'one_time',
-          billingInterval: null,
-          purpose: 'job_posting',
-          isRecommended: false,
-          displayOrder: 1,
-          invoiceOnly: false,
-          publishTiming: null,
-          netTermsDays: null,
-          prices: [{ currency: 'AUD', amountCents: 14900, isActive: true }],
-          features: [],
-        },
-      ],
-      hasMore: false,
-      nextCursor: null,
+      remotePermits: null,
+      plans: {
+        object: 'list',
+        url: '/v1/job-posting/plans',
+        data: [
+          {
+            object: 'job_posting_plan',
+            id: 'plan-standard',
+            name: 'Standard listing',
+            description: null,
+            kind: 'one_time',
+            billingInterval: null,
+            purpose: 'job_posting',
+            isRecommended: false,
+            displayOrder: 1,
+            invoiceOnly: false,
+            publishTiming: null,
+            netTermsDays: null,
+            prices: [{ currency: 'AUD', amountCents: 14900, isActive: true }],
+            features: [],
+          },
+        ],
+        hasMore: false,
+        nextCursor: null,
+      },
     } as never);
     vi.spyOn(Route, 'useSearch').mockReturnValue({ plan: undefined });
     mocks.submitJobPosting.mockResolvedValue({
@@ -133,7 +139,8 @@ describe('/post route composition', () => {
     });
 
     vi.spyOn(Route, 'useLoaderData').mockReturnValue({
-      data: [{ id: 'plan-standard' }],
+      remotePermits: null,
+      plans: { data: [{ id: 'plan-standard' }] },
     } as never);
     vi.spyOn(Route, 'useSearch').mockReturnValue({ plan: 'plan-standard' });
     const PostPage = Route.options.component;

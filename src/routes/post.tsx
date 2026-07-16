@@ -8,6 +8,7 @@ import {
   submitJobPosting,
   uploadLogo,
 } from '../server/post';
+import { getRemotePermits } from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
@@ -24,12 +25,21 @@ export const Route = createFileRoute('/post')({
         : undefined,
   }),
   head: () => ({ meta: [{ title: m.postJob_title() }] }),
-  loader: () => getPostPlans(),
+  loader: async () => {
+    const [plans, remotePermits] = await Promise.all([
+      getPostPlans(),
+      // The geographic-restriction option space. Optional enhancement — an
+      // unavailable taxonomy must not take the posting form down (the scope
+      // control degrades to worldwide/countries).
+      getRemotePermits().catch(() => null),
+    ]);
+    return { plans, remotePermits };
+  },
   component: PostJobPage,
 });
 
 function PostJobPage() {
-  const plans = Route.useLoaderData();
+  const { plans, remotePermits } = Route.useLoaderData();
   const search = Route.useSearch();
   const { board } = rootApi.useLoaderData();
   const officeLocationSuggestions = useLocationSuggestions(getLocale());
@@ -50,6 +60,7 @@ function PostJobPage() {
             plans={plans.data}
             officeLocationSuggestions={officeLocationSuggestions}
             customFields={board.customFields}
+            remotePermits={remotePermits?.data ?? null}
             initialPlanId={search.plan}
             onSubmit={(input) => submitJobPosting({ data: input })}
             onLogoFetch={(domain) => fetchLogoByDomain({ data: { domain } })}

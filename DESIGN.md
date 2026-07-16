@@ -1443,6 +1443,7 @@ Props:
 - `onLogoUpload: (data: FormData) => Promise<LogoResult>`
 - `onSubmit: (input: JobPostingFormInput) => Promise<SubmitJobResult>`
 - `plans: { object: "job_posting_plan"; id: string; name: string; description: string | null; kind: string; billingInterval: "m…`
+- `remotePermits: { type: string; value: string; label: string; }[] | null`
 
 ### ProfileCompletenessCard — `src/components/profile-completeness-card.tsx`
 

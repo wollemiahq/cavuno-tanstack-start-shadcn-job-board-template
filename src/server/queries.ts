@@ -205,6 +205,20 @@ export const searchPlaces = createServerFn({ method: 'GET' })
   );
 
 /**
+ * The canonical remote-permit taxonomy (worldwide / world regions / country
+ * groups like EU or DACH / countries) — the option space for the posting
+ * form's geographic restriction. Platform reference data served
+ * board-scoped; gated like the other taxonomy reads.
+ */
+export const getRemotePermits = createServerFn({ method: 'GET' })
+  .middleware([boardAccessMiddleware])
+  .handler(({ context }) =>
+    gatedRead(context, (h) =>
+      getBoard().taxonomy.remotePermits.list({ headers: h }),
+    ),
+  );
+
+/**
  * The board's job categories — name + slug only; the endpoint carries no job
  * counts, so callers link out rather than quantify.
  */

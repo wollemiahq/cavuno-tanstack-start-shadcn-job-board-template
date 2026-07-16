@@ -84,6 +84,7 @@ describe('PostJobForm', () => {
     render(
       <PostJobForm
         customFields={[]}
+        remotePermits={null}
         locale="en"
         officeLocationSuggestions={{
           suggestions: [],
@@ -163,6 +164,7 @@ describe('PostJobForm', () => {
     render(
       <PostJobForm
         customFields={[]}
+        remotePermits={null}
         locale="en"
         officeLocationSuggestions={{
           suggestions: [],
@@ -189,6 +191,7 @@ describe('PostJobForm', () => {
     const { container } = render(
       <PostJobForm
         customFields={[]}
+        remotePermits={null}
         locale="en"
         officeLocationSuggestions={{
           suggestions: [],
@@ -220,6 +223,7 @@ describe('PostJobForm', () => {
     render(
       <PostJobForm
         customFields={[]}
+        remotePermits={null}
         locale="en"
         officeLocationSuggestions={{
           suggestions: [],
@@ -248,6 +252,7 @@ describe('PostJobForm', () => {
     render(
       <PostJobForm
         customFields={[]}
+        remotePermits={null}
         locale="en"
         officeLocationSuggestions={{
           suggestions: [],
@@ -287,6 +292,7 @@ describe('PostJobForm', () => {
     const { container } = render(
       <PostJobForm
         customFields={[]}
+        remotePermits={null}
         locale="en"
         officeLocationSuggestions={{
           suggestions: [],
@@ -321,6 +327,7 @@ describe('PostJobForm', () => {
     render(
       <PostJobForm
         customFields={[]}
+        remotePermits={null}
         locale="en-AU"
         officeLocationSuggestions={{
           suggestions: [],

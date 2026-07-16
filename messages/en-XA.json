@@ -1097,5 +1097,7 @@
   "postJob_remoteRestrictionWorldwide": "⟦Ŵóŕĺðŵíðé⟧",
   "postJob_remoteRestrictionCountries": "⟦Šþéçíƒíç çóúñţŕíéš⟧",
   "postJob_remoteCountriesLabel": "⟦Çóúñţŕíéš⟧",
-  "postJob_remoteCountriesPlaceholder": "⟦Áðð á çóúñţŕý…⟧"
+  "postJob_remoteCountriesPlaceholder": "⟦Áðð á çóúñţŕý…⟧",
+  "postJob_remoteRegionsGroupLabel": "⟦Ŵóŕĺð ŕéğíóñš⟧",
+  "postJob_remoteBlocsGroupLabel": "⟦Çóúñţŕý ğŕóúþš⟧"
 }

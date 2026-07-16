@@ -2,17 +2,22 @@
 
 import { useMemo, useRef, useState } from 'react';
 
-import { fieldLabel, getSalaryLexicon } from '@cavuno/board/format';
+import {
+  countryOptions,
+  fieldLabel,
+  getSalaryLexicon,
+} from '@cavuno/board/format';
 import { ImagePlus } from 'lucide-react';
 
-import { COUNTRY_CODES } from '../lib/country-codes';
 import {
   DEFAULT_SALARY_TIMEFRAME,
   ensureProtocol,
   isRichTextEmpty,
   looksLikeDomain,
+  remotePermitsSubmission,
   SALARY_TIMEFRAMES,
   toDomain,
+  type RemoteScope,
   type SalaryTimeframe,
 } from '../lib/post-form';
 import { salaryCurrencyOptions } from '../lib/salary-currencies';
@@ -52,6 +57,7 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from './ui/select';
@@ -69,7 +75,11 @@ import {
 } from '@/components/custom-fields-group';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { PlaceTagsField } from '@/components/place-tags-field';
-import type { JobPostingPlan, PublicBoard } from '@cavuno/board';
+import type {
+  JobPostingPlan,
+  PublicBoard,
+  RemotePermitTaxonomyEntry,
+} from '@cavuno/board';
 
 const EMPLOYMENT_TYPES = [
   'full_time',
@@ -120,7 +130,7 @@ type PostJobFormState = {
   salaryTimeframe: SalaryTimeframe;
   companyName: string;
   remoteOption: (typeof REMOTE_OPTIONS)[number];
-  remoteRestriction: 'worldwide' | 'countries';
+  remoteScope: RemoteScope;
   remoteCountries: { code: string; name: string }[];
   seniority: string | null;
   officeLocations: OfficeLocationDraft[];
@@ -134,6 +144,11 @@ export type PostJobFormProps = {
   officeLocationSuggestions: LocationSuggestionState;
   /** Board-defined custom field definitions, in operator-config order. */
   customFields: PublicBoard['customFields'];
+  /**
+   * The remote-permit taxonomy (regions / country groups) for the
+   * geographic-restriction scope; `null` degrades to worldwide/countries.
+   */
+  remotePermits: RemotePermitTaxonomyEntry[] | null;
   initialPlanId?: string;
   onSubmit: (input: SubmitJobInput) => Promise<SubmitJobResult>;
   onLogoFetch: (domain: string) => Promise<LogoResult>;
@@ -170,6 +185,7 @@ export function PostJobForm({
   plans,
   officeLocationSuggestions,
   customFields,
+  remotePermits,
   initialPlanId,
   onSubmit,
   onLogoFetch,
@@ -187,7 +203,7 @@ export function PostJobForm({
     salaryTimeframe: DEFAULT_SALARY_TIMEFRAME,
     companyName: '',
     remoteOption: 'hybrid',
-    remoteRestriction: 'worldwide',
+    remoteScope: 'worldwide',
     remoteCountries: [],
     seniority: null,
     officeLocations: [],
@@ -203,7 +219,7 @@ export function PostJobForm({
     salaryTimeframe,
     companyName,
     remoteOption,
-    remoteRestriction,
+    remoteScope,
     remoteCountries,
     seniority,
     officeLocations,
@@ -242,24 +258,32 @@ export function PostJobForm({
     value,
     label: fieldLabel(locale, value) ?? value,
   }));
-  const restrictionItems = [
+  // Scope select: worldwide, then world regions and country groups from the
+  // remote-permit taxonomy, then hand-picked countries. Absent taxonomy data
+  // degrades to worldwide/countries.
+  const regionScopes = remotePermits?.filter(
+    (permit) => permit.type === 'world_region',
+  );
+  const blocScopes = remotePermits?.filter(
+    (permit) => permit.type === 'custom',
+  );
+  const scopeItems = [
     { value: 'worldwide', label: m.postJob_remoteRestrictionWorldwide() },
+    ...[...(regionScopes ?? []), ...(blocScopes ?? [])].map((permit) => ({
+      value: `${permit.type}:${permit.value}`,
+      label: permit.label,
+    })),
     { value: 'countries', label: m.postJob_remoteRestrictionCountries() },
   ];
-  // Country picker suggestions are synthesized locally (ISO codes + Intl
-  // labels) but reuse the async-shaped PlaceTagsField contract.
+  // Country picker suggestions come from the SDK country lexicon (the
+  // `country` slice of the same permit taxonomy) via the async-shaped
+  // PlaceTagsField contract.
   const [countryQuery, setCountryQuery] = useState('');
-  const countryOptions = useMemo(() => {
-    const names = new Intl.DisplayNames([locale], { type: 'region' });
-    return COUNTRY_CODES.map((code) => ({
-      code,
-      name: names.of(code) ?? code,
-    })).sort((a, b) => a.name.localeCompare(b.name));
-  }, [locale]);
+  const countryChoices = useMemo(() => countryOptions(locale), [locale]);
   const countrySuggestions = useMemo(() => {
     const query = countryQuery.trim().toLowerCase();
     if (!query) return [];
-    return countryOptions
+    return countryChoices
       .filter((country) => country.name.toLowerCase().includes(query))
       .slice(0, 10)
       .map((country) => ({
@@ -270,7 +294,7 @@ export function PostJobForm({
         countryCode: country.code,
         regionCode: null,
       }));
-  }, [countryOptions, countryQuery]);
+  }, [countryChoices, countryQuery]);
   const currencyItems = salaryCurrencyOptions().map(({ value, label }) => ({
     value,
     label,
@@ -402,26 +426,12 @@ export function PostJobForm({
           ({ key: _key, ...location }) => location,
         ),
         ...(remoteOption === 'remote'
-          ? remoteRestriction === 'countries' && remoteCountries.length
-            ? {
-                remoteWorkingPermits: remoteCountries.map((country) => ({
-                  type: 'country',
-                  value: country.code,
-                  label: country.name,
-                })),
-                remoteWorkPermitCountryCodes: remoteCountries.map(
-                  (country) => country.code,
-                ),
-              }
-            : {
-                remoteWorkingPermits: [
-                  {
-                    type: 'worldwide',
-                    value: 'worldwide',
-                    label: m.postJob_remoteRestrictionWorldwide(),
-                  },
-                ],
-              }
+          ? remotePermitsSubmission(
+              remoteScope,
+              remoteCountries,
+              remotePermits,
+              m.postJob_remoteRestrictionWorldwide(),
+            )
           : {}),
         ...(Object.keys(submittableCustomFieldValues).length
           ? { customFieldValues: submittableCustomFieldValues }
@@ -693,20 +703,64 @@ export function PostJobForm({
           </Field>
           {remoteOption === 'remote' ? (
             <div className="grid gap-5 sm:grid-cols-2">
-              <SelectField
-                label={m.postJob_remoteRestrictionLabel()}
-                name="remoteRestriction"
-                items={restrictionItems}
-                value={remoteRestriction}
-                onValueChange={(value) =>
-                  updateFormState({
-                    remoteRestriction:
-                      (value as 'worldwide' | 'countries' | null) ??
-                      'worldwide',
-                  })
-                }
-              />
-              {remoteRestriction === 'countries' ? (
+              <Field>
+                <FieldLabel htmlFor="remoteScope">
+                  {m.postJob_remoteRestrictionLabel()}
+                </FieldLabel>
+                <Select
+                  items={scopeItems}
+                  name="remoteScope"
+                  value={remoteScope}
+                  onValueChange={(value) =>
+                    updateFormState({
+                      remoteScope: (value as RemoteScope | null) ?? 'worldwide',
+                    })
+                  }
+                >
+                  <SelectTrigger id="remoteScope" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="worldwide">
+                      {m.postJob_remoteRestrictionWorldwide()}
+                    </SelectItem>
+                    {regionScopes?.length ? (
+                      <SelectGroup>
+                        <SelectLabel>
+                          {m.postJob_remoteRegionsGroupLabel()}
+                        </SelectLabel>
+                        {regionScopes.map((permit) => (
+                          <SelectItem
+                            key={`${permit.type}:${permit.value}`}
+                            value={`${permit.type}:${permit.value}`}
+                          >
+                            {permit.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    ) : null}
+                    {blocScopes?.length ? (
+                      <SelectGroup>
+                        <SelectLabel>
+                          {m.postJob_remoteBlocsGroupLabel()}
+                        </SelectLabel>
+                        {blocScopes.map((permit) => (
+                          <SelectItem
+                            key={`${permit.type}:${permit.value}`}
+                            value={`${permit.type}:${permit.value}`}
+                          >
+                            {permit.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    ) : null}
+                    <SelectItem value="countries">
+                      {m.postJob_remoteRestrictionCountries()}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+              {remoteScope === 'countries' ? (
                 <Field>
                   <FieldLabel htmlFor="remoteCountries">
                     {m.postJob_remoteCountriesLabel()}

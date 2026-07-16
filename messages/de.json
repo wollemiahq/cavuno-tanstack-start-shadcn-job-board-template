@@ -1097,5 +1097,7 @@
   "postJob_remoteRestrictionWorldwide": "Weltweit",
   "postJob_remoteRestrictionCountries": "Bestimmte Länder",
   "postJob_remoteCountriesLabel": "Länder",
-  "postJob_remoteCountriesPlaceholder": "Land hinzufügen…"
+  "postJob_remoteCountriesPlaceholder": "Land hinzufügen…",
+  "postJob_remoteRegionsGroupLabel": "Weltregionen",
+  "postJob_remoteBlocsGroupLabel": "Ländergruppen"
 }

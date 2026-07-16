@@ -4,7 +4,10 @@
  * unit-tested without rendering the form.
  */
 
-import type { CreateJobPostingInput } from '@cavuno/board';
+import type {
+  CreateJobPostingInput,
+  RemotePermitTaxonomyEntry,
+} from '@cavuno/board';
 
 /** The periods the API quotes `salaryMin`/`salaryMax` against. */
 export const SALARY_TIMEFRAMES = [
@@ -138,4 +141,61 @@ export function isRichTextEmpty(html: string): boolean {
     .replace(/&nbsp;/gi, '')
     .replace(/\s+/g, '');
   return text.length === 0;
+}
+
+/**
+ * The post form's remote geographic scope: worldwide, hand-picked countries,
+ * or one `type:value` token from the remote-permit taxonomy (a world region
+ * or country group such as `custom:EU`).
+ */
+export type RemoteScope = 'worldwide' | 'countries' | (string & {});
+
+/**
+ * Map the remote-scope selection to the posting body's permit fields.
+ * A region/bloc scope submits its single canonical `{type, value, label}`
+ * entry (the server derives member country codes); hand-picked countries
+ * also carry the derived top-level codes, mirroring the hosted wizard.
+ * Anything unresolvable degrades to worldwide — never an invalid permit.
+ */
+export function remotePermitsSubmission(
+  scope: RemoteScope,
+  countries: { code: string; name: string }[],
+  permits: RemotePermitTaxonomyEntry[] | null,
+  worldwideLabel: string,
+): Pick<
+  JobPostingFormInput,
+  'remoteWorkingPermits' | 'remoteWorkPermitCountryCodes'
+> {
+  if (scope === 'countries' && countries.length > 0) {
+    return {
+      remoteWorkingPermits: countries.map((country) => ({
+        type: 'country',
+        value: country.code,
+        label: country.name,
+      })),
+      remoteWorkPermitCountryCodes: countries.map((country) => country.code),
+    };
+  }
+
+  if (scope !== 'worldwide' && scope !== 'countries') {
+    const separator = scope.indexOf(':');
+    const type = scope.slice(0, separator);
+    const value = scope.slice(separator + 1);
+    const entry = permits?.find(
+      (permit) => permit.type === type && permit.value === value,
+    );
+    if (entry) {
+      return {
+        remoteWorkingPermits: [
+          { type: entry.type, value: entry.value, label: entry.label },
+        ],
+      };
+    }
+  }
+
+  return {
+    remoteWorkingPermits: [
+      { type: 'worldwide', value: 'worldwide', label: worldwideLabel },
+    ],
+  };
 }

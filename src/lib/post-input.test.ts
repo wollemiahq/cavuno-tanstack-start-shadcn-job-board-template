@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { toCreateJobPostingInput, type JobPostingFormInput } from './post-form';
+import {
+  remotePermitsSubmission,
+  toCreateJobPostingInput,
+  type JobPostingFormInput,
+} from './post-form';
+
+import type { RemotePermitTaxonomyEntry } from '@cavuno/board';
 
 const posting: JobPostingFormInput = {
   companyName: 'Acme Studio',
@@ -64,5 +70,68 @@ describe('toCreateJobPostingInput', () => {
       salaryMax: undefined,
       salaryCurrency: undefined,
     });
+  });
+});
+
+describe('remotePermitsSubmission', () => {
+  const permits = [
+    { type: 'worldwide', value: 'worldwide', label: 'Worldwide' },
+    { type: 'world_region', value: 'EMEA', label: 'EMEA' },
+    { type: 'custom', value: 'EU', label: 'European Union' },
+  ] as RemotePermitTaxonomyEntry[];
+
+  it('maps a region/bloc scope to its single canonical permit entry', () => {
+    expect(
+      remotePermitsSubmission('custom:EU', [], permits, 'Worldwide'),
+    ).toEqual({
+      remoteWorkingPermits: [
+        { type: 'custom', value: 'EU', label: 'European Union' },
+      ],
+    });
+    expect(
+      remotePermitsSubmission('world_region:EMEA', [], permits, 'Worldwide'),
+    ).toEqual({
+      remoteWorkingPermits: [
+        { type: 'world_region', value: 'EMEA', label: 'EMEA' },
+      ],
+    });
+  });
+
+  it('maps hand-picked countries with the derived top-level codes', () => {
+    expect(
+      remotePermitsSubmission(
+        'countries',
+        [{ code: 'DE', name: 'Germany' }],
+        permits,
+        'Worldwide',
+      ),
+    ).toEqual({
+      remoteWorkingPermits: [
+        { type: 'country', value: 'DE', label: 'Germany' },
+      ],
+      remoteWorkPermitCountryCodes: ['DE'],
+    });
+  });
+
+  it('degrades to worldwide instead of ever submitting an invalid permit', () => {
+    const worldwide = {
+      remoteWorkingPermits: [
+        { type: 'worldwide', value: 'worldwide', label: 'Worldwide' },
+      ],
+    };
+    expect(
+      remotePermitsSubmission('worldwide', [], permits, 'Worldwide'),
+    ).toEqual(worldwide);
+    // Countries mode with nothing picked, a token missing from the taxonomy,
+    // and a taxonomy that failed to load all fall back the same way.
+    expect(
+      remotePermitsSubmission('countries', [], permits, 'Worldwide'),
+    ).toEqual(worldwide);
+    expect(
+      remotePermitsSubmission('custom:MENA', [], permits, 'Worldwide'),
+    ).toEqual(worldwide);
+    expect(remotePermitsSubmission('custom:EU', [], null, 'Worldwide')).toEqual(
+      worldwide,
+    );
   });
 });
