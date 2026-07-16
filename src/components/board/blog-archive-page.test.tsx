@@ -94,6 +94,31 @@ function renderArchive(element: React.ReactNode) {
 }
 
 describe('BlogArchivePage — Page-family archive presentation', () => {
+  it('keeps the root archive compact without a visible breadcrumb', async () => {
+    const { container } = renderArchive(
+      <BlogArchivePage
+        title="Blog"
+        description="News and insights."
+        filters={<nav aria-label="Article topics">All topics</nav>}
+        posts={[post]}
+        empty={empty}
+      />,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Blog' })).toBeVisible();
+    expect(screen.queryByRole('navigation', { name: 'Breadcrumb' })).toBeNull();
+    expect(
+      screen
+        .getByRole('navigation', { name: 'Article topics' })
+        .closest('[data-slot="page-header"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(
+        '[data-slot="page-content"] > [data-slot="container"]',
+      ),
+    ).toBeNull();
+  });
+
   it('owns one main and h1 while preserving real discovery and cursor anchors', async () => {
     const { container } = renderArchive(
       <BlogArchivePage
@@ -121,6 +146,7 @@ describe('BlogArchivePage — Page-family archive presentation', () => {
     const main = await screen.findByRole('main');
     expect(container.querySelectorAll('main')).toHaveLength(1);
     expect(container.querySelectorAll('h1')).toHaveLength(1);
+    expect(screen.queryByRole('navigation', { name: 'Breadcrumb' })).toBeNull();
     expect(
       within(main).getByRole('heading', {
         level: 1,

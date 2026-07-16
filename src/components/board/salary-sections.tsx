@@ -86,6 +86,38 @@ export function OverallSalaryCard({ vm }: { vm: OverallSalaryVM }) {
   );
 }
 
+export function CompactCompanySalarySummary({
+  title,
+  vm,
+}: {
+  title: string;
+  vm: OverallSalaryVM;
+}) {
+  const sample = vm.stats.at(-1);
+
+  return (
+    <section aria-label={title} className="space-y-3">
+      <h3 className="text-foreground text-sm font-semibold">{title}</h3>
+      <Card size="sm">
+        <CardContent className="space-y-1">
+          <p className="text-muted-foreground text-sm">{vm.headlineLabel}</p>
+          <p className="text-card-foreground text-xl font-semibold tabular-nums">
+            {vm.headlineValue}
+            <span className="text-muted-foreground ml-1.5 text-sm font-normal">
+              {vm.perYearSuffix}
+            </span>
+          </p>
+          {sample ? (
+            <p className="text-muted-foreground text-sm">
+              {sample.label} {sample.value}
+            </p>
+          ) : null}
+        </CardContent>
+      </Card>
+    </section>
+  );
+}
+
 export function SenioritySalaryTable({ vm }: { vm: SeniorityTableVM }) {
   if (vm.rows.length === 0) return null;
 

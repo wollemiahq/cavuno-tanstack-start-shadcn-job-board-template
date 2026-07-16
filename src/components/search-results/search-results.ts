@@ -5,6 +5,7 @@ export {
 } from './search-result-card';
 export {
   SearchResultDetail,
+  SearchResultDetailHeader,
   type SearchResultDetailProps,
 } from './search-result-detail';
 export {

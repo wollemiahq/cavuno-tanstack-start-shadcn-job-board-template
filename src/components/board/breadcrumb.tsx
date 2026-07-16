@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 
 import { Link as AriaLink } from 'react-aria-components';
 
+import { Box } from '@/components/layout/box';
 import {
   Breadcrumb as BreadcrumbRoot,
   BreadcrumbItem,
@@ -14,44 +15,32 @@ import {
 /**
  * The resolved trail: the ancestor crumbs (last one current/unlinked) plus the
  * `<nav aria-label>` copy. This is the ONE shape every breadcrumb-bearing
- * surface passes — the `breadcrumb` slot on `PageBody` / `ListingPageHeader`
- * and the `PageBreadcrumb` placement primitive all take it, so no route ever
- * hand-rolls the trail element or its spacing.
+ * surface passes. The root shell is the sole visible placement owner.
  */
 export interface BreadcrumbData {
   items: { name: string; href?: string }[];
   ariaLabel: string;
 }
 
-/**
- * PageBreadcrumb — the ONE placement primitive for the trail (CAV-511). It
- * owns the codified position: the trail hugs the top (`pt-4 md:pt-5`, compact,
- * relative to the nav), left-aligned at the shared container edge
- * (`max-w-7xl` + the canonical horizontal padding). Every sanctioned
- * seam renders THIS — `PageBody`'s `breadcrumb` slot (non-band pages),
- * `ListingPageHeader`'s `breadcrumb` slot (listing heroes), and the
- * `JobDetail` header band — so the placement literally cannot diverge per
- * page. The gray-band pages seat it inside their `bg-secondary` section (the
- * band supplies the background); non-band pages render it on the page surface.
- * Identical padding classes in every context — that is the invariant the
- * pattern-contract gate enforces.
- */
-export function PageBreadcrumb({ items, ariaLabel }: BreadcrumbData) {
+/** The one visible trail placement: the compact first row of the footer. */
+export function ShellBreadcrumb({ items, ariaLabel }: BreadcrumbData) {
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 pt-4 md:px-8 md:pt-5">
-      <Breadcrumb items={items} ariaLabel={ariaLabel} />
+    <div data-slot="shell-breadcrumb">
+      <Box border="bottom" paddingY={{ base: '4', md: '5' }}>
+        <Breadcrumb items={items} ariaLabel={ariaLabel} />
+      </Box>
     </div>
   );
 }
 
 /**
- * Breadcrumb — composed from the owned shadcn primitives, mirroring
- * the `JobDetail` breadcrumb (CAV-486): a `ChevronRight` separator, the trail
- * links riding the router seam as `AriaLink` (client-side, locale-aware nav),
- * and the current page as `aria-current` text. PURE MARKUP over the same
+ * Breadcrumb — composed from the owned shadcn primitives: a `ChevronRight`
+ * separator, trail links riding the router seam as `AriaLink` (client-side,
+ * locale-aware navigation), and the current page as `aria-current` text. Pure
+ * markup over the same
  * `{ items, ariaLabel }` contract. It is never rendered directly by a route —
- * the `PageBreadcrumb` placement primitive above wraps it so the trail always
- * carries the codified spacing.
+ * `ShellBreadcrumb` above wraps it so the trail always carries the codified
+ * spacing immediately before the footer.
  */
 export function Breadcrumb({
   items,

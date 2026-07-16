@@ -17,6 +17,7 @@ const vm: JobDetailVM = {
   companyAvatarName: 'Acme',
   sector: null,
   locationLabel: 'Sydney',
+  workplaceLabel: 'On-site',
   employmentTypeLabel: null,
   seniorityLabel: null,
   salaryLabel: null,
@@ -40,8 +41,8 @@ const vm: JobDetailVM = {
 afterEach(cleanup);
 
 describe('JobSearchDetailState', () => {
-  it('preserves the pane geometry while the first detail loads', () => {
-    const { container } = render(
+  it('announces the first detail load', () => {
+    render(
       <JobSearchDetailState
         status="loading"
         loadingLabel="Loading job details…"
@@ -52,12 +53,8 @@ describe('JobSearchDetailState', () => {
     );
 
     expect(screen.getByRole('status')).not.toHaveAttribute('aria-busy');
-    expect(screen.getByText('Loading job details…')).toHaveClass('sr-only');
-    expect(
-      container.querySelectorAll("[data-slot='skeleton']").length,
-    ).toBeGreaterThan(2);
-    expect(container.querySelector("[data-slot='skeleton']")).toHaveClass(
-      'motion-reduce:animate-none',
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Loading job details…',
     );
   });
 
@@ -76,7 +73,7 @@ describe('JobSearchDetailState', () => {
     expect(screen.queryByRole('status')).toBeNull();
   });
 
-  it('keeps preserved content read-only while the next selected job loads', () => {
+  it('removes changing content and actions while the next job loads', () => {
     render(
       <JobSearchDetailState
         status="loading"
@@ -91,20 +88,14 @@ describe('JobSearchDetailState', () => {
     );
 
     expect(screen.queryByText('Previous description.')).toBeNull();
-    expect(
-      screen.getByRole('button', { name: 'Apply previous job', hidden: true }),
-    ).toBeVisible();
-    expect(
-      screen.getByRole('button', { name: 'Save previous job', hidden: true }),
-    ).toBeVisible();
-    expect(
-      screen
-        .getByRole('button', { name: 'Apply previous job', hidden: true })
-        .closest('[data-inert="true"]'),
-    ).not.toBeNull();
-    expect(
-      document.querySelectorAll("[data-slot='skeleton']").length,
-    ).toBeGreaterThan(2);
+    expect(screen.queryByRole('button', { name: 'Apply' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
+    expect(screen.queryByText('Apply previous job')).toBeNull();
+    expect(screen.queryByText('Save previous job')).toBeNull();
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Loading job details…',
+    );
   });
 
   it('keeps the previous job visible behind an owned retry alert when a transition fails', () => {
@@ -125,7 +116,7 @@ describe('JobSearchDetailState', () => {
     expect(
       screen.getByRole('heading', { level: 2, name: 'Previous job' }),
     ).toBeVisible();
-    expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not load job');
     expect(
       screen
         .getByRole('button', { name: 'Apply previous job', hidden: true })

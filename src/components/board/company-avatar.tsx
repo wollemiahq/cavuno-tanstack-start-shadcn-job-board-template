@@ -32,7 +32,13 @@ export function CompanyAvatar({
         )}
         aria-hidden="true"
       >
-        <img src={logoUrl} alt="" className="size-full object-contain" />
+        <img
+          src={logoUrl}
+          alt=""
+          width={64}
+          height={64}
+          className="size-full object-contain"
+        />
       </span>
     );
   }

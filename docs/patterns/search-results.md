@@ -26,7 +26,11 @@ the entity’s ordinary canonical link owns navigation to its full detail page.
   be nested inside a second oversized card.
 - `SearchResultsList` — the named master region and list-scroll restoration seam.
 - `SearchResultDetail` — the desktop-only named detail projection and its own
-  scroll-restoration seam.
+  scroll-restoration seam. Its compact header is derived from one stable local
+  threshold (`scrollTop` crossing the hero boundary's `offsetTop`), so layout
+  changes cannot make the header oscillate at the transition. A small exit
+  buffer absorbs wheel and touch-scroll noise before restoring the expanded
+  hero.
 - `SearchResultCard` — compact hover, keyboard-focus, and persistent selected
   chrome around an entity-specific result.
 - `AdRail` — an explicitly labelled, provider-neutral 160 × 600 seam. It is

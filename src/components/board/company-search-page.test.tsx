@@ -48,7 +48,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('CompanySearchPage — search results pattern', () => {
-  it('composes company controls, canonical result anchors, and named master-detail regions', async () => {
+  it('uses the same condensed filter, results, and detail structure as jobs', async () => {
     const rootRoute = createRootRoute();
     const indexRoute = createRoute({
       getParentRoute: () => rootRoute,
@@ -59,12 +59,18 @@ describe('CompanySearchPage — search results pattern', () => {
           count={1}
           page={1}
           pageSize={24}
+          breadcrumb={{
+            ariaLabel: 'Breadcrumb',
+            items: [
+              { name: 'Companies', href: '/companies' },
+              { name: 'Technology' },
+            ],
+          }}
           query="acme"
+          heading="Companies"
           markets={[{ slug: 'technology', name: 'Technology' }]}
           startAd={{ label: 'Sponsored start', content: <p>Start creative</p> }}
           endAd={{ label: 'Sponsored end', content: <p>End creative</p> }}
-          onSearchSubmit={vi.fn()}
-          onMarketChange={vi.fn()}
           onPageChange={vi.fn()}
           selectedCompany="acme"
           onSelectedCompanyReplace={vi.fn()}
@@ -87,22 +93,35 @@ describe('CompanySearchPage — search results pattern', () => {
     await screen.findByRole('main');
     expect(container.querySelectorAll('main')).toHaveLength(1);
     expect(container.querySelectorAll('h1')).toHaveLength(1);
-    expect(screen.getByRole('searchbox', { name: 'Company name' })).toHaveValue(
-      'acme',
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      '1 company',
     );
-    expect(screen.getByRole('combobox', { name: 'Market' }).tagName).toBe(
-      'BUTTON',
-    );
+    expect(screen.queryByText(/Companies and employers hiring on/)).toBeNull();
+    expect(
+      screen.queryByRole('searchbox', { name: 'Company name' }),
+    ).toBeNull();
+    expect(screen.queryByRole('combobox', { name: 'Market' })).toBeNull();
+    expect(
+      container.querySelector("[data-slot='company-filter-bar']"),
+    ).toBeNull();
+    expect(
+      container.querySelector("[data-slot='company-search-form']"),
+    ).toBeNull();
+    expect(
+      container.querySelector("[data-slot='search-results-layout']"),
+    ).not.toBeNull();
 
     const results = screen.getByRole('region', { name: 'Company results' });
     const detail = screen.getByRole('region', { name: 'Selected company' });
+    expect(screen.queryByRole('navigation', { name: 'Breadcrumb' })).toBeNull();
     expect(
       within(results).getByRole('link', { name: /Acme/i }),
     ).toHaveAttribute('href', '/companies/acme');
-    expect(screen.getByRole('link', { name: 'Technology' })).toHaveAttribute(
-      'href',
-      '/companies/markets/technology',
-    );
+    expect(
+      within(
+        screen.getByRole('region', { name: 'Browse by market' }),
+      ).getByRole('link', { name: 'Technology' }),
+    ).toHaveAttribute('href', '/companies/markets/technology');
     expect(
       screen.getByRole('complementary', { name: 'Sponsored start' }),
     ).toHaveTextContent('Start creative');
@@ -126,8 +145,6 @@ describe('CompanySearchPage — search results pattern', () => {
           pageSize={24}
           query="acme"
           markets={[]}
-          onSearchSubmit={vi.fn()}
-          onMarketChange={vi.fn()}
           onPageChange={vi.fn()}
           hasMore
           onLoadMore={onLoadMore}
@@ -151,5 +168,50 @@ describe('CompanySearchPage — search results pattern', () => {
     expect(
       screen.queryByRole('navigation', { name: /pagination/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it('keeps a no-match search inside the sponsored workspace and offers a primary reset', async () => {
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => (
+        <CompanySearchPage
+          companies={[]}
+          count={0}
+          page={1}
+          pageSize={24}
+          query="no-such-company"
+          markets={[]}
+          onPageChange={vi.fn()}
+          onSelectedCompanyReplace={vi.fn()}
+          onSelectedCompanyPush={vi.fn()}
+          detail={<p>Unused company detail</p>}
+          startAd={{ label: 'Sponsored start', content: <p>Start creative</p> }}
+          endAd={{ label: 'Sponsored end', content: <p>End creative</p> }}
+        />
+      ),
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    const { container } = render(<RouterProvider router={router} />);
+
+    expect(await screen.findByText(/no-such-company/i)).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Reset filters' })).toHaveAttribute(
+      'href',
+      '/companies',
+    );
+    expect(
+      container.querySelector("[data-slot='search-results-layout']"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('complementary', { name: 'Sponsored start' }),
+    ).toHaveTextContent('Start creative');
+    expect(
+      screen.getByRole('complementary', { name: 'Sponsored end' }),
+    ).toHaveTextContent('End creative');
+    expect(screen.queryByText('Unused company detail')).toBeNull();
   });
 });

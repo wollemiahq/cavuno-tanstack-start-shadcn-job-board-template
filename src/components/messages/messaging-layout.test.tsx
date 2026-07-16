@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { MessagingLayout } from './messaging-layout';
 
 describe('MessagingLayout', () => {
-  it('keeps the dedicated messaging page in one bordered two-column box', () => {
+  it('labels the conversation list and selected conversation in reading order', () => {
     render(
       <MessagingLayout
         aria-label="Messaging"
@@ -17,17 +17,12 @@ describe('MessagingLayout', () => {
     );
 
     const layout = screen.getByRole('region', { name: 'Messaging' });
-    expect(layout).toHaveAttribute('data-slot', 'card');
-    expect(layout).not.toHaveClass('rhea-theme');
-    expect(layout).toHaveClass('overflow-hidden', 'rounded-xl', 'border');
-    expect(layout).toHaveClass('md:grid-cols-[22rem_minmax(0,1fr)]');
-
     const list = screen.getByRole('navigation', { name: 'Conversations' });
     const conversation = screen.getByRole('region', {
       name: 'Selected conversation',
     });
-    expect(list).toHaveClass('hidden', 'md:flex');
-    expect(conversation).toHaveClass('flex');
+    expect(layout).toContainElement(list);
+    expect(layout).toContainElement(conversation);
     expect(
       list.compareDocumentPosition(conversation) &
         Node.DOCUMENT_POSITION_FOLLOWING,

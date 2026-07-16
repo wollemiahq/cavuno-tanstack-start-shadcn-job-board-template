@@ -43,7 +43,7 @@ const state = {
     {
       id: 'preference-1',
       label: 'Design jobs',
-      frequency: 'daily',
+      frequency: 'weekly',
       isActive: true,
       filters: {},
       manageToken: 'preference-token',

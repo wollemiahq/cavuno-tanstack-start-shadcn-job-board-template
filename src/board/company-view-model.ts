@@ -10,7 +10,7 @@ export interface CompanySearchLabels {
   openJobs: (count: number) => string;
   viewCompany: string;
   viewJobs: string;
-  visitWebsite: string;
+  viewSalaries: string;
   website: string;
 }
 
@@ -44,7 +44,7 @@ export interface CompanyDetailVM extends Omit<
   websiteLabel: string | null;
   viewCompanyLabel: string;
   viewJobsLabel: string;
-  visitWebsiteLabel: string;
+  viewSalariesLabel: string;
   websiteHeading: string;
 }
 
@@ -72,7 +72,8 @@ export function toCompanyDetailVM(
   labels: CompanySearchLabels,
 ): CompanyDetailVM {
   const card = toCompanyCardVM(company, labels);
-  const websiteHref = normalizeWebsiteUrl(company.website ?? '');
+  const normalizedWebsite = normalizeWebsiteUrl(company.website ?? '');
+  const websiteHref = normalizedWebsite?.replace(/\/$/, '') ?? null;
 
   return {
     ...card,
@@ -90,7 +91,7 @@ export function toCompanyDetailVM(
     openJobsLabel: labels.openJobs(company.publishedJobCount),
     viewCompanyLabel: labels.viewCompany,
     viewJobsLabel: labels.viewJobs,
-    visitWebsiteLabel: labels.visitWebsite,
+    viewSalariesLabel: labels.viewSalaries,
     websiteHeading: labels.website,
   };
 }

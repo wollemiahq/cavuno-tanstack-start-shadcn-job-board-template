@@ -115,7 +115,7 @@ function renderArticle(article: PublicBlogPost) {
 }
 
 describe('BlogArticleContent — complete article presentation', () => {
-  it('uses the Page family, Typeset body, captioned image, and complete author links', async () => {
+  it('uses the Page family, Typeset body, captioned image, and an author byline that defers social links to the author page', async () => {
     const { container } = renderArticle(post);
 
     const main = await screen.findByRole('main');
@@ -128,9 +128,11 @@ describe('BlogArticleContent — complete article presentation', () => {
     const body = screen.getByLabelText('Article body');
     expect(body).toHaveClass('typeset', 'typeset-content');
     expect(body).toHaveTextContent('Record what can change and who decides.');
-    expect(
-      screen.getByRole('img', { name: post.featureImageAlt! }),
-    ).toBeVisible();
+    const cover = screen.getByRole('img', { name: post.featureImageAlt! });
+    expect(cover).toBeVisible();
+    expect(cover).toHaveAttribute('width', '1200');
+    expect(cover).toHaveAttribute('height', '675');
+    expect(cover).toHaveAttribute('fetchpriority', 'high');
     expect(
       screen.getByText(
         'The maintainers trace one component from shared token to product pattern.',
@@ -143,19 +145,17 @@ describe('BlogArticleContent — complete article presentation', () => {
       'href',
       '/blog/author/avery-montgomery-smythe',
     );
-    expect(author).not.toHaveClass('truncate', 'line-clamp-1', 'line-clamp-2');
-    expect(
-      container.querySelector('a[href="https://avery.example"]'),
-    ).toBeVisible();
-    expect(
-      container.querySelector('a[href="https://x.com/avery"]'),
-    ).toBeVisible();
+    expect(author).toHaveTextContent(authorName);
+    // The author's own social links belong to the author page, not each post —
+    // the byline here links through to that profile instead.
+    expect(container.querySelector('a[href="https://avery.example"]')).toBeNull();
+    expect(container.querySelector('a[href="https://x.com/avery"]')).toBeNull();
     expect(
       container.querySelector('a[href="https://www.linkedin.com/in/avery"]'),
-    ).toBeVisible();
+    ).toBeNull();
     expect(
       container.querySelector('a[href="https://github.com/avery"]'),
-    ).toBeVisible();
+    ).toBeNull();
     expect(
       screen.getByRole('link', {
         name: 'Design-system governance across international product portfolios',

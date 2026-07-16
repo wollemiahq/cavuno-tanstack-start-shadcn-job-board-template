@@ -12,6 +12,7 @@ import {
   CandidateActionFeedback,
   type CandidateActionFeedbackState,
 } from '@/components/candidate-action-feedback';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -52,20 +53,24 @@ export function SkillsSection({ skills: initial }: { skills: string[] }) {
       ) : (
         <ul className="flex flex-wrap gap-2">
           {skills.map((skill) => (
-            <li
+            <Badge
               key={skill}
-              className="bg-secondary text-secondary-foreground flex items-center gap-1 rounded-full px-3 py-1 text-sm"
+              variant="secondary"
+              render={<li />}
+              className="h-6 gap-0.5 pr-0.5"
             >
               {skill}
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-xs"
                 aria-label={m.skillsSection_removeSkillAriaLabel({ skill })}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground size-5 rounded-full"
                 onClick={() => setSkills(skills.filter((s) => s !== skill))}
               >
                 <X className="size-3.5" />
-              </button>
-            </li>
+              </Button>
+            </Badge>
           ))}
         </ul>
       )}

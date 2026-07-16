@@ -31,13 +31,6 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/components/ui/item';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import type { Alert, AlertBody } from '@cavuno/board';
 
 const REMOTE_OPTIONS = ['on_site', 'hybrid', 'remote'] as const;
@@ -49,7 +42,6 @@ const REMOTE_LABEL: Record<string, () => string> = {
 
 interface FormState {
   label: string;
-  frequency: 'daily' | 'weekly';
   jobFunctions: string;
   remoteOptions: string[];
 }
@@ -62,12 +54,12 @@ function toBody(form: FormState, initial: Alert | null): AlertBody {
   const filters = initial?.filters;
   return {
     ...(form.label.trim() ? { label: form.label.trim() } : {}),
-    frequency: form.frequency,
+    frequency: 'weekly',
     ...(jobFunctions.length ? { jobFunctions } : {}),
     ...(form.remoteOptions.length ? { remoteOptions: form.remoteOptions } : {}),
     // `update` is a whole-object PUT — round-trip the filters this simplified
-    // UI doesn't edit (seniority / places / salary) so editing the label or
-    // frequency doesn't silently wipe them.
+    // UI doesn't edit (seniority / places / salary) so editing the visible
+    // fields doesn't silently wipe them.
     ...(filters?.seniorityLevels.length
       ? { seniorityLevels: filters.seniorityLevels }
       : {}),
@@ -83,7 +75,6 @@ function toBody(form: FormState, initial: Alert | null): AlertBody {
 function fromAlert(alert: Alert | null): FormState {
   return {
     label: alert?.label ?? '',
-    frequency: alert?.frequency ?? 'weekly',
     jobFunctions: alert?.filters.jobFunctions.join(', ') ?? '',
     remoteOptions: alert?.filters.remoteOptions ?? [],
   };
@@ -135,37 +126,6 @@ function AlertForm({
                   setForm((prev) => ({ ...prev, label: event.target.value }))
                 }
               />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor={`${id}-frequency`}>
-                {m.alertManager_frequencyLabel()}
-              </FieldLabel>
-              <Select
-                name="frequency"
-                value={form.frequency}
-                onValueChange={(value) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    frequency: value as 'daily' | 'weekly',
-                  }))
-                }
-              >
-                <SelectTrigger
-                  id={`${id}-frequency`}
-                  data-test="alert-frequency"
-                  className="w-full"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">
-                    {m.alertManager_frequencyDaily()}
-                  </SelectItem>
-                  <SelectItem value="weekly">
-                    {m.alertManager_frequencyWeekly()}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
             </Field>
             <Field>
               <FieldLabel htmlFor={`${id}-roles`}>
@@ -288,11 +248,7 @@ export function AlertManager({ alerts }: { alerts: Alert[] }) {
                       <span>
                         {alert.label ?? m.alertManager_allNewJobsLabel()}
                       </span>
-                      <Badge>
-                        {alert.frequency === 'daily'
-                          ? m.alertManager_frequencyDaily()
-                          : m.alertManager_frequencyWeekly()}
-                      </Badge>
+                      <Badge>{m.alertManager_frequencyWeekly()}</Badge>
                       {!alert.isActive ? (
                         <Badge variant="secondary">
                           {m.alertManager_pausedBadge()}

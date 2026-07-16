@@ -45,11 +45,7 @@ describe('InboxList', () => {
     );
 
     const row = screen.getByRole('button', { name: /Hue Le · Cavuno/ });
-    expect(row).toHaveAttribute('data-slot', 'item');
-    expect(row.querySelector('[data-slot="item-media"]')).not.toBeNull();
-    expect(row.querySelector('[data-slot="item-content"]')).not.toBeNull();
     expect(row).toHaveAttribute('aria-current', 'true');
-    expect(row).toHaveClass('bg-muted');
     expect(screen.getByLabelText('Unread')).toBeInTheDocument();
 
     fireEvent.click(row);

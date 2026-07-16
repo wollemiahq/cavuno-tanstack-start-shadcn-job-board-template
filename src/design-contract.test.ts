@@ -225,6 +225,18 @@ describe('DESIGN.md + DTCG export (D15 generated artifacts)', () => {
       tokens.dark['--background'].toLowerCase(),
     );
     expect(dtcg.fontFamily.sans.$type).toBe('fontFamily');
+    expect(dtcg.dimension.radius).toEqual({
+      $type: 'dimension',
+      $value: { value: 0.625, unit: 'rem' },
+    });
+  });
+
+  it('does not advertise the retired runtime BoardTheme cascade', () => {
+    const registry = read('design/registry-items.json');
+    const themeMode = read('src/components/cavuno/board-theme.tsx');
+
+    expect(registry).not.toContain('BoardTheme');
+    expect(themeMode).not.toContain('export function BoardTheme');
   });
 });
 

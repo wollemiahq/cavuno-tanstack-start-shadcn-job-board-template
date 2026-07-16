@@ -26,7 +26,7 @@ export function SearchResultsList({
       data-slot="search-results-list"
       data-scroll-restoration-id={scrollRestorationId}
       className={cn(
-        'md:border-border min-w-0 md:h-full md:min-h-0 md:overflow-y-auto md:overscroll-contain md:border-r',
+        'min-w-0 overflow-x-hidden md:h-full md:min-h-0 md:overflow-y-auto',
         className,
       )}
     >

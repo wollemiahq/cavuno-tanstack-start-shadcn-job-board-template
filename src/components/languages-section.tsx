@@ -82,16 +82,18 @@ export function LanguagesSection({
                 list="proficiency-levels"
                 onChange={(e) => update(index, { proficiency: e.target.value })}
               />
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-xs"
                 aria-label={m.languagesSection_removeLanguageAriaLabel()}
-                className="text-muted-foreground hover:text-foreground shrink-0 transition-colors"
+                className="text-muted-foreground hover:text-foreground shrink-0"
                 onClick={() =>
                   setLanguages(languages.filter((_, i) => i !== index))
                 }
               >
                 <X className="size-4" />
-              </button>
+              </Button>
             </li>
           ))}
         </ul>

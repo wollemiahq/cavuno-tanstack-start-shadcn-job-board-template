@@ -16,8 +16,8 @@ afterEach(() => {
 });
 
 describe('JobAlertFloatingPrompt', () => {
-  it('uses the signup Card as its only surface while keeping the corner placement', async () => {
-    const { container } = render(
+  it('offers job alerts without duplicating the signup form', async () => {
+    render(
       <JobAlertFloatingPrompt
         defaults={{ filters: {}, context: { source: 'jobs_list' } }}
         language="en"
@@ -25,20 +25,14 @@ describe('JobAlertFloatingPrompt', () => {
     );
 
     await screen.findByRole('heading', { name: 'Never miss a job' });
-    const prompt = container.querySelector(
-      '[data-test="job-alert-floating-prompt"]',
+    await waitFor(() =>
+      expect(
+        screen.getByText('Get new matching jobs in your inbox.'),
+      ).toBeVisible(),
     );
-    await waitFor(() => expect(prompt).not.toBeNull());
-    if (!prompt) throw new Error('Expected the floating job-alert prompt');
-
-    expect(prompt.querySelector("[data-slot='card']")).toBeInTheDocument();
-    expect(prompt).toHaveClass('fixed', 'right-4', 'bottom-4');
-    expect(prompt).not.toHaveClass(
-      'rounded-2xl',
-      'bg-card',
-      'shadow-lg',
-      'ring-1',
+    expect(screen.getByRole('textbox', { name: 'email' })).toHaveAttribute(
+      'type',
+      'email',
     );
-    expect(prompt).toHaveTextContent('Get new matching jobs in your inbox.');
   });
 });

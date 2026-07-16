@@ -1,6 +1,10 @@
 /**
- * Saved jobs — its own tab in the candidate sidebar shell (moved out of
- * the profile page in the Paper layout-B restructure).
+ * Saved jobs — a standalone candidate account page.
+ *
+ * Routing note (CAV-510): the file is `account_.saved` (trailing underscore) so
+ * `/account/saved` is NOT nested under the `/account` leaf route. `/account`
+ * renders the profile page and has no `<Outlet/>`, so nesting here meant
+ * navigating to `/account/saved` rendered nothing — the page "did nothing".
  */
 import { useState } from 'react';
 
@@ -14,8 +18,7 @@ import {
 } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import { getAccount, unsaveJob } from '../server/account';
-import { useCandidateShellContext } from './-candidate-shell-context';
+import { getSavedJobs, unsaveJob } from '../server/account';
 
 import { toJobCardVM } from '@/board/job-view-model';
 import { JobCard } from '@/components/board/job-card';
@@ -39,13 +42,13 @@ import { candidateLoaderError } from '@/lib/candidate-loader-error';
 
 const rootApi = getRouteApi('__root__');
 
-export const Route = createFileRoute('/account/saved')({
+export const Route = createFileRoute('/account_/saved')({
   staticData: { ownsMain: true },
   pendingComponent: CandidateRoutePendingPage,
   errorComponent: CandidateRouteErrorPage,
   loader: async () => {
     try {
-      return await getAccount();
+      return await getSavedJobs();
     } catch (error) {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
@@ -69,24 +72,15 @@ export const Route = createFileRoute('/account/saved')({
 });
 
 function SavedJobsPage() {
-  const { me, profile, savedJobs } = Route.useLoaderData();
+  const savedJobs = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
-  const candidateShell = useCandidateShellContext();
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [feedback, setFeedback] =
     useState<CandidateActionFeedbackState>('idle');
 
   return (
-    <CandidateShell
-      active="saved"
-      {...candidateShell}
-      identity={{
-        avatarUrl: profile.avatarUrl,
-        title: profile.displayName ?? me.email,
-        subtitle: me.email,
-      }}
-    >
+    <CandidateShell>
       <div className="space-y-4">
         <header>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">

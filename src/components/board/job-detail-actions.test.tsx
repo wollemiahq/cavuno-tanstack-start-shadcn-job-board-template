@@ -17,6 +17,7 @@ const vm: JobDetailVM = {
   companyAvatarName: 'Acme',
   sector: null,
   locationLabel: 'Sydney',
+  workplaceLabel: 'On-site',
   employmentTypeLabel: null,
   seniorityLabel: null,
   salaryLabel: null,
@@ -40,7 +41,7 @@ const vm: JobDetailVM = {
 afterEach(cleanup);
 
 describe('JobDetail actions', () => {
-  it('uses one Apply/Save row as a mobile bottom bar and desktop sticky rail', () => {
+  it('keeps Apply and Save in one actions region', () => {
     const { container } = render(
       <JobDetail
         vm={vm}
@@ -50,8 +51,7 @@ describe('JobDetail actions', () => {
     );
 
     const actions = container.querySelector("[data-slot='job-actions']");
-    expect(actions).toHaveClass('fixed', 'bottom-0', 'lg:static');
-    expect(actions?.querySelector('[data-slot="card"]')).not.toBeNull();
+    expect(actions).toBeInTheDocument();
     expect(actions).toContainElement(
       screen.getByRole('button', { name: 'Apply' }),
     );

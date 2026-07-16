@@ -87,62 +87,55 @@ const faq: SalaryFaqVM = {
   ],
 };
 
-function closestOwnedCard(element: HTMLElement) {
-  return element.matches("[data-slot='card']")
-    ? element
-    : (element.closest("[data-slot='card']") ??
-        element.querySelector("[data-slot='card']"));
-}
-
-describe('salary sections — owned shadcn presentation', () => {
-  it('renders every resolved salary metric in a theme-owned Card', () => {
+describe('salary sections', () => {
+  it('renders every resolved salary metric', () => {
     render(<OverallSalaryCard vm={overall} />);
 
-    for (const label of [
-      'Average salary',
-      '25th percentile',
-      'Median',
-      'Based on',
-    ]) {
-      expect(closestOwnedCard(screen.getByText(label))).not.toBeNull();
-    }
+    expect(screen.getByText('Average salary')).toBeVisible();
     expect(screen.getByText('$120,000–$160,000')).toBeVisible();
     expect(screen.getByText('/ yr')).toBeVisible();
+    expect(screen.getByText('25th percentile')).toBeVisible();
+    expect(screen.getByText('$110,000')).toBeVisible();
+    expect(screen.getByText('Median')).toBeVisible();
+    expect(screen.getByText('$140,000')).toBeVisible();
+    expect(screen.getByText('Based on')).toBeVisible();
+    expect(screen.getByText('12 jobs')).toBeVisible();
   });
 
-  it('uses the owned shadcn Table while preserving honest missing comparisons', () => {
-    const { container } = render(<SenioritySalaryTable vm={seniority} />);
+  it('uses a semantic table while preserving honest missing comparisons', () => {
+    render(<SenioritySalaryTable vm={seniority} />);
 
-    const table = container.querySelector("table[data-slot='table']");
-    expect(table).not.toBeNull();
+    const table = screen.getByRole('table');
     expect(
-      within(table as HTMLElement).getByRole('columnheader', {
+      within(table).getByRole('columnheader', {
         name: 'Experience level',
       }),
     ).toBeVisible();
-    const principalRow = within(table as HTMLElement).getByRole('row', {
+    const principalRow = within(table).getByRole('row', {
       name: /Principal/,
     });
     expect(principalRow).toHaveTextContent('$175,000–$205,000');
     expect(principalRow).toHaveTextContent('—');
   });
 
-  it('keeps every salary rail item a real crawlable anchor backed by an owned Card', () => {
-    const { container } = render(<SalaryRail vm={rail} />);
+  it('keeps every salary rail item a real crawlable anchor', () => {
+    render(<SalaryRail vm={rail} />);
 
     const links = screen.getAllByRole('link');
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       '/companies/acme-robotics/salaries',
       '/companies/long-range-labs/salaries',
     ]);
-    for (const link of links) {
-      expect(closestOwnedCard(link)).not.toBeNull();
-    }
-    expect(container.querySelectorAll("[data-slot='avatar']")).toHaveLength(2);
+    expect(screen.getByText('Acme Robotics')).toBeVisible();
+    expect(screen.getByText('$130,000–$175,000')).toBeVisible();
+    expect(screen.getByText('7 jobs')).toBeVisible();
+    expect(screen.getByText('Long Range Labs')).toBeVisible();
+    expect(screen.getByText('$125,000–$168,000')).toBeVisible();
+    expect(screen.getByText('3 jobs')).toBeVisible();
     expect(screen.getByText('AR')).toBeVisible();
   });
 
-  it('renders FAQs as semantic question-answer pairs on owned Cards', () => {
+  it('renders FAQs as semantic question-answer pairs', () => {
     render(<SalaryFaq vm={faq} />);
 
     const question = screen.getByText('What affects the salary range?');
@@ -151,10 +144,9 @@ describe('salary sections — owned shadcn presentation', () => {
       screen.getByText('Experience, location, and role scope all contribute.')
         .tagName,
     ).toBe('DD');
-    expect(closestOwnedCard(question)).not.toBeNull();
   });
 
-  it('uses the shared shadcn Empty composition without inventing salary data', () => {
+  it('explains missing salary data without inventing a value', () => {
     render(
       <SalaryEmptyState
         title="No salary data yet"
@@ -162,14 +154,12 @@ describe('salary sections — owned shadcn presentation', () => {
       />,
     );
 
-    const title = screen.getByText('No salary data yet');
-    const empty = title.closest("[data-slot='empty']");
-    expect(empty).not.toBeNull();
+    expect(screen.getByText('No salary data yet')).toBeVisible();
     expect(
-      within(empty as HTMLElement).getByText(
+      screen.getByText(
         'Salary figures appear after matching jobs are published.',
       ),
     ).toBeVisible();
-    expect(empty).not.toHaveTextContent('$0');
+    expect(document.body).not.toHaveTextContent('$0');
   });
 });

@@ -32,9 +32,8 @@ describe('SaveJobButton candidate continuation', () => {
       />,
     );
 
-    const href = screen
-      .getByRole('link', { name: 'Save' })
-      .getAttribute('href');
+    const save = screen.getByRole('link', { name: 'Save' });
+    const href = save.getAttribute('href');
     expect(href).not.toBeNull();
     const signInUrl = new URL(href!, 'https://board.example');
     expect(signInUrl.pathname).toBe('/auth/sign-in');
@@ -91,6 +90,36 @@ describe('SaveJobButton candidate continuation', () => {
         '/account/saved',
       );
     });
+  });
+
+  it('offers the same save flow as a compact icon control for search cards', async () => {
+    const onSave = vi.fn(async () => {});
+    render(
+      <SaveJobButton
+        jobId="job-1"
+        viewer={{ emailVerified: true }}
+        returnTo="/jobs?selectedJob=product-designer"
+        presentation="icon"
+        labels={{
+          save: 'Save job',
+          saving: 'Saving job…',
+          saved: 'Job saved',
+          error: 'Could not save.',
+        }}
+        onSave={onSave}
+      />,
+    );
+
+    const save = screen.getByRole('button', { name: 'Save job' });
+    fireEvent.click(save);
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Job saved' })).toHaveAttribute(
+        'href',
+        '/account/saved',
+      );
+    });
+    expect(onSave).toHaveBeenCalledWith('job-1');
   });
 
   it('surfaces a recoverable save failure and permits retry', async () => {

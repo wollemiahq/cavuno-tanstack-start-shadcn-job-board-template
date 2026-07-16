@@ -81,16 +81,24 @@ describe('useSearchSelection', () => {
     expect(onReplace).toHaveBeenCalledTimes(1);
   });
 
-  it('pushes an explicit desktop selection and resets only the detail pane', () => {
+  it('pushes an explicit desktop selection', () => {
     setDesktop(true);
     const onPush = vi.fn();
 
     render(<Harness selectedJob="first-job" onPush={onPush} />);
-    const detailPane = screen.getByTestId('detail-pane');
-
     fireEvent.click(screen.getByRole('link', { name: 'Second job' }));
 
     expect(onPush).toHaveBeenCalledWith('second-job');
+  });
+
+  it('resets only the detail pane whenever browser history changes the selection', () => {
+    setDesktop(true);
+
+    const { rerender } = render(<Harness selectedJob="first-job" />);
+    const detailPane = screen.getByTestId('detail-pane');
+
+    rerender(<Harness selectedJob="second-job" />);
+
     expect(detailPane.scrollTo).toHaveBeenCalledWith({ top: 0 });
   });
 

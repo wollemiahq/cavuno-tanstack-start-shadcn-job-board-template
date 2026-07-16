@@ -75,13 +75,17 @@ Radix reference with `shadcn init -b radix`, replace the owned UI sources and
 dependencies deliberately, and adapt Base UI-only props such as
 `focusableWhenDisabled`.
 
-`src/theme.css` is the one CLI-owned theme source. Apply the pinned preset with
-`pnpm exec shadcn apply b27Gcu6y --only theme --yes`, then run
-`pnpm run gen:theme && pnpm run gen:design`. `src/styles.css` owns only the app
-layout utilities that sit above the semantic shadcn tokens. Components use
-canonical utilities such as `bg-background`, `text-foreground`,
-`text-muted-foreground`, `border-border`, and `ring-ring`; changing the theme
-does not require a parallel compatibility stylesheet.
+`src/theme.css` is the one CLI-owned theme source. Apply colors, radius, and
+fonts from the pinned preset with
+`pnpm exec shadcn apply b27Gcu6y --only theme,font --yes`, then run
+`pnpm run gen:theme && pnpm run gen:design`. Icon migration or a full preset
+apply can rewrite owned component source, so review the generated diff before
+keeping it. Finish every
+preset handoff with `pnpm run check:shadcn`, typecheck, and tests.
+`src/styles.css` owns only the app layout utilities that sit above the semantic
+shadcn tokens. Components use canonical utilities such as `bg-background`,
+`text-foreground`, `text-muted-foreground`, `border-border`, and `ring-ring`;
+changing the theme does not require a parallel compatibility stylesheet.
 
 The full component inventory, token reference, and design do's-and-don'ts
 live in **`DESIGN.md`** (generated from `src/theme.css` + component source —
@@ -158,6 +162,11 @@ Path-prefixed `/de/` `/fr/` routing, SSR locale middleware, and per-locale
 old version, so exact pins are load-bearing, not stylistic.
 
 ## Verification
+
+The suite follows the behavior-first policy in
+[`docs/testing.md`](docs/testing.md): test product rules, interactions, route
+state, and accessibility; review appearance in the compact browser evidence
+matrix instead of asserting Tailwind classes.
 
 ```sh
 pnpm run typecheck

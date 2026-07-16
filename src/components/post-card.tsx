@@ -4,13 +4,7 @@ import { ArrowUpRight } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { initialsOf } from '@/lib/initials';
 import type { PublicBlogPostSummary } from '@cavuno/board';
 
@@ -29,7 +23,7 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
 
   return (
     <article className="group h-full">
-      <Card className="h-full gap-0 py-0">
+      <Card className="h-full has-[>a:first-child]:pt-0">
         {post.coverUrl ? (
           <Link
             to="/blog/$postSlug"
@@ -39,13 +33,15 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
             <img
               src={post.coverUrl}
               alt={post.featureImageAlt ?? post.title}
-              className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              width={1200}
+              height={675}
+              className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transform-none motion-reduce:transition-none"
               loading="lazy"
             />
           </Link>
         ) : null}
 
-        <CardHeader className="gap-3 py-5">
+        <CardHeader className="gap-3">
           {eyebrow ? (
             <Link
               to="/blog/tag/$tagSlug"
@@ -83,7 +79,7 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
         </CardHeader>
 
         {firstAuthor || date ? (
-          <CardFooter className="mt-auto gap-3 pb-5">
+          <CardContent className="mt-auto flex items-center gap-3">
             {firstAuthor ? (
               <Avatar size="sm">
                 {firstAuthor.avatarUrl ? (
@@ -116,10 +112,8 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
                 <span className="text-muted-foreground">{date}</span>
               ) : null}
             </div>
-          </CardFooter>
-        ) : (
-          <CardContent className="pb-5" />
-        )}
+          </CardContent>
+        ) : null}
       </Card>
     </article>
   );

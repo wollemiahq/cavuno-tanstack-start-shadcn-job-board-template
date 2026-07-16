@@ -566,6 +566,16 @@ function dtcgExport(tokens) {
       $value: splitFontStack(tokens.light['--font-heading']),
     },
   };
+  const radius = tokens.light['--radius'].match(/^([\d.]+)(rem)$/);
+  if (!radius) {
+    throw new Error('Expected --radius to be a rem dimension');
+  }
+  dtcg.dimension = {
+    radius: {
+      $type: 'dimension',
+      $value: { value: Number(radius[1]), unit: radius[2] },
+    },
+  };
   return (
     JSON.stringify(dtcg, null, 2).replace(
       /"\$value": \[\n((?:\s+"(?:[^"\\]|\\.)+",?\n)+)\s+\]/g,

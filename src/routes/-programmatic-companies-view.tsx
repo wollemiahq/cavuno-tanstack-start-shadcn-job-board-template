@@ -1,6 +1,7 @@
-import { useNavigate } from '@tanstack/react-router';
+import { boardCopy } from '#/copy';
 
-import type { BreadcrumbData } from '@/components/board/breadcrumb';
+import { getRouteApi, useNavigate } from '@tanstack/react-router';
+
 import { CompanySearchPage } from '@/components/board/company-search-page';
 import {
   includeSelectedCompanyMarket,
@@ -19,6 +20,8 @@ type LooseNavigate = (options: {
   resetScroll?: boolean;
 }) => void;
 
+const rootApi = getRouteApi('__root__');
+
 export type CompaniesPageData = {
   data: PublicCompany[];
   count?: number;
@@ -28,8 +31,6 @@ export type CompaniesPageData = {
 
 export function ProgrammaticCompaniesView({
   heading,
-  description,
-  breadcrumb,
   page,
   pageSize,
   markets,
@@ -37,8 +38,6 @@ export function ProgrammaticCompaniesView({
   search,
 }: {
   heading: string;
-  description?: string;
-  breadcrumb?: BreadcrumbData;
   page: CompaniesPageData;
   pageSize: number;
   markets: Array<{ slug: string; name: string }>;
@@ -46,32 +45,14 @@ export function ProgrammaticCompaniesView({
   search: CompaniesSearch;
 }) {
   const navigate = useNavigate() as unknown as LooseNavigate;
+  const { board } = rootApi.useLoaderData();
+  const copy = boardCopy(board.language, board.labels);
   const marketOptions = includeSelectedCompanyMarket(markets, market);
   const selectedCompany = useSelectedCompany(
     page.data.some((company) => company.slug === search.selectedCompany)
       ? search.selectedCompany
       : undefined,
   );
-
-  const navigateToMarket = (marketSlug: string | undefined, query: string) => {
-    const nextSearch = () => ({
-      query: query.trim() || undefined,
-      cursor: undefined,
-      page: undefined,
-      selectedCompany: undefined,
-    });
-
-    if (marketSlug) {
-      navigate({
-        to: '/companies/markets/$market',
-        params: { market: marketSlug },
-        search: nextSearch,
-      });
-      return;
-    }
-
-    navigate({ to: '/companies', search: nextSearch });
-  };
 
   return (
     <CompanySearchPage
@@ -80,31 +61,19 @@ export function ProgrammaticCompaniesView({
       page={search.page ?? 1}
       pageSize={pageSize}
       heading={heading}
-      description={description}
-      breadcrumb={breadcrumb}
+      breadcrumb={
+        market
+          ? {
+              ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
+              items: [
+                { name: copy.breadcrumbs.companies, href: '/companies' },
+                { name: heading },
+              ],
+            }
+          : undefined
+      }
       query={search.query}
-      marketSlug={market?.slug}
       markets={marketOptions}
-      onSearchSubmit={(query) => {
-        const nextSearch = () => ({
-          query: query.trim() || undefined,
-          cursor: undefined,
-          page: undefined,
-          selectedCompany: undefined,
-        });
-
-        if (market) {
-          navigate({
-            to: '/companies/markets/$market',
-            params: { market: market.slug },
-            search: nextSearch,
-          });
-          return;
-        }
-
-        navigate({ to: '/companies', search: nextSearch });
-      }}
-      onMarketChange={navigateToMarket}
       onPageChange={(nextPage) =>
         navigate({
           search: (previous) => ({
@@ -143,7 +112,13 @@ export function ProgrammaticCompaniesView({
           resetScroll: false,
         })
       }
-      detail={<SelectedCompanyDetail state={selectedCompany} />}
+      detail={
+        <SelectedCompanyDetail
+          state={selectedCompany}
+          language={board.language}
+          labels={board.labels}
+        />
+      }
     />
   );
 }

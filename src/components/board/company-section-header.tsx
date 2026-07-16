@@ -4,9 +4,8 @@ import { Link } from '@tanstack/react-router';
 
 import { m } from '../../paraglide/messages';
 
-import { PageBreadcrumb } from '@/components/board/breadcrumb';
-import type { BreadcrumbData } from '@/components/board/breadcrumb';
 import { PageBody } from '@/components/board/page-body';
+import { Container } from '@/components/layout/container';
 import { Text } from '@/components/text';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -17,25 +16,14 @@ import { cn } from '@/lib/utils';
  * The company section shell (CAV-512). A company's three public surfaces —
  * profile (`/companies/:slug`), the jobs subpage (`…/jobs`), and the salary
  * overview (`…/salaries`) — read as ONE entity by opening every one with THIS
- * byte-identical header, seated in a full-bleed gray band: the breadcrumb, the
- * company mark + name (H1) + one-line description, then a row of section tabs.
+ * byte-identical header, seated in a full-bleed gray band: the company mark +
+ * name (H1) + one-line description, then a row of section tabs.
  * The band is the SAME composition as the job-detail page (`PageBody`'s `band`
- * slot, `bg-secondary` + `border-b`, a `PageBreadcrumb` at the top) so the two
+ * slot, `bg-secondary` + `border-b`) so the two
  * top sections feel like the same component. Only the content BELOW the tabs,
  * on the white surface, changes per surface.
  *
- * Codified design rule (operator review, baked into
- * docs/patterns/company-section.md): "The trail locates the entity; the tabs
- * navigate within it." The visible breadcrumb ends at the ENTITY — Home →
- * Companies → {Company} — IDENTICAL across all three tabs; the section is NEVER
- * appended as a final crumb. The tab row alone communicates the active section.
- * The company name in both the crumb (a link) and the H1 (identity) is correct.
- *
- * The breadcrumb is seated at the TOP of the band via the shared
- * `PageBreadcrumb` placement primitive — the SAME band seam as `JobDetail`
- * (the pattern-contract gate lists this shell among the sanctioned band
- * owners). Routes pass the resolved trail DATA; the shell never receives
- * hand-placed trail markup.
+ * The root shell renders the page trail once, immediately above the footer.
  */
 
 export type CompanySection = 'overview' | 'jobs' | 'salaries';
@@ -77,7 +65,7 @@ function TabInner({
     <span className="flex items-center gap-1.5 px-0.5">
       {label}
       {count != null ? (
-        <Badge variant={active ? 'default' : 'secondary'} className="-my-px">
+        <Badge variant={active ? 'default' : 'outline'} className="-my-px">
           {count}
         </Badge>
       ) : null}
@@ -165,15 +153,12 @@ function CompanyTabs({
 }
 
 export function CompanySectionShell({
-  breadcrumb,
   company,
   activeSection,
   jobCount,
   hasSalaries,
   children,
 }: {
-  /** The resolved trail — Home → Companies → {Company}, identical per section. */
-  breadcrumb: BreadcrumbData;
   company: {
     name: string;
     slug: string;
@@ -201,49 +186,50 @@ export function CompanySectionShell({
       // tab row ride the band; the per-section content stays below on white.
       band={
         <div className="border-border bg-secondary border-b">
-          {/* Trail hugs the nav (pt-4/5) via the SHARED PageBreadcrumb
-              placement primitive — same seam as the job-detail band. */}
-          <PageBreadcrumb
-            items={breadcrumb.items}
-            ariaLabel={breadcrumb.ariaLabel}
-          />
-          {/* Generous vertical rhythm matching the job-detail hero (pt-8
-              md:pt-10 + gap-8) so the band feels spacious, NOT cramped. The
-              header + tabs still sit flush at the band's bottom (no pb), so the
-              tab row's border-b aligns with the band border (the active
-              underline lands on it). Byte-identical header across sections. */}
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pt-8 md:px-8 md:pt-10">
-            <header className="flex items-start gap-4">
-              <Avatar size="lg" className="size-12 rounded-xl after:rounded-xl">
-                {company.logoUrl ? (
-                  <AvatarImage
-                    src={company.logoUrl}
-                    alt={company.name}
-                    className="rounded-xl"
-                  />
-                ) : null}
-                <AvatarFallback className="rounded-xl">
-                  {initialsOf(company.name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex min-w-0 flex-col gap-1">
-                <Text as="h1" variant="heading2" className="md:text-3xl">
-                  {company.name}
-                </Text>
-                {descriptionText ? (
-                  <p className="text-muted-foreground line-clamp-1 text-base">
-                    {descriptionText}
-                  </p>
-                ) : null}
-              </div>
-            </header>
-            <CompanyTabs
-              active={activeSection}
-              companySlug={company.slug}
-              jobCount={jobCount}
-              hasSalaries={hasSalaries}
-            />
-          </div>
+          {/* Top rhythm comes from the shared --header-space token, so this
+              band, the job-detail hero, and every PageHeader start on the same
+              line. Bottom padding is deliberately absent — the tab row sits
+              flush at the band's bottom so its border-b aligns with the band
+              border (the active underline lands on it). That flush edge is the
+              one sanctioned exception to the shared header rhythm.
+              Byte-identical header across sections. */}
+          <Container width="wide">
+            <div className="flex flex-col gap-8 pt-(--header-space)">
+              <header className="flex items-start gap-4">
+                <Avatar
+                  size="lg"
+                  className="size-12 rounded-xl after:rounded-xl"
+                >
+                  {company.logoUrl ? (
+                    <AvatarImage
+                      src={company.logoUrl}
+                      alt={company.name}
+                      className="rounded-xl"
+                    />
+                  ) : null}
+                  <AvatarFallback className="rounded-xl">
+                    {initialsOf(company.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex min-w-0 flex-col gap-1">
+                  <Text as="h1" variant="heading2" className="md:text-3xl">
+                    {company.name}
+                  </Text>
+                  {descriptionText ? (
+                    <p className="text-muted-foreground line-clamp-1 text-base">
+                      {descriptionText}
+                    </p>
+                  ) : null}
+                </div>
+              </header>
+              <CompanyTabs
+                active={activeSection}
+                companySlug={company.slug}
+                jobCount={jobCount}
+                hasSalaries={hasSalaries}
+              />
+            </div>
+          </Container>
         </div>
       }
     >

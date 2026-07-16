@@ -3,13 +3,12 @@ import type { ReactNode } from 'react';
 import { m } from '../paraglide/messages';
 
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
-import { PageHeaderWithBreadcrumb } from '@/components/board/page-header-with-breadcrumb';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { SalaryEmptyState } from '@/components/board/salary-sections';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 
 export function SalaryPageLayout({
-  breadcrumb,
+  breadcrumb: _breadcrumb,
   title,
   description,
   children,
@@ -21,20 +20,18 @@ export function SalaryPageLayout({
 }) {
   return (
     <Page width="wide">
-      <PageHeaderWithBreadcrumb
-        width="wide"
-        breadcrumb={breadcrumb}
-        title={title}
-        description={description}
-      />
-      <PageContent>{children}</PageContent>
+      <PageContent
+        header={<PageHeader title={title} description={description} />}
+      >
+        {children}
+      </PageContent>
     </Page>
   );
 }
 
 export function SalaryNotFoundPage({ title }: { title: string }) {
   return (
-    <Page width="content">
+    <Page width="wide">
       <PageContent header={<PageHeader title={title} />}>
         <SalaryEmptyState title={title} />
       </PageContent>

@@ -115,7 +115,7 @@ function LocationsIndexPage() {
   const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
 
   return (
-    <Page width="content">
+    <Page width="wide">
       <JsonLd
         data={listingJsonLd({
           origin: seo.origin,

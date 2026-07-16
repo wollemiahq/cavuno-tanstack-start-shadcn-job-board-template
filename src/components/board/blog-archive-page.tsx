@@ -5,8 +5,12 @@ import { FileText } from 'lucide-react';
 import { m } from '../../paraglide/messages';
 
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
-import { PageHeaderWithBreadcrumb } from '@/components/board/page-header-with-breadcrumb';
-import { Page, PageContent, PageSection } from '@/components/layout/page';
+import {
+  Page,
+  PageContent,
+  PageHeader,
+  PageSection,
+} from '@/components/layout/page';
 import { PostCard } from '@/components/post-card';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -31,7 +35,7 @@ export interface BlogArchiveEmptyState {
 }
 
 export interface BlogArchivePageProps {
-  breadcrumb: BreadcrumbData;
+  breadcrumb?: BreadcrumbData;
   title: string;
   description?: string | null;
   avatar?: ReactNode;
@@ -45,7 +49,6 @@ export interface BlogArchivePageProps {
 
 /** Shared Page-family presentation for the blog, tag, and author archives. */
 export function BlogArchivePage({
-  breadcrumb,
   title,
   description,
   avatar,
@@ -59,18 +62,12 @@ export function BlogArchivePage({
     <Page>
       <PageContent
         header={
-          <PageHeaderWithBreadcrumb
-            breadcrumb={breadcrumb}
-            title={title}
-            description={description}
-            eyebrow={avatar}
-          >
+          <PageHeader title={title} description={description} eyebrow={avatar}>
             {search}
-          </PageHeaderWithBreadcrumb>
+            {filters}
+          </PageHeader>
         }
       >
-        {filters}
-
         <PageSection ariaLabel={title}>
           {posts.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

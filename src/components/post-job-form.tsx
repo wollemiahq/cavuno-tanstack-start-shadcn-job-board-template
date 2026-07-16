@@ -2,14 +2,17 @@
 
 import { useRef, useState } from 'react';
 
-import { fieldLabel } from '@cavuno/board/format';
+import { fieldLabel, getSalaryLexicon } from '@cavuno/board/format';
 import { ImagePlus } from 'lucide-react';
 
 import {
+  DEFAULT_SALARY_TIMEFRAME,
   ensureProtocol,
   isRichTextEmpty,
   looksLikeDomain,
+  SALARY_TIMEFRAMES,
   toDomain,
+  type SalaryTimeframe,
 } from '../lib/post-form';
 import { salaryCurrencyOptions } from '../lib/salary-currencies';
 import { m } from '../paraglide/messages';
@@ -27,7 +30,14 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from './ui/empty';
-import { Field, FieldError, FieldLabel } from './ui/field';
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from './ui/field';
 import { Input } from './ui/input';
 import {
   InputGroup,
@@ -35,7 +45,6 @@ import {
   InputGroupInput,
   InputGroupText,
 } from './ui/input-group';
-import { Label } from './ui/label';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import {
   Select,
@@ -82,6 +91,7 @@ type PostJobFormState = {
   logoStatus: LogoStatus;
   description: string;
   currency: string;
+  salaryTimeframe: SalaryTimeframe;
   companyName: string;
 };
 
@@ -136,10 +146,18 @@ export function PostJobForm({
     logoStatus: { kind: 'idle' },
     description: '',
     currency: 'USD',
+    salaryTimeframe: DEFAULT_SALARY_TIMEFRAME,
     companyName: '',
   });
-  const { status, logoUrl, logoStatus, description, currency, companyName } =
-    formState;
+  const {
+    status,
+    logoUrl,
+    logoStatus,
+    description,
+    currency,
+    salaryTimeframe,
+    companyName,
+  } = formState;
 
   function updateFormState(patch: Partial<PostJobFormState>) {
     setFormState((current) => ({ ...current, ...patch }));
@@ -159,6 +177,13 @@ export function PostJobForm({
   const currencyItems = salaryCurrencyOptions().map(({ value, label }) => ({
     value,
     label,
+  }));
+  // The timeframe words are the SDK's, so the select reads the same language
+  // as the salary ranges it produces — no parallel copy to drift.
+  const timeframeWords = getSalaryLexicon(locale).timeframe;
+  const timeframeItems = SALARY_TIMEFRAMES.map((value) => ({
+    value,
+    label: timeframeWords[value],
   }));
 
   const companyInitials = companyName
@@ -260,6 +285,7 @@ export function PostJobForm({
         salaryMin,
         salaryMax,
         salaryCurrency: currency,
+        salaryTimeframe,
         selectedPlan: readString(form, 'selectedPlan'),
         logoUrl: logoUrl ?? undefined,
       });
@@ -454,7 +480,7 @@ export function PostJobForm({
             name="applicationUrl"
             required
           />
-          <div className="grid gap-5 sm:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <SelectField
               label={m.postJob_currencyLabel()}
               name="salaryCurrency"
@@ -462,6 +488,19 @@ export function PostJobForm({
               value={currency}
               onValueChange={(value) =>
                 updateFormState({ currency: value ?? 'USD' })
+              }
+            />
+            <SelectField
+              label={m.postJob_salaryTimeframeLabel()}
+              name="salaryTimeframe"
+              items={timeframeItems}
+              value={salaryTimeframe}
+              onValueChange={(value) =>
+                updateFormState({
+                  salaryTimeframe:
+                    (value as SalaryTimeframe | null) ??
+                    DEFAULT_SALARY_TIMEFRAME,
+                })
               }
             />
             <LabeledInput
@@ -490,45 +529,48 @@ export function PostJobForm({
             const price =
               plan.prices.find(({ isActive }) => isActive) ?? plan.prices[0];
             return (
-              <Label
+              // The owned Field choice card — the SAME idiom as the join
+              // page's RoleSelector, so every card-style radio picker reads
+              // as one system (selected state is field.tsx's built-in tint).
+              <FieldLabel
                 key={plan.id}
                 htmlFor={`plan-${plan.id}`}
-                className="border-border bg-card has-[[data-checked]]:border-primary has-[[data-checked]]:ring-primary/20 items-start gap-3 rounded-3xl border p-5 shadow-sm has-[[data-checked]]:ring-2"
+                className="hover:bg-muted cursor-pointer transition-colors"
               >
-                <RadioGroupItem
-                  id={`plan-${plan.id}`}
-                  value={plan.id}
-                  className="mt-0.5"
-                />
-                <span className="min-w-0 flex-1 space-y-1">
-                  <span className="flex flex-wrap items-center gap-2">
-                    <span className="text-foreground font-medium">
-                      {plan.name}
-                    </span>
-                    {plan.isRecommended ? (
-                      <Badge variant="secondary">
-                        {m.postJob_recommendedLabel()}
-                      </Badge>
+                <Field orientation="horizontal">
+                  <RadioGroupItem
+                    id={`plan-${plan.id}`}
+                    value={plan.id}
+                    aria-label={plan.name}
+                  />
+                  <FieldContent>
+                    <FieldTitle>
+                      <span className="flex flex-wrap items-center gap-2">
+                        {plan.name}
+                        {plan.isRecommended ? (
+                          <Badge variant="secondary">
+                            {m.postJob_recommendedLabel()}
+                          </Badge>
+                        ) : null}
+                      </span>
+                    </FieldTitle>
+                    {plan.description ? (
+                      <FieldDescription>{plan.description}</FieldDescription>
                     ) : null}
+                  </FieldContent>
+                  <span className="text-foreground font-medium">
+                    {price
+                      ? formatPrice(
+                          locale,
+                          price.amountCents / 100,
+                          price.currency,
+                        )
+                      : plan.kind === 'free'
+                        ? m.postJob_freeLabel()
+                        : m.postJob_priceUnavailableLabel()}
                   </span>
-                  {plan.description ? (
-                    <span className="text-muted-foreground block text-sm font-normal">
-                      {plan.description}
-                    </span>
-                  ) : null}
-                </span>
-                <span className="text-foreground font-medium">
-                  {price
-                    ? formatPrice(
-                        locale,
-                        price.amountCents / 100,
-                        price.currency,
-                      )
-                    : plan.kind === 'free'
-                      ? m.postJob_freeLabel()
-                      : m.postJob_priceUnavailableLabel()}
-                </span>
-              </Label>
+                </Field>
+              </FieldLabel>
             );
           })}
         </RadioGroup>

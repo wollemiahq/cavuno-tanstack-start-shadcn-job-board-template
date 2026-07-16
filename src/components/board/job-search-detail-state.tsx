@@ -1,7 +1,10 @@
 import { AlertCircle } from 'lucide-react';
 
 import type { JobDetailVM } from '@/board/job-detail-view-model';
-import { JobSearchResultDetail } from '@/components/board/job-search-result-detail';
+import {
+  JobSearchResultDetail,
+  JobSearchResultDetailPending,
+} from '@/components/board/job-search-result-detail';
 import { Alert, AlertAction, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,7 +15,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export function JobSearchDetailState({
   status,
@@ -56,14 +58,10 @@ export function JobSearchDetailState({
             </AlertAction>
           </Alert>
         ) : null}
-        {status === 'loading' ? (
-          <p role="status" className="sr-only">
-            {loadingLabel}
-          </p>
-        ) : null}
         <JobSearchResultDetail
           vm={vm}
           loading={status === 'loading'}
+          loadingLabel={loadingLabel}
           applySlot={
             status === 'error' ? (
               <span data-inert="true" inert className="contents">
@@ -106,19 +104,5 @@ export function JobSearchDetailState({
     );
   }
 
-  return (
-    <div role="status" className="min-h-[28rem] space-y-6 p-6">
-      <span className="sr-only">{loadingLabel}</span>
-      <div className="flex items-center gap-3">
-        <Skeleton className="size-10" />
-        <Skeleton className="h-5 w-32" />
-      </div>
-      <Skeleton className="h-9 w-3/4" />
-      <div className="flex gap-2">
-        <Skeleton className="h-6 w-20" />
-        <Skeleton className="h-6 w-24" />
-      </div>
-      <Skeleton className="h-52 w-full" />
-    </div>
-  );
+  return <JobSearchResultDetailPending loadingLabel={loadingLabel} />;
 }

@@ -144,6 +144,7 @@ export function MessageBubble({
                   onChange={(event) => setDraft(event.target.value)}
                   rows={2}
                   maxLength={8000}
+                  className="max-h-40 overflow-y-auto"
                   aria-label={m.messageBubble_editLabel()}
                   data-test="edit-textarea"
                 />
@@ -240,6 +241,7 @@ export function MessageBubble({
                 <SelectTrigger
                   size="sm"
                   className="w-full"
+                  aria-label={m.messageBubble_reportTitle()}
                   data-test="report-reason"
                 >
                   <SelectValue />

@@ -27,13 +27,15 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
 // Header imports the signed-in Messages link even for this anonymous public
 // shell suite. Stub its Board API boundary so jsdom never resolves the
 // Cloudflare Workers environment module.
 vi.mock('../server/messaging', () => ({ getUnreadCount: vi.fn() }));
+// Header calls signOut from the avatar menu; the real module chain reaches
+// the Workers-only `cloudflare:workers` import, so it must be mocked in jsdom.
+vi.mock('../server/auth', () => ({
+  signOut: vi.fn(async () => ({ ok: true })),
+}));
 vi.mock('../server/queries', () => ({
   searchPlaces: vi.fn().mockResolvedValue({ data: [] }),
 }));
@@ -67,6 +69,9 @@ function renderHeader({
   features = allFeatures,
   talentDirectoryVisibility = features.talentDirectory ? 'public' : 'off',
   locationSuggestions = [],
+  keywordSuggestions = [],
+  companyMarketSuggestions = [],
+  resolvedKeywordLabel,
 }: {
   initialEntry?: string;
   features?: HeaderFeatures;
@@ -77,12 +82,21 @@ function renderHeader({
     name: string;
     contextLabel: string | null;
   }>;
+  keywordSuggestions?: Array<{
+    id: string;
+    type: 'category' | 'skill';
+    slug: string;
+    name: string;
+  }>;
+  companyMarketSuggestions?: Array<{ slug: string; name: string }>;
+  resolvedKeywordLabel?: string;
 } = {}) {
   const initialUrl = new URL(initialEntry, 'https://board.example');
   const initialSearch = resolveHeaderSearchState(
     initialUrl.pathname,
     Object.fromEntries(initialUrl.searchParams),
     initialUrl.pathname.startsWith('/jobs/locations/') ? 'Sydney' : undefined,
+    resolvedKeywordLabel,
   );
   const rootRoute = createRootRoute();
   const route = (path: string) =>
@@ -96,13 +110,42 @@ function renderHeader({
           scope,
           query,
           location,
+          term,
+          market,
         }: HeaderSearchSubmission) {
           if (scope === 'companies') {
-            void navigate({ to: '/companies', search: { query } });
+            if (market) {
+              void navigate({
+                to: '/companies/markets/$market',
+                params: { market: market.slug },
+              });
+            } else {
+              void navigate({ to: '/companies', search: { query } });
+            }
           } else if (scope === 'talent') {
             void navigate({ to: '/talent', search: { q: query } });
           } else if (scope === 'blog') {
             void navigate({ to: '/blog', search: { q: query } });
+          } else if (location && term?.type === 'skill') {
+            void navigate({
+              to: '/jobs/locations/$location/skills/$skill',
+              params: { location: location.slug, skill: term.slug },
+            });
+          } else if (location && term?.type === 'category') {
+            void navigate({
+              to: '/jobs/locations/$location/$keyword',
+              params: { location: location.slug, keyword: term.slug },
+            });
+          } else if (term?.type === 'skill') {
+            void navigate({
+              to: '/jobs/skills/$skill',
+              params: { skill: term.slug },
+            });
+          } else if (term?.type === 'category') {
+            void navigate({
+              to: '/jobs/$keyword',
+              params: { keyword: term.slug },
+            });
           } else if (location) {
             void navigate({
               to: '/jobs/locations/$location',
@@ -131,6 +174,16 @@ function renderHeader({
                   loading: false,
                   onQueryChange: vi.fn(),
                 },
+                keywordSuggestions: {
+                  suggestions: keywordSuggestions,
+                  loading: false,
+                  onQueryChange: vi.fn(),
+                },
+                companyMarketSuggestions: {
+                  suggestions: companyMarketSuggestions,
+                  loading: false,
+                  onQueryChange: vi.fn(),
+                },
               }}
             />
           </AppRouterProvider>
@@ -143,7 +196,12 @@ function renderHeader({
       route('/'),
       route('/jobs'),
       route('/jobs/locations/$location'),
+      route('/jobs/$keyword'),
+      route('/jobs/skills/$skill'),
+      route('/jobs/locations/$location/$keyword'),
+      route('/jobs/locations/$location/skills/$skill'),
       route('/companies'),
+      route('/companies/markets/$market'),
       route('/talent'),
       route('/p/$handle'),
       route('/blog'),
@@ -199,7 +257,7 @@ describe('Header — feature-gated public collections', () => {
         'href',
       ),
     ).toBe('/talent');
-    expect(screen.getByRole('searchbox')).toHaveAttribute(
+    expect(screen.getByLabelText(/keyword/i)).toHaveAttribute(
       'placeholder',
       'Search candidates…',
     );
@@ -265,6 +323,30 @@ describe('Header — role and public-posting gates', () => {
     },
   );
 
+  it('uses the single Companies search for free text and market suggestions', async () => {
+    const router = renderHeader({
+      initialEntry: '/companies',
+      companyMarketSuggestions: [
+        { slug: 'industrial-automation', name: 'Industrial Automation' },
+      ],
+    });
+    const searchbox = await screen.findByLabelText(/keyword/i);
+
+    fireEvent.input(searchbox, {
+      target: { value: 'industrial' },
+      inputType: 'insertText',
+    });
+    fireEvent.click(
+      screen.getByRole('option', { name: /Industrial Automation/ }),
+    );
+
+    await waitFor(() =>
+      expect(router.state.location.href).toBe(
+        '/companies/markets/industrial-automation',
+      ),
+    );
+  });
+
   it('shows Post a job independently of account registration', async () => {
     renderHeader({
       features: {
@@ -286,38 +368,35 @@ describe('Header — role and public-posting gates', () => {
 });
 
 describe('Header — mobile navigation disclosure', () => {
-  it('composes the disclosure from the owned shadcn Collapsible family', () => {
-    const source = readFileSync(
-      join(import.meta.dirname, 'Header.tsx'),
-      'utf8',
-    );
-
-    expect(source).toMatch(/from ["']@\/components\/ui\/collapsible["']/);
-    expect(source).toContain('<Collapsible');
-    expect(source).toContain('<CollapsibleTrigger');
-    expect(source).toContain('<CollapsibleContent');
-  });
-
-  it('exposes the collapsed and expanded state and controls the rendered menu', async () => {
+  it('opens a named modal and restores focus to the trigger on Escape', async () => {
     renderHeader();
 
     const toggle = await screen.findByRole('button', {
       name: /navigation menu/i,
     });
-    const controlledId = toggle.getAttribute('aria-controls');
 
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
-    expect(toggle).toHaveClass('text-foreground');
-    expect(controlledId).toBeTruthy();
-    expect(document.getElementById(controlledId!)).toBeNull();
 
+    toggle.focus();
     fireEvent.click(toggle);
 
-    expect(toggle.getAttribute('aria-expanded')).toBe('true');
-    expect(document.getElementById(controlledId!)).toBeTruthy();
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Primary navigation',
+    });
+    expect(toggle.closest('[aria-hidden="true"]')).not.toBeNull();
+    await waitFor(() => expect(document.activeElement).not.toBe(toggle));
+
+    fireEvent.keyDown(document.activeElement ?? dialog, { key: 'Escape' });
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: 'Primary navigation' }),
+      ).toBeNull(),
+    );
+    expect(toggle).toHaveFocus();
   });
 
-  it('keeps account and posting actions inside the mobile disclosure', async () => {
+  it('keeps mobile authentication beside the trigger while navigation fills the overlay', async () => {
     renderHeader();
 
     const toggle = await screen.findByRole('button', {
@@ -325,18 +404,18 @@ describe('Header — mobile navigation disclosure', () => {
     });
     fireEvent.click(toggle);
 
-    const mobileMenu = document.getElementById(
-      toggle.getAttribute('aria-controls')!,
-    );
-    expect(mobileMenu).not.toBeNull();
-    if (!mobileMenu) throw new Error('Expected the expanded mobile menu');
+    const mobileMenu = await screen.findByRole('dialog', {
+      name: 'Primary navigation',
+    });
 
-    expect(
-      within(mobileMenu).getByRole('link', { name: 'Sign in' }),
-    ).toHaveAttribute('href', '/auth/sign-in');
-    expect(
-      within(mobileMenu).getByRole('link', { name: 'Sign up' }),
-    ).toHaveAttribute('href', '/auth/join');
+    const actions = mobileMenu.querySelector<HTMLElement>(
+      '[data-test="header-actions"]',
+    );
+    if (!actions) throw new Error('Expected header actions');
+    const signIn = within(actions).getByRole('link', { name: 'Sign in' });
+    const signUp = within(actions).getByRole('link', { name: 'Sign up' });
+    expect(signIn).toHaveAttribute('href', '/auth/sign-in');
+    expect(signUp).toHaveAttribute('href', '/auth/join');
     expect(
       within(mobileMenu).getByRole('link', { name: 'Post a job' }),
     ).toHaveAttribute('href', '/post');
@@ -344,19 +423,6 @@ describe('Header — mobile navigation disclosure', () => {
 });
 
 describe('Header — pathname-scoped submit-only search', () => {
-  it('composes the search bar from the owned shadcn ButtonGroup and InputGroup families', () => {
-    const source = readFileSync(
-      join(import.meta.dirname, 'Header.tsx'),
-      'utf8',
-    );
-
-    expect(source).toMatch(/from ["']@\/components\/ui\/button-group["']/);
-    expect(source).toMatch(/from ["']@\/components\/ui\/input-group["']/);
-    expect(source).toContain('<ButtonGroup');
-    expect(source).toContain('<InputGroup');
-    expect(source).toContain('<InputGroupInput');
-  });
-
   it('uses the route-resolved place name without reconstructing it from the slug', () => {
     expect(
       resolveHeaderSearchState(
@@ -367,7 +433,7 @@ describe('Header — pathname-scoped submit-only search', () => {
     ).toEqual({ slug: 'sao-paulo-sp', name: 'São Paulo, SP' });
   });
 
-  it('uses a left search, geometrically centered primary navigation, and right actions', async () => {
+  it('keeps search, primary navigation, and actions in accessible DOM order', async () => {
     renderHeader();
 
     await screen.findByRole('search');
@@ -385,12 +451,8 @@ describe('Header — pathname-scoped submit-only search', () => {
     expect(actions).not.toBeNull();
     if (!left || !actions)
       throw new Error('Expected all three desktop header zones');
-    expect(left).toContainElement(screen.getByRole('search'));
-    expect(primaryNavigation).toHaveAttribute(
-      'data-slot',
-      'header-primary-navigation',
-    );
-    expect(actions).toHaveAttribute('data-slot', 'header-actions');
+    const search = screen.getByRole('search');
+    expect(left).toContainElement(search);
     expect(
       screen.queryByRole('combobox', { name: 'Search category' }),
     ).toBeNull();
@@ -408,7 +470,9 @@ describe('Header — pathname-scoped submit-only search', () => {
     renderHeader({ initialEntry: '/jobs' });
 
     const jobsSearch = await screen.findByRole('search');
-    expect(within(jobsSearch).getByRole('searchbox')).toBeTruthy();
+    expect(
+      within(jobsSearch).getByRole('combobox', { name: /keyword/i }),
+    ).toBeTruthy();
     expect(
       within(jobsSearch).getByRole('combobox', { name: /location/i }),
     ).toBeTruthy();
@@ -431,11 +495,52 @@ describe('Header — pathname-scoped submit-only search', () => {
     expect(screen.queryByRole('combobox', { name: /location/i })).toBeNull();
   });
 
+  it('stages a canonical Jobs suggestion and navigates only when Search is submitted', async () => {
+    const router = renderHeader({
+      initialEntry: '/jobs',
+      keywordSuggestions: [
+        {
+          id: 'skill:robotics',
+          type: 'skill',
+          slug: 'robotics',
+          name: 'Robotics',
+        },
+      ],
+    });
+
+    const keyword = await screen.findByRole('combobox', { name: /keyword/i });
+    fireEvent.input(keyword, {
+      target: { value: 'rob' },
+      inputType: 'insertText',
+    });
+    fireEvent.click(screen.getByRole('option', { name: /Robotics/ }));
+
+    expect(router.state.location.href).toBe('/jobs');
+    fireEvent.submit(keyword.closest('form') as HTMLFormElement);
+    await waitFor(() =>
+      expect(router.state.location.href).toBe('/jobs/skills/robotics'),
+    );
+  });
+
+  it('gives the keyword field the same inline clear affordance as location', async () => {
+    renderHeader({ initialEntry: '/jobs?q=robotics' });
+
+    const keyword = (await screen.findByLabelText(
+      /keyword/i,
+    )) as HTMLInputElement;
+    fireEvent.click(screen.getByRole('button', { name: /clear search/i }));
+
+    expect(keyword.value).toBe('');
+    expect(keyword).toHaveFocus();
+  });
+
   it('preserves an active place and submits keyword plus location together', async () => {
     const router = renderHeader({
       initialEntry: '/jobs/locations/sydney?q=engineer',
     });
-    const keyword = (await screen.findByRole('searchbox')) as HTMLInputElement;
+    const keyword = (await screen.findByLabelText(
+      /keyword/i,
+    )) as HTMLInputElement;
     const location = screen.getByRole('combobox', {
       name: /location/i,
     }) as HTMLInputElement;
@@ -451,6 +556,58 @@ describe('Header — pathname-scoped submit-only search', () => {
     );
   });
 
+  it.each([
+    {
+      name: 'category route',
+      initialEntry: '/jobs/mechanical-engineering',
+      resolvedKeywordLabel: 'Mechanical Engineering',
+      expectedKeyword: 'Mechanical Engineering',
+      expectedLocation: '',
+    },
+    {
+      name: 'skill route',
+      initialEntry: '/jobs/skills/robotics',
+      resolvedKeywordLabel: 'Robotics',
+      expectedKeyword: 'Robotics',
+      expectedLocation: '',
+    },
+    {
+      name: 'combined category and location route',
+      initialEntry: '/jobs/locations/sydney/mechanical-engineering',
+      resolvedKeywordLabel: 'Mechanical Engineering',
+      expectedKeyword: 'Mechanical Engineering',
+      expectedLocation: 'Sydney',
+    },
+    {
+      name: 'hosted free-text query URL',
+      initialEntry: '/jobs?query=robotics',
+      resolvedKeywordLabel: undefined,
+      expectedKeyword: 'robotics',
+      expectedLocation: '',
+    },
+  ])(
+    'prefills the search controls on a $name',
+    async ({
+      initialEntry,
+      resolvedKeywordLabel,
+      expectedKeyword,
+      expectedLocation,
+    }) => {
+      renderHeader({ initialEntry, resolvedKeywordLabel });
+
+      expect(
+        (await screen.findByLabelText(/keyword/i)).getAttribute('value'),
+      ).toBe(expectedKeyword);
+      expect(
+        (
+          screen.getByRole('combobox', {
+            name: /location/i,
+          }) as HTMLInputElement
+        ).value,
+      ).toBe(expectedLocation);
+    },
+  );
+
   it('submits a newly selected Jobs location with the keyword', async () => {
     const router = renderHeader({
       initialEntry: '/jobs?q=engineer',
@@ -463,7 +620,9 @@ describe('Header — pathname-scoped submit-only search', () => {
         },
       ],
     });
-    const keyword = (await screen.findByRole('searchbox')) as HTMLInputElement;
+    const keyword = (await screen.findByLabelText(
+      /keyword/i,
+    )) as HTMLInputElement;
     const location = screen.getByRole('combobox', { name: /location/i });
 
     fireEvent.change(keyword, { target: { value: 'robotics' } });
@@ -521,8 +680,8 @@ describe('Header — pathname-scoped submit-only search', () => {
     'derives the $name search destination from the pathname and navigates only on submit',
     async ({ initialEntry, initialValue, nextValue, expectedHref }) => {
       const router = renderHeader({ initialEntry });
-      const searchbox = (await screen.findByRole(
-        'searchbox',
+      const searchbox = (await screen.findByLabelText(
+        /keyword/i,
       )) as HTMLInputElement;
 
       expect(searchbox.value).toBe(initialValue);
@@ -539,8 +698,8 @@ describe('Header — pathname-scoped submit-only search', () => {
 
   it('uses Jobs search from the landing page and hands the query to /jobs', async () => {
     const router = renderHeader({ initialEntry: '/' });
-    const searchbox = (await screen.findByRole(
-      'searchbox',
+    const searchbox = (await screen.findByLabelText(
+      /keyword/i,
     )) as HTMLInputElement;
 
     fireEvent.change(searchbox, { target: { value: 'systems' } });

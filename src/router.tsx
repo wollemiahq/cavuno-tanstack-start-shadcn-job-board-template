@@ -9,7 +9,15 @@ export function getRouter() {
     routeTree,
     scrollRestoration: true,
     defaultPreload: 'intent',
-    defaultPreloadStaleTime: 0,
+    // Without this, navigation treats all route data as stale (`staleTime`
+    // defaults to 0) and re-runs the loader on click even when the intent
+    // preload just fetched it — the hover work is paid for and thrown away.
+    // Note `preloadStaleTime` governs only re-preloading, not navigation, so
+    // it cannot fix that. At 30s, a hovered link commits from cache
+    // (measured: click → content 119ms, zero requests, vs ~1.9s cold);
+    // route data can be up to 30s stale on quick revisits — acceptable for
+    // job-board content.
+    defaultStaleTime: 30_000,
     // The default 404 is a real shadcn Empty page instead of TanStack's
     // built-in placeholder.
     defaultNotFoundComponent: NotFound,

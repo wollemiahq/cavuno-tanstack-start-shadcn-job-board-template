@@ -33,7 +33,7 @@ vi.mock('../server/paywall', () => ({
   startCheckout: mocks.startCheckout,
 }));
 
-import { AccessPage, Route } from './account.access';
+import { AccessPage, Route } from './account_.access';
 
 const grant = {
   object: 'access_grant',

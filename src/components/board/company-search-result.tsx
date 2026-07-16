@@ -2,7 +2,7 @@ import type { MouseEvent as ReactMouseEvent } from 'react';
 
 import type { CompanyCardVM } from '@/board/company-view-model';
 import { SearchResultCard } from '@/components/search-results/search-results';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { initialsOf } from '@/lib/initials';
 
@@ -26,10 +26,10 @@ export function CompanySearchResult({
         <div className="flex items-start gap-3">
           <Avatar size="lg" className="rounded-xl">
             {vm.logoUrl ? (
-              <img
+              <AvatarImage
                 src={vm.logoUrl}
                 alt={vm.name}
-                className="aspect-square size-full rounded-xl object-cover"
+                className="rounded-xl"
               />
             ) : (
               <AvatarFallback className="rounded-xl">

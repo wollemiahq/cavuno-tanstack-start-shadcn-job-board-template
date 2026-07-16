@@ -280,7 +280,7 @@ Props:
 
 Props:
 
-- `alerts: { id: string; object: "alert"; label: string | null; frequency: "daily" | "weekly"; isActive: boolean; filters: { job…`
+- `alerts: { id: string; object: "alert"; label: string | null; frequency: "weekly"; isActive: boolean; filters: { jobFunctions:…`
 
 ### NotFound — `src/components/app-not-found.tsx`
 
@@ -312,6 +312,7 @@ Props:
 
 - `autoComplete?: string | undefined`
 - `label: string`
+- `labelAction?: ReactNode`
 - `minLength?: number | undefined`
 - `name: string`
 - `type?: string | undefined`
@@ -342,7 +343,7 @@ Props:
 - `filters?: JobAlertFiltersInput | undefined`
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
-- `onSubscribe: (input: JobAlertSubscribeInput) => Promise<{ status: "created" | "duplicate"; }>`
+- `onSubscribe: (input: JobAlertSubscribeInput) => Promise<{ status: "submitted"; }>`
 - `title?: string | undefined`
 
 ### AlertsBand — `src/components/board/alerts-band.tsx`
@@ -351,7 +352,7 @@ Props:
 
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
-- `onSubscribe: (input: JobAlertSubscribeInput) => Promise<{ status: "created" | "duplicate"; }>`
+- `onSubscribe: (input: JobAlertSubscribeInput) => Promise<{ status: "submitted"; }>`
 - `source: string`
 
 ### ApplyButton — `src/components/board/apply-button.tsx`
@@ -377,7 +378,7 @@ Shared Page-family presentation for the blog, tag, and author archives.
 Props:
 
 - `avatar?: ReactNode`
-- `breadcrumb: BreadcrumbData`
+- `breadcrumb?: BreadcrumbData | undefined`
 - `description?: string | null | undefined`
 - `empty: BlogArchiveEmptyState`
 - `filters?: ReactNode`
@@ -411,7 +412,7 @@ Props:
 - `ariaLabel?: string | undefined`
 - `items: { name: string; href?: string | undefined; }[]`
 
-### PageBreadcrumb — `src/components/board/breadcrumb.tsx`
+### ShellBreadcrumb — `src/components/board/breadcrumb.tsx`
 
 The shared breadcrumb trail (nav › ol › li) used by the job-detail and salary pages. Pass an ordered items list; a crumb with no href renders as the current page.
 
@@ -424,14 +425,13 @@ Props:
 
 ### CandidateAccountShell — `src/components/board/candidate-account-shell.tsx`
 
+Candidate account content wrapper. Account navigation now lives in the
+signed-in header's avatar menu (CAV-510), so this shell owns only the page's
+single main landmark and reading-width content column — no sidebar rail.
+
 Props:
 
-- `activeSection: string`
 - `children: ReactNode`
-- `identity: CandidateAccountIdentity`
-- `navigation: CandidateAccountNavigationItem[]`
-- `navigationLabel: string`
-- `rail?: ReactNode`
 
 ### CompanyAvatar — `src/components/board/company-avatar.tsx`
 
@@ -457,17 +457,6 @@ Props:
 - `name: string`
 - `publishedJobCount: number`
 
-### CompanySearchControls — `src/components/board/company-search-controls.tsx`
-
-Props:
-
-- `labels: { query: string; queryPlaceholder: string; market: string; allMarkets: string; search: string; }`
-- `markets: { slug: string; name: string; }[]`
-- `marketSlug?: string | undefined`
-- `onMarketChange: (marketSlug: string | undefined, query: string) => void`
-- `onSubmit: (query: string) => void`
-- `query?: string | undefined`
-
 ### CompanySearchDetailState — `src/components/board/company-search-detail-state.tsx`
 
 Props:
@@ -486,17 +475,13 @@ Props:
 - `breadcrumb?: BreadcrumbData | undefined`
 - `companies: { id: string; object: "public_company"; name: string; slug: string; website: string | null; logoUrl: string | null; d…`
 - `count: number`
-- `description?: string | undefined`
 - `detail: ReactNode`
 - `endAd?: AdPlacement | undefined`
 - `hasMore?: boolean | undefined`
 - `heading?: string | undefined`
 - `markets: { slug: string; name: string; }[]`
-- `marketSlug?: string | undefined`
 - `onLoadMore?: (() => void) | undefined`
-- `onMarketChange: (marketSlug: string | undefined, query: string) => void`
 - `onPageChange: (page: number) => void`
-- `onSearchSubmit: (query: string) => void`
 - `onSelectedCompanyPush: (companySlug: string) => void`
 - `onSelectedCompanyReplace: (companySlug: string) => void`
 - `page: number`
@@ -509,7 +494,10 @@ Props:
 
 Props:
 
+- `hasSalaries?: boolean | undefined`
 - `interactive?: boolean | undefined`
+- `jobPreviews?: JobCardVM[] | undefined`
+- `salaryOverall?: OverallSalaryVM | null | undefined`
 - `vm: CompanyDetailVM`
 
 ### CompanySearchResult — `src/components/board/company-search-result.tsx`
@@ -525,7 +513,6 @@ Props:
 Props:
 
 - `activeSection: CompanySection`
-- `breadcrumb: BreadcrumbData`
 - `children: ReactNode`
 - `company: { name: string; slug: string; logoUrl: string | null; description: string | null; }`
 - `hasSalaries: boolean`
@@ -547,6 +534,7 @@ Props:
 
 - `boardName: string`
 - `candidatesEnabled: boolean`
+- `categories?: HomeCategoryCard[] | undefined`
 - `companies: HomeCompanyCard[]`
 - `countLabel?: string | undefined`
 - `employersEnabled: boolean`
@@ -554,6 +542,12 @@ Props:
 - `posts: { id: string; object: "public_blog_post"; title: string; slug: string; featured: boolean; coverUrl: string | null; fe…`
 - `publicJobSubmission?: boolean | undefined`
 - `talent: { object: "talent_directory_entry"; handle: string | null; displayName: string | null; headline: string | null; locat…`
+
+### JobAboutCompanyCard — `src/components/board/job-about-company-card.tsx`
+
+Props:
+
+- `company: JobDetailCompanyVM`
 
 ### JobCard — `src/components/board/job-card.tsx`
 
@@ -586,6 +580,7 @@ Props:
 
 Props:
 
+- `compact?: boolean | undefined`
 - `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "full_time…`
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
@@ -612,6 +607,7 @@ Usage: Fetch with board.jobs.list({ ...filters, cursor, limit: 20 }) (board.jobs
 
 Props:
 
+- `breadcrumb?: BreadcrumbData | undefined`
 - `count?: number | undefined`
 - `detail: ReactNode`
 - `endAd?: AdPlacement | undefined`
@@ -623,6 +619,7 @@ Props:
 - `language: string`
 - `onFiltersChange: (next: ListingFilters) => void`
 - `onPageChange: (page: number) => void`
+- `onSaveJob: (jobId: string) => Promise<void>`
 - `onSelectedJobPush: (jobSlug: string) => void`
 - `onSelectedJobReplace: (jobSlug: string) => void`
 - `page: number`
@@ -630,6 +627,7 @@ Props:
 - `relatedSearches?: RelatedSearch[] | undefined`
 - `selectedJob?: string | undefined`
 - `startAd?: AdPlacement | undefined`
+- `viewer: { emailVerified: boolean; } | null`
 
 ### JobSearchResultDetail — `src/components/board/job-search-result-detail.tsx`
 
@@ -637,14 +635,22 @@ Props:
 
 - `applySlot?: ReactNode`
 - `loading?: boolean | undefined`
+- `loadingLabel?: string | undefined`
 - `saveSlot?: ReactNode`
 - `vm: JobDetailVM`
+
+### JobSearchResultDetailPending — `src/components/board/job-search-result-detail.tsx`
+
+Props:
+
+- `loadingLabel: string`
 
 ### JobSearchResult — `src/components/board/job-search-result.tsx`
 
 Props:
 
 - `onActivate?: ((event: MouseEvent<HTMLAnchorElement, MouseEvent>) => void) | undefined`
+- `saveSlot?: ReactNode`
 - `selected?: boolean | undefined`
 - `vm: JobCardVM`
 
@@ -678,14 +684,13 @@ describes the failed search rather than exposing the missing taxonomy.
 
 Props:
 
+- `className?: string | undefined`
 - `count?: number | undefined`
 - `heading?: string | undefined`
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
-- `onSortChange: (sort: JobSort | undefined) => void`
 - `page?: number | undefined`
 - `pageSize?: number | undefined`
-- `sort: JobSort | undefined`
 
 ### ListingPageHeader — `src/components/board/listing-page-header.tsx`
 
@@ -704,6 +709,13 @@ Props:
 - `search?: ReactNode`
 - `subtitle?: string | null | undefined`
 - `title: string`
+
+### ListingResultsHeader — `src/components/board/listing-page-header.tsx`
+
+Props:
+
+- `breadcrumb?: BreadcrumbData | undefined`
+- `children: ReactNode`
 
 ### ListingSearchBand — `src/components/board/listing-page-header.tsx`
 
@@ -739,7 +751,9 @@ Props:
 
 Props:
 
+- `compact?: boolean | undefined`
 - `count: number`
+- `hrefForPage: (page: number) => string`
 - `onPageChange: (page: number) => void`
 - `page: number`
 - `pageSize: number`
@@ -776,56 +790,30 @@ Props:
 
 ### PageBody — `src/components/board/page-body.tsx`
 
-Migration-only compatibility shell for routes that predate the canonical
-`Page` / `PageHeader` / `PageContent` / `PageSection` family. Do not use
-`PageBody` for new page-level composition; migrate existing consumers to
-the Page family as those routes are touched.
-
-Preserved public slots:
- - `band` — a full-bleed section rendered edge-to-edge ABOVE the
-   constrained container (the Lumen gray listing header, the job-detail
-   header band). The band owns its own inner `max-w-7xl` wrapper and,
-   when it has one, its OWN breadcrumb (via `ListingPageHeader` / the
-   `JobDetail` band) — so `breadcrumb` below is for the band-less pages.
- - `breadcrumb` — the resolved trail for a NON-band page (a company
-   profile, a blog article, a salary page). `PageBody` seats it through the
-   shared `PageBreadcrumb` placement primitive, hugging the nav at the
-   codified `pt-4 md:pt-5`, so the spacing is identical to the band pages'.
- - `children` — the constrained content, on the shared container
-   width + padding + `gap-8` rhythm.
- - `rail` — an optional right-hand sticky column; when present the body
-   becomes the two-column `[1fr_20rem]` grid (the job-detail
-   apply-rail pattern). On mobile the rail stacks above the content.
+Migration-only compatibility shell for detail surfaces that need a
+full-bleed band and an optional sticky rail. Geometry is delegated to the
+canonical Page family; global navigation context is owned by the root shell
+breadcrumb.
 
 Props:
 
 - `band?: ReactNode`
-- `breadcrumb?: BreadcrumbData | undefined`
 - `children: ReactNode`
 - `rail?: ReactNode`
-
-### PageHeaderWithBreadcrumb — `src/components/board/page-header-with-breadcrumb.tsx`
-
-The canonical Page-family seam for a page intro that owns a breadcrumb.
-Routes pass resolved breadcrumb data; this component alone seats the shared
-placement primitive before the constrained PageHeader.
-
-Props:
-
-- `actions?: ReactNode`
-- `align?: "center" | "start" | undefined`
-- `breadcrumb?: BreadcrumbData | undefined`
-- `children?: ReactNode`
-- `description?: ReactNode`
-- `eyebrow?: ReactNode`
-- `title: ReactNode`
-- `width?: ContainerWidth | undefined`
+- `railLabel?: string | undefined`
 
 ### PublicContentPending — `src/components/board/public-content-pending.tsx`
 
 Props:
 
 - `label: string`
+
+### CompactCompanySalarySummary — `src/components/board/salary-sections.tsx`
+
+Props:
+
+- `title: string`
+- `vm: OverallSalaryVM`
 
 ### CompanySalarySummary — `src/components/board/salary-sections.tsx`
 
@@ -876,8 +864,20 @@ Props:
 - `labels: { save: string; saving: string; saved: string; error: string; }`
 - `onSave: (jobId: string) => Promise<void>`
 - `onSaved?: (() => void | Promise<void>) | undefined`
+- `presentation?: "default" | "icon" | undefined`
 - `returnTo: string`
 - `viewer: { emailVerified: boolean; } | null`
+
+### TalentFilterControls — `src/components/board/talent-filter-controls.tsx`
+
+Secondary Talent filters; the shared header owns the candidate query.
+
+Props:
+
+- `labels: { skill: string; skillPlaceholder: string; search: string; }`
+- `onSubmit: (search: { q: string; skill: string; }) => void`
+- `q?: string | undefined`
+- `skill?: string | undefined`
 
 ### TalentProfileContent — `src/components/board/talent-profile-content.tsx`
 
@@ -885,17 +885,17 @@ Props:
 
 - `headingAs?: "h1" | "h2" | undefined`
 - `interactive?: boolean | undefined`
+- `showHeader?: boolean | undefined`
 - `showName?: boolean | undefined`
 - `vm: TalentProfileVM`
 
-### TalentSearchControls — `src/components/board/talent-search-controls.tsx`
+### TalentProfileIdentity — `src/components/board/talent-profile-content.tsx`
 
 Props:
 
-- `labels: { query: string; queryPlaceholder: string; skill: string; skillPlaceholder: string; search: string; }`
-- `onSubmit: (search: { q: string; skill: string; }) => void`
-- `q?: string | undefined`
-- `skill?: string | undefined`
+- `headingAs?: "h1" | "h2" | undefined`
+- `showName?: boolean | undefined`
+- `vm: TalentProfileVM`
 
 ### TalentSearchDetailState — `src/components/board/talent-search-detail-state.tsx`
 
@@ -912,13 +912,10 @@ Props:
 
 Props:
 
-- `breadcrumb?: BreadcrumbData | undefined`
 - `candidates: { object: "talent_directory_entry"; handle: string | null; displayName: string | null; headline: string | null; locat…`
-- `description?: string | undefined`
 - `detail: ReactNode`
 - `endAd?: AdPlacement | undefined`
 - `hasMore?: boolean | undefined`
-- `heading?: string | undefined`
 - `onNextResults?: (() => void) | undefined`
 - `onSearchSubmit: (search: { q: string; skill: string; }) => void`
 - `onSelectedTalentPush: (handle: string) => void`
@@ -935,6 +932,8 @@ Props:
 - `interactive?: boolean | undefined`
 - `vm: TalentProfileVM`
 
+### TalentSearchResultDetailSkeleton — `src/components/board/talent-search-result-detail.tsx`
+
 ### TalentSearchResult — `src/components/board/talent-search-result.tsx`
 
 Props:
@@ -950,6 +949,25 @@ Props:
 - `chips: TaxonomyChip[]`
 - `overflow?: number | undefined`
 - `size?: "sm" | "lg" | "md" | undefined`
+
+### FacebookIcon — `src/components/brand-icons.tsx`
+
+### GoogleIcon — `src/components/brand-icons.tsx`
+
+Google's "G" in its required brand colours — an identity mark, so the fills
+are deliberately literal rather than themed.
+
+Props:
+
+- `className?: string | undefined`
+
+### LinkedInIcon — `src/components/brand-icons.tsx`
+
+Props:
+
+- `className?: string | undefined`
+
+### XIcon — `src/components/brand-icons.tsx`
 
 ### CandidateActionFeedback — `src/components/candidate-action-feedback.tsx`
 
@@ -979,35 +997,36 @@ Props:
 
 ### CandidateShell — `src/components/candidate-shell.tsx`
 
+Thin wrapper for the candidate account pages. The account navigation moved to
+the signed-in header avatar menu (CAV-510); this simply renders the page
+content inside the shared account content shell.
+
 Props:
 
-- `active: string`
-- `candidatePaywall: boolean`
 - `children: ReactNode`
-- `identity?: Partial<CandidateShellIdentity> | undefined`
-- `rail?: ReactNode`
-- `viewer: CandidateShellViewer | null`
-
-### BoardTheme — `src/components/cavuno/board-theme.tsx`
-
-Props:
-
-- `theme: ThemeInput | null`
 
 ### CompanyJobsSearchBar — `src/components/company-jobs-search-bar.tsx`
 
-The company-jobs subpage keyword search (CAV-501, CAV-511) — a thin wrapper
-of the shared `ListingSearchBand`, so it is the SAME white panel the jobs,
+The company-jobs subpage search (CAV-501, CAV-511) — a thin wrapper of the
+shared `ListingSearchBand`, so it is the SAME white panel the jobs,
 companies, and blog headers use (no duplicate search-band markup). Scoped to
 ONE company: it submits to that company's jobs subpage
-(`/companies/$companySlug/jobs?q=`), backed by the jobs SEARCH endpoint with
-a `companyId` filter. Submitting a fresh `search` drops `?page=`, resetting
-pagination to page 1.
+(`/companies/$companySlug/jobs?q=&location=`), backed by the jobs SEARCH
+endpoint with a `companyId` filter, or the BROWSE list when there is no
+keyword. Submitting a fresh search drops `?page=`, resetting to page 1.
+
+Location rides the band's `leadingSlot` — the same slot and the same
+`LocationCombobox` the site header uses. The API's location filter is a geo
+radius keyed by PLACE SLUG, so only a resolved suggestion is submittable;
+the display name rides alongside as `locationName` purely so a cold load
+rehydrates the input's text.
 
 Props:
 
 - `companySlug: string`
 - `defaultValue?: string | undefined`
+- `location?: { slug: string; name?: string | undefined; } | null | undefined`
+- `locationSuggestions: LocationSuggestionState`
 
 ### CompanySearchBar — `src/components/company-search-bar.tsx`
 
@@ -1020,6 +1039,22 @@ index results (`/companies?query=`), backed by `companies.search`.
 Props:
 
 - `defaultValue?: string | undefined`
+
+### CompanySearchCombobox — `src/components/company-search-combobox.tsx`
+
+One unrestricted Companies search with canonical market suggestions.
+
+Props:
+
+- `className?: string | undefined`
+- `loading: boolean`
+- `onClear: () => void`
+- `onQueryChange: (query: string) => void`
+- `onSelect: (suggestion: CompanyMarketSuggestion) => void`
+- `onValueChange: (value: string) => void`
+- `placeholder: string`
+- `suggestions: CompanyMarketSuggestion[]`
+- `value: string`
 
 ### DangerZone — `src/components/danger-zone.tsx`
 
@@ -1074,6 +1109,22 @@ read the `<` escape transparently.
 Props:
 
 - `data: unknown[]`
+
+### KeywordCombobox — `src/components/keyword-combobox.tsx`
+
+Jobs keyword autocomplete: canonical terms plus an unrestricted text value.
+
+Props:
+
+- `className?: string | undefined`
+- `loading: boolean`
+- `onClear: () => void`
+- `onQueryChange: (query: string) => void`
+- `onSelect: (suggestion: KeywordSuggestionVM) => void`
+- `onValueChange: (value: string) => void`
+- `placeholder: string`
+- `suggestions: KeywordSuggestionVM[]`
+- `value: string`
 
 ### LanguagesSection — `src/components/languages-section.tsx`
 
@@ -1393,6 +1444,13 @@ Props:
 - `label: string`
 - `scrollRestorationId?: string | undefined`
 
+### SearchResultDetailHeader — `src/components/search-results/search-result-detail.tsx`
+
+Props:
+
+- `compact: ReactNode`
+- `expanded: ReactNode`
+
 ### SearchResultsLayout — `src/components/search-results/search-results-layout.tsx`
 
 Responsive master–detail geometry with optional outer advertising rails.
@@ -1413,6 +1471,14 @@ Props:
 - `children: ReactNode`
 - `label: string`
 - `scrollRestorationId?: string | undefined`
+
+### MainContentTarget — `src/components/shell-accessibility.tsx`
+
+### SkipToContentLink — `src/components/shell-accessibility.tsx`
+
+Props:
+
+- `label: string`
 
 ### SkillsSection — `src/components/skills-section.tsx`
 
@@ -1461,14 +1527,14 @@ Props:
 
 Props:
 
-- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `size?: "default" | "sm" | "lg" | "icon" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 - `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
 
 ### AlertDialogCancel — `src/components/ui/alert-dialog.tsx`
 
 Props:
 
-- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `size?: "default" | "sm" | "lg" | "icon" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 - `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
 
 ### AlertDialogContent — `src/components/ui/alert-dialog.tsx`
@@ -1529,7 +1595,7 @@ Variants — `orientation`: horizontal, vertical
 
 Props:
 
-- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `size?: "default" | "sm" | "lg" | "icon" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 - `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
 
 ### AttachmentActions — `src/components/ui/attachment.tsx`
@@ -1544,7 +1610,7 @@ Props:
 
 Props:
 
-- `variant?: "image" | "icon" | null | undefined`
+- `variant?: "icon" | "image" | null | undefined`
 
 Variants — `variant`: icon, image
 
@@ -1658,7 +1724,7 @@ Variants — `orientation`: horizontal, vertical
 
 Props:
 
-- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `size?: "default" | "sm" | "lg" | "icon" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 - `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
 
 Variants — `variant`: default, outline, secondary, ghost, destructive, link
@@ -1712,14 +1778,14 @@ Props:
 
 Props:
 
-- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `size?: "default" | "sm" | "lg" | "icon" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 - `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
 
 ### CarouselPrevious — `src/components/ui/carousel.tsx`
 
 Props:
 
-- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `size?: "default" | "sm" | "lg" | "icon" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 - `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
 
 ### ChartContainer — `src/components/ui/chart.tsx`
@@ -1789,6 +1855,7 @@ Props:
 
 Props:
 
+- `anchorRef?: Ref<HTMLDivElement> | undefined`
 - `showClear?: boolean | undefined`
 - `showTrigger?: boolean | undefined`
 
@@ -1889,7 +1956,6 @@ Props:
 
 Props:
 
-- `closeLabel?: string | undefined`
 - `showCloseButton?: boolean | undefined`
 
 ### DialogDescription — `src/components/ui/dialog.tsx`
@@ -1940,6 +2006,12 @@ Props:
 
 ### DropdownMenu — `src/components/ui/dropdown-menu.tsx`
 
+### DropdownMenuCheckboxItem — `src/components/ui/dropdown-menu.tsx`
+
+Props:
+
+- `inset?: boolean | undefined`
+
 ### DropdownMenuContent — `src/components/ui/dropdown-menu.tsx`
 
 ### DropdownMenuGroup — `src/components/ui/dropdown-menu.tsx`
@@ -1949,15 +2021,23 @@ Props:
 Props:
 
 - `inset?: boolean | undefined`
-- `variant?: "default" | "destructive" | null | undefined`
-
-Variants — `variant`: default, destructive
+- `variant?: "default" | "destructive" | undefined`
 
 ### DropdownMenuLabel — `src/components/ui/dropdown-menu.tsx`
+
+Props:
+
+- `inset?: boolean | undefined`
 
 ### DropdownMenuPortal — `src/components/ui/dropdown-menu.tsx`
 
 ### DropdownMenuRadioGroup — `src/components/ui/dropdown-menu.tsx`
+
+### DropdownMenuRadioItem — `src/components/ui/dropdown-menu.tsx`
+
+Props:
+
+- `inset?: boolean | undefined`
 
 ### DropdownMenuSeparator — `src/components/ui/dropdown-menu.tsx`
 
@@ -1969,7 +2049,9 @@ Variants — `variant`: default, destructive
 
 ### DropdownMenuSubTrigger — `src/components/ui/dropdown-menu.tsx`
 
-Variants — `variant`: default, destructive
+Props:
+
+- `inset?: boolean | undefined`
 
 ### DropdownMenuTrigger — `src/components/ui/dropdown-menu.tsx`
 
@@ -2098,7 +2180,7 @@ Variants — `size`: default, sm, xs
 
 Props:
 
-- `variant?: "default" | "image" | "icon" | null | undefined`
+- `variant?: "default" | "icon" | "image" | null | undefined`
 
 Variants — `variant`: default, icon, image
 
@@ -2141,7 +2223,7 @@ Props:
 Props:
 
 - `inset?: boolean | undefined`
-- `variant?: "default" | "destructive" | null | undefined`
+- `variant?: "default" | "destructive" | undefined`
 
 ### MenubarLabel — `src/components/ui/menubar.tsx`
 
@@ -2184,7 +2266,7 @@ Props:
 Props:
 
 - `label: string`
-- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `size?: "default" | "sm" | "lg" | "icon" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 - `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
 
 ### MessageScrollerContent — `src/components/ui/message-scroller.tsx`
@@ -2250,14 +2332,15 @@ Props:
 Props:
 
 - `isActive?: boolean | undefined`
-- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `size?: "default" | "sm" | "lg" | "icon" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 
 ### PaginationNext — `src/components/ui/pagination.tsx`
 
 Props:
 
 - `isActive?: boolean | undefined`
-- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `showText?: boolean | undefined`
+- `size?: "default" | "sm" | "lg" | "icon" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 - `text: string`
 
 ### PaginationPrevious — `src/components/ui/pagination.tsx`
@@ -2265,7 +2348,8 @@ Props:
 Props:
 
 - `isActive?: boolean | undefined`
-- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `showText?: boolean | undefined`
+- `size?: "default" | "sm" | "lg" | "icon" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 - `text: string`
 
 ### Popover — `src/components/ui/popover.tsx`
@@ -2342,7 +2426,6 @@ Props:
 
 Props:
 
-- `closeLabel?: string | undefined`
 - `showCloseButton?: boolean | undefined`
 - `side?: "top" | "right" | "bottom" | "left" | undefined`
 
@@ -2360,7 +2443,7 @@ Props:
 
 Props:
 
-- `collapsible?: "none" | "icon" | "offcanvas" | undefined`
+- `collapsible?: "icon" | "none" | "offcanvas" | undefined`
 - `side?: "right" | "left" | undefined`
 - `variant?: "sidebar" | "floating" | "inset" | undefined`
 
@@ -2440,7 +2523,7 @@ Props:
 
 Props:
 
-- `size?: "default" | "sm" | "lg" | "xs" | "icon" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
+- `size?: "default" | "sm" | "lg" | "icon" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 - `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
 
 ### Skeleton — `src/components/ui/skeleton.tsx`
@@ -2544,6 +2627,8 @@ Defaults:
 Invariants:
 
 - Page owns geometry; callers cannot pass className or style.
+- Page publishes `--header-space` — the single header rhythm every
+detail surface reads, whether it renders a PageHeader or a full-bleed band.
 
 ### PageContent — `src/components/layout/page.tsx`
 
@@ -2575,7 +2660,6 @@ Props:
 
 - `actions?: ReactNode`
 - `align?: "center" | "start" | undefined`
-- `breadcrumb?: ReactNode`
 - `children?: ReactNode`
 - `description?: ReactNode`
 - `eyebrow?: ReactNode`
@@ -2643,15 +2727,15 @@ Primitives: Card, Avatar, Badge, TaxonomyTags, initialsOf
 
 ### Breadcrumb — `docs/patterns/breadcrumb.md`
 
-The chevron-separated trail of ancestor links ending in the current page — the internal-linking + SEO spine back up the hierarchy.
+A single bottom-of-page trail that preserves hierarchy without competing with dense page headers.
 
-Primitives: Breadcrumb, PageBreadcrumb, PageHeaderWithBreadcrumb, AriaLink
+Primitives: Breadcrumb, ShellBreadcrumb, AriaLink
 
 ### Company section — `docs/patterns/company-section.md`
 
 A company's three public surfaces — profile, jobs, salaries — read as ONE entity behind a shared header with tab navigation.
 
-Primitives: Page, PageHeader, PageContent, PageSection, Avatar, Badge, Link, Breadcrumb
+Primitives: Page, PageHeader, PageContent, PageSection, Avatar, Badge, Link
 
 ### Detail page — `docs/patterns/detail-page.md`
 
@@ -2723,7 +2807,7 @@ Primitives: PageSection, Link, Button
 
 The public shell's context-aware search, centered discovery navigation, and account actions.
 
-Primitives: Header, HeaderSearch, LocationCombobox, Link, Input, Button
+Primitives: Header, HeaderSearch, LocationCombobox, Link, Input, Button, Box
 
 ### Stat tile — `docs/patterns/stat-tile.md`
 

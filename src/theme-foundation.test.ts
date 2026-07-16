@@ -33,6 +33,13 @@ describe('shadcn Rhea theme foundation', () => {
     expect(styles).toContain('@custom-variant dark');
   });
 
+  it('matches native controls to the active light or dark document theme', () => {
+    const theme = read('src/theme.css');
+
+    expect(theme).toMatch(/:root\s*{[^}]*color-scheme:\s*light/s);
+    expect(theme).toMatch(/\.dark\s*{[^}]*color-scheme:\s*dark/s);
+  });
+
   it('hands rich text to the owned shadcn Typeset preset', () => {
     const prose = read('src/components/prose.tsx');
     const typeset = read('src/typeset.css');

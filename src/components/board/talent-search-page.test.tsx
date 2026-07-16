@@ -84,18 +84,28 @@ function renderPage(onNextResults = vi.fn()) {
 }
 
 describe('TalentSearchPage — search results pattern', () => {
-  it('composes two-field search, canonical result anchors, ads, and named master-detail regions', async () => {
+  it('uses the same condensed results shell as Jobs and Companies', async () => {
     const { container } = renderPage();
 
     await screen.findByRole('main');
     expect(container.querySelectorAll('main')).toHaveLength(1);
     expect(container.querySelectorAll('h1')).toHaveLength(1);
-    expect(screen.getByRole('searchbox', { name: /candidate/i })).toHaveValue(
-      'engineer',
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Candidates',
     );
+    expect(screen.queryByRole('searchbox', { name: /candidate/i })).toBeNull();
     expect(screen.getByRole('textbox', { name: /skill/i })).toHaveValue(
       'Mathematics',
     );
+    expect(
+      container.querySelector("[data-slot='talent-search-form']"),
+    ).toBeNull();
+    expect(
+      container.querySelector("[data-slot='talent-filter-bar']"),
+    ).not.toBeNull();
+    expect(
+      container.querySelector("[data-slot='search-results-layout']"),
+    ).not.toBeNull();
 
     const results = screen.getByRole('region', { name: 'Talent results' });
     expect(
@@ -119,5 +129,49 @@ describe('TalentSearchPage — search results pattern', () => {
     );
     expect(onNextResults).toHaveBeenCalledTimes(1);
     expect(screen.queryByText('Load more')).toBeNull();
+  });
+
+  it('keeps a filtered no-match state inside the sponsored workspace and offers a primary reset', async () => {
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => (
+        <TalentSearchPage
+          candidates={[]}
+          q="no-such-candidate"
+          skill="Cobol"
+          onSearchSubmit={vi.fn()}
+          onSelectedTalentReplace={vi.fn()}
+          onSelectedTalentPush={vi.fn()}
+          detail={<p>Unused talent detail</p>}
+          startAd={{ label: 'Sponsored start', content: <p>Start creative</p> }}
+          endAd={{ label: 'Sponsored end', content: <p>End creative</p> }}
+        />
+      ),
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    const { container } = render(<RouterProvider router={router} />);
+
+    expect(
+      await screen.findByText('No candidates match these filters.'),
+    ).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Reset filters' })).toHaveAttribute(
+      'href',
+      '/talent',
+    );
+    expect(
+      container.querySelector("[data-slot='search-results-layout']"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('complementary', { name: 'Sponsored start' }),
+    ).toHaveTextContent('Start creative');
+    expect(
+      screen.getByRole('complementary', { name: 'Sponsored end' }),
+    ).toHaveTextContent('End creative');
+    expect(screen.queryByText('Unused talent detail')).toBeNull();
   });
 });

@@ -1,0 +1,116 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+  resolveHeaderRouteLabels,
+  resolveHeaderSearchState,
+} from './header-search';
+
+describe('resolveHeaderRouteLabels', () => {
+  it('keeps resolved taxonomy and place labels from a combined jobs route', () => {
+    expect(
+      resolveHeaderRouteLabels([
+        { loaderData: undefined },
+        {
+          loaderData: {
+            place: { displayName: 'Sydney, NSW' },
+            category: { displayName: 'Mechanical Engineering' },
+          },
+        },
+      ]),
+    ).toEqual({
+      location: 'Sydney, NSW',
+      query: 'Mechanical Engineering',
+    });
+  });
+
+  it('uses a resolved skill label when the route has no category', () => {
+    expect(
+      resolveHeaderRouteLabels([
+        { loaderData: { skill: { displayName: 'Robotics' } } },
+      ]),
+    ).toEqual({ query: 'Robotics', location: undefined });
+  });
+
+  it('keeps the resolved company market label for the shared Companies search', () => {
+    expect(
+      resolveHeaderRouteLabels([
+        {
+          loaderData: {
+            market: { displayName: 'Industrial Automation' },
+          },
+        },
+      ]),
+    ).toEqual({ query: 'Industrial Automation', location: undefined });
+  });
+});
+
+describe('resolveHeaderSearchState', () => {
+  it('prefills category and location routes from their resolved labels', () => {
+    const state = resolveHeaderSearchState(
+      '/jobs/locations/sydney-nsw/mechanical-engineering',
+      {},
+      'Sydney, NSW',
+      'Mechanical Engineering',
+    );
+
+    expect(state).toMatchObject({
+      query: 'Mechanical Engineering',
+      location: { slug: 'sydney-nsw', name: 'Sydney, NSW' },
+      term: {
+        type: 'category',
+        slug: 'mechanical-engineering',
+        name: 'Mechanical Engineering',
+      },
+    });
+  });
+
+  it('prefills a canonical skill route as a skill term', () => {
+    expect(
+      resolveHeaderSearchState(
+        '/jobs/skills/robotics',
+        {},
+        undefined,
+        'Robotics',
+      ),
+    ).toMatchObject({
+      query: 'Robotics',
+      term: { type: 'skill', slug: 'robotics', name: 'Robotics' },
+    });
+  });
+
+  it.each([
+    { search: { q: 'robotics' }, expected: 'robotics' },
+    { search: { query: 'robotics' }, expected: 'robotics' },
+  ])('prefills free-text job search from $search', ({ search, expected }) => {
+    expect(resolveHeaderSearchState('/jobs', search).query).toBe(expected);
+  });
+
+  it('lets an explicit free-text query replace the taxonomy label', () => {
+    const state = resolveHeaderSearchState(
+      '/jobs/mechanical-engineering',
+      { query: 'robotics' },
+      undefined,
+      'Mechanical Engineering',
+    );
+
+    expect(state.query).toBe('robotics');
+    expect(state.term).toBeNull();
+  });
+
+  it('prefills a company market route as the selected top-search suggestion', () => {
+    expect(
+      resolveHeaderSearchState(
+        '/companies/markets/industrial-automation',
+        {},
+        undefined,
+        'Industrial Automation',
+      ),
+    ).toMatchObject({
+      query: 'Industrial Automation',
+      market: {
+        slug: 'industrial-automation',
+        name: 'Industrial Automation',
+      },
+    });
+  });
+});

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import '@testing-library/jest-dom/vitest';
 import {
   cleanup,
   fireEvent,
@@ -10,9 +11,6 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { JobsFilterToolbar } from './jobs-filter-toolbar';
-
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 afterEach(cleanup);
 
@@ -27,7 +25,7 @@ const labels = {
   sheetDescription: 'Narrow the jobs shown in these results.',
   reset: 'Reset',
   apply: 'Apply filters',
-  cancel: 'Cancel',
+  close: 'Close',
 };
 
 const options = {
@@ -46,19 +44,6 @@ const options = {
 };
 
 describe('JobsFilterToolbar', () => {
-  it('uses the owned shadcn Field anatomy for filter labels and groups', () => {
-    const source = readFileSync(
-      join(import.meta.dirname, 'jobs-filter-toolbar.tsx'),
-      'utf8',
-    );
-
-    expect(source).toMatch(/from ["']@\/components\/ui\/field["']/);
-    expect(source).toContain('<Field');
-    expect(source).toContain('<FieldLabel');
-    expect(source).toContain('<FieldSet');
-    expect(source).toContain('<FieldLegend');
-  });
-
   it('commits a desktop workplace selection immediately', () => {
     const onApply = vi.fn();
 
@@ -150,7 +135,7 @@ describe('JobsFilterToolbar', () => {
     });
   });
 
-  it('discards All filters edits when the sheet is cancelled', () => {
+  it('exposes Reset and Apply actions and discards edits when closed', () => {
     const onApply = vi.fn();
 
     render(
@@ -165,8 +150,14 @@ describe('JobsFilterToolbar', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /All filters/ }));
     let sheet = screen.getByRole('dialog', { name: 'All filters' });
+    expect(within(sheet).queryByRole('button', { name: 'Cancel' })).toBeNull();
+    expect(within(sheet).getByRole('button', { name: 'Reset' })).toBeVisible();
+    expect(
+      within(sheet).getByRole('button', { name: 'Apply filters' }),
+    ).toBeVisible();
+
     fireEvent.click(within(sheet).getByRole('checkbox', { name: 'Junior' }));
-    fireEvent.click(within(sheet).getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
 
     expect(onApply).not.toHaveBeenCalled();
 

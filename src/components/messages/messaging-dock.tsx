@@ -5,6 +5,7 @@ import { ChevronDown, MessageSquare, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 export function MessagingDock({
   open,
@@ -41,7 +42,7 @@ export function MessagingDock({
             <Card
               role="complementary"
               aria-label={conversationLabel}
-              className="border-border h-[min(40rem,calc(100dvh-5rem))] w-[28rem] gap-0 rounded-t-xl rounded-b-none border border-b-0 py-0 shadow-xl ring-0"
+              className="border-border h-[min(40rem,calc(100dvh-5rem))] w-[min(28rem,calc(100vw-3rem))] gap-0 rounded-t-xl rounded-b-none border border-b-0 py-0 shadow-xl ring-0"
             >
               {conversationHasOwnHeader ? (
                 conversation
@@ -70,7 +71,10 @@ export function MessagingDock({
           <Card
             role="complementary"
             aria-label={messagesLabel}
-            className="border-border h-[min(40rem,calc(100dvh-5rem))] w-80 gap-0 rounded-t-xl rounded-b-none border border-b-0 py-0 shadow-xl ring-0"
+            className={cn(
+              'border-border h-[min(40rem,calc(100dvh-5rem))] w-80 gap-0 rounded-t-xl rounded-b-none border border-b-0 py-0 shadow-xl ring-0',
+              conversation && 'hidden lg:flex',
+            )}
           >
             <header className="border-border flex h-14 shrink-0 items-center gap-3 border-b px-4">
               <MessageSquare className="size-5" aria-hidden="true" />

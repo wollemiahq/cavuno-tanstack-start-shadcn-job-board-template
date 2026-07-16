@@ -1,7 +1,7 @@
 import { boardCopy } from '#/copy';
 
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
-import { createFileRoute, getRouteApi } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import {
@@ -9,10 +9,8 @@ import {
   getSeoBase,
   listCompanies,
   searchCompanies,
-  subscribeJobAlert,
 } from '../server/queries';
 
-import { AlertsBand } from '@/components/board/alerts-band';
 import { JsonLd } from '@/components/json-ld';
 import {
   companiesListingLoaderDeps,
@@ -23,10 +21,8 @@ import { ProgrammaticCompaniesView } from '@/routes/-programmatic-companies-view
 
 const COMPANIES_PAGE_SIZE = 24;
 
-const rootApi = getRouteApi('__root__');
-
 export const Route = createFileRoute('/companies/')({
-  staticData: { fullBleed: true, ownsMain: true },
+  staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseCompaniesSearch,
   loaderDeps: ({ search }) => companiesListingLoaderDeps(search),
   loader: async ({ deps }) => {
@@ -72,7 +68,6 @@ export const Route = createFileRoute('/companies/')({
 
 function CompaniesPage() {
   const { page, markets, seo } = Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
   const search = Route.useSearch();
   const copy = boardCopy(seo.language, seo.labels);
   const crumbs = copy.breadcrumbs;
@@ -89,30 +84,11 @@ function CompaniesPage() {
 
       <ProgrammaticCompaniesView
         heading={m.companiesIndex_metaTitle()}
-        description={m.companiesIndex_metaDescription({
-          boardName: seo.boardName,
-        })}
-        breadcrumb={{
-          ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
-          items: [{ name: crumbs.home, href: '/' }, { name: crumbs.companies }],
-        }}
         page={page}
         pageSize={COMPANIES_PAGE_SIZE}
         markets={markets}
         search={search}
       />
-
-      {board.features.jobAlerts ? (
-        <AlertsBand
-          language={board.language}
-          labels={board.labels}
-          source="companies_list"
-          onSubscribe={async (input) => {
-            const result = await subscribeJobAlert({ data: input });
-            return { status: result.status };
-          }}
-        />
-      ) : null}
     </>
   );
 }

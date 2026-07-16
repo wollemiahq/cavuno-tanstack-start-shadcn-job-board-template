@@ -4,12 +4,15 @@ import type {
   JobDetailFactVM,
   JobDetailVM,
 } from '@/board/job-detail-view-model';
+import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
 import { Prose } from '@/components/prose';
+import { SearchResultDetailHeader } from '@/components/search-results/search-results';
 import { Text } from '@/components/text';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { initialsOf } from '@/lib/initials';
+import { m } from '@/paraglide/messages';
 
 function DefinitionList({
   rows,
@@ -19,13 +22,15 @@ function DefinitionList({
   if (rows.length === 0) return null;
 
   return (
-    <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-[max-content_1fr]">
+    <dl className="grid max-w-full min-w-0 gap-x-6 gap-y-2 sm:grid-cols-[max-content_minmax(0,1fr)]">
       {rows.map((row) => (
         <div key={'key' in row ? row.key : row.label} className="contents">
           <dt className="text-muted-foreground text-sm font-medium">
             {row.label}
           </dt>
-          <dd className="text-foreground text-sm">{row.value}</dd>
+          <dd className="text-foreground min-w-0 text-sm [overflow-wrap:anywhere]">
+            {row.value}
+          </dd>
         </div>
       ))}
     </dl>
@@ -59,83 +64,180 @@ function TaxonomySection({
   );
 }
 
-export function JobSearchResultDetail({
+function JobDetailActions({
+  applySlot,
+  saveSlot,
+  loading,
+  compact = false,
+}: {
+  applySlot?: React.ReactNode;
+  saveSlot?: React.ReactNode;
+  loading: boolean;
+  compact?: boolean;
+}) {
+  if (loading) {
+    return (
+      <div
+        data-slot={
+          compact
+            ? 'job-detail-compact-actions-loading'
+            : 'job-detail-actions-loading'
+        }
+        className="flex w-fit max-w-full min-w-0 shrink-0 items-center gap-2"
+      >
+        <Skeleton
+          data-slot="job-detail-apply-action-skeleton"
+          className="h-9 w-20 shrink-0"
+        />
+        <Skeleton
+          data-slot="job-detail-save-action-skeleton"
+          className="h-9 w-20 shrink-0"
+        />
+      </div>
+    );
+  }
+
+  if (!applySlot && !saveSlot) return null;
+
+  return (
+    <div
+      data-slot={
+        compact ? 'job-detail-compact-actions' : 'job-detail-primary-actions'
+      }
+      className="flex w-fit max-w-full min-w-0 shrink-0 items-center gap-2"
+    >
+      {applySlot ? (
+        <div data-testid="job-detail-apply-action" className="shrink-0">
+          {applySlot}
+        </div>
+      ) : null}
+      {saveSlot ? (
+        <div data-testid="job-detail-save-action" className="shrink-0">
+          {saveSlot}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function JobDetailHeadingSkeleton() {
+  return (
+    <div
+      data-slot="job-detail-header-loading"
+      className="col-start-1 row-start-1 flex min-w-0 flex-col gap-4"
+    >
+      <div
+        data-slot="job-detail-company-row"
+        className="flex min-h-10 items-center gap-3"
+      >
+        <Skeleton className="size-10 rounded-full" />
+        <Skeleton className="h-5 w-36" />
+      </div>
+      <div data-slot="job-detail-title-row" className="flex flex-col">
+        <Skeleton className="h-7 w-3/4 max-w-full" />
+      </div>
+      <div
+        data-slot="job-detail-location-row"
+        className="flex min-h-5 items-center"
+      >
+        <Skeleton className="h-5 w-48 max-w-full" />
+      </div>
+      <div
+        data-slot="job-detail-badges"
+        className="flex min-h-5 flex-wrap gap-1.5"
+      >
+        <Skeleton className="h-5 w-28" />
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-5 w-24" />
+      </div>
+    </div>
+  );
+}
+
+function JobDetailBodySkeleton() {
+  return (
+    <div
+      data-slot="job-detail-loading-body"
+      className="max-w-full min-w-0 space-y-8 p-5 md:p-6"
+    >
+      <div data-slot="job-detail-body-prose-skeleton" className="space-y-3">
+        <Skeleton className="h-5 w-full" />
+        <Skeleton className="h-5 w-11/12" />
+        <Skeleton className="h-5 w-full" />
+        <Skeleton className="h-5 w-4/5" />
+      </div>
+      <div className="space-y-3">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="h-4 w-1/2" />
+      </div>
+      <div className="space-y-3">
+        <Skeleton className="h-5 w-24" />
+        <div className="flex flex-wrap gap-1.5">
+          <Skeleton className="h-5 w-20" />
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-5 w-16" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ExpandedJobDetailHeader({
   vm,
   applySlot,
   saveSlot,
-  loading = false,
+  loading,
 }: {
   vm: JobDetailVM;
   applySlot?: React.ReactNode;
   saveSlot?: React.ReactNode;
-  loading?: boolean;
+  loading: boolean;
 }) {
   return (
-    <article>
-      <div
-        data-slot="job-detail-sticky-header"
-        className="border-border bg-background/95 sticky top-0 z-10 flex min-h-16 items-center justify-end gap-3 border-b p-3 backdrop-blur"
-      >
-        <div className="min-w-0 flex-1">
-          <p className="text-foreground truncate text-sm font-semibold">
-            {vm.title}
-          </p>
-          {vm.companyName ? (
-            <p className="text-muted-foreground truncate text-xs">
-              {vm.companyName}
-            </p>
-          ) : null}
-        </div>
-        <div
-          data-slot="job-detail-primary-actions"
-          data-inert={loading ? 'true' : undefined}
-          inert={loading ? true : undefined}
-          className="ml-auto flex shrink-0 items-center gap-2 data-[inert=true]:pointer-events-none data-[inert=true]:opacity-50"
-        >
-          {applySlot}
-          {saveSlot}
-        </div>
-      </div>
-
+    <header
+      data-slot="job-detail-expanded-header"
+      className="grid max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-4 p-5 md:p-6"
+    >
       {loading ? (
-        <div
-          data-slot="job-detail-loading-body"
-          className="space-y-6 p-5 md:p-6"
-        >
-          <div className="flex items-center gap-3">
-            <Skeleton className="size-10 rounded-xl" />
-            <Skeleton className="h-5 w-36" />
-          </div>
-          <Skeleton className="h-9 w-3/4" />
-          <div className="flex gap-2">
-            <Skeleton className="h-5 w-20" />
-            <Skeleton className="h-5 w-24" />
-          </div>
-          <Skeleton className="h-5 w-40" />
-          <Skeleton className="h-52 w-full" />
-        </div>
+        <JobDetailHeadingSkeleton />
       ) : (
-        <div className="space-y-8 p-5 md:p-6">
-          <header className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Avatar size="lg" className="rounded-xl">
-                {vm.companyLogoUrl ? (
-                  <AvatarImage
-                    src={vm.companyLogoUrl}
-                    alt=""
-                    className="rounded-xl"
-                  />
-                ) : null}
-                <AvatarFallback className="rounded-xl">
-                  {initialsOf(vm.companyAvatarName)}
-                </AvatarFallback>
-              </Avatar>
-              {vm.companyName ? (
-                <p className="text-foreground font-medium">{vm.companyName}</p>
+        <div
+          data-slot="job-detail-heading"
+          className="col-start-1 row-start-1 flex min-w-0 flex-col gap-4"
+        >
+          <div
+            data-slot="job-detail-company-row"
+            className="flex min-h-10 min-w-0 items-center gap-3"
+          >
+            <Avatar size="lg">
+              {vm.companyLogoUrl ? (
+                <AvatarImage src={vm.companyLogoUrl} alt="" />
               ) : null}
-            </div>
+              <AvatarFallback>
+                {initialsOf(vm.companyAvatarName)}
+              </AvatarFallback>
+            </Avatar>
+            {vm.companyName ? (
+              <div className="flex min-w-0 items-center gap-1 truncate">
+                {vm.company ? (
+                  <a
+                    href={vm.company.href}
+                    className="text-foreground truncate font-medium outline-none hover:underline focus-visible:underline"
+                  >
+                    {vm.companyName}
+                  </a>
+                ) : (
+                  <span className="text-foreground truncate font-medium">
+                    {vm.companyName}
+                  </span>
+                )}
+              </div>
+            ) : null}
+          </div>
 
-            <Text as="h2" variant="heading2">
+          <div data-slot="job-detail-title-row" className="flex items-start">
+            <Text as="h2" variant="heading2" className="min-w-0">
               {vm.detailHref ? (
                 <a
                   href={vm.detailHref}
@@ -147,31 +249,213 @@ export function JobSearchResultDetail({
                 vm.title
               )}
             </Text>
+          </div>
 
-            <div className="flex flex-wrap gap-1.5">
-              <Badge variant="secondary">{vm.locationLabel}</Badge>
-              {vm.employmentTypeLabel ? (
-                <Badge variant="secondary">{vm.employmentTypeLabel}</Badge>
-              ) : null}
-              {vm.seniorityLabel ? (
-                <Badge variant="secondary">{vm.seniorityLabel}</Badge>
-              ) : null}
-            </div>
+          <p
+            data-slot="job-detail-location-row"
+            className="text-muted-foreground min-h-5 text-sm"
+          >
+            {vm.locationLabel ?? m.jobDetail_locationNotSpecifiedLabel()}
+            {vm.publishedLabel ? ` · ${vm.publishedLabel}` : null}
+          </p>
 
+          <div
+            data-slot="job-detail-badges"
+            className="flex min-h-5 flex-wrap gap-1.5"
+          >
             {vm.salaryLabel ? (
-              <p className="text-foreground text-lg font-semibold">
+              <Badge
+                variant="outline"
+                className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+              >
                 {vm.salaryLabel}
-              </p>
+              </Badge>
             ) : null}
-            {vm.publishedLabel ? (
-              <p className="text-muted-foreground text-sm">
-                {vm.publishedLabel}
-              </p>
+            {vm.workplaceLabel ? (
+              <Badge variant="secondary">{vm.workplaceLabel}</Badge>
             ) : null}
-          </header>
+            {vm.employmentTypeLabel ? (
+              <Badge variant="secondary">{vm.employmentTypeLabel}</Badge>
+            ) : null}
+            {vm.seniorityLabel ? (
+              <Badge variant="secondary">{vm.seniorityLabel}</Badge>
+            ) : null}
+          </div>
+        </div>
+      )}
 
+      <div className="col-start-1 row-start-2 w-full justify-self-stretch">
+        <JobDetailActions
+          applySlot={applySlot}
+          saveSlot={saveSlot}
+          loading={loading}
+        />
+      </div>
+    </header>
+  );
+}
+
+function ExpandedJobDetailSkeletonHeader() {
+  return (
+    <header
+      data-slot="job-detail-expanded-header"
+      className="grid max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-4 p-5 md:p-6"
+    >
+      <JobDetailHeadingSkeleton />
+      <div className="col-start-1 row-start-2 w-full justify-self-stretch">
+        <JobDetailActions loading />
+      </div>
+    </header>
+  );
+}
+
+function CompactJobDetailHeader({
+  vm,
+  applySlot,
+  saveSlot,
+  loading,
+}: {
+  vm: JobDetailVM;
+  applySlot?: React.ReactNode;
+  saveSlot?: React.ReactNode;
+  loading: boolean;
+}) {
+  return (
+    <header
+      data-slot="job-detail-compact-header"
+      className="border-border bg-background/95 grid min-h-16 max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b py-3 pl-5 backdrop-blur md:pl-6"
+    >
+      {loading ? (
+        <div className="min-w-0 space-y-1">
+          <Skeleton className="h-5 w-48 max-w-full" />
+          <Skeleton className="h-4 w-32 max-w-full" />
+        </div>
+      ) : (
+        <div className="min-w-0">
+          <p className="truncate text-base font-semibold">
+            {vm.detailHref ? (
+              <a
+                href={vm.detailHref}
+                className="outline-none hover:underline focus-visible:underline"
+              >
+                {vm.title}
+              </a>
+            ) : (
+              vm.title
+            )}
+          </p>
+          {vm.companyName ? (
+            <p className="text-muted-foreground truncate text-sm">
+              {vm.company ? (
+                <a
+                  href={vm.company.href}
+                  className="outline-none hover:underline focus-visible:underline"
+                >
+                  {vm.companyName}
+                </a>
+              ) : (
+                vm.companyName
+              )}
+            </p>
+          ) : null}
+        </div>
+      )}
+      <div className="justify-self-end">
+        <JobDetailActions
+          applySlot={applySlot}
+          saveSlot={saveSlot}
+          loading={loading}
+          compact
+        />
+      </div>
+    </header>
+  );
+}
+
+function CompactJobDetailSkeletonHeader() {
+  return (
+    <header
+      data-slot="job-detail-compact-header"
+      className="border-border bg-background/95 grid min-h-16 max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b py-3 pl-5 backdrop-blur md:pl-6"
+    >
+      <div className="min-w-0 space-y-1">
+        <Skeleton className="h-5 w-48 max-w-full" />
+        <Skeleton className="h-4 w-32 max-w-full" />
+      </div>
+      <div className="justify-self-end">
+        <JobDetailActions loading compact />
+      </div>
+    </header>
+  );
+}
+
+export function JobSearchResultDetailPending({
+  loadingLabel,
+}: {
+  loadingLabel: string;
+}) {
+  return (
+    <article aria-busy="true" className="min-h-[28rem] max-w-full min-w-0">
+      <span className="sr-only" role="status">
+        {loadingLabel}
+      </span>
+      <SearchResultDetailHeader
+        expanded={<ExpandedJobDetailSkeletonHeader />}
+        compact={<CompactJobDetailSkeletonHeader />}
+      />
+      <JobDetailBodySkeleton />
+    </article>
+  );
+}
+
+export function JobSearchResultDetail({
+  vm,
+  applySlot,
+  saveSlot,
+  loading = false,
+  loadingLabel = m.ui_loadingLabel(),
+}: {
+  vm: JobDetailVM;
+  applySlot?: React.ReactNode;
+  saveSlot?: React.ReactNode;
+  loading?: boolean;
+  loadingLabel?: string;
+}) {
+  return (
+    <article aria-busy={loading} className="max-w-full min-w-0">
+      {loading ? (
+        <span className="sr-only" role="status">
+          {loadingLabel}
+        </span>
+      ) : null}
+      <SearchResultDetailHeader
+        expanded={
+          <ExpandedJobDetailHeader
+            vm={vm}
+            applySlot={applySlot}
+            saveSlot={saveSlot}
+            loading={loading}
+          />
+        }
+        compact={
+          <CompactJobDetailHeader
+            vm={vm}
+            applySlot={applySlot}
+            saveSlot={saveSlot}
+            loading={loading}
+          />
+        }
+      />
+
+      {loading ? (
+        <JobDetailBodySkeleton />
+      ) : (
+        <div className="max-w-full min-w-0 space-y-8 p-5 md:p-6">
           {vm.descriptionHtml ? (
-            <Prose html={vm.descriptionHtml} />
+            <Prose
+              html={vm.descriptionHtml}
+              className="max-w-full min-w-0 [overflow-wrap:anywhere]"
+            />
           ) : (
             <p className="text-muted-foreground">{vm.noDescriptionText}</p>
           )}
@@ -192,6 +476,8 @@ export function JobSearchResultDetail({
               <DefinitionList rows={vm.customFields} />
             </section>
           ) : null}
+
+          {vm.company ? <JobAboutCompanyCard company={vm.company} /> : null}
         </div>
       )}
     </article>

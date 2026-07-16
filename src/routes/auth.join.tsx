@@ -10,6 +10,10 @@ import {
   redirect,
 } from '@tanstack/react-router';
 
+import {
+  candidateReturnTo,
+  candidateSignUpHref,
+} from '../lib/candidate-return-to';
 import { resolveSignupDestination } from '../lib/signup-destination';
 import { m } from '../paraglide/messages';
 import { getBoardContext, getSeoBase } from '../server/queries';
@@ -21,11 +25,27 @@ import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/auth/join')({
-  loader: async () => {
+  // The key is omitted rather than set to `undefined` when absent, so a
+  // `search={{}}` link stays a clean `/auth/join` with no trailing `?`.
+  validateSearch: (search: Record<string, unknown>): { returnTo?: string } =>
+    typeof search.returnTo === 'string' && search.returnTo
+      ? { returnTo: candidateReturnTo(search.returnTo) }
+      : {},
+  loaderDeps: ({ search }) => search,
+  loader: async ({ deps }) => {
     const board = await getBoardContext();
     const destination = resolveSignupDestination(board.features);
     if (destination === null) throw notFound();
-    if (destination !== '/auth/join') throw redirect({ href: destination });
+    if (destination !== '/auth/join') {
+      // Carry the caller's destination through the gate. Only the candidate
+      // form takes a returnTo; the employer form has no candidate context.
+      throw redirect({
+        href:
+          destination === '/auth/sign-up'
+            ? candidateSignUpHref(deps.returnTo)
+            : destination,
+      });
+    }
     const seo = await getSeoBase();
     return { boardName: board.name, seo };
   },
@@ -55,6 +75,7 @@ export const Route = createFileRoute('/auth/join')({
 
 function JoinPage() {
   const { boardName, seo } = Route.useLoaderData();
+  const { returnTo } = Route.useSearch();
   const [role, setRole] = useState<'candidate' | 'employer'>('candidate');
   const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
   const jsonLd = [
@@ -63,9 +84,6 @@ function JoinPage() {
       { label: m.breadcrumbJsonLd_joinLabel() },
     ]),
   ].filter((entry): entry is Record<string, unknown> => entry !== null);
-  const destination =
-    role === 'employer' ? '/auth/employer/sign-up' : '/auth/sign-up';
-
   return (
     <RheaAuthCard
       title={m.authJoin_heading({ boardName })}
@@ -81,12 +99,24 @@ function JoinPage() {
         employerTitle={m.authJoin_employerCardTitle()}
         employerBody={m.authJoin_employerCardBody()}
       />
-      <Link
-        to={destination}
-        className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
-      >
-        {m.authJoin_continueLabel()}
-      </Link>
+      {/* The candidate form carries the caller's destination through; the
+          employer form has no candidate returnTo to honour. */}
+      {role === 'employer' ? (
+        <Link
+          to="/auth/employer/sign-up"
+          className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
+        >
+          {m.authJoin_continueLabel()}
+        </Link>
+      ) : (
+        <Link
+          to="/auth/sign-up"
+          search={{ returnTo }}
+          className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
+        >
+          {m.authJoin_continueLabel()}
+        </Link>
+      )}
       <p className="text-muted-foreground text-center text-sm">
         {m.authJoin_alreadyHaveAccountText()}{' '}
         <Link

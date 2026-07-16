@@ -1,0 +1,720 @@
+{
+  "schemaVersion": 1,
+  "registry": "https://ui.shadcn.com/r/index.json",
+  "installCommand": "pnpm exec shadcn add --all --yes --overwrite",
+  "config": {
+    "style": "base-rhea",
+    "rsc": false,
+    "iconLibrary": "lucide",
+    "theme": "src/theme.css"
+  },
+  "installedFiles": {
+    "componentFiles": 60,
+    "supportFiles": [
+      "src/hooks/use-mobile.ts"
+    ],
+    "total": 61
+  },
+  "summary": {
+    "used": 36,
+    "available": 24
+  },
+  "registryCompositions": [
+    {
+      "name": "form",
+      "implementation": "Field + React Hook Form",
+      "note": "The CLI resolves dependencies but does not create form.tsx."
+    },
+    {
+      "name": "data-table",
+      "implementation": "Table + @tanstack/react-table",
+      "note": "Documentation composition, not a standalone registry file."
+    },
+    {
+      "name": "date-picker",
+      "implementation": "Calendar + Popover",
+      "note": "Documentation composition, not a standalone registry file."
+    },
+    {
+      "name": "toast",
+      "implementation": "Sonner",
+      "note": "The current component catalog directs new work to Sonner."
+    },
+    {
+      "name": "typography",
+      "implementation": "src/typeset.css",
+      "note": "Project-wide typeset layer rather than a React component file."
+    }
+  ],
+  "components": [
+    {
+      "name": "accordion",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "alert",
+      "status": "used",
+      "productionReferences": [
+        "src/components/board/company-search-detail-state.tsx",
+        "src/components/board/job-search-detail-state.tsx",
+        "src/components/board/job-search-page.tsx",
+        "src/components/board/talent-search-detail-state.tsx",
+        "src/components/candidate-action-feedback.tsx",
+        "src/components/messages/message-bubble.tsx",
+        "src/components/messages/thread-view.tsx",
+        "src/components/post-job-form.tsx",
+        "src/routes/-messages-runtime.tsx",
+        "src/routes/alerts.manage.tsx",
+        "src/routes/auth.verify-email-required.tsx",
+        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.companies.$slug.profile.tsx",
+        "src/routes/employers.dashboard.tsx",
+        "src/routes/employers.onboarding.$slug.tsx"
+      ]
+    },
+    {
+      "name": "alert-dialog",
+      "status": "used",
+      "productionReferences": [
+        "src/components/danger-zone.tsx"
+      ]
+    },
+    {
+      "name": "aspect-ratio",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "attachment",
+      "status": "used",
+      "productionReferences": [
+        "src/components/resume-upload.tsx"
+      ]
+    },
+    {
+      "name": "avatar",
+      "status": "used",
+      "productionReferences": [
+        "src/components/Header.tsx",
+        "src/components/account-shell.tsx",
+        "src/components/avatar-upload.tsx",
+        "src/components/board/blog-article-content.tsx",
+        "src/components/board/company-card.tsx",
+        "src/components/board/company-search-result-detail.tsx",
+        "src/components/board/company-search-result.tsx",
+        "src/components/board/company-section-header.tsx",
+        "src/components/board/home-landing.tsx",
+        "src/components/board/job-about-company-card.tsx",
+        "src/components/board/job-card.tsx",
+        "src/components/board/job-detail.tsx",
+        "src/components/board/job-search-result-detail.tsx",
+        "src/components/board/job-search-result.tsx",
+        "src/components/board/salary-sections.tsx",
+        "src/components/board/talent-profile-content.tsx",
+        "src/components/board/talent-search-result.tsx",
+        "src/components/messages/avatar.tsx",
+        "src/components/post-card.tsx",
+        "src/components/post-job-form.tsx",
+        "src/components/talent-card.tsx",
+        "src/routes/blog.author.$authorSlug.tsx"
+      ]
+    },
+    {
+      "name": "badge",
+      "status": "used",
+      "productionReferences": [
+        "src/components/alert-manager.tsx",
+        "src/components/board/blog-article-content.tsx",
+        "src/components/board/company-card.tsx",
+        "src/components/board/company-search-page.tsx",
+        "src/components/board/company-search-result-detail.tsx",
+        "src/components/board/company-search-result.tsx",
+        "src/components/board/company-section-header.tsx",
+        "src/components/board/home-landing.tsx",
+        "src/components/board/job-card.tsx",
+        "src/components/board/job-detail.tsx",
+        "src/components/board/job-search-page.tsx",
+        "src/components/board/job-search-result-detail.tsx",
+        "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/board/talent-profile-content.tsx",
+        "src/components/board/talent-search-result.tsx",
+        "src/components/board/taxonomy-tags.tsx",
+        "src/components/messages-nav-link.tsx",
+        "src/components/messages/messaging-dock.tsx",
+        "src/components/post-card.tsx",
+        "src/components/post-job-form.tsx",
+        "src/components/resume-upload.tsx",
+        "src/components/skills-section.tsx",
+        "src/components/talent-card.tsx",
+        "src/routes/account_.access.tsx",
+        "src/routes/alerts.manage.tsx",
+        "src/routes/blog.index.tsx",
+        "src/routes/companies.$companySlug.index.tsx",
+        "src/routes/embed.jobs.tsx",
+        "src/routes/employers.companies.$slug.index.tsx",
+        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.companies.$slug.profile.tsx",
+        "src/routes/employers.dashboard.tsx",
+        "src/routes/employers.index.tsx",
+        "src/routes/jobs.locations.index.tsx",
+        "src/routes/me.applications.tsx"
+      ]
+    },
+    {
+      "name": "breadcrumb",
+      "status": "used",
+      "productionReferences": [
+        "src/components/board/breadcrumb.tsx"
+      ]
+    },
+    {
+      "name": "bubble",
+      "status": "used",
+      "productionReferences": [
+        "src/components/messages/message-bubble.tsx"
+      ]
+    },
+    {
+      "name": "button",
+      "status": "used",
+      "productionReferences": [
+        "src/components/Header.tsx",
+        "src/components/alert-manager.tsx",
+        "src/components/app-not-found.tsx",
+        "src/components/avatar-upload.tsx",
+        "src/components/board/alert-signup-form.tsx",
+        "src/components/board/alerts-band.tsx",
+        "src/components/board/apply-button.tsx",
+        "src/components/board/blog-archive-page.tsx",
+        "src/components/board/blog-article-content.tsx",
+        "src/components/board/company-search-detail-state.tsx",
+        "src/components/board/company-search-page.tsx",
+        "src/components/board/company-search-result-detail.tsx",
+        "src/components/board/copy-link-button.tsx",
+        "src/components/board/home-landing.tsx",
+        "src/components/board/job-about-company-card.tsx",
+        "src/components/board/job-detail.tsx",
+        "src/components/board/job-search-detail-state.tsx",
+        "src/components/board/job-search-page.tsx",
+        "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/board/jobs-not-found.tsx",
+        "src/components/board/listing-page-header.tsx",
+        "src/components/board/salary-sections.tsx",
+        "src/components/board/save-job-button.tsx",
+        "src/components/board/talent-filter-controls.tsx",
+        "src/components/board/talent-search-detail-state.tsx",
+        "src/components/board/talent-search-page.tsx",
+        "src/components/board/talent-search-result-detail.tsx",
+        "src/components/candidate-route-state.tsx",
+        "src/components/danger-zone.tsx",
+        "src/components/education-section.tsx",
+        "src/components/experience-section.tsx",
+        "src/components/job-alert-floating-prompt.tsx",
+        "src/components/languages-section.tsx",
+        "src/components/messages-nav-link.tsx",
+        "src/components/messages/blocked-list.tsx",
+        "src/components/messages/inbox-list.tsx",
+        "src/components/messages/message-bubble.tsx",
+        "src/components/messages/messaging-dock.tsx",
+        "src/components/messages/thread-view.tsx",
+        "src/components/post-job-form.tsx",
+        "src/components/profile-form.tsx",
+        "src/components/resume-upload.tsx",
+        "src/components/rhea-auth-pilot.tsx",
+        "src/components/rich-text-editor.tsx",
+        "src/components/skills-section.tsx",
+        "src/routes/-messages-dock-controller.tsx",
+        "src/routes/account.tsx",
+        "src/routes/account_.access.tsx",
+        "src/routes/account_.saved.tsx",
+        "src/routes/alerts.manage.tsx",
+        "src/routes/auth.employer.sign-up.tsx",
+        "src/routes/auth.forgot-password.tsx",
+        "src/routes/auth.join.tsx",
+        "src/routes/auth.magic-link.tsx",
+        "src/routes/auth.oauth-complete.tsx",
+        "src/routes/auth.reset-password.tsx",
+        "src/routes/auth.sign-in.tsx",
+        "src/routes/auth.sign-up.tsx",
+        "src/routes/auth.verify-email-required.tsx",
+        "src/routes/auth.verify-email.tsx",
+        "src/routes/companies.$companySlug.index.tsx",
+        "src/routes/embed.jobs.tsx",
+        "src/routes/employers.companies.$slug.index.tsx",
+        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.companies.$slug.profile.tsx",
+        "src/routes/employers.dashboard.tsx",
+        "src/routes/employers.index.tsx",
+        "src/routes/employers.onboarding.$slug.tsx",
+        "src/routes/me.applications.tsx",
+        "src/routes/p.$handle.tsx",
+        "src/routes/password.tsx",
+        "src/routes/salaries.index.tsx",
+        "src/routes/settings.tsx",
+        "src/routes/talent.index.tsx"
+      ]
+    },
+    {
+      "name": "button-group",
+      "status": "used",
+      "productionReferences": [
+        "src/components/Header.tsx",
+        "src/components/board/alert-signup-form.tsx",
+        "src/components/board/talent-filter-controls.tsx",
+        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.onboarding.$slug.tsx"
+      ]
+    },
+    {
+      "name": "calendar",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "card",
+      "status": "used",
+      "productionReferences": [
+        "src/components/account-shell.tsx",
+        "src/components/alert-manager.tsx",
+        "src/components/board/alert-signup-form.tsx",
+        "src/components/board/company-card.tsx",
+        "src/components/board/company-search-result-detail.tsx",
+        "src/components/board/home-landing.tsx",
+        "src/components/board/job-about-company-card.tsx",
+        "src/components/board/job-card.tsx",
+        "src/components/board/job-detail.tsx",
+        "src/components/board/salary-sections.tsx",
+        "src/components/danger-zone.tsx",
+        "src/components/education-section.tsx",
+        "src/components/experience-section.tsx",
+        "src/components/messages/message-bubble.tsx",
+        "src/components/messages/messaging-dock.tsx",
+        "src/components/messages/messaging-layout.tsx",
+        "src/components/post-card.tsx",
+        "src/components/post-job-form.tsx",
+        "src/components/rhea-auth-pilot.tsx",
+        "src/components/search-results/search-result-card.tsx",
+        "src/components/talent-card.tsx",
+        "src/routes/account_.access.tsx",
+        "src/routes/companies.$companySlug.index.tsx",
+        "src/routes/employers.companies.$slug.index.tsx",
+        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.companies.$slug.profile.tsx",
+        "src/routes/employers.index.tsx",
+        "src/routes/employers.onboarding.$slug.tsx",
+        "src/routes/p.$handle.tsx"
+      ]
+    },
+    {
+      "name": "carousel",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "chart",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "checkbox",
+      "status": "used",
+      "productionReferences": [
+        "src/components/alert-manager.tsx",
+        "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/notification-settings.tsx",
+        "src/components/profile-form.tsx",
+        "src/components/resume-upload.tsx"
+      ]
+    },
+    {
+      "name": "collapsible",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "combobox",
+      "status": "used",
+      "productionReferences": [
+        "src/components/company-search-combobox.tsx",
+        "src/components/keyword-combobox.tsx",
+        "src/components/location-combobox.tsx",
+        "src/routes/employers.dashboard.tsx"
+      ]
+    },
+    {
+      "name": "command",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "context-menu",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "dialog",
+      "status": "used",
+      "productionReferences": [
+        "src/routes/employers.dashboard.tsx"
+      ]
+    },
+    {
+      "name": "direction",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "drawer",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "dropdown-menu",
+      "status": "used",
+      "productionReferences": [
+        "src/components/Header.tsx",
+        "src/components/messages/message-bubble.tsx",
+        "src/components/messages/thread-view.tsx"
+      ]
+    },
+    {
+      "name": "empty",
+      "status": "used",
+      "productionReferences": [
+        "src/components/alert-manager.tsx",
+        "src/components/app-not-found.tsx",
+        "src/components/board/blog-archive-page.tsx",
+        "src/components/board/blog-article-content.tsx",
+        "src/components/board/company-search-detail-state.tsx",
+        "src/components/board/company-search-page.tsx",
+        "src/components/board/home-landing.tsx",
+        "src/components/board/job-list.tsx",
+        "src/components/board/job-search-detail-state.tsx",
+        "src/components/board/job-search-page.tsx",
+        "src/components/board/jobs-not-found.tsx",
+        "src/components/board/salary-sections.tsx",
+        "src/components/board/talent-search-detail-state.tsx",
+        "src/components/board/talent-search-page.tsx",
+        "src/components/candidate-route-state.tsx",
+        "src/components/messages/blocked-list.tsx",
+        "src/components/messages/inbox-list.tsx",
+        "src/components/messages/thread-view.tsx",
+        "src/components/post-job-form.tsx",
+        "src/routes/-messages-dock-controller.tsx",
+        "src/routes/account_.saved.tsx",
+        "src/routes/alerts.manage.tsx",
+        "src/routes/auth.employer.sign-up.tsx",
+        "src/routes/auth.join.tsx",
+        "src/routes/companies.$companySlug.index.tsx",
+        "src/routes/companies.$companySlug.jobs.$jobSlug.tsx",
+        "src/routes/embed.jobs.tsx",
+        "src/routes/employers.companies.$slug.index.tsx",
+        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.companies.$slug.profile.tsx",
+        "src/routes/employers.index.tsx",
+        "src/routes/jobs.locations.index.tsx",
+        "src/routes/me.applications.tsx",
+        "src/routes/messages.tsx",
+        "src/routes/p.$handle.tsx",
+        "src/routes/talent.index.tsx"
+      ]
+    },
+    {
+      "name": "field",
+      "status": "used",
+      "productionReferences": [
+        "src/components/alert-manager.tsx",
+        "src/components/auth-form.tsx",
+        "src/components/board/alert-signup-form.tsx",
+        "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/board/talent-filter-controls.tsx",
+        "src/components/danger-zone.tsx",
+        "src/components/education-section.tsx",
+        "src/components/experience-section.tsx",
+        "src/components/messages/composer.tsx",
+        "src/components/post-job-form.tsx",
+        "src/components/profile-form.tsx",
+        "src/components/rhea-auth-pilot.tsx",
+        "src/routes/auth.verify-email-required.tsx",
+        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.companies.$slug.profile.tsx",
+        "src/routes/employers.dashboard.tsx",
+        "src/routes/employers.onboarding.$slug.tsx"
+      ]
+    },
+    {
+      "name": "hover-card",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "input",
+      "status": "used",
+      "productionReferences": [
+        "src/components/alert-manager.tsx",
+        "src/components/auth-form.tsx",
+        "src/components/board/alerts-band.tsx",
+        "src/components/danger-zone.tsx",
+        "src/components/education-section.tsx",
+        "src/components/experience-section.tsx",
+        "src/components/languages-section.tsx",
+        "src/components/post-job-form.tsx",
+        "src/components/profile-form.tsx",
+        "src/components/rhea-auth-pilot.tsx",
+        "src/components/rich-text-editor.tsx",
+        "src/components/skills-section.tsx",
+        "src/routes/employers.companies.$slug.index.tsx",
+        "src/routes/employers.companies.$slug.profile.tsx",
+        "src/routes/employers.dashboard.tsx",
+        "src/routes/employers.onboarding.$slug.tsx"
+      ]
+    },
+    {
+      "name": "input-group",
+      "status": "used",
+      "productionReferences": [
+        "src/components/Header.tsx",
+        "src/components/board/alert-signup-form.tsx",
+        "src/components/board/listing-page-header.tsx",
+        "src/components/board/talent-filter-controls.tsx",
+        "src/components/company-search-combobox.tsx",
+        "src/components/keyword-combobox.tsx",
+        "src/components/location-combobox.tsx",
+        "src/components/messages/composer.tsx",
+        "src/components/post-job-form.tsx",
+        "src/routes/-messages-runtime.tsx",
+        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.dashboard.tsx"
+      ]
+    },
+    {
+      "name": "input-otp",
+      "status": "used",
+      "productionReferences": [
+        "src/routes/auth.verify-email-required.tsx"
+      ]
+    },
+    {
+      "name": "item",
+      "status": "used",
+      "productionReferences": [
+        "src/components/alert-manager.tsx",
+        "src/components/education-section.tsx",
+        "src/components/experience-section.tsx",
+        "src/components/messages/blocked-list.tsx",
+        "src/components/messages/inbox-list.tsx",
+        "src/routes/alerts.manage.tsx",
+        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.dashboard.tsx",
+        "src/routes/me.applications.tsx"
+      ]
+    },
+    {
+      "name": "kbd",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "label",
+      "status": "used",
+      "productionReferences": [
+        "src/components/resume-upload.tsx",
+        "src/routes/employers.companies.$slug.index.tsx"
+      ]
+    },
+    {
+      "name": "marker",
+      "status": "used",
+      "productionReferences": [
+        "src/components/messages/thread-view.tsx"
+      ]
+    },
+    {
+      "name": "menubar",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "message",
+      "status": "used",
+      "productionReferences": [
+        "src/components/messages/message-bubble.tsx"
+      ]
+    },
+    {
+      "name": "message-scroller",
+      "status": "used",
+      "productionReferences": [
+        "src/components/messages/thread-view.tsx"
+      ]
+    },
+    {
+      "name": "native-select",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "navigation-menu",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "pagination",
+      "status": "used",
+      "productionReferences": [
+        "src/components/board/blog-archive-page.tsx",
+        "src/components/board/listing-pagination.tsx"
+      ]
+    },
+    {
+      "name": "popover",
+      "status": "used",
+      "productionReferences": [
+        "src/components/rich-text-editor.tsx"
+      ]
+    },
+    {
+      "name": "progress",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "radio-group",
+      "status": "used",
+      "productionReferences": [
+        "src/components/post-job-form.tsx",
+        "src/components/rhea-auth-pilot.tsx",
+        "src/routes/auth.sign-in.tsx"
+      ]
+    },
+    {
+      "name": "resizable",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "scroll-area",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "select",
+      "status": "used",
+      "productionReferences": [
+        "src/components/board/jobs-filter-controls.tsx",
+        "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/messages/message-bubble.tsx",
+        "src/components/post-job-form.tsx",
+        "src/components/profile-form.tsx",
+        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx"
+      ]
+    },
+    {
+      "name": "separator",
+      "status": "used",
+      "productionReferences": [
+        "src/components/account-shell.tsx",
+        "src/components/rich-text-editor.tsx"
+      ]
+    },
+    {
+      "name": "sheet",
+      "status": "used",
+      "productionReferences": [
+        "src/components/Header.tsx",
+        "src/components/board/jobs-filter-toolbar.tsx"
+      ]
+    },
+    {
+      "name": "sidebar",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "skeleton",
+      "status": "used",
+      "productionReferences": [
+        "src/components/board/company-search-detail-state.tsx",
+        "src/components/board/job-search-result-detail.tsx",
+        "src/components/board/public-content-pending.tsx",
+        "src/components/board/talent-search-result-detail.tsx",
+        "src/components/candidate-route-state.tsx",
+        "src/routes/-messages-dock-controller.tsx"
+      ]
+    },
+    {
+      "name": "slider",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "sonner",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "spinner",
+      "status": "used",
+      "productionReferences": [
+        "src/components/board/alert-signup-form.tsx",
+        "src/components/company-search-combobox.tsx",
+        "src/components/keyword-combobox.tsx",
+        "src/components/location-combobox.tsx",
+        "src/components/post-job-form.tsx",
+        "src/routes/employers.companies.$slug.index.tsx",
+        "src/routes/employers.dashboard.tsx",
+        "src/routes/employers.onboarding.$slug.tsx"
+      ]
+    },
+    {
+      "name": "switch",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "table",
+      "status": "used",
+      "productionReferences": [
+        "src/components/board/salary-sections.tsx",
+        "src/routes/employers.companies.$slug.index.tsx"
+      ]
+    },
+    {
+      "name": "tabs",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "textarea",
+      "status": "used",
+      "productionReferences": [
+        "src/components/education-section.tsx",
+        "src/components/experience-section.tsx",
+        "src/components/messages/message-bubble.tsx",
+        "src/components/profile-form.tsx",
+        "src/routes/employers.companies.$slug.index.tsx",
+        "src/routes/employers.companies.$slug.profile.tsx"
+      ]
+    },
+    {
+      "name": "toggle",
+      "status": "used",
+      "productionReferences": [
+        "src/components/rich-text-editor.tsx"
+      ]
+    },
+    {
+      "name": "toggle-group",
+      "status": "available",
+      "productionReferences": []
+    },
+    {
+      "name": "tooltip",
+      "status": "used",
+      "productionReferences": [
+        "src/components/rich-text-editor.tsx"
+      ]
+    }
+  ]
+}

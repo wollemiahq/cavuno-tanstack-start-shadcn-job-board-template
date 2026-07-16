@@ -1,7 +1,7 @@
 import type { ElementType } from 'react';
 
 import type { TalentProfileVM } from '@/board/talent-view-model';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { initialsOf } from '@/lib/initials';
 
@@ -23,59 +23,74 @@ function ProfileLink({
   );
 }
 
+export function TalentProfileIdentity({
+  vm,
+  headingAs = 'h2',
+  showName = true,
+}: {
+  vm: TalentProfileVM;
+  headingAs?: 'h1' | 'h2';
+  showName?: boolean;
+}) {
+  const Heading = headingAs as ElementType;
+
+  return (
+    <header data-slot="talent-profile-identity" className="space-y-4">
+      <div className="flex items-center gap-3">
+        <Avatar size="lg">
+          {vm.avatarUrl ? (
+            <AvatarImage src={vm.avatarUrl} alt={vm.avatarName} />
+          ) : null}
+          <AvatarFallback>{initialsOf(vm.avatarName)}</AvatarFallback>
+        </Avatar>
+        <div className="min-w-0">
+          {showName ? (
+            <Heading className="text-foreground text-2xl font-semibold tracking-tight">
+              {vm.displayName}
+            </Heading>
+          ) : null}
+          {vm.headline ? (
+            <p className="text-muted-foreground mt-1 text-sm">{vm.headline}</p>
+          ) : null}
+        </div>
+      </div>
+
+      {vm.location || vm.jobSearchStatusLabel ? (
+        <div className="flex flex-wrap gap-1.5">
+          {vm.location ? <Badge variant="outline">{vm.location}</Badge> : null}
+          {vm.jobSearchStatusLabel ? (
+            <Badge variant="secondary">{vm.jobSearchStatusLabel}</Badge>
+          ) : null}
+        </div>
+      ) : null}
+    </header>
+  );
+}
+
 export function TalentProfileContent({
   vm,
   headingAs = 'h2',
   interactive = true,
   showName = true,
+  showHeader = true,
 }: {
   vm: TalentProfileVM;
   headingAs?: 'h1' | 'h2';
   interactive?: boolean;
   showName?: boolean;
+  showHeader?: boolean;
 }) {
-  const Heading = headingAs as ElementType;
   const SectionHeading = (headingAs === 'h1' ? 'h2' : 'h3') as ElementType;
 
   return (
     <div className="space-y-8">
-      <header className="space-y-4">
-        <div className="flex items-center gap-3">
-          <Avatar size="lg">
-            {vm.avatarUrl ? (
-              <img
-                src={vm.avatarUrl}
-                alt={vm.avatarName}
-                className="aspect-square size-full rounded-full object-cover"
-              />
-            ) : null}
-            <AvatarFallback>{initialsOf(vm.avatarName)}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            {showName ? (
-              <Heading className="text-foreground text-2xl font-semibold tracking-tight">
-                {vm.displayName}
-              </Heading>
-            ) : null}
-            {vm.headline ? (
-              <p className="text-muted-foreground mt-1 text-sm">
-                {vm.headline}
-              </p>
-            ) : null}
-          </div>
-        </div>
-
-        {vm.location || vm.jobSearchStatusLabel ? (
-          <div className="flex flex-wrap gap-1.5">
-            {vm.location ? (
-              <Badge variant="outline">{vm.location}</Badge>
-            ) : null}
-            {vm.jobSearchStatusLabel ? (
-              <Badge variant="secondary">{vm.jobSearchStatusLabel}</Badge>
-            ) : null}
-          </div>
-        ) : null}
-      </header>
+      {showHeader ? (
+        <TalentProfileIdentity
+          vm={vm}
+          headingAs={headingAs}
+          showName={showName}
+        />
+      ) : null}
 
       {vm.bio ? (
         <p className="text-foreground text-sm leading-6 whitespace-pre-line">

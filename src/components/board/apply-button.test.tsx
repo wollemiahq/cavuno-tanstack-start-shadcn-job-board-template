@@ -44,7 +44,8 @@ describe('ApplyButton apply-click analytics', () => {
       />,
     );
 
-    const href = screen.getByRole('link').getAttribute('href');
+    const link = screen.getByRole('link', { name: 'Apply' });
+    const href = link.getAttribute('href');
     expect(href).not.toBeNull();
     const signInUrl = new URL(href!, 'https://board.example');
     expect(signInUrl.pathname).toBe('/auth/sign-in');
@@ -63,7 +64,8 @@ describe('ApplyButton apply-click analytics', () => {
       />,
     );
 
-    const href = screen.getByRole('link').getAttribute('href');
+    const link = screen.getByRole('link', { name: 'Apply' });
+    const href = link.getAttribute('href');
     expect(href).not.toBeNull();
     const verifyUrl = new URL(href!, 'https://board.example');
     expect(verifyUrl.pathname).toBe('/auth/verify-email-required');
@@ -97,7 +99,8 @@ describe('ApplyButton apply-click analytics', () => {
         viewer={{ emailVerified: true }}
       />,
     );
-    fireEvent.click(screen.getByRole('button'));
+    const apply = screen.getByRole('button');
+    fireEvent.click(apply);
     expect(trackEvent).toHaveBeenCalledExactlyOnceWith('job_apply_click', {
       job_id: 'j57abc',
       company_slug: 'acme',

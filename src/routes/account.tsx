@@ -11,7 +11,6 @@ import {
   isRedirect,
   Link,
   redirect,
-  useRouter,
 } from '@tanstack/react-router';
 
 import { AvatarUpload } from '../components/avatar-upload';
@@ -24,122 +23,25 @@ import { ResumeUpload } from '../components/resume-upload';
 import { SkillsSection } from '../components/skills-section';
 import { m } from '../paraglide/messages';
 import { getAccount } from '../server/account';
-import { signOut } from '../server/auth';
-import { useCandidateShellContext } from './-candidate-shell-context';
 
 import {
   CandidateRouteErrorPage,
   CandidateRoutePendingPage,
 } from '@/components/candidate-route-state';
 import { CandidateShell } from '@/components/candidate-shell';
-import { Badge } from '@/components/ui/badge';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { buttonVariants } from '@/components/ui/button';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 
 function Divider() {
   return <div className="bg-border h-px w-full" />;
 }
 
-export const Route = createFileRoute('/account')({
-  staticData: { ownsMain: true },
-  pendingComponent: CandidateRoutePendingPage,
-  errorComponent: CandidateRouteErrorPage,
-  loader: async () => {
-    try {
-      return await getAccount();
-    } catch (error) {
-      // gatedRead's `/password` wall redirect (or any framework redirect) must
-      // pass through — only a genuine load failure falls back to sign-in.
-      if (isRedirect(error)) throw error;
-      const authFailure = candidateLoaderError(error);
-      if (authFailure === 'email-unverified') {
-        throw redirect({
-          to: '/auth/verify-email-required',
-          search: { returnTo: '/account' },
-        });
-      }
-      if (authFailure === 'unauthenticated') {
-        throw redirect({
-          to: '/auth/sign-in',
-          search: { returnTo: '/account' },
-        });
-      }
-      throw error;
-    }
-  },
-  head: () => ({ meta: [{ title: m.accountHome_title() }] }),
-  component: AccountPage,
-});
-
-/** Simple presence-based completeness for the rail meter. */
-function profileStrength(data: {
-  displayName: string | null;
-  avatarUrl: string | null;
-  hasResume: boolean;
-  experienceCount: number;
-  educationCount: number;
-  skillsCount: number;
-}) {
-  const checks = [
-    Boolean(data.displayName),
-    Boolean(data.avatarUrl),
-    data.hasResume,
-    data.experienceCount > 0,
-    data.educationCount > 0,
-    data.skillsCount > 0,
-  ];
-  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
-}
-
-function StrengthMeter({ percent }: { percent: number }) {
-  return (
-    <div className="mt-6 hidden md:block">
-      <div className="border-border border-t pt-5">
-        <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-          {m.accountShell_profileStrengthLabel()}
-        </p>
-        <p className="text-foreground mt-1 text-sm font-medium">{percent}%</p>
-        <Progress
-          value={percent}
-          aria-label={m.accountShell_profileStrengthLabel()}
-          className="mt-2 gap-0 [&_[data-slot=progress-track]]:h-1.5"
-        />
-      </div>
-    </div>
-  );
-}
-
 function AccountPage() {
   const { me, profile, experience, education, skills, languages, resume } =
     Route.useLoaderData();
-  const candidateShell = useCandidateShellContext();
-  const router = useRouter();
-  const percent = profileStrength({
-    displayName: profile.displayName,
-    avatarUrl: profile.avatarUrl,
-    hasResume: Boolean(resume),
-    experienceCount: experience.data.length,
-    educationCount: education.data.length,
-    skillsCount: skills.data.length,
-  });
 
   return (
-    <CandidateShell
-      active="profile"
-      {...candidateShell}
-      identity={{
-        avatarUrl: profile.avatarUrl,
-        title: profile.displayName ?? me.email,
-        subtitle: me.email,
-        badge: me.emailVerified ? (
-          <Badge variant="secondary">{m.accountHome_verifiedBadge()}</Badge>
-        ) : (
-          <Badge variant="outline">{m.accountHome_unverifiedBadge()}</Badge>
-        ),
-      }}
-      rail={<StrengthMeter percent={percent} />}
-    >
+    <CandidateShell>
       <div className="space-y-8">
         <header className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -158,16 +60,6 @@ function AccountPage() {
             >
               {m.accountHome_forEmployersLink()}
             </Link>
-            <Button
-              variant="outline"
-              onClick={async () => {
-                await signOut();
-                await router.invalidate();
-                await router.navigate({ to: '/' });
-              }}
-            >
-              {m.accountHome_signOutLabel()}
-            </Button>
           </div>
         </header>
 
@@ -206,3 +98,34 @@ function AccountPage() {
     </CandidateShell>
   );
 }
+
+export const Route = createFileRoute('/account')({
+  staticData: { ownsMain: true },
+  pendingComponent: CandidateRoutePendingPage,
+  errorComponent: CandidateRouteErrorPage,
+  loader: async () => {
+    try {
+      return await getAccount();
+    } catch (error) {
+      // gatedRead's `/password` wall redirect (or any framework redirect) must
+      // pass through — only a genuine load failure falls back to sign-in.
+      if (isRedirect(error)) throw error;
+      const authFailure = candidateLoaderError(error);
+      if (authFailure === 'email-unverified') {
+        throw redirect({
+          to: '/auth/verify-email-required',
+          search: { returnTo: '/account' },
+        });
+      }
+      if (authFailure === 'unauthenticated') {
+        throw redirect({
+          to: '/auth/sign-in',
+          search: { returnTo: '/account' },
+        });
+      }
+      throw error;
+    }
+  },
+  head: () => ({ meta: [{ title: m.accountHome_title() }] }),
+  component: AccountPage,
+});

@@ -21,6 +21,22 @@ export function pageSearchValue(page: number): number | undefined {
   return page > 1 ? page : undefined;
 }
 
+/** Build a real pagination URL while preserving the listing's active filters. */
+export function listingPageHref(
+  currentHref: string,
+  page: number,
+  transientParams: string[] = [],
+): string {
+  const url = new URL(currentHref, 'https://board.local');
+
+  for (const param of transientParams) url.searchParams.delete(param);
+
+  if (page > 1) url.searchParams.set('page', String(page));
+  else url.searchParams.delete('page');
+
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
 /** Zero-based API offset for a 1-based page. */
 export function pageToOffset(page: number, pageSize: number): number {
   return (page - 1) * pageSize;

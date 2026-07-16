@@ -13,6 +13,7 @@ import { boardCopy } from '#/copy';
  */
 import {
   cardLocationLabel,
+  fieldLabel,
   formatPublishedRelativeDate,
   formatSalaryRange,
   type BoardLabelOverrides,
@@ -24,6 +25,7 @@ import {
 } from '@cavuno/board/paths';
 
 import { deriveSummary } from '@/lib/derive-summary';
+import { m } from '@/paraglide/messages';
 import type { PublicJobCard } from '@cavuno/board';
 
 export interface JobCardTagVM {
@@ -49,6 +51,10 @@ export interface JobCardVM {
   sector: string | null;
   /** "Salary · Location", omitting whichever half is missing. */
   compLine: string | null;
+  /** Salary is independent so dense search cards do not hide location. */
+  salaryLabel: string | null;
+  /** Physical/applicant geography followed by the workplace type. */
+  locationLabel: string;
   /** Honest one-line summary from the real description, or `null`. */
   summary: string | null;
   isFeatured: boolean;
@@ -65,17 +71,26 @@ export function toJobCardVM(
   labels?: BoardLabelOverrides,
 ): JobCardVM {
   const company = job.company;
+  const salaryLabel = formatSalaryRange(
+    language,
+    job.salaryMin,
+    job.salaryMax,
+    job.salaryTimeframe,
+    job.salaryCurrency,
+  );
+  const workplaceLabel = job.remoteOption
+    ? fieldLabel(language, job.remoteOption, labels)
+    : null;
+  const placeLabel =
+    job.remoteOption === 'remote' ? job.remoteLocationLabel : job.locationLabel;
+  const locationLabel = [
+    placeLabel || m.jobDetail_locationNotSpecifiedLabel(),
+    workplaceLabel ? `(${workplaceLabel})` : null,
+  ]
+    .filter(Boolean)
+    .join(' ');
   const compLine =
-    [
-      formatSalaryRange(
-        language,
-        job.salaryMin,
-        job.salaryMax,
-        job.salaryTimeframe,
-        job.salaryCurrency,
-      ),
-      cardLocationLabel(language, job),
-    ]
+    [salaryLabel, cardLocationLabel(language, job)]
       .filter(Boolean)
       .join(' · ') || null;
 
@@ -92,6 +107,8 @@ export function toJobCardVM(
     companyAvatarName: company?.name ?? job.title,
     sector: job.categories[0]?.name ?? null,
     compLine,
+    salaryLabel,
+    locationLabel,
     summary: deriveSummary(job.description),
     isFeatured: job.isFeatured,
     featuredLabel: boardCopy(language, labels).jobCard.featuredLabel,

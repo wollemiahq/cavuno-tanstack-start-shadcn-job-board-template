@@ -21,6 +21,7 @@ import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { getServerEnv } from '../lib/env';
 import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
+import { readTalentDirectory } from './talent-directory-read';
 
 import type { BoardContextFooter } from '../components/Footer';
 import type {
@@ -39,8 +40,10 @@ import type {
   JobsSearchBody,
   LegalPageType,
   PlacesListQuery,
+  TaxonomyListQuery,
   PlansListQuery,
   PublicBlogAdjacentPosts,
+  SuggestionsListQuery,
   TalentDirectoryQuery,
   TaxonomyResolution,
 } from '@cavuno/board';
@@ -201,6 +204,29 @@ export const searchPlaces = createServerFn({ method: 'GET' })
     ),
   );
 
+/**
+ * The board's job categories — name + slug only; the endpoint carries no job
+ * counts, so callers link out rather than quantify.
+ */
+export const listCategories = createServerFn({ method: 'GET' })
+  .validator((input: TaxonomyListQuery) => input)
+  .middleware([boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, (h) =>
+      getBoard().taxonomy.categories.list(data, { headers: h }),
+    ),
+  );
+
+/** Category/skill autocomplete for the shared Jobs keyword field. */
+export const searchTaxonomySuggestions = createServerFn({ method: 'GET' })
+  .validator((input: SuggestionsListQuery) => input)
+  .middleware([boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, (h) =>
+      getBoard().taxonomy.suggestions.list(data, { headers: h }),
+    ),
+  );
+
 // ── Job alerts (anonymous, double opt-in — public endpoints, no grant) ───────
 
 export const subscribeJobAlert = createServerFn({ method: 'POST' })
@@ -293,7 +319,9 @@ export const listTalent = createServerFn({ method: 'GET' })
   .validator((input: TalentDirectoryQuery) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
-    gatedRead(context, (h) => getBoard().talent.list(data, { headers: h })),
+    readTalentDirectory(() =>
+      gatedRead(context, (h) => getBoard().talent.list(data, { headers: h })),
+    ),
   );
 
 export const getTalentProfile = createServerFn({ method: 'GET' })
@@ -321,13 +349,15 @@ export const listSalesLedPlans = createServerFn({ method: 'GET' })
   );
 
 export const listCompanyJobs = createServerFn({ method: 'GET' })
-  .validator((input: { companySlug: string; cursor?: string }) => input)
+  .validator(
+    (input: { companySlug: string; cursor?: string; limit?: number }) => input,
+  )
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, (h) =>
       getBoard().companies.listJobs(
         data.companySlug,
-        { cursor: data.cursor },
+        { cursor: data.cursor, limit: data.limit },
         { headers: h },
       ),
     ),

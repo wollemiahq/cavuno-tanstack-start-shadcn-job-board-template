@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { createFileRoute, useRouter } from '@tanstack/react-router';
+import { ArrowRight } from 'lucide-react';
 
 import {
   AuthCard,
@@ -10,8 +11,8 @@ import {
 } from '../components/auth-form';
 import {
   candidateForgotPasswordHref,
+  candidateJoinHref,
   candidateReturnTo,
-  candidateSignUpHref,
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import {
@@ -20,6 +21,7 @@ import {
   signIn,
 } from '../server/auth';
 
+import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
@@ -156,17 +158,19 @@ function SignInPage() {
             name="password"
             type="password"
             autoComplete="current-password"
+            labelAction={
+              <a
+                className={buttonVariants({
+                  variant: 'link',
+                  size: 'sm',
+                  className: 'h-auto p-0',
+                })}
+                href={candidateForgotPasswordHref(returnTo)}
+              >
+                {m.authSignIn_forgotPasswordLink()}
+              </a>
+            }
           />
-        ) : null}
-        {mode === 'password' ? (
-          <div className="flex justify-end">
-            <a
-              className={buttonVariants({ variant: 'link', size: 'sm' })}
-              href={candidateForgotPasswordHref(returnTo)}
-            >
-              {m.authSignIn_forgotPasswordLink()}
-            </a>
-          </div>
         ) : null}
         <FormError message={error} />
         <Button type="submit" size="lg" className="w-full" disabled={pending}>
@@ -191,6 +195,7 @@ function SignInPage() {
           disabled={pending}
           onClick={() => void startOAuth('google')}
         >
+          <GoogleIcon />
           {m.authSignIn_continueWithGoogleLabel()}
         </Button>
         <Button
@@ -201,16 +206,21 @@ function SignInPage() {
           disabled={pending}
           onClick={() => void startOAuth('linkedin')}
         >
+          <LinkedInIcon className="size-4 text-[#0A66C2]" />
           {m.authSignIn_continueWithLinkedinLabel()}
         </Button>
       </div>
 
+      {/* Mirrors the sign-up card's prompt+link footer, so the two entry
+          points read as one pair rather than two conventions. */}
       <p className="text-muted-foreground text-center text-sm">
+        {m.authSignIn_noAccountText()}{' '}
         <a
           className={buttonVariants({ variant: 'link', size: 'sm' })}
-          href={candidateSignUpHref(returnTo)}
+          href={candidateJoinHref(returnTo)}
         >
-          {m.authSignIn_createAccountLink()}
+          {m.authSignIn_getStartedLink()}
+          <ArrowRight data-icon="inline-end" />
         </a>
       </p>
     </AuthCard>

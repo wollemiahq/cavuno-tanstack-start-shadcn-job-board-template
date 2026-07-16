@@ -37,16 +37,16 @@ export function SearchResultsLayout({
       data-start-ad={hasStartAd}
       data-end-ad={hasEndAd}
       className={cn(
-        'mx-auto grid w-full max-w-[var(--layout-width)] grid-cols-1 md:h-full md:min-h-0',
+        'mx-auto grid w-full max-w-full min-w-0 grid-cols-1 md:h-full md:min-h-0 md:max-w-[calc(var(--layout-width)+4rem)] md:px-8',
         hasStartAd &&
           !hasEndAd &&
-          'min-[1600px]:max-w-[92rem] min-[1600px]:grid-cols-[10rem_minmax(0,80rem)] min-[1600px]:gap-8',
+          'min-[1600px]:max-w-[92rem] min-[1600px]:grid-cols-[10rem_minmax(0,80rem)] min-[1600px]:gap-8 min-[1600px]:px-0',
         !hasStartAd &&
           hasEndAd &&
-          'min-[1600px]:max-w-[92rem] min-[1600px]:grid-cols-[minmax(0,80rem)_10rem] min-[1600px]:gap-8',
+          'min-[1600px]:max-w-[92rem] min-[1600px]:grid-cols-[minmax(0,80rem)_10rem] min-[1600px]:gap-8 min-[1600px]:px-0',
         hasStartAd &&
           hasEndAd &&
-          'min-[1600px]:max-w-[104rem] min-[1600px]:grid-cols-[10rem_minmax(0,80rem)_10rem] min-[1600px]:gap-8',
+          'min-[1600px]:max-w-[104rem] min-[1600px]:grid-cols-[10rem_minmax(0,80rem)_10rem] min-[1600px]:gap-8 min-[1600px]:px-0',
         className,
       )}
     >
@@ -54,7 +54,7 @@ export function SearchResultsLayout({
       <div
         data-slot="search-results-core"
         className={cn(
-          'grid min-w-0 grid-cols-1 md:h-full md:min-h-0 md:grid-cols-[20rem_minmax(0,1fr)] xl:grid-cols-[24rem_minmax(0,1fr)]',
+          'grid w-full max-w-full min-w-0 grid-cols-1 md:h-full md:min-h-0 md:grid-cols-[20rem_minmax(0,1fr)] xl:grid-cols-[24rem_minmax(0,1fr)]',
           hasStartAd && 'min-[1600px]:col-start-2',
         )}
       >

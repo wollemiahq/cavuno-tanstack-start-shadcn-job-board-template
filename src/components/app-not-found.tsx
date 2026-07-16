@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import {
   Empty,
   EmptyContent,
@@ -22,9 +22,9 @@ export function NotFound() {
         <EmptyDescription>{m.notFound_body()}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button render={<Link to="/" />} size="lg">
+        <Link to="/" className={buttonVariants({ size: 'lg' })}>
           {m.notFound_browseJobsLink()}
-        </Button>
+        </Link>
       </EmptyContent>
     </Empty>
   );

@@ -69,6 +69,8 @@ const job: JobCardVM = {
   companyAvatarName: 'TechNova Labs',
   sector: null,
   compLine: null,
+  salaryLabel: null,
+  locationLabel: 'Worldwide (Remote)',
   summary: null,
   isFeatured: false,
   featuredLabel: 'Featured',
@@ -88,6 +90,8 @@ const productDesignerJob: JobCardVM = {
   companyAvatarName: 'TechNova Labs',
   sector: null,
   compLine: null,
+  salaryLabel: null,
+  locationLabel: 'Sydney, NSW (Hybrid)',
   summary:
     'Design the dashboards our customers live in. You will run discovery with design partners and ship high-fidelity Figma specs alongside a design system.',
   isFeatured: false,
@@ -115,6 +119,8 @@ const machineLearningJob: JobCardVM = {
   companyAvatarName: 'TechNova Labs',
   sector: null,
   compLine: null,
+  salaryLabel: null,
+  locationLabel: 'Worldwide (Remote)',
   summary:
     'Build anomaly-detection models over build telemetry. Production Python, feature pipelines, and model monitoring — not research.',
   isFeatured: false,
@@ -237,7 +243,7 @@ describe('HomeLanding — honest stat pill', () => {
     cleanup();
     renderLanding({ ...baseProps, countLabel: undefined });
     // No count from the loader ⇒ no stat pill (never a bare "0").
-    await screen.findByRole('link', { name: 'View all jobs' });
+    await screen.findAllByRole('link', { name: 'View all jobs' });
     expect(screen.queryByText(/^12/)).toBeNull();
   });
 });
@@ -316,7 +322,7 @@ describe('HomeLanding — hiring index', () => {
 
   it('omits the whole section when the board surfaced no companies', async () => {
     renderLanding({ ...baseProps, companies: [] });
-    await screen.findByRole('link', { name: 'View all jobs' });
+    await screen.findAllByRole('link', { name: 'View all jobs' });
     expect(screen.queryByRole('link', { name: 'TechNova Labs' })).toBeNull();
   });
 });
@@ -360,7 +366,7 @@ describe('HomeLanding — blog strip (feature/data gated)', () => {
 
   it('omits the whole section when the blog feature is off (posts=null)', async () => {
     renderLanding({ ...baseProps, posts: null });
-    await screen.findByRole('link', { name: 'View all jobs' });
+    await screen.findAllByRole('link', { name: 'View all jobs' });
     expect(screen.queryByRole('link', { name: 'View all posts' })).toBeNull();
     expect(screen.queryByText(/Building Robots at Scale/)).toBeNull();
   });
@@ -376,7 +382,7 @@ describe('HomeLanding — talent strip (feature/data gated)', () => {
 
   it('omits the whole section when the talent feature is off (talent=null)', async () => {
     renderLanding({ ...baseProps, talent: null });
-    await screen.findByRole('link', { name: 'View all jobs' });
+    await screen.findAllByRole('link', { name: 'View all jobs' });
     expect(screen.queryByRole('link', { name: 'View all talent' })).toBeNull();
     expect(screen.queryByText('Ada Lovelace')).toBeNull();
   });
@@ -417,7 +423,7 @@ describe('HomeLanding — dual-path sign-up band', () => {
       candidatesEnabled: false,
       employersEnabled: false,
     });
-    await screen.findByRole('link', { name: 'View all jobs' });
+    await screen.findAllByRole('link', { name: 'View all jobs' });
     expect(
       screen.queryByRole('link', { name: 'Create a candidate profile' }),
     ).toBeNull();

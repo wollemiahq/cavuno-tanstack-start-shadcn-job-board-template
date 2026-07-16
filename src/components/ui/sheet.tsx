@@ -5,6 +5,7 @@ import { XIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { m } from '@/paraglide/messages';
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
@@ -19,13 +20,7 @@ function SheetClose({ ...props }: SheetPrimitive.Close.Props) {
 }
 
 function SheetPortal({ ...props }: SheetPrimitive.Portal.Props) {
-  return (
-    <SheetPrimitive.Portal
-      data-slot="sheet-portal"
-      {...props}
-      className={props.className}
-    />
-  );
+  return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
 }
 
 function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
@@ -45,13 +40,11 @@ function SheetContent({
   className,
   children,
   side = 'right',
-  showCloseButton = false,
-  closeLabel,
+  showCloseButton = true,
   ...props
 }: SheetPrimitive.Popup.Props & {
   side?: 'top' | 'right' | 'bottom' | 'left';
   showCloseButton?: boolean;
-  closeLabel?: string;
 }) {
   return (
     <SheetPortal>
@@ -66,7 +59,7 @@ function SheetContent({
         {...props}
       >
         {children}
-        {showCloseButton && closeLabel ? (
+        {showCloseButton ? (
           <SheetPrimitive.Close
             data-slot="sheet-close"
             render={
@@ -77,8 +70,8 @@ function SheetContent({
               />
             }
           >
-            <XIcon />
-            <span className="sr-only">{closeLabel}</span>
+            <XIcon aria-hidden="true" />
+            <span className="sr-only">{m.common_closeLabel()}</span>
           </SheetPrimitive.Close>
         ) : null}
       </SheetPrimitive.Popup>

@@ -56,13 +56,19 @@ function ComboboxInput({
   disabled = false,
   showTrigger = true,
   showClear = false,
+  anchorRef,
   ...props
 }: ComboboxPrimitive.Input.Props & {
   showTrigger?: boolean;
   showClear?: boolean;
+  anchorRef?: React.Ref<HTMLDivElement>;
 }) {
   return (
-    <InputGroup className={cn('w-auto', className)}>
+    <InputGroup
+      ref={anchorRef}
+      data-combobox-anchor={anchorRef ? '' : undefined}
+      className={cn('w-auto', className)}
+    >
       <ComboboxPrimitive.Input
         render={<InputGroupInput disabled={disabled} />}
         {...props}

@@ -30,8 +30,6 @@ describe('Composer', () => {
     );
 
     const textarea = screen.getByRole('textbox', { name: 'Send a message' });
-    expect(textarea).toHaveAttribute('data-slot', 'input-group-control');
-    expect(textarea.closest('[data-slot="input-group"]')).not.toBeNull();
 
     fireEvent.change(textarea, { target: { value: 'Keep this draft' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send message' }));

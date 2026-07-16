@@ -9,8 +9,8 @@ import { CompanySearchDetailState } from './company-search-detail-state';
 afterEach(cleanup);
 
 describe('CompanySearchDetailState', () => {
-  it('preserves the pane geometry while the first company detail loads', () => {
-    const { container } = render(
+  it('announces the first company detail load', () => {
+    render(
       <CompanySearchDetailState
         status="loading"
         loadingLabel="Loading company details…"
@@ -21,13 +21,12 @@ describe('CompanySearchDetailState', () => {
     );
 
     expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'true');
-    expect(screen.getByText('Loading company details…')).toHaveClass('sr-only');
-    expect(
-      container.querySelectorAll("[data-slot='skeleton']").length,
-    ).toBeGreaterThan(2);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Loading company details…',
+    );
   });
 
-  it('keeps the caller-provided read-only detail visible during a transition', () => {
+  it('replaces preserved detail with a loading state during a transition', () => {
     render(
       <CompanySearchDetailState
         status="loading"
@@ -44,9 +43,10 @@ describe('CompanySearchDetailState', () => {
     );
 
     expect(
-      screen.getByRole('article', { name: 'Previous company' }),
-    ).toBeVisible();
-    expect(screen.getByText('Previous company details')).toBeVisible();
+      screen.queryByRole('article', { name: 'Previous company' }),
+    ).toBeNull();
+    expect(screen.queryByText('Previous company details')).toBeNull();
+    expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'true');
     expect(screen.getByRole('status')).toHaveTextContent(
       'Loading company details…',
     );
@@ -94,7 +94,6 @@ describe('CompanySearchDetailState', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Could not load company',
     );
-    expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(onRetry).toHaveBeenCalledTimes(1);
   });

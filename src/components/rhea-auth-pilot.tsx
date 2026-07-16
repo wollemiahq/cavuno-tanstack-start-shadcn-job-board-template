@@ -31,7 +31,10 @@ export function RheaAuthCard({
   return (
     <div className="mx-auto w-full max-w-md py-6 sm:py-12">
       <Card className="bg-card/95 shadow-foreground/5 overflow-hidden border-0 shadow-xl backdrop-blur">
-        <CardHeader className="items-center gap-5 text-center">
+        {/* CardHeader is a grid, so `items-center` only aligns the cross axis
+            (vertical) — `justify-items-center` is what centres the mark and
+            heading horizontally. */}
+        <CardHeader className="items-center justify-items-center gap-5 text-center">
           <div
             aria-hidden
             className="bg-primary text-primary-foreground flex size-11 items-center justify-center rounded-2xl shadow-sm"

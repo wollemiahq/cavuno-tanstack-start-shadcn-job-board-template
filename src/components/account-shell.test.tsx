@@ -58,9 +58,6 @@ describe('AccountShell', () => {
     expect(
       await screen.findByRole('heading', { name: 'Open roles' }),
     ).toBeVisible();
-    expect(container.querySelector('[data-layout="page"]')).not.toHaveClass(
-      'rhea-theme',
-    );
     expect(container.querySelectorAll('main')).toHaveLength(1);
     expect(
       container.querySelector('[data-slot="avatar-fallback"]'),

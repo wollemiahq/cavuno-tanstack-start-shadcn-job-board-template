@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { Link, createFileRoute, useRouter } from '@tanstack/react-router';
-import { ChevronRight, Plus, Search } from 'lucide-react';
+import { ChevronRight, Plus, Search, XIcon } from 'lucide-react';
 
 import { handleEmployerLoaderError } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/combobox';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -383,10 +384,19 @@ function CreateCompanyModal({
         if (!open) onClose();
       }}
     >
-      <DialogContent
-        showCloseButton
-        closeLabel={m.employerOnboarding_cancelLabel()}
-      >
+      <DialogContent showCloseButton={false}>
+        <DialogClose
+          render={
+            <Button
+              variant="ghost"
+              className="bg-secondary absolute top-4 right-4"
+              size="icon-sm"
+            />
+          }
+        >
+          <XIcon aria-hidden="true" />
+          <span className="sr-only">{m.employerOnboarding_cancelLabel()}</span>
+        </DialogClose>
         <form
           onSubmit={async (event) => {
             event.preventDefault();

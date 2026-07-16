@@ -16,10 +16,17 @@ import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
  * a fresh query drops `?page=` (see CompanyJobsSearchBar), resetting to
  * page 1.
  */
-import { createFileRoute, getRouteApi, notFound } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  getRouteApi,
+  notFound,
+  useLocation,
+} from '@tanstack/react-router';
 
 import { CompanyJobsSearchBar } from '../components/company-jobs-search-bar';
+import { useLocationSuggestions } from './-use-location-suggestions';
 import {
+  listingPageHref,
   pageSearchValue,
   pageToOffset,
   parsePageParam,
@@ -41,6 +48,14 @@ import { JsonLd } from '@/components/json-ld';
 interface CompanyJobsSearch {
   /** Free-text keyword, scoped to this company via the jobs search endpoint. */
   q?: string;
+  /**
+   * Place slug for the API's geo-radius search. A slug (not free text) — the
+   * combobox only emits one the places endpoint resolved, and the API ignores
+   * anything unresolvable. Radius is left at the API default (50km).
+   */
+  location?: string;
+  /** Human label for `location`, so the combobox rehydrates on a cold load. */
+  locationName?: string;
   /** 1-based page; page 1 drops from the URL (clean canonical). */
   page?: number;
 }
@@ -53,9 +68,17 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
   // Full-bleed: the shared company-section shell owns the page container +
   // breadcrumb placement (the shell header is the hero here — no centered
   // ListingPageHeader band — matching /companies + /companies/…/salaries).
-  staticData: { fullBleed: true },
+  staticData: { fullBleed: true, ownsMain: true },
   validateSearch: (search: Record<string, unknown>): CompanyJobsSearch => ({
     q: typeof search.q === 'string' && search.q ? search.q : undefined,
+    location:
+      typeof search.location === 'string' && search.location
+        ? search.location
+        : undefined,
+    locationName:
+      typeof search.locationName === 'string' && search.locationName
+        ? search.locationName
+        : undefined,
     page: pageSearchValue(parsePageParam(search.page)),
   }),
   loaderDeps: ({ search }) => search,
@@ -65,12 +88,18 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
         data: { companySlug: params.companySlug },
       });
       const offset = pageToOffset(deps.page ?? 1, COMPANY_JOBS_PAGE_SIZE);
+      // `location` is a place slug the API geo-resolves; it rides the SEARCH
+      // endpoint's `filters` and the BROWSE endpoint's top level, so it narrows
+      // with or without a keyword.
       const [page, seo, hasSalaries] = await Promise.all([
         deps.q
           ? searchJobs({
               data: {
                 query: deps.q,
-                filters: { companyId: [company.id] },
+                filters: {
+                  companyId: [company.id],
+                  ...(deps.location ? { location: deps.location } : {}),
+                },
                 offset,
                 limit: COMPANY_JOBS_PAGE_SIZE,
               },
@@ -78,6 +107,7 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
           : listJobs({
               data: {
                 companyId: [company.id],
+                ...(deps.location ? { location: deps.location } : {}),
                 offset,
                 limit: COMPANY_JOBS_PAGE_SIZE,
               },
@@ -85,7 +115,15 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
         getSeoBase(),
         getCompanySalaryPresence({ data: { companySlug: params.companySlug } }),
       ]);
-      return { company, page, seo, q: deps.q ?? null, hasSalaries };
+      return {
+        company,
+        page,
+        seo,
+        q: deps.q ?? null,
+        location: deps.location ?? null,
+        locationName: deps.locationName ?? null,
+        hasSalaries,
+      };
     } catch (error) {
       if (isNotFound(error)) throw notFound();
       throw error;
@@ -126,10 +164,13 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
 });
 
 function CompanyJobsPage() {
-  const { company, page, seo, q, hasSalaries } = Route.useLoaderData();
+  const { company, page, seo, q, location, locationName, hasSalaries } =
+    Route.useLoaderData();
   const search = Route.useSearch();
   const { board } = rootApi.useLoaderData();
+  const locationSuggestions = useLocationSuggestions(board.language);
   const navigate = Route.useNavigate();
+  const currentHref = useLocation({ select: (location) => location.href });
   const copy = boardCopy(seo.language, seo.labels);
   const crumbs = copy.breadcrumbs;
 
@@ -170,14 +211,6 @@ function CompanyJobsPage() {
 
   return (
     <CompanySectionShell
-      breadcrumb={{
-        ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
-        items: [
-          { name: crumbs.home, href: '/' },
-          { name: crumbs.companies, href: '/companies' },
-          { name: company.name },
-        ],
-      }}
       company={company}
       activeSection="jobs"
       jobCount={company.publishedJobCount}
@@ -190,6 +223,8 @@ function CompanyJobsPage() {
       <CompanyJobsSearchBar
         companySlug={company.slug}
         defaultValue={q ?? undefined}
+        location={location ? { slug: location, name: locationName ?? '' } : null}
+        locationSuggestions={locationSuggestions}
       />
 
       <p className="text-foreground text-base font-semibold">{countLabel}</p>
@@ -199,12 +234,14 @@ function CompanyJobsPage() {
         language={board.language}
         labels={board.labels}
         variant="grid"
+        compact
       />
 
       <ListingPagination
         page={currentPage}
         count={count}
         pageSize={COMPANY_JOBS_PAGE_SIZE}
+        hrefForPage={(nextPage) => listingPageHref(currentHref, nextPage)}
         onPageChange={(next) =>
           navigate({
             search: (prev) => ({ ...prev, page: pageSearchValue(next) }),

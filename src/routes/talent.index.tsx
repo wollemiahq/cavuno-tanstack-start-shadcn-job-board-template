@@ -1,6 +1,6 @@
 import { boardCopy } from '#/copy';
 
-import { isBoardApiError, isNotFound } from '@cavuno/board';
+import { isNotFound } from '@cavuno/board';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { createFileRoute, notFound, useNavigate } from '@tanstack/react-router';
 import { LockKeyhole, Users } from 'lucide-react';
@@ -31,14 +31,14 @@ import { useSelectedTalent } from '@/routes/-use-selected-talent';
 const TALENT_PAGE_SIZE = 24;
 
 export const Route = createFileRoute('/talent/')({
-  staticData: { fullBleed: true, ownsMain: true },
+  staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseTalentSearch,
   loaderDeps: ({ search }) => talentListingLoaderDeps(search),
   loader: async ({ deps }) => {
     const seo = await getSeoBase();
 
     try {
-      const page = await listTalent({
+      const result = await listTalent({
         data: {
           cursor: deps.cursor,
           q: deps.q,
@@ -46,16 +46,12 @@ export const Route = createFileRoute('/talent/')({
           limit: TALENT_PAGE_SIZE,
         },
       });
-      return { seo, page, restricted: false as const };
-    } catch (error) {
-      if (isNotFound(error)) throw notFound();
-      if (
-        isBoardApiError(error) &&
-        error.status === 403 &&
-        error.code === 'talent_directory_restricted'
-      ) {
+      if (result.status === 'restricted') {
         return { seo, page: null, restricted: true as const };
       }
+      return { seo, page: result.page, restricted: false as const };
+    } catch (error) {
+      if (isNotFound(error)) throw notFound();
       throw error;
     }
   },
@@ -82,7 +78,7 @@ export const Route = createFileRoute('/talent/')({
 
 function TalentDirectoryNotFound() {
   return (
-    <Page width="content">
+    <Page width="wide">
       <PageContent header={<PageHeader title={m.talentDirectory_title()} />}>
         <Empty className="min-h-80 border">
           <EmptyHeader>
@@ -103,27 +99,41 @@ function TalentDirectoryNotFound() {
   );
 }
 
-function RestrictedTalentDirectory({ boardName }: { boardName: string }) {
+export function RestrictedTalentDirectory({
+  boardName,
+}: {
+  boardName: string;
+}) {
   return (
-    <Page width="content">
-      <PageContent header={<PageHeader title={m.talentDirectory_title()} />}>
-        <Empty className="min-h-80 border">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <LockKeyhole aria-hidden="true" />
-            </EmptyMedia>
-            <EmptyTitle>{m.talentDirectory_restrictedHeading()}</EmptyTitle>
-            <EmptyDescription>
-              {m.talentDirectory_restrictedBody({ boardName })}
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <a href="/auth/sign-in" className={buttonVariants()}>
-              {m.talentDirectory_signInLabel()}
-            </a>
-          </EmptyContent>
-        </Empty>
-      </PageContent>
+    <Page width="wide" fill>
+      <main className="min-w-0 overflow-x-clip">
+        <div className="mx-auto w-full max-w-[var(--layout-width)] px-4 py-4 md:px-8">
+          <Empty className="min-h-[calc(100dvh-12rem)] border-0">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <LockKeyhole aria-hidden="true" />
+              </EmptyMedia>
+              <EmptyTitle>
+                <h1>{m.talentDirectory_restrictedHeading()}</h1>
+              </EmptyTitle>
+              <EmptyDescription>
+                {m.talentDirectory_restrictedBody({ boardName })}
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent className="flex-row justify-center gap-2">
+              <a href="/auth/employer/sign-up" className={buttonVariants()}>
+                {m.siteHeader_signUpLabel()}
+              </a>
+              <a
+                href="/auth/sign-in"
+                className={buttonVariants({ variant: 'outline' })}
+              >
+                {m.talentDirectory_signInLabel()}
+              </a>
+            </EmptyContent>
+          </Empty>
+        </div>
+      </main>
     </Page>
   );
 }
@@ -161,17 +171,6 @@ function TalentDirectoryPage() {
       <JsonLd data={jsonLd} />
       <TalentSearchPage
         candidates={page.data}
-        heading={m.talentDirectory_title()}
-        description={m.talentDirectory_metaDescription({
-          boardName: seo.boardName,
-        })}
-        breadcrumb={{
-          ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
-          items: [
-            { name: copy.breadcrumbs.home, href: '/' },
-            { name: copy.breadcrumbs.talent },
-          ],
-        }}
         q={search.q}
         skill={search.skill}
         hasMore={page.hasMore}

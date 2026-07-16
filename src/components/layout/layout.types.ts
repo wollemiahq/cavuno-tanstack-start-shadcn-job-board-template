@@ -105,5 +105,13 @@ export const containerGridClass =
 export const responsiveGutterClass =
   '[--layout-gutter:var(--layout-gutter-base)] sm:[--layout-gutter:var(--layout-gutter-sm)] md:[--layout-gutter:var(--layout-gutter-md)] lg:[--layout-gutter:var(--layout-gutter-lg)] xl:[--layout-gutter:var(--layout-gutter-xl)] 2xl:[--layout-gutter:var(--layout-gutter-2xl)]';
 
+/**
+ * The one header rhythm every detail surface reads. Both header idioms — the
+ * constrained `PageHeader` and the full-bleed grey bands — consume this, so the
+ * spacing above a page's title can only be changed in one place.
+ */
+export const responsiveHeaderSpaceClass =
+  '[--header-space:var(--header-space-base)] sm:[--header-space:var(--header-space-sm)] md:[--header-space:var(--header-space-md)] lg:[--header-space:var(--header-space-lg)] xl:[--header-space:var(--header-space-xl)] 2xl:[--header-space:var(--header-space-2xl)]';
+
 export const responsiveGapClass =
   'gap-(--layout-gap-base) sm:gap-(--layout-gap-sm) md:gap-(--layout-gap-md) lg:gap-(--layout-gap-lg) xl:gap-(--layout-gap-xl) 2xl:gap-(--layout-gap-2xl)';

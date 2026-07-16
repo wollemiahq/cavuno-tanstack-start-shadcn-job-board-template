@@ -31,16 +31,26 @@ export function Field({
   type = 'text',
   autoComplete,
   minLength,
+  labelAction,
 }: {
   label: string;
   name: string;
   type?: string;
   autoComplete?: string;
   minLength?: number;
+  /** Trailing control on the label row (e.g. "Forgot password?"). */
+  labelAction?: ReactNode;
 }) {
   return (
     <FormField>
-      <FieldLabel htmlFor={name}>{label}</FieldLabel>
+      {labelAction ? (
+        <div className="flex items-center justify-between gap-2">
+          <FieldLabel htmlFor={name}>{label}</FieldLabel>
+          {labelAction}
+        </div>
+      ) : (
+        <FieldLabel htmlFor={name}>{label}</FieldLabel>
+      )}
       <Input
         id={name}
         name={name}

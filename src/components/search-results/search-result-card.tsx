@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef } from 'react';
 
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 export type SearchResultCardProps = ComponentPropsWithoutRef<'article'> & {
@@ -25,11 +25,11 @@ export function SearchResultCard({
         size="sm"
         data-selected={selected}
         className={cn(
-          'hover:bg-accent/50 focus-within:ring-ring/50 data-[selected=true]:bg-accent data-[selected=true]:ring-ring/60 gap-0 py-0 transition-colors focus-within:ring-2',
+          'hover:bg-accent/50 focus-within:ring-ring/50 data-[selected=true]:bg-accent data-[selected=true]:ring-ring/60 gap-0 py-0 shadow-none transition-colors ring-inset focus-within:ring-2',
           className,
         )}
       >
-        {children}
+        <CardContent className="p-0">{children}</CardContent>
       </Card>
     </article>
   );

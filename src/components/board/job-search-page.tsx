@@ -1,6 +1,6 @@
 'use client';
 
-import { Link } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import { Search } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
@@ -10,10 +10,13 @@ import {
   relatedSearchesTitle,
   relatedSearchesToChips,
 } from '@/board/related-searches';
+import type { BreadcrumbData } from '@/components/board/breadcrumb';
 import { JobSearchResult } from '@/components/board/job-search-result';
 import { JobsFilterControls } from '@/components/board/jobs-filter-controls';
 import { JobsResultsBar } from '@/components/board/jobs-results-bar';
+import { ListingResultsHeader } from '@/components/board/listing-page-header';
 import { ListingPagination } from '@/components/board/listing-pagination';
+import { SaveJobButton } from '@/components/board/save-job-button';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { Page } from '@/components/layout/page';
@@ -35,6 +38,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
+import { listingPageHref } from '@/lib/pagination';
 import type { PublicJobCard, RelatedSearch } from '@cavuno/board';
 import type { ListingFilters } from '@cavuno/board/filters';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
@@ -94,6 +98,7 @@ export function JobSearchPage({
   language,
   labels,
   heading,
+  breadcrumb,
   relatedSearches,
   onFiltersChange,
   onPageChange,
@@ -103,6 +108,8 @@ export function JobSearchPage({
   detail,
   startAd,
   endAd,
+  viewer,
+  onSaveJob,
 }: {
   jobs: PublicJobCard[];
   count?: number;
@@ -114,6 +121,7 @@ export function JobSearchPage({
   language: string;
   labels?: BoardLabelOverrides;
   heading?: string;
+  breadcrumb?: BreadcrumbData;
   relatedSearches?: RelatedSearch[];
   onFiltersChange: (next: ListingFilters) => void;
   onPageChange: (page: number) => void;
@@ -123,7 +131,10 @@ export function JobSearchPage({
   detail: React.ReactNode;
   startAd?: AdPlacement;
   endAd?: AdPlacement;
+  viewer: { emailVerified: boolean } | null;
+  onSaveJob: (jobId: string) => Promise<void>;
 }) {
+  const returnTo = useLocation({ select: (location) => location.href });
   const jobVms = jobs.map((job) => toJobCardVM(job, language, labels));
   const selectableSlugs = jobVms.flatMap((vm) =>
     vm.jobSlug && vm.detailHref ? [vm.jobSlug] : [],
@@ -141,13 +152,11 @@ export function JobSearchPage({
       page={page}
       pageSize={pageSize}
       heading={heading}
-      sort={filters.sort}
       language={language}
       labels={labels}
-      onSortChange={(sort) => onFiltersChange({ ...filters, sort })}
+      className={jobVms.length > 0 ? 'px-4 md:px-0' : undefined}
     />
   );
-
   return (
     <Page width="wide" fill>
       <main
@@ -169,16 +178,36 @@ export function JobSearchPage({
 
         <div
           data-slot="job-search-viewport"
-          className="px-4 py-4 md:flex md:min-h-0 md:flex-1 md:px-8"
+          className="min-w-0 overflow-x-clip md:flex md:min-h-0 md:flex-1 md:overflow-hidden"
         >
           {jobVms.length === 0 ? (
-            <div className="mx-auto w-full max-w-[var(--layout-width)] space-y-4">
-              {resultsBar}
-              <JobsEmpty
-                filters={filters}
-                hasRouteConstraint={Boolean(heading)}
-              />
-            </div>
+            <SearchResultsLayout
+              startAd={
+                startAd ? (
+                  <AdRail label={startAd.label}>{startAd.content}</AdRail>
+                ) : undefined
+              }
+              endAd={
+                endAd ? (
+                  <AdRail label={endAd.label}>{endAd.content}</AdRail>
+                ) : undefined
+              }
+              list={
+                <div
+                  data-slot="job-empty-results"
+                  className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0"
+                >
+                  <ListingResultsHeader breadcrumb={breadcrumb}>
+                    {resultsBar}
+                  </ListingResultsHeader>
+                  <JobsEmpty
+                    filters={filters}
+                    hasRouteConstraint={Boolean(heading)}
+                  />
+                </div>
+              }
+              detail={null}
+            />
           ) : (
             <SearchResultsLayout
               startAd={
@@ -196,8 +225,13 @@ export function JobSearchPage({
                   label={m.jobSearch_resultsRegionLabel()}
                   scrollRestorationId="jobs-search-results"
                 >
-                  <div className="space-y-4 p-4">
-                    {resultsBar}
+                  <div
+                    data-slot="job-results-content"
+                    className="space-y-4 pt-4 pr-4 pb-4"
+                  >
+                    <ListingResultsHeader breadcrumb={breadcrumb}>
+                      {resultsBar}
+                    </ListingResultsHeader>
 
                     <div className="space-y-3">
                       {jobVms.map((vm) => (
@@ -210,6 +244,22 @@ export function JobSearchPage({
                               ? (event) =>
                                   selection.onResultActivate(event, vm.jobSlug!)
                               : undefined
+                          }
+                          saveSlot={
+                            <SaveJobButton
+                              jobId={vm.id}
+                              viewer={viewer}
+                              returnTo={returnTo}
+                              presentation="icon"
+                              labels={{
+                                save: m.companyJobDetail_saveJobLabel(),
+                                saving: m.companyJobDetail_savingLabel(),
+                                saved:
+                                  m.companyJobDetail_savedViewInAccountLabel(),
+                                error: m.saveJobButton_errorText(),
+                              }}
+                              onSave={onSaveJob}
+                            />
                           }
                         />
                       ))}
@@ -237,9 +287,13 @@ export function JobSearchPage({
                     ) : null}
 
                     <ListingPagination
+                      compact
                       page={page}
                       count={count ?? 0}
                       pageSize={pageSize}
+                      hrefForPage={(nextPage) =>
+                        listingPageHref(returnTo, nextPage, ['selectedJob'])
+                      }
                       onPageChange={onPageChange}
                     />
 

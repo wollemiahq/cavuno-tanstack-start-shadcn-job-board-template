@@ -53,6 +53,7 @@
     "next-env.d.ts",
     "pnpm-lock.yaml",
     "playwright-report",
+    "docs/shadcn-component-usage.json",
     "src/routeTree.gen.ts",
     "src/theme/resolved.ts"
   ]

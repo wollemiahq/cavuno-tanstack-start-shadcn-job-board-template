@@ -94,12 +94,24 @@ describe('AlertManager', () => {
     expect(
       screen.getByLabelText('Name (optional)').closest('[data-slot="field"]'),
     ).not.toBeNull();
-    expect(
-      screen.getByLabelText('Frequency').closest('[data-slot="field"]'),
-    ).not.toBeNull();
+    expect(screen.queryByLabelText('Frequency')).not.toBeInTheDocument();
     expect(
       screen.getByRole('group', { name: 'Remote options' }),
     ).toHaveAttribute('data-slot', 'field-set');
+  });
+
+  it('creates the only supported weekly cadence', async () => {
+    mocks.createMyAlert.mockResolvedValue(undefined);
+    render(<AlertManager alerts={[]} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'New alert' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create alert' }));
+
+    await waitFor(() =>
+      expect(mocks.createMyAlert).toHaveBeenCalledWith({
+        data: { frequency: 'weekly' },
+      }),
+    );
   });
 
   it('prevents duplicate deletes, then shows a retryable error without invalidating', async () => {

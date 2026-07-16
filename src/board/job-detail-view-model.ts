@@ -16,7 +16,6 @@ import {
   fieldLabel,
   formatPublishedRelativeDate,
   formatSalaryRange,
-  locationLabel,
   resolveCustomFieldDisplay,
   type BoardLabelOverrides,
 } from '@cavuno/board/format';
@@ -83,7 +82,9 @@ export interface JobDetailVM {
   /** Avatar fallback name (company name, else the job title). */
   companyAvatarName: string;
   sector: string | null;
-  locationLabel: string;
+  /** Physical or applicant geography, kept separate from workplace type. */
+  locationLabel: string | null;
+  workplaceLabel: string | null;
   employmentTypeLabel: string | null;
   seniorityLabel: string | null;
   salaryLabel: string | null;
@@ -209,6 +210,12 @@ export function toJobDetailVM(
       job.salaryCurrency,
     ) || null;
   const published = formatPublishedRelativeDate(language, job.publishedAt);
+  const location =
+    job.remoteOption === 'remote'
+      ? job.remoteWorldwide
+        ? copy.worldwideLabel
+        : job.remoteWorkPermitCountryCodes.join(', ') || null
+      : (offices[0] ?? null);
 
   return {
     breadcrumbs: buildJobBreadcrumbs(job, language, labels).map((crumb) => ({
@@ -222,7 +229,10 @@ export function toJobDetailVM(
     companyLogoUrl: company?.logoUrl ?? null,
     companyAvatarName: company?.name ?? job.title,
     sector: job.categories[0]?.name ?? null,
-    locationLabel: locationLabel(language, job),
+    locationLabel: location,
+    workplaceLabel: job.remoteOption
+      ? fieldLabel(language, job.remoteOption, labels)
+      : null,
     employmentTypeLabel: job.employmentType
       ? fieldLabel(language, job.employmentType, labels)
       : null,

@@ -196,14 +196,11 @@ describe('employer entry surfaces', () => {
     if (!EmployersPage)
       throw new Error('The employer landing route needs a component');
 
-    const { container } = render(<EmployersPage />);
+    render(<EmployersPage />);
 
     expect(
       screen.getByRole('heading', { level: 1, name: 'For employers' }),
     ).toBeVisible();
-    expect(container.querySelector('[data-layout="page"]')).not.toHaveClass(
-      'rhea-theme',
-    );
     const growthCard = screen.getByText('Growth').closest('[data-slot="card"]');
     expect(growthCard).toBeInTheDocument();
     const growthCardElement = growthCard as HTMLElement;
@@ -257,14 +254,11 @@ describe('employer entry surfaces', () => {
     if (!DashboardPage)
       throw new Error('The employer dashboard route needs a component');
 
-    const { container } = render(<DashboardPage />);
+    render(<DashboardPage />);
 
     expect(
       screen.getByRole('heading', { level: 1, name: 'Your companies' }),
     ).toBeVisible();
-    expect(container.querySelector('[data-layout="page"]')).not.toHaveClass(
-      'rhea-theme',
-    );
     const companyItem = screen
       .getByText('Acme Ventures')
       .closest('[data-slot="item"]');
@@ -308,9 +302,6 @@ describe('employer entry surfaces', () => {
 
     const dialog = screen.getByRole('dialog', { name: 'Add a new company' });
     expect(dialog).toHaveAttribute('data-slot', 'dialog-content');
-    expect(dialog.closest('[data-slot="dialog-portal"]')).not.toHaveClass(
-      'rhea-theme',
-    );
   });
 
   it('keeps a pending membership inside the employer workspace while awaiting approval', () => {
@@ -324,14 +315,11 @@ describe('employer entry surfaces', () => {
     if (!OnboardingPage)
       throw new Error('The employer onboarding route needs a component');
 
-    const { container } = render(<OnboardingPage />);
+    render(<OnboardingPage />);
 
     expect(
       screen.getByRole('heading', { level: 1, name: 'Awaiting approval' }),
     ).toBeVisible();
-    expect(container.querySelector('[data-layout="page"]')).not.toHaveClass(
-      'rhea-theme',
-    );
     expect(screen.getByText(/request to join Acme Ventures/i)).toBeVisible();
     expect(screen.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',

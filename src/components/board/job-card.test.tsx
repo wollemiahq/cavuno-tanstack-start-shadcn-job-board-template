@@ -36,6 +36,8 @@ const baseVM: JobCardVM = {
   companyAvatarName: 'Acme',
   sector: 'Engineering',
   compLine: '$120k–$160k · Remote',
+  salaryLabel: '$120k–$160k',
+  locationLabel: 'Worldwide (Remote)',
   summary: 'Own the deploy platform end to end.',
   isFeatured: false,
   featuredLabel: 'Featured',

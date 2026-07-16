@@ -3,6 +3,7 @@
 import { boardCopy } from '#/copy';
 
 import {
+  DEFAULT_SORT,
   EMPLOYMENT_TYPES,
   REMOTE_OPTIONS,
   SENIORITIES,
@@ -10,10 +11,19 @@ import {
   type ListingFilters,
 } from '@cavuno/board/filters';
 import { fieldLabel, type BoardLabelOverrides } from '@cavuno/board/format';
+import { ArrowUpDown } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
 import { JobsFilterToolbar } from '@/components/board/jobs-filter-toolbar';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export function JobsFilterControls({
   filters,
@@ -28,9 +38,13 @@ export function JobsFilterControls({
 }) {
   const copy = boardCopy(language, labels);
   const seniorityLabel = seniorityLabels(language, labels);
+  const sortItems = [
+    { value: 'relevance', label: copy.jobCard.aiRankedLabel },
+    { value: 'newest', label: copy.jobCard.sortNewestLabel },
+  ] as const;
 
   return (
-    <div data-slot="jobs-filter-bar">
+    <div data-slot="jobs-filter-bar" className="flex items-center gap-2">
       <JobsFilterToolbar
         labels={{
           workplace: copy.jobSearch.workplacePlaceholder,
@@ -43,7 +57,7 @@ export function JobsFilterControls({
           sheetDescription: m.jobSearch_filterSheetDescription(),
           reset: m.jobSearch_resetLabel(),
           apply: m.jobSearch_applyFiltersLabel(),
-          cancel: m.jobSearch_cancelLabel(),
+          close: m.employerCompany_closeLabel(),
         }}
         options={{
           workplace: REMOTE_OPTIONS.map((option) => ({
@@ -82,6 +96,31 @@ export function JobsFilterControls({
           })
         }
       />
+      <Select
+        items={sortItems}
+        value={filters.sort ?? DEFAULT_SORT}
+        onValueChange={(sort) =>
+          onChange({ ...filters, sort: sort as ListingFilters['sort'] })
+        }
+      >
+        <SelectTrigger
+          aria-label={copy.jobSearch.sortPlaceholder}
+          className="ml-auto"
+        >
+          <ArrowUpDown aria-hidden="true" />
+          <span>{copy.jobSearch.sortPlaceholder}:</span>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent align="start" alignItemWithTrigger={false}>
+          <SelectGroup>
+            {sortItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
     </div>
   );
 }

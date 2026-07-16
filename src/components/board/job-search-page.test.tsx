@@ -60,8 +60,17 @@ describe('JobSearchPage — search results pattern', () => {
           count={12}
           page={1}
           pageSize={20}
+          breadcrumb={{
+            ariaLabel: 'Breadcrumb',
+            items: [
+              { name: 'Jobs', href: '/jobs' },
+              { name: 'Product design' },
+            ],
+          }}
           filters={{ q: 'product designer' }}
           language="en"
+          viewer={null}
+          onSaveJob={vi.fn(async () => {})}
           onFiltersChange={vi.fn()}
           onPageChange={vi.fn()}
           selectedJob="product-designer"
@@ -104,17 +113,7 @@ describe('JobSearchPage — search results pattern', () => {
 
     const results = screen.getByRole('region', { name: 'Job results' });
     const detail = screen.getByRole('region', { name: 'Selected job' });
-    const pageMain = container.querySelector('[data-layout="job-search-page"]');
-    const viewport = container.querySelector(
-      '[data-slot="job-search-viewport"]',
-    );
-    expect(pageMain).toHaveClass(
-      'md:flex',
-      'md:h-full',
-      'md:min-h-0',
-      'md:flex-col',
-    );
-    expect(viewport).toHaveClass('md:flex', 'md:min-h-0', 'md:flex-1');
+    expect(screen.queryByRole('navigation', { name: 'Breadcrumb' })).toBeNull();
     expect(
       within(results).getByRole('link', { name: /Product designer/i }),
     ).toHaveAttribute('href', '/companies/acme/jobs/product-designer');
@@ -134,11 +133,15 @@ describe('JobSearchPage — search results pattern', () => {
           pageSize={20}
           filters={{ q: 'no-such-role' }}
           language="en"
+          viewer={null}
+          onSaveJob={vi.fn(async () => {})}
           onFiltersChange={vi.fn()}
           onPageChange={vi.fn()}
           onSelectedJobReplace={vi.fn()}
           onSelectedJobPush={vi.fn()}
           detail={<p>Unused detail pane</p>}
+          startAd={{ label: 'Sponsored start', content: <p>Start creative</p> }}
+          endAd={{ label: 'Sponsored end', content: <p>End creative</p> }}
         />
       ),
     });
@@ -161,12 +164,15 @@ describe('JobSearchPage — search results pattern', () => {
       'href',
       '/jobs',
     );
-    expect(screen.getByRole('link', { name: 'Reset filters' })).toHaveClass(
-      'bg-primary',
-    );
     expect(
       container.querySelector("[data-slot='search-results-layout']"),
-    ).toBeNull();
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('complementary', { name: 'Sponsored start' }),
+    ).toHaveTextContent('Start creative');
+    expect(
+      screen.getByRole('complementary', { name: 'Sponsored end' }),
+    ).toHaveTextContent('End creative');
     expect(screen.queryByRole('region', { name: 'Selected job' })).toBeNull();
     expect(screen.queryByText('Unused detail pane')).toBeNull();
   });
@@ -185,6 +191,8 @@ describe('JobSearchPage — search results pattern', () => {
           filters={{}}
           heading="0 React jobs"
           language="en"
+          viewer={null}
+          onSaveJob={vi.fn(async () => {})}
           onFiltersChange={vi.fn()}
           onPageChange={vi.fn()}
           onSelectedJobReplace={vi.fn()}
@@ -225,6 +233,8 @@ describe('JobSearchPage — search results pattern', () => {
           pageSize={20}
           filters={{}}
           language="en"
+          viewer={null}
+          onSaveJob={vi.fn(async () => {})}
           onFiltersChange={vi.fn()}
           onPageChange={vi.fn()}
           selectedJob="product-designer"

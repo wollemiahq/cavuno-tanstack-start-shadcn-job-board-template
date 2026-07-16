@@ -4,10 +4,9 @@ import { toAlertSignupVM } from './alert-signup-view-model';
 
 /**
  * The alert-signup mapper is Layer 1b — it owns the copy resolution for
- * the subscribe form, including the per-status result messages. These pin
- * that the pure-markup form has every label + message it renders, and that
- * the three API-status messages are distinct (a returning subscriber must
- * see "already subscribed", not the success text).
+ * the subscribe form, including the uniform submitted result message. These
+ * pin that the pure-markup form has every label + message it renders without
+ * exposing whether an address was already subscribed.
  */
 describe('toAlertSignupVM', () => {
   const vm = toAlertSignupVM('en');
@@ -27,13 +26,14 @@ describe('toAlertSignupVM', () => {
     }
   });
 
-  it('maps each API status to a distinct, non-empty message', () => {
-    const { created, duplicate, error } = vm.messages;
-    for (const m of [created, duplicate, error]) {
+  it('maps submitted and error outcomes to distinct, non-empty messages', () => {
+    const { submitted, error } = vm.messages;
+    for (const m of [submitted, error]) {
       expect(m.length).toBeGreaterThan(0);
     }
-    // The three outcomes must read differently — a duplicate is not a
-    // success, and an error is neither.
-    expect(new Set([created, duplicate, error]).size).toBe(3);
+    expect(submitted).toBe(
+      "If this email isn't already subscribed, we've sent a confirmation link — check your inbox.",
+    );
+    expect(submitted).not.toBe(error);
   });
 });

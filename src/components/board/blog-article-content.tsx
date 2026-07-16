@@ -4,9 +4,18 @@ import { formatDate } from '@cavuno/board/format';
 import { Link } from '@tanstack/react-router';
 import { FileWarning } from 'lucide-react';
 
+import {
+  FacebookIcon,
+  LinkedInIcon,
+  XIcon,
+} from '@/components/brand-icons';
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
-import { PageHeaderWithBreadcrumb } from '@/components/board/page-header-with-breadcrumb';
-import { Page, PageContent, PageSection } from '@/components/layout/page';
+import {
+  Page,
+  PageContent,
+  PageHeader,
+  PageSection,
+} from '@/components/layout/page';
 import { PostCard } from '@/components/post-card';
 import { Prose } from '@/components/prose';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -121,79 +130,41 @@ function ArticleToc({
 }
 
 function ShareLinks({ links }: { links: ReturnType<typeof shareLinks> }) {
+  const targets = [
+    { href: links.x, label: m.blogPost_shareOnX(), Icon: XIcon },
+    {
+      href: links.facebook,
+      label: m.blogPost_shareOnFacebook(),
+      Icon: FacebookIcon,
+    },
+    {
+      href: links.linkedin,
+      label: m.blogPost_shareOnLinkedin(),
+      Icon: LinkedInIcon,
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-3">
       <p className="text-foreground text-sm font-medium">
         {m.blogPost_shareHeading()}
       </p>
       <div className="flex flex-wrap gap-2">
-        <a
-          href={links.x}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={m.blogPost_shareOnX()}
-          className={buttonVariants({ variant: 'outline', size: 'sm' })}
-        >
-          X
-        </a>
-        <a
-          href={links.facebook}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={m.blogPost_shareOnFacebook()}
-          className={buttonVariants({ variant: 'outline', size: 'sm' })}
-        >
-          {m.blogPost_shareOnFacebook()}
-        </a>
-        <a
-          href={links.linkedin}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={m.blogPost_shareOnLinkedin()}
-          className={buttonVariants({ variant: 'outline', size: 'sm' })}
-        >
-          {m.blogPost_shareOnLinkedin()}
-        </a>
+        {targets.map(({ href, label, Icon }) => (
+          <a
+            key={href}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={label}
+            className={buttonVariants({ variant: 'outline', size: 'icon-lg' })}
+          >
+            <Icon />
+          </a>
+        ))}
       </div>
     </div>
   );
-}
-
-function AuthorLinks({
-  author,
-}: {
-  author: PublicBlogPost['authors'][number];
-}) {
-  const links = [
-    author.websiteUrl
-      ? { href: author.websiteUrl, label: m.blogPost_authorWebsiteLabel() }
-      : null,
-    author.twitterUrl
-      ? { href: author.twitterUrl, label: m.blogPost_authorXLabel() }
-      : null,
-    author.linkedinUrl
-      ? { href: author.linkedinUrl, label: m.blogPost_authorLinkedinLabel() }
-      : null,
-    author.githubUrl
-      ? { href: author.githubUrl, label: m.blogPost_authorGithubLabel() }
-      : null,
-  ].filter((link) => link !== null);
-
-  return links.length > 0 ? (
-    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
-      {links.map((link) => (
-        <a
-          key={link.href}
-          href={link.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/30 rounded-sm outline-none hover:underline focus-visible:ring-3"
-        >
-          {link.label}
-        </a>
-      ))}
-    </div>
-  ) : null;
 }
 
 function PostMeta({
@@ -247,9 +218,10 @@ function PostMeta({
                   </span>
                 ) : null}
                 {author.bio ? (
-                  <p className="text-muted-foreground text-sm">{author.bio}</p>
+                  <p className="text-muted-foreground line-clamp-4 text-sm">
+                    {author.bio}
+                  </p>
                 ) : null}
-                <AuthorLinks author={author} />
               </div>
             </div>
           ))
@@ -265,7 +237,7 @@ function PostMeta({
 
 /** Complete reusable article presentation for the canonical post route. */
 export function BlogArticleContent({
-  breadcrumb,
+  breadcrumb: _breadcrumb,
   post,
   language,
   permalink,
@@ -282,11 +254,7 @@ export function BlogArticleContent({
     <Page>
       <PageContent
         header={
-          <PageHeaderWithBreadcrumb
-            breadcrumb={breadcrumb}
-            title={post.title}
-            description={post.customExcerpt}
-          />
+          <PageHeader title={post.title} description={post.customExcerpt} />
         }
       >
         <article className="flex min-w-0 flex-col gap-10">
@@ -302,6 +270,9 @@ export function BlogArticleContent({
               <img
                 src={post.coverUrl}
                 alt={post.featureImageAlt ?? post.title}
+                width={1200}
+                height={675}
+                fetchPriority="high"
                 className="ring-foreground/5 aspect-video w-full rounded-3xl object-cover shadow-sm ring-1"
               />
               {post.featureImageCaption ? (

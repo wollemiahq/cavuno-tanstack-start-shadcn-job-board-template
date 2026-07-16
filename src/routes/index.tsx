@@ -1,10 +1,10 @@
 import { boardCopy } from '#/copy';
 
-import { isForbidden } from '@cavuno/board';
 import {
   parseListingFilters,
   type ListingFilters,
 } from '@cavuno/board/filters';
+import { jobsCategoryPath } from '@cavuno/board/paths';
 import { listingJsonLd } from '@cavuno/board/seo';
 /**
  * Home `/` — the designed LANDING (CAV-495), not the bare search page.
@@ -86,14 +86,10 @@ export const Route = createFileRoute('/')({
       board.features.blog
         ? listBlogPosts({ data: { limit: 3 } })
         : Promise.resolve(null),
-      // Talent preview — only when the directory feature is on. An
-      // employers-only directory 403s for an anonymous home visitor, so the
-      // section is omitted rather than failing the page.
+      // Talent preview — only when the directory feature is on. The serialised
+      // restricted result omits the preview for anonymous home visitors.
       board.features.talentDirectory
-        ? listTalent({ data: { limit: 6 } }).catch((error) => {
-            if (isForbidden(error)) return null;
-            throw error;
-          })
+        ? listTalent({ data: { limit: 6 } })
         : Promise.resolve(null),
     ]);
     return {
@@ -101,7 +97,7 @@ export const Route = createFileRoute('/')({
       companies: companies.data,
       seo,
       posts: blog?.data ?? null,
-      talent: talent?.data ?? null,
+      talent: talent?.status === 'available' ? talent.page.data : null,
     };
   },
   head: ({ loaderData }) => {
@@ -159,6 +155,26 @@ function HomePage() {
             }),
     }));
 
+  // The browse envelope's related searches are already ranked and counted, so
+  // the category rail costs no extra read. Paths come from the SDK helper.
+  const categoryCards = (page.relatedSearches ?? [])
+    .filter((related) => related.type === 'category')
+    .map((related) => ({
+      slug: related.slug,
+      name: related.term,
+      countLabel:
+        related.count > 0
+          ? related.count === 1
+            ? m.jobSearch_resultsCountOne({
+                count: related.count.toLocaleString(board.language),
+              })
+            : m.jobSearch_resultsCountMany({
+                count: related.count.toLocaleString(board.language),
+              })
+          : null,
+      href: jobsCategoryPath(related.slug),
+    }));
+
   return (
     <>
       <JsonLd
@@ -173,6 +189,7 @@ function HomePage() {
       <HomeLanding
         jobs={jobs}
         countLabel={countLabel}
+        categories={categoryCards}
         companies={hiringCompanies}
         posts={posts}
         talent={talent}

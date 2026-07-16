@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import { Bookmark, BookmarkCheck, LoaderCircle } from 'lucide-react';
+
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
   candidateSignInHref,
@@ -16,6 +18,7 @@ export function SaveJobButton({
   labels,
   onSave,
   onSaved,
+  presentation = 'default',
 }: {
   jobId: string;
   viewer: { emailVerified: boolean } | null;
@@ -28,6 +31,7 @@ export function SaveJobButton({
   };
   onSave: (jobId: string) => Promise<void>;
   onSaved?: () => Promise<void> | void;
+  presentation?: 'default' | 'icon';
 }) {
   const [trackedJobId, setTrackedJobId] = useState(jobId);
   const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'error'>(
@@ -39,13 +43,47 @@ export function SaveJobButton({
     setState('idle');
   }
 
+  const iconOnly = presentation === 'icon';
+  const controlVariant = iconOnly ? 'ghost' : 'outline';
+  const controlSize = iconOnly ? 'icon' : 'lg';
+
+  function controlLabel(
+    label: string,
+    controlState: 'idle' | 'saving' | 'saved',
+  ) {
+    if (!iconOnly) return label;
+
+    const Icon =
+      controlState === 'saving'
+        ? LoaderCircle
+        : controlState === 'saved'
+          ? BookmarkCheck
+          : Bookmark;
+
+    return (
+      <>
+        <Icon
+          aria-hidden="true"
+          className={cn(controlState === 'saving' && 'animate-spin')}
+        />
+        <span className="sr-only">{label}</span>
+      </>
+    );
+  }
+
   if (!viewer) {
     return (
       <a
         href={candidateSignInHref(returnTo)}
-        className={buttonVariants({ variant: 'outline', size: 'lg' })}
+        data-presentation={presentation}
+        className={cn(
+          buttonVariants({
+            variant: controlVariant,
+            size: controlSize,
+          }),
+        )}
       >
-        {labels.save}
+        {controlLabel(labels.save, 'idle')}
       </a>
     );
   }
@@ -54,9 +92,15 @@ export function SaveJobButton({
     return (
       <a
         href={candidateVerifyEmailHref(returnTo)}
-        className={buttonVariants({ variant: 'outline', size: 'lg' })}
+        data-presentation={presentation}
+        className={cn(
+          buttonVariants({
+            variant: controlVariant,
+            size: controlSize,
+          }),
+        )}
       >
-        {labels.save}
+        {controlLabel(labels.save, 'idle')}
       </a>
     );
   }
@@ -65,19 +109,26 @@ export function SaveJobButton({
     return (
       <a
         href="/account/saved"
-        className={buttonVariants({ variant: 'outline', size: 'lg' })}
+        data-presentation={presentation}
+        className={cn(
+          buttonVariants({
+            variant: controlVariant,
+            size: controlSize,
+          }),
+        )}
       >
-        {labels.saved}
+        {controlLabel(labels.saved, 'saved')}
       </a>
     );
   }
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className={cn('flex flex-col gap-1', iconOnly && 'relative')}>
       <Button
         type="button"
-        variant="outline"
-        size="lg"
+        variant={iconOnly ? 'ghost' : 'outline'}
+        size={iconOnly ? 'icon' : 'lg'}
+        data-presentation={presentation}
         className={cn(state === 'saving' && 'cursor-wait')}
         disabled={state === 'saving'}
         onClick={async () => {
@@ -95,10 +146,16 @@ export function SaveJobButton({
           }
         }}
       >
-        {state === 'saving' ? labels.saving : labels.save}
+        {controlLabel(
+          state === 'saving' ? labels.saving : labels.save,
+          state === 'saving' ? 'saving' : 'idle',
+        )}
       </Button>
       {state === 'error' ? (
-        <p role="alert" className="text-destructive text-sm">
+        <p
+          role="alert"
+          className={cn('text-destructive text-sm', iconOnly && 'sr-only')}
+        >
           {labels.error}
         </p>
       ) : null}

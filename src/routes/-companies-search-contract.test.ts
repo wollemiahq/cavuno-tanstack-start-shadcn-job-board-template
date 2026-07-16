@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 const {
   getCompanyMarket,
   getCompanyMarkets,
@@ -20,7 +23,6 @@ vi.mock('../server/queries', () => ({
   getSeoBase,
   listCompanies,
   searchCompanies,
-  subscribeJobAlert: vi.fn(),
 }));
 
 import { Route as CompaniesRoute } from './companies.index';
@@ -79,6 +81,16 @@ beforeEach(() => {
 });
 
 describe('companies route — URL-backed master-detail search', () => {
+  it('does not append a job-alert acquisition band to the company directory', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/routes/companies.index.tsx'),
+      'utf8',
+    );
+
+    expect(source).not.toContain('AlertsBand');
+    expect(source).not.toContain('subscribeJobAlert');
+  });
+
   it('accepts the data query, cursor, browse page, and selected company', () => {
     expect(
       validateSearch(CompaniesRoute, {

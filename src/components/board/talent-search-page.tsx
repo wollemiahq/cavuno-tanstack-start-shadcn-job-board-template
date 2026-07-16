@@ -6,11 +6,10 @@ import { m } from '../../paraglide/messages';
 
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import { toTalentCardVM } from '@/board/talent-view-model';
-import type { BreadcrumbData } from '@/components/board/breadcrumb';
-import { PageHeaderWithBreadcrumb } from '@/components/board/page-header-with-breadcrumb';
-import { TalentSearchControls } from '@/components/board/talent-search-controls';
+import { TalentFilterControls } from '@/components/board/talent-filter-controls';
 import { TalentSearchResult } from '@/components/board/talent-search-result';
 import { Box } from '@/components/layout/box';
+import { Container } from '@/components/layout/container';
 import { Page } from '@/components/layout/page';
 import {
   AdRail,
@@ -18,9 +17,10 @@ import {
   SearchResultsLayout,
   SearchResultsList,
 } from '@/components/search-results/search-results';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -36,9 +36,6 @@ type AdPlacement = {
 
 export function TalentSearchPage({
   candidates,
-  heading,
-  description,
-  breadcrumb,
   q,
   skill,
   hasMore = false,
@@ -52,9 +49,6 @@ export function TalentSearchPage({
   endAd,
 }: {
   candidates: TalentDirectoryEntry[];
-  heading?: string;
-  description?: string;
-  breadcrumb?: BreadcrumbData;
   q?: string;
   skill?: string;
   hasMore?: boolean;
@@ -68,6 +62,7 @@ export function TalentSearchPage({
   endAd?: AdPlacement;
 }) {
   const labels = getTalentSearchLabels();
+  const hasActiveSearch = Boolean(q || skill);
   const candidateVms = candidates.map((candidate) =>
     toTalentCardVM(candidate, labels),
   );
@@ -80,24 +75,30 @@ export function TalentSearchPage({
     onReplace: onSelectedTalentReplace,
     onPush: onSelectedTalentPush,
   });
+  const resultsBar = (
+    <div
+      data-slot="talent-results-bar"
+      className={candidateVms.length > 0 ? 'px-4 pb-3 md:px-0' : 'pb-3'}
+    >
+      <h1 className="text-foreground text-lg font-semibold tracking-tight">
+        {m.talentSearch_resultsHeading()}
+      </h1>
+    </div>
+  );
 
   return (
-    <Page width="wide">
-      <main data-layout="talent-search-page">
-        <Box background="muted" border="bottom">
-          <PageHeaderWithBreadcrumb
-            breadcrumb={breadcrumb}
-            align="center"
-            title={heading ?? m.talentDirectory_title()}
-            description={description}
-          >
-            <div className="mt-2 w-full max-w-5xl text-left">
-              <TalentSearchControls
+    <Page width="wide" fill>
+      <main
+        data-layout="talent-search-page"
+        className="md:flex md:h-full md:min-h-0 md:flex-col"
+      >
+        <Box border="bottom" paddingX={{ base: '4', md: '8' }}>
+          <Container width="wide" gutter="0">
+            <div className="py-3">
+              <TalentFilterControls
                 q={q}
                 skill={skill}
                 labels={{
-                  query: m.talentSearch_queryLabel(),
-                  queryPlaceholder: m.talentDirectory_searchPlaceholder(),
                   skill: m.talentSearch_skillLabel(),
                   skillPlaceholder: m.talentSearch_skillPlaceholder(),
                   search: m.talentDirectory_searchLabel(),
@@ -105,35 +106,72 @@ export function TalentSearchPage({
                 onSubmit={onSearchSubmit}
               />
             </div>
-          </PageHeaderWithBreadcrumb>
+          </Container>
         </Box>
 
-        <Box
-          paddingX={{ base: '4', md: '8' }}
-          paddingY={{ base: '6', md: '8' }}
+        <div
+          data-slot="talent-search-viewport"
+          className="min-w-0 overflow-x-clip md:flex md:min-h-0 md:flex-1 md:overflow-hidden"
         >
-          <SearchResultsLayout
-            startAd={
-              startAd ? (
-                <AdRail label={startAd.label}>{startAd.content}</AdRail>
-              ) : undefined
-            }
-            endAd={
-              endAd ? (
-                <AdRail label={endAd.label}>{endAd.content}</AdRail>
-              ) : undefined
-            }
-            list={
-              <SearchResultsList
-                label={m.talentSearch_resultsRegionLabel()}
-                scrollRestorationId="talent-search-results"
-              >
-                <div className="space-y-4 p-4">
-                  <p className="text-muted-foreground text-sm font-medium">
-                    {m.talentSearch_resultsHeading()}
-                  </p>
+          {candidateVms.length === 0 ? (
+            <SearchResultsLayout
+              startAd={
+                startAd ? (
+                  <AdRail label={startAd.label}>{startAd.content}</AdRail>
+                ) : undefined
+              }
+              endAd={
+                endAd ? (
+                  <AdRail label={endAd.label}>{endAd.content}</AdRail>
+                ) : undefined
+              }
+              list={
+                <div className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0">
+                  {resultsBar}
+                  <Empty className="min-h-[calc(100dvh-16rem)] border-0">
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <Users aria-hidden="true" />
+                      </EmptyMedia>
+                      <EmptyTitle>{m.talentDirectory_title()}</EmptyTitle>
+                      <EmptyDescription>
+                        {hasActiveSearch
+                          ? m.talentSearch_noMatchText()
+                          : m.talentDirectory_emptyText()}
+                      </EmptyDescription>
+                    </EmptyHeader>
+                    {hasActiveSearch ? (
+                      <EmptyContent>
+                        <a href="/talent" className={buttonVariants()}>
+                          {m.jobSearch_resetFiltersAction()}
+                        </a>
+                      </EmptyContent>
+                    ) : null}
+                  </Empty>
+                </div>
+              }
+              detail={null}
+            />
+          ) : (
+            <SearchResultsLayout
+              startAd={
+                startAd ? (
+                  <AdRail label={startAd.label}>{startAd.content}</AdRail>
+                ) : undefined
+              }
+              endAd={
+                endAd ? (
+                  <AdRail label={endAd.label}>{endAd.content}</AdRail>
+                ) : undefined
+              }
+              list={
+                <SearchResultsList
+                  label={m.talentSearch_resultsRegionLabel()}
+                  scrollRestorationId="talent-search-results"
+                >
+                  <div className="space-y-4 pt-4 pr-4 pb-4">
+                    {resultsBar}
 
-                  {candidateVms.length > 0 ? (
                     <div className="space-y-3">
                       {candidateVms.map((vm, index) => (
                         <TalentSearchResult
@@ -152,47 +190,33 @@ export function TalentSearchPage({
                         />
                       ))}
                     </div>
-                  ) : (
-                    <Empty className="min-h-72 border">
-                      <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                          <Users aria-hidden="true" />
-                        </EmptyMedia>
-                        <EmptyTitle>{m.talentDirectory_title()}</EmptyTitle>
-                        <EmptyDescription>
-                          {q || skill
-                            ? m.talentSearch_noMatchText()
-                            : m.talentDirectory_emptyText()}
-                        </EmptyDescription>
-                      </EmptyHeader>
-                    </Empty>
-                  )}
 
-                  {hasMore && onNextResults ? (
-                    <div className="flex justify-center">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={onNextResults}
-                      >
-                        {m.talentSearch_nextResultsLabel()}
-                      </Button>
-                    </div>
-                  ) : null}
-                </div>
-              </SearchResultsList>
-            }
-            detail={
-              <SearchResultDetail
-                ref={selection.detailRef}
-                label={m.talentSearch_selectedProfileRegionLabel()}
-                scrollRestorationId="talent-selected-detail"
-              >
-                {detail}
-              </SearchResultDetail>
-            }
-          />
-        </Box>
+                    {hasMore && onNextResults ? (
+                      <div className="flex justify-center">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={onNextResults}
+                        >
+                          {m.talentSearch_nextResultsLabel()}
+                        </Button>
+                      </div>
+                    ) : null}
+                  </div>
+                </SearchResultsList>
+              }
+              detail={
+                <SearchResultDetail
+                  ref={selection.detailRef}
+                  label={m.talentSearch_selectedProfileRegionLabel()}
+                  scrollRestorationId="talent-selected-detail"
+                >
+                  {detail}
+                </SearchResultDetail>
+              }
+            />
+          )}
+        </div>
       </main>
     </Page>
   );

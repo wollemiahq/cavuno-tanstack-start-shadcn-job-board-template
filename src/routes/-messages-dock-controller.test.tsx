@@ -123,7 +123,9 @@ describe('MessagesDockController', () => {
     expect(
       screen.getByRole('complementary', { name: 'Conversation with Hue Le' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Hue Le' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Hue Le' }),
+    ).toBeInTheDocument();
   });
 
   it('replaces a failed initial inbox load with an honest retry state', async () => {

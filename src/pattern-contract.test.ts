@@ -122,31 +122,16 @@ describe('breadcrumb singleton (P6 — one implementation only)', () => {
   });
 });
 
-describe('breadcrumb placement (P6 — one placement primitive)', () => {
-  // Placement is owned by ONE primitive: `PageBreadcrumb` (board/breadcrumb.tsx)
-  // hugs the nav at the codified `pt-4 md:pt-5`, left-aligned at the container
-  // edge. It is seated ONLY by the sanctioned seams — `PageBody`'s `breadcrumb`
-  // slot, `ListingPageHeader`'s `breadcrumb` slot, the `JobDetail` band, and the
-  // `CompanySectionShell` band (CAV-516: the company section header rides the
-  // same full-bleed band as job-detail) — so the spacing literally cannot
-  // diverge per page (CAV-511). Two gates keep it that way:
-  //  (a) the trail element `<Breadcrumb` is rendered ONLY by the placement
-  //      primitive's own file (never hand-placed by a route),
-  //  (b) the `<PageBreadcrumb` placement primitive is seated ONLY by the
-  //      sanctioned seams (never dropped into a route with ad-hoc spacing).
+describe('breadcrumb placement (P6 — one shell placement)', () => {
+  // The root shell resolves and seats one visible trail after route content
+  // and before the footer. Domain pages may still emit breadcrumb JSON-LD,
+  // but they never render a second visible breadcrumb.
   const BREADCRUMB_ELEMENT = '<Breadcrumb';
-  const PLACEMENT_ELEMENT = '<PageBreadcrumb';
+  const PLACEMENT_ELEMENT = '<ShellBreadcrumb';
   const BREADCRUMB_OWNERS = [
     join('src', 'components', 'board', 'breadcrumb.tsx'),
   ];
-  const PLACEMENT_OWNERS = [
-    join('src', 'components', 'board', 'company-search-page.tsx'),
-    join('src', 'components', 'board', 'company-section-header.tsx'),
-    join('src', 'components', 'board', 'job-detail.tsx'),
-    join('src', 'components', 'board', 'listing-page-header.tsx'),
-    join('src', 'components', 'board', 'page-body.tsx'),
-    join('src', 'components', 'board', 'page-header-with-breadcrumb.tsx'),
-  ];
+  const PLACEMENT_OWNERS = [join('src', 'routes', '__root.tsx')];
 
   it('renders the <Breadcrumb> trail element only inside the placement primitive', () => {
     const owners = tsxFiles(SRC_DIR)
@@ -156,19 +141,19 @@ describe('breadcrumb placement (P6 — one placement primitive)', () => {
     expect(
       owners,
       'a route/component renders <Breadcrumb> directly — pass the resolved ' +
-        'trail to the `breadcrumb` slot on PageBody / ListingPageHeader instead',
+        'trail through the root shell instead',
     ).toEqual(BREADCRUMB_OWNERS);
   });
 
-  it('seats the <PageBreadcrumb> placement primitive only in the sanctioned seams', () => {
+  it('seats the <ShellBreadcrumb> placement primitive only in the root shell', () => {
     const owners = tsxFiles(SRC_DIR)
       .filter((path) => read(path).includes(PLACEMENT_ELEMENT))
       .map((path) => relative(root, path))
       .sort();
     expect(
       owners,
-      'a route/component seats <PageBreadcrumb> directly — route the trail ' +
-        'through a sanctioned page-header seam instead',
+      'a route/component seats <ShellBreadcrumb> directly — the root shell ' +
+        'is the single visible placement owner',
     ).toEqual(PLACEMENT_OWNERS);
   });
 });

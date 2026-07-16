@@ -64,7 +64,9 @@ const fieldVariants = cva(
           'flex-col *:w-full @md/field-group:flex-row @md/field-group:items-center @md/field-group:*:w-auto @md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:*:data-[slot=field-label]:flex-auto [&>.sr-only]:w-auto @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px',
       },
     },
-    defaultVariants: { orientation: 'vertical' },
+    defaultVariants: {
+      orientation: 'vertical',
+    },
   },
 );
 
@@ -146,11 +148,13 @@ function FieldSeparator({
   children,
   className,
   ...props
-}: React.ComponentProps<'div'> & { children?: React.ReactNode }) {
+}: React.ComponentProps<'div'> & {
+  children?: React.ReactNode;
+}) {
   return (
     <div
       data-slot="field-separator"
-      data-content={Boolean(children)}
+      data-content={!!children}
       className={cn(
         'relative -my-2 h-5 text-sm group-data-[variant=outline]/field-group:-mb-2',
         className,
@@ -158,14 +162,14 @@ function FieldSeparator({
       {...props}
     >
       <Separator className="absolute inset-0 top-1/2" />
-      {children ? (
+      {children && (
         <span
           className="bg-background text-muted-foreground relative mx-auto block w-fit px-2"
           data-slot="field-separator-content"
         >
           {children}
         </span>
-      ) : null}
+      )}
     </div>
   );
 }
@@ -179,24 +183,35 @@ function FieldError({
   errors?: Array<{ message?: string } | undefined>;
 }) {
   const content = useMemo(() => {
-    if (children) return children;
-    if (!errors?.length) return null;
+    if (children) {
+      return children;
+    }
+
+    if (!errors?.length) {
+      return null;
+    }
 
     const uniqueErrors = [
       ...new Map(errors.map((error) => [error?.message, error])).values(),
     ];
-    if (uniqueErrors.length === 1) return uniqueErrors[0]?.message;
+
+    if (uniqueErrors?.length == 1) {
+      return uniqueErrors[0]?.message;
+    }
 
     return (
       <ul className="ml-4 flex list-disc flex-col gap-1">
-        {uniqueErrors.map((error, index) =>
-          error?.message ? <li key={index}>{error.message}</li> : null,
+        {uniqueErrors.map(
+          (error, index) =>
+            error?.message && <li key={index}>{error.message}</li>,
         )}
       </ul>
     );
   }, [children, errors]);
 
-  if (!content) return null;
+  if (!content) {
+    return null;
+  }
 
   return (
     <div
@@ -212,13 +227,13 @@ function FieldError({
 
 export {
   Field,
-  FieldContent,
+  FieldLabel,
   FieldDescription,
   FieldError,
   FieldGroup,
-  FieldLabel,
   FieldLegend,
   FieldSeparator,
   FieldSet,
+  FieldContent,
   FieldTitle,
 };

@@ -1,9 +1,8 @@
 import { boardCopy } from '#/copy';
 
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
-import { createFileRoute, getRouteApi, Link } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 
-import { AlertsBand } from '@/components/board/alerts-band';
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
@@ -14,7 +13,6 @@ import {
   listBlogPosts,
   listBlogTags,
   searchBlogPosts,
-  subscribeJobAlert,
 } from '@/server/queries';
 
 interface BlogSearch {
@@ -63,11 +61,8 @@ export const Route = createFileRoute('/blog/')({
   component: BlogPage,
 });
 
-const rootApi = getRouteApi('__root__');
-
 function BlogPage() {
   const { page, tags, seo, q } = Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
   const copy = boardCopy(seo.language, seo.labels);
   const crumbs = copy.breadcrumbs;
   const jsonLd = [
@@ -81,10 +76,6 @@ function BlogPage() {
     <>
       <JsonLd data={jsonLd} />
       <BlogArchivePage
-        breadcrumb={{
-          ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
-          items: [{ name: crumbs.home, href: '/' }, { name: crumbs.blog }],
-        }}
         title={m.blogIndex_title()}
         description={m.blogIndex_subtitleText()}
         filters={
@@ -142,18 +133,6 @@ function BlogPage() {
           ) : undefined
         }
       />
-
-      {board.features.jobAlerts ? (
-        <AlertsBand
-          language={board.language}
-          labels={board.labels}
-          source="blog_list"
-          onSubscribe={async (input) => {
-            const result = await subscribeJobAlert({ data: input });
-            return { status: result.status };
-          }}
-        />
-      ) : null}
     </>
   );
 }

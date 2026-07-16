@@ -28,6 +28,15 @@ export function candidateSignUpHref(value: unknown) {
   return candidateAuthHref('/auth/sign-up', value);
 }
 
+/**
+ * The single sign-up entry point (CAV-514). Send users here when the role is
+ * unknown — `/auth/join` resolves it via `resolveSignupDestination`, skipping
+ * the chooser when the board only enables one role.
+ */
+export function candidateJoinHref(value: unknown) {
+  return candidateAuthHref('/auth/join', value);
+}
+
 export function candidateForgotPasswordHref(value: unknown) {
   return candidateAuthHref('/auth/forgot-password', value);
 }

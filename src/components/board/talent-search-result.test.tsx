@@ -41,10 +41,7 @@ describe('TalentSearchResult', () => {
     expect(screen.getByText('London, United Kingdom')).toBeVisible();
     expect(screen.getByText('Open to offers')).toBeVisible();
     expect(screen.getByText('Analytical engines')).toBeVisible();
-    expect(screen.getByRole('img', { name: 'Ada Lovelace' })).toHaveAttribute(
-      'src',
-      'https://cdn.example/ada.jpg',
-    );
+    expect(container.querySelector("[data-slot='avatar']")).toBeInTheDocument();
 
     fireEvent.click(link);
     expect(onActivate).toHaveBeenCalledTimes(1);

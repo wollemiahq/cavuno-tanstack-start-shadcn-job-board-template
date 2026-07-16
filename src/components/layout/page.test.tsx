@@ -17,7 +17,6 @@ describe('Page composition', () => {
         <PageContent
           header={
             <PageHeader
-              breadcrumb={<nav aria-label="Breadcrumb">Home / Jobs</nav>}
               eyebrow={<p>1,204 open roles</p>}
               title="Jobs"
               description="Find your next role"
@@ -40,9 +39,6 @@ describe('Page composition', () => {
     const main = screen.getByRole('main');
     expect(
       within(main).getByRole('heading', { level: 1, name: 'Jobs' }),
-    ).toBeInTheDocument();
-    expect(
-      within(main).getByRole('navigation', { name: 'Breadcrumb' }),
     ).toBeInTheDocument();
     expect(
       within(main).getByRole('form', { name: 'Job search' }),

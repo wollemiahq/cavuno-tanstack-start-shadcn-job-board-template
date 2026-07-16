@@ -12,6 +12,7 @@ import { JsonLd } from './json-ld';
 
 import { JobSearchPage } from '@/components/board/job-search-page';
 import type { JobsSearch } from '@/lib/jobs-search';
+import { saveJob } from '@/server/account';
 import type { PublicJobCard, RelatedSearch } from '@cavuno/board';
 
 const rootApi = getRouteApi('__root__');
@@ -75,6 +76,13 @@ export function ProgrammaticJobsView({
 
       <JobSearchPage
         heading={heading}
+        breadcrumb={{
+          ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
+          items: [
+            { name: copy.breadcrumbs.jobs, href: '/jobs' },
+            { name: heading },
+          ],
+        }}
         count={count}
         gatedCount={gatedCount}
         jobs={jobs}
@@ -84,6 +92,10 @@ export function ProgrammaticJobsView({
         filters={filters}
         language={board.language}
         labels={board.labels}
+        viewer={user ? { emailVerified: user.emailVerified } : null}
+        onSaveJob={async (jobId) => {
+          await saveJob({ data: { jobId } });
+        }}
         onFiltersChange={(next) =>
           navigate({
             search: (prev) => ({

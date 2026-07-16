@@ -67,7 +67,7 @@ Installing the catalog does not mean every component should appear in the demo. 
 | Attachment | Adopted | Stored résumé file row and actions. |
 | Avatar | Adopted | Jobs, companies, talent, authors, accounts, and messaging identities. |
 | Badge | Adopted | Job taxonomy, statuses, result metadata, and unread counts. |
-| Breadcrumb | Adopted | The single `PageBreadcrumb` trail implementation. |
+| Breadcrumb | Adopted | The single root-owned `ShellBreadcrumb` trail implementation. |
 | Bubble | Adopted | Message bubble alignment and grouped message chrome. |
 | Button | Adopted | Canonical actions and link rendering throughout the starter. |
 | Button Group | Adopted | Joined keyword/location/search control in the global header. |

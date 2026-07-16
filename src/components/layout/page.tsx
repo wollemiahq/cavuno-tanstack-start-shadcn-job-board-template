@@ -4,6 +4,7 @@ import {
   containerGridClass,
   containerWidthValues,
   responsiveGutterClass,
+  responsiveHeaderSpaceClass,
   responsiveTokenStyle,
   spaceValues,
   type ContainerWidth,
@@ -27,6 +28,8 @@ export type PageProps = PageNativeProps & {
  *
  * @default width is `wide` (80rem) with 1rem mobile and 2rem desktop gutters.
  * @invariant Page owns geometry; callers cannot pass className or style.
+ * @invariant Page publishes `--header-space` — the single header rhythm every
+ * detail surface reads, whether it renders a PageHeader or a full-bleed band.
  */
 export function Page({ width = 'wide', fill = false, ...props }: PageProps) {
   const layoutStyle = {
@@ -34,6 +37,11 @@ export function Page({ width = 'wide', fill = false, ...props }: PageProps) {
     ...responsiveTokenStyle(
       'layout-gutter',
       { base: '4', md: '8' },
+      spaceValues,
+    ),
+    ...responsiveTokenStyle(
+      'header-space',
+      { base: '8', md: '10' },
       spaceValues,
     ),
   };
@@ -44,7 +52,11 @@ export function Page({ width = 'wide', fill = false, ...props }: PageProps) {
       data-slot="page"
       data-layout="page"
       style={layoutStyle}
-      className={cn(responsiveGutterClass, fill && 'md:h-full md:min-h-0')}
+      className={cn(
+        responsiveGutterClass,
+        responsiveHeaderSpaceClass,
+        fill && 'md:h-full md:min-h-0',
+      )}
     />
   );
 }
@@ -55,7 +67,6 @@ type PageHeaderNativeProps = Omit<
 >;
 
 export type PageHeaderProps = PageHeaderNativeProps & {
-  breadcrumb?: ReactNode;
   eyebrow?: ReactNode;
   title: ReactNode;
   description?: ReactNode;
@@ -72,7 +83,6 @@ export type PageHeaderProps = PageHeaderNativeProps & {
  * @invariant Every PageHeader renders exactly one required h1.
  */
 export function PageHeader({
-  breadcrumb,
   eyebrow,
   title,
   description,
@@ -90,11 +100,12 @@ export function PageHeader({
       data-layout="page-header"
       data-align={align}
       className={cn(
-        'flex flex-col gap-4 py-8 md:py-10',
+        // Top spacing only: PageContent's body owns the gap down to the
+        // content, so the two never stack into an unintended double gap.
+        'flex flex-col gap-4 pt-(--header-space)',
         centered && 'items-center text-center',
       )}
     >
-      {breadcrumb}
       {eyebrow}
       <div
         data-slot="page-header-heading"

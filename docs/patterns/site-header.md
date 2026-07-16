@@ -1,7 +1,7 @@
 ---
 name: Site header
 purpose: The public shell's context-aware search, centered discovery navigation, and account actions.
-primitives: [Header, HeaderSearch, LocationCombobox, Link, Input, Button]
+primitives: [Header, HeaderSearch, LocationCombobox, Link, Input, Button, Box]
 usedBy: [src/components/Header.tsx, src/components/location-combobox.tsx, src/lib/header-search.ts, src/routes/__root.tsx]
 ---
 
@@ -46,7 +46,7 @@ for the current query.
 
 ```tsx
 <header>
-  <Container width="wide">
+  <Box paddingX={{ base: '4', md: '8' }}>
     <div className="grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
       <div data-slot="header-left">
         <Brand />
@@ -55,9 +55,14 @@ for the current query.
       <nav data-slot="header-primary-navigation">…</nav>
       <div data-slot="header-actions">…</div>
     </div>
-  </Container>
+  </Box>
 </header>
 ```
+
+The header is intentionally fluid rather than capped at the page-body width.
+Its responsive gutters match the canonical page gutters while giving grouped
+keyword and location search the horizontal room expected of a dense product
+navigation bar.
 
 ## Do / Don't
 
@@ -66,6 +71,7 @@ for the current query.
 | Derive search shape and destination from the active route. | Keep a second search-type control beside primary navigation. |
 | Pair Jobs keyword and location inside one visually grouped control. | Split location into an unrelated filter or a second page hero. |
 | Keep the navigation geometrically centered with equal outer tracks. | Center it only within leftover flex space. |
+| Keep the chrome fluid with responsive `Box` gutters. | Put the header inside the canonical 80rem page-body container. |
 | Preserve the URL query on reload, history navigation, and new tabs. | Navigate on every keystroke or keep canonical search state only in React. |
 | Collapse navigation into the mobile disclosure before the header crowds. | Force all four links, search, and account actions into one mobile row. |
 

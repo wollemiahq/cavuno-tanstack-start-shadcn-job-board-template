@@ -38,6 +38,7 @@ describe('ListingPagination — owned shadcn navigation', () => {
         page={1}
         count={20}
         pageSize={20}
+        hrefForPage={(page) => `/jobs?page=${page}`}
         onPageChange={vi.fn()}
       />,
     );
@@ -48,17 +49,27 @@ describe('ListingPagination — owned shadcn navigation', () => {
         page={2}
         count={60}
         pageSize={20}
+        hrefForPage={(page) => `/jobs?page=${page}`}
         onPageChange={vi.fn()}
       />,
     );
 
     const pagination = screen.getByRole('navigation', { name: 'Pagination' });
-    expect(pagination).toHaveAttribute('data-slot', 'pagination');
     expect(
       within(pagination).getByText('2').closest("[aria-current='page']"),
     ).not.toBeNull();
     expect(within(pagination).getByLabelText(/previous page/i)).toBeEnabled();
     expect(within(pagination).getByLabelText(/next page/i)).toBeEnabled();
+    expect(
+      within(pagination)
+        .getAllByRole('link')
+        .map((link) => link.tagName),
+    ).toEqual(['A', 'A', 'A', 'A', 'A']);
+    expect(within(pagination).queryByRole('button')).toBeNull();
+    expect(within(pagination).getByLabelText(/previous page/i)).toHaveAttribute(
+      'href',
+      '/jobs?page=1',
+    );
   });
 
   it('sends previous, numbered-page, and next choices through the URL-navigation callback', () => {
@@ -68,6 +79,7 @@ describe('ListingPagination — owned shadcn navigation', () => {
         page={2}
         count={80}
         pageSize={20}
+        hrefForPage={(page) => `/jobs?page=${page}`}
         onPageChange={onPageChange}
       />,
     );
@@ -78,5 +90,33 @@ describe('ListingPagination — owned shadcn navigation', () => {
     fireEvent.click(within(pagination).getByLabelText(/next page/i));
 
     expect(onPageChange.mock.calls).toEqual([[1], [4], [3]]);
+  });
+
+  it('keeps compact pagination navigable at a later page', () => {
+    render(
+      <ListingPagination
+        compact
+        page={5}
+        count={180}
+        pageSize={20}
+        hrefForPage={(page) => `/jobs?page=${page}`}
+        onPageChange={vi.fn()}
+      />,
+    );
+
+    const pagination = screen.getByRole('navigation', { name: 'Pagination' });
+    expect(pagination).toHaveAttribute('data-compact', 'true');
+    expect(within(pagination).getByLabelText(/previous page/i)).toHaveAttribute(
+      'href',
+      '/jobs?page=4',
+    );
+    expect(within(pagination).getByLabelText(/next page/i)).toHaveAttribute(
+      'href',
+      '/jobs?page=6',
+    );
+    expect(
+      within(pagination).getByText('5').closest("[aria-current='page']"),
+    ).not.toBeNull();
+    expect(within(pagination).queryByRole('button')).toBeNull();
   });
 });

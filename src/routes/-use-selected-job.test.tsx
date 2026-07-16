@@ -3,12 +3,13 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getJob, myApplicationForJob } = vi.hoisted(() => ({
+const { getCompany, getJob, myApplicationForJob } = vi.hoisted(() => ({
+  getCompany: vi.fn(),
   getJob: vi.fn(),
   myApplicationForJob: vi.fn(),
 }));
 
-vi.mock('../server/queries', () => ({ getJob }));
+vi.mock('../server/queries', () => ({ getCompany, getJob }));
 vi.mock('../server/applications', () => ({ myApplicationForJob }));
 
 import { useSelectedJob } from './-use-selected-job';
@@ -28,6 +29,7 @@ function deferred<T>() {
 }
 
 beforeEach(() => {
+  getCompany.mockReset();
   getJob.mockReset();
   myApplicationForJob.mockReset();
 });
@@ -113,5 +115,26 @@ describe('useSelectedJob', () => {
     await waitFor(() => expect(result.current.status).toBe('ready'));
     expect(myApplicationForJob).not.toHaveBeenCalled();
     expect(result.current.alreadyApplied).toBe(false);
+  });
+
+  it('loads the attached company description for the about-company section', async () => {
+    getJob.mockResolvedValue({
+      ...job('first-job'),
+      company: { slug: 'acme' },
+    });
+    getCompany.mockResolvedValue({
+      slug: 'acme',
+      description: '<p>Acme builds tools for modern product teams.</p>',
+    });
+
+    const { result } = renderHook(() => useSelectedJob('first-job'));
+
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+    expect(getCompany).toHaveBeenCalledWith({
+      data: { companySlug: 'acme' },
+    });
+    expect(result.current.companyDescription).toBe(
+      '<p>Acme builds tools for modern product teams.</p>',
+    );
   });
 });

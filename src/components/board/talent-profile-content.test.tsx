@@ -89,4 +89,16 @@ describe('TalentProfileContent', () => {
     expect(screen.queryByRole('heading', { name: 'Skills' })).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Languages' })).toBeNull();
   });
+
+  it('can omit the profile identity when a parent detail header owns it', () => {
+    render(<TalentProfileContent vm={profileVm} showHeader={false} />);
+
+    expect(screen.queryByRole('heading', { name: 'Ada Lovelace' })).toBeNull();
+    expect(screen.queryByText('Computing pioneer')).toBeNull();
+    expect(screen.queryByText('Open to offers')).toBeNull();
+    expect(
+      screen.getByText('I translate ambitious ideas into working systems.'),
+    ).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Experience' })).toBeVisible();
+  });
 });

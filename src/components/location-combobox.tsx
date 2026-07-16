@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { MapPin, X } from 'lucide-react';
 
@@ -13,6 +13,7 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
+  useComboboxAnchor,
 } from '@/components/ui/combobox';
 import { InputGroupAddon, InputGroupButton } from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
@@ -56,6 +57,8 @@ export function LocationCombobox({
 }: LocationComboboxProps) {
   const [text, setText] = useState(valueLabel ?? value ?? '');
   const [open, setOpen] = useState(false);
+  const anchorRef = useComboboxAnchor();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setText(valueLabel ?? value ?? '');
@@ -66,6 +69,7 @@ export function LocationCombobox({
     setOpen(false);
     onQueryChange('');
     onClear();
+    inputRef.current?.focus();
   };
 
   return (
@@ -97,6 +101,8 @@ export function LocationCombobox({
       }}
     >
       <ComboboxInput
+        ref={inputRef}
+        anchorRef={anchorRef}
         type="text"
         aria-label={m.locationCombobox_locationAriaLabel()}
         placeholder={m.locationCombobox_placeholderText()}
@@ -127,7 +133,7 @@ export function LocationCombobox({
           </InputGroupAddon>
         ) : null}
       </ComboboxInput>
-      <ComboboxContent aria-busy={loading}>
+      <ComboboxContent anchor={anchorRef} aria-busy={loading}>
         {loading && suggestions.length === 0 ? (
           <div
             role="status"

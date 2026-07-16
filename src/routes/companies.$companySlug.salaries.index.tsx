@@ -15,7 +15,6 @@ import { getCompany, getCompanySalary, getSeoBase } from '../server/queries';
 
 import {
   toOverallSalaryVM,
-  toSalaryBreadcrumbVM,
   toSalaryFaqVM,
   toSalaryRailVM,
   toSeniorityTableVM,
@@ -33,7 +32,7 @@ import { JsonLd } from '@/components/json-ld';
 import { Text } from '@/components/text';
 
 export const Route = createFileRoute('/companies/$companySlug/salaries/')({
-  staticData: { fullBleed: true },
+  staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
     let salary;
     try {
@@ -138,15 +137,6 @@ function CompanySalaryPage() {
 
   return (
     <CompanySectionShell
-      breadcrumb={toSalaryBreadcrumbVM(
-        [
-          { name: crumbs.home, href: '/' },
-          { name: crumbs.companies, href: '/companies' },
-          { name: salary.companyName },
-        ],
-        seo.language,
-        seo.labels,
-      )}
       company={company}
       activeSection="salaries"
       jobCount={company.publishedJobCount}

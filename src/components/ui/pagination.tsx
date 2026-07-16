@@ -6,8 +6,9 @@ import {
   MoreHorizontalIcon,
 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import type { VariantProps } from 'class-variance-authority';
 
 function Pagination({
   className,
@@ -42,7 +43,7 @@ function PaginationItem({ ...props }: React.ComponentProps<'li'>) {
 
 type PaginationLinkProps = {
   isActive?: boolean;
-} & Pick<React.ComponentProps<typeof Button>, 'size'> &
+} & Pick<VariantProps<typeof buttonVariants>, 'size'> &
   React.ComponentProps<'a'>;
 
 function PaginationLink({
@@ -52,19 +53,15 @@ function PaginationLink({
   ...props
 }: PaginationLinkProps) {
   return (
-    <Button
-      variant={isActive ? 'outline' : 'ghost'}
-      size={size}
-      className={cn(className)}
-      nativeButton={false}
-      render={
-        <a
-          aria-current={isActive ? 'page' : undefined}
-          data-slot="pagination-link"
-          data-active={isActive}
-          {...props}
-        />
-      }
+    <a
+      aria-current={isActive ? 'page' : undefined}
+      data-slot="pagination-link"
+      data-active={isActive}
+      className={cn(
+        buttonVariants({ variant: isActive ? 'outline' : 'ghost', size }),
+        className,
+      )}
+      {...props}
     />
   );
 }
@@ -72,16 +69,23 @@ function PaginationLink({
 function PaginationPrevious({
   className,
   text,
+  showText = true,
   ...props
-}: React.ComponentProps<typeof PaginationLink> & { text: string }) {
+}: React.ComponentProps<typeof PaginationLink> & {
+  text: string;
+  showText?: boolean;
+}) {
   return (
     <PaginationLink
+      aria-label={text}
       size="default"
-      className={cn('pl-1.5!', className)}
+      className={className}
       {...props}
     >
       <ChevronLeftIcon data-icon="inline-start" />
-      <span className="hidden sm:block">{text}</span>
+      <span className={cn('hidden sm:block', !showText && 'hidden!')}>
+        {text}
+      </span>
     </PaginationLink>
   );
 }
@@ -89,15 +93,22 @@ function PaginationPrevious({
 function PaginationNext({
   className,
   text,
+  showText = true,
   ...props
-}: React.ComponentProps<typeof PaginationLink> & { text: string }) {
+}: React.ComponentProps<typeof PaginationLink> & {
+  text: string;
+  showText?: boolean;
+}) {
   return (
     <PaginationLink
+      aria-label={text}
       size="default"
-      className={cn('pr-1.5!', className)}
+      className={className}
       {...props}
     >
-      <span className="hidden sm:block">{text}</span>
+      <span className={cn('hidden sm:block', !showText && 'hidden!')}>
+        {text}
+      </span>
       <ChevronRightIcon data-icon="inline-end" />
     </PaginationLink>
   );

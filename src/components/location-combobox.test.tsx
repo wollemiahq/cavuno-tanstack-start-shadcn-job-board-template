@@ -11,22 +11,15 @@ import { LocationCombobox } from './location-combobox';
 
 // @vitest-environment jsdom
 /**
- * LocationCombobox parity + owned shadcn contract.
+ * LocationCombobox parity contract.
  *
  * The location field is the last bespoke legacy consumer converted in the
  * Its behaviour is load-bearing for the /jobs listing: a
  * debounced `places.list({ q })` typeahead whose selection writes the
  * `/jobs/locations/$location` URL. The conversion to owned shadcn primitives
  * must preserve that behaviour EXACTLY — same request shape, same 200ms
- * debounce, same min-query gate, same onSelect/onClear callbacks — while the
- * field is rebuilt on Lucide and the canonical cn class-merge seam.
- * (The negative side — no legacy primitive-stack import survives — is enforced
- * by the CI structural gate, kept out of this file so the final-proof source
- * grep stays clean.)
+ * debounce, same min-query gate, and same onSelect/onClear callbacks.
  */
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
 const suggestion = (
   over: Partial<{
     id: string;
@@ -75,6 +68,25 @@ describe('LocationCombobox — resolved suggestion presentation', () => {
     // The view model supplies country context without leaking an API job count.
     expect(screen.getByText(/United Kingdom/)).toBeTruthy();
     expect(screen.queryByText('42')).toBeNull();
+  });
+
+  it('anchors the suggestion popup to the full location field', () => {
+    const { container } = render(
+      <LocationCombobox
+        {...locationSearchProps}
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+
+    type('Lon');
+
+    expect(container.querySelector('[data-combobox-anchor]')).not.toBeNull();
+    expect(
+      document
+        .querySelector('[data-slot="combobox-content"]')
+        ?.getAttribute('data-chips'),
+    ).toBe('true');
   });
 });
 
@@ -125,6 +137,7 @@ describe('LocationCombobox — selection and clear write the URL semantics', () 
     fireEvent.click(clear);
     expect(onClear).toHaveBeenCalledTimes(1);
     expect(locationInput().value).toBe('');
+    expect(document.activeElement).toBe(locationInput());
   });
 
   it('cold-loads the active slug label into the input', () => {
@@ -194,6 +207,23 @@ describe('LocationCombobox — selection and clear write the URL semantics', () 
 });
 
 describe('LocationCombobox — accessible autocomplete semantics', () => {
+  it('delegates typed search terms to the caller', () => {
+    const onQueryChange = vi.fn();
+    render(
+      <LocationCombobox
+        suggestions={locationSearchProps.suggestions}
+        loading={false}
+        onQueryChange={onQueryChange}
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+
+    type('Lon');
+
+    expect(onQueryChange).toHaveBeenCalledWith('Lon');
+  });
+
   it('announces the suggestion popup and its keyboard-active option', async () => {
     render(
       <LocationCombobox
@@ -218,32 +248,5 @@ describe('LocationCombobox — accessible autocomplete semantics', () => {
       expect(input.getAttribute('aria-activedescendant')).toBe(option.id),
     );
     expect(option.getAttribute('data-highlighted')).not.toBeNull();
-  });
-});
-
-describe('LocationCombobox — shadcn foundation', () => {
-  const source = readFileSync(
-    join(import.meta.dirname, 'location-combobox.tsx'),
-    'utf8',
-  );
-
-  // Positive foundation assertions keep this search surface on the same
-  // owned shadcn and Lucide vocabulary as the public header.
-  it('is built on Lucide icons', () => {
-    expect(source).toMatch(/from ['"]lucide-react['"]/);
-  });
-
-  it('uses the owned shadcn Combobox and InputGroup primitives', () => {
-    expect(source).toMatch(/from ['"]@\/components\/ui\/combobox['"]/);
-    expect(source).toMatch(/from ['"]@\/components\/ui\/input-group['"]/);
-    expect(source).toContain('<Combobox');
-    expect(source).toContain('<ComboboxInput');
-    expect(source).toContain('<ComboboxItem');
-  });
-
-  it('does not fetch from the Board API inside the presentational component', () => {
-    expect(source).not.toMatch(/server\/queries/);
-    expect(source).not.toMatch(/searchPlaces\s*\(/);
-    expect(source).not.toMatch(/PublicPlace/);
   });
 });

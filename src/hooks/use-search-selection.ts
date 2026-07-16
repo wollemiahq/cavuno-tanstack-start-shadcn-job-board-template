@@ -52,10 +52,20 @@ export function useSearchSelection({
       ? selectedId
       : resultIds[0]
     : undefined;
+  const previousActiveId = useRef(activeId);
 
   useEffect(() => {
     if (activeId && activeId !== selectedId) onReplace(activeId);
   }, [activeId, onReplace, selectedId]);
+
+  useEffect(() => {
+    const previousId = previousActiveId.current;
+    previousActiveId.current = activeId;
+
+    if (previousId && activeId && previousId !== activeId) {
+      detailRef.current?.scrollTo({ top: 0 });
+    }
+  }, [activeId]);
 
   return {
     isDesktop,
@@ -77,7 +87,6 @@ export function useSearchSelection({
       event.preventDefault();
       if (resultId === selectedId) return;
 
-      detailRef.current?.scrollTo({ top: 0 });
       onPush(resultId);
     },
   };

@@ -3,7 +3,7 @@
 import '@testing-library/jest-dom/vitest';
 import { BoardApiError } from '@cavuno/board';
 import { isNotFound as isRouteNotFound } from '@tanstack/react-router';
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { getSeoBase, getTalentProfile, listTalent } = vi.hoisted(() => ({
@@ -19,7 +19,10 @@ vi.mock('../server/queries', () => ({
 }));
 
 import { Route as ProfileRoute } from './p.$handle';
-import { Route as TalentRoute } from './talent.index';
+import {
+  RestrictedTalentDirectory,
+  Route as TalentRoute,
+} from './talent.index';
 
 const seo = {
   boardName: 'Acme Careers',
@@ -95,7 +98,7 @@ describe('talent directory route — query and capability contracts', () => {
   });
 
   it('renders the restricted state for the employer-only directory code', async () => {
-    listTalent.mockRejectedValue(apiError(403, 'talent_directory_restricted'));
+    listTalent.mockResolvedValue({ status: 'restricted' });
 
     await expect(
       routeLoader(TalentRoute)({ deps: {} } as never),
@@ -103,6 +106,26 @@ describe('talent directory route — query and capability contracts', () => {
       page: null,
       restricted: true,
     });
+  });
+
+  it('presents employer-only access as the shared empty state with both auth paths', () => {
+    const { container } = render(
+      <RestrictedTalentDirectory boardName="Acme Careers" />,
+    );
+
+    expect(container.querySelector("[data-slot='empty']")).not.toBeNull();
+    expect(
+      screen.getByRole('heading', {
+        name: 'This talent directory is for employers',
+      }),
+    ).toBeVisible();
+    const signUpLink = screen.getByRole('link', { name: 'Sign up' });
+    expect(signUpLink).toHaveAttribute('href', '/auth/employer/sign-up');
+    expect(signUpLink).not.toHaveAttribute('role', 'button');
+    const signInLink = screen.getByRole('link', { name: 'Sign in' });
+    expect(signInLink).toHaveAttribute('href', '/auth/sign-in');
+    expect(signInLink).not.toHaveAttribute('role', 'button');
+    expect(screen.queryByRole('heading', { name: 'Talent' })).toBeNull();
   });
 
   it('does not disguise an unrelated forbidden response as an employer-only directory', async () => {

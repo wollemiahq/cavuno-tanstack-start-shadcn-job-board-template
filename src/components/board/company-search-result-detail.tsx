@@ -1,82 +1,273 @@
 import { Link } from '@tanstack/react-router';
 
 import type { CompanyDetailVM } from '@/board/company-view-model';
+import type { JobCardVM } from '@/board/job-view-model';
+import type { OverallSalaryVM } from '@/board/salary-view-model';
+import { JobCard } from '@/components/board/job-card';
 import { Prose } from '@/components/prose';
+import { SearchResultDetailHeader } from '@/components/search-results/search-results';
 import { Text } from '@/components/text';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge, badgeVariants } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { initialsOf } from '@/lib/initials';
-import { cn } from '@/lib/utils';
+import { m } from '@/paraglide/messages';
+
+function CompanyDetailActions({
+  vm,
+  hasJobs,
+  hasSalaries,
+  compact = false,
+}: {
+  vm: CompanyDetailVM;
+  hasJobs: boolean;
+  hasSalaries: boolean;
+  compact?: boolean;
+}) {
+  if (!hasJobs && !hasSalaries) return null;
+
+  return (
+    <div
+      data-slot="company-detail-primary-actions"
+      className={
+        compact
+          ? 'flex shrink-0 items-center gap-2'
+          : 'col-start-1 row-start-2 flex w-fit max-w-full min-w-0 items-center gap-2'
+      }
+    >
+      {hasJobs ? (
+        <Link
+          to="/companies/$companySlug/jobs"
+          params={{ companySlug: vm.companySlug }}
+          className={buttonVariants({ size: compact ? 'sm' : 'default' })}
+        >
+          {vm.viewJobsLabel}
+        </Link>
+      ) : null}
+      {hasSalaries ? (
+        <Link
+          to="/companies/$companySlug/salaries"
+          params={{ companySlug: vm.companySlug }}
+          className={buttonVariants({
+            variant: 'outline',
+            size: compact ? 'sm' : 'default',
+          })}
+        >
+          {vm.viewSalariesLabel}
+        </Link>
+      ) : null}
+    </div>
+  );
+}
+
+function ExpandedCompanyDetailHeader({
+  vm,
+  hasJobs,
+  hasSalaries,
+  interactive,
+}: {
+  vm: CompanyDetailVM;
+  hasJobs: boolean;
+  hasSalaries: boolean;
+  interactive: boolean;
+}) {
+  return (
+    <div data-slot="company-detail-expanded-header">
+      <header
+        data-slot="company-detail-sticky-header"
+        className="grid max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-4 p-5 md:p-6"
+      >
+        <div
+          data-slot="company-detail-heading"
+          className="col-start-1 row-start-1 flex min-w-0 items-center gap-3"
+        >
+          <Avatar size="lg" className="rounded-xl">
+            {vm.logoUrl ? (
+              <AvatarImage src={vm.logoUrl} alt="" className="rounded-xl" />
+            ) : null}
+            <AvatarFallback className="rounded-xl">
+              {initialsOf(vm.avatarName)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 space-y-1">
+            <Text as="h2" variant="heading2" className="truncate">
+              {interactive ? (
+                <a
+                  href={vm.detailHref}
+                  className="outline-none hover:underline focus-visible:underline"
+                >
+                  {vm.name}
+                </a>
+              ) : (
+                vm.name
+              )}
+            </Text>
+            {vm.openJobsLabel ? (
+              <Badge variant="secondary">{vm.openJobsLabel}</Badge>
+            ) : null}
+          </div>
+        </div>
+
+        {interactive ? (
+          <CompanyDetailActions
+            vm={vm}
+            hasJobs={hasJobs}
+            hasSalaries={hasSalaries}
+          />
+        ) : null}
+      </header>
+    </div>
+  );
+}
+
+function CompactCompanyDetailHeader({
+  vm,
+  hasJobs,
+  hasSalaries,
+  interactive,
+}: {
+  vm: CompanyDetailVM;
+  hasJobs: boolean;
+  hasSalaries: boolean;
+  interactive: boolean;
+}) {
+  return (
+    <header
+      data-slot="company-detail-compact-header"
+      className="border-border bg-background/95 flex h-16 min-w-0 items-center justify-between gap-4 border-b px-5 backdrop-blur md:px-6"
+    >
+      <Text as="h2" variant="heading3" className="min-w-0 truncate text-base">
+        {interactive ? (
+          <a
+            href={vm.detailHref}
+            className="outline-none hover:underline focus-visible:underline"
+          >
+            {vm.name}
+          </a>
+        ) : (
+          vm.name
+        )}
+      </Text>
+      {interactive ? (
+        <CompanyDetailActions
+          vm={vm}
+          hasJobs={hasJobs}
+          hasSalaries={hasSalaries}
+          compact
+        />
+      ) : null}
+    </header>
+  );
+}
 
 export function CompanySearchResultDetail({
   vm,
+  jobPreviews = [],
+  salaryOverall = null,
+  hasSalaries = false,
   interactive = true,
 }: {
   vm: CompanyDetailVM;
+  jobPreviews?: JobCardVM[];
+  salaryOverall?: OverallSalaryVM | null;
+  hasSalaries?: boolean;
   interactive?: boolean;
 }) {
+  const hasJobs = jobPreviews.length > 0;
+  const hasSalaryData = hasSalaries && salaryOverall !== null;
+  const salarySample = salaryOverall?.stats.at(-1);
+
   return (
-    <article>
-      {interactive ? (
-        <div
-          data-slot="company-detail-actions"
-          className="border-border bg-background/95 sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b p-4 backdrop-blur"
-        >
-          <a href={vm.detailHref} className={buttonVariants()}>
-            {vm.viewCompanyLabel}
-          </a>
-          {vm.publishedJobCount > 0 ? (
-            <Link
-              to="/companies/$companySlug/jobs"
-              params={{ companySlug: vm.companySlug }}
-              className={buttonVariants({ variant: 'outline' })}
-            >
-              {vm.viewJobsLabel}
-            </Link>
-          ) : null}
-          {vm.websiteHref ? (
-            <a
-              href={vm.websiteHref}
-              target="_blank"
-              rel="noreferrer"
-              className={buttonVariants({ variant: 'outline' })}
-            >
-              {vm.visitWebsiteLabel}
-            </a>
-          ) : null}
-        </div>
-      ) : null}
+    <article className="max-w-full min-w-0">
+      <SearchResultDetailHeader
+        expanded={
+          <ExpandedCompanyDetailHeader
+            vm={vm}
+            hasJobs={hasJobs}
+            hasSalaries={hasSalaryData}
+            interactive={interactive}
+          />
+        }
+        compact={
+          <CompactCompanyDetailHeader
+            vm={vm}
+            hasJobs={hasJobs}
+            hasSalaries={hasSalaryData}
+            interactive={interactive}
+          />
+        }
+      />
 
       <div className="space-y-8 p-5 md:p-6">
-        <header className="space-y-4">
-          <div className="flex items-center gap-3">
-            <Avatar size="lg" className="rounded-xl">
-              {vm.logoUrl ? (
-                <AvatarImage
-                  src={vm.logoUrl}
-                  alt={vm.name}
-                  className="rounded-xl"
-                />
-              ) : null}
-              <AvatarFallback className="rounded-xl">
-                {initialsOf(vm.avatarName)}
-              </AvatarFallback>
-            </Avatar>
-            <Text as="h2" variant="heading2">
-              {vm.name}
-            </Text>
-          </div>
-          {vm.openJobsLabel ? (
-            <Badge variant="secondary">{vm.openJobsLabel}</Badge>
-          ) : null}
-        </header>
-
         {vm.descriptionHtml ? (
           <Prose html={vm.descriptionHtml} />
         ) : (
           <p className="text-muted-foreground">{vm.noDescriptionText}</p>
         )}
+
+        {interactive && jobPreviews.length > 0 ? (
+          <section
+            aria-label={m.companyDetail_openJobsHeading()}
+            className="space-y-3"
+          >
+            <div className="flex items-center justify-between gap-4">
+              <h3 className="text-foreground text-sm font-semibold">
+                {m.companyDetail_openJobsHeading()}
+              </h3>
+              <Link
+                to="/companies/$companySlug/jobs"
+                params={{ companySlug: vm.companySlug }}
+                className={buttonVariants({ variant: 'link', size: 'sm' })}
+              >
+                {m.home_viewAllJobsLabel()}
+              </Link>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {jobPreviews.slice(0, 4).map((job) => (
+                <JobCard key={job.id} vm={job} compact />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {interactive && hasSalaryData && salaryOverall ? (
+          <section
+            aria-label={m.companyDetail_salariesSummaryHeading()}
+            className="space-y-3"
+          >
+            <div className="flex items-center justify-between gap-4">
+              <h3 className="text-foreground text-sm font-semibold">
+                {m.companyDetail_salariesSummaryHeading()}
+              </h3>
+              <Link
+                to="/companies/$companySlug/salaries"
+                params={{ companySlug: vm.companySlug }}
+                className={buttonVariants({ variant: 'link', size: 'sm' })}
+              >
+                {vm.viewSalariesLabel}
+              </Link>
+            </div>
+            <Card size="sm">
+              <CardContent className="space-y-1">
+                <p className="text-muted-foreground text-sm">
+                  {salaryOverall.headlineLabel}
+                </p>
+                <p className="text-card-foreground text-xl font-semibold tabular-nums">
+                  {salaryOverall.headlineValue}
+                  <span className="text-muted-foreground ml-1.5 text-sm font-normal">
+                    {salaryOverall.perYearSuffix}
+                  </span>
+                </p>
+                {salarySample ? (
+                  <p className="text-muted-foreground text-sm">
+                    {salarySample.label} {salarySample.value}
+                  </p>
+                ) : null}
+              </CardContent>
+            </Card>
+          </section>
+        ) : null}
 
         {vm.marketChips.length > 0 ? (
           <section aria-label={vm.marketsHeading} className="space-y-2">
@@ -86,20 +277,17 @@ export function CompanySearchResultDetail({
             <div className="flex flex-wrap gap-1.5">
               {vm.marketChips.map((market) =>
                 interactive ? (
-                  <a
+                  <Badge
                     key={market.key}
-                    href={market.href}
-                    className={badgeVariants({ variant: 'outline' })}
+                    variant="outline"
+                    render={<a href={market.href} />}
                   >
                     {market.name}
-                  </a>
+                  </Badge>
                 ) : (
-                  <span
-                    key={market.key}
-                    className={badgeVariants({ variant: 'outline' })}
-                  >
+                  <Badge key={market.key} variant="outline">
                     {market.name}
-                  </span>
+                  </Badge>
                 ),
               )}
             </div>
@@ -107,20 +295,20 @@ export function CompanySearchResultDetail({
         ) : null}
 
         {vm.websiteHref && vm.websiteLabel ? (
-          <dl className="grid gap-2 sm:grid-cols-[max-content_1fr] sm:gap-x-6">
+          <dl
+            data-slot="company-detail-facts"
+            className="grid grid-cols-[5rem_minmax(0,1fr)] items-baseline gap-x-4 gap-y-2"
+          >
             <dt className="text-muted-foreground text-sm font-medium">
               {vm.websiteHeading}
             </dt>
-            <dd>
+            <dd className="text-foreground min-w-0 text-sm [overflow-wrap:anywhere]">
               {interactive ? (
                 <a
                   href={vm.websiteHref}
                   target="_blank"
                   rel="noreferrer"
-                  className={cn(
-                    badgeVariants({ variant: 'link' }),
-                    'h-auto px-0',
-                  )}
+                  className="font-medium underline-offset-4 outline-none hover:underline focus-visible:underline"
                 >
                   {vm.websiteLabel}
                 </a>

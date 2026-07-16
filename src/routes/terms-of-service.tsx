@@ -12,7 +12,7 @@ const META = LEGAL_PAGES['terms-of-service'];
 
 export const Route = createFileRoute('/terms-of-service')({
   // Full-bleed: the shared `PageBody` owns the width (CAV-502).
-  staticData: { fullBleed: true },
+  staticData: { fullBleed: true, ownsMain: true },
   loader: async () => {
     try {
       const [page, seo] = await Promise.all([

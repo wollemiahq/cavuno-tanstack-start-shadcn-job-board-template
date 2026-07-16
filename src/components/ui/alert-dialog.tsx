@@ -17,16 +17,9 @@ function AlertDialogTrigger({ ...props }: AlertDialogPrimitive.Trigger.Props) {
   );
 }
 
-function AlertDialogPortal({
-  className,
-  ...props
-}: AlertDialogPrimitive.Portal.Props) {
+function AlertDialogPortal({ ...props }: AlertDialogPrimitive.Portal.Props) {
   return (
-    <AlertDialogPrimitive.Portal
-      data-slot="alert-dialog-portal"
-      className={className}
-      {...props}
-    />
+    <AlertDialogPrimitive.Portal data-slot="alert-dialog-portal" {...props} />
   );
 }
 

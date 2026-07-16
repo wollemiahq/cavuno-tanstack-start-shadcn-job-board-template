@@ -104,7 +104,12 @@ describe('PostCard — crawlable blog discovery', () => {
       'href',
       '/blog/author/avery-montgomery-smythe',
     );
-    expect(author).not.toHaveClass('truncate', 'line-clamp-1', 'line-clamp-2');
     expect(author).toHaveTextContent(longAuthorName);
+
+    const cover = screen.getByRole('img', {
+      name: post.featureImageAlt!,
+    });
+    expect(cover).toHaveAttribute('width', '1200');
+    expect(cover).toHaveAttribute('height', '675');
   });
 });

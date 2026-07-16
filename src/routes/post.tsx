@@ -39,17 +39,19 @@ function PostJobPage() {
           />
         }
       >
-        <PostJobForm
-          locale={getLocale()}
-          plans={plans.data}
-          initialPlanId={search.plan}
-          onSubmit={(input) => submitJobPosting({ data: input })}
-          onLogoFetch={(domain) => fetchLogoByDomain({ data: { domain } })}
-          onLogoUpload={(data) => uploadLogo({ data })}
-          onCheckout={(url) => {
-            window.location.href = url;
-          }}
-        />
+        <div>
+          <PostJobForm
+            locale={getLocale()}
+            plans={plans.data}
+            initialPlanId={search.plan}
+            onSubmit={(input) => submitJobPosting({ data: input })}
+            onLogoFetch={(domain) => fetchLogoByDomain({ data: { domain } })}
+            onLogoUpload={(data) => uploadLogo({ data })}
+            onCheckout={(url) => {
+              window.location.href = url;
+            }}
+          />
+        </div>
       </PageContent>
     </Page>
   );

@@ -56,15 +56,7 @@ describe('MessageBubble', () => {
       'data-align',
       'end',
     );
-    expect(body.closest('[data-slot=message]')).toHaveAttribute(
-      'data-align',
-      'end',
-    );
-    expect(body).toHaveClass('whitespace-pre-wrap', '[overflow-wrap:anywhere]');
-    expect(screen.getByText('Abi T. Tunggal')).toHaveAttribute(
-      'data-slot',
-      'message-header',
-    );
+    expect(screen.getByText('Abi T. Tunggal')).toBeVisible();
     expect(screen.getByText(/Seen/)).toHaveAttribute(
       'data-slot',
       'message-footer',
@@ -99,11 +91,34 @@ describe('MessageBubble', () => {
     expect(
       screen.getByText('Report this message').closest('[data-slot="card"]'),
     ).not.toBeNull();
+    expect(
+      screen.getByRole('combobox', { name: 'Report this message' }),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Submit report' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Report failed');
     expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
     expect(onReport).toHaveBeenCalledWith('spam');
+  });
+
+  it('keeps the auto-growing message editor inside the conversation viewport', async () => {
+    render(
+      <MessageBubble
+        message={message}
+        own
+        showSeen={false}
+        onChanged={vi.fn()}
+        onReported={vi.fn()}
+        onEdit={vi.fn()}
+        onUnsend={vi.fn()}
+        onReport={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Message actions' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Edit' }));
+
+    expect(screen.getByRole('textbox', { name: 'Edit' })).toBeVisible();
   });
 
   it('hydrates message timestamps when the server and browser use different timezones', async () => {

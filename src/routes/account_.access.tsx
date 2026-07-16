@@ -27,7 +27,6 @@ import {
   openBillingPortal,
   startCheckout,
 } from '../server/paywall';
-import { useCandidateShellContext } from './-candidate-shell-context';
 
 import {
   CandidateActionFeedback,
@@ -53,14 +52,17 @@ function formatPrice(amountCents: number, currency: string) {
   }).format(amountCents / 100);
 }
 
-export const Route = createFileRoute('/account/access')({
+export const Route = createFileRoute('/account_/access')({
   staticData: { ownsMain: true },
   pendingComponent: CandidateRoutePendingPage,
   errorComponent: CandidateRouteErrorPage,
-  validateSearch: (search: Record<string, unknown>) => ({
-    session_id:
-      typeof search.session_id === 'string' ? search.session_id : undefined,
-  }),
+  // The key is omitted rather than set to `undefined` when absent, so plain
+  // `<Link to="/account/access">` (the header avatar menu) needs no search
+  // prop and renders without a trailing `?`.
+  validateSearch: (search: Record<string, unknown>): { session_id?: string } =>
+    typeof search.session_id === 'string' && search.session_id
+      ? { session_id: search.session_id }
+      : {},
   loader: async () => {
     try {
       const [grant, offers] = await Promise.all([
@@ -90,10 +92,8 @@ export const Route = createFileRoute('/account/access')({
 });
 
 function AccessPageShell() {
-  const candidateShell = useCandidateShellContext();
-
   return (
-    <CandidateShell active="subscription" {...candidateShell}>
+    <CandidateShell>
       <AccessPage />
     </CandidateShell>
   );
@@ -230,13 +230,15 @@ export function AccessPage() {
           {m.accountAccess_completePurchaseTitle()}
         </h1>
         <EmbeddedCheckout kit={kit} onComplete={handleCheckoutComplete} />
-        <button
+        <Button
           type="button"
-          className="text-sm underline"
+          variant="link"
+          size="sm"
+          className="h-auto w-fit p-0"
           onClick={() => setKit(null)}
         >
           {m.accountAccess_backToPlansLabel()}
-        </button>
+        </Button>
       </section>
     );
   }

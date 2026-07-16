@@ -17,8 +17,8 @@ const labels = {
 };
 
 describe('TalentSearchDetailState', () => {
-  it('preserves the pane geometry while the first profile loads', () => {
-    const { container } = render(
+  it('announces the first profile load', () => {
+    render(
       <TalentSearchDetailState
         status="loading"
         {...labels}
@@ -27,13 +27,12 @@ describe('TalentSearchDetailState', () => {
     );
 
     expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'true');
-    expect(screen.getByText('Loading profile details…')).toHaveClass('sr-only');
-    expect(
-      container.querySelectorAll("[data-slot='skeleton']").length,
-    ).toBeGreaterThan(2);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Loading profile details…',
+    );
   });
 
-  it('keeps the previous profile visible but action-free during a selection transition', () => {
+  it('removes every stale profile field and action during a selection transition', () => {
     render(
       <TalentSearchDetailState
         status="loading"
@@ -43,13 +42,13 @@ describe('TalentSearchDetailState', () => {
       />,
     );
 
-    expect(
-      screen.getByRole('heading', { level: 2, name: 'Ada Lovelace' }),
-    ).toBeVisible();
+    expect(screen.queryByText('Ada Lovelace')).toBeNull();
+    expect(screen.queryByText('Computing pioneer')).toBeNull();
+    expect(screen.queryByRole('link', { name: 'View profile' })).toBeNull();
+    expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'true');
     expect(screen.getByRole('status')).toHaveTextContent(
       'Loading profile details…',
     );
-    expect(screen.queryByRole('link', { name: 'View profile' })).toBeNull();
   });
 
   it('keeps the previous action-free profile visible when a selection transition fails', () => {
@@ -69,7 +68,6 @@ describe('TalentSearchDetailState', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Could not load profile',
     );
-    expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
     expect(screen.queryByRole('link', { name: 'View profile' })).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));

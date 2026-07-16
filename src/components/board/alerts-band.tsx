@@ -8,10 +8,9 @@
  * The section wears the `dark` scheme class so its owned semantic tokens
  * resolve against the dark palette while the board's brand ramp carries through.
  *
- * Same contract as `AlertSignupForm` (copy via `toAlertSignupVM`, the
- * idempotent subscribe statuses surfaced honestly); a lean horizontal
- * sibling, not a replacement — job listings keep their context-carrying
- * floating prompt instead.
+ * Same privacy-preserving submitted contract as `AlertSignupForm` (copy via
+ * `toAlertSignupVM`); a lean horizontal sibling, not a replacement — job
+ * listings keep their context-carrying floating prompt instead.
  */
 import { useState } from 'react';
 
@@ -21,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import type { JobAlertSubscribeInput } from '@cavuno/board';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
-type Status = 'idle' | 'pending' | 'created' | 'duplicate' | 'error';
+type Status = 'idle' | 'pending' | 'submitted' | 'error';
 
 export function AlertsBand({
   onSubscribe,
@@ -32,7 +31,7 @@ export function AlertsBand({
   /** Perform the subscribe (see AlertSignupForm wiring docs). */
   onSubscribe: (
     input: JobAlertSubscribeInput,
-  ) => Promise<{ status: 'created' | 'duplicate' }>;
+  ) => Promise<{ status: 'submitted' }>;
   /** Board language (ISO code) from `board.context()`. */
   language: string;
   /** Operator label overrides (`board.context().labels`), ADR-0059. */
@@ -46,13 +45,11 @@ export function AlertsBand({
   const vm = toAlertSignupVM(language, labels);
 
   const message =
-    status === 'created'
-      ? vm.messages.created
-      : status === 'duplicate'
-        ? vm.messages.duplicate
-        : status === 'error'
-          ? vm.messages.error
-          : null;
+    status === 'submitted'
+      ? vm.messages.submitted
+      : status === 'error'
+        ? vm.messages.error
+        : null;
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 pb-10 md:px-8">
@@ -83,14 +80,14 @@ export function AlertsBand({
             event.preventDefault();
             setStatus('pending');
             try {
-              const result = await onSubscribe({
+              await onSubscribe({
                 email,
                 consent: true,
                 frequency: 'weekly',
                 context: { source },
               });
-              setStatus(result.status === 'created' ? 'created' : 'duplicate');
-              if (result.status === 'created') setEmail('');
+              setStatus('submitted');
+              setEmail('');
             } catch {
               setStatus('error');
             }

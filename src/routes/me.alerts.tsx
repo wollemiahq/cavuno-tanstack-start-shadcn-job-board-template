@@ -9,7 +9,6 @@ import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router';
 import { AlertManager } from '../components/alert-manager';
 import { m } from '../paraglide/messages';
 import { getMyAlerts } from '../server/account';
-import { useCandidateShellContext } from './-candidate-shell-context';
 
 import {
   CandidateRouteErrorPage,
@@ -49,10 +48,9 @@ export const Route = createFileRoute('/me/alerts')({
 
 function AlertsPage() {
   const alerts = Route.useLoaderData();
-  const candidateShell = useCandidateShellContext();
 
   return (
-    <CandidateShell active="alerts" {...candidateShell}>
+    <CandidateShell>
       <div className="space-y-6">
         <header>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">

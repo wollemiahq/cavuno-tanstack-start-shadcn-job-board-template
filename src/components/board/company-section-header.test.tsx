@@ -37,14 +37,6 @@ afterEach(cleanup);
 type ShellProps = React.ComponentProps<typeof CompanySectionShell>;
 
 const baseProps: ShellProps = {
-  breadcrumb: {
-    ariaLabel: 'Breadcrumb',
-    items: [
-      { name: 'Home', href: '/' },
-      { name: 'Companies', href: '/companies' },
-      { name: 'Anduril' },
-    ],
-  },
   company: {
     name: 'Anduril',
     slug: 'anduril',
@@ -85,32 +77,7 @@ function renderShell(props: ShellProps) {
 
 const tabNav = () =>
   screen.getByRole('navigation', { name: 'Company sections' });
-const trail = () => screen.getByRole('navigation', { name: 'Breadcrumb' });
-
 describe('CompanySectionShell — trail locates the entity, tabs navigate within it', () => {
-  it('ends the breadcrumb at the company with NO section crumb', async () => {
-    renderShell(baseProps);
-    await screen.findByRole('heading', { level: 1, name: 'Anduril' });
-
-    // The trail is exactly Home → Companies → Anduril.
-    const crumbs = within(trail()).getAllByRole('listitem');
-    expect(crumbs.map((c) => c.textContent)).toEqual([
-      'Home',
-      'Companies',
-      'Anduril',
-    ]);
-
-    // Current page is the ENTITY (unlinked), never a section.
-    const current = within(trail()).getByText('Anduril', {
-      selector: '[aria-current="page"]',
-    });
-    expect(current).toBeTruthy();
-    // No "Jobs" / "Salaries" / "Overview" crumb was appended to the trail.
-    expect(within(trail()).queryByText('Jobs')).toBeNull();
-    expect(within(trail()).queryByText('Salaries')).toBeNull();
-    expect(within(trail()).queryByText('Overview')).toBeNull();
-  });
-
   it('renders the company name as the H1 and the description as tag-stripped one-liner', async () => {
     renderShell(baseProps);
     const h1 = await screen.findByRole('heading', { level: 1 });
@@ -191,55 +158,52 @@ describe('CompanySectionShell — Salaries gates on real data', () => {
   });
 });
 
-describe('CompanySectionShell — header rides a full-bleed band (CAV-516)', () => {
-  it('seats the breadcrumb + header + tabs inside a bg-secondary band, section content below on white', async () => {
+describe('CompanySectionShell — shared section header', () => {
+  it('places the company header and tabs before section content', async () => {
     renderShell(baseProps);
-    await screen.findByRole('heading', { level: 1 });
-
-    // The header block now lives inside a full-bleed gray band — the SAME
-    // composition as the job-detail page (PageBody `band` slot, bg-secondary
-    // + border-b), so the two top sections read as the same component.
-    const band = document.querySelector('.bg-secondary');
-    expect(band, 'expected a bg-secondary band wrapper').toBeTruthy();
-    const header = document.querySelector('header')!;
-    expect(band!.contains(header)).toBe(true);
-    expect(band!.contains(tabNav())).toBe(true);
-
-    // The breadcrumb trail is seated at the TOP of the band, above the header.
-    expect(band!.contains(trail())).toBe(true);
-    expect(
-      trail().compareDocumentPosition(header) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-
-    // Section content renders OUTSIDE the band (below, on the white surface).
+    const heading = await screen.findByRole('heading', { level: 1 });
     const content = screen.getByTestId('section-content');
-    expect(band!.contains(content)).toBe(false);
-  });
 
-  it('does not wrap the tab row in an overflow-x-auto scroll container', async () => {
-    // `overflow-x-auto` with the default `overflow-y: visible` is promoted by
-    // the browser to `overflow-y: auto` (CSS spec); the active tab underline's
-    // `-mb-px` then overflowed by 1px and painted a spurious VERTICAL
-    // scrollbar. The three fixed tabs never overflow, so the scroll container
-    // is removed entirely.
-    renderShell(baseProps);
-    await screen.findByRole('heading', { level: 1 });
-    expect(tabNav().className).not.toContain('overflow-x-auto');
+    expect(screen.queryByRole('navigation', { name: 'Breadcrumb' })).toBeNull();
+    expect(
+      heading.compareDocumentPosition(content) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(
+      tabNav().compareDocumentPosition(content) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 });
 
 describe('CompanySectionShell — one entity across three sections', () => {
-  it('renders a byte-identical header block whichever section is active', async () => {
+  it('keeps the same company identity and destinations across sections', async () => {
     renderShell(baseProps);
-    await screen.findByRole('heading', { level: 1 });
-    const overviewHeader = document.querySelector('header')!.outerHTML;
+    expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe(
+      'Anduril',
+    );
+    const overviewDestinations = within(tabNav())
+      .getAllByRole('link')
+      .map((link) => link.getAttribute('href'));
+    expect(
+      overviewDestinations.every((href) =>
+        href?.startsWith('/companies/anduril'),
+      ),
+    ).toBe(true);
     cleanup();
 
     renderShell({ ...baseProps, activeSection: 'salaries' });
-    await screen.findByRole('heading', { level: 1 });
-    const salariesHeader = document.querySelector('header')!.outerHTML;
+    expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe(
+      'Anduril',
+    );
+    const salaryDestinations = within(tabNav())
+      .getAllByRole('link')
+      .map((link) => link.getAttribute('href'));
 
-    expect(salariesHeader).toBe(overviewHeader);
+    expect(
+      salaryDestinations.every((href) =>
+        href?.startsWith('/companies/anduril'),
+      ),
+    ).toBe(true);
   });
 });

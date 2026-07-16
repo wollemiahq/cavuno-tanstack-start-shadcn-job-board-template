@@ -15,7 +15,6 @@ import {
 
 import { m } from '../paraglide/messages';
 import { getApplications, withdrawApplication } from '../server/applications';
-import { useCandidateShellContext } from './-candidate-shell-context';
 
 import {
   CandidateActionFeedback,
@@ -84,14 +83,13 @@ export const Route = createFileRoute('/me/applications')({
 
 function ApplicationsPage() {
   const applications = Route.useLoaderData();
-  const candidateShell = useCandidateShellContext();
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [feedback, setFeedback] =
     useState<CandidateActionFeedbackState>('idle');
 
   return (
-    <CandidateShell active="applications" {...candidateShell}>
+    <CandidateShell>
       <div className="space-y-6">
         <header>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">

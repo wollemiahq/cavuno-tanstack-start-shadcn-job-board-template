@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { myApplicationForJob } from '../server/applications';
-import { getJob } from '../server/queries';
+import { getCompany, getJob } from '../server/queries';
 
 import type { PublicJob } from '@cavuno/board';
 
 export type SelectedJobState = {
   status: 'idle' | 'loading' | 'ready' | 'error';
   job?: PublicJob;
+  companyDescription: string | null;
   alreadyApplied: boolean;
   error?: Error;
   retry: () => void;
@@ -21,11 +22,16 @@ export function useSelectedJob(
   const [state, setState] = useState<Omit<SelectedJobState, 'retry'>>({
     status: 'idle',
     alreadyApplied: false,
+    companyDescription: null,
   });
 
   useEffect(() => {
     if (!jobSlug) {
-      setState({ status: 'idle', alreadyApplied: false });
+      setState({
+        status: 'idle',
+        alreadyApplied: false,
+        companyDescription: null,
+      });
       return;
     }
 
@@ -34,20 +40,28 @@ export function useSelectedJob(
       status: 'loading',
       job: previous.job,
       alreadyApplied: previous.alreadyApplied,
+      companyDescription: previous.companyDescription,
     }));
 
-    void Promise.all([
-      getJob({ data: { jobSlug } }),
-      includeApplicationState
-        ? myApplicationForJob({ data: { jobSlug } }).catch(() => null)
-        : Promise.resolve(null),
-    ])
-      .then(([job, application]) => {
+    const application = includeApplicationState
+      ? myApplicationForJob({ data: { jobSlug } }).catch(() => null)
+      : Promise.resolve(null);
+
+    void getJob({ data: { jobSlug } })
+      .then(async (job) => {
+        const company = job.company?.slug
+          ? await getCompany({ data: { companySlug: job.company.slug } })
+          : null;
+
+        return { job, company, application: await application };
+      })
+      .then(({ job, company, application }) => {
         if (!cancelled) {
           setState({
             status: 'ready',
             job,
             alreadyApplied: application !== null,
+            companyDescription: company?.description ?? null,
           });
         }
       })
@@ -57,6 +71,7 @@ export function useSelectedJob(
           status: 'error',
           job: previous.job,
           alreadyApplied: previous.alreadyApplied,
+          companyDescription: previous.companyDescription,
           error: cause instanceof Error ? cause : new Error(String(cause)),
         }));
       });

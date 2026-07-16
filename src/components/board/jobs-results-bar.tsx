@@ -2,27 +2,10 @@
 
 import { boardCopy } from '#/copy';
 
-import { DEFAULT_SORT, JOB_SORTS, sortLabels } from '@cavuno/board/filters';
-
 import { m } from '../../paraglide/messages';
 
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-/**
- * The results header bar (CAV-495) — the Himalayas "count + sort on one line"
- * idiom. The honest total-result count sits on the left, the sort control on
- * the right, in a single row directly above the card grid (replacing the
- * header eyebrow badge + the sort dropdown buried in the filter bar). Dumb +
- * callback-driven: `sort` is the active `ListingFilters["sort"]`, edits go out
- * through `onSortChange` with the SAME sort enum the URL already carries.
- */
-import type { ListingFilters } from '@cavuno/board/filters';
+import { cn } from '@/lib/utils';
+/** The honest result count and current page range directly above the cards. */
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 export function JobsResultsBar({
@@ -30,10 +13,9 @@ export function JobsResultsBar({
   page,
   pageSize,
   heading,
-  sort,
   language,
   labels,
-  onSortChange,
+  className,
 }: {
   /** Total result count when the API returned one. */
   count?: number;
@@ -42,23 +24,16 @@ export function JobsResultsBar({
   pageSize?: number;
   /** Route context, such as “Engineering jobs” or “Jobs in Sydney”. */
   heading?: string;
-  sort: ListingFilters['sort'];
   language: string;
   /** Operator label overrides (`board.context().labels`), ADR-0059. */
   labels?: BoardLabelOverrides;
-  onSortChange: (sort: ListingFilters['sort']) => void;
+  className?: string;
 }) {
-  const sortLabel = sortLabels(language, labels);
-  const sortItems = JOB_SORTS.map((value) => ({
-    value,
-    label: sortLabel[value],
-  }));
-
   const showRange =
     typeof count === 'number' &&
     typeof page === 'number' &&
     typeof pageSize === 'number' &&
-    count > pageSize;
+    count > 0;
   const totalLabel =
     typeof count === 'number'
       ? heading
@@ -83,7 +58,10 @@ export function JobsResultsBar({
     : null;
 
   return (
-    <div className="border-border flex flex-wrap items-center justify-between gap-3 border-b pb-4">
+    <div
+      data-slot="jobs-results-bar"
+      className={cn('flex items-center justify-between gap-3 pb-3', className)}
+    >
       <div className="min-w-0">
         <h1 className="text-foreground text-lg font-semibold tracking-tight">
           {totalLabel}
@@ -92,27 +70,6 @@ export function JobsResultsBar({
           <p className="text-muted-foreground text-xs">{rangeLabel}</p>
         ) : null}
       </div>
-      <Select
-        items={sortItems}
-        value={sort ?? DEFAULT_SORT}
-        onValueChange={(value) => onSortChange(value as ListingFilters['sort'])}
-      >
-        <SelectTrigger
-          aria-label={boardCopy(language, labels).jobSearch.sortPlaceholder}
-          className="w-48"
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {sortItems.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
     </div>
   );
 }

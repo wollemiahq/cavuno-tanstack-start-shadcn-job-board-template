@@ -39,9 +39,27 @@ describe('toJobCardVM', () => {
     expect(vm.hasDetailLink).toBe(true);
   });
 
-  it('builds a "Salary · Location" comp line', () => {
+  it('keeps salary and essential location metadata independently renderable', () => {
     expect(vm.compLine).toContain('·');
     expect(vm.compLine).toMatch(/\$/);
+    expect(vm.salaryLabel).toMatch(/\$/);
+    expect(vm.locationLabel).toBe('Worldwide (Remote)');
+  });
+
+  it('states when an on-site card is missing its physical location', () => {
+    const missingLocation = toJobCardVM(
+      {
+        ...baseJob,
+        remoteOption: 'on_site',
+        remoteLocationLabel: null,
+        locationLabel: null,
+      } as unknown as PublicJobCard,
+      'en',
+    );
+
+    expect(missingLocation.locationLabel).toBe(
+      'Location not specified (On-site)',
+    );
   });
 
   it('derives an honest summary from the description', () => {

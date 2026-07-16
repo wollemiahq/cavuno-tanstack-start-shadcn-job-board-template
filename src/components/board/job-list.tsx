@@ -29,6 +29,7 @@ export function JobList({
   language,
   labels,
   variant = 'grid',
+  compact = false,
 }: {
   jobs: PublicJobCard[];
   language: string;
@@ -40,6 +41,12 @@ export function JobList({
    * cards (no summary/tags) for the similar-jobs right rail (CAV-500).
    */
   variant?: 'grid' | 'rows' | 'compact';
+  /**
+   * Lean the `grid` tiles the same way the `compact` variant leans its rail
+   * cards — no summary, no tag pills. Density is orthogonal to layout, so a
+   * grid can be lean without collapsing to the rail's single column.
+   */
+  compact?: boolean;
 }) {
   const copy = boardCopy(language, labels);
 
@@ -90,7 +97,11 @@ export function JobList({
   return (
     <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
       {jobs.map((job) => (
-        <JobCard key={job.id} vm={toJobCardVM(job, language, labels)} />
+        <JobCard
+          key={job.id}
+          vm={toJobCardVM(job, language, labels)}
+          compact={compact}
+        />
       ))}
     </div>
   );

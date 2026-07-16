@@ -259,5 +259,14 @@
       "$type": "fontFamily",
       "$value": ["var(--font-sans)"]
     }
+  },
+  "dimension": {
+    "radius": {
+      "$type": "dimension",
+      "$value": {
+        "value": 0.625,
+        "unit": "rem"
+      }
+    }
   }
 }

@@ -192,9 +192,7 @@ function ManagePage() {
                           : m.alertsManage_pausedBadge()}
                       </Badge>
                       <span className="text-muted-foreground">
-                        {preference.frequency === 'daily'
-                          ? m.alertManager_frequencyDaily()
-                          : m.alertManager_frequencyWeekly()}
+                        {m.alertManager_frequencyWeekly()}
                       </span>
                     </ItemTitle>
                     <ItemDescription>

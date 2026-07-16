@@ -17,9 +17,9 @@
  *
  * Wiring: `onSubscribe` calls the Board API — client-side that is
  * `board.jobAlerts.subscribe(input)`; behind a server function/action,
- * forward the input and return the result's `status`. The API is
- * idempotent per (email, filters): a repeat subscribe returns
- * `duplicate`, which this form surfaces honestly.
+ * forward the input and return the result's `submitted` status. The API uses
+ * one uniform result so the UI never reveals whether an address already has
+ * a matching subscription.
  */
 import { useId, useState } from 'react';
 
@@ -46,7 +46,7 @@ import { Spinner } from '@/components/ui/spinner';
 import type { JobAlertSubscribeInput } from '@cavuno/board';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
-type Status = 'idle' | 'pending' | 'created' | 'duplicate' | 'error';
+type Status = 'idle' | 'pending' | 'submitted' | 'error';
 
 export function AlertSignupForm({
   filters,
@@ -62,7 +62,7 @@ export function AlertSignupForm({
   /** Perform the subscribe (see wiring docs); resolve with the API status. */
   onSubscribe: (
     input: JobAlertSubscribeInput,
-  ) => Promise<{ status: 'created' | 'duplicate' }>;
+  ) => Promise<{ status: 'submitted' }>;
   /** Board language (ISO code) from `board.context()`. */
   language: string;
   /** Operator label overrides (`board.context().labels`), ADR-0059. */
@@ -77,13 +77,11 @@ export function AlertSignupForm({
   const vm = toAlertSignupVM(language, labels);
 
   const message =
-    status === 'created'
-      ? vm.messages.created
-      : status === 'duplicate'
-        ? vm.messages.duplicate
-        : status === 'error'
-          ? vm.messages.error
-          : null;
+    status === 'submitted'
+      ? vm.messages.submitted
+      : status === 'error'
+        ? vm.messages.error
+        : null;
 
   return (
     <section aria-label={vm.sectionAriaLabel}>
@@ -105,17 +103,15 @@ export function AlertSignupForm({
               event.preventDefault();
               setStatus('pending');
               try {
-                const result = await onSubscribe({
+                await onSubscribe({
                   email,
                   consent: true,
                   frequency: 'weekly',
                   filters,
                   context,
                 });
-                setStatus(
-                  result.status === 'created' ? 'created' : 'duplicate',
-                );
-                if (result.status === 'created') setEmail('');
+                setStatus('submitted');
+                setEmail('');
               } catch {
                 setStatus('error');
               }
@@ -141,8 +137,8 @@ export function AlertSignupForm({
                     disabled={status === 'pending'}
                     onChange={(event) => {
                       setEmail(event.target.value);
-                      // Clear a stale created/duplicate/error message once the
-                      // user edits the address.
+                      // Clear a stale submitted/error message once the user
+                      // edits the address.
                       if (status !== 'idle' && status !== 'pending')
                         setStatus('idle');
                     }}

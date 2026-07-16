@@ -2,7 +2,7 @@ import type { MouseEvent as ReactMouseEvent } from 'react';
 
 import type { TalentCardVM } from '@/board/talent-view-model';
 import { SearchResultCard } from '@/components/search-results/search-results';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { initialsOf } from '@/lib/initials';
 
@@ -20,11 +20,7 @@ export function TalentSearchResult({
     <div className="flex items-start gap-3">
       <Avatar size="lg">
         {vm.avatarUrl ? (
-          <img
-            src={vm.avatarUrl}
-            alt={vm.avatarName}
-            className="aspect-square size-full rounded-full object-cover"
-          />
+          <AvatarImage src={vm.avatarUrl} alt={vm.avatarName} />
         ) : null}
         <AvatarFallback>{initialsOf(vm.avatarName)}</AvatarFallback>
       </Avatar>

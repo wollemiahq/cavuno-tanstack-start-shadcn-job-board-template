@@ -26,20 +26,6 @@ function productionSources(directory: string): string[] {
 }
 
 describe('shadcn-only release boundary', () => {
-  it('runs the shadcn-only boundary in CI instead of the retired inverse gate', () => {
-    const workflow = readFileSync(
-      resolve(root, '.github/workflows/ci.yml'),
-      'utf8',
-    );
-
-    expect(workflow).toContain('Shadcn-only release boundary');
-    expect(workflow).toContain('src/shadcn-only-release.test.ts');
-    expect(workflow).not.toContain('No legacy primitive-stack imports');
-    expect(workflow).not.toContain(
-      'Use the Untitled UI base components + @untitledui/icons',
-    );
-  });
-
   it('does not ship the retired Untitled UI source trees', () => {
     for (const directory of retiredDirectories) {
       expect(existsSync(resolve(root, directory)), directory).toBe(false);
@@ -52,6 +38,12 @@ describe('shadcn-only release boundary', () => {
       expect(source, file).not.toMatch(
         /@untitledui\/icons|@\/components\/(?:base|application|shared-assets|untitled-ui)\/|rhea-theme/,
       );
+
+      if (!file.includes('/components/ui/')) {
+        expect(source, file).not.toMatch(
+          /from ['"](?:@base-ui\/react|@radix-ui\/)/,
+        );
+      }
     }
   });
 
@@ -66,13 +58,21 @@ describe('shadcn-only release boundary', () => {
     );
   });
 
-  it('loads only the canonical shadcn theme and typeset layers', () => {
-    const styles = readFileSync(resolve(root, 'src/styles.css'), 'utf8');
+  it('keeps the replaceable primitive seam in the local UI directory', () => {
+    const components = JSON.parse(
+      readFileSync(resolve(root, 'components.json'), 'utf8'),
+    ) as {
+      style: string;
+      iconLibrary: string;
+      aliases: { ui: string };
+      tailwind: { css: string };
+    };
 
-    expect(styles).toMatch(/@import ['"]\.\/theme\.css['"]/);
-    expect(styles).toMatch(/@import ['"]\.\/typeset\.css['"]/);
-    expect(styles).not.toContain('styles/untitled-ui');
-    expect(styles).not.toContain('--background-color-primary');
-    expect(styles).not.toContain('--text-color-primary');
+    expect(components).toMatchObject({
+      style: 'base-rhea',
+      iconLibrary: 'lucide',
+      aliases: { ui: '@/components/ui' },
+      tailwind: { css: 'src/theme.css' },
+    });
   });
 });

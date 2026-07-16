@@ -1,30 +1,25 @@
-'use client';
+import * as React from 'react';
 
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { XIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { m } from '@/paraglide/messages';
 
-function Dialog(props: DialogPrimitive.Root.Props) {
+function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
 
-function DialogTrigger(props: DialogPrimitive.Trigger.Props) {
+function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
 }
 
-function DialogPortal({ className, ...props }: DialogPrimitive.Portal.Props) {
-  return (
-    <DialogPrimitive.Portal
-      data-slot="dialog-portal"
-      className={className}
-      {...props}
-    />
-  );
+function DialogPortal({ ...props }: DialogPrimitive.Portal.Props) {
+  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
 }
 
-function DialogClose(props: DialogPrimitive.Close.Props) {
+function DialogClose({ ...props }: DialogPrimitive.Close.Props) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
 }
 
@@ -47,12 +42,10 @@ function DialogOverlay({
 function DialogContent({
   className,
   children,
-  showCloseButton = false,
-  closeLabel,
+  showCloseButton = true,
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean;
-  closeLabel?: string;
 }) {
   return (
     <DialogPortal>
@@ -66,7 +59,7 @@ function DialogContent({
         {...props}
       >
         {children}
-        {showCloseButton && closeLabel ? (
+        {showCloseButton ? (
           <DialogPrimitive.Close
             data-slot="dialog-close"
             render={
@@ -78,7 +71,7 @@ function DialogContent({
             }
           >
             <XIcon aria-hidden="true" />
-            <span className="sr-only">{closeLabel}</span>
+            <span className="sr-only">{m.common_closeLabel()}</span>
           </DialogPrimitive.Close>
         ) : null}
       </DialogPrimitive.Popup>
@@ -105,7 +98,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
         className,
       )}
       {...props}
-    />
+    ></div>
   );
 }
 

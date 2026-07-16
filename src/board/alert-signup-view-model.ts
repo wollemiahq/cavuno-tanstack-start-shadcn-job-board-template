@@ -32,8 +32,8 @@ export interface AlertSignupVM {
   submitAriaLabel: string;
   subscribingLabel: string;
   buttonText: string;
-  /** The idempotent-subscribe result messages, keyed by API status. */
-  messages: { created: string; duplicate: string; error: string };
+  /** The privacy-preserving subscribe result and failure messages. */
+  messages: { submitted: string; error: string };
 }
 
 export function toAlertSignupVM(
@@ -50,8 +50,7 @@ export function toAlertSignupVM(
     subscribingLabel: copy.subscribingLabel,
     buttonText: copy.jobAlertButtonText,
     messages: {
-      created: copy.jobAlertSuccessToast,
-      duplicate: copy.jobAlertDuplicateToast,
+      submitted: copy.jobAlertSuccessToast,
       error: copy.jobAlertErrorToast,
     },
   };

@@ -20,7 +20,6 @@ import {
   getNotificationPreferences,
   unsubscribeWithToken,
 } from '../server/settings';
-import { useCandidateShellContext } from './-candidate-shell-context';
 
 import {
   CandidateRouteErrorPage,
@@ -163,10 +162,9 @@ function SignedInSettings({
 }: {
   preferences: Parameters<typeof NotificationSettings>[0]['preferences'];
 }) {
-  const candidateShell = useCandidateShellContext();
 
   return (
-    <CandidateShell active="settings" {...candidateShell}>
+    <CandidateShell>
       <div className="space-y-6">
         <header>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">

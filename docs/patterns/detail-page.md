@@ -8,7 +8,7 @@ usedBy: [src/components/board/job-detail.tsx, src/components/board/talent-profil
 ## Purpose
 
 A single job, company, public profile, or post opens on a clear page header
-(breadcrumbs + title + meta), then drops into a two-column body: the sanitized
+(identity + title + meta), then drops into a two-column body: the sanitized
 prose in the main column, a sticky action rail on the right. `PageContent`'s
 named `aside` owns the canonical two-column geometry, so no page re-derives the
 sticky-rail math. On mobile `asideOrder="before"` puts the primary CTA directly
@@ -27,7 +27,7 @@ under the header.
 
 - `Page` with a full-width `Bleed` header and `PageContent` with a named `aside`
   (switches the body to the two-column sticky grid).
-- Header band: breadcrumbs → `Avatar` + name link → display title → meta `Badge`
+- Header band: `Avatar` + name link → display title → meta `Badge`
   pills → posted date.
 - Main column: sanitized HTML in the canonical `Prose` wrapper
   (`typeset typeset-content`), facts (`<dl>`), `TaxonomyTags`, custom fields,
@@ -45,7 +45,7 @@ implementation without changing the domain component's public contract:
   <PageContent
     header={
       <Bleed>
-        <PageHeader title={vm.title} breadcrumb={breadcrumb}>
+        <PageHeader title={vm.title}>
           …
         </PageHeader>
       </Bleed>
@@ -66,6 +66,7 @@ implementation without changing the domain component's public contract:
 | Use `PageContent`'s named `aside` for the sticky column.                               | Start new work on migration-only `PageBody`, or hand-roll the grid and sticky geometry in a route.      |
 | Render sanitized API HTML (`job.description`, `post.html`) as-is through `Prose`.      | Interpolate other strings into `dangerouslySetInnerHTML`, or hand-roll a `prose` class set per surface. |
 | Keep the job-detail `head()` meta + JobPosting JSON-LD in the route.                   | Move or drop the SEO contract.                                                                          |
+| Let the root shell render the one visible breadcrumb above the footer.                | Add another breadcrumb inside the detail hero or prose column.                                          |
 | Reuse one profile-content projection in search detail and the canonical profile route. | Fork public profile fields or invent Message, Save, or Contact actions the API does not support.        |
 
 ## Used by

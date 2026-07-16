@@ -11,16 +11,9 @@ function ContextMenu({ ...props }: ContextMenuPrimitive.Root.Props) {
   return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />;
 }
 
-function ContextMenuPortal({
-  className,
-  ...props
-}: ContextMenuPrimitive.Portal.Props) {
+function ContextMenuPortal({ ...props }: ContextMenuPrimitive.Portal.Props) {
   return (
-    <ContextMenuPrimitive.Portal
-      data-slot="context-menu-portal"
-      className={className}
-      {...props}
-    />
+    <ContextMenuPrimitive.Portal data-slot="context-menu-portal" {...props} />
   );
 }
 
@@ -50,7 +43,7 @@ function ContextMenuContent({
     'align' | 'alignOffset' | 'side' | 'sideOffset'
   >) {
   return (
-    <ContextMenuPortal>
+    <ContextMenuPrimitive.Portal>
       <ContextMenuPrimitive.Positioner
         className="isolate z-50 outline-none"
         align={align}
@@ -67,7 +60,7 @@ function ContextMenuContent({
           {...props}
         />
       </ContextMenuPrimitive.Positioner>
-    </ContextMenuPortal>
+    </ContextMenuPrimitive.Portal>
   );
 }
 

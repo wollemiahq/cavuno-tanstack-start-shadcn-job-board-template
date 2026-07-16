@@ -13,13 +13,17 @@ export interface JobsSearch extends ListingFilters {
 }
 
 export function parseJobsSearch(search: Record<string, unknown>): JobsSearch {
+  const listingSearch = {
+    ...search,
+    q: typeof search.q === 'string' ? search.q : search.query,
+  };
   const selectedJob =
     typeof search.selectedJob === 'string' && search.selectedJob.trim()
       ? search.selectedJob.trim()
       : undefined;
 
   return {
-    ...parseListingFilters(search),
+    ...parseListingFilters(listingSearch),
     page: pageSearchValue(parsePageParam(search.page)),
     selectedJob,
   };

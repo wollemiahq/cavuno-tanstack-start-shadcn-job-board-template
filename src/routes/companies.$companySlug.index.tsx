@@ -10,7 +10,7 @@ import {
   Link,
   notFound,
 } from '@tanstack/react-router';
-import { Building2 } from 'lucide-react';
+import { ArrowRight, Building2 } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import {
@@ -36,7 +36,7 @@ import { JsonLd } from '@/components/json-ld';
 import { Prose } from '@/components/prose';
 import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Empty,
@@ -44,11 +44,11 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/companies/$companySlug/')({
-  // Full-bleed so the shared PageBody owns the container + the breadcrumb
-  // placement (the trail hugs the nav at pt-4/5, same as every other page).
-  staticData: { fullBleed: true },
+  // Full-bleed so the shared PageBody owns the canonical page geometry.
+  staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
     try {
       const [company, jobs, similar, seo, salarySummary] = await Promise.all([
@@ -128,11 +128,16 @@ function jobCountLabel(count: number) {
     : m.companyDetail_openJobsCountMany({ count });
 }
 
-/** Pluralized "View all N job(s)" CTA into the company jobs subpage. */
-function viewAllJobsLabel(count: number) {
+/**
+ * The jobs-preview heading: "N Open jobs", or the bare "Open jobs" when the
+ * company has none. Deliberately its own key — the `openJobsCount*` pair is
+ * shared with the company cards, search labels, and home rail.
+ */
+function openJobsHeading(count: number) {
+  if (count === 0) return m.companyDetail_openJobsHeading();
   return count === 1
-    ? m.companyDetail_viewAllJobsCountOne({ count })
-    : m.companyDetail_viewAllJobsCountMany({ count });
+    ? m.companyDetail_openJobsHeadingCountOne({ count })
+    : m.companyDetail_openJobsHeadingCountMany({ count });
 }
 
 /** How many jobs the profile previews before deferring to the /jobs subpage. */
@@ -223,14 +228,6 @@ function CompanyPage() {
 
   return (
     <CompanySectionShell
-      breadcrumb={{
-        ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
-        items: [
-          { name: crumbs.home, href: '/' },
-          { name: crumbs.companies, href: '/companies' },
-          { name: company.name },
-        ],
-      }}
       company={company}
       activeSection="overview"
       jobCount={company.publishedJobCount}
@@ -239,65 +236,6 @@ function CompanyPage() {
       <JsonLd data={jsonLd} />
 
       <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
-        {/* Key-facts rail — right column on desktop, sticky as the profile
-            scrolls; the primary CTA jumps to the full company jobs subpage. */}
-        <aside className="lg:sticky lg:top-8 lg:col-start-2 lg:row-start-1 lg:self-start">
-          <Card>
-            <CardContent className="flex flex-col gap-4">
-              {website ? (
-                <div className="flex flex-col gap-1">
-                  <span className="text-muted-foreground text-sm font-medium">
-                    {m.footer_websiteLabel()}
-                  </span>
-                  <Button
-                    render={
-                      <a href={website} target="_blank" rel="noreferrer" />
-                    }
-                    variant="link"
-                    size="sm"
-                    className="w-fit px-0"
-                  >
-                    {company.website}
-                  </Button>
-                </div>
-              ) : null}
-
-              {company.markets.length > 0 ? (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {company.markets.map((market) => (
-                    <Link
-                      key={market.slug}
-                      to="/companies/markets/$market"
-                      params={{ market: market.slug }}
-                      className="focus-visible:ring-ring rounded-full transition-opacity hover:no-underline hover:opacity-75 focus-visible:ring-2 focus-visible:outline-none"
-                    >
-                      <Badge variant="secondary">{market.name}</Badge>
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
-
-              <p className="text-muted-foreground text-sm">
-                {jobCountLabel(company.publishedJobCount)}
-              </p>
-
-              {company.publishedJobCount > 0 ? (
-                <Button
-                  render={
-                    <Link
-                      to="/companies/$companySlug/jobs"
-                      params={{ companySlug: company.slug }}
-                    />
-                  }
-                  className="w-full"
-                >
-                  {viewAllJobsLabel(company.publishedJobCount)}
-                </Button>
-              ) : null}
-            </CardContent>
-          </Card>
-        </aside>
-
         {/* Main column — description prose and the jobs preview; both columns
             share row 1 so the rail sticks alongside. The company header + tabs
             are the shared shell above. */}
@@ -313,20 +251,19 @@ function CompanyPage() {
           >
             <div className="flex flex-wrap items-center justify-between gap-3">
               <Text as="h2" variant="heading4">
-                {m.companyDetail_openJobsHeading()}
-                {company.publishedJobCount > 0 ? (
-                  <span className="text-muted-foreground ml-2">
-                    {company.publishedJobCount}
-                  </span>
-                ) : null}
+                {openJobsHeading(company.publishedJobCount)}
               </Text>
               {company.publishedJobCount > previewJobs.length ? (
                 <Link
                   to="/companies/$companySlug/jobs"
                   params={{ companySlug: company.slug }}
-                  className="text-foreground hover:text-foreground/80 focus-visible:ring-ring rounded-sm text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  className={cn(
+                    buttonVariants({ variant: 'ghost', size: 'sm' }),
+                    'no-underline',
+                  )}
                 >
-                  {viewAllJobsLabel(company.publishedJobCount)}
+                  {m.companyDetail_viewOpenJobsLabel()}
+                  <ArrowRight data-icon="inline-end" />
                 </Link>
               ) : null}
             </div>
@@ -342,6 +279,7 @@ function CompanyPage() {
                   <JobCard
                     key={job.id}
                     vm={toJobCardVM(job, board.language, board.labels)}
+                    compact
                   />
                 ))}
               </div>
@@ -361,31 +299,84 @@ function CompanyPage() {
             />
           ) : null}
         </div>
+
+        {/* Key-facts rail — right column on desktop, sticky as the profile
+            scrolls. Last in the DOM so it stacks BELOW the content on narrow
+            screens (reading and tab order follow the visual order); the
+            explicit lg column placement lifts it back alongside. */}
+        <aside className="flex flex-col gap-8 lg:sticky lg:top-8 lg:col-start-2 lg:row-start-1 lg:self-start">
+          <Card>
+            <CardContent className="flex flex-col gap-4">
+              {website ? (
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-muted-foreground text-sm font-medium">
+                    {m.footer_websiteLabel()}
+                  </span>
+                  <a
+                    href={website}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={buttonVariants({
+                      variant: 'link',
+                      size: 'sm',
+                      className: 'w-fit max-w-full justify-start truncate px-0',
+                    })}
+                  >
+                    {company.website}
+                  </a>
+                </div>
+              ) : null}
+
+              {company.markets.length > 0 ? (
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-muted-foreground text-sm font-medium">
+                    {m.employerProfile_marketsLabel()}
+                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {company.markets.map((market) => (
+                      <Link
+                        key={market.slug}
+                        to="/companies/markets/$market"
+                        params={{ market: market.slug }}
+                        className="focus-visible:ring-ring rounded-full transition-opacity hover:no-underline hover:opacity-75 focus-visible:ring-2 focus-visible:outline-none"
+                      >
+                        <Badge variant="secondary">{market.name}</Badge>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          {/* Similar companies sit directly under the key-facts card, the same
+              way similar jobs sit under the apply card on job detail. */}
+          {similar.length > 0 ? (
+            <section
+              aria-label={m.companyDetail_similarCompaniesHeading()}
+              className="flex flex-col gap-4"
+            >
+              <Text as="h2" variant="heading4">
+                {m.companyDetail_similarCompaniesHeading()}
+              </Text>
+              <div className="flex flex-col gap-4">
+                {similar.map((c) => (
+                  <CompanyCard
+                    key={c.id}
+                    companySlug={c.slug}
+                    name={c.name}
+                    logoUrl={c.logoUrl}
+                    description={c.description}
+                    publishedJobCount={c.publishedJobCount}
+                    jobCountLabel={jobCountLabel(c.publishedJobCount)}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </aside>
       </div>
 
-      {similar.length > 0 ? (
-        <section
-          aria-label={m.companyDetail_similarCompaniesHeading()}
-          className="border-border flex flex-col gap-4 border-t pt-8"
-        >
-          <Text as="h2" variant="heading4">
-            {m.companyDetail_similarCompaniesHeading()}
-          </Text>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {similar.map((c) => (
-              <CompanyCard
-                key={c.id}
-                companySlug={c.slug}
-                name={c.name}
-                logoUrl={c.logoUrl}
-                description={c.description}
-                publishedJobCount={c.publishedJobCount}
-                jobCountLabel={jobCountLabel(c.publishedJobCount)}
-              />
-            ))}
-          </div>
-        </section>
-      ) : null}
     </CompanySectionShell>
   );
 }

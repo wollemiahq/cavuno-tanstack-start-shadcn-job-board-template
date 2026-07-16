@@ -6,6 +6,19 @@
 
 import type { CreateJobPostingInput } from '@cavuno/board';
 
+/** The periods the API quotes `salaryMin`/`salaryMax` against. */
+export const SALARY_TIMEFRAMES = [
+  'per_year',
+  'per_month',
+  'per_week',
+  'per_day',
+  'per_hour',
+] as const;
+
+export type SalaryTimeframe = (typeof SALARY_TIMEFRAMES)[number];
+
+export const DEFAULT_SALARY_TIMEFRAME: SalaryTimeframe = 'per_year';
+
 export type JobPostingFormInput = {
   companyName: string;
   companyWebsite?: string;
@@ -19,6 +32,8 @@ export type JobPostingFormInput = {
   salaryMin?: number;
   salaryMax?: number;
   salaryCurrency?: string;
+  /** Period the figures are quoted against; only sent with a full range. */
+  salaryTimeframe?: SalaryTimeframe;
   selectedPlan?: string;
   logoUrl?: string;
 };
@@ -45,6 +60,9 @@ export function toCreateJobPostingInput(
       salaryMin: data.salaryMin,
       salaryMax: data.salaryMax,
       salaryCurrency: salaryRangeEnabled ? data.salaryCurrency : undefined,
+      // Rides with the range, exactly like the currency — a timeframe without
+      // figures to qualify says nothing.
+      salaryTimeframe: salaryRangeEnabled ? data.salaryTimeframe : undefined,
       selectedPlan: data.selectedPlan,
     },
     logoUrl: data.logoUrl,

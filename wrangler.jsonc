@@ -8,14 +8,12 @@
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
   "main": "./src/server.ts",
-  // COMMITTED DEFAULT: the ADR-0058 platform sandbox (published,
-  // well-known pk). A fresh clone renders a live board with zero
-  // config, and every write a stranger triggers (apply, alerts) lands
-  // on the deterministic fixture tenant — never on a real board.
+  // COMMITTED DEFAULT: the production Robotics Engineer Jobs board — the
+  // same real-data reference board used by the other Cavuno starters.
   // Point at your own board by swapping CAVUNO_BOARD (one change).
   "vars": {
     "CAVUNO_API_URL": "https://api.cavuno.com",
-    "CAVUNO_BOARD": "pk_c2f66367a3abaa6bafd00fd3c2de3297",
+    "CAVUNO_BOARD": "pk_d9ce40a106227b615ec710de3f3d73dc",
   },
   // The hosted demo deploy (CAV-490): the production Robotics Engineer
   // Jobs board — real content at full strength. Deploy with

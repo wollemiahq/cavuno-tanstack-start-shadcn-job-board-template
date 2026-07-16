@@ -12,7 +12,7 @@ export function getCompanySearchLabels(): CompanySearchLabels {
         : m.companyDetail_openJobsCountMany({ count }),
     viewCompany: m.companySearch_viewCompanyLabel(),
     viewJobs: m.companySearch_viewJobsLabel(),
-    visitWebsite: m.companySearch_visitWebsiteLabel(),
+    viewSalaries: m.companyDetail_viewSalariesLink(),
     website: m.footer_websiteLabel(),
   };
 }

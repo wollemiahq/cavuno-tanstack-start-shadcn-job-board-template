@@ -23,6 +23,14 @@ describe('parseJobsSearch', () => {
     expect(parseJobsSearch({ selectedJob: '  ' }).selectedJob).toBeUndefined();
     expect(parseJobsSearch({ selectedJob: 42 }).selectedJob).toBeUndefined();
   });
+
+  it('accepts the hosted-board query parameter as the canonical job query', () => {
+    expect(parseJobsSearch({ query: 'robotics engineer' })).toMatchObject({
+      q: 'robotics engineer',
+      page: undefined,
+      selectedJob: undefined,
+    });
+  });
 });
 
 describe('jobsListingLoaderDeps', () => {

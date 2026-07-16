@@ -8,12 +8,29 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  listingPageHref,
   pageSearchValue,
   pageToOffset,
   parsePageParam,
   shouldRenderPagination,
   totalPages,
 } from './pagination';
+
+describe('listingPageHref (crawlable pagination URLs)', () => {
+  it('preserves filters while replacing transient selection state', () => {
+    expect(
+      listingPageHref('/jobs?q=robotics&selectedJob=old&page=2', 3, [
+        'selectedJob',
+      ]),
+    ).toBe('/jobs?q=robotics&page=3');
+  });
+
+  it('keeps page one canonical by removing the page parameter', () => {
+    expect(listingPageHref('/companies?market=robotics&page=2', 1)).toBe(
+      '/companies?market=robotics',
+    );
+  });
+});
 
 describe('parsePageParam (public-input coercion)', () => {
   it('reads a valid 1-based page from a string param', () => {

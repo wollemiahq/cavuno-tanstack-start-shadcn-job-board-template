@@ -4,26 +4,6 @@
   "homepage": "https://cavuno.com",
   "items": [
     {
-      "name": "base",
-      "type": "registry:base",
-      "title": "Cavuno base",
-      "description": "Board design-system payload: the canonical shadcn token baseline plus the per-board runtime theme override (BoardTheme) consuming @cavuno/board/theme.",
-      "dependencies": ["@cavuno/board@^1.31.0"],
-      "files": [
-        {
-          "path": "src/base/board-theme.tsx",
-          "type": "registry:component",
-          "target": "components/cavuno/board-theme.tsx"
-        }
-      ],
-      "cssVars": {
-        "theme": {
-          "radius": "0.625rem"
-        }
-      },
-      "docs": "Mount <BoardTheme theme={(await board.context()).theme} /> once in your app shell, after the static theme stylesheet \u2014 board colors then win the cascade. A null theme renders no CSS/fonts (static defaults apply) \u2014 only the mode script, which resolves the OS system preference."
-    },
-    {
       "name": "job-card",
       "type": "registry:component",
       "title": "Job card",

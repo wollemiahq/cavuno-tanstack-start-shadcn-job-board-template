@@ -113,10 +113,10 @@ describe('PostJobForm', () => {
     fireEvent.change(screen.getByLabelText('Application URL'), {
       target: { value: 'acme.example/careers/staff-designer' },
     });
-    fireEvent.change(screen.getByLabelText('Salary min (per year)'), {
+    fireEvent.change(screen.getByLabelText('Salary min'), {
       target: { value: '140000' },
     });
-    fireEvent.change(screen.getByLabelText('Salary max (per year)'), {
+    fireEvent.change(screen.getByLabelText('Salary max'), {
       target: { value: '180000' },
     });
 
@@ -136,6 +136,7 @@ describe('PostJobForm', () => {
         salaryMin: 140000,
         salaryMax: 180000,
         salaryCurrency: 'USD',
+        salaryTimeframe: 'per_year',
         selectedPlan: 'plan-standard',
         logoUrl: undefined,
       }),

@@ -4,8 +4,7 @@ import { mergeProps } from '@base-ui/react/merge-props';
 import { useRender } from '@base-ui/react/use-render';
 import { cva, type VariantProps } from 'class-variance-authority';
 
-import { Button } from './button';
-
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const attachmentVariants = cva(
@@ -119,7 +118,8 @@ function AttachmentDescription({
     <span
       data-slot="attachment-description"
       className={cn(
-        'text-muted-foreground group-data-[state=error]/attachment:text-destructive/80 mt-0.5 block max-w-full min-w-0 truncate text-xs',
+        'text-muted-foreground group-data-[state=error]/attachment:text-destructive/80 mt-0.5 block min-w-0 truncate text-xs',
+        'max-w-full',
         className,
       )}
       {...props}
@@ -187,7 +187,7 @@ function AttachmentGroup({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="attachment-group"
       className={cn(
-        'flex min-w-0 snap-x snap-mandatory scroll-px-1 gap-3 overflow-x-auto overscroll-x-contain py-1 *:data-[slot=attachment]:flex-none *:data-[slot=attachment]:snap-start',
+        'scroll-fade-x flex min-w-0 snap-x snap-mandatory scroll-px-1 scrollbar-none gap-3 overflow-x-auto overscroll-x-contain py-1 *:data-[slot=attachment]:flex-none *:data-[slot=attachment]:snap-start',
         className,
       )}
       {...props}
@@ -197,12 +197,12 @@ function AttachmentGroup({ className, ...props }: React.ComponentProps<'div'>) {
 
 export {
   Attachment,
-  AttachmentAction,
-  AttachmentActions,
-  AttachmentContent,
-  AttachmentDescription,
   AttachmentGroup,
   AttachmentMedia,
+  AttachmentContent,
   AttachmentTitle,
+  AttachmentDescription,
+  AttachmentActions,
+  AttachmentAction,
   AttachmentTrigger,
 };

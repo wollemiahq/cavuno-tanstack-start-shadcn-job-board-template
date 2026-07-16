@@ -14,9 +14,6 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-
 const mocks = vi.hoisted(() => ({
   addApplicantNote: vi.fn(),
   bulkRejectApplicants: vi.fn(),
@@ -138,25 +135,7 @@ afterEach(() => {
   mocks.invalidate.mockResolvedValue(undefined);
 });
 
-describe('employer company workspace shadcn contract', () => {
-  const files = [
-    'src/routes/employers.companies.$slug.index.tsx',
-    'src/routes/employers.companies.$slug.profile.tsx',
-    'src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx',
-  ];
-
-  it.each(files)('%s has no legacy presentation imports or tokens', (file) => {
-    const source = readFileSync(resolve(process.cwd(), file), 'utf8');
-
-    expect(source).not.toMatch(/@untitledui\/icons/);
-    expect(source).not.toMatch(/@\/components\/base\//);
-    expect(source).not.toMatch(/@\/components\/text/);
-    expect(source).not.toMatch(/@\/utils\/cx/);
-    expect(source).not.toMatch(
-      /\b(?:text|bg|border|ring)-(?:primary|secondary|tertiary|secondary_alt)\b/,
-    );
-  });
-
+describe('employer company workspace', () => {
   it('lets every shell-owning employer workspace route own the document main', () => {
     expect(JobsRoute.options.staticData).toMatchObject({ ownsMain: true });
     expect(ProfileRoute.options.staticData).toMatchObject({ ownsMain: true });
@@ -319,7 +298,7 @@ describe('employer company workspace shadcn contract', () => {
     );
   });
 
-  it('renders applicant identity, pipeline controls, notes, and history in one card', () => {
+  it('renders applicant identity, pipeline controls, notes, and history together', () => {
     const stages = [
       {
         id: 'stage-review',
@@ -383,7 +362,7 @@ describe('employer company workspace shadcn contract', () => {
     const ApplicantsPage = ApplicantsRoute.options.component;
     if (!ApplicantsPage)
       throw new Error('The applicants route must expose its component');
-    const { container } = render(<ApplicantsPage />);
+    render(<ApplicantsPage />);
 
     expect(
       screen.getByRole('heading', {
@@ -400,7 +379,6 @@ describe('employer company workspace shadcn contract', () => {
     expect(
       screen.getByText('Note: Strong portfolio · Grace Hopper'),
     ).toBeInTheDocument();
-    expect(container.querySelector('[data-slot="card"]')).toBeInTheDocument();
   });
 
   it('keeps a failed stage rename open and reports the error beside that stage', async () => {

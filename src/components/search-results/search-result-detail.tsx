@@ -1,4 +1,13 @@
-import type { ComponentPropsWithRef, ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentPropsWithRef,
+  type ReactNode,
+} from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -11,6 +20,40 @@ export type SearchResultDetailProps = Omit<
   children: ReactNode;
 };
 
+const SearchResultDetailContext = createContext(false);
+const COMPACT_HEADER_EXIT_BUFFER = 8;
+
+export function SearchResultDetailHeader({
+  expanded,
+  compact,
+}: {
+  expanded: ReactNode;
+  compact: ReactNode;
+}) {
+  const condensed = useContext(SearchResultDetailContext);
+
+  return (
+    <>
+      <div
+        data-slot="detail-expanded-header"
+        aria-hidden={condensed || undefined}
+        inert={condensed || undefined}
+      >
+        {expanded}
+      </div>
+      <div data-slot="detail-hero-boundary" className="h-px" aria-hidden />
+      <div
+        data-slot="detail-compact-header-anchor"
+        className="sticky top-0 z-10 h-0 group-data-[condensed=true]/detail:h-16"
+      >
+        {condensed ? (
+          <div data-slot="detail-compact-header">{compact}</div>
+        ) : null}
+      </div>
+    </>
+  );
+}
+
 /** The desktop-only, independently scrolling detail projection. */
 export function SearchResultDetail({
   label,
@@ -18,22 +61,64 @@ export function SearchResultDetail({
   className,
   children,
   ref,
+  onScroll,
   ...props
 }: SearchResultDetailProps) {
+  const [condensed, setCondensed] = useState(false);
+  const detailRef = useRef<HTMLElement | null>(null);
+  const setDetailRef = useCallback(
+    (node: HTMLElement | null) => {
+      detailRef.current = node;
+      if (typeof ref === 'function') {
+        ref(node);
+      } else if (ref) {
+        ref.current = node;
+      }
+    },
+    [ref],
+  );
+  const updateCondensed = useCallback(() => {
+    const detail = detailRef.current;
+    if (!detail) return;
+
+    const heroBoundary = detail.querySelector<HTMLElement>(
+      '[data-slot="detail-hero-boundary"]',
+    );
+    setCondensed((current) => {
+      if (!heroBoundary || detail.scrollTop <= 0) return false;
+
+      const enterAt = heroBoundary.offsetTop;
+      const exitBelow = Math.max(enterAt - COMPACT_HEADER_EXIT_BUFFER, 0);
+
+      return detail.scrollTop >= (current ? exitBelow : enterAt);
+    });
+  }, []);
+
+  useEffect(() => {
+    updateCondensed();
+  }, [children, updateCondensed]);
+
   return (
     <section
       {...props}
-      ref={ref}
+      ref={setDetailRef}
       aria-label={label}
       data-slot="search-result-detail"
       data-scroll-restoration-id={scrollRestorationId}
+      data-condensed={condensed}
       tabIndex={0}
+      onScroll={(event) => {
+        updateCondensed();
+        onScroll?.(event);
+      }}
       className={cn(
-        'focus-visible:ring-ring hidden min-w-0 outline-none focus-visible:ring-2 focus-visible:ring-inset md:block md:h-full md:min-h-0 md:overflow-y-auto md:overscroll-contain',
+        'group/detail focus-visible:ring-ring hidden min-w-0 overflow-x-hidden outline-none [overflow-anchor:none] focus-visible:ring-2 focus-visible:ring-inset md:block md:h-full md:min-h-0 md:overflow-y-auto',
         className,
       )}
     >
-      {children}
+      <SearchResultDetailContext.Provider value={condensed}>
+        {children}
+      </SearchResultDetailContext.Provider>
     </section>
   );
 }

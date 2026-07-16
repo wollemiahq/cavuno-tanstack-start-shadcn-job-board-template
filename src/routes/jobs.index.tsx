@@ -18,6 +18,7 @@ import { JsonLd } from '../components/json-ld';
 import { jobAlertDefaultsFromSearch } from '../lib/job-alert-defaults';
 import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
 import { pageSearchValue, pageToOffset } from '../lib/pagination';
+import { saveJob } from '../server/account';
 import { getSeoBase, listJobs, searchJobs } from '../server/queries';
 import { SelectedJobDetail } from './-selected-job-detail';
 import { useSelectedJob } from './-use-selected-job';
@@ -117,6 +118,10 @@ function JobsPage() {
         filters={search}
         language={board.language}
         labels={board.labels}
+        viewer={user ? { emailVerified: user.emailVerified } : null}
+        onSaveJob={async (jobId) => {
+          await saveJob({ data: { jobId } });
+        }}
         relatedSearches={
           'relatedSearches' in page ? page.relatedSearches : undefined
         }

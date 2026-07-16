@@ -1,11 +1,19 @@
+import type { ReactNode } from 'react';
+
 import { boardCopy } from '#/copy';
 
 import { Link } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 
+import {
+  FacebookIcon,
+  LinkedInIcon,
+  XIcon,
+} from '@/components/brand-icons';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
+import { cn } from '@/lib/utils';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 /**
@@ -123,7 +131,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h3 className="text-foreground text-sm font-semibold">{heading}</h3>
+      <h2 className="text-foreground text-sm font-semibold">{heading}</h2>
       <ul className="mt-4 space-y-3">
         {links.map((link) => (
           <FooterLinkItem key={`${link.href}${link.label}`} link={link} />
@@ -131,46 +139,6 @@ function FooterColumn({
       </ul>
       {children}
     </div>
-  );
-}
-
-// Brand-glyph SVGs (same paths as the hosted board's footer icons).
-function XIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-      className="size-4"
-    >
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
-  );
-}
-
-function FacebookIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-      className="size-4"
-    >
-      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-    </svg>
-  );
-}
-
-function LinkedInIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-      className="size-4"
-    >
-      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-    </svg>
   );
 }
 
@@ -197,8 +165,11 @@ export default function Footer({
   slug,
   features,
   footer,
+  connected = false,
   talentDirectoryVisibility,
   hasEmployerOfferPage,
+  flush = false,
+  breadcrumb,
 }: {
   boardName: string;
   logoUrl: string | null;
@@ -222,6 +193,7 @@ export default function Footer({
     impressum: boolean;
   };
   footer: BoardContextFooter | null;
+  connected?: boolean;
   /**
    * The tri-state behind `features.talentDirectory` — hosted chrome links
    * /talent whenever it is not 'off' (an employers-only directory renders
@@ -236,6 +208,10 @@ export default function Footer({
    * `hasEnabledPlans` gate on "Post a job" (same public-plan query).
    */
   hasEmployerOfferPage: boolean;
+  /** Remove the outer gap when the preceding route already fills a viewport. */
+  flush?: boolean;
+  /** Optional compact navigation trail rendered as the footer's first row. */
+  breadcrumb?: ReactNode;
 }) {
   const copy = boardCopy(language, labels);
 
@@ -334,8 +310,14 @@ export default function Footer({
   const marketingHref = `https://cavuno.com/?ref=${encodeURIComponent(primaryDomain ?? slug)}`;
 
   return (
-    <footer className="border-border bg-background text-foreground mt-16 border-t">
+    <footer
+      className={cn(
+        'border-border bg-background text-foreground border-t',
+        connected ? 'mt-0' : flush ? 'mt-16 md:mt-0' : 'mt-16',
+      )}
+    >
       <Container width="wide">
+        {breadcrumb}
         <Box paddingY={{ base: '10', md: '12' }}>
           <div className="grid gap-10 md:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,1fr))]">
             <div className="max-w-xs space-y-4">
@@ -344,7 +326,13 @@ export default function Footer({
                 className="text-foreground focus-visible:ring-ring/30 flex items-center gap-2.5 rounded-md text-lg font-semibold outline-none hover:no-underline focus-visible:ring-3"
               >
                 {logoUrl ? (
-                  <img src={logoUrl} alt="" className="size-8 rounded-md" />
+                  <img
+                    src={logoUrl}
+                    alt=""
+                    width={32}
+                    height={32}
+                    className="size-8 rounded-md"
+                  />
                 ) : null}
                 {boardName}
               </Link>
@@ -383,7 +371,7 @@ export default function Footer({
                       aria-label={social.label}
                       rel="noopener noreferrer"
                       target="_blank"
-                      className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/30 rounded-sm transition-colors outline-none focus-visible:ring-3"
+                      className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/30 flex size-10 items-center justify-center rounded-full transition-colors outline-none focus-visible:ring-3"
                     >
                       {social.icon}
                     </a>

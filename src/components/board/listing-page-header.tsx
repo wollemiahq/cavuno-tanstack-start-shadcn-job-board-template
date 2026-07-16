@@ -6,10 +6,7 @@ import { Search, X } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
-import {
-  PageBreadcrumb,
-  type BreadcrumbData,
-} from '@/components/board/breadcrumb';
+import type { BreadcrumbData } from '@/components/board/breadcrumb';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,13 +27,13 @@ import { cn } from '@/lib/utils';
  * wrapper of it), preserving current route behavior during that migration.
  */
 export function ListingPageHeader({
-  breadcrumb,
+  breadcrumb: _breadcrumb,
   eyebrow,
   title,
   subtitle,
   search,
 }: {
-  /** The resolved trail — seated (via `PageBreadcrumb`) as the band's first element, above the title. */
+  /** @deprecated Trails are rendered once by the root shell. */
   breadcrumb?: BreadcrumbData;
   /** Optional eyebrow above the title (e.g. the home hero's honest job-count Badge). Omitted when absent. */
   eyebrow?: React.ReactNode;
@@ -47,23 +44,9 @@ export function ListingPageHeader({
 }) {
   return (
     <section className="border-border bg-muted border-b">
-      {/* With a breadcrumb, the trail hugs the top of the band (compact
-          pt-4/5, left-aligned at the container edge) through the SHARED
-          `PageBreadcrumb` placement primitive — the same one the band-less
-          pages seat via `PageBody` — so the spacing cannot diverge (CAV-511).
-          The generous whitespace lives BETWEEN the trail and the centered
-          title, so the crumb anchors near the nav instead of floating
-          mid-band (CAV-510). */}
-      {breadcrumb ? (
-        <PageBreadcrumb
-          items={breadcrumb.items}
-          ariaLabel={breadcrumb.ariaLabel}
-        />
-      ) : null}
       <div
         className={cn(
-          'mx-auto flex w-full max-w-7xl flex-col items-center gap-4 px-4 md:px-8',
-          breadcrumb ? 'pt-8 pb-10 md:pt-10 md:pb-14' : 'py-10 md:py-14',
+          'mx-auto flex w-full max-w-7xl flex-col items-center gap-4 px-4 py-10 md:px-8 md:py-14',
         )}
       >
         {eyebrow}
@@ -79,6 +62,16 @@ export function ListingPageHeader({
       </div>
     </section>
   );
+}
+
+export function ListingResultsHeader({
+  breadcrumb: _breadcrumb,
+  children,
+}: {
+  breadcrumb?: BreadcrumbData;
+  children: React.ReactNode;
+}) {
+  return <div className="space-y-4">{children}</div>;
 }
 
 /**

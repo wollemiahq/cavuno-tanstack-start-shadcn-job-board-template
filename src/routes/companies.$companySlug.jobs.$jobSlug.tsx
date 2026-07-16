@@ -51,7 +51,7 @@ import {
 } from '@/components/ui/empty';
 
 export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
-  staticData: { fullBleed: true },
+  staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
     try {
       const [job, board, user, similar, company, seo] = await Promise.all([

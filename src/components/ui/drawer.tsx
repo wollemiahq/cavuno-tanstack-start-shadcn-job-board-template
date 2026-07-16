@@ -57,14 +57,8 @@ function DrawerTrigger({ ...props }: DrawerPrimitive.Trigger.Props) {
   return <DrawerPrimitive.Trigger data-slot="drawer-trigger" {...props} />;
 }
 
-function DrawerPortal({ className, ...props }: DrawerPrimitive.Portal.Props) {
-  return (
-    <DrawerPrimitive.Portal
-      data-slot="drawer-portal"
-      className={className}
-      {...props}
-    />
-  );
+function DrawerPortal({ ...props }: DrawerPrimitive.Portal.Props) {
+  return <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} />;
 }
 
 function DrawerClose({ ...props }: DrawerPrimitive.Close.Props) {

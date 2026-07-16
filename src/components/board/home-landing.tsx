@@ -51,18 +51,60 @@ export interface HomeCompanyCard {
   openJobsLabel: string;
 }
 
+export interface HomeCategoryCard {
+  slug: string;
+  name: string;
+  /** Pre-resolved "N jobs" label, or null when the route has no count. */
+  countLabel: string | null;
+  /** Resolved by the route via `jobsCategoryPath` — never string-built here. */
+  href: string;
+}
+
 function ViewAllAction({
   label,
   to,
 }: {
   label: string;
-  to: '/jobs' | '/blog' | '/talent';
+  to: '/jobs' | '/blog' | '/talent' | '/companies';
 }) {
   return (
     <Link to={to} className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
       {label}
       <ArrowRight aria-hidden="true" data-icon="inline-end" />
     </Link>
+  );
+}
+
+/**
+ * The category browse rail, built from the browse envelope's related searches —
+ * already ranked by the API and counted, so it costs no extra read.
+ */
+function CategoryBrowse({ categories }: { categories: HomeCategoryCard[] }) {
+  return (
+    <Grid as="ul" columns={{ base: 2, md: 3, lg: 4 }} gap="3">
+      {categories.map((category) => (
+        <li key={category.slug}>
+          <Card
+            size="sm"
+            className="hover:bg-muted/50 h-full shadow-none transition-colors"
+          >
+            <CardContent className="flex flex-col gap-1">
+              <a
+                href={category.href}
+                className="focus-visible:ring-ring/30 text-foreground rounded-sm text-sm font-medium outline-none hover:underline focus-visible:ring-3"
+              >
+                {category.name}
+              </a>
+              {category.countLabel ? (
+                <span className="text-muted-foreground text-xs">
+                  {category.countLabel}
+                </span>
+              ) : null}
+            </CardContent>
+          </Card>
+        </li>
+      ))}
+    </Grid>
   );
 }
 
@@ -123,7 +165,10 @@ function HomeJobCard({ vm }: { vm: JobCardVM }) {
         ) : null}
 
         {visibleTags.length > 0 || vm.postedAtLabel ? (
-          <CardFooter className="mt-auto flex-wrap gap-2">
+          // Card zeroes its own pb whenever a footer exists, and CardFooter
+          // only self-pads when it carries a border — so a borderless footer
+          // has to restore the bottom inset itself.
+          <CardFooter className="mt-auto flex-wrap gap-2 pb-(--card-spacing)">
             {visibleTags.map((tag) => (
               <Badge
                 key={tag.key}
@@ -152,8 +197,16 @@ function HomeJobCard({ vm }: { vm: JobCardVM }) {
 
 function HiringIndex({ companies }: { companies: HomeCompanyCard[] }) {
   return (
-    <PageSection title={m.home_companiesHeading()}>
-      <Grid as="ul" columns={{ base: 1, sm: 2 }} gap="3">
+    <PageSection
+      title={m.home_companiesHeading()}
+      actions={
+        <ViewAllAction
+          label={m.home_viewAllCompaniesLabel()}
+          to="/companies"
+        />
+      }
+    >
+      <Grid as="ul" columns={{ base: 1, sm: 2, lg: 3 }} gap="3">
         {companies.map((company) => (
           <li key={company.id}>
             <Card size="sm" className="h-full shadow-none">
@@ -205,7 +258,7 @@ function SignupCtaCard({
         </CardTitle>
         <CardDescription>{supporting}</CardDescription>
       </CardHeader>
-      <CardFooter className="mt-auto">
+      <CardFooter className="mt-auto pb-(--card-spacing)">
         <Link to={href} className={buttonVariants({ size: 'lg' })}>
           {buttonLabel}
         </Link>
@@ -217,6 +270,7 @@ function SignupCtaCard({
 export function HomeLanding({
   jobs,
   countLabel,
+  categories = [],
   companies,
   posts,
   talent,
@@ -227,6 +281,7 @@ export function HomeLanding({
 }: {
   jobs: JobCardVM[];
   countLabel?: string;
+  categories?: HomeCategoryCard[];
   companies: HomeCompanyCard[];
   posts: PublicBlogPostSummary[] | null;
   talent: TalentDirectoryEntry[] | null;
@@ -252,10 +307,9 @@ export function HomeLanding({
               padding={{ base: '8', md: '12' }}
             >
               <Container width="wide">
-                <Grid
-                  columns={hiringCompanies.length > 0 ? { base: 1, lg: 2 } : 1}
-                  gap="8"
-                >
+                {/* Hero is the headline + its CTAs only. Companies earn their
+                    own section below rather than riding the hero band. */}
+                <Grid columns={1} gap="8">
                   <PageHeader
                     eyebrow={
                       countLabel ? (
@@ -292,17 +346,25 @@ export function HomeLanding({
                       </>
                     }
                   />
-                  {hiringCompanies.length > 0 ? (
-                    <HiringIndex companies={hiringCompanies} />
-                  ) : null}
                 </Grid>
               </Container>
             </Box>
           </Bleed>
         }
       >
+        {categories.length > 0 ? (
+          <PageSection title={m.home_categoriesHeading()}>
+            <CategoryBrowse categories={categories} />
+          </PageSection>
+        ) : null}
+
         {latestJobs.length > 0 ? (
-          <PageSection title={m.home_latestJobsHeading()}>
+          <PageSection
+            title={m.home_latestJobsHeading()}
+            actions={
+              <ViewAllAction label={m.home_viewAllJobsLabel()} to="/jobs" />
+            }
+          >
             <Grid as="ul" columns={{ base: 1, md: 2 }} gap="5">
               {latestJobs.map((vm) => (
                 <li key={vm.id}>
@@ -326,6 +388,10 @@ export function HomeLanding({
             </Empty>
           </PageSection>
         )}
+
+        {hiringCompanies.length > 0 ? (
+          <HiringIndex companies={hiringCompanies} />
+        ) : null}
 
         {featuredTalent.length > 0 ? (
           <PageSection

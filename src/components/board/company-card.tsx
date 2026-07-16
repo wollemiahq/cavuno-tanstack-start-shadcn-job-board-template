@@ -1,5 +1,4 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowUpRight } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +6,6 @@ import {
   Card,
   CardAction,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -86,21 +84,14 @@ export function CompanyCard({
             </CardDescription>
           ) : null}
         </div>
-        {/* Decorative directory-card affordance — the real link is the
-                    company name; the arrow just signals the card is navigable. */}
-        <CardAction className="col-start-3">
-          <ArrowUpRight
-            aria-hidden="true"
-            className="text-muted-foreground group-hover/card:text-primary size-5 shrink-0 transition-transform group-hover/card:translate-x-0.5 group-hover/card:-translate-y-0.5"
-          />
-        </CardAction>
+        {/* The open-count rides the card's top-right action slot — the real
+            link is still the company name. */}
+        {publishedJobCount > 0 ? (
+          <CardAction className="col-start-3">
+            <Badge variant="secondary">{jobCountLabel}</Badge>
+          </CardAction>
+        ) : null}
       </CardHeader>
-
-      {publishedJobCount > 0 ? (
-        <CardFooter>
-          <Badge variant="secondary">{jobCountLabel}</Badge>
-        </CardFooter>
-      ) : null}
     </Card>
   );
 }

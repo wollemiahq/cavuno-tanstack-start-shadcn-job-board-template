@@ -18,6 +18,24 @@ import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 
 const LOCALES = ['en', 'de', 'fr'];
 
+const STARTER_COPY_OVERRIDES = {
+  en: {
+    companySearchBar_placeholderText: 'Company name or market…',
+    jobCard_aiRankedLabel: 'Relevance',
+    jobCard_sortNewestLabel: 'Date',
+  },
+  de: {
+    companySearchBar_placeholderText: 'Firmenname oder Markt…',
+    jobCard_aiRankedLabel: 'Relevanz',
+    jobCard_sortNewestLabel: 'Datum',
+  },
+  fr: {
+    companySearchBar_placeholderText: 'Nom de l’entreprise ou marché…',
+    jobCard_aiRankedLabel: 'Pertinence',
+    jobCard_sortNewestLabel: 'Date',
+  },
+};
+
 // The two function-valued catalog keys → (param name, sentinel that
 // round-trips through the formatter so we can recover the ICU template
 // per locale). experienceYears takes a number; posted takes an
@@ -86,6 +104,7 @@ for (const locale of LOCALES) {
     if (key.startsWith('$') || catalogKeys.has(key)) continue;
     messages[key] = value;
   }
+  Object.assign(messages, STARTER_COPY_OVERRIDES[locale]);
   writeMessages(locale, messages);
   if (locale === 'en') enMessages = messages;
 }

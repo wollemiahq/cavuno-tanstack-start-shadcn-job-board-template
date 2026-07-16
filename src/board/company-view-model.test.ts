@@ -10,7 +10,7 @@ const labels = {
   openJobs: (count: number) => `${count} open ${count === 1 ? 'job' : 'jobs'}`,
   viewCompany: 'View company',
   viewJobs: 'View jobs',
-  visitWebsite: 'Visit website',
+  viewSalaries: 'View salaries',
   website: 'Website',
 };
 
@@ -55,6 +55,7 @@ describe('company view models', () => {
     const vm = toCompanyDetailVM(
       {
         ...company,
+        website: 'https://acme.example/',
         markets: [{ name: 'Developer tools', slug: 'developer-tools' }],
       } as PublicCompanyDetail,
       labels,
@@ -71,6 +72,8 @@ describe('company view models', () => {
     expect(vm.websiteLabel).toBe('acme.example');
     expect(vm.detailHref).toBe('/companies/acme-research');
     expect(vm.companySlug).toBe('acme-research');
+    expect(vm.viewSalariesLabel).toBe('View salaries');
     expect(vm).not.toHaveProperty('jobsHref');
+    expect(vm).not.toHaveProperty('visitWebsiteLabel');
   });
 });

@@ -12,7 +12,7 @@ const META = LEGAL_PAGES.impressum;
 
 export const Route = createFileRoute('/impressum')({
   // Full-bleed: the shared `PageBody` owns the width (CAV-502).
-  staticData: { fullBleed: true },
+  staticData: { fullBleed: true, ownsMain: true },
   loader: async () => {
     try {
       const [page, seo] = await Promise.all([

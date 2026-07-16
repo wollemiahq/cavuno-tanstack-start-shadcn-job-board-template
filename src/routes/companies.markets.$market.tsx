@@ -23,7 +23,7 @@ import { ProgrammaticCompaniesView } from '@/routes/-programmatic-companies-view
 const COMPANIES_PAGE_SIZE = 24;
 
 export const Route = createFileRoute('/companies/markets/$market')({
-  staticData: { fullBleed: true, ownsMain: true },
+  staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseCompaniesSearch,
   loaderDeps: ({ search }) => companiesListingLoaderDeps(search),
   loader: async ({ params, deps }) => {
@@ -122,18 +122,6 @@ function MarketPage() {
 
       <ProgrammaticCompaniesView
         heading={market.displayName}
-        description={m.marketPage_metaDescription({
-          market: market.displayName,
-          boardName: seo.boardName,
-        })}
-        breadcrumb={{
-          ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
-          items: [
-            { name: crumbs.home, href: '/' },
-            { name: crumbs.companies, href: '/companies' },
-            { name: market.displayName },
-          ],
-        }}
         page={page}
         pageSize={COMPANIES_PAGE_SIZE}
         markets={markets}

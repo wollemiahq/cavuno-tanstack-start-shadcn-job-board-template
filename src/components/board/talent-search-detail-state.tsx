@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { AlertCircle } from 'lucide-react';
 
+import { TalentSearchResultDetailSkeleton } from '@/components/board/talent-search-result-detail';
 import { Alert, AlertAction, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,7 +13,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export type TalentSearchDetailStateProps = {
   status: 'idle' | 'loading' | 'ready' | 'error';
@@ -33,6 +33,15 @@ export function TalentSearchDetailState({
 }: TalentSearchDetailStateProps) {
   if (status === 'idle') return null;
   if (status === 'ready') return detail ?? null;
+
+  if (status === 'loading') {
+    return (
+      <div role="status" aria-busy="true">
+        <span className="sr-only">{loadingLabel}</span>
+        <TalentSearchResultDetailSkeleton />
+      </div>
+    );
+  }
 
   if (status === 'error' && !detail) {
     return (
@@ -72,30 +81,5 @@ export function TalentSearchDetailState({
     );
   }
 
-  if (status === 'loading' && detail) {
-    return (
-      <div aria-busy="true">
-        <p role="status" className="sr-only">
-          {loadingLabel}
-        </p>
-        {detail}
-      </div>
-    );
-  }
-
-  return (
-    <div role="status" aria-busy="true" className="min-h-[28rem] space-y-6 p-6">
-      <span className="sr-only">{loadingLabel}</span>
-      <div className="flex items-center gap-3">
-        <Skeleton className="size-12" />
-        <Skeleton className="h-6 w-40" />
-      </div>
-      <Skeleton className="h-9 w-3/4" />
-      <div className="flex gap-2">
-        <Skeleton className="h-6 w-20" />
-        <Skeleton className="h-6 w-24" />
-      </div>
-      <Skeleton className="h-52 w-full" />
-    </div>
-  );
+  return null;
 }

@@ -2,6 +2,8 @@
 
 import { useId, useState } from 'react';
 
+import { XIcon } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -22,6 +24,7 @@ import {
 } from '@/components/ui/select';
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -53,7 +56,7 @@ export type JobsFilterToolbarLabels = {
   sheetDescription: string;
   reset: string;
   apply: string;
-  cancel: string;
+  close: string;
 };
 
 export type JobsFilterToolbarProps = {
@@ -106,7 +109,7 @@ function FilterSelect({
         <SelectTrigger id={controlId} aria-label={label}>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent align="start" alignItemWithTrigger={false}>
           <SelectGroup>
             {items.map((item) => (
               <SelectItem key={item.value} value={item.value}>
@@ -127,7 +130,9 @@ export function JobsFilterToolbar({
   onApply,
   onReset,
 }: JobsFilterToolbarProps) {
-  const [sheetMode, setSheetMode] = useState<'desktop' | 'mobile' | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  /** Retained while the sheet animates out so its title does not swap mid-exit. */
+  const [sheetMode, setSheetMode] = useState<'desktop' | 'mobile'>('desktop');
   const [draft, setDraft] = useState<JobsFilterValues>({});
   const activeCount =
     Number(Boolean(value.workplace)) +
@@ -140,9 +145,10 @@ export function JobsFilterToolbar({
       seniority: value.seniority ? [...value.seniority] : undefined,
     });
     setSheetMode(mode);
+    setSheetOpen(true);
   };
 
-  const closeSheet = () => setSheetMode(null);
+  const closeSheet = () => setSheetOpen(false);
 
   const applyDraft = () => {
     onApply({
@@ -186,7 +192,7 @@ export function JobsFilterToolbar({
           type="button"
           variant="outline"
           aria-haspopup="dialog"
-          aria-expanded={sheetMode === 'desktop'}
+          aria-expanded={sheetOpen && sheetMode === 'desktop'}
           onClick={() => openSheet('desktop')}
         >
           {labels.allFilters}
@@ -204,7 +210,7 @@ export function JobsFilterToolbar({
         variant="outline"
         className="md:hidden"
         aria-haspopup="dialog"
-        aria-expanded={sheetMode === 'mobile'}
+        aria-expanded={sheetOpen && sheetMode === 'mobile'}
         onClick={() => openSheet('mobile')}
       >
         {labels.filters}
@@ -212,12 +218,24 @@ export function JobsFilterToolbar({
       </Button>
 
       <Sheet
-        open={sheetMode !== null}
+        open={sheetOpen}
         onOpenChange={(open) => {
           if (!open) closeSheet();
         }}
       >
-        <SheetContent side="right">
+        <SheetContent side="right" showCloseButton={false}>
+          <SheetClose
+            render={
+              <Button
+                variant="ghost"
+                className="bg-secondary absolute top-4 right-4"
+                size="icon-sm"
+              />
+            }
+          >
+            <XIcon aria-hidden="true" />
+            <span className="sr-only">{labels.close}</span>
+          </SheetClose>
           <SheetHeader>
             <SheetTitle>
               {sheetMode === 'desktop' ? labels.allFilters : labels.filters}
@@ -272,14 +290,11 @@ export function JobsFilterToolbar({
             </FieldSet>
           </FieldGroup>
 
-          <SheetFooter className="border-t">
+          <SheetFooter className="flex-row items-center border-t">
             <Button type="button" variant="ghost" onClick={() => setDraft({})}>
               {labels.reset}
             </Button>
-            <Button type="button" variant="outline" onClick={closeSheet}>
-              {labels.cancel}
-            </Button>
-            <Button type="button" onClick={applyDraft}>
+            <Button type="button" className="flex-1" onClick={applyDraft}>
               {labels.apply}
             </Button>
           </SheetFooter>

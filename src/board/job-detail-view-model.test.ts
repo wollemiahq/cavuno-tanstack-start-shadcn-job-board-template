@@ -101,6 +101,39 @@ describe('toJobDetailVM', () => {
     expect(byLabel[copy.experienceLabel]).toContain('5');
   });
 
+  it('keeps physical location separate from workplace type', () => {
+    const onSite = toJobDetailVM(
+      {
+        ...baseJob,
+        remoteOption: 'on_site',
+        officeLocations: [],
+      } as unknown as PublicJob,
+      customFields,
+      [],
+      null,
+      'en',
+    );
+
+    expect(onSite.locationLabel).toBeNull();
+    expect(onSite.workplaceLabel).toBe('On-site');
+    expect(vm.locationLabel).toBe('US, GB');
+    expect(vm.workplaceLabel).toBe('Remote');
+
+    const hybrid = toJobDetailVM(
+      {
+        ...baseJob,
+        remoteOption: 'hybrid',
+      } as unknown as PublicJob,
+      customFields,
+      [],
+      null,
+      'en',
+    );
+
+    expect(hybrid.locationLabel).toBe('Berlin, BE, DE');
+    expect(hybrid.workplaceLabel).toBe('Hybrid');
+  });
+
   it('resolves a boolean custom field to its yes/no copy, text passes through', () => {
     const visa = vm.customFields.find((f) => f.key === 'visa');
     const team = vm.customFields.find((f) => f.key === 'team');

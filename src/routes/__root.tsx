@@ -3,6 +3,8 @@
  * the session user, injects the board theme as overrides of the shadcn
  * token block, and renders the shared chrome.
  */
+import { boardCopy } from '#/copy';
+
 import {
   HeadContent,
   Outlet,
@@ -14,6 +16,7 @@ import {
 
 import Footer from '../components/Footer';
 import Header from '../components/Header';
+import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getSessionUser } from '../server/account';
 import {
@@ -26,21 +29,34 @@ import appCss from '../styles.css?url';
 import { themeMeta } from '../theme/resolved';
 import { MessagesDockController } from './-messages-dock-controller';
 import { MessagesNavController } from './-messages-nav-controller';
+import { useCompanyMarketSuggestions } from './-use-company-market-suggestions';
+import { useKeywordSuggestions } from './-use-keyword-suggestions';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { AppRouterProvider } from '@/components/app-router-provider';
+import { ShellBreadcrumb } from '@/components/board/breadcrumb';
 import { themeModeScript } from '@/components/cavuno/board-theme';
+import { Box } from '@/components/layout/box';
+import { Container } from '@/components/layout/container';
 import {
+  MainContentTarget,
+  SkipToContentLink,
+} from '@/components/shell-accessibility';
+import {
+  resolveHeaderRouteLabels,
   resolveHeaderSearchState,
   type HeaderSearchSubmission,
 } from '@/lib/header-search';
+import {
+  resolveShellBreadcrumb,
+  resolveShellBreadcrumbEntities,
+} from '@/lib/shell-breadcrumb';
 
 declare module '@tanstack/react-router' {
   interface StaticDataRouteOption {
     /**
-     * Listing routes opt out of the root container so they can compose
-     * full-bleed bands (the Lumen-style gray hero, CAV-497). A fullBleed
-     * route owns its own `max-w-7xl` wrappers per section.
+     * Listing routes opt out of the root wrapper so the Page family can own
+     * the canonical 80rem content width and any intentional full-bleed bands.
      */
     fullBleed?: boolean;
     /** Migrated PageContent renders the route's single main landmark. */
@@ -136,33 +152,53 @@ function RootLayout() {
     select: (s) => s.matches.some((match) => match.staticData?.fillsViewport),
   });
   const location = useRouterState({ select: (s) => s.location });
-  const resolvedLocationLabel = useRouterState({
-    select: (state) => {
-      const match = [...state.matches]
-        .reverse()
-        .find((candidate) => candidate.routeId.startsWith('/jobs/locations/'));
-      const loaderData = match?.loaderData as
-        | { place?: { displayName?: unknown } }
-        | undefined;
-      return typeof loaderData?.place?.displayName === 'string'
-        ? loaderData.place.displayName
-        : undefined;
-    },
+  const resolvedHeaderLabels = useRouterState({
+    select: (state) => resolveHeaderRouteLabels(state.matches),
+  });
+  const breadcrumbEntities = useRouterState({
+    select: (state) => resolveShellBreadcrumbEntities(state.matches),
   });
   const navigate = useNavigate();
   const headerSearch = resolveHeaderSearchState(
     location.pathname,
     location.search as Record<string, unknown>,
-    resolvedLocationLabel,
+    resolvedHeaderLabels.location,
+    resolvedHeaderLabels.query,
   );
   const locationSuggestions = useLocationSuggestions(board.language);
+  const keywordSuggestions = useKeywordSuggestions(
+    headerSearch.scope === 'jobs',
+  );
+  const companyMarketSuggestions = useCompanyMarketSuggestions(
+    headerSearch.scope === 'companies',
+  );
+  const copy = boardCopy(board.language, board.labels);
+  const shellBreadcrumb = resolveShellBreadcrumb({
+    pathname: location.pathname,
+    labels: copy.breadcrumbs,
+    entities: {
+      ...breadcrumbEntities,
+      location: breadcrumbEntities.location ?? resolvedHeaderLabels.location,
+      query: breadcrumbEntities.query ?? resolvedHeaderLabels.query,
+    },
+  });
 
   function submitHeaderSearch({
     scope,
     query,
     location: selectedLocation,
+    term,
+    market,
   }: HeaderSearchSubmission) {
     if (scope === 'companies') {
+      if (market) {
+        void navigate({
+          to: '/companies/markets/$market',
+          params: { market: market.slug },
+        });
+        return;
+      }
+
       void navigate({ to: '/companies', search: { query } });
       return;
     }
@@ -174,6 +210,38 @@ function RootLayout() {
 
     if (scope === 'blog') {
       void navigate({ to: '/blog', search: { q: query } });
+      return;
+    }
+
+    if (selectedLocation && term?.type === 'skill') {
+      void navigate({
+        to: '/jobs/locations/$location/skills/$skill',
+        params: { location: selectedLocation.slug, skill: term.slug },
+      });
+      return;
+    }
+
+    if (selectedLocation && term?.type === 'category') {
+      void navigate({
+        to: '/jobs/locations/$location/$keyword',
+        params: { location: selectedLocation.slug, keyword: term.slug },
+      });
+      return;
+    }
+
+    if (term?.type === 'skill') {
+      void navigate({
+        to: '/jobs/skills/$skill',
+        params: { skill: term.slug },
+      });
+      return;
+    }
+
+    if (term?.type === 'category') {
+      void navigate({
+        to: '/jobs/$keyword',
+        params: { keyword: term.slug },
+      });
       return;
     }
 
@@ -197,9 +265,11 @@ function RootLayout() {
   if (isEmbed) {
     return (
       <AppRouterProvider>
-        <main className="p-4">
-          <Outlet />
-        </main>
+        <MainContentTarget>
+          <main className="p-4">
+            <Outlet />
+          </main>
+        </MainContentTarget>
       </AppRouterProvider>
     );
   }
@@ -212,27 +282,40 @@ function RootLayout() {
       language={board.language}
       labels={board.labels}
       features={board.features}
+      candidatePaywall={board.features.candidatePaywall}
       talentDirectoryVisibility={board.talentDirectoryVisibility}
       messagesNav={user ? <MessagesNavController /> : undefined}
       search={{
         ...headerSearch,
         onSubmit: submitHeaderSearch,
+        keywordSuggestions,
+        companyMarketSuggestions,
         locationSuggestions,
       }}
     />
   );
   const routeContent = ownsMain ? (
-    <div className={fillsViewport ? 'flex-1 md:min-h-0' : 'flex-1'}>
+    <MainContentTarget
+      className={fillsViewport ? 'flex-1 md:h-full md:min-h-0' : 'flex-1'}
+    >
       <Outlet />
-    </div>
+    </MainContentTarget>
   ) : isFullBleed ? (
-    <main className="flex-1">
-      <Outlet />
-    </main>
+    <MainContentTarget className="flex flex-1 flex-col">
+      <main className="flex-1">
+        <Outlet />
+      </main>
+    </MainContentTarget>
   ) : (
-    <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 md:px-8">
-      <Outlet />
-    </main>
+    <MainContentTarget className="flex flex-1 flex-col">
+      <main className="flex-1">
+        <Container width="wide">
+          <Box paddingY={{ base: '8', md: '10' }}>
+            <Outlet />
+          </Box>
+        </Container>
+      </main>
+    </MainContentTarget>
   );
 
   return (
@@ -249,6 +332,16 @@ function RootLayout() {
         </>
       )}
       <Footer
+        breadcrumb={
+          shellBreadcrumb ? (
+            <ShellBreadcrumb
+              items={shellBreadcrumb.items}
+              ariaLabel={copy.jobDetail.breadcrumbAriaLabel}
+            />
+          ) : undefined
+        }
+        connected={shellBreadcrumb !== null}
+        flush={fillsViewport}
         boardName={board.name}
         logoUrl={board.logoUrl}
         language={board.language}
@@ -314,6 +407,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body className="bg-background text-foreground flex min-h-screen flex-col font-sans antialiased">
         {/* System-mode resolution before first paint (no theme flash). */}
         <script dangerouslySetInnerHTML={{ __html: themeModeScript(mode) }} />
+        <SkipToContentLink label={m.siteHeader_skipToContentLabel()} />
         {children}
         <Scripts />
       </body>

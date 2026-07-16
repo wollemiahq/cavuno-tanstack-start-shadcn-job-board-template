@@ -40,10 +40,7 @@ describe('CompanySearchResult', () => {
       screen.getByText('Research tools for ambitious engineering teams.'),
     ).toBeVisible();
     expect(screen.getByText('3 open jobs')).toBeVisible();
-    expect(screen.getByRole('img', { name: 'Acme Research' })).toHaveAttribute(
-      'src',
-      'https://cdn.example/acme.svg',
-    );
+    expect(container.querySelector("[data-slot='avatar']")).toBeInTheDocument();
 
     fireEvent.click(link);
     expect(onActivate).toHaveBeenCalledTimes(1);

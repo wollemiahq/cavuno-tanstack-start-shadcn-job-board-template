@@ -57,8 +57,8 @@ import { Route as AuthJoinRouteImport } from './routes/auth.join'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AlertsManageRouteImport } from './routes/alerts.manage'
 import { Route as AlertsConfirmRouteImport } from './routes/alerts.confirm'
-import { Route as AccountSavedRouteImport } from './routes/account.saved'
-import { Route as AccountAccessRouteImport } from './routes/account.access'
+import { Route as AccountSavedRouteImport } from './routes/account_.saved'
+import { Route as AccountAccessRouteImport } from './routes/account_.access'
 import { Route as SalariesTitlesIndexRouteImport } from './routes/salaries.titles.index'
 import { Route as SalariesSkillsIndexRouteImport } from './routes/salaries.skills.index'
 import { Route as SalariesLocationsIndexRouteImport } from './routes/salaries.locations.index'
@@ -335,14 +335,14 @@ const AlertsConfirmRoute = AlertsConfirmRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountSavedRoute = AccountSavedRouteImport.update({
-  id: '/saved',
-  path: '/saved',
-  getParentRoute: () => AccountRoute,
+  id: '/account_/saved',
+  path: '/account/saved',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AccountAccessRoute = AccountAccessRouteImport.update({
-  id: '/access',
-  path: '/access',
-  getParentRoute: () => AccountRoute,
+  id: '/account_/access',
+  path: '/account/access',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const SalariesTitlesIndexRoute = SalariesTitlesIndexRouteImport.update({
   id: '/salaries/titles/',
@@ -539,7 +539,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/about': typeof AboutRoute
-  '/account': typeof AccountRouteWithChildren
+  '/account': typeof AccountRoute
   '/ads.txt': typeof AdsDottxtRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/impressum': typeof ImpressumRoute
@@ -625,7 +625,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/about': typeof AboutRoute
-  '/account': typeof AccountRouteWithChildren
+  '/account': typeof AccountRoute
   '/ads.txt': typeof AdsDottxtRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/impressum': typeof ImpressumRoute
@@ -712,7 +712,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/about': typeof AboutRoute
-  '/account': typeof AccountRouteWithChildren
+  '/account': typeof AccountRoute
   '/ads.txt': typeof AdsDottxtRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/impressum': typeof ImpressumRoute
@@ -726,8 +726,8 @@ export interface FileRoutesById {
   '/site.webmanifest': typeof SiteDotwebmanifestRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
-  '/account/access': typeof AccountAccessRoute
-  '/account/saved': typeof AccountSavedRoute
+  '/account_/access': typeof AccountAccessRoute
+  '/account_/saved': typeof AccountSavedRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
   '/alerts/manage': typeof AlertsManageRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
@@ -986,8 +986,8 @@ export interface FileRouteTypes {
     | '/site.webmanifest'
     | '/sitemap.xml'
     | '/terms-of-service'
-    | '/account/access'
-    | '/account/saved'
+    | '/account_/access'
+    | '/account_/saved'
     | '/alerts/confirm'
     | '/alerts/manage'
     | '/auth/forgot-password'
@@ -1059,7 +1059,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
   AboutRoute: typeof AboutRoute
-  AccountRoute: typeof AccountRouteWithChildren
+  AccountRoute: typeof AccountRoute
   AdsDottxtRoute: typeof AdsDottxtRoute
   CookiePolicyRoute: typeof CookiePolicyRoute
   ImpressumRoute: typeof ImpressumRoute
@@ -1073,6 +1073,8 @@ export interface RootRouteChildren {
   SiteDotwebmanifestRoute: typeof SiteDotwebmanifestRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
+  AccountAccessRoute: typeof AccountAccessRoute
+  AccountSavedRoute: typeof AccountSavedRoute
   AlertsConfirmRoute: typeof AlertsConfirmRoute
   AlertsManageRoute: typeof AlertsManageRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
@@ -1475,19 +1477,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlertsConfirmRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/account/saved': {
-      id: '/account/saved'
-      path: '/saved'
+    '/account_/saved': {
+      id: '/account_/saved'
+      path: '/account/saved'
       fullPath: '/account/saved'
       preLoaderRoute: typeof AccountSavedRouteImport
-      parentRoute: typeof AccountRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/account/access': {
-      id: '/account/access'
-      path: '/access'
+    '/account_/access': {
+      id: '/account_/access'
+      path: '/account/access'
       fullPath: '/account/access'
       preLoaderRoute: typeof AccountAccessRouteImport
-      parentRoute: typeof AccountRoute
+      parentRoute: typeof rootRouteImport
     }
     '/salaries/titles/': {
       id: '/salaries/titles/'
@@ -1730,19 +1732,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AccountRouteChildren {
-  AccountAccessRoute: typeof AccountAccessRoute
-  AccountSavedRoute: typeof AccountSavedRoute
-}
-
-const AccountRouteChildren: AccountRouteChildren = {
-  AccountAccessRoute: AccountAccessRoute,
-  AccountSavedRoute: AccountSavedRoute,
-}
-
-const AccountRouteWithChildren =
-  AccountRoute._addFileChildren(AccountRouteChildren)
-
 interface MessagesRouteChildren {
   MessagesConversationIdRoute: typeof MessagesConversationIdRoute
 }
@@ -1786,7 +1775,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
   AboutRoute: AboutRoute,
-  AccountRoute: AccountRouteWithChildren,
+  AccountRoute: AccountRoute,
   AdsDottxtRoute: AdsDottxtRoute,
   CookiePolicyRoute: CookiePolicyRoute,
   ImpressumRoute: ImpressumRoute,
@@ -1800,6 +1789,8 @@ const rootRouteChildren: RootRouteChildren = {
   SiteDotwebmanifestRoute: SiteDotwebmanifestRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
+  AccountAccessRoute: AccountAccessRoute,
+  AccountSavedRoute: AccountSavedRoute,
   AlertsConfirmRoute: AlertsConfirmRoute,
   AlertsManageRoute: AlertsManageRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,

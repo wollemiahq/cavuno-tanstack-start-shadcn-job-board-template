@@ -1,34 +1,29 @@
-import type { MouseEvent as ReactMouseEvent } from 'react';
+import type { MouseEvent as ReactMouseEvent, ReactNode } from 'react';
 
 import type { JobCardVM } from '@/board/job-view-model';
 import { SearchResultCard } from '@/components/search-results/search-results';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { initialsOf } from '@/lib/initials';
 
 export function JobSearchResult({
   vm,
   selected = false,
   onActivate,
+  saveSlot,
 }: {
   vm: JobCardVM;
   selected?: boolean;
   onActivate?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
+  saveSlot?: ReactNode;
 }) {
   return (
     <SearchResultCard selected={selected}>
       <div className="relative flex items-start gap-3 p-4">
-        <Avatar size="lg" className="rounded-xl">
+        <Avatar size="lg">
           {vm.companyLogoUrl ? (
-            <AvatarImage
-              src={vm.companyLogoUrl}
-              alt=""
-              className="rounded-xl"
-            />
+            <AvatarImage src={vm.companyLogoUrl} alt="" />
           ) : null}
-          <AvatarFallback className="rounded-xl">
-            {initialsOf(vm.companyAvatarName)}
-          </AvatarFallback>
+          <AvatarFallback>{initialsOf(vm.companyAvatarName)}</AvatarFallback>
         </Avatar>
 
         <div className="min-w-0 flex-1">
@@ -55,35 +50,36 @@ export function JobSearchResult({
               ) : null}
             </div>
             {vm.isFeatured ? (
-              <Badge variant="secondary">{vm.featuredLabel}</Badge>
+              <span className="text-muted-foreground text-xs font-medium">
+                {vm.featuredLabel}
+              </span>
             ) : null}
           </div>
 
-          {vm.compLine ? (
-            <p className="text-foreground mt-2 text-sm">{vm.compLine}</p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            {vm.locationLabel}
+          </p>
+          {vm.salaryLabel ? (
+            <p className="text-foreground mt-2 text-sm">{vm.salaryLabel}</p>
           ) : null}
           {vm.summary ? (
             <p className="text-muted-foreground mt-2 line-clamp-2 text-sm">
               {vm.summary}
             </p>
           ) : null}
-          {vm.tags.length > 0 ? (
-            <div className="relative z-10 mt-3 flex flex-wrap gap-1.5">
-              {vm.tags.map((tag) => (
-                <Badge
-                  key={tag.key}
-                  variant="outline"
-                  render={<a href={tag.href} />}
-                >
-                  {tag.name}
-                </Badge>
-              ))}
+          {vm.postedAtLabel || saveSlot ? (
+            <div className="mt-3 flex min-h-8 items-end justify-between gap-3">
+              {vm.postedAtLabel ? (
+                <p className="text-muted-foreground text-xs">
+                  {vm.postedAtLabel}
+                </p>
+              ) : (
+                <span />
+              )}
+              {saveSlot ? (
+                <div className="relative z-10 shrink-0">{saveSlot}</div>
+              ) : null}
             </div>
-          ) : null}
-          {vm.postedAtLabel ? (
-            <p className="text-muted-foreground mt-3 text-xs">
-              {vm.postedAtLabel}
-            </p>
           ) : null}
         </div>
       </div>

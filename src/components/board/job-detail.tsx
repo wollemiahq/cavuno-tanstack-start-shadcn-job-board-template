@@ -6,7 +6,7 @@
  * from `@cavuno/board*` and the design is free to restructure without
  * touching the data/correctness layer.
  *
- * Anatomy: breadcrumbs → page header (company avatar + name link, display
+ * Anatomy: page header (company avatar + name link, display
  * title, meta pills, posted date) → two-column body. The main column
  * carries the sanitized description prose, facts, taxonomy links, operator
  * custom fields, and the similar-jobs card grid; the sticky right rail is
@@ -26,16 +26,18 @@ import type {
   JobDetailFactVM,
   JobDetailVM,
 } from '@/board/job-detail-view-model';
-import { PageBreadcrumb } from '@/components/board/breadcrumb';
+import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
 import { PageBody } from '@/components/board/page-body';
 import { TaxonomyTags } from '@/components/board/taxonomy-tags';
+import { Container } from '@/components/layout/container';
 import { Prose } from '@/components/prose';
 import { Text } from '@/components/text';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { initialsOf } from '@/lib/initials';
+import { m } from '@/paraglide/messages';
 
 function TaxonomySection({
   heading,
@@ -118,21 +120,11 @@ export function JobDetail({
   alertSlot?: React.ReactNode;
 }) {
   return (
-    <article className="pb-24 lg:pb-0">
-      <PageBody
-        // Full-bleed gray header band (Lumen structure, CAV-497/502) —
-        // breadcrumbs + the page header ride the band; the two-column
-        // body (prose + sticky apply rail) stays below on white.
-        band={
-          <div className="border-border bg-muted/50 border-b">
-            {/* Trail hugs the nav (pt-4/5) via the SHARED PageBreadcrumb
-                            placement primitive — same seam as the listing bands and
-                            the band-less pages (CAV-511). */}
-            <PageBreadcrumb
-              items={vm.breadcrumbs}
-              ariaLabel={vm.breadcrumbAriaLabel}
-            />
-            <div className="mx-auto flex w-full max-w-7xl flex-col px-4 pt-6 pb-8 md:px-8 md:pb-10">
+    <PageBody
+      band={
+        <div className="border-border bg-muted/50 border-b">
+          <Container width="wide">
+            <div className="flex flex-col pt-(--header-space) pb-(--header-space)">
               <header className="flex flex-col gap-4">
                 <div className="flex items-center gap-3">
                   <Avatar size="lg" className="rounded-xl after:rounded-xl">
@@ -148,13 +140,15 @@ export function JobDetail({
                     </AvatarFallback>
                   </Avatar>
                   {vm.company?.href && vm.companyName ? (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      render={<a href={vm.company.href} />}
+                    <a
+                      href={vm.company.href}
+                      className={buttonVariants({
+                        variant: 'link',
+                        size: 'sm',
+                      })}
                     >
                       {vm.companyName}
-                    </Button>
+                    </a>
                   ) : vm.companyName ? (
                     <span className="text-foreground text-base font-semibold">
                       {vm.companyName}
@@ -167,67 +161,63 @@ export function JobDetail({
                 </Text>
 
                 <div className="flex flex-wrap items-center gap-1.5">
+                  {vm.salaryLabel ? (
+                    <Badge variant="outline">{vm.salaryLabel}</Badge>
+                  ) : null}
+                  {vm.workplaceLabel ? (
+                    <Badge variant="secondary">{vm.workplaceLabel}</Badge>
+                  ) : null}
                   {vm.employmentTypeLabel ? (
                     <Badge variant="secondary">{vm.employmentTypeLabel}</Badge>
                   ) : null}
                   {vm.seniorityLabel ? (
                     <Badge variant="secondary">{vm.seniorityLabel}</Badge>
                   ) : null}
-                  <Badge variant="secondary">{vm.locationLabel}</Badge>
                 </div>
 
-                {/* Salary rides the header as a prominent meta line (CAV-500). */}
-                {vm.salaryLabel ? (
-                  <p className="text-foreground text-lg font-semibold">
-                    {vm.salaryLabel}
-                  </p>
-                ) : null}
-
-                {vm.publishedLabel ? (
-                  <p className="text-muted-foreground text-sm">
-                    {vm.publishedLabel}
-                  </p>
-                ) : null}
+                <p className="text-muted-foreground text-sm">
+                  {vm.locationLabel ?? m.jobDetail_locationNotSpecifiedLabel()}
+                  {vm.publishedLabel ? ` · ${vm.publishedLabel}` : null}
+                </p>
               </header>
             </div>
+          </Container>
+        </div>
+      }
+      rail={
+        <>
+          <div
+            data-slot="job-actions"
+            className="border-border bg-background/95 fixed inset-x-0 bottom-0 z-40 border-t p-4 shadow-lg backdrop-blur lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none"
+          >
+            <Card size="sm" className="gap-0 py-0">
+              <CardContent className="grid grid-cols-2 gap-2 p-4 lg:flex lg:flex-col lg:gap-4">
+                {applySlot ? (
+                  <div className="flex flex-col gap-2">{applySlot}</div>
+                ) : null}
+                {secondaryActions ? (
+                  <div className="flex flex-col gap-2">{secondaryActions}</div>
+                ) : null}
+              </CardContent>
+            </Card>
           </div>
-        }
-        // Apply rail — right column on desktop; first on mobile so the
-        // apply CTA sits directly under the header.
-        rail={
-          <>
-            <div
-              data-slot="job-actions"
-              className="border-border bg-background/95 fixed inset-x-0 bottom-0 z-40 border-t p-4 shadow-lg backdrop-blur lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none"
+          {/* Similar jobs sit directly under the apply card (CAV-500). */}
+          {similarSlot ? (
+            <section
+              aria-label={vm.similarJobsHeading}
+              className="flex flex-col gap-4"
             >
-              <Card size="sm" className="gap-0 py-0">
-                <CardContent className="grid grid-cols-2 gap-2 p-4 lg:flex lg:flex-col lg:gap-4">
-                  {applySlot ? (
-                    <div className="flex flex-col gap-2">{applySlot}</div>
-                  ) : null}
-                  {secondaryActions ? (
-                    <div className="flex flex-col gap-2">
-                      {secondaryActions}
-                    </div>
-                  ) : null}
-                </CardContent>
-              </Card>
-            </div>
-            {/* Similar jobs sit directly under the apply card (CAV-500). */}
-            {similarSlot ? (
-              <section
-                aria-label={vm.similarJobsHeading}
-                className="flex flex-col gap-4"
-              >
-                <Text as="h2" variant="heading4">
-                  {vm.similarJobsHeading}
-                </Text>
-                {similarSlot}
-              </section>
-            ) : null}
-          </>
-        }
-      >
+              <Text as="h2" variant="heading4">
+                {vm.similarJobsHeading}
+              </Text>
+              {similarSlot}
+            </section>
+          ) : null}
+        </>
+      }
+      railLabel={m.jobDetail_sidebarAriaLabel()}
+    >
+      <article className="flex flex-col gap-8 pb-24 lg:pb-0">
         {vm.descriptionHtml ? (
           // TRUST BOUNDARY: the description is rendered as raw HTML.
           // The Cavuno Board API sanitizes it server-side (the same
@@ -254,8 +244,10 @@ export function JobDetail({
           heading={vm.additionalDetailsHeading}
         />
 
+        {vm.company ? <JobAboutCompanyCard company={vm.company} /> : null}
+
         {alertSlot}
-      </PageBody>
-    </article>
+      </article>
+    </PageBody>
   );
 }

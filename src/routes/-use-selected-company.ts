@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { getCompany } from '../server/queries';
+import {
+  getCompany,
+  getCompanySalarySummary,
+  listCompanyJobs,
+} from '../server/queries';
 
 import type { PublicCompanyDetail } from '@cavuno/board';
 
 export type SelectedCompanyState = {
   status: 'idle' | 'loading' | 'ready' | 'error';
   company?: PublicCompanyDetail;
+  jobs?: Awaited<ReturnType<typeof listCompanyJobs>>;
+  salarySummary?: Awaited<ReturnType<typeof getCompanySalarySummary>>;
   error?: Error;
   retry: () => void;
 };
@@ -27,17 +33,27 @@ export function useSelectedCompany(companySlug?: string): SelectedCompanyState {
     setState((previous) => ({
       status: 'loading',
       company: previous.company,
+      jobs: previous.jobs,
+      salarySummary: previous.salarySummary,
     }));
 
-    void getCompany({ data: { companySlug } })
-      .then((company) => {
-        if (!cancelled) setState({ status: 'ready', company });
+    void Promise.all([
+      getCompany({ data: { companySlug } }),
+      listCompanyJobs({ data: { companySlug, limit: 4 } }),
+      getCompanySalarySummary({ data: { companySlug } }),
+    ])
+      .then(([company, jobs, salarySummary]) => {
+        if (!cancelled) {
+          setState({ status: 'ready', company, jobs, salarySummary });
+        }
       })
       .catch((cause: unknown) => {
         if (cancelled) return;
         setState((previous) => ({
           status: 'error',
           company: previous.company,
+          jobs: previous.jobs,
+          salarySummary: previous.salarySummary,
           error: cause instanceof Error ? cause : new Error(String(cause)),
         }));
       });

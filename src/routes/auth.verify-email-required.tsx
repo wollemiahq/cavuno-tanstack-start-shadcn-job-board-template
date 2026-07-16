@@ -9,22 +9,18 @@ import { useState } from 'react';
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 
 import { AuthCard, FormError } from '../components/auth-form';
-import {
-  candidateReturnTo,
-  candidateSignInHref,
-} from '../lib/candidate-return-to';
+import { candidateReturnTo } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { resendOtp, verifyOtpCode } from '../server/auth';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp';
-import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/auth/verify-email-required')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -46,6 +42,27 @@ function VerifyEmailRequiredPage() {
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
 
+  // Shared by the auto-submit (`onComplete`) and the form's implicit
+  // Enter-key submission — the sixth digit IS the submit action.
+  async function verify(code: string) {
+    if (pending) return;
+    setPending(true);
+    setError(null);
+    try {
+      const result = await verifyOtpCode({ data: { code: code.trim() } });
+      if (result.ok) {
+        await router.invalidate();
+        await router.navigate({ href: returnTo });
+      } else {
+        setError(result.message);
+      }
+    } catch {
+      setError(m.candidateAction_errorText());
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
     <AuthCard
       title={m.authVerifyEmailRequired_cardTitle()}
@@ -53,26 +70,10 @@ function VerifyEmailRequiredPage() {
     >
       <form
         className="grid gap-4"
-        onSubmit={async (event) => {
+        onSubmit={(event) => {
           event.preventDefault();
-          setPending(true);
-          setError(null);
           const form = new FormData(event.currentTarget);
-          try {
-            const result = await verifyOtpCode({
-              data: { code: String(form.get('code')).trim() },
-            });
-            if (result.ok) {
-              await router.invalidate();
-              await router.navigate({ href: returnTo });
-            } else {
-              setError(result.message);
-            }
-          } catch {
-            setError(m.candidateAction_errorText());
-          } finally {
-            setPending(false);
-          }
+          void verify(String(form.get('code')));
         }}
       >
         <Field>
@@ -87,6 +88,8 @@ function VerifyEmailRequiredPage() {
             autoComplete="one-time-code"
             data-test="otp-code"
             containerClassName="justify-center"
+            disabled={pending}
+            onComplete={(code: string) => void verify(code)}
           >
             <InputOTPGroup>
               <InputOTPSlot index={0} className="size-10" />
@@ -99,17 +102,14 @@ function VerifyEmailRequiredPage() {
           </InputOTP>
           <FormError message={error} />
         </Field>
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full"
-          disabled={pending}
-          data-test="otp-verify"
-        >
-          {pending
-            ? m.authVerifyEmailRequired_verifyingLabel()
-            : m.authVerifyEmailRequired_verifyLabel()}
-        </Button>
+        {pending ? (
+          <p
+            role="status"
+            className="text-muted-foreground text-center text-sm"
+          >
+            {m.authVerifyEmailRequired_verifyingLabel()}
+          </p>
+        ) : null}
       </form>
 
       {resent ? (
@@ -149,16 +149,6 @@ function VerifyEmailRequiredPage() {
           ? m.authVerifyEmailRequired_sendingLabel()
           : m.authVerifyEmailRequired_resendLabel()}
       </Button>
-
-      <a
-        href={candidateSignInHref(returnTo)}
-        className={cn(
-          buttonVariants({ variant: 'ghost', size: 'lg' }),
-          'w-full',
-        )}
-      >
-        {m.authVerifyEmailRequired_backToSignInLabel()}
-      </a>
     </AuthCard>
   );
 }

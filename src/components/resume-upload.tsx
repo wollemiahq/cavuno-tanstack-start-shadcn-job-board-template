@@ -75,13 +75,15 @@ export function ResumeUpload({ resume }: { resume: Resume }) {
       {resume.parseStatus === 'parsing' ? (
         <p className="text-muted-foreground text-sm" role="status">
           {m.resumeUpload_parsingText()}{' '}
-          <button
+          <Button
             type="button"
-            className="underline"
+            variant="link"
+            size="xs"
+            className="h-auto p-0"
             onClick={() => router.invalidate()}
           >
             {m.resumeUpload_refreshLabel()}
-          </button>
+          </Button>
         </p>
       ) : null}
       {resume.parseStatus === 'failed' && resume.parseFailureReason ? (

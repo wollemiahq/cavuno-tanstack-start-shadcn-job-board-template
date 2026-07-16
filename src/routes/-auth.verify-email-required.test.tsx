@@ -95,10 +95,10 @@ describe('/auth/verify-email-required search contract', () => {
       throw new Error('The verification route needs a component');
 
     const { container } = render(<VerifyPage />);
+    // Typing the sixth digit IS the submit — no Verify button exists.
     fireEvent.change(container.querySelector('input[name="code"]')!, {
       target: { value: '123456' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Verify email' }));
 
     await waitFor(() => {
       expect(mocks.verifyOtpCode).toHaveBeenCalledWith({
@@ -117,10 +117,8 @@ describe('/auth/verify-email-required search contract', () => {
       throw new Error('The verification route needs a component');
 
     const { container } = render(<VerifyPage />);
-    fireEvent.change(container.querySelector('input[name="code"]')!, {
-      target: { value: '123456' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Verify email' }));
+    const code = container.querySelector('input[name="code"]')!;
+    fireEvent.change(code, { target: { value: '123456' } });
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Something went wrong. Try again.',
@@ -129,7 +127,8 @@ describe('/auth/verify-email-required search contract', () => {
       'data-slot',
       'field-error',
     );
-    expect(screen.getByRole('button', { name: 'Verify email' })).toBeEnabled();
+    // The input re-enables so the candidate can correct the code and retry.
+    expect(code).toBeEnabled();
   });
 
   it('recovers when resending the verification code rejects unexpectedly', async () => {
@@ -178,20 +177,19 @@ describe('/auth/verify-email-required search contract', () => {
     );
   });
 
-  it('keeps the destination when returning to sign in', () => {
-    const returnTo = '/jobs?q=design&selectedJob=product-designer';
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo });
+  it('offers no sign-in escape hatch — the gate is verify or resend', () => {
+    // The candidate here is already signed in; a "back to sign in" link was
+    // a circular exit and was removed deliberately (CAV session decision).
+    vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo: '/account' });
     const VerifyPage = Route.options.component;
     if (!VerifyPage)
       throw new Error('The verification route needs a component');
 
     render(<VerifyPage />);
 
+    expect(screen.queryByRole('link')).toBeNull();
     expect(
-      screen.getByRole('link', { name: 'Back to sign in' }),
-    ).toHaveAttribute(
-      'href',
-      `/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}`,
-    );
+      screen.queryByRole('button', { name: 'Verify email' }),
+    ).toBeNull();
   });
 });

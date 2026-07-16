@@ -112,4 +112,12 @@ describe('shadcn Rhea foundation', () => {
     );
     expect(publicIntro).not.toMatch(/built entirely from[\s\S]*Untitled UI/i);
   });
+
+  it('documents reproducible shadcn/create theme, font, and icon handoff', () => {
+    const readme = read('README.md');
+
+    expect(readme).toMatch(/shadcn apply[^\n]*--only theme,font/);
+    expect(readme).toMatch(/icon[^\n]*(migration|full preset)/i);
+    expect(readme).toMatch(/review[^\n]*diff/i);
+  });
 });

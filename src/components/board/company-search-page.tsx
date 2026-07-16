@@ -1,38 +1,37 @@
 'use client';
 
 import { companyMarketPath } from '@cavuno/board/paths';
+import { useLocation } from '@tanstack/react-router';
 import { Building2 } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
 import { getCompanySearchLabels } from '@/board/company-search-labels';
 import { toCompanyCardVM } from '@/board/company-view-model';
-import {
-  PageBreadcrumb,
-  type BreadcrumbData,
-} from '@/components/board/breadcrumb';
-import { CompanySearchControls } from '@/components/board/company-search-controls';
+import type { BreadcrumbData } from '@/components/board/breadcrumb';
 import { CompanySearchResult } from '@/components/board/company-search-result';
+import { ListingResultsHeader } from '@/components/board/listing-page-header';
 import { ListingPagination } from '@/components/board/listing-pagination';
-import { Box } from '@/components/layout/box';
-import { Container } from '@/components/layout/container';
-import { Page, PageHeader } from '@/components/layout/page';
+import { Page } from '@/components/layout/page';
 import {
   AdRail,
   SearchResultDetail,
   SearchResultsLayout,
   SearchResultsList,
 } from '@/components/search-results/search-results';
-import { badgeVariants } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
+import { listingPageHref } from '@/lib/pagination';
 import type { PublicCompany } from '@cavuno/board';
 
 type AdPlacement = {
@@ -46,13 +45,9 @@ export function CompanySearchPage({
   page,
   pageSize,
   heading,
-  description,
   breadcrumb,
   query,
-  marketSlug,
   markets,
-  onSearchSubmit,
-  onMarketChange,
   onPageChange,
   hasMore = false,
   onLoadMore,
@@ -68,13 +63,9 @@ export function CompanySearchPage({
   page: number;
   pageSize: number;
   heading?: string;
-  description?: string;
   breadcrumb?: BreadcrumbData;
   query?: string;
-  marketSlug?: string;
   markets: Array<{ slug: string; name: string }>;
-  onSearchSubmit: (query: string) => void;
-  onMarketChange: (marketSlug: string | undefined, query: string) => void;
   onPageChange: (page: number) => void;
   hasMore?: boolean;
   onLoadMore?: () => void;
@@ -85,7 +76,9 @@ export function CompanySearchPage({
   startAd?: AdPlacement;
   endAd?: AdPlacement;
 }) {
+  const currentHref = useLocation({ select: (location) => location.href });
   const labels = getCompanySearchLabels();
+  const hasActiveSearch = Boolean(query || breadcrumb);
   const companyVms = companies.map((company) =>
     toCompanyCardVM(company, labels),
   );
@@ -100,69 +93,91 @@ export function CompanySearchPage({
     count === 1
       ? m.companySearch_resultsCountOne({ count })
       : m.companySearch_resultsCountMany({ count });
-
+  const resultsBar = (
+    <div
+      data-slot="company-results-bar"
+      className={companyVms.length > 0 ? 'px-4 pb-3 md:px-0' : 'pb-3'}
+    >
+      <h1 className="text-foreground text-lg font-semibold tracking-tight">
+        {resultCountLabel}
+      </h1>
+    </div>
+  );
   return (
-    <Page width="wide">
-      <main data-layout="company-search-page">
-        <Box background="muted" border="bottom">
-          {breadcrumb ? (
-            <PageBreadcrumb
-              items={breadcrumb.items}
-              ariaLabel={breadcrumb.ariaLabel}
-            />
-          ) : null}
-          <Container width="wide">
-            <PageHeader
-              align="center"
-              title={heading ?? m.companiesIndex_metaTitle()}
-              description={description}
-            >
-              <div className="mt-2 w-full max-w-5xl text-left">
-                <CompanySearchControls
-                  query={query}
-                  marketSlug={marketSlug}
-                  markets={markets}
-                  labels={{
-                    query: m.companySearch_queryLabel(),
-                    queryPlaceholder: m.companySearchBar_placeholderText(),
-                    market: m.companySearch_marketLabel(),
-                    allMarkets: m.companySearch_allMarketsLabel(),
-                    search: m.companySearch_searchLabel(),
-                  }}
-                  onSubmit={onSearchSubmit}
-                  onMarketChange={onMarketChange}
-                />
-              </div>
-            </PageHeader>
-          </Container>
-        </Box>
-
-        <Box
-          paddingX={{ base: '4', md: '8' }}
-          paddingY={{ base: '6', md: '8' }}
+    <Page width="wide" fill>
+      <main
+        data-layout="company-search-page"
+        className="md:flex md:h-full md:min-h-0 md:flex-col"
+      >
+        <div
+          data-slot="company-search-viewport"
+          className="min-w-0 overflow-x-clip md:flex md:min-h-0 md:flex-1 md:overflow-hidden"
         >
-          <SearchResultsLayout
-            startAd={
-              startAd ? (
-                <AdRail label={startAd.label}>{startAd.content}</AdRail>
-              ) : undefined
-            }
-            endAd={
-              endAd ? (
-                <AdRail label={endAd.label}>{endAd.content}</AdRail>
-              ) : undefined
-            }
-            list={
-              <SearchResultsList
-                label={m.companySearch_resultsRegionLabel()}
-                scrollRestorationId="companies-search-results"
-              >
-                <div className="space-y-4 p-4">
-                  <p className="text-muted-foreground text-sm font-medium">
-                    {resultCountLabel}
-                  </p>
+          {companyVms.length === 0 ? (
+            <SearchResultsLayout
+              startAd={
+                startAd ? (
+                  <AdRail label={startAd.label}>{startAd.content}</AdRail>
+                ) : undefined
+              }
+              endAd={
+                endAd ? (
+                  <AdRail label={endAd.label}>{endAd.content}</AdRail>
+                ) : undefined
+              }
+              list={
+                <div className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0">
+                  <ListingResultsHeader breadcrumb={breadcrumb}>
+                    {resultsBar}
+                  </ListingResultsHeader>
+                  <Empty className="min-h-[calc(100dvh-16rem)] border-0">
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <Building2 aria-hidden="true" />
+                      </EmptyMedia>
+                      <EmptyTitle>
+                        {heading ?? m.companiesIndex_metaTitle()}
+                      </EmptyTitle>
+                      <EmptyDescription>
+                        {query
+                          ? m.companiesIndex_noMatchText({ query })
+                          : m.companiesIndex_emptyText()}
+                      </EmptyDescription>
+                    </EmptyHeader>
+                    {hasActiveSearch ? (
+                      <EmptyContent>
+                        <a href="/companies" className={buttonVariants()}>
+                          {m.jobSearch_resetFiltersAction()}
+                        </a>
+                      </EmptyContent>
+                    ) : null}
+                  </Empty>
+                </div>
+              }
+              detail={null}
+            />
+          ) : (
+            <SearchResultsLayout
+              startAd={
+                startAd ? (
+                  <AdRail label={startAd.label}>{startAd.content}</AdRail>
+                ) : undefined
+              }
+              endAd={
+                endAd ? (
+                  <AdRail label={endAd.label}>{endAd.content}</AdRail>
+                ) : undefined
+              }
+              list={
+                <SearchResultsList
+                  label={m.companySearch_resultsRegionLabel()}
+                  scrollRestorationId="companies-search-results"
+                >
+                  <div className="space-y-4 pt-4 pr-4 pb-4">
+                    <ListingResultsHeader breadcrumb={breadcrumb}>
+                      {resultsBar}
+                    </ListingResultsHeader>
 
-                  {companyVms.length > 0 ? (
                     <div className="space-y-3">
                       {companyVms.map((vm, index) => {
                         const companySlug = companySlugs[index]!;
@@ -178,78 +193,73 @@ export function CompanySearchPage({
                         );
                       })}
                     </div>
-                  ) : (
-                    <Empty className="min-h-72 border">
-                      <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                          <Building2 aria-hidden="true" />
-                        </EmptyMedia>
-                        <EmptyTitle>{m.companiesIndex_metaTitle()}</EmptyTitle>
-                        <EmptyDescription>
-                          {query
-                            ? m.companiesIndex_noMatchText({ query })
-                            : m.companiesIndex_emptyText()}
-                        </EmptyDescription>
-                      </EmptyHeader>
-                    </Empty>
-                  )}
 
-                  {query ? (
-                    hasMore && onLoadMore ? (
-                      <div className="flex justify-center">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={onLoadMore}
-                        >
-                          {m.companiesIndex_nextResultsLabel()}
-                        </Button>
-                      </div>
-                    ) : null
-                  ) : (
-                    <ListingPagination
-                      page={page}
-                      count={count}
-                      pageSize={pageSize}
-                      onPageChange={onPageChange}
-                    />
-                  )}
-
-                  {markets.length > 0 ? (
-                    <section
-                      aria-label={m.companiesIndex_browseByMarketHeading()}
-                      className="border-border space-y-3 border-t pt-4"
-                    >
-                      <h2 className="text-sm font-semibold">
-                        {m.companiesIndex_browseByMarketHeading()}
-                      </h2>
-                      <div className="flex flex-wrap gap-1.5">
-                        {markets.map((market) => (
-                          <a
-                            key={market.slug}
-                            href={companyMarketPath(market.slug)}
-                            className={badgeVariants({ variant: 'outline' })}
+                    {query ? (
+                      hasMore && onLoadMore ? (
+                        <div className="flex justify-center">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onLoadMore}
                           >
-                            {market.name}
-                          </a>
-                        ))}
-                      </div>
-                    </section>
-                  ) : null}
-                </div>
-              </SearchResultsList>
-            }
-            detail={
-              <SearchResultDetail
-                ref={selection.detailRef}
-                label={m.companySearch_selectedCompanyRegionLabel()}
-                scrollRestorationId="companies-selected-detail"
-              >
-                {detail}
-              </SearchResultDetail>
-            }
-          />
-        </Box>
+                            {m.companiesIndex_nextResultsLabel()}
+                          </Button>
+                        </div>
+                      ) : null
+                    ) : (
+                      <ListingPagination
+                        compact
+                        page={page}
+                        count={count}
+                        pageSize={pageSize}
+                        hrefForPage={(nextPage) =>
+                          listingPageHref(currentHref, nextPage, [
+                            'cursor',
+                            'selectedCompany',
+                          ])
+                        }
+                        onPageChange={onPageChange}
+                      />
+                    )}
+
+                    {markets.length > 0 ? (
+                      <section
+                        aria-label={m.companiesIndex_browseByMarketHeading()}
+                        className="border-border space-y-3 border-t pt-4"
+                      >
+                        <h2 className="text-sm font-semibold">
+                          {m.companiesIndex_browseByMarketHeading()}
+                        </h2>
+                        <div className="flex flex-wrap gap-1.5">
+                          {markets.map((market) => (
+                            <Badge
+                              key={market.slug}
+                              variant="outline"
+                              render={
+                                <a href={companyMarketPath(market.slug)} />
+                              }
+                            >
+                              {market.name}
+                            </Badge>
+                          ))}
+                        </div>
+                      </section>
+                    ) : null}
+                  </div>
+                </SearchResultsList>
+              }
+              detail={
+                <SearchResultDetail
+                  ref={selection.detailRef}
+                  label={m.companySearch_selectedCompanyRegionLabel()}
+                  scrollRestorationId="companies-selected-detail"
+                >
+                  {detail}
+                </SearchResultDetail>
+              }
+            />
+          )}
+        </div>
       </main>
     </Page>
   );

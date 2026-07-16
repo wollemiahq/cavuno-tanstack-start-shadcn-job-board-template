@@ -1,7 +1,7 @@
 ---
 name: Company section
 purpose: A company's three public surfaces — profile, jobs, salaries — read as ONE entity behind a shared header with tab navigation.
-primitives: [Page, PageHeader, PageContent, PageSection, Avatar, Badge, Link, Breadcrumb]
+primitives: [Page, PageHeader, PageContent, PageSection, Avatar, Badge, Link]
 usedBy: [src/components/board/company-section-header.tsx, src/routes/companies.$companySlug.index.tsx, src/routes/companies.$companySlug.jobs.index.tsx, src/routes/companies.$companySlug.salaries.index.tsx]
 ---
 
@@ -11,7 +11,7 @@ A company is one entity with three public surfaces: its profile
 (`/companies/:slug`), the jobs subpage (`…/jobs`), and the salary overview
 (`…/salaries` + category pages). They must not read as three unrelated pages.
 The **company section shell** (`CompanySectionShell`) opens every one of them
-with a byte-identical header — the breadcrumb, the company mark + name (H1) +
+with a byte-identical header — the company mark + name (H1) +
 one-line description, then a row of section tabs — so the visitor always knows
 they are inside the same company, and can move between its sections in one
 click. Only the content BELOW the tabs changes per surface.
@@ -34,9 +34,8 @@ The canonical anatomy is `Page` → `PageContent`, with the shared identity in
 migration-only `PageBody` internally. New route composition must not consume
 `PageBody` directly.
 
-- The **breadcrumb**, passed as resolved breadcrumb data to the company shell
-  and seated in the page header (never hand-placed trail markup). See the
-  codified rule below.
+- The root shell's bottom breadcrumb locates the current company section. The
+  company shell never hand-places trail markup.
 - The **header block** — `Avatar` (logo / initials) + the company name as the
   page `h1` + a tag-stripped, one-line-clamped description. This block is
   byte-identical across the three sections.
@@ -48,27 +47,22 @@ migration-only `PageBody` internally. New route composition must not consume
   description + jobs preview; the jobs search band + results + pagination; the
   salary cards + rails + FAQ).
 
-### Codified design rule — "the trail locates the entity; the tabs navigate within it"
+### Codified design rule — the shell locates the page; the tabs navigate the entity
 
 Baked in verbatim from the operator design review:
 
-> On company section pages the visible breadcrumb ends at the ENTITY — Home →
-> Companies → {Company} — and is IDENTICAL across all three tabs. NEVER append
-> the section as a final crumb (no "… → Anduril → Jobs"). The tab row alone
-> communicates which section you're in. The `BreadcrumbList` JSON-LD must match
-> the visible trail (the pairing rule). The company name appearing both in the
-> crumb and as the header H1 is correct (crumb = link, H1 = identity) — do not
-> try to dedupe that. This rule generalises to any future tabbed entity page.
+The page trail is rendered once by the root shell above the footer. The tabs
+remain the immediate navigation between Overview, Jobs, and Salaries; they are
+not duplicated by another breadcrumb inside the company band.
 
 ## Composition
 
-`CompanySectionShell` is the domain assembly: it owns the resolved breadcrumb,
-shared header, tab row, and section content. Its current internal use of
+`CompanySectionShell` is the domain assembly: it owns the shared header, tab
+row, and section content. Its current internal use of
 `PageBody` is a migration detail, not a public composition recommendation:
 
 ```tsx
 <CompanySectionShell
-  breadcrumb={{ ariaLabel, items: [home, companies, { name: company.name }] }}
   company={company}            // name, slug, logoUrl, description
   activeSection="jobs"          // derived from the current route
   jobCount={company.publishedJobCount}
@@ -89,8 +83,7 @@ than switching panels in the current document, so they must remain crawlable
 
 | Do | Don't |
 |---|---|
-| End the breadcrumb at the entity — Home → Companies → {Company} — identical on all three tabs, with the matching `BreadcrumbList` JSON-LD. | Append the section as a final crumb (`… → Anduril → Jobs`) or diverge the visible trail from its JSON-LD. |
-| Pass resolved `BreadcrumbData` to `CompanySectionShell`; for new entity shells use the `PageHeader` breadcrumb seam. | Consume migration-only `PageBody` directly or hand-place the trail in a route. |
+| Let the root shell own the one visible breadcrumb above the footer. | Hand-place a second trail inside the company band. |
 | Render section navigation as real `Link` anchors using semantic theme tokens; active = unlinked `aria-current="page"`. | Use the shadcn `Tabs` component for navigation between separately indexable routes. |
 | Show the Jobs count Badge and gate the Salaries tab on real salary data (`getCompanySalaryPresence`). | Render a dead Salaries tab for a company with no salary data. |
 | On the jobs subpage let the shell header BE the hero and keep the search band below it. | Double up a second page header above the shell header. |

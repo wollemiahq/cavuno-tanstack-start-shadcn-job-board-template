@@ -41,6 +41,29 @@ input[type='search']::-webkit-search-cancel-button {
 
 /* ── App shell ── */
 
+/* Reserve space for the window scrollbar so navigating between pages that
+   overflow the viewport (blog, company detail) and pages that don't
+   (short/empty states such as /talent) doesn't add or remove the scrollbar
+   and shift centered layouts horizontally. Only classic scrollbars take
+   space, so this is inert on overlay scrollbars (macOS default) — which is
+   fine, since overlay scrollbars never cause the shift. */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Quiet the classic scrollbars that live in that reserved space: a slim,
+   muted thumb on a transparent track, themed via --border so both modes
+   stay subtle. Standard properties only (Chromium 121+/Firefox; Safari
+   ignores scrollbar-color and keeps its overlay bars, which never looked
+   heavy to begin with). `scrollbar-color` inherits from the root; width
+   does not, so it is applied to every scroll container. */
+:root {
+  scrollbar-color: var(--border) transparent;
+}
+* {
+  scrollbar-width: thin;
+}
+
 html,
 body,
 #app {

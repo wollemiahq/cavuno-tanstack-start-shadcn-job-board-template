@@ -82,7 +82,7 @@ export function Composer({
             aria-invalid={Boolean(error)}
             rows={2}
             maxLength={MAX_BODY}
-            className="min-h-20"
+            className="max-h-40 min-h-20 overflow-y-auto"
             data-test="composer"
           />
           <InputGroupAddon align="block-end" className="justify-between">

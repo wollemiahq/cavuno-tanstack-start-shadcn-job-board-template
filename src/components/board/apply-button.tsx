@@ -31,7 +31,6 @@ import {
   candidateSignInHref,
   candidateVerifyEmailHref,
 } from '@/lib/candidate-return-to';
-import { cn } from '@/lib/utils';
 
 export function ApplyButton({
   jobId,
@@ -108,7 +107,7 @@ export function ApplyButton({
           href={action.url}
           target="_blank"
           rel="noreferrer"
-          className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
+          className={buttonVariants({ size: 'lg' })}
           // The outbound click IS the apply for external jobs — record it
           // for employer reporting (hosted parity; P2).
           onClick={() => trackJobApplyClick({ jobId, companySlug })}
@@ -122,28 +121,25 @@ export function ApplyButton({
       return (
         <a
           href={candidateSignInHref(returnTo)}
-          className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
+          className={buttonVariants({ size: 'lg' })}
         >
-          {copy.signInToApplyLabel}
+          {m.applyButton_applyLabel()}
         </a>
       );
     case 'verify-email':
       return (
         <a
           href={candidateVerifyEmailHref(returnTo)}
-          className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
+          className={buttonVariants({ size: 'lg' })}
         >
-          {copy.verifyEmailToApplyLabel}
+          {m.applyButton_applyLabel()}
         </a>
       );
     case 'applied':
       return (
         <a
           href={applicationsHref}
-          className={cn(
-            buttonVariants({ variant: 'secondary', size: 'lg' }),
-            'w-full',
-          )}
+          className={buttonVariants({ variant: 'secondary', size: 'lg' })}
         >
           {copy.appliedViewApplicationsLabel}
         </a>
@@ -153,7 +149,6 @@ export function ApplyButton({
         <div className="flex flex-col gap-1">
           <Button
             size="lg"
-            className="w-full"
             disabled={state === 'applying'}
             onClick={async () => {
               // Fired only on the press that performs the apply — the

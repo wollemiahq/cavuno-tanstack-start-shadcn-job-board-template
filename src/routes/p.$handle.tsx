@@ -10,7 +10,6 @@ import { getSeoBase, getTalentProfile } from '../server/queries';
 
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import { toTalentProfileVM } from '@/board/talent-view-model';
-import { PageHeaderWithBreadcrumb } from '@/components/board/page-header-with-breadcrumb';
 import { TalentProfileContent } from '@/components/board/talent-profile-content';
 import { JsonLd } from '@/components/json-ld';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
@@ -74,7 +73,7 @@ export const Route = createFileRoute('/p/$handle')({
 
 function TalentProfileNotFound() {
   return (
-    <Page width="content">
+    <Page width="wide">
       <PageContent
         header={<PageHeader title={m.publicProfile_profileFallbackLabel()} />}
       >
@@ -133,22 +132,10 @@ function TalentProfilePage() {
   ].filter((entry): entry is Record<string, unknown> => entry !== null);
 
   return (
-    <Page width="content">
-      <PageHeaderWithBreadcrumb
-        width="content"
-        breadcrumb={{
-          ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
-          items: [
-            { name: copy.breadcrumbs.home, href: '/' },
-            { name: copy.breadcrumbs.talent, href: '/talent' },
-            { name: displayName },
-          ],
-        }}
-        title={displayName}
-      />
-      <PageContent>
+    <Page width="wide">
+      <PageContent header={<PageHeader title={displayName} />}>
         <JsonLd data={jsonLd} />
-        <article>
+        <article className="max-w-3xl">
           <Card>
             <CardContent className="py-1 md:px-8">
               <TalentProfileContent

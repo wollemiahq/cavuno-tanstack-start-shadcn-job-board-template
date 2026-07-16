@@ -27,13 +27,6 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
-      # CAV-511: the release has one presentation system. These focused
-      # contracts reject retired Untitled UI source/dependencies, Radix or
-      # direct primitive leakage, compatibility CSS, and theme drift before
-      # the broader suite runs.
-      - name: Shadcn-only release boundary
-        run: pnpm exec vp test run src/shadcn-only-release.test.ts src/theme-foundation.test.ts src/legacy-token-scan.test.ts
-
       - name: Test
         run: pnpm test
 
