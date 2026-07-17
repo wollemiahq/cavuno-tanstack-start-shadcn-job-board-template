@@ -145,7 +145,9 @@ export function PlaceTagsField({
             commitFreeText();
           }}
           onFocus={() => {
-            if (available.length > 0 && text.trim()) setOpen(true);
+            // Static option sets (the permit picker) list on focus; async
+            // search fields have no suggestions until a query, so stay shut.
+            if (available.length > 0) setOpen(true);
           }}
           className="w-full"
         >

@@ -17,7 +17,7 @@ import {
   remotePermitsSubmission,
   SALARY_TIMEFRAMES,
   toDomain,
-  type RemoteScope,
+  type RemotePermitSelection,
   type SalaryTimeframe,
 } from '../lib/post-form';
 import { salaryCurrencyOptions } from '../lib/salary-currencies';
@@ -57,7 +57,6 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from './ui/select';
@@ -130,8 +129,7 @@ type PostJobFormState = {
   salaryTimeframe: SalaryTimeframe;
   companyName: string;
   remoteOption: (typeof REMOTE_OPTIONS)[number];
-  remoteScope: RemoteScope;
-  remoteCountries: { code: string; name: string }[];
+  remotePermitSelections: RemotePermitSelection[];
   seniority: string | null;
   officeLocations: OfficeLocationDraft[];
   officeLocationsError: boolean;
@@ -203,8 +201,7 @@ export function PostJobForm({
     salaryTimeframe: DEFAULT_SALARY_TIMEFRAME,
     companyName: '',
     remoteOption: 'hybrid',
-    remoteScope: 'worldwide',
-    remoteCountries: [],
+    remotePermitSelections: [],
     seniority: null,
     officeLocations: [],
     officeLocationsError: false,
@@ -219,8 +216,7 @@ export function PostJobForm({
     salaryTimeframe,
     companyName,
     remoteOption,
-    remoteScope,
-    remoteCountries,
+    remotePermitSelections,
     seniority,
     officeLocations,
     officeLocationsError,
@@ -258,43 +254,45 @@ export function PostJobForm({
     value,
     label: fieldLabel(locale, value) ?? value,
   }));
-  // Scope select: worldwide, then world regions and country groups from the
-  // remote-permit taxonomy, then hand-picked countries. Absent taxonomy data
-  // degrades to worldwide/countries.
-  const regionScopes = remotePermits?.filter(
-    (permit) => permit.type === 'world_region',
-  );
-  const blocScopes = remotePermits?.filter(
-    (permit) => permit.type === 'custom',
-  );
-  const scopeItems = [
-    { value: 'worldwide', label: m.postJob_remoteRestrictionWorldwide() },
-    ...[...(regionScopes ?? []), ...(blocScopes ?? [])].map((permit) => ({
-      value: `${permit.type}:${permit.value}`,
-      label: permit.label,
-    })),
-    { value: 'countries', label: m.postJob_remoteRestrictionCountries() },
-  ];
-  // Country picker suggestions come from the SDK country lexicon (the
-  // `country` slice of the same permit taxonomy) via the async-shaped
-  // PlaceTagsField contract.
-  const [countryQuery, setCountryQuery] = useState('');
+  // The geographic-restriction option space: world regions and country
+  // groups from the remote-permit taxonomy (absent when the taxonomy is
+  // unavailable), then every country from the SDK lexicon — one searchable
+  // list, encoded as `type:value` ids so a pick maps straight to a permit.
+  const [permitQuery, setPermitQuery] = useState('');
   const countryChoices = useMemo(() => countryOptions(locale), [locale]);
-  const countrySuggestions = useMemo(() => {
-    const query = countryQuery.trim().toLowerCase();
-    if (!query) return [];
-    return countryChoices
-      .filter((country) => country.name.toLowerCase().includes(query))
-      .slice(0, 10)
-      .map((country) => ({
-        id: country.code,
-        slug: country.code.toLowerCase(),
-        name: country.name,
-        contextLabel: null,
-        countryCode: country.code,
+  const permitChoices = useMemo(() => {
+    const groups = (remotePermits ?? [])
+      .filter(
+        (permit) => permit.type === 'world_region' || permit.type === 'custom',
+      )
+      .map((permit) => ({
+        id: `${permit.type}:${permit.value}`,
+        slug: `${permit.type}:${permit.value}`,
+        name: permit.label,
+        contextLabel:
+          permit.type === 'world_region'
+            ? m.postJob_remoteRegionsGroupLabel()
+            : m.postJob_remoteBlocsGroupLabel(),
+        countryCode: null,
         regionCode: null,
       }));
-  }, [countryChoices, countryQuery]);
+    const countries = countryChoices.map((country) => ({
+      id: `country:${country.code}`,
+      slug: `country:${country.code}`,
+      name: country.name,
+      contextLabel: m.postJob_remoteCountriesLabel(),
+      countryCode: country.code,
+      regionCode: null,
+    }));
+    return [...groups, ...countries];
+  }, [remotePermits, countryChoices]);
+  const permitSuggestions = useMemo(() => {
+    const query = permitQuery.trim().toLowerCase();
+    if (!query) return permitChoices;
+    return permitChoices.filter((choice) =>
+      choice.name.toLowerCase().includes(query),
+    );
+  }, [permitChoices, permitQuery]);
   const currencyItems = salaryCurrencyOptions().map(({ value, label }) => ({
     value,
     label,
@@ -427,9 +425,7 @@ export function PostJobForm({
         ),
         ...(remoteOption === 'remote'
           ? remotePermitsSubmission(
-              remoteScope,
-              remoteCountries,
-              remotePermits,
+              remotePermitSelections,
               m.postJob_remoteRestrictionWorldwide(),
             )
           : {}),
@@ -702,109 +698,60 @@ export function PostJobForm({
             ) : null}
           </Field>
           {remoteOption === 'remote' ? (
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor="remoteScope">
-                  {m.postJob_remoteRestrictionLabel()}
-                </FieldLabel>
-                <Select
-                  items={scopeItems}
-                  name="remoteScope"
-                  value={remoteScope}
-                  onValueChange={(value) =>
-                    updateFormState({
-                      remoteScope: (value as RemoteScope | null) ?? 'worldwide',
-                    })
-                  }
-                >
-                  <SelectTrigger id="remoteScope" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="worldwide">
-                      {m.postJob_remoteRestrictionWorldwide()}
-                    </SelectItem>
-                    {regionScopes?.length ? (
-                      <SelectGroup>
-                        <SelectLabel>
-                          {m.postJob_remoteRegionsGroupLabel()}
-                        </SelectLabel>
-                        {regionScopes.map((permit) => (
-                          <SelectItem
-                            key={`${permit.type}:${permit.value}`}
-                            value={`${permit.type}:${permit.value}`}
-                          >
-                            {permit.label}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    ) : null}
-                    {blocScopes?.length ? (
-                      <SelectGroup>
-                        <SelectLabel>
-                          {m.postJob_remoteBlocsGroupLabel()}
-                        </SelectLabel>
-                        {blocScopes.map((permit) => (
-                          <SelectItem
-                            key={`${permit.type}:${permit.value}`}
-                            value={`${permit.type}:${permit.value}`}
-                          >
-                            {permit.label}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    ) : null}
-                    <SelectItem value="countries">
-                      {m.postJob_remoteRestrictionCountries()}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-              {remoteScope === 'countries' ? (
-                <Field>
-                  <FieldLabel htmlFor="remoteCountries">
-                    {m.postJob_remoteCountriesLabel()}
-                  </FieldLabel>
-                  <PlaceTagsField
-                    id="remoteCountries"
-                    tags={remoteCountries.map((country) => ({
-                      key: country.code,
-                      label: country.name,
-                    }))}
-                    onAddSuggestion={(country: LocationSuggestionVM) =>
-                      setFormState((current) =>
-                        current.remoteCountries.some(
-                          (entry) => entry.code === country.id,
-                        )
-                          ? current
-                          : {
-                              ...current,
-                              remoteCountries: [
-                                ...current.remoteCountries,
-                                { code: country.id, name: country.name },
-                              ],
-                            },
-                      )
-                    }
-                    onRemove={(code) =>
-                      updateFormState({
-                        remoteCountries: remoteCountries.filter(
-                          (country) => country.code !== code,
-                        ),
-                      })
-                    }
-                    suggestions={countrySuggestions}
-                    loading={false}
-                    onQueryChange={setCountryQuery}
-                    placeholder={m.postJob_remoteCountriesPlaceholder()}
-                    searchingText={m.locationCombobox_searchingText()}
-                    removeAriaLabel={(name) =>
-                      m.placeTags_removeAriaLabel({ name })
-                    }
-                  />
-                </Field>
-              ) : null}
-            </div>
+            <Field>
+              <FieldLabel htmlFor="remotePermits">
+                {m.postJob_remoteRestrictionLabel()}
+              </FieldLabel>
+              <PlaceTagsField
+                id="remotePermits"
+                tags={remotePermitSelections.map((selection) => ({
+                  key: `${selection.type}:${selection.value}`,
+                  label: selection.label,
+                }))}
+                onAddSuggestion={(choice: LocationSuggestionVM) => {
+                  const separator = choice.id.indexOf(':');
+                  const selection = {
+                    type: choice.id.slice(0, separator),
+                    value: choice.id.slice(separator + 1),
+                    label: choice.name,
+                  };
+                  setFormState((current) =>
+                    current.remotePermitSelections.some(
+                      (entry) =>
+                        entry.type === selection.type &&
+                        entry.value === selection.value,
+                    )
+                      ? current
+                      : {
+                          ...current,
+                          remotePermitSelections: [
+                            ...current.remotePermitSelections,
+                            selection,
+                          ],
+                        },
+                  );
+                }}
+                onRemove={(key) =>
+                  updateFormState({
+                    remotePermitSelections: remotePermitSelections.filter(
+                      (selection) =>
+                        `${selection.type}:${selection.value}` !== key,
+                    ),
+                  })
+                }
+                suggestions={permitSuggestions}
+                loading={false}
+                onQueryChange={setPermitQuery}
+                placeholder={m.postJob_remoteRestrictionPlaceholder()}
+                searchingText={m.locationCombobox_searchingText()}
+                removeAriaLabel={(name) =>
+                  m.placeTags_removeAriaLabel({ name })
+                }
+              />
+              <FieldDescription>
+                {m.postJob_remoteRestrictionHelperText()}
+              </FieldDescription>
+            </Field>
           ) : null}
           <Field>
             <FieldLabel>{m.postJob_descriptionLabel()}</FieldLabel>

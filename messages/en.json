@@ -1095,9 +1095,9 @@
   "postJob_seniorityPlaceholder": "Optional",
   "postJob_remoteRestrictionLabel": "Geographic restriction",
   "postJob_remoteRestrictionWorldwide": "Worldwide",
-  "postJob_remoteRestrictionCountries": "Specific countries",
   "postJob_remoteCountriesLabel": "Countries",
-  "postJob_remoteCountriesPlaceholder": "Add a country…",
   "postJob_remoteRegionsGroupLabel": "World regions",
-  "postJob_remoteBlocsGroupLabel": "Country groups"
+  "postJob_remoteBlocsGroupLabel": "Country groups",
+  "postJob_remoteRestrictionPlaceholder": "Search regions, groups, or countries…",
+  "postJob_remoteRestrictionHelperText": "Leave empty to hire worldwide."
 }

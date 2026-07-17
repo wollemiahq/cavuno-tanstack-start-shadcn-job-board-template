@@ -6,8 +6,6 @@ import {
   type JobPostingFormInput,
 } from './post-form';
 
-import type { RemotePermitTaxonomyEntry } from '@cavuno/board';
-
 const posting: JobPostingFormInput = {
   companyName: 'Acme Studio',
   companyWebsite: 'https://acme.example',
@@ -74,64 +72,58 @@ describe('toCreateJobPostingInput', () => {
 });
 
 describe('remotePermitsSubmission', () => {
-  const permits = [
-    { type: 'worldwide', value: 'worldwide', label: 'Worldwide' },
-    { type: 'world_region', value: 'EMEA', label: 'EMEA' },
-    { type: 'custom', value: 'EU', label: 'European Union' },
-  ] as RemotePermitTaxonomyEntry[];
-
-  it('maps a region/bloc scope to its single canonical permit entry', () => {
+  it('maps region/group selections to their canonical permit entries', () => {
     expect(
-      remotePermitsSubmission('custom:EU', [], permits, 'Worldwide'),
+      remotePermitsSubmission(
+        [
+          { type: 'custom', value: 'EU', label: 'European Union' },
+          { type: 'world_region', value: 'EMEA', label: 'EMEA' },
+        ],
+        'Worldwide',
+      ),
     ).toEqual({
       remoteWorkingPermits: [
         { type: 'custom', value: 'EU', label: 'European Union' },
-      ],
-    });
-    expect(
-      remotePermitsSubmission('world_region:EMEA', [], permits, 'Worldwide'),
-    ).toEqual({
-      remoteWorkingPermits: [
         { type: 'world_region', value: 'EMEA', label: 'EMEA' },
       ],
     });
   });
 
-  it('maps hand-picked countries with the derived top-level codes', () => {
+  it('carries top-level codes only when every selection is a country', () => {
     expect(
       remotePermitsSubmission(
-        'countries',
-        [{ code: 'DE', name: 'Germany' }],
-        permits,
+        [
+          { type: 'country', value: 'DE', label: 'Germany' },
+          { type: 'country', value: 'CH', label: 'Switzerland' },
+        ],
         'Worldwide',
       ),
     ).toEqual({
       remoteWorkingPermits: [
         { type: 'country', value: 'DE', label: 'Germany' },
+        { type: 'country', value: 'CH', label: 'Switzerland' },
       ],
-      remoteWorkPermitCountryCodes: ['DE'],
+      remoteWorkPermitCountryCodes: ['DE', 'CH'],
     });
+
+    // Mixed group + country: the client cannot expand the group, so the
+    // server derives the codes from the permits alone.
+    expect(
+      remotePermitsSubmission(
+        [
+          { type: 'custom', value: 'EU', label: 'European Union' },
+          { type: 'country', value: 'CH', label: 'Switzerland' },
+        ],
+        'Worldwide',
+      ).remoteWorkPermitCountryCodes,
+    ).toBeUndefined();
   });
 
-  it('degrades to worldwide instead of ever submitting an invalid permit', () => {
-    const worldwide = {
+  it('means worldwide when nothing is selected', () => {
+    expect(remotePermitsSubmission([], 'Worldwide')).toEqual({
       remoteWorkingPermits: [
         { type: 'worldwide', value: 'worldwide', label: 'Worldwide' },
       ],
-    };
-    expect(
-      remotePermitsSubmission('worldwide', [], permits, 'Worldwide'),
-    ).toEqual(worldwide);
-    // Countries mode with nothing picked, a token missing from the taxonomy,
-    // and a taxonomy that failed to load all fall back the same way.
-    expect(
-      remotePermitsSubmission('countries', [], permits, 'Worldwide'),
-    ).toEqual(worldwide);
-    expect(
-      remotePermitsSubmission('custom:MENA', [], permits, 'Worldwide'),
-    ).toEqual(worldwide);
-    expect(remotePermitsSubmission('custom:EU', [], null, 'Worldwide')).toEqual(
-      worldwide,
-    );
+    });
   });
 });

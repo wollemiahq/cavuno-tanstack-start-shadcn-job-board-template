@@ -1095,9 +1095,9 @@
   "postJob_seniorityPlaceholder": "⟦Óþţíóñáĺ⟧",
   "postJob_remoteRestrictionLabel": "⟦Ğéóğŕáþĥíç ŕéšţŕíçţíóñ⟧",
   "postJob_remoteRestrictionWorldwide": "⟦Ŵóŕĺðŵíðé⟧",
-  "postJob_remoteRestrictionCountries": "⟦Šþéçíƒíç çóúñţŕíéš⟧",
   "postJob_remoteCountriesLabel": "⟦Çóúñţŕíéš⟧",
-  "postJob_remoteCountriesPlaceholder": "⟦Áðð á çóúñţŕý…⟧",
   "postJob_remoteRegionsGroupLabel": "⟦Ŵóŕĺð ŕéğíóñš⟧",
-  "postJob_remoteBlocsGroupLabel": "⟦Çóúñţŕý ğŕóúþš⟧"
+  "postJob_remoteBlocsGroupLabel": "⟦Çóúñţŕý ğŕóúþš⟧",
+  "postJob_remoteRestrictionPlaceholder": "⟦Šéáŕçĥ ŕéğíóñš, ğŕóúþš, óŕ çóúñţŕíéš…⟧",
+  "postJob_remoteRestrictionHelperText": "⟦Ĺéáṽé éɱþţý ţó ĥíŕé ŵóŕĺðŵíðé.⟧"
 }
