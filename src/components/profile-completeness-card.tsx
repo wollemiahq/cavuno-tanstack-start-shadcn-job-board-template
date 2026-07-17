@@ -4,7 +4,6 @@ import { CheckCircle2, Circle } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 
-import { ResumeUpload } from '@/components/resume-upload';
 import {
   Card,
   CardContent,
@@ -13,9 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import type { Resume } from '@cavuno/board';
 
 export type ProfileChecklistItem = {
   key: string;
@@ -27,16 +24,14 @@ export type ProfileChecklistItem = {
 
 /**
  * Profile-completeness rail card: one progress read-out over the checklist of
- * profile parts, with the resume uploader embedded — "complete your profile by
- * uploading your resume or filling it out". The caller derives the checklist
- * from the account loader data; this stays pure presentation.
+ * profile parts. The resume itself uploads via the page-header "Import resume"
+ * dialog; the rail only tracks it. The caller derives the checklist from the
+ * account loader data; this stays pure presentation.
  */
 export function ProfileCompletenessCard({
   items,
-  resume,
 }: {
   items: ProfileChecklistItem[];
-  resume: Resume;
 }) {
   const done = items.filter((item) => item.done).length;
   const percent =
@@ -86,8 +81,6 @@ export function ProfileCompletenessCard({
             </li>
           ))}
         </ul>
-        <Separator />
-        <ResumeUpload resume={resume} variant="embedded" />
       </CardContent>
     </Card>
   );

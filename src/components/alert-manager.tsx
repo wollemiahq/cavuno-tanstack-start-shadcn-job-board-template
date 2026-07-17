@@ -292,15 +292,17 @@ function AlertForm({
           </Field>
         ) : null}
       </FieldGroup>
-      <div className="flex gap-2">
-        <Button type="submit" size="sm" disabled={status === 'saving'}>
-          {status === 'saving' ? m.alertManager_savingLabel() : submitLabel}
-        </Button>
+      {/* Overlay editors right-align their footer, Cancel before the
+          primary — the Dialog/Sheet/AlertDialog convention. */}
+      <div className="flex justify-end gap-2">
         {onCancel ? (
           <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
             {m.alertManager_cancelLabel()}
           </Button>
         ) : null}
+        <Button type="submit" size="sm" disabled={status === 'saving'}>
+          {status === 'saving' ? m.alertManager_savingLabel() : submitLabel}
+        </Button>
       </div>
       <CandidateActionFeedback state={status === 'error' ? 'error' : 'idle'} />
     </form>

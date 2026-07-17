@@ -573,7 +573,7 @@
   "resumeUpload_uploadingLabel": "Wird hochgeladen …",
   "resumeUpload_replaceLabel": "Lebenslauf ersetzen",
   "resumeUpload_uploadLabel": "Lebenslauf hochladen",
-  "resumeUpload_keepCopyLabel": "Eine Kopie hinterlegen",
+  "resumeUpload_keepCopyLabel": "Meinen Lebenslauf gespeichert lassen",
   "resumeUpload_formatsText": "PDF, DOC, DOCX, ODT, RTF oder TXT, bis zu 10 MB.",
   "resumeUpload_uploadError": "Upload fehlgeschlagen — prüfe Dateityp und -größe.",
   "languagesSection_heading": "Sprachen",
@@ -1073,7 +1073,6 @@
   "ui_moreLabel": "Mehr",
   "monthYearField_monthPlaceholder": "Monat",
   "monthYearField_yearPlaceholder": "Jahr",
-  "monthYearField_clearAriaLabel": "Datum löschen",
   "profileCompleteness_title": "Vervollständige dein Profil",
   "profileCompleteness_introText": "Lade deinen Lebenslauf hoch oder fülle die Abschnitte unten aus — vollständige Profile fallen Arbeitgebern auf.",
   "profileCompleteness_percentText": "{percent} % vollständig",
@@ -1100,5 +1099,11 @@
   "educationSection_editTitle": "Ausbildung bearbeiten",
   "accountSaved_countOneText": "Du hast 1 Job gespeichert.",
   "accountSaved_countOtherText": "Du hast {count} Jobs gespeichert.",
-  "accountSaved_savedLabel": "Gespeichert"
+  "accountSaved_savedLabel": "Gespeichert",
+  "experienceSection_currentRoleLabel": "Ich arbeite derzeit hier",
+  "educationSection_currentLabel": "Ich studiere derzeit hier",
+  "resumeImport_triggerLabel": "Lebenslauf importieren",
+  "resumeImport_title": "Lebenslauf importieren",
+  "resumeImport_description": "Wir nutzen ihn, um deine Profilfelder auszufüllen.",
+  "resumeUpload_keepCopyHint": "Speichert eine Kopie in deinem Profil, damit sie bei der nächsten Bewerbung bereitliegt."
 }

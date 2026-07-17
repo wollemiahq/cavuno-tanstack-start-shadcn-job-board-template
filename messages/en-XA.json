@@ -573,7 +573,7 @@
   "resumeUpload_uploadingLabel": "⟦Úþĺóáðíñğ…⟧",
   "resumeUpload_replaceLabel": "⟦Ŕéþĺáçé ŕéšúɱé⟧",
   "resumeUpload_uploadLabel": "⟦Úþĺóáð ŕéšúɱé⟧",
-  "resumeUpload_keepCopyLabel": "⟦Ķééþ á çóþý óñ ƒíĺé⟧",
+  "resumeUpload_keepCopyLabel": "⟦Ķééþ ɱý ŕéšúɱé šáṽéð⟧",
   "resumeUpload_formatsText": "⟦ÞÐƑ, ÐÓÇ, ÐÓÇẊ, ÓÐŢ, ŔŢƑ óŕ ŢẊŢ, úþ ţó 10ṀƁ.⟧",
   "resumeUpload_uploadError": "⟦Úþĺóáð ƒáíĺéð — çĥéçķ ţĥé ƒíĺé ţýþé áñð šížé.⟧",
   "languagesSection_heading": "⟦Ĺáñğúáğéš⟧",
@@ -1073,7 +1073,6 @@
   "ui_moreLabel": "⟦Ṁóŕé⟧",
   "monthYearField_monthPlaceholder": "⟦Ṁóñţĥ⟧",
   "monthYearField_yearPlaceholder": "⟦Ýéáŕ⟧",
-  "monthYearField_clearAriaLabel": "⟦Çĺéáŕ ðáţé⟧",
   "profileCompleteness_title": "⟦Çóɱþĺéţé ýóúŕ þŕóƒíĺé⟧",
   "profileCompleteness_introText": "⟦Úþĺóáð ýóúŕ ŕéšúɱé óŕ ƒíĺĺ íţ óúţ ƀéĺóŵ — çóɱþĺéţé þŕóƒíĺéš šţáñð óúţ ţó éɱþĺóýéŕš.⟧",
   "profileCompleteness_percentText": "⟦{percent}% çóɱþĺéţé⟧",
@@ -1100,5 +1099,11 @@
   "educationSection_editTitle": "⟦Éðíţ éðúçáţíóñ⟧",
   "accountSaved_countOneText": "⟦Ýóú ĥáṽé šáṽéð 1 ĵóƀ.⟧",
   "accountSaved_countOtherText": "⟦Ýóú ĥáṽé šáṽéð {count} ĵóƀš.⟧",
-  "accountSaved_savedLabel": "⟦Šáṽéð⟧"
+  "accountSaved_savedLabel": "⟦Šáṽéð⟧",
+  "experienceSection_currentRoleLabel": "⟦Í çúŕŕéñţĺý ŵóŕķ ĥéŕé⟧",
+  "educationSection_currentLabel": "⟦Í çúŕŕéñţĺý šţúðý ĥéŕé⟧",
+  "resumeImport_triggerLabel": "⟦Íɱþóŕţ ŕéšúɱé⟧",
+  "resumeImport_title": "⟦Íɱþóŕţ ŕéšúɱé⟧",
+  "resumeImport_description": "⟦Ŵé'ĺĺ úšé íţ ţó ƒíĺĺ íñ ýóúŕ þŕóƒíĺé ƒíéĺðš.⟧",
+  "resumeUpload_keepCopyHint": "⟦Šţóŕéš á çóþý óñ ýóúŕ þŕóƒíĺé šó íţ'š ŕéáðý ţĥé ñéẋţ ţíɱé ýóú áþþĺý.⟧"
 }

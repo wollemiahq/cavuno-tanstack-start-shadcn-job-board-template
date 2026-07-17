@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
-import { X } from 'lucide-react';
+import { Languages, X } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { replaceLanguages } from '../server/account';
@@ -14,6 +14,12 @@ import {
 } from '@/components/candidate-action-feedback';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -69,9 +75,16 @@ export function LanguagesSection({
       </CardHeader>
       <CardContent className="space-y-3">
         {languages.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
-            {m.languagesSection_emptyText()}
-          </p>
+          <Empty className="border-0 p-8">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Languages aria-hidden="true" />
+              </EmptyMedia>
+              <EmptyDescription>
+                {m.languagesSection_emptyText()}
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <ul className="space-y-2">
             {languages.map((language, index) => {

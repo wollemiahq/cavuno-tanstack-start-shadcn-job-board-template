@@ -573,7 +573,7 @@
   "resumeUpload_uploadingLabel": "Téléversement…",
   "resumeUpload_replaceLabel": "Remplacer le CV",
   "resumeUpload_uploadLabel": "Téléverser un CV",
-  "resumeUpload_keepCopyLabel": "Conserver une copie",
+  "resumeUpload_keepCopyLabel": "Conserver mon CV",
   "resumeUpload_formatsText": "PDF, DOC, DOCX, ODT, RTF ou TXT, jusqu'à 10 Mo.",
   "resumeUpload_uploadError": "Échec du téléversement — vérifiez le type et la taille du fichier.",
   "languagesSection_heading": "Langues",
@@ -1073,7 +1073,6 @@
   "ui_moreLabel": "Plus",
   "monthYearField_monthPlaceholder": "Mois",
   "monthYearField_yearPlaceholder": "Année",
-  "monthYearField_clearAriaLabel": "Effacer la date",
   "profileCompleteness_title": "Complétez votre profil",
   "profileCompleteness_introText": "Téléversez votre CV ou remplissez les sections ci-dessous — les profils complets attirent l’attention des employeurs.",
   "profileCompleteness_percentText": "{percent} % complet",
@@ -1100,5 +1099,11 @@
   "educationSection_editTitle": "Modifier la formation",
   "accountSaved_countOneText": "Vous avez enregistré 1 offre.",
   "accountSaved_countOtherText": "Vous avez enregistré {count} offres.",
-  "accountSaved_savedLabel": "Enregistrée"
+  "accountSaved_savedLabel": "Enregistrée",
+  "experienceSection_currentRoleLabel": "Je travaille actuellement ici",
+  "educationSection_currentLabel": "J'étudie actuellement ici",
+  "resumeImport_triggerLabel": "Importer un CV",
+  "resumeImport_title": "Importer un CV",
+  "resumeImport_description": "Nous l’utiliserons pour remplir votre profil.",
+  "resumeUpload_keepCopyHint": "Enregistre une copie sur votre profil, prête pour votre prochaine candidature."
 }

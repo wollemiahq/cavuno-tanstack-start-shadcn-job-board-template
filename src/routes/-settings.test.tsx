@@ -14,6 +14,16 @@ vi.mock('../server/settings', () => ({
   unsubscribeWithToken: vi.fn(),
 }));
 
+// The Danger zone (account delete) renders on the signed-in settings page and
+// pulls in the account/auth server seams.
+vi.mock('../server/account', () => ({
+  deleteAccount: vi.fn(),
+}));
+
+vi.mock('../server/auth', () => ({
+  signOut: vi.fn(),
+}));
+
 import { Route } from './settings';
 
 afterEach(() => {

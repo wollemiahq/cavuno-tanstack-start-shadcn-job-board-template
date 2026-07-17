@@ -55,9 +55,9 @@ export function ResumeUpload({
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [keepOnFile, setKeepOnFile] = useState(
-    resume.keepResumeOnFile ?? false,
-  );
+  // Keeping the resume on file is the helpful default (hosted parity) —
+  // people expect an uploaded resume to stay available for reuse.
+  const [keepOnFile, setKeepOnFile] = useState(resume.keepResumeOnFile ?? true);
   const [status, setStatus] = useState<
     'idle' | 'uploading' | 'deleting' | 'upload-error' | 'delete-error'
   >('idle');
@@ -170,19 +170,22 @@ export function ResumeUpload({
         }}
       />
 
-      <div className="flex items-center gap-3">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={status === 'uploading' || status === 'deleting'}
-          onClick={() => inputRef.current?.click()}
-        >
-          {status === 'uploading'
-            ? m.resumeUpload_uploadingLabel()
-            : resume.hasResumeOnFile
-              ? m.resumeUpload_replaceLabel()
-              : m.resumeUpload_uploadLabel()}
-        </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={status === 'uploading' || status === 'deleting'}
+        onClick={() => inputRef.current?.click()}
+      >
+        {status === 'uploading'
+          ? m.resumeUpload_uploadingLabel()
+          : resume.hasResumeOnFile
+            ? m.resumeUpload_replaceLabel()
+            : m.resumeUpload_uploadLabel()}
+      </Button>
+      <p className="text-muted-foreground text-xs">
+        {m.resumeUpload_formatsText()}
+      </p>
+      <div className="space-y-1">
         <Label className="w-fit cursor-pointer">
           <Checkbox
             checked={keepOnFile}
@@ -190,10 +193,10 @@ export function ResumeUpload({
           />
           {m.resumeUpload_keepCopyLabel()}
         </Label>
+        <p className="text-muted-foreground text-xs">
+          {m.resumeUpload_keepCopyHint()}
+        </p>
       </div>
-      <p className="text-muted-foreground text-xs">
-        {m.resumeUpload_formatsText()}
-      </p>
       {status === 'upload-error' ? (
         <p className="text-destructive text-xs" role="alert">
           {m.resumeUpload_uploadError()}

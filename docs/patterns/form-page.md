@@ -30,6 +30,16 @@ every form legible and accessible.
 - Submit `Button` + an action-level `Alert` or the domain feedback component
   that wraps it.
 
+### Action placement (canonical)
+
+- **In-page forms** (a form living in the page or a `Card`): the primary
+  action sits **left-aligned** at the end of the form, in reading flow under
+  the left-aligned fields (e.g. "Save profile").
+- **Overlay editors** (`Dialog`, `Sheet`, `AlertDialog`): footer actions are
+  **right-aligned**, Cancel before the primary — the shadcn
+  `DialogFooter`/`AlertDialogFooter` convention. Never mix the two on one
+  surface.
+
 ## Composition
 
 Compose owned shadcn primitives explicitly so the label/control relationship

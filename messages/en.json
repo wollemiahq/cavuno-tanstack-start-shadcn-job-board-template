@@ -573,7 +573,7 @@
   "resumeUpload_uploadingLabel": "Uploading…",
   "resumeUpload_replaceLabel": "Replace resume",
   "resumeUpload_uploadLabel": "Upload resume",
-  "resumeUpload_keepCopyLabel": "Keep a copy on file",
+  "resumeUpload_keepCopyLabel": "Keep my resume saved",
   "resumeUpload_formatsText": "PDF, DOC, DOCX, ODT, RTF or TXT, up to 10MB.",
   "resumeUpload_uploadError": "Upload failed — check the file type and size.",
   "languagesSection_heading": "Languages",
@@ -1073,7 +1073,6 @@
   "ui_moreLabel": "More",
   "monthYearField_monthPlaceholder": "Month",
   "monthYearField_yearPlaceholder": "Year",
-  "monthYearField_clearAriaLabel": "Clear date",
   "profileCompleteness_title": "Complete your profile",
   "profileCompleteness_introText": "Upload your resume or fill it out below — complete profiles stand out to employers.",
   "profileCompleteness_percentText": "{percent}% complete",
@@ -1100,5 +1099,11 @@
   "educationSection_editTitle": "Edit education",
   "accountSaved_countOneText": "You have saved 1 job.",
   "accountSaved_countOtherText": "You have saved {count} jobs.",
-  "accountSaved_savedLabel": "Saved"
+  "accountSaved_savedLabel": "Saved",
+  "experienceSection_currentRoleLabel": "I currently work here",
+  "educationSection_currentLabel": "I currently study here",
+  "resumeImport_triggerLabel": "Import resume",
+  "resumeImport_title": "Import resume",
+  "resumeImport_description": "We'll use it to fill in your profile fields.",
+  "resumeUpload_keepCopyHint": "Stores a copy on your profile so it's ready the next time you apply."
 }

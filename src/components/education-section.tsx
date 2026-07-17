@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { formatMonthYear } from '@cavuno/board/format';
 import { useRouter } from '@tanstack/react-router';
+import { GraduationCap } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import {
@@ -25,12 +26,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from '@/components/ui/empty';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
@@ -40,6 +48,7 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/components/ui/item';
+import { Label } from '@/components/ui/label';
 import {
   Sheet,
   SheetContent,
@@ -57,6 +66,8 @@ type Draft = {
   fieldOfStudy: string;
   startDate: string;
   endDate: string;
+  /** "I currently study here" — an unset end date, expressed as a toggle. */
+  current: boolean;
   description: string;
 };
 
@@ -66,6 +77,7 @@ const EMPTY: Draft = {
   fieldOfStudy: '',
   startDate: '',
   endDate: '',
+  current: false,
   description: '',
 };
 
@@ -76,6 +88,7 @@ function toDraft(item: CandidateEducation): Draft {
     fieldOfStudy: item.fieldOfStudy ?? '',
     startDate: item.startDate ?? '',
     endDate: item.endDate ?? '',
+    current: Boolean(item.startDate) && !item.endDate,
     description: item.description ?? '',
   };
 }
@@ -118,7 +131,7 @@ export function EducationSection({
       degree: draft.degree.trim(),
       fieldOfStudy: draft.fieldOfStudy.trim(),
       startDate: draft.startDate,
-      endDate: draft.endDate,
+      endDate: draft.current ? '' : draft.endDate,
       description: draft.description.trim(),
     };
     try {
@@ -200,21 +213,36 @@ export function EducationSection({
               yearAriaLabel={m.monthYearField_yearPlaceholder()}
               monthPlaceholder={m.monthYearField_monthPlaceholder()}
               yearPlaceholder={m.monthYearField_yearPlaceholder()}
-              clearAriaLabel={m.monthYearField_clearAriaLabel()}
             />
-            <MonthYearField
-              idPrefix="education-end"
-              label={m.educationSection_endLabel()}
-              language={language}
-              clearable
-              defaultValue={draft.endDate}
-              onChange={(endDate) => setDraft((prev) => ({ ...prev, endDate }))}
-              monthAriaLabel={m.monthYearField_monthPlaceholder()}
-              yearAriaLabel={m.monthYearField_yearPlaceholder()}
-              monthPlaceholder={m.monthYearField_monthPlaceholder()}
-              yearPlaceholder={m.monthYearField_yearPlaceholder()}
-              clearAriaLabel={m.monthYearField_clearAriaLabel()}
-            />
+            {draft.current ? null : (
+              <MonthYearField
+                key={`end-${editing.id ?? 'new'}`}
+                idPrefix="education-end"
+                label={m.educationSection_endLabel()}
+                language={language}
+                defaultValue={draft.endDate}
+                onChange={(endDate) =>
+                  setDraft((prev) => ({ ...prev, endDate }))
+                }
+                monthAriaLabel={m.monthYearField_monthPlaceholder()}
+                yearAriaLabel={m.monthYearField_yearPlaceholder()}
+                monthPlaceholder={m.monthYearField_monthPlaceholder()}
+                yearPlaceholder={m.monthYearField_yearPlaceholder()}
+              />
+            )}
+            <Label className="w-fit cursor-pointer sm:col-span-2">
+              <Checkbox
+                checked={draft.current}
+                onCheckedChange={(checked) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    current: checked === true,
+                    endDate: checked === true ? '' : prev.endDate,
+                  }))
+                }
+              />
+              {m.educationSection_currentLabel()}
+            </Label>
           </div>
           <Field className="gap-1.5">
             <FieldLabel htmlFor="education-description">
@@ -229,12 +257,9 @@ export function EducationSection({
               }
             />
           </Field>
-          <div className="flex gap-2">
-            <Button type="submit" size="sm" disabled={pending}>
-              {pending
-                ? m.educationSection_savingLabel()
-                : m.educationSection_saveLabel()}
-            </Button>
+          {/* Overlay editors right-align their footer, Cancel before the
+              primary — the Dialog/Sheet/AlertDialog convention. */}
+          <div className="flex justify-end gap-2">
             <Button
               type="button"
               variant="ghost"
@@ -246,6 +271,11 @@ export function EducationSection({
               }}
             >
               {m.educationSection_cancelLabel()}
+            </Button>
+            <Button type="submit" size="sm" disabled={pending}>
+              {pending
+                ? m.educationSection_savingLabel()
+                : m.educationSection_saveLabel()}
             </Button>
           </div>
         </FieldGroup>
@@ -266,9 +296,16 @@ export function EducationSection({
       </CardHeader>
       <CardContent className="space-y-3">
         {items.length === 0 && editing === null ? (
-          <p className="text-muted-foreground text-sm">
-            {m.educationSection_emptyText()}
-          </p>
+          <Empty className="border-0 p-8">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <GraduationCap aria-hidden="true" />
+              </EmptyMedia>
+              <EmptyDescription>
+                {m.educationSection_emptyText()}
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : null}
 
         {items.length > 0 ? (

@@ -2,9 +2,6 @@
 
 import { useMemo, useState } from 'react';
 
-import { X } from 'lucide-react';
-
-import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import {
   Select,
@@ -49,12 +46,10 @@ export function MonthYearField({
   defaultValue = '',
   onChange,
   required = false,
-  clearable = false,
   monthAriaLabel,
   yearAriaLabel,
   monthPlaceholder,
   yearPlaceholder,
-  clearAriaLabel,
 }: {
   idPrefix: string;
   label: string;
@@ -65,13 +60,10 @@ export function MonthYearField({
   /** Fired with `YYYY-MM-01` once both parts are set, or `''` on clear. */
   onChange: (value: string) => void;
   required?: boolean;
-  /** Renders a clear control once any part is set (optional end dates). */
-  clearable?: boolean;
   monthAriaLabel: string;
   yearAriaLabel: string;
   monthPlaceholder: string;
   yearPlaceholder: string;
-  clearAriaLabel: string;
 }) {
   const [parts, setParts] = useState(() => parseParts(defaultValue));
 
@@ -156,18 +148,6 @@ export function MonthYearField({
             ))}
           </SelectContent>
         </Select>
-        {clearable && (parts.month || parts.year) ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            aria-label={clearAriaLabel}
-            className="text-muted-foreground hover:text-foreground shrink-0"
-            onClick={() => commit({ year: '', month: '' })}
-          >
-            <X className="size-4" />
-          </Button>
-        ) : null}
       </div>
     </Field>
   );

@@ -14,6 +14,7 @@ import {
   redirect,
 } from '@tanstack/react-router';
 
+import { DangerZone } from '../components/danger-zone';
 import { NotificationSettings } from '../components/notification-settings';
 import { m } from '../paraglide/messages';
 import { getSeoBase } from '../server/queries';
@@ -179,6 +180,7 @@ function SignedInSettings({
           </p>
         </header>
         <NotificationSettings preferences={preferences} />
+        <DangerZone />
       </div>
     </CandidateShell>
   );

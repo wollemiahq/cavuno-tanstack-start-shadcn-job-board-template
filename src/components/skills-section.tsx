@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
-import { X } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { replaceSkills } from '../server/account';
@@ -15,6 +15,12 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
 
 /**
@@ -51,9 +57,14 @@ export function SkillsSection({ skills: initial }: { skills: string[] }) {
       </CardHeader>
       <CardContent className="space-y-3">
         {skills.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
-            {m.skillsSection_emptyText()}
-          </p>
+          <Empty className="border-0 p-8">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Sparkles aria-hidden="true" />
+              </EmptyMedia>
+              <EmptyDescription>{m.skillsSection_emptyText()}</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <ul className="flex flex-wrap gap-2">
             {skills.map((skill) => (

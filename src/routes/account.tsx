@@ -1,10 +1,11 @@
 /**
  * Account — the candidate Profile tab in the sidebar shell (Paper
  * "Candidate — Sidebar"): profile + avatar + experience + education +
- * skills + languages + account delete, each an owned Card section, with a
- * profile-completeness rail (progress + checklist + the resume uploader) on
- * the right. Saved jobs moved to /account/saved; notification settings stay
- * at /settings. The loader's server function enforces auth; the redirect
+ * skills + languages, each an owned Card section, with a
+ * profile-completeness rail (progress + checklist) on the right and the
+ * resume import dialog as the page-header action. Saved jobs moved to
+ * /account/saved; notification settings and account deletion live at
+ * /settings. The loader's server function enforces auth; the redirect
  * here is UX, not the security boundary.
  */
 import {
@@ -15,11 +16,11 @@ import {
 } from '@tanstack/react-router';
 
 import { AvatarUpload } from '../components/avatar-upload';
-import { DangerZone } from '../components/danger-zone';
 import { EducationSection } from '../components/education-section';
 import { ExperienceSection } from '../components/experience-section';
 import { LanguagesSection } from '../components/languages-section';
 import { ProfileForm } from '../components/profile-form';
+import { ResumeImportDialog } from '../components/resume-import-dialog';
 import { SkillsSection } from '../components/skills-section';
 import { m } from '../paraglide/messages';
 import { getAccount } from '../server/account';
@@ -107,7 +108,8 @@ function AccountPage() {
   return (
     <CandidateShell
       title={m.accountHome_title()}
-      aside={<ProfileCompletenessCard items={checklist} resume={resume} />}
+      actions={<ResumeImportDialog resume={resume} />}
+      aside={<ProfileCompletenessCard items={checklist} />}
       asideLabel={m.profileCompleteness_regionLabel()}
     >
       <div className="space-y-6">
@@ -145,8 +147,6 @@ function AccountPage() {
             proficiency: language.proficiency,
           }))}
         />
-
-        <DangerZone />
       </div>
     </CandidateShell>
   );

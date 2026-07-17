@@ -1363,8 +1363,6 @@ Props:
 
 Props:
 
-- `clearable?: boolean | undefined`
-- `clearAriaLabel: string`
 - `defaultValue?: string | undefined`
 - `idPrefix: string`
 - `label: string`
@@ -1447,14 +1445,13 @@ Props:
 ### ProfileCompletenessCard — `src/components/profile-completeness-card.tsx`
 
 Profile-completeness rail card: one progress read-out over the checklist of
-profile parts, with the resume uploader embedded — "complete your profile by
-uploading your resume or filling it out". The caller derives the checklist
-from the account loader data; this stays pure presentation.
+profile parts. The resume itself uploads via the page-header "Import resume"
+dialog; the rail only tracks it. The caller derives the checklist from the
+account loader data; this stays pure presentation.
 
 Props:
 
 - `items: ProfileChecklistItem[]`
-- `resume: { object: "resume"; parseStatus: "parsing" | "parsed" | "failed" | null; parseFailureReason: string | null; parsedAt:…`
 
 ### ProfileForm — `src/components/profile-form.tsx`
 
@@ -1490,6 +1487,16 @@ Props:
 - `as?: ElementType | undefined`
 - `children?: ReactNode`
 - `html?: string | undefined`
+
+### ResumeImportDialog — `src/components/resume-import-dialog.tsx`
+
+"Import resume" page-header action: the resume pipeline (upload → parse →
+keep-on-file) lives in a dialog instead of a page section — mirroring the
+hosted board's resume upload modal.
+
+Props:
+
+- `resume: { object: "resume"; parseStatus: "parsing" | "parsed" | "failed" | null; parseFailureReason: string | null; parsedAt:…`
 
 ### ResumeUpload — `src/components/resume-upload.tsx`
 
