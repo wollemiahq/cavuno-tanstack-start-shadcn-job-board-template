@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { formatMonthYear } from '@cavuno/board/format';
 import { useRouter } from '@tanstack/react-router';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, Pencil, Trash2 } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import {
@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -289,20 +290,22 @@ export function ExperienceSection({
       </form>
     ) : null;
 
+  const addButton = (
+    <Button variant="outline" size="sm" onClick={() => open(null)}>
+      {m.experienceSection_addLabel()}
+    </Button>
+  );
+
   return (
     <Card data-test="experience-section" id="experience">
       <CardHeader>
         <CardTitle>
           <h2>{m.experienceSection_heading()}</h2>
         </CardTitle>
-        <CardAction>
-          <Button variant="outline" size="sm" onClick={() => open(null)}>
-            {m.experienceSection_addLabel()}
-          </Button>
-        </CardAction>
+        {items.length > 0 ? <CardAction>{addButton}</CardAction> : null}
       </CardHeader>
       <CardContent className="space-y-3">
-        {items.length === 0 && editing === null ? (
+        {items.length === 0 ? (
           <Empty className="border-0 p-8">
             <EmptyHeader>
               <EmptyMedia variant="icon">
@@ -312,6 +315,7 @@ export function ExperienceSection({
                 {m.experienceSection_emptyText()}
               </EmptyDescription>
             </EmptyHeader>
+            <EmptyContent>{addButton}</EmptyContent>
           </Empty>
         ) : null}
 
@@ -334,12 +338,20 @@ export function ExperienceSection({
                   </ItemDescription>
                 </ItemContent>
                 <ItemActions>
-                  <Button variant="ghost" size="sm" onClick={() => open(item)}>
-                    {m.experienceSection_editLabel()}
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={m.experienceSection_editLabel()}
+                    title={m.experienceSection_editLabel()}
+                    onClick={() => open(item)}
+                  >
+                    <Pencil aria-hidden />
                   </Button>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon-sm"
+                    aria-label={m.experienceSection_deleteLabel()}
+                    title={m.experienceSection_deleteLabel()}
                     disabled={pending}
                     onClick={async () => {
                       setPending(true);
@@ -354,7 +366,7 @@ export function ExperienceSection({
                       }
                     }}
                   >
-                    {m.experienceSection_deleteLabel()}
+                    <Trash2 aria-hidden />
                   </Button>
                 </ItemActions>
               </Item>

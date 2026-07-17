@@ -1169,10 +1169,12 @@ Props:
 
 ### LanguagesSection — `src/components/languages-section.tsx`
 
-Languages — name + proficiency rows over the whole-set replace
-(`board.me.profile.updateLanguages`). Proficiency is a free string on the
-API; the select offers the five common levels and keeps any previously
-stored custom value selectable so an edit round-trip cannot lose it.
+Languages — name + proficiency entries over the whole-set replace
+(`board.me.profile.updateLanguages`). Add opens a dialog, edit a right-hand
+sheet — the same editor pattern as experience/education. Proficiency is a
+free string on the API; the select offers the five common levels and keeps
+any previously stored custom value selectable so an edit round-trip cannot
+lose it.
 
 Props:
 
@@ -1612,8 +1614,9 @@ Props:
 
 ### SkillsSection — `src/components/skills-section.tsx`
 
-Skills — a tag editor over the whole-set replace
-(`board.me.profile.updateSkills`). Edits are local; one PUT on save.
+Skills — badges over the whole-set replace
+(`board.me.profile.updateSkills`). Adding happens in an "Add skill" dialog
+(the LinkedIn flow); add and remove each persist immediately with one PUT.
 
 Props:
 

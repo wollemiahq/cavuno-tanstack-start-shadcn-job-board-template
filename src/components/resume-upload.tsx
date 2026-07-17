@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
-import { FileText } from 'lucide-react';
+import { FileText, Upload } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { deleteResume, uploadResume } from '../server/account';
@@ -102,7 +102,7 @@ export function ResumeUpload({
       ) : null}
 
       {resume.hasResumeOnFile && resume.file ? (
-        <Attachment className="w-full">
+        <Attachment className="w-full" data-test="resume-attachment">
           <AttachmentMedia>
             <FileText aria-hidden />
           </AttachmentMedia>
@@ -140,11 +140,7 @@ export function ResumeUpload({
             </AttachmentAction>
           </AttachmentActions>
         </Attachment>
-      ) : (
-        <p className="text-muted-foreground text-sm">
-          {m.resumeUpload_emptyText()}
-        </p>
-      )}
+      ) : null}
 
       <input
         ref={inputRef}
@@ -170,21 +166,28 @@ export function ResumeUpload({
         }}
       />
 
-      <Button
-        variant="outline"
-        size="sm"
+      {/* Dropzone-styled click target (an interactive take on the Empty
+          composition) — file picking is click-to-browse. */}
+      <button
+        type="button"
         disabled={status === 'uploading' || status === 'deleting'}
         onClick={() => inputRef.current?.click()}
+        className="border-input hover:bg-muted/50 focus-visible:border-ring focus-visible:ring-ring/50 flex w-full flex-col items-center gap-1.5 rounded-3xl border border-dashed p-8 text-center transition-colors focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50"
       >
-        {status === 'uploading'
-          ? m.resumeUpload_uploadingLabel()
-          : resume.hasResumeOnFile
-            ? m.resumeUpload_replaceLabel()
-            : m.resumeUpload_uploadLabel()}
-      </Button>
-      <p className="text-muted-foreground text-xs">
-        {m.resumeUpload_formatsText()}
-      </p>
+        <span className="bg-muted text-foreground mb-1 flex size-10 items-center justify-center rounded-xl">
+          <Upload aria-hidden className="size-5" />
+        </span>
+        <span className="text-sm font-medium">
+          {status === 'uploading'
+            ? m.resumeUpload_uploadingLabel()
+            : resume.hasResumeOnFile
+              ? m.resumeUpload_replaceLabel()
+              : m.resumeUpload_uploadLabel()}
+        </span>
+        <span className="text-muted-foreground text-xs">
+          {m.resumeUpload_formatsText()}
+        </span>
+      </button>
       <div className="space-y-1">
         <Label className="w-fit cursor-pointer">
           <Checkbox

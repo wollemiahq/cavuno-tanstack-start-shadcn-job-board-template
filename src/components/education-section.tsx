@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { formatMonthYear } from '@cavuno/board/format';
 import { useRouter } from '@tanstack/react-router';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, Pencil, Trash2 } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import {
@@ -26,7 +26,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +34,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -48,7 +48,6 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/components/ui/item';
-import { Label } from '@/components/ui/label';
 import {
   Sheet,
   SheetContent,
@@ -65,9 +64,8 @@ type Draft = {
   degree: string;
   fieldOfStudy: string;
   startDate: string;
+  /** Actual or expected — education always has one (the LinkedIn model). */
   endDate: string;
-  /** "I currently study here" — an unset end date, expressed as a toggle. */
-  current: boolean;
   description: string;
 };
 
@@ -77,7 +75,6 @@ const EMPTY: Draft = {
   fieldOfStudy: '',
   startDate: '',
   endDate: '',
-  current: false,
   description: '',
 };
 
@@ -88,7 +85,6 @@ function toDraft(item: CandidateEducation): Draft {
     fieldOfStudy: item.fieldOfStudy ?? '',
     startDate: item.startDate ?? '',
     endDate: item.endDate ?? '',
-    current: Boolean(item.startDate) && !item.endDate,
     description: item.description ?? '',
   };
 }
@@ -131,7 +127,7 @@ export function EducationSection({
       degree: draft.degree.trim(),
       fieldOfStudy: draft.fieldOfStudy.trim(),
       startDate: draft.startDate,
-      endDate: draft.current ? '' : draft.endDate,
+      endDate: draft.endDate,
       description: draft.description.trim(),
     };
     try {
@@ -214,35 +210,17 @@ export function EducationSection({
               monthPlaceholder={m.monthYearField_monthPlaceholder()}
               yearPlaceholder={m.monthYearField_yearPlaceholder()}
             />
-            {draft.current ? null : (
-              <MonthYearField
-                key={`end-${editing.id ?? 'new'}`}
-                idPrefix="education-end"
-                label={m.educationSection_endLabel()}
-                language={language}
-                defaultValue={draft.endDate}
-                onChange={(endDate) =>
-                  setDraft((prev) => ({ ...prev, endDate }))
-                }
-                monthAriaLabel={m.monthYearField_monthPlaceholder()}
-                yearAriaLabel={m.monthYearField_yearPlaceholder()}
-                monthPlaceholder={m.monthYearField_monthPlaceholder()}
-                yearPlaceholder={m.monthYearField_yearPlaceholder()}
-              />
-            )}
-            <Label className="w-fit cursor-pointer sm:col-span-2">
-              <Checkbox
-                checked={draft.current}
-                onCheckedChange={(checked) =>
-                  setDraft((prev) => ({
-                    ...prev,
-                    current: checked === true,
-                    endDate: checked === true ? '' : prev.endDate,
-                  }))
-                }
-              />
-              {m.educationSection_currentLabel()}
-            </Label>
+            <MonthYearField
+              idPrefix="education-end"
+              label={m.educationSection_endLabel()}
+              language={language}
+              defaultValue={draft.endDate}
+              onChange={(endDate) => setDraft((prev) => ({ ...prev, endDate }))}
+              monthAriaLabel={m.monthYearField_monthPlaceholder()}
+              yearAriaLabel={m.monthYearField_yearPlaceholder()}
+              monthPlaceholder={m.monthYearField_monthPlaceholder()}
+              yearPlaceholder={m.monthYearField_yearPlaceholder()}
+            />
           </div>
           <Field className="gap-1.5">
             <FieldLabel htmlFor="education-description">
@@ -282,20 +260,22 @@ export function EducationSection({
       </form>
     ) : null;
 
+  const addButton = (
+    <Button variant="outline" size="sm" onClick={() => open(null)}>
+      {m.educationSection_addLabel()}
+    </Button>
+  );
+
   return (
     <Card data-test="education-section" id="education">
       <CardHeader>
         <CardTitle>
           <h2>{m.educationSection_heading()}</h2>
         </CardTitle>
-        <CardAction>
-          <Button variant="outline" size="sm" onClick={() => open(null)}>
-            {m.educationSection_addLabel()}
-          </Button>
-        </CardAction>
+        {items.length > 0 ? <CardAction>{addButton}</CardAction> : null}
       </CardHeader>
       <CardContent className="space-y-3">
-        {items.length === 0 && editing === null ? (
+        {items.length === 0 ? (
           <Empty className="border-0 p-8">
             <EmptyHeader>
               <EmptyMedia variant="icon">
@@ -305,6 +285,7 @@ export function EducationSection({
                 {m.educationSection_emptyText()}
               </EmptyDescription>
             </EmptyHeader>
+            <EmptyContent>{addButton}</EmptyContent>
           </Empty>
         ) : null}
 
@@ -329,12 +310,20 @@ export function EducationSection({
                   ) : null}
                 </ItemContent>
                 <ItemActions>
-                  <Button variant="ghost" size="sm" onClick={() => open(item)}>
-                    {m.educationSection_editLabel()}
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={m.educationSection_editLabel()}
+                    title={m.educationSection_editLabel()}
+                    onClick={() => open(item)}
+                  >
+                    <Pencil aria-hidden />
                   </Button>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon-sm"
+                    aria-label={m.educationSection_deleteLabel()}
+                    title={m.educationSection_deleteLabel()}
                     disabled={pending}
                     onClick={async () => {
                       setPending(true);
@@ -349,7 +338,7 @@ export function EducationSection({
                       }
                     }}
                   >
-                    {m.educationSection_deleteLabel()}
+                    <Trash2 aria-hidden />
                   </Button>
                 </ItemActions>
               </Item>

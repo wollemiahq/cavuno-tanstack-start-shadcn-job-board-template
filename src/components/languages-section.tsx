@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
-import { Languages, X } from 'lucide-react';
+import { Languages, Pencil, Trash2 } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { replaceLanguages } from '../server/account';
@@ -13,14 +13,35 @@ import {
   type CandidateActionFeedbackState,
 } from '@/components/candidate-action-feedback';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
 } from '@/components/ui/empty';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from '@/components/ui/item';
 import {
   Select,
   SelectContent,
@@ -28,8 +49,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 
 type Language = { name: string; proficiency: string };
+
+/** `index: null` = adding; a number = editing that row. */
+type Editing = { index: number | null } | null;
 
 const LEVELS = [
   m.languagesSection_levelNative,
@@ -40,31 +70,152 @@ const LEVELS = [
 ];
 
 /**
- * Languages — name + proficiency rows over the whole-set replace
- * (`board.me.profile.updateLanguages`). Proficiency is a free string on the
- * API; the select offers the five common levels and keeps any previously
- * stored custom value selectable so an edit round-trip cannot lose it.
+ * Languages — name + proficiency entries over the whole-set replace
+ * (`board.me.profile.updateLanguages`). Add opens a dialog, edit a right-hand
+ * sheet — the same editor pattern as experience/education. Proficiency is a
+ * free string on the API; the select offers the five common levels and keeps
+ * any previously stored custom value selectable so an edit round-trip cannot
+ * lose it.
  */
-export function LanguagesSection({
-  languages: initial,
-}: {
-  languages: Language[];
-}) {
+export function LanguagesSection({ languages }: { languages: Language[] }) {
   const router = useRouter();
-  const [languages, setLanguages] = useState<Language[]>(initial);
+  const [editing, setEditing] = useState<Editing>(null);
+  const [draft, setDraft] = useState<Language>({ name: '', proficiency: '' });
   const [pending, setPending] = useState(false);
   const [feedback, setFeedback] =
     useState<CandidateActionFeedbackState>('idle');
 
-  const dirty = JSON.stringify(languages) !== JSON.stringify(initial);
-  const valid = languages.every((l) => l.name.trim() && l.proficiency.trim());
-
-  const update = (index: number, patch: Partial<Language>) =>
-    setLanguages(
-      languages.map((l, i) => (i === index ? { ...l, ...patch } : l)),
-    );
-
   const levelLabels: string[] = LEVELS.map((level) => level());
+
+  const persist = async (next: Language[]): Promise<boolean> => {
+    setPending(true);
+    setFeedback('idle');
+    try {
+      await replaceLanguages({ data: { languages: next } });
+      await router.invalidate();
+      return true;
+    } catch {
+      setFeedback('error');
+      return false;
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const submit = async () => {
+    const entry = {
+      name: draft.name.trim(),
+      proficiency: draft.proficiency.trim(),
+    };
+    if (!entry.name || !entry.proficiency) return;
+    const next =
+      editing && editing.index !== null
+        ? languages.map((language, index) =>
+            index === editing.index ? entry : language,
+          )
+        : [...languages, entry];
+    if (await persist(next)) setEditing(null);
+  };
+
+  const open = (index: number | null) => {
+    setDraft(
+      index === null ? { name: '', proficiency: '' } : { ...languages[index]! },
+    );
+    setEditing({ index });
+  };
+
+  const addButton = (
+    <Button variant="outline" size="sm" onClick={() => open(null)}>
+      {m.languagesSection_addLabel()}
+    </Button>
+  );
+
+  const levels =
+    !draft.proficiency || levelLabels.includes(draft.proficiency)
+      ? levelLabels
+      : [draft.proficiency, ...levelLabels];
+
+  const editorForm =
+    editing !== null ? (
+      <form
+        key={editing.index ?? 'new'}
+        onSubmit={(event) => {
+          event.preventDefault();
+          void submit();
+        }}
+      >
+        <FieldGroup className="gap-3">
+          <Field className="gap-1.5">
+            <FieldLabel htmlFor="language-name">
+              {m.languagesSection_languageLabel()}
+            </FieldLabel>
+            <Input
+              id="language-name"
+              required
+              value={draft.name}
+              onChange={(event) =>
+                setDraft((prev) => ({ ...prev, name: event.target.value }))
+              }
+            />
+          </Field>
+          <Field className="gap-1.5">
+            <FieldLabel htmlFor="language-proficiency">
+              {m.languagesSection_proficiencyLabel()}
+            </FieldLabel>
+            <Select
+              items={levels.map((level) => ({ label: level, value: level }))}
+              value={draft.proficiency || null}
+              required
+              onValueChange={(proficiency) =>
+                setDraft((prev) => ({
+                  ...prev,
+                  proficiency: (proficiency as string | null) ?? '',
+                }))
+              }
+            >
+              <SelectTrigger
+                id="language-proficiency"
+                className="w-full"
+                aria-label={m.languagesSection_proficiencyLabel()}
+              >
+                <SelectValue
+                  placeholder={m.languagesSection_proficiencyLabel()}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {levels.map((level) => (
+                  <SelectItem key={level} value={level}>
+                    {level}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          {/* Overlay editors right-align their footer, Cancel before the
+              primary — the Dialog/Sheet/AlertDialog convention. */}
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={pending}
+              onClick={() => setEditing(null)}
+            >
+              {m.languagesSection_cancelLabel()}
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={pending || !draft.name.trim() || !draft.proficiency}
+            >
+              {pending
+                ? m.languagesSection_savingLabel()
+                : m.languagesSection_saveLabel()}
+            </Button>
+          </div>
+        </FieldGroup>
+      </form>
+    ) : null;
 
   return (
     <Card data-test="languages-section" id="languages">
@@ -72,6 +223,7 @@ export function LanguagesSection({
         <CardTitle>
           <h2>{m.languagesSection_heading()}</h2>
         </CardTitle>
+        {languages.length > 0 ? <CardAction>{addButton}</CardAction> : null}
       </CardHeader>
       <CardContent className="space-y-3">
         {languages.length === 0 ? (
@@ -84,104 +236,73 @@ export function LanguagesSection({
                 {m.languagesSection_emptyText()}
               </EmptyDescription>
             </EmptyHeader>
+            <EmptyContent>{addButton}</EmptyContent>
           </Empty>
         ) : (
           <ul className="space-y-2">
-            {languages.map((language, index) => {
-              const levels = levelLabels.includes(language.proficiency)
-                ? levelLabels
-                : language.proficiency
-                  ? [language.proficiency, ...levelLabels]
-                  : levelLabels;
-              return (
-                <li key={index} className="flex items-center gap-2">
-                  <Input
-                    className="flex-1"
-                    value={language.name}
-                    placeholder={m.languagesSection_languageLabel()}
-                    aria-label={m.languagesSection_languageLabel()}
-                    onChange={(e) => update(index, { name: e.target.value })}
-                  />
-                  <Select
-                    items={levels.map((level) => ({
-                      label: level,
-                      value: level,
-                    }))}
-                    value={language.proficiency || null}
-                    onValueChange={(proficiency) =>
-                      update(index, {
-                        proficiency: (proficiency as string | null) ?? '',
-                      })
-                    }
-                  >
-                    <SelectTrigger
-                      aria-label={m.languagesSection_proficiencyLabel()}
-                      className="flex-1"
-                    >
-                      <SelectValue
-                        placeholder={m.languagesSection_proficiencyLabel()}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {levels.map((level) => (
-                        <SelectItem key={level} value={level}>
-                          {level}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            {languages.map((language, index) => (
+              <Item key={index} variant="outline" size="sm" render={<li />}>
+                <ItemContent>
+                  <ItemTitle>{language.name}</ItemTitle>
+                  <ItemDescription>{language.proficiency}</ItemDescription>
+                </ItemContent>
+                <ItemActions>
                   <Button
-                    type="button"
                     variant="ghost"
-                    size="icon-xs"
+                    size="icon-sm"
+                    aria-label={m.languagesSection_editTitle()}
+                    title={m.languagesSection_editTitle()}
+                    onClick={() => open(index)}
+                  >
+                    <Pencil aria-hidden />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     aria-label={m.languagesSection_removeLanguageAriaLabel()}
-                    className="text-muted-foreground hover:text-foreground shrink-0"
+                    title={m.languagesSection_removeLanguageAriaLabel()}
+                    disabled={pending}
                     onClick={() =>
-                      setLanguages(languages.filter((_, i) => i !== index))
+                      void persist(languages.filter((_, i) => i !== index))
                     }
                   >
-                    <X className="size-4" />
+                    <Trash2 aria-hidden />
                   </Button>
-                </li>
-              );
-            })}
+                </ItemActions>
+              </Item>
+            ))}
           </ul>
         )}
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setLanguages([...languages, { name: '', proficiency: '' }])
-            }
-          >
-            {m.languagesSection_addLabel()}
-          </Button>
-          {dirty ? (
-            <Button
-              size="sm"
-              disabled={pending || !valid}
-              onClick={async () => {
-                setPending(true);
-                setFeedback('idle');
-                try {
-                  await replaceLanguages({ data: { languages } });
-                  await router.invalidate();
-                } catch {
-                  setFeedback('error');
-                } finally {
-                  setPending(false);
-                }
-              }}
-            >
-              {pending
-                ? m.languagesSection_savingLabel()
-                : m.languagesSection_saveLabel()}
-            </Button>
-          ) : null}
-        </div>
+
         <CandidateActionFeedback state={feedback} />
+
+        <Dialog
+          open={editing !== null && editing.index === null}
+          onOpenChange={(open) => {
+            if (!open) setEditing(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>{m.languagesSection_addLabel()}</DialogTitle>
+            </DialogHeader>
+            {editorForm}
+          </DialogContent>
+        </Dialog>
+
+        <Sheet
+          open={editing !== null && editing.index !== null}
+          onOpenChange={(open) => {
+            if (!open) setEditing(null);
+          }}
+        >
+          <SheetContent side="right" className="w-full gap-0 sm:max-w-lg">
+            <SheetHeader>
+              <SheetTitle>{m.languagesSection_editTitle()}</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto p-4 pt-2">{editorForm}</div>
+          </SheetContent>
+        </Sheet>
       </CardContent>
     </Card>
   );

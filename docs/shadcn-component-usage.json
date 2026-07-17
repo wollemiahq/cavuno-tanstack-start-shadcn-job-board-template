@@ -328,7 +328,6 @@
         "src/components/alert-manager.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
         "src/components/custom-fields-group.tsx",
-        "src/components/education-section.tsx",
         "src/components/experience-section.tsx",
         "src/components/notification-settings.tsx",
         "src/components/profile-form.tsx",
@@ -369,7 +368,9 @@
         "src/components/alert-manager.tsx",
         "src/components/education-section.tsx",
         "src/components/experience-section.tsx",
+        "src/components/languages-section.tsx",
         "src/components/resume-import-dialog.tsx",
+        "src/components/skills-section.tsx",
         "src/routes/employers.dashboard.tsx"
       ]
     },
@@ -451,11 +452,13 @@
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",
         "src/components/experience-section.tsx",
+        "src/components/languages-section.tsx",
         "src/components/messages/composer.tsx",
         "src/components/month-year-field.tsx",
         "src/components/post-job-form.tsx",
         "src/components/profile-form.tsx",
         "src/components/rhea-auth-pilot.tsx",
+        "src/components/skills-section.tsx",
         "src/routes/auth.verify-email-required.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
@@ -525,6 +528,7 @@
         "src/components/alert-manager.tsx",
         "src/components/education-section.tsx",
         "src/components/experience-section.tsx",
+        "src/components/languages-section.tsx",
         "src/components/messages/blocked-list.tsx",
         "src/components/messages/inbox-list.tsx",
         "src/routes/alerts.manage.tsx",
@@ -542,7 +546,6 @@
       "name": "label",
       "status": "used",
       "productionReferences": [
-        "src/components/education-section.tsx",
         "src/components/experience-section.tsx",
         "src/components/resume-upload.tsx",
         "src/routes/employers.companies.$slug.index.tsx"
@@ -656,7 +659,8 @@
         "src/components/alert-manager.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
         "src/components/education-section.tsx",
-        "src/components/experience-section.tsx"
+        "src/components/experience-section.tsx",
+        "src/components/languages-section.tsx"
       ]
     },
     {
