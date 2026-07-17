@@ -69,6 +69,7 @@ import type {
   SubmitJobResult,
 } from '../server/post';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
+import { planFeatureLines } from '@/board/plan-view-model';
 import {
   CustomFieldsGroup,
   type CustomFieldValues,
@@ -827,6 +828,7 @@ export function PostJobForm({
           {plans.map((plan) => {
             const price =
               plan.prices.find(({ isActive }) => isActive) ?? plan.prices[0];
+            const features = planFeatureLines(plan);
             return (
               // The owned Field choice card — the SAME idiom as the join
               // page's RoleSelector, so every card-style radio picker reads
@@ -855,6 +857,11 @@ export function PostJobForm({
                     </FieldTitle>
                     {plan.description ? (
                       <FieldDescription>{plan.description}</FieldDescription>
+                    ) : null}
+                    {features.length > 0 ? (
+                      <FieldDescription>
+                        {features.join(' · ')}
+                      </FieldDescription>
                     ) : null}
                   </FieldContent>
                   <span className="text-foreground font-medium">

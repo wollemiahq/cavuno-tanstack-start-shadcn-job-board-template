@@ -1130,5 +1130,12 @@
   "appError_body": "⟦Ţĥé þáğé ĥíţ á šñáğ ŵĥíĺé ĺóáðíñğ. Ţŕý áğáíñ íñ á ɱóɱéñţ.⟧",
   "appError_rateLimitedBody": "⟦Ýóú’ṽé ɱáðé á ĺóţ óƒ ŕéɋúéšţš íñ á šĥóŕţ ţíɱé. Ğíṽé íţ á ƒéŵ šéçóñðš, ţĥéñ ţŕý áğáíñ.⟧",
   "appError_retryLabel": "⟦Ţŕý áğáíñ⟧",
-  "appError_homeLabel": "⟦Ğó ţó ĥóɱéþáğé⟧"
+  "appError_homeLabel": "⟦Ğó ţó ĥóɱéþáğé⟧",
+  "planFeature_liveDays": "⟦Ĺíṽé ƒóŕ {days} ðáýš⟧",
+  "planFeature_maxActiveOne": "⟦1 áçţíṽé ĵóƀ áţ á ţíɱé⟧",
+  "planFeature_maxActiveOther": "⟦Úþ ţó {count} áçţíṽé ĵóƀš⟧",
+  "planFeature_unlimitedActive": "⟦Úñĺíɱíţéð áçţíṽé ĵóƀš⟧",
+  "planFeature_featuredAuto": "⟦Éṽéŕý þóšţ íš ƒéáţúŕéð⟧",
+  "planFeature_featuredOne": "⟦Íñçĺúðéš 1 ƒéáţúŕéð þóšţ⟧",
+  "planFeature_featuredOther": "⟦Íñçĺúðéš {count} ƒéáţúŕéð þóšţš⟧"
 }

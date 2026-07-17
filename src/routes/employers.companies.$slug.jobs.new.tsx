@@ -45,16 +45,20 @@ import { getRemotePermits } from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
+import { planFeatureLines } from '@/board/plan-view-model';
 import { EmployerCompanyShell } from '@/components/account-shell';
 import { PlaceTagsField } from '@/components/place-tags-field';
 import { RichTextEditor } from '@/components/rich-text-editor';
+import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Field,
+  FieldContent,
   FieldDescription,
   FieldError,
   FieldLabel,
+  FieldTitle,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -776,22 +780,27 @@ function NewJobPage() {
                           {m.employerCompany_reusableCreditsLabel()}
                         </p>
                         {billingOptions.map((option) => (
-                          <Label
+                          <FieldLabel
                             key={option.id}
-                            className="border-input has-data-checked:border-ring flex items-center justify-between gap-3 rounded-2xl border p-3 font-normal"
+                            htmlFor={`billing-option-${option.id}`}
+                            className="hover:bg-muted cursor-pointer transition-colors"
                           >
-                            <span className="flex items-center gap-2">
-                              <RadioGroupItem value={`option:${option.id}`} />
-                              <span className="font-medium">
-                                {option.planName}
+                            <Field orientation="horizontal">
+                              <RadioGroupItem
+                                id={`billing-option-${option.id}`}
+                                value={`option:${option.id}`}
+                                aria-label={option.planName}
+                              />
+                              <FieldContent>
+                                <FieldTitle>{option.planName}</FieldTitle>
+                              </FieldContent>
+                              <span className="text-muted-foreground text-sm">
+                                {m.employerCompany_creditsRemaining({
+                                  count: option.jobsRemaining,
+                                })}
                               </span>
-                            </span>
-                            <span className="text-muted-foreground text-sm">
-                              {m.employerCompany_creditsRemaining({
-                                count: option.jobsRemaining,
-                              })}
-                            </span>
-                          </Label>
+                            </Field>
+                          </FieldLabel>
                         ))}
                       </div>
                     ) : null}
@@ -805,23 +814,50 @@ function NewJobPage() {
                             plan.prices.find(
                               (candidate) => candidate.isActive,
                             ) ?? plan.prices[0];
+                          const features = planFeatureLines(plan);
                           return (
-                            <Label
+                            <FieldLabel
                               key={plan.id}
-                              className="border-input has-data-checked:border-ring flex items-center justify-between gap-3 rounded-2xl border p-3 font-normal"
+                              htmlFor={`billing-plan-${plan.id}`}
+                              className="hover:bg-muted cursor-pointer transition-colors"
                             >
-                              <span className="flex items-center gap-2">
-                                <RadioGroupItem value={`plan:${plan.id}`} />
-                                <span className="font-medium">{plan.name}</span>
-                              </span>
-                              <span className="text-muted-foreground text-sm">
-                                {formatPrice(
-                                  locale,
-                                  price?.currency,
-                                  price?.amountCents,
-                                )}
-                              </span>
-                            </Label>
+                              <Field orientation="horizontal">
+                                <RadioGroupItem
+                                  id={`billing-plan-${plan.id}`}
+                                  value={`plan:${plan.id}`}
+                                  aria-label={plan.name}
+                                />
+                                <FieldContent>
+                                  <FieldTitle>
+                                    <span className="flex flex-wrap items-center gap-2">
+                                      {plan.name}
+                                      {plan.isRecommended ? (
+                                        <Badge variant="secondary">
+                                          {m.postJob_recommendedLabel()}
+                                        </Badge>
+                                      ) : null}
+                                    </span>
+                                  </FieldTitle>
+                                  {plan.description ? (
+                                    <FieldDescription>
+                                      {plan.description}
+                                    </FieldDescription>
+                                  ) : null}
+                                  {features.length > 0 ? (
+                                    <FieldDescription>
+                                      {features.join(' · ')}
+                                    </FieldDescription>
+                                  ) : null}
+                                </FieldContent>
+                                <span className="text-foreground font-medium">
+                                  {formatPrice(
+                                    locale,
+                                    price?.currency,
+                                    price?.amountCents,
+                                  )}
+                                </span>
+                              </Field>
+                            </FieldLabel>
                           );
                         })}
                       </div>

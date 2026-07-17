@@ -22,7 +22,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `aspect-ratio` | Available | Installed for adoption when the product needs this behavior. |
 | `attachment` | Used (1) | `src/components/resume-upload.tsx` |
 | `avatar` | Used (22) | `src/components/Header.tsx`<br>`src/components/account-shell.tsx`<br>`src/components/avatar-upload.tsx`<br>+19 more in the JSON ledger |
-| `badge` | Used (36) | `src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>`src/components/board/company-card.tsx`<br>+33 more in the JSON ledger |
+| `badge` | Used (37) | `src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>`src/components/board/company-card.tsx`<br>+34 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
 | `button` | Used (77) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-error.tsx`<br>+74 more in the JSON ledger |

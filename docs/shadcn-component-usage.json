@@ -154,6 +154,7 @@
         "src/routes/embed.jobs.tsx",
         "src/routes/employers.companies.$slug.index.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.companies.$slug.jobs.new.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.dashboard.tsx",
         "src/routes/employers.index.tsx",

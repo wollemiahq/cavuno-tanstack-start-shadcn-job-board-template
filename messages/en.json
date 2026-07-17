@@ -1130,5 +1130,12 @@
   "appError_body": "The page hit a snag while loading. Try again in a moment.",
   "appError_rateLimitedBody": "You’ve made a lot of requests in a short time. Give it a few seconds, then try again.",
   "appError_retryLabel": "Try again",
-  "appError_homeLabel": "Go to homepage"
+  "appError_homeLabel": "Go to homepage",
+  "planFeature_liveDays": "Live for {days} days",
+  "planFeature_maxActiveOne": "1 active job at a time",
+  "planFeature_maxActiveOther": "Up to {count} active jobs",
+  "planFeature_unlimitedActive": "Unlimited active jobs",
+  "planFeature_featuredAuto": "Every post is featured",
+  "planFeature_featuredOne": "Includes 1 featured post",
+  "planFeature_featuredOther": "Includes {count} featured posts"
 }

@@ -1130,5 +1130,12 @@
   "appError_body": "Le chargement de la page a rencontré un problème. Réessayez dans un instant.",
   "appError_rateLimitedBody": "Trop de requêtes en peu de temps. Patientez quelques secondes puis réessayez.",
   "appError_retryLabel": "Réessayer",
-  "appError_homeLabel": "Aller à l’accueil"
+  "appError_homeLabel": "Aller à l’accueil",
+  "planFeature_liveDays": "En ligne pendant {days} jours",
+  "planFeature_maxActiveOne": "1 offre active à la fois",
+  "planFeature_maxActiveOther": "Jusqu’à {count} offres actives",
+  "planFeature_unlimitedActive": "Offres actives illimitées",
+  "planFeature_featuredAuto": "Chaque offre est mise en avant",
+  "planFeature_featuredOne": "Inclut 1 offre mise en avant",
+  "planFeature_featuredOther": "Inclut {count} offres mises en avant"
 }
