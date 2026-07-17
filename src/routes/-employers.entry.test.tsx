@@ -324,9 +324,7 @@ describe('employer entry surfaces', () => {
       screen.getByRole('heading', { level: 1, name: 'Awaiting approval' }),
     ).toBeVisible();
     expect(screen.getByText(/request to join Acme Ventures/i)).toBeVisible();
-    expect(screen.getByRole('link', { name: 'Back' })).toHaveAttribute(
-      'href',
-      '/employers/dashboard',
-    );
+    // The step's single escape hatch withdraws the claim (no Back link).
+    expect(screen.getByRole('button', { name: 'Cancel claim' })).toBeEnabled();
   });
 });

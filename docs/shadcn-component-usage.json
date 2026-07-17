@@ -264,8 +264,7 @@
         "src/components/Header.tsx",
         "src/components/board/alert-signup-form.tsx",
         "src/components/board/talent-filter-controls.tsx",
-        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
-        "src/routes/employers.onboarding.$slug.tsx"
+        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx"
       ]
     },
     {

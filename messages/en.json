@@ -1012,7 +1012,7 @@
   "accountShell_completeProfileLink": "Complete profile",
   "accountShell_jobsNav": "Jobs",
   "accountShell_companyProfileNav": "Company profile",
-  "employerOnboarding_connectTitle": "Connect your company",
+  "employerOnboarding_connectTitle": "Join your company",
   "employerOnboarding_connectSubtitle": "Search for your company or add a new one",
   "employerOnboarding_searchPlaceholder": "Search companies by name...",
   "employerOnboarding_addAsNewCompany": "Add “{query}” as a new company",
@@ -1106,5 +1106,8 @@
   "resumeUpload_keepCopyHint": "Stores a copy on your profile so it's ready the next time you apply.",
   "skillsSection_cancelLabel": "Cancel",
   "languagesSection_cancelLabel": "Cancel",
-  "languagesSection_editTitle": "Edit language"
+  "languagesSection_editTitle": "Edit language",
+  "employerOnboarding_openGmailLabel": "Open Gmail",
+  "employerOnboarding_openOutlookLabel": "Open Outlook",
+  "employerDashboard_websiteProtocolPrefix": "https://"
 }

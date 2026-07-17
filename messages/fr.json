@@ -1012,7 +1012,7 @@
   "accountShell_completeProfileLink": "Compléter le profil",
   "accountShell_jobsNav": "Offres",
   "accountShell_companyProfileNav": "Profil de l’entreprise",
-  "employerOnboarding_connectTitle": "Connectez votre entreprise",
+  "employerOnboarding_connectTitle": "Rejoignez votre entreprise",
   "employerOnboarding_connectSubtitle": "Recherchez votre entreprise ou ajoutez-en une nouvelle",
   "employerOnboarding_searchPlaceholder": "Rechercher une entreprise par nom…",
   "employerOnboarding_addAsNewCompany": "Ajouter « {query} » comme nouvelle entreprise",
@@ -1106,5 +1106,8 @@
   "resumeUpload_keepCopyHint": "Enregistre une copie sur votre profil, prête pour votre prochaine candidature.",
   "skillsSection_cancelLabel": "Annuler",
   "languagesSection_cancelLabel": "Annuler",
-  "languagesSection_editTitle": "Modifier la langue"
+  "languagesSection_editTitle": "Modifier la langue",
+  "employerOnboarding_openGmailLabel": "Ouvrir Gmail",
+  "employerOnboarding_openOutlookLabel": "Ouvrir Outlook",
+  "employerDashboard_websiteProtocolPrefix": "https://"
 }

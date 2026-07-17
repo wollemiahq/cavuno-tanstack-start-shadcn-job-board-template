@@ -23,6 +23,7 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
+  useComboboxAnchor,
 } from '@/components/ui/combobox';
 import {
   Dialog,
@@ -35,7 +36,12 @@ import {
 } from '@/components/ui/dialog';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { InputGroupAddon } from '@/components/ui/input-group';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
 import {
   Item,
   ItemActions,
@@ -192,6 +198,7 @@ type ConnectCompanyState = {
 
 function ConnectCompany({ onBack }: { onBack?: () => void }) {
   const router = useRouter();
+  const anchorRef = useComboboxAnchor();
   const [state, setState] = useState<ConnectCompanyState>({
     query: '',
     results: [],
@@ -207,7 +214,9 @@ function ConnectCompany({ onBack }: { onBack?: () => void }) {
 
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 2) {
+    // Search from the very first character — a one-letter pause showing
+    // nothing while two letters show results reads as broken.
+    if (q.length < 1) {
       setState((current) => ({
         ...current,
         results: [],
@@ -272,8 +281,12 @@ function ConnectCompany({ onBack }: { onBack?: () => void }) {
               filter={null}
               autoComplete="none"
               autoHighlight
-              open={open}
-              onOpenChange={(nextOpen) => updateState({ open: nextOpen })}
+              open={open && query.trim().length > 0}
+              onOpenChange={(nextOpen) =>
+                // Never pop an empty-query panel (it would only offer
+                // `Add "" as a new company`).
+                updateState({ open: nextOpen && query.trim().length > 0 })
+              }
               inputValue={query}
               itemToStringLabel={(company: SearchResult) => company.name}
               itemToStringValue={(company: SearchResult) => company.slug}
@@ -290,6 +303,7 @@ function ConnectCompany({ onBack }: { onBack?: () => void }) {
             >
               <ComboboxInput
                 id="company-search"
+                anchorRef={anchorRef}
                 type="text"
                 value={query}
                 showTrigger={false}
@@ -302,7 +316,7 @@ function ConnectCompany({ onBack }: { onBack?: () => void }) {
                   <Search aria-hidden />
                 </InputGroupAddon>
               </ComboboxInput>
-              <ComboboxContent>
+              <ComboboxContent anchor={anchorRef}>
                 <ComboboxList>
                   {(company: SearchResult) => (
                     <ComboboxItem
@@ -328,22 +342,24 @@ function ConnectCompany({ onBack }: { onBack?: () => void }) {
                     </ComboboxItem>
                   )}
                 </ComboboxList>
-                <div className="border-border border-t p-1">
-                  <Button
-                    variant="ghost"
-                    className="h-auto w-full justify-start px-2 py-2"
-                    onClick={() =>
-                      updateState({ modalOpen: true, open: false })
-                    }
-                  >
-                    <span className="border-border flex size-8 shrink-0 items-center justify-center rounded-full border border-dashed">
-                      <Plus className="size-4" aria-hidden />
-                    </span>
-                    {m.employerOnboarding_addAsNewCompany({
-                      query: query.trim(),
-                    })}
-                  </Button>
-                </div>
+                {query.trim() ? (
+                  <div className="border-border border-t p-1">
+                    <Button
+                      variant="ghost"
+                      className="h-auto w-full justify-start px-2 py-2"
+                      onClick={() =>
+                        updateState({ modalOpen: true, open: false })
+                      }
+                    >
+                      <span className="border-border flex size-8 shrink-0 items-center justify-center rounded-full border border-dashed">
+                        <Plus className="size-4" aria-hidden />
+                      </span>
+                      {m.employerOnboarding_addAsNewCompany({
+                        query: query.trim(),
+                      })}
+                    </Button>
+                  </div>
+                ) : null}
               </ComboboxContent>
             </Combobox>
           </Field>
@@ -403,15 +419,15 @@ function CreateCompanyModal({
           <span className="sr-only">{m.employerOnboarding_cancelLabel()}</span>
         </DialogClose>
         <form
+          className="space-y-5"
           onSubmit={async (event) => {
             event.preventDefault();
             setStatus('saving');
+            const website = form.website.trim();
             const result = await createCompany({
               data: {
                 name: form.name.trim(),
-                ...(form.website.trim()
-                  ? { website: form.website.trim() }
-                  : {}),
+                ...(website ? { website: `https://${website}` } : {}),
               },
             });
             if (!result.ok) {
@@ -445,6 +461,7 @@ function CreateCompanyModal({
               <Input
                 id="company-name"
                 value={form.name}
+                autoFocus={!initialName}
                 onChange={(event) =>
                   setForm({ ...form, name: event.currentTarget.value })
                 }
@@ -455,14 +472,31 @@ function CreateCompanyModal({
               <FieldLabel htmlFor="company-website">
                 {m.employerDashboard_websiteOptionalLabel()}
               </FieldLabel>
-              <Input
-                id="company-website"
-                value={form.website}
-                placeholder={m.employerDashboard_websitePlaceholder()}
-                onChange={(event) =>
-                  setForm({ ...form, website: event.currentTarget.value })
-                }
-              />
+              <InputGroup>
+                <InputGroupAddon>
+                  <InputGroupText>
+                    {m.employerDashboard_websiteProtocolPrefix()}
+                  </InputGroupText>
+                </InputGroupAddon>
+                <InputGroupInput
+                  id="company-website"
+                  value={form.website}
+                  placeholder={m.employerDashboard_websitePlaceholder()}
+                  // The name is usually pre-filled from the search query, so
+                  // the website is the first thing left to type.
+                  autoFocus={Boolean(initialName)}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      // Pasted full URLs collapse into the fixed prefix.
+                      website: event.currentTarget.value.replace(
+                        /^https?:\/\//i,
+                        '',
+                      ),
+                    })
+                  }
+                />
+              </InputGroup>
             </Field>
             {status === 'error' ? <FieldError>{message}</FieldError> : null}
           </div>

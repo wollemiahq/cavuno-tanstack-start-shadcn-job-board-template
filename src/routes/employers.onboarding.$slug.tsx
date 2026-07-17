@@ -1,11 +1,6 @@
 import { useState } from 'react';
 
-import {
-  Link,
-  createFileRoute,
-  redirect,
-  useRouter,
-} from '@tanstack/react-router';
+import { createFileRoute, redirect, useRouter } from '@tanstack/react-router';
 
 import { handleEmployerLoaderError } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
@@ -15,7 +10,6 @@ import { EmployerIdentityAvatar } from '@/components/account-shell';
 import { Page, PageContent } from '@/components/layout/page';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { ButtonGroup } from '@/components/ui/button-group';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -65,21 +59,26 @@ function OnboardingPage() {
             {membership.status === 'pending_work_email' ? (
               <WorkEmailStep slug={slug} membership={membership} />
             ) : membership.status === 'awaiting_admin' ? (
-              <StaticStep
-                title={m.employerOnboarding_awaitingAdminTitle()}
-                body={m.employerOnboarding_awaitingAdminBody({
-                  company: membership.company.name,
-                })}
-              />
+              <div className="space-y-5">
+                <StepHeading
+                  title={m.employerOnboarding_awaitingAdminTitle()}
+                  body={m.employerOnboarding_awaitingAdminBody({
+                    company: membership.company.name,
+                  })}
+                />
+                <CancelClaimButton slug={slug} />
+              </div>
             ) : (
-              <StaticStep
-                title={m.employerOnboarding_rejectedTitle()}
-                body={m.employerOnboarding_rejectedBody({
-                  company: membership.company.name,
-                })}
-              />
+              <div className="space-y-5">
+                <StepHeading
+                  title={m.employerOnboarding_rejectedTitle()}
+                  body={m.employerOnboarding_rejectedBody({
+                    company: membership.company.name,
+                  })}
+                />
+                <CancelClaimButton slug={slug} />
+              </div>
             )}
-            <FooterActions slug={slug} />
           </CardContent>
         </Card>
       </PageContent>
@@ -119,14 +118,34 @@ function WorkEmailStep({
   if (!editing && membership.workEmail) {
     const verifiedEmail = membership.workEmail;
     return (
-      <div className="space-y-5">
+      <div className="space-y-6">
         <StepHeading
           title={m.employerOnboarding_emailSentTitle()}
           body={m.employerOnboarding_emailSentBody({ email: verifiedEmail })}
         />
-        <ButtonGroup className="mx-auto flex-wrap">
+        {/* Fastest path first: jump straight to the inbox. */}
+        <div className="flex flex-wrap justify-center gap-2">
+          <a
+            href="https://mail.google.com/"
+            target="_blank"
+            rel="noreferrer"
+            className={buttonVariants({ variant: 'outline' })}
+          >
+            {m.employerOnboarding_openGmailLabel()}
+          </a>
+          <a
+            href="https://outlook.live.com/mail/"
+            target="_blank"
+            rel="noreferrer"
+            className={buttonVariants({ variant: 'outline' })}
+          >
+            {m.employerOnboarding_openOutlookLabel()}
+          </a>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-2">
           <Button
-            variant="outline"
+            variant="ghost"
+            size="sm"
             disabled={status === 'sending'}
             onClick={() => send(verifiedEmail)}
           >
@@ -135,15 +154,16 @@ function WorkEmailStep({
               ? m.employerDashboard_sendingLabel()
               : m.employerOnboarding_resendLabel()}
           </Button>
-          <Button variant="ghost" onClick={() => setEditing(true)}>
+          <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
             {m.employerOnboarding_changeEmailLabel()}
           </Button>
-        </ButtonGroup>
+        </div>
         {status === 'error' ? (
           <Alert variant="destructive">
             <AlertDescription>{message}</AlertDescription>
           </Alert>
         ) : null}
+        <CancelClaimButton slug={slug} />
       </div>
     );
   }
@@ -181,7 +201,7 @@ function WorkEmailStep({
         />
         {status === 'error' ? <FieldError>{message}</FieldError> : null}
       </Field>
-      <ButtonGroup orientation="vertical" className="mx-auto w-full max-w-sm">
+      <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-2">
         <Button
           type="submit"
           size="lg"
@@ -194,15 +214,19 @@ function WorkEmailStep({
             : m.employerDashboard_sendLinkLabel()}
         </Button>
         {membership.workEmail ? (
+          // A link was already sent — backing out returns to the inbox step.
           <Button
             type="button"
             variant="ghost"
+            size="sm"
             onClick={() => setEditing(false)}
           >
-            {m.employerOnboarding_backLabel()}
+            {m.employerOnboarding_cancelLabel()}
           </Button>
-        ) : null}
-      </ButtonGroup>
+        ) : (
+          <CancelClaimButton slug={slug} />
+        )}
+      </div>
     </form>
   );
 }
@@ -218,31 +242,28 @@ function StepHeading({ title, body }: { title: string; body: string }) {
   );
 }
 
-function StaticStep({ title, body }: { title: string; body: string }) {
-  return <StepHeading title={title} body={body} />;
-}
-
-function FooterActions({ slug }: { slug: string }) {
+/** The step's single escape hatch: withdraw the claim, back to the dashboard. */
+function CancelClaimButton({ slug }: { slug: string }) {
   const router = useRouter();
+  const [cancelling, setCancelling] = useState(false);
   return (
-    <div className="border-border flex flex-wrap items-center justify-center gap-2 border-t pt-6">
-      <Link
-        to="/employers/dashboard"
-        className={buttonVariants({ variant: 'outline', size: 'sm' })}
-      >
-        {m.employerOnboarding_backLabel()}
-      </Link>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={async () => {
+    <Button
+      variant="ghost"
+      size="sm"
+      className="text-muted-foreground"
+      disabled={cancelling}
+      onClick={async () => {
+        setCancelling(true);
+        try {
           await cancelClaim({ data: { slug } });
           await router.invalidate();
           await router.navigate({ to: '/employers/dashboard' });
-        }}
-      >
-        {m.employerDashboard_cancelClaimLabel()}
-      </Button>
-    </div>
+        } finally {
+          setCancelling(false);
+        }
+      }}
+    >
+      {m.employerDashboard_cancelClaimLabel()}
+    </Button>
   );
 }

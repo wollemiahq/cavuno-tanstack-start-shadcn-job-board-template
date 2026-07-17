@@ -26,7 +26,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
 | `button` | Used (75) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+72 more in the JSON ledger |
-| `button-group` | Used (5) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/talent-filter-controls.tsx`<br>+2 more in the JSON ledger |
+| `button-group` | Used (4) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/talent-filter-controls.tsx`<br>+1 more in the JSON ledger |
 | `calendar` | Available | Installed for adoption when the product needs this behavior. |
 | `card` | Used (32) | `src/components/account-shell.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>+29 more in the JSON ledger |
 | `carousel` | Available | Installed for adoption when the product needs this behavior. |

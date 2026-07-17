@@ -1012,7 +1012,7 @@
   "accountShell_completeProfileLink": "⟦Çóɱþĺéţé þŕóƒíĺé⟧",
   "accountShell_jobsNav": "⟦Ĵóƀš⟧",
   "accountShell_companyProfileNav": "⟦Çóɱþáñý þŕóƒíĺé⟧",
-  "employerOnboarding_connectTitle": "⟦Çóññéçţ ýóúŕ çóɱþáñý⟧",
+  "employerOnboarding_connectTitle": "⟦Ĵóíñ ýóúŕ çóɱþáñý⟧",
   "employerOnboarding_connectSubtitle": "⟦Šéáŕçĥ ƒóŕ ýóúŕ çóɱþáñý óŕ áðð á ñéŵ óñé⟧",
   "employerOnboarding_searchPlaceholder": "⟦Šéáŕçĥ çóɱþáñíéš ƀý ñáɱé...⟧",
   "employerOnboarding_addAsNewCompany": "⟦Áðð “{query}” áš á ñéŵ çóɱþáñý⟧",
@@ -1106,5 +1106,8 @@
   "resumeUpload_keepCopyHint": "⟦Šţóŕéš á çóþý óñ ýóúŕ þŕóƒíĺé šó íţ'š ŕéáðý ţĥé ñéẋţ ţíɱé ýóú áþþĺý.⟧",
   "skillsSection_cancelLabel": "⟦Çáñçéĺ⟧",
   "languagesSection_cancelLabel": "⟦Çáñçéĺ⟧",
-  "languagesSection_editTitle": "⟦Éðíţ ĺáñğúáğé⟧"
+  "languagesSection_editTitle": "⟦Éðíţ ĺáñğúáğé⟧",
+  "employerOnboarding_openGmailLabel": "⟦Óþéñ Ğɱáíĺ⟧",
+  "employerOnboarding_openOutlookLabel": "⟦Óþéñ Óúţĺóóķ⟧",
+  "employerDashboard_websiteProtocolPrefix": "⟦ĥţţþš://⟧"
 }
