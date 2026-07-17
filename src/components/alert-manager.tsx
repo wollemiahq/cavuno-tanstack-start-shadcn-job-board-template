@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
 import { BellRing } from 'lucide-react';
@@ -13,7 +13,6 @@ import {
   CandidateActionFeedback,
   type CandidateActionFeedbackState,
 } from '@/components/candidate-action-feedback';
-import type { LocationSuggestionState } from '@/components/location-combobox';
 import { PlaceTagsField } from '@/components/place-tags-field';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -63,6 +62,13 @@ const REMOTE_LABEL: Record<string, () => string> = {
   remote: m.alertManager_remoteRemote,
 };
 
+/** One board place from the directory (the alert filter option space). */
+export type AlertPlaceOption = {
+  id: string;
+  slug: string | null;
+  name: string;
+};
+
 /** Resolved place-id → display-name map from the board places directory. */
 export type PlaceNameMap = Record<string, string>;
 
@@ -105,7 +111,9 @@ function fromAlert(alert: Alert | null, placeNames: PlaceNameMap): FormState {
   return {
     label: alert?.label ?? '',
     jobFunctions: alert?.filters.jobFunctions.join(', ') ?? '',
-    remoteOptions: alert?.filters.remoteOptions ?? [],
+    // A new alert starts with every workplace type — matching everything,
+    // narrowed by unticking.
+    remoteOptions: alert ? alert.filters.remoteOptions : [...REMOTE_OPTIONS],
     places: (alert?.filters.placeIds ?? []).map((id) => ({
       id,
       name: placeNames[id] ?? id,
@@ -116,14 +124,14 @@ function fromAlert(alert: Alert | null, placeNames: PlaceNameMap): FormState {
 function AlertForm({
   initial,
   placeNames,
-  locationSuggestions,
+  places,
   submitLabel,
   onSubmit,
   onCancel,
 }: {
   initial: Alert | null;
   placeNames: PlaceNameMap;
-  locationSuggestions: LocationSuggestionState;
+  places: AlertPlaceOption[];
   submitLabel: string;
   onSubmit: (body: AlertBody) => Promise<void>;
   onCancel?: () => void;
@@ -133,6 +141,29 @@ function AlertForm({
     fromAlert(initial, placeNames),
   );
   const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
+  // The board places directory is bounded and already loaded — the picker
+  // lists it on focus and filters client-side, same behavior as the post
+  // form's geographic restriction.
+  const [placeQuery, setPlaceQuery] = useState('');
+  const placeChoices = useMemo(
+    () =>
+      places.map((place) => ({
+        id: place.id,
+        slug: place.slug ?? place.id,
+        name: place.name,
+        contextLabel: null,
+        countryCode: null,
+        regionCode: null,
+      })),
+    [places],
+  );
+  const placeSuggestions = useMemo(() => {
+    const query = placeQuery.trim().toLowerCase();
+    if (!query) return placeChoices;
+    return placeChoices.filter((place) =>
+      place.name.toLowerCase().includes(query),
+    );
+  }, [placeChoices, placeQuery]);
 
   // The location filter reveals once the alert names a workplace type (or
   // already carries places) — "remote in Germany", "on-site in Munich".
@@ -251,7 +282,9 @@ function AlertForm({
               placeholder={m.alertManager_locationsPlaceholder()}
               searchingText={m.locationCombobox_searchingText()}
               removeAriaLabel={(name) => m.placeTags_removeAriaLabel({ name })}
-              {...locationSuggestions}
+              suggestions={placeSuggestions}
+              loading={false}
+              onQueryChange={setPlaceQuery}
             />
             <FieldDescription>
               {m.alertManager_locationsHelperText()}
@@ -276,13 +309,15 @@ function AlertForm({
 
 export function AlertManager({
   alerts,
-  placeNames,
-  locationSuggestions,
+  places,
 }: {
   alerts: Alert[];
-  placeNames: PlaceNameMap;
-  locationSuggestions: LocationSuggestionState;
+  places: AlertPlaceOption[];
 }) {
+  const placeNames: PlaceNameMap = useMemo(
+    () => Object.fromEntries(places.map((place) => [place.id, place.name])),
+    [places],
+  );
   const router = useRouter();
   const [editing, setEditing] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -326,7 +361,7 @@ export function AlertManager({
   return (
     <div className="space-y-4" data-test="alert-manager">
       {alerts.length === 0 ? (
-        <Empty className="border">
+        <Empty className="min-h-96 border-0">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <BellRing aria-hidden="true" />
@@ -412,7 +447,7 @@ export function AlertManager({
             key={creating ? 'open' : 'closed'}
             initial={null}
             placeNames={placeNames}
-            locationSuggestions={locationSuggestions}
+            places={places}
             submitLabel={m.alertManager_createAlertLabel()}
             onCancel={() => setCreating(false)}
             onSubmit={async (body) => {
@@ -442,7 +477,7 @@ export function AlertManager({
                 key={editingAlert.id}
                 initial={editingAlert}
                 placeNames={placeNames}
-                locationSuggestions={locationSuggestions}
+                places={places}
                 submitLabel={m.alertManager_saveChangesLabel()}
                 onCancel={() => setEditing(null)}
                 onSubmit={async (body) => {

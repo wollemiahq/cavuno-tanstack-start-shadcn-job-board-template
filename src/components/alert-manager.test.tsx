@@ -9,7 +9,6 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import type { Alert } from '@cavuno/board';
 
 const mocks = vi.hoisted(() => ({
@@ -57,31 +56,13 @@ const secondAlert = {
   label: 'Design roles',
 } satisfies Alert;
 
-const berlin: LocationSuggestionVM = {
-  id: 'place-berlin',
-  slug: 'berlin',
-  name: 'Berlin',
-  contextLabel: 'Germany',
-  countryCode: 'DE',
-  regionCode: null,
-};
+const berlin = { id: 'place-berlin', slug: 'berlin', name: 'Berlin' };
 
 function renderManager({
   alerts = [] as Alert[],
-  placeNames = {} as Record<string, string>,
-  suggestions = [] as LocationSuggestionVM[],
+  places = [] as { id: string; slug: string | null; name: string }[],
 } = {}) {
-  return render(
-    <AlertManager
-      alerts={alerts}
-      placeNames={placeNames}
-      locationSuggestions={{
-        suggestions,
-        loading: false,
-        onQueryChange: vi.fn(),
-      }}
-    />,
-  );
+  return render(<AlertManager alerts={alerts} places={places} />);
 }
 
 afterEach(() => {
@@ -141,7 +122,7 @@ describe('AlertManager', () => {
     expect(sheet).toHaveAttribute('data-side', 'right');
   });
 
-  it('creates the only supported weekly cadence', async () => {
+  it('creates weekly alerts with every workplace type ticked by default', async () => {
     mocks.createMyAlert.mockResolvedValue(undefined);
     renderManager();
 
@@ -150,20 +131,23 @@ describe('AlertManager', () => {
 
     await waitFor(() =>
       expect(mocks.createMyAlert).toHaveBeenCalledWith({
-        data: { frequency: 'weekly' },
+        data: {
+          frequency: 'weekly',
+          remoteOptions: ['on_site', 'hybrid', 'remote'],
+        },
       }),
     );
   });
 
-  it('ties the alert to picked locations once a workplace type is chosen', async () => {
+  it('narrows workplace types and ties the alert to picked locations', async () => {
     mocks.createMyAlert.mockResolvedValue(undefined);
-    renderManager({ suggestions: [berlin] });
+    renderManager({ places: [berlin] });
 
     fireEvent.click(screen.getByRole('button', { name: 'New alert' }));
-    // No workplace type chosen — no location filter offered yet.
-    expect(screen.queryByLabelText('Locations')).not.toBeInTheDocument();
+    // Everything ticked by default → the location filter is offered already.
+    fireEvent.click(screen.getByRole('checkbox', { name: 'On-site' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Hybrid' }));
 
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Remote' }));
     const locations = screen.getByLabelText('Locations');
     fireEvent.change(locations, { target: { value: 'Ber' } });
     fireEvent.click(await screen.findByRole('option', { name: /Berlin/ }));
@@ -190,7 +174,7 @@ describe('AlertManager', () => {
           filters: { ...alert.filters, placeIds: ['place-berlin'] },
         },
       ],
-      placeNames: { 'place-berlin': 'Berlin' },
+      places: [berlin],
     });
 
     expect(screen.getByText(/Berlin/)).toBeInTheDocument();

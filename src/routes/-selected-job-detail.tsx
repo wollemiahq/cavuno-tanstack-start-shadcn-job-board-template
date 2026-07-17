@@ -16,10 +16,13 @@ export function SelectedJobDetail({
   state,
   board,
   user,
+  saveSlot,
 }: {
   state: SelectedJobState;
   board: Awaited<ReturnType<typeof getBoardContext>>;
   user: Awaited<ReturnType<typeof getSessionUser>>;
+  /** Override for surfaces where the job is already saved (saved-jobs page). */
+  saveSlot?: React.ReactNode;
 }) {
   const router = useRouter();
   const returnTo = useLocation({ select: (location) => location.href });
@@ -61,7 +64,9 @@ export function SelectedJobDetail({
         ) : undefined
       }
       saveSlot={
-        state.job ? (
+        saveSlot !== undefined ? (
+          saveSlot
+        ) : state.job ? (
           <SaveJobButton
             jobId={state.job.id}
             viewer={user ? { emailVerified: user.emailVerified } : null}

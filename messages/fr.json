@@ -1099,5 +1099,6 @@
   "experienceSection_editTitle": "Modifier l'expérience",
   "educationSection_editTitle": "Modifier la formation",
   "accountSaved_countOneText": "Vous avez enregistré 1 offre.",
-  "accountSaved_countOtherText": "Vous avez enregistré {count} offres."
+  "accountSaved_countOtherText": "Vous avez enregistré {count} offres.",
+  "accountSaved_savedLabel": "Enregistrée"
 }

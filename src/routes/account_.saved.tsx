@@ -20,7 +20,7 @@ import {
   useNavigate,
   useRouter,
 } from '@tanstack/react-router';
-import { Bookmark, BookmarkMinus } from 'lucide-react';
+import { Bookmark, BookmarkCheck } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getSavedJobs, unsaveJob } from '../server/account';
@@ -172,7 +172,7 @@ function SavedJobsPage() {
                   className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0"
                 >
                   {header}
-                  <Empty className="border">
+                  <Empty className="min-h-[calc(100dvh-16rem)] border-0">
                     <EmptyHeader>
                       <EmptyMedia variant="icon">
                         <Bookmark aria-hidden="true" />
@@ -235,7 +235,6 @@ function SavedJobsPage() {
                                     data: { jobId: saved.jobId },
                                   });
                                   await router.invalidate();
-                                  setFeedback('success');
                                 } catch {
                                   setFeedback('error');
                                 } finally {
@@ -243,7 +242,7 @@ function SavedJobsPage() {
                                 }
                               }}
                             >
-                              <BookmarkMinus aria-hidden />
+                              <BookmarkCheck aria-hidden />
                             </Button>
                           }
                         />
@@ -262,6 +261,37 @@ function SavedJobsPage() {
                     state={selectedJobState}
                     board={board}
                     user={user}
+                    saveSlot={
+                      selectedJobState.job ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="lg"
+                          title={m.accountHome_unsaveLabel()}
+                          disabled={pendingId !== null}
+                          onClick={async () => {
+                            const saved = savedJobs.data.find(
+                              (entry) =>
+                                entry.job?.slug === selectedJobState.job?.slug,
+                            );
+                            if (!saved) return;
+                            setPendingId(saved.id);
+                            setFeedback('idle');
+                            try {
+                              await unsaveJob({ data: { jobId: saved.jobId } });
+                              await router.invalidate();
+                            } catch {
+                              setFeedback('error');
+                            } finally {
+                              setPendingId(null);
+                            }
+                          }}
+                        >
+                          <BookmarkCheck aria-hidden data-icon="inline-start" />
+                          {m.accountSaved_savedLabel()}
+                        </Button>
+                      ) : undefined
+                    }
                   />
                 </SearchResultDetail>
               }

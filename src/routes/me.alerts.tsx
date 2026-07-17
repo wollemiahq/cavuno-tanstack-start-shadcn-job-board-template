@@ -5,18 +5,12 @@
  * remove). The loader also pulls the board places directory once so stored
  * `placeIds` render as names (the alert payload carries ids only).
  */
-import {
-  createFileRoute,
-  getRouteApi,
-  isRedirect,
-  redirect,
-} from '@tanstack/react-router';
+import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router';
 
 import { AlertManager } from '../components/alert-manager';
 import { m } from '../paraglide/messages';
 import { getMyAlerts } from '../server/account';
 import { getSeoBase, searchPlaces } from '../server/queries';
-import { useLocationSuggestions } from './-use-location-suggestions';
 
 import {
   CandidateRouteErrorPage,
@@ -25,8 +19,6 @@ import {
 import { CandidateShell } from '@/components/candidate-shell';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { pageTitle } from '@/lib/page-title';
-
-const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/me/alerts')({
   staticData: { ownsMain: true },
@@ -68,22 +60,13 @@ export const Route = createFileRoute('/me/alerts')({
 
 function AlertsPage() {
   const { alerts, places } = Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
-  const locationSuggestions = useLocationSuggestions(board.language);
-  const placeNames = Object.fromEntries(
-    places.data.map((place) => [place.id, place.name]),
-  );
 
   return (
     <CandidateShell
       title={m.meAlerts_title()}
       description={m.meAlerts_subtitleText()}
     >
-      <AlertManager
-        alerts={alerts.data}
-        placeNames={placeNames}
-        locationSuggestions={locationSuggestions}
-      />
+      <AlertManager alerts={alerts.data} places={places.data} />
     </CandidateShell>
   );
 }

@@ -1099,5 +1099,6 @@
   "experienceSection_editTitle": "⟦Éðíţ éẋþéŕíéñçé⟧",
   "educationSection_editTitle": "⟦Éðíţ éðúçáţíóñ⟧",
   "accountSaved_countOneText": "⟦Ýóú ĥáṽé šáṽéð 1 ĵóƀ.⟧",
-  "accountSaved_countOtherText": "⟦Ýóú ĥáṽé šáṽéð {count} ĵóƀš.⟧"
+  "accountSaved_countOtherText": "⟦Ýóú ĥáṽé šáṽéð {count} ĵóƀš.⟧",
+  "accountSaved_savedLabel": "⟦Šáṽéð⟧"
 }

@@ -1099,5 +1099,6 @@
   "experienceSection_editTitle": "Edit experience",
   "educationSection_editTitle": "Edit education",
   "accountSaved_countOneText": "You have saved 1 job.",
-  "accountSaved_countOtherText": "You have saved {count} jobs."
+  "accountSaved_countOtherText": "You have saved {count} jobs.",
+  "accountSaved_savedLabel": "Saved"
 }

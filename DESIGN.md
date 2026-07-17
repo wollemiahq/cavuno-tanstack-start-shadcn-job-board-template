@@ -281,8 +281,7 @@ Props:
 Props:
 
 - `alerts: { id: string; object: "alert"; label: string | null; frequency: "weekly"; isActive: boolean; filters: { jobFunctions:…`
-- `locationSuggestions: LocationSuggestionState`
-- `placeNames: PlaceNameMap`
+- `places: AlertPlaceOption[]`
 
 ### NotFound — `src/components/app-not-found.tsx`
 

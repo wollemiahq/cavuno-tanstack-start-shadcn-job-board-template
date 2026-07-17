@@ -1099,5 +1099,6 @@
   "experienceSection_editTitle": "Erfahrung bearbeiten",
   "educationSection_editTitle": "Ausbildung bearbeiten",
   "accountSaved_countOneText": "Du hast 1 Job gespeichert.",
-  "accountSaved_countOtherText": "Du hast {count} Jobs gespeichert."
+  "accountSaved_countOtherText": "Du hast {count} Jobs gespeichert.",
+  "accountSaved_savedLabel": "Gespeichert"
 }
