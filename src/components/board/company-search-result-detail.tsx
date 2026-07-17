@@ -82,7 +82,7 @@ function ExpandedCompanyDetailHeader({
           data-slot="company-detail-heading"
           className="col-start-1 row-start-1 flex min-w-0 items-center gap-3"
         >
-          <Avatar size="lg" className="rounded-xl">
+          <Avatar size="lg" className="rounded-xl after:rounded-xl">
             {vm.logoUrl ? (
               <AvatarImage src={vm.logoUrl} alt="" className="rounded-xl" />
             ) : null}

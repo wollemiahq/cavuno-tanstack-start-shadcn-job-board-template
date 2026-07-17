@@ -24,7 +24,7 @@ export function CompanySearchResult({
         className="block rounded-[inherit] p-4 outline-none"
       >
         <div className="flex items-start gap-3">
-          <Avatar size="lg" className="rounded-xl">
+          <Avatar size="lg" className="rounded-xl after:rounded-xl">
             {vm.logoUrl ? (
               <AvatarImage
                 src={vm.logoUrl}
