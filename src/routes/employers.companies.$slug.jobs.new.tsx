@@ -109,6 +109,10 @@ export const Route = createFileRoute('/employers/companies/$slug/jobs/new')({
 
 type OfficeLocationDraft = { key: string; displayName: string };
 
+type PermitType = NonNullable<
+  CreateEmployerJobBody['remotePermits']
+>[number]['type'];
+
 function NewJobPage() {
   const { workspace, remotePermits } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
@@ -119,8 +123,8 @@ function NewJobPage() {
 
   const [form, setForm] = useState({
     title: '',
-    employmentType: 'full_time' as string,
-    seniority: null as string | null,
+    employmentType: 'full_time' as (typeof EMPLOYMENT_TYPES)[number],
+    seniority: null as (typeof SENIORITIES)[number] | null,
     remoteOption: 'hybrid' as (typeof REMOTE_OPTIONS)[number],
     officeLocations: [] as OfficeLocationDraft[],
     permitSelections: [] as RemotePermitSelection[],
@@ -244,10 +248,12 @@ function NewJobPage() {
             remotePermits:
               form.permitSelections.length > 0
                 ? form.permitSelections.map(({ type, value }) => ({
-                    type,
+                    // Selections come from the taxonomy/lexicon choices, so
+                    // the runtime values are always canonical permit types.
+                    type: type as PermitType,
                     value,
                   }))
-                : [{ type: 'worldwide', value: 'worldwide' }],
+                : [{ type: 'worldwide' as const, value: 'worldwide' }],
           }
         : {}),
       ...(salaryRange
@@ -261,7 +267,7 @@ function NewJobPage() {
       ...(form.applyMethod === 'external'
         ? { applicationUrl: normalizeApplicationTarget(form.applicationTarget) }
         : {}),
-    } as CreateEmployerJobBody;
+    } satisfies CreateEmployerJobBody;
 
     setStatus('saving');
     setMessage('');
@@ -316,7 +322,11 @@ function NewJobPage() {
                     items={employmentItems}
                     value={form.employmentType}
                     onValueChange={(value) =>
-                      set('employmentType', (value as string) ?? 'full_time')
+                      set(
+                        'employmentType',
+                        (value as (typeof EMPLOYMENT_TYPES)[number] | null) ??
+                          'full_time',
+                      )
                     }
                   >
                     <SelectTrigger id="job-employment-type" className="w-full">
@@ -339,7 +349,10 @@ function NewJobPage() {
                     items={seniorityItems}
                     value={form.seniority}
                     onValueChange={(value) =>
-                      set('seniority', (value as string | null) ?? null)
+                      set(
+                        'seniority',
+                        (value as (typeof SENIORITIES)[number] | null) ?? null,
+                      )
                     }
                   >
                     <SelectTrigger id="job-seniority" className="w-full">
