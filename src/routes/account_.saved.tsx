@@ -171,8 +171,9 @@ function SavedJobsPage() {
                   data-slot="saved-jobs-empty"
                   className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0"
                 >
-                  {header}
-                  <Empty className="min-h-[calc(100dvh-16rem)] border-0">
+                  {/* No header here — the Empty composition IS the page when
+                      there is nothing saved; a header above it repeats it. */}
+                  <Empty className="min-h-[calc(100dvh-12rem)] border-0">
                     <EmptyHeader>
                       <EmptyMedia variant="icon">
                         <Bookmark aria-hidden="true" />

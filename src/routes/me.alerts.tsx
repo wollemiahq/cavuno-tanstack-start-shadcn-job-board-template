@@ -60,11 +60,14 @@ export const Route = createFileRoute('/me/alerts')({
 
 function AlertsPage() {
   const { alerts, places } = Route.useLoaderData();
+  // With no alerts the Empty composition IS the page — repeating the page
+  // header above it reads the same thing twice.
+  const hasAlerts = alerts.data.length > 0;
 
   return (
     <CandidateShell
-      title={m.meAlerts_title()}
-      description={m.meAlerts_subtitleText()}
+      title={hasAlerts ? m.meAlerts_title() : undefined}
+      description={hasAlerts ? m.meAlerts_subtitleText() : undefined}
     >
       <AlertManager alerts={alerts.data} places={places.data} />
     </CandidateShell>

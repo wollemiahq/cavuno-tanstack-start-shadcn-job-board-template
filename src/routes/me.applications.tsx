@@ -101,17 +101,20 @@ function ApplicationsPage() {
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [feedback, setFeedback] =
     useState<CandidateActionFeedbackState>('idle');
+  // With no applications the Empty composition IS the page — repeating the
+  // page header above it reads the same thing twice.
+  const hasApplications = applications.data.length > 0;
 
   return (
     <CandidateShell
-      title={m.meApplications_title()}
-      description={m.meApplications_subheading()}
+      title={hasApplications ? m.meApplications_title() : undefined}
+      description={hasApplications ? m.meApplications_subheading() : undefined}
     >
       <div className="space-y-6">
         <CandidateActionFeedback state={feedback} />
 
         {applications.data.length === 0 ? (
-          <Empty className="border">
+          <Empty className="min-h-96 border-0">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <Send aria-hidden="true" />
