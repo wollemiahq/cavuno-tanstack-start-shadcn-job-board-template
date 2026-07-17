@@ -50,7 +50,7 @@ export const Route = createFileRoute('/auth/join')({
     const seo = await getSeoBase();
     return { boardName: board.name, seo };
   },
-  head: ({ loaderData }) =>
+  head: ({ loaderData, match }) =>
     loaderData
       ? {
           meta: [
@@ -63,7 +63,21 @@ export const Route = createFileRoute('/auth/join')({
             },
           ],
         }
-      : { meta: [{ title: headTitle(undefined, m.authJoin_title()) }] },
+      : {
+          meta: [
+            {
+              // A board with signup disabled throws notFound() here, and the
+              // head still runs — so without this the 404 would advertise a
+              // join page that does not exist.
+              title: headTitle(
+                undefined,
+                match.status === 'notFound'
+                  ? m.notFound_heading()
+                  : m.authJoin_title(),
+              ),
+            },
+          ],
+        },
   component: JoinPage,
   notFoundComponent: () => (
     <div>

@@ -63,7 +63,7 @@ export const Route = createFileRoute('/talent/')({
       throw error;
     }
   },
-  head: ({ loaderData }) =>
+  head: ({ loaderData, match }) =>
     loaderData
       ? {
           meta: [
@@ -84,7 +84,22 @@ export const Route = createFileRoute('/talent/')({
             { rel: 'canonical', href: `${loaderData.seo.origin}/talent` },
           ],
         }
-      : { meta: [{ title: headTitle(undefined, m.talentDirectory_title()) }] },
+      : {
+          meta: [
+            {
+              // A loader that threw notFound() still runs this head, so a
+              // page that does not exist would otherwise advertise itself as
+              // the talent directory. No loader data means no board name, so
+              // the seam degrades to a bare title either way.
+              title: headTitle(
+                undefined,
+                match.status === 'notFound'
+                  ? m.notFound_heading()
+                  : m.talentDirectory_title(),
+              ),
+            },
+          ],
+        },
   component: TalentDirectoryPage,
   notFoundComponent: TalentDirectoryNotFound,
 });
