@@ -13,8 +13,10 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { pageTitle } from '@/lib/page-title';
 import { m } from '@/paraglide/messages';
 import { getBlocked, getInbox } from '@/server/messaging';
+import { getSeoBase } from '@/server/queries';
 
 function asView(value: unknown): MessagesView {
   return value === 'archived' || value === 'blocked' ? value : 'inbox';
@@ -30,13 +32,15 @@ export const Route = createFileRoute('/messages')({
   },
   loaderDeps: ({ search }) => ({ view: asView(search.view) }),
   loader: async ({ deps }) => {
+    const seo = await getSeoBase();
     try {
       if (deps.view === 'blocked') {
-        return { view: 'blocked' as const, blocked: await getBlocked() };
+        return { view: 'blocked' as const, blocked: await getBlocked(), seo };
       }
       return {
         view: deps.view,
         inbox: await getInbox({ data: { archived: deps.view === 'archived' } }),
+        seo,
       };
     } catch (error) {
       if (isRedirect(error)) throw error;
@@ -51,7 +55,11 @@ export const Route = createFileRoute('/messages')({
       throw redirect({ to: '/auth/sign-in', search: { returnTo } });
     }
   },
-  head: () => ({ meta: [{ title: m.messagesPage_title() }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      { title: pageTitle(m.messagesPage_title(), loaderData?.seo.boardName) },
+    ],
+  }),
   component: MessagesPage,
 });
 

@@ -26,6 +26,12 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   return { ...actual, useRouter: () => ({ invalidate: mocks.invalidate }) };
 });
 
+// The route threads getSeoBase through its loader for the page title; the
+// module resolves cloudflare:workers, so stub the seam for jsdom.
+vi.mock('../server/queries', () => ({
+  getSeoBase: vi.fn().mockResolvedValue({ boardName: 'Acme Board' }),
+}));
+
 vi.mock('../server/paywall', () => ({
   getAccessGrant: mocks.getAccessGrant,
   getPaywallOffers: mocks.getPaywallOffers,

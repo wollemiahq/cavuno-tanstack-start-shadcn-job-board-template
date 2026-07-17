@@ -27,6 +27,7 @@ import {
   openBillingPortal,
   startCheckout,
 } from '../server/paywall';
+import { getSeoBase } from '../server/queries';
 
 import {
   CandidateActionFeedback,
@@ -41,6 +42,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
+import { pageTitle } from '@/lib/page-title';
 import type { AccessCheckoutSession, PaywallOffer } from '@cavuno/board';
 
 const RETURN_PATH = '/account/access';
@@ -69,7 +71,7 @@ export const Route = createFileRoute('/account_/access')({
         getAccessGrant(),
         getPaywallOffers(),
       ]);
-      return { grant, offers: offers.data };
+      return { grant, offers: offers.data, seo: await getSeoBase() };
     } catch (error) {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
@@ -88,6 +90,13 @@ export const Route = createFileRoute('/account_/access')({
       throw error;
     }
   },
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(m.accountAccess_title(), loaderData?.seo.boardName),
+      },
+    ],
+  }),
   component: AccessPageShell,
 });
 

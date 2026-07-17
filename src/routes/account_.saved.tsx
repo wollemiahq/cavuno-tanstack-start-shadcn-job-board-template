@@ -24,6 +24,7 @@ import { Bookmark, BookmarkMinus } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getSavedJobs, unsaveJob } from '../server/account';
+import { getSeoBase } from '../server/queries';
 import { SelectedJobDetail } from './-selected-job-detail';
 import { useSelectedJob } from './-use-selected-job';
 
@@ -54,6 +55,7 @@ import {
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
+import { pageTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
 
@@ -67,7 +69,8 @@ export const Route = createFileRoute('/account_/saved')({
   errorComponent: CandidateRouteErrorPage,
   loader: async () => {
     try {
-      return await getSavedJobs();
+      const [saved, seo] = await Promise.all([getSavedJobs(), getSeoBase()]);
+      return { ...saved, seo };
     } catch (error) {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
@@ -86,7 +89,16 @@ export const Route = createFileRoute('/account_/saved')({
       throw error;
     }
   },
-  head: () => ({ meta: [{ title: m.accountShell_savedJobsNav() }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          m.accountShell_savedJobsNav(),
+          loaderData?.seo.boardName,
+        ),
+      },
+    ],
+  }),
   component: SavedJobsPage,
 });
 

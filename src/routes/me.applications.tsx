@@ -16,6 +16,7 @@ import { Send } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getApplications, withdrawApplication } from '../server/applications';
+import { getSeoBase } from '../server/queries';
 
 import {
   CandidateActionFeedback,
@@ -44,6 +45,7 @@ import {
   ItemTitle,
 } from '@/components/ui/item';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
+import { pageTitle } from '@/lib/page-title';
 import type { Application } from '@cavuno/board';
 
 const STATUS_LABEL: Record<Application['status'], () => string> = {
@@ -60,7 +62,11 @@ export const Route = createFileRoute('/me/applications')({
   errorComponent: CandidateRouteErrorPage,
   loader: async () => {
     try {
-      return await getApplications({ data: undefined });
+      const [applications, seo] = await Promise.all([
+        getApplications({ data: undefined }),
+        getSeoBase(),
+      ]);
+      return { ...applications, seo };
     } catch (error) {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
@@ -79,7 +85,13 @@ export const Route = createFileRoute('/me/applications')({
       throw error;
     }
   },
-  head: () => ({ meta: [{ title: m.meApplications_title() }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(m.meApplications_title(), loaderData?.seo.boardName),
+      },
+    ],
+  }),
   component: ApplicationsPage,
 });
 

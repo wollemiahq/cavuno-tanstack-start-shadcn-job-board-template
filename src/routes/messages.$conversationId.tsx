@@ -13,8 +13,10 @@ import {
 
 import { Page, PageContent } from '@/components/layout/page';
 import { MessagingLayout } from '@/components/messages/messaging-layout';
+import { pageTitle } from '@/lib/page-title';
 import { m } from '@/paraglide/messages';
 import { getInbox, getThread } from '@/server/messaging';
+import { getSeoBase } from '@/server/queries';
 
 type ThreadSearch = { view?: 'archived' };
 
@@ -32,7 +34,7 @@ export const Route = createFileRoute('/messages/$conversationId')({
         getThread({ data: { id: params.conversationId } }),
         getInbox({ data: { archived: deps.view === 'archived' } }),
       ]);
-      return { ...thread, inbox, view: deps.view };
+      return { ...thread, inbox, view: deps.view, seo: await getSeoBase() };
     } catch (error) {
       if (isRedirect(error)) throw error;
       if (String(error).includes('EMAIL_UNVERIFIED')) {
@@ -47,7 +49,16 @@ export const Route = createFileRoute('/messages/$conversationId')({
       });
     }
   },
-  head: () => ({ meta: [{ title: m.messagesPage_conversationTitle() }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          m.messagesPage_conversationTitle(),
+          loaderData?.seo.boardName,
+        ),
+      },
+    ],
+  }),
   component: ThreadPage,
 });
 

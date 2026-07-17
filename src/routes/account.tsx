@@ -23,6 +23,7 @@ import { ProfileForm } from '../components/profile-form';
 import { SkillsSection } from '../components/skills-section';
 import { m } from '../paraglide/messages';
 import { getAccount } from '../server/account';
+import { getSeoBase } from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import {
@@ -36,6 +37,7 @@ import {
 } from '@/components/profile-completeness-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
+import { pageTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
 
@@ -156,7 +158,8 @@ export const Route = createFileRoute('/account')({
   errorComponent: CandidateRouteErrorPage,
   loader: async () => {
     try {
-      return await getAccount();
+      const [account, seo] = await Promise.all([getAccount(), getSeoBase()]);
+      return { ...account, seo };
     } catch (error) {
       // gatedRead's `/password` wall redirect (or any framework redirect) must
       // pass through — only a genuine load failure falls back to sign-in.
@@ -177,6 +180,10 @@ export const Route = createFileRoute('/account')({
       throw error;
     }
   },
-  head: () => ({ meta: [{ title: m.accountHome_title() }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      { title: pageTitle(m.accountHome_title(), loaderData?.seo.boardName) },
+    ],
+  }),
   component: AccountPage,
 });

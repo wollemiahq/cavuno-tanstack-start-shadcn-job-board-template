@@ -15,7 +15,7 @@ import {
 import { AlertManager } from '../components/alert-manager';
 import { m } from '../paraglide/messages';
 import { getMyAlerts } from '../server/account';
-import { searchPlaces } from '../server/queries';
+import { getSeoBase, searchPlaces } from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import {
@@ -24,6 +24,7 @@ import {
 } from '@/components/candidate-route-state';
 import { CandidateShell } from '@/components/candidate-shell';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
+import { pageTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
 
@@ -33,13 +34,14 @@ export const Route = createFileRoute('/me/alerts')({
   errorComponent: CandidateRouteErrorPage,
   loader: async () => {
     try {
-      const [alerts, places] = await Promise.all([
+      const [alerts, places, seo] = await Promise.all([
         getMyAlerts(),
         // Name resolution only — an unavailable directory must not take the
         // alerts page down (ids render as-is instead).
         searchPlaces({ data: {} }).catch(() => ({ data: [] })),
+        getSeoBase(),
       ]);
-      return { alerts, places };
+      return { alerts, places, seo };
     } catch (error) {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
@@ -58,7 +60,9 @@ export const Route = createFileRoute('/me/alerts')({
       throw error;
     }
   },
-  head: () => ({ meta: [{ title: m.meAlerts_title() }] }),
+  head: ({ loaderData }) => ({
+    meta: [{ title: pageTitle(m.meAlerts_title(), loaderData?.seo.boardName) }],
+  }),
   component: AlertsPage,
 });
 

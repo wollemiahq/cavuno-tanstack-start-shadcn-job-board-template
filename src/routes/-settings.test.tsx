@@ -3,6 +3,12 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+// The route threads getSeoBase through its loader for the page title; the
+// module resolves cloudflare:workers, so stub the seam for jsdom.
+vi.mock('../server/queries', () => ({
+  getSeoBase: vi.fn().mockResolvedValue({ boardName: 'Acme Board' }),
+}));
+
 vi.mock('../server/settings', () => ({
   getNotificationPreferences: vi.fn(),
   unsubscribeWithToken: vi.fn(),

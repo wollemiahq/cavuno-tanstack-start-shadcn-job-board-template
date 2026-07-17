@@ -16,6 +16,7 @@ import {
 
 import { NotificationSettings } from '../components/notification-settings';
 import { m } from '../paraglide/messages';
+import { getSeoBase } from '../server/queries';
 import {
   getNotificationPreferences,
   unsubscribeWithToken,
@@ -30,6 +31,7 @@ import { Page, PageContent } from '@/components/layout/page';
 import { buttonVariants } from '@/components/ui/button';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
+import { pageTitle } from '@/lib/page-title';
 
 type Channel = 'messageEmails' | 'applicationEmails';
 
@@ -57,6 +59,7 @@ export const Route = createFileRoute('/settings')({
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
+    const seo = await getSeoBase();
     if (deps.token && deps.boardUserId && deps.channel) {
       try {
         await unsubscribeWithToken({
@@ -66,14 +69,14 @@ export const Route = createFileRoute('/settings')({
             channel: deps.channel,
           },
         });
-        return { mode: 'unsubscribed' as const, channel: deps.channel };
+        return { mode: 'unsubscribed' as const, channel: deps.channel, seo };
       } catch {
-        return { mode: 'unsubscribe-failed' as const };
+        return { mode: 'unsubscribe-failed' as const, seo };
       }
     }
     try {
       const preferences = await getNotificationPreferences();
-      return { mode: 'settings' as const, preferences: preferences.data };
+      return { mode: 'settings' as const, preferences: preferences.data, seo };
     } catch (error) {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
@@ -92,7 +95,9 @@ export const Route = createFileRoute('/settings')({
       throw error;
     }
   },
-  head: () => ({ meta: [{ title: m.settings_title() }] }),
+  head: ({ loaderData }) => ({
+    meta: [{ title: pageTitle(m.settings_title(), loaderData?.seo.boardName) }],
+  }),
   component: SettingsPage,
 });
 
