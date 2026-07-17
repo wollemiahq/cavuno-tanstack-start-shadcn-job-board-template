@@ -1,4 +1,3 @@
-/** OAuth completion landing — exchanges the callback one-time token. */
 import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { AuthCard } from '../components/auth-form';
@@ -8,8 +7,11 @@ import {
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { exchangeOAuth } from '../server/auth';
+/** OAuth completion landing — exchanges the callback one-time token. */
+import { getSeoBase } from '../server/queries';
 
 import { buttonVariants } from '@/components/ui/button';
+import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 
 interface OAuthCompleteSearch {
@@ -27,12 +29,28 @@ export const Route = createFileRoute('/auth/oauth-complete')({
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
-    if (!deps.token) return { status: 'missing-token' as const };
-    const result = await exchangeOAuth({ data: { token: deps.token } });
-    if (!result.ok) return { status: 'invalid' as const };
+    // Started before the token branch so it overlaps the exchange.
+    const seoPromise = getSeoBase();
+    if (!deps.token) {
+      return { status: 'missing-token' as const, seo: await seoPromise };
+    }
+    const [result, seo] = await Promise.all([
+      exchangeOAuth({ data: { token: deps.token } }),
+      seoPromise,
+    ]);
+    if (!result.ok) return { status: 'invalid' as const, seo };
     throw redirect({ href: deps.returnTo });
   },
-  head: () => ({ meta: [{ title: m.authOauthComplete_title() }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: headTitle(
+          loaderData?.seo.boardName,
+          m.authOauthComplete_title(),
+        ),
+      },
+    ],
+  }),
   component: OAuthCompletePage,
 });
 

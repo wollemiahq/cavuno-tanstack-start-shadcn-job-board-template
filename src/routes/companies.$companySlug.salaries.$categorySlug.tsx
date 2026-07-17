@@ -40,6 +40,7 @@ import {
 } from '@/components/board/salary-sections';
 import { JsonLd } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
+import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute(
   '/companies/$companySlug/salaries/$categorySlug',
@@ -78,11 +79,13 @@ export const Route = createFileRoute(
       ? {
           meta: [
             {
-              title: m.companySalaries_categoryMetaTitle({
-                company: loaderData.salary.companyName,
-                category: loaderData.salary.categoryName,
-                boardName: loaderData.seo.boardName,
-              }),
+              title: headTitle(
+                loaderData?.seo.boardName,
+                m.companySalaries_categoryMetaTitle({
+                  company: loaderData.salary.companyName,
+                  category: loaderData.salary.categoryName,
+                }),
+              ),
             },
             {
               name: 'description',

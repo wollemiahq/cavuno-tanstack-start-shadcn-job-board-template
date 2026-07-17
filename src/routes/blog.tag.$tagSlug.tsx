@@ -7,6 +7,7 @@ import { createFileRoute, Link, notFound } from '@tanstack/react-router';
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
+import { headTitle } from '@/lib/page-title';
 import { m } from '@/paraglide/messages';
 import { getBlogTag, getSeoBase, listBlogPosts } from '@/server/queries';
 
@@ -45,7 +46,15 @@ export const Route = createFileRoute('/blog/tag/$tagSlug')({
     loaderData
       ? {
           meta: [
-            { title: m.blogTag_metaTitle({ tag: loaderData.tag.name }) },
+            {
+              // `Tag | Blog | Board` — the section segment reuses the
+              // breadcrumb's key, so renaming the section moves both.
+              title: headTitle(
+                loaderData?.seo.boardName,
+                loaderData.tag.name,
+                m.blogIndex_title(),
+              ),
+            },
             {
               name: 'description',
               content:

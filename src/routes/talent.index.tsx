@@ -25,6 +25,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { headTitle } from '@/lib/page-title';
 import {
   parseTalentSearch,
   talentListingLoaderDeps,
@@ -66,7 +67,12 @@ export const Route = createFileRoute('/talent/')({
     loaderData
       ? {
           meta: [
-            { title: m.talentDirectory_title() },
+            {
+              title: headTitle(
+                loaderData?.seo.boardName,
+                m.talentDirectory_title(),
+              ),
+            },
             {
               name: 'description',
               content: m.talentDirectory_metaDescription({
@@ -78,7 +84,7 @@ export const Route = createFileRoute('/talent/')({
             { rel: 'canonical', href: `${loaderData.seo.origin}/talent` },
           ],
         }
-      : { meta: [{ title: m.talentDirectory_title() }] },
+      : { meta: [{ title: headTitle(undefined, m.talentDirectory_title()) }] },
   component: TalentDirectoryPage,
   notFoundComponent: TalentDirectoryNotFound,
 });

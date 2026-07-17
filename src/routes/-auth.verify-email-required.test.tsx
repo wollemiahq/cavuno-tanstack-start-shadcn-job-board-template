@@ -18,6 +18,8 @@ import {
   vi,
 } from 'vitest';
 
+vi.mock('../server/queries', () => ({ getSeoBase: vi.fn() }));
+
 import type { Resume } from '@cavuno/board';
 
 type AuthResult = { ok: true } | { ok: false; message: string };

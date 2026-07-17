@@ -177,7 +177,7 @@ describe('canonical talent profile route', () => {
 
     expect(head({ loaderData } as never)).toMatchObject({
       meta: expect.arrayContaining([
-        { title: 'Ada Lovelace — Acme Careers' },
+        { title: 'Ada Lovelace | Acme Careers' },
         { name: 'description', content: 'Robotics engineer' },
       ]),
       links: [

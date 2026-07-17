@@ -21,6 +21,7 @@ import {
   type RailItem,
 } from '@/components/board/salary-sections';
 import { JsonLd } from '@/components/json-ld';
+import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/salaries/companies/')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -36,9 +37,10 @@ export const Route = createFileRoute('/salaries/companies/')({
       ? {
           meta: [
             {
-              title: m.salaryHub_companiesMetaTitle({
-                boardName: loaderData.seo.boardName,
-              }),
+              title: headTitle(
+                loaderData?.seo.boardName,
+                m.salaryHub_companiesMetaTitle(),
+              ),
             },
             {
               name: 'description',

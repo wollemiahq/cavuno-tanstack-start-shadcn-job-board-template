@@ -11,6 +11,7 @@ import {
   listCompanies,
   searchCompanies,
 } from '../server/employers';
+import { getSeoBase } from '../server/queries';
 
 import { EmployerIdentityAvatar } from '@/components/account-shell';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
@@ -51,6 +52,7 @@ import {
   ItemTitle,
 } from '@/components/ui/item';
 import { Spinner } from '@/components/ui/spinner';
+import { headTitle } from '@/lib/page-title';
 import type { CompanyMembership } from '@cavuno/board';
 
 export const Route = createFileRoute('/employers/dashboard')({
@@ -60,12 +62,25 @@ export const Route = createFileRoute('/employers/dashboard')({
     search.add === true || search.add === 'true' ? { add: true } : {},
   loader: async () => {
     try {
-      return await listCompanies();
+      const [companies, seo] = await Promise.all([
+        listCompanies(),
+        getSeoBase(),
+      ]);
+      return { ...companies, seo };
     } catch (error) {
       handleEmployerLoaderError(error, '/employers/dashboard');
     }
   },
-  head: () => ({ meta: [{ title: m.employerDashboard_metaTitle() }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: headTitle(
+          loaderData?.seo.boardName,
+          m.employerDashboard_metaTitle(),
+        ),
+      },
+    ],
+  }),
   staticData: { ownsMain: true },
   component: EmployerDashboard,
 });

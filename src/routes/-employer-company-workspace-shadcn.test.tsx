@@ -12,7 +12,7 @@ import {
   waitFor,
   within,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   addApplicantNote: vi.fn(),
@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   deleteJob: vi.fn(),
   getCompanyWorkspace: vi.fn(),
   getCompany: vi.fn(),
+  getSeoBase: vi.fn(),
   getPipeline: vi.fn(),
   invalidate: vi.fn(),
   listCompanyJobs: vi.fn(),
@@ -88,6 +89,7 @@ vi.mock('../server/employers', () => ({
 
 vi.mock('../server/queries', () => ({
   getCompany: mocks.getCompany,
+  getSeoBase: mocks.getSeoBase,
   listCompanyJobs: mocks.listCompanyJobs,
 }));
 
@@ -133,6 +135,11 @@ afterEach(() => {
   cleanup();
   vi.clearAllMocks();
   mocks.invalidate.mockResolvedValue(undefined);
+});
+
+beforeEach(() => {
+  // Every workspace loader now resolves the board name for its page title.
+  mocks.getSeoBase.mockResolvedValue({ boardName: 'Acme Board' });
 });
 
 describe('employer company workspace', () => {

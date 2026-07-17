@@ -9,8 +9,10 @@ import {
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { forgotPassword } from '../server/auth';
+import { getSeoBase } from '../server/queries';
 
 import { Button, buttonVariants } from '@/components/ui/button';
+import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/auth/forgot-password')({
@@ -20,7 +22,12 @@ export const Route = createFileRoute('/auth/forgot-password')({
         ? candidateReturnTo(search.returnTo)
         : undefined,
   }),
-  head: () => ({ meta: [{ title: m.authForgotPassword_title() }] }),
+  loader: () => getSeoBase(),
+  head: ({ loaderData }) => ({
+    meta: [
+      { title: headTitle(loaderData?.boardName, m.authForgotPassword_title()) },
+    ],
+  }),
   component: ForgotPasswordPage,
 });
 

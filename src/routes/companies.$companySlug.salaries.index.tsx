@@ -30,6 +30,7 @@ import {
 } from '@/components/board/salary-sections';
 import { JsonLd } from '@/components/json-ld';
 import { Text } from '@/components/text';
+import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/companies/$companySlug/salaries/')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -57,10 +58,12 @@ export const Route = createFileRoute('/companies/$companySlug/salaries/')({
       ? {
           meta: [
             {
-              title: m.companySalaries_metaTitle({
-                company: loaderData.salary.companyName,
-                boardName: loaderData.seo.boardName,
-              }),
+              title: headTitle(
+                loaderData?.seo.boardName,
+                m.companySalaries_metaTitle({
+                  company: loaderData.salary.companyName,
+                }),
+              ),
             },
             {
               name: 'description',

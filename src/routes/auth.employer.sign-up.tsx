@@ -12,6 +12,7 @@ import { getBoardContext } from '../server/queries';
 import { RheaRegistrationPage } from '@/components/rhea-auth-pilot';
 import { buttonVariants } from '@/components/ui/button';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
+import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/auth/employer/sign-up')({
   loader: async () => {
@@ -19,7 +20,11 @@ export const Route = createFileRoute('/auth/employer/sign-up')({
     if (!board.features.employers) throw notFound();
     return { boardName: board.name };
   },
-  head: () => ({ meta: [{ title: m.authEmployerSignUp_title() }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      { title: headTitle(loaderData?.boardName, m.authEmployerSignUp_title()) },
+    ],
+  }),
   component: EmployerSignUpPage,
   notFoundComponent: () => (
     <div>

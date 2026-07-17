@@ -23,6 +23,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/p/$handle')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -43,12 +44,11 @@ export const Route = createFileRoute('/p/$handle')({
       ? {
           meta: [
             {
-              title: m.publicProfile_pageTitle({
-                name:
-                  loaderData.profile.displayName ??
+              title: headTitle(
+                loaderData.seo.boardName,
+                loaderData.profile.displayName ??
                   m.publicProfile_profileFallbackLabel(),
-                boardName: loaderData.seo.boardName,
-              }),
+              ),
             },
             ...(loaderData.profile.headline
               ? [

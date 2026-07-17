@@ -19,7 +19,7 @@ import { handleEmployerLoaderError } from '../lib/employer-loader-auth';
 import { isRichTextEmpty } from '../lib/post-form';
 import { m } from '../paraglide/messages';
 import { getCompanyWorkspace, updateCompany } from '../server/employers';
-import { getCompany } from '../server/queries';
+import { getSeoBase, getCompany } from '../server/queries';
 
 import { EmployerCompanyShell } from '@/components/account-shell';
 import { RichTextEditor } from '@/components/rich-text-editor';
@@ -39,17 +39,19 @@ import {
   InputGroupInput,
   InputGroupText,
 } from '@/components/ui/input-group';
+import { headTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/employers/companies/$slug/profile')({
   loader: async ({ params }) => {
     try {
-      const [workspace, company] = await Promise.all([
+      const [workspace, company, seo] = await Promise.all([
         getCompanyWorkspace({ data: { slug: params.slug } }),
         getCompany({ data: { companySlug: params.slug } }),
+        getSeoBase(),
       ]);
-      return { workspace, company };
+      return { workspace, company, seo };
     } catch (error) {
       handleEmployerLoaderError(
         error,
@@ -57,7 +59,16 @@ export const Route = createFileRoute('/employers/companies/$slug/profile')({
       );
     }
   },
-  head: () => ({ meta: [{ title: m.employerCompany_metaTitle() }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: headTitle(
+          loaderData?.seo.boardName,
+          m.employerCompany_metaTitle(),
+        ),
+      },
+    ],
+  }),
   staticData: { ownsMain: true },
   component: CompanyProfilePage,
 });

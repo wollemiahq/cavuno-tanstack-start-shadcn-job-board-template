@@ -6,8 +6,10 @@ import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { AuthCard, Field, FormError } from '../components/auth-form';
 import { m } from '../paraglide/messages';
 import { verifyBoardPassword } from '../server/board-access';
+import { getSeoBase } from '../server/queries';
 
 import { Button } from '@/components/ui/button';
+import { headTitle } from '@/lib/page-title';
 
 /**
  * The board-password challenge. A gated content read on a protected board
@@ -20,7 +22,10 @@ export const Route = createFileRoute('/password')({
   validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
     redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
   }),
-  head: () => ({ meta: [{ title: m.passwordPage_title() }] }),
+  loader: () => getSeoBase(),
+  head: ({ loaderData }) => ({
+    meta: [{ title: headTitle(loaderData?.boardName, m.passwordPage_title()) }],
+  }),
   component: PasswordPage,
 });
 

@@ -12,6 +12,7 @@ import { PublicContentPending } from '@/components/board/public-content-pending'
 import { JsonLd } from '@/components/json-ld';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { initialsOf } from '@/lib/initials';
+import { headTitle } from '@/lib/page-title';
 import { m } from '@/paraglide/messages';
 import { getBlogAuthor, getSeoBase, listBlogPosts } from '@/server/queries';
 
@@ -55,7 +56,13 @@ export const Route = createFileRoute('/blog/author/$authorSlug')({
       ? {
           meta: [
             {
-              title: m.blogAuthor_metaTitle({ author: loaderData.author.name }),
+              // `Author | Blog | Board` — the section segment reuses the
+              // breadcrumb's key, so renaming the section moves both.
+              title: headTitle(
+                loaderData.seo.boardName,
+                loaderData.author.name,
+                m.blogIndex_title(),
+              ),
             },
             {
               name: 'description',

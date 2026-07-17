@@ -16,6 +16,7 @@ import {
   companiesListingLoaderDeps,
   parseCompaniesSearch,
 } from '@/lib/companies-search';
+import { headTitle } from '@/lib/page-title';
 import { pageToOffset } from '@/lib/pagination';
 import { ProgrammaticCompaniesView } from '@/routes/-programmatic-companies-view';
 
@@ -50,7 +51,12 @@ export const Route = createFileRoute('/companies/')({
     loaderData
       ? {
           meta: [
-            { title: m.companiesIndex_metaTitle() },
+            {
+              title: headTitle(
+                loaderData?.seo.boardName,
+                m.companiesIndex_metaTitle(),
+              ),
+            },
             {
               name: 'description',
               content: m.companiesIndex_metaDescription({
@@ -62,7 +68,9 @@ export const Route = createFileRoute('/companies/')({
             { rel: 'canonical', href: `${loaderData.seo.origin}/companies` },
           ],
         }
-      : { meta: [{ title: m.companiesIndex_metaTitle() }] },
+      : {
+          meta: [{ title: headTitle(undefined, m.companiesIndex_metaTitle()) }],
+        },
   component: CompaniesPage,
 });
 

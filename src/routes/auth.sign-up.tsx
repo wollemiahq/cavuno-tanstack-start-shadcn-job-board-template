@@ -11,6 +11,7 @@ import { getBoardContext } from '../server/queries';
 
 import { RheaRegistrationPage } from '@/components/rhea-auth-pilot';
 import { buttonVariants } from '@/components/ui/button';
+import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/auth/sign-up')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -23,7 +24,9 @@ export const Route = createFileRoute('/auth/sign-up')({
     const board = await getBoardContext();
     return { boardName: board.name };
   },
-  head: () => ({ meta: [{ title: m.authSignUp_title() }] }),
+  head: ({ loaderData }) => ({
+    meta: [{ title: headTitle(loaderData?.boardName, m.authSignUp_title()) }],
+  }),
   component: SignUpPage,
 });
 

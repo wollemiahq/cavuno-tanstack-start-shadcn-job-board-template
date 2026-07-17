@@ -7,6 +7,7 @@ import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
 import { Badge } from '@/components/ui/badge';
+import { headTitle } from '@/lib/page-title';
 import { m } from '@/paraglide/messages';
 import {
   getSeoBase,
@@ -47,7 +48,9 @@ export const Route = createFileRoute('/blog/')({
     loaderData
       ? {
           meta: [
-            { title: m.blogIndex_title() },
+            {
+              title: headTitle(loaderData?.seo.boardName, m.blogIndex_title()),
+            },
             {
               name: 'description',
               content: m.blogIndex_metaDescription({
@@ -57,7 +60,7 @@ export const Route = createFileRoute('/blog/')({
           ],
           links: [{ rel: 'canonical', href: `${loaderData.seo.origin}/blog` }],
         }
-      : { meta: [{ title: m.blogIndex_title() }] },
+      : { meta: [{ title: headTitle(undefined, m.blogIndex_title()) }] },
   component: BlogPage,
 });
 

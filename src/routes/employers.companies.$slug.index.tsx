@@ -1,8 +1,3 @@
-/**
- * Company workspace — Jobs tab: job management, publishing and checkout.
- * Creating a job lives on its own page (`jobs/new`), mirroring the public
- * post form.
- */
 import { useState } from 'react';
 
 import { boardCopy } from '#/copy';
@@ -29,6 +24,12 @@ import {
   publishJob,
   unpublishJob,
 } from '../server/employers';
+/**
+ * Company workspace — Jobs tab: job management, publishing and checkout.
+ * Creating a job lives on its own page (`jobs/new`), mirroring the public
+ * post form.
+ */
+import { getSeoBase } from '../server/queries';
 
 import { EmployerCompanyShell } from '@/components/account-shell';
 import { Badge } from '@/components/ui/badge';
@@ -51,6 +52,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 import type {
   EmployerBillingOption,
@@ -63,12 +65,25 @@ const rootApi = getRouteApi('__root__');
 export const Route = createFileRoute('/employers/companies/$slug/')({
   loader: async ({ params }) => {
     try {
-      return await getCompanyWorkspace({ data: { slug: params.slug } });
+      const [workspace, seo] = await Promise.all([
+        getCompanyWorkspace({ data: { slug: params.slug } }),
+        getSeoBase(),
+      ]);
+      return { ...workspace, seo };
     } catch (error) {
       handleEmployerLoaderError(error, `/employers/companies/${params.slug}`);
     }
   },
-  head: () => ({ meta: [{ title: m.employerCompany_metaTitle() }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: headTitle(
+          loaderData?.seo.boardName,
+          m.employerCompany_metaTitle(),
+        ),
+      },
+    ],
+  }),
   staticData: { ownsMain: true },
   component: CompanyJobsPage,
 });

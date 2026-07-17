@@ -9,6 +9,8 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('../server/queries', () => ({ getSeoBase: vi.fn() }));
+
 const forgotPassword = vi.hoisted(() => vi.fn());
 
 vi.mock('../server/auth', () => ({ forgotPassword }));

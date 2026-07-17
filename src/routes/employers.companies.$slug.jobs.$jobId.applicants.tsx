@@ -15,6 +15,7 @@ import {
   removeStage,
   renameStage,
 } from '../server/employers';
+import { getSeoBase } from '../server/queries';
 
 import { Page, PageContent } from '@/components/layout/page';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -48,6 +49,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { headTitle } from '@/lib/page-title';
 import type { EmployerApplicant, EmployerPipelineStage } from '@cavuno/board';
 
 export const Route = createFileRoute(
@@ -55,9 +57,11 @@ export const Route = createFileRoute(
 )({
   loader: async ({ params }) => {
     try {
-      return await getPipeline({
-        data: { slug: params.slug, job: params.jobId },
-      });
+      const [pipeline, seo] = await Promise.all([
+        getPipeline({ data: { slug: params.slug, job: params.jobId } }),
+        getSeoBase(),
+      ]);
+      return { ...pipeline, seo };
     } catch (error) {
       handleEmployerLoaderError(
         error,
@@ -65,7 +69,16 @@ export const Route = createFileRoute(
       );
     }
   },
-  head: () => ({ meta: [{ title: m.employerApplicants_title() }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: headTitle(
+          loaderData?.seo.boardName,
+          m.employerApplicants_title(),
+        ),
+      },
+    ],
+  }),
   staticData: { ownsMain: true },
   component: ApplicantsPage,
 });

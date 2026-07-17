@@ -1,4 +1,3 @@
-/** Magic-link landing — consumes ?token= and creates the starter session. */
 import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { AuthCard } from '../components/auth-form';
@@ -8,8 +7,11 @@ import {
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { consumeMagicLink } from '../server/auth';
+/** Magic-link landing — consumes ?token= and creates the starter session. */
+import { getSeoBase } from '../server/queries';
 
 import { buttonVariants } from '@/components/ui/button';
+import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 
 interface MagicLinkSearch {
@@ -27,12 +29,23 @@ export const Route = createFileRoute('/auth/magic-link')({
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
-    if (!deps.token) return { status: 'missing-token' as const };
-    const result = await consumeMagicLink({ data: { token: deps.token } });
-    if (!result.ok) return { status: 'invalid' as const };
+    // Started before the token branch so it overlaps the token consume.
+    const seoPromise = getSeoBase();
+    if (!deps.token) {
+      return { status: 'missing-token' as const, seo: await seoPromise };
+    }
+    const [result, seo] = await Promise.all([
+      consumeMagicLink({ data: { token: deps.token } }),
+      seoPromise,
+    ]);
+    if (!result.ok) return { status: 'invalid' as const, seo };
     throw redirect({ href: deps.returnTo });
   },
-  head: () => ({ meta: [{ title: m.authMagicLink_title() }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      { title: headTitle(loaderData?.seo.boardName, m.authMagicLink_title()) },
+    ],
+  }),
   component: MagicLinkPage,
 });
 

@@ -37,6 +37,7 @@ import {
   type RailItem,
 } from '@/components/board/salary-sections';
 import { JsonLd } from '@/components/json-ld';
+import { headTitle } from '@/lib/page-title';
 
 type City = LocationSalaryDetail['childLocations'][number];
 
@@ -74,10 +75,12 @@ export const Route = createFileRoute('/salaries/locations/$slug/')({
       ? {
           meta: [
             {
-              title: m.salaryDetail_placeMetaTitle({
-                place: loaderData.salary.placeName,
-                boardName: loaderData.seo.boardName,
-              }),
+              title: headTitle(
+                loaderData?.seo.boardName,
+                m.salaryDetail_placeMetaTitle({
+                  place: loaderData.salary.placeName,
+                }),
+              ),
             },
             {
               name: 'description',

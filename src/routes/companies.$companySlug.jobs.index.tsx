@@ -44,6 +44,7 @@ import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobList } from '@/components/board/job-list';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { JsonLd } from '@/components/json-ld';
+import { headTitle } from '@/lib/page-title';
 
 interface CompanyJobsSearch {
   /** Free-text keyword, scoped to this company via the jobs search endpoint. */
@@ -134,10 +135,10 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
       ? {
           meta: [
             {
-              title: m.companyJobs_metaTitle({
-                company: loaderData.company.name,
-                boardName: loaderData.seo.boardName,
-              }),
+              title: headTitle(
+                loaderData?.seo.boardName,
+                m.companyJobs_metaTitle({ company: loaderData.company.name }),
+              ),
             },
             {
               name: 'description',

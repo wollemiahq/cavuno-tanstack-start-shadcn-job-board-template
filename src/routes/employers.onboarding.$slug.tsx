@@ -5,6 +5,7 @@ import { createFileRoute, redirect, useRouter } from '@tanstack/react-router';
 import { handleEmployerLoaderError } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
 import { cancelClaim, listCompanies, sendWorkEmail } from '../server/employers';
+import { getSeoBase } from '../server/queries';
 
 import { EmployerIdentityAvatar } from '@/components/account-shell';
 import { Page, PageContent } from '@/components/layout/page';
@@ -14,16 +15,18 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
+import { headTitle } from '@/lib/page-title';
 import type { CompanyMembership } from '@cavuno/board';
 
 export const Route = createFileRoute('/employers/onboarding/$slug')({
   loader: async ({ params }) => {
-    let memberships;
+    let loaded;
     try {
-      memberships = await listCompanies();
+      loaded = await Promise.all([listCompanies(), getSeoBase()]);
     } catch (error) {
       handleEmployerLoaderError(error, `/employers/onboarding/${params.slug}`);
     }
+    const [memberships, seo] = loaded;
     const membership = memberships.data.find(
       (candidate) => candidate.company.slug === params.slug,
     );
@@ -34,9 +37,18 @@ export const Route = createFileRoute('/employers/onboarding/$slug')({
         params: { slug: params.slug },
       });
     }
-    return { membership };
+    return { membership, seo };
   },
-  head: () => ({ meta: [{ title: m.employerDashboard_metaTitle() }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: headTitle(
+          loaderData?.seo.boardName,
+          m.employerDashboard_metaTitle(),
+        ),
+      },
+    ],
+  }),
   staticData: { ownsMain: true },
   component: OnboardingPage,
 });

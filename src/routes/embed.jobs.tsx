@@ -24,6 +24,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 import type {
   EmploymentType,
@@ -126,11 +127,10 @@ export const Route = createFileRoute('/embed/jobs')({
   // with the hosted `(embed)` layout's `robots: { index: false }`).
   head: ({ loaderData }) => ({
     meta: [
-      {
-        title: loaderData
-          ? m.embedJobs_metaTitle({ boardName: loaderData.boardName })
-          : m.embedJobs_metaTitleFallback(),
-      },
+      // One key, both cases: the seam drops the suffix by itself when the
+      // board name is unresolvable, so the old `…_metaTitleFallback` twin
+      // is gone.
+      { title: headTitle(loaderData?.boardName, m.embedJobs_metaTitle()) },
       ...(loaderData
         ? [
             {

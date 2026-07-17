@@ -26,6 +26,7 @@ import {
   type RailItem,
 } from '@/components/board/salary-sections';
 import { JsonLd } from '@/components/json-ld';
+import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/salaries/skills/$slug/locations')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -52,10 +53,12 @@ export const Route = createFileRoute('/salaries/skills/$slug/locations')({
       ? {
           meta: [
             {
-              title: m.salaryDetail_skillLocationsMetaTitle({
-                skill: loaderData.data.skillName,
-                boardName: loaderData.seo.boardName,
-              }),
+              title: headTitle(
+                loaderData?.seo.boardName,
+                m.salaryDetail_skillLocationsMetaTitle({
+                  skill: loaderData.data.skillName,
+                }),
+              ),
             },
             {
               name: 'description',

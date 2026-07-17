@@ -17,6 +17,7 @@ import {
   companiesListingLoaderDeps,
   parseCompaniesSearch,
 } from '@/lib/companies-search';
+import { headTitle } from '@/lib/page-title';
 import { pageToOffset } from '@/lib/pagination';
 import { ProgrammaticCompaniesView } from '@/routes/-programmatic-companies-view';
 
@@ -64,9 +65,12 @@ export const Route = createFileRoute('/companies/markets/$market')({
       ? {
           meta: [
             {
-              title: m.marketPage_metaTitle({
-                market: loaderData.market.displayName,
-              }),
+              title: headTitle(
+                loaderData.seo.boardName,
+                m.marketPage_metaTitle({
+                  market: loaderData.market.displayName,
+                }),
+              ),
             },
             {
               name: 'description',

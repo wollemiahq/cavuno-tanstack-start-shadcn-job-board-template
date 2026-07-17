@@ -16,6 +16,7 @@ import { candidateReturnTo } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { getResume } from '../server/account';
 import { resendOtp, verifyOtpCode } from '../server/auth';
+import { getSeoBase } from '../server/queries';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp';
+import { headTitle } from '@/lib/page-title';
 import type { Resume } from '@cavuno/board';
 
 export const Route = createFileRoute('/auth/verify-email-required')({
@@ -41,13 +43,23 @@ export const Route = createFileRoute('/auth/verify-email-required')({
   // way, so an upload during the step updates the rendered file state.
   loader: async () => {
     try {
-      return { resume: await getResume() };
+      const [resume, seo] = await Promise.all([getResume(), getSeoBase()]);
+      return { resume, seo };
     } catch (error) {
       if (isRedirect(error)) throw error;
-      return { resume: null };
+      return { resume: null, seo: await getSeoBase() };
     }
   },
-  head: () => ({ meta: [{ title: m.authVerifyEmailRequired_title() }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: headTitle(
+          loaderData?.seo.boardName,
+          m.authVerifyEmailRequired_title(),
+        ),
+      },
+    ],
+  }),
   component: VerifyEmailRequiredPage,
 });
 

@@ -12,8 +12,10 @@ import {
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { verifyEmail } from '../server/auth';
+import { getSeoBase } from '../server/queries';
 
 import { buttonVariants } from '@/components/ui/button';
+import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 
 interface VerifySearch {
@@ -31,13 +33,25 @@ export const Route = createFileRoute('/auth/verify-email')({
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
-    if (!deps.token) return { status: 'missing-token' as const };
-    const result = await verifyEmail({ data: { token: deps.token } });
+    // Started before the token branch so it overlaps the verify call.
+    const seoPromise = getSeoBase();
+    if (!deps.token)
+      return { status: 'missing-token' as const, seo: await seoPromise };
+    const [result, seo] = await Promise.all([
+      verifyEmail({ data: { token: deps.token } }),
+      seoPromise,
+    ]);
     return result.ok
-      ? { status: 'verified' as const }
-      : { status: 'invalid' as const };
+      ? { status: 'verified' as const, seo }
+      : { status: 'invalid' as const, seo };
   },
-  head: () => ({ meta: [{ title: m.authVerifyEmail_title() }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: headTitle(loaderData?.seo.boardName, m.authVerifyEmail_title()),
+      },
+    ],
+  }),
   component: VerifyEmailPage,
 });
 

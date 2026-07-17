@@ -44,6 +44,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/companies/$companySlug/')({
@@ -83,7 +84,12 @@ export const Route = createFileRoute('/companies/$companySlug/')({
     loaderData
       ? {
           meta: [
-            { title: loaderData.company.name },
+            {
+              title: headTitle(
+                loaderData?.seo.boardName,
+                loaderData.company.name,
+              ),
+            },
             ...(loaderData.company.description
               ? [
                   {

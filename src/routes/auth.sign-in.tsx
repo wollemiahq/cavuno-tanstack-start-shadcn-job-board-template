@@ -20,10 +20,12 @@ import {
   requestMagicLink,
   signIn,
 } from '../server/auth';
+import { getSeoBase } from '../server/queries';
 
 import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/auth/sign-in')({
@@ -33,7 +35,10 @@ export const Route = createFileRoute('/auth/sign-in')({
         ? candidateReturnTo(search.returnTo)
         : undefined,
   }),
-  head: () => ({ meta: [{ title: m.authSignIn_title() }] }),
+  loader: () => getSeoBase(),
+  head: ({ loaderData }) => ({
+    meta: [{ title: headTitle(loaderData?.boardName, m.authSignIn_title()) }],
+  }),
   component: SignInPage,
 });
 

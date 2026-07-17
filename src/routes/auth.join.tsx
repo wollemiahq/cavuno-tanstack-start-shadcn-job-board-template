@@ -22,6 +22,7 @@ import { JsonLd } from '@/components/json-ld';
 import { RheaAuthCard, RoleSelector } from '@/components/rhea-auth-pilot';
 import { buttonVariants } from '@/components/ui/button';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
+import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/auth/join')({
@@ -52,7 +53,9 @@ export const Route = createFileRoute('/auth/join')({
   head: ({ loaderData }) =>
     loaderData
       ? {
-          meta: [{ title: m.authJoin_title() }],
+          meta: [
+            { title: headTitle(loaderData?.seo.boardName, m.authJoin_title()) },
+          ],
           links: [
             {
               rel: 'canonical',
@@ -60,7 +63,7 @@ export const Route = createFileRoute('/auth/join')({
             },
           ],
         }
-      : { meta: [{ title: m.authJoin_title() }] },
+      : { meta: [{ title: headTitle(undefined, m.authJoin_title()) }] },
   component: JoinPage,
   notFoundComponent: () => (
     <div>

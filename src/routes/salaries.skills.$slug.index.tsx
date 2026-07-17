@@ -40,6 +40,7 @@ import {
 } from '@/components/board/salary-sections';
 import { JsonLd } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
+import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/salaries/skills/$slug/')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -66,10 +67,12 @@ export const Route = createFileRoute('/salaries/skills/$slug/')({
       ? {
           meta: [
             {
-              title: m.salaryDetail_skillMetaTitle({
-                skill: loaderData.salary.skillName,
-                boardName: loaderData.seo.boardName,
-              }),
+              title: headTitle(
+                loaderData?.seo.boardName,
+                m.salaryDetail_skillMetaTitle({
+                  skill: loaderData.salary.skillName,
+                }),
+              ),
             },
             {
               name: 'description',

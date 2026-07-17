@@ -8,11 +8,12 @@ import {
   submitJobPosting,
   uploadLogo,
 } from '../server/post';
-import { getRemotePermits } from '../server/queries';
+import { getSeoBase, getRemotePermits } from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { PostJobForm } from '@/components/post-job-form';
+import { headTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
 
@@ -24,16 +25,19 @@ export const Route = createFileRoute('/post')({
         ? search.plan
         : undefined,
   }),
-  head: () => ({ meta: [{ title: m.postJob_title() }] }),
+  head: ({ loaderData }) => ({
+    meta: [{ title: headTitle(loaderData?.seo.boardName, m.postJob_title()) }],
+  }),
   loader: async () => {
-    const [plans, remotePermits] = await Promise.all([
+    const [plans, remotePermits, seo] = await Promise.all([
       getPostPlans(),
       // The geographic-restriction option space. Optional enhancement — an
       // unavailable taxonomy must not take the posting form down (the scope
       // control degrades to worldwide/countries).
       getRemotePermits().catch(() => null),
+      getSeoBase(),
     ]);
-    return { plans, remotePermits };
+    return { plans, remotePermits, seo };
   },
   component: PostJobPage,
 });

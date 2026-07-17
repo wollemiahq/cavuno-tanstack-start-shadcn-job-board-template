@@ -1,4 +1,3 @@
-/** Reset-password landing — the route reset emails link to (ADR-0035). */
 import { useState } from 'react';
 
 import { createFileRoute, useRouter } from '@tanstack/react-router';
@@ -11,8 +10,11 @@ import {
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { resetPassword } from '../server/auth';
+/** Reset-password landing — the route reset emails link to (ADR-0035). */
+import { getSeoBase } from '../server/queries';
 
 import { Button, buttonVariants } from '@/components/ui/button';
+import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 
 interface ResetSearch {
@@ -28,7 +30,12 @@ export const Route = createFileRoute('/auth/reset-password')({
         : undefined,
     returnTo: candidateReturnTo(search.returnTo),
   }),
-  head: () => ({ meta: [{ title: m.authResetPassword_title() }] }),
+  loader: () => getSeoBase(),
+  head: ({ loaderData }) => ({
+    meta: [
+      { title: headTitle(loaderData?.boardName, m.authResetPassword_title()) },
+    ],
+  }),
   component: ResetPasswordPage,
 });
 

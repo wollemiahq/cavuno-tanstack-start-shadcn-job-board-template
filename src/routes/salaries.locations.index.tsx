@@ -15,6 +15,7 @@ import { SalaryPageLayout, SalaryPendingPage } from './-salary-page-layout';
 import { toSalaryBreadcrumbVM } from '@/board/salary-view-model';
 import { SalaryEmptyState } from '@/components/board/salary-sections';
 import { JsonLd } from '@/components/json-ld';
+import { headTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
 
@@ -32,9 +33,10 @@ export const Route = createFileRoute('/salaries/locations/')({
       ? {
           meta: [
             {
-              title: m.salaryHub_locationsMetaTitle({
-                boardName: loaderData.seo.boardName,
-              }),
+              title: headTitle(
+                loaderData?.seo.boardName,
+                m.salaryHub_locationsMetaTitle(),
+              ),
             },
             {
               name: 'description',
