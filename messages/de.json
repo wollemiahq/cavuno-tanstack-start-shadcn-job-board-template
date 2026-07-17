@@ -1111,7 +1111,7 @@
   "employerDashboard_websiteProtocolPrefix": "https://",
   "siteHeader_addNewCompanyLabel": "Neues Unternehmen hinzufügen",
   "employerCompany_jobsEmptyText": "Veröffentliche deinen ersten Job und starte die Suche.",
-  "employerPostJob_subtitleText": "Der Job wird als Entwurf angelegt — veröffentliche ihn aus deiner Jobliste, wenn du bereit bist.",
+  "employerPostJob_subtitleText": "Fülle die Stelle aus und wähle, wie du sie veröffentlichst — ein Guthaben veröffentlicht sofort, ein neuer Plan geht beim Absenden zur Kasse.",
   "employerPostJob_applyMethodLabel": "Wie sich Kandidat:innen bewerben",
   "employerPostJob_applyNativeLabel": "Bewerbungen auf diesem Board sammeln",
   "employerPostJob_applyNativeHint": "Kandidat:innen bewerben sich hier und landen in deiner Bewerber-Pipeline.",
@@ -1124,5 +1124,6 @@
   "authSignIn_openGmailLabel": "Gmail öffnen",
   "authSignIn_openOutlookLabel": "Outlook öffnen",
   "authSignIn_resendLabel": "E-Mail erneut senden",
-  "authSignIn_useDifferentEmailLabel": "Andere E-Mail verwenden"
+  "authSignIn_useDifferentEmailLabel": "Andere E-Mail verwenden",
+  "employerPostJob_billingRequiredError": "Wähle ein Guthaben oder einen Plan für die Veröffentlichung."
 }

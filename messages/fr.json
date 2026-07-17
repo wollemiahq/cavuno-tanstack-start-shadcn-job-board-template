@@ -1111,7 +1111,7 @@
   "employerDashboard_websiteProtocolPrefix": "https://",
   "siteHeader_addNewCompanyLabel": "Ajouter une nouvelle entreprise",
   "employerCompany_jobsEmptyText": "Publiez votre première offre pour commencer à recruter.",
-  "employerPostJob_subtitleText": "L’offre est créée en brouillon — publiez-la depuis votre liste d’offres quand vous êtes prêt.",
+  "employerPostJob_subtitleText": "Renseignez le poste et choisissez comment le publier — un crédit publie immédiatement, un nouveau plan passe au paiement à l’envoi.",
   "employerPostJob_applyMethodLabel": "Comment les candidats postulent",
   "employerPostJob_applyNativeLabel": "Recevoir les candidatures sur ce site",
   "employerPostJob_applyNativeHint": "Les candidats postulent ici et arrivent dans votre pipeline de candidats.",
@@ -1124,5 +1124,6 @@
   "authSignIn_openGmailLabel": "Ouvrir Gmail",
   "authSignIn_openOutlookLabel": "Ouvrir Outlook",
   "authSignIn_resendLabel": "Renvoyer l’e-mail",
-  "authSignIn_useDifferentEmailLabel": "Utiliser une autre adresse"
+  "authSignIn_useDifferentEmailLabel": "Utiliser une autre adresse",
+  "employerPostJob_billingRequiredError": "Choisissez un crédit ou un plan pour publier."
 }

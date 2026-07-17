@@ -1,10 +1,11 @@
 /**
- * Company workspace — Post a job. A dedicated page mirroring the public
- * `/post` form's field set (hosted parity: employment type + seniority,
- * title, workplace, office locations, remote geographic restriction, rich
- * description, salary range) minus the company/contact/plan sections the
- * workspace already knows. Submission creates a HELD DRAFT via the employer
- * jobs API; publishing/checkout stays on the Jobs tab.
+ * Company workspace — Post a job. One-page wizard mirroring the hosted
+ * employer post flow: the job details (public /post field set) plus the
+ * billing choice — an existing credit or a new plan — submit together.
+ * A credit (or free plan) publishes immediately; a paid plan redirects to
+ * checkout; an invoice-only plan reports the emailed invoice. The job is
+ * created first, so a failed payment still leaves it recoverable from the
+ * jobs list.
  *
  * Apply method: an external URL/email, or the board's built-in applications
  * (native apply — the job's `applicationUrl` stays unset and candidates land
@@ -35,7 +36,11 @@ import {
 } from '../lib/post-form';
 import { salaryCurrencyOptions } from '../lib/salary-currencies';
 import { m } from '../paraglide/messages';
-import { createJob, getCompanyWorkspace } from '../server/employers';
+import {
+  checkoutJob,
+  createJob,
+  getCompanyWorkspace,
+} from '../server/employers';
 import { getRemotePermits } from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
@@ -44,7 +49,7 @@ import { EmployerCompanyShell } from '@/components/account-shell';
 import { PlaceTagsField } from '@/components/place-tags-field';
 import { RichTextEditor } from '@/components/rich-text-editor';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Field,
   FieldDescription,
@@ -113,12 +118,29 @@ type PermitType = NonNullable<
   CreateEmployerJobBody['remotePermits']
 >[number]['type'];
 
+function formatPrice(
+  language: string,
+  currency: string | undefined,
+  amountCents: number | undefined,
+) {
+  if (currency === undefined || amountCents === undefined) return '';
+  if (amountCents === 0) return m.employerCompany_freeLabel();
+  return new Intl.NumberFormat(language, {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+    maximumFractionDigits: amountCents % 100 === 0 ? 0 : 2,
+  }).format(amountCents / 100);
+}
+
 function NewJobPage() {
   const { workspace, remotePermits } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const router = useRouter();
   const locale = board.language;
   const company = workspace.membership?.company;
+  const billingOptions = workspace.billingOptions.data;
+  const plans = workspace.plans;
+  const canPublish = billingOptions.length > 0 || plans.length > 0;
   const officeLocationSuggestions = useLocationSuggestions(locale);
 
   const [form, setForm] = useState({
@@ -136,12 +158,16 @@ function NewJobPage() {
     applyMethod: 'external' as 'external' | 'native',
     applicationTarget: '',
   });
+  /** `option:{id}` (existing credit) or `plan:{planId}` (new purchase). */
+  const [selectedBilling, setSelectedBilling] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [notice, setNotice] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{
     description?: boolean;
     officeLocations?: boolean;
     applicationTarget?: boolean;
+    billing?: boolean;
   }>({});
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
@@ -211,12 +237,14 @@ function NewJobPage() {
       applicationTarget:
         form.applyMethod === 'external' &&
         normalizeApplicationTarget(form.applicationTarget) === undefined,
+      billing: canPublish && selectedBilling === null,
     };
     setFieldErrors(errors);
     if (
       errors.description ||
       errors.officeLocations ||
-      errors.applicationTarget
+      errors.applicationTarget ||
+      errors.billing
     )
       return;
 
@@ -271,10 +299,54 @@ function NewJobPage() {
 
     setStatus('saving');
     setMessage('');
+    setNotice('');
     const result = await createJob({ data: { slug: workspace.slug, body } });
     if (!result.ok) {
       setStatus('error');
       setMessage(result.message);
+      return;
+    }
+
+    // The hosted flow: post and pay together. A board with no plans and no
+    // credits can only hold the job as a draft in the list.
+    if (!selectedBilling) {
+      await router.invalidate();
+      await router.navigate({
+        to: '/employers/companies/$slug',
+        params: { slug: workspace.slug },
+      });
+      return;
+    }
+
+    const option = billingOptions.find(
+      (candidate) => `option:${candidate.id}` === selectedBilling,
+    );
+    const billing = option
+      ? { type: option.type, planId: option.planId, id: option.id }
+      : {
+          type: 'new' as const,
+          planId: selectedBilling.replace(/^plan:/, ''),
+        };
+
+    const checkout = await checkoutJob({
+      data: { slug: workspace.slug, id: result.data.id, body: { billing } },
+    });
+    if (!checkout.ok) {
+      // The job exists as a draft — surface the payment failure and let the
+      // jobs list be the retry surface.
+      setStatus('error');
+      setMessage(checkout.message);
+      return;
+    }
+    const outcome = checkout.data;
+    if (outcome.status === 'checkout' && outcome.checkoutUrl) {
+      window.location.assign(outcome.checkoutUrl);
+      return;
+    }
+    if (outcome.status === 'invoice_sent') {
+      setStatus('idle');
+      setNotice(m.employerCompany_invoiceSentText());
+      await router.invalidate();
       return;
     }
     await router.invalidate();
@@ -304,15 +376,15 @@ function NewJobPage() {
           </p>
         </header>
 
-        <Card>
-          <CardContent>
-            <form
-              className="grid gap-5"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void submit();
-              }}
-            >
+        <form
+          className="space-y-6"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+        >
+          <Card>
+            <CardContent className="grid gap-5">
               <div className="grid gap-5 sm:grid-cols-2">
                 <Field>
                   <FieldLabel htmlFor="job-employment-type">
@@ -678,26 +750,121 @@ function NewJobPage() {
                   ) : null}
                 </Field>
               ) : null}
+            </CardContent>
+          </Card>
 
-              {/* In-page form: primary action left-aligned, in reading flow. */}
-              <div className="flex flex-wrap items-center gap-3">
-                <Button type="submit" disabled={status === 'saving'}>
-                  {status === 'saving'
-                    ? m.employerCompany_creatingLabel()
-                    : m.employerCompany_createDraftLabel()}
-                </Button>
-                <Link
-                  to="/employers/companies/$slug"
-                  params={{ slug: workspace.slug }}
-                  className={buttonVariants({ variant: 'ghost' })}
-                >
-                  {m.employerOnboarding_cancelLabel()}
-                </Link>
-                {status === 'error' ? <FieldError>{message}</FieldError> : null}
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                <h2>{m.employerCompany_choosePlanHeading()}</h2>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {canPublish ? (
+                <Field data-invalid={fieldErrors.billing || undefined}>
+                  <RadioGroup
+                    value={selectedBilling}
+                    onValueChange={(value) =>
+                      setSelectedBilling((value as string | null) ?? null)
+                    }
+                    className="gap-4"
+                    aria-label={m.employerCompany_choosePlanHeading()}
+                  >
+                    {billingOptions.length > 0 ? (
+                      <div className="grid gap-2">
+                        <p className="text-muted-foreground text-xs font-medium">
+                          {m.employerCompany_reusableCreditsLabel()}
+                        </p>
+                        {billingOptions.map((option) => (
+                          <Label
+                            key={option.id}
+                            className="border-input has-data-checked:border-ring flex items-center justify-between gap-3 rounded-2xl border p-3 font-normal"
+                          >
+                            <span className="flex items-center gap-2">
+                              <RadioGroupItem value={`option:${option.id}`} />
+                              <span className="font-medium">
+                                {option.planName}
+                              </span>
+                            </span>
+                            <span className="text-muted-foreground text-sm">
+                              {m.employerCompany_creditsRemaining({
+                                count: option.jobsRemaining,
+                              })}
+                            </span>
+                          </Label>
+                        ))}
+                      </div>
+                    ) : null}
+                    {plans.length > 0 ? (
+                      <div className="grid gap-2">
+                        <p className="text-muted-foreground text-xs font-medium">
+                          {m.employerCompany_buyPlanLabel()}
+                        </p>
+                        {plans.map((plan) => {
+                          const price =
+                            plan.prices.find(
+                              (candidate) => candidate.isActive,
+                            ) ?? plan.prices[0];
+                          return (
+                            <Label
+                              key={plan.id}
+                              className="border-input has-data-checked:border-ring flex items-center justify-between gap-3 rounded-2xl border p-3 font-normal"
+                            >
+                              <span className="flex items-center gap-2">
+                                <RadioGroupItem value={`plan:${plan.id}`} />
+                                <span className="font-medium">{plan.name}</span>
+                              </span>
+                              <span className="text-muted-foreground text-sm">
+                                {formatPrice(
+                                  locale,
+                                  price?.currency,
+                                  price?.amountCents,
+                                )}
+                              </span>
+                            </Label>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </RadioGroup>
+                  {fieldErrors.billing ? (
+                    <FieldError>
+                      {m.employerPostJob_billingRequiredError()}
+                    </FieldError>
+                  ) : null}
+                </Field>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  {m.employerCompany_noPlansText()}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* In-page form: primary action left-aligned, in reading flow. */}
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="submit" disabled={status === 'saving'}>
+              {status === 'saving'
+                ? m.postJob_submittingLabel()
+                : canPublish
+                  ? m.postJob_submitButtonLabel()
+                  : m.employerCompany_createDraftLabel()}
+            </Button>
+            <Link
+              to="/employers/companies/$slug"
+              params={{ slug: workspace.slug }}
+              className={buttonVariants({ variant: 'ghost' })}
+            >
+              {m.employerOnboarding_cancelLabel()}
+            </Link>
+            {status === 'error' ? <FieldError>{message}</FieldError> : null}
+            {notice ? (
+              <p role="status" className="text-sm">
+                {notice}
+              </p>
+            ) : null}
+          </div>
+        </form>
       </div>
     </EmployerCompanyShell>
   );

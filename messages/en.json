@@ -1111,7 +1111,7 @@
   "employerDashboard_websiteProtocolPrefix": "https://",
   "siteHeader_addNewCompanyLabel": "Add new company",
   "employerCompany_jobsEmptyText": "Post your first job to start hiring.",
-  "employerPostJob_subtitleText": "The job is created as a draft — publish it from your jobs list when you’re ready.",
+  "employerPostJob_subtitleText": "Fill in the role and choose how to publish it — a credit posts instantly, a new plan checks out on submit.",
   "employerPostJob_applyMethodLabel": "How candidates apply",
   "employerPostJob_applyNativeLabel": "Collect applications on this board",
   "employerPostJob_applyNativeHint": "Candidates apply here and land in your applicant pipeline.",
@@ -1124,5 +1124,6 @@
   "authSignIn_openGmailLabel": "Open Gmail",
   "authSignIn_openOutlookLabel": "Open Outlook",
   "authSignIn_resendLabel": "Resend email",
-  "authSignIn_useDifferentEmailLabel": "Use a different email"
+  "authSignIn_useDifferentEmailLabel": "Use a different email",
+  "employerPostJob_billingRequiredError": "Choose a credit or plan to publish with."
 }

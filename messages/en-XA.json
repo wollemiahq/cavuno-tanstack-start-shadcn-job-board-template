@@ -1111,7 +1111,7 @@
   "employerDashboard_websiteProtocolPrefix": "⟦ĥţţþš://⟧",
   "siteHeader_addNewCompanyLabel": "⟦Áðð ñéŵ çóɱþáñý⟧",
   "employerCompany_jobsEmptyText": "⟦Þóšţ ýóúŕ ƒíŕšţ ĵóƀ ţó šţáŕţ ĥíŕíñğ.⟧",
-  "employerPostJob_subtitleText": "⟦Ţĥé ĵóƀ íš çŕéáţéð áš á ðŕáƒţ — þúƀĺíšĥ íţ ƒŕóɱ ýóúŕ ĵóƀš ĺíšţ ŵĥéñ ýóú’ŕé ŕéáðý.⟧",
+  "employerPostJob_subtitleText": "⟦Ƒíĺĺ íñ ţĥé ŕóĺé áñð çĥóóšé ĥóŵ ţó þúƀĺíšĥ íţ — á çŕéðíţ þóšţš íñšţáñţĺý, á ñéŵ þĺáñ çĥéçķš óúţ óñ šúƀɱíţ.⟧",
   "employerPostJob_applyMethodLabel": "⟦Ĥóŵ çáñðíðáţéš áþþĺý⟧",
   "employerPostJob_applyNativeLabel": "⟦Çóĺĺéçţ áþþĺíçáţíóñš óñ ţĥíš ƀóáŕð⟧",
   "employerPostJob_applyNativeHint": "⟦Çáñðíðáţéš áþþĺý ĥéŕé áñð ĺáñð íñ ýóúŕ áþþĺíçáñţ þíþéĺíñé.⟧",
@@ -1124,5 +1124,6 @@
   "authSignIn_openGmailLabel": "⟦Óþéñ Ğɱáíĺ⟧",
   "authSignIn_openOutlookLabel": "⟦Óþéñ Óúţĺóóķ⟧",
   "authSignIn_resendLabel": "⟦Ŕéšéñð éɱáíĺ⟧",
-  "authSignIn_useDifferentEmailLabel": "⟦Úšé á ðíƒƒéŕéñţ éɱáíĺ⟧"
+  "authSignIn_useDifferentEmailLabel": "⟦Úšé á ðíƒƒéŕéñţ éɱáíĺ⟧",
+  "employerPostJob_billingRequiredError": "⟦Çĥóóšé á çŕéðíţ óŕ þĺáñ ţó þúƀĺíšĥ ŵíţĥ.⟧"
 }
