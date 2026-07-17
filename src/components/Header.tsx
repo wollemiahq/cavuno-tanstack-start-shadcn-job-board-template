@@ -62,7 +62,7 @@ import type {
   HeaderSearchScope,
 } from '@/lib/header-search';
 import { cn } from '@/lib/utils';
-import type { BoardUser } from '@cavuno/board';
+import type { BoardUser, CompanyMembership } from '@cavuno/board';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 const navItemClassName =
@@ -221,10 +221,16 @@ function HeaderSearch({
 function AccountMenu({
   user,
   candidatePaywall,
+  employerCompanies,
 }: {
   user: BoardUser;
   candidatePaywall: boolean;
+  employerCompanies: CompanyMembership[] | null;
 }) {
+  const companyWorkspaces = (employerCompanies ?? []).filter(
+    (membership) =>
+      membership.status === 'approved' && membership.company.slug !== null,
+  );
   const router = useRouter();
 
   return (
@@ -281,6 +287,30 @@ function AccountMenu({
           {m.accountShell_settingsNav()}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        {companyWorkspaces.length > 0 ? (
+          companyWorkspaces.map((membership) => (
+            <DropdownMenuItem
+              key={membership.id}
+              nativeButton={false}
+              render={
+                <Link
+                  to="/employers/companies/$slug"
+                  params={{ slug: membership.company.slug! }}
+                />
+              }
+            >
+              {membership.company.name}
+            </DropdownMenuItem>
+          ))
+        ) : (
+          <DropdownMenuItem
+            nativeButton={false}
+            render={<Link to="/employers/dashboard" search={{ add: true }} />}
+          >
+            {m.employerOnboarding_addCompanyLabel()}
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           data-test="account-menu-sign-out"
           onClick={async () => {
@@ -304,6 +334,7 @@ export default function Header({
   labels,
   features,
   candidatePaywall = false,
+  employerCompanies = null,
   talentDirectoryVisibility,
   search,
   messagesNav,
@@ -321,6 +352,7 @@ export default function Header({
     talentDirectory: boolean;
   };
   candidatePaywall?: boolean;
+  employerCompanies?: CompanyMembership[] | null;
   talentDirectoryVisibility: 'off' | 'public' | 'employers_only' | null;
   messagesNav?: ReactNode;
   search: HeaderSearchState & {
@@ -425,7 +457,11 @@ export default function Header({
   const accountActions = user ? (
     <>
       {messagesNav}
-      <AccountMenu user={user} candidatePaywall={candidatePaywall} />
+      <AccountMenu
+        user={user}
+        candidatePaywall={candidatePaywall}
+        employerCompanies={employerCompanies}
+      />
     </>
   ) : (
     <>
@@ -449,7 +485,11 @@ export default function Header({
   const mobileAccountActions = user ? (
     <>
       {messagesNav}
-      <AccountMenu user={user} candidatePaywall={candidatePaywall} />
+      <AccountMenu
+        user={user}
+        candidatePaywall={candidatePaywall}
+        employerCompanies={employerCompanies}
+      />
     </>
   ) : (
     <>

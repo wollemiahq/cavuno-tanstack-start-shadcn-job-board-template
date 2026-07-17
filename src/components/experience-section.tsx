@@ -27,6 +27,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
@@ -36,6 +42,12 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/components/ui/item';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import type { CandidateExperience } from '@cavuno/board';
 
@@ -124,7 +136,6 @@ export function ExperienceSection({
       await router.invalidate();
       setEditing(null);
       setDraft(EMPTY);
-      setFeedback('success');
     } catch {
       setFeedback('error');
     } finally {
@@ -132,19 +143,133 @@ export function ExperienceSection({
     }
   };
 
+  const editorForm =
+    editing !== null ? (
+      <form
+        key={editing.id ?? 'new'}
+        onSubmit={(event) => {
+          event.preventDefault();
+          void submit();
+        }}
+      >
+        <FieldGroup className="gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field className="gap-1.5">
+              <FieldLabel htmlFor="experience-title">
+                {m.experienceSection_titleLabel()}
+              </FieldLabel>
+              <Input
+                id="experience-title"
+                required
+                value={draft.title}
+                onChange={(event) =>
+                  setDraft({ ...draft, title: event.target.value })
+                }
+              />
+            </Field>
+            <Field className="gap-1.5">
+              <FieldLabel htmlFor="experience-company">
+                {m.experienceSection_companyLabel()}
+              </FieldLabel>
+              <Input
+                id="experience-company"
+                required
+                value={draft.companyName}
+                onChange={(event) =>
+                  setDraft({ ...draft, companyName: event.target.value })
+                }
+              />
+            </Field>
+            <Field className="gap-1.5 sm:col-span-2">
+              <FieldLabel htmlFor="experience-location">
+                {m.experienceSection_locationLabel()}
+              </FieldLabel>
+              <LocationSuggestField
+                id="experience-location"
+                value={draft.location}
+                onValueChange={(location) =>
+                  setDraft((prev) => ({ ...prev, location }))
+                }
+                searchingText={m.locationCombobox_searchingText()}
+                {...locationSuggestions}
+              />
+            </Field>
+            <MonthYearField
+              idPrefix="experience-start"
+              label={m.experienceSection_startLabel()}
+              language={language}
+              required
+              defaultValue={draft.startDate}
+              onChange={(startDate) =>
+                setDraft((prev) => ({ ...prev, startDate }))
+              }
+              monthAriaLabel={m.monthYearField_monthPlaceholder()}
+              yearAriaLabel={m.monthYearField_yearPlaceholder()}
+              monthPlaceholder={m.monthYearField_monthPlaceholder()}
+              yearPlaceholder={m.monthYearField_yearPlaceholder()}
+              clearAriaLabel={m.monthYearField_clearAriaLabel()}
+            />
+            <MonthYearField
+              idPrefix="experience-end"
+              label={m.experienceSection_endLabel()}
+              language={language}
+              clearable
+              defaultValue={draft.endDate}
+              onChange={(endDate) => setDraft((prev) => ({ ...prev, endDate }))}
+              monthAriaLabel={m.monthYearField_monthPlaceholder()}
+              yearAriaLabel={m.monthYearField_yearPlaceholder()}
+              monthPlaceholder={m.monthYearField_monthPlaceholder()}
+              yearPlaceholder={m.monthYearField_yearPlaceholder()}
+              clearAriaLabel={m.monthYearField_clearAriaLabel()}
+            />
+          </div>
+          <Field className="gap-1.5">
+            <FieldLabel htmlFor="experience-description">
+              {m.experienceSection_descriptionLabel()}
+            </FieldLabel>
+            <Textarea
+              id="experience-description"
+              rows={4}
+              value={draft.description}
+              onChange={(event) =>
+                setDraft({ ...draft, description: event.target.value })
+              }
+            />
+          </Field>
+          <div className="flex gap-2">
+            <Button type="submit" size="sm" disabled={pending}>
+              {pending
+                ? m.experienceSection_savingLabel()
+                : m.experienceSection_saveLabel()}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={pending}
+              onClick={() => {
+                setEditing(null);
+                setDraft(EMPTY);
+              }}
+            >
+              {m.experienceSection_cancelLabel()}
+            </Button>
+          </div>
+        </FieldGroup>
+      </form>
+    ) : null;
+
   return (
     <Card data-test="experience-section" id="experience">
       <CardHeader>
         <CardTitle>
           <h2>{m.experienceSection_heading()}</h2>
         </CardTitle>
-        {editing === null ? (
-          <CardAction>
-            <Button variant="outline" size="sm" onClick={() => open(null)}>
-              {m.experienceSection_addLabel()}
-            </Button>
-          </CardAction>
-        ) : null}
+        <CardAction>
+          <Button variant="outline" size="sm" onClick={() => open(null)}>
+            {m.experienceSection_addLabel()}
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent className="space-y-3">
         {items.length === 0 && editing === null ? (
@@ -185,7 +310,6 @@ export function ExperienceSection({
                       try {
                         await deleteExperience({ data: { id: item.id } });
                         await router.invalidate();
-                        setFeedback('success');
                       } catch {
                         setFeedback('error');
                       } finally {
@@ -201,124 +325,35 @@ export function ExperienceSection({
           </ul>
         ) : null}
 
-        {editing !== null ? (
-          <form
-            key={editing.id ?? 'new'}
-            className="border-border rounded-2xl border p-4"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void submit();
-            }}
-          >
-            <FieldGroup className="gap-3">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field className="gap-1.5">
-                  <FieldLabel htmlFor="experience-title">
-                    {m.experienceSection_titleLabel()}
-                  </FieldLabel>
-                  <Input
-                    id="experience-title"
-                    required
-                    value={draft.title}
-                    onChange={(event) =>
-                      setDraft({ ...draft, title: event.target.value })
-                    }
-                  />
-                </Field>
-                <Field className="gap-1.5">
-                  <FieldLabel htmlFor="experience-company">
-                    {m.experienceSection_companyLabel()}
-                  </FieldLabel>
-                  <Input
-                    id="experience-company"
-                    required
-                    value={draft.companyName}
-                    onChange={(event) =>
-                      setDraft({ ...draft, companyName: event.target.value })
-                    }
-                  />
-                </Field>
-                <Field className="gap-1.5 sm:col-span-2">
-                  <FieldLabel htmlFor="experience-location">
-                    {m.experienceSection_locationLabel()}
-                  </FieldLabel>
-                  <LocationSuggestField
-                    id="experience-location"
-                    value={draft.location}
-                    onValueChange={(location) =>
-                      setDraft((prev) => ({ ...prev, location }))
-                    }
-                    searchingText={m.locationCombobox_searchingText()}
-                    {...locationSuggestions}
-                  />
-                </Field>
-                <MonthYearField
-                  idPrefix="experience-start"
-                  label={m.experienceSection_startLabel()}
-                  language={language}
-                  required
-                  defaultValue={draft.startDate}
-                  onChange={(startDate) =>
-                    setDraft((prev) => ({ ...prev, startDate }))
-                  }
-                  monthAriaLabel={m.monthYearField_monthPlaceholder()}
-                  yearAriaLabel={m.monthYearField_yearPlaceholder()}
-                  monthPlaceholder={m.monthYearField_monthPlaceholder()}
-                  yearPlaceholder={m.monthYearField_yearPlaceholder()}
-                  clearAriaLabel={m.monthYearField_clearAriaLabel()}
-                />
-                <MonthYearField
-                  idPrefix="experience-end"
-                  label={m.experienceSection_endLabel()}
-                  language={language}
-                  clearable
-                  defaultValue={draft.endDate}
-                  onChange={(endDate) =>
-                    setDraft((prev) => ({ ...prev, endDate }))
-                  }
-                  monthAriaLabel={m.monthYearField_monthPlaceholder()}
-                  yearAriaLabel={m.monthYearField_yearPlaceholder()}
-                  monthPlaceholder={m.monthYearField_monthPlaceholder()}
-                  yearPlaceholder={m.monthYearField_yearPlaceholder()}
-                  clearAriaLabel={m.monthYearField_clearAriaLabel()}
-                />
-              </div>
-              <Field className="gap-1.5">
-                <FieldLabel htmlFor="experience-description">
-                  {m.experienceSection_descriptionLabel()}
-                </FieldLabel>
-                <Textarea
-                  id="experience-description"
-                  rows={4}
-                  value={draft.description}
-                  onChange={(event) =>
-                    setDraft({ ...draft, description: event.target.value })
-                  }
-                />
-              </Field>
-              <div className="flex gap-2">
-                <Button type="submit" size="sm" disabled={pending}>
-                  {pending
-                    ? m.experienceSection_savingLabel()
-                    : m.experienceSection_saveLabel()}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={pending}
-                  onClick={() => {
-                    setEditing(null);
-                    setDraft(EMPTY);
-                  }}
-                >
-                  {m.experienceSection_cancelLabel()}
-                </Button>
-              </div>
-            </FieldGroup>
-          </form>
-        ) : null}
         <CandidateActionFeedback state={feedback} />
+
+        <Dialog
+          open={editing !== null && editing.id === null}
+          onOpenChange={(open) => {
+            if (!open) setEditing(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-xl">
+            <DialogHeader>
+              <DialogTitle>{m.experienceSection_addLabel()}</DialogTitle>
+            </DialogHeader>
+            {editorForm}
+          </DialogContent>
+        </Dialog>
+
+        <Sheet
+          open={editing !== null && editing.id !== null}
+          onOpenChange={(open) => {
+            if (!open) setEditing(null);
+          }}
+        >
+          <SheetContent side="right" className="w-full gap-0 sm:max-w-lg">
+            <SheetHeader>
+              <SheetTitle>{m.experienceSection_editTitle()}</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto p-4 pt-2">{editorForm}</div>
+          </SheetContent>
+        </Sheet>
       </CardContent>
     </Card>
   );

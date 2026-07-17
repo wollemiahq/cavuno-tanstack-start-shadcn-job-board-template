@@ -106,7 +106,6 @@ export function SkillsSection({ skills: initial }: { skills: string[] }) {
               try {
                 await replaceSkills({ data: { skills } });
                 await router.invalidate();
-                setFeedback('success');
               } catch {
                 setFeedback('error');
               } finally {

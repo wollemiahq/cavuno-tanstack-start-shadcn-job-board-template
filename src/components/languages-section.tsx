@@ -155,7 +155,6 @@ export function LanguagesSection({
                 try {
                   await replaceLanguages({ data: { languages } });
                   await router.invalidate();
-                  setFeedback('success');
                 } catch {
                   setFeedback('error');
                 } finally {

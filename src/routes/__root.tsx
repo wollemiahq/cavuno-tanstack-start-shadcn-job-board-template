@@ -19,6 +19,7 @@ import Header from '../components/Header';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getSessionUser } from '../server/account';
+import { listCompanies } from '../server/employers';
 import {
   getAnalyticsConfig,
   getBoardContext,
@@ -69,14 +70,20 @@ declare module '@tanstack/react-router' {
 
 export const Route = createRootRoute({
   loader: async () => {
-    const [board, user, seo, analytics, offerGate] = await Promise.all([
-      getBoardContext(),
-      getSessionUser(),
-      getBoardSeo(),
-      getAnalyticsConfig(),
-      getEmployerOfferGate(),
-    ]);
-    return { board, user, seo, analytics, offerGate };
+    const [board, user, seo, analytics, offerGate, employerCompanies] =
+      await Promise.all([
+        getBoardContext(),
+        getSessionUser(),
+        getBoardSeo(),
+        getAnalyticsConfig(),
+        getEmployerOfferGate(),
+        // Signed-in header menu: the viewer's company workspaces. Signed-out
+        // (or any failure) is simply "no companies".
+        listCompanies()
+          .then((memberships) => memberships.data)
+          .catch(() => null),
+      ]);
+    return { board, user, seo, analytics, offerGate, employerCompanies };
   },
   head: ({ loaderData }) => {
     const board = loaderData?.board;
@@ -139,7 +146,7 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
-  const { board, user, offerGate } = Route.useLoaderData();
+  const { board, user, offerGate, employerCompanies } = Route.useLoaderData();
   const isEmbed = useRouterState({
     select: (s) => s.location.pathname.startsWith('/embed'),
   });
@@ -284,6 +291,7 @@ function RootLayout() {
       labels={board.labels}
       features={board.features}
       candidatePaywall={board.features.candidatePaywall}
+      employerCompanies={employerCompanies}
       talentDirectoryVisibility={board.talentDirectoryVisibility}
       messagesNav={user ? <MessagesNavController /> : undefined}
       search={{

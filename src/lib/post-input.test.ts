@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  normalizeApplicationTarget,
   remotePermitsSubmission,
   toCreateJobPostingInput,
   type JobPostingFormInput,
@@ -125,5 +126,23 @@ describe('remotePermitsSubmission', () => {
         { type: 'worldwide', value: 'worldwide', label: 'Worldwide' },
       ],
     });
+  });
+});
+
+describe('normalizeApplicationTarget', () => {
+  it('accepts an apply URL or a hiring email', () => {
+    expect(normalizeApplicationTarget('acme.com/apply')).toBe(
+      'https://acme.com/apply',
+    );
+    expect(normalizeApplicationTarget('https://acme.com/apply')).toBe(
+      'https://acme.com/apply',
+    );
+    expect(normalizeApplicationTarget('jobs@acme.com')).toBe(
+      'mailto:jobs@acme.com',
+    );
+    expect(normalizeApplicationTarget('mailto:jobs@acme.com')).toBe(
+      'mailto:jobs@acme.com',
+    );
+    expect(normalizeApplicationTarget('   ')).toBeUndefined();
   });
 });

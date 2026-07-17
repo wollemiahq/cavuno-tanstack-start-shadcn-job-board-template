@@ -228,7 +228,6 @@
         "src/components/rich-text-editor.tsx",
         "src/components/skills-section.tsx",
         "src/routes/-messages-dock-controller.tsx",
-        "src/routes/account.tsx",
         "src/routes/account_.access.tsx",
         "src/routes/account_.saved.tsx",
         "src/routes/alerts.manage.tsx",
@@ -366,6 +365,8 @@
       "status": "used",
       "productionReferences": [
         "src/components/alert-manager.tsx",
+        "src/components/education-section.tsx",
+        "src/components/experience-section.tsx",
         "src/routes/employers.dashboard.tsx"
       ]
     },
@@ -385,8 +386,7 @@
       "productionReferences": [
         "src/components/Header.tsx",
         "src/components/messages/message-bubble.tsx",
-        "src/components/messages/thread-view.tsx",
-        "src/routes/account.tsx"
+        "src/components/messages/thread-view.tsx"
       ]
     },
     {
@@ -646,7 +646,9 @@
       "productionReferences": [
         "src/components/Header.tsx",
         "src/components/alert-manager.tsx",
-        "src/components/board/jobs-filter-toolbar.tsx"
+        "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/education-section.tsx",
+        "src/components/experience-section.tsx"
       ]
     },
     {

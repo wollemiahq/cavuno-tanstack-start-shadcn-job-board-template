@@ -11,10 +11,8 @@ import {
   createFileRoute,
   getRouteApi,
   isRedirect,
-  Link,
   redirect,
 } from '@tanstack/react-router';
-import { ChevronDown } from 'lucide-react';
 
 import { AvatarUpload } from '../components/avatar-upload';
 import { DangerZone } from '../components/danger-zone';
@@ -36,20 +34,13 @@ import {
   ProfileCompletenessCard,
   type ProfileChecklistItem,
 } from '@/components/profile-completeness-card';
-import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 
 const rootApi = getRouteApi('__root__');
 
 function AccountPage() {
-  const { me, profile, experience, education, skills, languages, resume } =
+  const { profile, experience, education, skills, languages, resume } =
     Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const profileLocationSuggestions = useLocationSuggestions(board.language);
@@ -113,55 +104,22 @@ function AccountPage() {
 
   return (
     <CandidateShell
+      title={m.accountHome_title()}
       aside={<ProfileCompletenessCard items={checklist} resume={resume} />}
       asideLabel={m.profileCompleteness_regionLabel()}
     >
       <div className="space-y-6">
-        <header className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <AvatarUpload
-              avatarUrl={profile.avatarUrl}
-              displayName={profile.displayName}
-            />
-            <h1 className="font-heading text-3xl font-semibold tracking-tight">
-              {profile.displayName ?? me.email}
-            </h1>
-          </div>
-          <div className="flex shrink-0 flex-wrap justify-end gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className={buttonVariants({ variant: 'outline' })}
-              >
-                {m.accountHome_forEmployersLink()}
-                <ChevronDown aria-hidden data-icon="inline-end" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-48">
-                <DropdownMenuItem
-                  nativeButton={false}
-                  render={<Link to="/employers/dashboard" />}
-                >
-                  {m.employerDashboard_metaTitle()}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  nativeButton={false}
-                  render={
-                    <Link to="/employers/dashboard" search={{ add: true }} />
-                  }
-                >
-                  {m.employerOnboarding_addCompanyLabel()}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
-
         <Card id="profile">
           <CardHeader>
             <CardTitle>
               <h2>{m.accountHome_profileHeading()}</h2>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
+            <AvatarUpload
+              avatarUrl={profile.avatarUrl}
+              displayName={profile.displayName}
+            />
             <ProfileForm
               profile={profile}
               locationSuggestions={profileLocationSuggestions}

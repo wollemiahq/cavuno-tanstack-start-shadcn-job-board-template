@@ -98,6 +98,22 @@ export function ensureProtocol(value: string | undefined): string | undefined {
   return `https://${trimmed}`;
 }
 
+/**
+ * Normalise the application target: posters may paste an apply URL or a
+ * hiring email (the SDK treats http(s) and mailto as the safe apply
+ * targets). Emails gain `mailto:`, bare domains gain `https://`, existing
+ * schemes pass through, empty becomes undefined.
+ */
+export function normalizeApplicationTarget(
+  value: string | undefined,
+): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  if (/^mailto:/i.test(trimmed)) return trimmed;
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return `mailto:${trimmed}`;
+  return ensureProtocol(trimmed);
+}
+
 /** Strip any protocol and path, leaving the bare host (for logo lookup). */
 export function toDomain(value: string): string {
   return value

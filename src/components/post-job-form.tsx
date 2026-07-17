@@ -13,6 +13,7 @@ import {
   DEFAULT_SALARY_TIMEFRAME,
   ensureProtocol,
   isRichTextEmpty,
+  normalizeApplicationTarget,
   looksLikeDomain,
   remotePermitsSubmission,
   SALARY_TIMEFRAMES,
@@ -430,7 +431,7 @@ export function PostJobForm({
           ? { customFieldValues: submittableCustomFieldValues }
           : {}),
         applicationUrl:
-          ensureProtocol(readString(form, 'applicationUrl')) ?? '',
+          normalizeApplicationTarget(readString(form, 'applicationUrl')) ?? '',
         salaryMin,
         salaryMax,
         salaryCurrency: currency,
@@ -794,11 +795,17 @@ export function PostJobForm({
               }
             />
           </div>
-          <LabeledUrlInput
-            label={m.postJob_applicationUrlLabel()}
-            name="applicationUrl"
-            required
-          />
+          <Field>
+            <FieldLabel htmlFor="applicationUrl">
+              {m.postJob_applicationUrlLabel()}
+            </FieldLabel>
+            <Input
+              id="applicationUrl"
+              name="applicationUrl"
+              required
+              placeholder={m.postJob_applicationUrlPlaceholder()}
+            />
+          </Field>
           {/* ADR-0008: board-defined custom fields render as their own group
               after the built-in fields, in operator-config order. */}
           <CustomFieldsGroup

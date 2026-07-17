@@ -75,26 +75,29 @@ export function MonthYearField({
 }) {
   const [parts, setParts] = useState(() => parseParts(defaultValue));
 
+  // Arrays, deliberately NOT keyed records: JS object key ordering puts
+  // integer-like keys ('10'–'12', years) before zero-padded strings and
+  // sorts them ascending, which rendered months October-first and years
+  // 1966-first.
   const monthItems = useMemo(() => {
     const monthName = new Intl.DateTimeFormat(language, {
       month: 'long',
       timeZone: 'UTC',
     });
-    return Object.fromEntries(
-      Array.from({ length: 12 }, (_, index) => {
-        const value = String(index + 1).padStart(2, '0');
-        return [value, monthName.format(new Date(Date.UTC(2020, index, 1)))];
-      }),
-    );
+    return Array.from({ length: 12 }, (_, index) => ({
+      value: String(index + 1).padStart(2, '0'),
+      label: monthName.format(new Date(Date.UTC(2020, index, 1))),
+    }));
   }, [language]);
 
   const yearItems = useMemo(() => {
     const current = new Date().getUTCFullYear();
-    return Object.fromEntries(
-      Array.from({ length: YEARS_BACK + YEARS_FORWARD + 1 }, (_, index) => {
+    return Array.from(
+      { length: YEARS_BACK + YEARS_FORWARD + 1 },
+      (_, index) => {
         const year = String(current + YEARS_FORWARD - index);
-        return [year, year];
-      }),
+        return { value: year, label: year };
+      },
     );
   }, []);
 
@@ -123,9 +126,9 @@ export function MonthYearField({
             <SelectValue placeholder={monthPlaceholder} />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(monthItems).map(([value, name]) => (
-              <SelectItem key={value} value={value}>
-                {name}
+            {monthItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -146,9 +149,9 @@ export function MonthYearField({
             <SelectValue placeholder={yearPlaceholder} />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(yearItems).map(([value, name]) => (
-              <SelectItem key={value} value={value}>
-                {name}
+            {yearItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
               </SelectItem>
             ))}
           </SelectContent>

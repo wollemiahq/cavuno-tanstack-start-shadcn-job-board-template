@@ -432,7 +432,6 @@
   "accountHome_unverifiedBadge": "Nicht bestätigt — prüfe deine E-Mails",
   "accountHome_applicationsLink": "Bewerbungen",
   "accountHome_jobAlertsLink": "Job-Benachrichtigungen",
-  "accountHome_forEmployersLink": "Für Arbeitgeber",
   "accountHome_settingsLink": "Einstellungen",
   "accountHome_signOutLabel": "Abmelden",
   "accountHome_profileHeading": "Profil",
@@ -1096,5 +1095,8 @@
   "postJob_remoteRestrictionLabel": "Geografische Einschränkung",
   "postJob_remoteRestrictionWorldwide": "Weltweit",
   "postJob_remoteRestrictionPlaceholder": "Regionen, Gruppen oder Länder suchen…",
-  "postJob_remoteRestrictionHelperText": "Leer lassen, um weltweit einzustellen."
+  "postJob_remoteRestrictionHelperText": "Leer lassen, um weltweit einzustellen.",
+  "postJob_applicationUrlPlaceholder": "https://firma.de/bewerben oder jobs@firma.de",
+  "experienceSection_editTitle": "Erfahrung bearbeiten",
+  "educationSection_editTitle": "Ausbildung bearbeiten"
 }

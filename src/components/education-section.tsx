@@ -25,6 +25,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
@@ -34,6 +40,12 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/components/ui/item';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import type { CandidateEducation } from '@cavuno/board';
 
@@ -118,7 +130,6 @@ export function EducationSection({
       await router.invalidate();
       setEditing(null);
       setDraft(EMPTY);
-      setFeedback('success');
     } catch {
       setFeedback('error');
     } finally {
@@ -126,19 +137,132 @@ export function EducationSection({
     }
   };
 
+  const editorForm =
+    editing !== null ? (
+      <form
+        key={editing.id ?? 'new'}
+        onSubmit={(event) => {
+          event.preventDefault();
+          void submit();
+        }}
+      >
+        <FieldGroup className="gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field className="gap-1.5">
+              <FieldLabel htmlFor="education-institution">
+                {m.educationSection_institutionLabel()}
+              </FieldLabel>
+              <Input
+                id="education-institution"
+                required
+                value={draft.institutionName}
+                onChange={(event) =>
+                  setDraft({
+                    ...draft,
+                    institutionName: event.target.value,
+                  })
+                }
+              />
+            </Field>
+            <Field className="gap-1.5">
+              <FieldLabel htmlFor="education-degree">
+                {m.educationSection_degreeLabel()}
+              </FieldLabel>
+              <Input
+                id="education-degree"
+                value={draft.degree}
+                onChange={(event) =>
+                  setDraft({ ...draft, degree: event.target.value })
+                }
+              />
+            </Field>
+            <Field className="gap-1.5 sm:col-span-2">
+              <FieldLabel htmlFor="education-field">
+                {m.educationSection_fieldOfStudyLabel()}
+              </FieldLabel>
+              <Input
+                id="education-field"
+                value={draft.fieldOfStudy}
+                onChange={(event) =>
+                  setDraft({ ...draft, fieldOfStudy: event.target.value })
+                }
+              />
+            </Field>
+            <MonthYearField
+              idPrefix="education-start"
+              label={m.educationSection_startLabel()}
+              language={language}
+              defaultValue={draft.startDate}
+              onChange={(startDate) =>
+                setDraft((prev) => ({ ...prev, startDate }))
+              }
+              monthAriaLabel={m.monthYearField_monthPlaceholder()}
+              yearAriaLabel={m.monthYearField_yearPlaceholder()}
+              monthPlaceholder={m.monthYearField_monthPlaceholder()}
+              yearPlaceholder={m.monthYearField_yearPlaceholder()}
+              clearAriaLabel={m.monthYearField_clearAriaLabel()}
+            />
+            <MonthYearField
+              idPrefix="education-end"
+              label={m.educationSection_endLabel()}
+              language={language}
+              clearable
+              defaultValue={draft.endDate}
+              onChange={(endDate) => setDraft((prev) => ({ ...prev, endDate }))}
+              monthAriaLabel={m.monthYearField_monthPlaceholder()}
+              yearAriaLabel={m.monthYearField_yearPlaceholder()}
+              monthPlaceholder={m.monthYearField_monthPlaceholder()}
+              yearPlaceholder={m.monthYearField_yearPlaceholder()}
+              clearAriaLabel={m.monthYearField_clearAriaLabel()}
+            />
+          </div>
+          <Field className="gap-1.5">
+            <FieldLabel htmlFor="education-description">
+              {m.educationSection_descriptionLabel()}
+            </FieldLabel>
+            <Textarea
+              id="education-description"
+              rows={3}
+              value={draft.description}
+              onChange={(event) =>
+                setDraft({ ...draft, description: event.target.value })
+              }
+            />
+          </Field>
+          <div className="flex gap-2">
+            <Button type="submit" size="sm" disabled={pending}>
+              {pending
+                ? m.educationSection_savingLabel()
+                : m.educationSection_saveLabel()}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={pending}
+              onClick={() => {
+                setEditing(null);
+                setDraft(EMPTY);
+              }}
+            >
+              {m.educationSection_cancelLabel()}
+            </Button>
+          </div>
+        </FieldGroup>
+      </form>
+    ) : null;
+
   return (
     <Card data-test="education-section" id="education">
       <CardHeader>
         <CardTitle>
           <h2>{m.educationSection_heading()}</h2>
         </CardTitle>
-        {editing === null ? (
-          <CardAction>
-            <Button variant="outline" size="sm" onClick={() => open(null)}>
-              {m.educationSection_addLabel()}
-            </Button>
-          </CardAction>
-        ) : null}
+        <CardAction>
+          <Button variant="outline" size="sm" onClick={() => open(null)}>
+            {m.educationSection_addLabel()}
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent className="space-y-3">
         {items.length === 0 && editing === null ? (
@@ -181,7 +305,6 @@ export function EducationSection({
                       try {
                         await deleteEducation({ data: { id: item.id } });
                         await router.invalidate();
-                        setFeedback('success');
                       } catch {
                         setFeedback('error');
                       } finally {
@@ -197,123 +320,35 @@ export function EducationSection({
           </ul>
         ) : null}
 
-        {editing !== null ? (
-          <form
-            key={editing.id ?? 'new'}
-            className="border-border rounded-2xl border p-4"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void submit();
-            }}
-          >
-            <FieldGroup className="gap-3">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field className="gap-1.5">
-                  <FieldLabel htmlFor="education-institution">
-                    {m.educationSection_institutionLabel()}
-                  </FieldLabel>
-                  <Input
-                    id="education-institution"
-                    required
-                    value={draft.institutionName}
-                    onChange={(event) =>
-                      setDraft({
-                        ...draft,
-                        institutionName: event.target.value,
-                      })
-                    }
-                  />
-                </Field>
-                <Field className="gap-1.5">
-                  <FieldLabel htmlFor="education-degree">
-                    {m.educationSection_degreeLabel()}
-                  </FieldLabel>
-                  <Input
-                    id="education-degree"
-                    value={draft.degree}
-                    onChange={(event) =>
-                      setDraft({ ...draft, degree: event.target.value })
-                    }
-                  />
-                </Field>
-                <Field className="gap-1.5 sm:col-span-2">
-                  <FieldLabel htmlFor="education-field">
-                    {m.educationSection_fieldOfStudyLabel()}
-                  </FieldLabel>
-                  <Input
-                    id="education-field"
-                    value={draft.fieldOfStudy}
-                    onChange={(event) =>
-                      setDraft({ ...draft, fieldOfStudy: event.target.value })
-                    }
-                  />
-                </Field>
-                <MonthYearField
-                  idPrefix="education-start"
-                  label={m.educationSection_startLabel()}
-                  language={language}
-                  defaultValue={draft.startDate}
-                  onChange={(startDate) =>
-                    setDraft((prev) => ({ ...prev, startDate }))
-                  }
-                  monthAriaLabel={m.monthYearField_monthPlaceholder()}
-                  yearAriaLabel={m.monthYearField_yearPlaceholder()}
-                  monthPlaceholder={m.monthYearField_monthPlaceholder()}
-                  yearPlaceholder={m.monthYearField_yearPlaceholder()}
-                  clearAriaLabel={m.monthYearField_clearAriaLabel()}
-                />
-                <MonthYearField
-                  idPrefix="education-end"
-                  label={m.educationSection_endLabel()}
-                  language={language}
-                  clearable
-                  defaultValue={draft.endDate}
-                  onChange={(endDate) =>
-                    setDraft((prev) => ({ ...prev, endDate }))
-                  }
-                  monthAriaLabel={m.monthYearField_monthPlaceholder()}
-                  yearAriaLabel={m.monthYearField_yearPlaceholder()}
-                  monthPlaceholder={m.monthYearField_monthPlaceholder()}
-                  yearPlaceholder={m.monthYearField_yearPlaceholder()}
-                  clearAriaLabel={m.monthYearField_clearAriaLabel()}
-                />
-              </div>
-              <Field className="gap-1.5">
-                <FieldLabel htmlFor="education-description">
-                  {m.educationSection_descriptionLabel()}
-                </FieldLabel>
-                <Textarea
-                  id="education-description"
-                  rows={3}
-                  value={draft.description}
-                  onChange={(event) =>
-                    setDraft({ ...draft, description: event.target.value })
-                  }
-                />
-              </Field>
-              <div className="flex gap-2">
-                <Button type="submit" size="sm" disabled={pending}>
-                  {pending
-                    ? m.educationSection_savingLabel()
-                    : m.educationSection_saveLabel()}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={pending}
-                  onClick={() => {
-                    setEditing(null);
-                    setDraft(EMPTY);
-                  }}
-                >
-                  {m.educationSection_cancelLabel()}
-                </Button>
-              </div>
-            </FieldGroup>
-          </form>
-        ) : null}
         <CandidateActionFeedback state={feedback} />
+
+        <Dialog
+          open={editing !== null && editing.id === null}
+          onOpenChange={(open) => {
+            if (!open) setEditing(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-xl">
+            <DialogHeader>
+              <DialogTitle>{m.educationSection_addLabel()}</DialogTitle>
+            </DialogHeader>
+            {editorForm}
+          </DialogContent>
+        </Dialog>
+
+        <Sheet
+          open={editing !== null && editing.id !== null}
+          onOpenChange={(open) => {
+            if (!open) setEditing(null);
+          }}
+        >
+          <SheetContent side="right" className="w-full gap-0 sm:max-w-lg">
+            <SheetHeader>
+              <SheetTitle>{m.educationSection_editTitle()}</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto p-4 pt-2">{editorForm}</div>
+          </SheetContent>
+        </Sheet>
       </CardContent>
     </Card>
   );

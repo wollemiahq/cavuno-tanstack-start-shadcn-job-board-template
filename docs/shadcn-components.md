@@ -25,7 +25,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `badge` | Used (36) | `src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>`src/components/board/company-card.tsx`<br>+33 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
-| `button` | Used (76) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+73 more in the JSON ledger |
+| `button` | Used (75) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+72 more in the JSON ledger |
 | `button-group` | Used (5) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/talent-filter-controls.tsx`<br>+2 more in the JSON ledger |
 | `calendar` | Available | Installed for adoption when the product needs this behavior. |
 | `card` | Used (32) | `src/components/account-shell.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>+29 more in the JSON ledger |
@@ -36,10 +36,10 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `combobox` | Used (6) | `src/components/company-search-combobox.tsx`<br>`src/components/keyword-combobox.tsx`<br>`src/components/location-combobox.tsx`<br>+3 more in the JSON ledger |
 | `command` | Available | Installed for adoption when the product needs this behavior. |
 | `context-menu` | Available | Installed for adoption when the product needs this behavior. |
-| `dialog` | Used (2) | `src/components/alert-manager.tsx`<br>`src/routes/employers.dashboard.tsx` |
+| `dialog` | Used (4) | `src/components/alert-manager.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+1 more in the JSON ledger |
 | `direction` | Available | Installed for adoption when the product needs this behavior. |
 | `drawer` | Available | Installed for adoption when the product needs this behavior. |
-| `dropdown-menu` | Used (4) | `src/components/Header.tsx`<br>`src/components/messages/message-bubble.tsx`<br>`src/components/messages/thread-view.tsx`<br>+1 more in the JSON ledger |
+| `dropdown-menu` | Used (3) | `src/components/Header.tsx`<br>`src/components/messages/message-bubble.tsx`<br>`src/components/messages/thread-view.tsx` |
 | `empty` | Used (36) | `src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+33 more in the JSON ledger |
 | `field` | Used (19) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+16 more in the JSON ledger |
 | `hover-card` | Available | Installed for adoption when the product needs this behavior. |
@@ -63,7 +63,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `scroll-area` | Available | Installed for adoption when the product needs this behavior. |
 | `select` | Used (9) | `src/components/board/jobs-filter-controls.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/custom-fields-group.tsx`<br>+6 more in the JSON ledger |
 | `separator` | Used (3) | `src/components/account-shell.tsx`<br>`src/components/profile-completeness-card.tsx`<br>`src/components/rich-text-editor.tsx` |
-| `sheet` | Used (3) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx` |
+| `sheet` | Used (5) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>+2 more in the JSON ledger |
 | `sidebar` | Available | Installed for adoption when the product needs this behavior. |
 | `skeleton` | Used (6) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-result-detail.tsx`<br>`src/components/board/public-content-pending.tsx`<br>+3 more in the JSON ledger |
 | `slider` | Available | Installed for adoption when the product needs this behavior. |
