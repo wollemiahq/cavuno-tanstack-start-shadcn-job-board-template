@@ -7,6 +7,7 @@ import { m } from '../paraglide/messages';
 import { getLegalPage, getSeoBase } from '../server/queries';
 
 import { PageBody } from '@/components/board/page-body';
+import { headTitle } from '@/lib/page-title';
 
 const META = LEGAL_PAGES['terms-of-service'];
 
@@ -29,7 +30,12 @@ export const Route = createFileRoute('/terms-of-service')({
     loaderData
       ? {
           meta: [
-            { title: loaderData.page.title },
+            {
+              title: headTitle(
+                loaderData?.seo.boardName,
+                loaderData.page.title,
+              ),
+            },
             {
               name: 'description',
               content: legalMetaDescription(loaderData.page.content),

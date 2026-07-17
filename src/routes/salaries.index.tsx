@@ -25,6 +25,7 @@ import {
 import { JsonLd } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
 import { buttonVariants } from '@/components/ui/button';
+import { headTitle } from '@/lib/page-title';
 
 const PREVIEW = 9;
 
@@ -52,9 +53,10 @@ export const Route = createFileRoute('/salaries/')({
       ? {
           meta: [
             {
-              title: m.salaryHub_metaTitle({
-                boardName: loaderData.seo.boardName,
-              }),
+              title: headTitle(
+                loaderData?.seo.boardName,
+                m.salaryHub_metaTitle(),
+              ),
             },
             {
               name: 'description',

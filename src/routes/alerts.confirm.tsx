@@ -6,9 +6,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import { confirmJobAlert } from '../server/queries';
+import { getSeoBase, confirmJobAlert } from '../server/queries';
 
 import { Page, PageContent } from '@/components/layout/page';
+import { headTitle } from '@/lib/page-title';
 
 type ConfirmStatus =
   | 'confirmed'
@@ -47,14 +48,24 @@ export const Route = createFileRoute('/alerts/confirm')({
         : undefined,
   }),
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps }): Promise<{ status: ConfirmStatus }> => {
-    if (!deps.token) return { status: 'not_found' };
-    const result = await confirmJobAlert({ data: { token: deps.token } });
-    return { status: result.status };
+  loader: async ({
+    deps,
+  }): Promise<{
+    status: ConfirmStatus;
+    seo: Awaited<ReturnType<typeof getSeoBase>>;
+  }> => {
+    // Started before the token branch so it overlaps the confirm call.
+    const seoPromise = getSeoBase();
+    if (!deps.token) return { status: 'not_found', seo: await seoPromise };
+    const [result, seo] = await Promise.all([
+      confirmJobAlert({ data: { token: deps.token } }),
+      seoPromise,
+    ]);
+    return { status: result.status, seo };
   },
-  head: () => ({
+  head: ({ loaderData }) => ({
     meta: [
-      { title: m.alertsConfirm_title() },
+      { title: headTitle(loaderData?.seo.boardName, m.alertsConfirm_title()) },
       { name: 'robots', content: 'noindex' },
     ],
   }),

@@ -15,6 +15,7 @@ import { createFileRoute, useRouter } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import {
+  getSeoBase,
   deleteJobAlertPreference,
   getJobAlertManageState,
   resubscribeJobAlert,
@@ -38,9 +39,12 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/components/ui/item';
+import { headTitle } from '@/lib/page-title';
 import type { JobAlertManageState, JobAlertStoredFilters } from '@cavuno/board';
 
-type LoaderData = { state: JobAlertManageState } | { error: true };
+type LoaderData = ({ state: JobAlertManageState } | { error: true }) & {
+  seo: Awaited<ReturnType<typeof getSeoBase>>;
+};
 
 export const Route = createFileRoute('/alerts/manage')({
   staticData: { ownsMain: true },
@@ -58,19 +62,26 @@ export const Route = createFileRoute('/alerts/manage')({
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }): Promise<LoaderData> => {
-    if (!deps.subscription || !deps.token) return { error: true };
+    // Started before the branch so it overlaps the manage-state read.
+    const seoPromise = getSeoBase();
+    if (!deps.subscription || !deps.token) {
+      return { error: true, seo: await seoPromise };
+    }
     try {
-      const state = await getJobAlertManageState({
-        data: { subscription: deps.subscription, token: deps.token },
-      });
-      return { state };
+      const [state, seo] = await Promise.all([
+        getJobAlertManageState({
+          data: { subscription: deps.subscription, token: deps.token },
+        }),
+        seoPromise,
+      ]);
+      return { state, seo };
     } catch {
-      return { error: true };
+      return { error: true, seo: await seoPromise };
     }
   },
-  head: () => ({
+  head: ({ loaderData }) => ({
     meta: [
-      { title: m.alertsManage_title() },
+      { title: headTitle(loaderData?.seo.boardName, m.alertsManage_title()) },
       { name: 'robots', content: 'noindex' },
     ],
   }),

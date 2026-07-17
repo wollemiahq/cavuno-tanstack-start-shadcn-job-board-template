@@ -29,6 +29,7 @@ import {
 
 import { toJobCardVM } from '@/board/job-view-model';
 import { HomeLanding } from '@/components/board/home-landing';
+import { headTitle } from '@/lib/page-title';
 
 interface JobsSearch extends ListingFilters {
   cursor?: string;
@@ -103,7 +104,7 @@ export const Route = createFileRoute('/')({
   head: ({ loaderData }) => {
     if (!loaderData) return {};
 
-    const title = `${m.home_heroHeadline()} | ${loaderData.seo.boardName}`;
+    const title = headTitle(loaderData?.seo.boardName, m.home_heroHeadline());
     const description = m.home_heroSupporting();
     const canonical = `${loaderData.seo.origin}/`;
 

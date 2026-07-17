@@ -31,6 +31,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 import type { Plan, SalesLedPlan } from '@cavuno/board';
 
@@ -47,7 +48,12 @@ export const Route = createFileRoute('/employers/')({
     loaderData
       ? {
           meta: [
-            { title: m.employerLanding_title() },
+            {
+              title: headTitle(
+                loaderData?.seo.boardName,
+                m.employerLanding_title(),
+              ),
+            },
             {
               name: 'description',
               content: m.employerLanding_subtitle({
@@ -59,7 +65,7 @@ export const Route = createFileRoute('/employers/')({
             { rel: 'canonical', href: `${loaderData.seo.origin}/employers` },
           ],
         }
-      : { meta: [{ title: m.employerLanding_title() }] },
+      : { meta: [{ title: headTitle(undefined, m.employerLanding_title()) }] },
   staticData: { ownsMain: true },
   component: EmployersPage,
 });

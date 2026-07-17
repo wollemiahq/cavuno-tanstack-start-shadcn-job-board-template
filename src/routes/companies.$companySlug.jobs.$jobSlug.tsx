@@ -49,6 +49,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -89,7 +90,7 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
   },
   head: ({ loaderData }) => {
     if (!loaderData) return {};
-    const { job, board, seo } = loaderData;
+    const { job, seo } = loaderData;
     const title = job.company?.name
       ? `${job.title} at ${job.company.name}`
       : job.title;
@@ -110,7 +111,7 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
 
     return {
       meta: [
-        { title: `${title} — ${board.name}` },
+        { title: headTitle(loaderData?.seo.boardName, title) },
         { name: 'description', content: description },
         { property: 'og:title', content: title },
         { property: 'og:description', content: description },
