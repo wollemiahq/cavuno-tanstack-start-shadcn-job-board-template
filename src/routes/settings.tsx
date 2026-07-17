@@ -32,7 +32,7 @@ import { Page, PageContent } from '@/components/layout/page';
 import { buttonVariants } from '@/components/ui/button';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
-import { pageTitle } from '@/lib/page-title';
+import { headTitle } from '@/lib/page-title';
 
 type Channel = 'messageEmails' | 'applicationEmails';
 
@@ -97,7 +97,7 @@ export const Route = createFileRoute('/settings')({
     }
   },
   head: ({ loaderData }) => ({
-    meta: [{ title: pageTitle(m.settings_title(), loaderData?.seo.boardName) }],
+    meta: [{ title: headTitle(loaderData?.seo.boardName, m.settings_title()) }],
   }),
   component: SettingsPage,
 });

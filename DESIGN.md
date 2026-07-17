@@ -283,14 +283,32 @@ Props:
 - `alerts: { id: string; object: "alert"; label: string | null; frequency: "weekly"; isActive: boolean; filters: { jobFunctions:…`
 - `places: AlertPlaceOption[]`
 
-### AppError — `src/components/app-error.tsx`
-
-The router's default error boundary — the app-wide sibling of
-`app-not-found`. Raw error text (stack traces, API phrases like
-"Rate limit exceeded") never renders; the one detail worth reading is
-whether it was rate limiting, which gets its own friendlier line.
-
 ### NotFound — `src/components/app-not-found.tsx`
+
+### AppRouteError — `src/components/app-route-error.tsx`
+
+The public-facing route error state — the root route's backstop for a
+loader rejection anywhere in the tree (a Board API 500/timeout, a failed
+`serverFnFetcher`). Without it TanStack has no error boundary above the
+six candidate routes, so a rejecting public loader left the page blank.
+
+Two constraints shape this surface:
+ - It stands in for `RootLayout`, so it renders its own `<main>` and its
+   own `Page` (which owns the design-token scope) — the header/footer chrome
+   is NOT mounted around it.
+ - It reads NO loader data. The root loader is one of the things that can
+   fail, so board context may never have resolved; copy comes from the
+   Paraglide seam and the recovery link is a static typed route.
+
+Props:
+
+- `description: string`
+- `homeLabel: string`
+- `reset: () => void`
+- `retryLabel: string`
+- `title: string`
+
+### AppRouteErrorPage — `src/components/app-route-error.tsx`
 
 ### AppRouterProvider — `src/components/app-router-provider.tsx`
 

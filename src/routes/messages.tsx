@@ -13,7 +13,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { pageTitle } from '@/lib/page-title';
+import { headTitle } from '@/lib/page-title';
 import { m } from '@/paraglide/messages';
 import { getBlocked, getInbox } from '@/server/messaging';
 import { getSeoBase } from '@/server/queries';
@@ -57,7 +57,7 @@ export const Route = createFileRoute('/messages')({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: pageTitle(m.messagesPage_title(), loaderData?.seo.boardName) },
+      { title: headTitle(loaderData?.seo.boardName, m.messagesPage_title()) },
     ],
   }),
   component: MessagesPage,

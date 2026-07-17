@@ -18,7 +18,7 @@ import {
 } from '@/components/candidate-route-state';
 import { CandidateShell } from '@/components/candidate-shell';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
-import { pageTitle } from '@/lib/page-title';
+import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/me/alerts')({
   staticData: { ownsMain: true },
@@ -53,7 +53,7 @@ export const Route = createFileRoute('/me/alerts')({
     }
   },
   head: ({ loaderData }) => ({
-    meta: [{ title: pageTitle(m.meAlerts_title(), loaderData?.seo.boardName) }],
+    meta: [{ title: headTitle(loaderData?.seo.boardName, m.meAlerts_title()) }],
   }),
   component: AlertsPage,
 });

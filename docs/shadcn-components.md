@@ -25,7 +25,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `badge` | Used (37) | `src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>`src/components/board/company-card.tsx`<br>+34 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
-| `button` | Used (77) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-error.tsx`<br>+74 more in the JSON ledger |
+| `button` | Used (77) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+74 more in the JSON ledger |
 | `button-group` | Used (4) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/talent-filter-controls.tsx`<br>+1 more in the JSON ledger |
 | `calendar` | Available | Installed for adoption when the product needs this behavior. |
 | `card` | Used (33) | `src/components/account-shell.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>+30 more in the JSON ledger |
@@ -40,7 +40,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `direction` | Available | Installed for adoption when the product needs this behavior. |
 | `drawer` | Available | Installed for adoption when the product needs this behavior. |
 | `dropdown-menu` | Used (3) | `src/components/Header.tsx`<br>`src/components/messages/message-bubble.tsx`<br>`src/components/messages/thread-view.tsx` |
-| `empty` | Used (40) | `src/components/alert-manager.tsx`<br>`src/components/app-error.tsx`<br>`src/components/app-not-found.tsx`<br>+37 more in the JSON ledger |
+| `empty` | Used (40) | `src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>+37 more in the JSON ledger |
 | `field` | Used (22) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+19 more in the JSON ledger |
 | `hover-card` | Available | Installed for adoption when the product needs this behavior. |
 | `input` | Used (17) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alerts-band.tsx`<br>+14 more in the JSON ledger |

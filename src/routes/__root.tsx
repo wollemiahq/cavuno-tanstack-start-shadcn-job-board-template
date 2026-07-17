@@ -34,6 +34,7 @@ import { useCompanyMarketSuggestions } from './-use-company-market-suggestions';
 import { useKeywordSuggestions } from './-use-keyword-suggestions';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
+import { AppRouteErrorPage } from '@/components/app-route-error';
 import { AppRouterProvider } from '@/components/app-router-provider';
 import { ShellBreadcrumb } from '@/components/board/breadcrumb';
 import { themeModeScript } from '@/components/cavuno/board-theme';
@@ -143,6 +144,14 @@ export const Route = createRootRoute({
   },
   shellComponent: RootDocument,
   component: RootLayout,
+  // The tree-wide backstop for a rejecting loader: a `Failed to fetch` inside
+  // a public route's loader escaped every boundary and left the page blank.
+  // Only the candidate routes carry their own errorComponent; a route without
+  // one surfaces its error here, so this covers every public,
+  // SEO-load-bearing page. Deliberately at the root rather than the router's
+  // `defaultErrorComponent` — that option would give EVERY route its own
+  // boundary, so an error would never reach the root at all.
+  errorComponent: AppRouteErrorPage,
 });
 
 function RootLayout() {

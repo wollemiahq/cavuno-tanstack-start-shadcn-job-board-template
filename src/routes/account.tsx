@@ -38,7 +38,7 @@ import {
 } from '@/components/profile-completeness-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
-import { pageTitle } from '@/lib/page-title';
+import { headTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
 
@@ -182,7 +182,7 @@ export const Route = createFileRoute('/account')({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: pageTitle(m.accountHome_title(), loaderData?.seo.boardName) },
+      { title: headTitle(loaderData?.seo.boardName, m.accountHome_title()) },
     ],
   }),
   component: AccountPage,

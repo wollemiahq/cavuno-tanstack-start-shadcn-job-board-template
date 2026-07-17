@@ -55,7 +55,7 @@ import {
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
-import { pageTitle } from '@/lib/page-title';
+import { headTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
 
@@ -92,9 +92,9 @@ export const Route = createFileRoute('/account_/saved')({
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: pageTitle(
-          m.accountShell_savedJobsNav(),
+        title: headTitle(
           loaderData?.seo.boardName,
+          m.accountShell_savedJobsNav(),
         ),
       },
     ],

@@ -1127,15 +1127,15 @@
   "authSignIn_useDifferentEmailLabel": "Use a different email",
   "employerPostJob_billingRequiredError": "Choose a credit or plan to publish with.",
   "appError_heading": "Something went wrong",
-  "appError_body": "The page hit a snag while loading. Try again in a moment.",
+  "appError_body": "This page didn't load. Try again, or head back to the homepage.",
   "appError_rateLimitedBody": "You’ve made a lot of requests in a short time. Give it a few seconds, then try again.",
-  "appError_retryLabel": "Try again",
-  "appError_homeLabel": "Go to homepage",
   "planFeature_liveDays": "Live for {days} days",
   "planFeature_maxActiveOne": "1 active job at a time",
   "planFeature_maxActiveOther": "Up to {count} active jobs",
   "planFeature_unlimitedActive": "Unlimited active jobs",
   "planFeature_featuredAuto": "Every post is featured",
   "planFeature_featuredOne": "Includes 1 featured post",
-  "planFeature_featuredOther": "Includes {count} featured posts"
+  "planFeature_featuredOther": "Includes {count} featured posts",
+  "appError_retryAction": "Try again",
+  "appError_homeLink": "Go to homepage"
 }

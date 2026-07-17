@@ -42,7 +42,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
-import { pageTitle } from '@/lib/page-title';
+import { headTitle } from '@/lib/page-title';
 import type { AccessCheckoutSession, PaywallOffer } from '@cavuno/board';
 
 const RETURN_PATH = '/account/access';
@@ -93,7 +93,7 @@ export const Route = createFileRoute('/account_/access')({
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: pageTitle(m.accountAccess_title(), loaderData?.seo.boardName),
+        title: headTitle(loaderData?.seo.boardName, m.accountAccess_title()),
       },
     ],
   }),

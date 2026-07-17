@@ -13,7 +13,7 @@ import {
 
 import { Page, PageContent } from '@/components/layout/page';
 import { MessagingLayout } from '@/components/messages/messaging-layout';
-import { pageTitle } from '@/lib/page-title';
+import { headTitle } from '@/lib/page-title';
 import { m } from '@/paraglide/messages';
 import { getInbox, getThread } from '@/server/messaging';
 import { getSeoBase } from '@/server/queries';
@@ -52,9 +52,9 @@ export const Route = createFileRoute('/messages/$conversationId')({
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: pageTitle(
-          m.messagesPage_conversationTitle(),
+        title: headTitle(
           loaderData?.seo.boardName,
+          m.messagesPage_conversationTitle(),
         ),
       },
     ],
