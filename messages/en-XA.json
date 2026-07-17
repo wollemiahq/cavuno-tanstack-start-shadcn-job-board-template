@@ -435,7 +435,6 @@
   "accountHome_settingsLink": "⟦Šéţţíñğš⟧",
   "accountHome_signOutLabel": "⟦Šíğñ óúţ⟧",
   "accountHome_profileHeading": "⟦Þŕóƒíĺé⟧",
-  "accountHome_savedJobsHeading": "⟦Šáṽéð ĵóƀš ({count})⟧",
   "accountHome_savedJobsEmptyText": "⟦Ĵóƀš ýóú šáṽé šĥóŵ úþ ĥéŕé.⟧",
   "accountHome_unsaveLabel": "⟦Úñšáṽé⟧",
   "candidateAccount_loadingLabel": "⟦Ĺóáðíñğ ýóúŕ áççóúñţ…⟧",
@@ -1098,5 +1097,7 @@
   "postJob_remoteRestrictionHelperText": "⟦Ĺéáṽé éɱþţý ţó ĥíŕé ŵóŕĺðŵíðé.⟧",
   "postJob_applicationUrlPlaceholder": "⟦ĥţţþš://çóɱþáñý.çóɱ/áþþĺý óŕ ĵóƀš@çóɱþáñý.çóɱ⟧",
   "experienceSection_editTitle": "⟦Éðíţ éẋþéŕíéñçé⟧",
-  "educationSection_editTitle": "⟦Éðíţ éðúçáţíóñ⟧"
+  "educationSection_editTitle": "⟦Éðíţ éðúçáţíóñ⟧",
+  "accountSaved_countOneText": "⟦Ýóú ĥáṽé šáṽéð 1 ĵóƀ.⟧",
+  "accountSaved_countOtherText": "⟦Ýóú ĥáṽé šáṽéð {count} ĵóƀš.⟧"
 }

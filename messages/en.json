@@ -435,7 +435,6 @@
   "accountHome_settingsLink": "Settings",
   "accountHome_signOutLabel": "Sign out",
   "accountHome_profileHeading": "Profile",
-  "accountHome_savedJobsHeading": "Saved jobs ({count})",
   "accountHome_savedJobsEmptyText": "Jobs you save show up here.",
   "accountHome_unsaveLabel": "Unsave",
   "candidateAccount_loadingLabel": "Loading your account…",
@@ -1098,5 +1097,7 @@
   "postJob_remoteRestrictionHelperText": "Leave empty to hire worldwide.",
   "postJob_applicationUrlPlaceholder": "https://company.com/apply or jobs@company.com",
   "experienceSection_editTitle": "Edit experience",
-  "educationSection_editTitle": "Edit education"
+  "educationSection_editTitle": "Edit education",
+  "accountSaved_countOneText": "You have saved 1 job.",
+  "accountSaved_countOtherText": "You have saved {count} jobs."
 }

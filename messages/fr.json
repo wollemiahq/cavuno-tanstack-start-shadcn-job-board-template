@@ -435,7 +435,6 @@
   "accountHome_settingsLink": "Paramètres",
   "accountHome_signOutLabel": "Se déconnecter",
   "accountHome_profileHeading": "Profil",
-  "accountHome_savedJobsHeading": "Offres enregistrées ({count})",
   "accountHome_savedJobsEmptyText": "Les offres que vous enregistrez apparaissent ici.",
   "accountHome_unsaveLabel": "Retirer",
   "candidateAccount_loadingLabel": "Chargement de votre compte…",
@@ -1098,5 +1097,7 @@
   "postJob_remoteRestrictionHelperText": "Laissez vide pour recruter dans le monde entier.",
   "postJob_applicationUrlPlaceholder": "https://entreprise.com/postuler ou jobs@entreprise.com",
   "experienceSection_editTitle": "Modifier l'expérience",
-  "educationSection_editTitle": "Modifier la formation"
+  "educationSection_editTitle": "Modifier la formation",
+  "accountSaved_countOneText": "Vous avez enregistré 1 offre.",
+  "accountSaved_countOtherText": "Vous avez enregistré {count} offres."
 }

@@ -435,7 +435,6 @@
   "accountHome_settingsLink": "Einstellungen",
   "accountHome_signOutLabel": "Abmelden",
   "accountHome_profileHeading": "Profil",
-  "accountHome_savedJobsHeading": "Gespeicherte Jobs ({count})",
   "accountHome_savedJobsEmptyText": "Jobs, die du speicherst, erscheinen hier.",
   "accountHome_unsaveLabel": "Entfernen",
   "candidateAccount_loadingLabel": "Ihr Konto wird geladen …",
@@ -1098,5 +1097,7 @@
   "postJob_remoteRestrictionHelperText": "Leer lassen, um weltweit einzustellen.",
   "postJob_applicationUrlPlaceholder": "https://firma.de/bewerben oder jobs@firma.de",
   "experienceSection_editTitle": "Erfahrung bearbeiten",
-  "educationSection_editTitle": "Ausbildung bearbeiten"
+  "educationSection_editTitle": "Ausbildung bearbeiten",
+  "accountSaved_countOneText": "Du hast 1 Job gespeichert.",
+  "accountSaved_countOtherText": "Du hast {count} Jobs gespeichert."
 }

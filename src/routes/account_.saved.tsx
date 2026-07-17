@@ -134,7 +134,9 @@ function SavedJobsPage() {
         {m.accountShell_savedJobsNav()}
       </h1>
       <p className="text-muted-foreground text-sm">
-        {m.accountHome_savedJobsHeading({ count: savedJobs.data.length })}
+        {savedJobs.data.length === 1
+          ? m.accountSaved_countOneText()
+          : m.accountSaved_countOtherText({ count: savedJobs.data.length })}
       </p>
       <CandidateActionFeedback state={feedback} />
     </header>
