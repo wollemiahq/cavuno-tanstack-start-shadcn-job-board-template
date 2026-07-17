@@ -82,13 +82,9 @@ function ExpandedCompanyDetailHeader({
           data-slot="company-detail-heading"
           className="col-start-1 row-start-1 flex min-w-0 items-center gap-3"
         >
-          <Avatar size="lg" className="rounded-xl after:rounded-xl">
-            {vm.logoUrl ? (
-              <AvatarImage src={vm.logoUrl} alt="" className="rounded-xl" />
-            ) : null}
-            <AvatarFallback className="rounded-xl">
-              {initialsOf(vm.avatarName)}
-            </AvatarFallback>
+          <Avatar size="lg">
+            {vm.logoUrl ? <AvatarImage src={vm.logoUrl} alt="" /> : null}
+            <AvatarFallback>{initialsOf(vm.avatarName)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 space-y-1">
             <Text as="h2" variant="heading2" className="truncate">

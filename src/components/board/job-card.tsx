@@ -41,18 +41,11 @@ function CompanyAvatar({
   className?: string;
 }) {
   return (
-    <Avatar
-      size={size}
-      className={cn('rounded-xl after:rounded-xl', className)}
-    >
+    <Avatar size={size} className={cn('', className)}>
       {vm.companyLogoUrl ? (
-        <AvatarImage
-          src={vm.companyLogoUrl}
-          alt={vm.companyName ?? vm.title}
-          className="rounded-xl"
-        />
+        <AvatarImage src={vm.companyLogoUrl} alt={vm.companyName ?? vm.title} />
       ) : null}
-      <AvatarFallback className="rounded-xl font-semibold">
+      <AvatarFallback className="font-semibold">
         {initialsOf(vm.companyAvatarName)}
       </AvatarFallback>
     </Avatar>

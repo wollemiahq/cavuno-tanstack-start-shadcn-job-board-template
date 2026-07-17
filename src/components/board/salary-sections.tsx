@@ -190,17 +190,11 @@ export function SalaryRail({ vm }: { vm: SalaryRailVM }) {
             >
               <CardContent>
                 <div className="flex items-center gap-3">
-                  <Avatar className="rounded-xl after:rounded-xl">
+                  <Avatar>
                     {item.logoPath ? (
-                      <AvatarImage
-                        className="rounded-xl"
-                        src={item.logoPath}
-                        alt={item.name}
-                      />
+                      <AvatarImage src={item.logoPath} alt={item.name} />
                     ) : null}
-                    <AvatarFallback className="rounded-xl">
-                      {initialsOf(item.name)}
-                    </AvatarFallback>
+                    <AvatarFallback>{initialsOf(item.name)}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium break-words">

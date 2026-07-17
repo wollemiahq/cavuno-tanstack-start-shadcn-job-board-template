@@ -20,7 +20,7 @@ import { initialsOf } from '@/lib/initials';
  * hover like `JobCard`. The company mark falls
  * back to two-letter initials when there is no logo. The open-count Badge
  * is shown ONLY when the company has open roles (an empty company earns no
- * "0 open jobs" noise), and the description line is honestly omitted when
+ *"0 open jobs" noise), and the description line is honestly omitted when
  * absent — the API sends it as (pre-sanitized) HTML, so it is flattened to
  * plain text and clamped rather than rendered as markup inside a card.
  */
@@ -47,7 +47,7 @@ export function CompanyCard({
   /** Long-form company description (pre-sanitized HTML) or null. */
   description: string | null;
   publishedJobCount: number;
-  /** Pre-resolved, pluralized "N open job(s)" label from the route. */
+  /** Pre-resolved, pluralized"N open job(s)" label from the route. */
   jobCountLabel: string;
 }) {
   const descriptionText = description ? toPlainText(description) : '';
@@ -58,13 +58,9 @@ export function CompanyCard({
       className="h-full gap-4 transition-shadow hover:shadow-md"
     >
       <CardHeader className="grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3">
-        <Avatar size="lg" className="rounded-xl after:rounded-xl">
-          {logoUrl ? (
-            <AvatarImage src={logoUrl} alt={name} className="rounded-xl" />
-          ) : null}
-          <AvatarFallback className="rounded-xl">
-            {initialsOf(name)}
-          </AvatarFallback>
+        <Avatar size="lg">
+          {logoUrl ? <AvatarImage src={logoUrl} alt={name} /> : null}
+          <AvatarFallback>{initialsOf(name)}</AvatarFallback>
         </Avatar>
         <div className="min-w-0">
           <CardTitle>

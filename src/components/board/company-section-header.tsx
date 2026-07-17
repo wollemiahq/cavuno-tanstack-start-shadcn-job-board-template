@@ -196,20 +196,11 @@ export function CompanySectionShell({
           <Container width="wide">
             <div className="flex flex-col gap-8 pt-(--header-space)">
               <header className="flex items-start gap-4">
-                <Avatar
-                  size="lg"
-                  className="size-12 rounded-xl after:rounded-xl"
-                >
+                <Avatar size="lg" className="size-12">
                   {company.logoUrl ? (
-                    <AvatarImage
-                      src={company.logoUrl}
-                      alt={company.name}
-                      className="rounded-xl"
-                    />
+                    <AvatarImage src={company.logoUrl} alt={company.name} />
                   ) : null}
-                  <AvatarFallback className="rounded-xl">
-                    {initialsOf(company.name)}
-                  </AvatarFallback>
+                  <AvatarFallback>{initialsOf(company.name)}</AvatarFallback>
                 </Avatar>
                 <div className="flex min-w-0 flex-col gap-1">
                   <Text as="h1" variant="heading2" className="md:text-3xl">

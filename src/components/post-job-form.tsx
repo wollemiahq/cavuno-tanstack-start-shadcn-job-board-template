@@ -401,7 +401,7 @@ export function PostJobForm({
     const salaryMax = readNumber(form, 'salaryMax');
     updateFormState({ status: { kind: 'pending' } });
 
-    // Empty strings / empty selections are "unanswered", not values.
+    // Empty strings / empty selections are"unanswered", not values.
     const submittableCustomFieldValues = Object.fromEntries(
       Object.entries(customFieldValues).filter(([, value]) =>
         Array.isArray(value) ? value.length > 0 : value !== '',
@@ -560,15 +560,11 @@ export function PostJobForm({
           onDragOver={(event) => event.preventDefault()}
           onDrop={onLogoDrop}
         >
-          <Avatar className="size-16 rounded-2xl after:rounded-2xl">
+          <Avatar className="size-16">
             {logoUrl ? (
-              <AvatarImage
-                src={logoUrl}
-                alt={m.postJob_logoPreviewAlt()}
-                className="rounded-2xl"
-              />
+              <AvatarImage src={logoUrl} alt={m.postJob_logoPreviewAlt()} />
             ) : null}
-            <AvatarFallback className="rounded-2xl text-base">
+            <AvatarFallback className="text-base">
               {companyInitials || <ImagePlus aria-hidden="true" />}
             </AvatarFallback>
           </Avatar>

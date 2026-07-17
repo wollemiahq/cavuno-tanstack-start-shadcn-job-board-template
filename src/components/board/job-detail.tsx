@@ -1,5 +1,5 @@
 /**
- * Job detail page — composed as an owned shadcn page (CAV-486, "as
+ * Job detail page — composed as an owned shadcn page (CAV-486,"as
  * Jordan Hughes would design it"). PURE MARKUP over `JobDetailVM`
  * (ADR-0070 Layer 2): every value is pre-resolved by `toJobDetailVM`
  * (src/board/job-detail-view-model.ts), so this file imports nothing
@@ -127,15 +127,11 @@ export function JobDetail({
             <div className="flex flex-col pt-(--header-space) pb-(--header-space)">
               <header className="flex flex-col gap-4">
                 <div className="flex items-center gap-3">
-                  <Avatar size="lg" className="rounded-xl after:rounded-xl">
+                  <Avatar size="lg">
                     {vm.companyLogoUrl ? (
-                      <AvatarImage
-                        src={vm.companyLogoUrl}
-                        alt=""
-                        className="rounded-xl"
-                      />
+                      <AvatarImage src={vm.companyLogoUrl} alt="" />
                     ) : null}
-                    <AvatarFallback className="rounded-xl">
+                    <AvatarFallback>
                       {initialsOf(vm.companyAvatarName)}
                     </AvatarFallback>
                   </Avatar>

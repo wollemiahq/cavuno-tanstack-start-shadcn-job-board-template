@@ -24,17 +24,11 @@ export function CompanySearchResult({
         className="block rounded-[inherit] p-4 outline-none"
       >
         <div className="flex items-start gap-3">
-          <Avatar size="lg" className="rounded-xl after:rounded-xl">
+          <Avatar size="lg">
             {vm.logoUrl ? (
-              <AvatarImage
-                src={vm.logoUrl}
-                alt={vm.name}
-                className="rounded-xl"
-              />
+              <AvatarImage src={vm.logoUrl} alt={vm.name} />
             ) : (
-              <AvatarFallback className="rounded-xl">
-                {initialsOf(vm.avatarName)}
-              </AvatarFallback>
+              <AvatarFallback>{initialsOf(vm.avatarName)}</AvatarFallback>
             )}
           </Avatar>
 
