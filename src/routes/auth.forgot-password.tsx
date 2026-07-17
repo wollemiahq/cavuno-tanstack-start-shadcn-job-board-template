@@ -36,6 +36,24 @@ function ForgotPasswordPage() {
         title={m.authForgotPassword_checkEmailTitle()}
         supportingText={m.authForgotPassword_checkEmailBody()}
       >
+        <div className="flex flex-wrap justify-center gap-2">
+          <a
+            href="https://mail.google.com/"
+            target="_blank"
+            rel="noreferrer"
+            className={buttonVariants({ variant: 'outline' })}
+          >
+            {m.authSignIn_openGmailLabel()}
+          </a>
+          <a
+            href="https://outlook.live.com/mail/"
+            target="_blank"
+            rel="noreferrer"
+            className={buttonVariants({ variant: 'outline' })}
+          >
+            {m.authSignIn_openOutlookLabel()}
+          </a>
+        </div>
         <a
           href={candidateSignInHref(returnTo)}
           className={cn(
