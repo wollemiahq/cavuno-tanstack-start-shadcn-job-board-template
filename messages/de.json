@@ -1109,5 +1109,16 @@
   "languagesSection_editTitle": "Sprache bearbeiten",
   "employerOnboarding_openGmailLabel": "Gmail öffnen",
   "employerOnboarding_openOutlookLabel": "Outlook öffnen",
-  "employerDashboard_websiteProtocolPrefix": "https://"
+  "employerDashboard_websiteProtocolPrefix": "https://",
+  "siteHeader_addNewCompanyLabel": "Neues Unternehmen hinzufügen",
+  "employerCompany_jobsEmptyText": "Veröffentliche deinen ersten Job und starte die Suche.",
+  "employerPostJob_subtitleText": "Der Job wird als Entwurf angelegt — veröffentliche ihn aus deiner Jobliste, wenn du bereit bist.",
+  "employerPostJob_applyMethodLabel": "Wie sich Kandidat:innen bewerben",
+  "employerPostJob_applyNativeLabel": "Bewerbungen auf diesem Board sammeln",
+  "employerPostJob_applyNativeHint": "Kandidat:innen bewerben sich hier und landen in deiner Bewerber-Pipeline.",
+  "employerPostJob_applyExternalLabel": "Kandidat:innen an eine externe URL oder E-Mail weiterleiten",
+  "employerPostJob_applyTargetRequiredError": "Gib eine Bewerbungs-URL oder E-Mail-Adresse an.",
+  "employerProfile_editIntroText": "So erscheint {company} auf dem Board — Änderungen speichern direkt ins öffentliche Profil.",
+  "employerProfile_taglineHint": "Eine einzeilige Zusammenfassung zu deinem Unternehmen. Die gespeicherte Tagline kann hier nicht angezeigt werden — Absenden ersetzt sie.",
+  "employerProfile_aboutPlaceholder": "Was ihr tut, warum es zählt und wie es ist, mit euch zu arbeiten."
 }

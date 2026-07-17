@@ -1,6 +1,7 @@
 /**
- * Company workspace — Jobs tab: company identity, job management,
- * publishing and checkout, and a compact draft-job form.
+ * Company workspace — Jobs tab: job management, publishing and checkout.
+ * Creating a job lives on its own page (`jobs/new`), mirroring the public
+ * post form.
  */
 import { useState } from 'react';
 
@@ -23,7 +24,6 @@ import { handleEmployerLoaderError } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
 import {
   checkoutJob,
-  createJob,
   deleteJob,
   getCompanyWorkspace,
   publishJob,
@@ -33,21 +33,15 @@ import {
 import { EmployerCompanyShell } from '@/components/account-shell';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
+  EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import {
   Table,
@@ -57,7 +51,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import type {
   EmployerBillingOption,
@@ -85,8 +78,18 @@ function CompanyJobsPage() {
     Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const copy = boardCopy(board.language, board.labels);
-  const [posting, setPosting] = useState(false);
   const company = membership?.company;
+
+  const postJobLink = (
+    <Link
+      to="/employers/companies/$slug/jobs/new"
+      params={{ slug }}
+      className={buttonVariants()}
+    >
+      <PlusIcon data-icon="inline-start" aria-hidden />
+      {copy.nav.post}
+    </Link>
+  );
 
   return (
     <EmployerCompanyShell
@@ -104,30 +107,27 @@ function CompanyJobsPage() {
             <h1 className="font-heading text-2xl font-semibold tracking-tight">
               {m.employerJobs_yourJobsHeading()}
             </h1>
-            <p className="text-muted-foreground text-sm">
-              {m.employerCompany_jobsHeading({ count: jobs.data.length })}
-            </p>
+            {jobs.data.length > 0 ? (
+              <p className="text-muted-foreground text-sm">
+                {m.employerCompany_jobsHeading({ count: jobs.data.length })}
+              </p>
+            ) : null}
           </div>
-          <Button
-            type="button"
-            aria-expanded={posting}
-            onClick={() => setPosting((open) => !open)}
-          >
-            <PlusIcon data-icon="inline-start" />
-            {posting ? m.employerCompany_closeLabel() : copy.nav.post}
-          </Button>
+          {jobs.data.length > 0 ? postJobLink : null}
         </header>
 
-        {posting ? <CreateJobForm slug={slug} /> : null}
-
         {jobs.data.length === 0 ? (
-          <Empty className="border">
+          <Empty className="min-h-96 border-0">
             <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <PlusIcon aria-hidden="true" />
+              </EmptyMedia>
               <EmptyTitle>{m.employerCompany_noJobsText()}</EmptyTitle>
               <EmptyDescription>
-                {m.employerCompany_draftNoticeText()}
+                {m.employerCompany_jobsEmptyText()}
               </EmptyDescription>
             </EmptyHeader>
+            <EmptyContent>{postJobLink}</EmptyContent>
           </Empty>
         ) : (
           <Card className="py-0">
@@ -159,103 +159,6 @@ function CompanyJobsPage() {
         )}
       </div>
     </EmployerCompanyShell>
-  );
-}
-
-function CreateJobForm({ slug }: { slug: string }) {
-  const router = useRouter();
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    applicationUrl: '',
-  });
-  const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
-  const [message, setMessage] = useState('');
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{m.employerCompany_postJobHeading()}</CardTitle>
-        <CardDescription>{m.employerCompany_draftNoticeText()}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form
-          className="space-y-4"
-          onSubmit={async (event) => {
-            event.preventDefault();
-            setStatus('saving');
-            const result = await createJob({
-              data: {
-                slug,
-                body: {
-                  title: form.title.trim(),
-                  description: form.description.trim(),
-                  applicationUrl: form.applicationUrl.trim(),
-                },
-              },
-            });
-            if (result.ok) {
-              setForm({ title: '', description: '', applicationUrl: '' });
-              setStatus('idle');
-              await router.invalidate();
-            } else {
-              setStatus('error');
-              setMessage(result.message);
-            }
-          }}
-        >
-          <div className="space-y-1.5">
-            <Label htmlFor="job-title">{m.employerCompany_titleLabel()}</Label>
-            <Input
-              id="job-title"
-              value={form.title}
-              onChange={(event) =>
-                setForm({ ...form, title: event.target.value })
-              }
-              required
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="job-description">
-              {m.employerCompany_descriptionLabel()}
-            </Label>
-            <Textarea
-              id="job-description"
-              rows={4}
-              value={form.description}
-              onChange={(event) =>
-                setForm({ ...form, description: event.target.value })
-              }
-              required
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="job-application-url">
-              {m.employerCompany_applyUrlLabel()}
-            </Label>
-            <Input
-              id="job-application-url"
-              value={form.applicationUrl}
-              placeholder={m.employerCompany_applyUrlPlaceholder()}
-              onChange={(event) =>
-                setForm({ ...form, applicationUrl: event.target.value })
-              }
-              required
-            />
-          </div>
-          <Button type="submit" disabled={status === 'saving'}>
-            {status === 'saving'
-              ? m.employerCompany_creatingLabel()
-              : m.employerCompany_createDraftLabel()}
-          </Button>
-          {status === 'error' ? (
-            <p role="alert" className="text-destructive text-sm">
-              {message}
-            </p>
-          ) : null}
-        </form>
-      </CardContent>
-    </Card>
   );
 }
 

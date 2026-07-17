@@ -1109,5 +1109,16 @@
   "languagesSection_editTitle": "Edit language",
   "employerOnboarding_openGmailLabel": "Open Gmail",
   "employerOnboarding_openOutlookLabel": "Open Outlook",
-  "employerDashboard_websiteProtocolPrefix": "https://"
+  "employerDashboard_websiteProtocolPrefix": "https://",
+  "siteHeader_addNewCompanyLabel": "Add new company",
+  "employerCompany_jobsEmptyText": "Post your first job to start hiring.",
+  "employerPostJob_subtitleText": "The job is created as a draft — publish it from your jobs list when you’re ready.",
+  "employerPostJob_applyMethodLabel": "How candidates apply",
+  "employerPostJob_applyNativeLabel": "Collect applications on this board",
+  "employerPostJob_applyNativeHint": "Candidates apply here and land in your applicant pipeline.",
+  "employerPostJob_applyExternalLabel": "Send candidates to an external URL or email",
+  "employerPostJob_applyTargetRequiredError": "Enter an application URL or email address.",
+  "employerProfile_editIntroText": "This is how {company} appears on the board — edits save straight to the public profile.",
+  "employerProfile_taglineHint": "A one-line summary shown with your company. The saved tagline can’t be shown here — submitting replaces it.",
+  "employerProfile_aboutPlaceholder": "What you do, why it matters, and what it’s like to work with you."
 }

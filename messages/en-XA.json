@@ -1109,5 +1109,16 @@
   "languagesSection_editTitle": "⟦Éðíţ ĺáñğúáğé⟧",
   "employerOnboarding_openGmailLabel": "⟦Óþéñ Ğɱáíĺ⟧",
   "employerOnboarding_openOutlookLabel": "⟦Óþéñ Óúţĺóóķ⟧",
-  "employerDashboard_websiteProtocolPrefix": "⟦ĥţţþš://⟧"
+  "employerDashboard_websiteProtocolPrefix": "⟦ĥţţþš://⟧",
+  "siteHeader_addNewCompanyLabel": "⟦Áðð ñéŵ çóɱþáñý⟧",
+  "employerCompany_jobsEmptyText": "⟦Þóšţ ýóúŕ ƒíŕšţ ĵóƀ ţó šţáŕţ ĥíŕíñğ.⟧",
+  "employerPostJob_subtitleText": "⟦Ţĥé ĵóƀ íš çŕéáţéð áš á ðŕáƒţ — þúƀĺíšĥ íţ ƒŕóɱ ýóúŕ ĵóƀš ĺíšţ ŵĥéñ ýóú’ŕé ŕéáðý.⟧",
+  "employerPostJob_applyMethodLabel": "⟦Ĥóŵ çáñðíðáţéš áþþĺý⟧",
+  "employerPostJob_applyNativeLabel": "⟦Çóĺĺéçţ áþþĺíçáţíóñš óñ ţĥíš ƀóáŕð⟧",
+  "employerPostJob_applyNativeHint": "⟦Çáñðíðáţéš áþþĺý ĥéŕé áñð ĺáñð íñ ýóúŕ áþþĺíçáñţ þíþéĺíñé.⟧",
+  "employerPostJob_applyExternalLabel": "⟦Šéñð çáñðíðáţéš ţó áñ éẋţéŕñáĺ ÚŔĹ óŕ éɱáíĺ⟧",
+  "employerPostJob_applyTargetRequiredError": "⟦Éñţéŕ áñ áþþĺíçáţíóñ ÚŔĹ óŕ éɱáíĺ áððŕéšš.⟧",
+  "employerProfile_editIntroText": "⟦Ţĥíš íš ĥóŵ {company} áþþéáŕš óñ ţĥé ƀóáŕð — éðíţš šáṽé šţŕáíğĥţ ţó ţĥé þúƀĺíç þŕóƒíĺé.⟧",
+  "employerProfile_taglineHint": "⟦Á óñé-ĺíñé šúɱɱáŕý šĥóŵñ ŵíţĥ ýóúŕ çóɱþáñý. Ţĥé šáṽéð ţáğĺíñé çáñ’ţ ƀé šĥóŵñ ĥéŕé — šúƀɱíţţíñğ ŕéþĺáçéš íţ.⟧",
+  "employerProfile_aboutPlaceholder": "⟦Ŵĥáţ ýóú ðó, ŵĥý íţ ɱáţţéŕš, áñð ŵĥáţ íţ’š ĺíķé ţó ŵóŕķ ŵíţĥ ýóú.⟧"
 }

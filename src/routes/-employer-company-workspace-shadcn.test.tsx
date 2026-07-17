@@ -265,11 +265,10 @@ describe('employer company workspace', () => {
     expect(planButton).toBeEnabled();
   });
 
-  it('keeps the complete company profile visible and exposes labelled edit controls', () => {
+  it('keeps the company profile editable in place with the public link visible', () => {
     vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
       workspace: { slug: 'northstar-labs', membership: { company } },
       company,
-      publicJobs: { data: [] },
     } as never);
 
     const ProfilePage = ProfileRoute.options.component;
@@ -277,25 +276,25 @@ describe('employer company workspace', () => {
       throw new Error('The profile route must expose its component');
     render(<ProfilePage />);
 
+    // One always-editable form over the public profile — no view/edit toggle.
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Northstar Labs' }),
+      screen.getByRole('heading', { level: 1, name: 'Company profile' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Building better hiring tools.'),
-    ).toBeInTheDocument();
-    expect(screen.getByText('Hiring')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Edit profile' }));
-
+      screen.getByRole('link', { name: /View public page/ }),
+    ).toHaveAttribute('href', 'https://jobs.example/companies/northstar-labs');
     expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue(
       'Northstar Labs',
     );
+    // The website edits behind a fixed https:// prefix.
     expect(screen.getByRole('textbox', { name: 'Website' })).toHaveValue(
-      'https://northstar.example',
+      'northstar.example',
     );
-    expect(screen.getByRole('textbox', { name: 'Description' })).toHaveValue(
+    expect(screen.getByRole('textbox', { name: 'About' })).toHaveValue(
       '<p>Building better hiring tools.</p>',
     );
+    expect(screen.getByText('Hiring')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save company' })).toBeEnabled();
   });
 
   it('renders applicant identity, pipeline controls, notes, and history together', () => {

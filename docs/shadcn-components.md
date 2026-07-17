@@ -17,7 +17,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | Component | Status | Production references |
 | --- | --- | --- |
 | `accordion` | Available | Installed for adoption when the product needs this behavior. |
-| `alert` | Used (15) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-detail-state.tsx`<br>`src/components/board/job-search-page.tsx`<br>+12 more in the JSON ledger |
+| `alert` | Used (14) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-detail-state.tsx`<br>`src/components/board/job-search-page.tsx`<br>+11 more in the JSON ledger |
 | `alert-dialog` | Used (1) | `src/components/danger-zone.tsx` |
 | `aspect-ratio` | Available | Installed for adoption when the product needs this behavior. |
 | `attachment` | Used (1) | `src/components/resume-upload.tsx` |
@@ -25,10 +25,10 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `badge` | Used (36) | `src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>`src/components/board/company-card.tsx`<br>+33 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
-| `button` | Used (75) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+72 more in the JSON ledger |
+| `button` | Used (76) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+73 more in the JSON ledger |
 | `button-group` | Used (4) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/talent-filter-controls.tsx`<br>+1 more in the JSON ledger |
 | `calendar` | Available | Installed for adoption when the product needs this behavior. |
-| `card` | Used (32) | `src/components/account-shell.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>+29 more in the JSON ledger |
+| `card` | Used (33) | `src/components/account-shell.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>+30 more in the JSON ledger |
 | `carousel` | Available | Installed for adoption when the product needs this behavior. |
 | `chart` | Available | Installed for adoption when the product needs this behavior. |
 | `checkbox` | Used (7) | `src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/custom-fields-group.tsx`<br>+4 more in the JSON ledger |
@@ -40,15 +40,15 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `direction` | Available | Installed for adoption when the product needs this behavior. |
 | `drawer` | Available | Installed for adoption when the product needs this behavior. |
 | `dropdown-menu` | Used (3) | `src/components/Header.tsx`<br>`src/components/messages/message-bubble.tsx`<br>`src/components/messages/thread-view.tsx` |
-| `empty` | Used (40) | `src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+37 more in the JSON ledger |
-| `field` | Used (21) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+18 more in the JSON ledger |
+| `empty` | Used (39) | `src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+36 more in the JSON ledger |
+| `field` | Used (22) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+19 more in the JSON ledger |
 | `hover-card` | Available | Installed for adoption when the product needs this behavior. |
 | `input` | Used (17) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alerts-band.tsx`<br>+14 more in the JSON ledger |
-| `input-group` | Used (14) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/listing-page-header.tsx`<br>+11 more in the JSON ledger |
+| `input-group` | Used (15) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/listing-page-header.tsx`<br>+12 more in the JSON ledger |
 | `input-otp` | Used (1) | `src/routes/auth.verify-email-required.tsx` |
 | `item` | Used (10) | `src/components/alert-manager.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+7 more in the JSON ledger |
 | `kbd` | Available | Installed for adoption when the product needs this behavior. |
-| `label` | Used (3) | `src/components/experience-section.tsx`<br>`src/components/resume-upload.tsx`<br>`src/routes/employers.companies.$slug.index.tsx` |
+| `label` | Used (3) | `src/components/experience-section.tsx`<br>`src/components/resume-upload.tsx`<br>`src/routes/employers.companies.$slug.jobs.new.tsx` |
 | `marker` | Used (1) | `src/components/messages/thread-view.tsx` |
 | `menubar` | Available | Installed for adoption when the product needs this behavior. |
 | `message` | Used (1) | `src/components/messages/message-bubble.tsx` |
@@ -58,10 +58,10 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `pagination` | Used (2) | `src/components/board/blog-archive-page.tsx`<br>`src/components/board/listing-pagination.tsx` |
 | `popover` | Used (1) | `src/components/rich-text-editor.tsx` |
 | `progress` | Used (1) | `src/components/profile-completeness-card.tsx` |
-| `radio-group` | Used (3) | `src/components/post-job-form.tsx`<br>`src/components/rhea-auth-pilot.tsx`<br>`src/routes/auth.sign-in.tsx` |
+| `radio-group` | Used (4) | `src/components/post-job-form.tsx`<br>`src/components/rhea-auth-pilot.tsx`<br>`src/routes/auth.sign-in.tsx`<br>+1 more in the JSON ledger |
 | `resizable` | Available | Installed for adoption when the product needs this behavior. |
 | `scroll-area` | Available | Installed for adoption when the product needs this behavior. |
-| `select` | Used (9) | `src/components/board/jobs-filter-controls.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/custom-fields-group.tsx`<br>+6 more in the JSON ledger |
+| `select` | Used (10) | `src/components/board/jobs-filter-controls.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/custom-fields-group.tsx`<br>+7 more in the JSON ledger |
 | `separator` | Used (2) | `src/components/account-shell.tsx`<br>`src/components/rich-text-editor.tsx` |
 | `sheet` | Used (6) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>+3 more in the JSON ledger |
 | `sidebar` | Available | Installed for adoption when the product needs this behavior. |
@@ -72,7 +72,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `switch` | Available | Installed for adoption when the product needs this behavior. |
 | `table` | Used (2) | `src/components/board/salary-sections.tsx`<br>`src/routes/employers.companies.$slug.index.tsx` |
 | `tabs` | Available | Installed for adoption when the product needs this behavior. |
-| `textarea` | Used (7) | `src/components/custom-fields-group.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+4 more in the JSON ledger |
+| `textarea` | Used (6) | `src/components/custom-fields-group.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+3 more in the JSON ledger |
 | `toggle` | Used (1) | `src/components/rich-text-editor.tsx` |
 | `toggle-group` | Available | Installed for adoption when the product needs this behavior. |
 | `tooltip` | Used (1) | `src/components/rich-text-editor.tsx` |

@@ -40,6 +40,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -287,29 +288,29 @@ function AccountMenu({
           {m.accountShell_settingsNav()}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        {companyWorkspaces.length > 0 ? (
-          companyWorkspaces.map((membership) => (
-            <DropdownMenuItem
-              key={membership.id}
-              nativeButton={false}
-              render={
-                <Link
-                  to="/employers/companies/$slug"
-                  params={{ slug: membership.company.slug! }}
-                />
-              }
-            >
-              {membership.company.name}
-            </DropdownMenuItem>
-          ))
-        ) : (
+        <DropdownMenuLabel>
+          {m.employerOnboarding_yourCompaniesTitle()}
+        </DropdownMenuLabel>
+        {companyWorkspaces.map((membership) => (
           <DropdownMenuItem
+            key={membership.id}
             nativeButton={false}
-            render={<Link to="/employers/dashboard" search={{ add: true }} />}
+            render={
+              <Link
+                to="/employers/companies/$slug"
+                params={{ slug: membership.company.slug! }}
+              />
+            }
           >
-            {m.employerOnboarding_addCompanyLabel()}
+            {membership.company.name}
           </DropdownMenuItem>
-        )}
+        ))}
+        <DropdownMenuItem
+          nativeButton={false}
+          render={<Link to="/employers/dashboard" search={{ add: true }} />}
+        >
+          {m.siteHeader_addNewCompanyLabel()}
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           data-test="account-menu-sign-out"

@@ -68,7 +68,6 @@
         "src/routes/alerts.manage.tsx",
         "src/routes/auth.verify-email-required.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
-        "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.dashboard.tsx",
         "src/routes/employers.onboarding.$slug.tsx"
       ]
@@ -245,6 +244,7 @@
         "src/routes/embed.jobs.tsx",
         "src/routes/employers.companies.$slug.index.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.companies.$slug.jobs.new.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.dashboard.tsx",
         "src/routes/employers.index.tsx",
@@ -304,6 +304,7 @@
         "src/routes/companies.$companySlug.index.tsx",
         "src/routes/employers.companies.$slug.index.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.companies.$slug.jobs.new.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.index.tsx",
         "src/routes/employers.onboarding.$slug.tsx",
@@ -429,7 +430,6 @@
         "src/routes/embed.jobs.tsx",
         "src/routes/employers.companies.$slug.index.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
-        "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.index.tsx",
         "src/routes/jobs.locations.index.tsx",
         "src/routes/me.applications.tsx",
@@ -460,6 +460,7 @@
         "src/components/skills-section.tsx",
         "src/routes/auth.verify-email-required.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.companies.$slug.jobs.new.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.dashboard.tsx",
         "src/routes/employers.onboarding.$slug.tsx"
@@ -487,7 +488,7 @@
         "src/components/rhea-auth-pilot.tsx",
         "src/components/rich-text-editor.tsx",
         "src/components/skills-section.tsx",
-        "src/routes/employers.companies.$slug.index.tsx",
+        "src/routes/employers.companies.$slug.jobs.new.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.dashboard.tsx",
         "src/routes/employers.onboarding.$slug.tsx"
@@ -510,6 +511,7 @@
         "src/components/post-job-form.tsx",
         "src/routes/-messages-runtime.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.dashboard.tsx"
       ]
     },
@@ -547,7 +549,7 @@
       "productionReferences": [
         "src/components/experience-section.tsx",
         "src/components/resume-upload.tsx",
-        "src/routes/employers.companies.$slug.index.tsx"
+        "src/routes/employers.companies.$slug.jobs.new.tsx"
       ]
     },
     {
@@ -614,7 +616,8 @@
       "productionReferences": [
         "src/components/post-job-form.tsx",
         "src/components/rhea-auth-pilot.tsx",
-        "src/routes/auth.sign-in.tsx"
+        "src/routes/auth.sign-in.tsx",
+        "src/routes/employers.companies.$slug.jobs.new.tsx"
       ]
     },
     {
@@ -639,7 +642,8 @@
         "src/components/month-year-field.tsx",
         "src/components/post-job-form.tsx",
         "src/components/profile-form.tsx",
-        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx"
+        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.companies.$slug.jobs.new.tsx"
       ]
     },
     {
@@ -732,7 +736,6 @@
         "src/components/experience-section.tsx",
         "src/components/messages/message-bubble.tsx",
         "src/components/profile-form.tsx",
-        "src/routes/employers.companies.$slug.index.tsx",
         "src/routes/employers.companies.$slug.profile.tsx"
       ]
     },
