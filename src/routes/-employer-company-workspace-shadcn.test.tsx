@@ -290,9 +290,9 @@ describe('employer company workspace', () => {
     expect(screen.getByRole('textbox', { name: 'Website' })).toHaveValue(
       'northstar.example',
     );
-    expect(screen.getByRole('textbox', { name: 'About' })).toHaveValue(
-      '<p>Building better hiring tools.</p>',
-    );
+    // The About field authors as rich text (HTML on the wire), so the
+    // editor toolbar stands in for a plain textbox assertion.
+    expect(screen.getByRole('toolbar', { name: 'About' })).toBeInTheDocument();
     expect(screen.getByText('Hiring')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save company' })).toBeEnabled();
   });

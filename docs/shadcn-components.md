@@ -72,7 +72,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `switch` | Available | Installed for adoption when the product needs this behavior. |
 | `table` | Used (2) | `src/components/board/salary-sections.tsx`<br>`src/routes/employers.companies.$slug.index.tsx` |
 | `tabs` | Available | Installed for adoption when the product needs this behavior. |
-| `textarea` | Used (6) | `src/components/custom-fields-group.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+3 more in the JSON ledger |
+| `textarea` | Used (5) | `src/components/custom-fields-group.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+2 more in the JSON ledger |
 | `toggle` | Used (1) | `src/components/rich-text-editor.tsx` |
 | `toggle-group` | Available | Installed for adoption when the product needs this behavior. |
 | `tooltip` | Used (1) | `src/components/rich-text-editor.tsx` |

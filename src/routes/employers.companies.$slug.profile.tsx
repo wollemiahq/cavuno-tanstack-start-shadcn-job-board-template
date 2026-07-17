@@ -16,11 +16,13 @@ import {
 import { ExternalLinkIcon } from 'lucide-react';
 
 import { handleEmployerLoaderError } from '../lib/employer-loader-auth';
+import { isRichTextEmpty } from '../lib/post-form';
 import { m } from '../paraglide/messages';
 import { getCompanyWorkspace, updateCompany } from '../server/employers';
 import { getCompany } from '../server/queries';
 
 import { EmployerCompanyShell } from '@/components/account-shell';
+import { RichTextEditor } from '@/components/rich-text-editor';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,7 +39,6 @@ import {
   InputGroupInput,
   InputGroupText,
 } from '@/components/ui/input-group';
-import { Textarea } from '@/components/ui/textarea';
 
 const rootApi = getRouteApi('__root__');
 
@@ -189,7 +190,9 @@ function ProfileEditorCard({
         body: {
           name: form.name.trim(),
           website: website ? `https://${website}` : '',
-          description: form.description.trim(),
+          description: isRichTextEmpty(form.description)
+            ? ''
+            : form.description,
           ...(form.summary.trim() ? { summary: form.summary.trim() } : {}),
         },
       },
@@ -267,17 +270,15 @@ function ProfileEditorCard({
             </FieldDescription>
           </Field>
           <Field>
-            <FieldLabel htmlFor="profile-description">
-              {m.employerProfile_aboutHeading()}
-            </FieldLabel>
-            <Textarea
-              id="profile-description"
-              rows={10}
+            <FieldLabel>{m.employerProfile_aboutHeading()}</FieldLabel>
+            {/* Company descriptions are HTML on the API (rendered as-is on
+                the public page), so they author as rich text, not markup. */}
+            <RichTextEditor
               value={form.description}
-              placeholder={m.employerProfile_aboutPlaceholder()}
-              onChange={(event) =>
-                setForm({ ...form, description: event.target.value })
+              onChange={(description) =>
+                setForm((prev) => ({ ...prev, description }))
               }
+              ariaLabel={m.employerProfile_aboutHeading()}
             />
           </Field>
           {/* In-page form: primary action left-aligned, in reading flow. */}

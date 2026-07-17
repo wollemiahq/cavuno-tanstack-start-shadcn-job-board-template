@@ -1119,7 +1119,6 @@
   "employerPostJob_applyTargetRequiredError": "Saisissez une URL de candidature ou une adresse e-mail.",
   "employerProfile_editIntroText": "Voici comment {company} apparaît sur le site — les modifications sont enregistrées directement sur le profil public.",
   "employerProfile_taglineHint": "Un résumé en une ligne affiché avec votre entreprise. La version enregistrée ne peut pas s’afficher ici — l’envoi la remplace.",
-  "employerProfile_aboutPlaceholder": "Ce que vous faites, pourquoi c’est important et ce que c’est de travailler avec vous.",
   "authSignIn_magicLinkSentTitle": "Vérifiez votre boîte de réception",
   "authSignIn_magicLinkSentBody": "Nous avons envoyé un lien de connexion à {email}.",
   "authSignIn_openGmailLabel": "Ouvrir Gmail",

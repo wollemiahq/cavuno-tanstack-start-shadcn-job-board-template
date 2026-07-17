@@ -1119,7 +1119,6 @@
   "employerPostJob_applyTargetRequiredError": "Enter an application URL or email address.",
   "employerProfile_editIntroText": "This is how {company} appears on the board — edits save straight to the public profile.",
   "employerProfile_taglineHint": "A one-line summary shown with your company. The saved tagline can’t be shown here — submitting replaces it.",
-  "employerProfile_aboutPlaceholder": "What you do, why it matters, and what it’s like to work with you.",
   "authSignIn_magicLinkSentTitle": "Check your inbox",
   "authSignIn_magicLinkSentBody": "We sent a sign-in link to {email}.",
   "authSignIn_openGmailLabel": "Open Gmail",
