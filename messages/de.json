@@ -1125,5 +1125,10 @@
   "authSignIn_openOutlookLabel": "Outlook öffnen",
   "authSignIn_resendLabel": "E-Mail erneut senden",
   "authSignIn_useDifferentEmailLabel": "Andere E-Mail verwenden",
-  "employerPostJob_billingRequiredError": "Wähle ein Guthaben oder einen Plan für die Veröffentlichung."
+  "employerPostJob_billingRequiredError": "Wähle ein Guthaben oder einen Plan für die Veröffentlichung.",
+  "appError_heading": "Etwas ist schiefgelaufen",
+  "appError_body": "Beim Laden der Seite gab es ein Problem. Versuch es gleich noch einmal.",
+  "appError_rateLimitedBody": "Zu viele Anfragen in kurzer Zeit. Warte ein paar Sekunden und versuch es dann erneut.",
+  "appError_retryLabel": "Erneut versuchen",
+  "appError_homeLabel": "Zur Startseite"
 }

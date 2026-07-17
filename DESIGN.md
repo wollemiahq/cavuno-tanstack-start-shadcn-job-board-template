@@ -283,6 +283,13 @@ Props:
 - `alerts: { id: string; object: "alert"; label: string | null; frequency: "weekly"; isActive: boolean; filters: { jobFunctions:…`
 - `places: AlertPlaceOption[]`
 
+### AppError — `src/components/app-error.tsx`
+
+The router's default error boundary — the app-wide sibling of
+`app-not-found`. Raw error text (stack traces, API phrases like
+"Rate limit exceeded") never renders; the one detail worth reading is
+whether it was rate limiting, which gets its own friendlier line.
+
 ### NotFound — `src/components/app-not-found.tsx`
 
 ### AppRouterProvider — `src/components/app-router-provider.tsx`

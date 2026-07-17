@@ -181,6 +181,7 @@
       "productionReferences": [
         "src/components/Header.tsx",
         "src/components/alert-manager.tsx",
+        "src/components/app-error.tsx",
         "src/components/app-not-found.tsx",
         "src/components/avatar-upload.tsx",
         "src/components/board/alert-signup-form.tsx",
@@ -398,6 +399,7 @@
       "status": "used",
       "productionReferences": [
         "src/components/alert-manager.tsx",
+        "src/components/app-error.tsx",
         "src/components/app-not-found.tsx",
         "src/components/board/blog-archive-page.tsx",
         "src/components/board/blog-article-content.tsx",

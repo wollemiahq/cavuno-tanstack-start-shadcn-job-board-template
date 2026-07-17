@@ -1125,5 +1125,10 @@
   "authSignIn_openOutlookLabel": "Open Outlook",
   "authSignIn_resendLabel": "Resend email",
   "authSignIn_useDifferentEmailLabel": "Use a different email",
-  "employerPostJob_billingRequiredError": "Choose a credit or plan to publish with."
+  "employerPostJob_billingRequiredError": "Choose a credit or plan to publish with.",
+  "appError_heading": "Something went wrong",
+  "appError_body": "The page hit a snag while loading. Try again in a moment.",
+  "appError_rateLimitedBody": "You’ve made a lot of requests in a short time. Give it a few seconds, then try again.",
+  "appError_retryLabel": "Try again",
+  "appError_homeLabel": "Go to homepage"
 }

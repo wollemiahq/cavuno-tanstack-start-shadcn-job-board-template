@@ -1125,5 +1125,10 @@
   "authSignIn_openOutlookLabel": "Ouvrir Outlook",
   "authSignIn_resendLabel": "Renvoyer l’e-mail",
   "authSignIn_useDifferentEmailLabel": "Utiliser une autre adresse",
-  "employerPostJob_billingRequiredError": "Choisissez un crédit ou un plan pour publier."
+  "employerPostJob_billingRequiredError": "Choisissez un crédit ou un plan pour publier.",
+  "appError_heading": "Une erreur est survenue",
+  "appError_body": "Le chargement de la page a rencontré un problème. Réessayez dans un instant.",
+  "appError_rateLimitedBody": "Trop de requêtes en peu de temps. Patientez quelques secondes puis réessayez.",
+  "appError_retryLabel": "Réessayer",
+  "appError_homeLabel": "Aller à l’accueil"
 }

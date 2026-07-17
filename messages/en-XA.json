@@ -1125,5 +1125,10 @@
   "authSignIn_openOutlookLabel": "⟦Óþéñ Óúţĺóóķ⟧",
   "authSignIn_resendLabel": "⟦Ŕéšéñð éɱáíĺ⟧",
   "authSignIn_useDifferentEmailLabel": "⟦Úšé á ðíƒƒéŕéñţ éɱáíĺ⟧",
-  "employerPostJob_billingRequiredError": "⟦Çĥóóšé á çŕéðíţ óŕ þĺáñ ţó þúƀĺíšĥ ŵíţĥ.⟧"
+  "employerPostJob_billingRequiredError": "⟦Çĥóóšé á çŕéðíţ óŕ þĺáñ ţó þúƀĺíšĥ ŵíţĥ.⟧",
+  "appError_heading": "⟦Šóɱéţĥíñğ ŵéñţ ŵŕóñğ⟧",
+  "appError_body": "⟦Ţĥé þáğé ĥíţ á šñáğ ŵĥíĺé ĺóáðíñğ. Ţŕý áğáíñ íñ á ɱóɱéñţ.⟧",
+  "appError_rateLimitedBody": "⟦Ýóú’ṽé ɱáðé á ĺóţ óƒ ŕéɋúéšţš íñ á šĥóŕţ ţíɱé. Ğíṽé íţ á ƒéŵ šéçóñðš, ţĥéñ ţŕý áğáíñ.⟧",
+  "appError_retryLabel": "⟦Ţŕý áğáíñ⟧",
+  "appError_homeLabel": "⟦Ğó ţó ĥóɱéþáğé⟧"
 }
