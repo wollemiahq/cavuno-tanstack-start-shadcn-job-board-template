@@ -145,8 +145,9 @@ export function PlaceTagsField({
             commitFreeText();
           }}
           onFocus={() => {
-            // Static option sets (the permit picker) list on focus; async
+            // Static option sets (the permit picker) list on refocus; async
             // search fields have no suggestions until a query, so stay shut.
+            // First-time opening is Base UI's own click/ArrowDown behavior.
             if (available.length > 0) setOpen(true);
           }}
           className="w-full"

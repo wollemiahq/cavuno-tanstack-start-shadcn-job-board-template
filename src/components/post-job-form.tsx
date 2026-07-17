@@ -269,10 +269,7 @@ export function PostJobForm({
         id: `${permit.type}:${permit.value}`,
         slug: `${permit.type}:${permit.value}`,
         name: permit.label,
-        contextLabel:
-          permit.type === 'world_region'
-            ? m.postJob_remoteRegionsGroupLabel()
-            : m.postJob_remoteBlocsGroupLabel(),
+        contextLabel: null,
         countryCode: null,
         regionCode: null,
       }));
@@ -280,7 +277,7 @@ export function PostJobForm({
       id: `country:${country.code}`,
       slug: `country:${country.code}`,
       name: country.name,
-      contextLabel: m.postJob_remoteCountriesLabel(),
+      contextLabel: null,
       countryCode: country.code,
       regionCode: null,
     }));

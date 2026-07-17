@@ -1095,9 +1095,6 @@
   "postJob_seniorityPlaceholder": "Optional",
   "postJob_remoteRestrictionLabel": "Geografische Einschränkung",
   "postJob_remoteRestrictionWorldwide": "Weltweit",
-  "postJob_remoteCountriesLabel": "Länder",
-  "postJob_remoteRegionsGroupLabel": "Weltregionen",
-  "postJob_remoteBlocsGroupLabel": "Ländergruppen",
   "postJob_remoteRestrictionPlaceholder": "Regionen, Gruppen oder Länder suchen…",
   "postJob_remoteRestrictionHelperText": "Leer lassen, um weltweit einzustellen."
 }

@@ -1095,9 +1095,6 @@
   "postJob_seniorityPlaceholder": "Facultatif",
   "postJob_remoteRestrictionLabel": "Restriction géographique",
   "postJob_remoteRestrictionWorldwide": "Monde entier",
-  "postJob_remoteCountriesLabel": "Pays",
-  "postJob_remoteRegionsGroupLabel": "Régions du monde",
-  "postJob_remoteBlocsGroupLabel": "Groupes de pays",
   "postJob_remoteRestrictionPlaceholder": "Rechercher des régions, groupes ou pays…",
   "postJob_remoteRestrictionHelperText": "Laissez vide pour recruter dans le monde entier."
 }
