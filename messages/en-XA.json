@@ -328,7 +328,6 @@
   "authSignIn_continueWithLinkedinLabel": "⟦Çóñţíñúé ŵíţĥ ĹíñķéðÍñ⟧",
   "authSignIn_passwordTabLabel": "⟦Þáššŵóŕð⟧",
   "authSignIn_magicLinkTabLabel": "⟦Ṁáğíç ĺíñķ⟧",
-  "authSignIn_magicLinkSentText": "⟦Çĥéçķ ýóúŕ éɱáíĺ ƒóŕ á šíğñ-íñ ĺíñķ.⟧",
   "authSignIn_emailLabel": "⟦Éɱáíĺ⟧",
   "authSignIn_passwordLabel": "⟦Þáššŵóŕð⟧",
   "authSignIn_signingInLabel": "⟦Šíğñíñğ íñ…⟧",
@@ -1120,5 +1119,11 @@
   "employerPostJob_applyTargetRequiredError": "⟦Éñţéŕ áñ áþþĺíçáţíóñ ÚŔĹ óŕ éɱáíĺ áððŕéšš.⟧",
   "employerProfile_editIntroText": "⟦Ţĥíš íš ĥóŵ {company} áþþéáŕš óñ ţĥé ƀóáŕð — éðíţš šáṽé šţŕáíğĥţ ţó ţĥé þúƀĺíç þŕóƒíĺé.⟧",
   "employerProfile_taglineHint": "⟦Á óñé-ĺíñé šúɱɱáŕý šĥóŵñ ŵíţĥ ýóúŕ çóɱþáñý. Ţĥé šáṽéð ţáğĺíñé çáñ’ţ ƀé šĥóŵñ ĥéŕé — šúƀɱíţţíñğ ŕéþĺáçéš íţ.⟧",
-  "employerProfile_aboutPlaceholder": "⟦Ŵĥáţ ýóú ðó, ŵĥý íţ ɱáţţéŕš, áñð ŵĥáţ íţ’š ĺíķé ţó ŵóŕķ ŵíţĥ ýóú.⟧"
+  "employerProfile_aboutPlaceholder": "⟦Ŵĥáţ ýóú ðó, ŵĥý íţ ɱáţţéŕš, áñð ŵĥáţ íţ’š ĺíķé ţó ŵóŕķ ŵíţĥ ýóú.⟧",
+  "authSignIn_magicLinkSentTitle": "⟦Çĥéçķ ýóúŕ íñƀóẋ⟧",
+  "authSignIn_magicLinkSentBody": "⟦Ŵé šéñţ á šíğñ-íñ ĺíñķ ţó {email}.⟧",
+  "authSignIn_openGmailLabel": "⟦Óþéñ Ğɱáíĺ⟧",
+  "authSignIn_openOutlookLabel": "⟦Óþéñ Óúţĺóóķ⟧",
+  "authSignIn_resendLabel": "⟦Ŕéšéñð éɱáíĺ⟧",
+  "authSignIn_useDifferentEmailLabel": "⟦Úšé á ðíƒƒéŕéñţ éɱáíĺ⟧"
 }

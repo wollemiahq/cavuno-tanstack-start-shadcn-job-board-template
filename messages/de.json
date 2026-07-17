@@ -328,7 +328,6 @@
   "authSignIn_continueWithLinkedinLabel": "Mit LinkedIn fortfahren",
   "authSignIn_passwordTabLabel": "Passwort",
   "authSignIn_magicLinkTabLabel": "Magic Link",
-  "authSignIn_magicLinkSentText": "Prüfe deine E-Mails — dort findest du deinen Anmeldelink.",
   "authSignIn_emailLabel": "E-Mail",
   "authSignIn_passwordLabel": "Passwort",
   "authSignIn_signingInLabel": "Anmeldung läuft …",
@@ -1120,5 +1119,11 @@
   "employerPostJob_applyTargetRequiredError": "Gib eine Bewerbungs-URL oder E-Mail-Adresse an.",
   "employerProfile_editIntroText": "So erscheint {company} auf dem Board — Änderungen speichern direkt ins öffentliche Profil.",
   "employerProfile_taglineHint": "Eine einzeilige Zusammenfassung zu deinem Unternehmen. Die gespeicherte Tagline kann hier nicht angezeigt werden — Absenden ersetzt sie.",
-  "employerProfile_aboutPlaceholder": "Was ihr tut, warum es zählt und wie es ist, mit euch zu arbeiten."
+  "employerProfile_aboutPlaceholder": "Was ihr tut, warum es zählt und wie es ist, mit euch zu arbeiten.",
+  "authSignIn_magicLinkSentTitle": "Sieh in dein Postfach",
+  "authSignIn_magicLinkSentBody": "Wir haben einen Anmeldelink an {email} gesendet.",
+  "authSignIn_openGmailLabel": "Gmail öffnen",
+  "authSignIn_openOutlookLabel": "Outlook öffnen",
+  "authSignIn_resendLabel": "E-Mail erneut senden",
+  "authSignIn_useDifferentEmailLabel": "Andere E-Mail verwenden"
 }

@@ -44,7 +44,8 @@ function SignInPage() {
   const [mode, setMode] = useState<'password' | 'magic'>('password');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [sent, setSent] = useState(false);
+  /** The address a magic link was sent to — non-null swaps in the sent state. */
+  const [sentTo, setSentTo] = useState<string | null>(null);
 
   async function startOAuth(provider: 'google' | 'linkedin') {
     setPending(true);
@@ -65,6 +66,72 @@ function SignInPage() {
     }
   }
 
+  // The link is out — the whole card becomes the check-your-inbox
+  // instructions (OTP-page shape), not a banner above a still-live form.
+  if (sentTo) {
+    return (
+      <AuthCard
+        title={m.authSignIn_magicLinkSentTitle()}
+        supportingText={m.authSignIn_magicLinkSentBody({ email: sentTo })}
+      >
+        <div className="flex flex-wrap justify-center gap-2">
+          <a
+            href="https://mail.google.com/"
+            target="_blank"
+            rel="noreferrer"
+            className={buttonVariants({ variant: 'outline' })}
+          >
+            {m.authSignIn_openGmailLabel()}
+          </a>
+          <a
+            href="https://outlook.live.com/mail/"
+            target="_blank"
+            rel="noreferrer"
+            className={buttonVariants({ variant: 'outline' })}
+          >
+            {m.authSignIn_openOutlookLabel()}
+          </a>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={pending}
+            onClick={async () => {
+              setPending(true);
+              setError(null);
+              try {
+                const result = await requestMagicLink({
+                  data: { email: sentTo, returnTo },
+                });
+                if (!result.ok) setError(result.message);
+              } catch {
+                setError(m.candidateAction_errorText());
+              } finally {
+                setPending(false);
+              }
+            }}
+          >
+            {pending ? m.authSignIn_sendingLabel() : m.authSignIn_resendLabel()}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setSentTo(null);
+              setError(null);
+            }}
+          >
+            {m.authSignIn_useDifferentEmailLabel()}
+          </Button>
+        </div>
+        <FormError message={error} />
+      </AuthCard>
+    );
+  }
+
   return (
     <AuthCard title={m.authSignIn_title()}>
       <RadioGroup
@@ -73,7 +140,6 @@ function SignInPage() {
         onValueChange={(next) => {
           setMode(next as 'password' | 'magic');
           setError(null);
-          setSent(false);
         }}
         className="bg-muted grid grid-cols-2 gap-1 rounded-2xl p-1"
         aria-label={m.authSignIn_title()}
@@ -102,12 +168,6 @@ function SignInPage() {
         </label>
       </RadioGroup>
 
-      {sent ? (
-        <p className="bg-muted text-muted-foreground rounded-2xl p-3 text-sm">
-          {m.authSignIn_magicLinkSentText()}
-        </p>
-      ) : null}
-
       <form
         className="grid gap-4"
         onSubmit={async (event) => {
@@ -135,7 +195,7 @@ function SignInPage() {
               await router.invalidate();
               await router.navigate({ href: returnTo });
             } else if (result.ok) {
-              setSent(true);
+              setSentTo(email);
             } else {
               setError(result.message);
             }
