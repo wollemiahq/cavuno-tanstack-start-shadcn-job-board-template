@@ -2,12 +2,11 @@
 
 import { useState } from 'react';
 
-import { ChevronDown, Mail, RotateCw, TriangleAlert } from 'lucide-react';
+import { ChevronLeft, Mail, RotateCw, TriangleAlert } from 'lucide-react';
 
 import type { PreviewEmail } from '../../lib/preview';
 import { PREVIEW_EMAILS_DEFAULT_LIMIT } from '../../lib/preview';
 import { listSandboxEmails } from '../../server/preview';
-import { Prose } from '../prose';
 import { HydrationSafeDate } from '../messages/hydration-safe-date';
 
 import { Badge } from '@/components/ui/badge';
@@ -35,11 +34,19 @@ import { m } from '@/paraglide/messages';
 type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 /**
- * The "Emails" panel — a letter_opener-style viewer for the sandbox's captured
- * outbound mail (spec §4b). A Sheet triggered from inside the preview toolbar:
- * every board email (magic links, verification, alert-manage HMAC URLs,
- * digests) is listed newest-first, and expanding a row renders the captured
- * body so a preview session can complete flows that normally need an inbox.
+ * The "Emails" panel — a Mailpit/letter_opener-style viewer for the sandbox's
+ * captured outbound mail (spec §4b). A Sheet triggered from inside the preview
+ * toolbar: every board email (magic links, verification, alert-manage HMAC
+ * URLs, digests) is listed newest-first in a compact master list, and
+ * selecting one opens a workbench detail — a metadata header (To / Subject /
+ * Type / Received) above the rendered body — so a preview session can complete
+ * flows that normally need an inbox.
+ *
+ * The body is framed in a SANDBOXED iframe (`srcdoc`, `sandbox=""`, no
+ * scripts): an email is a standalone document, so framing it keeps its own
+ * inline styles from bleeding into the app and keeps the app's styles from
+ * distorting it. AGENTS.md hard rule 4 holds — the platform HTML is handed to
+ * `srcDoc` as-is, never interpolated with other strings.
  *
  * Data arrives from the `listSandboxEmails` server function on demand (open /
  * refresh) — the same scriptable seam agents drive headlessly, and the reason
@@ -50,7 +57,7 @@ export function PreviewEmailsSheet({ disabled }: { disabled?: boolean }) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<LoadStatus>('idle');
   const [emails, setEmails] = useState<PreviewEmail[]>([]);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   async function load() {
     setStatus('loading');
@@ -59,6 +66,9 @@ export function PreviewEmailsSheet({ disabled }: { disabled?: boolean }) {
         data: { limit: PREVIEW_EMAILS_DEFAULT_LIMIT },
       });
       setEmails(result);
+      // Auto-open the newest capture so the workbench lands on a body, not an
+      // empty detail pane; the master list stays the way back.
+      setSelectedId(result[0]?.id ?? null);
       setStatus('ready');
     } catch {
       setStatus('error');
@@ -71,12 +81,12 @@ export function PreviewEmailsSheet({ disabled }: { disabled?: boolean }) {
     if (next && status === 'idle') void load();
   }
 
+  const selected = emails.find((email) => email.id === selectedId) ?? null;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger
-        render={
-          <Button variant="outline" size="sm" className="w-full" />
-        }
+        render={<Button variant="outline" size="sm" className="w-full" />}
         disabled={disabled}
       >
         <Mail data-icon="inline-start" />
@@ -84,7 +94,7 @@ export function PreviewEmailsSheet({ disabled }: { disabled?: boolean }) {
       </SheetTrigger>
       <SheetContent
         side="right"
-        className="w-full gap-0 p-0 sm:max-w-md"
+        className="w-full gap-0 p-0 sm:max-w-2xl lg:max-w-3xl"
         data-test="preview-emails-panel"
       >
         <SheetHeader className="flex-row items-start justify-between gap-3 p-4">
@@ -113,17 +123,14 @@ export function PreviewEmailsSheet({ disabled }: { disabled?: boolean }) {
 
         <Separator />
 
-        <div className="flex-1 overflow-y-auto">
-          <PanelBody
-            status={status}
-            emails={emails}
-            expanded={expanded}
-            onToggle={(id) =>
-              setExpanded((current) => (current === id ? null : id))
-            }
-            onRetry={() => void load()}
-          />
-        </div>
+        <PanelBody
+          status={status}
+          emails={emails}
+          selected={selected}
+          onSelect={setSelectedId}
+          onBack={() => setSelectedId(null)}
+          onRetry={() => void load()}
+        />
       </SheetContent>
     </Sheet>
   );
@@ -132,20 +139,22 @@ export function PreviewEmailsSheet({ disabled }: { disabled?: boolean }) {
 function PanelBody({
   status,
   emails,
-  expanded,
-  onToggle,
+  selected,
+  onSelect,
+  onBack,
   onRetry,
 }: {
   status: LoadStatus;
   emails: PreviewEmail[];
-  expanded: string | null;
-  onToggle: (id: string) => void;
+  selected: PreviewEmail | null;
+  onSelect: (id: string) => void;
+  onBack: () => void;
   onRetry: () => void;
 }) {
   if (status === 'loading' && emails.length === 0) {
     return (
       <div
-        className="text-muted-foreground flex items-center justify-center gap-2 p-8 text-sm"
+        className="text-muted-foreground flex flex-1 items-center justify-center gap-2 p-8 text-sm"
         role="status"
       >
         <Spinner className="size-4" />
@@ -173,7 +182,7 @@ function PanelBody({
 
   if (status === 'ready' && emails.length === 0) {
     return (
-      <Empty className="border-0" data-test="preview-emails-empty">
+      <Empty className="flex-1 border-0" data-test="preview-emails-empty">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <Mail />
@@ -188,84 +197,194 @@ function PanelBody({
   }
 
   return (
-    <ul className="divide-border divide-y" data-test="preview-emails-list">
-      {emails.map((email) => (
-        <EmailRow
-          key={email.id}
-          email={email}
-          expanded={expanded === email.id}
-          onToggle={() => onToggle(email.id)}
-        />
-      ))}
-    </ul>
+    <div className="flex min-h-0 w-full flex-1">
+      <ul
+        className={cn(
+          'flex min-h-0 w-full flex-col overflow-y-auto sm:w-72 sm:shrink-0 sm:border-r',
+          selected && 'hidden sm:flex',
+        )}
+        data-test="preview-emails-list"
+      >
+        {emails.map((email) => (
+          <EmailListRow
+            key={email.id}
+            email={email}
+            selected={selected?.id === email.id}
+            onSelect={() => onSelect(email.id)}
+          />
+        ))}
+      </ul>
+
+      <div
+        className={cn(
+          'flex min-h-0 flex-1 flex-col',
+          !selected && 'hidden sm:flex',
+        )}
+        data-test="preview-email-detail"
+      >
+        {selected ? (
+          <EmailDetail email={selected} onBack={onBack} />
+        ) : (
+          <div className="text-muted-foreground flex flex-1 items-center justify-center p-8 text-sm">
+            {m.previewToolbar_emailsSelectHint()}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
-function EmailRow({
+function EmailListRow({
   email,
-  expanded,
-  onToggle,
+  selected,
+  onSelect,
 }: {
   email: PreviewEmail;
-  expanded: boolean;
-  onToggle: () => void;
+  selected: boolean;
+  onSelect: () => void;
 }) {
-  const hasHtml = email.html.trim().length > 0;
   return (
     <li data-test="preview-email">
       <button
         type="button"
-        onClick={onToggle}
-        aria-expanded={expanded}
-        className="hover:bg-muted flex w-full items-start gap-3 px-4 py-3 text-left transition-colors"
+        onClick={onSelect}
+        aria-current={selected || undefined}
+        className={cn(
+          'hover:bg-muted border-border flex w-full flex-col gap-1 border-b px-4 py-3 text-left transition-colors',
+          selected && 'bg-muted',
+        )}
       >
-        <span className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="flex items-center gap-2">
-            <span className="min-w-0 flex-1 truncate text-sm font-medium">
-              {email.subject}
-            </span>
-            {email.type ? (
-              <Badge variant="secondary" className="shrink-0">
-                {email.type}
-              </Badge>
-            ) : null}
+        <span className="flex items-center gap-2">
+          <span className="min-w-0 flex-1 truncate text-sm font-medium">
+            {email.subject}
           </span>
-          <span className="text-muted-foreground truncate text-xs">
-            {m.previewToolbar_emailsTo()} {email.to}
-          </span>
+          {email.type ? (
+            <Badge variant="secondary" className="shrink-0">
+              {email.type}
+            </Badge>
+          ) : null}
         </span>
-        <span className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs">
-          <HydrationSafeDate
-            iso={new Date(email.createdAt).toISOString()}
-            presentation="relative"
-          />
-          <ChevronDown
-            className={cn(
-              'size-4 transition-transform',
-              expanded && 'rotate-180',
-            )}
-          />
+        <span className="flex items-center justify-between gap-2">
+          <span className="text-muted-foreground min-w-0 flex-1 truncate font-mono text-xs">
+            {email.to}
+          </span>
+          <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+            <HydrationSafeDate
+              iso={new Date(email.createdAt).toISOString()}
+              presentation="relative"
+            />
+          </span>
         </span>
       </button>
-
-      {expanded ? (
-        <div className="px-4 pb-4" data-test="preview-email-body">
-          <div className="bg-background overflow-hidden rounded-2xl border">
-            {hasHtml ? (
-              <Prose html={email.html} className="max-w-none p-4" />
-            ) : (
-              <div className="p-4">
-                <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
-                  {m.previewToolbar_emailsPlainText()}
-                </p>
-                <pre className="text-foreground font-sans text-sm break-words whitespace-pre-wrap">
-                  {email.text ?? ''}
-                </pre>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : null}
     </li>
+  );
+}
+
+function EmailDetail({
+  email,
+  onBack,
+}: {
+  email: PreviewEmail;
+  onBack: () => void;
+}) {
+  const iso = new Date(email.createdAt).toISOString();
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex items-center border-b p-2 sm:hidden">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ChevronLeft data-icon="inline-start" />
+          {m.previewToolbar_emailsBack()}
+        </Button>
+      </div>
+
+      <dl className="grid gap-2.5 p-4">
+        <MetaRow label={m.previewToolbar_emailsTo()} mono>
+          {email.to}
+        </MetaRow>
+        <MetaRow label={m.previewToolbar_emailsSubject()}>
+          {email.subject}
+        </MetaRow>
+        {email.type ? (
+          <MetaRow label={m.previewToolbar_emailsType()}>
+            <Badge variant="secondary">{email.type}</Badge>
+          </MetaRow>
+        ) : null}
+        <MetaRow label={m.previewToolbar_emailsReceived()} mono>
+          <HydrationSafeDate iso={iso} presentation="day" />{' · '}
+          <HydrationSafeDate iso={iso} presentation="clock" />
+        </MetaRow>
+      </dl>
+
+      <Separator />
+
+      <EmailBody email={email} />
+    </div>
+  );
+}
+
+/** One definition-list row in the metadata header. */
+function MetaRow({
+  label,
+  mono,
+  children,
+}: {
+  label: string;
+  mono?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="grid grid-cols-[5.5rem_1fr] items-start gap-3">
+      <dt className="text-muted-foreground pt-px text-xs font-medium">
+        {label}
+      </dt>
+      <dd
+        className={cn(
+          'min-w-0 text-sm break-words',
+          mono && 'font-mono text-xs tabular-nums',
+        )}
+      >
+        {children}
+      </dd>
+    </div>
+  );
+}
+
+/**
+ * The captured body. When HTML is present it is framed in a sandboxed iframe —
+ * `srcDoc` receives the platform HTML verbatim (AGENTS.md rule 4: rendered
+ * as-is, never interpolated), `sandbox=""` blocks scripts and same-origin
+ * access, so the frame is opaque: no style bleed either way. The frame carries
+ * a fixed height with its own internal scroll (a `sandbox=""` frame can't be
+ * measured cross-origin for auto-height), centred on a muted backdrop with a
+ * white card to mimic an email client. When HTML is empty the plain-text
+ * fallback renders in a themed `<pre>` block instead.
+ */
+function EmailBody({ email }: { email: PreviewEmail }) {
+  const hasHtml = email.html.trim().length > 0;
+  return (
+    <div
+      className="bg-muted min-h-0 flex-1 overflow-y-auto p-4"
+      data-test="preview-email-body"
+    >
+      {hasHtml ? (
+        <div className="mx-auto max-w-[640px] overflow-hidden rounded-2xl border bg-white shadow-sm">
+          <iframe
+            title={m.previewToolbar_emailsBodyLabel()}
+            srcDoc={email.html}
+            sandbox=""
+            className="block h-[32rem] w-full bg-white"
+          />
+        </div>
+      ) : (
+        <div className="bg-background mx-auto max-w-[640px] rounded-2xl border p-4 shadow-sm">
+          <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
+            {m.previewToolbar_emailsPlainText()}
+          </p>
+          <pre className="text-foreground font-mono text-sm break-words whitespace-pre-wrap">
+            {email.text ?? ''}
+          </pre>
+        </div>
+      )}
+    </div>
   );
 }
