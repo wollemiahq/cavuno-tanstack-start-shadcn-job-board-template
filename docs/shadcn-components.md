@@ -25,8 +25,8 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `badge` | Used (39) | `src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>`src/components/board/company-card.tsx`<br>+36 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
-| `button` | Used (79) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+76 more in the JSON ledger |
-| `button-group` | Used (4) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/talent-filter-controls.tsx`<br>+1 more in the JSON ledger |
+| `button` | Used (78) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+75 more in the JSON ledger |
+| `button-group` | Used (3) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx` |
 | `calendar` | Available | Installed for adoption when the product needs this behavior. |
 | `card` | Used (33) | `src/components/account-shell.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>+30 more in the JSON ledger |
 | `carousel` | Available | Installed for adoption when the product needs this behavior. |
@@ -41,12 +41,12 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `drawer` | Available | Installed for adoption when the product needs this behavior. |
 | `dropdown-menu` | Used (3) | `src/components/Header.tsx`<br>`src/components/messages/message-bubble.tsx`<br>`src/components/messages/thread-view.tsx` |
 | `empty` | Used (41) | `src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>+38 more in the JSON ledger |
-| `field` | Used (22) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+19 more in the JSON ledger |
+| `field` | Used (21) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+18 more in the JSON ledger |
 | `hover-card` | Available | Installed for adoption when the product needs this behavior. |
 | `input` | Used (17) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alerts-band.tsx`<br>+14 more in the JSON ledger |
-| `input-group` | Used (15) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/listing-page-header.tsx`<br>+12 more in the JSON ledger |
+| `input-group` | Used (14) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/listing-page-header.tsx`<br>+11 more in the JSON ledger |
 | `input-otp` | Used (1) | `src/routes/auth.verify-email-required.tsx` |
-| `item` | Used (10) | `src/components/alert-manager.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+7 more in the JSON ledger |
+| `item` | Used (9) | `src/components/alert-manager.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+6 more in the JSON ledger |
 | `kbd` | Available | Installed for adoption when the product needs this behavior. |
 | `label` | Used (3) | `src/components/experience-section.tsx`<br>`src/components/resume-upload.tsx`<br>`src/routes/employers.companies.$slug.jobs.new.tsx` |
 | `marker` | Used (1) | `src/components/messages/thread-view.tsx` |

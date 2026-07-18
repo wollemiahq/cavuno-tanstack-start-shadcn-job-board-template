@@ -1,6 +1,8 @@
 import type { ElementType } from 'react';
 
 import type { TalentProfileVM } from '@/board/talent-view-model';
+// A logo-or-initials brand chip; reused here for education institutions.
+import { CompanyAvatar } from '@/components/board/company-avatar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { initialsOf } from '@/lib/initials';
@@ -107,63 +109,71 @@ export function TalentProfileContent({
             {vm.experiences.map((experience) => (
               <article
                 key={experience.key}
-                className="space-y-3 py-4 first:pt-0 last:pb-0"
+                className="flex gap-3 py-4 first:pt-0 last:pb-0"
               >
-                <div>
-                  <h4 className="text-foreground font-semibold">
-                    {experience.title}
-                  </h4>
-                  <ProfileLink
-                    href={experience.companyHref}
-                    interactive={interactive}
-                  >
-                    {experience.companyName}
-                  </ProfileLink>
+                <CompanyAvatar
+                  name={experience.companyName}
+                  logoUrl={experience.companyLogoUrl}
+                  size="sm"
+                  className="mt-0.5"
+                />
+                <div className="min-w-0 flex-1 space-y-3">
+                  <div>
+                    <h4 className="text-foreground font-semibold">
+                      {experience.title}
+                    </h4>
+                    <ProfileLink
+                      href={experience.companyHref}
+                      interactive={interactive}
+                    >
+                      {experience.companyName}
+                    </ProfileLink>
+                  </div>
+                  {experience.dateRangeLabel ? (
+                    <p className="text-muted-foreground text-sm">
+                      {experience.dateRangeLabel}
+                    </p>
+                  ) : null}
+                  {experience.location ||
+                  experience.employmentTypeLabel ||
+                  experience.locationTypeLabel ||
+                  experience.foundViaLabel ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {experience.location ? (
+                        <Badge variant="outline">{experience.location}</Badge>
+                      ) : null}
+                      {experience.employmentTypeLabel ? (
+                        <Badge variant="outline">
+                          {experience.employmentTypeLabel}
+                        </Badge>
+                      ) : null}
+                      {experience.locationTypeLabel ? (
+                        <Badge variant="outline">
+                          {experience.locationTypeLabel}
+                        </Badge>
+                      ) : null}
+                      {experience.foundViaLabel ? (
+                        <Badge variant="outline">
+                          {experience.foundViaLabel}
+                        </Badge>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  {experience.description ? (
+                    <p className="text-foreground text-sm leading-6 whitespace-pre-line">
+                      {experience.description}
+                    </p>
+                  ) : null}
+                  {experience.skills.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {experience.skills.map((skill) => (
+                        <Badge key={skill} variant="secondary">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
-                {experience.dateRangeLabel ? (
-                  <p className="text-muted-foreground text-sm">
-                    {experience.dateRangeLabel}
-                  </p>
-                ) : null}
-                {experience.location ||
-                experience.employmentTypeLabel ||
-                experience.locationTypeLabel ||
-                experience.foundViaLabel ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {experience.location ? (
-                      <Badge variant="outline">{experience.location}</Badge>
-                    ) : null}
-                    {experience.employmentTypeLabel ? (
-                      <Badge variant="outline">
-                        {experience.employmentTypeLabel}
-                      </Badge>
-                    ) : null}
-                    {experience.locationTypeLabel ? (
-                      <Badge variant="outline">
-                        {experience.locationTypeLabel}
-                      </Badge>
-                    ) : null}
-                    {experience.foundViaLabel ? (
-                      <Badge variant="outline">
-                        {experience.foundViaLabel}
-                      </Badge>
-                    ) : null}
-                  </div>
-                ) : null}
-                {experience.description ? (
-                  <p className="text-foreground text-sm leading-6 whitespace-pre-line">
-                    {experience.description}
-                  </p>
-                ) : null}
-                {experience.skills.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {experience.skills.map((skill) => (
-                      <Badge key={skill} variant="secondary">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : null}
               </article>
             ))}
           </div>
@@ -179,37 +189,45 @@ export function TalentProfileContent({
             {vm.education.map((education) => (
               <article
                 key={education.key}
-                className="space-y-2 py-4 first:pt-0 last:pb-0"
+                className="flex gap-3 py-4 first:pt-0 last:pb-0"
               >
-                <ProfileLink
-                  href={education.institutionHref}
-                  interactive={interactive}
-                >
-                  {education.institutionName}
-                </ProfileLink>
-                {education.qualificationLabel ? (
-                  <p className="text-foreground font-medium">
-                    {education.qualificationLabel}
-                  </p>
-                ) : null}
-                {education.dateRangeLabel ? (
-                  <p className="text-muted-foreground text-sm">
-                    {education.dateRangeLabel}
-                  </p>
-                ) : null}
-                {education.grade ? (
-                  <p className="text-foreground text-sm">{education.grade}</p>
-                ) : null}
-                {education.activitiesAndSocieties ? (
-                  <p className="text-foreground text-sm">
-                    {education.activitiesAndSocieties}
-                  </p>
-                ) : null}
-                {education.description ? (
-                  <p className="text-foreground text-sm leading-6 whitespace-pre-line">
-                    {education.description}
-                  </p>
-                ) : null}
+                <CompanyAvatar
+                  name={education.institutionName}
+                  logoUrl={education.institutionLogoUrl}
+                  size="sm"
+                  className="mt-0.5"
+                />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <ProfileLink
+                    href={education.institutionHref}
+                    interactive={interactive}
+                  >
+                    {education.institutionName}
+                  </ProfileLink>
+                  {education.qualificationLabel ? (
+                    <p className="text-foreground font-medium">
+                      {education.qualificationLabel}
+                    </p>
+                  ) : null}
+                  {education.dateRangeLabel ? (
+                    <p className="text-muted-foreground text-sm">
+                      {education.dateRangeLabel}
+                    </p>
+                  ) : null}
+                  {education.grade ? (
+                    <p className="text-foreground text-sm">{education.grade}</p>
+                  ) : null}
+                  {education.activitiesAndSocieties ? (
+                    <p className="text-foreground text-sm">
+                      {education.activitiesAndSocieties}
+                    </p>
+                  ) : null}
+                  {education.description ? (
+                    <p className="text-foreground text-sm leading-6 whitespace-pre-line">
+                      {education.description}
+                    </p>
+                  ) : null}
+                </div>
               </article>
             ))}
           </div>

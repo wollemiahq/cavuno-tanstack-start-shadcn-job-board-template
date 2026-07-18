@@ -675,6 +675,7 @@
   "talentSearch_detailErrorTitle": "Profil konnte nicht geladen werden",
   "talentSearch_retryLabel": "Erneut versuchen",
   "talentSearch_viewProfileLabel": "Profil ansehen",
+  "talentSearch_messageLabel": "Nachricht",
   "talentSearch_statusActivelyLooking": "Aktiv auf Jobsuche",
   "talentSearch_statusOpenToOffers": "Offen für Angebote",
   "talentSearch_statusNotLooking": "Nicht auf Jobsuche",

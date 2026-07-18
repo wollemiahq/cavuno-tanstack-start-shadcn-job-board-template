@@ -675,6 +675,7 @@
   "talentSearch_detailErrorTitle": "Could not load profile",
   "talentSearch_retryLabel": "Retry",
   "talentSearch_viewProfileLabel": "View profile",
+  "talentSearch_messageLabel": "Message",
   "talentSearch_statusActivelyLooking": "Actively looking",
   "talentSearch_statusOpenToOffers": "Open to offers",
   "talentSearch_statusNotLooking": "Not looking",

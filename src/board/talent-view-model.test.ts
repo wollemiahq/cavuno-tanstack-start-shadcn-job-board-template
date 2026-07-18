@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { toTalentCardVM, toTalentProfileVM } from './talent-view-model';
+import {
+  resolveTalentDetailCta,
+  toTalentCardVM,
+  toTalentProfileVM,
+} from './talent-view-model';
 
 import type { TalentDirectoryEntry, TalentProfile } from '@cavuno/board';
 
@@ -145,6 +149,10 @@ describe('talent view models', () => {
         title: 'Analytical engineer',
         companyName: 'Analytical Engines',
         companyHref: 'https://analytical.example',
+        // The public TalentProfile shape carries no company logo yet — the
+        // mapper resolves it to null and the profile renders the initials
+        // fallback (platform follow-up documented on toTalentProfileVM).
+        companyLogoUrl: null,
         dateRangeLabel: 'janv. 2022 – Aujourd’hui',
         location: 'London, United Kingdom',
         employmentTypeLabel: 'Full time',
@@ -159,6 +167,7 @@ describe('talent view models', () => {
         key: 'university-of-london-2018-09',
         institutionName: 'University of London',
         institutionHref: 'https://university.example',
+        institutionLogoUrl: null,
         qualificationLabel: 'Bachelor of Science, Mathematics',
         grade: 'First class honours',
         activitiesAndSocieties: 'Analytical Society',
@@ -237,5 +246,87 @@ describe('talent view models', () => {
     expect(vm.languages).toEqual([
       { key: 'esperanto', name: 'Esperanto', proficiencyLabel: null },
     ]);
+  });
+
+  it('resolves company and institution logos to null until the API exposes them', () => {
+    const vm = toTalentProfileVM(profile, 'fr', labels);
+
+    expect(vm.experiences[0]!.companyLogoUrl).toBeNull();
+    expect(vm.education[0]!.institutionLogoUrl).toBeNull();
+  });
+});
+
+describe('resolveTalentDetailCta', () => {
+  const base = {
+    detailHref: '/p/ada-lovelace',
+    signInHref: '/auth/sign-in?returnTo=%2Ftalent',
+    pricingHref: '/employers',
+    labels: { message: 'Message', viewProfile: 'View profile' },
+    showViewProfile: true,
+  };
+
+  it('routes an anonymous viewer to sign-in and keeps the profile link', () => {
+    expect(
+      resolveTalentDetailCta({ ...base, viewer: { kind: 'anonymous' } }),
+    ).toEqual({
+      message: { label: 'Message', href: '/auth/sign-in?returnTo=%2Ftalent' },
+      viewProfile: { label: 'View profile', href: '/p/ada-lovelace' },
+    });
+  });
+
+  it('gives a candidate viewer no Message CTA (candidates cannot cold-message candidates)', () => {
+    expect(
+      resolveTalentDetailCta({ ...base, viewer: { kind: 'candidate' } }),
+    ).toEqual({
+      message: null,
+      viewProfile: { label: 'View profile', href: '/p/ada-lovelace' },
+    });
+  });
+
+  it('routes an employer without talent access to pricing', () => {
+    expect(
+      resolveTalentDetailCta({
+        ...base,
+        viewer: { kind: 'employer', hasTalentAccess: false },
+      }),
+    ).toEqual({
+      message: { label: 'Message', href: '/employers' },
+      viewProfile: { label: 'View profile', href: '/p/ada-lovelace' },
+    });
+  });
+
+  it('hands an employer with access to the canonical profile and drops the duplicate link', () => {
+    expect(
+      resolveTalentDetailCta({
+        ...base,
+        viewer: { kind: 'employer', hasTalentAccess: true },
+      }),
+    ).toEqual({
+      message: { label: 'Message', href: '/p/ada-lovelace' },
+      viewProfile: null,
+    });
+  });
+
+  it('omits the View profile link on the canonical profile surface itself', () => {
+    expect(
+      resolveTalentDetailCta({
+        ...base,
+        viewer: { kind: 'anonymous' },
+        showViewProfile: false,
+      }),
+    ).toEqual({
+      message: { label: 'Message', href: '/auth/sign-in?returnTo=%2Ftalent' },
+      viewProfile: null,
+    });
+  });
+
+  it('renders no Message for an access-holding employer when the handle is missing', () => {
+    expect(
+      resolveTalentDetailCta({
+        ...base,
+        detailHref: null,
+        viewer: { kind: 'employer', hasTalentAccess: true },
+      }),
+    ).toEqual({ message: null, viewProfile: null });
   });
 });
