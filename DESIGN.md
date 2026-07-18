@@ -570,12 +570,15 @@ Props:
 - `candidatesEnabled: boolean`
 - `categories?: HomeCategoryCard[] | undefined`
 - `companies: HomeCompanyCard[]`
-- `countLabel?: string | undefined`
+- `companiesCountLabel?: string | undefined`
 - `employersEnabled: boolean`
 - `jobs: JobCardVM[]`
+- `jobsCountLabel?: string | undefined`
 - `posts: { id: string; object: "public_blog_post"; title: string; slug: string; featured: boolean; coverUrl: string | null; fe…`
+- `postsCountLabel?: string | undefined`
 - `publicJobSubmission?: boolean | undefined`
 - `talent: { object: "talent_directory_entry"; handle: string | null; displayName: string | null; headline: string | null; locat…`
+- `talentCountLabel?: string | undefined`
 
 ### JobAboutCompanyCard — `src/components/board/job-about-company-card.tsx`
 
@@ -1260,6 +1263,12 @@ Props:
 - `searchingText: string`
 - `suggestions: LocationSuggestionVM[]`
 - `value: string`
+
+### DitherCanvas — `src/components/marketing/dither-canvas.tsx`
+
+Props:
+
+- `className?: string | undefined`
 
 ### MessagesNavLink — `src/components/messages-nav-link.tsx`
 
@@ -2859,6 +2868,7 @@ Props:
 - `children?: ReactNode`
 - `description?: ReactNode`
 - `eyebrow?: ReactNode`
+- `size?: "default" | "display" | undefined`
 - `title: ReactNode`
 
 Defaults:
@@ -2879,6 +2889,7 @@ Props:
 - `ariaLabel?: string | undefined`
 - `children: ReactNode`
 - `description?: ReactNode`
+- `eyebrow?: ReactNode`
 - `title?: ReactNode`
 
 Defaults:

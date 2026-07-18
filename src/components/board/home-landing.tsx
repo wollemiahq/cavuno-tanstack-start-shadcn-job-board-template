@@ -14,6 +14,7 @@ import {
   PageHeader,
   PageSection,
 } from '@/components/layout/page';
+import { DitherCanvas } from '@/components/marketing/dither-canvas';
 import { PostCard } from '@/components/post-card';
 import { TalentCard } from '@/components/talent-card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -34,6 +35,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { clampList } from '@/lib/clamp-list';
 import { initialsOf } from '@/lib/initials';
 import type {
   PublicBlogPostSummary,
@@ -121,8 +123,10 @@ function HomeJobCard({ vm }: { vm: JobCardVM }) {
     ) : (
       vm.title
     );
-  const visibleTags = vm.tags.slice(0, MAX_JOB_TAGS);
-  const hiddenTagCount = Math.max(0, vm.tags.length - visibleTags.length);
+  const { visible: visibleTags, overflow: hiddenTagCount } = clampList(
+    vm.tags,
+    MAX_JOB_TAGS,
+  );
 
   return (
     <article className="h-full">
@@ -195,10 +199,18 @@ function HomeJobCard({ vm }: { vm: JobCardVM }) {
   );
 }
 
-function HiringIndex({ companies }: { companies: HomeCompanyCard[] }) {
+function HiringIndex({
+  companies,
+  countLabel,
+}: {
+  companies: HomeCompanyCard[];
+  countLabel?: string;
+}) {
   return (
     <PageSection
+      eyebrow={countLabel}
       title={m.home_companiesHeading()}
+      description={m.home_companiesDescription()}
       actions={
         <ViewAllAction label={m.home_viewAllCompaniesLabel()} to="/companies" />
       }
@@ -266,7 +278,10 @@ function SignupCtaCard({
 
 export function HomeLanding({
   jobs,
-  countLabel,
+  jobsCountLabel,
+  companiesCountLabel,
+  talentCountLabel,
+  postsCountLabel,
   categories = [],
   companies,
   posts,
@@ -277,7 +292,14 @@ export function HomeLanding({
   publicJobSubmission = false,
 }: {
   jobs: JobCardVM[];
-  countLabel?: string;
+  /** Pre-resolved "N jobs" eyebrow for the Latest jobs section. */
+  jobsCountLabel?: string;
+  /** Pre-resolved "N companies" eyebrow for the Companies section. */
+  companiesCountLabel?: string;
+  /** Pre-resolved "N candidates" eyebrow for the Featured talent section. */
+  talentCountLabel?: string;
+  /** Pre-resolved "N posts" eyebrow for the Blog section. */
+  postsCountLabel?: string;
   categories?: HomeCategoryCard[];
   companies: HomeCompanyCard[];
   posts: PublicBlogPostSummary[] | null;
@@ -298,66 +320,69 @@ export function HomeLanding({
       <PageContent
         header={
           <Bleed>
-            <Box
-              background="muted"
-              border="bottom"
-              padding={{ base: '8', md: '12' }}
-            >
-              <Container width="wide">
-                {/* Hero is the headline + its CTAs only. Companies earn their
-                    own section below rather than riding the hero band. */}
-                <Grid columns={1} gap="8">
-                  <PageHeader
-                    eyebrow={
-                      countLabel ? (
-                        <p className="text-muted-foreground text-sm font-medium">
-                          {countLabel}
-                        </p>
-                      ) : undefined
-                    }
-                    title={m.home_heroHeadline()}
-                    description={m.home_heroSupporting()}
-                    actions={
-                      <>
-                        <Link
-                          to="/jobs"
-                          className={buttonVariants({ size: 'lg' })}
-                        >
-                          {m.home_viewAllJobsLabel()}
-                          <ArrowRight
-                            aria-hidden="true"
-                            data-icon="inline-end"
-                          />
-                        </Link>
-                        {publicJobSubmission ? (
-                          <Link
-                            to="/post"
-                            className={buttonVariants({
-                              variant: 'outline',
-                              size: 'lg',
-                            })}
-                          >
-                            {m.siteHeader_postJobLabel()}
-                          </Link>
-                        ) : null}
-                      </>
-                    }
-                  />
-                </Grid>
-              </Container>
+            <Box background="muted" border="bottom">
+              {/* The band is relative + clipped so the decorative dither field
+                  can sit behind the hero content (counts belong to the section
+                  headers below, not the hero). */}
+              <div className="relative isolate overflow-hidden">
+                <DitherCanvas className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
+                <Container width="wide">
+                  <div className="py-8 md:py-12">
+                    {/* Hero is the headline + its CTAs only. Companies earn
+                        their own section below rather than riding the band. */}
+                    <Grid columns={1} gap="8">
+                      <PageHeader
+                        size="display"
+                        title={m.home_heroHeadline()}
+                        description={m.home_heroSupporting()}
+                        actions={
+                          <>
+                            <Link
+                              to="/jobs"
+                              className={buttonVariants({ size: 'lg' })}
+                            >
+                              {m.home_viewAllJobsLabel()}
+                              <ArrowRight
+                                aria-hidden="true"
+                                data-icon="inline-end"
+                              />
+                            </Link>
+                            {publicJobSubmission ? (
+                              <Link
+                                to="/post"
+                                className={buttonVariants({
+                                  variant: 'outline',
+                                  size: 'lg',
+                                })}
+                              >
+                                {m.siteHeader_postJobLabel()}
+                              </Link>
+                            ) : null}
+                          </>
+                        }
+                      />
+                    </Grid>
+                  </div>
+                </Container>
+              </div>
             </Box>
           </Bleed>
         }
       >
         {categories.length > 0 ? (
-          <PageSection title={m.home_categoriesHeading()}>
+          <PageSection
+            title={m.home_categoriesHeading()}
+            description={m.home_categoriesDescription()}
+          >
             <CategoryBrowse categories={categories} />
           </PageSection>
         ) : null}
 
         {latestJobs.length > 0 ? (
           <PageSection
+            eyebrow={jobsCountLabel}
             title={m.home_latestJobsHeading()}
+            description={m.home_latestJobsDescription()}
             actions={
               <ViewAllAction label={m.home_viewAllJobsLabel()} to="/jobs" />
             }
@@ -387,12 +412,17 @@ export function HomeLanding({
         )}
 
         {hiringCompanies.length > 0 ? (
-          <HiringIndex companies={hiringCompanies} />
+          <HiringIndex
+            companies={hiringCompanies}
+            countLabel={companiesCountLabel}
+          />
         ) : null}
 
         {featuredTalent.length > 0 ? (
           <PageSection
+            eyebrow={talentCountLabel}
             title={m.home_talentHeading()}
+            description={m.home_talentDescription()}
             actions={
               <ViewAllAction label={m.home_viewAllTalentLabel()} to="/talent" />
             }
@@ -409,7 +439,9 @@ export function HomeLanding({
 
         {latestPosts.length > 0 ? (
           <PageSection
+            eyebrow={postsCountLabel}
             title={m.home_blogHeading()}
+            description={m.home_blogDescription()}
             actions={
               <ViewAllAction label={m.home_viewAllBlogLabel()} to="/blog" />
             }

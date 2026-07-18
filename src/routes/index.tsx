@@ -93,12 +93,16 @@ export const Route = createFileRoute('/')({
         ? listTalent({ data: { limit: 6 } })
         : Promise.resolve(null),
     ]);
+    const talentPage = talent?.status === 'available' ? talent.page : null;
     return {
       page,
       companies: companies.data,
+      companiesCount: companies.count ?? null,
       seo,
       posts: blog?.data ?? null,
-      talent: talent?.status === 'available' ? talent.page.data : null,
+      postsCount: blog?.count ?? null,
+      talent: talentPage?.data ?? null,
+      talentCount: talentPage?.count ?? null,
     };
   },
   head: ({ loaderData }) => {
@@ -126,15 +130,53 @@ export const Route = createFileRoute('/')({
 const rootApi = getRouteApi('__root__');
 
 function HomePage() {
-  const { page, companies, seo, posts, talent } = Route.useLoaderData();
+  const {
+    page,
+    companies,
+    companiesCount,
+    seo,
+    posts,
+    postsCount,
+    talent,
+    talentCount,
+  } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const copy = boardCopy(board.language, board.labels);
-  const countLabel =
-    typeof page.count === 'number' && page.count > 0
-      ? `${page.count.toLocaleString(board.language)} ${
-          page.count === 1 ? copy.entity.jobSingular : copy.entity.jobPlural
+
+  // ONE section-header eyebrow pattern: "{localized count} {noun}", resolved
+  // here (never in the dumb landing) from the counts the list envelopes carry.
+  // Omitted when the section has no positive count — never a bare "0".
+  const countEyebrow = (
+    count: number | null | undefined,
+    singular: string,
+    plural: string,
+  ) =>
+    typeof count === 'number' && count > 0
+      ? `${count.toLocaleString(board.language)} ${
+          count === 1 ? singular : plural
         }`
       : undefined;
+
+  const jobsCountLabel = countEyebrow(
+    page.count,
+    copy.entity.jobSingular,
+    copy.entity.jobPlural,
+  );
+  const companiesCountLabel = countEyebrow(
+    companiesCount,
+    copy.entity.companySingular,
+    copy.entity.companyPlural,
+  );
+  const talentCountLabel = countEyebrow(
+    talentCount,
+    m.home_candidateSingular(),
+    m.home_candidatePlural(),
+  );
+  const postsCountLabel = countEyebrow(
+    postsCount,
+    m.home_postSingular(),
+    m.home_postPlural(),
+  );
   const jobs = page.data.map((job) =>
     toJobCardVM(job, board.language, board.labels),
   );
@@ -189,7 +231,10 @@ function HomePage() {
       />
       <HomeLanding
         jobs={jobs}
-        countLabel={countLabel}
+        jobsCountLabel={jobsCountLabel}
+        companiesCountLabel={companiesCountLabel}
+        talentCountLabel={talentCountLabel}
+        postsCountLabel={postsCountLabel}
         categories={categoryCards}
         companies={hiringCompanies}
         posts={posts}

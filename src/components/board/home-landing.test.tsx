@@ -40,6 +40,12 @@ import type {
 } from '@cavuno/board';
 
 beforeEach(() => {
+  // The hero's decorative DitherCanvas asks for a 2D context; jsdom has none
+  // and would log a "not implemented" warning. Stub it to null — the canvas
+  // degrades to a transparent no-op, exactly its production fallback path.
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
+    null as never,
+  );
   vi.spyOn(window, 'Image').mockImplementation(function MockImage() {
     const image = document.createElement('img');
     Object.defineProperties(image, {
@@ -192,7 +198,10 @@ const candidate = {
 
 const baseProps: LandingProps = {
   jobs: [job, productDesignerJob, machineLearningJob],
-  countLabel: '12 jobs',
+  jobsCountLabel: '12 jobs',
+  companiesCountLabel: '4 companies',
+  talentCountLabel: '1 candidate',
+  postsCountLabel: '1 post',
   companies: hiringCompanies,
   posts: [post],
   talent: [candidate],
@@ -236,15 +245,49 @@ function renderLanding(props: LandingProps) {
   render(<RouterProvider router={router} />);
 }
 
-describe('HomeLanding — honest stat pill', () => {
-  it('shows the open-role count and omits it when the loader returned none', async () => {
+describe('HomeLanding — section-header count eyebrow', () => {
+  it('shows the honest counts as section eyebrows and omits them when the loader returned none', async () => {
     renderLanding(baseProps);
-    expect(await screen.findByText(/12/)).toBeTruthy();
+    // The count rides the Latest jobs section header, not the hero.
+    const jobsSection = await screen.findByRole('region', {
+      name: 'Latest jobs',
+    });
+    expect(within(jobsSection).getByText('12 jobs')).toBeTruthy();
+    const companiesSection = screen.getByRole('region', {
+      name: 'Companies hiring now',
+    });
+    expect(within(companiesSection).getByText('4 companies')).toBeTruthy();
+
     cleanup();
-    renderLanding({ ...baseProps, countLabel: undefined });
-    // No count from the loader ⇒ no stat pill (never a bare "0").
+    renderLanding({
+      ...baseProps,
+      jobsCountLabel: undefined,
+      companiesCountLabel: undefined,
+    });
+    // No count from the loader ⇒ no eyebrow (never a bare "0").
     await screen.findAllByRole('link', { name: 'View all jobs' });
-    expect(screen.queryByText(/^12/)).toBeNull();
+    expect(screen.queryByText(/^12 jobs$/)).toBeNull();
+    expect(screen.queryByText(/^4 companies$/)).toBeNull();
+  });
+
+  it('gives each section a one-line description consistent with the hero voice', async () => {
+    renderLanding(baseProps);
+    const jobsSection = await screen.findByRole('region', {
+      name: 'Latest jobs',
+    });
+    expect(
+      within(jobsSection).getByText(
+        'The most recent roles from teams hiring now.',
+      ),
+    ).toBeTruthy();
+    const companiesSection = screen.getByRole('region', {
+      name: 'Companies hiring now',
+    });
+    expect(
+      within(companiesSection).getByText(
+        'Explore the teams with open roles right now.',
+      ),
+    ).toBeTruthy();
   });
 });
 
@@ -332,7 +375,7 @@ describe('HomeLanding — empty board', () => {
     renderLanding({
       ...baseProps,
       jobs: [],
-      countLabel: undefined,
+      jobsCountLabel: undefined,
       companies: [],
       posts: null,
       talent: null,
