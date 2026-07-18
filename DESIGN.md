@@ -1480,11 +1480,19 @@ Props:
 
 ### PreviewEmailsSheet — `src/components/preview/preview-emails.tsx`
 
-The "Emails" panel — a letter_opener-style viewer for the sandbox's captured
-outbound mail (spec §4b). A Sheet triggered from inside the preview toolbar:
-every board email (magic links, verification, alert-manage HMAC URLs,
-digests) is listed newest-first, and expanding a row renders the captured
-body so a preview session can complete flows that normally need an inbox.
+The "Emails" panel — a Mailpit/letter_opener-style viewer for the sandbox's
+captured outbound mail (spec §4b). A Sheet triggered from inside the preview
+toolbar: every board email (magic links, verification, alert-manage HMAC
+URLs, digests) is listed newest-first in a compact master list, and
+selecting one opens a workbench detail — a metadata header (To / Subject /
+Type / Received) above the rendered body — so a preview session can complete
+flows that normally need an inbox.
+
+The body is framed in a SANDBOXED iframe (`srcdoc`, `sandbox=""`, no
+scripts): an email is a standalone document, so framing it keeps its own
+inline styles from bleeding into the app and keeps the app's styles from
+distorting it. AGENTS.md hard rule 4 holds — the platform HTML is handed to
+`srcDoc` as-is, never interpolated with other strings.
 
 Data arrives from the `listSandboxEmails` server function on demand (open /
 refresh) — the same scriptable seam agents drive headlessly, and the reason
