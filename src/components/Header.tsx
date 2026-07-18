@@ -39,6 +39,7 @@ import { ButtonGroup } from '@/components/ui/button-group';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -288,29 +289,33 @@ function AccountMenu({
           {m.accountShell_settingsNav()}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuLabel>
-          {m.employerOnboarding_yourCompaniesTitle()}
-        </DropdownMenuLabel>
-        {companyWorkspaces.map((membership) => (
+        {/* Base UI requires GroupLabel inside a Group — an unwrapped label
+            throws MenuGroupContext-missing and crashes to the boundary. */}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>
+            {m.employerOnboarding_yourCompaniesTitle()}
+          </DropdownMenuLabel>
+          {companyWorkspaces.map((membership) => (
+            <DropdownMenuItem
+              key={membership.id}
+              nativeButton={false}
+              render={
+                <Link
+                  to="/employers/companies/$slug"
+                  params={{ slug: membership.company.slug! }}
+                />
+              }
+            >
+              {membership.company.name}
+            </DropdownMenuItem>
+          ))}
           <DropdownMenuItem
-            key={membership.id}
             nativeButton={false}
-            render={
-              <Link
-                to="/employers/companies/$slug"
-                params={{ slug: membership.company.slug! }}
-              />
-            }
+            render={<Link to="/employers/dashboard" search={{ add: true }} />}
           >
-            {membership.company.name}
+            {m.siteHeader_addNewCompanyLabel()}
           </DropdownMenuItem>
-        ))}
-        <DropdownMenuItem
-          nativeButton={false}
-          render={<Link to="/employers/dashboard" search={{ add: true }} />}
-        >
-          {m.siteHeader_addNewCompanyLabel()}
-        </DropdownMenuItem>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           data-test="account-menu-sign-out"
