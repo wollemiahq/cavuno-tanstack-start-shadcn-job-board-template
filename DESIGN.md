@@ -1469,6 +1469,44 @@ Props:
 - `plans: { object: "job_posting_plan"; id: string; name: string; description: string | null; kind: string; billingInterval: "m…`
 - `remotePermits: { type: string; value: string; label: string; }[] | null`
 
+### PreviewEmailsSheet — `src/components/preview/preview-emails.tsx`
+
+The "Emails" panel — a letter_opener-style viewer for the sandbox's captured
+outbound mail (spec §4b). A Sheet triggered from inside the preview toolbar:
+every board email (magic links, verification, alert-manage HMAC URLs,
+digests) is listed newest-first, and expanding a row renders the captured
+body so a preview session can complete flows that normally need an inbox.
+
+Data arrives from the `listSandboxEmails` server function on demand (open /
+refresh) — the same scriptable seam agents drive headlessly, and the reason
+it is not preloaded into the root loader on every page. The server fn is
+sandbox-gated and returns `[]` off the sandbox, so the panel is inert there.
+
+Props:
+
+- `disabled?: boolean | undefined`
+
+### PreviewToolbar — `src/components/preview/preview-toolbar.tsx`
+
+The developer-preview toolbar — Workstream B of the sandbox-preview-state
+spec. A floating, unobtrusive pill that renders ONLY when the server-side
+capability check passes (`sandbox: true`), never on a tenant board.
+
+It is the discoverability skin over the persona-switch seam; the same
+server functions are scriptable headlessly for agents (spec §3.7).
+
+Positioned bottom-LEFT to clear the app's own bottom-right chrome (the
+messages dock at `right-6 bottom-0`, the job-alert prompt at `right-4
+bottom-4`) — "must not collide with the app's own chrome" wins over the
+nominal bottom-right ask.
+
+Props:
+
+- `capability: PreviewCapability`
+- `config: PreviewBoardConfig`
+- `personas: PreviewPersona[]`
+- `viewer: PreviewViewer | null`
+
 ### ProfileCompletenessCard — `src/components/profile-completeness-card.tsx`
 
 Profile-completeness rail card: one progress read-out over the checklist of

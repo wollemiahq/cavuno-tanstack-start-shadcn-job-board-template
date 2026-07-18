@@ -16,10 +16,12 @@ import {
 
 import Footer from '../components/Footer';
 import Header from '../components/Header';
+import { toPreviewBoardConfig } from '../lib/preview';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getSessionUser } from '../server/account';
 import { listCompanies } from '../server/employers';
+import { getPreviewState } from '../server/preview';
 import {
   getAnalyticsConfig,
   getBoardContext,
@@ -41,6 +43,7 @@ import { themeModeScript } from '@/components/cavuno/board-theme';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { NavigationProgress } from '@/components/navigation-progress';
+import { PreviewToolbar } from '@/components/preview/preview-toolbar';
 import {
   MainContentTarget,
   SkipToContentLink,
@@ -71,7 +74,7 @@ declare module '@tanstack/react-router' {
 
 export const Route = createRootRoute({
   loader: async () => {
-    const [board, user, seo, analytics, offerGate, employerCompanies] =
+    const [board, user, seo, analytics, offerGate, employerCompanies, preview] =
       await Promise.all([
         getBoardContext(),
         getSessionUser(),
@@ -83,8 +86,27 @@ export const Route = createRootRoute({
         listCompanies()
           .then((memberships) => memberships.data)
           .catch(() => null),
+        // Developer-preview capability + persona roster (Workstream B). The
+        // server-verified `sandbox: true` gate resolves false on every tenant
+        // board, so the toolbar never renders there. Fail closed so a sandbox
+        // hiccup only hides the toolbar, never faults the page.
+        getPreviewState().catch(() => ({
+          capability: {
+            canPreview: false as const,
+            reason: 'not-sandbox' as const,
+          },
+          personas: [],
+        })),
       ]);
-    return { board, user, seo, analytics, offerGate, employerCompanies };
+    return {
+      board,
+      user,
+      seo,
+      analytics,
+      offerGate,
+      employerCompanies,
+      preview,
+    };
   },
   head: ({ loaderData }) => {
     const board = loaderData?.board;
@@ -155,7 +177,8 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
-  const { board, user, offerGate, employerCompanies } = Route.useLoaderData();
+  const { board, user, offerGate, employerCompanies, preview } =
+    Route.useLoaderData();
   const isEmbed = useRouterState({
     select: (s) => s.location.pathname.startsWith('/embed'),
   });
@@ -375,6 +398,22 @@ function RootLayout() {
       />
       {user && !location.pathname.startsWith('/messages') ? (
         <MessagesDockController />
+      ) : null}
+      {preview.capability.canPreview ? (
+        <PreviewToolbar
+          capability={preview.capability}
+          personas={preview.personas}
+          viewer={
+            user
+              ? {
+                  displayName: user.displayName,
+                  email: user.email,
+                  role: user.role,
+                }
+              : null
+          }
+          config={toPreviewBoardConfig(board)}
+        />
       ) : null}
     </AppRouterProvider>
   );

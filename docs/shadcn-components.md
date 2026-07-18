@@ -8,7 +8,7 @@ This standalone starter owns the complete shadcn Base Rhea source set generated 
 - Theme: `src/theme.css`.
 - Icons: Lucide.
 - Installed source: 60 UI components plus `src/hooks/use-mobile.ts` (61 files total).
-- Production adoption: 37 used, 23 available.
+- Production adoption: 39 used, 21 available.
 
 Installing every primitive is a source-ownership and discoverability decision. It is not a requirement to render every primitive: use the semantic component that fits the interaction instead of manufacturing UI solely to increase the used count.
 
@@ -18,14 +18,14 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | --- | --- | --- |
 | `accordion` | Available | Installed for adoption when the product needs this behavior. |
 | `alert` | Used (14) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-detail-state.tsx`<br>`src/components/board/job-search-page.tsx`<br>+11 more in the JSON ledger |
-| `alert-dialog` | Used (1) | `src/components/danger-zone.tsx` |
+| `alert-dialog` | Used (2) | `src/components/danger-zone.tsx`<br>`src/components/preview/preview-toolbar.tsx` |
 | `aspect-ratio` | Available | Installed for adoption when the product needs this behavior. |
 | `attachment` | Used (1) | `src/components/resume-upload.tsx` |
 | `avatar` | Used (22) | `src/components/Header.tsx`<br>`src/components/account-shell.tsx`<br>`src/components/avatar-upload.tsx`<br>+19 more in the JSON ledger |
-| `badge` | Used (37) | `src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>`src/components/board/company-card.tsx`<br>+34 more in the JSON ledger |
+| `badge` | Used (39) | `src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>`src/components/board/company-card.tsx`<br>+36 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
-| `button` | Used (77) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+74 more in the JSON ledger |
+| `button` | Used (79) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+76 more in the JSON ledger |
 | `button-group` | Used (4) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/talent-filter-controls.tsx`<br>+1 more in the JSON ledger |
 | `calendar` | Available | Installed for adoption when the product needs this behavior. |
 | `card` | Used (33) | `src/components/account-shell.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>+30 more in the JSON ledger |
@@ -40,7 +40,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `direction` | Available | Installed for adoption when the product needs this behavior. |
 | `drawer` | Available | Installed for adoption when the product needs this behavior. |
 | `dropdown-menu` | Used (3) | `src/components/Header.tsx`<br>`src/components/messages/message-bubble.tsx`<br>`src/components/messages/thread-view.tsx` |
-| `empty` | Used (40) | `src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>+37 more in the JSON ledger |
+| `empty` | Used (41) | `src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>+38 more in the JSON ledger |
 | `field` | Used (22) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+19 more in the JSON ledger |
 | `hover-card` | Available | Installed for adoption when the product needs this behavior. |
 | `input` | Used (17) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alerts-band.tsx`<br>+14 more in the JSON ledger |
@@ -53,23 +53,23 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `menubar` | Available | Installed for adoption when the product needs this behavior. |
 | `message` | Used (1) | `src/components/messages/message-bubble.tsx` |
 | `message-scroller` | Used (1) | `src/components/messages/thread-view.tsx` |
-| `native-select` | Available | Installed for adoption when the product needs this behavior. |
+| `native-select` | Used (1) | `src/components/preview/preview-toolbar.tsx` |
 | `navigation-menu` | Available | Installed for adoption when the product needs this behavior. |
 | `pagination` | Used (2) | `src/components/board/blog-archive-page.tsx`<br>`src/components/board/listing-pagination.tsx` |
-| `popover` | Used (1) | `src/components/rich-text-editor.tsx` |
+| `popover` | Used (2) | `src/components/preview/preview-toolbar.tsx`<br>`src/components/rich-text-editor.tsx` |
 | `progress` | Used (1) | `src/components/profile-completeness-card.tsx` |
 | `radio-group` | Used (4) | `src/components/post-job-form.tsx`<br>`src/components/rhea-auth-pilot.tsx`<br>`src/routes/auth.sign-in.tsx`<br>+1 more in the JSON ledger |
 | `resizable` | Available | Installed for adoption when the product needs this behavior. |
 | `scroll-area` | Available | Installed for adoption when the product needs this behavior. |
 | `select` | Used (10) | `src/components/board/jobs-filter-controls.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/custom-fields-group.tsx`<br>+7 more in the JSON ledger |
-| `separator` | Used (2) | `src/components/account-shell.tsx`<br>`src/components/rich-text-editor.tsx` |
-| `sheet` | Used (6) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>+3 more in the JSON ledger |
+| `separator` | Used (4) | `src/components/account-shell.tsx`<br>`src/components/preview/preview-emails.tsx`<br>`src/components/preview/preview-toolbar.tsx`<br>+1 more in the JSON ledger |
+| `sheet` | Used (7) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>+4 more in the JSON ledger |
 | `sidebar` | Available | Installed for adoption when the product needs this behavior. |
 | `skeleton` | Used (6) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-result-detail.tsx`<br>`src/components/board/public-content-pending.tsx`<br>+3 more in the JSON ledger |
 | `slider` | Available | Installed for adoption when the product needs this behavior. |
 | `sonner` | Available | Installed for adoption when the product needs this behavior. |
-| `spinner` | Used (10) | `src/components/board/alert-signup-form.tsx`<br>`src/components/company-search-combobox.tsx`<br>`src/components/keyword-combobox.tsx`<br>+7 more in the JSON ledger |
-| `switch` | Available | Installed for adoption when the product needs this behavior. |
+| `spinner` | Used (12) | `src/components/board/alert-signup-form.tsx`<br>`src/components/company-search-combobox.tsx`<br>`src/components/keyword-combobox.tsx`<br>+9 more in the JSON ledger |
+| `switch` | Used (1) | `src/components/preview/preview-toolbar.tsx` |
 | `table` | Used (2) | `src/components/board/salary-sections.tsx`<br>`src/routes/employers.companies.$slug.index.tsx` |
 | `tabs` | Available | Installed for adoption when the product needs this behavior. |
 | `textarea` | Used (5) | `src/components/custom-fields-group.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+2 more in the JSON ledger |

@@ -16,8 +16,8 @@
     "total": 61
   },
   "summary": {
-    "used": 37,
-    "available": 23
+    "used": 39,
+    "available": 21
   },
   "registryCompositions": [
     {
@@ -76,7 +76,8 @@
       "name": "alert-dialog",
       "status": "used",
       "productionReferences": [
-        "src/components/danger-zone.tsx"
+        "src/components/danger-zone.tsx",
+        "src/components/preview/preview-toolbar.tsx"
       ]
     },
     {
@@ -144,6 +145,8 @@
         "src/components/place-tags-field.tsx",
         "src/components/post-card.tsx",
         "src/components/post-job-form.tsx",
+        "src/components/preview/preview-emails.tsx",
+        "src/components/preview/preview-toolbar.tsx",
         "src/components/resume-upload.tsx",
         "src/components/skills-section.tsx",
         "src/components/talent-card.tsx",
@@ -222,6 +225,8 @@
         "src/components/messages/thread-view.tsx",
         "src/components/place-tags-field.tsx",
         "src/components/post-job-form.tsx",
+        "src/components/preview/preview-emails.tsx",
+        "src/components/preview/preview-toolbar.tsx",
         "src/components/profile-form.tsx",
         "src/components/resume-import-dialog.tsx",
         "src/components/resume-upload.tsx",
@@ -422,6 +427,7 @@
         "src/components/messages/inbox-list.tsx",
         "src/components/messages/thread-view.tsx",
         "src/components/post-job-form.tsx",
+        "src/components/preview/preview-emails.tsx",
         "src/components/skills-section.tsx",
         "src/routes/-messages-dock-controller.tsx",
         "src/routes/account_.saved.tsx",
@@ -583,8 +589,10 @@
     },
     {
       "name": "native-select",
-      "status": "available",
-      "productionReferences": []
+      "status": "used",
+      "productionReferences": [
+        "src/components/preview/preview-toolbar.tsx"
+      ]
     },
     {
       "name": "navigation-menu",
@@ -603,6 +611,7 @@
       "name": "popover",
       "status": "used",
       "productionReferences": [
+        "src/components/preview/preview-toolbar.tsx",
         "src/components/rich-text-editor.tsx"
       ]
     },
@@ -654,6 +663,8 @@
       "status": "used",
       "productionReferences": [
         "src/components/account-shell.tsx",
+        "src/components/preview/preview-emails.tsx",
+        "src/components/preview/preview-toolbar.tsx",
         "src/components/rich-text-editor.tsx"
       ]
     },
@@ -666,7 +677,8 @@
         "src/components/board/jobs-filter-toolbar.tsx",
         "src/components/education-section.tsx",
         "src/components/experience-section.tsx",
-        "src/components/languages-section.tsx"
+        "src/components/languages-section.tsx",
+        "src/components/preview/preview-emails.tsx"
       ]
     },
     {
@@ -707,6 +719,8 @@
         "src/components/location-suggest-field.tsx",
         "src/components/place-tags-field.tsx",
         "src/components/post-job-form.tsx",
+        "src/components/preview/preview-emails.tsx",
+        "src/components/preview/preview-toolbar.tsx",
         "src/routes/employers.companies.$slug.index.tsx",
         "src/routes/employers.dashboard.tsx",
         "src/routes/employers.onboarding.$slug.tsx"
@@ -714,8 +728,10 @@
     },
     {
       "name": "switch",
-      "status": "available",
-      "productionReferences": []
+      "status": "used",
+      "productionReferences": [
+        "src/components/preview/preview-toolbar.tsx"
+      ]
     },
     {
       "name": "table",

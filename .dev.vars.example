@@ -3,6 +3,9 @@
 # note the /api prefix; only api.cavuno.com rewrites /v1 → /api/v1).
 CAVUNO_API_URL=https://api.cavuno.com
 # The board this frontend renders — its pk_… publishable key.
-# Default: the production Robotics Engineer Jobs board — the same real-data
-# reference board used by the other Cavuno starters.
-CAVUNO_BOARD=pk_d9ce40a106227b615ec710de3f3d73dc
+# Default: the platform SANDBOX fixture board (`sandbox: true`) — the
+# state-complete feature showcase. Grounding here lights up the developer
+# preview toolbar (persona switching, board-settings toggles, reseed).
+# This is the sandbox's real, deliberately-published key (see
+# docs/preview-states.md) — data resets nightly; safe for write probes.
+CAVUNO_BOARD=pk_c2f66367a3abaa6bafd00fd3c2de3297
