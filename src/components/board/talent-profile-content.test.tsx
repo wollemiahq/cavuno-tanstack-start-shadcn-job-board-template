@@ -66,6 +66,37 @@ describe('TalentProfileContent', () => {
     ).toBeNull();
   });
 
+  it('renders an initials brand chip for each experience and education entry when no logo is present', () => {
+    render(<TalentProfileContent vm={profileVm} headingAs="h1" />);
+
+    // companyLogoUrl / institutionLogoUrl are null (the public API omits the
+    // field), so CompanyAvatar shows the initials fallback.
+    expect(screen.getByText('AE')).toBeVisible(); // Analytical Engines
+    expect(screen.getByText('UO')).toBeVisible(); // University of London
+  });
+
+  it('shows the company logo image when the entry carries one', () => {
+    render(
+      <TalentProfileContent
+        vm={{
+          ...profileVm,
+          experiences: [
+            {
+              ...profileVm.experiences[0]!,
+              companyLogoUrl: 'https://cdn.example/analytical-engines.png',
+            },
+          ],
+        }}
+        headingAs="h1"
+      />,
+    );
+
+    const logo = document.querySelector<HTMLImageElement>(
+      'img[src="https://cdn.example/analytical-engines.png"]',
+    );
+    expect(logo).not.toBeNull();
+  });
+
   it('uses an h2 in the search detail projection and omits empty optional sections', () => {
     render(
       <TalentProfileContent

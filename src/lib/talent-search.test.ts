@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  parseTalentSearch,
-  talentListingLoaderDeps,
-  talentSearchSubmission,
-} from './talent-search';
+import { parseTalentSearch, talentListingLoaderDeps } from './talent-search';
 
 describe('parseTalentSearch', () => {
   it('keeps only trimmed Talent listing and selection state', () => {
@@ -69,47 +65,12 @@ describe('talentListingLoaderDeps', () => {
     expect(first).toEqual(second);
     expect(first).not.toHaveProperty('selectedTalent');
   });
-});
 
-describe('talentSearchSubmission', () => {
-  it('canonicalizes the submitted filters and clears pagination plus selection', () => {
+  it('preserves a deep-linked ?skill= facet as a directory dependency', () => {
+    // The in-page skill box was removed (ADR-0075: the header owns the
+    // query), but a `?skill=` link must still filter the directory.
     expect(
-      talentSearchSubmission(
-        {
-          q: 'designer',
-          skill: 'Figma',
-          cursor: 'next-page-token',
-          selectedTalent: 'ada-lovelace',
-        },
-        {
-          q: '  product researcher  ',
-          skill: '  accessibility  ',
-        },
-      ),
-    ).toEqual({
-      q: 'product researcher',
-      skill: 'accessibility',
-      cursor: undefined,
-      selectedTalent: undefined,
-    });
-  });
-
-  it('removes blank submitted filters together with stale result state', () => {
-    expect(
-      talentSearchSubmission(
-        {
-          q: 'designer',
-          skill: 'Figma',
-          cursor: 'next-page-token',
-          selectedTalent: 'ada-lovelace',
-        },
-        { q: '  ', skill: '' },
-      ),
-    ).toEqual({
-      q: undefined,
-      skill: undefined,
-      cursor: undefined,
-      selectedTalent: undefined,
-    });
+      talentListingLoaderDeps(parseTalentSearch({ skill: 'accessibility' })),
+    ).toEqual({ q: undefined, skill: 'accessibility', cursor: undefined });
   });
 });

@@ -61,7 +61,6 @@ function renderPage(onNextResults = vi.fn()) {
         hasMore
         onNextResults={onNextResults}
         selectedTalent="ada-lovelace"
-        onSearchSubmit={vi.fn()}
         onSelectedTalentReplace={vi.fn()}
         onSelectedTalentPush={vi.fn()}
         detail={<p>Selected profile details</p>}
@@ -94,15 +93,12 @@ describe('TalentSearchPage — search results pattern', () => {
       'Candidates',
     );
     expect(screen.queryByRole('searchbox', { name: /candidate/i })).toBeNull();
-    expect(screen.getByRole('textbox', { name: /skill/i })).toHaveValue(
-      'Mathematics',
-    );
-    expect(
-      container.querySelector("[data-slot='talent-search-form']"),
-    ).toBeNull();
+    // The redundant in-page skill box is gone (ADR-0075): the header owns
+    // the candidate query; `?skill=` still filters via the loader.
+    expect(screen.queryByRole('textbox', { name: /skill/i })).toBeNull();
     expect(
       container.querySelector("[data-slot='talent-filter-bar']"),
-    ).not.toBeNull();
+    ).toBeNull();
     expect(
       container.querySelector("[data-slot='search-results-layout']"),
     ).not.toBeNull();
@@ -141,7 +137,6 @@ describe('TalentSearchPage — search results pattern', () => {
           candidates={[]}
           q="no-such-candidate"
           skill="Cobol"
-          onSearchSubmit={vi.fn()}
           onSelectedTalentReplace={vi.fn()}
           onSelectedTalentPush={vi.fn()}
           detail={<p>Unused talent detail</p>}

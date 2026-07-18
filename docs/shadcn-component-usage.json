@@ -207,7 +207,6 @@
         "src/components/board/listing-page-header.tsx",
         "src/components/board/salary-sections.tsx",
         "src/components/board/save-job-button.tsx",
-        "src/components/board/talent-filter-controls.tsx",
         "src/components/board/talent-search-detail-state.tsx",
         "src/components/board/talent-search-page.tsx",
         "src/components/board/talent-search-result-detail.tsx",
@@ -270,7 +269,6 @@
       "productionReferences": [
         "src/components/Header.tsx",
         "src/components/board/alert-signup-form.tsx",
-        "src/components/board/talent-filter-controls.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx"
       ]
     },
@@ -455,7 +453,6 @@
         "src/components/auth-form.tsx",
         "src/components/board/alert-signup-form.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
-        "src/components/board/talent-filter-controls.tsx",
         "src/components/custom-fields-group.tsx",
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",
@@ -510,7 +507,6 @@
         "src/components/Header.tsx",
         "src/components/board/alert-signup-form.tsx",
         "src/components/board/listing-page-header.tsx",
-        "src/components/board/talent-filter-controls.tsx",
         "src/components/company-search-combobox.tsx",
         "src/components/keyword-combobox.tsx",
         "src/components/location-combobox.tsx",
@@ -538,7 +534,6 @@
         "src/components/alert-manager.tsx",
         "src/components/education-section.tsx",
         "src/components/experience-section.tsx",
-        "src/components/languages-section.tsx",
         "src/components/messages/blocked-list.tsx",
         "src/components/messages/inbox-list.tsx",
         "src/routes/alerts.manage.tsx",

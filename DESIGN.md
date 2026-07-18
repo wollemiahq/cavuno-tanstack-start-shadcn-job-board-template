@@ -902,17 +902,6 @@ Props:
 - `returnTo: string`
 - `viewer: { emailVerified: boolean; } | null`
 
-### TalentFilterControls — `src/components/board/talent-filter-controls.tsx`
-
-Secondary Talent filters; the shared header owns the candidate query.
-
-Props:
-
-- `labels: { skill: string; skillPlaceholder: string; search: string; }`
-- `onSubmit: (search: { q: string; skill: string; }) => void`
-- `q?: string | undefined`
-- `skill?: string | undefined`
-
 ### TalentProfileContent — `src/components/board/talent-profile-content.tsx`
 
 Props:
@@ -951,7 +940,6 @@ Props:
 - `endAd?: AdPlacement | undefined`
 - `hasMore?: boolean | undefined`
 - `onNextResults?: (() => void) | undefined`
-- `onSearchSubmit: (search: { q: string; skill: string; }) => void`
 - `onSelectedTalentPush: (handle: string) => void`
 - `onSelectedTalentReplace: (handle: string) => void`
 - `q?: string | undefined`
@@ -963,6 +951,7 @@ Props:
 
 Props:
 
+- `cta?: TalentDetailCta | undefined`
 - `interactive?: boolean | undefined`
 - `vm: TalentProfileVM`
 

@@ -37,15 +37,3 @@ export function talentListingLoaderDeps(
     cursor: search.cursor,
   };
 }
-
-export function talentSearchSubmission(
-  _current: TalentSearch,
-  next: Pick<TalentSearch, 'q' | 'skill'>,
-): TalentSearch {
-  return {
-    q: stringSearchValue(next.q),
-    skill: stringSearchValue(next.skill),
-    cursor: undefined,
-    selectedTalent: undefined,
-  };
-}

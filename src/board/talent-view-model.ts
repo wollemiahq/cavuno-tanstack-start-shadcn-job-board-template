@@ -34,6 +34,14 @@ export interface TalentExperienceVM {
   title: string;
   companyName: string;
   companyHref: string | null;
+  /**
+   * Company mark for the entry (logo when present, initials fallback
+   * otherwise). The public `TalentProfile.experiences` shape does not yet
+   * carry a logo URL, so this resolves to `null` today — see the platform
+   * follow-up noted on `toTalentProfileVM`. Resolving it here keeps the
+   * component ready for the field with a single mapper change.
+   */
+  companyLogoUrl: string | null;
   dateRangeLabel: string;
   location: string | null;
   employmentTypeLabel: string | null;
@@ -47,6 +55,8 @@ export interface TalentEducationVM {
   key: string;
   institutionName: string;
   institutionHref: string | null;
+  /** Institution mark; `null` today for the same reason as `companyLogoUrl`. */
+  institutionLogoUrl: string | null;
   qualificationLabel: string | null;
   grade: string | null;
   activitiesAndSocieties: string | null;
@@ -137,6 +147,16 @@ export function toTalentCardVM(
   };
 }
 
+/**
+ * PLATFORM FOLLOW-UP — talent entry logos. The public `TalentProfile`
+ * serializer (`@cavuno/board` schema `TalentProfile`) exposes
+ * `experiences[].companyUrl` and `education[].institutionUrl` but no logo
+ * field (`companyLogoUrl` / `institutionLogoUrl`), unlike the company
+ * serializer which does carry `logoUrl`. Until the API adds those fields the
+ * mapper resolves them to `null` and the profile renders the initials
+ * fallback. When the field lands, resolve it from `experience.companyLogoUrl`
+ * / `education.institutionLogoUrl` here — no component change required.
+ */
 export function toTalentProfileVM(
   profile: TalentProfile,
   language: string,
@@ -166,6 +186,7 @@ export function toTalentProfileVM(
       title: experience.title,
       companyName: experience.companyName,
       companyHref: normalizeWebsiteUrl(experience.companyUrl ?? ''),
+      companyLogoUrl: null,
       dateRangeLabel: formatMonthRange(
         experience.startDate,
         experience.endDate,
@@ -190,6 +211,7 @@ export function toTalentProfileVM(
       key: stableKey(education.institutionName, education.startDate),
       institutionName: education.institutionName,
       institutionHref: normalizeWebsiteUrl(education.institutionUrl ?? ''),
+      institutionLogoUrl: null,
       qualificationLabel:
         [education.degree, education.fieldOfStudy].filter(Boolean).join(', ') ||
         null,
@@ -215,5 +237,83 @@ export function toTalentProfileVM(
       ),
     })),
     viewProfileLabel: labels.viewProfile,
+  };
+}
+
+/** The viewer looking at a talent detail surface, for CTA gating. */
+export type TalentDetailViewer =
+  | { kind: 'anonymous' }
+  | { kind: 'candidate' }
+  | { kind: 'employer'; hasTalentAccess: boolean };
+
+export interface TalentDetailCtaLabels {
+  message: string;
+  viewProfile: string;
+}
+
+export interface TalentDetailCtaLink {
+  label: string;
+  href: string;
+}
+
+export interface TalentDetailCta {
+  /** The emphasized action, or `null` when the viewer gets no Message CTA. */
+  message: TalentDetailCtaLink | null;
+  /** The subdued canonical-profile link, or `null` when it would duplicate
+   *  the primary action or the surface already is the canonical profile. */
+  viewProfile: TalentDetailCtaLink | null;
+}
+
+/**
+ * Resolve the talent-detail primary/secondary CTA from the viewer's state.
+ *
+ * Gating matrix (a "Message" a candidate cannot cold-send is never shown):
+ *  - anonymous               → Message routes to sign-in (`signInHref`).
+ *  - candidate               → no Message (candidates can't cold-message
+ *                              candidates); only the View-profile link.
+ *  - employer, no access     → Message routes to pricing (`pricingHref`).
+ *  - employer, has access    → Message routes to the canonical profile
+ *                              (`detailHref`), where the conversation opens.
+ *
+ * NOTE: a live in-pane conversation start is not wired because the public
+ * talent shapes expose only `handle`, never the `candidateBoardUserId` that
+ * `board.me.conversations.start` requires — a platform follow-up. Until then
+ * the employer-with-access action hands off to the canonical profile.
+ */
+export function resolveTalentDetailCta(input: {
+  viewer: TalentDetailViewer;
+  /** Canonical `/p/{handle}` link, or `null` when the handle is missing. */
+  detailHref: string | null;
+  signInHref: string;
+  pricingHref: string;
+  labels: TalentDetailCtaLabels;
+  /** `false` when the surface already is the canonical profile page. */
+  showViewProfile: boolean;
+}): TalentDetailCta {
+  const { viewer, detailHref, labels } = input;
+
+  const viewProfile: TalentDetailCtaLink | null =
+    input.showViewProfile && detailHref
+      ? { label: labels.viewProfile, href: detailHref }
+      : null;
+
+  let message: TalentDetailCtaLink | null = null;
+  if (viewer.kind === 'anonymous') {
+    message = { label: labels.message, href: input.signInHref };
+  } else if (viewer.kind === 'employer') {
+    message = viewer.hasTalentAccess
+      ? detailHref
+        ? { label: labels.message, href: detailHref }
+        : null
+      : { label: labels.message, href: input.pricingHref };
+  }
+
+  // Never render two controls pointing at the same place.
+  return {
+    message,
+    viewProfile:
+      message && viewProfile && message.href === viewProfile.href
+        ? null
+        : viewProfile,
   };
 }

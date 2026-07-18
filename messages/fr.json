@@ -666,6 +666,7 @@
   "talentSearch_detailErrorTitle": "Impossible de charger le profil",
   "talentSearch_retryLabel": "Réessayer",
   "talentSearch_viewProfileLabel": "Voir le profil",
+  "talentSearch_messageLabel": "Message",
   "talentSearch_statusActivelyLooking": "En recherche active",
   "talentSearch_statusOpenToOffers": "Ouvert aux propositions",
   "talentSearch_statusNotLooking": "Pas en recherche",

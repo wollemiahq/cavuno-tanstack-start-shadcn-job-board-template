@@ -36,13 +36,6 @@ import {
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-} from '@/components/ui/item';
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -239,14 +232,24 @@ export function LanguagesSection({ languages }: { languages: Language[] }) {
             <EmptyContent>{addButton}</EmptyContent>
           </Empty>
         ) : (
-          <ul className="space-y-2">
+          // A language is atomic (name + level), so it gets the compact row
+          // treatment of Skills — not the bordered cards Experience and
+          // Education use for their richer entries.
+          <ul className="divide-border divide-y">
             {languages.map((language, index) => (
-              <Item key={index} variant="outline" size="sm" render={<li />}>
-                <ItemContent>
-                  <ItemTitle>{language.name}</ItemTitle>
-                  <ItemDescription>{language.proficiency}</ItemDescription>
-                </ItemContent>
-                <ItemActions>
+              <li
+                key={index}
+                className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0"
+              >
+                <div className="grid min-w-0 gap-x-3 gap-y-0.5 sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)] sm:items-baseline">
+                  <span className="text-foreground truncate font-medium">
+                    {language.name}
+                  </span>
+                  <span className="text-muted-foreground truncate text-sm">
+                    {language.proficiency}
+                  </span>
+                </div>
+                <div className="flex shrink-0 items-center gap-0.5">
                   <Button
                     variant="ghost"
                     size="icon-sm"
@@ -268,8 +271,8 @@ export function LanguagesSection({ languages }: { languages: Language[] }) {
                   >
                     <Trash2 aria-hidden />
                   </Button>
-                </ItemActions>
-              </Item>
+                </div>
+              </li>
             ))}
           </ul>
         )}

@@ -13,13 +13,32 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { TalentSearchResultDetail } from './talent-search-result-detail';
 import { profileVm } from './talent-ui-test-fixtures';
 
+import type { TalentDetailCta } from '@/board/talent-view-model';
 import { SearchResultDetail } from '@/components/search-results/search-results';
 
 afterEach(cleanup);
 
+// Anonymous/without-access: Message points somewhere other than the profile,
+// so both controls render (and are distinct).
+const messageAndViewProfileCta: TalentDetailCta = {
+  message: { label: 'Message', href: '/auth/sign-in?returnTo=%2Ftalent' },
+  viewProfile: { label: 'View profile', href: '/p/ada-lovelace' },
+};
+
+// Candidate viewer: candidates can't cold-message candidates, so no Message.
+const viewProfileOnlyCta: TalentDetailCta = {
+  message: null,
+  viewProfile: { label: 'View profile', href: '/p/ada-lovelace' },
+};
+
 describe('TalentSearchResultDetail', () => {
-  it('shows decision-complete public facts and only the supported View profile action', () => {
-    const { container } = render(<TalentSearchResultDetail vm={profileVm} />);
+  it('shows decision-complete public facts', () => {
+    render(
+      <TalentSearchResultDetail
+        vm={profileVm}
+        cta={messageAndViewProfileCta}
+      />,
+    );
 
     expect(
       screen.getByRole('heading', { level: 2, name: 'Ada Lovelace' }),
@@ -30,32 +49,56 @@ describe('TalentSearchResultDetail', () => {
     expect(screen.getByText('Analytical engineer')).toBeVisible();
     expect(screen.getByText('Bachelor of Mathematics')).toBeVisible();
     expect(screen.getByText('Fluent')).toBeVisible();
+    expect(screen.getAllByText('Ada Lovelace')).toHaveLength(1);
+  });
+
+  it('renders the Message primary action ahead of the secondary View profile link', () => {
+    const { container } = render(
+      <TalentSearchResultDetail
+        vm={profileVm}
+        cta={messageAndViewProfileCta}
+      />,
+    );
 
     const actions = container.querySelector<HTMLElement>(
       "[data-slot='talent-detail-actions']",
     );
-    expect(actions).not.toBeNull();
     if (!actions) throw new Error('Talent detail actions were not rendered');
 
-    const actionLinks = within(actions).getAllByRole('link');
-    expect(actionLinks).toHaveLength(1);
-    expect(actionLinks[0]).toHaveAccessibleName('View profile');
-    expect(actionLinks[0]).toHaveAttribute('href', '/p/ada-lovelace');
-    expect(actionLinks[0]).not.toHaveAttribute('role', 'button');
-    expect(
-      within(actions).queryByRole('button', {
-        name: /message|contact|save|apply/i,
-      }),
-    ).toBeNull();
-    expect(
-      container.querySelector('[data-slot="detail-hero-boundary"]'),
-    ).toBeInTheDocument();
-    expect(screen.getAllByText('Ada Lovelace')).toHaveLength(1);
+    const links = within(actions).getAllByRole('link');
+    expect(links).toHaveLength(2);
+    expect(links[0]).toHaveAccessibleName('Message');
+    expect(links[0]).toHaveAttribute(
+      'href',
+      '/auth/sign-in?returnTo=%2Ftalent',
+    );
+    expect(links[1]).toHaveAccessibleName('View profile');
+    expect(links[1]).toHaveAttribute('href', '/p/ada-lovelace');
+  });
+
+  it('renders only the View profile link when the viewer earns no Message CTA', () => {
+    const { container } = render(
+      <TalentSearchResultDetail vm={profileVm} cta={viewProfileOnlyCta} />,
+    );
+
+    const actions = container.querySelector<HTMLElement>(
+      "[data-slot='talent-detail-actions']",
+    );
+    if (!actions) throw new Error('Talent detail actions were not rendered');
+
+    const links = within(actions).getAllByRole('link');
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAccessibleName('View profile');
+    expect(within(actions).queryByRole('link', { name: 'Message' })).toBeNull();
   });
 
   it('removes every profile action while preserved detail is read-only', () => {
     const { container } = render(
-      <TalentSearchResultDetail vm={profileVm} interactive={false} />,
+      <TalentSearchResultDetail
+        vm={profileVm}
+        cta={messageAndViewProfileCta}
+        interactive={false}
+      />,
     );
 
     expect(
@@ -66,12 +109,16 @@ describe('TalentSearchResultDetail', () => {
       container.querySelector("[data-slot='talent-detail-actions']"),
     ).toBeNull();
     expect(screen.queryByRole('link', { name: 'View profile' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Message' })).toBeNull();
   });
 
   it('replaces the expanded identity with a compact identity and action at the hero boundary', () => {
     const { container } = render(
       <SearchResultDetail label="Selected profile">
-        <TalentSearchResultDetail vm={profileVm} />
+        <TalentSearchResultDetail
+          vm={profileVm}
+          cta={messageAndViewProfileCta}
+        />
       </SearchResultDetail>,
     );
     const detail = screen.getByRole('region', { name: 'Selected profile' });
@@ -103,6 +150,9 @@ describe('TalentSearchResultDetail', () => {
     expect(expanded).toHaveAttribute('aria-hidden', 'true');
     expect(within(compact).getByText('Ada Lovelace')).toBeVisible();
     expect(within(compact).getByText('Computing pioneer')).toBeVisible();
+    expect(
+      within(compact).getByRole('link', { name: 'Message' }),
+    ).toHaveAttribute('href', '/auth/sign-in?returnTo=%2Ftalent');
     expect(
       within(compact).getByRole('link', { name: 'View profile' }),
     ).toHaveAttribute('href', '/p/ada-lovelace');
