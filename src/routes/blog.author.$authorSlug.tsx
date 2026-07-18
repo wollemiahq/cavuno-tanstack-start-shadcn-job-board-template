@@ -186,16 +186,14 @@ function AuthorPage() {
         title={author.name}
         description={author.bio}
         avatar={
-          <div className="flex items-center gap-4">
-            <Avatar size="lg" className="size-14">
-              {author.avatarUrl ? (
-                <AvatarImage src={author.avatarUrl} alt={author.name} />
-              ) : null}
-              <AvatarFallback>{initialsOf(author.name)}</AvatarFallback>
-            </Avatar>
-            <AuthorLinks author={author} />
-          </div>
+          <Avatar aria-hidden size="lg" className="size-9">
+            {author.avatarUrl ? (
+              <AvatarImage src={author.avatarUrl} alt="" />
+            ) : null}
+            <AvatarFallback>{initialsOf(author.name)}</AvatarFallback>
+          </Avatar>
         }
+        filters={<AuthorLinks author={author} />}
         posts={posts.data}
         empty={{
           title: m.blogIndex_emptyTitle(),

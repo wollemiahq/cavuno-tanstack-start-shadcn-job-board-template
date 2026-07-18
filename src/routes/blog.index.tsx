@@ -4,9 +4,9 @@ import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { createFileRoute, Link } from '@tanstack/react-router';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
+import { BlogTagChips } from '@/components/board/blog-tag-chips';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
-import { Badge } from '@/components/ui/badge';
 import { headTitle } from '@/lib/page-title';
 import { m } from '@/paraglide/messages';
 import {
@@ -81,37 +81,7 @@ function BlogPage() {
       <BlogArchivePage
         title={m.blogIndex_title()}
         description={m.blogIndex_subtitleText()}
-        filters={
-          <nav
-            aria-label={m.blogIndex_topicsLabel()}
-            className="flex flex-wrap gap-2"
-          >
-            <Link
-              to="/blog"
-              search={{}}
-              className="focus-visible:ring-ring/30 rounded-2xl outline-none focus-visible:ring-3"
-            >
-              <Badge variant={q ? 'secondary' : 'default'}>
-                {m.blogIndex_allTagsLabel()}
-              </Badge>
-            </Link>
-            {tags.map((tag) => (
-              <Link
-                key={tag.id}
-                to="/blog/tag/$tagSlug"
-                params={{ tagSlug: tag.slug }}
-                className="focus-visible:ring-ring/30 rounded-2xl outline-none focus-visible:ring-3"
-              >
-                <Badge
-                  variant="secondary"
-                  className="h-auto max-w-full whitespace-normal"
-                >
-                  {tag.name}
-                </Badge>
-              </Link>
-            ))}
-          </nav>
-        }
+        filters={<BlogTagChips tags={tags} allActive={!q} />}
         posts={page.data}
         empty={{
           title: m.blogIndex_emptyTitle(),

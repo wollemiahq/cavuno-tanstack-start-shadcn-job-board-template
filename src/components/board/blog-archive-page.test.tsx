@@ -177,6 +177,47 @@ describe('BlogArchivePage — Page-family archive presentation', () => {
     expect(screen.queryByRole('button', { name: 'Next results' })).toBeNull();
   });
 
+  it('leads the h1 with a decorative avatar without polluting the heading name', async () => {
+    const { container } = renderArchive(
+      <BlogArchivePage
+        breadcrumb={breadcrumb}
+        title="Harriet Vale"
+        description="Writes about hiring systems and editorial operations."
+        avatar={
+          <span aria-hidden data-slot="avatar">
+            HV
+          </span>
+        }
+        filters={
+          <div>
+            <a href="https://example.com/in/harriet">LinkedIn</a>
+          </div>
+        }
+        posts={[post]}
+        empty={empty}
+      />,
+    );
+
+    // Single h1 whose accessible name is just the author, avatar excluded.
+    const heading = await screen.findByRole('heading', {
+      level: 1,
+      name: 'Harriet Vale',
+    });
+    expect(container.querySelectorAll('h1')).toHaveLength(1);
+    // The avatar renders inside the heading, ahead of the name.
+    expect(heading.querySelector('[data-slot="avatar"]')).not.toBeNull();
+    // The bio is the description line, the social link a quiet affordance below.
+    expect(
+      screen.getByText(
+        'Writes about hiring systems and editorial operations.',
+      ),
+    ).toBeVisible();
+    expect(screen.getByRole('link', { name: 'LinkedIn' })).toHaveAttribute(
+      'href',
+      'https://example.com/in/harriet',
+    );
+  });
+
   it('explains an empty archive and gives the visitor a crawlable recovery path', async () => {
     renderArchive(
       <BlogArchivePage
