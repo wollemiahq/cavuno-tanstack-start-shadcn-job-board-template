@@ -40,6 +40,10 @@ import { PreviewToolbar } from './preview-toolbar';
 
 const capable: PreviewCapability = { canPreview: true, reason: 'sandbox' };
 
+// The trigger is a plain pill visually ("Viewing as: …") but carries a static
+// aria-label so assistive tech announces the control's purpose (a11y gate).
+const PANEL_LABEL = 'Preview toolbar — switch persona and board settings';
+
 const personas: PreviewPersona[] = [
   {
     id: 'candidate-new',
@@ -120,9 +124,28 @@ describe('PreviewToolbar', () => {
     expect(screen.getByText('Casey Complete')).toBeInTheDocument();
   });
 
+  it('gives the trigger and each persona row an accessible name', () => {
+    renderToolbar();
+    // The floating trigger is reachable by an explicit, stable label.
+    fireEvent.click(screen.getByRole('button', { name: PANEL_LABEL }));
+
+    // Each persona button announces "<displayName>, <description>" so it is
+    // self-describing out of the visual group context.
+    expect(
+      screen.getByRole('button', {
+        name: 'Nadia New, Verified, empty everything',
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: 'Adam Admin, Approved admin with applicants',
+      }),
+    ).toBeInTheDocument();
+  });
+
   it('renders the roster grouped by role in the panel', () => {
     renderToolbar();
-    fireEvent.click(screen.getByRole('button', { name: /Viewing as/ }));
+    fireEvent.click(screen.getByRole('button', { name: PANEL_LABEL }));
 
     expect(screen.getByText('Candidates')).toBeInTheDocument();
     expect(screen.getByText('Employers')).toBeInTheDocument();
@@ -137,7 +160,7 @@ describe('PreviewToolbar', () => {
       viewer: { displayName: 'Nadia New', email: 'n@x.com', role: 'candidate' },
     });
     renderToolbar();
-    fireEvent.click(screen.getByRole('button', { name: /Viewing as/ }));
+    fireEvent.click(screen.getByRole('button', { name: PANEL_LABEL }));
     fireEvent.click(screen.getByText('Nadia New'));
 
     await waitFor(() =>
@@ -158,7 +181,7 @@ describe('PreviewToolbar', () => {
       message: 'reseeded',
     });
     renderToolbar();
-    fireEvent.click(screen.getByRole('button', { name: /Viewing as/ }));
+    fireEvent.click(screen.getByRole('button', { name: PANEL_LABEL }));
     fireEvent.click(screen.getByText('Nadia New'));
 
     await waitFor(() =>
@@ -172,7 +195,7 @@ describe('PreviewToolbar', () => {
   it('toggles a boolean flag by its board-config key through updateSandboxFlags', async () => {
     mocks.updateSandboxFlags.mockResolvedValue({ ok: true });
     renderToolbar();
-    fireEvent.click(screen.getByRole('button', { name: /Viewing as/ }));
+    fireEvent.click(screen.getByRole('button', { name: PANEL_LABEL }));
 
     fireEvent.click(screen.getByRole('switch', { name: 'Candidate paywall' }));
 
@@ -187,7 +210,7 @@ describe('PreviewToolbar', () => {
   it('sets the tri-state talent directory via the enum config key', async () => {
     mocks.updateSandboxFlags.mockResolvedValue({ ok: true });
     renderToolbar();
-    fireEvent.click(screen.getByRole('button', { name: /Viewing as/ }));
+    fireEvent.click(screen.getByRole('button', { name: PANEL_LABEL }));
 
     fireEvent.change(
       screen.getByRole('combobox', { name: 'Talent directory' }),
@@ -205,7 +228,7 @@ describe('PreviewToolbar', () => {
   it('surfaces an error and does not invalidate when a toggle rejects', async () => {
     mocks.updateSandboxFlags.mockRejectedValueOnce(new Error('400'));
     renderToolbar();
-    fireEvent.click(screen.getByRole('button', { name: /Viewing as/ }));
+    fireEvent.click(screen.getByRole('button', { name: PANEL_LABEL }));
 
     fireEvent.click(screen.getByRole('switch', { name: 'Blog' }));
 
@@ -222,7 +245,7 @@ describe('PreviewToolbar', () => {
   it('reseeds after confirming in the owned alert dialog', async () => {
     mocks.reseedSandbox.mockResolvedValue({ ok: true });
     renderToolbar();
-    fireEvent.click(screen.getByRole('button', { name: /Viewing as/ }));
+    fireEvent.click(screen.getByRole('button', { name: PANEL_LABEL }));
     fireEvent.click(screen.getByRole('button', { name: 'Reseed' }));
 
     // The confirm action lives in the alert dialog.

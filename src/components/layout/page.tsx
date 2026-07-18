@@ -72,6 +72,12 @@ export type PageHeaderProps = PageHeaderNativeProps & {
   description?: ReactNode;
   actions?: ReactNode;
   align?: 'start' | 'center';
+  /**
+   * Heading scale. `default` is the standard page h1; `display` is the
+   * landing-hero scale (matches the `Text` display role) for the marketing
+   * top-of-page band. Both keep the single required h1.
+   */
+  size?: 'default' | 'display';
   children?: ReactNode;
 };
 
@@ -88,10 +94,12 @@ export function PageHeader({
   description,
   actions,
   align = 'start',
+  size = 'default',
   children,
   ...props
 }: PageHeaderProps) {
   const centered = align === 'center';
+  const display = size === 'display';
 
   return (
     <header
@@ -120,11 +128,23 @@ export function PageHeader({
             centered && 'items-center',
           )}
         >
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">
+          <h1
+            className={cn(
+              'font-heading font-semibold tracking-tight',
+              display ? 'text-4xl md:text-5xl' : 'text-3xl',
+            )}
+          >
             {title}
           </h1>
           {description ? (
-            <p className="text-muted-foreground text-base">{description}</p>
+            <p
+              className={cn(
+                'text-muted-foreground',
+                display ? 'text-base md:text-lg' : 'text-base',
+              )}
+            >
+              {description}
+            </p>
           ) : null}
         </div>
         {actions ? (
@@ -240,6 +260,8 @@ type PageSectionNativeProps = Omit<
 >;
 
 type TitledPageSectionProps = PageSectionNativeProps & {
+  /** Small count/context line above the title (e.g. "9 candidates"). */
+  eyebrow?: ReactNode;
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
@@ -248,6 +270,7 @@ type TitledPageSectionProps = PageSectionNativeProps & {
 };
 
 type AriaLabelledPageSectionProps = PageSectionNativeProps & {
+  eyebrow?: never;
   title?: never;
   description?: never;
   actions?: never;
@@ -267,14 +290,22 @@ export type PageSectionProps =
  */
 export function PageSection(props: PageSectionProps) {
   const generatedId = useId();
-  const { title, description, actions, ariaLabel, children, ...sectionProps } =
-    props as PageSectionNativeProps & {
-      title?: ReactNode;
-      description?: ReactNode;
-      actions?: ReactNode;
-      ariaLabel?: string;
-      children: ReactNode;
-    };
+  const {
+    eyebrow,
+    title,
+    description,
+    actions,
+    ariaLabel,
+    children,
+    ...sectionProps
+  } = props as PageSectionNativeProps & {
+    eyebrow?: ReactNode;
+    title?: ReactNode;
+    description?: ReactNode;
+    actions?: ReactNode;
+    ariaLabel?: string;
+    children: ReactNode;
+  };
 
   if (title !== undefined) {
     const headingId = `${generatedId}-heading`;
@@ -292,6 +323,14 @@ export function PageSection(props: PageSectionProps) {
           className="flex items-start justify-between gap-4"
         >
           <div className="flex min-w-0 flex-col gap-1">
+            {eyebrow ? (
+              <p
+                data-slot="page-section-eyebrow"
+                className="text-muted-foreground text-sm font-medium"
+              >
+                {eyebrow}
+              </p>
+            ) : null}
             <h2 id={headingId} className="font-heading text-xl font-semibold">
               {title}
             </h2>

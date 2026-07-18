@@ -6,10 +6,7 @@ import { m } from '../../paraglide/messages';
 
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import { toTalentCardVM } from '@/board/talent-view-model';
-import { TalentFilterControls } from '@/components/board/talent-filter-controls';
 import { TalentSearchResult } from '@/components/board/talent-search-result';
-import { Box } from '@/components/layout/box';
-import { Container } from '@/components/layout/container';
 import { Page } from '@/components/layout/page';
 import {
   AdRail,
@@ -40,7 +37,6 @@ export function TalentSearchPage({
   skill,
   hasMore = false,
   onNextResults,
-  onSearchSubmit,
   selectedTalent,
   onSelectedTalentReplace,
   onSelectedTalentPush,
@@ -49,11 +45,12 @@ export function TalentSearchPage({
   endAd,
 }: {
   candidates: TalentDirectoryEntry[];
+  /** Header-owned candidate query (ADR-0075) — drives the empty-state copy. */
   q?: string;
+  /** `?skill=` facet from a deep link — drives the empty-state copy. */
   skill?: string;
   hasMore?: boolean;
   onNextResults?: () => void;
-  onSearchSubmit: (search: { q: string; skill: string }) => void;
   selectedTalent?: string;
   onSelectedTalentReplace: (handle: string) => void;
   onSelectedTalentPush: (handle: string) => void;
@@ -92,23 +89,6 @@ export function TalentSearchPage({
         data-layout="talent-search-page"
         className="md:flex md:h-full md:min-h-0 md:flex-col"
       >
-        <Box border="bottom" paddingX={{ base: '4', md: '8' }}>
-          <Container width="wide" gutter="0">
-            <div className="py-3">
-              <TalentFilterControls
-                q={q}
-                skill={skill}
-                labels={{
-                  skill: m.talentSearch_skillLabel(),
-                  skillPlaceholder: m.talentSearch_skillPlaceholder(),
-                  search: m.talentDirectory_searchLabel(),
-                }}
-                onSubmit={onSearchSubmit}
-              />
-            </div>
-          </Container>
-        </Box>
-
         <div
           data-slot="talent-search-viewport"
           className="min-w-0 overflow-x-clip md:flex md:min-h-0 md:flex-1 md:overflow-hidden"

@@ -1,4 +1,7 @@
-import type { TalentProfileVM } from '@/board/talent-view-model';
+import type {
+  TalentDetailCta,
+  TalentProfileVM,
+} from '@/board/talent-view-model';
 import {
   TalentProfileContent,
   TalentProfileIdentity,
@@ -7,29 +10,55 @@ import { SearchResultDetailHeader } from '@/components/search-results/search-res
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
-function TalentProfileAction({
-  vm,
+/**
+ * Message (primary) + View profile (secondary) — the CTA is pre-resolved by
+ * `resolveTalentDetailCta`, so this only renders whatever links the viewer's
+ * state earned. Nothing renders on the loading placeholder (`interactive`
+ * false) or when the viewer earns neither control (e.g. a candidate viewing
+ * a handle-less entry).
+ */
+function TalentDetailActions({
+  cta,
   interactive,
 }: {
-  vm: TalentProfileVM;
+  cta: TalentDetailCta;
   interactive: boolean;
 }) {
-  if (!interactive || !vm.detailHref) return null;
+  if (!interactive || (!cta.message && !cta.viewProfile)) return null;
 
   return (
-    <a href={vm.detailHref} className={buttonVariants()}>
-      {vm.viewProfileLabel}
-    </a>
+    <div
+      data-slot="talent-detail-actions"
+      className="flex flex-wrap items-center gap-2"
+    >
+      {cta.message ? (
+        <a href={cta.message.href} className={buttonVariants()}>
+          {cta.message.label}
+        </a>
+      ) : null}
+      {cta.viewProfile ? (
+        <a
+          href={cta.viewProfile.href}
+          className={buttonVariants({ variant: 'outline' })}
+        >
+          {cta.viewProfile.label}
+        </a>
+      ) : null}
+    </div>
   );
 }
 
 function ExpandedTalentDetailHeader({
   vm,
+  cta,
   interactive,
 }: {
   vm: TalentProfileVM;
+  cta: TalentDetailCta;
   interactive: boolean;
 }) {
+  const hasActions = interactive && Boolean(cta.message || cta.viewProfile);
+
   return (
     <header
       data-slot="talent-detail-expanded-header"
@@ -38,12 +67,9 @@ function ExpandedTalentDetailHeader({
       <div className="col-start-1 row-start-1 min-w-0">
         <TalentProfileIdentity vm={vm} headingAs="h2" />
       </div>
-      {interactive && vm.detailHref ? (
-        <div
-          data-slot="talent-detail-actions"
-          className="col-start-1 row-start-2 w-fit justify-self-start"
-        >
-          <TalentProfileAction vm={vm} interactive />
+      {hasActions ? (
+        <div className="col-start-1 row-start-2 w-fit justify-self-start">
+          <TalentDetailActions cta={cta} interactive />
         </div>
       ) : null}
     </header>
@@ -52,9 +78,11 @@ function ExpandedTalentDetailHeader({
 
 function CompactTalentDetailHeader({
   vm,
+  cta,
   interactive,
 }: {
   vm: TalentProfileVM;
+  cta: TalentDetailCta;
   interactive: boolean;
 }) {
   return (
@@ -71,7 +99,7 @@ function CompactTalentDetailHeader({
         ) : null}
       </div>
       <div className="justify-self-end">
-        <TalentProfileAction vm={vm} interactive={interactive} />
+        <TalentDetailActions cta={cta} interactive={interactive} />
       </div>
     </header>
   );
@@ -132,19 +160,29 @@ export function TalentSearchResultDetailSkeleton() {
 
 export function TalentSearchResultDetail({
   vm,
+  cta = { message: null, viewProfile: null },
   interactive = true,
 }: {
   vm: TalentProfileVM;
+  cta?: TalentDetailCta;
   interactive?: boolean;
 }) {
   return (
     <article className="max-w-full min-w-0">
       <SearchResultDetailHeader
         expanded={
-          <ExpandedTalentDetailHeader vm={vm} interactive={interactive} />
+          <ExpandedTalentDetailHeader
+            vm={vm}
+            cta={cta}
+            interactive={interactive}
+          />
         }
         compact={
-          <CompactTalentDetailHeader vm={vm} interactive={interactive} />
+          <CompactTalentDetailHeader
+            vm={vm}
+            cta={cta}
+            interactive={interactive}
+          />
         }
       />
 

@@ -5,11 +5,17 @@ import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { createFileRoute, Link, notFound } from '@tanstack/react-router';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
+import { BlogTagChips } from '@/components/board/blog-tag-chips';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
 import { headTitle } from '@/lib/page-title';
 import { m } from '@/paraglide/messages';
-import { getBlogTag, getSeoBase, listBlogPosts } from '@/server/queries';
+import {
+  getBlogTag,
+  getSeoBase,
+  listBlogPosts,
+  listBlogTags,
+} from '@/server/queries';
 
 interface BlogTagSearch {
   cursor?: string;
@@ -29,14 +35,15 @@ export const Route = createFileRoute('/blog/tag/$tagSlug')({
   loaderDeps: ({ search }) => search,
   loader: async ({ params, deps }) => {
     try {
-      const [tag, posts, seo] = await Promise.all([
+      const [tag, posts, tags, seo] = await Promise.all([
         getBlogTag({ data: { tagSlug: params.tagSlug } }),
         listBlogPosts({
           data: { tagSlug: params.tagSlug, cursor: deps.cursor, limit: 24 },
         }),
+        listBlogTags({ data: {} }),
         getSeoBase(),
       ]);
-      return { tag, posts, seo };
+      return { tag, posts, tags: tags.data, seo };
     } catch (error) {
       if (isNotFound(error)) throw notFound();
       throw error;
@@ -100,7 +107,7 @@ function BlogTagNotFound() {
 }
 
 function TagPage() {
-  const { tag, posts, seo } = Route.useLoaderData();
+  const { tag, posts, tags, seo } = Route.useLoaderData();
   const copy = boardCopy(seo.language, seo.labels);
   const crumbs = copy.breadcrumbs;
   const jsonLd = [
@@ -125,6 +132,7 @@ function TagPage() {
         }}
         title={tag.name}
         description={tag.description}
+        filters={<BlogTagChips tags={tags} activeTagSlug={tag.slug} />}
         posts={posts.data}
         empty={{
           title: m.blogIndex_emptyTitle(),

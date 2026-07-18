@@ -26,6 +26,7 @@ import { TaxonomyTags } from '@/components/board/taxonomy-tags';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { clampList } from '@/lib/clamp-list';
 import { initialsOf } from '@/lib/initials';
 import { cn } from '@/lib/utils';
 
@@ -58,13 +59,16 @@ function TagBadges({ vm }: { vm: JobCardVM }) {
 
   // Taxonomy chips stay LINKS — the internal-linking spine into the
   // programmatic /jobs/skills|categories pages (SEO-load-bearing) — and
-  // keep the honest +N overflow for the tags beyond the cap.
+  // keep the honest +N overflow for the tags beyond the cap (shared clamp).
+  const { visible, overflow } = clampList(vm.tags, MAX_TAG_BADGES);
   return (
     <TaxonomyTags
-      chips={vm.tags
-        .slice(0, MAX_TAG_BADGES)
-        .map((tag) => ({ key: tag.key, name: tag.name, href: tag.href }))}
-      overflow={Math.max(0, vm.tags.length - MAX_TAG_BADGES)}
+      chips={visible.map((tag) => ({
+        key: tag.key,
+        name: tag.name,
+        href: tag.href,
+      }))}
+      overflow={overflow}
       size="sm"
     />
   );

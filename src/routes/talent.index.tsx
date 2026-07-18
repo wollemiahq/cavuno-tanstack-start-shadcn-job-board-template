@@ -6,6 +6,7 @@ import {
   createFileRoute,
   getRouteApi,
   notFound,
+  useLocation,
   useNavigate,
 } from '@tanstack/react-router';
 import { LockKeyhole, Users } from 'lucide-react';
@@ -13,6 +14,7 @@ import { LockKeyhole, Users } from 'lucide-react';
 import { m } from '../paraglide/messages';
 import { getSeoBase, listTalent } from '../server/queries';
 
+import type { TalentDetailViewer } from '@/board/talent-view-model';
 import { TalentSearchPage } from '@/components/board/talent-search-page';
 import { JsonLd } from '@/components/json-ld';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
@@ -25,11 +27,11 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { candidateSignInHref } from '@/lib/candidate-return-to';
 import { headTitle } from '@/lib/page-title';
 import {
   parseTalentSearch,
   talentListingLoaderDeps,
-  talentSearchSubmission,
 } from '@/lib/talent-search';
 import { SelectedTalentDetail } from '@/routes/-selected-talent-detail';
 import { useSelectedTalent } from '@/routes/-use-selected-talent';
@@ -186,8 +188,19 @@ function TalentDirectoryPage() {
   const { seo, page, restricted } = Route.useLoaderData();
   const { user } = rootApi.useLoaderData();
   const search = Route.useSearch();
+  const location = useLocation();
   const navigate = useNavigate({ from: '/talent/' });
   const copy = boardCopy(seo.language, seo.labels);
+  // Gate the detail-pane Message CTA by the viewer's role. A candidate cannot
+  // cold-message another candidate; an employer's Message hands off to the
+  // canonical profile (see resolveTalentDetailCta for the full matrix).
+  const viewer: TalentDetailViewer =
+    user === null
+      ? { kind: 'anonymous' }
+      : user.role === 'employer'
+        ? { kind: 'employer', hasTalentAccess: true }
+        : { kind: 'candidate' };
+  const signInHref = candidateSignInHref(location.href);
   const selectedTalent = useSelectedTalent(
     page?.data.some((candidate) => candidate.handle === search.selectedTalent)
       ? search.selectedTalent
@@ -234,11 +247,6 @@ function TalentDirectoryPage() {
                 })
             : undefined
         }
-        onSearchSubmit={(next) =>
-          navigate({
-            search: (previous) => talentSearchSubmission(previous, next),
-          })
-        }
         selectedTalent={search.selectedTalent}
         onSelectedTalentReplace={(handle) =>
           navigate({
@@ -260,7 +268,12 @@ function TalentDirectoryPage() {
           })
         }
         detail={
-          <SelectedTalentDetail state={selectedTalent} locale={seo.language} />
+          <SelectedTalentDetail
+            state={selectedTalent}
+            locale={seo.language}
+            viewer={viewer}
+            signInHref={signInHref}
+          />
         }
       />
     </>

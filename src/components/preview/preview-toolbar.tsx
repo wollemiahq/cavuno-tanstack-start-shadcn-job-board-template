@@ -199,6 +199,7 @@ export function PreviewToolbar({
               variant="outline"
               size="sm"
               className="rounded-full shadow-lg"
+              aria-label={m.previewToolbar_triggerLabel()}
             />
           }
         >
@@ -463,6 +464,7 @@ function PersonaGroup({
                 type="button"
                 disabled={disabled}
                 aria-current={active || undefined}
+                aria-label={`${persona.displayName}, ${persona.description}`}
                 data-test="preview-persona"
                 onClick={() => onSwitch(persona)}
                 className={cn(
