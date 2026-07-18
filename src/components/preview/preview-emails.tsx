@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { ChevronLeft, Mail, RotateCw, TriangleAlert } from 'lucide-react';
 
@@ -53,13 +53,28 @@ type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
  * it is not preloaded into the root loader on every page. The server fn is
  * sandbox-gated and returns `[]` off the sandbox, so the panel is inert there.
  */
-export function PreviewEmailsSheet({ disabled }: { disabled?: boolean }) {
-  const [open, setOpen] = useState(false);
+export function PreviewEmailsSheet({
+  disabled,
+  open: openProp,
+  onOpenChange: onOpenChangeProp,
+}: {
+  disabled?: boolean;
+  /**
+   * Controlled mode — the toolbar opens this sheet from its footer envelope,
+   * so the default full-width trigger is suppressed. When omitted the sheet is
+   * uncontrolled and renders its own trigger button (used in isolation / tests).
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
+  const controlled = openProp !== undefined;
+  const [openState, setOpenState] = useState(false);
+  const open = controlled ? openProp : openState;
   const [status, setStatus] = useState<LoadStatus>('idle');
   const [emails, setEmails] = useState<PreviewEmail[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  async function load() {
+  const load = useCallback(async () => {
     setStatus('loading');
     try {
       const result = await listSandboxEmails({
@@ -73,25 +88,32 @@ export function PreviewEmailsSheet({ disabled }: { disabled?: boolean }) {
     } catch {
       setStatus('error');
     }
-  }
+  }, []);
+
+  // Lazy first load whenever the panel opens with nothing fetched yet — works
+  // in both controlled (toolbar-driven) and uncontrolled (own-trigger) modes.
+  useEffect(() => {
+    if (open && status === 'idle') void load();
+  }, [open, status, load]);
 
   function onOpenChange(next: boolean) {
-    setOpen(next);
-    // Lazy first load: only fetch when the panel is actually opened.
-    if (next && status === 'idle') void load();
+    if (!controlled) setOpenState(next);
+    onOpenChangeProp?.(next);
   }
 
   const selected = emails.find((email) => email.id === selectedId) ?? null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetTrigger
-        render={<Button variant="outline" size="sm" className="w-full" />}
-        disabled={disabled}
-      >
-        <Mail data-icon="inline-start" />
-        {m.previewToolbar_emails()}
-      </SheetTrigger>
+      {controlled ? null : (
+        <SheetTrigger
+          render={<Button variant="outline" size="sm" className="w-full" />}
+          disabled={disabled}
+        >
+          <Mail data-icon="inline-start" />
+          {m.previewToolbar_emails()}
+        </SheetTrigger>
+      )}
       <SheetContent
         side="right"
         className="w-full gap-0 p-0 sm:max-w-2xl lg:max-w-3xl"

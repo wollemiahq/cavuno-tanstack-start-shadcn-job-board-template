@@ -586,7 +586,7 @@
       "name": "native-select",
       "status": "used",
       "productionReferences": [
-        "src/components/preview/preview-toolbar.tsx"
+        "src/components/preview/preview-board-settings.tsx"
       ]
     },
     {
@@ -658,6 +658,7 @@
       "status": "used",
       "productionReferences": [
         "src/components/account-shell.tsx",
+        "src/components/preview/preview-board-settings.tsx",
         "src/components/preview/preview-emails.tsx",
         "src/components/preview/preview-toolbar.tsx",
         "src/components/rich-text-editor.tsx"
@@ -673,6 +674,7 @@
         "src/components/education-section.tsx",
         "src/components/experience-section.tsx",
         "src/components/languages-section.tsx",
+        "src/components/preview/preview-board-settings.tsx",
         "src/components/preview/preview-emails.tsx"
       ]
     },
@@ -725,7 +727,7 @@
       "name": "switch",
       "status": "used",
       "productionReferences": [
-        "src/components/preview/preview-toolbar.tsx"
+        "src/components/preview/preview-board-settings.tsx"
       ]
     },
     {

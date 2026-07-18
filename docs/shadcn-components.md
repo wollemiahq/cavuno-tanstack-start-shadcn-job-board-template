@@ -53,7 +53,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `menubar` | Available | Installed for adoption when the product needs this behavior. |
 | `message` | Used (1) | `src/components/messages/message-bubble.tsx` |
 | `message-scroller` | Used (1) | `src/components/messages/thread-view.tsx` |
-| `native-select` | Used (1) | `src/components/preview/preview-toolbar.tsx` |
+| `native-select` | Used (1) | `src/components/preview/preview-board-settings.tsx` |
 | `navigation-menu` | Available | Installed for adoption when the product needs this behavior. |
 | `pagination` | Used (2) | `src/components/board/blog-archive-page.tsx`<br>`src/components/board/listing-pagination.tsx` |
 | `popover` | Used (2) | `src/components/preview/preview-toolbar.tsx`<br>`src/components/rich-text-editor.tsx` |
@@ -62,14 +62,14 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `resizable` | Available | Installed for adoption when the product needs this behavior. |
 | `scroll-area` | Available | Installed for adoption when the product needs this behavior. |
 | `select` | Used (10) | `src/components/board/jobs-filter-controls.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/custom-fields-group.tsx`<br>+7 more in the JSON ledger |
-| `separator` | Used (4) | `src/components/account-shell.tsx`<br>`src/components/preview/preview-emails.tsx`<br>`src/components/preview/preview-toolbar.tsx`<br>+1 more in the JSON ledger |
-| `sheet` | Used (7) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>+4 more in the JSON ledger |
+| `separator` | Used (5) | `src/components/account-shell.tsx`<br>`src/components/preview/preview-board-settings.tsx`<br>`src/components/preview/preview-emails.tsx`<br>+2 more in the JSON ledger |
+| `sheet` | Used (8) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>+5 more in the JSON ledger |
 | `sidebar` | Available | Installed for adoption when the product needs this behavior. |
 | `skeleton` | Used (6) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-result-detail.tsx`<br>`src/components/board/public-content-pending.tsx`<br>+3 more in the JSON ledger |
 | `slider` | Available | Installed for adoption when the product needs this behavior. |
 | `sonner` | Available | Installed for adoption when the product needs this behavior. |
 | `spinner` | Used (12) | `src/components/board/alert-signup-form.tsx`<br>`src/components/company-search-combobox.tsx`<br>`src/components/keyword-combobox.tsx`<br>+9 more in the JSON ledger |
-| `switch` | Used (1) | `src/components/preview/preview-toolbar.tsx` |
+| `switch` | Used (1) | `src/components/preview/preview-board-settings.tsx` |
 | `table` | Used (2) | `src/components/board/salary-sections.tsx`<br>`src/routes/employers.companies.$slug.index.tsx` |
 | `tabs` | Available | Installed for adoption when the product needs this behavior. |
 | `textarea` | Used (5) | `src/components/custom-fields-group.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+2 more in the JSON ledger |

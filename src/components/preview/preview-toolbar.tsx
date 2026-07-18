@@ -2,32 +2,27 @@
 
 import { useState } from 'react';
 
-import { useRouter } from '@tanstack/react-router';
 import {
   Check,
   ChevronsUpDown,
   Eye,
   LogOut,
+  Mail,
   RotateCcw,
+  Settings,
   TriangleAlert,
+  type LucideIcon,
 } from 'lucide-react';
 
 import {
   groupPersonasByRole,
-  PREVIEW_FEATURE_FLAGS,
   type PreviewBoardConfig,
   type PreviewCapability,
-  type PreviewFeatureFlag,
   type PreviewPersona,
   type PreviewViewer,
-  type TalentDirectoryVisibility,
 } from '../../lib/preview';
-import {
-  exitPreview,
-  reseedSandbox,
-  switchPersona,
-  updateSandboxFlags,
-} from '../../server/preview';
+import { exitPreview, reseedSandbox, switchPersona } from '../../server/preview';
+import { PreviewBoardSettingsSheet } from './preview-board-settings';
 import { PreviewEmailsSheet } from './preview-emails';
 
 import {
@@ -47,13 +42,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@/components/ui/native-select';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
-import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages';
 
@@ -62,8 +52,17 @@ import { m } from '@/paraglide/messages';
  * spec. A floating, unobtrusive pill that renders ONLY when the server-side
  * capability check passes (`sandbox: true`), never on a tenant board.
  *
- * It is the discoverability skin over the persona-switch seam; the same
- * server functions are scriptable headlessly for agents (spec §3.7).
+ * Information architecture (Stripe test-mode helper pattern): the pill anchors
+ * a persistent mode indicator whose PRIMARY surface does one job — switch
+ * persona. Everything else is progressive disclosure behind the popover's
+ * footer action row, each in its own focused surface:
+ *   - Board settings → its own sheet (`PreviewBoardSettingsSheet`)
+ *   - Emails         → its own sheet (`PreviewEmailsSheet`)
+ *   - Reseed         → a confirm dialog
+ *   - Exit preview   → immediate sign-out + reload
+ * Opening any of them dismisses the persona menu; closing them returns to
+ * nothing (never re-opens the menu). The same server functions are scriptable
+ * headlessly for agents (spec §3.7).
  *
  * Positioned bottom-LEFT to clear the app's own bottom-right chrome (the
  * messages dock at `right-6 bottom-0`, the job-alert prompt at `right-4
@@ -81,22 +80,14 @@ export function PreviewToolbar({
   viewer: PreviewViewer | null;
   config: PreviewBoardConfig;
 }) {
-  const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
-  const [pendingFlag, setPendingFlag] = useState<string | null>(null);
-  const [flagError, setFlagError] = useState(false);
+  const [boardSettingsOpen, setBoardSettingsOpen] = useState(false);
+  const [emailsOpen, setEmailsOpen] = useState(false);
   const [reseedOpen, setReseedOpen] = useState(false);
   const [reseeding, setReseeding] = useState(false);
   const [exiting, setExiting] = useState(false);
   const [stalePersona, setStalePersona] = useState<string | null>(null);
-  // Optimistic overlay for the board-setting controls: the control adopts
-  // the picked value immediately instead of disable→revert→snap while the
-  // PATCH + loader refetch round-trips. Cleared on settle (success keeps
-  // the server truth, failure reverts to the `config` prop).
-  const [optimisticConfig, setOptimisticConfig] = useState<
-    Partial<PreviewBoardConfig>
-  >({});
-  const effectiveConfig = { ...config, ...optimisticConfig };
 
   // Server-verified: the toolbar can never render on a real board. This is a
   // defensive second gate — the root layout already withholds it off-sandbox.
@@ -128,42 +119,6 @@ export function PreviewToolbar({
     }
   }
 
-  /**
-   * Toggle one board-config key. On failure — a rejected PATCH (the flag module
-   * or platform whitelist drifted) or a typed `not-sandbox` result — surface the
-   * error banner and DON'T invalidate: the control stays bound to the current
-   * `config` prop, so it reverts to its real value rather than sticking at the
-   * value the user just picked. Wrapped so a 4xx never unhandled-rejects.
-   */
-  async function onSetFlag(
-    key: string,
-    next: boolean | TalentDirectoryVisibility,
-  ) {
-    setFlagError(false);
-    setPendingFlag(key);
-    setOptimisticConfig((current) => ({ ...current, [key]: next }));
-    try {
-      const result = await updateSandboxFlags({
-        data: { config: { [key]: next } },
-      });
-      if (result.ok) {
-        await router.invalidate();
-      } else {
-        setFlagError(true);
-      }
-    } catch {
-      setFlagError(true);
-    } finally {
-      // Settle: server truth (fresh `config` after invalidate) or revert.
-      setOptimisticConfig((current) => {
-        const rest = { ...current };
-        delete rest[key as keyof PreviewBoardConfig];
-        return rest;
-      });
-      setPendingFlag(null);
-    }
-  }
-
   async function onReseed() {
     setReseeding(true);
     try {
@@ -187,12 +142,31 @@ export function PreviewToolbar({
     }
   }
 
+  // Footer actions each dismiss the persona menu, then open their own surface —
+  // so closing that surface returns to nothing, never back to the menu.
+  function openBoardSettings() {
+    setMenuOpen(false);
+    setBoardSettingsOpen(true);
+  }
+  function openEmails() {
+    setMenuOpen(false);
+    setEmailsOpen(true);
+  }
+  function openReseed() {
+    setMenuOpen(false);
+    setReseedOpen(true);
+  }
+  function handleExit() {
+    setMenuOpen(false);
+    void onExit();
+  }
+
   return (
     <div
       className="fixed bottom-4 left-4 z-[60] print:hidden"
       data-test="preview-toolbar"
     >
-      <Popover>
+      <Popover open={menuOpen} onOpenChange={setMenuOpen}>
         <PopoverTrigger
           render={
             <Button
@@ -272,160 +246,101 @@ export function PreviewToolbar({
 
           <Separator />
 
-          <div className="p-3">
-            <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
-              {m.previewToolbar_boardSettings()}
-            </p>
-            {flagError ? (
-              <div
-                className="text-destructive bg-destructive/10 mb-3 flex items-start gap-2 rounded-2xl p-3 text-xs"
-                role="alert"
-              >
-                <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-                <span>{m.previewToolbar_flagError()}</span>
-              </div>
-            ) : null}
-            <ul className="flex flex-col gap-3">
-              {PREVIEW_FEATURE_FLAGS.map((flag) => (
-                <FlagControl
-                  key={flag.key}
-                  flag={flag}
-                  config={effectiveConfig}
-                  disabled={busy}
-                  pending={pendingFlag === flag.key}
-                  onSet={onSetFlag}
-                />
-              ))}
-            </ul>
-          </div>
-
-          <Separator />
-
-          <div className="p-3">
-            <PreviewEmailsSheet disabled={busy} />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between gap-2 p-3">
-            <AlertDialog open={reseedOpen} onOpenChange={setReseedOpen}>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={busy}
-                onClick={() => setReseedOpen(true)}
-              >
-                <RotateCcw data-icon="inline-start" />
-                {m.previewToolbar_reseed()}
-              </Button>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    {m.previewToolbar_reseedConfirmTitle()}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {m.previewToolbar_reseedConfirmBody()}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel disabled={reseeding}>
-                    {m.previewToolbar_cancel()}
-                  </AlertDialogCancel>
-                  <AlertDialogAction disabled={reseeding} onClick={onReseed}>
-                    {reseeding ? <Spinner /> : null}
-                    {m.previewToolbar_reseed()}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-
-            <Button
-              variant="ghost"
-              size="sm"
+          {/* Compact toolbar of secondary tools — each opens its own surface. */}
+          <div
+            className="grid grid-cols-2 gap-1 p-2"
+            data-test="preview-actions"
+          >
+            <FooterAction
+              icon={Settings}
+              label={m.previewToolbar_boardSettings()}
+              disabled={busy}
+              onClick={openBoardSettings}
+            />
+            <FooterAction
+              icon={Mail}
+              label={m.previewToolbar_emails()}
+              disabled={busy}
+              onClick={openEmails}
+            />
+            <FooterAction
+              icon={RotateCcw}
+              label={m.previewToolbar_reseed()}
+              disabled={busy}
+              onClick={openReseed}
+            />
+            <FooterAction
+              icon={exiting ? undefined : LogOut}
+              label={m.previewToolbar_exit()}
               disabled={busy || !viewer}
-              onClick={onExit}
-            >
-              {exiting ? <Spinner /> : <LogOut data-icon="inline-start" />}
-              {m.previewToolbar_exit()}
-            </Button>
+              onClick={handleExit}
+            />
           </div>
         </PopoverContent>
       </Popover>
+
+      {/* Secondary surfaces — siblings of the menu, so they persist after it
+          closes and closing them returns to nothing. */}
+      <PreviewBoardSettingsSheet
+        config={config}
+        open={boardSettingsOpen}
+        onOpenChange={setBoardSettingsOpen}
+      />
+
+      <PreviewEmailsSheet open={emailsOpen} onOpenChange={setEmailsOpen} />
+
+      <AlertDialog open={reseedOpen} onOpenChange={setReseedOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {m.previewToolbar_reseedConfirmTitle()}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {m.previewToolbar_reseedConfirmBody()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={reseeding}>
+              {m.previewToolbar_cancel()}
+            </AlertDialogCancel>
+            <AlertDialogAction disabled={reseeding} onClick={onReseed}>
+              {reseeding ? <Spinner /> : null}
+              {m.previewToolbar_reseed()}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-/** Tri-state talent-directory option label, from the message catalog. */
-function visibilityLabel(value: TalentDirectoryVisibility): string {
-  switch (value) {
-    case 'off':
-      return m.previewToolbar_talentVisibility_off();
-    case 'public':
-      return m.previewToolbar_talentVisibility_public();
-    case 'employers_only':
-      return m.previewToolbar_talentVisibility_employersOnly();
-  }
-}
-
 /**
- * One "Board settings" row. A boolean flag renders a Switch; the tri-state
- * `talentDirectoryVisibility` renders a small native select. Both are
- * controlled by the current `config` prop, so a failed toggle (handled in
- * `onSetFlag`) reverts to the real value on the next loader read.
+ * One small icon+label button in the popover footer's action row. The visible
+ * label is the button's accessible name; `icon` is optional so the Exit action
+ * can swap in a spinner while its request is in flight.
  */
-function FlagControl({
-  flag,
-  config,
+function FooterAction({
+  icon: Icon,
+  label,
   disabled,
-  pending,
-  onSet,
+  onClick,
 }: {
-  flag: PreviewFeatureFlag;
-  config: PreviewBoardConfig;
+  icon?: LucideIcon;
+  label: string;
   disabled: boolean;
-  pending: boolean;
-  onSet: (key: string, next: boolean | TalentDirectoryVisibility) => void;
+  onClick: () => void;
 }) {
-  const controlId = `preview-flag-${flag.key}`;
   return (
-    <li className="flex items-start justify-between gap-3">
-      <div className="flex flex-col">
-        <label htmlFor={controlId} className="text-sm font-medium">
-          {flag.label}
-        </label>
-        <span className="text-muted-foreground text-xs">
-          {flag.description}
-        </span>
-      </div>
-      {flag.kind === 'boolean' ? (
-        <Switch
-          id={controlId}
-          className="mt-0.5"
-          checked={config[flag.key] === true}
-          disabled={disabled || pending}
-          aria-label={flag.label}
-          onCheckedChange={(next) => onSet(flag.key, next)}
-        />
-      ) : (
-        <NativeSelect
-          size="sm"
-          className="mt-0.5 shrink-0"
-          id={controlId}
-          value={config[flag.key]}
-          disabled={disabled || pending}
-          aria-label={flag.label}
-          onChange={(event) =>
-            onSet(flag.key, event.target.value as TalentDirectoryVisibility)
-          }
-        >
-          {flag.options.map((option) => (
-            <NativeSelectOption key={option} value={option}>
-              {visibilityLabel(option)}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
-      )}
-    </li>
+    <Button
+      variant="ghost"
+      size="sm"
+      className="justify-start"
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {Icon ? <Icon data-icon="inline-start" /> : <Spinner />}
+      {label}
+    </Button>
   );
 }
 

@@ -1155,6 +1155,7 @@
   "previewToolbar_employers": "Employeurs",
   "previewToolbar_noPersonas": "Aucune persona. Réinitialisez la liste ci-dessous.",
   "previewToolbar_boardSettings": "Paramètres du board",
+  "previewToolbar_boardSettingsSubtitle": "Activez les fonctionnalités autorisées du board sandbox.",
   "previewToolbar_reseed": "Réinitialiser",
   "previewToolbar_reseedConfirmTitle": "Réinitialiser la sandbox ?",
   "previewToolbar_reseedConfirmBody": "Recrée la liste des personas et restaure la configuration de base du board. Tout état modifié pendant l'exploration est perdu.",

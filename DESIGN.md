@@ -1479,6 +1479,27 @@ Props:
 - `plans: { object: "job_posting_plan"; id: string; name: string; description: string | null; kind: string; billingInterval: "m…`
 - `remotePermits: { type: string; value: string; label: string; }[] | null`
 
+### PreviewBoardSettingsSheet — `src/components/preview/preview-board-settings.tsx`
+
+The "Board settings" surface — the sandbox analog of the dashboard's board
+settings (spec §4b item 5), split out of the persona menu into its own
+focused sheet (progressive disclosure: the persona popover does ONE job, the
+flag controls live behind their own affordance). Reached from the toolbar
+footer's gear and controlled by the parent; closing it returns to nothing
+— it never re-opens the persona menu.
+
+The optimistic-update + error-banner behavior moved here verbatim from the
+old inline section: each control adopts the picked value immediately
+(`optimisticConfig`) instead of disable→revert→snap while the PATCH + loader
+refetch round-trips, and a rejected PATCH surfaces the banner and does NOT
+invalidate, so the control reverts to the real `config` prop.
+
+Props:
+
+- `config: PreviewBoardConfig`
+- `onOpenChange: (open: boolean) => void`
+- `open: boolean`
+
 ### PreviewEmailsSheet — `src/components/preview/preview-emails.tsx`
 
 The "Emails" panel — a Mailpit/letter_opener-style viewer for the sandbox's
@@ -1503,6 +1524,8 @@ sandbox-gated and returns `[]` off the sandbox, so the panel is inert there.
 Props:
 
 - `disabled?: boolean | undefined`
+- `onOpenChange?: ((open: boolean) => void) | undefined`
+- `open?: boolean | undefined`
 
 ### PreviewToolbar — `src/components/preview/preview-toolbar.tsx`
 
@@ -1510,8 +1533,17 @@ The developer-preview toolbar — Workstream B of the sandbox-preview-state
 spec. A floating, unobtrusive pill that renders ONLY when the server-side
 capability check passes (`sandbox: true`), never on a tenant board.
 
-It is the discoverability skin over the persona-switch seam; the same
-server functions are scriptable headlessly for agents (spec §3.7).
+Information architecture (Stripe test-mode helper pattern): the pill anchors
+a persistent mode indicator whose PRIMARY surface does one job — switch
+persona. Everything else is progressive disclosure behind the popover's
+footer action row, each in its own focused surface:
+  - Board settings → its own sheet (`PreviewBoardSettingsSheet`)
+  - Emails         → its own sheet (`PreviewEmailsSheet`)
+  - Reseed         → a confirm dialog
+  - Exit preview   → immediate sign-out + reload
+Opening any of them dismisses the persona menu; closing them returns to
+nothing (never re-opens the menu). The same server functions are scriptable
+headlessly for agents (spec §3.7).
 
 Positioned bottom-LEFT to clear the app's own bottom-right chrome (the
 messages dock at `right-6 bottom-0`, the job-alert prompt at `right-4

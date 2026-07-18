@@ -22,9 +22,12 @@ const mocks = vi.hoisted(() => ({
   updateSandboxFlags: vi.fn<() => unknown>(),
   reseedSandbox: vi.fn<() => unknown>(),
   exitPreview: vi.fn<() => unknown>(),
+  listSandboxEmails: vi.fn<() => unknown>(),
   invalidate: vi.fn<() => unknown>(),
 }));
 
+// The persona menu and the board-settings sheet both consume `useRouter`
+// (the flag optimistic path invalidates on success); one mock covers both.
 vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ invalidate: mocks.invalidate }),
 }));
@@ -34,6 +37,7 @@ vi.mock('../../server/preview', () => ({
   updateSandboxFlags: mocks.updateSandboxFlags,
   reseedSandbox: mocks.reseedSandbox,
   exitPreview: mocks.exitPreview,
+  listSandboxEmails: mocks.listSandboxEmails,
 }));
 
 import { PreviewToolbar } from './preview-toolbar';
@@ -85,10 +89,25 @@ function renderToolbar({
   );
 }
 
+// Open the persona menu via its stable, labelled floating trigger.
+function openMenu() {
+  fireEvent.click(screen.getByRole('button', { name: PANEL_LABEL }));
+}
+
+// Board settings now live behind their own footer affordance: open the menu,
+// then the gear. Opening it dismisses the menu (a separate focused surface).
+function openBoardSettings() {
+  openMenu();
+  fireEvent.click(screen.getByRole('button', { name: 'Board settings' }));
+}
+
 // jsdom cannot navigate; the toolbar full-reloads after identity-changing
 // actions (switch/reseed/exit) so every viewer-scoped client surface resets.
 const reloadMock = vi.fn();
 beforeEach(() => {
+  // The footer's Emails action mounts the (lazy) emails sheet, which reads
+  // this on open — resolve empty so it never throws in unrelated tests.
+  mocks.listSandboxEmails.mockResolvedValue([]);
   Object.defineProperty(window, 'location', {
     value: { ...window.location, reload: reloadMock },
     writable: true,
@@ -192,10 +211,56 @@ describe('PreviewToolbar', () => {
     expect(mocks.invalidate).not.toHaveBeenCalled();
   });
 
+  it('keeps the persona menu focused — footer actions, no flag switches', () => {
+    renderToolbar();
+    openMenu();
+
+    // The primary surface does ONE job (switch persona) plus a footer action
+    // row; the flag controls have moved out to their own surface.
+    const actions = document.querySelector(
+      '[data-test="preview-actions"]',
+    ) as HTMLElement;
+    expect(
+      within(actions).getByRole('button', { name: 'Board settings' }),
+    ).toBeInTheDocument();
+    expect(
+      within(actions).getByRole('button', { name: 'Emails' }),
+    ).toBeInTheDocument();
+    expect(
+      within(actions).getByRole('button', { name: 'Reseed' }),
+    ).toBeInTheDocument();
+    expect(
+      within(actions).getByRole('button', { name: 'Exit preview' }),
+    ).toBeInTheDocument();
+
+    // No flag switch/select is present in the persona menu anymore.
+    expect(screen.queryByRole('switch')).toBeNull();
+    expect(
+      screen.queryByRole('combobox', { name: 'Talent directory' }),
+    ).toBeNull();
+  });
+
+  it('reveals the flag controls only after opening Board settings', () => {
+    renderToolbar();
+    openBoardSettings();
+
+    // The focused surface carries its own title + the whitelisted controls.
+    const panel = document.querySelector(
+      '[data-test="preview-board-settings-panel"]',
+    ) as HTMLElement;
+    expect(panel).not.toBeNull();
+    expect(
+      within(panel).getByRole('switch', { name: 'Candidate paywall' }),
+    ).toBeInTheDocument();
+    expect(
+      within(panel).getByRole('combobox', { name: 'Talent directory' }),
+    ).toBeInTheDocument();
+  });
+
   it('toggles a boolean flag by its board-config key through updateSandboxFlags', async () => {
     mocks.updateSandboxFlags.mockResolvedValue({ ok: true });
     renderToolbar();
-    fireEvent.click(screen.getByRole('button', { name: PANEL_LABEL }));
+    openBoardSettings();
 
     fireEvent.click(screen.getByRole('switch', { name: 'Candidate paywall' }));
 
@@ -210,7 +275,7 @@ describe('PreviewToolbar', () => {
   it('sets the tri-state talent directory via the enum config key', async () => {
     mocks.updateSandboxFlags.mockResolvedValue({ ok: true });
     renderToolbar();
-    fireEvent.click(screen.getByRole('button', { name: PANEL_LABEL }));
+    openBoardSettings();
 
     fireEvent.change(
       screen.getByRole('combobox', { name: 'Talent directory' }),
@@ -228,7 +293,7 @@ describe('PreviewToolbar', () => {
   it('surfaces an error and does not invalidate when a toggle rejects', async () => {
     mocks.updateSandboxFlags.mockRejectedValueOnce(new Error('400'));
     renderToolbar();
-    fireEvent.click(screen.getByRole('button', { name: PANEL_LABEL }));
+    openBoardSettings();
 
     fireEvent.click(screen.getByRole('switch', { name: 'Blog' }));
 
@@ -242,10 +307,26 @@ describe('PreviewToolbar', () => {
     expect(mocks.invalidate).not.toHaveBeenCalled();
   });
 
-  it('reseeds after confirming in the owned alert dialog', async () => {
+  it('opens the Emails sheet from the footer envelope', async () => {
+    mocks.listSandboxEmails.mockResolvedValue([]);
+    renderToolbar();
+    openMenu();
+    fireEvent.click(screen.getByRole('button', { name: 'Emails' }));
+
+    // The Emails sheet mounts and lazily loads its captures on open.
+    await waitFor(() =>
+      expect(
+        document.querySelector('[data-test="preview-emails-panel"]'),
+      ).not.toBeNull(),
+    );
+    await waitFor(() => expect(mocks.listSandboxEmails).toHaveBeenCalled());
+  });
+
+  it('reseeds after confirming in the footer-opened alert dialog', async () => {
     mocks.reseedSandbox.mockResolvedValue({ ok: true });
     renderToolbar();
-    fireEvent.click(screen.getByRole('button', { name: PANEL_LABEL }));
+    openMenu();
+    // The footer's Reseed action opens the confirm dialog.
     fireEvent.click(screen.getByRole('button', { name: 'Reseed' }));
 
     // The confirm action lives in the alert dialog.

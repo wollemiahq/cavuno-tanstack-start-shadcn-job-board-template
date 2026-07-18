@@ -1155,6 +1155,7 @@
   "previewToolbar_employers": "Arbeitgeber",
   "previewToolbar_noPersonas": "Keine Personas vorhanden. Setze die Liste unten zurück.",
   "previewToolbar_boardSettings": "Board-Einstellungen",
+  "previewToolbar_boardSettingsSubtitle": "Whitelist-Funktionen des Sandbox-Boards umschalten.",
   "previewToolbar_reseed": "Zurücksetzen",
   "previewToolbar_reseedConfirmTitle": "Sandbox zurücksetzen?",
   "previewToolbar_reseedConfirmBody": "Erstellt die Persona-Liste neu und stellt die Basiskonfiguration des Boards wieder her. Alle beim Erkunden geänderten Zustände gehen verloren.",

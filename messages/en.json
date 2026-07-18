@@ -1155,6 +1155,7 @@
   "previewToolbar_employers": "Employers",
   "previewToolbar_noPersonas": "No personas seeded. Reseed the roster below.",
   "previewToolbar_boardSettings": "Board settings",
+  "previewToolbar_boardSettingsSubtitle": "Toggle whitelisted features on the sandbox board.",
   "previewToolbar_reseed": "Reseed",
   "previewToolbar_reseedConfirmTitle": "Reseed the sandbox?",
   "previewToolbar_reseedConfirmBody": "Recreates the persona roster and restores the baseline board config. Any state you changed while exploring is discarded.",
