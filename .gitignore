@@ -18,3 +18,6 @@ todos.json
 
 # Paraglide compiler output — generated from messages/ (which come from uiCopy)
 src/paraglide
+
+# Agent scratch worktrees — never part of the template
+.claude/worktrees/
