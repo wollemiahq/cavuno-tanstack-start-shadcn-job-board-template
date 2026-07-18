@@ -76,7 +76,7 @@ toggleable.
 | `jobAlertsEnabled` | switch | Anonymous job-alert subscription on/off |
 | `candidatesEnabled` | switch | Candidate profiles / sign-up on/off |
 | `employersEnabled` | switch | Employer sign-up / self-serve on/off |
-| `registrationWallEnabled` | switch | Require sign-in before jobs are visible |
+| `registrationWallEnabled` | switch | Require sign-in to apply — disables guest applications (jobs stay visible) |
 
 `jobAccessPreviewCount` (number) is on the API whitelist but has no toolbar
 control. `publicJobSubmission` is **not** a board-config key — there is no such

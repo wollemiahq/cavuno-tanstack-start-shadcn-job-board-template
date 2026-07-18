@@ -227,7 +227,9 @@ export const PREVIEW_FEATURE_FLAGS: readonly PreviewFeatureFlag[] = [
     key: 'registrationWallEnabled',
     kind: 'boolean',
     label: 'Registration wall',
-    description: 'Require sign-in before jobs are visible.',
+    // Gates APPLYING, not browsing: the platform 403s guest applications
+    // (applications_guest_not_allowed) when enabled; jobs stay visible.
+    description: 'Require sign-in to apply — disables guest applications.',
   },
 ] as const;
 
