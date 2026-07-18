@@ -89,6 +89,14 @@ export function PreviewToolbar({
   const [reseeding, setReseeding] = useState(false);
   const [exiting, setExiting] = useState(false);
   const [stalePersona, setStalePersona] = useState<string | null>(null);
+  // Optimistic overlay for the board-setting controls: the control adopts
+  // the picked value immediately instead of disable→revert→snap while the
+  // PATCH + loader refetch round-trips. Cleared on settle (success keeps
+  // the server truth, failure reverts to the `config` prop).
+  const [optimisticConfig, setOptimisticConfig] = useState<
+    Partial<PreviewBoardConfig>
+  >({});
+  const effectiveConfig = { ...config, ...optimisticConfig };
 
   // Server-verified: the toolbar can never render on a real board. This is a
   // defensive second gate — the root layout already withholds it off-sandbox.
@@ -105,7 +113,12 @@ export function PreviewToolbar({
     try {
       const result = await switchPersona({ data: { personaId: persona.id } });
       if (result.ok) {
-        await router.invalidate();
+        // Full reload, not router.invalidate(): a persona switch changes the
+        // viewer identity, and every client-held surface (open dock threads,
+        // polled inbox state, loader caches) must reset with it — invalidate
+        // alone left the previous persona's thread visible (user-reported).
+        window.location.reload();
+        return;
       } else if (result.code === 'persona-unavailable') {
         // Reseeded out from under a stale menu (spec §4b item 3).
         setStalePersona(persona.id);
@@ -128,6 +141,7 @@ export function PreviewToolbar({
   ) {
     setFlagError(false);
     setPendingFlag(key);
+    setOptimisticConfig((current) => ({ ...current, [key]: next }));
     try {
       const result = await updateSandboxFlags({
         data: { config: { [key]: next } },
@@ -140,6 +154,12 @@ export function PreviewToolbar({
     } catch {
       setFlagError(true);
     } finally {
+      // Settle: server truth (fresh `config` after invalidate) or revert.
+      setOptimisticConfig((current) => {
+        const rest = { ...current };
+        delete rest[key as keyof PreviewBoardConfig];
+        return rest;
+      });
       setPendingFlag(null);
     }
   }
@@ -148,9 +168,10 @@ export function PreviewToolbar({
     setReseeding(true);
     try {
       await reseedSandbox();
-      setStalePersona(null);
-      await router.invalidate();
-      setReseedOpen(false);
+      // Reseed purges and recreates the personas — the CURRENT session's
+      // board user is among the purged, so the viewer's own session is now
+      // stale by construction. Reload lands on the honest signed-out state.
+      window.location.reload();
     } finally {
       setReseeding(false);
     }
@@ -160,7 +181,7 @@ export function PreviewToolbar({
     setExiting(true);
     try {
       await exitPreview();
-      await router.invalidate();
+      window.location.reload();
     } finally {
       setExiting(false);
     }
@@ -268,7 +289,7 @@ export function PreviewToolbar({
                 <FlagControl
                   key={flag.key}
                   flag={flag}
-                  config={config}
+                  config={effectiveConfig}
                   disabled={busy}
                   pending={pendingFlag === flag.key}
                   onSet={onSetFlag}

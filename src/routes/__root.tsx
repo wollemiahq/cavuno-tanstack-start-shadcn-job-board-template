@@ -397,7 +397,10 @@ function RootLayout() {
         hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
       />
       {user && !location.pathname.startsWith('/messages') ? (
-        <MessagesDockController />
+        // Keyed by viewer: the dock holds polled inbox + open-thread state
+        // that must unmount wholesale when the signed-in identity changes
+        // (sign-out/in, persona switch) — never survive across viewers.
+        <MessagesDockController key={user.id} />
       ) : null}
       {preview.capability.canPreview ? (
         <PreviewToolbar

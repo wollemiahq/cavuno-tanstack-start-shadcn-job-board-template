@@ -8,7 +8,7 @@ import {
   waitFor,
   within,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type {
   PreviewBoardConfig,
@@ -81,6 +81,16 @@ function renderToolbar({
   );
 }
 
+// jsdom cannot navigate; the toolbar full-reloads after identity-changing
+// actions (switch/reseed/exit) so every viewer-scoped client surface resets.
+const reloadMock = vi.fn();
+beforeEach(() => {
+  Object.defineProperty(window, 'location', {
+    value: { ...window.location, reload: reloadMock },
+    writable: true,
+  });
+});
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -135,7 +145,10 @@ describe('PreviewToolbar', () => {
         data: { personaId: 'candidate-new' },
       }),
     );
-    await waitFor(() => expect(mocks.invalidate).toHaveBeenCalled());
+    // Identity changed: full reload (resets dock/thread/loader state), never
+    // a mere invalidate.
+    await waitFor(() => expect(reloadMock).toHaveBeenCalled());
+    expect(mocks.invalidate).not.toHaveBeenCalled();
   });
 
   it('surfaces the reseed affordance when a switch hits a stale persona', async () => {
@@ -217,5 +230,7 @@ describe('PreviewToolbar', () => {
     fireEvent.click(within(confirm).getByRole('button', { name: 'Reseed' }));
 
     await waitFor(() => expect(mocks.reseedSandbox).toHaveBeenCalled());
+    // Reseed purges the viewer's own board user — reload to the honest state.
+    await waitFor(() => expect(reloadMock).toHaveBeenCalled());
   });
 });
