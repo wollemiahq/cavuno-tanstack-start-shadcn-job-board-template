@@ -126,6 +126,7 @@
       "productionReferences": [
         "src/components/alert-manager.tsx",
         "src/components/board/blog-article-content.tsx",
+        "src/components/board/blog-tag-chips.tsx",
         "src/components/board/company-card.tsx",
         "src/components/board/company-search-page.tsx",
         "src/components/board/company-search-result-detail.tsx",
@@ -152,7 +153,6 @@
         "src/components/talent-card.tsx",
         "src/routes/account_.access.tsx",
         "src/routes/alerts.manage.tsx",
-        "src/routes/blog.index.tsx",
         "src/routes/companies.$companySlug.index.tsx",
         "src/routes/embed.jobs.tsx",
         "src/routes/employers.companies.$slug.index.tsx",

@@ -1,9 +1,10 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowRight, Building2, Search } from 'lucide-react';
+import { ArrowRight, Search } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
 import type { JobCardVM } from '@/board/job-view-model';
+import { CompanyAvatar } from '@/components/board/company-avatar';
 import { Bleed } from '@/components/layout/bleed';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
@@ -221,9 +222,11 @@ function HiringIndex({
             <Card size="sm" className="h-full shadow-none">
               <CardHeader>
                 <div className="flex items-start gap-3">
-                  <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-xl">
-                    <Building2 aria-hidden="true" className="size-4" />
-                  </span>
+                  <CompanyAvatar
+                    name={company.name}
+                    logoUrl={company.logoUrl}
+                    size="md"
+                  />
                   <div className="min-w-0">
                     <CardTitle>
                       <h3 className="line-clamp-2">

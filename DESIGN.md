@@ -427,6 +427,18 @@ Props:
 - `post: { id: string; object: "public_blog_post"; title: string; slug: string; featured: boolean; coverUrl: string | null; fe…`
 - `related?: { id: string; object: "public_blog_post"; title: string; slug: string; featured: boolean; coverUrl: string | null; fe…`
 
+### BlogTagChips — `src/components/board/blog-tag-chips.tsx`
+
+The blog's topic row: an "All" chip back to the index plus one anchor per
+tag. Shared by the index and every tag archive so each tag page interlinks
+every other tag, with the current tag in the index's active treatment.
+
+Props:
+
+- `activeTagSlug?: string | null | undefined`
+- `allActive?: boolean | undefined`
+- `tags: ({ id: string; name: string; slug: string; description: string | null; } & { object: "public_blog_tag"; })[]`
+
 ### Breadcrumb — `src/components/board/breadcrumb.tsx`
 
 The shared breadcrumb trail (nav › ol › li) used by the job-detail and salary pages. Pass an ordered items list; a crumb with no href renders as the current page.
@@ -1692,12 +1704,6 @@ Props:
 - `skills: string[]`
 
 ### TalentCard — `src/components/talent-card.tsx`
-
-One candidate as a talent-directory card. PURE MARKUP shared by the
-`/talent` directory grid and the home landing's "Featured talent" strip,
-so the two surfaces read as one system (mirrors how `JobCard` /
-`CompanyCard` / `PostCard` are shared). The avatar falls back to two-letter
-initials; location, headline, and skills are honestly omitted when absent.
 
 Props:
 

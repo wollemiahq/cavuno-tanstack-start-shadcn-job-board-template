@@ -6,6 +6,7 @@ import { m } from '../paraglide/messages';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { clampList } from '@/lib/clamp-list';
 import type { TalentDirectoryEntry } from '@cavuno/board';
 
 /**
@@ -15,9 +16,17 @@ import type { TalentDirectoryEntry } from '@cavuno/board';
  * `CompanyCard` / `PostCard` are shared). The avatar falls back to two-letter
  * initials; location, headline, and skills are honestly omitted when absent.
  */
+const MAX_SKILL_TAGS = 4;
+
 export function TalentCard({ candidate }: { candidate: TalentDirectoryEntry }) {
   const displayName =
     candidate.displayName ?? m.talentDirectory_candidateFallbackLabel();
+  // Skills are plain strings (no hrefs), so the overflow chip is a Badge
+  // rather than the taxonomy "+K" anchor treatment JobCard uses.
+  const { visible: visibleSkills, overflow: hiddenSkillCount } = clampList(
+    candidate.skills,
+    MAX_SKILL_TAGS,
+  );
 
   return (
     <Card role="article" className="h-full">
@@ -53,11 +62,14 @@ export function TalentCard({ candidate }: { candidate: TalentDirectoryEntry }) {
         ) : null}
         {candidate.skills.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
-            {candidate.skills.slice(0, 6).map((skill) => (
+            {visibleSkills.map((skill) => (
               <Badge key={skill} variant="outline">
                 {skill}
               </Badge>
             ))}
+            {hiddenSkillCount > 0 ? (
+              <Badge variant="secondary">+{hiddenSkillCount}</Badge>
+            ) : null}
           </div>
         ) : null}
       </CardContent>
