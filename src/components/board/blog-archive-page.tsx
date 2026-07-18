@@ -38,6 +38,11 @@ export interface BlogArchivePageProps {
   breadcrumb?: BreadcrumbData;
   title: string;
   description?: string | null;
+  /**
+   * Optional decorative mark that leads the h1 inline (e.g. an author
+   * avatar), so the heading keeps the same baseline as the other archives
+   * instead of being pushed down by an eyebrow row.
+   */
   avatar?: ReactNode;
   filters?: ReactNode;
   search?: ReactNode;
@@ -58,11 +63,20 @@ export function BlogArchivePage({
   empty,
   nextLink,
 }: BlogArchivePageProps) {
+  const heading = avatar ? (
+    <span className="flex items-center gap-3">
+      {avatar}
+      <span className="min-w-0">{title}</span>
+    </span>
+  ) : (
+    title
+  );
+
   return (
     <Page>
       <PageContent
         header={
-          <PageHeader title={title} description={description} eyebrow={avatar}>
+          <PageHeader title={heading} description={description}>
             {search}
             {filters}
           </PageHeader>
