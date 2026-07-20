@@ -201,7 +201,7 @@ describe('employer company workspace', () => {
     ).rejects.toMatchObject({ status: 403 });
   });
 
-  it('renders job management as a semantic table with every draft action', () => {
+  it('renders job management as a semantic table with every draft action', async () => {
     vi.spyOn(JobsRoute, 'useLoaderData').mockReturnValue({
       slug: 'northstar-labs',
       membership: { company },
@@ -220,14 +220,22 @@ describe('employer company workspace', () => {
     ).toBeInTheDocument();
     expect(within(table).getByText('Full-time')).toBeInTheDocument();
     expect(within(table).getByText('Draft')).toBeInTheDocument();
+    // The status-dependent primary action stays a visible button for drafts.
     expect(screen.getByRole('button', { name: 'Publish & pay' })).toBeEnabled();
+
+    // Every remaining action groups behind the per-row ⋯ menu.
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Actions for Senior Product Designer',
+      }),
+    );
     expect(
-      screen.getByRole('button', { name: 'Republish (if paid)' }),
-    ).toBeEnabled();
-    expect(
-      screen.getByRole('link', { name: 'Applicants' }),
+      await screen.findByRole('menuitem', { name: 'Republish (if paid)' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Delete' })).toBeEnabled();
+    expect(
+      screen.getByRole('menuitem', { name: 'Applicants' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeEnabled();
   });
 
   it('prevents duplicate checkout requests and recovers next to the plan picker', async () => {
@@ -302,7 +310,6 @@ describe('employer company workspace', () => {
     // The About field authors as rich text (HTML on the wire), so the
     // editor toolbar stands in for a plain textbox assertion.
     expect(screen.getByRole('toolbar', { name: 'About' })).toBeInTheDocument();
-    expect(screen.getByText('Hiring')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save company' })).toBeEnabled();
     // Social links are writable on the update surface; they render as URL
     // inputs and start blank (no read returns them).

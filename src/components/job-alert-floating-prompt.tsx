@@ -9,6 +9,7 @@ import { subscribeJobAlert } from '../server/queries';
 
 import type { JobAlertDefaults } from '../lib/job-alert-defaults';
 import { AlertSignupForm } from '@/components/board/alert-signup-form';
+import { FloatingStackItem } from '@/components/floating-stack';
 import { Button } from '@/components/ui/button';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
@@ -40,10 +41,11 @@ export function JobAlertFloatingPrompt({
   if (!visible) return null;
 
   return (
-    <div
-      data-test="job-alert-floating-prompt"
-      className="fixed right-4 bottom-4 z-40 w-80 max-w-[calc(100vw-2rem)]"
+    <FloatingStackItem
+      order={10}
+      className="relative w-80 max-w-[calc(100vw-2rem)]"
     >
+      <div data-test="job-alert-floating-prompt">
       <Button
         type="button"
         variant="ghost"
@@ -78,6 +80,7 @@ export function JobAlertFloatingPrompt({
           m.jobAlertFloatingPrompt_defaultDescription()
         }
       />
-    </div>
+      </div>
+    </FloatingStackItem>
   );
 }

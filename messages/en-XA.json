@@ -1053,6 +1053,7 @@
   "employerJobs_typeColumn": "⟦Ţýþé⟧",
   "employerJobs_statusColumn": "⟦Šţáţúš⟧",
   "employerJobs_actionsColumn": "⟦Áçţíóñš⟧",
+  "employerJobs_rowActionsAriaLabel": "⟦Áçţíóñš ƒóŕ {title}⟧",
   "employerProfile_marketsLabel": "⟦Ṁáŕķéţš⟧",
   "notFound_heading": "⟦Þáğé ñóţ ƒóúñð⟧",
   "notFound_body": "⟦Ţĥé þáğé ýóú'ŕé ĺóóķíñğ ƒóŕ ðóéšñ'ţ éẋíšţ óŕ ĥáš ɱóṽéð.⟧",

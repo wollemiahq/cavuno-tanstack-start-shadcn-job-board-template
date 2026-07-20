@@ -7,10 +7,13 @@ usedBy: [src/components/board/candidate-account-shell.tsx, src/components/candid
 
 ## Purpose
 
-The logged-in surface wraps its content in a shell: an identity rail (avatar +
-name + email), a section nav, and the content region. Candidate routes compose
-`CandidateShell` with the shadcn-styled `CandidateAccountShell`; employer routes
-retain their own `AccountShell` and `EmployerCompanyShell` chassis.
+The logged-in surface wraps its content in a shell: an identity block (avatar +
+name), a section nav, and the content region. Candidate routes compose
+`CandidateShell` with the shadcn-styled `CandidateAccountShell` and keep a
+left-aside rail; employer routes use their own `AccountShell` /
+`EmployerCompanyShell` chassis, which places the identity and the Jobs /
+Company profile section nav in a full-width header row above the content (no
+side columns).
 
 ## When to use
 
@@ -45,7 +48,7 @@ const candidateShell = useCandidateShellContext()
 | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
 | Wrap authenticated pages in the matching shell variant.                        | Re-derive the identity rail + nav per route.                                   |
 | Build candidate presentation from shadcn primitives and semantic theme tokens. | Import employer-shell or legacy presentation components into candidate routes. |
-| Let `PageContent` own the left-aside/content geometry.                         | Add a second page-layout system inside account routes.                         |
+| Let `PageContent` own the page geometry (aside for candidate, header nav for employer). | Add a second page-layout system inside account routes.                         |
 | Pass loader-derived viewer and feature data from routes into the shell.        | Read route loaders from a component under `src/components/**`.                 |
 
 ## Used by

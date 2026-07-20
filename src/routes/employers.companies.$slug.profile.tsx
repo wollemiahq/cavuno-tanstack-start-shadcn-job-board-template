@@ -33,9 +33,8 @@ import {
   EmployerIdentityAvatar,
 } from '@/components/account-shell';
 import { RichTextEditor } from '@/components/rich-text-editor';
-import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Field,
   FieldDescription,
@@ -106,86 +105,34 @@ function CompanyProfilePage() {
       slug={workspace.slug}
       company={{
         name: company.name,
-        website: company.website,
         logoUrl: company.logoUrl ?? membershipCompany?.logoUrl ?? null,
       }}
       active="profile"
     >
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
-        <div className="space-y-6">
-          <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-1">
-              <h1 className="font-heading text-2xl font-semibold tracking-tight">
-                {m.employerCompany_profileHeading()}
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                {m.employerProfile_editIntroText({ company: company.name })}
-              </p>
-            </div>
-            {company.links.public ? (
-              <a
-                href={company.links.public}
-                target="_blank"
-                rel="noreferrer"
-                className={buttonVariants({ variant: 'outline' })}
-              >
-                {m.employerProfile_viewPublicLabel()}
-                <ExternalLinkIcon data-icon="inline-end" aria-hidden />
-              </a>
-            ) : null}
-          </header>
+      <div className="space-y-6">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <h1 className="font-heading text-2xl font-semibold tracking-tight">
+              {m.employerCompany_profileHeading()}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {m.employerProfile_editIntroText({ company: company.name })}
+            </p>
+          </div>
+          {company.links.public ? (
+            <a
+              href={company.links.public}
+              target="_blank"
+              rel="noreferrer"
+              className={buttonVariants({ variant: 'outline' })}
+            >
+              {m.employerProfile_viewPublicLabel()}
+              <ExternalLinkIcon data-icon="inline-end" aria-hidden />
+            </a>
+          ) : null}
+        </header>
 
-          <ProfileEditorCard slug={workspace.slug} company={company} />
-        </div>
-
-        <aside
-          aria-label={m.employerProfile_aboutCardHeading({
-            company: company.name,
-          })}
-        >
-          <Card size="sm">
-            <CardHeader>
-              <CardTitle>
-                {m.employerProfile_aboutCardHeading({ company: company.name })}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <dl className="space-y-4 text-sm">
-                {company.website ? (
-                  <div className="space-y-1">
-                    <dt className="text-muted-foreground">
-                      {m.employerCompany_websiteLabel()}
-                    </dt>
-                    <dd className="break-all">
-                      <a
-                        href={company.website}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-foreground font-medium underline-offset-4 hover:underline"
-                      >
-                        {stripProtocol(company.website)}
-                      </a>
-                    </dd>
-                  </div>
-                ) : null}
-                {company.markets.length > 0 ? (
-                  <div className="space-y-2">
-                    <dt className="text-muted-foreground">
-                      {m.employerProfile_marketsLabel()}
-                    </dt>
-                    <dd className="flex flex-wrap gap-1.5">
-                      {company.markets.map((market) => (
-                        <Badge key={market.slug} variant="secondary">
-                          {market.name}
-                        </Badge>
-                      ))}
-                    </dd>
-                  </div>
-                ) : null}
-              </dl>
-            </CardContent>
-          </Card>
-        </aside>
+        <ProfileEditorCard slug={workspace.slug} company={company} />
       </div>
     </EmployerCompanyShell>
   );
