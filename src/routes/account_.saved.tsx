@@ -31,10 +31,6 @@ import { useSelectedJob } from './-use-selected-job';
 import { toSavedJobCardVM } from '@/board/job-view-model';
 import { JobSearchResult } from '@/components/board/job-search-result';
 import {
-  CandidateActionFeedback,
-  type CandidateActionFeedbackState,
-} from '@/components/candidate-action-feedback';
-import {
   CandidateRouteErrorPage,
   CandidateRoutePendingPage,
 } from '@/components/candidate-route-state';
@@ -47,6 +43,7 @@ import {
 } from '@/components/search-results/search-results';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useSearchSelection } from '@/hooks/use-search-selection';
+import { toastActionError } from '@/lib/action-toast';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 
@@ -102,8 +99,6 @@ function SavedJobsPage() {
   const navigate = useNavigate({ from: '/account/saved' });
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [feedback, setFeedback] =
-    useState<CandidateActionFeedbackState>('idle');
 
   const rows = savedJobs.data.flatMap((saved) => {
     if (!saved.job) return [];
@@ -143,7 +138,6 @@ function SavedJobsPage() {
           ? m.accountSaved_countOneText()
           : m.accountSaved_countOtherText({ count: savedJobs.data.length })}
       </p>
-      <CandidateActionFeedback state={feedback} />
     </header>
   );
 
@@ -217,14 +211,13 @@ function SavedJobsPage() {
                               disabled={pendingId === saved.id}
                               onClick={async () => {
                                 setPendingId(saved.id);
-                                setFeedback('idle');
                                 try {
                                   await unsaveJob({
                                     data: { jobId: saved.jobId },
                                   });
                                   await router.invalidate();
                                 } catch {
-                                  setFeedback('error');
+                                  void toastActionError();
                                 } finally {
                                   setPendingId(null);
                                 }
@@ -264,12 +257,11 @@ function SavedJobsPage() {
                             );
                             if (!saved) return;
                             setPendingId(saved.id);
-                            setFeedback('idle');
                             try {
                               await unsaveJob({ data: { jobId: saved.jobId } });
                               await router.invalidate();
                             } catch {
-                              setFeedback('error');
+                              void toastActionError();
                             } finally {
                               setPendingId(null);
                             }

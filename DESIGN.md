@@ -370,6 +370,7 @@ Props:
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `onSubscribe: (input: JobAlertSubscribeInput) => Promise<{ status: "submitted"; }>`
+- `surface?: "accent" | "card" | undefined`
 - `title?: string | undefined`
 
 ### AlertsBand — `src/components/board/alerts-band.tsx`
@@ -1007,12 +1008,6 @@ Props:
 
 ### XIcon — `src/components/brand-icons.tsx`
 
-### CandidateActionFeedback — `src/components/candidate-action-feedback.tsx`
-
-Props:
-
-- `state: CandidateActionFeedbackState`
-
 ### CandidateProfilePendingPage — `src/components/candidate-route-state.tsx`
 
 Pending state matching the /account profile layout (cards + right rail).
@@ -1160,6 +1155,29 @@ Props:
 - `jobId: string`
 - `slug: string`
 
+### EmptyState — `src/components/empty-state.tsx`
+
+The canonical page/collection empty surface (see
+docs/patterns/empty-state.md): a featured icon badge, a title, a
+description, and one optional action, vertically centred in a consistent
+`min-h-96` so "no saved jobs", "no applications", "no job alerts", and the
+employer's "no jobs" all read at the same scale and placement instead of
+each hand-rolling its own height and action styling.
+
+Pass the action as a real Button (or a button-styled Link for navigation)
+with a consistent variant — the board uses `outline` for the single
+recovery action. Multi-action access gates and full-canvas search
+not-found surfaces keep their own wrappers (JobsNotFound / SalaryEmptyState
+/ the restricted-directory gate) rather than this single-action shape.
+
+Props:
+
+- `action?: ReactNode`
+- `className?: string | undefined`
+- `description: ReactNode`
+- `icon: ReactNode`
+- `title: ReactNode`
+
 ### ExperienceSection — `src/components/experience-section.tsx`
 
 Work experience — list + add/edit/delete, over `board.me.profile`'s
@@ -1180,19 +1198,33 @@ A single widget in the floating stack. Portals into the shared container
 when one is mounted (the running app) and renders inline as a graceful
 fallback when it is not (isolated component tests). `order` controls the
 vertical position within the stack — a lower value renders higher up.
+`flush` opts an item into the bottom-edge slot: it forgoes the standard
+bottom margin so it sits stuck to the viewport bottom (see the provider
+doc); at most one item should be flush.
 
 Props:
 
 - `children: ReactNode`
 - `className?: string | undefined`
+- `flush?: boolean | undefined`
 - `order?: number | undefined`
 
 ### FloatingStackProvider — `src/components/floating-stack.tsx`
 
 Shared bottom-right stacking region for floating widgets (the job-alert
 prompt, the messaging dock, and any future corner widget). A single fixed
-flex column that every widget portals into, so they stack vertically with
-consistent spacing instead of overlapping in the same corner.
+flex column that every widget portals into, so they stack vertically and
+are collision-aware instead of overlapping in the same corner.
+
+Bottom-edge model (the flush slot): the column is anchored at `bottom-0`
+with NO container gap. Instead, every ordinary item owns a bottom margin
+(`mb-4`) that does double duty — it both separates the item from whatever
+sits below it AND floats the lowest ordinary item up off the viewport
+edge. A `flush` item drops that margin, so it sticks to the bottom edge
+(the messaging dock's rounded-top / flush-bottom look) while any item
+stacked above it still keeps its `mb-4` gap and never overlaps. This lets
+the dock be flush-bottom whether or not the job-alert prompt is present,
+without the prompt losing its float margin when the dock is absent.
 
 The container sits at `z-40` — below the `z-50` overlay layer — so menus,
 popovers, and dialogs (which portal to the body at `z-50`) still render
@@ -2897,6 +2929,19 @@ Variants — `size`: default, sm, lg
 
 ### TooltipTrigger — `src/components/ui/tooltip.tsx`
 
+### UnreadCountBadge — `src/components/unread-count-badge.tsx`
+
+The single unread-count treatment shared by the header messaging icon and
+the messaging dock pill: one deep-red notification badge on the semantic
+`destructive` token (never a hardcoded colour), a fixed-diameter round
+chip with the count centred in tabular figures so 1- and 2-glyph counts
+stay aligned. Renders nothing at zero. Callers pass positioning via
+`className` (e.g. the header icon's absolute offset).
+
+Props:
+
+- `count: number`
+
 ## Layout compositions
 
 Page, PageHeader, PageContent, and PageSection are the sole canonical page-level composition family for new work. Compose these contracts instead of hand-rolling containers, headings, or rails; use Bleed for full-width bands.
@@ -3040,13 +3085,13 @@ Primitives: Page, Bleed, PageHeader, PageContent, JobDetail, TalentProfileConten
 
 The zero-results / not-found treatment — a featured icon, title, and description, kept inside the page chrome.
 
-Primitives: Empty, JobsNotFound, SalaryEmptyState
+Primitives: EmptyState, Empty, JobsNotFound, SalaryEmptyState
 
 ### Form feedback — `docs/patterns/form-feedback.md`
 
 The success / error / pending message tied to a form action, announced to assistive tech.
 
-Primitives: Alert, AlertDescription, FieldError, FieldDescription, Spinner
+Primitives: Alert, AlertDescription, FieldError, FieldDescription, Spinner, toast
 
 ### Form page — `docs/patterns/form-page.md`
 

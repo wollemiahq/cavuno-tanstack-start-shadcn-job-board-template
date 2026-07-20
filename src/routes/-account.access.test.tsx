@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   invalidate: vi.fn(),
   openBillingPortal: vi.fn(),
   startCheckout: vi.fn(),
+  toastActionError: vi.fn(),
 }));
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
@@ -37,6 +38,11 @@ vi.mock('../server/paywall', () => ({
   getPaywallOffers: mocks.getPaywallOffers,
   openBillingPortal: mocks.openBillingPortal,
   startCheckout: mocks.startCheckout,
+}));
+
+vi.mock('@/lib/action-toast', () => ({
+  toastActionError: mocks.toastActionError,
+  toastActionSuccess: vi.fn(),
 }));
 
 import { AccessPage, Route } from './account_.access';
@@ -108,7 +114,7 @@ describe('candidate access actions', () => {
     });
   });
 
-  it('shows a recoverable alert and re-enables checkout when session creation fails', async () => {
+  it('fires a recoverable error toast and re-enables checkout when session creation fails', async () => {
     vi.spyOn(Route, 'useLoaderData').mockReturnValue({
       grant,
       offers: [offer],
@@ -120,14 +126,12 @@ describe('candidate access actions', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(
-        'Something went wrong. Try again.',
-      );
+      expect(mocks.toastActionError).toHaveBeenCalled();
       expect(screen.getByRole('button', { name: 'Choose' })).toBeEnabled();
     });
   });
 
-  it('shows a recoverable alert and re-enables the billing portal after failure', async () => {
+  it('fires a recoverable error toast and re-enables the billing portal after failure', async () => {
     vi.spyOn(Route, 'useLoaderData').mockReturnValue({
       grant: {
         ...grant,
@@ -146,16 +150,14 @@ describe('candidate access actions', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(
-        'Something went wrong. Try again.',
-      );
+      expect(mocks.toastActionError).toHaveBeenCalled();
       expect(
         screen.getByRole('button', { name: 'Manage subscription' }),
       ).toBeEnabled();
     });
   });
 
-  it('turns a rejected grant poll into visible feedback with a refresh action', async () => {
+  it('turns a rejected grant poll into an error toast with a refresh action', async () => {
     vi.useFakeTimers();
     vi.spyOn(Route, 'useLoaderData').mockReturnValue({ grant, offers: [] });
     vi.spyOn(Route, 'useSearch').mockReturnValue({
@@ -170,9 +172,7 @@ describe('candidate access actions', () => {
       await vi.advanceTimersByTimeAsync(2000);
     });
 
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Something went wrong. Try again.',
-    );
+    expect(mocks.toastActionError).toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Refresh' })).toBeEnabled();
   });
 });

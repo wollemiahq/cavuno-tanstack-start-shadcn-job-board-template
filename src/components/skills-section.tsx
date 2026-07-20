@@ -8,10 +8,6 @@ import { Sparkles, X } from 'lucide-react';
 import { m } from '../paraglide/messages';
 import { replaceSkills } from '../server/account';
 
-import {
-  CandidateActionFeedback,
-  type CandidateActionFeedbackState,
-} from '@/components/candidate-action-feedback';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,6 +32,7 @@ import {
 } from '@/components/ui/empty';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { toastActionError } from '@/lib/action-toast';
 
 /**
  * Skills — badges over the whole-set replace
@@ -47,18 +44,15 @@ export function SkillsSection({ skills }: { skills: string[] }) {
   const [adding, setAdding] = useState(false);
   const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
-  const [feedback, setFeedback] =
-    useState<CandidateActionFeedbackState>('idle');
 
   const save = async (next: string[]): Promise<boolean> => {
     setPending(true);
-    setFeedback('idle');
     try {
       await replaceSkills({ data: { skills: next } });
       await router.invalidate();
       return true;
     } catch {
-      setFeedback('error');
+      void toastActionError();
       return false;
     } finally {
       setPending(false);
@@ -136,8 +130,6 @@ export function SkillsSection({ skills }: { skills: string[] }) {
             ))}
           </ul>
         )}
-
-        <CandidateActionFeedback state={feedback} />
 
         <Dialog
           open={adding}

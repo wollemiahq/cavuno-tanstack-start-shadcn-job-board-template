@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   deleteResume: vi.fn(),
   invalidate: vi.fn(),
   uploadResume: vi.fn(),
+  toastActionError: vi.fn(),
 }));
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
@@ -26,6 +27,11 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
 vi.mock('../server/account', () => ({
   deleteResume: mocks.deleteResume,
   uploadResume: mocks.uploadResume,
+}));
+
+vi.mock('@/lib/action-toast', () => ({
+  toastActionError: mocks.toastActionError,
+  toastActionSuccess: vi.fn(),
 }));
 
 import { ResumeUpload } from './resume-upload';
@@ -50,7 +56,7 @@ afterEach(() => {
 });
 
 describe('ResumeUpload', () => {
-  it('shows a recoverable alert and re-enables delete when deletion fails', async () => {
+  it('fires a recoverable error toast and re-enables delete when deletion fails', async () => {
     mocks.deleteResume.mockRejectedValue(new Error('network unavailable'));
     render(<ResumeUpload resume={resume} />);
 
@@ -59,9 +65,7 @@ describe('ResumeUpload', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(
-        'Something went wrong. Try again.',
-      );
+      expect(mocks.toastActionError).toHaveBeenCalled();
       expect(screen.getByRole('button', { name: 'Delete' })).toBeEnabled();
     });
     expect(mocks.invalidate).not.toHaveBeenCalled();

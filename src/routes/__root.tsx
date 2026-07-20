@@ -49,6 +49,7 @@ import {
   MainContentTarget,
   SkipToContentLink,
 } from '@/components/shell-accessibility';
+import { Toaster } from '@/components/ui/sonner';
 import {
   resolveHeaderRouteLabels,
   resolveHeaderSearchState,
@@ -473,6 +474,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: themeModeScript(mode) }} />
         <SkipToContentLink label={m.siteHeader_skipToContentLabel()} />
         {children}
+        <Toaster />
         <Scripts />
       </body>
     </html>

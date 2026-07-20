@@ -8,7 +8,6 @@ import { FileText, Upload } from 'lucide-react';
 import { m } from '../paraglide/messages';
 import { deleteResume, uploadResume } from '../server/account';
 
-import { CandidateActionFeedback } from '@/components/candidate-action-feedback';
 import {
   Attachment,
   AttachmentAction,
@@ -21,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { toastActionError } from '@/lib/action-toast';
 import type { Resume } from '@cavuno/board';
 
 /**
@@ -59,7 +59,7 @@ export function ResumeUpload({
   // people expect an uploaded resume to stay available for reuse.
   const [keepOnFile, setKeepOnFile] = useState(resume.keepResumeOnFile ?? true);
   const [status, setStatus] = useState<
-    'idle' | 'uploading' | 'deleting' | 'upload-error' | 'delete-error'
+    'idle' | 'uploading' | 'deleting' | 'upload-error'
   >('idle');
 
   const parseStatusBadge = resume.parseStatus ? (
@@ -132,7 +132,8 @@ export function ResumeUpload({
                   await router.invalidate();
                   setStatus('idle');
                 } catch {
-                  setStatus('delete-error');
+                  setStatus('idle');
+                  void toastActionError();
                 }
               }}
             >
@@ -205,9 +206,6 @@ export function ResumeUpload({
           {m.resumeUpload_uploadError()}
         </p>
       ) : null}
-      <CandidateActionFeedback
-        state={status === 'delete-error' ? 'error' : 'idle'}
-      />
     </section>
   );
 }

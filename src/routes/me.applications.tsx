@@ -19,10 +19,6 @@ import { getApplications, withdrawApplication } from '../server/applications';
 import { getSeoBase } from '../server/queries';
 
 import {
-  CandidateActionFeedback,
-  type CandidateActionFeedbackState,
-} from '@/components/candidate-action-feedback';
-import {
   CandidateRouteErrorPage,
   CandidateRoutePendingPage,
 } from '@/components/candidate-route-state';
@@ -37,6 +33,7 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/components/ui/item';
+import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 import type { Application } from '@cavuno/board';
@@ -92,8 +89,6 @@ function ApplicationsPage() {
   const applications = Route.useLoaderData();
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [feedback, setFeedback] =
-    useState<CandidateActionFeedbackState>('idle');
   // With no applications the Empty composition IS the page — repeating the
   // page header above it reads the same thing twice.
   const hasApplications = applications.data.length > 0;
@@ -104,8 +99,6 @@ function ApplicationsPage() {
       description={hasApplications ? m.meApplications_subheading() : undefined}
     >
       <div className="space-y-6">
-        <CandidateActionFeedback state={feedback} />
-
         {applications.data.length === 0 ? (
           <EmptyState
             icon={<Send aria-hidden="true" />}
@@ -177,15 +170,14 @@ function ApplicationsPage() {
                         disabled={pendingId === application.id}
                         onClick={async () => {
                           setPendingId(application.id);
-                          setFeedback('idle');
                           try {
                             await withdrawApplication({
                               data: { id: application.id },
                             });
                             await router.invalidate();
-                            setFeedback('success');
+                            void toastActionSuccess();
                           } catch {
-                            setFeedback('error');
+                            void toastActionError();
                           } finally {
                             setPendingId(null);
                           }

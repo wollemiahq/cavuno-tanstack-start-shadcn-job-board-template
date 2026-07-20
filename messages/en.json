@@ -555,8 +555,6 @@
   "profileForm_openToRelocatingLabel": "Open to relocating",
   "profileForm_savingLabel": "Saving…",
   "profileForm_saveLabel": "Save profile",
-  "profileForm_savedText": "Saved.",
-  "profileForm_saveError": "Couldn’t save — check the handle and try again.",
   "educationSection_heading": "Education",
   "educationSection_addLabel": "Add education",
   "educationSection_emptyText": "No education added yet.",
