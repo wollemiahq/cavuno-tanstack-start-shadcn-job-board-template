@@ -5,8 +5,11 @@ production-realistic job board** — real jobs and companies, a working
 applicant tracker, captured outbound emails, and Stripe test-mode checkout.
 No API key, no account, and no empty database to seed first.
 
-Built on TanStack Start, Cloudflare Workers, and the official
-**shadcn/ui Rhea** preset on **Base UI**. Data comes from the hosted
+Built on [TanStack Start](https://tanstack.com/start),
+[Cloudflare Workers](https://workers.cloudflare.com),
+[shadcn/ui](https://ui.shadcn.com) on [Base UI](https://base-ui.com),
+[Tailwind CSS](https://tailwindcss.com), [Geist](https://vercel.com/font), and
+[Lucide](https://lucide.dev). Data comes from the hosted
 [Cavuno Board API](https://cavuno.com) (`@cavuno/board`), so every surface is
 a real page wired to a real backend — not a mock.
 
@@ -23,9 +26,12 @@ a real page wired to a real backend — not a mock.
 
 ## Why this template is different
 
-Most job-board templates hand you a beautiful shell and then ask you to
-"insert your API key and seed a database." You clone, you configure, you stare
-at an empty board. This one leads with two things instead:
+Most job-board templates are a beautiful frontend with no real backend behind
+it — the listings are hardcoded or mocked, and to actually launch you either
+build the backend yourself (auth, applications, payments, emails, search) or
+bolt on a separate service. This one is wired to a real backend from the first
+clone, and it boots **populated** so you can see and build every real state
+immediately. Two things make that work:
 
 ### 1. A zero-setup running product
 
@@ -91,9 +97,11 @@ personas.
 
 > Requires **pnpm 11** (pinned in `package.json`) and Node 24 (matches CI).
 
-**Point it at your own board** by swapping one value — `CAVUNO_BOARD` — for
-your board's `pk_…` publishable key (`.dev.vars` in dev, `wrangler.jsonc` vars
-in production). The app code is identical either way.
+**The workflow:** build and style your board against the sandbox — it's
+populated, safe to write to, and resets nightly — then go live by swapping one
+value, `CAVUNO_BOARD`, for your own board's `pk_…` publishable key (`.dev.vars`
+in dev, `wrangler.jsonc` vars in production). The app code is identical either
+way; you're just pointing it at your real board instead of the sandbox.
 
 > **The preview toolbar is sandbox-only.** Personas, the captured-email
 > viewer, reseed, and the flag toggles are gated on the board being the
@@ -181,7 +189,7 @@ Cross-cutting capabilities that ship on top of those routes:
 | Framework | [TanStack Start](https://tanstack.com/start) (SSR) on React 19 |
 | Runtime | [Cloudflare Workers](https://workers.cloudflare.com) |
 | Build | Vite+ (`vp`) |
-| UI | [shadcn/ui Rhea](https://ui.shadcn.com) on [Base UI](https://base-ui.com), Tailwind CSS 4, Geist, Lucide |
+| UI | [shadcn/ui](https://ui.shadcn.com) on [Base UI](https://base-ui.com), [Tailwind CSS 4](https://tailwindcss.com), [Geist](https://vercel.com/font), [Lucide](https://lucide.dev) |
 | Data | [`@cavuno/board`](https://cavuno.com) — hosted job-board backend SDK |
 | i18n | [Paraglide JS](https://paraglidejs.com) |
 
@@ -205,10 +213,12 @@ that keeps customizations safe:
   Select a pattern before composing a route; never hand-roll a
   listing/detail/form/empty surface.
 
-The design-system source is the current official shadcn/ui Rhea preset; the
-Base UI-backed primitives under `src/components/ui/` and their CLI-owned theme
-(`src/theme.css`) are yours to edit or replace. The full theming and preset
-workflow lives in [`DESIGN.md`](DESIGN.md).
+It's standard [shadcn/ui](https://ui.shadcn.com) on Base UI: the primitives
+under `src/components/ui/` are token-pure and the theme lives in the
+shadcn-CLI-owned `src/theme.css`. So you can restyle the whole board with any
+shadcn theme — pick one at [ui.shadcn.com/create](https://ui.shadcn.com/create)
+and apply it, or run `pnpm run theme:apply`. The full theming workflow is in
+[`docs/theming.md`](docs/theming.md) and [`DESIGN.md`](DESIGN.md).
 
 ---
 
