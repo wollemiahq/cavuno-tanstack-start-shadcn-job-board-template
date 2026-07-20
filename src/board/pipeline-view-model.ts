@@ -16,8 +16,6 @@ import type { EmployerApplicant, EmployerPipeline } from '@cavuno/board';
  * how a timeline line reads, which stages an employer may edit) stay here.
  */
 
-/** System stages whose meaning fixes their position and blocks deletion. */
-const PROTECTED_HINT = new Set(['review', 'offer', 'hired', 'rejected']);
 
 export interface PipelineStageVM {
   id: string;
@@ -136,9 +134,11 @@ export function toPipelineBoardVM(
       id: stage.id,
       label: stage.label,
       systemStage: stage.systemStage,
-      isProtected:
-        stage.isProtected ||
-        (stage.systemStage !== null && PROTECTED_HINT.has(stage.systemStage)),
+      // The API's flag is the single truth for editability — the pre-kanban
+      // UI rendered its edit/delete controls from exactly this field, and a
+      // client-side guess (e.g. "every systemStage is protected") wrongly
+      // locks stages the board owner may rename (the sandbox's Offer stage).
+      isProtected: stage.isProtected,
     }));
 
   const fallbackStageId =
