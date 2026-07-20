@@ -7,8 +7,14 @@
  * picks a tier → `startCheckout` returns a mount kit → `<EmbeddedCheckout>`
  * mounts Stripe for the board's connected account. Stripe returns the buyer to
  * this route with `?session_id=…`; we poll `getAccessGrant` until it flips to
- * `hasAccess`, then re-render the entitled state (with a Manage-subscription
- * link for recurring grants).
+ * `hasAccess`, then re-render the entitled state (Manage-subscription portal
+ * for recurring grants, a lifetime note for one-time grants).
+ *
+ * Every branch is a full Page composition (PageHeader + PageContent) so the
+ * offers, checkout, confirming, entitled, and error surfaces all read like real
+ * app pages rather than bare stacked text. Widths are intentional per state: the
+ * checkout stays `wide` with a centred `max-w-4xl` shell because Stripe's
+ * embedded form only lays out two-column above ~750px of container width.
  */
 import { useCallback, useEffect, useState } from 'react';
 
@@ -18,6 +24,7 @@ import {
   redirect,
   useRouter,
 } from '@tanstack/react-router';
+import { Clock, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 
 import { EmbeddedCheckout } from '../components/paywall/embedded-checkout';
 import { m } from '../paraglide/messages';
@@ -33,13 +40,29 @@ import {
   CandidateRouteErrorPage,
   CandidateRoutePendingPage,
 } from '@/components/candidate-route-state';
-import { CandidateShell } from '@/components/candidate-shell';
+import { EmptyState } from '@/components/empty-state';
+import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { Spinner } from '@/components/ui/spinner';
 import { toastActionError } from '@/lib/action-toast';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
+import { cn } from '@/lib/utils';
 import type { AccessCheckoutSession, PaywallOffer } from '@cavuno/board';
 
 const RETURN_PATH = '/account/access';
@@ -94,14 +117,69 @@ export const Route = createFileRoute('/account_/access')({
       },
     ],
   }),
-  component: AccessPageShell,
+  component: AccessPage,
 });
 
-function AccessPageShell() {
+/** A button-styled "Browse jobs" navigation link, shared by the entitled states. */
+function BrowseJobsLink({
+  variant = 'outline',
+}: {
+  variant?: 'default' | 'outline';
+}) {
   return (
-    <CandidateShell>
-      <AccessPage />
-    </CandidateShell>
+    <a href="/" className={buttonVariants({ variant })}>
+      {m.accountAccess_browseJobsLink()}
+    </a>
+  );
+}
+
+/** One selectable plan tier. The board's default offer gets the "Popular" ring. */
+function PlanCard({
+  offer,
+  busy,
+  onChoose,
+}: {
+  offer: PaywallOffer;
+  busy: string | null;
+  onChoose: (offer: PaywallOffer) => void;
+}) {
+  const popular = offer.isDefault;
+  return (
+    <Card
+      className={cn(
+        'flex flex-col',
+        popular && 'ring-primary ring-2',
+      )}
+    >
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between gap-2">
+          <span className="truncate">{offer.label}</span>
+          {popular ? <Badge>{m.accountAccess_popularBadge()}</Badge> : null}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1">
+        <p className="flex items-baseline gap-1.5">
+          <span className="font-heading text-3xl font-semibold tracking-tight">
+            {formatPrice(offer.amountCents, offer.currency)}
+          </span>
+          <span className="text-muted-foreground text-sm">
+            {offer.billingLabel}
+          </span>
+        </p>
+      </CardContent>
+      <CardFooter>
+        <Button
+          className="w-full"
+          variant={popular ? 'default' : 'outline'}
+          onClick={() => onChoose(offer)}
+          disabled={busy !== null}
+        >
+          {busy === offer.offerKey
+            ? m.accountAccess_startingLabel()
+            : m.accountAccess_chooseLabel()}
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }
 
@@ -194,135 +272,207 @@ export function AccessPage() {
     }
   }
 
+  // Entitled: recurring grants get the billing portal, lifetime grants a note.
   if (hasAccess) {
+    const isRecurring = grant.offerType === 'recurring';
+    const isLifetime = grant.offerType === 'lifetime';
     return (
-      <section className="mx-auto max-w-xl space-y-4 py-10">
-        <div className="flex items-center gap-2">
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">
-            {m.accountAccess_title()}
-          </h1>
-          <Badge>{m.accountAccess_activeBadge()}</Badge>
-        </div>
-        <p className="text-muted-foreground">{m.accountAccess_activeBody()}</p>
-        {grant.offerType === 'recurring' ? (
-          <Button onClick={manage} disabled={busy === 'portal'}>
-            {busy === 'portal'
-              ? m.accountAccess_openingLabel()
-              : m.accountAccess_manageSubscriptionLabel()}
-          </Button>
-        ) : null}
-        <div>
-          <a
-            href="/"
-            className={buttonVariants({ variant: 'link', size: 'sm' })}
-          >
-            {m.accountAccess_browseJobsLink()}
-          </a>
-        </div>
-      </section>
+      <Page width="content">
+        <PageContent
+          header={
+            <PageHeader
+              title={m.accountAccess_title()}
+              actions={
+                <Badge variant={isLifetime ? 'secondary' : 'default'}>
+                  {isLifetime
+                    ? m.accountAccess_lifetimeBadge()
+                    : m.accountAccess_activeBadge()}
+                </Badge>
+              }
+            />
+          }
+        >
+          <Card>
+            <CardContent className="flex flex-col items-start gap-4">
+              <span className="bg-muted text-foreground flex size-11 shrink-0 items-center justify-center rounded-2xl">
+                {isLifetime ? (
+                  <Sparkles className="size-5" aria-hidden="true" />
+                ) : (
+                  <ShieldCheck className="size-5" aria-hidden="true" />
+                )}
+              </span>
+              <div className="space-y-1.5">
+                <p className="font-heading text-lg font-medium tracking-tight">
+                  {isLifetime
+                    ? m.accountAccess_lifetimeBody()
+                    : m.accountAccess_activeBody()}
+                </p>
+                {isRecurring ? (
+                  <p className="text-muted-foreground text-sm">
+                    {m.accountAccess_manageSubscriptionBody()}
+                  </p>
+                ) : null}
+              </div>
+            </CardContent>
+            <CardFooter className="flex-wrap gap-3 border-t">
+              {isRecurring ? (
+                <Button onClick={manage} disabled={busy === 'portal'}>
+                  {busy === 'portal'
+                    ? m.accountAccess_openingLabel()
+                    : m.accountAccess_manageSubscriptionLabel()}
+                </Button>
+              ) : null}
+              <BrowseJobsLink variant={isRecurring ? 'outline' : 'default'} />
+            </CardFooter>
+          </Card>
+        </PageContent>
+      </Page>
     );
   }
 
+  // Checkout: Stripe's embedded form gets the wide shell (see file header).
   if (kit) {
     return (
-      // Wider than the plan list on purpose: Stripe's embedded checkout lays
-      // out its payment form two-column above ~750px of container width —
-      // clamping it to the reading column squeezed the form into a strip.
-      <section className="mx-auto max-w-4xl space-y-4 py-10">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight">
-          {m.accountAccess_completePurchaseTitle()}
-        </h1>
-        <EmbeddedCheckout kit={kit} onComplete={handleCheckoutComplete} />
-        <Button
-          type="button"
-          variant="link"
-          size="sm"
-          className="h-auto w-fit p-0"
-          onClick={() => setKit(null)}
+      <Page width="wide">
+        <PageContent
+          header={
+            <PageHeader
+              title={m.accountAccess_completePurchaseTitle()}
+              description={m.accountAccess_completePurchaseSubtitle()}
+              actions={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setKit(null)}
+                >
+                  {m.accountAccess_backToPlansLabel()}
+                </Button>
+              }
+            />
+          }
         >
-          {m.accountAccess_backToPlansLabel()}
-        </Button>
-      </section>
+          <div className="mx-auto w-full max-w-4xl">
+            <Card>
+              <CardHeader className="border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <Lock
+                    className="text-muted-foreground size-4"
+                    aria-hidden="true"
+                  />
+                  {m.accountAccess_secureCheckoutLabel()}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EmbeddedCheckout
+                  kit={kit}
+                  onComplete={handleCheckoutComplete}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </PageContent>
+      </Page>
     );
   }
 
+  // Confirming: waiting on the webhook after Stripe returns the buyer.
   if (polling) {
     return (
-      <section className="mx-auto max-w-xl py-10">
-        <p className="text-muted-foreground">
-          {m.accountAccess_confirmingText()}
-        </p>
-      </section>
+      <Page width="content">
+        <PageContent
+          header={<PageHeader title={m.accountAccess_title()} />}
+        >
+          <Empty className="min-h-80 border-0">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Spinner className="size-5" />
+              </EmptyMedia>
+              <EmptyTitle>{m.accountAccess_confirmingText()}</EmptyTitle>
+              <EmptyDescription>
+                {m.accountAccess_confirmingSubtitle()}
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        </PageContent>
+      </Page>
     );
   }
 
+  // Exhausted: the poll timed out (or failed) but the payment went through.
   if (exhausted) {
     return (
-      <section className="mx-auto max-w-xl space-y-3 py-10">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight">
-          {m.accountAccess_paymentReceivedTitle()}
-        </h1>
-        <p className="text-muted-foreground">
-          {m.accountAccess_paymentReceivedBody()}
-        </p>
-        <Button
-          onClick={async () => {
-            try {
-              await router.invalidate();
-            } catch {
-              void toastActionError();
+      <Page width="content">
+        <PageContent>
+          <EmptyState
+            icon={<Clock aria-hidden="true" />}
+            title={m.accountAccess_paymentReceivedTitle()}
+            description={m.accountAccess_paymentReceivedBody()}
+            action={
+              <Button
+                onClick={async () => {
+                  try {
+                    await router.invalidate();
+                  } catch {
+                    void toastActionError();
+                  }
+                }}
+              >
+                {m.accountAccess_refreshLabel()}
+              </Button>
             }
-          }}
-        >
-          {m.accountAccess_refreshLabel()}
-        </Button>
-      </section>
+          />
+        </PageContent>
+      </Page>
     );
   }
 
+  // Paywall off / no tiers configured.
+  if (offers.length === 0) {
+    return (
+      <Page width="content">
+        <PageContent>
+          <EmptyState
+            icon={<Lock aria-hidden="true" />}
+            title={m.accountAccess_noOffersTitle()}
+            description={m.accountAccess_noOffersText()}
+            action={<BrowseJobsLink />}
+          />
+        </PageContent>
+      </Page>
+    );
+  }
+
+  // Plan picker.
   return (
-    <section className="mx-auto max-w-xl space-y-6 py-10">
-      <div className="space-y-2">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight">
-          {m.accountAccess_unlockTitle()}
-        </h1>
-        <p className="text-muted-foreground">
-          {m.accountAccess_unlockSubtitle()}
-        </p>
-      </div>
-      {offers.length === 0 ? (
-        <p className="text-muted-foreground">
-          {m.accountAccess_noOffersText()}
-        </p>
-      ) : (
-        <ul className="space-y-3">
+    <Page width="content">
+      <PageContent
+        header={
+          <PageHeader
+            align="center"
+            title={m.accountAccess_unlockTitle()}
+            description={m.accountAccess_unlockSubtitle()}
+          />
+        }
+      >
+        <div
+          className={cn(
+            'grid gap-4',
+            offers.length > 1
+              ? 'sm:grid-cols-2'
+              : 'mx-auto w-full max-w-sm',
+          )}
+        >
           {offers.map((offer) => (
-            <li key={offer.offerKey}>
-              <Card size="sm">
-                <CardContent className="flex items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 font-medium">
-                      {offer.label}
-                      {offer.isDefault ? (
-                        <Badge>{m.accountAccess_popularBadge()}</Badge>
-                      ) : null}
-                    </div>
-                    <div className="text-muted-foreground text-sm">
-                      {formatPrice(offer.amountCents, offer.currency)} ·{' '}
-                      {offer.billingLabel}
-                    </div>
-                  </div>
-                  <Button onClick={() => buy(offer)} disabled={busy !== null}>
-                    {busy === offer.offerKey
-                      ? m.accountAccess_startingLabel()
-                      : m.accountAccess_chooseLabel()}
-                  </Button>
-                </CardContent>
-              </Card>
-            </li>
+            <PlanCard
+              key={offer.offerKey}
+              offer={offer}
+              busy={busy}
+              onChoose={buy}
+            />
           ))}
-        </ul>
-      )}
-    </section>
+        </div>
+      </PageContent>
+    </Page>
   );
 }

@@ -419,6 +419,7 @@
         "src/components/preview/preview-emails.tsx",
         "src/components/skills-section.tsx",
         "src/routes/-messages-dock-controller.tsx",
+        "src/routes/account_.access.tsx",
         "src/routes/alerts.manage.tsx",
         "src/routes/auth.employer.sign-up.tsx",
         "src/routes/auth.join.tsx",
@@ -704,10 +705,12 @@
         "src/components/keyword-combobox.tsx",
         "src/components/location-combobox.tsx",
         "src/components/location-suggest-field.tsx",
+        "src/components/paywall/embedded-checkout.tsx",
         "src/components/place-tags-field.tsx",
         "src/components/post-job-form.tsx",
         "src/components/preview/preview-emails.tsx",
         "src/components/preview/preview-toolbar.tsx",
+        "src/routes/account_.access.tsx",
         "src/routes/employers.dashboard.tsx",
         "src/routes/employers.onboarding.$slug.tsx"
       ]

@@ -5,11 +5,17 @@
  * board's connected account (`loadStripe(publishableKey, { stripeAccount })`)
  * so the embedded form renders that account's session — the mount the shared
  * hosted embed got wrong (doc 36 open-Q2).
+ *
+ * The mount node stays in the DOM the whole time (Stripe needs a stable ref);
+ * a centred spinner overlays it until the form finishes mounting so the panel
+ * never flashes an empty box while Stripe.js loads over the network.
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { loadStripe, type StripeEmbeddedCheckout } from '@stripe/stripe-js';
 
+import { Spinner } from '@/components/ui/spinner';
+import { m } from '@/paraglide/messages';
 import type { AccessCheckoutSession } from '@cavuno/board';
 
 export function EmbeddedCheckout({
@@ -20,10 +26,12 @@ export function EmbeddedCheckout({
   onComplete?: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let instance: StripeEmbeddedCheckout | undefined;
     let cancelled = false;
+    setLoading(true);
 
     void (async () => {
       const stripe = await loadStripe(kit.publishableKey, {
@@ -39,6 +47,7 @@ export function EmbeddedCheckout({
         return;
       }
       instance.mount(ref.current);
+      setLoading(false);
     })();
 
     return () => {
@@ -47,5 +56,18 @@ export function EmbeddedCheckout({
     };
   }, [kit.clientSecret, kit.publishableKey, kit.stripeAccountId, onComplete]);
 
-  return <div ref={ref} data-testid="paywall-embedded-checkout" />;
+  return (
+    <div className="relative min-h-80">
+      {loading ? (
+        <div
+          className="text-muted-foreground absolute inset-0 flex flex-col items-center justify-center gap-3"
+          data-testid="paywall-checkout-loading"
+        >
+          <Spinner className="size-6" />
+          <p className="text-sm">{m.accountAccess_checkoutLoadingText()}</p>
+        </div>
+      ) : null}
+      <div ref={ref} data-testid="paywall-embedded-checkout" />
+    </div>
+  );
 }
