@@ -43,6 +43,9 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -296,19 +299,39 @@ function AccountMenu({
             {m.employerOnboarding_yourCompaniesTitle()}
           </DropdownMenuLabel>
           {companyWorkspaces.map((membership) => (
-            <DropdownMenuItem
-              key={membership.id}
-              nativeButton={false}
-              render={
-                <Link
-                  to="/employers/companies/$slug"
-                  params={{ slug: membership.company.slug! }}
-                />
-              }
-            >
-              {membership.company.name}
-            </DropdownMenuItem>
+            <DropdownMenuSub key={membership.id}>
+              <DropdownMenuSubTrigger>
+                {membership.company.name}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem
+                  nativeButton={false}
+                  render={
+                    <Link
+                      to="/employers/companies/$slug"
+                      params={{ slug: membership.company.slug! }}
+                    />
+                  }
+                >
+                  {m.accountShell_jobsNav()}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  nativeButton={false}
+                  render={
+                    <Link
+                      to="/employers/companies/$slug/profile"
+                      params={{ slug: membership.company.slug! }}
+                    />
+                  }
+                >
+                  {m.accountShell_companyProfileNav()}
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
           ))}
+          <DropdownMenuItem nativeButton={false} render={<Link to="/post" />}>
+            {m.siteHeader_postJobLabel()}
+          </DropdownMenuItem>
           <DropdownMenuItem
             nativeButton={false}
             render={<Link to="/employers/dashboard" search={{ add: true }} />}
