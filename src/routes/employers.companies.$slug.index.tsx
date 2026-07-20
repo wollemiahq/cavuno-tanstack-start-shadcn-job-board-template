@@ -32,6 +32,7 @@ import {
 import { getSeoBase } from '../server/queries';
 
 import { EmployerCompanyShell } from '@/components/account-shell';
+import { EmptyState } from '@/components/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,14 +43,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
 import {
   Table,
@@ -138,18 +131,12 @@ function CompanyJobsPage() {
         </header>
 
         {jobs.data.length === 0 ? (
-          <Empty className="min-h-96 border-0">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <PlusIcon aria-hidden="true" />
-              </EmptyMedia>
-              <EmptyTitle>{m.employerCompany_noJobsText()}</EmptyTitle>
-              <EmptyDescription>
-                {m.employerCompany_jobsEmptyText()}
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>{postJobLink}</EmptyContent>
-          </Empty>
+          <EmptyState
+            icon={<PlusIcon aria-hidden="true" />}
+            title={m.employerCompany_noJobsText()}
+            description={m.employerCompany_jobsEmptyText()}
+            action={postJobLink}
+          />
         ) : (
           <Card className="py-0">
             <Table>

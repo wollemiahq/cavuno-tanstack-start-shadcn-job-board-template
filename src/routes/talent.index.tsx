@@ -16,6 +16,7 @@ import { getSeoBase, listTalent } from '../server/queries';
 
 import type { TalentDetailViewer } from '@/board/talent-view-model';
 import { TalentSearchPage } from '@/components/board/talent-search-page';
+import { EmptyState } from '@/components/empty-state';
 import { JsonLd } from '@/components/json-ld';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { buttonVariants } from '@/components/ui/button';
@@ -110,20 +111,16 @@ function TalentDirectoryNotFound() {
   return (
     <Page width="wide">
       <PageContent header={<PageHeader title={m.talentDirectory_title()} />}>
-        <Empty className="min-h-80 border">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Users aria-hidden="true" />
-            </EmptyMedia>
-            <EmptyTitle>{m.talentDirectory_notFoundText()}</EmptyTitle>
-            <EmptyDescription>{m.talentDirectory_emptyText()}</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
+        <EmptyState
+          icon={<Users aria-hidden="true" />}
+          title={m.talentDirectory_notFoundText()}
+          description={m.talentDirectory_emptyText()}
+          action={
             <a href="/jobs" className={buttonVariants({ variant: 'outline' })}>
               {m.meApplications_browseJobsLink()}
             </a>
-          </EmptyContent>
-        </Empty>
+          }
+        />
       </PageContent>
     </Page>
   );

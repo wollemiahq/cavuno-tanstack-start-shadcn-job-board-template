@@ -13,6 +13,7 @@ import {
   CandidateActionFeedback,
   type CandidateActionFeedbackState,
 } from '@/components/candidate-action-feedback';
+import { EmptyState } from '@/components/empty-state';
 import { PlaceTagsField } from '@/components/place-tags-field';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,14 +24,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
 import {
   Field,
   FieldDescription,
@@ -363,16 +356,12 @@ export function AlertManager({
   return (
     <div className="space-y-4" data-test="alert-manager">
       {alerts.length === 0 ? (
-        <Empty className="min-h-96 border-0">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <BellRing aria-hidden="true" />
-            </EmptyMedia>
-            <EmptyTitle>{m.meAlerts_title()}</EmptyTitle>
-            <EmptyDescription>{m.alertManager_emptyText()}</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>{newAlertButton}</EmptyContent>
-        </Empty>
+        <EmptyState
+          icon={<BellRing aria-hidden="true" />}
+          title={m.meAlerts_title()}
+          description={m.alertManager_emptyText()}
+          action={newAlertButton}
+        />
       ) : (
         <>
           <ul className="space-y-3">
