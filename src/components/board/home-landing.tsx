@@ -89,7 +89,7 @@ function CategoryBrowse({ categories }: { categories: HomeCategoryCard[] }) {
         <li key={category.slug}>
           <Card
             size="sm"
-            className="hover:bg-muted/50 h-full shadow-none transition-colors"
+            className="h-full transition-shadow hover:shadow-md"
           >
             <CardContent className="flex flex-col gap-1">
               <a
@@ -219,7 +219,7 @@ function HiringIndex({
       <Grid as="ul" columns={{ base: 1, sm: 2, lg: 3 }} gap="3">
         {companies.map((company) => (
           <li key={company.id}>
-            <Card size="sm" className="h-full shadow-none">
+            <Card size="sm" className="h-full transition-shadow hover:shadow-md">
               <CardHeader>
                 <div className="flex items-start gap-3">
                   <CompanyAvatar
@@ -263,7 +263,7 @@ function SignupCtaCard({
   href: '/auth/sign-up' | '/auth/employer/sign-up';
 }) {
   return (
-    <Card className="h-full shadow-none">
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>
           <h2>{heading}</h2>

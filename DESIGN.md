@@ -482,10 +482,6 @@ Props:
 
 ### CompanyAvatar — `src/components/board/company-avatar.tsx`
 
-Company mark: the real logo when it exists, initials on the ink chip
-otherwise (direction-C stress fix S3/S5 — logos mostly exist on the
-wire; the initials fallback is still exercised by real companies).
-
 Props:
 
 - `className?: string | undefined`

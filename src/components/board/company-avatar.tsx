@@ -1,10 +1,15 @@
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
 /**
- * Company mark: the real logo when it exists, initials on the ink chip
- * otherwise (direction-C stress fix S3/S5 — logos mostly exist on the
- * wire; the initials fallback is still exercised by real companies).
+ * Company mark: the shadcn Avatar primitive (load-state fallback, ring,
+ * a11y) shaped as a rounded square — companies read as logo-squares, not
+ * person-circles. The primitive's image falls back to initials on load
+ * failure; logos use object-contain so they are never cropped.
  */
+const BOX = { sm: 'size-10', md: 'size-11', lg: 'size-12' } as const;
+const TEXT = { sm: 'text-sm', md: 'text-base', lg: 'text-lg' } as const;
+
 export function CompanyAvatar({
   name,
   logoUrl,
@@ -16,32 +21,6 @@ export function CompanyAvatar({
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }) {
-  const box =
-    size === 'lg'
-      ? 'size-12 text-lg'
-      : size === 'md'
-        ? 'size-11 text-base'
-        : 'size-10 text-sm';
-  if (logoUrl) {
-    return (
-      <span
-        className={cn(
-          'border-border bg-background flex shrink-0 items-center justify-center overflow-hidden rounded-[9px] border',
-          box,
-          className,
-        )}
-        aria-hidden="true"
-      >
-        <img
-          src={logoUrl}
-          alt=""
-          width={64}
-          height={64}
-          className="size-full object-contain"
-        />
-      </span>
-    );
-  }
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
@@ -49,19 +28,23 @@ export function CompanyAvatar({
     .slice(0, 2)
     .join('')
     .toUpperCase();
+
   return (
-    <span
-      className={cn(
-        // Same bordered-surface family as the logo variant — the initials
-        // fallback reads as a quiet placeholder, not a brand mark (the old
-        // ink chip out-shouted real logos next to it).
-        'border-border bg-muted text-muted-foreground flex shrink-0 items-center justify-center rounded-[9px] border font-semibold tracking-wide',
-        box,
-        className,
-      )}
-      aria-hidden="true"
+    <Avatar
+      className={cn('rounded-[9px] after:rounded-[9px]', BOX[size], className)}
     >
-      {initials || '?'}
-    </span>
+      {logoUrl ? (
+        <AvatarImage
+          src={logoUrl}
+          alt={name}
+          className="rounded-[9px] object-contain"
+        />
+      ) : null}
+      <AvatarFallback
+        className={cn('rounded-[9px] font-semibold tracking-wide', TEXT[size])}
+      >
+        {initials || '?'}
+      </AvatarFallback>
+    </Avatar>
   );
 }
