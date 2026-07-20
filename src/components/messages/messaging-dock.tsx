@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { ChevronDown, MessageSquare, X } from 'lucide-react';
 
 import { FloatingStackItem } from '@/components/floating-stack';
-import { Badge } from '@/components/ui/badge';
+import { UnreadCountBadge } from '@/components/unread-count-badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -80,7 +80,7 @@ export function MessagingDock({
             <header className="border-border flex h-14 shrink-0 items-center gap-3 border-b px-4">
               <MessageSquare className="size-5" aria-hidden="true" />
               <p className="flex-1 font-semibold">{messagesLabel}</p>
-              {unreadCount > 0 ? <Badge>{unreadCount}</Badge> : null}
+              <UnreadCountBadge count={unreadCount} />
               <Button
                 type="button"
                 variant="ghost"
@@ -106,7 +106,7 @@ export function MessagingDock({
         >
           <MessageSquare aria-hidden="true" />
           <span className="flex-1 text-left">{messagesLabel}</span>
-          {unreadCount > 0 ? <Badge>{unreadCount}</Badge> : null}
+          <UnreadCountBadge count={unreadCount} />
         </Button>
       )}
     </FloatingStackItem>
