@@ -499,7 +499,7 @@ export const searchBlogPosts = createServerFn({ method: 'GET' })
     ),
   );
 
-const EMPTY_ADJACENT: PublicBlogAdjacentPosts = {
+export const EMPTY_ADJACENT: PublicBlogAdjacentPosts = {
   object: 'blog_adjacent_posts',
   previous: null,
   next: null,

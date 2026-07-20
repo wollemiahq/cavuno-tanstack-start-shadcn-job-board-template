@@ -20,6 +20,7 @@ import { headTitle } from '@/lib/page-title';
 import { selectRelatedPosts } from '@/lib/related-posts';
 import { m } from '@/paraglide/messages';
 import {
+  EMPTY_ADJACENT,
   getBlogPost,
   getBlogPostAdjacent,
   getSeoBase,
@@ -54,19 +55,26 @@ export const Route = createFileRoute('/blog/$postSlug')({
     }
 
     const firstTagSlug = post.tags[0]?.slug ?? null;
+    // Adjacent nav and the related-posts rails are garnish — a failure there
+    // (a filtered-list API hiccup once took every article down with it) must
+    // degrade to an article without rails, never a 500. SEO stays load-bearing.
     const [adjacent, byTag, latest, seo] = await Promise.all([
-      getBlogPostAdjacent({ data: { postSlug: post.slug } }),
+      getBlogPostAdjacent({ data: { postSlug: post.slug } }).catch(
+        () => EMPTY_ADJACENT,
+      ),
       firstTagSlug
-        ? listBlogPosts({ data: { tagSlug: firstTagSlug, limit: 4 } })
+        ? listBlogPosts({ data: { tagSlug: firstTagSlug, limit: 4 } }).catch(
+            () => null,
+          )
         : Promise.resolve(null),
-      listBlogPosts({ data: { limit: 4 } }),
+      listBlogPosts({ data: { limit: 4 } }).catch(() => null),
       getSeoBase(),
     ]);
 
     const related = selectRelatedPosts({
       currentId: post.id,
       byTag: byTag?.data ?? [],
-      latest: latest.data,
+      latest: latest?.data ?? [],
       limit: 3,
     });
 
