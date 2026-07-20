@@ -36,12 +36,13 @@ function useResolvedThemeMode(): 'light' | 'dark' {
   return mode;
 }
 
-const Toaster = ({ ...props }: ToasterProps) => {
+const Toaster = ({ position = 'top-right', ...props }: ToasterProps) => {
   const theme = useResolvedThemeMode();
 
   return (
     <Sonner
       theme={theme}
+      position={position}
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,
