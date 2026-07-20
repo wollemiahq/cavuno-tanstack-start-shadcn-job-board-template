@@ -1053,6 +1053,7 @@
   "employerJobs_typeColumn": "Type",
   "employerJobs_statusColumn": "Status",
   "employerJobs_actionsColumn": "Actions",
+  "employerJobs_rowActionsAriaLabel": "Actions for {title}",
   "employerProfile_marketsLabel": "Markets",
   "notFound_heading": "Page not found",
   "notFound_body": "The page you're looking for doesn't exist or has moved.",

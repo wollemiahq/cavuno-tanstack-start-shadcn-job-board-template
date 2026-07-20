@@ -1053,6 +1053,7 @@
   "employerJobs_typeColumn": "Art",
   "employerJobs_statusColumn": "Status",
   "employerJobs_actionsColumn": "Aktionen",
+  "employerJobs_rowActionsAriaLabel": "Aktionen für {title}",
   "employerProfile_marketsLabel": "Märkte",
   "notFound_heading": "Seite nicht gefunden",
   "notFound_body": "Die gesuchte Seite existiert nicht oder wurde verschoben.",

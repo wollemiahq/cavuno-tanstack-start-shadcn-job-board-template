@@ -9,7 +9,7 @@ import {
   Link,
   useRouter,
 } from '@tanstack/react-router';
-import { PlusIcon } from 'lucide-react';
+import { MoreHorizontalIcon, PlusIcon } from 'lucide-react';
 
 import {
   employerJobStatusLabel,
@@ -35,6 +35,13 @@ import { EmployerCompanyShell } from '@/components/account-shell';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Empty,
   EmptyContent,
@@ -229,69 +236,91 @@ function JobRow({
           </Badge>
         </TableCell>
         <TableCell>
-          <div className="flex min-w-max flex-wrap justify-end gap-1">
-            {isLive ? (
+          {/* Drafts keep their status-dependent primary action visible —
+              "Publish & pay" toggles the inline checkout picker, which
+              can't collapse into the menu. Every other action groups
+              under the ⋯ menu, with Delete separated and destructive. */}
+          <div className="flex items-center justify-end gap-1">
+            {!isLive ? (
               <Button
                 type="button"
-                variant="outline"
                 size="sm"
-                onClick={() =>
-                  act(() => unpublishJob({ data: { slug, id: job.id } }))
+                aria-expanded={checkoutOpen}
+                onClick={() => setCheckoutOpen((open) => !open)}
+              >
+                {checkoutOpen
+                  ? m.employerCompany_closeLabel()
+                  : m.employerCompany_publishPayLabel()}
+              </Button>
+            ) : null}
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={m.employerJobs_rowActionsAriaLabel({
+                      title: job.title,
+                    })}
+                    data-test="employer-job-row-actions"
+                  />
                 }
               >
-                {m.employerCompany_unpublishLabel()}
-              </Button>
-            ) : (
-              <>
-                <Button
-                  type="button"
-                  size="sm"
-                  aria-expanded={checkoutOpen}
-                  onClick={() => setCheckoutOpen((open) => !open)}
-                >
-                  {checkoutOpen
-                    ? m.employerCompany_closeLabel()
-                    : m.employerCompany_publishPayLabel()}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    act(() => publishJob({ data: { slug, id: job.id } }))
+                <MoreHorizontalIcon aria-hidden="true" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {isLive && job.links.public ? (
+                  <DropdownMenuItem
+                    render={
+                      <a
+                        href={job.links.public}
+                        target="_blank"
+                        rel="noreferrer"
+                      />
+                    }
+                  >
+                    {m.employerCompany_viewLabel()}
+                  </DropdownMenuItem>
+                ) : null}
+                <DropdownMenuItem
+                  render={
+                    <Link
+                      to="/employers/companies/$slug/jobs/$jobId/applicants"
+                      params={{ slug, jobId: job.id }}
+                    />
                   }
                 >
-                  {m.employerCompany_republishLabel()}
-                </Button>
-              </>
-            )}
-            {isLive && job.links.public ? (
-              <a
-                href={job.links.public}
-                target="_blank"
-                rel="noreferrer"
-                className={buttonVariants({ variant: 'ghost', size: 'sm' })}
-              >
-                {m.employerCompany_viewLabel()}
-              </a>
-            ) : null}
-            <Link
-              to="/employers/companies/$slug/jobs/$jobId/applicants"
-              params={{ slug, jobId: job.id }}
-              className={buttonVariants({ variant: 'ghost', size: 'sm' })}
-            >
-              {m.employerCompany_applicantsLabel()}
-            </Link>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={() =>
-                act(() => deleteJob({ data: { slug, id: job.id } }))
-              }
-            >
-              {m.employerCompany_deleteLabel()}
-            </Button>
+                  {m.employerCompany_applicantsLabel()}
+                </DropdownMenuItem>
+                {isLive ? (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      act(() => unpublishJob({ data: { slug, id: job.id } }))
+                    }
+                  >
+                    {m.employerCompany_unpublishLabel()}
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      act(() => publishJob({ data: { slug, id: job.id } }))
+                    }
+                  >
+                    {m.employerCompany_republishLabel()}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() =>
+                    act(() => deleteJob({ data: { slug, id: job.id } }))
+                  }
+                >
+                  {m.employerCompany_deleteLabel()}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           {message ? (
             <p
