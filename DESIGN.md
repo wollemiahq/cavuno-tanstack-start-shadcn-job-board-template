@@ -18,6 +18,7 @@ colors:
   accent: 'oklch(0.97 0 0)'
   accent-foreground: 'oklch(0.205 0 0)'
   destructive: 'oklch(0.577 0.245 27.325)'
+  destructive-foreground: 'oklch(0.985 0 0)'
   border: 'oklch(0.922 0 0)'
   input: 'oklch(0.922 0 0)'
   ring: 'oklch(0.708 0 0)'
@@ -49,6 +50,7 @@ colors:
   accent-dark: 'oklch(0.269 0 0)'
   accent-foreground-dark: 'oklch(0.985 0 0)'
   destructive-dark: 'oklch(0.704 0.191 22.216)'
+  destructive-foreground-dark: 'oklch(0.985 0 0)'
   border-dark: 'oklch(1 0 0 / 10%)'
   input-dark: 'oklch(1 0 0 / 15%)'
   ring-dark: 'oklch(0.556 0 0)'
@@ -111,6 +113,7 @@ values in components.
 | `--accent` | `oklch(0.97 0 0)` | `oklch(0.269 0 0)` |
 | `--accent-foreground` | `oklch(0.205 0 0)` | `oklch(0.985 0 0)` |
 | `--destructive` | `oklch(0.577 0.245 27.325)` | `oklch(0.704 0.191 22.216)` |
+| `--destructive-foreground` | `oklch(0.985 0 0)` | `oklch(0.985 0 0)` |
 | `--border` | `oklch(0.922 0 0)` | `oklch(1 0 0 / 10%)` |
 | `--input` | `oklch(0.922 0 0)` | `oklch(1 0 0 / 15%)` |
 | `--ring` | `oklch(0.708 0 0)` | `oklch(0.556 0 0)` |

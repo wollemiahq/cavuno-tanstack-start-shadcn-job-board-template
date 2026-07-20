@@ -61,6 +61,10 @@
       "$type": "color",
       "$value": "oklch(0.577 0.245 27.325)"
     },
+    "destructive-foreground": {
+      "$type": "color",
+      "$value": "oklch(0.985 0 0)"
+    },
     "border": {
       "$type": "color",
       "$value": "oklch(0.922 0 0)"
@@ -184,6 +188,10 @@
     "destructive-dark": {
       "$type": "color",
       "$value": "oklch(0.704 0.191 22.216)"
+    },
+    "destructive-foreground-dark": {
+      "$type": "color",
+      "$value": "oklch(0.985 0 0)"
     },
     "border-dark": {
       "$type": "color",
