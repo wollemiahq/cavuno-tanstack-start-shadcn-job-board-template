@@ -3,15 +3,14 @@ import { Link } from '@tanstack/react-router';
 import type { CompanyDetailVM } from '@/board/company-view-model';
 import type { JobCardVM } from '@/board/job-view-model';
 import type { OverallSalaryVM } from '@/board/salary-view-model';
+import { CompanyAvatar } from '@/components/board/company-avatar';
 import { JobCard } from '@/components/board/job-card';
 import { Prose } from '@/components/prose';
 import { SearchResultDetailHeader } from '@/components/search-results/search-results';
 import { Text } from '@/components/text';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { initialsOf } from '@/lib/initials';
 import { m } from '@/paraglide/messages';
 
 function CompanyDetailActions({
@@ -82,10 +81,7 @@ function ExpandedCompanyDetailHeader({
           data-slot="company-detail-heading"
           className="col-start-1 row-start-1 flex min-w-0 items-center gap-3"
         >
-          <Avatar size="lg">
-            {vm.logoUrl ? <AvatarImage src={vm.logoUrl} alt="" /> : null}
-            <AvatarFallback>{initialsOf(vm.avatarName)}</AvatarFallback>
-          </Avatar>
+          <CompanyAvatar name={vm.avatarName} logoUrl={vm.logoUrl} size="lg" />
           <div className="min-w-0 space-y-1">
             <Text as="h2" variant="heading2" className="truncate">
               {interactive ? (

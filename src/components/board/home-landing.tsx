@@ -18,7 +18,6 @@ import {
 import { DitherCanvas } from '@/components/marketing/dither-canvas';
 import { PostCard } from '@/components/post-card';
 import { TalentCard } from '@/components/talent-card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -37,7 +36,6 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { clampList } from '@/lib/clamp-list';
-import { initialsOf } from '@/lib/initials';
 import type {
   PublicBlogPostSummary,
   TalentDirectoryEntry,
@@ -134,17 +132,11 @@ function HomeJobCard({ vm }: { vm: JobCardVM }) {
       <Card className="h-full transition-shadow hover:shadow-md">
         <CardHeader>
           <div className="flex items-start gap-3">
-            <Avatar size="lg">
-              {vm.companyLogoUrl ? (
-                <AvatarImage
-                  src={vm.companyLogoUrl}
-                  alt={vm.companyName ?? vm.title}
-                />
-              ) : null}
-              <AvatarFallback>
-                {initialsOf(vm.companyAvatarName)}
-              </AvatarFallback>
-            </Avatar>
+            <CompanyAvatar
+              name={vm.companyAvatarName}
+              logoUrl={vm.companyLogoUrl}
+              size="lg"
+            />
             <div className="min-w-0 flex-1">
               {vm.companyName ? (
                 <p className="text-muted-foreground text-xs font-medium">
@@ -225,7 +217,7 @@ function HiringIndex({
                   <CompanyAvatar
                     name={company.name}
                     logoUrl={company.logoUrl}
-                    size="md"
+                    size="lg"
                   />
                   <div className="min-w-0">
                     <CardTitle>

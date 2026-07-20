@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CompanyAvatar } from '@/components/board/company-avatar';
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { initialsOf } from '@/lib/initials';
 /**
  * One company as an owned shadcn card row (CAV-487). PURE MARKUP: the
  * companies index, the market-scoped browse, and the similar-companies
@@ -58,10 +57,7 @@ export function CompanyCard({
       className="h-full gap-4 transition-shadow hover:shadow-md"
     >
       <CardHeader className="grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3">
-        <Avatar size="lg">
-          {logoUrl ? <AvatarImage src={logoUrl} alt={name} /> : null}
-          <AvatarFallback>{initialsOf(name)}</AvatarFallback>
-        </Avatar>
+        <CompanyAvatar name={name} logoUrl={logoUrl} size="lg" />
         <div className="min-w-0">
           <CardTitle>
             <h3>

@@ -1,9 +1,8 @@
 import type { MouseEvent as ReactMouseEvent, ReactNode } from 'react';
 
 import type { JobCardVM } from '@/board/job-view-model';
+import { CompanyAvatar } from '@/components/board/company-avatar';
 import { SearchResultCard } from '@/components/search-results/search-results';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { initialsOf } from '@/lib/initials';
 
 export function JobSearchResult({
   vm,
@@ -19,12 +18,11 @@ export function JobSearchResult({
   return (
     <SearchResultCard selected={selected}>
       <div className="relative flex items-start gap-3 p-4">
-        <Avatar size="lg">
-          {vm.companyLogoUrl ? (
-            <AvatarImage src={vm.companyLogoUrl} alt="" />
-          ) : null}
-          <AvatarFallback>{initialsOf(vm.companyAvatarName)}</AvatarFallback>
-        </Avatar>
+        <CompanyAvatar
+          name={vm.companyAvatarName}
+          logoUrl={vm.companyLogoUrl}
+          size="lg"
+        />
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">

@@ -265,7 +265,7 @@ Props:
 
 - `active: string`
 - `children: ReactNode`
-- `company: { name: string; logoUrl: string | null; }`
+- `company: { name: string; website: string | null; logoUrl: string | null; }`
 - `slug: string`
 
 ### EmployerIdentityAvatar — `src/components/account-shell.tsx`
@@ -370,7 +370,6 @@ Props:
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `onSubscribe: (input: JobAlertSubscribeInput) => Promise<{ status: "submitted"; }>`
-- `surface?: "accent" | "card" | undefined`
 - `title?: string | undefined`
 
 ### AlertsBand — `src/components/board/alerts-band.tsx`
@@ -482,12 +481,23 @@ Props:
 
 ### CompanyAvatar — `src/components/board/company-avatar.tsx`
 
+Company mark — the one shared way a company logo renders across every
+board surface. It is a thin, override-free wrapper over the owned Avatar
+primitive: the shape, ring, and image fit all come from the primitive, so
+a company reads identically everywhere (and matches people avatars, which
+use the same primitive directly). The only thing this adds over a raw
+`<Avatar>` is the two-letter initials fallback when no logo exists.
+
+`size` is the Avatar primitive's own scale — `sm`/`default`/`lg`/`xl`
+(size-6/8/10/12). `className` is a layout-only passthrough (margins,
+responsive display); it must never carry shape/size/fit overrides.
+
 Props:
 
 - `className?: string | undefined`
 - `logoUrl?: string | null | undefined`
 - `name: string`
-- `size?: "sm" | "lg" | "md" | undefined`
+- `size?: "default" | "sm" | "lg" | "xl" | undefined`
 
 ### CompanyCard — `src/components/board/company-card.tsx`
 
@@ -1004,6 +1014,12 @@ Props:
 
 ### XIcon — `src/components/brand-icons.tsx`
 
+### CandidateActionFeedback — `src/components/candidate-action-feedback.tsx`
+
+Props:
+
+- `state: CandidateActionFeedbackState`
+
 ### CandidateProfilePendingPage — `src/components/candidate-route-state.tsx`
 
 Pending state matching the /account profile layout (cards + right rail).
@@ -1129,51 +1145,6 @@ Props:
 - `items: { id: string; object: "candidate_education"; institutionName: string; institutionUrl: string | null; degree: string |…`
 - `language: string`
 
-### ApplicantPipelineBoard — `src/components/employer/applicant-pipeline-board.tsx`
-
-The employer applicant pipeline as a KANBAN board. Columns are the
-pipeline's visible stages in order; cards are applicants. Dragging a
-card (pointer OR keyboard, via react-aria's `useDragAndDrop` + a
-`GridList` per column) changes its stage through the same `moveApplicant`
-server function the detail sheet's stage picker uses. Moves are
-optimistic: the card jumps columns immediately and reverts on error.
-
-Every other capability the flat list had stays reachable — the resume
-link, stage picker, private-note field, activity timeline, and reject
-action live in a per-card detail sheet; stage add/rename/delete live in
-the board header and each column's menu (system stages are immutable).
-
-Props:
-
-- `board: PipelineBoardVM`
-- `defaultOpenCardId?: string | undefined`
-- `defaultStageDialog?: StageDialogState | undefined`
-- `jobId: string`
-- `slug: string`
-
-### EmptyState — `src/components/empty-state.tsx`
-
-The canonical page/collection empty surface (see
-docs/patterns/empty-state.md): a featured icon badge, a title, a
-description, and one optional action, vertically centred in a consistent
-`min-h-96` so "no saved jobs", "no applications", "no job alerts", and the
-employer's "no jobs" all read at the same scale and placement instead of
-each hand-rolling its own height and action styling.
-
-Pass the action as a real Button (or a button-styled Link for navigation)
-with a consistent variant — the board uses `outline` for the single
-recovery action. Multi-action access gates and full-canvas search
-not-found surfaces keep their own wrappers (JobsNotFound / SalaryEmptyState
-/ the restricted-directory gate) rather than this single-action shape.
-
-Props:
-
-- `action?: ReactNode`
-- `className?: string | undefined`
-- `description: ReactNode`
-- `icon: ReactNode`
-- `title: ReactNode`
-
 ### ExperienceSection — `src/components/experience-section.tsx`
 
 Work experience — list + add/edit/delete, over `board.me.profile`'s
@@ -1187,49 +1158,6 @@ Props:
 - `items: { id: string; object: "candidate_experience"; title: string; companyName: string; companyUrl: string | null; location…`
 - `language: string`
 - `locationSuggestions: LocationSuggestionState`
-
-### FloatingStackItem — `src/components/floating-stack.tsx`
-
-A single widget in the floating stack. Portals into the shared container
-when one is mounted (the running app) and renders inline as a graceful
-fallback when it is not (isolated component tests). `order` controls the
-vertical position within the stack — a lower value renders higher up.
-`flush` opts an item into the bottom-edge slot: it forgoes the standard
-bottom margin so it sits stuck to the viewport bottom (see the provider
-doc); at most one item should be flush.
-
-Props:
-
-- `children: ReactNode`
-- `className?: string | undefined`
-- `flush?: boolean | undefined`
-- `order?: number | undefined`
-
-### FloatingStackProvider — `src/components/floating-stack.tsx`
-
-Shared bottom-right stacking region for floating widgets (the job-alert
-prompt, the messaging dock, and any future corner widget). A single fixed
-flex column that every widget portals into, so they stack vertically and
-are collision-aware instead of overlapping in the same corner.
-
-Bottom-edge model (the flush slot): the column is anchored at `bottom-0`
-with NO container gap. Instead, every ordinary item owns a bottom margin
-(`mb-4`) that does double duty — it both separates the item from whatever
-sits below it AND floats the lowest ordinary item up off the viewport
-edge. A `flush` item drops that margin, so it sticks to the bottom edge
-(the messaging dock's rounded-top / flush-bottom look) while any item
-stacked above it still keeps its `mb-4` gap and never overlaps. This lets
-the dock be flush-bottom whether or not the job-alert prompt is present,
-without the prompt losing its float margin when the dock is absent.
-
-The container sits at `z-40` — below the `z-50` overlay layer — so menus,
-popovers, and dialogs (which portal to the body at `z-50`) still render
-above the stack. It is `pointer-events-none` so empty gaps never trap
-clicks meant for the page; each item re-enables pointer events.
-
-Props:
-
-- `children: ReactNode`
 
 ### JobAlertFloatingPrompt — `src/components/job-alert-floating-prompt.tsx`
 
@@ -1941,7 +1869,7 @@ Variants — `variant`: icon, image
 
 Props:
 
-- `size?: "default" | "sm" | "lg" | undefined`
+- `size?: "default" | "sm" | "lg" | "xl" | undefined`
 
 ### AvatarBadge — `src/components/ui/avatar.tsx`
 
@@ -2925,19 +2853,6 @@ Variants — `size`: default, sm, lg
 
 ### TooltipTrigger — `src/components/ui/tooltip.tsx`
 
-### UnreadCountBadge — `src/components/unread-count-badge.tsx`
-
-The single unread-count treatment shared by the header messaging icon and
-the messaging dock pill: one deep-red notification badge on the semantic
-`destructive` token (never a hardcoded colour), a fixed-diameter round
-chip with the count centred in tabular figures so 1- and 2-glyph counts
-stay aligned. Renders nothing at zero. Callers pass positioning via
-`className` (e.g. the header icon's absolute offset).
-
-Props:
-
-- `count: number`
-
 ## Layout compositions
 
 Page, PageHeader, PageContent, and PageSection are the sole canonical page-level composition family for new work. Compose these contracts instead of hand-rolling containers, headings, or rails; use Bleed for full-width bands.
@@ -3081,13 +2996,13 @@ Primitives: Page, Bleed, PageHeader, PageContent, JobDetail, TalentProfileConten
 
 The zero-results / not-found treatment — a featured icon, title, and description, kept inside the page chrome.
 
-Primitives: EmptyState, Empty, JobsNotFound, SalaryEmptyState
+Primitives: Empty, JobsNotFound, SalaryEmptyState
 
 ### Form feedback — `docs/patterns/form-feedback.md`
 
 The success / error / pending message tied to a form action, announced to assistive tech.
 
-Primitives: Alert, AlertDescription, FieldError, FieldDescription, Spinner, toast
+Primitives: Alert, AlertDescription, FieldError, FieldDescription, Spinner
 
 ### Form page — `docs/patterns/form-page.md`
 

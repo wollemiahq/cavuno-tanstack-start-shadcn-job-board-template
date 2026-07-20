@@ -6,7 +6,7 @@ import type {
   SalaryRailVM,
   SeniorityTableVM,
 } from '@/board/salary-view-model';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CompanyAvatar } from '@/components/board/company-avatar';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -24,7 +24,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { initialsOf } from '@/lib/initials';
 import { cn } from '@/lib/utils';
 
 export type { RailItem } from '@/board/salary-view-model';
@@ -190,12 +189,7 @@ export function SalaryRail({ vm }: { vm: SalaryRailVM }) {
             >
               <CardContent>
                 <div className="flex items-center gap-3">
-                  <Avatar>
-                    {item.logoPath ? (
-                      <AvatarImage src={item.logoPath} alt={item.name} />
-                    ) : null}
-                    <AvatarFallback>{initialsOf(item.name)}</AvatarFallback>
-                  </Avatar>
+                  <CompanyAvatar name={item.name} logoUrl={item.logoPath} />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium break-words">
                       {item.name}

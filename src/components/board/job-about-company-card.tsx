@@ -1,5 +1,5 @@
 import type { JobDetailCompanyVM } from '@/board/job-detail-view-model';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CompanyAvatar } from '@/components/board/company-avatar';
 import { buttonVariants } from '@/components/ui/button';
 import {
   Card,
@@ -8,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { initialsOf } from '@/lib/initials';
 import { m } from '@/paraglide/messages';
 
 export function JobAboutCompanyCard({
@@ -27,12 +26,11 @@ export function JobAboutCompanyCard({
         <div className="flex flex-wrap items-center gap-4">
           {company.name ? (
             <div className="flex min-w-0 items-center gap-3">
-              <Avatar size="lg">
-                {company.logoUrl ? (
-                  <AvatarImage src={company.logoUrl} alt="" />
-                ) : null}
-                <AvatarFallback>{initialsOf(company.name)}</AvatarFallback>
-              </Avatar>
+              <CompanyAvatar
+                name={company.name}
+                logoUrl={company.logoUrl}
+                size="lg"
+              />
               <p className="min-w-0 truncate font-medium">{company.name}</p>
             </div>
           ) : null}

@@ -114,7 +114,7 @@ export function TalentProfileContent({
                 <CompanyAvatar
                   name={experience.companyName}
                   logoUrl={experience.companyLogoUrl}
-                  size="sm"
+                  size="lg"
                   className="mt-0.5"
                 />
                 <div className="min-w-0 flex-1 space-y-3">
@@ -194,7 +194,7 @@ export function TalentProfileContent({
                 <CompanyAvatar
                   name={education.institutionName}
                   logoUrl={education.institutionLogoUrl}
-                  size="sm"
+                  size="lg"
                   className="mt-0.5"
                 />
                 <div className="min-w-0 flex-1 space-y-2">

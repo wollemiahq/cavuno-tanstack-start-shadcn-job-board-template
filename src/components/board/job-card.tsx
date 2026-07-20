@@ -22,36 +22,14 @@ import { Link } from '@tanstack/react-router';
  * count (S4); company mark falls back to initials when no logo (S3/S5).
  */
 import type { JobCardVM } from '@/board/job-view-model';
+import { CompanyAvatar } from '@/components/board/company-avatar';
 import { TaxonomyTags } from '@/components/board/taxonomy-tags';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { clampList } from '@/lib/clamp-list';
-import { initialsOf } from '@/lib/initials';
 import { cn } from '@/lib/utils';
 
 const MAX_TAG_BADGES = 3;
-
-function CompanyAvatar({
-  vm,
-  size,
-  className,
-}: {
-  vm: JobCardVM;
-  size: 'sm' | 'default' | 'lg';
-  className?: string;
-}) {
-  return (
-    <Avatar size={size} className={cn('', className)}>
-      {vm.companyLogoUrl ? (
-        <AvatarImage src={vm.companyLogoUrl} alt={vm.companyName ?? vm.title} />
-      ) : null}
-      <AvatarFallback className="font-semibold">
-        {initialsOf(vm.companyAvatarName)}
-      </AvatarFallback>
-    </Avatar>
-  );
-}
 
 /** The SEO-load-bearing taxonomy chips — the collection Tag's visual as links. */
 function TagBadges({ vm }: { vm: JobCardVM }) {
@@ -116,13 +94,19 @@ export function JobCard({
         <Card className={surface}>
           <CardContent className="flex items-start gap-4 p-5 md:p-6">
             <CompanyAvatar
-              vm={vm}
-              size="lg"
-              className="mt-0.5 hidden size-12 sm:flex"
+              name={vm.companyAvatarName}
+              logoUrl={vm.companyLogoUrl}
+              size="xl"
+              className="mt-0.5 hidden sm:flex"
             />
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               <div className="flex items-center gap-2">
-                <CompanyAvatar vm={vm} size="sm" className="sm:hidden" />
+                <CompanyAvatar
+                  name={vm.companyAvatarName}
+                  logoUrl={vm.companyLogoUrl}
+                  size="sm"
+                  className="sm:hidden"
+                />
                 {vm.companyName ? (
                   <p className="text-foreground truncate text-sm font-semibold">
                     {vm.companyName}
@@ -170,7 +154,11 @@ export function JobCard({
           <div
             className={cn('flex items-center gap-3', compact ? 'mb-3' : 'mb-4')}
           >
-            <CompanyAvatar vm={vm} size={compact ? 'default' : 'lg'} />
+            <CompanyAvatar
+              name={vm.companyAvatarName}
+              logoUrl={vm.companyLogoUrl}
+              size={compact ? 'default' : 'lg'}
+            />
             <div className="min-w-0 flex-1">
               {vm.companyName ? (
                 <p className="text-foreground truncate text-sm font-semibold">
