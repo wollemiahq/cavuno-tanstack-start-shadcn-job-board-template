@@ -136,7 +136,16 @@ export function AlertSignupForm({
                 {vm.emailAriaLabel}
               </FieldLabel>
               <ButtonGroup className="w-full">
-                <InputGroup className="bg-background flex-1">
+                {/* The accent surface tints the whole card, so the field
+                    keeps bg-background for contrast; on the plain card
+                    surface the standard input treatment applies — a white
+                    override there made the field invisible. */}
+                <InputGroup
+                  className={cn(
+                    'flex-1',
+                    surface === 'accent' && 'bg-background',
+                  )}
+                >
                   <InputGroupInput
                     id={emailInputId}
                     type="email"
