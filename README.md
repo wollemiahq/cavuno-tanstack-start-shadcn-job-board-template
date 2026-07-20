@@ -1,189 +1,251 @@
-# cavuno-shadcn-ui-job-board-template
+# Cavuno — a job board template that runs the moment you clone it
 
-An MIT-licensed job board template built on the official
-**shadcn/ui Rhea** preset with **Base UI**, Geist, Lucide, and
-[Tailwind CSS 4](https://tailwindcss.com). Clone it, run it, and you have a
-complete, SEO-ready job board — every surface a real page, nothing stubbed.
+**Clone it, `pnpm dev`, and in under a minute you have a populated,
+production-realistic job board** — real jobs and companies, a working
+applicant tracker, captured outbound emails, and Stripe test-mode checkout —
+with **no API key, no account, and no empty-database staring-contest.**
 
-This repository is currently a private preview. Authorized collaborators can
-clone and evaluate it, but no public release, hosted demo, announcement, or
-ad-network integration has been approved. The MIT license and release assets
-are being prepared now so a later public release can be an explicit decision.
+Built on TanStack Start, Cloudflare Workers, and the official
+**shadcn/ui Rhea** preset on **Base UI**. Data comes from the hosted
+[Cavuno Board API](https://cavuno.com) (`@cavuno/board`), so every surface is
+a real page wired to a real backend — not a mock.
 
-![Job board built with shadcn/ui Rhea](docs/screenshot-home.png)
+> **Hosted demo:** `<DEMO_URL>` — _placeholder; see [Deploy](#deploy). The demo
+> deploy target exists (`wrangler deploy --env demo`) but the public URL is the
+> owner's go-live decision._
 
-**Stack**: React 19 · TanStack Start (SSR) · Cloudflare Workers · Vite+ (`vp`) · Tailwind CSS 4 · shadcn/ui Rhea · Base UI.
+![Cavuno job board home — real sandbox jobs and company cards](docs/media/home.png)
 
-## What you get
+<!-- Screenshots referenced below live in docs/media/ and must be captured
+     before release — see docs/media/README.md for the exact shot list. -->
 
-- **Owned shadcn/ui Rhea source, in-tree** — the Base UI-backed primitives
-  under `src/components/ui/` and their CLI-owned theme are yours to edit or
-  replace. Every release surface uses this one component and token system;
-  there is no inherited Untitled UI compatibility layer.
-- **Every surface is a real page**, not a placeholder: jobs browse + search
-  + filters, job detail + apply, companies, blog, salary explorer,
-  programmatic SEO listings, candidate auth + account + messaging, the
-  employer app, and embeds.
-- **SEO built in** — canonical URLs, `JobPosting` JSON-LD (Google for Jobs),
-  `sitemap.xml`, `robots.txt`, blog `rss.xml`, and OpenGraph images.
-- **i18n chrome** — [Paraglide JS](https://paraglidejs.com) with `en`/`de`/`fr`
-  catalogs (UI chrome only; board content stays its own language).
-- **Dark mode** keyed to a single `.dark` class, and **accessibility** from
-  Base UI semantics and the owned components' explicit ARIA contracts.
+---
+
+## Why this template is different
+
+Most job-board templates hand you a beautiful shell and then ask you to
+"insert your API key and seed a database." You clone, you configure, you stare
+at an empty board. This one leads with two things instead:
+
+### 1. A zero-setup running product
+
+`.dev.vars.example` already points at the **platform sandbox board** — a live,
+deterministic fixture tenant that resets nightly and is safe to write to. So a
+fresh clone boots straight into a full board with:
+
+- **8 seeded scenario personas** you switch between from a **developer preview
+  toolbar** (bottom-left, sandbox-only) — new candidates, verified candidates,
+  premium/granted candidates, and employers from "just signed up" through
+  "workspace admin with a live applicant pipeline." Switching sets a **real
+  session cookie**, so you see each state exactly as that user would.
+- **A working ATS** — the employer applicant pipeline is a real **kanban
+  board** (columns are stages, cards are applicants) with pointer **and**
+  keyboard drag-and-drop and optimistic moves.
+- **Captured outbound email** — a `letter_opener`-style viewer over every email
+  the board would send (magic-link sign-in, verification, password reset,
+  alert double-opt-in). The sandbox captures instead of delivering, so every
+  flow that "continues in your inbox" is completable on the spot.
+- **Payments that work with Stripe test cards** — the sandbox runs Stripe
+  **test mode**, so the candidate paywall and the job-posting funnel accept
+  `4242 4242 4242 4242` with **no Stripe account or keys of your own.**
+
+The full sandbox playbook — persona roster, feature-flag toggles, reseed, and
+the headless server-function equivalents — is in
+[`docs/preview-states.md`](docs/preview-states.md). The guided "wow" tour is in
+[`docs/DEMO.md`](docs/DEMO.md).
+
+### 2. Agent-ready by construction
+
+[`AGENTS.md`](AGENTS.md) is a machine-readable contract that any coding agent —
+the hosted Cavuno builder, a tenant's own agent, or a fleet run — reads before
+touching the repo. It works because the codebase is layered so that
+correctness can't be redesigned away:
+
+- **Layer 1a — the `@cavuno/board` SDK**: formatters, path helpers,
+  breadcrumbs, copy. The correctness functions.
+- **Layer 1b — view-model mappers** (`src/board/**`): pure functions
+  (`toJobCardVM`, `toJobDetailVM`, …) that call the SDK and hand components
+  plain, resolved data.
+- **Layer 2 — presentation** (`src/components/**`): dumb, typed-props
+  components you can restructure freely without ever mis-calling a formatter.
+
+That separation is what makes this one of the first genuinely
+**agent-buildable** job-board templates: an agent can redesign the surface
+without breaking salary math, canonical URLs, or SEO.
+
+---
 
 ## Quickstart
 
 ```sh
 git clone https://github.com/wollemiahq/cavuno-shadcn-ui-job-board-template
 cd cavuno-shadcn-ui-job-board-template
+cp .dev.vars.example .dev.vars   # already points at the live sandbox board
 pnpm install
-pnpm dev            # http://localhost:3000
+pnpm dev                         # http://localhost:3000
 ```
 
-The clone command requires access while the repository remains private.
-The repository also includes the 23 version-matched `@cavuno/board` agent
-skills under `.claude/skills`; re-run `pnpm exec cavuno-board setup` after an
-SDK upgrade so an LLM works from the same API contract as the installed code.
+That's it. No keys, no account, no database. The dev server boots on the
+**sandbox board** and the preview toolbar appears bottom-left — start switching
+personas.
 
-With **zero config** it renders the platform **sandbox board** — a live,
-deterministic fixture tenant you can safely try everything on (applying,
-alert signups) that resets nightly. No keys, no account, no setup.
+> Requires **pnpm 11** (pinned in `package.json`) and Node 24 (matches CI).
 
-**Point it at your own board** by swapping one value, `CAVUNO_BOARD`, for
-your board's `pk_…` publishable key (`.dev.vars` in dev, `wrangler.jsonc`
-in production):
+**Point it at your own board** by swapping one value — `CAVUNO_BOARD` — for
+your board's `pk_…` publishable key (`.dev.vars` in dev, `wrangler.jsonc` vars
+in production). Nothing else changes.
 
-| Variable | What | Example |
+| Variable | What | Where |
 |---|---|---|
-| `CAVUNO_API_URL` | Board API base URL | `https://api.cavuno.com` |
-| `CAVUNO_BOARD` | Your board's publishable key | `pk_…` (Dashboard → Settings → API) |
+| `CAVUNO_API_URL` | Board API base URL (`https://api.cavuno.com`) | `.dev.vars` / `wrangler.jsonc` |
+| `CAVUNO_BOARD` | Your board's `pk_…` publishable key (Dashboard → Settings → API) | `.dev.vars` / `wrangler.jsonc` |
 
-The reveal: the data layer is the **[Cavuno Board API](https://cavuno.com)**
-(`@cavuno/board`) — a hosted job-board backend (jobs, companies, salaries,
-applications, alerts, auth). The `pk_…` key is client-safe by design; user
-sessions live in a host-owned httpOnly cookie this app manages itself.
-Deploy with `pnpm run deploy` (Cloudflare Workers).
+The `pk_…` key is **client-safe by design**; user sessions live in a
+host-owned httpOnly cookie this app manages itself. The Board API is only ever
+called server-side (`src/server/**`).
 
-## Design system
+---
 
-The design-system source is the current official **shadcn/ui Rhea preset**:
-Base UI primitives, Neutral colors, Geist, and Lucide icons. Components live
-under `src/components/ui/` and use the canonical shadcn public APIs, so you can
-replace that source with your own Base UI-backed shadcn components. Radix is a
-possible explicit migration, not a zero-change replacement: create a disposable
-Radix reference with `shadcn init -b radix`, replace the owned UI sources and
-dependencies deliberately, and adapt Base UI-only props such as
-`focusableWhenDisabled`.
+## Take the tour (the "wow" in 60 seconds)
 
-`src/theme.css` is the one CLI-owned theme source. Apply colors, radius, and
-fonts from the pinned preset with
-`pnpm exec shadcn apply b27Gcu6y --only theme,font --yes`, then run
-`pnpm run gen:theme && pnpm run gen:design`. Icon migration or a full preset
-apply can rewrite owned component source, so review the generated diff before
-keeping it. Finish every
-preset handoff with `pnpm run check:shadcn`, typecheck, and tests.
-`src/styles.css` owns only the app layout utilities that sit above the semantic
-shadcn tokens. Components use canonical utilities such as `bg-background`,
-`text-foreground`, `text-muted-foreground`, `border-border`, and `ring-ring`;
-changing the theme does not require a parallel compatibility stylesheet.
+The sandbox exists so you can see every state without seeding anything. The
+full script with exact clicks is in [`docs/DEMO.md`](docs/DEMO.md); the short
+version:
 
-The full component inventory, token reference, and design do's-and-don'ts
-live in **`DESIGN.md`** (generated from `src/theme.css` + component source —
-regenerate with `pnpm run gen:design`, never hand-edit; CI rejects drift).
-The human-reviewed [shadcn component cross-reference](docs/shadcn-component-cross-reference.md)
-records every installed official component, where the starter adopts it, and
-why some interaction-free primitives remain available rather than forced into
-the demo.
+1. **Switch personas** — toolbar → **Employers → `employer-admin`**. You are
+   now signed in as a workspace admin.
+2. **Drag a card across the kanban** — open a job's applicants and move a
+   candidate between pipeline stages (mouse or keyboard).
+3. **Read a captured email** — toolbar → **Emails** to see the outbound mail
+   the board just produced, rendered in full.
+4. **Check out with a test card** — trigger the candidate paywall or the
+   job-posting funnel and pay with `4242 4242 4242 4242`. No Stripe setup.
+
+![Preview toolbar switching between the 8 seeded personas](docs/media/persona-switcher.png)
+![Employer applicant pipeline as a drag-and-drop kanban board](docs/media/kanban.png)
+![Captured outbound email viewer](docs/media/captured-emails.png)
+
+---
 
 ## What's inside
+
+Every surface is a real, SSR-rendered page wired to the Board API:
 
 | Surface | Route(s) |
 |---|---|
 | Home (company discovery + latest jobs) | `/` |
 | Jobs search (filters + master/detail) | `/jobs` |
 | Job detail (meta + Google for Jobs JSON-LD) | `/companies/:companySlug/jobs/:jobSlug` |
-| Programmatic listings | `/jobs/:keyword`, `/jobs/skills/:skill`, `/jobs/locations/:location` |
+| Programmatic SEO listings | `/jobs/:keyword`, `/jobs/skills/:skill`, `/jobs/locations/:location` |
 | Companies | `/companies`, `/companies/:companySlug`, `/companies/markets/:market` |
-| Salaries | `/salaries` + company/title/skill/location trees |
-| Talent | `/talent`, `/p/:handle` |
-| Blog (+ tags, authors) | `/blog`, `/blog/:postSlug`, `/blog/tag/:tagSlug`, `/blog/author/:authorSlug` |
-| Auth, account, employer, messaging | `/auth/*`, `/account`, `/employers/*`, `/messages` |
+| Salaries explorer | `/salaries` + company/title/skill/location trees |
+| Talent directory | `/talent`, `/p/:handle` |
+| Blog (+ tags, authors, RSS) | `/blog`, `/blog/:postSlug`, `/blog/tag/:tagSlug`, `/blog/author/:authorSlug` |
+| Candidate auth, account, saved jobs, messaging | `/auth/*`, `/account`, `/settings`, `/messages` |
+| Employer app (dashboard, jobs, **applicant pipeline**) | `/employers/*` |
+| Post a job (anonymous funnel) | `/post` |
+| Embeds | `/embed/jobs` |
 | SEO artifacts | `/sitemap.xml`, `/robots.txt`, `/blog/rss.xml` |
 
-Job-detail URLs mirror Cavuno's hosted board so a board migrating
-hosted → headless keeps its indexed URLs.
+Cross-cutting capabilities that ship on top of those routes:
 
-## Real-data discipline
+- **SEO built in** — canonical URLs, `JobPosting` JSON-LD (Google for Jobs),
+  `sitemap.xml`, `robots.txt`, blog RSS, and OpenGraph images. Job-detail URLs
+  mirror Cavuno's hosted board, so a board migrating hosted → headless keeps
+  its indexed URLs.
+- **Real-data discipline** — the design handles messy data by construction:
+  long titles clamp, absent salaries are omitted (never an empty label), skill
+  tags cap at `3 + N`, missing logos fall back to initials. See
+  [`docs/stress-log.md`](docs/stress-log.md).
+- **i18n chrome** — [Paraglide JS](https://paraglidejs.com) with `en`/`de`/`fr`
+  catalogs, compile-time, SSR-native. UI chrome only; board content stays its
+  own language.
+- **Dark mode** keyed to a single `.dark` class, and **accessibility** from
+  Base UI semantics and the owned components' explicit ARIA contracts.
 
-The starter is wired to a live, forager-ingested board, so the design
-handles messy data by construction: long titles clamp to keep card rhythm,
-absent salaries are omitted (never an empty label), 10–15 skill tags cap at
-3 + honest `+N`, missing logos fall back to initials, and one-line summaries
-are the real first sentence of the real description or omitted — never
-invented about a real employer. The historical source-baseline stress pass
-(production robotics board, 937 jobs, light + dark, CJK, sparse profiles) is
-recorded in [`docs/stress-log.md`](docs/stress-log.md). Current shadcn captures,
-route exercise, and interaction measurements live in
-[`docs/release-evidence/`](docs/release-evidence/README.md); the remaining
-private-delivery gates are recorded without overclaiming in
-[`docs/publish-gate.md`](docs/publish-gate.md).
+---
 
-## Upkeep
+## Tech stack
 
-- **`.github/workflows/ci.yml`** — typecheck, test, build, structural
-  import gates, plus `npx cavuno-board doctor` (static + read probes against
-  the built worker + write probes against the platform sandbox). Doctor is
-  the conformance gate: capability, not markup.
-- **`.github/workflows/update.yaml`** — the reusable
-  [`cavuno-update-action`](https://github.com/wollemiahq/cavuno-update-action):
-  weekly it bumps `@cavuno/*`, rebuilds, runs doctor, lets a coding agent
-  fix breaking changes, and opens a PR.
+| Layer | Choice |
+|---|---|
+| Framework | [TanStack Start](https://tanstack.com/start) (SSR) on React 19 |
+| Runtime | [Cloudflare Workers](https://workers.cloudflare.com) |
+| Build | Vite+ (`vp`) |
+| UI | [shadcn/ui Rhea](https://ui.shadcn.com) on [Base UI](https://base-ui.com), Tailwind CSS 4, Geist, Lucide |
+| Data | [`@cavuno/board`](https://cavuno.com) — hosted job-board backend SDK |
+| i18n | [Paraglide JS](https://paraglidejs.com) |
 
-## Internationalization (Paraglide JS)
+Exact versions are in [`package.json`](package.json). `@cavuno/board` and
+`vite-plus` are pinned **exact** on purpose — npm's `min-release-age` policy
+would otherwise silently resolve `@latest` down to an older version.
 
-Multi-language **chrome** is wired with [Paraglide JS](https://paraglidejs.com)
-— compile-time, no runtime provider, TanStack-native. The board's content
-stays its single language; only the UI chrome localizes.
+---
 
-- **Messages come from the SDK catalog, never hand-authored.**
-  `pnpm run gen:messages` regenerates `messages/{en,de,fr}.json` from
-  `@cavuno/board`'s `uiCopy` catalog — run it after a board SDK bump.
-- The Paraglide Vite plugin compiles those into tree-shakeable functions in
-  `src/paraglide/` (generated, gitignored) on every build.
+## Customize it
 
-Path-prefixed `/de/` `/fr/` routing, SSR locale middleware, and per-locale
-`hreflang`/sitemap are guided by the `cavuno-board-i18n` skill
-(`npx @cavuno/board setup`). Content translation is out of scope.
+This is a **customization template**, not a scaffold to rebuild. The contract
+that keeps customizations safe:
 
-## Version pinning
+- **[`AGENTS.md`](AGENTS.md)** — the rules any contributor (human or agent)
+  follows: the customization surface, the layering, and the hard rules.
+- **[`DESIGN.md`](DESIGN.md)** — the visual identity, design tokens, and the
+  full component inventory (generated from `src/theme.css` + component source;
+  never hand-edited).
+- **[`docs/patterns/`](docs/patterns/README.md)** — page-level compositions.
+  Select a pattern before composing a route; never hand-roll a
+  listing/detail/form/empty surface.
 
-`@cavuno/board` and `vite-plus` are pinned **exact**. npm's
-`min-release-age` policy silently resolves `@cavuno/board@latest` down to an
-old version, so exact pins are load-bearing, not stylistic.
+The design-system source is the current official shadcn/ui Rhea preset; the
+Base UI-backed primitives under `src/components/ui/` and their CLI-owned theme
+(`src/theme.css`) are yours to edit or replace. The full theming and preset
+workflow lives in [`DESIGN.md`](DESIGN.md).
 
-## Verification
+---
 
-The suite follows the behavior-first policy in
-[`docs/testing.md`](docs/testing.md): test product rules, interactions, route
-state, and accessibility; review appearance in the compact browser evidence
-matrix instead of asserting Tailwind classes.
+## Deploy
 
-```sh
-pnpm run typecheck
-pnpm test
-pnpm run check
-pnpm run gen:design -- --check
-pnpm run build
-pnpm exec shadcn add --all --dry-run --yes
-```
-
-After serving the production build on port 4173, the Board API conformance
-probe is:
+The template targets **Cloudflare Workers** (config in
+[`wrangler.jsonc`](wrangler.jsonc)).
 
 ```sh
-pnpm exec cavuno-board doctor --frontend http://localhost:4173 --sandbox
+pnpm run deploy            # builds, then `wrangler deploy`
 ```
 
-Doctor is accepted for release only when the run has no failed or skipped
-suites. The latest private-delivery status, including any honest skips, lives
-in [`docs/publish-gate.md`](docs/publish-gate.md).
+A `demo` environment is pre-wired for the hosted showcase deploy:
+
+```sh
+wrangler deploy --env demo
+```
+
+> The public demo URL (`<DEMO_URL>` above) is intentionally a placeholder —
+> flipping it live is the owner's decision. See [`docs/publish-gate.md`](docs/publish-gate.md)
+> for the current release status.
+
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/wollemiahq/cavuno-shadcn-ui-job-board-template)
+
+<!-- The Deploy button above works once the repo is public; while private it
+     will not resolve for external visitors. -->
+
+---
+
+## Verify
+
+Every change runs the verify triad before it lands (CI enforces the same):
+
+```sh
+pnpm run typecheck && pnpm test && pnpm run build
+```
+
+The full local gate, including formatting, design-artifact drift, and the Board
+API conformance probe (`cavuno-board doctor`), is documented in
+[`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/testing.md`](docs/testing.md).
+
+---
+
+## Contributing & license
+
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — how to run, the verify triad, the
+  `AGENTS.md` contract, and PR expectations.
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — Contributor Covenant.
+- **License:** [MIT](LICENSE).
