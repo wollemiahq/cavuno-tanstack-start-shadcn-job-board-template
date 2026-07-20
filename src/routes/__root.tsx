@@ -48,6 +48,7 @@ import {
   MainContentTarget,
   SkipToContentLink,
 } from '@/components/shell-accessibility';
+import { Toaster } from '@/components/ui/sonner';
 import {
   resolveHeaderRouteLabels,
   resolveHeaderSearchState,
@@ -418,6 +419,7 @@ function RootLayout() {
           config={toPreviewBoardConfig(board)}
         />
       ) : null}
+      <Toaster />
     </AppRouterProvider>
   );
 }

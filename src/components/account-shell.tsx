@@ -2,8 +2,6 @@ import type { ReactNode } from 'react';
 
 import { Link } from '@tanstack/react-router';
 
-import { m } from '../paraglide/messages';
-
 import { Page, PageContent } from '@/components/layout/page';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
@@ -127,46 +125,5 @@ export function EmployerIdentityAvatar({
       {logoUrl ? <AvatarImage src={logoUrl} alt="" /> : null}
       <AvatarFallback>{initialsOf(name) ?? '?'}</AvatarFallback>
     </Avatar>
-  );
-}
-
-export function EmployerCompanyShell({
-  slug,
-  company,
-  active,
-  children,
-}: {
-  slug: string;
-  company: { name: string; website: string | null; logoUrl: string | null };
-  active: string;
-  children: ReactNode;
-}) {
-  const nav: ShellNavItem[] = [
-    {
-      key: 'jobs',
-      to: '/employers/companies/$slug',
-      params: { slug },
-      label: m.accountShell_jobsNav(),
-    },
-    {
-      key: 'profile',
-      to: '/employers/companies/$slug/profile',
-      params: { slug },
-      label: m.accountShell_companyProfileNav(),
-    },
-  ];
-
-  return (
-    <AccountShell
-      identity={{
-        avatarUrl: company.logoUrl,
-        title: company.name,
-        subtitle: company.website,
-      }}
-      nav={nav}
-      active={active}
-    >
-      {children}
-    </AccountShell>
   );
 }

@@ -16,8 +16,8 @@
     "total": 61
   },
   "summary": {
-    "used": 39,
-    "available": 21
+    "used": 40,
+    "available": 20
   },
   "registryCompositions": [
     {
@@ -141,6 +141,7 @@
         "src/components/board/talent-profile-content.tsx",
         "src/components/board/talent-search-result.tsx",
         "src/components/board/taxonomy-tags.tsx",
+        "src/components/employer-job-form.tsx",
         "src/components/messages-nav-link.tsx",
         "src/components/messages/messaging-dock.tsx",
         "src/components/place-tags-field.tsx",
@@ -156,8 +157,6 @@
         "src/routes/companies.$companySlug.index.tsx",
         "src/routes/embed.jobs.tsx",
         "src/routes/employers.companies.$slug.index.tsx",
-        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
-        "src/routes/employers.companies.$slug.jobs.new.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.dashboard.tsx",
         "src/routes/employers.index.tsx",
@@ -213,6 +212,7 @@
         "src/components/candidate-route-state.tsx",
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",
+        "src/components/employer-job-form.tsx",
         "src/components/experience-section.tsx",
         "src/components/job-alert-floating-prompt.tsx",
         "src/components/languages-section.tsx",
@@ -250,6 +250,7 @@
         "src/routes/embed.jobs.tsx",
         "src/routes/employers.companies.$slug.index.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
+        "src/routes/employers.companies.$slug.jobs.$jobId.edit.tsx",
         "src/routes/employers.companies.$slug.jobs.new.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.dashboard.tsx",
@@ -292,6 +293,7 @@
         "src/components/board/salary-sections.tsx",
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",
+        "src/components/employer-job-form.tsx",
         "src/components/experience-section.tsx",
         "src/components/languages-section.tsx",
         "src/components/messages/message-bubble.tsx",
@@ -309,7 +311,6 @@
         "src/routes/companies.$companySlug.index.tsx",
         "src/routes/employers.companies.$slug.index.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
-        "src/routes/employers.companies.$slug.jobs.new.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.index.tsx",
         "src/routes/employers.onboarding.$slug.tsx",
@@ -395,7 +396,8 @@
       "productionReferences": [
         "src/components/Header.tsx",
         "src/components/messages/message-bubble.tsx",
-        "src/components/messages/thread-view.tsx"
+        "src/components/messages/thread-view.tsx",
+        "src/routes/employers.companies.$slug.index.tsx"
       ]
     },
     {
@@ -456,6 +458,7 @@
         "src/components/custom-fields-group.tsx",
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",
+        "src/components/employer-job-form.tsx",
         "src/components/experience-section.tsx",
         "src/components/languages-section.tsx",
         "src/components/messages/composer.tsx",
@@ -466,7 +469,6 @@
         "src/components/skills-section.tsx",
         "src/routes/auth.verify-email-required.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
-        "src/routes/employers.companies.$slug.jobs.new.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.dashboard.tsx",
         "src/routes/employers.onboarding.$slug.tsx"
@@ -487,6 +489,7 @@
         "src/components/custom-fields-group.tsx",
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",
+        "src/components/employer-job-form.tsx",
         "src/components/experience-section.tsx",
         "src/components/languages-section.tsx",
         "src/components/post-job-form.tsx",
@@ -494,7 +497,6 @@
         "src/components/rhea-auth-pilot.tsx",
         "src/components/rich-text-editor.tsx",
         "src/components/skills-section.tsx",
-        "src/routes/employers.companies.$slug.jobs.new.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.dashboard.tsx",
         "src/routes/employers.onboarding.$slug.tsx"
@@ -551,9 +553,9 @@
       "name": "label",
       "status": "used",
       "productionReferences": [
+        "src/components/employer-job-form.tsx",
         "src/components/experience-section.tsx",
-        "src/components/resume-upload.tsx",
-        "src/routes/employers.companies.$slug.jobs.new.tsx"
+        "src/components/resume-upload.tsx"
       ]
     },
     {
@@ -621,10 +623,10 @@
       "name": "radio-group",
       "status": "used",
       "productionReferences": [
+        "src/components/employer-job-form.tsx",
         "src/components/post-job-form.tsx",
         "src/components/rhea-auth-pilot.tsx",
-        "src/routes/auth.sign-in.tsx",
-        "src/routes/employers.companies.$slug.jobs.new.tsx"
+        "src/routes/auth.sign-in.tsx"
       ]
     },
     {
@@ -644,13 +646,13 @@
         "src/components/board/jobs-filter-controls.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
         "src/components/custom-fields-group.tsx",
+        "src/components/employer-job-form.tsx",
         "src/components/languages-section.tsx",
         "src/components/messages/message-bubble.tsx",
         "src/components/month-year-field.tsx",
         "src/components/post-job-form.tsx",
         "src/components/profile-form.tsx",
-        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
-        "src/routes/employers.companies.$slug.jobs.new.tsx"
+        "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx"
       ]
     },
     {
@@ -702,8 +704,10 @@
     },
     {
       "name": "sonner",
-      "status": "available",
-      "productionReferences": []
+      "status": "used",
+      "productionReferences": [
+        "src/routes/__root.tsx"
+      ]
     },
     {
       "name": "spinner",
@@ -718,7 +722,6 @@
         "src/components/post-job-form.tsx",
         "src/components/preview/preview-emails.tsx",
         "src/components/preview/preview-toolbar.tsx",
-        "src/routes/employers.companies.$slug.index.tsx",
         "src/routes/employers.dashboard.tsx",
         "src/routes/employers.onboarding.$slug.tsx"
       ]

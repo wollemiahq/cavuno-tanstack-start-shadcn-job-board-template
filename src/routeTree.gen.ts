@@ -93,6 +93,7 @@ import { Route as CompaniesCompanySlugJobsJobSlugRouteImport } from './routes/co
 import { Route as JobsLocationsLocationSkillsSkillRouteImport } from './routes/jobs.locations.$location.skills.$skill'
 import { Route as EmployersCompaniesSlugJobsNewRouteImport } from './routes/employers.companies.$slug.jobs.new'
 import { Route as CompaniesCompanySlugJobsJobSlugOgRouteImport } from './routes/companies.$companySlug.jobs.$jobSlug.og'
+import { Route as EmployersCompaniesSlugJobsJobIdEditRouteImport } from './routes/employers.companies.$slug.jobs.$jobId.edit'
 import { Route as EmployersCompaniesSlugJobsJobIdApplicantsRouteImport } from './routes/employers.companies.$slug.jobs.$jobId.applicants'
 
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
@@ -535,6 +536,12 @@ const CompaniesCompanySlugJobsJobSlugOgRoute =
     path: '/og',
     getParentRoute: () => CompaniesCompanySlugJobsJobSlugRoute,
   } as any)
+const EmployersCompaniesSlugJobsJobIdEditRoute =
+  EmployersCompaniesSlugJobsJobIdEditRouteImport.update({
+    id: '/employers/companies/$slug/jobs/$jobId/edit',
+    path: '/employers/companies/$slug/jobs/$jobId/edit',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const EmployersCompaniesSlugJobsJobIdApplicantsRoute =
   EmployersCompaniesSlugJobsJobIdApplicantsRouteImport.update({
     id: '/employers/companies/$slug/jobs/$jobId/applicants',
@@ -628,6 +635,7 @@ export interface FileRoutesByFullPath {
   '/employers/companies/$slug/jobs/new': typeof EmployersCompaniesSlugJobsNewRoute
   '/jobs/locations/$location/skills/$skill': typeof JobsLocationsLocationSkillsSkillRoute
   '/employers/companies/$slug/jobs/$jobId/applicants': typeof EmployersCompaniesSlugJobsJobIdApplicantsRoute
+  '/employers/companies/$slug/jobs/$jobId/edit': typeof EmployersCompaniesSlugJobsJobIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -715,6 +723,7 @@ export interface FileRoutesByTo {
   '/employers/companies/$slug/jobs/new': typeof EmployersCompaniesSlugJobsNewRoute
   '/jobs/locations/$location/skills/$skill': typeof JobsLocationsLocationSkillsSkillRoute
   '/employers/companies/$slug/jobs/$jobId/applicants': typeof EmployersCompaniesSlugJobsJobIdApplicantsRoute
+  '/employers/companies/$slug/jobs/$jobId/edit': typeof EmployersCompaniesSlugJobsJobIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -803,6 +812,7 @@ export interface FileRoutesById {
   '/employers/companies/$slug/jobs/new': typeof EmployersCompaniesSlugJobsNewRoute
   '/jobs/locations/$location/skills/$skill': typeof JobsLocationsLocationSkillsSkillRoute
   '/employers/companies/$slug/jobs/$jobId/applicants': typeof EmployersCompaniesSlugJobsJobIdApplicantsRoute
+  '/employers/companies/$slug/jobs/$jobId/edit': typeof EmployersCompaniesSlugJobsJobIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -892,6 +902,7 @@ export interface FileRouteTypes {
     | '/employers/companies/$slug/jobs/new'
     | '/jobs/locations/$location/skills/$skill'
     | '/employers/companies/$slug/jobs/$jobId/applicants'
+    | '/employers/companies/$slug/jobs/$jobId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -979,6 +990,7 @@ export interface FileRouteTypes {
     | '/employers/companies/$slug/jobs/new'
     | '/jobs/locations/$location/skills/$skill'
     | '/employers/companies/$slug/jobs/$jobId/applicants'
+    | '/employers/companies/$slug/jobs/$jobId/edit'
   id:
     | '__root__'
     | '/'
@@ -1066,6 +1078,7 @@ export interface FileRouteTypes {
     | '/employers/companies/$slug/jobs/new'
     | '/jobs/locations/$location/skills/$skill'
     | '/employers/companies/$slug/jobs/$jobId/applicants'
+    | '/employers/companies/$slug/jobs/$jobId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1151,6 +1164,7 @@ export interface RootRouteChildren {
   EmployersCompaniesSlugJobsNewRoute: typeof EmployersCompaniesSlugJobsNewRoute
   JobsLocationsLocationSkillsSkillRoute: typeof JobsLocationsLocationSkillsSkillRoute
   EmployersCompaniesSlugJobsJobIdApplicantsRoute: typeof EmployersCompaniesSlugJobsJobIdApplicantsRoute
+  EmployersCompaniesSlugJobsJobIdEditRoute: typeof EmployersCompaniesSlugJobsJobIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1743,6 +1757,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompaniesCompanySlugJobsJobSlugOgRouteImport
       parentRoute: typeof CompaniesCompanySlugJobsJobSlugRoute
     }
+    '/employers/companies/$slug/jobs/$jobId/edit': {
+      id: '/employers/companies/$slug/jobs/$jobId/edit'
+      path: '/employers/companies/$slug/jobs/$jobId/edit'
+      fullPath: '/employers/companies/$slug/jobs/$jobId/edit'
+      preLoaderRoute: typeof EmployersCompaniesSlugJobsJobIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/employers/companies/$slug/jobs/$jobId/applicants': {
       id: '/employers/companies/$slug/jobs/$jobId/applicants'
       path: '/employers/companies/$slug/jobs/$jobId/applicants'
@@ -1880,6 +1901,8 @@ const rootRouteChildren: RootRouteChildren = {
   JobsLocationsLocationSkillsSkillRoute: JobsLocationsLocationSkillsSkillRoute,
   EmployersCompaniesSlugJobsJobIdApplicantsRoute:
     EmployersCompaniesSlugJobsJobIdApplicantsRoute,
+  EmployersCompaniesSlugJobsJobIdEditRoute:
+    EmployersCompaniesSlugJobsJobIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
