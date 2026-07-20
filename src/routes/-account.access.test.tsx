@@ -157,6 +157,82 @@ describe('candidate access actions', () => {
     });
   });
 
+  it('renders a plan option per offer for a viewer without access', () => {
+    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
+      grant,
+      offers: [offer, annualOffer],
+    });
+    vi.spyOn(Route, 'useSearch').mockReturnValue({ session_id: undefined });
+
+    render(<AccessPage />);
+
+    expect(screen.getAllByRole('button', { name: 'Choose' })).toHaveLength(2);
+    expect(
+      screen.queryByRole('button', { name: 'Manage subscription' }),
+    ).toBeNull();
+  });
+
+  it('opens the billing portal for a recurring subscription', async () => {
+    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
+      grant: {
+        ...grant,
+        hasAccess: true,
+        status: 'active',
+        offerType: 'recurring',
+      },
+      offers: [],
+    });
+    vi.spyOn(Route, 'useSearch').mockReturnValue({ session_id: undefined });
+    mocks.openBillingPortal.mockResolvedValue({
+      url: 'https://billing.example/session',
+    });
+
+    const originalLocation = window.location;
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      writable: true,
+      value: { href: '' },
+    });
+
+    render(<AccessPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Manage subscription' }));
+
+    await waitFor(() => {
+      expect(mocks.openBillingPortal).toHaveBeenCalledWith({
+        data: { returnPath: '/account/access' },
+      });
+      expect(window.location.href).toBe('https://billing.example/session');
+    });
+
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      writable: true,
+      value: originalLocation,
+    });
+  });
+
+  it('shows the lifetime entitlement with no billing portal', () => {
+    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
+      grant: {
+        ...grant,
+        hasAccess: true,
+        status: 'active',
+        offerType: 'lifetime',
+      },
+      offers: [],
+    });
+    vi.spyOn(Route, 'useSearch').mockReturnValue({ session_id: undefined });
+
+    render(<AccessPage />);
+
+    // A lifetime grant cannot be managed via the portal, and it is an entitled
+    // state rather than the plan picker.
+    expect(
+      screen.queryByRole('button', { name: 'Manage subscription' }),
+    ).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Choose' })).toBeNull();
+  });
+
   it('turns a rejected grant poll into an error toast with a refresh action', async () => {
     vi.useFakeTimers();
     vi.spyOn(Route, 'useLoaderData').mockReturnValue({ grant, offers: [] });
