@@ -13,10 +13,6 @@ import {
   updateExperience,
 } from '../server/account';
 
-import {
-  CandidateActionFeedback,
-  type CandidateActionFeedbackState,
-} from '@/components/candidate-action-feedback';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { LocationSuggestField } from '@/components/location-suggest-field';
 import { MonthYearField } from '@/components/month-year-field';
@@ -59,6 +55,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
+import { toastActionError } from '@/lib/action-toast';
 import type { CandidateExperience } from '@cavuno/board';
 
 type Editing = { id: string | null } | null;
@@ -122,8 +119,6 @@ export function ExperienceSection({
   const [editing, setEditing] = useState<Editing>(null);
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [pending, setPending] = useState(false);
-  const [feedback, setFeedback] =
-    useState<CandidateActionFeedbackState>('idle');
 
   const open = (item: CandidateExperience | null) => {
     setEditing({ id: item ? item.id : null });
@@ -132,7 +127,6 @@ export function ExperienceSection({
 
   const submit = async () => {
     setPending(true);
-    setFeedback('idle');
     const body = {
       title: draft.title.trim(),
       companyName: draft.companyName.trim(),
@@ -151,7 +145,7 @@ export function ExperienceSection({
       setEditing(null);
       setDraft(EMPTY);
     } catch {
-      setFeedback('error');
+      void toastActionError();
     } finally {
       setPending(false);
     }
@@ -355,12 +349,11 @@ export function ExperienceSection({
                     disabled={pending}
                     onClick={async () => {
                       setPending(true);
-                      setFeedback('idle');
                       try {
                         await deleteExperience({ data: { id: item.id } });
                         await router.invalidate();
                       } catch {
-                        setFeedback('error');
+                        void toastActionError();
                       } finally {
                         setPending(false);
                       }
@@ -373,8 +366,6 @@ export function ExperienceSection({
             ))}
           </ul>
         ) : null}
-
-        <CandidateActionFeedback state={feedback} />
 
         <Dialog
           open={editing !== null && editing.id === null}

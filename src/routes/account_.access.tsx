@@ -30,10 +30,6 @@ import {
 import { getSeoBase } from '../server/queries';
 
 import {
-  CandidateActionFeedback,
-  type CandidateActionFeedbackState,
-} from '@/components/candidate-action-feedback';
-import {
   CandidateRouteErrorPage,
   CandidateRoutePendingPage,
 } from '@/components/candidate-route-state';
@@ -41,6 +37,7 @@ import { CandidateShell } from '@/components/candidate-shell';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { toastActionError } from '@/lib/action-toast';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 import type { AccessCheckoutSession, PaywallOffer } from '@cavuno/board';
@@ -117,8 +114,6 @@ export function AccessPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [exhausted, setExhausted] = useState(false);
-  const [feedback, setFeedback] =
-    useState<CandidateActionFeedbackState>('idle');
   // Returning from Stripe with a session id means a checkout just completed —
   // poll the grant until the webhook has recorded it.
   const [polling, setPolling] = useState(
@@ -143,14 +138,14 @@ export function AccessPage() {
         if (stop) return;
         setPolling(false);
         setExhausted(true);
-        setFeedback('error');
+        void toastActionError();
         return;
       }
       if (stop) return;
       if (next.hasAccess) {
         setConfirmed(true);
         setPolling(false);
-        void router.invalidate().catch(() => setFeedback('error'));
+        void router.invalidate().catch(() => toastActionError());
       } else if (attempts < 30) {
         timerId = window.setTimeout(tick, 2000);
       } else {
@@ -168,20 +163,18 @@ export function AccessPage() {
   // A stable reference so mounting the embedded checkout doesn't re-run its
   // effect (and destroy/remount the live Stripe iframe) on every render.
   const handleCheckoutComplete = useCallback(() => {
-    setFeedback('idle');
     setPolling(true);
   }, []);
 
   async function buy(offer: PaywallOffer) {
     setBusy(offer.offerKey);
-    setFeedback('idle');
     try {
       const mountKit = await startCheckout({
         data: { offerKey: offer.offerKey, returnPath: RETURN_PATH },
       });
       setKit(mountKit);
     } catch {
-      setFeedback('error');
+      void toastActionError();
     } finally {
       setBusy(null);
     }
@@ -189,14 +182,13 @@ export function AccessPage() {
 
   async function manage() {
     setBusy('portal');
-    setFeedback('idle');
     try {
       const { url } = await openBillingPortal({
         data: { returnPath: RETURN_PATH },
       });
       window.location.href = url;
     } catch {
-      setFeedback('error');
+      void toastActionError();
     } finally {
       setBusy(null);
     }
@@ -219,7 +211,6 @@ export function AccessPage() {
               : m.accountAccess_manageSubscriptionLabel()}
           </Button>
         ) : null}
-        <CandidateActionFeedback state={feedback} />
         <div>
           <a
             href="/"
@@ -273,17 +264,15 @@ export function AccessPage() {
         </p>
         <Button
           onClick={async () => {
-            setFeedback('idle');
             try {
               await router.invalidate();
             } catch {
-              setFeedback('error');
+              void toastActionError();
             }
           }}
         >
           {m.accountAccess_refreshLabel()}
         </Button>
-        <CandidateActionFeedback state={feedback} />
       </section>
     );
   }
@@ -331,7 +320,6 @@ export function AccessPage() {
           ))}
         </ul>
       )}
-      <CandidateActionFeedback state={feedback} />
     </section>
   );
 }

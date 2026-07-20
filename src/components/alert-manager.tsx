@@ -9,10 +9,7 @@ import { m } from '../paraglide/messages';
 import { createMyAlert, deleteMyAlert, updateMyAlert } from '../server/account';
 
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
-import {
-  CandidateActionFeedback,
-  type CandidateActionFeedbackState,
-} from '@/components/candidate-action-feedback';
+import { EmptyState } from '@/components/empty-state';
 import { PlaceTagsField } from '@/components/place-tags-field';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,14 +20,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
 import {
   Field,
   FieldDescription,
@@ -53,6 +42,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import type { Alert, AlertBody } from '@cavuno/board';
 
 const REMOTE_OPTIONS = ['on_site', 'hybrid', 'remote'] as const;
@@ -181,6 +171,7 @@ function AlertForm({
           setStatus('idle');
         } catch {
           setStatus('error');
+          void toastActionError();
         }
       }}
     >
@@ -304,7 +295,6 @@ function AlertForm({
           {status === 'saving' ? m.alertManager_savingLabel() : submitLabel}
         </Button>
       </div>
-      <CandidateActionFeedback state={status === 'error' ? 'error' : 'idle'} />
     </form>
   );
 }
@@ -324,8 +314,6 @@ export function AlertManager({
   const [editing, setEditing] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [feedback, setFeedback] =
-    useState<CandidateActionFeedbackState>('idle');
 
   const editingAlert = alerts.find((alert) => alert.id === editing) ?? null;
 
@@ -363,16 +351,12 @@ export function AlertManager({
   return (
     <div className="space-y-4" data-test="alert-manager">
       {alerts.length === 0 ? (
-        <Empty className="min-h-96 border-0">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <BellRing aria-hidden="true" />
-            </EmptyMedia>
-            <EmptyTitle>{m.meAlerts_title()}</EmptyTitle>
-            <EmptyDescription>{m.alertManager_emptyText()}</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>{newAlertButton}</EmptyContent>
-        </Empty>
+        <EmptyState
+          icon={<BellRing aria-hidden="true" />}
+          title={m.meAlerts_title()}
+          description={m.alertManager_emptyText()}
+          action={newAlertButton}
+        />
       ) : (
         <>
           <ul className="space-y-3">
@@ -415,13 +399,12 @@ export function AlertManager({
                       disabled={pendingDeleteId !== null}
                       onClick={async () => {
                         setPendingDeleteId(alert.id);
-                        setFeedback('idle');
                         try {
                           await deleteMyAlert({ data: { id: alert.id } });
                           await router.invalidate();
-                          setFeedback('success');
+                          void toastActionSuccess();
                         } catch {
-                          setFeedback('error');
+                          void toastActionError();
                         } finally {
                           setPendingDeleteId(null);
                         }
@@ -438,8 +421,6 @@ export function AlertManager({
         </>
       )}
 
-      <CandidateActionFeedback state={feedback} />
-
       <Dialog open={creating} onOpenChange={setCreating}>
         <DialogContent>
           <DialogHeader>
@@ -453,11 +434,10 @@ export function AlertManager({
             submitLabel={m.alertManager_createAlertLabel()}
             onCancel={() => setCreating(false)}
             onSubmit={async (body) => {
-              setFeedback('idle');
               await createMyAlert({ data: body });
               setCreating(false);
               await router.invalidate();
-              setFeedback('success');
+              void toastActionSuccess();
             }}
           />
         </DialogContent>
@@ -483,11 +463,10 @@ export function AlertManager({
                 submitLabel={m.alertManager_saveChangesLabel()}
                 onCancel={() => setEditing(null)}
                 onSubmit={async (body) => {
-                  setFeedback('idle');
                   await updateMyAlert({ data: { id: editingAlert.id, body } });
                   setEditing(null);
                   await router.invalidate();
-                  setFeedback('success');
+                  void toastActionSuccess();
                 }}
               />
             ) : null}

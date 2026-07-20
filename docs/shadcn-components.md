@@ -8,7 +8,7 @@ This standalone starter owns the complete shadcn Base Rhea source set generated 
 - Theme: `src/theme.css`.
 - Icons: Lucide.
 - Installed source: 60 UI components plus `src/hooks/use-mobile.ts` (61 files total).
-- Production adoption: 39 used, 21 available.
+- Production adoption: 40 used, 20 available.
 
 Installing every primitive is a source-ownership and discoverability decision. It is not a requirement to render every primitive: use the semantic component that fits the interaction instead of manufacturing UI solely to increase the used count.
 
@@ -17,12 +17,12 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | Component | Status | Production references |
 | --- | --- | --- |
 | `accordion` | Available | Installed for adoption when the product needs this behavior. |
-| `alert` | Used (14) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-detail-state.tsx`<br>`src/components/board/job-search-page.tsx`<br>+11 more in the JSON ledger |
+| `alert` | Used (13) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-detail-state.tsx`<br>`src/components/board/job-search-page.tsx`<br>+10 more in the JSON ledger |
 | `alert-dialog` | Used (3) | `src/components/danger-zone.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>`src/components/preview/preview-toolbar.tsx` |
 | `aspect-ratio` | Available | Installed for adoption when the product needs this behavior. |
 | `attachment` | Used (1) | `src/components/resume-upload.tsx` |
 | `avatar` | Used (23) | `src/components/Header.tsx`<br>`src/components/account-shell.tsx`<br>`src/components/avatar-upload.tsx`<br>+20 more in the JSON ledger |
-| `badge` | Used (38) | `src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>`src/components/board/blog-tag-chips.tsx`<br>+35 more in the JSON ledger |
+| `badge` | Used (36) | `src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>`src/components/board/blog-tag-chips.tsx`<br>+33 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
 | `button` | Used (79) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+76 more in the JSON ledger |
@@ -40,7 +40,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `direction` | Available | Installed for adoption when the product needs this behavior. |
 | `drawer` | Available | Installed for adoption when the product needs this behavior. |
 | `dropdown-menu` | Used (5) | `src/components/Header.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>`src/components/messages/message-bubble.tsx`<br>+2 more in the JSON ledger |
-| `empty` | Used (41) | `src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>+38 more in the JSON ledger |
+| `empty` | Used (38) | `src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+35 more in the JSON ledger |
 | `field` | Used (21) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+18 more in the JSON ledger |
 | `hover-card` | Available | Installed for adoption when the product needs this behavior. |
 | `input` | Used (18) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alerts-band.tsx`<br>+15 more in the JSON ledger |
@@ -67,7 +67,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `sidebar` | Available | Installed for adoption when the product needs this behavior. |
 | `skeleton` | Used (6) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-result-detail.tsx`<br>`src/components/board/public-content-pending.tsx`<br>+3 more in the JSON ledger |
 | `slider` | Available | Installed for adoption when the product needs this behavior. |
-| `sonner` | Available | Installed for adoption when the product needs this behavior. |
+| `sonner` | Used (1) | `src/routes/__root.tsx` |
 | `spinner` | Used (12) | `src/components/board/alert-signup-form.tsx`<br>`src/components/company-search-combobox.tsx`<br>`src/components/keyword-combobox.tsx`<br>+9 more in the JSON ledger |
 | `switch` | Used (1) | `src/components/preview/preview-board-settings.tsx` |
 | `table` | Used (2) | `src/components/board/salary-sections.tsx`<br>`src/routes/employers.companies.$slug.index.tsx` |

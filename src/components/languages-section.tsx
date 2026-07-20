@@ -8,10 +8,6 @@ import { Languages, Pencil, Trash2 } from 'lucide-react';
 import { m } from '../paraglide/messages';
 import { replaceLanguages } from '../server/account';
 
-import {
-  CandidateActionFeedback,
-  type CandidateActionFeedbackState,
-} from '@/components/candidate-action-feedback';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -48,6 +44,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { toastActionError } from '@/lib/action-toast';
 
 type Language = { name: string; proficiency: string };
 
@@ -75,20 +72,17 @@ export function LanguagesSection({ languages }: { languages: Language[] }) {
   const [editing, setEditing] = useState<Editing>(null);
   const [draft, setDraft] = useState<Language>({ name: '', proficiency: '' });
   const [pending, setPending] = useState(false);
-  const [feedback, setFeedback] =
-    useState<CandidateActionFeedbackState>('idle');
 
   const levelLabels: string[] = LEVELS.map((level) => level());
 
   const persist = async (next: Language[]): Promise<boolean> => {
     setPending(true);
-    setFeedback('idle');
     try {
       await replaceLanguages({ data: { languages: next } });
       await router.invalidate();
       return true;
     } catch {
-      setFeedback('error');
+      void toastActionError();
       return false;
     } finally {
       setPending(false);
@@ -276,8 +270,6 @@ export function LanguagesSection({ languages }: { languages: Language[] }) {
             ))}
           </ul>
         )}
-
-        <CandidateActionFeedback state={feedback} />
 
         <Dialog
           open={editing !== null && editing.index === null}

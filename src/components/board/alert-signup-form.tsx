@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/field';
 import { InputGroup, InputGroupInput } from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 import type { JobAlertSubscribeInput } from '@cavuno/board';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
@@ -56,6 +57,7 @@ export function AlertSignupForm({
   labels,
   title,
   description,
+  surface = 'accent',
 }: {
   filters?: JobAlertSubscribeInput['filters'];
   context?: JobAlertSubscribeInput['context'];
@@ -69,6 +71,13 @@ export function AlertSignupForm({
   labels?: BoardLabelOverrides;
   title?: string;
   description?: string;
+  /**
+   * Card surface. `accent` (default) is the in-flow tinted `bg-primary/5`
+   * band used on solid page backgrounds; `card` is an opaque `bg-card`
+   * surface with a lift shadow for the floating prompt, which sits over
+   * page content and must not read as washed-out/transparent.
+   */
+  surface?: 'accent' | 'card';
 }) {
   const emailInputId = useId();
   const [email, setEmail] = useState('');
@@ -85,7 +94,12 @@ export function AlertSignupForm({
 
   return (
     <section aria-label={vm.sectionAriaLabel}>
-      <Card className="border-primary bg-primary/5 gap-3 border py-5 shadow-none ring-0">
+      <Card
+        className={cn(
+          'border-primary gap-3 border py-5 ring-0',
+          surface === 'card' ? 'bg-card shadow-lg' : 'bg-primary/5 shadow-none',
+        )}
+      >
         <CardHeader className="pr-12">
           <CardTitle>
             <h2 className="text-foreground flex items-center gap-2 text-base font-semibold">

@@ -762,7 +762,7 @@ function NewJobPage() {
                 <h2>{m.employerCompany_choosePlanHeading()}</h2>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-5">
               {canPublish ? (
                 <Field data-invalid={fieldErrors.billing || undefined}>
                   <RadioGroup
@@ -873,32 +873,34 @@ function NewJobPage() {
                   {m.employerCompany_noPlansText()}
                 </p>
               )}
+
+              {/* Card-wrapped form: the primary action lives inside the card,
+                  at the bottom of CardContent (the board's card-form
+                  convention — see the employer profile form). */}
+              <div className="flex flex-wrap items-center gap-3">
+                <Button type="submit" disabled={status === 'saving'}>
+                  {status === 'saving'
+                    ? m.postJob_submittingLabel()
+                    : canPublish
+                      ? m.postJob_submitButtonLabel()
+                      : m.employerCompany_createDraftLabel()}
+                </Button>
+                <Link
+                  to="/employers/companies/$slug"
+                  params={{ slug: workspace.slug }}
+                  className={buttonVariants({ variant: 'ghost' })}
+                >
+                  {m.employerOnboarding_cancelLabel()}
+                </Link>
+                {status === 'error' ? <FieldError>{message}</FieldError> : null}
+                {notice ? (
+                  <p role="status" className="text-sm">
+                    {notice}
+                  </p>
+                ) : null}
+              </div>
             </CardContent>
           </Card>
-
-          {/* In-page form: primary action left-aligned, in reading flow. */}
-          <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" disabled={status === 'saving'}>
-              {status === 'saving'
-                ? m.postJob_submittingLabel()
-                : canPublish
-                  ? m.postJob_submitButtonLabel()
-                  : m.employerCompany_createDraftLabel()}
-            </Button>
-            <Link
-              to="/employers/companies/$slug"
-              params={{ slug: workspace.slug }}
-              className={buttonVariants({ variant: 'ghost' })}
-            >
-              {m.employerOnboarding_cancelLabel()}
-            </Link>
-            {status === 'error' ? <FieldError>{message}</FieldError> : null}
-            {notice ? (
-              <p role="status" className="text-sm">
-                {notice}
-              </p>
-            ) : null}
-          </div>
         </form>
       </div>
     </EmployerCompanyShell>

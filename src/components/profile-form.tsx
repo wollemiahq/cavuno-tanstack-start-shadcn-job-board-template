@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import type { CandidateProfile } from '@cavuno/board';
 
 type FormState = {
@@ -55,7 +56,7 @@ function toForm(profile: CandidateProfile): FormState {
   };
 }
 
-type Status = 'idle' | 'saving' | 'saved' | 'error';
+type Status = 'idle' | 'saving';
 type HandleState = { checking: boolean; available: boolean | null };
 
 /**
@@ -133,10 +134,12 @@ export function ProfileForm({
             },
           });
           await router.invalidate();
-          setStatus('saved');
+          setStatus('idle');
           setHandleState({ checking: false, available: null });
+          void toastActionSuccess();
         } catch {
-          setStatus('error');
+          setStatus('idle');
+          void toastActionError();
         }
       }}
     >
@@ -328,13 +331,6 @@ export function ProfileForm({
               ? m.profileForm_savingLabel()
               : m.profileForm_saveLabel()}
           </Button>
-          {status === 'saved' ? (
-            <FieldDescription aria-live="polite">
-              {m.profileForm_savedText()}
-            </FieldDescription>
-          ) : status === 'error' ? (
-            <FieldError>{m.profileForm_saveError()}</FieldError>
-          ) : null}
         </div>
       </FieldGroup>
     </form>

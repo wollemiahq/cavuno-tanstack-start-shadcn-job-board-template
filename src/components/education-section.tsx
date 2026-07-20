@@ -13,10 +13,6 @@ import {
   updateEducation,
 } from '../server/account';
 
-import {
-  CandidateActionFeedback,
-  type CandidateActionFeedbackState,
-} from '@/components/candidate-action-feedback';
 import { MonthYearField } from '@/components/month-year-field';
 import { Button } from '@/components/ui/button';
 import {
@@ -55,6 +51,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
+import { toastActionError } from '@/lib/action-toast';
 import type { CandidateEducation } from '@cavuno/board';
 
 type Editing = { id: string | null } | null;
@@ -111,8 +108,6 @@ export function EducationSection({
   const [editing, setEditing] = useState<Editing>(null);
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [pending, setPending] = useState(false);
-  const [feedback, setFeedback] =
-    useState<CandidateActionFeedbackState>('idle');
 
   const open = (item: CandidateEducation | null) => {
     setEditing({ id: item ? item.id : null });
@@ -121,7 +116,6 @@ export function EducationSection({
 
   const submit = async () => {
     setPending(true);
-    setFeedback('idle');
     const body = {
       institutionName: draft.institutionName.trim(),
       degree: draft.degree.trim(),
@@ -140,7 +134,7 @@ export function EducationSection({
       setEditing(null);
       setDraft(EMPTY);
     } catch {
-      setFeedback('error');
+      void toastActionError();
     } finally {
       setPending(false);
     }
@@ -327,12 +321,11 @@ export function EducationSection({
                     disabled={pending}
                     onClick={async () => {
                       setPending(true);
-                      setFeedback('idle');
                       try {
                         await deleteEducation({ data: { id: item.id } });
                         await router.invalidate();
                       } catch {
-                        setFeedback('error');
+                        void toastActionError();
                       } finally {
                         setPending(false);
                       }
@@ -345,8 +338,6 @@ export function EducationSection({
             ))}
           </ul>
         ) : null}
-
-        <CandidateActionFeedback state={feedback} />
 
         <Dialog
           open={editing !== null && editing.id === null}

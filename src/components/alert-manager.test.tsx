@@ -16,6 +16,8 @@ const mocks = vi.hoisted(() => ({
   deleteMyAlert: vi.fn<() => unknown>(),
   invalidate: vi.fn<() => unknown>(),
   updateMyAlert: vi.fn<() => unknown>(),
+  toastActionSuccess: vi.fn<() => unknown>(),
+  toastActionError: vi.fn<() => unknown>(),
 }));
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
@@ -28,6 +30,11 @@ vi.mock('../server/account', () => ({
   createMyAlert: mocks.createMyAlert,
   deleteMyAlert: mocks.deleteMyAlert,
   updateMyAlert: mocks.updateMyAlert,
+}));
+
+vi.mock('@/lib/action-toast', () => ({
+  toastActionSuccess: mocks.toastActionSuccess,
+  toastActionError: mocks.toastActionError,
 }));
 
 import { AlertManager } from './alert-manager';
@@ -203,9 +210,7 @@ describe('AlertManager', () => {
     rejectDelete(new Error('network unavailable'));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(
-        'Something went wrong. Try again.',
-      );
+      expect(mocks.toastActionError).toHaveBeenCalled();
       expect(deleteButton).toBeEnabled();
     });
     expect(mocks.invalidate).not.toHaveBeenCalled();

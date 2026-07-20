@@ -31,13 +31,10 @@ import { useSelectedJob } from './-use-selected-job';
 import { toSavedJobCardVM } from '@/board/job-view-model';
 import { JobSearchResult } from '@/components/board/job-search-result';
 import {
-  CandidateActionFeedback,
-  type CandidateActionFeedbackState,
-} from '@/components/candidate-action-feedback';
-import {
   CandidateRouteErrorPage,
   CandidateRoutePendingPage,
 } from '@/components/candidate-route-state';
+import { EmptyState } from '@/components/empty-state';
 import { Page } from '@/components/layout/page';
 import {
   SearchResultDetail,
@@ -45,15 +42,8 @@ import {
   SearchResultsList,
 } from '@/components/search-results/search-results';
 import { Button, buttonVariants } from '@/components/ui/button';
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
+import { toastActionError } from '@/lib/action-toast';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 
@@ -109,8 +99,6 @@ function SavedJobsPage() {
   const navigate = useNavigate({ from: '/account/saved' });
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [feedback, setFeedback] =
-    useState<CandidateActionFeedbackState>('idle');
 
   const rows = savedJobs.data.flatMap((saved) => {
     if (!saved.job) return [];
@@ -150,7 +138,6 @@ function SavedJobsPage() {
           ? m.accountSaved_countOneText()
           : m.accountSaved_countOtherText({ count: savedJobs.data.length })}
       </p>
-      <CandidateActionFeedback state={feedback} />
     </header>
   );
 
@@ -171,27 +158,21 @@ function SavedJobsPage() {
                   data-slot="saved-jobs-empty"
                   className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0"
                 >
-                  {/* No header here — the Empty composition IS the page when
-                      there is nothing saved; a header above it repeats it. */}
-                  <Empty className="min-h-[calc(100dvh-12rem)] border-0">
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <Bookmark aria-hidden="true" />
-                      </EmptyMedia>
-                      <EmptyTitle>{m.accountShell_savedJobsNav()}</EmptyTitle>
-                      <EmptyDescription>
-                        {m.accountHome_savedJobsEmptyText()}
-                      </EmptyDescription>
-                    </EmptyHeader>
-                    <EmptyContent>
+                  {/* No header here — the empty state IS the page when there
+                      is nothing saved; a header above it repeats it. */}
+                  <EmptyState
+                    icon={<Bookmark aria-hidden="true" />}
+                    title={m.accountShell_savedJobsNav()}
+                    description={m.accountHome_savedJobsEmptyText()}
+                    action={
                       <a
                         href="/jobs"
                         className={buttonVariants({ variant: 'outline' })}
                       >
                         {m.meApplications_browseJobsLink()}
                       </a>
-                    </EmptyContent>
-                  </Empty>
+                    }
+                  />
                 </div>
               }
               detail={null}
@@ -230,14 +211,13 @@ function SavedJobsPage() {
                               disabled={pendingId === saved.id}
                               onClick={async () => {
                                 setPendingId(saved.id);
-                                setFeedback('idle');
                                 try {
                                   await unsaveJob({
                                     data: { jobId: saved.jobId },
                                   });
                                   await router.invalidate();
                                 } catch {
-                                  setFeedback('error');
+                                  void toastActionError();
                                 } finally {
                                   setPendingId(null);
                                 }
@@ -277,12 +257,11 @@ function SavedJobsPage() {
                             );
                             if (!saved) return;
                             setPendingId(saved.id);
-                            setFeedback('idle');
                             try {
                               await unsaveJob({ data: { jobId: saved.jobId } });
                               await router.invalidate();
                             } catch {
-                              setFeedback('error');
+                              void toastActionError();
                             } finally {
                               setPendingId(null);
                             }

@@ -60,6 +60,7 @@ export function JobAlertFloatingPrompt({
         <XIcon aria-hidden="true" />
       </Button>
       <AlertSignupForm
+        surface="card"
         filters={defaults.filters}
         context={defaults.context}
         language={language}

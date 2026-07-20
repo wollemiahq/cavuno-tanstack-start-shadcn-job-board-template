@@ -35,12 +35,7 @@ import {
 import { RichTextEditor } from '@/components/rich-text-editor';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from '@/components/ui/field';
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   InputGroup,
@@ -48,6 +43,7 @@ import {
   InputGroupInput,
   InputGroupText,
 } from '@/components/ui/input-group';
+import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import { headTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
@@ -155,12 +151,10 @@ function ProfileEditorCard({
     xUrl: '',
     facebookUrl: '',
   });
-  const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
-  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState<'idle' | 'saving'>('idle');
 
   async function save() {
     setStatus('saving');
-    setMessage('');
     const website = form.website.trim();
     const result = await updateCompany({
       data: {
@@ -186,12 +180,13 @@ function ProfileEditorCard({
       },
     });
     if (!result.ok) {
-      setStatus('error');
-      setMessage(result.message);
+      setStatus('idle');
+      void toastActionError(result.message);
       return;
     }
     setStatus('idle');
     await router.invalidate();
+    void toastActionSuccess();
   }
 
   return (
@@ -367,14 +362,14 @@ function ProfileEditorCard({
               </Field>
             </div>
           </fieldset>
-          {/* In-page form: primary action left-aligned, in reading flow. */}
+          {/* Card-wrapped form: the primary action lives inside the card, at
+              the bottom of CardContent (the board's card-form convention). */}
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={status === 'saving'}>
               {status === 'saving'
                 ? m.employerCompany_savingLabel()
                 : m.employerCompany_saveCompanyLabel()}
             </Button>
-            {status === 'error' ? <FieldError>{message}</FieldError> : null}
           </div>
         </form>
       </CardContent>

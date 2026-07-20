@@ -16,8 +16,8 @@
     "total": 61
   },
   "summary": {
-    "used": 39,
-    "available": 21
+    "used": 40,
+    "available": 20
   },
   "registryCompositions": [
     {
@@ -60,7 +60,6 @@
         "src/components/board/job-search-detail-state.tsx",
         "src/components/board/job-search-page.tsx",
         "src/components/board/talent-search-detail-state.tsx",
-        "src/components/candidate-action-feedback.tsx",
         "src/components/employer/applicant-pipeline-board.tsx",
         "src/components/messages/message-bubble.tsx",
         "src/components/messages/thread-view.tsx",
@@ -144,8 +143,6 @@
         "src/components/board/talent-search-result.tsx",
         "src/components/board/taxonomy-tags.tsx",
         "src/components/employer/applicant-pipeline-board.tsx",
-        "src/components/messages-nav-link.tsx",
-        "src/components/messages/messaging-dock.tsx",
         "src/components/place-tags-field.tsx",
         "src/components/post-card.tsx",
         "src/components/post-job-form.tsx",
@@ -404,7 +401,6 @@
       "name": "empty",
       "status": "used",
       "productionReferences": [
-        "src/components/alert-manager.tsx",
         "src/components/app-not-found.tsx",
         "src/components/app-route-error.tsx",
         "src/components/board/blog-archive-page.tsx",
@@ -421,6 +417,7 @@
         "src/components/board/talent-search-page.tsx",
         "src/components/candidate-route-state.tsx",
         "src/components/education-section.tsx",
+        "src/components/empty-state.tsx",
         "src/components/experience-section.tsx",
         "src/components/languages-section.tsx",
         "src/components/messages/blocked-list.tsx",
@@ -430,18 +427,15 @@
         "src/components/preview/preview-emails.tsx",
         "src/components/skills-section.tsx",
         "src/routes/-messages-dock-controller.tsx",
-        "src/routes/account_.saved.tsx",
         "src/routes/alerts.manage.tsx",
         "src/routes/auth.employer.sign-up.tsx",
         "src/routes/auth.join.tsx",
         "src/routes/companies.$companySlug.index.tsx",
         "src/routes/companies.$companySlug.jobs.$jobSlug.tsx",
         "src/routes/embed.jobs.tsx",
-        "src/routes/employers.companies.$slug.index.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
         "src/routes/employers.index.tsx",
         "src/routes/jobs.locations.index.tsx",
-        "src/routes/me.applications.tsx",
         "src/routes/messages.tsx",
         "src/routes/p.$handle.tsx",
         "src/routes/talent.index.tsx"
@@ -703,8 +697,10 @@
     },
     {
       "name": "sonner",
-      "status": "available",
-      "productionReferences": []
+      "status": "used",
+      "productionReferences": [
+        "src/routes/__root.tsx"
+      ]
     },
     {
       "name": "spinner",

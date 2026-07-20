@@ -7,11 +7,8 @@ import { useRouter } from '@tanstack/react-router';
 import { m } from '../paraglide/messages';
 import { updateNotificationPreference } from '../server/settings';
 
-import {
-  CandidateActionFeedback,
-  type CandidateActionFeedbackState,
-} from '@/components/candidate-action-feedback';
 import { Checkbox } from '@/components/ui/checkbox';
+import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import type { NotificationPreference } from '@cavuno/board';
 
 const CHANNEL_LABELS: Record<
@@ -40,8 +37,6 @@ export function NotificationSettings({
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
-  const [feedback, setFeedback] =
-    useState<CandidateActionFeedbackState>('idle');
 
   return (
     <div className="space-y-3">
@@ -66,7 +61,6 @@ export function NotificationSettings({
                 disabled={pending === pref.channel}
                 onCheckedChange={async (isSelected) => {
                   setPending(pref.channel);
-                  setFeedback('idle');
                   try {
                     await updateNotificationPreference({
                       data: {
@@ -75,9 +69,9 @@ export function NotificationSettings({
                       },
                     });
                     await router.invalidate();
-                    setFeedback('success');
+                    void toastActionSuccess();
                   } catch {
-                    setFeedback('error');
+                    void toastActionError();
                   } finally {
                     setPending(null);
                   }
@@ -87,7 +81,6 @@ export function NotificationSettings({
           );
         })}
       </ul>
-      <CandidateActionFeedback state={feedback} />
     </div>
   );
 }

@@ -555,8 +555,6 @@
   "profileForm_openToRelocatingLabel": "Prêt à déménager",
   "profileForm_savingLabel": "Enregistrement…",
   "profileForm_saveLabel": "Enregistrer le profil",
-  "profileForm_savedText": "Enregistré.",
-  "profileForm_saveError": "Impossible d'enregistrer — vérifiez le pseudo et réessayez.",
   "educationSection_heading": "Formation",
   "educationSection_addLabel": "Ajouter une formation",
   "educationSection_emptyText": "Aucune formation ajoutée pour l'instant.",

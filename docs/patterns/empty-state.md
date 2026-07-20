@@ -1,8 +1,8 @@
 ---
 name: Empty state
 purpose: The zero-results / not-found treatment — a featured icon, title, and description, kept inside the page chrome.
-primitives: [Empty, JobsNotFound, SalaryEmptyState]
-usedBy: [src/components/board/home-landing.tsx, src/components/board/jobs-not-found.tsx, src/components/board/salary-sections.tsx, src/components/board/company-search-page.tsx, src/components/board/talent-search-page.tsx, src/routes/talent.index.tsx, src/routes/p.$handle.tsx, src/routes/companies.markets.$market.tsx, src/routes/blog.index.tsx, src/routes/jobs.locations.index.tsx]
+primitives: [EmptyState, Empty, JobsNotFound, SalaryEmptyState]
+usedBy: [src/components/empty-state.tsx, src/components/alert-manager.tsx, src/routes/me.applications.tsx, src/routes/account_.saved.tsx, src/routes/employers.companies.$slug.index.tsx, src/components/board/home-landing.tsx, src/components/board/jobs-not-found.tsx, src/components/board/salary-sections.tsx, src/components/board/company-search-page.tsx, src/components/board/talent-search-page.tsx, src/routes/talent.index.tsx, src/routes/p.$handle.tsx, src/routes/companies.markets.$market.tsx, src/routes/blog.index.tsx, src/routes/jobs.locations.index.tsx]
 ---
 
 ## Purpose
@@ -21,9 +21,17 @@ place to revise or reset the search rather than a wall.
 
 ## Anatomy
 
-- New Rhea surfaces use the owned shadcn `Empty` compound: `EmptyHeader` →
-  `EmptyMedia` → `EmptyTitle` + `EmptyDescription`, with optional
-  `EmptyContent` actions.
+- **Page/collection empties** (no saved jobs, no applications, no job alerts,
+  the employer's "no jobs") use the shared `EmptyState` wrapper
+  (`src/components/empty-state.tsx`): one icon badge, title, description, and a
+  single button action, in a consistent `min-h-96`. This is the standardized
+  form — do not hand-roll the min-height, media size, or action styling per
+  surface.
+- New Rhea surfaces otherwise use the owned shadcn `Empty` compound:
+  `EmptyHeader` → `EmptyMedia` → `EmptyTitle` + `EmptyDescription`, with
+  optional `EmptyContent` actions. Multi-action access gates (the restricted
+  talent directory) and full-canvas search not-found surfaces compose `Empty`
+  directly rather than the single-action `EmptyState`.
 - For programmatic not-founds: composed through the owning listing or search
   pattern so contextual search stays available (`JobsNotFound` and
   `ProgrammaticCompaniesView`).
