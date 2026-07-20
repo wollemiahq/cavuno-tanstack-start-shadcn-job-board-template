@@ -18,6 +18,7 @@ export function SelectedTalentDetail({
   locale,
   viewer,
   signInHref,
+  messagingEnabled,
 }: {
   state: SelectedTalentState;
   locale: string;
@@ -25,6 +26,8 @@ export function SelectedTalentDetail({
   viewer: TalentDetailViewer;
   /** Where an anonymous viewer's Message CTA sends them to authenticate. */
   signInHref: string;
+  /** Board `features.messaging`: `false` hides the Message CTA entirely. */
+  messagingEnabled: boolean;
 }) {
   const detail = state.profile
     ? (() => {
@@ -45,6 +48,7 @@ export function SelectedTalentDetail({
           // The pane is a preview, not the canonical profile page, so it
           // keeps the secondary "View profile" link.
           showViewProfile: true,
+          messagingEnabled,
         });
         return (
           <TalentSearchResultDetail

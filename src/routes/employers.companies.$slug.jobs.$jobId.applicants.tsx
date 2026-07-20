@@ -1,6 +1,11 @@
 import { useState } from 'react';
 
-import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  Link,
+  notFound,
+  useRouter,
+} from '@tanstack/react-router';
 import { ExternalLinkIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 
 import { employerJobStatusLabel } from '../lib/employer-job-labels';
@@ -15,7 +20,7 @@ import {
   removeStage,
   renameStage,
 } from '../server/employers';
-import { getSeoBase } from '../server/queries';
+import { getBoardContext, getSeoBase } from '../server/queries';
 
 import { Page, PageContent } from '@/components/layout/page';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -56,6 +61,11 @@ export const Route = createFileRoute(
   '/employers/companies/$slug/jobs/$jobId/applicants',
 )({
   loader: async ({ params }) => {
+    // External-apply-only board (nativeApplications off): the platform 404s
+    // the pipeline / applicants reads. Degrade to a route-level notFound so
+    // the employer surface reads as absent, never an error state.
+    const board = await getBoardContext();
+    if (!board.features.nativeApplications) throw notFound();
     try {
       const [pipeline, seo] = await Promise.all([
         getPipeline({ data: { slug: params.slug, job: params.jobId } }),

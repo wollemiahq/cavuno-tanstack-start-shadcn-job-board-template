@@ -182,6 +182,7 @@ function JobDetailPage() {
             language={board.language}
             returnTo={returnTo}
             labels={board.labels}
+            nativeApplications={board.features.nativeApplications}
             viewer={user ? { emailVerified: user.emailVerified } : null}
             alreadyApplied={alreadyApplied}
             onApply={async (jobSlug) => {

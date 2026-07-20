@@ -9,6 +9,7 @@ import {
   createFileRoute,
   isRedirect,
   Link,
+  notFound,
   redirect,
   useRouter,
 } from '@tanstack/react-router';
@@ -16,7 +17,7 @@ import { Send } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getApplications, withdrawApplication } from '../server/applications';
-import { getSeoBase } from '../server/queries';
+import { getBoardContext, getSeoBase } from '../server/queries';
 
 import {
   CandidateActionFeedback,
@@ -61,6 +62,11 @@ export const Route = createFileRoute('/me/applications')({
   pendingComponent: CandidateRoutePendingPage,
   errorComponent: CandidateRouteErrorPage,
   loader: async () => {
+    // External-apply-only board (nativeApplications off): there is no
+    // applications surface — the platform 422s the read. Treat it as
+    // not-existing (404) rather than rendering an error state.
+    const board = await getBoardContext();
+    if (!board.features.nativeApplications) throw notFound();
     try {
       const [applications, seo] = await Promise.all([
         getApplications({ data: undefined }),

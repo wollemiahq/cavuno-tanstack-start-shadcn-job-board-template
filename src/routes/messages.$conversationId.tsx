@@ -2,6 +2,7 @@ import { companyPath } from '@cavuno/board/paths';
 import {
   createFileRoute,
   isRedirect,
+  notFound,
   redirect,
   useNavigate,
 } from '@tanstack/react-router';
@@ -16,7 +17,7 @@ import { MessagingLayout } from '@/components/messages/messaging-layout';
 import { headTitle } from '@/lib/page-title';
 import { m } from '@/paraglide/messages';
 import { getInbox, getThread } from '@/server/messaging';
-import { getSeoBase } from '@/server/queries';
+import { getBoardContext, getSeoBase } from '@/server/queries';
 
 type ThreadSearch = { view?: 'archived' };
 
@@ -26,6 +27,9 @@ export const Route = createFileRoute('/messages/$conversationId')({
     search.view === 'archived' ? { view: 'archived' } : {},
   loaderDeps: ({ search }) => ({ view: search.view ?? 'inbox' }),
   loader: async ({ params, deps }) => {
+    // Messaging feature off ⇒ the surface does not exist on this board.
+    const board = await getBoardContext();
+    if (!board.features.messaging) throw notFound();
     const returnTo = `/messages/${encodeURIComponent(params.conversationId)}${
       deps.view === 'archived' ? '?view=archived' : ''
     }`;

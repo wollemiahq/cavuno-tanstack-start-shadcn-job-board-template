@@ -2,7 +2,7 @@
 
 import '@testing-library/jest-dom/vitest';
 import { BoardApiError } from '@cavuno/board';
-import { isRedirect } from '@tanstack/react-router';
+import { isNotFound as isRouteNotFound, isRedirect } from '@tanstack/react-router';
 import {
   act,
   cleanup,
@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => ({
   getCompanyWorkspace: vi.fn(),
   getCompany: vi.fn(),
   getSeoBase: vi.fn(),
+  getBoardContext: vi.fn(),
   getPipeline: vi.fn(),
   invalidate: vi.fn(),
   listCompanyJobs: vi.fn(),
@@ -90,6 +91,7 @@ vi.mock('../server/employers', () => ({
 vi.mock('../server/queries', () => ({
   getCompany: mocks.getCompany,
   getSeoBase: mocks.getSeoBase,
+  getBoardContext: mocks.getBoardContext,
   listCompanyJobs: mocks.listCompanyJobs,
 }));
 
@@ -140,6 +142,11 @@ afterEach(() => {
 beforeEach(() => {
   // Every workspace loader now resolves the board name for its page title.
   mocks.getSeoBase.mockResolvedValue({ boardName: 'Acme Board' });
+  // The applicants loader gates on the native-applications feature flag;
+  // default it on so the existing pipeline tests exercise the API path.
+  mocks.getBoardContext.mockResolvedValue({
+    features: { nativeApplications: true, messaging: true },
+  });
 });
 
 describe('employer company workspace', () => {
@@ -197,6 +204,28 @@ describe('employer company workspace', () => {
         params: { slug: 'northstar-labs', jobId: 'job-1' },
       } as never),
     ).rejects.toMatchObject({ status: 403 });
+  });
+
+  it('degrades the applicants pipeline to not-found when native applications are off', async () => {
+    mocks.getBoardContext.mockResolvedValue({
+      features: { nativeApplications: false, messaging: true },
+    });
+    const loader = ApplicantsRoute.options.loader;
+    if (typeof loader !== 'function')
+      throw new Error('The applicants route needs a loader');
+
+    let outcome: unknown;
+    try {
+      await loader({
+        params: { slug: 'northstar-labs', jobId: 'job-1' },
+      } as never);
+    } catch (error) {
+      outcome = error;
+    }
+
+    expect(isRouteNotFound(outcome)).toBe(true);
+    // The API pipeline read is never attempted — the feature does not exist.
+    expect(mocks.getPipeline).not.toHaveBeenCalled();
   });
 
   it('renders job management as a semantic table with every draft action', () => {

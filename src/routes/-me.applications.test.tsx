@@ -4,7 +4,7 @@ import '@testing-library/jest-dom/vitest';
 import type { ReactNode } from 'react';
 
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Application } from '@cavuno/board';
 
@@ -48,16 +48,29 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   };
 });
 
-// The route threads getSeoBase through its loader for the page title; the
-// module resolves cloudflare:workers, so stub the seam for jsdom.
+const queryMocks = vi.hoisted(() => ({
+  getSeoBase: vi.fn(),
+  getBoardContext: vi.fn(),
+}));
+const applicationMocks = vi.hoisted(() => ({
+  getApplications: vi.fn(),
+  withdrawApplication: vi.fn(),
+}));
+
+// The route threads getSeoBase + getBoardContext through its loader (page
+// title + the native-applications gate); both resolve cloudflare:workers, so
+// stub the seam for jsdom.
 vi.mock('../server/queries', () => ({
-  getSeoBase: vi.fn().mockResolvedValue({ boardName: 'Acme Board' }),
+  getSeoBase: queryMocks.getSeoBase,
+  getBoardContext: queryMocks.getBoardContext,
 }));
 
 vi.mock('../server/applications', () => ({
-  getApplications: vi.fn<() => void>(),
-  withdrawApplication: vi.fn<() => void>(),
+  getApplications: applicationMocks.getApplications,
+  withdrawApplication: applicationMocks.withdrawApplication,
 }));
+
+import { isNotFound as isRouteNotFound } from '@tanstack/react-router';
 
 import { Route } from './me.applications';
 
@@ -82,10 +95,59 @@ const application = {
   },
 } satisfies Application;
 
+const applicationsEnvelope = {
+  object: 'list',
+  url: '/v1/me/applications',
+  data: [application],
+  hasMore: false,
+  nextCursor: null,
+} as const;
+
+beforeEach(() => {
+  queryMocks.getSeoBase.mockResolvedValue({ boardName: 'Acme Board' });
+  queryMocks.getBoardContext.mockResolvedValue({
+    features: { nativeApplications: true, messaging: true },
+  });
+  applicationMocks.getApplications.mockResolvedValue(applicationsEnvelope);
+});
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.clearAllMocks();
+});
+
+describe('candidate applications — native-applications gate', () => {
+  it('loads the applications when native applications are on', async () => {
+    const loader = Route.options.loader;
+    if (typeof loader !== 'function')
+      throw new Error('The applications route needs a loader');
+
+    const data = await loader({} as never);
+
+    expect(data).toMatchObject({ data: [application] });
+    expect(applicationMocks.getApplications).toHaveBeenCalledOnce();
+  });
+
+  it('treats the route as not-found when native applications are off', async () => {
+    queryMocks.getBoardContext.mockResolvedValue({
+      features: { nativeApplications: false, messaging: true },
+    });
+    const loader = Route.options.loader;
+    if (typeof loader !== 'function')
+      throw new Error('The applications route needs a loader');
+
+    let outcome: unknown;
+    try {
+      await loader({} as never);
+    } catch (error) {
+      outcome = error;
+    }
+
+    expect(isRouteNotFound(outcome)).toBe(true);
+    // The 422-prone applications read is never attempted.
+    expect(applicationMocks.getApplications).not.toHaveBeenCalled();
+  });
 });
 
 describe('candidate applications', () => {

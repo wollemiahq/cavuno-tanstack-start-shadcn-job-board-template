@@ -60,6 +60,7 @@ const allFeatures: HeaderFeatures = {
   publicJobSubmission: true,
   blog: true,
   talentDirectory: true,
+  nativeApplications: true,
 };
 
 type TalentDirectoryVisibility = 'off' | 'public' | 'employers_only' | null;
@@ -68,6 +69,7 @@ function renderHeader({
   initialEntry = '/',
   features = allFeatures,
   talentDirectoryVisibility = features.talentDirectory ? 'public' : 'off',
+  user = null,
   locationSuggestions = [],
   keywordSuggestions = [],
   companyMarketSuggestions = [],
@@ -76,6 +78,7 @@ function renderHeader({
   initialEntry?: string;
   features?: HeaderFeatures;
   talentDirectoryVisibility?: TalentDirectoryVisibility;
+  user?: React.ComponentProps<typeof Header>['user'];
   locationSuggestions?: Array<{
     id: string;
     slug: string;
@@ -164,7 +167,7 @@ function renderHeader({
             <Header
               boardName="Robotics Jobs"
               logoUrl={null}
-              user={null}
+              user={user}
               language="en"
               features={features}
               talentDirectoryVisibility={talentDirectoryVisibility}
@@ -370,6 +373,44 @@ describe('Header — role and public-posting gates', () => {
     ).toBe('/post');
     expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Sign up' })).toBeNull();
+  });
+});
+
+describe('Header — native-applications account gating', () => {
+  const signedInUser = {
+    id: 'user-1',
+    object: 'board_user',
+    role: 'candidate',
+    email: 'ada@example.com',
+    displayName: 'Ada Lovelace',
+    emailVerified: true,
+  } as const;
+
+  it('shows the Applications account entry when native applications are on', async () => {
+    renderHeader({ user: signedInUser });
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Account' }));
+
+    expect(
+      await screen.findByRole('menuitem', { name: 'Applications' }),
+    ).toBeTruthy();
+  });
+
+  it('hides the Applications account entry when native applications are off', async () => {
+    renderHeader({
+      user: signedInUser,
+      features: { ...allFeatures, nativeApplications: false },
+    });
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Account' }));
+
+    // The menu is open (a sibling item resolves) but Applications is absent.
+    expect(
+      await screen.findByRole('menuitem', { name: 'Saved jobs' }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('menuitem', { name: 'Applications' }),
+    ).toBeNull();
   });
 });
 

@@ -46,6 +46,7 @@ export function toApplyButtonVM({
   applied,
   language,
   labels,
+  nativeApplications = true,
 }: {
   jobSlug: string | null;
   applicationUrl: string | null;
@@ -54,10 +55,28 @@ export function toApplyButtonVM({
   applied: boolean;
   language: string;
   labels?: BoardLabelOverrides;
+  /**
+   * Board feature flag (default-on): `false` ⇒ external-applications-only.
+   * The platform 422s a native apply, so a native-only job must NOT render a
+   * dead-end native form — collapse every non-external outcome (native,
+   * sign-in, verify, applied) to `none`. An external `applicationUrl` still
+   * applies to everyone and is untouched.
+   */
+  nativeApplications?: boolean;
 }): ApplyButtonVM {
   const copy = boardCopy(language, labels).apply;
+  const resolved = resolveApplyAction({
+    jobSlug,
+    applicationUrl,
+    viewer,
+    applied,
+  });
+  const action: ApplyAction =
+    !nativeApplications && resolved.kind !== 'external'
+      ? { kind: 'none' }
+      : resolved;
   return {
-    action: resolveApplyAction({ jobSlug, applicationUrl, viewer, applied }),
+    action,
     copy: {
       applyOnEmployerSiteLabel: copy.applyOnEmployerSiteLabel,
       signInToApplyLabel: copy.signInToApplyLabel,

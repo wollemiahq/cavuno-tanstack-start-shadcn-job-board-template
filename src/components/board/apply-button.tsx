@@ -44,6 +44,7 @@ export function ApplyButton({
   onApply,
   alreadyApplied = false,
   applicationsHref = '/me/applications',
+  nativeApplications = true,
 }: {
   /** Convex job _id — keys the `job_apply_click` analytics event (P2). */
   jobId: string;
@@ -74,6 +75,12 @@ export function ApplyButton({
    */
   alreadyApplied?: boolean;
   applicationsHref?: string;
+  /**
+   * Board feature flag (`board.features.nativeApplications`, default-on).
+   * `false` ⇒ external-apply-only: a native-only job renders nothing rather
+   * than a dead-end apply form (the platform 422s the native apply).
+   */
+  nativeApplications?: boolean;
 }) {
   // Only the transient in-session interaction lives in state; the
   // returning-visitor "applied" truth comes from the `alreadyApplied`
@@ -96,6 +103,7 @@ export function ApplyButton({
     applied: alreadyApplied || state === 'applied',
     language,
     labels,
+    nativeApplications,
   });
 
   switch (action.kind) {

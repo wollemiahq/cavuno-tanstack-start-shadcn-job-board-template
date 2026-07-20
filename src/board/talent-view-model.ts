@@ -289,8 +289,15 @@ export function resolveTalentDetailCta(input: {
   labels: TalentDetailCtaLabels;
   /** `false` when the surface already is the canonical profile page. */
   showViewProfile: boolean;
+  /**
+   * Board `features.messaging` (default-on). `false` ⇒ the whole messaging
+   * surface is off, so no Message CTA is offered to anyone — only the
+   * View-profile link remains.
+   */
+  messagingEnabled?: boolean;
 }): TalentDetailCta {
   const { viewer, detailHref, labels } = input;
+  const messagingEnabled = input.messagingEnabled ?? true;
 
   const viewProfile: TalentDetailCtaLink | null =
     input.showViewProfile && detailHref
@@ -298,6 +305,10 @@ export function resolveTalentDetailCta(input: {
       : null;
 
   let message: TalentDetailCtaLink | null = null;
+  if (!messagingEnabled) {
+    // No messaging surface ⇒ no Message CTA; keep the profile link.
+    return { message: null, viewProfile };
+  }
   if (viewer.kind === 'anonymous') {
     message = { label: labels.message, href: input.signInHref };
   } else if (viewer.kind === 'employer') {

@@ -1,4 +1,9 @@
-import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  isRedirect,
+  notFound,
+  redirect,
+} from '@tanstack/react-router';
 import { MessageSquare } from 'lucide-react';
 
 import { MessagesSidebarController } from './-messages-runtime';
@@ -16,7 +21,7 @@ import {
 import { headTitle } from '@/lib/page-title';
 import { m } from '@/paraglide/messages';
 import { getBlocked, getInbox } from '@/server/messaging';
-import { getSeoBase } from '@/server/queries';
+import { getBoardContext, getSeoBase } from '@/server/queries';
 
 function asView(value: unknown): MessagesView {
   return value === 'archived' || value === 'blocked' ? value : 'inbox';
@@ -32,6 +37,9 @@ export const Route = createFileRoute('/messages')({
   },
   loaderDeps: ({ search }) => ({ view: asView(search.view) }),
   loader: async ({ deps }) => {
+    // Messaging feature off ⇒ the surface does not exist on this board.
+    const board = await getBoardContext();
+    if (!board.features.messaging) throw notFound();
     const seo = await getSeoBase();
     try {
       if (deps.view === 'blocked') {
