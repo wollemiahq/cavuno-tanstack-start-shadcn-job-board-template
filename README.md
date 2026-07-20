@@ -93,7 +93,16 @@ personas.
 
 **Point it at your own board** by swapping one value — `CAVUNO_BOARD` — for
 your board's `pk_…` publishable key (`.dev.vars` in dev, `wrangler.jsonc` vars
-in production). Nothing else changes.
+in production). The app code is identical either way.
+
+> **The preview toolbar is sandbox-only.** Personas, the captured-email
+> viewer, reseed, and the flag toggles are gated on the board being the
+> platform sandbox (`sandbox: true`), so they exist purely for exploring and
+> developing the template. Point `CAVUNO_BOARD` at your own board and the
+> toolbar simply isn't there — you're now developing against your real board,
+> with real users, real sessions, and real outbound email. That gate is board
+> truth from the API, not an env flag, so the toolbar can never render on a
+> production board.
 
 | Variable | What | Where |
 |---|---|---|
