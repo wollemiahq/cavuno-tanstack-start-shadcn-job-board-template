@@ -65,6 +65,47 @@ describe('toApplyButtonVM — decision ladder', () => {
   });
 });
 
+describe('toApplyButtonVM — nativeApplications off (external-apply-only)', () => {
+  it('keeps an external URL applyable for everyone', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      jobSlug: null,
+      applicationUrl: 'https://jobs.acme.com/123',
+      viewer: null,
+      nativeApplications: false,
+    });
+    expect(vm.action).toEqual({
+      kind: 'external',
+      url: 'https://jobs.acme.com/123',
+    });
+  });
+
+  it.each([
+    { name: 'anonymous native job (would be sign-in)', viewer: null },
+    {
+      name: 'unverified native job (would be verify-email)',
+      viewer: { emailVerified: false },
+    },
+    {
+      name: 'verified native job (would be native)',
+      viewer: { emailVerified: true },
+    },
+  ])('collapses a $name to a non-applyable state', ({ viewer }) => {
+    const vm = toApplyButtonVM({ ...base, viewer, nativeApplications: false });
+    expect(vm.action.kind).toBe('none');
+  });
+
+  it('never shows a dead-end applied link once native apply is disabled', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      viewer: { emailVerified: true },
+      applied: true,
+      nativeApplications: false,
+    });
+    expect(vm.action.kind).toBe('none');
+  });
+});
+
 describe('toApplyButtonVM — copy', () => {
   it('resolves every label the markup renders', () => {
     const vm = toApplyButtonVM({ ...base, viewer: { emailVerified: true } });

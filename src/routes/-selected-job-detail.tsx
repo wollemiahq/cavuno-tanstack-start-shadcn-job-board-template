@@ -55,6 +55,7 @@ export function SelectedJobDetail({
             language={board.language}
             returnTo={returnTo}
             labels={board.labels}
+            nativeApplications={board.features.nativeApplications}
             viewer={user ? { emailVerified: user.emailVerified } : null}
             alreadyApplied={state.alreadyApplied}
             onApply={async (jobSlug) => {

@@ -385,6 +385,7 @@ Props:
 - `jobSlug: string | null`
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
+- `nativeApplications?: boolean | undefined`
 - `onApply: (jobSlug: string) => Promise<void>`
 - `returnTo: string`
 - `viewer: { emailVerified: boolean; } | null`

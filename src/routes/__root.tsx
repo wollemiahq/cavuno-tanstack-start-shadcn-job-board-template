@@ -354,7 +354,9 @@ function RootLayout() {
       candidatePaywall={board.features.candidatePaywall}
       employerCompanies={employerCompanies}
       talentDirectoryVisibility={board.talentDirectoryVisibility}
-      messagesNav={user ? <MessagesNavController /> : undefined}
+      messagesNav={
+        user && board.features.messaging ? <MessagesNavController /> : undefined
+      }
       search={{
         ...headerSearch,
         onSubmit: submitHeaderSearch,
@@ -426,10 +428,13 @@ function RootLayout() {
         talentDirectoryVisibility={board.talentDirectoryVisibility}
         hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
       />
-      {user && !location.pathname.startsWith('/messages') ? (
+      {user &&
+      board.features.messaging &&
+      !location.pathname.startsWith('/messages') ? (
         // Keyed by viewer: the dock holds polled inbox + open-thread state
         // that must unmount wholesale when the signed-in identity changes
-        // (sign-out/in, persona switch) — never survive across viewers.
+        // (sign-out/in, persona switch) — never survive across viewers. The
+        // whole messaging surface is hidden when the board flag is off.
         <MessagesDockController key={user.id} />
       ) : null}
       {preview.capability.canPreview ? (

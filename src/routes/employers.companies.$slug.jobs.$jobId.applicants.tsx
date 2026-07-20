@@ -1,4 +1,8 @@
-import { createFileRoute, getRouteApi } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  getRouteApi,
+  notFound,
+} from '@tanstack/react-router';
 
 import { toPipelineBoardVM } from '../board/pipeline-view-model';
 import { ApplicantPipelineBoard } from '../components/employer/applicant-pipeline-board';
@@ -9,7 +13,7 @@ import {
 } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
 import { getPipeline } from '../server/employers';
-import { getSeoBase } from '../server/queries';
+import { getBoardContext, getSeoBase } from '../server/queries';
 
 import { Page, PageContent } from '@/components/layout/page';
 import {
@@ -26,6 +30,11 @@ export const Route = createFileRoute(
   '/employers/companies/$slug/jobs/$jobId/applicants',
 )({
   loader: async ({ params, location }) => {
+    // External-apply-only board (nativeApplications off): the platform 404s
+    // the pipeline / applicants reads. Degrade to a route-level notFound so
+    // the employer surface reads as absent, never an error state.
+    const board = await getBoardContext();
+    if (!board.features.nativeApplications) throw notFound();
     try {
       const [pipeline, seo] = await Promise.all([
         getPipeline({ data: { slug: params.slug, job: params.jobId } }),

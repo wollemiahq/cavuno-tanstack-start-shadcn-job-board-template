@@ -183,7 +183,7 @@ export function RestrictedTalentDirectory({
 
 function TalentDirectoryPage() {
   const { seo, page, restricted } = Route.useLoaderData();
-  const { user } = rootApi.useLoaderData();
+  const { user, board } = rootApi.useLoaderData();
   const search = Route.useSearch();
   const location = useLocation();
   const navigate = useNavigate({ from: '/talent/' });
@@ -270,6 +270,7 @@ function TalentDirectoryPage() {
             locale={seo.language}
             viewer={viewer}
             signInHref={signInHref}
+            messagingEnabled={board.features.messaging}
           />
         }
       />

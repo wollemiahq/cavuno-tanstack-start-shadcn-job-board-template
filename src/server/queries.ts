@@ -17,6 +17,7 @@ import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
+import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { getServerEnv } from '../lib/env';
@@ -73,6 +74,14 @@ export const getBoardContext = createServerFn({ method: 'GET' }).handler(
     };
     return {
       ...context,
+      // Runtime feature flags (Board PR #968) resolved to clean typed
+      // booleans here at the single context boundary — absent ⇒ on. See
+      // src/board/board-feature-flags.ts for the additive polarity + the
+      // SDK-types TODO.
+      features: {
+        ...context.features,
+        ...resolveRuntimeFeatureFlags(context.features),
+      },
       footer: parity.footer ?? null,
       talentDirectoryVisibility: parity.talentDirectoryVisibility ?? null,
       theme: context.theme

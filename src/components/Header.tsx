@@ -226,10 +226,13 @@ function HeaderSearch({
 function AccountMenu({
   user,
   candidatePaywall,
+  nativeApplications,
   employerCompanies,
 }: {
   user: BoardUser;
   candidatePaywall: boolean;
+  /** false ⇒ the board is external-apply-only; hide the Applications entry. */
+  nativeApplications: boolean;
   employerCompanies: CompanyMembership[] | null;
 }) {
   const companyWorkspaces = (employerCompanies ?? []).filter(
@@ -274,12 +277,14 @@ function AccountMenu({
         >
           {m.accountShell_jobAlertsNav()}
         </DropdownMenuItem>
-        <DropdownMenuItem
-          nativeButton={false}
-          render={<Link to="/me/applications" />}
-        >
-          {m.accountShell_applicationsNav()}
-        </DropdownMenuItem>
+        {nativeApplications ? (
+          <DropdownMenuItem
+            nativeButton={false}
+            render={<Link to="/me/applications" />}
+          >
+            {m.accountShell_applicationsNav()}
+          </DropdownMenuItem>
+        ) : null}
         {candidatePaywall ? (
           <DropdownMenuItem
             nativeButton={false}
@@ -387,6 +392,7 @@ export default function Header({
     publicJobSubmission: boolean;
     blog: boolean;
     talentDirectory: boolean;
+    nativeApplications: boolean;
   };
   candidatePaywall?: boolean;
   employerCompanies?: CompanyMembership[] | null;
@@ -497,6 +503,7 @@ export default function Header({
       <AccountMenu
         user={user}
         candidatePaywall={candidatePaywall}
+        nativeApplications={features.nativeApplications}
         employerCompanies={employerCompanies}
       />
     </>
@@ -525,6 +532,7 @@ export default function Header({
       <AccountMenu
         user={user}
         candidatePaywall={candidatePaywall}
+        nativeApplications={features.nativeApplications}
         employerCompanies={employerCompanies}
       />
     </>

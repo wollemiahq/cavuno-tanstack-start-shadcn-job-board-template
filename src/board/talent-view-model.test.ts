@@ -329,4 +329,26 @@ describe('resolveTalentDetailCta', () => {
       }),
     ).toEqual({ message: null, viewProfile: null });
   });
+
+  it.each([
+    { name: 'anonymous', viewer: { kind: 'anonymous' as const } },
+    {
+      name: 'employer with access',
+      viewer: { kind: 'employer' as const, hasTalentAccess: true },
+    },
+    {
+      name: 'employer without access',
+      viewer: { kind: 'employer' as const, hasTalentAccess: false },
+    },
+  ])(
+    'drops the Message CTA for a $name viewer when messaging is off, keeping the profile link',
+    ({ viewer }) => {
+      expect(
+        resolveTalentDetailCta({ ...base, viewer, messagingEnabled: false }),
+      ).toEqual({
+        message: null,
+        viewProfile: { label: 'View profile', href: '/p/ada-lovelace' },
+      });
+    },
+  );
 });
