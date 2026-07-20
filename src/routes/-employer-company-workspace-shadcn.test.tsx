@@ -67,6 +67,8 @@ vi.mock('@/components/account-shell', async () => {
   return {
     EmployerCompanyShell: ({ children }: { children: React.ReactNode }) =>
       React.createElement('div', { 'data-testid': 'company-shell' }, children),
+    EmployerIdentityAvatar: ({ name }: { name: string }) =>
+      React.createElement('div', { 'data-testid': 'company-logo' }, name),
   };
 });
 
@@ -302,6 +304,45 @@ describe('employer company workspace', () => {
     expect(screen.getByRole('toolbar', { name: 'About' })).toBeInTheDocument();
     expect(screen.getByText('Hiring')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save company' })).toBeEnabled();
+    // Social links are writable on the update surface; they render as URL
+    // inputs and start blank (no read returns them).
+    expect(screen.getByRole('textbox', { name: 'LinkedIn' })).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: 'X' })).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: 'Facebook' })).toHaveValue('');
+  });
+
+  it('sends tagline and social links (scheme-normalised) only when filled', async () => {
+    mocks.updateCompany.mockResolvedValue({ ok: true, data: {} });
+    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
+      workspace: { slug: 'northstar-labs', membership: { company } },
+      company,
+    } as never);
+
+    const ProfilePage = ProfileRoute.options.component;
+    if (!ProfilePage)
+      throw new Error('The profile route must expose its component');
+    render(<ProfilePage />);
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Tagline' }), {
+      target: { value: 'Hiring the best' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'LinkedIn' }), {
+      target: { value: 'linkedin.com/company/northstar' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'X' }), {
+      target: { value: 'https://x.com/northstar' },
+    });
+    // Facebook left blank — it must be omitted from the patch.
+    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+
+    await waitFor(() => expect(mocks.updateCompany).toHaveBeenCalledTimes(1));
+    const body = mocks.updateCompany.mock.calls[0][0].data.body;
+    expect(body).toMatchObject({
+      summary: 'Hiring the best',
+      linkedinUrl: 'https://linkedin.com/company/northstar',
+      xUrl: 'https://x.com/northstar',
+    });
+    expect(body).not.toHaveProperty('facebookUrl');
   });
 
   it('renders applicant identity, pipeline controls, notes, and history together', () => {
