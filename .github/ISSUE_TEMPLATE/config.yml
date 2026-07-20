@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Cavuno Board API & product questions
+    url: https://cavuno.com
+    about: Questions about the hosted Board API, your board, or account are not template bugs — start here.
+  - name: Customization contract (AGENTS.md)
+    url: https://github.com/wollemiahq/cavuno-shadcn-ui-job-board-template/blob/main/AGENTS.md
+    about: Before proposing a change, read the rules for what is safe to edit.
