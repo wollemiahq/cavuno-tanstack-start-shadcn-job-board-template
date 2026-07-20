@@ -54,7 +54,10 @@ const compactShellPrefixes = [
   '/settings',
 ] as const;
 
-function scopeFromPathname(pathname: string): HeaderSearchScope {
+function scopeFromPathname(
+  pathname: string,
+  fallback: HeaderSearchScope,
+): HeaderSearchScope {
   if (pathname === '/blog' || pathname.startsWith('/blog/')) {
     return 'blog';
   }
@@ -74,7 +77,7 @@ function scopeFromPathname(pathname: string): HeaderSearchScope {
     return 'companies';
   }
 
-  return 'jobs';
+  return fallback;
 }
 
 function stringSearchValue(value: unknown) {
@@ -165,8 +168,13 @@ export function resolveHeaderSearchState(
   search: Record<string, unknown>,
   resolvedLocationLabel?: string,
   resolvedQueryLabel?: string,
+  // What the viewer is most likely hunting when the route itself doesn't
+  // scope the search: candidates (and signed-out visitors) hunt jobs;
+  // employers hunt talent — the shell resolves this from identity + the
+  // board's talent-directory visibility.
+  fallbackScope: HeaderSearchScope = 'jobs',
 ): HeaderSearchState {
-  const scope = scopeFromPathname(pathname);
+  const scope = scopeFromPathname(pathname, fallbackScope);
   const explicitQuery = stringSearchValue(
     scope === 'companies'
       ? search.query

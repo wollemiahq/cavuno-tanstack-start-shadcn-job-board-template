@@ -114,3 +114,29 @@ describe('resolveHeaderSearchState', () => {
     });
   });
 });
+
+describe('identity-aware fallback scope', () => {
+  it('defaults to jobs off-section for candidates and signed-out viewers', () => {
+    expect(resolveHeaderSearchState('/', {}).scope).toBe('jobs');
+    expect(resolveHeaderSearchState('/me/saved', {}).scope).toBe('jobs');
+  });
+
+  it('employers default to talent off-section, but sections still win', () => {
+    expect(
+      resolveHeaderSearchState('/', {}, undefined, undefined, 'talent').scope,
+    ).toBe('talent');
+    expect(
+      resolveHeaderSearchState(
+        '/companies',
+        {},
+        undefined,
+        undefined,
+        'talent',
+      ).scope,
+    ).toBe('companies');
+    expect(
+      resolveHeaderSearchState('/blog', {}, undefined, undefined, 'talent')
+        .scope,
+    ).toBe('blog');
+  });
+});

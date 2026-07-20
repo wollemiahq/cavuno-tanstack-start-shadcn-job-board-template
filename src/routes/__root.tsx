@@ -201,11 +201,20 @@ function RootLayout() {
     select: (state) => resolveShellBreadcrumbEntities(state.matches),
   });
   const navigate = useNavigate();
+  // Identity-aware default search scope: an approved employer hunts talent
+  // (when the board's directory is visible to them); everyone else hunts
+  // jobs. Section routes (companies/talent/blog) still override.
+  const isApprovedEmployer = (employerCompanies ?? []).some(
+    (membership) => membership.status === 'approved',
+  );
   const headerSearch = resolveHeaderSearchState(
     location.pathname,
     location.search as Record<string, unknown>,
     resolvedHeaderLabels.location,
     resolvedHeaderLabels.query,
+    isApprovedEmployer && board.talentDirectoryVisibility !== 'off'
+      ? 'talent'
+      : 'jobs',
   );
   const locationSuggestions = useLocationSuggestions(board.language);
   const keywordSuggestions = useKeywordSuggestions(
