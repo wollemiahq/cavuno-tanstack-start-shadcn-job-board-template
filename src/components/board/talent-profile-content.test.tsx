@@ -110,12 +110,11 @@ describe('TalentProfileContent', () => {
       />,
     );
 
-    // CompanyAvatar renders the shadcn Avatar primitive, which mounts its
-    // <img> in a client load-state effect (never during SSR / jsdom). The
-    // logo path is wired via `logoUrl` → AvatarImage; actual image display is
-    // browser-verified. Here we assert the brand chip is present for the
-    // experience by its initials fallback (deterministic in jsdom).
-    expect(screen.getAllByText('AE').length).toBeGreaterThan(0);
+    // The window.Image mock (beforeEach) makes the load-gated AvatarImage
+    // reveal deterministically, so the real logo <img> renders.
+    expect(
+      await screen.findByRole('img', { name: 'Analytical Engines' }),
+    ).toHaveAttribute('src', 'https://cdn.example/analytical-engines.png');
   });
 
   it('uses an h2 in the search detail projection and omits empty optional sections', () => {
