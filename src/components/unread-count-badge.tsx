@@ -28,7 +28,7 @@ export function UnreadCountBadge({
     <span
       data-slot="unread-count-badge"
       className={cn(
-        'bg-destructive inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[0.625rem] font-semibold text-white tabular-nums',
+        'bg-destructive text-destructive-foreground inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[0.625rem] font-semibold tabular-nums',
         className,
       )}
       {...props}
