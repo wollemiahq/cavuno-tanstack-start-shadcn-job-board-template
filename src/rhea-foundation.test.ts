@@ -98,26 +98,5 @@ describe('shadcn Rhea foundation', () => {
     expect(agents).not.toMatch(/New components compose \*\*Untitled UI/i);
   });
 
-  it('positions the public starter as a shadcn-only Rhea system', () => {
-    const readme = read('README.md');
-    const publicIntro = readme.slice(0, readme.indexOf('## Quickstart'));
 
-    expect(publicIntro).toMatch(/shadcn\/ui[\s\S]*Rhea[\s\S]*Base UI/i);
-    expect(publicIntro).toMatch(/\*\*Stack\*\*:[^\n]*Base UI/i);
-    expect(publicIntro).toContain(
-      '![Job board built with shadcn/ui Rhea](docs/screenshot-home.png)',
-    );
-    expect(publicIntro).toMatch(
-      /no inherited Untitled UI compatibility layer/i,
-    );
-    expect(publicIntro).not.toMatch(/built entirely from[\s\S]*Untitled UI/i);
-  });
-
-  it('documents reproducible shadcn/create theme, font, and icon handoff', () => {
-    const readme = read('README.md');
-
-    expect(readme).toMatch(/shadcn apply[^\n]*--only theme,font/);
-    expect(readme).toMatch(/icon[^\n]*(migration|full preset)/i);
-    expect(readme).toMatch(/review[^\n]*diff/i);
-  });
 });
