@@ -1,5 +1,6 @@
 import { formatDate } from '@cavuno/board/format';
 
+import { initialsOf } from '@/lib/initials';
 import { m } from '@/paraglide/messages';
 import type { EmployerApplicant, EmployerPipeline } from '@cavuno/board';
 
@@ -88,14 +89,10 @@ function stageLabelForToken(
 }
 
 function initialsFor(name: string): string {
-  const parts = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '');
-  const initials = parts.join('');
-  return initials || name.slice(0, 2).toUpperCase() || '—';
+  // Shares the app-wide avatar-initials rule (`initialsOf`), which returns
+  // `undefined` for an empty/whitespace name; a pipeline card always needs a
+  // non-empty label, so keep the first-two-chars → em-dash fallback.
+  return initialsOf(name) ?? (name.slice(0, 2).toUpperCase() || '—');
 }
 
 function toTimelineEntry(
