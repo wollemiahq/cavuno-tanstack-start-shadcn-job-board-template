@@ -13,8 +13,8 @@ import {
 afterEach(cleanup);
 
 describe('Dialog', () => {
-  it('provides modal semantics and keeps its portal inside the Rhea theme scope', () => {
-    render(
+  it('provides modal semantics and portals its content to the document body', () => {
+    const { container } = render(
       <Dialog open>
         <DialogContent showCloseButton={false}>
           <DialogTitle>Add a company</DialogTitle>
@@ -25,7 +25,11 @@ describe('Dialog', () => {
 
     const dialog = screen.getByRole('dialog', { name: 'Add a company' });
     expect(dialog).toHaveAccessibleDescription('Create a company workspace.');
-    expect(dialog.closest('.rhea-theme')).toBeNull();
+    expect(dialog).toHaveAttribute('data-slot', 'dialog-content');
+    // Real portaling check: the content mounts to the document body, not
+    // inside the component's own subtree — so the app's <body> theme applies.
+    expect(container).not.toContainElement(dialog);
+    expect(document.body).toContainElement(dialog);
   });
 
   it('shows the canonical close control by default and lets callers hide it', () => {

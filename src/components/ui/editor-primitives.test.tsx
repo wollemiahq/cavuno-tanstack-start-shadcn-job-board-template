@@ -34,7 +34,7 @@ describe('owned Rhea editor primitives', () => {
   });
 
   it('renders portaled popover content under the global theme', () => {
-    render(
+    const { container } = render(
       <Popover open>
         <PopoverTrigger>Link</PopoverTrigger>
         <PopoverContent>Link settings</PopoverContent>
@@ -43,11 +43,14 @@ describe('owned Rhea editor primitives', () => {
 
     const content = screen.getByText('Link settings');
     expect(content).toHaveAttribute('data-slot', 'popover-content');
-    expect(content.closest('.rhea-theme')).toBeNull();
+    // Real portaling check: content mounts to the document body, outside the
+    // component subtree, so the app's <body> theme (not a local scope) applies.
+    expect(container).not.toContainElement(content);
+    expect(document.body).toContainElement(content);
   });
 
   it('renders portaled tooltip content under the global theme', () => {
-    render(
+    const { container } = render(
       <TooltipProvider>
         <Tooltip open>
           <TooltipTrigger>Format</TooltipTrigger>
@@ -58,7 +61,10 @@ describe('owned Rhea editor primitives', () => {
 
     const content = screen.getByText('Bold');
     expect(content).toHaveAttribute('data-slot', 'tooltip-content');
-    expect(content.closest('.rhea-theme')).toBeNull();
+    // Real portaling check: content mounts to the document body, outside the
+    // component subtree, so the app's <body> theme (not a local scope) applies.
+    expect(container).not.toContainElement(content);
+    expect(document.body).toContainElement(content);
   });
 
   it('renders semantic horizontal and vertical separators', () => {
