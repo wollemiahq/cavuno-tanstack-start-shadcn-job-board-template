@@ -1138,6 +1138,28 @@ Props:
 - `items: { id: string; object: "candidate_education"; institutionName: string; institutionUrl: string | null; degree: string |…`
 - `language: string`
 
+### ApplicantPipelineBoard — `src/components/employer/applicant-pipeline-board.tsx`
+
+The employer applicant pipeline as a KANBAN board. Columns are the
+pipeline's visible stages in order; cards are applicants. Dragging a
+card (pointer OR keyboard, via react-aria's `useDragAndDrop` + a
+`GridList` per column) changes its stage through the same `moveApplicant`
+server function the detail sheet's stage picker uses. Moves are
+optimistic: the card jumps columns immediately and reverts on error.
+
+Every other capability the flat list had stays reachable — the resume
+link, stage picker, private-note field, activity timeline, and reject
+action live in a per-card detail sheet; stage add/rename/delete live in
+the board header and each column's menu (system stages are immutable).
+
+Props:
+
+- `board: PipelineBoardVM`
+- `defaultOpenCardId?: string | undefined`
+- `defaultStageDialog?: StageDialogState | undefined`
+- `jobId: string`
+- `slug: string`
+
 ### ExperienceSection — `src/components/experience-section.tsx`
 
 Work experience — list + add/edit/delete, over `board.me.profile`'s

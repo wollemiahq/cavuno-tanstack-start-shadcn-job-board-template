@@ -95,9 +95,12 @@ vi.mock('../server/queries', () => ({
   listCompanyJobs: mocks.listCompanyJobs,
 }));
 
+import { ApplicantPipelineBoard } from '../components/employer/applicant-pipeline-board';
 import { Route as JobsRoute } from './employers.companies.$slug.index';
 import { Route as ApplicantsRoute } from './employers.companies.$slug.jobs.$jobId.applicants';
 import { Route as ProfileRoute } from './employers.companies.$slug.profile';
+
+import type { PipelineBoardVM } from '../board/pipeline-view-model';
 
 const job = {
   id: 'job-1',
@@ -352,146 +355,7 @@ describe('employer company workspace', () => {
     expect(body).not.toHaveProperty('facebookUrl');
   });
 
-  it('renders applicant identity, pipeline controls, notes, and history together', () => {
-    const stages = [
-      {
-        id: 'stage-review',
-        object: 'employer_pipeline_stage',
-        jobId: 'job-1',
-        label: 'Review',
-        systemStage: 'review',
-        isProtected: true,
-        hidden: false,
-        position: 0,
-      },
-    ] as const;
-    vi.spyOn(ApplicantsRoute, 'useParams').mockReturnValue({
-      slug: 'northstar-labs',
-      jobId: 'job-1',
-    });
-    vi.spyOn(ApplicantsRoute, 'useLoaderData').mockReturnValue({
-      object: 'employer_pipeline',
-      job: {
-        id: 'job-1',
-        title: 'Senior Product Designer',
-        status: 'published',
-        expiresAt: null,
-      },
-      stages,
-      applicants: [
-        {
-          id: 'application-1',
-          object: 'employer_applicant',
-          jobId: 'job-1',
-          candidateBoardUserId: 'candidate-1',
-          candidateProfileId: 'profile-1',
-          candidateProfileHandle: 'ada',
-          candidateName: 'Ada Lovelace',
-          candidateEmail: 'ada@example.com',
-          candidateHeadline: 'Product designer',
-          candidateLocation: 'Sydney',
-          coverNote: 'I care deeply about accessible products.',
-          resumeFilename: 'ada.pdf',
-          resumeUrl: 'https://files.example/ada.pdf',
-          stage: 'review',
-          source: 'native_apply',
-          appliedAt: '2026-07-13T00:00:00.000Z',
-          timeline: [
-            {
-              id: 'event-1',
-              type: 'note_created',
-              actorBoardUserId: 'employer-1',
-              actorName: 'Grace Hopper',
-              noteId: 'note-1',
-              noteBody: 'Strong portfolio',
-              fromStage: null,
-              toStage: null,
-              createdAt: '2026-07-14T00:00:00.000Z',
-            },
-          ],
-        },
-      ],
-    } as never);
-
-    const ApplicantsPage = ApplicantsRoute.options.component;
-    if (!ApplicantsPage)
-      throw new Error('The applicants route must expose its component');
-    render(<ApplicantsPage />);
-
-    expect(
-      screen.getByRole('heading', {
-        level: 1,
-        name: 'Senior Product Designer',
-      }),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/Published · 1 applicant/)).toBeInTheDocument();
-    expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Stage' })).toBeInTheDocument();
-    expect(
-      screen.getByRole('textbox', { name: 'Add a private note' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('Note: Strong portfolio · Grace Hopper'),
-    ).toBeInTheDocument();
-  });
-
-  it('keeps a failed stage rename open and reports the error beside that stage', async () => {
-    const stages = [
-      {
-        id: 'stage-custom',
-        object: 'employer_pipeline_stage',
-        jobId: 'job-1',
-        label: 'Portfolio review',
-        systemStage: null,
-        isProtected: false,
-        hidden: false,
-        position: 0,
-      },
-    ] as const;
-    mocks.renameStage.mockResolvedValue({
-      ok: false,
-      message: 'Rename failed',
-    });
-    vi.spyOn(ApplicantsRoute, 'useParams').mockReturnValue({
-      slug: 'northstar-labs',
-      jobId: 'job-1',
-    });
-    vi.spyOn(ApplicantsRoute, 'useLoaderData').mockReturnValue({
-      object: 'employer_pipeline',
-      job: {
-        id: 'job-1',
-        title: 'Senior Product Designer',
-        status: 'published',
-        expiresAt: null,
-      },
-      stages,
-      applicants: [],
-    } as never);
-
-    const ApplicantsPage = ApplicantsRoute.options.component;
-    if (!ApplicantsPage)
-      throw new Error('The applicants route must expose its component');
-    render(<ApplicantsPage />);
-
-    fireEvent.click(
-      screen.getByRole('button', { name: 'edit Portfolio review' }),
-    );
-    const input = screen.getByRole('textbox', { name: 'Portfolio review' });
-    fireEvent.change(input, { target: { value: 'Interview' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('Rename failed');
-    expect(
-      screen.getByRole('textbox', { name: 'Portfolio review' }),
-    ).toHaveValue('Interview');
-    expect(mocks.invalidate).not.toHaveBeenCalled();
-  });
-
-  it('reports a failed applicant action in the action area rather than the note field', async () => {
-    mocks.bulkRejectApplicants.mockResolvedValue({
-      ok: false,
-      message: 'Reject failed',
-    });
+  it('renders the applicant pipeline as a kanban board with cards in their stage column', () => {
     vi.spyOn(ApplicantsRoute, 'useParams').mockReturnValue({
       slug: 'northstar-labs',
       jobId: 'job-1',
@@ -515,6 +379,16 @@ describe('employer company workspace', () => {
           hidden: false,
           position: 0,
         },
+        {
+          id: 'stage-interview',
+          object: 'employer_pipeline_stage',
+          jobId: 'job-1',
+          label: 'Interview',
+          systemStage: null,
+          isProtected: false,
+          hidden: false,
+          position: 1,
+        },
       ],
       applicants: [
         {
@@ -526,11 +400,11 @@ describe('employer company workspace', () => {
           candidateProfileHandle: 'ada',
           candidateName: 'Ada Lovelace',
           candidateEmail: 'ada@example.com',
-          candidateHeadline: null,
-          candidateLocation: null,
-          coverNote: null,
-          resumeFilename: null,
-          resumeUrl: null,
+          candidateHeadline: 'Product designer',
+          candidateLocation: 'Sydney',
+          coverNote: 'I care deeply about accessible products.',
+          resumeFilename: 'ada.pdf',
+          resumeUrl: 'https://files.example/ada.pdf',
           stage: 'review',
           source: 'native_apply',
           appliedAt: '2026-07-13T00:00:00.000Z',
@@ -542,15 +416,218 @@ describe('employer company workspace', () => {
     const ApplicantsPage = ApplicantsRoute.options.component;
     if (!ApplicantsPage)
       throw new Error('The applicants route must expose its component');
-    const { container } = render(<ApplicantsPage />);
+    render(<ApplicantsPage />);
+
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: 'Senior Product Designer',
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Published · 1 applicant/)).toBeInTheDocument();
+    // Each visible stage is a column; the Review column carries the card.
+    expect(
+      screen.getByRole('heading', { level: 3, name: 'Review' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 3, name: 'Interview' }),
+    ).toBeInTheDocument();
+    const reviewColumn = screen.getByRole('grid', {
+      name: 'Review applicants',
+    });
+    expect(within(reviewColumn).getByText('Ada Lovelace')).toBeInTheDocument();
+    expect(within(reviewColumn).getByText(/Applied/)).toBeInTheDocument();
+  });
+
+  function reviewBoardVM(): PipelineBoardVM {
+    return {
+      stages: [
+        {
+          id: 'stage-review',
+          label: 'Review',
+          systemStage: 'review',
+          isProtected: true,
+        },
+      ],
+      cards: [
+        {
+          id: 'application-1',
+          name: 'Ada Lovelace',
+          email: 'ada@example.com',
+          headline: null,
+          initials: 'AL',
+          appliedLabel: 'Applied 13 Jul 2026',
+          coverNote: null,
+          resumeUrl: null,
+          resumeFilename: null,
+          columnStageId: 'stage-review',
+          timeline: [{ id: 'event-1', text: 'Note: Strong portfolio' }],
+        },
+      ],
+    };
+  }
+
+  it('surfaces stage picker, note field, and activity in the card detail sheet', () => {
+    render(
+      <ApplicantPipelineBoard
+        slug="northstar-labs"
+        jobId="job-1"
+        board={reviewBoardVM()}
+        defaultOpenCardId="application-1"
+      />,
+    );
+
+    expect(screen.getByRole('combobox', { name: 'Stage' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('textbox', { name: 'Add a private note' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Note: Strong portfolio')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reject' })).toBeInTheDocument();
+  });
+
+  it('keeps a failed stage rename open and reports the error in the dialog', async () => {
+    mocks.renameStage.mockResolvedValue({
+      ok: false,
+      message: 'Rename failed',
+    });
+
+    render(
+      <ApplicantPipelineBoard
+        slug="northstar-labs"
+        jobId="job-1"
+        board={{
+          stages: [
+            {
+              id: 'stage-custom',
+              label: 'Portfolio review',
+              systemStage: null,
+              isProtected: false,
+            },
+          ],
+          cards: [],
+        }}
+        defaultStageDialog={{
+          kind: 'rename',
+          stage: {
+            id: 'stage-custom',
+            label: 'Portfolio review',
+            systemStage: null,
+            isProtected: false,
+          },
+        }}
+      />,
+    );
+
+    const input = screen.getByRole('textbox', { name: 'Stage name' });
+    expect(input).toHaveValue('Portfolio review');
+    fireEvent.change(input, { target: { value: 'Interview' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Rename failed');
+    expect(screen.getByRole('textbox', { name: 'Stage name' })).toHaveValue(
+      'Interview',
+    );
+    expect(mocks.invalidate).not.toHaveBeenCalled();
+  });
+
+  it('reports a failed reject in the detail sheet action area', async () => {
+    mocks.bulkRejectApplicants.mockResolvedValue({
+      ok: false,
+      message: 'Reject failed',
+    });
+
+    render(
+      <ApplicantPipelineBoard
+        slug="northstar-labs"
+        jobId="job-1"
+        board={reviewBoardVM()}
+        defaultOpenCardId="application-1"
+      />,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Reject failed');
     expect(alert.closest('[data-applicant-action-feedback]')).not.toBeNull();
-    expect(
-      container.querySelector('[data-applicant-note-field] [role="alert"]'),
-    ).toBeNull();
+    expect(mocks.invalidate).not.toHaveBeenCalled();
+  });
+
+  it('moves a card optimistically through the detail sheet stage picker', async () => {
+    // Hold the move in-flight so the optimistic column placement is observable
+    // (a resolved move + mocked invalidate would settle back to the static prop).
+    let resolveMove!: (value: { ok: true; data: null }) => void;
+    mocks.moveApplicant.mockReturnValue(
+      new Promise((resolve) => {
+        resolveMove = resolve;
+      }),
+    );
+
+    render(
+      <ApplicantPipelineBoard
+        slug="northstar-labs"
+        jobId="job-1"
+        board={{
+          stages: [
+            {
+              id: 'stage-review',
+              label: 'Review',
+              systemStage: 'review',
+              isProtected: true,
+            },
+            {
+              id: 'stage-interview',
+              label: 'Interview',
+              systemStage: null,
+              isProtected: false,
+            },
+          ],
+          cards: [
+            {
+              id: 'application-1',
+              name: 'Ada Lovelace',
+              email: 'ada@example.com',
+              headline: null,
+              initials: 'AL',
+              appliedLabel: null,
+              coverNote: null,
+              resumeUrl: null,
+              resumeFilename: null,
+              columnStageId: 'stage-review',
+              timeline: [],
+            },
+          ],
+        }}
+        defaultOpenCardId="application-1"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('combobox', { name: 'Stage' }));
+    const interviewOption = await screen.findByRole('option', {
+      name: 'Interview',
+    });
+    fireEvent.pointerDown(interviewOption, { pointerType: 'mouse' });
+    fireEvent.click(interviewOption);
+
+    await waitFor(() =>
+      expect(mocks.moveApplicant).toHaveBeenCalledWith({
+        data: {
+          slug: 'northstar-labs',
+          applicationId: 'application-1',
+          stageId: 'stage-interview',
+        },
+      }),
+    );
+    // Optimistic: the stage picker adopts Interview immediately (the card's
+    // resolved column follows the same override) while the move is in flight.
+    expect(screen.getByRole('combobox', { name: 'Stage' })).toHaveTextContent(
+      'Interview',
+    );
+
+    // Settle the move; the loader invalidation is what refetches truth.
+    await act(async () => {
+      resolveMove({ ok: true, data: null });
+    });
+    await waitFor(() => expect(mocks.invalidate).toHaveBeenCalled());
   });
 });
