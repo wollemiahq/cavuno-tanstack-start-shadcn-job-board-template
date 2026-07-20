@@ -263,7 +263,7 @@ function SignupCtaCard({
   href: '/auth/sign-up' | '/auth/employer/sign-up';
 }) {
   return (
-    <Card className="bg-muted/50 h-full shadow-none">
+    <Card className="h-full shadow-none">
       <CardHeader>
         <CardTitle>
           <h2>{heading}</h2>

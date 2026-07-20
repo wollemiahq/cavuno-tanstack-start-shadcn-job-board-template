@@ -52,7 +52,10 @@ export function CompanyAvatar({
   return (
     <span
       className={cn(
-        'bg-foreground text-background flex shrink-0 items-center justify-center rounded-[9px] font-semibold tracking-wide',
+        // Same bordered-surface family as the logo variant — the initials
+        // fallback reads as a quiet placeholder, not a brand mark (the old
+        // ink chip out-shouted real logos next to it).
+        'border-border bg-muted text-muted-foreground flex shrink-0 items-center justify-center rounded-[9px] border font-semibold tracking-wide',
         box,
         className,
       )}
