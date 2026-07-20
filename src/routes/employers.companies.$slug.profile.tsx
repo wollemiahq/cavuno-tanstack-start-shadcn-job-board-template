@@ -4,7 +4,14 @@
  * you see is what the board shows, edits save in place. Jobs live on the Jobs
  * tab — this page is only the profile.
  *
- * `summary` (tagline) is write-only on the v1 wire, so it starts blank.
+ * `summary` (tagline) and the social links (`xUrl` / `linkedinUrl` /
+ * `facebookUrl`) are writable on the employer company-update surface but are
+ * NOT returned by any read the board exposes to this frontend — the public
+ * `companies.retrieve` shape omits them, and `me.companies.list` only carries a
+ * slim company (name/slug/website/logoUrl). So these fields start blank and are
+ * "set or replace" only: an empty field is left out of the patch to preserve
+ * whatever is stored. The company `logoUrl` is read-only here — the SDK exposes
+ * no employer logo-write path (see the report), so the logo is a preview only.
  */
 import { useState } from 'react';
 
@@ -21,7 +28,10 @@ import { m } from '../paraglide/messages';
 import { getCompanyWorkspace, updateCompany } from '../server/employers';
 import { getSeoBase, getCompany } from '../server/queries';
 
-import { EmployerCompanyShell } from '@/components/account-shell';
+import {
+  EmployerCompanyShell,
+  EmployerIdentityAvatar,
+} from '@/components/account-shell';
 import { RichTextEditor } from '@/components/rich-text-editor';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -77,6 +87,13 @@ type PublicCompany = Awaited<ReturnType<typeof getCompany>>;
 
 function stripProtocol(url: string): string {
   return url.replace(/^https?:\/\//i, '');
+}
+
+/** A pasted social link may omit its scheme; the API wants an absolute URL. */
+function ensureHttps(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
 function CompanyProfilePage() {
@@ -187,6 +204,9 @@ function ProfileEditorCard({
     website: stripProtocol(company.website ?? ''),
     summary: '',
     description: company.description ?? '',
+    linkedinUrl: '',
+    xUrl: '',
+    facebookUrl: '',
   });
   const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
   const [message, setMessage] = useState('');
@@ -204,7 +224,17 @@ function ProfileEditorCard({
           description: isRichTextEmpty(form.description)
             ? ''
             : form.description,
+          // Write-only fields (not returned by any read): only include a field
+          // when the employer typed something, so a blank input never wipes the
+          // stored value on save.
           ...(form.summary.trim() ? { summary: form.summary.trim() } : {}),
+          ...(form.linkedinUrl.trim()
+            ? { linkedinUrl: ensureHttps(form.linkedinUrl) }
+            : {}),
+          ...(form.xUrl.trim() ? { xUrl: ensureHttps(form.xUrl) } : {}),
+          ...(form.facebookUrl.trim()
+            ? { facebookUrl: ensureHttps(form.facebookUrl) }
+            : {}),
         },
       },
     });
@@ -227,6 +257,22 @@ function ProfileEditorCard({
             void save();
           }}
         >
+          {/* Logo is read-only on this surface: the board returns `logoUrl`
+              but exposes no employer logo-write path, so we preview it and do
+              not offer an upload control (nothing would persist). */}
+          <Field>
+            <FieldLabel>{m.employerProfile_logoLabel()}</FieldLabel>
+            <div className="flex items-center gap-4">
+              <EmployerIdentityAvatar
+                name={company.name}
+                logoUrl={company.logoUrl}
+                size="lg"
+              />
+              <FieldDescription>
+                {m.employerProfile_logoHint()}
+              </FieldDescription>
+            </div>
+          </Field>
           <div className="grid gap-5 sm:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="company-name">
@@ -280,6 +326,88 @@ function ProfileEditorCard({
               {m.employerProfile_taglineHint()}
             </FieldDescription>
           </Field>
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-medium">
+              {m.employerProfile_socialLinksHeading()}
+            </legend>
+            <FieldDescription>
+              {m.employerProfile_socialLinksHint()}
+            </FieldDescription>
+            {/* The website field's pattern: a fixed https:// prefix with the
+                scheme stripped from what the employer types, so the input holds
+                a bare URL and `ensureHttps` restores the scheme on save. */}
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="company-linkedin">
+                  {m.employerProfile_linkedinLabel()}
+                </FieldLabel>
+                <InputGroup>
+                  <InputGroupAddon>
+                    <InputGroupText>
+                      {m.employerDashboard_websiteProtocolPrefix()}
+                    </InputGroupText>
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    id="company-linkedin"
+                    inputMode="url"
+                    value={form.linkedinUrl}
+                    onChange={(event) =>
+                      setForm({
+                        ...form,
+                        linkedinUrl: stripProtocol(event.currentTarget.value),
+                      })
+                    }
+                  />
+                </InputGroup>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="company-x">
+                  {m.employerProfile_xLabel()}
+                </FieldLabel>
+                <InputGroup>
+                  <InputGroupAddon>
+                    <InputGroupText>
+                      {m.employerDashboard_websiteProtocolPrefix()}
+                    </InputGroupText>
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    id="company-x"
+                    inputMode="url"
+                    value={form.xUrl}
+                    onChange={(event) =>
+                      setForm({
+                        ...form,
+                        xUrl: stripProtocol(event.currentTarget.value),
+                      })
+                    }
+                  />
+                </InputGroup>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="company-facebook">
+                  {m.employerProfile_facebookLabel()}
+                </FieldLabel>
+                <InputGroup>
+                  <InputGroupAddon>
+                    <InputGroupText>
+                      {m.employerDashboard_websiteProtocolPrefix()}
+                    </InputGroupText>
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    id="company-facebook"
+                    inputMode="url"
+                    value={form.facebookUrl}
+                    onChange={(event) =>
+                      setForm({
+                        ...form,
+                        facebookUrl: stripProtocol(event.currentTarget.value),
+                      })
+                    }
+                  />
+                </InputGroup>
+              </Field>
+            </div>
+          </fieldset>
           <Field>
             <FieldLabel>{m.employerProfile_aboutHeading()}</FieldLabel>
             {/* Company descriptions are HTML on the API (rendered as-is on
