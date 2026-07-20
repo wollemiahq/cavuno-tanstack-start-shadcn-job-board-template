@@ -158,7 +158,6 @@
         "src/routes/employers.companies.$slug.index.tsx",
         "src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx",
         "src/routes/employers.companies.$slug.jobs.new.tsx",
-        "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.dashboard.tsx",
         "src/routes/employers.index.tsx",
         "src/routes/jobs.locations.index.tsx",
@@ -281,7 +280,6 @@
       "name": "card",
       "status": "used",
       "productionReferences": [
-        "src/components/account-shell.tsx",
         "src/components/board/alert-signup-form.tsx",
         "src/components/board/company-card.tsx",
         "src/components/board/company-search-result-detail.tsx",
@@ -395,7 +393,8 @@
       "productionReferences": [
         "src/components/Header.tsx",
         "src/components/messages/message-bubble.tsx",
-        "src/components/messages/thread-view.tsx"
+        "src/components/messages/thread-view.tsx",
+        "src/routes/employers.companies.$slug.index.tsx"
       ]
     },
     {
@@ -657,7 +656,6 @@
       "name": "separator",
       "status": "used",
       "productionReferences": [
-        "src/components/account-shell.tsx",
         "src/components/preview/preview-board-settings.tsx",
         "src/components/preview/preview-emails.tsx",
         "src/components/preview/preview-toolbar.tsx",

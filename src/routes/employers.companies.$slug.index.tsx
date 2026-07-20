@@ -118,7 +118,6 @@ function CompanyJobsPage() {
       slug={slug}
       company={{
         name: company?.name ?? slug,
-        website: company?.website ?? null,
         logoUrl: company?.logoUrl ?? null,
       }}
       active="jobs"

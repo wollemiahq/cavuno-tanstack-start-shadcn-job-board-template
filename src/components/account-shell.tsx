@@ -6,8 +6,6 @@ import { m } from '../paraglide/messages';
 
 import { Page, PageContent } from '@/components/layout/page';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { initialsOf } from '@/lib/initials';
 import { cn } from '@/lib/utils';
 
@@ -38,75 +36,73 @@ export function AccountShell({
   rail?: ReactNode;
   children: ReactNode;
 }) {
-  const sidebar = (
-    <Card size="sm" data-slot="employer-account-sidebar">
-      <CardContent>
-        <div className="flex min-w-0 items-center gap-3">
-          <EmployerIdentityAvatar
-            name={identity.title}
-            logoUrl={identity.avatarUrl}
-          />
-          <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <p className="text-foreground min-w-0 truncate font-medium">
-                {identity.title}
-              </p>
-              {identity.badge}
-            </div>
-            {identity.subtitle ? (
-              <p className="text-muted-foreground mt-0.5 text-sm break-words">
-                {identity.subtitle}
-              </p>
-            ) : null}
-          </div>
-        </div>
-
-        <Separator className="my-4" />
-
-        <nav
-          aria-label={identity.title}
-          className="grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-1"
-        >
-          {nav.map((item) => {
-            const current = item.key === active;
-            return (
-              <Link
-                key={item.key}
-                to={item.to}
-                params={item.params}
-                aria-current={current ? 'page' : undefined}
-                className={cn(
-                  'text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring rounded-xl px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
-                  current && 'bg-muted text-foreground',
-                )}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {rail ? (
-          <div
-            className="border-border mt-4 border-t pt-4"
-            data-slot="employer-account-rail"
-          >
-            {rail}
-          </div>
-        ) : null}
-      </CardContent>
-    </Card>
-  );
-
+  // No side columns: an identity + section-nav header owns the top of the
+  // page, and the content region spans the full page width beneath it.
   return (
     <Page width="wide">
-      <PageContent
-        aside={sidebar}
-        asideLabel={identity.title}
-        asideOrder="before"
-      >
-        <div data-slot="employer-account-content" className="min-w-0">
-          {children}
+      <PageContent>
+        <div className="flex flex-col gap-6">
+          <div
+            className="flex flex-col gap-4"
+            data-slot="employer-account-header"
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <EmployerIdentityAvatar
+                name={identity.title}
+                logoUrl={identity.avatarUrl}
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <p className="text-foreground min-w-0 truncate text-lg font-semibold">
+                    {identity.title}
+                  </p>
+                  {identity.badge}
+                </div>
+                {identity.subtitle ? (
+                  <p className="text-muted-foreground mt-0.5 text-sm break-words">
+                    {identity.subtitle}
+                  </p>
+                ) : null}
+              </div>
+              {rail ? (
+                <div
+                  className="shrink-0"
+                  data-slot="employer-account-rail"
+                >
+                  {rail}
+                </div>
+              ) : null}
+            </div>
+
+            <nav
+              aria-label={identity.title}
+              className="border-border flex gap-1 overflow-x-auto border-b"
+            >
+              {nav.map((item) => {
+                const current = item.key === active;
+                return (
+                  <Link
+                    key={item.key}
+                    to={item.to}
+                    params={item.params}
+                    aria-current={current ? 'page' : undefined}
+                    className={cn(
+                      'focus-visible:ring-ring -mb-px border-b-2 border-transparent px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none',
+                      current
+                        ? 'border-foreground text-foreground'
+                        : 'text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+
+          <div data-slot="employer-account-content" className="min-w-0">
+            {children}
+          </div>
         </div>
       </PageContent>
     </Page>
@@ -137,7 +133,7 @@ export function EmployerCompanyShell({
   children,
 }: {
   slug: string;
-  company: { name: string; website: string | null; logoUrl: string | null };
+  company: { name: string; logoUrl: string | null };
   active: string;
   children: ReactNode;
 }) {
@@ -161,7 +157,6 @@ export function EmployerCompanyShell({
       identity={{
         avatarUrl: company.logoUrl,
         title: company.name,
-        subtitle: company.website,
       }}
       nav={nav}
       active={active}

@@ -365,7 +365,6 @@ function NewJobPage() {
       slug={workspace.slug}
       company={{
         name: company?.name ?? workspace.slug,
-        website: company?.website ?? null,
         logoUrl: company?.logoUrl ?? null,
       }}
       active="jobs"

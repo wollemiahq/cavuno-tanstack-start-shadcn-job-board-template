@@ -265,7 +265,7 @@ Props:
 
 - `active: string`
 - `children: ReactNode`
-- `company: { name: string; website: string | null; logoUrl: string | null; }`
+- `company: { name: string; logoUrl: string | null; }`
 - `slug: string`
 
 ### EmployerIdentityAvatar — `src/components/account-shell.tsx`
@@ -1151,6 +1151,35 @@ Props:
 - `items: { id: string; object: "candidate_experience"; title: string; companyName: string; companyUrl: string | null; location…`
 - `language: string`
 - `locationSuggestions: LocationSuggestionState`
+
+### FloatingStackItem — `src/components/floating-stack.tsx`
+
+A single widget in the floating stack. Portals into the shared container
+when one is mounted (the running app) and renders inline as a graceful
+fallback when it is not (isolated component tests). `order` controls the
+vertical position within the stack — a lower value renders higher up.
+
+Props:
+
+- `children: ReactNode`
+- `className?: string | undefined`
+- `order?: number | undefined`
+
+### FloatingStackProvider — `src/components/floating-stack.tsx`
+
+Shared bottom-right stacking region for floating widgets (the job-alert
+prompt, the messaging dock, and any future corner widget). A single fixed
+flex column that every widget portals into, so they stack vertically with
+consistent spacing instead of overlapping in the same corner.
+
+The container sits at `z-40` — below the `z-50` overlay layer — so menus,
+popovers, and dialogs (which portal to the body at `z-50`) still render
+above the stack. It is `pointer-events-none` so empty gaps never trap
+clicks meant for the page; each item re-enables pointer events.
+
+Props:
+
+- `children: ReactNode`
 
 ### JobAlertFloatingPrompt — `src/components/job-alert-floating-prompt.tsx`
 

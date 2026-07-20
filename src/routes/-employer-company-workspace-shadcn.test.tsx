@@ -308,7 +308,6 @@ describe('employer company workspace', () => {
     // The About field authors as rich text (HTML on the wire), so the
     // editor toolbar stands in for a plain textbox assertion.
     expect(screen.getByRole('toolbar', { name: 'About' })).toBeInTheDocument();
-    expect(screen.getByText('Hiring')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save company' })).toBeEnabled();
   });
 
