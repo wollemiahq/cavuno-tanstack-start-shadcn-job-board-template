@@ -1,6 +1,6 @@
 import { fieldLabel } from '@cavuno/board/format';
 
-import { m } from '../paraglide/messages';
+import { m } from '@/paraglide/messages';
 
 import type { EmployerJob } from '@cavuno/board';
 

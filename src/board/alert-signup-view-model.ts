@@ -19,7 +19,7 @@
  * them directly from `@cavuno/board*` instead. Don't "fix" that to a
  * re-export — it's intentional.
  */
-import { boardCopy } from '#/copy';
+import { boardCopy } from '@/copy';
 
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 

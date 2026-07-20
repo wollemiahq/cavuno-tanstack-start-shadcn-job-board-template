@@ -1,4 +1,4 @@
-import { boardCopy } from '#/copy';
+import { boardCopy } from '@/copy';
 
 import { describe, expect, it } from 'vitest';
 

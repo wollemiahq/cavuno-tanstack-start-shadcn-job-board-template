@@ -7,7 +7,7 @@ import {
   toCreateJobPostingInput,
   type JobPostingFormInput,
 } from '../lib/post-form';
-import { m } from '../paraglide/messages';
+import { m } from '@/paraglide/messages';
 import { gatedRead } from './board-access';
 
 import type { JobPostingResult } from '@cavuno/board';

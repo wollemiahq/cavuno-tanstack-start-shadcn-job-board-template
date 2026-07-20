@@ -18,7 +18,7 @@
  * Builder-2's layer-3 ejection (ADR-0059: per-board generated-code copy
  * overrides) is a regeneration of `messages/{locale}.json` + this file.
  */
-import { m } from './paraglide/messages';
+import { m } from '@/paraglide/messages';
 
 import type { BoardLabelOverrides, UiCopy } from '@cavuno/board/format';
 

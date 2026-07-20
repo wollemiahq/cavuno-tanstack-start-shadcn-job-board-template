@@ -1,4 +1,4 @@
-import { boardCopy } from '#/copy';
+import { boardCopy } from '@/copy';
 
 /**
  * Apply-button VIEW-MODEL — the Layer-1b seam for the apply block
