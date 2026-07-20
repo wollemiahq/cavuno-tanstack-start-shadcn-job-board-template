@@ -225,10 +225,6 @@ export function JobSearchPage({
                   label={m.jobSearch_resultsRegionLabel()}
                   scrollRestorationId="jobs-search-results"
                 >
-                  <div
-                    data-slot="job-results-content"
-                    className="space-y-4 pt-4 pr-4 pb-4"
-                  >
                     <ListingResultsHeader breadcrumb={breadcrumb}>
                       {resultsBar}
                     </ListingResultsHeader>
@@ -318,7 +314,6 @@ export function JobSearchPage({
                         </div>
                       </section>
                     ) : null}
-                  </div>
                 </SearchResultsList>
               }
               detail={

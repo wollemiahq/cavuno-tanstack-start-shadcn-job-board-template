@@ -173,7 +173,6 @@ export function CompanySearchPage({
                   label={m.companySearch_resultsRegionLabel()}
                   scrollRestorationId="companies-search-results"
                 >
-                  <div className="space-y-4 pt-4 pr-4 pb-4">
                     <ListingResultsHeader breadcrumb={breadcrumb}>
                       {resultsBar}
                     </ListingResultsHeader>
@@ -245,7 +244,6 @@ export function CompanySearchPage({
                         </div>
                       </section>
                     ) : null}
-                  </div>
                 </SearchResultsList>
               }
               detail={

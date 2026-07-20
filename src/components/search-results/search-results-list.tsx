@@ -30,7 +30,12 @@ export function SearchResultsList({
         className,
       )}
     >
-      {children}
+      {/* The one content-padding contract shared by jobs, companies, and
+          talent: vertical inset only. The column's horizontal gutters come
+          from the search-results grid, so this must NOT add side padding
+          (an asymmetric right inset was leaving a gap beside the sticky
+          results header). */}
+      <div className="space-y-4 py-4">{children}</div>
     </section>
   );
 }

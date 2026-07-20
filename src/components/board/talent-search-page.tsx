@@ -149,7 +149,6 @@ export function TalentSearchPage({
                   label={m.talentSearch_resultsRegionLabel()}
                   scrollRestorationId="talent-search-results"
                 >
-                  <div className="space-y-4 pt-4 pr-4 pb-4">
                     {resultsBar}
 
                     <div className="space-y-3">
@@ -182,7 +181,6 @@ export function TalentSearchPage({
                         </Button>
                       </div>
                     ) : null}
-                  </div>
                 </SearchResultsList>
               }
               detail={
