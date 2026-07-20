@@ -16,7 +16,7 @@ re-shot to hero quality — noted per row.
 | `persona-switcher.png` | The preview toolbar open, showing the 8 personas under Candidates / Employers | Any page; open the bottom-left toolbar persona menu | No — must be captured (toolbar is sandbox-only) |
 | `kanban.png` | The employer applicant pipeline as a drag-and-drop kanban, ideally mid-drag or with a drop indicator visible | Switch to `employer-admin`, open a job's **Applicants** (`/employers/companies/:slug/jobs/:jobId/applicants`) | No — release-evidence only has the empty "connect a company" dashboard |
 | `captured-emails.png` | The captured-email viewer with a row expanded showing a rendered HTML body | Toolbar → **Emails**, expand a message | No — must be captured |
-| `tour.gif` _(optional)_ | Animated 4-beat tour (persona → kanban → email → 4242 checkout) | Drive the [`DEMO.md`](../DEMO.md) script | No — record separately |
+| `tour.gif` _(optional)_ | Animated tour: switching personas, dragging an applicant across the kanban, reading a captured email, and paying with a test card | Drive the [`DEMO.md`](../DEMO.md) script | No — record separately |
 
 ## Notes
 

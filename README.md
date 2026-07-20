@@ -2,8 +2,8 @@
 
 **Clone it, `pnpm dev`, and in under a minute you have a populated,
 production-realistic job board** — real jobs and companies, a working
-applicant tracker, captured outbound emails, and Stripe test-mode checkout —
-with **no API key, no account, and no empty-database staring-contest.**
+applicant tracker, captured outbound emails, and Stripe test-mode checkout.
+No API key, no account, and no empty database to seed first.
 
 Built on TanStack Start, Cloudflare Workers, and the official
 **shadcn/ui Rhea** preset on **Base UI**. Data comes from the hosted
@@ -51,7 +51,7 @@ fresh clone boots straight into a full board with:
 
 The full sandbox playbook — persona roster, feature-flag toggles, reseed, and
 the headless server-function equivalents — is in
-[`docs/preview-states.md`](docs/preview-states.md). The guided "wow" tour is in
+[`docs/preview-states.md`](docs/preview-states.md). A short guided tour is in
 [`docs/DEMO.md`](docs/DEMO.md).
 
 ### 2. Agent-ready by construction
@@ -106,7 +106,7 @@ called server-side (`src/server/**`).
 
 ---
 
-## Take the tour (the "wow" in 60 seconds)
+## Take the tour
 
 The sandbox exists so you can see every state without seeding anything. The
 full script with exact clicks is in [`docs/DEMO.md`](docs/DEMO.md); the short

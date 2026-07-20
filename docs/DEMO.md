@@ -1,8 +1,10 @@
 # The guided tour — see everything in 60 seconds
 
-This is the "wow" walkthrough: a fresh clone, on the **sandbox board**, shows a
-full, production-realistic job board with no seeding. The four beats below are
-persona-switch → kanban drag → captured email → test-card checkout.
+A fresh clone boots straight onto the **sandbox board** — a full,
+production-realistic job board, with nothing to seed. This tour walks the four
+things that best show what that gets you: switching into a seeded persona,
+moving an applicant through the hiring pipeline, reading a captured email, and
+paying with a test card.
 
 > **Prerequisite:** you're running on the sandbox board (the default in
 > `.dev.vars.example`). If the **preview toolbar** isn't visible bottom-left,
