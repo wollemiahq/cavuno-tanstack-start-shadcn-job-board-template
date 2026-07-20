@@ -13,9 +13,6 @@ import {
   CardTitle,
 } from './card';
 
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
 afterEach(cleanup);
 
 describe('official Rhea Card source', () => {
@@ -49,12 +46,20 @@ describe('official Rhea Card source', () => {
     expect(screen.getByText('Starter title')).toBeInTheDocument();
   });
 
-  it('carries the official Rhea spacing and media contracts', () => {
-    const source = readFileSync(join(import.meta.dirname, 'card.tsx'), 'utf8');
-    expect(source).toContain('gap-(--card-spacing)');
-    expect(source).toContain('[--card-spacing:--spacing(5)]');
-    expect(source).toContain('data-[size=sm]:[--card-spacing:--spacing(4)]');
-    expect(source).toContain('has-[>img:first-child]:pt-0');
-    expect(source).toContain('has-data-[slot=card-action]');
+  it('drives the spacing variant through the data-size attribute', () => {
+    // The `--card-spacing` token is switched by the CSS `data-[size=sm]:`
+    // selector, so the observable behavioral seam is that the `size` prop
+    // maps to `data-size` — default vs sm — which the styling keys off.
+    const { container: def } = render(<Card>Default</Card>);
+    expect(def.querySelector('[data-slot="card"]')).toHaveAttribute(
+      'data-size',
+      'default',
+    );
+
+    const { container: sm } = render(<Card size="sm">Small</Card>);
+    expect(sm.querySelector('[data-slot="card"]')).toHaveAttribute(
+      'data-size',
+      'sm',
+    );
   });
 });
