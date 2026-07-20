@@ -326,6 +326,18 @@ function ProfileEditorCard({
               {m.employerProfile_taglineHint()}
             </FieldDescription>
           </Field>
+          <Field>
+            <FieldLabel>{m.employerProfile_aboutHeading()}</FieldLabel>
+            {/* Company descriptions are HTML on the API (rendered as-is on
+                the public page), so they author as rich text, not markup. */}
+            <RichTextEditor
+              value={form.description}
+              onChange={(description) =>
+                setForm((prev) => ({ ...prev, description }))
+              }
+              ariaLabel={m.employerProfile_aboutHeading()}
+            />
+          </Field>
           <fieldset className="space-y-3">
             <legend className="text-sm font-medium">
               {m.employerProfile_socialLinksHeading()}
@@ -408,18 +420,6 @@ function ProfileEditorCard({
               </Field>
             </div>
           </fieldset>
-          <Field>
-            <FieldLabel>{m.employerProfile_aboutHeading()}</FieldLabel>
-            {/* Company descriptions are HTML on the API (rendered as-is on
-                the public page), so they author as rich text, not markup. */}
-            <RichTextEditor
-              value={form.description}
-              onChange={(description) =>
-                setForm((prev) => ({ ...prev, description }))
-              }
-              ariaLabel={m.employerProfile_aboutHeading()}
-            />
-          </Field>
           {/* In-page form: primary action left-aligned, in reading flow. */}
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={status === 'saving'}>
