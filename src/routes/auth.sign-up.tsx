@@ -1,5 +1,6 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 
+import { redirectIfAuthenticated } from '../lib/auth-guard';
 import {
   candidateReturnTo,
   candidateSignInHref,
@@ -20,7 +21,9 @@ export const Route = createFileRoute('/auth/sign-up')({
         ? candidateReturnTo(search.returnTo)
         : undefined,
   }),
-  loader: async () => {
+  loaderDeps: ({ search }) => ({ returnTo: search.returnTo }),
+  loader: async ({ deps }) => {
+    await redirectIfAuthenticated(candidateReturnTo(deps.returnTo));
     const board = await getBoardContext();
     return { boardName: board.name };
   },

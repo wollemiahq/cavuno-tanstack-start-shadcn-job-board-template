@@ -10,6 +10,10 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../server/queries', () => ({ getSeoBase: vi.fn() }));
+// The loader's already-authed guard reads the session; default to signed-out.
+vi.mock('../server/account', () => ({
+  getSessionUser: vi.fn().mockResolvedValue(null),
+}));
 
 const mocks = vi.hoisted(() => ({
   getOAuthAuthorizationUrl: vi.fn(),

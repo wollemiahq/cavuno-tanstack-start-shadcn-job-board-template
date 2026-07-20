@@ -9,6 +9,8 @@ vi.mock('../server/queries', () => ({
   getBoardContext: vi.fn<() => void>(),
   getSeoBase: vi.fn<() => void>(),
 }));
+// The already-authed guard on these entry pages reads the account layer.
+vi.mock('../server/account', () => ({ getSessionUser: vi.fn() }));
 
 import { Route as EmployerSignUpRoute } from './auth.employer.sign-up';
 import { Route as JoinRoute } from './auth.join';

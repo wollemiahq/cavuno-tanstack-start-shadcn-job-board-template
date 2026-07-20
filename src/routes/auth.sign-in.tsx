@@ -9,6 +9,7 @@ import {
   Field,
   FormError,
 } from '../components/auth-form';
+import { redirectIfAuthenticated } from '../lib/auth-guard';
 import {
   candidateForgotPasswordHref,
   candidateJoinHref,
@@ -35,7 +36,11 @@ export const Route = createFileRoute('/auth/sign-in')({
         ? candidateReturnTo(search.returnTo)
         : undefined,
   }),
-  loader: () => getSeoBase(),
+  loaderDeps: ({ search }) => ({ returnTo: search.returnTo }),
+  loader: async ({ deps }) => {
+    await redirectIfAuthenticated(candidateReturnTo(deps.returnTo));
+    return getSeoBase();
+  },
   head: ({ loaderData }) => ({
     meta: [{ title: headTitle(loaderData?.boardName, m.authSignIn_title()) }],
   }),

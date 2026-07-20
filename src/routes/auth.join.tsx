@@ -10,6 +10,7 @@ import {
   redirect,
 } from '@tanstack/react-router';
 
+import { redirectIfAuthenticated } from '../lib/auth-guard';
 import {
   candidateReturnTo,
   candidateSignUpHref,
@@ -34,6 +35,7 @@ export const Route = createFileRoute('/auth/join')({
       : {},
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
+    await redirectIfAuthenticated(candidateReturnTo(deps.returnTo));
     const board = await getBoardContext();
     const destination = resolveSignupDestination(board.features);
     if (destination === null) throw notFound();

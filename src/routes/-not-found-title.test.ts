@@ -19,6 +19,8 @@ vi.mock('../server/queries', () => ({
   listTalent: vi.fn(),
   getBoardContext: vi.fn(),
 }));
+// auth.join's already-authed guard imports the account server layer.
+vi.mock('../server/account', () => ({ getSessionUser: vi.fn() }));
 
 import { m } from '../paraglide/messages';
 import { Route as JoinRoute } from './auth.join';
