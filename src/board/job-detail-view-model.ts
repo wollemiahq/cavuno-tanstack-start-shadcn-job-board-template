@@ -210,11 +210,25 @@ export function toJobDetailVM(
       job.salaryCurrency,
     ) || null;
   const published = formatPublishedRelativeDate(language, job.publishedAt);
+  // Resolve remote work-permit ISO codes to country names the same way the
+  // card mapper does (the SDK's card location label reads names the API
+  // pre-resolved with `Intl.DisplayNames` region names) — so the detail
+  // header no longer renders raw codes like "US, GB", and the two mappers
+  // agree on the remote location.
+  const regionNames = (() => {
+    try {
+      return new Intl.DisplayNames([language], { type: 'region' });
+    } catch {
+      return null;
+    }
+  })();
   const location =
     job.remoteOption === 'remote'
       ? job.remoteWorldwide
         ? copy.worldwideLabel
-        : job.remoteWorkPermitCountryCodes.join(', ') || null
+        : job.remoteWorkPermitCountryCodes
+            .map((code) => regionNames?.of(code) ?? code)
+            .join(', ') || null
       : (offices[0] ?? null);
 
   return {
