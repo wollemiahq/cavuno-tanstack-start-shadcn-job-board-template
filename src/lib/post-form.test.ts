@@ -5,7 +5,9 @@ import {
   isRichTextEmpty,
   looksLikeDomain,
   sanitizeLinkUrl,
+  stripSocialHandle,
   toDomain,
+  toSocialUrl,
 } from './post-form';
 
 describe('ensureProtocol', () => {
@@ -105,5 +107,42 @@ describe('isRichTextEmpty', () => {
   it('treats a document with visible text as non-empty', () => {
     expect(isRichTextEmpty('<p>Hello</p>')).toBe(false);
     expect(isRichTextEmpty('<ul><li>Role</li></ul>')).toBe(false);
+  });
+});
+
+describe('stripSocialHandle', () => {
+  it('reduces a pasted full URL to the bare handle', () => {
+    expect(
+      stripSocialHandle('https://www.linkedin.com/company/acme', [
+        'linkedin.com',
+      ]),
+    ).toBe('company/acme');
+  });
+
+  it('strips a network alias (twitter.com for x.com)', () => {
+    expect(
+      stripSocialHandle('https://twitter.com/acme', ['x.com', 'twitter.com']),
+    ).toBe('acme');
+  });
+
+  it('leaves a bare handle untouched', () => {
+    expect(stripSocialHandle('acme', ['x.com'])).toBe('acme');
+  });
+});
+
+describe('toSocialUrl', () => {
+  it('canonicalises to the network domain regardless of pasted form', () => {
+    expect(toSocialUrl('acme', 'x.com')).toBe('https://x.com/acme');
+    expect(
+      toSocialUrl('https://twitter.com/acme', 'x.com', [
+        'x.com',
+        'twitter.com',
+      ]),
+    ).toBe('https://x.com/acme');
+  });
+
+  it('returns an empty string for empty input', () => {
+    expect(toSocialUrl('', 'x.com')).toBe('');
+    expect(toSocialUrl('   ', 'x.com')).toBe('');
   });
 });

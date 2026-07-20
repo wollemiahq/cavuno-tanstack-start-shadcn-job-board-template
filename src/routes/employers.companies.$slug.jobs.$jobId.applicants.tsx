@@ -1,10 +1,13 @@
 import { useState } from 'react';
 
-import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
+import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { ExternalLinkIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 
 import { employerJobStatusLabel } from '../lib/employer-job-labels';
-import { handleEmployerLoaderError } from '../lib/employer-loader-auth';
+import {
+  handleEmployerLoaderError,
+  isReauthRetry,
+} from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
 import {
   addApplicantNote,
@@ -19,16 +22,10 @@ import { getSeoBase } from '../server/queries';
 
 import { Page, PageContent } from '@/components/layout/page';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty';
+import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import {
   InputGroup,
@@ -55,7 +52,7 @@ import type { EmployerApplicant, EmployerPipelineStage } from '@cavuno/board';
 export const Route = createFileRoute(
   '/employers/companies/$slug/jobs/$jobId/applicants',
 )({
-  loader: async ({ params }) => {
+  loader: async ({ params, location }) => {
     try {
       const [pipeline, seo] = await Promise.all([
         getPipeline({ data: { slug: params.slug, job: params.jobId } }),
@@ -63,9 +60,10 @@ export const Route = createFileRoute(
       ]);
       return { ...pipeline, seo };
     } catch (error) {
-      handleEmployerLoaderError(
+      return await handleEmployerLoaderError(
         error,
         `/employers/companies/${params.slug}/jobs/${params.jobId}/applicants`,
+        { retried: isReauthRetry(location) },
       );
     }
   },
@@ -92,49 +90,32 @@ function ApplicantsPage() {
     <Page width="content">
       <PageContent>
         <div className="space-y-8">
-          <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-1">
-              <h1 className="font-heading text-3xl font-semibold tracking-tight">
-                {pipeline.job.title}
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                {employerJobStatusLabel(pipeline.job.status)} ·{' '}
-                {pipeline.applicants.length === 1
-                  ? m.employerApplicants_countOne({
-                      count: pipeline.applicants.length,
-                    })
-                  : m.employerApplicants_countMany({
-                      count: pipeline.applicants.length,
-                    })}
-              </p>
-            </div>
-            <Link
-              to="/employers/companies/$slug"
-              params={{ slug }}
-              className={buttonVariants({ variant: 'outline' })}
-            >
-              {m.employerApplicants_backToCompanyLabel()}
-            </Link>
+          <header className="space-y-1">
+            <h1 className="font-heading text-3xl font-semibold tracking-tight">
+              {pipeline.job.title}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {employerJobStatusLabel(pipeline.job.status)} ·{' '}
+              {pipeline.applicants.length === 1
+                ? m.employerApplicants_countOne({
+                    count: pipeline.applicants.length,
+                  })
+                : m.employerApplicants_countMany({
+                    count: pipeline.applicants.length,
+                  })}
+            </p>
           </header>
 
           <section
-            aria-labelledby="pipeline-stages-heading"
+            aria-label={m.employerApplicants_stagesHeading()}
             className="space-y-4"
           >
-            <h2
-              id="pipeline-stages-heading"
-              className="font-heading text-xl font-semibold"
-            >
-              {m.employerApplicants_stagesHeading()}
-            </h2>
             <StageManager
               slug={slug}
               jobId={pipeline.job.id}
               stages={pipeline.stages}
             />
           </section>
-
-          <hr className="border-border" />
 
           <section aria-labelledby="applicants-heading" className="space-y-4">
             <h2
@@ -149,9 +130,6 @@ function ApplicantsPage() {
                   <EmptyTitle>
                     {m.employerApplicants_noApplicantsText()}
                   </EmptyTitle>
-                  <EmptyDescription>
-                    {m.employerApplicants_stagesHeading()}
-                  </EmptyDescription>
                 </EmptyHeader>
               </Empty>
             ) : (
@@ -315,14 +293,8 @@ function StagePill({
   return (
     <div className="space-y-2">
       <ButtonGroup aria-label={stage.label}>
-        <ButtonGroupText>
-          {stage.label}
-          {stage.isProtected ? (
-            <Badge variant="secondary">
-              {m.employerApplicants_systemBadge()}
-            </Badge>
-          ) : null}
-        </ButtonGroupText>
+        {/* A protected (system) stage simply carries no ⋮ actions — no badge. */}
+        <ButtonGroupText>{stage.label}</ButtonGroupText>
         {!stage.isProtected ? (
           <>
             <Button
