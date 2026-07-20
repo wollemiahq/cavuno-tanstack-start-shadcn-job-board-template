@@ -13,6 +13,7 @@ import { isNotFound } from '@cavuno/board';
  * hosted board's wall). The board context + SEO base stay OPEN (the hosted
  * board serves them publicly, and the /password challenge needs the brand).
  */
+import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
@@ -446,11 +447,34 @@ export const getLegalPage = createServerFn({ method: 'GET' })
     ),
   );
 
+/**
+ * The API rejects every blog read with `blog_disabled` (422) when the
+ * board's blog feature is off. A disabled feature must read as ABSENT on
+ * the board — parity with the hosted board's notFound gate — so map it to
+ * the route-level 404 rather than surfacing a 500. Thrown notFound()
+ * serializes across the server-fn boundary to the loader.
+ */
+const isBlogDisabled = (error: unknown): boolean =>
+  typeof error === 'object' &&
+  error !== null &&
+  (error as { code?: unknown }).code === 'blog_disabled';
+
+const blogRead = async <T>(read: () => Promise<T>): Promise<T> => {
+  try {
+    return await read();
+  } catch (error) {
+    if (isBlogDisabled(error)) throw notFound();
+    throw error;
+  }
+};
+
 export const listBlogPosts = createServerFn({ method: 'GET' })
   .validator((input: BlogPostsListQuery) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
-    gatedRead(context, (h) => getBoard().blog.posts.list(data, { headers: h })),
+    gatedRead(context, (h) =>
+      blogRead(() => getBoard().blog.posts.list(data, { headers: h })),
+    ),
   );
 
 export const getBlogPost = createServerFn({ method: 'GET' })
@@ -458,7 +482,11 @@ export const getBlogPost = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, (h) =>
-      getBoard().blog.posts.retrieve(data.postSlug, undefined, { headers: h }),
+      blogRead(() =>
+        getBoard().blog.posts.retrieve(data.postSlug, undefined, {
+          headers: h,
+        }),
+      ),
     ),
   );
 
@@ -467,7 +495,7 @@ export const searchBlogPosts = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, (h) =>
-      getBoard().blog.search(data, undefined, { headers: h }),
+      blogRead(() => getBoard().blog.search(data, undefined, { headers: h })),
     ),
   );
 
@@ -487,9 +515,9 @@ export const getBlogPostAdjacent = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, async (h) => {
       try {
-        return await getBoard().blog.posts.adjacent(data.postSlug, {
-          headers: h,
-        });
+        return await blogRead(() =>
+          getBoard().blog.posts.adjacent(data.postSlug, { headers: h }),
+        );
       } catch (error) {
         if (isNotFound(error)) return EMPTY_ADJACENT;
         throw error;
@@ -502,7 +530,7 @@ export const listBlogTags = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
     gatedRead(context, (h) =>
-      getBoard().blog.tags.list(undefined, { headers: h }),
+      blogRead(() => getBoard().blog.tags.list(undefined, { headers: h })),
     ),
   );
 
@@ -511,7 +539,9 @@ export const getBlogTag = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, (h) =>
-      getBoard().blog.tags.retrieve(data.tagSlug, undefined, { headers: h }),
+      blogRead(() =>
+        getBoard().blog.tags.retrieve(data.tagSlug, undefined, { headers: h }),
+      ),
     ),
   );
 
@@ -520,9 +550,11 @@ export const getBlogAuthor = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, (h) =>
-      getBoard().blog.authors.retrieve(data.authorSlug, undefined, {
-        headers: h,
-      }),
+      blogRead(() =>
+        getBoard().blog.authors.retrieve(data.authorSlug, undefined, {
+          headers: h,
+        }),
+      ),
     ),
   );
 
