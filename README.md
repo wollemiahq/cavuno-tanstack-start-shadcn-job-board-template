@@ -153,7 +153,7 @@ Every surface is a real, SSR-rendered page wired to the Board API:
 | Home (company discovery + latest jobs) | `/` |
 | Jobs search (filters + master/detail) | `/jobs` |
 | Job detail (meta + Google for Jobs JSON-LD) | `/companies/:companySlug/jobs/:jobSlug` |
-| Programmatic SEO listings | `/jobs/:keyword`, `/jobs/skills/:skill`, `/jobs/locations/:location` |
+| Programmatic SEO listings | `/jobs/:keyword`, `/jobs/skills/:skill`, `/jobs/locations/:location`, and the compound pages `/jobs/locations/:location/:keyword` + `/jobs/locations/:location/skills/:skill` |
 | Companies | `/companies`, `/companies/:companySlug`, `/companies/markets/:market` |
 | Salaries explorer | `/salaries` + company/title/skill/location trees |
 | Talent directory | `/talent`, `/p/:handle` |
