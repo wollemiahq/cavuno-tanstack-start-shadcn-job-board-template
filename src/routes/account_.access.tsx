@@ -225,7 +225,10 @@ export function AccessPage() {
 
   if (kit) {
     return (
-      <section className="mx-auto max-w-xl space-y-4 py-10">
+      // Wider than the plan list on purpose: Stripe's embedded checkout lays
+      // out its payment form two-column above ~750px of container width —
+      // clamping it to the reading column squeezed the form into a strip.
+      <section className="mx-auto max-w-4xl space-y-4 py-10">
         <h1 className="font-heading text-3xl font-semibold tracking-tight">
           {m.accountAccess_completePurchaseTitle()}
         </h1>
