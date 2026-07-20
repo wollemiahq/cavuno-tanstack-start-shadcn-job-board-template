@@ -326,12 +326,20 @@ function AccountMenu({
                 >
                   {m.accountShell_companyProfileNav()}
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  nativeButton={false}
+                  render={
+                    <Link
+                      to="/employers/companies/$slug/jobs/new"
+                      params={{ slug: membership.company.slug! }}
+                    />
+                  }
+                >
+                  {m.siteHeader_postJobLabel()}
+                </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
           ))}
-          <DropdownMenuItem nativeButton={false} render={<Link to="/post" />}>
-            {m.siteHeader_postJobLabel()}
-          </DropdownMenuItem>
           <DropdownMenuItem
             nativeButton={false}
             render={<Link to="/employers/dashboard" search={{ add: true }} />}
