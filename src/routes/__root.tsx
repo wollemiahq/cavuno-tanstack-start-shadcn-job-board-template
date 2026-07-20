@@ -217,6 +217,24 @@ function RootLayout() {
   const shellBreadcrumb = resolveShellBreadcrumb({
     pathname: location.pathname,
     labels: copy.breadcrumbs,
+    // Authed surfaces get footer trails too — labels from the template
+    // catalogs (the SDK's copy.breadcrumbs only knows public segments).
+    privateLabels: {
+      account: m.accountHome_title(),
+      profile: m.accountShell_profileNav(),
+      savedJobs: m.accountShell_savedJobsNav(),
+      jobAlerts: m.accountShell_jobAlertsNav(),
+      applications: m.accountShell_applicationsNav(),
+      applicants: m.employerApplicants_title(),
+      subscription: m.accountShell_subscriptionNav(),
+      settings: m.accountShell_settingsNav(),
+      messages: m.messagesPage_title(),
+      signIn: m.siteHeader_signInLabel(),
+      signUp: m.siteHeader_signUpLabel(),
+      postJob: m.siteHeader_postJobLabel(),
+      companyProfile: m.accountShell_companyProfileNav(),
+      employerDashboard: m.employerDashboard_title(),
+    },
     entities: {
       ...breadcrumbEntities,
       location: breadcrumbEntities.location ?? resolvedHeaderLabels.location,

@@ -102,16 +102,93 @@ describe('shell breadcrumb resolver', () => {
     });
   });
 
-  it('does not add public breadcrumbs to private or embedded application routes', () => {
+  it('authed routes get trails too; only embeds and the password gate stay bare', () => {
     for (const pathname of [
       '/account',
       '/auth/sign-in',
       '/employers/dashboard',
       '/messages',
       '/settings',
-      '/embed/jobs',
     ]) {
-      expect(resolveShellBreadcrumb({ pathname, labels })).toBeNull();
+      expect(resolveShellBreadcrumb({ pathname, labels })).not.toBeNull();
     }
+    expect(resolveShellBreadcrumb({ pathname: '/embed/jobs', labels })).toBeNull();
+    expect(resolveShellBreadcrumb({ pathname: '/password', labels })).toBeNull();
+  });
+});
+
+describe('resolveShellBreadcrumb — authed surfaces (footer trails everywhere)', () => {
+  const privateLabels = {
+    account: 'Account',
+    profile: 'Profile',
+    savedJobs: 'Saved jobs',
+    jobAlerts: 'Job alerts',
+    applications: 'Applications',
+    applicants: 'Applicants',
+    subscription: 'Subscription',
+    settings: 'Settings',
+    messages: 'Messages',
+    signIn: 'Sign in',
+    signUp: 'Sign up',
+    postJob: 'Post a job',
+    companyProfile: 'Company profile',
+    employerDashboard: 'Companies',
+  };
+  const resolve = (pathname: string, entities = {}) =>
+    resolveShellBreadcrumb({ pathname, labels, privateLabels, entities });
+
+  it('candidate pages skip the /me plumbing segment', () => {
+    expect(resolve('/me/saved')).toEqual({
+      items: [{ name: 'Home', href: '/' }, { name: 'Saved jobs' }],
+    });
+    expect(resolve('/me/applications')?.items[1]).toEqual({
+      name: 'Applications',
+    });
+  });
+
+  it('settings, messages, and account trails render', () => {
+    expect(resolve('/settings')?.items[1]).toEqual({ name: 'Settings' });
+    expect(resolve('/messages')?.items[1]).toEqual({ name: 'Messages' });
+    expect(resolve('/account/access')?.items).toEqual([
+      { name: 'Home', href: '/' },
+      { name: 'Account', href: '/account' },
+      { name: 'Subscription' },
+    ]);
+  });
+
+  it('employer company pages use the resolved company name', () => {
+    expect(
+      resolve('/employers/companies/cinder-oak-robotics/jobs/new', {
+        company: 'Cinder & Oak Robotics',
+      })?.items,
+    ).toEqual([
+      { name: 'Home', href: '/' },
+      {
+        name: 'Cinder & Oak Robotics',
+        href: '/employers/companies/cinder-oak-robotics',
+      },
+      { name: 'Post a job' },
+    ]);
+  });
+
+  it('applicants pages prefer the job title', () => {
+    expect(
+      resolve('/employers/companies/acme/jobs/j1/applicants', {
+        company: 'Acme',
+        job: 'Director of Hardware Engineering',
+      })?.items[2],
+    ).toEqual({ name: 'Director of Hardware Engineering' });
+  });
+
+  it('auth pages get a trail; embeds and the password gate stay bare', () => {
+    expect(resolve('/auth/sign-in')?.items[1]).toEqual({ name: 'Sign in' });
+    expect(resolve('/embed/jobs')).toBeNull();
+    expect(resolve('/password')).toBeNull();
+  });
+
+  it('labels fall back to readable segments when not provided', () => {
+    expect(
+      resolveShellBreadcrumb({ pathname: '/me/saved', labels })?.items[1],
+    ).toEqual({ name: 'Saved' });
   });
 });

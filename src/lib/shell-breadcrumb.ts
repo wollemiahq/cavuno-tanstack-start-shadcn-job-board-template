@@ -27,21 +27,34 @@ export interface ShellBreadcrumbEntities {
   tag?: string;
 }
 
+/** Labels for the authed surfaces' trails — template catalog copy, passed in
+ * by the shell so this module stays pure and testable. Every field is optional
+ * at the call site via `Partial`; missing labels fall back to a readable form
+ * of the path segment. */
+export interface ShellBreadcrumbPrivateLabels {
+  account: string;
+  profile: string;
+  savedJobs: string;
+  jobAlerts: string;
+  applications: string;
+  applicants: string;
+  subscription: string;
+  settings: string;
+  messages: string;
+  signIn: string;
+  signUp: string;
+  postJob: string;
+  companyProfile: string;
+  employerDashboard: string;
+}
+
 interface RouteMatch {
   loaderData?: unknown;
 }
 
-const privatePrefixes = [
-  '/account',
-  '/alerts',
-  '/auth',
-  '/embed',
-  '/employers',
-  '/me',
-  '/messages',
-  '/password',
-  '/settings',
-] as const;
+// Only surfaces where a trail is meaningless: embeds render inside someone
+// else's chrome, and the board-password gate is a lock screen.
+const excludedPrefixes = ['/embed', '/password'] as const;
 
 function record(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object'
@@ -81,6 +94,11 @@ export function resolveShellBreadcrumbEntities(
       entityLabel(data.skill, ['displayName', 'name']) ??
       entityLabel(data.market, ['displayName', 'name']);
     entities.company ??= entityLabel(data.company, ['name', 'displayName']);
+    // Employer loaders nest the company inside a workspace envelope.
+    entities.company ??= entityLabel(
+      record(data.workspace)?.company,
+      ['name', 'displayName'],
+    );
     entities.job ??= entityLabel(data.job, ['title', 'name']);
     entities.profile ??= entityLabel(data.profile, ['displayName', 'name']);
     entities.post ??= entityLabel(data.post, ['title', 'name']);
@@ -109,19 +127,24 @@ function finish(items: { name: string; href?: string }[]) {
 export function resolveShellBreadcrumb({
   pathname,
   labels,
+  privateLabels = {},
   entities = {},
 }: {
   pathname: string;
   labels: ShellBreadcrumbLabels;
+  privateLabels?: Partial<ShellBreadcrumbPrivateLabels>;
   entities?: ShellBreadcrumbEntities;
 }): { items: { name: string; href?: string }[] } | null {
   if (
-    privatePrefixes.some(
+    excludedPrefixes.some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
     )
   ) {
     return null;
   }
+
+  const priv = (key: keyof ShellBreadcrumbPrivateLabels, segment: string) =>
+    privateLabels[key] ?? readableSegment(segment);
 
   const segments = pathname.split('/').filter(Boolean);
   const items: { name: string; href?: string }[] = [
@@ -226,6 +249,83 @@ export function resolveShellBreadcrumb({
                 : readableSegment(segment);
       items.push({ name, href });
     }
+    return finish(items);
+  }
+
+  if (section === 'auth') {
+    const name =
+      rest[0] === 'sign-in'
+        ? priv('signIn', 'sign-in')
+        : rest[0]?.endsWith('sign-up')
+          ? priv('signUp', 'sign-up')
+          : readableSegment(rest[0] ?? section);
+    items.push({ name });
+    return finish(items);
+  }
+
+  if (section === 'me') {
+    // The `/me` segment itself is plumbing, not a place — skip it.
+    const leaf = {
+      profile: priv('profile', 'profile'),
+      saved: priv('savedJobs', 'saved'),
+      alerts: priv('jobAlerts', 'alerts'),
+      applications: priv('applications', 'applications'),
+    }[rest[0] ?? ''];
+    items.push({ name: leaf ?? readableSegment(rest[0] ?? section) });
+    return finish(items);
+  }
+
+  if (section === 'account') {
+    items.push({ name: priv('account', 'account'), href: '/account' });
+    if (rest[0] === 'access') {
+      items.push({ name: priv('subscription', 'access') });
+    } else if (rest[0]) {
+      items.push({ name: readableSegment(rest[0]) });
+    }
+    return finish(items);
+  }
+
+  if (section === 'settings') {
+    items.push({ name: priv('settings', 'settings') });
+    return finish(items);
+  }
+
+  if (section === 'messages') {
+    items.push({ name: priv('messages', 'messages') });
+    return finish(items);
+  }
+
+  if (section === 'alerts') {
+    items.push({ name: priv('jobAlerts', 'alerts') });
+    return finish(items);
+  }
+
+  if (section === 'employers') {
+    if (rest[0] === 'dashboard' || rest[0] === undefined) {
+      items.push({ name: priv('employerDashboard', 'dashboard') });
+      return finish(items);
+    }
+    if (rest[0] === 'onboarding') {
+      items.push({
+        name: entities.company ?? readableSegment(rest[1] ?? rest[0]),
+      });
+      return finish(items);
+    }
+    if (rest[0] === 'companies' && rest[1]) {
+      items.push({
+        name: entities.company ?? readableSegment(rest[1]),
+        href: `/employers/companies/${rest[1]}`,
+      });
+      if (rest[2] === 'profile') {
+        items.push({ name: priv('companyProfile', 'profile') });
+      } else if (rest[2] === 'jobs' && rest[3] === 'new') {
+        items.push({ name: priv('postJob', 'new') });
+      } else if (rest[2] === 'jobs' && rest[4] === 'applicants') {
+        items.push({ name: entities.job ?? priv('applicants', 'applicants') });
+      }
+      return finish(items);
+    }
+    items.push({ name: readableSegment(rest[0]) });
     return finish(items);
   }
 
