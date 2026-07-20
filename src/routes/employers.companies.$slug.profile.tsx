@@ -1,17 +1,11 @@
 /**
- * Company workspace — Company profile tab. One always-editable form over the
- * public company profile (the LinkedIn/Wellfound company-admin model): what
- * you see is what the board shows, edits save in place. Jobs live on the Jobs
- * tab — this page is only the profile.
+ * Company workspace — Company profile. One always-editable form over the public
+ * company profile (the LinkedIn/Wellfound company-admin model): what you see is
+ * what the board shows, edits save in place. It stands alone at the shared
+ * employer page width — no tabs; navigate via the header account menu.
  *
- * `summary` (tagline) and the social links (`xUrl` / `linkedinUrl` /
- * `facebookUrl`) are writable on the employer company-update surface but are
- * NOT returned by any read the board exposes to this frontend — the public
- * `companies.retrieve` shape omits them, and `me.companies.list` only carries a
- * slim company (name/slug/website/logoUrl). So these fields start blank and are
- * "set or replace" only: an empty field is left out of the patch to preserve
- * whatever is stored. The company `logoUrl` is read-only here — the SDK exposes
- * no employer logo-write path (see the report), so the logo is a preview only.
+ * `summary` (tagline) and the social links are write-only on the v1 wire, so
+ * they start blank and are only sent when filled (never wiping a stored value).
  */
 import { useState } from 'react';
 
@@ -22,20 +16,31 @@ import {
 } from '@tanstack/react-router';
 import { ExternalLinkIcon } from 'lucide-react';
 
-import { handleEmployerLoaderError } from '../lib/employer-loader-auth';
-import { isRichTextEmpty } from '../lib/post-form';
+import {
+  handleEmployerLoaderError,
+  isReauthRetry,
+} from '../lib/employer-loader-auth';
+import {
+  isRichTextEmpty,
+  stripSocialHandle,
+  toSocialUrl,
+} from '../lib/post-form';
 import { m } from '../paraglide/messages';
 import { getCompanyWorkspace, updateCompany } from '../server/employers';
 import { getSeoBase, getCompany } from '../server/queries';
 
-import {
-  EmployerCompanyShell,
-  EmployerIdentityAvatar,
-} from '@/components/account-shell';
+import { EmployerIdentityAvatar } from '@/components/account-shell';
+import { Page, PageContent } from '@/components/layout/page';
 import { RichTextEditor } from '@/components/rich-text-editor';
+import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   InputGroup,
@@ -43,13 +48,12 @@ import {
   InputGroupInput,
   InputGroupText,
 } from '@/components/ui/input-group';
-import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import { headTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/employers/companies/$slug/profile')({
-  loader: async ({ params }) => {
+  loader: async ({ params, location }) => {
     try {
       const [workspace, company, seo] = await Promise.all([
         getCompanyWorkspace({ data: { slug: params.slug } }),
@@ -58,9 +62,10 @@ export const Route = createFileRoute('/employers/companies/$slug/profile')({
       ]);
       return { workspace, company, seo };
     } catch (error) {
-      handleEmployerLoaderError(
+      return await handleEmployerLoaderError(
         error,
         `/employers/companies/${params.slug}/profile`,
+        { retried: isReauthRetry(location) },
       );
     }
   },
@@ -84,53 +89,57 @@ function stripProtocol(url: string): string {
   return url.replace(/^https?:\/\//i, '');
 }
 
-/** A pasted social link may omit its scheme; the API wants an absolute URL. */
-function ensureHttps(url: string): string {
-  const trimmed = url.trim();
-  if (!trimmed) return '';
-  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-}
-
 function CompanyProfilePage() {
   const { workspace, company } = Route.useLoaderData();
-  const membershipCompany = workspace.membership?.company;
   rootApi.useLoaderData();
 
   return (
-    <EmployerCompanyShell
-      slug={workspace.slug}
-      company={{
-        name: company.name,
-        logoUrl: company.logoUrl ?? membershipCompany?.logoUrl ?? null,
-      }}
-      active="profile"
-    >
-      <div className="space-y-6">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1">
-            <h1 className="font-heading text-2xl font-semibold tracking-tight">
-              {m.employerCompany_profileHeading()}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {m.employerProfile_editIntroText({ company: company.name })}
-            </p>
-          </div>
-          {company.links.public ? (
-            <a
-              href={company.links.public}
-              target="_blank"
-              rel="noreferrer"
-              className={buttonVariants({ variant: 'outline' })}
-            >
-              {m.employerProfile_viewPublicLabel()}
-              <ExternalLinkIcon data-icon="inline-end" aria-hidden />
-            </a>
-          ) : null}
-        </header>
+    <Page width="content">
+      <PageContent>
+        <div className="space-y-6">
+          <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-1">
+              <h1 className="font-heading text-2xl font-semibold tracking-tight">
+                {m.employerCompany_profileHeading()}
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                {m.employerProfile_editIntroText({ company: company.name })}
+              </p>
+            </div>
+            {company.links.public ? (
+              <a
+                href={company.links.public}
+                target="_blank"
+                rel="noreferrer"
+                className={buttonVariants({ variant: 'outline' })}
+              >
+                {m.employerProfile_viewPublicLabel()}
+                <ExternalLinkIcon data-icon="inline-end" aria-hidden />
+              </a>
+            ) : null}
+          </header>
 
-        <ProfileEditorCard slug={workspace.slug} company={company} />
-      </div>
-    </EmployerCompanyShell>
+          <ProfileEditorCard slug={workspace.slug} company={company} />
+
+          {company.markets.length > 0 ? (
+            <Card size="sm">
+              <CardContent className="space-y-2">
+                <p className="text-muted-foreground text-sm">
+                  {m.employerProfile_marketsLabel()}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {company.markets.map((market) => (
+                    <Badge key={market.slug} variant="secondary">
+                      {market.name}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+        </div>
+      </PageContent>
+    </Page>
   );
 }
 
@@ -151,10 +160,12 @@ function ProfileEditorCard({
     xUrl: '',
     facebookUrl: '',
   });
-  const [status, setStatus] = useState<'idle' | 'saving'>('idle');
+  const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
+  const [message, setMessage] = useState('');
 
   async function save() {
     setStatus('saving');
+    setMessage('');
     const website = form.website.trim();
     const result = await updateCompany({
       data: {
@@ -165,28 +176,30 @@ function ProfileEditorCard({
           description: isRichTextEmpty(form.description)
             ? ''
             : form.description,
-          // Write-only fields (not returned by any read): only include a field
-          // when the employer typed something, so a blank input never wipes the
-          // stored value on save.
           ...(form.summary.trim() ? { summary: form.summary.trim() } : {}),
+          // Write-only fields: only sent when filled, so a blank input never
+          // wipes a stored link we can't read back to prefill.
           ...(form.linkedinUrl.trim()
-            ? { linkedinUrl: ensureHttps(form.linkedinUrl) }
+            ? { linkedinUrl: toSocialUrl(form.linkedinUrl, 'linkedin.com') }
             : {}),
-          ...(form.xUrl.trim() ? { xUrl: ensureHttps(form.xUrl) } : {}),
+          ...(form.xUrl.trim()
+            ? {
+                xUrl: toSocialUrl(form.xUrl, 'x.com', ['x.com', 'twitter.com']),
+              }
+            : {}),
           ...(form.facebookUrl.trim()
-            ? { facebookUrl: ensureHttps(form.facebookUrl) }
+            ? { facebookUrl: toSocialUrl(form.facebookUrl, 'facebook.com') }
             : {}),
         },
       },
     });
     if (!result.ok) {
-      setStatus('idle');
-      void toastActionError(result.message);
+      setStatus('error');
+      setMessage(result.message);
       return;
     }
     setStatus('idle');
     await router.invalidate();
-    void toastActionSuccess();
   }
 
   return (
@@ -268,6 +281,40 @@ function ProfileEditorCard({
               {m.employerProfile_taglineHint()}
             </FieldDescription>
           </Field>
+
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-medium">
+              {m.employerProfile_linksHeading()}
+            </legend>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <SocialField
+                id="company-linkedin"
+                label={m.employerProfile_linkedinLabel()}
+                domain="linkedin.com"
+                domains={['linkedin.com']}
+                value={form.linkedinUrl}
+                onChange={(linkedinUrl) => setForm({ ...form, linkedinUrl })}
+              />
+              <SocialField
+                id="company-x"
+                label={m.employerProfile_xLabel()}
+                domain="x.com"
+                domains={['x.com', 'twitter.com']}
+                value={form.xUrl}
+                onChange={(xUrl) => setForm({ ...form, xUrl })}
+              />
+              <SocialField
+                id="company-facebook"
+                label={m.employerProfile_facebookLabel()}
+                domain="facebook.com"
+                domains={['facebook.com']}
+                value={form.facebookUrl}
+                onChange={(facebookUrl) => setForm({ ...form, facebookUrl })}
+              />
+            </div>
+            <FieldDescription>{m.employerProfile_linksHint()}</FieldDescription>
+          </fieldset>
+
           <Field>
             <FieldLabel>{m.employerProfile_aboutHeading()}</FieldLabel>
             {/* Company descriptions are HTML on the API (rendered as-is on
@@ -280,99 +327,52 @@ function ProfileEditorCard({
               ariaLabel={m.employerProfile_aboutHeading()}
             />
           </Field>
-          <fieldset className="space-y-3">
-            <legend className="text-sm font-medium">
-              {m.employerProfile_socialLinksHeading()}
-            </legend>
-            <FieldDescription>
-              {m.employerProfile_socialLinksHint()}
-            </FieldDescription>
-            {/* The website field's pattern: a fixed https:// prefix with the
-                scheme stripped from what the employer types, so the input holds
-                a bare URL and `ensureHttps` restores the scheme on save. */}
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor="company-linkedin">
-                  {m.employerProfile_linkedinLabel()}
-                </FieldLabel>
-                <InputGroup>
-                  <InputGroupAddon>
-                    <InputGroupText>
-                      {m.employerDashboard_websiteProtocolPrefix()}
-                    </InputGroupText>
-                  </InputGroupAddon>
-                  <InputGroupInput
-                    id="company-linkedin"
-                    inputMode="url"
-                    value={form.linkedinUrl}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        linkedinUrl: stripProtocol(event.currentTarget.value),
-                      })
-                    }
-                  />
-                </InputGroup>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="company-x">
-                  {m.employerProfile_xLabel()}
-                </FieldLabel>
-                <InputGroup>
-                  <InputGroupAddon>
-                    <InputGroupText>
-                      {m.employerDashboard_websiteProtocolPrefix()}
-                    </InputGroupText>
-                  </InputGroupAddon>
-                  <InputGroupInput
-                    id="company-x"
-                    inputMode="url"
-                    value={form.xUrl}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        xUrl: stripProtocol(event.currentTarget.value),
-                      })
-                    }
-                  />
-                </InputGroup>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="company-facebook">
-                  {m.employerProfile_facebookLabel()}
-                </FieldLabel>
-                <InputGroup>
-                  <InputGroupAddon>
-                    <InputGroupText>
-                      {m.employerDashboard_websiteProtocolPrefix()}
-                    </InputGroupText>
-                  </InputGroupAddon>
-                  <InputGroupInput
-                    id="company-facebook"
-                    inputMode="url"
-                    value={form.facebookUrl}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        facebookUrl: stripProtocol(event.currentTarget.value),
-                      })
-                    }
-                  />
-                </InputGroup>
-              </Field>
-            </div>
-          </fieldset>
-          {/* Card-wrapped form: the primary action lives inside the card, at
-              the bottom of CardContent (the board's card-form convention). */}
+          {/* In-page form: primary action left-aligned, in reading flow. */}
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={status === 'saving'}>
               {status === 'saving'
                 ? m.employerCompany_savingLabel()
                 : m.employerCompany_saveCompanyLabel()}
             </Button>
+            {status === 'error' ? <FieldError>{message}</FieldError> : null}
           </div>
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+function SocialField({
+  id,
+  label,
+  domain,
+  domains,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  domain: string;
+  domains: string[];
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <Field>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <InputGroup>
+        <InputGroupAddon>
+          <InputGroupText>{domain}/</InputGroupText>
+        </InputGroupAddon>
+        <InputGroupInput
+          id={id}
+          value={value}
+          // Pasting a full URL auto-strips scheme + domain to the bare handle.
+          onChange={(event) =>
+            onChange(stripSocialHandle(event.currentTarget.value, domains))
+          }
+        />
+      </InputGroup>
+    </Field>
   );
 }

@@ -259,15 +259,6 @@ Props:
 - `nav: ShellNavItem[]`
 - `rail?: ReactNode`
 
-### EmployerCompanyShell — `src/components/account-shell.tsx`
-
-Props:
-
-- `active: string`
-- `children: ReactNode`
-- `company: { name: string; logoUrl: string | null; }`
-- `slug: string`
-
 ### EmployerIdentityAvatar — `src/components/account-shell.tsx`
 
 Props:
@@ -1139,6 +1130,19 @@ Props:
 
 - `items: { id: string; object: "candidate_education"; institutionName: string; institutionUrl: string | null; degree: string |…`
 - `language: string`
+
+### EmployerJobForm — `src/components/employer-job-form.tsx`
+
+Props:
+
+- `billingOptions: { id: string; object: "employer_billing_option"; type: "subscription" | "order"; planId: string; planName: string; pl…`
+- `job?: ({ id: string; object: "employer_job"; title: string; slug: string | null; status: "draft" | "published" | "expired" …`
+- `locale: string`
+- `mode: EmployerJobFormMode`
+- `officeLocationSuggestions: LocationSuggestionState`
+- `plans: { object: "job_posting_plan"; id: string; name: string; description: string | null; kind: string; billingInterval: "m…`
+- `remotePermits: { type: string; value: string; label: string; }[] | null`
+- `slug: string`
 
 ### ApplicantPipelineBoard — `src/components/employer/applicant-pipeline-board.tsx`
 

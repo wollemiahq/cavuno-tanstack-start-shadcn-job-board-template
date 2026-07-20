@@ -23,16 +23,26 @@ const mocks = vi.hoisted(() => ({
   deleteJob: vi.fn(),
   getCompanyWorkspace: vi.fn(),
   getCompany: vi.fn(),
+  getJob: vi.fn(),
   getSeoBase: vi.fn(),
   getPipeline: vi.fn(),
   invalidate: vi.fn(),
-  listCompanyJobs: vi.fn(),
   moveApplicant: vi.fn(),
+  navigate: vi.fn(),
   publishJob: vi.fn(),
+  refreshSession: vi.fn(),
   removeStage: vi.fn(),
   renameStage: vi.fn(),
+  toastSuccess: vi.fn(),
+  toastError: vi.fn(),
   unpublishJob: vi.fn(),
   updateCompany: vi.fn(),
+  updateJob: vi.fn(),
+}));
+
+vi.mock('sonner', () => ({
+  toast: { success: mocks.toastSuccess, error: mocks.toastError },
+  Toaster: () => null,
 }));
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
@@ -58,17 +68,10 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
       to: string;
     } & React.ComponentProps<'a'>) =>
       React.createElement('a', { href: to, ...props }, children),
-    useRouter: () => ({ invalidate: mocks.invalidate }),
-  };
-});
-
-vi.mock('@/components/account-shell', async () => {
-  const React = await import('react');
-  return {
-    EmployerCompanyShell: ({ children }: { children: React.ReactNode }) =>
-      React.createElement('div', { 'data-testid': 'company-shell' }, children),
-    EmployerIdentityAvatar: ({ name }: { name: string }) =>
-      React.createElement('div', { 'data-testid': 'company-logo' }, name),
+    useRouter: () => ({
+      invalidate: mocks.invalidate,
+      navigate: mocks.navigate,
+    }),
   };
 });
 
@@ -80,6 +83,7 @@ vi.mock('../server/employers', () => ({
   createStage: mocks.createStage,
   deleteJob: mocks.deleteJob,
   getCompanyWorkspace: mocks.getCompanyWorkspace,
+  getJob: mocks.getJob,
   getPipeline: mocks.getPipeline,
   moveApplicant: mocks.moveApplicant,
   publishJob: mocks.publishJob,
@@ -87,12 +91,14 @@ vi.mock('../server/employers', () => ({
   renameStage: mocks.renameStage,
   unpublishJob: mocks.unpublishJob,
   updateCompany: mocks.updateCompany,
+  updateJob: mocks.updateJob,
 }));
+
+vi.mock('../server/auth', () => ({ refreshSession: mocks.refreshSession }));
 
 vi.mock('../server/queries', () => ({
   getCompany: mocks.getCompany,
   getSeoBase: mocks.getSeoBase,
-  listCompanyJobs: mocks.listCompanyJobs,
 }));
 
 import { ApplicantPipelineBoard } from '../components/employer/applicant-pipeline-board';
@@ -102,7 +108,7 @@ import { Route as ProfileRoute } from './employers.companies.$slug.profile';
 
 import type { PipelineBoardVM } from '../board/pipeline-view-model';
 
-const job = {
+const draftJob = {
   id: 'job-1',
   object: 'employer_job',
   title: 'Senior Product Designer',
@@ -126,25 +132,41 @@ const job = {
 
 const company = {
   id: 'company-1',
-  object: 'company',
+  object: 'public_company',
   name: 'Northstar Labs',
   slug: 'northstar-labs',
   website: 'https://northstar.example',
   logoUrl: null,
   description: '<p>Building better hiring tools.</p>',
+  jobCount: 1,
+  publishedJobCount: 1,
   markets: [{ id: 'market-1', name: 'Hiring', slug: 'hiring' }],
   links: { public: 'https://jobs.example/companies/northstar-labs' },
 };
+
+function renderJobs(jobs: unknown[]) {
+  vi.spyOn(JobsRoute, 'useLoaderData').mockReturnValue({
+    slug: 'northstar-labs',
+    membership: { company: { name: 'Northstar Labs' } },
+    jobs: { data: jobs },
+    billingOptions: { data: [] },
+    plans: [],
+  } as never);
+  const JobsPage = JobsRoute.options.component;
+  if (!JobsPage) throw new Error('The jobs route must expose its component');
+  render(<JobsPage />);
+}
 
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
   mocks.invalidate.mockResolvedValue(undefined);
+  mocks.navigate.mockResolvedValue(undefined);
 });
 
 beforeEach(() => {
-  // Every workspace loader now resolves the board name for its page title.
   mocks.getSeoBase.mockResolvedValue({ boardName: 'Acme Board' });
+  mocks.refreshSession.mockResolvedValue({ ok: false });
 });
 
 describe('employer company workspace', () => {
@@ -156,7 +178,7 @@ describe('employer company workspace', () => {
     });
   });
 
-  it('preserves the requested company workspace across an expired session', async () => {
+  it('recovers a transient auth failure with a refresh instead of sign-in', async () => {
     mocks.getCompanyWorkspace.mockRejectedValue(
       new BoardApiError({
         status: 401,
@@ -165,13 +187,50 @@ describe('employer company workspace', () => {
         raw: {},
       }),
     );
+    mocks.refreshSession.mockResolvedValue({ ok: true });
     const loader = JobsRoute.options.loader;
     if (typeof loader !== 'function')
       throw new Error('The company jobs route needs a loader');
 
     let result: unknown;
     try {
-      result = await loader({ params: { slug: 'northstar-labs' } } as never);
+      result = await loader({
+        params: { slug: 'northstar-labs' },
+        location: { search: {} },
+      } as never);
+    } catch (error) {
+      result = error;
+    }
+
+    expect(mocks.refreshSession).toHaveBeenCalledTimes(1);
+    expect(isRedirect(result)).toBe(true);
+    if (!isRedirect(result)) return;
+    // A successful refresh reloads the same page (bounded by ?reauth=1).
+    expect(result.options.href).toBe(
+      '/employers/companies/northstar-labs?reauth=1',
+    );
+  });
+
+  it('falls through to sign-in once the refresh cannot recover', async () => {
+    mocks.getCompanyWorkspace.mockRejectedValue(
+      new BoardApiError({
+        status: 401,
+        code: 'auth_unauthorized',
+        message: 'Session expired',
+        raw: {},
+      }),
+    );
+    mocks.refreshSession.mockResolvedValue({ ok: false });
+    const loader = JobsRoute.options.loader;
+    if (typeof loader !== 'function')
+      throw new Error('The company jobs route needs a loader');
+
+    let result: unknown;
+    try {
+      result = await loader({
+        params: { slug: 'northstar-labs' },
+        location: { search: {} },
+      } as never);
     } catch (error) {
       result = error;
     }
@@ -182,6 +241,35 @@ describe('employer company workspace', () => {
       to: '/auth/sign-in',
       search: { returnTo: '/employers/companies/northstar-labs' },
     });
+  });
+
+  it('does not refresh again on the retried load, going straight to sign-in', async () => {
+    mocks.getCompanyWorkspace.mockRejectedValue(
+      new BoardApiError({
+        status: 401,
+        code: 'auth_unauthorized',
+        message: 'Session expired',
+        raw: {},
+      }),
+    );
+    mocks.refreshSession.mockResolvedValue({ ok: true });
+    const loader = JobsRoute.options.loader;
+    if (typeof loader !== 'function') throw new Error('needs a loader');
+
+    let result: unknown;
+    try {
+      result = await loader({
+        params: { slug: 'northstar-labs' },
+        location: { search: { reauth: '1' } },
+      } as never);
+    } catch (error) {
+      result = error;
+    }
+
+    expect(mocks.refreshSession).not.toHaveBeenCalled();
+    expect(isRedirect(result)).toBe(true);
+    if (!isRedirect(result)) return;
+    expect(result.options).toMatchObject({ to: '/auth/sign-in' });
   });
 
   it('keeps forbidden company workspace errors distinct from authentication', async () => {
@@ -200,89 +288,115 @@ describe('employer company workspace', () => {
     await expect(
       loader({
         params: { slug: 'northstar-labs', jobId: 'job-1' },
+        location: { search: {} },
       } as never),
     ).rejects.toMatchObject({ status: 403 });
   });
 
-  it('renders job management as a semantic table with every draft action', async () => {
-    vi.spyOn(JobsRoute, 'useLoaderData').mockReturnValue({
-      slug: 'northstar-labs',
-      membership: { company },
-      jobs: { data: [job] },
-      billingOptions: { data: [] },
-      plans: [],
-    } as never);
-
-    const JobsPage = JobsRoute.options.component;
-    if (!JobsPage) throw new Error('The jobs route must expose its component');
-    render(<JobsPage />);
-
-    const table = screen.getByRole('table');
+  it('titles the jobs list with the company name and its active-job count', () => {
+    renderJobs([
+      { ...draftJob, id: 'a', status: 'published', publishedAt: '2026-07-01' },
+      { ...draftJob, id: 'b', status: 'published', publishedAt: '2026-07-02' },
+      { ...draftJob, id: 'c', status: 'draft' },
+    ]);
     expect(
-      within(table).getByText('Senior Product Designer'),
+      screen.getByRole('heading', { level: 1, name: 'Northstar Labs Jobs' }),
     ).toBeInTheDocument();
-    expect(within(table).getByText('Full-time')).toBeInTheDocument();
-    expect(within(table).getByText('Draft')).toBeInTheDocument();
-    // The status-dependent primary action stays a visible button for drafts.
-    expect(screen.getByRole('button', { name: 'Publish & pay' })).toBeEnabled();
+    expect(screen.getByText('You have 2 active jobs.')).toBeInTheDocument();
+  });
 
-    // Every remaining action groups behind the per-row ⋯ menu.
+  it('links every role name to its edit page and hides applicants for drafts', () => {
+    renderJobs([draftJob]);
+
+    const roleLink = screen.getByRole('link', {
+      name: 'Senior Product Designer',
+    });
+    expect(roleLink).toHaveAttribute(
+      'href',
+      '/employers/companies/$slug/jobs/$jobId/edit',
+    );
+    // A draft keeps a primary Publish that also lands on the edit page.
+    expect(screen.getByRole('link', { name: 'Publish' })).toHaveAttribute(
+      'href',
+      '/employers/companies/$slug/jobs/$jobId/edit',
+    );
+
     fireEvent.click(
       screen.getByRole('button', {
         name: 'Actions for Senior Product Designer',
       }),
     );
+    expect(screen.getByRole('menuitem', { name: 'Edit' })).toBeInTheDocument();
     expect(
-      await screen.findByRole('menuitem', { name: 'Republish (if paid)' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('menuitem', { name: 'Applicants' }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeEnabled();
+      screen.queryByRole('menuitem', { name: 'Applicants' }),
+    ).not.toBeInTheDocument();
   });
 
-  it('prevents duplicate checkout requests and recovers next to the plan picker', async () => {
-    let rejectCheckout!: (reason: Error) => void;
-    mocks.checkoutJob.mockImplementation(
-      () =>
-        new Promise((_resolve, reject) => {
-          rejectCheckout = reject;
-        }),
+  it('shows a distinct Expired chip and flips the date to the expiry', () => {
+    renderJobs([
+      {
+        ...draftJob,
+        status: 'published',
+        publishedAt: '2026-06-01T00:00:00.000Z',
+        expiresAt: '2026-07-01T00:00:00.000Z',
+      },
+    ]);
+    // Past its expiry, the published masquerade is replaced by an Expired chip.
+    expect(screen.getByText('Expired')).toBeInTheDocument();
+    expect(screen.getByText(/Expired on/)).toBeInTheDocument();
+    expect(screen.queryByText(/^Posted/)).not.toBeInTheDocument();
+  });
+
+  it('republishes an entitled job in place and toasts', async () => {
+    mocks.publishJob.mockResolvedValue({ ok: true, data: {} });
+    renderJobs([
+      {
+        ...draftJob,
+        status: 'expired',
+        expiresAt: '2026-07-01T00:00:00.000Z',
+      },
+    ]);
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Actions for Senior Product Designer',
+      }),
     );
-    vi.spyOn(JobsRoute, 'useLoaderData').mockReturnValue({
-      slug: 'northstar-labs',
-      membership: { company },
-      jobs: { data: [job] },
-      billingOptions: { data: [] },
-      plans: [
-        {
-          id: 'plan-free',
-          name: 'Free listing',
-          description: null,
-          prices: [],
-        },
-      ],
-    } as never);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Republish' }));
 
-    const JobsPage = JobsRoute.options.component;
-    if (!JobsPage) throw new Error('The jobs route must expose its component');
-    render(<JobsPage />);
+    await waitFor(() => expect(mocks.publishJob).toHaveBeenCalledTimes(1));
+    expect(mocks.toastSuccess).toHaveBeenCalledTimes(1);
+    expect(mocks.navigate).not.toHaveBeenCalled();
+  });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Publish & pay' }));
-    const planButton = screen.getByRole('button', { name: /Free listing/ });
-    fireEvent.click(planButton);
+  it('routes an unentitled republish to the edit/pay page', async () => {
+    mocks.publishJob.mockResolvedValue({
+      ok: false,
+      message: 'Payment required',
+    });
+    renderJobs([
+      {
+        ...draftJob,
+        status: 'expired',
+        expiresAt: '2026-07-01T00:00:00.000Z',
+      },
+    ]);
 
-    expect(planButton).toBeDisabled();
-    expect(mocks.checkoutJob).toHaveBeenCalledTimes(1);
-
-    await act(async () => rejectCheckout(new Error('Checkout unavailable')));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Actions for Senior Product Designer',
+      }),
+    );
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Republish' }));
 
     await waitFor(() =>
-      expect(screen.getByRole('alert')).toHaveTextContent(
-        'Something went wrong',
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: '/employers/companies/$slug/jobs/$jobId/edit',
+        }),
       ),
     );
-    expect(planButton).toBeEnabled();
+    expect(mocks.toastSuccess).not.toHaveBeenCalled();
   });
 
   it('keeps the company profile editable in place with the public link visible', () => {
@@ -296,7 +410,6 @@ describe('employer company workspace', () => {
       throw new Error('The profile route must expose its component');
     render(<ProfilePage />);
 
-    // One always-editable form over the public profile — no view/edit toggle.
     expect(
       screen.getByRole('heading', { level: 1, name: 'Company profile' }),
     ).toBeInTheDocument();
@@ -306,53 +419,33 @@ describe('employer company workspace', () => {
     expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue(
       'Northstar Labs',
     );
-    // The website edits behind a fixed https:// prefix.
     expect(screen.getByRole('textbox', { name: 'Website' })).toHaveValue(
       'northstar.example',
     );
-    // The About field authors as rich text (HTML on the wire), so the
-    // editor toolbar stands in for a plain textbox assertion.
+    // The three per-network social fields sit behind their domain addons.
+    expect(screen.getByText('linkedin.com/')).toBeInTheDocument();
+    expect(screen.getByText('x.com/')).toBeInTheDocument();
+    expect(screen.getByText('facebook.com/')).toBeInTheDocument();
     expect(screen.getByRole('toolbar', { name: 'About' })).toBeInTheDocument();
+    expect(screen.getByText('Hiring')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save company' })).toBeEnabled();
-    // Social links are writable on the update surface; they render as URL
-    // inputs and start blank (no read returns them).
-    expect(screen.getByRole('textbox', { name: 'LinkedIn' })).toHaveValue('');
-    expect(screen.getByRole('textbox', { name: 'X' })).toHaveValue('');
-    expect(screen.getByRole('textbox', { name: 'Facebook' })).toHaveValue('');
   });
 
-  it('sends tagline and social links (scheme-normalised) only when filled', async () => {
-    mocks.updateCompany.mockResolvedValue({ ok: true, data: {} });
+  it('auto-strips a pasted social URL down to the handle', () => {
     vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
       workspace: { slug: 'northstar-labs', membership: { company } },
       company,
     } as never);
 
     const ProfilePage = ProfileRoute.options.component;
-    if (!ProfilePage)
-      throw new Error('The profile route must expose its component');
+    if (!ProfilePage) throw new Error('needs a component');
     render(<ProfilePage />);
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Tagline' }), {
-      target: { value: 'Hiring the best' },
+    const linkedin = screen.getByRole('textbox', { name: 'LinkedIn' });
+    fireEvent.change(linkedin, {
+      target: { value: 'https://www.linkedin.com/company/northstar' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'LinkedIn' }), {
-      target: { value: 'linkedin.com/company/northstar' },
-    });
-    fireEvent.change(screen.getByRole('textbox', { name: 'X' }), {
-      target: { value: 'https://x.com/northstar' },
-    });
-    // Facebook left blank — it must be omitted from the patch.
-    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
-
-    await waitFor(() => expect(mocks.updateCompany).toHaveBeenCalledTimes(1));
-    const body = mocks.updateCompany.mock.calls[0][0].data.body;
-    expect(body).toMatchObject({
-      summary: 'Hiring the best',
-      linkedinUrl: 'https://linkedin.com/company/northstar',
-      xUrl: 'https://x.com/northstar',
-    });
-    expect(body).not.toHaveProperty('facebookUrl');
+    expect(linkedin).toHaveValue('company/northstar');
   });
 
   it('renders the applicant pipeline as a kanban board with cards in their stage column', () => {

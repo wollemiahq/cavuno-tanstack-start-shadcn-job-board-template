@@ -2,7 +2,10 @@ import { useState } from 'react';
 
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router';
 
-import { handleEmployerLoaderError } from '../lib/employer-loader-auth';
+import {
+  handleEmployerLoaderError,
+  isReauthRetry,
+} from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
 import { cancelClaim, listCompanies, sendWorkEmail } from '../server/employers';
 import { getSeoBase } from '../server/queries';
@@ -19,12 +22,16 @@ import { headTitle } from '@/lib/page-title';
 import type { CompanyMembership } from '@cavuno/board';
 
 export const Route = createFileRoute('/employers/onboarding/$slug')({
-  loader: async ({ params }) => {
+  loader: async ({ params, location }) => {
     let loaded;
     try {
       loaded = await Promise.all([listCompanies(), getSeoBase()]);
     } catch (error) {
-      handleEmployerLoaderError(error, `/employers/onboarding/${params.slug}`);
+      return await handleEmployerLoaderError(
+        error,
+        `/employers/onboarding/${params.slug}`,
+        { retried: isReauthRetry(location) },
+      );
     }
     const [memberships, seo] = loaded;
     const membership = memberships.data.find(

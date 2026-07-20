@@ -78,6 +78,11 @@ vi.mock('../server/queries', () => ({
   listPlans: vi.fn(),
   listSalesLedPlans: vi.fn(),
 }));
+// The employer loader's refresh-before-redirect path; default to no recovery,
+// so an UNAUTHENTICATED loader still redirects to sign-in.
+vi.mock('../server/auth', () => ({
+  refreshSession: vi.fn().mockResolvedValue({ ok: false }),
+}));
 
 import { listCompanies, searchCompanies } from '../server/employers';
 import { Route as DashboardRoute } from './employers.dashboard';

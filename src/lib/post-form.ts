@@ -156,6 +156,46 @@ export function isRichTextEmpty(html: string): boolean {
   return text.length === 0;
 }
 
+/**
+ * Reduce a pasted social URL to the part after the network's domain, so the
+ * input shows only the handle/path behind a fixed `domain/` addon. Strips the
+ * scheme and an optional `www.`, then the first matching domain (also
+ * tolerating a `www.`-prefixed domain) and any leading slash. A value that is
+ * already a bare handle passes through unchanged.
+ */
+export function stripSocialHandle(value: string, domains: string[]): string {
+  let result = value
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '');
+  for (const domain of domains) {
+    const escaped = domain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const next = result.replace(
+      new RegExp(`^(?:www\\.)?${escaped}/?`, 'i'),
+      '',
+    );
+    if (next !== result) {
+      result = next;
+      break;
+    }
+  }
+  return result.replace(/^\/+/, '');
+}
+
+/**
+ * Build the canonical stored `https://{canonicalDomain}/{handle}` URL for a
+ * social handle, accepting a full pasted URL for any of `domains`. Empty input
+ * (or a value that reduces to nothing) returns `''`.
+ */
+export function toSocialUrl(
+  value: string,
+  canonicalDomain: string,
+  domains: string[] = [canonicalDomain],
+): string {
+  const handle = stripSocialHandle(value, domains);
+  return handle ? `https://${canonicalDomain}/${handle}` : '';
+}
+
 /** One chosen permit entry (a world region, country group, or country). */
 export type RemotePermitSelection = {
   type: string;

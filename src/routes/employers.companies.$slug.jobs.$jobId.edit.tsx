@@ -1,14 +1,9 @@
 /**
- * Company workspace — Post a job. One-page wizard mirroring the hosted
- * employer post flow: the job details (public /post field set) plus the
- * billing choice — an existing credit or a new plan — submit together.
- * A credit (or free plan) publishes immediately; a paid plan redirects to
- * checkout; an invoice-only plan reports the emailed invoice. The job is
- * created first, so a failed payment still leaves it recoverable from the
- * jobs list.
- *
- * The form itself lives in `EmployerJobForm`, shared with the per-job edit
- * page so the two never drift.
+ * Company workspace — Edit a job. Shares `EmployerJobForm` with "Post a job",
+ * prefilled from the job's full detail. A DRAFT owns the plan picker + payment
+ * step here (the same billing choice as posting), so a held draft is published
+ * from its own edit page rather than an inline popover on the jobs list. A
+ * published/expired job edits its details only.
  */
 import { createFileRoute, getRouteApi, Link } from '@tanstack/react-router';
 
@@ -17,7 +12,7 @@ import {
   isReauthRetry,
 } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
-import { getCompanyWorkspace } from '../server/employers';
+import { getCompanyWorkspace, getJob } from '../server/employers';
 import { getRemotePermits, getSeoBase } from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
@@ -28,20 +23,22 @@ import { headTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
 
-export const Route = createFileRoute('/employers/companies/$slug/jobs/new')({
+export const Route = createFileRoute(
+  '/employers/companies/$slug/jobs/$jobId/edit',
+)({
   loader: async ({ params, location }) => {
     try {
-      const [workspace, remotePermits, seo] = await Promise.all([
+      const [workspace, job, remotePermits, seo] = await Promise.all([
         getCompanyWorkspace({ data: { slug: params.slug } }),
-        // Taxonomy garnish — the form falls back to countries-only.
+        getJob({ data: { slug: params.slug, id: params.jobId } }),
         getRemotePermits().catch(() => null),
         getSeoBase(),
       ]);
-      return { workspace, remotePermits, seo };
+      return { workspace, job, remotePermits, seo };
     } catch (error) {
       return await handleEmployerLoaderError(
         error,
-        `/employers/companies/${params.slug}/jobs/new`,
+        `/employers/companies/${params.slug}/jobs/${params.jobId}/edit`,
         { retried: isReauthRetry(location) },
       );
     }
@@ -51,20 +48,21 @@ export const Route = createFileRoute('/employers/companies/$slug/jobs/new')({
       {
         title: headTitle(
           loaderData?.seo.boardName,
-          m.employerCompany_postJobHeading(),
+          m.employerEditJob_heading(),
         ),
       },
     ],
   }),
   staticData: { ownsMain: true },
-  component: NewJobPage,
+  component: EditJobPage,
 });
 
-function NewJobPage() {
-  const { workspace, remotePermits } = Route.useLoaderData();
+function EditJobPage() {
+  const { workspace, job, remotePermits } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const locale = board.language;
   const officeLocationSuggestions = useLocationSuggestions(locale);
+  const isDraft = job.status === 'draft';
 
   return (
     <Page width="content">
@@ -72,10 +70,12 @@ function NewJobPage() {
         <div className="space-y-6">
           <header className="space-y-1">
             <h1 className="font-heading text-2xl font-semibold tracking-tight">
-              {m.employerCompany_postJobHeading()}
+              {m.employerEditJob_heading()}
             </h1>
             <p className="text-muted-foreground text-sm">
-              {m.employerPostJob_subtitleText()}
+              {isDraft
+                ? m.employerEditJob_draftSubtitleText()
+                : m.employerEditJob_subtitleText()}
             </p>
           </header>
 
@@ -86,7 +86,8 @@ function NewJobPage() {
             plans={workspace.plans}
             billingOptions={workspace.billingOptions.data}
             officeLocationSuggestions={officeLocationSuggestions}
-            mode={{ kind: 'create' }}
+            mode={{ kind: 'edit', jobId: job.id, status: job.status }}
+            job={job}
           />
 
           <Link

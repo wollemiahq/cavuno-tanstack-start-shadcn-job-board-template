@@ -1,16 +1,48 @@
 import { isUnauthorized } from '@cavuno/board';
 import { isRedirect, redirect } from '@tanstack/react-router';
 
-export function handleEmployerLoaderError(
+import { refreshSession } from '../server/auth';
+
+/** Whether the loader is already the one-shot retry after a session refresh. */
+export function isReauthRetry(location?: { search?: unknown }): boolean {
+  const search = (location?.search ?? {}) as Record<string, unknown>;
+  return search.reauth === '1' || search.reauth === 1 || search.reauth === true;
+}
+
+/**
+ * Loader error policy for the authenticated employer surfaces.
+ *
+ * A transient access-token rejection (the API 401s a token the client still
+ * believes is live) shouldn't bounce a signed-in employer to sign-in. So on an
+ * unauthorized error we FIRST attempt one forced session refresh and, when it
+ * succeeds, reload the same page (`?reauth=1` bounds it to a single retry so a
+ * genuinely-dead session can't loop). Only a failed refresh — or an
+ * already-retried load — falls through to `/auth/sign-in`.
+ */
+export async function handleEmployerLoaderError(
   error: unknown,
   returnTo: string,
-): never {
+  options?: { retried?: boolean },
+): Promise<never> {
   if (isRedirect(error)) throw error;
 
   if (
     isUnauthorized(error) ||
     (error instanceof Error && error.message.includes('UNAUTHENTICATED'))
   ) {
+    if (!options?.retried) {
+      let refreshed = false;
+      try {
+        refreshed = (await refreshSession()).ok;
+      } catch {
+        refreshed = false;
+      }
+      if (refreshed) {
+        throw redirect({
+          href: `${returnTo}${returnTo.includes('?') ? '&' : '?'}reauth=1`,
+        });
+      }
+    }
     throw redirect({
       to: '/auth/sign-in',
       search: { returnTo },

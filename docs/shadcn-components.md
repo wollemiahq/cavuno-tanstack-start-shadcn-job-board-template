@@ -22,10 +22,10 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `aspect-ratio` | Available | Installed for adoption when the product needs this behavior. |
 | `attachment` | Used (1) | `src/components/resume-upload.tsx` |
 | `avatar` | Used (13) | `src/components/Header.tsx`<br>`src/components/account-shell.tsx`<br>`src/components/avatar-upload.tsx`<br>+10 more in the JSON ledger |
-| `badge` | Used (36) | `src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>`src/components/board/blog-tag-chips.tsx`<br>+33 more in the JSON ledger |
+| `badge` | Used (37) | `src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>`src/components/board/blog-tag-chips.tsx`<br>+34 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
-| `button` | Used (79) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+76 more in the JSON ledger |
+| `button` | Used (80) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+77 more in the JSON ledger |
 | `button-group` | Used (2) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx` |
 | `calendar` | Available | Installed for adoption when the product needs this behavior. |
 | `card` | Used (31) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>`src/components/board/company-search-result-detail.tsx`<br>+28 more in the JSON ledger |
@@ -40,7 +40,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `direction` | Available | Installed for adoption when the product needs this behavior. |
 | `drawer` | Available | Installed for adoption when the product needs this behavior. |
 | `dropdown-menu` | Used (5) | `src/components/Header.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>`src/components/messages/message-bubble.tsx`<br>+2 more in the JSON ledger |
-| `empty` | Used (38) | `src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+35 more in the JSON ledger |
+| `empty` | Used (39) | `src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+36 more in the JSON ledger |
 | `field` | Used (21) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+18 more in the JSON ledger |
 | `hover-card` | Available | Installed for adoption when the product needs this behavior. |
 | `input` | Used (18) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alerts-band.tsx`<br>+15 more in the JSON ledger |
@@ -48,7 +48,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `input-otp` | Used (1) | `src/routes/auth.verify-email-required.tsx` |
 | `item` | Used (8) | `src/components/alert-manager.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+5 more in the JSON ledger |
 | `kbd` | Available | Installed for adoption when the product needs this behavior. |
-| `label` | Used (3) | `src/components/experience-section.tsx`<br>`src/components/resume-upload.tsx`<br>`src/routes/employers.companies.$slug.jobs.new.tsx` |
+| `label` | Used (3) | `src/components/employer-job-form.tsx`<br>`src/components/experience-section.tsx`<br>`src/components/resume-upload.tsx` |
 | `marker` | Used (1) | `src/components/messages/thread-view.tsx` |
 | `menubar` | Available | Installed for adoption when the product needs this behavior. |
 | `message` | Used (1) | `src/components/messages/message-bubble.tsx` |
@@ -58,7 +58,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `pagination` | Used (2) | `src/components/board/blog-archive-page.tsx`<br>`src/components/board/listing-pagination.tsx` |
 | `popover` | Used (2) | `src/components/preview/preview-toolbar.tsx`<br>`src/components/rich-text-editor.tsx` |
 | `progress` | Used (1) | `src/components/profile-completeness-card.tsx` |
-| `radio-group` | Used (4) | `src/components/post-job-form.tsx`<br>`src/components/rhea-auth-pilot.tsx`<br>`src/routes/auth.sign-in.tsx`<br>+1 more in the JSON ledger |
+| `radio-group` | Used (4) | `src/components/employer-job-form.tsx`<br>`src/components/post-job-form.tsx`<br>`src/components/rhea-auth-pilot.tsx`<br>+1 more in the JSON ledger |
 | `resizable` | Available | Installed for adoption when the product needs this behavior. |
 | `scroll-area` | Available | Installed for adoption when the product needs this behavior. |
 | `select` | Used (10) | `src/components/board/jobs-filter-controls.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/custom-fields-group.tsx`<br>+7 more in the JSON ledger |
@@ -68,7 +68,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `skeleton` | Used (6) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-result-detail.tsx`<br>`src/components/board/public-content-pending.tsx`<br>+3 more in the JSON ledger |
 | `slider` | Available | Installed for adoption when the product needs this behavior. |
 | `sonner` | Used (1) | `src/routes/__root.tsx` |
-| `spinner` | Used (12) | `src/components/board/alert-signup-form.tsx`<br>`src/components/company-search-combobox.tsx`<br>`src/components/keyword-combobox.tsx`<br>+9 more in the JSON ledger |
+| `spinner` | Used (11) | `src/components/board/alert-signup-form.tsx`<br>`src/components/company-search-combobox.tsx`<br>`src/components/keyword-combobox.tsx`<br>+8 more in the JSON ledger |
 | `switch` | Used (1) | `src/components/preview/preview-board-settings.tsx` |
 | `table` | Used (2) | `src/components/board/salary-sections.tsx`<br>`src/routes/employers.companies.$slug.index.tsx` |
 | `tabs` | Available | Installed for adoption when the product needs this behavior. |

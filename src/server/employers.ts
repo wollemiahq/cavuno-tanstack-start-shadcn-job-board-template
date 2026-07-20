@@ -180,6 +180,18 @@ export const getCompanyWorkspace = createServerFn({ method: 'GET' })
     }),
   );
 
+/** One job's full detail (edit-form prefill). Gated read like the workspace. */
+export const getJob = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string; id: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, () =>
+      getBoard().me.companies.jobs.retrieve(data.slug, data.id, {
+        headers: authedHeaders(context),
+      }),
+    ),
+  );
+
 export const createJob = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; body: CreateEmployerJobBody }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])

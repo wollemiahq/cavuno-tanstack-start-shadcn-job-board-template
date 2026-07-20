@@ -28,6 +28,10 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
 
 vi.mock('../server/auth', () => ({ signUp: mocks.signUp }));
 vi.mock('../server/queries', () => ({ getBoardContext: vi.fn() }));
+// The loader's already-authed guard reads the session; default to signed-out.
+vi.mock('../server/account', () => ({
+  getSessionUser: vi.fn().mockResolvedValue(null),
+}));
 
 import { Route } from './auth.sign-up';
 

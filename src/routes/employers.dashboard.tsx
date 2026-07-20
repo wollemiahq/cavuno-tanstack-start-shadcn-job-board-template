@@ -3,7 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, createFileRoute, useRouter } from '@tanstack/react-router';
 import { ChevronRight, Plus, Search, XIcon } from 'lucide-react';
 
-import { handleEmployerLoaderError } from '../lib/employer-loader-auth';
+import {
+  handleEmployerLoaderError,
+  isReauthRetry,
+} from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
 import {
   claimCompany,
@@ -60,7 +63,7 @@ export const Route = createFileRoute('/employers/dashboard')({
   // "For employers" menu targets it directly).
   validateSearch: (search: Record<string, unknown>): { add?: boolean } =>
     search.add === true || search.add === 'true' ? { add: true } : {},
-  loader: async () => {
+  loader: async ({ location }) => {
     try {
       const [companies, seo] = await Promise.all([
         listCompanies(),
@@ -68,7 +71,9 @@ export const Route = createFileRoute('/employers/dashboard')({
       ]);
       return { ...companies, seo };
     } catch (error) {
-      handleEmployerLoaderError(error, '/employers/dashboard');
+      return await handleEmployerLoaderError(error, '/employers/dashboard', {
+        retried: isReauthRetry(location),
+      });
     }
   },
   head: ({ loaderData }) => ({

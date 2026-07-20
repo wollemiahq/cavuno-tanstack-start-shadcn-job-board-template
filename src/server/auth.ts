@@ -1,6 +1,7 @@
 import { isBoardApiError, type BoardAuthSession } from '@cavuno/board';
 import {
   clearSessionCookie,
+  parseSessionCookie,
   serializeSessionCookie,
   type BoardSession,
 } from '@cavuno/board/server';
@@ -10,9 +11,12 @@ import {
  * and out of the `__Host-` session cookie.
  */
 import { createServerFn } from '@tanstack/react-start';
-import { setResponseHeader } from '@tanstack/react-start/server';
+import {
+  getRequestHeader,
+  setResponseHeader,
+} from '@tanstack/react-start/server';
 
-import { getBoard } from '../lib/board';
+import { getBoard, getSessionRefresher } from '../lib/board';
 import { sessionMiddleware } from '../lib/session-middleware';
 
 function storeSession(session: BoardAuthSession): BoardSession {
@@ -90,6 +94,34 @@ export const signUpEmployer = createServerFn({ method: 'POST' })
       return authError(error);
     }
   });
+
+/**
+ * Force one bearer-pair rotation from the current session cookie. Unlike the
+ * session middleware (which only rotates inside the `isExpiringSoon` window),
+ * this always attempts a refresh — the recovery path when the API rejects an
+ * access token the client still believes is live (clock skew, early
+ * server-side expiry). Returns `{ ok: true }` and re-sets the cookie on
+ * success; clears the cookie on a burned/revoked token; `{ ok: false }` when
+ * there is nothing to refresh. Single-flight is preserved by the shared
+ * refresher.
+ */
+export const refreshSession = createServerFn({ method: 'POST' }).handler(
+  async () => {
+    const session = parseSessionCookie(getRequestHeader('cookie') ?? null);
+    if (!session) return { ok: false as const };
+    try {
+      const next = await getSessionRefresher()(session);
+      if (!next) {
+        setResponseHeader('Set-Cookie', clearSessionCookie());
+        return { ok: false as const };
+      }
+      setResponseHeader('Set-Cookie', serializeSessionCookie(next));
+      return { ok: true as const };
+    } catch {
+      return { ok: false as const };
+    }
+  },
+);
 
 export const signOut = createServerFn({ method: 'POST' })
   .middleware([sessionMiddleware])
