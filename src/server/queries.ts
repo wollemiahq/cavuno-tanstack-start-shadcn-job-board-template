@@ -41,7 +41,6 @@ import type {
   JobsSearchBody,
   LegalPageType,
   PlacesListQuery,
-  TaxonomyListQuery,
   PlansListQuery,
   PublicBlogAdjacentPosts,
   SuggestionsListQuery,
@@ -216,19 +215,6 @@ export const getRemotePermits = createServerFn({ method: 'GET' })
   .handler(({ context }) =>
     gatedRead(context, (h) =>
       getBoard().taxonomy.remotePermits.list({ headers: h }),
-    ),
-  );
-
-/**
- * The board's job categories — name + slug only; the endpoint carries no job
- * counts, so callers link out rather than quantify.
- */
-export const listCategories = createServerFn({ method: 'GET' })
-  .validator((input: TaxonomyListQuery) => input)
-  .middleware([boardAccessMiddleware])
-  .handler(({ data, context }) =>
-    gatedRead(context, (h) =>
-      getBoard().taxonomy.categories.list(data, { headers: h }),
     ),
   );
 
