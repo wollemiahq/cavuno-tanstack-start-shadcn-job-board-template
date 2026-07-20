@@ -367,7 +367,8 @@ function ProfileEditorCard({
               </Field>
             </div>
           </fieldset>
-          {/* In-page form: primary action left-aligned, in reading flow. */}
+          {/* Card-wrapped form: the primary action lives inside the card, at
+              the bottom of CardContent (the board's card-form convention). */}
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={status === 'saving'}>
               {status === 'saving'
