@@ -2,12 +2,31 @@
 
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TalentProfileContent } from './talent-profile-content';
 import { profileVm } from './talent-ui-test-fixtures';
 
-afterEach(cleanup);
+beforeEach(() => {
+  // CompanyAvatar renders the owned Avatar primitive, whose image is
+  // load-gated: Base UI only reveals the <img> once the browser reports it
+  // loaded, which never happens for jsdom's non-fetching images. Mock
+  // `window.Image` to report a complete load so the logo path is exercised
+  // deterministically (mirrors home-landing.test.tsx).
+  vi.spyOn(window, 'Image').mockImplementation(function MockImage() {
+    const image = document.createElement('img');
+    Object.defineProperties(image, {
+      complete: { value: true },
+      naturalWidth: { value: 100 },
+    });
+    return image;
+  });
+});
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe('TalentProfileContent', () => {
   it('renders the complete public profile as a canonical h1 document without redundant actions', () => {

@@ -1,64 +1,33 @@
-import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { initialsOf } from '@/lib/initials';
 
 /**
- * Company mark: the real logo when it exists, initials on the ink chip
- * otherwise (direction-C stress fix S3/S5 — logos mostly exist on the
- * wire; the initials fallback is still exercised by real companies).
+ * Company mark — the one shared way a company logo renders across every
+ * board surface. It is a thin, override-free wrapper over the owned Avatar
+ * primitive: the shape, ring, and image fit all come from the primitive, so
+ * a company reads identically everywhere (and matches people avatars, which
+ * use the same primitive directly). The only thing this adds over a raw
+ * `<Avatar>` is the two-letter initials fallback when no logo exists.
+ *
+ * `size` is the Avatar primitive's own scale — `sm`/`default`/`lg`/`xl`
+ * (size-6/8/10/12). `className` is a layout-only passthrough (margins,
+ * responsive display); it must never carry shape/size/fit overrides.
  */
 export function CompanyAvatar({
   name,
   logoUrl,
-  size = 'sm',
+  size = 'default',
   className,
 }: {
   name: string;
   logoUrl?: string | null;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'default' | 'lg' | 'xl';
   className?: string;
 }) {
-  const box =
-    size === 'lg'
-      ? 'size-12 text-lg'
-      : size === 'md'
-        ? 'size-11 text-base'
-        : 'size-10 text-sm';
-  if (logoUrl) {
-    return (
-      <span
-        className={cn(
-          'border-border bg-background flex shrink-0 items-center justify-center overflow-hidden rounded-[9px] border',
-          box,
-          className,
-        )}
-        aria-hidden="true"
-      >
-        <img
-          src={logoUrl}
-          alt=""
-          width={64}
-          height={64}
-          className="size-full object-contain"
-        />
-      </span>
-    );
-  }
-  const initials = name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((word) => word[0]!)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
   return (
-    <span
-      className={cn(
-        'bg-foreground text-background flex shrink-0 items-center justify-center rounded-[9px] font-semibold tracking-wide',
-        box,
-        className,
-      )}
-      aria-hidden="true"
-    >
-      {initials || '?'}
-    </span>
+    <Avatar size={size} className={className}>
+      {logoUrl ? <AvatarImage src={logoUrl} alt={name} /> : null}
+      <AvatarFallback>{initialsOf(name)}</AvatarFallback>
+    </Avatar>
   );
 }

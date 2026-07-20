@@ -481,16 +481,23 @@ Props:
 
 ### CompanyAvatar — `src/components/board/company-avatar.tsx`
 
-Company mark: the real logo when it exists, initials on the ink chip
-otherwise (direction-C stress fix S3/S5 — logos mostly exist on the
-wire; the initials fallback is still exercised by real companies).
+Company mark — the one shared way a company logo renders across every
+board surface. It is a thin, override-free wrapper over the owned Avatar
+primitive: the shape, ring, and image fit all come from the primitive, so
+a company reads identically everywhere (and matches people avatars, which
+use the same primitive directly). The only thing this adds over a raw
+`<Avatar>` is the two-letter initials fallback when no logo exists.
+
+`size` is the Avatar primitive's own scale — `sm`/`default`/`lg`/`xl`
+(size-6/8/10/12). `className` is a layout-only passthrough (margins,
+responsive display); it must never carry shape/size/fit overrides.
 
 Props:
 
 - `className?: string | undefined`
 - `logoUrl?: string | null | undefined`
 - `name: string`
-- `size?: "sm" | "lg" | "md" | undefined`
+- `size?: "default" | "sm" | "lg" | "xl" | undefined`
 
 ### CompanyCard — `src/components/board/company-card.tsx`
 
@@ -1862,7 +1869,7 @@ Variants — `variant`: icon, image
 
 Props:
 
-- `size?: "default" | "sm" | "lg" | undefined`
+- `size?: "default" | "sm" | "lg" | "xl" | undefined`
 
 ### AvatarBadge — `src/components/ui/avatar.tsx`
 

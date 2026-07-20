@@ -4,14 +4,13 @@ import type {
   JobDetailFactVM,
   JobDetailVM,
 } from '@/board/job-detail-view-model';
+import { CompanyAvatar } from '@/components/board/company-avatar';
 import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
 import { Prose } from '@/components/prose';
 import { SearchResultDetailHeader } from '@/components/search-results/search-results';
 import { Text } from '@/components/text';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { initialsOf } from '@/lib/initials';
 import { m } from '@/paraglide/messages';
 
 function DefinitionList({
@@ -210,14 +209,11 @@ function ExpandedJobDetailHeader({
             data-slot="job-detail-company-row"
             className="flex min-h-10 min-w-0 items-center gap-3"
           >
-            <Avatar size="lg">
-              {vm.companyLogoUrl ? (
-                <AvatarImage src={vm.companyLogoUrl} alt="" />
-              ) : null}
-              <AvatarFallback>
-                {initialsOf(vm.companyAvatarName)}
-              </AvatarFallback>
-            </Avatar>
+            <CompanyAvatar
+              name={vm.companyAvatarName}
+              logoUrl={vm.companyLogoUrl}
+              size="lg"
+            />
             {vm.companyName ? (
               <div className="flex min-w-0 items-center gap-1 truncate">
                 {vm.company ? (

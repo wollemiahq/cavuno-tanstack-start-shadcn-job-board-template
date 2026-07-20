@@ -27,16 +27,15 @@ import type {
   JobDetailVM,
 } from '@/board/job-detail-view-model';
 import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
+import { CompanyAvatar } from '@/components/board/company-avatar';
 import { PageBody } from '@/components/board/page-body';
 import { TaxonomyTags } from '@/components/board/taxonomy-tags';
 import { Container } from '@/components/layout/container';
 import { Prose } from '@/components/prose';
 import { Text } from '@/components/text';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { initialsOf } from '@/lib/initials';
 import { m } from '@/paraglide/messages';
 
 function TaxonomySection({
@@ -127,14 +126,11 @@ export function JobDetail({
             <div className="flex flex-col pt-(--header-space) pb-(--header-space)">
               <header className="flex flex-col gap-4">
                 <div className="flex items-center gap-3">
-                  <Avatar size="lg">
-                    {vm.companyLogoUrl ? (
-                      <AvatarImage src={vm.companyLogoUrl} alt="" />
-                    ) : null}
-                    <AvatarFallback>
-                      {initialsOf(vm.companyAvatarName)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <CompanyAvatar
+                    name={vm.companyAvatarName}
+                    logoUrl={vm.companyLogoUrl}
+                    size="lg"
+                  />
                   {vm.company?.href && vm.companyName ? (
                     <a
                       href={vm.company.href}

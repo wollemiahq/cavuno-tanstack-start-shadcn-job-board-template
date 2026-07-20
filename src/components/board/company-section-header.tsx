@@ -4,12 +4,11 @@ import { Link } from '@tanstack/react-router';
 
 import { m } from '../../paraglide/messages';
 
+import { CompanyAvatar } from '@/components/board/company-avatar';
 import { PageBody } from '@/components/board/page-body';
 import { Container } from '@/components/layout/container';
 import { Text } from '@/components/text';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { initialsOf } from '@/lib/initials';
 import { cn } from '@/lib/utils';
 
 /**
@@ -196,12 +195,11 @@ export function CompanySectionShell({
           <Container width="wide">
             <div className="flex flex-col gap-8 pt-(--header-space)">
               <header className="flex items-start gap-4">
-                <Avatar size="lg" className="size-12">
-                  {company.logoUrl ? (
-                    <AvatarImage src={company.logoUrl} alt={company.name} />
-                  ) : null}
-                  <AvatarFallback>{initialsOf(company.name)}</AvatarFallback>
-                </Avatar>
+                <CompanyAvatar
+                  name={company.name}
+                  logoUrl={company.logoUrl}
+                  size="xl"
+                />
                 <div className="flex min-w-0 flex-col gap-1">
                   <Text as="h1" variant="heading2" className="md:text-3xl">
                     {company.name}
