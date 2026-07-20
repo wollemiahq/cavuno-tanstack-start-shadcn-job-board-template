@@ -94,9 +94,10 @@ export function resolveShellBreadcrumbEntities(
       entityLabel(data.skill, ['displayName', 'name']) ??
       entityLabel(data.market, ['displayName', 'name']);
     entities.company ??= entityLabel(data.company, ['name', 'displayName']);
-    // Employer loaders nest the company inside a workspace envelope.
+    // Employer loaders nest the company inside a workspace envelope
+    // ({ workspace: { membership: { company } } }).
     entities.company ??= entityLabel(
-      record(data.workspace)?.company,
+      record(record(data.workspace)?.membership)?.company,
       ['name', 'displayName'],
     );
     entities.job ??= entityLabel(data.job, ['title', 'name']);
