@@ -38,6 +38,7 @@ import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { AppRouteErrorPage } from '@/components/app-route-error';
 import { AppRouterProvider } from '@/components/app-router-provider';
+import { FloatingStackProvider } from '@/components/floating-stack';
 import { ShellBreadcrumb } from '@/components/board/breadcrumb';
 import { themeModeScript } from '@/components/cavuno/board-theme';
 import { Box } from '@/components/layout/box';
@@ -361,6 +362,7 @@ function RootLayout() {
 
   return (
     <AppRouterProvider>
+      <FloatingStackProvider>
       <NavigationProgress />
       {fillsViewport ? (
         <div className="md:grid md:h-dvh md:grid-rows-[auto_minmax(0,1fr)]">
@@ -418,6 +420,7 @@ function RootLayout() {
           config={toPreviewBoardConfig(board)}
         />
       ) : null}
+      </FloatingStackProvider>
     </AppRouterProvider>
   );
 }
