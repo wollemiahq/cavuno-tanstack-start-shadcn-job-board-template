@@ -166,7 +166,7 @@ function PlanCard({ plan }: { plan: Plan }) {
         </p>
         <FeatureList features={planFeatures(plan)} />
       </CardContent>
-      <CardFooter className="pb-(--card-spacing)">
+      <CardFooter>
         {plan.purpose === 'job_posting' ? (
           <Link
             to="/post"
@@ -200,7 +200,7 @@ function SalesLedCard({ plan }: { plan: SalesLedPlan }) {
         </p>
         <FeatureList features={plan.featuredBullets} />
       </CardContent>
-      <CardFooter className="pb-(--card-spacing)">
+      <CardFooter>
         <a
           href={plan.ctaDestination}
           className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}

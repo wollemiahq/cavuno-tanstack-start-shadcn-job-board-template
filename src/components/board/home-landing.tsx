@@ -162,10 +162,7 @@ function HomeJobCard({ vm }: { vm: JobCardVM }) {
         ) : null}
 
         {visibleTags.length > 0 || vm.postedAtLabel ? (
-          // Card zeroes its own pb whenever a footer exists, and CardFooter
-          // only self-pads when it carries a border — so a borderless footer
-          // has to restore the bottom inset itself.
-          <CardFooter className="mt-auto flex-wrap gap-2 pb-(--card-spacing)">
+          <CardFooter className="mt-auto flex-wrap gap-2">
             {visibleTags.map((tag) => (
               <Badge
                 key={tag.key}
@@ -262,7 +259,7 @@ function SignupCtaCard({
         </CardTitle>
         <CardDescription>{supporting}</CardDescription>
       </CardHeader>
-      <CardFooter className="mt-auto pb-(--card-spacing)">
+      <CardFooter className="mt-auto">
         <Link to={href} className={buttonVariants({ size: 'lg' })}>
           {buttonLabel}
         </Link>

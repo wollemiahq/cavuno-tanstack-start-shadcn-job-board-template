@@ -81,7 +81,12 @@ function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="card-footer"
       className={cn(
-        'flex items-center rounded-b-[min(var(--radius-4xl),24px)] px-(--card-spacing) [.border-t]:pt-(--card-spacing)',
+        // The card zeros its own bottom padding when a footer exists
+        // (has-data-[slot=card-footer]:pb-0), so the footer restores that
+        // inset — otherwise a borderless footer (a plain button, no top
+        // border) sits flush against the card edge. Bordered footers add
+        // their top padding on top of this.
+        'flex items-center rounded-b-[min(var(--radius-4xl),24px)] px-(--card-spacing) pb-(--card-spacing) [.border-t]:pt-(--card-spacing)',
         className,
       )}
       {...props}
