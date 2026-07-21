@@ -6,6 +6,7 @@ import type {
 } from '@/board/job-detail-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
 import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
+import { SearchDetailHeader } from '@/components/board/search-detail-header';
 import { Prose } from '@/components/prose';
 import { SearchResultDetailHeader } from '@/components/search-results/search-results';
 import { Text } from '@/components/text';
@@ -207,7 +208,7 @@ function ExpandedJobDetailHeader({
         >
           <div
             data-slot="job-detail-company-row"
-            className="flex min-h-10 min-w-0 items-center gap-3"
+            className="flex min-h-10 min-w-0 items-center gap-2"
           >
             <CompanyAvatar
               name={vm.companyAvatarName}
@@ -316,72 +317,40 @@ function CompactJobDetailHeader({
   saveSlot?: React.ReactNode;
   loading: boolean;
 }) {
+  if (loading) return <CompactJobDetailSkeletonHeader />;
+
   return (
-    <header
-      data-slot="job-detail-compact-header"
-      className="border-border bg-background/95 grid min-h-16 max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b py-3 pl-5 backdrop-blur md:pl-6"
-    >
-      {loading ? (
-        <div className="min-w-0 space-y-1">
-          <Skeleton className="h-5 w-48 max-w-full" />
-          <Skeleton className="h-4 w-32 max-w-full" />
-        </div>
-      ) : (
-        <div className="min-w-0">
-          <p className="truncate text-base font-semibold">
-            {vm.detailHref ? (
-              <a
-                href={vm.detailHref}
-                className="outline-none hover:underline focus-visible:underline"
-              >
-                {vm.title}
-              </a>
-            ) : (
-              vm.title
-            )}
-          </p>
-          {vm.companyName ? (
-            <p className="text-muted-foreground truncate text-sm">
-              {vm.company ? (
-                <a
-                  href={vm.company.href}
-                  className="outline-none hover:underline focus-visible:underline"
-                >
-                  {vm.companyName}
-                </a>
-              ) : (
-                vm.companyName
-              )}
-            </p>
-          ) : null}
-        </div>
-      )}
-      <div className="justify-self-end">
+    <SearchDetailHeader
+      mark={
+        <CompanyAvatar
+          name={vm.companyAvatarName}
+          logoUrl={vm.companyLogoUrl}
+          size="lg"
+        />
+      }
+      name={vm.title}
+      nameHref={vm.detailHref}
+      subtitle={vm.companyName}
+      actions={
         <JobDetailActions
           applySlot={applySlot}
           saveSlot={saveSlot}
-          loading={loading}
+          loading={false}
           compact
         />
-      </div>
-    </header>
+      }
+    />
   );
 }
 
 function CompactJobDetailSkeletonHeader() {
   return (
-    <header
-      data-slot="job-detail-compact-header"
-      className="border-border bg-background/95 grid min-h-16 max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b py-3 pl-5 backdrop-blur md:pl-6"
-    >
-      <div className="min-w-0 space-y-1">
-        <Skeleton className="h-5 w-48 max-w-full" />
-        <Skeleton className="h-4 w-32 max-w-full" />
-      </div>
-      <div className="justify-self-end">
-        <JobDetailActions loading compact />
-      </div>
-    </header>
+    <SearchDetailHeader
+      mark={<Skeleton className="size-10 rounded-full" />}
+      name={<Skeleton className="h-5 w-48 max-w-full" />}
+      subtitle={<Skeleton className="h-4 w-32 max-w-full" />}
+      actions={<JobDetailActions loading compact />}
+    />
   );
 }
 

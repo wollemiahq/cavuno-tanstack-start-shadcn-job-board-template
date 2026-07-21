@@ -146,7 +146,7 @@ describe('CompanySearchResultDetail', () => {
       container.querySelector("[data-slot='company-detail-expanded-header']"),
     ).toBeInTheDocument();
     expect(
-      container.querySelector("[data-slot='company-detail-compact-header']"),
+      container.querySelector("[data-slot='search-detail-header']"),
     ).toBeNull();
 
     Object.defineProperty(boundary, 'offsetTop', {
@@ -162,12 +162,13 @@ describe('CompanySearchResultDetail', () => {
 
     expect(expanded).toHaveAttribute('aria-hidden', 'true');
     const compact = container.querySelector<HTMLElement>(
-      "[data-slot='company-detail-compact-header']",
+      "[data-slot='search-detail-header']",
     );
     if (!compact) throw new Error('Compact company header was not rendered');
+    // The condensed header's name links to the company's own page.
     expect(
       within(compact).getByRole('link', { name: 'Acme Research' }),
-    ).toBeVisible();
+    ).toHaveAttribute('href', '/companies/acme-research');
     expect(
       within(compact).getByRole('link', { name: 'View jobs' }),
     ).toBeVisible();

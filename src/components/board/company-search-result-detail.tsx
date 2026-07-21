@@ -5,6 +5,7 @@ import type { JobCardVM } from '@/board/job-view-model';
 import type { OverallSalaryVM } from '@/board/salary-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
 import { JobCard } from '@/components/board/job-card';
+import { SearchDetailHeader } from '@/components/board/search-detail-header';
 import { Prose } from '@/components/prose';
 import { SearchResultDetailHeader } from '@/components/search-results/search-results';
 import { Text } from '@/components/text';
@@ -125,31 +126,24 @@ function CompactCompanyDetailHeader({
   interactive: boolean;
 }) {
   return (
-    <header
-      data-slot="company-detail-compact-header"
-      className="border-border bg-background/95 flex h-16 min-w-0 items-center justify-between gap-4 border-b px-5 backdrop-blur md:px-6"
-    >
-      <Text as="h2" variant="heading3" className="min-w-0 truncate text-base">
-        {interactive ? (
-          <a
-            href={vm.detailHref}
-            className="outline-none hover:underline focus-visible:underline"
-          >
-            {vm.name}
-          </a>
-        ) : (
-          vm.name
-        )}
-      </Text>
-      {interactive ? (
-        <CompanyDetailActions
-          vm={vm}
-          hasJobs={hasJobs}
-          hasSalaries={hasSalaries}
-          compact
-        />
-      ) : null}
-    </header>
+    <SearchDetailHeader
+      mark={
+        <CompanyAvatar name={vm.avatarName} logoUrl={vm.logoUrl} size="lg" />
+      }
+      name={vm.name}
+      nameHref={interactive ? vm.detailHref : null}
+      subtitle={interactive ? vm.openJobsLabel : null}
+      actions={
+        interactive ? (
+          <CompanyDetailActions
+            vm={vm}
+            hasJobs={hasJobs}
+            hasSalaries={hasSalaries}
+            compact
+          />
+        ) : null
+      }
+    />
   );
 }
 

@@ -2,13 +2,28 @@ import type {
   TalentDetailCta,
   TalentProfileVM,
 } from '@/board/talent-view-model';
+import { SearchDetailHeader } from '@/components/board/search-detail-header';
 import {
   TalentProfileContent,
   TalentProfileIdentity,
 } from '@/components/board/talent-profile-content';
 import { SearchResultDetailHeader } from '@/components/search-results/search-results';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { initialsOf } from '@/lib/initials';
+
+/** The talent mark — the shared Avatar primitive with an initials fallback. */
+function TalentMark({ vm }: { vm: TalentProfileVM }) {
+  return (
+    <Avatar size="lg">
+      {vm.avatarUrl ? (
+        <AvatarImage src={vm.avatarUrl} alt={vm.avatarName} />
+      ) : null}
+      <AvatarFallback>{initialsOf(vm.avatarName)}</AvatarFallback>
+    </Avatar>
+  );
+}
 
 /**
  * Message (primary) + View profile (secondary) — the CTA is pre-resolved by
@@ -86,22 +101,13 @@ function CompactTalentDetailHeader({
   interactive: boolean;
 }) {
   return (
-    <header
-      data-slot="talent-detail-compact-header"
-      className="border-border bg-background/95 grid min-h-16 max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b px-5 py-3 backdrop-blur md:px-6"
-    >
-      <div className="min-w-0">
-        <p className="truncate text-base font-semibold">{vm.displayName}</p>
-        {vm.headline ? (
-          <p className="text-muted-foreground truncate text-sm">
-            {vm.headline}
-          </p>
-        ) : null}
-      </div>
-      <div className="justify-self-end">
-        <TalentDetailActions cta={cta} interactive={interactive} />
-      </div>
-    </header>
+    <SearchDetailHeader
+      mark={<TalentMark vm={vm} />}
+      name={vm.displayName}
+      nameHref={interactive ? vm.detailHref : null}
+      subtitle={vm.headline}
+      actions={<TalentDetailActions cta={cta} interactive={interactive} />}
+    />
   );
 }
 
@@ -131,13 +137,12 @@ export function TalentSearchResultDetailSkeleton() {
           </header>
         }
         compact={
-          <header className="border-border bg-background/95 grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b px-5 py-3 backdrop-blur md:px-6">
-            <div className="min-w-0 space-y-1">
-              <Skeleton className="h-5 w-44 max-w-full" />
-              <Skeleton className="h-4 w-56 max-w-full" />
-            </div>
-            <Skeleton className="h-9 w-28" />
-          </header>
+          <SearchDetailHeader
+            mark={<Skeleton className="size-10 rounded-full" />}
+            name={<Skeleton className="h-5 w-44 max-w-full" />}
+            subtitle={<Skeleton className="h-4 w-56 max-w-full" />}
+            actions={<Skeleton className="h-9 w-28" />}
+          />
         }
       />
       <div
