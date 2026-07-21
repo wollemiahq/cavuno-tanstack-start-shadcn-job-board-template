@@ -40,9 +40,10 @@ import type {
 } from '@cavuno/board';
 
 beforeEach(() => {
-  // The hero's decorative DitherCanvas asks for a 2D context; jsdom has none
-  // and would log a "not implemented" warning. Stub it to null — the canvas
-  // degrades to a transparent no-op, exactly its production fallback path.
+  // The hero's decorative DitherCanvas probes for a WebGL2 context; jsdom has
+  // none and would log a "not implemented" warning. Stub getContext to null —
+  // the band degrades to its plain-background fallback, its production path
+  // wherever WebGL2 is unavailable.
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
     null as never,
   );
