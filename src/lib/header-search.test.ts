@@ -126,13 +126,8 @@ describe('identity-aware fallback scope', () => {
       resolveHeaderSearchState('/', {}, undefined, undefined, 'talent').scope,
     ).toBe('talent');
     expect(
-      resolveHeaderSearchState(
-        '/companies',
-        {},
-        undefined,
-        undefined,
-        'talent',
-      ).scope,
+      resolveHeaderSearchState('/companies', {}, undefined, undefined, 'talent')
+        .scope,
     ).toBe('companies');
     expect(
       resolveHeaderSearchState('/blog', {}, undefined, undefined, 'talent')

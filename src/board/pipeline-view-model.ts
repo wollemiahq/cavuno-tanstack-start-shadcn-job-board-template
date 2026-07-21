@@ -1,7 +1,8 @@
 import { formatDate } from '@cavuno/board/format';
 
-import { initialsOf } from '@/lib/initials';
 import { m } from '../paraglide/messages';
+
+import { initialsOf } from '@/lib/initials';
 import type { EmployerApplicant, EmployerPipeline } from '@cavuno/board';
 
 /**
@@ -16,7 +17,6 @@ import type { EmployerApplicant, EmployerPipeline } from '@cavuno/board';
  * contract, and the correctness rules (which column a card belongs to,
  * how a timeline line reads, which stages an employer may edit) stay here.
  */
-
 
 export interface PipelineStageVM {
   id: string;

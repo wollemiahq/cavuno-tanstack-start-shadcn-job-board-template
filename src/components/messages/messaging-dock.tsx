@@ -3,9 +3,9 @@ import type { ReactNode } from 'react';
 import { ChevronDown, MessageSquare, X } from 'lucide-react';
 
 import { FloatingStackItem } from '@/components/floating-stack';
-import { UnreadCountBadge } from '@/components/unread-count-badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { UnreadCountBadge } from '@/components/unread-count-badge';
 import { cn } from '@/lib/utils';
 
 export function MessagingDock({

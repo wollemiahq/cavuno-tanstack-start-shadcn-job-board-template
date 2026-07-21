@@ -3,12 +3,13 @@ import { boardCopy } from '#/copy';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { createFileRoute, Link } from '@tanstack/react-router';
 
+import { m } from '../paraglide/messages';
+
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogTagChips } from '@/components/board/blog-tag-chips';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
 import { headTitle } from '@/lib/page-title';
-import { m } from '../paraglide/messages';
 import {
   getSeoBase,
   listBlogPosts,

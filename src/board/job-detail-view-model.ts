@@ -1,5 +1,3 @@
-import { boardCopy } from '@/copy';
-
 /**
  * Job detail VIEW-MODEL — the Layer-1b seam for the job-detail block
  * (ADR-0070 Phase 2). `toJobDetailVM` is the ONLY place SDK wire types,
@@ -27,6 +25,7 @@ import {
 } from '@cavuno/board/paths';
 import { buildJobBreadcrumbs } from '@cavuno/board/seo';
 
+import { boardCopy } from '@/copy';
 import type { PublicBoard, PublicJob, PublicJobCard } from '@cavuno/board';
 
 export interface JobDetailChipVM {

@@ -38,9 +38,9 @@ import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { AppRouteErrorPage } from '@/components/app-route-error';
 import { AppRouterProvider } from '@/components/app-router-provider';
-import { FloatingStackProvider } from '@/components/floating-stack';
 import { ShellBreadcrumb } from '@/components/board/breadcrumb';
 import { themeModeScript } from '@/components/cavuno/board-theme';
+import { FloatingStackProvider } from '@/components/floating-stack';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { NavigationProgress } from '@/components/navigation-progress';
@@ -393,66 +393,66 @@ function RootLayout() {
   return (
     <AppRouterProvider>
       <FloatingStackProvider>
-      <NavigationProgress />
-      {fillsViewport ? (
-        <div className="md:grid md:h-dvh md:grid-rows-[auto_minmax(0,1fr)]">
-          {header}
-          {routeContent}
-        </div>
-      ) : (
-        <>
-          {header}
-          {routeContent}
-        </>
-      )}
-      <Footer
-        breadcrumb={
-          shellBreadcrumb ? (
-            <ShellBreadcrumb
-              items={shellBreadcrumb.items}
-              ariaLabel={copy.jobDetail.breadcrumbAriaLabel}
-            />
-          ) : undefined
-        }
-        connected={shellBreadcrumb !== null}
-        flush={fillsViewport}
-        boardName={board.name}
-        logoUrl={board.logoUrl}
-        language={board.language}
-        labels={board.labels}
-        showCavunoBranding={board.showCavunoBranding}
-        primaryDomain={board.primaryDomain}
-        slug={board.slug}
-        features={board.features}
-        footer={board.footer}
-        talentDirectoryVisibility={board.talentDirectoryVisibility}
-        hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
-      />
-      {user &&
-      board.features.messaging &&
-      !location.pathname.startsWith('/messages') ? (
-        // Keyed by viewer: the dock holds polled inbox + open-thread state
-        // that must unmount wholesale when the signed-in identity changes
-        // (sign-out/in, persona switch) — never survive across viewers. The
-        // whole messaging surface is hidden when the board flag is off.
-        <MessagesDockController key={user.id} />
-      ) : null}
-      {preview.capability.canPreview ? (
-        <PreviewToolbar
-          capability={preview.capability}
-          personas={preview.personas}
-          viewer={
-            user
-              ? {
-                  displayName: user.displayName,
-                  email: user.email,
-                  role: user.role,
-                }
-              : null
+        <NavigationProgress />
+        {fillsViewport ? (
+          <div className="md:grid md:h-dvh md:grid-rows-[auto_minmax(0,1fr)]">
+            {header}
+            {routeContent}
+          </div>
+        ) : (
+          <>
+            {header}
+            {routeContent}
+          </>
+        )}
+        <Footer
+          breadcrumb={
+            shellBreadcrumb ? (
+              <ShellBreadcrumb
+                items={shellBreadcrumb.items}
+                ariaLabel={copy.jobDetail.breadcrumbAriaLabel}
+              />
+            ) : undefined
           }
-          config={toPreviewBoardConfig(board)}
+          connected={shellBreadcrumb !== null}
+          flush={fillsViewport}
+          boardName={board.name}
+          logoUrl={board.logoUrl}
+          language={board.language}
+          labels={board.labels}
+          showCavunoBranding={board.showCavunoBranding}
+          primaryDomain={board.primaryDomain}
+          slug={board.slug}
+          features={board.features}
+          footer={board.footer}
+          talentDirectoryVisibility={board.talentDirectoryVisibility}
+          hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
         />
-      ) : null}
+        {user &&
+        board.features.messaging &&
+        !location.pathname.startsWith('/messages') ? (
+          // Keyed by viewer: the dock holds polled inbox + open-thread state
+          // that must unmount wholesale when the signed-in identity changes
+          // (sign-out/in, persona switch) — never survive across viewers. The
+          // whole messaging surface is hidden when the board flag is off.
+          <MessagesDockController key={user.id} />
+        ) : null}
+        {preview.capability.canPreview ? (
+          <PreviewToolbar
+            capability={preview.capability}
+            personas={preview.personas}
+            viewer={
+              user
+                ? {
+                    displayName: user.displayName,
+                    email: user.email,
+                    role: user.role,
+                  }
+                : null
+            }
+            config={toPreviewBoardConfig(board)}
+          />
+        ) : null}
       </FloatingStackProvider>
     </AppRouterProvider>
   );

@@ -18,7 +18,7 @@ auth, and SEO surfaces behave. Verify at runtime, in this order.
 ## 0 — Run `doctor` first (deterministic pass)
 
 ```bash
-PUBLIC_CAVUNO_API_URL=... PUBLIC_CAVUNO_BOARD=pk_... \
+PUBLIC_CAVUNO_BOARD=pk_... \
   npx @cavuno/board doctor --frontend http://localhost:3000
 ```
 
@@ -45,21 +45,22 @@ board; wait a few minutes.
 
 ## 1 — Probe the API directly (before blaming app code)
 
-Use the real env values the app reads (`PUBLIC_CAVUNO_API_URL`,
-`PUBLIC_CAVUNO_BOARD`). Expected outputs are exact.
+Use the real `PUBLIC_CAVUNO_BOARD` value the app reads. The SDK and doctor use `https://api.cavuno.com` by default; set `PUBLIC_CAVUNO_API_URL` only for a Cavuno-supplied non-production override. Expected outputs are exact.
 
 ```bash
+CAVUNO_API_URL="${PUBLIC_CAVUNO_API_URL:-https://api.cavuno.com}"
+
 # Board context: MUST return JSON with "object": "public_board" and your
 # board's name — not an HTML error page, not {"error":{"code":"boards_not_found"}}.
-curl -s "$PUBLIC_CAVUNO_API_URL/v1/boards/$PUBLIC_CAVUNO_BOARD" | head -c 300
+curl -s "$CAVUNO_API_URL/v1/boards/$PUBLIC_CAVUNO_BOARD" | head -c 300
 
 # Jobs list: MUST return {"object":"list", ... "data":[...]}. An empty data
 # array on a board you know has jobs means the wrong board identifier.
-curl -s "$PUBLIC_CAVUNO_API_URL/v1/boards/$PUBLIC_CAVUNO_BOARD/jobs?limit=2" | head -c 300
+curl -s "$CAVUNO_API_URL/v1/boards/$PUBLIC_CAVUNO_BOARD/jobs?limit=2" | head -c 300
 
 # Error envelope: a bogus job slug MUST return the v1 error shape with
 # "code":"jobs_not_found" — anything else means a proxy is rewriting responses.
-curl -s "$PUBLIC_CAVUNO_API_URL/v1/boards/$PUBLIC_CAVUNO_BOARD/jobs/definitely-not-a-job"
+curl -s "$CAVUNO_API_URL/v1/boards/$PUBLIC_CAVUNO_BOARD/jobs/definitely-not-a-job"
 ```
 
 On a password-protected board, every content read above returns 401 with
@@ -89,7 +90,7 @@ Start the app (dev is fine for this step) and probe its own routes:
   (idempotent), not a duplicate.
 - **Paywall** (gated boards): anonymous list shows the `gatedCount` upsell;
   an entitled login makes the same URL return the ungated view.
-- **Alerts**: subscribe → `status: "created"`; repeat → `"duplicate"`.
+- **Alerts**: subscribe → `status: "submitted"`; repeat → same uniform `"submitted"` (never reveals already-subscribed).
 
 ## 4 — Production build (mandatory)
 

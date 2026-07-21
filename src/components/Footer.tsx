@@ -7,9 +7,9 @@ import { Link } from '@tanstack/react-router';
 import { m } from '../paraglide/messages';
 
 import { FacebookIcon, LinkedInIcon, XIcon } from '@/components/brand-icons';
-import { Badge } from '@/components/ui/badge';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 

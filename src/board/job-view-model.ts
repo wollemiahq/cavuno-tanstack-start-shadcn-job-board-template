@@ -1,5 +1,3 @@
-import { boardCopy } from '@/copy';
-
 /**
  * Job card VIEW-MODEL — the Layer-1b seam for the job-card / job-search
  * block (ADR-0070 Phase 2). `toJobCardVM` is the ONLY place SDK wire
@@ -25,8 +23,10 @@ import {
   jobsSkillPath,
 } from '@cavuno/board/paths';
 
-import { deriveSummary } from '@/lib/derive-summary';
 import { m } from '../paraglide/messages';
+
+import { boardCopy } from '@/copy';
+import { deriveSummary } from '@/lib/derive-summary';
 import type { PublicJob, PublicJobCard } from '@cavuno/board';
 
 export interface JobCardTagVM {

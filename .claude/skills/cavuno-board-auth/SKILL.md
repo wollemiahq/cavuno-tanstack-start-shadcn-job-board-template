@@ -49,7 +49,6 @@ import { createBoardClient } from '@cavuno/board';
 // Browser/SPA: 'local' persists the pair across tabs + reloads via
 // localStorage; 'session' scopes it to the tab; 'memory' drops it on reload.
 const board = createBoardClient({
-  baseUrl: 'https://api.cavuno.com',
   board: 'pk_a8f3...',
   auth: { storage: 'local' },
 });

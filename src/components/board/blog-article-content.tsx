@@ -4,6 +4,8 @@ import { formatDate } from '@cavuno/board/format';
 import { Link } from '@tanstack/react-router';
 import { FileWarning } from 'lucide-react';
 
+import { m } from '../../paraglide/messages';
+
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
 import { FacebookIcon, LinkedInIcon, XIcon } from '@/components/brand-icons';
 import {
@@ -31,7 +33,6 @@ import {
 } from '@/lib/article-toc';
 import { initialsOf } from '@/lib/initials';
 import { cn } from '@/lib/utils';
-import { m } from '../../paraglide/messages';
 import type {
   PublicBlogAdjacentPosts,
   PublicBlogPost,

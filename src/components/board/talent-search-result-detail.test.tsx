@@ -70,9 +70,10 @@ describe('TalentSearchResultDetail', () => {
       within(actions).queryByRole('link', { name: 'View profile' }),
     ).toBeNull();
     // The candidate's NAME is now the accessible route to their profile.
-    expect(
-      screen.getByRole('link', { name: 'Ada Lovelace' }),
-    ).toHaveAttribute('href', '/p/ada-lovelace');
+    expect(screen.getByRole('link', { name: 'Ada Lovelace' })).toHaveAttribute(
+      'href',
+      '/p/ada-lovelace',
+    );
   });
 
   it('renders no action controls when the viewer earns no Message, keeping the name link to the profile', () => {
@@ -85,9 +86,10 @@ describe('TalentSearchResultDetail', () => {
     ).toBeNull();
     expect(screen.queryByRole('link', { name: 'Message' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'View profile' })).toBeNull();
-    expect(
-      screen.getByRole('link', { name: 'Ada Lovelace' }),
-    ).toHaveAttribute('href', '/p/ada-lovelace');
+    expect(screen.getByRole('link', { name: 'Ada Lovelace' })).toHaveAttribute(
+      'href',
+      '/p/ada-lovelace',
+    );
   });
 
   it('removes every profile action while preserved detail is read-only', () => {

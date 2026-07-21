@@ -19,7 +19,6 @@ import { createBoardClient } from '@cavuno/board';
 
 // Module-scoped, no auth.storage → safe across concurrent Workers requests.
 export const board = createBoardClient({
-  baseUrl: process.env.PUBLIC_CAVUNO_API_URL!,
   board: process.env.PUBLIC_CAVUNO_BOARD!,
 });
 ```

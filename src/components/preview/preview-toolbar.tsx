@@ -21,7 +21,12 @@ import {
   type PreviewPersona,
   type PreviewViewer,
 } from '../../lib/preview';
-import { exitPreview, reseedSandbox, switchPersona } from '../../server/preview';
+import { m } from '../../paraglide/messages';
+import {
+  exitPreview,
+  reseedSandbox,
+  switchPersona,
+} from '../../server/preview';
 import { PreviewBoardSettingsSheet } from './preview-board-settings';
 import { PreviewEmailsSheet } from './preview-emails';
 
@@ -45,7 +50,6 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import { m } from '../../paraglide/messages';
 
 /**
  * The developer-preview toolbar — Workstream B of the sandbox-preview-state

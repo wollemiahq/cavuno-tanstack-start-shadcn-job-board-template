@@ -1,7 +1,8 @@
 import { Link } from '@tanstack/react-router';
 
-import { Badge } from '@/components/ui/badge';
 import { m } from '../../paraglide/messages';
+
+import { Badge } from '@/components/ui/badge';
 import type { PublicBlogTag } from '@cavuno/board';
 
 export interface BlogTagChipsProps {
@@ -24,7 +25,10 @@ export function BlogTagChips({
   allActive = false,
 }: BlogTagChipsProps) {
   return (
-    <nav aria-label={m.blogIndex_topicsLabel()} className="flex flex-wrap gap-2">
+    <nav
+      aria-label={m.blogIndex_topicsLabel()}
+      className="flex flex-wrap gap-2"
+    >
       <Link
         to="/blog"
         search={{}}

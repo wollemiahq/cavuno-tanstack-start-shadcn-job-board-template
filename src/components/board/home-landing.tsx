@@ -209,7 +209,10 @@ function HiringIndex({
       <Grid as="ul" columns={{ base: 1, sm: 2, lg: 3 }} gap="3">
         {companies.map((company) => (
           <li key={company.id}>
-            <Card size="sm" className="relative h-full transition-shadow hover:shadow-md">
+            <Card
+              size="sm"
+              className="relative h-full transition-shadow hover:shadow-md"
+            >
               <CardHeader>
                 <div className="flex items-start gap-3">
                   <CompanyAvatar

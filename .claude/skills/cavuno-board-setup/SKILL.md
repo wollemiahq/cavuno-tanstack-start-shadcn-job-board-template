@@ -32,14 +32,13 @@ Read `package.json` and the project layout before writing anything. Identify: th
 - `next` → use Server Components + per-call `FetchOptions` (`next: { revalidate, tags }`).
 - Anything else (Nuxt, SvelteKit, Astro, SolidStart, plain JS) → use the core skills directly; the SDK surface is identical.
 
-## Use standard environment names
+## Use the standard board environment name
 
-Read these two values from the environment; never hard-code them:
+Read the board key from the environment; never hard-code it:
 
-- `PUBLIC_CAVUNO_API_URL` — the API base, e.g. `https://api.cavuno.com`.
 - `PUBLIC_CAVUNO_BOARD` — the board identifier. Use the `pk_…` publishable key, not the slug (the slug is operator-mutable and breaks deployed frontends on rename).
 
-Both are public-safe (the `pk_…` key is client-safe by design). Use your framework's public-env convention for the variable name (`VITE_`, `PUBLIC_`, `NEXT_PUBLIC_`); the values are the same.
+The `pk_…` key is public-safe by design. Use your framework's public-env convention for the variable name (`VITE_`, `PUBLIC_`, `NEXT_PUBLIC_`). The SDK uses `https://api.cavuno.com` by default. Pass `baseUrl` only when Cavuno supplies a staging or development origin.
 
 ## Keep credentials server-side
 
@@ -57,7 +56,6 @@ Create one client and reuse it. See `cavuno-board-client`.
 import { createBoardClient } from '@cavuno/board';
 
 export const board = createBoardClient({
-  baseUrl: process.env.PUBLIC_CAVUNO_API_URL!,
   board: process.env.PUBLIC_CAVUNO_BOARD!,
 });
 ```
@@ -68,7 +66,7 @@ export const board = createBoardClient({
 
 ## Build jobs browsing + detail
 
-The core surface. `jobs.list` / `jobs.search` for listing pages, `jobs.retrieve` for the detail page, `jobs.similar` for the related rail. Honor storefront pagination and the candidate-paywall `gatedCount`; use `paginate()` for full-catalog walks (sitemaps, feeds). See `cavuno-board-jobs`.
+The core surface. `jobs.list` / `jobs.search` for listing pages, `jobs.retrieve` for the detail page, `jobs.similar` for the related rail. Honor catalog pagination and the candidate-paywall `gatedCount`; use `paginate()` for full-catalog walks (sitemaps, feeds). See `cavuno-board-jobs`.
 
 ## Add board users + saved jobs
 
@@ -85,7 +83,7 @@ hand-rolling (each has a skill):
 
 - Salary/date/label formatting in the board language → `cavuno-board-format`
 - Listing-filter vocabulary + URL param parsing → `cavuno-board-filters`
-- Board theme → shadcn CSS variables + fonts → `cavuno-board-theme`
+- Optional hosted-board theme compatibility → `cavuno-board-theme`. By default, the consuming application owns tokens, fonts, and color mode.
 
 ## Build the remaining surfaces per feature flag
 
@@ -117,4 +115,4 @@ Then run the `cavuno-board-smoke-test` skill against your `pk_…` — type chec
 
 ## Stop conditions
 
-Stop and ask the human when: no `pk_…` board identifier or API URL is available; the framework is unrecognized and has no server boundary for secrets; or a surface you need (e.g. job alerts, applications) has no corresponding skill yet — the SDK only exposes endpoints that are live, so a missing skill means the endpoint isn't shipped.
+Stop and ask the human when: no `pk_…` board identifier is available; the framework is unrecognized and has no server boundary for credentials; or a surface you need (e.g. job alerts, applications) has no corresponding skill yet — the SDK only exposes endpoints that are live, so a missing skill means the endpoint isn't shipped.

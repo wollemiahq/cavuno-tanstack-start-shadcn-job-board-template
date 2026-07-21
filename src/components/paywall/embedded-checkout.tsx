@@ -14,8 +14,9 @@ import { useEffect, useRef, useState } from 'react';
 
 import { loadStripe, type StripeEmbeddedCheckout } from '@stripe/stripe-js';
 
-import { Spinner } from '@/components/ui/spinner';
 import { m } from '../../paraglide/messages';
+
+import { Spinner } from '@/components/ui/spinner';
 import type { AccessCheckoutSession } from '@cavuno/board';
 
 export function EmbeddedCheckout({

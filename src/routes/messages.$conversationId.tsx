@@ -7,6 +7,7 @@ import {
   useNavigate,
 } from '@tanstack/react-router';
 
+import { m } from '../paraglide/messages';
 import {
   MessagesSidebarController,
   ThreadController,
@@ -15,7 +16,6 @@ import {
 import { Page, PageContent } from '@/components/layout/page';
 import { MessagingLayout } from '@/components/messages/messaging-layout';
 import { headTitle } from '@/lib/page-title';
-import { m } from '../paraglide/messages';
 import { getInbox, getThread } from '@/server/messaging';
 import { getBoardContext, getSeoBase } from '@/server/queries';
 

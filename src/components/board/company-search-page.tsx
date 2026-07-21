@@ -173,77 +173,75 @@ export function CompanySearchPage({
                   label={m.companySearch_resultsRegionLabel()}
                   scrollRestorationId="companies-search-results"
                 >
-                    <ListingResultsHeader breadcrumb={breadcrumb}>
-                      {resultsBar}
-                    </ListingResultsHeader>
+                  <ListingResultsHeader breadcrumb={breadcrumb}>
+                    {resultsBar}
+                  </ListingResultsHeader>
 
-                    <div className="space-y-3">
-                      {companyVms.map((vm, index) => {
-                        const companySlug = companySlugs[index]!;
-                        return (
-                          <CompanySearchResult
-                            key={vm.id}
-                            vm={vm}
-                            selected={companySlug === selection.selectedId}
-                            onActivate={(event) =>
-                              selection.onResultActivate(event, companySlug)
-                            }
-                          />
-                        );
-                      })}
-                    </div>
+                  <div className="space-y-3">
+                    {companyVms.map((vm, index) => {
+                      const companySlug = companySlugs[index]!;
+                      return (
+                        <CompanySearchResult
+                          key={vm.id}
+                          vm={vm}
+                          selected={companySlug === selection.selectedId}
+                          onActivate={(event) =>
+                            selection.onResultActivate(event, companySlug)
+                          }
+                        />
+                      );
+                    })}
+                  </div>
 
-                    {query ? (
-                      hasMore && onLoadMore ? (
-                        <div className="flex justify-center">
-                          <Button
-                            type="button"
+                  {query ? (
+                    hasMore && onLoadMore ? (
+                      <div className="flex justify-center">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={onLoadMore}
+                        >
+                          {m.companiesIndex_nextResultsLabel()}
+                        </Button>
+                      </div>
+                    ) : null
+                  ) : (
+                    <ListingPagination
+                      compact
+                      page={page}
+                      count={count}
+                      pageSize={pageSize}
+                      hrefForPage={(nextPage) =>
+                        listingPageHref(currentHref, nextPage, [
+                          'cursor',
+                          'selectedCompany',
+                        ])
+                      }
+                      onPageChange={onPageChange}
+                    />
+                  )}
+
+                  {markets.length > 0 ? (
+                    <section
+                      aria-label={m.companiesIndex_browseByMarketHeading()}
+                      className="border-border space-y-3 border-t pt-4"
+                    >
+                      <h2 className="text-sm font-semibold">
+                        {m.companiesIndex_browseByMarketHeading()}
+                      </h2>
+                      <div className="flex flex-wrap gap-1.5">
+                        {markets.map((market) => (
+                          <Badge
+                            key={market.slug}
                             variant="outline"
-                            onClick={onLoadMore}
+                            render={<a href={companyMarketPath(market.slug)} />}
                           >
-                            {m.companiesIndex_nextResultsLabel()}
-                          </Button>
-                        </div>
-                      ) : null
-                    ) : (
-                      <ListingPagination
-                        compact
-                        page={page}
-                        count={count}
-                        pageSize={pageSize}
-                        hrefForPage={(nextPage) =>
-                          listingPageHref(currentHref, nextPage, [
-                            'cursor',
-                            'selectedCompany',
-                          ])
-                        }
-                        onPageChange={onPageChange}
-                      />
-                    )}
-
-                    {markets.length > 0 ? (
-                      <section
-                        aria-label={m.companiesIndex_browseByMarketHeading()}
-                        className="border-border space-y-3 border-t pt-4"
-                      >
-                        <h2 className="text-sm font-semibold">
-                          {m.companiesIndex_browseByMarketHeading()}
-                        </h2>
-                        <div className="flex flex-wrap gap-1.5">
-                          {markets.map((market) => (
-                            <Badge
-                              key={market.slug}
-                              variant="outline"
-                              render={
-                                <a href={companyMarketPath(market.slug)} />
-                              }
-                            >
-                              {market.name}
-                            </Badge>
-                          ))}
-                        </div>
-                      </section>
-                    ) : null}
+                            {market.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
                 </SearchResultsList>
               }
               detail={

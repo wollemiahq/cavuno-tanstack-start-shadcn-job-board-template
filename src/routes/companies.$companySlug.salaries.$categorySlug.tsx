@@ -170,7 +170,10 @@ function CompanyCategorySalaryPage() {
 
   const competitorItems: RailItem[] = salary.competitors.map((x) => ({
     name: x.companyName,
-    href: companyCategorySalaryPath(x.companySlug, salary.categoryCanonicalSlug),
+    href: companyCategorySalaryPath(
+      x.companySlug,
+      salary.categoryCanonicalSlug,
+    ),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
     logoPath: x.logoPath,
