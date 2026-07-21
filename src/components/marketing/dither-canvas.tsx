@@ -37,16 +37,32 @@ export function DitherCanvas({ className }: { className?: string }) {
       probeCanvas.getContext('webgl2') ?? probeCanvas.getContext('webgl');
     if (!gl) return; // no WebGL (jsdom, ancient engines) — stay unmounted
 
-    // Resolve the `--foreground` token to a concrete colour string paper
-    // can parse, and keep it in sync with theme (dark-class) flips.
+    // Resolve the `--foreground` token to an `rgb()` string the shader can
+    // parse — the browser reports the computed colour in its own space
+    // (`oklch(…)`), which paper's colour parser rejects, so round-trip it
+    // through a 2D context to sRGB bytes. Re-read on theme (dark) flips.
+    const probe2d = probeCanvas.getContext('2d', { willReadFrequently: true });
     const readInk = () => {
-      const probe = document.createElement('span');
-      probe.style.color = 'var(--foreground)';
-      probe.style.display = 'none';
-      document.body.appendChild(probe);
-      const resolved = getComputedStyle(probe).color;
-      probe.remove();
-      if (resolved) setInk(resolved);
+      const span = document.createElement('span');
+      span.style.color = 'var(--foreground)';
+      span.style.display = 'none';
+      document.body.appendChild(span);
+      const resolved = getComputedStyle(span).color;
+      span.remove();
+      if (!probe2d) {
+        if (resolved) setInk(resolved);
+        return;
+      }
+      probe2d.clearRect(0, 0, 1, 1);
+      probe2d.fillStyle = '#000';
+      try {
+        probe2d.fillStyle = resolved;
+      } catch {
+        /* keep the black fallback */
+      }
+      probe2d.fillRect(0, 0, 1, 1);
+      const [r, g, b] = probe2d.getImageData(0, 0, 1, 1).data;
+      setInk(`rgb(${r}, ${g}, ${b})`);
     };
     readInk();
     setReady(true);
@@ -74,7 +90,7 @@ export function DitherCanvas({ className }: { className?: string }) {
     <Dithering
       aria-hidden
       className={cn('pointer-events-none opacity-[0.12]', className)}
-      colorBack="transparent"
+      colorBack="rgba(0, 0, 0, 0)"
       colorFront={ink}
       shape="simplex"
       type="8x8"
