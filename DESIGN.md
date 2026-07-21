@@ -3223,7 +3223,7 @@ Primitives: Card, OverallSalaryCard, MetricPanel
 
 ### Typography — `docs/patterns/typography.md`
 
-Keep authored interface text on the Rhea/Geist theme scale and rendered HTML in one shadcn Typeset preset.
+Keep authored interface text on the shadcn/Geist theme scale and rendered HTML in one shadcn Typeset preset.
 
 Primitives: PageHeader, PageSection, CardTitle, Prose
 

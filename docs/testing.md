@@ -16,9 +16,8 @@ rewriting unrelated tests.
 3. **Route tests** cover URL parsing and serialization, canonical links,
    selected-result state, loading and error transitions, and access gates.
 4. **Release smoke checks** exercise the important routes against real board
-   data at desktop and mobile widths. Visual review belongs in the small
-   release-evidence matrix, where layout, overflow, and responsive regressions
-   can actually be seen.
+   data at desktop and mobile widths. Visual review belongs in a browser pass,
+   where layout, overflow, and responsive regressions can actually be seen.
 5. **Distribution gates** may inspect files only when the file itself is the
    product contract: generated design artifacts, theme output, the installed
    shadcn inventory, or the absence of the retired UI dependency tree.
@@ -31,8 +30,7 @@ rewriting unrelated tests.
   anatomy.
 - `outerHTML` snapshots of page structure.
 - Repeating the same shadcn-ownership assertion in every feature test.
-- Pixel or spacing claims in jsdom. Use the release-evidence browser pass for
-  those.
+- Pixel or spacing claims in jsdom. Use a browser pass for those.
 
 An implementation detail is test-worthy only when consumers rely on it as a
 documented public API. Prefer a rendered behavior assertion whenever one can
@@ -59,5 +57,4 @@ pnpm run build
 ```
 
 For a visual change, also exercise the affected route at desktop and mobile
-widths with real development data and record only release-critical states in
-[`docs/release-evidence/`](release-evidence/README.md).
+widths with real development data in the browser.

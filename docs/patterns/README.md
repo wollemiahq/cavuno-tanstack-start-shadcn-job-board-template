@@ -1,8 +1,7 @@
 # Patterns
 
-Polaris-style **pattern** layer for the Cavuno board frontend. A _pattern_ is a
-named, documented page-or-section composition — the level above a single
-component. Where `DESIGN.md` inventories the primitives (tokens + components),
+The **pattern** layer for this template. A _pattern_ is a named, documented
+page-or-section composition — the level above a single component. Where `DESIGN.md` inventories the primitives (tokens + components),
 this folder documents how they assemble into the recurring surfaces of the app.
 
 **Select a pattern from the table below before composing a route.** Don't
@@ -55,7 +54,6 @@ so docs and the design library stay in sync.
 - **Doc structure** — [`src/pattern-contract.test.ts`](../../src/pattern-contract.test.ts)
   asserts every pattern page has the template's sections in order, parses the
   required frontmatter keys, and appears in this index.
-- **Shadcn-only release boundary** — structural tests reject inherited Untitled
-  UI component paths, CSS imports, icons, and tokens. App code composes the
-  owned Rhea components and semantic tokens from `src/theme.css`; there is no
-  compatibility baseline to grow or re-baseline.
+- **One design system** — structural tests keep app code composing the owned
+  shadcn components under `src/components/ui/` and the semantic tokens from
+  `src/theme.css`; no parallel component or token system can creep in.

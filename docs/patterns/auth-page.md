@@ -7,7 +7,7 @@ usedBy: [src/components/auth-form.tsx, src/routes/auth.sign-in.tsx, src/routes/a
 
 ## Purpose
 
-Every auth surface uses one centered single-column Rhea card: a logo mark, a
+Every auth surface uses one centered single-column shadcn card: a logo mark, a
 display heading with supporting text, the form region, an "OR" divider, and the
 social sign-in buttons. The shell and controls use owned shadcn/Base UI
 primitives, so adopters can replace the component implementations without

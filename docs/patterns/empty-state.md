@@ -27,7 +27,7 @@ place to revise or reset the search rather than a wall.
   single button action, in a consistent `min-h-96`. This is the standardized
   form — do not hand-roll the min-height, media size, or action styling per
   surface.
-- New Rhea surfaces otherwise use the owned shadcn `Empty` compound:
+- New surfaces otherwise use the owned shadcn `Empty` compound:
   `EmptyHeader` → `EmptyMedia` → `EmptyTitle` + `EmptyDescription`, with
   optional `EmptyContent` actions. Multi-action access gates (the restricted
   talent directory) and full-canvas search not-found surfaces compose `Empty`
@@ -40,7 +40,7 @@ place to revise or reset the search rather than a wall.
 
 ## Composition
 
-The homepage uses the owned Rhea compound directly:
+The homepage uses the owned shadcn compound directly:
 
 ```tsx
 <PageSection ariaLabel={copy.home.latestJobs}>

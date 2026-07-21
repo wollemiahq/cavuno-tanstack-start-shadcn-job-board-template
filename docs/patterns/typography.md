@@ -1,6 +1,6 @@
 ---
 name: Typography
-purpose: Keep authored interface text on the Rhea/Geist theme scale and rendered HTML in one shadcn Typeset preset.
+purpose: Keep authored interface text on the shadcn/Geist theme scale and rendered HTML in one shadcn Typeset preset.
 primitives: [PageHeader, PageSection, CardTitle, Prose]
 usedBy: [src/components/layout/page.tsx, src/components/prose.tsx, src/components/post-card.tsx, src/components/board/blog-article-content.tsx, src/components/board/salary-sections.tsx]
 ---
@@ -8,7 +8,7 @@ usedBy: [src/components/layout/page.tsx, src/components/prose.tsx, src/component
 ## Purpose
 
 The theme owns typography. Authored interface text uses the semantic styles
-already built into Rhea components, while trusted rendered HTML uses one
+already built into shadcn components, while trusted rendered HTML uses one
 `typeset typeset-content` preset through `Prose`. Both paths inherit Geist and
 the active `theme.css` variables, so changing a shadcn/create preset updates the
 starter without introducing route-specific type scales.
@@ -24,7 +24,7 @@ starter without introducing route-specific type scales.
 ## Anatomy
 
 - Geist is loaded once and exposed through the theme font variables.
-- Rhea components pair semantic elements with the shared heading/body classes.
+- shadcn components pair semantic elements with the shared heading/body classes.
 - `Prose` is the only JSX gateway to `typeset typeset-content`.
 - `src/typeset.css` owns links, lists, headings, tables, code, and block quotes
   inside rendered HTML, including dark mode.
@@ -53,7 +53,7 @@ starter without introducing route-specific type scales.
 ## Used by
 
 - `PageHeader` and `PageSection` own page and section headings.
-- `PostCard` and salary cards use Rhea card typography.
+- `PostCard` and salary cards use shadcn card typography.
 - `BlogArticleContent` uses one `Prose` body for the complete article.
 - Job descriptions and other trusted HTML reuse the same `Prose` gateway.
 

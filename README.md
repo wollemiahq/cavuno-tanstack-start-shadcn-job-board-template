@@ -19,9 +19,6 @@ surface is a real page wired to a real backend — not a mock.
 
 ![Cavuno job board home — real sandbox jobs and company cards](docs/media/home.png)
 
-<!-- Screenshots referenced below live in docs/media/ and must be captured
-     before release — see docs/media/README.md for the exact shot list. -->
-
 ---
 
 ## Why this template is different
@@ -57,8 +54,7 @@ fresh clone boots straight into a full board with:
 
 The full sandbox playbook — persona roster, feature-flag toggles, reseed, and
 the headless server-function equivalents — is in
-[`docs/preview-states.md`](docs/preview-states.md). A short guided tour is in
-[`docs/DEMO.md`](docs/DEMO.md).
+[`docs/preview-states.md`](docs/preview-states.md).
 
 ### 2. Agent-ready by construction
 
@@ -125,9 +121,7 @@ called server-side (`src/server/**`).
 
 ## Take the tour
 
-The sandbox exists so you can see every state without seeding anything. The
-full script with exact clicks is in [`docs/DEMO.md`](docs/DEMO.md); the short
-version:
+The sandbox exists so you can see every state without seeding anything:
 
 1. **Switch personas** — toolbar → **Employers → `employer-admin`**. You are
    now signed in as a workspace admin.
@@ -172,8 +166,7 @@ Cross-cutting capabilities that ship on top of those routes:
   its indexed URLs.
 - **Real-data discipline** — the design handles messy data by construction:
   long titles clamp, absent salaries are omitted (never an empty label), skill
-  tags cap at `3 + N`, missing logos fall back to initials. See
-  [`docs/stress-log.md`](docs/stress-log.md).
+  tags cap at `3 + N`, missing logos fall back to initials.
 - **i18n chrome** — [Paraglide JS](https://paraglidejs.com) with `en`/`de`/`fr`
   catalogs, compile-time, SSR-native. UI chrome only; board content stays its
   own language.
@@ -239,8 +232,7 @@ wrangler deploy --env demo
 ```
 
 > The public demo URL (`<DEMO_URL>` above) is intentionally a placeholder —
-> flipping it live is the owner's decision. See [`docs/publish-gate.md`](docs/publish-gate.md)
-> for the current release status.
+> flipping it live is the owner's decision.
 
 [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/wollemiahq/cavuno-shadcn-ui-job-board-template)
 
