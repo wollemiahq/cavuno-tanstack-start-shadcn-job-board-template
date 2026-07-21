@@ -162,6 +162,15 @@ export const TALENT_DIRECTORY_VISIBILITIES = [
  * `passwordProtectionEnabled`, …) are deliberately absent.
  */
 export interface PreviewBooleanFlag {
+  /**
+   * Parent flags this capability depends on (all must be ON for the control
+   * to be interactive) — mirrors the dashboard's dependency gating: ATS needs
+   * employer accounts; messaging needs employers AND candidates. The stored
+   * value is never mutated by gating; the switch just disables.
+   */
+  requires?: readonly ('candidatesEnabled' | 'employersEnabled')[];
+  /** Short hint rendered when `requires` is unmet. */
+  requiresNote?: string;
   key:
     | 'jobAccessPaywallEnabled'
     | 'blogEnabled'
@@ -232,6 +241,8 @@ export const PREVIEW_FEATURE_FLAGS: readonly PreviewFeatureFlag[] = [
     // Off = external-applications-only board: native apply 422s
     // (applications_native_disabled) and the built-in apply flow hides.
     description: 'Built-in ATS apply — off means external-applications-only.',
+    requires: ['employersEnabled'],
+    requiresNote: 'Requires employer self-serve.',
   },
   {
     key: 'applicantMessagingEnabled',
@@ -240,6 +251,8 @@ export const PREVIEW_FEATURE_FLAGS: readonly PreviewFeatureFlag[] = [
     // Off = the whole surface family is absent: inbox, dock, message CTAs;
     // the conversations API rejects with messaging_disabled.
     description: 'Applicant–employer messaging surfaces and sends.',
+    requires: ['employersEnabled', 'candidatesEnabled'],
+    requiresNote: 'Requires employer self-serve and candidate accounts.',
   },
   {
     key: 'registrationWallEnabled',
@@ -340,6 +353,19 @@ export function projectPersona(raw: RawPreviewPersona): PreviewPersona {
     description: raw.description,
     states: raw.states,
   };
+}
+
+/**
+ * The unmet parents of a boolean flag under the current config — empty when
+ * the flag has no dependencies or all are ON. Pure, so the toolbar's gating
+ * is unit-testable without rendering.
+ */
+export function unmetFlagRequirements(
+  flag: PreviewFeatureFlag,
+  config: PreviewBoardConfig,
+): readonly ('candidatesEnabled' | 'employersEnabled')[] {
+  if (flag.kind !== 'boolean' || !flag.requires) return [];
+  return flag.requires.filter((parent) => config[parent] !== true);
 }
 
 /**

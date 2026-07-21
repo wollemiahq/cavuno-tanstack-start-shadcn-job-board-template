@@ -13,6 +13,7 @@ import {
   projectPersona,
   resolveCapability,
   type RawPreviewPersona,
+  unmetFlagRequirements,
 } from './preview';
 
 /**
@@ -279,5 +280,66 @@ describe('groupPersonasByRole', () => {
     ]);
     expect(grouped.candidate.map((p) => p.id)).toEqual(['c1', 'c2']);
     expect(grouped.employer.map((p) => p.id)).toEqual(['e1']);
+  });
+});
+
+describe('unmetFlagRequirements (dependency gating)', () => {
+  const baseConfig = {
+    jobAccessPaywallEnabled: false,
+    talentDirectoryVisibility: 'public',
+    blogEnabled: true,
+    jobAlertsEnabled: true,
+    candidatesEnabled: true,
+    employersEnabled: true,
+    nativeApplicationsEnabled: true,
+    applicantMessagingEnabled: true,
+    registrationWallEnabled: false,
+  } as const;
+  const flag = (key: string) =>
+    PREVIEW_FEATURE_FLAGS.find((entry) => entry.key === key)!;
+
+  it('every requires entry is a whitelisted boolean parent key', () => {
+    for (const entry of PREVIEW_FEATURE_FLAGS) {
+      if (entry.kind !== 'boolean' || !entry.requires) continue;
+      for (const parent of entry.requires) {
+        expect(SANDBOX_CONFIG_WHITELIST.has(parent)).toBe(true);
+      }
+      expect(entry.requiresNote).toBeTruthy();
+    }
+  });
+
+  it('ATS is gated when employers are off; messaging when either parent is off', () => {
+    expect(
+      unmetFlagRequirements(flag('nativeApplicationsEnabled'), {
+        ...baseConfig,
+        employersEnabled: false,
+      }),
+    ).toEqual(['employersEnabled']);
+    expect(
+      unmetFlagRequirements(flag('applicantMessagingEnabled'), {
+        ...baseConfig,
+        candidatesEnabled: false,
+      }),
+    ).toEqual(['candidatesEnabled']);
+    expect(
+      unmetFlagRequirements(flag('applicantMessagingEnabled'), {
+        ...baseConfig,
+        employersEnabled: false,
+        candidatesEnabled: false,
+      }),
+    ).toEqual(['employersEnabled', 'candidatesEnabled']);
+  });
+
+  it('is empty when parents are on, and for dependency-free flags', () => {
+    expect(
+      unmetFlagRequirements(flag('nativeApplicationsEnabled'), baseConfig),
+    ).toEqual([]);
+    expect(unmetFlagRequirements(flag('blogEnabled'), baseConfig)).toEqual([]);
+    expect(
+      unmetFlagRequirements(flag('talentDirectoryVisibility'), {
+        ...baseConfig,
+        employersEnabled: false,
+      }),
+    ).toEqual([]);
   });
 });

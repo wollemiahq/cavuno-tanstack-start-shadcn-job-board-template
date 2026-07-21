@@ -10,6 +10,7 @@ import {
   type PreviewBoardConfig,
   type PreviewFeatureFlag,
   type TalentDirectoryVisibility,
+  unmetFlagRequirements,
 } from '../../lib/preview';
 import { updateSandboxFlags } from '../../server/preview';
 
@@ -172,6 +173,11 @@ function FlagControl({
   onSet: (key: string, next: boolean | TalentDirectoryVisibility) => void;
 }) {
   const controlId = `preview-flag-${flag.key}`;
+  // Dependency gating (mirrors the dashboard): a capability whose parent
+  // audience flag is off disables rather than flips — the stored value is
+  // never mutated from here.
+  const unmet = unmetFlagRequirements(flag, config);
+  const gated = unmet.length > 0;
   return (
     <li className="flex items-start justify-between gap-3">
       <div className="flex flex-col">
@@ -181,13 +187,21 @@ function FlagControl({
         <span className="text-muted-foreground text-xs">
           {flag.description}
         </span>
+        {gated && flag.kind === 'boolean' && flag.requiresNote ? (
+          <span
+            className="text-muted-foreground text-xs italic"
+            data-test="preview-flag-requires"
+          >
+            {flag.requiresNote}
+          </span>
+        ) : null}
       </div>
       {flag.kind === 'boolean' ? (
         <Switch
           id={controlId}
           className="mt-0.5"
           checked={config[flag.key] === true}
-          disabled={pending}
+          disabled={pending || gated}
           aria-label={flag.label}
           onCheckedChange={(next) => onSet(flag.key, next)}
         />
