@@ -72,6 +72,8 @@ const config: PreviewBoardConfig = {
   jobAlertsEnabled: true,
   candidatesEnabled: true,
   employersEnabled: true,
+  nativeApplicationsEnabled: true,
+  applicantMessagingEnabled: true,
   registrationWallEnabled: false,
 };
 

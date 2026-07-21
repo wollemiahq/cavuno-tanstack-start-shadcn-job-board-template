@@ -32,6 +32,7 @@ import {
 } from './-salary-page-layout';
 
 import {
+  salarySkillLocationsPath,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
@@ -48,6 +49,7 @@ import {
 } from '@/components/board/salary-sections';
 import { JsonLd } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
+import { buttonVariants } from '@/components/ui/button';
 import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/salaries/skills/$slug/')({
@@ -231,14 +233,23 @@ function SkillSalaryPage() {
               seo.labels,
             )}
           />
-          <SalaryRail
-            vm={toSalaryRailVM(
-              m.salaryDetail_topLocations(),
-              locationItems,
-              seo.language,
-              seo.labels,
-            )}
-          />
+          {locationItems.length > 0 ? (
+            <PageSection
+              title={m.salaryDetail_topLocations()}
+              actions={
+                <a
+                  href={salarySkillLocationsPath(salary.canonicalSlug)}
+                  className={buttonVariants({ variant: 'link', size: 'sm' })}
+                >
+                  {m.salaryDetail_seeAllLocationsLabel()}
+                </a>
+              }
+            >
+              <SalaryRail
+                vm={toSalaryRailVM('', locationItems, seo.language, seo.labels)}
+              />
+            </PageSection>
+          ) : null}
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_topTitles(),

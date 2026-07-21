@@ -3,6 +3,7 @@ import type { ElementType } from 'react';
 import type { TalentProfileVM } from '@/board/talent-view-model';
 // A logo-or-initials brand chip; reused here for education institutions.
 import { CompanyAvatar } from '@/components/board/company-avatar';
+import { Text } from '@/components/text';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { initialsOf } from '@/lib/initials';
@@ -25,46 +26,82 @@ function ProfileLink({
   );
 }
 
+/**
+ * The talent header block — the avatar + name + headline meta line + the
+ * location/availability badge row. Modeled on the job-detail and
+ * company-profile headers (`CompanySectionShell`, `JobDetail`): the mark sits
+ * left of a stacked name → headline → badges column, so every entity page
+ * opens the same way.
+ *
+ * `size="xl"` drives the full-page hero band (a larger avatar + an `md:text-3xl`
+ * title, matching the company/job hero); `size="lg"` is the condensed detail
+ * pane. `nameHref` turns the NAME into the link to the canonical `/p/{handle}`
+ * profile — the accessible route to the profile now that the "View profile"
+ * button is gone. It is left null on the canonical page itself and whenever the
+ * surface is a non-interactive placeholder.
+ */
 export function TalentProfileIdentity({
   vm,
   headingAs = 'h2',
   showName = true,
+  size = 'lg',
+  nameHref = null,
 }: {
   vm: TalentProfileVM;
   headingAs?: 'h1' | 'h2';
   showName?: boolean;
+  size?: 'lg' | 'xl';
+  nameHref?: string | null;
 }) {
-  const Heading = headingAs as ElementType;
-
   return (
-    <header data-slot="talent-profile-identity" className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Avatar size="lg">
-          {vm.avatarUrl ? (
-            <AvatarImage src={vm.avatarUrl} alt={vm.avatarName} />
-          ) : null}
-          <AvatarFallback>{initialsOf(vm.avatarName)}</AvatarFallback>
-        </Avatar>
-        <div className="min-w-0">
-          {showName ? (
-            <Heading className="text-foreground text-2xl font-semibold tracking-tight">
-              {vm.displayName}
-            </Heading>
-          ) : null}
-          {vm.headline ? (
-            <p className="text-muted-foreground mt-1 text-sm">{vm.headline}</p>
-          ) : null}
-        </div>
-      </div>
+    <header
+      data-slot="talent-profile-identity"
+      className="flex items-start gap-4"
+    >
+      <Avatar size={size}>
+        {vm.avatarUrl ? (
+          <AvatarImage src={vm.avatarUrl} alt={vm.avatarName} />
+        ) : null}
+        <AvatarFallback>{initialsOf(vm.avatarName)}</AvatarFallback>
+      </Avatar>
+      <div className="flex min-w-0 flex-col gap-2">
+        {showName || vm.headline ? (
+          <div className="flex min-w-0 flex-col gap-1">
+            {showName ? (
+              <Text
+                as={headingAs}
+                variant="heading2"
+                className={size === 'xl' ? 'md:text-3xl' : undefined}
+              >
+                {nameHref ? (
+                  <a
+                    href={nameHref}
+                    className="outline-none hover:underline focus-visible:underline"
+                  >
+                    {vm.displayName}
+                  </a>
+                ) : (
+                  vm.displayName
+                )}
+              </Text>
+            ) : null}
+            {vm.headline ? (
+              <p className="text-muted-foreground text-base">{vm.headline}</p>
+            ) : null}
+          </div>
+        ) : null}
 
-      {vm.location || vm.jobSearchStatusLabel ? (
-        <div className="flex flex-wrap gap-1.5">
-          {vm.location ? <Badge variant="outline">{vm.location}</Badge> : null}
-          {vm.jobSearchStatusLabel ? (
-            <Badge variant="secondary">{vm.jobSearchStatusLabel}</Badge>
-          ) : null}
-        </div>
-      ) : null}
+        {vm.location || vm.jobSearchStatusLabel ? (
+          <div className="flex flex-wrap gap-1.5">
+            {vm.location ? (
+              <Badge variant="outline">{vm.location}</Badge>
+            ) : null}
+            {vm.jobSearchStatusLabel ? (
+              <Badge variant="secondary">{vm.jobSearchStatusLabel}</Badge>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </header>
   );
 }

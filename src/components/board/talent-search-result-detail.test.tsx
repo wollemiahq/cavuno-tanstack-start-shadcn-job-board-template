@@ -18,27 +18,24 @@ import { SearchResultDetail } from '@/components/search-results/search-results';
 
 afterEach(cleanup);
 
-// Anonymous/without-access: Message points somewhere other than the profile,
-// so both controls render (and are distinct).
-const messageAndViewProfileCta: TalentDetailCta = {
+// Anonymous/without-access: the Message CTA points at sign-in/pricing. The
+// route no longer offers a separate "View profile" button — the NAME is the
+// link to the canonical profile — so `viewProfile` is always null here.
+const messageCta: TalentDetailCta = {
   message: { label: 'Message', href: '/auth/sign-in?returnTo=%2Ftalent' },
-  viewProfile: { label: 'View profile', href: '/p/ada-lovelace' },
+  viewProfile: null,
 };
 
-// Candidate viewer: candidates can't cold-message candidates, so no Message.
-const viewProfileOnlyCta: TalentDetailCta = {
+// Candidate viewer: candidates can't cold-message candidates, so no Message —
+// and with the button gone, the pane renders no action controls at all.
+const noActionsCta: TalentDetailCta = {
   message: null,
-  viewProfile: { label: 'View profile', href: '/p/ada-lovelace' },
+  viewProfile: null,
 };
 
 describe('TalentSearchResultDetail', () => {
   it('shows decision-complete public facts', () => {
-    render(
-      <TalentSearchResultDetail
-        vm={profileVm}
-        cta={messageAndViewProfileCta}
-      />,
-    );
+    render(<TalentSearchResultDetail vm={profileVm} cta={messageCta} />);
 
     expect(
       screen.getByRole('heading', { level: 2, name: 'Ada Lovelace' }),
@@ -52,33 +49,9 @@ describe('TalentSearchResultDetail', () => {
     expect(screen.getAllByText('Ada Lovelace')).toHaveLength(1);
   });
 
-  it('renders the Message primary action ahead of the secondary View profile link', () => {
+  it('renders the Message action and links the candidate name to their profile', () => {
     const { container } = render(
-      <TalentSearchResultDetail
-        vm={profileVm}
-        cta={messageAndViewProfileCta}
-      />,
-    );
-
-    const actions = container.querySelector<HTMLElement>(
-      "[data-slot='talent-detail-actions']",
-    );
-    if (!actions) throw new Error('Talent detail actions were not rendered');
-
-    const links = within(actions).getAllByRole('link');
-    expect(links).toHaveLength(2);
-    expect(links[0]).toHaveAccessibleName('Message');
-    expect(links[0]).toHaveAttribute(
-      'href',
-      '/auth/sign-in?returnTo=%2Ftalent',
-    );
-    expect(links[1]).toHaveAccessibleName('View profile');
-    expect(links[1]).toHaveAttribute('href', '/p/ada-lovelace');
-  });
-
-  it('renders only the View profile link when the viewer earns no Message CTA', () => {
-    const { container } = render(
-      <TalentSearchResultDetail vm={profileVm} cta={viewProfileOnlyCta} />,
+      <TalentSearchResultDetail vm={profileVm} cta={messageCta} />,
     );
 
     const actions = container.querySelector<HTMLElement>(
@@ -88,15 +61,40 @@ describe('TalentSearchResultDetail', () => {
 
     const links = within(actions).getAllByRole('link');
     expect(links).toHaveLength(1);
-    expect(links[0]).toHaveAccessibleName('View profile');
-    expect(within(actions).queryByRole('link', { name: 'Message' })).toBeNull();
+    expect(links[0]).toHaveAccessibleName('Message');
+    expect(links[0]).toHaveAttribute(
+      'href',
+      '/auth/sign-in?returnTo=%2Ftalent',
+    );
+    expect(
+      within(actions).queryByRole('link', { name: 'View profile' }),
+    ).toBeNull();
+    // The candidate's NAME is now the accessible route to their profile.
+    expect(
+      screen.getByRole('link', { name: 'Ada Lovelace' }),
+    ).toHaveAttribute('href', '/p/ada-lovelace');
+  });
+
+  it('renders no action controls when the viewer earns no Message, keeping the name link to the profile', () => {
+    const { container } = render(
+      <TalentSearchResultDetail vm={profileVm} cta={noActionsCta} />,
+    );
+
+    expect(
+      container.querySelector("[data-slot='talent-detail-actions']"),
+    ).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Message' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'View profile' })).toBeNull();
+    expect(
+      screen.getByRole('link', { name: 'Ada Lovelace' }),
+    ).toHaveAttribute('href', '/p/ada-lovelace');
   });
 
   it('removes every profile action while preserved detail is read-only', () => {
     const { container } = render(
       <TalentSearchResultDetail
         vm={profileVm}
-        cta={messageAndViewProfileCta}
+        cta={messageCta}
         interactive={false}
       />,
     );
@@ -110,15 +108,14 @@ describe('TalentSearchResultDetail', () => {
     ).toBeNull();
     expect(screen.queryByRole('link', { name: 'View profile' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Message' })).toBeNull();
+    // A read-only placeholder exposes no navigable name link either.
+    expect(screen.queryByRole('link', { name: 'Ada Lovelace' })).toBeNull();
   });
 
   it('replaces the expanded identity with a compact identity and action at the hero boundary', () => {
     const { container } = render(
       <SearchResultDetail label="Selected profile">
-        <TalentSearchResultDetail
-          vm={profileVm}
-          cta={messageAndViewProfileCta}
-        />
+        <TalentSearchResultDetail vm={profileVm} cta={messageCta} />
       </SearchResultDetail>,
     );
     const detail = screen.getByRole('region', { name: 'Selected profile' });
@@ -156,8 +153,9 @@ describe('TalentSearchResultDetail', () => {
     expect(
       within(compact).getByRole('link', { name: 'Message' }),
     ).toHaveAttribute('href', '/auth/sign-in?returnTo=%2Ftalent');
+    // The "View profile" button is gone from the pane; the name is the link.
     expect(
-      within(compact).getByRole('link', { name: 'View profile' }),
-    ).toHaveAttribute('href', '/p/ada-lovelace');
+      within(compact).queryByRole('link', { name: 'View profile' }),
+    ).toBeNull();
   });
 });

@@ -168,6 +168,8 @@ export interface PreviewBooleanFlag {
     | 'jobAlertsEnabled'
     | 'candidatesEnabled'
     | 'employersEnabled'
+    | 'nativeApplicationsEnabled'
+    | 'applicantMessagingEnabled'
     | 'registrationWallEnabled';
   kind: 'boolean';
   label: string;
@@ -224,6 +226,22 @@ export const PREVIEW_FEATURE_FLAGS: readonly PreviewFeatureFlag[] = [
     description: 'Enable employer sign-up and self-serve flows.',
   },
   {
+    key: 'nativeApplicationsEnabled',
+    kind: 'boolean',
+    label: 'Native applications',
+    // Off = external-applications-only board: native apply 422s
+    // (applications_native_disabled) and the built-in apply flow hides.
+    description: 'Built-in ATS apply — off means external-applications-only.',
+  },
+  {
+    key: 'applicantMessagingEnabled',
+    kind: 'boolean',
+    label: 'Applicant messaging',
+    // Off = the whole surface family is absent: inbox, dock, message CTAs;
+    // the conversations API rejects with messaging_disabled.
+    description: 'Applicant–employer messaging surfaces and sends.',
+  },
+  {
     key: 'registrationWallEnabled',
     kind: 'boolean',
     label: 'Registration wall',
@@ -248,6 +266,8 @@ export const SANDBOX_CONFIG_WHITELIST: ReadonlySet<string> = new Set([
   'jobAlertsEnabled',
   'candidatesEnabled',
   'employersEnabled',
+  'nativeApplicationsEnabled',
+  'applicantMessagingEnabled',
   'registrationWallEnabled',
 ]);
 
@@ -264,6 +284,8 @@ export interface PreviewBoardConfig {
   jobAlertsEnabled: boolean;
   candidatesEnabled: boolean;
   employersEnabled: boolean;
+  nativeApplicationsEnabled: boolean;
+  applicantMessagingEnabled: boolean;
   registrationWallEnabled: boolean;
 }
 
@@ -275,6 +297,12 @@ export function toPreviewBoardConfig(context: {
     candidates: boolean;
     employers: boolean;
     registrationWall: boolean;
+    /**
+     * Runtime flags `@cavuno/board@1.38.0` does not type yet (see
+     * `src/board/board-feature-flags.ts`) — optional here, absent ⇒ ON.
+     */
+    nativeApplications?: boolean;
+    messaging?: boolean;
   };
   /** Nullable off an API deployment predating the tri-state slice — defaults to `'off'`. */
   talentDirectoryVisibility: TalentDirectoryVisibility | null;
@@ -286,6 +314,8 @@ export function toPreviewBoardConfig(context: {
     jobAlertsEnabled: context.features.jobAlerts,
     candidatesEnabled: context.features.candidates,
     employersEnabled: context.features.employers,
+    nativeApplicationsEnabled: context.features.nativeApplications ?? true,
+    applicantMessagingEnabled: context.features.messaging ?? true,
     registrationWallEnabled: context.features.registrationWall,
   };
 }

@@ -76,6 +76,8 @@ toggleable.
 | `jobAlertsEnabled` | switch | Anonymous job-alert subscription on/off |
 | `candidatesEnabled` | switch | Candidate profiles / sign-up on/off |
 | `employersEnabled` | switch | Employer sign-up / self-serve on/off |
+| `nativeApplicationsEnabled` | switch | Built-in ATS apply — off = external-applications-only (`apply` 422s, apply CTAs hide) |
+| `applicantMessagingEnabled` | switch | Applicant–employer messaging — off removes inbox/dock/CTAs and rejects `me/conversations` |
 | `registrationWallEnabled` | switch | Require sign-in to apply — disables guest applications (jobs stay visible) |
 
 `jobAccessPreviewCount` (number) is on the API whitelist but has no toolbar
@@ -88,6 +90,12 @@ Agent equivalent: `updateSandboxFlags({ data: { config: { jobAccessPaywallEnable
 
 The nightly reset and the reseed action restore the **baseline** config, so
 toggles are exploration, not drift.
+
+> **`nativeApplicationsEnabled` note:** on a real (non-sandbox) board the
+> dashboard/API off-flip also **unpublishes published native-apply jobs to
+> drafts** (async drain; re-enabling does not republish). The sandbox config
+> PATCH is a plain flag write — seeded jobs stay listed while you explore the
+> off state, and the next reseed restores the baseline either way.
 
 ## Reseed
 

@@ -30,8 +30,8 @@ import {
 /**
  * Company workspace — the company's jobs. Each row's role name links to the
  * job's own edit page (a draft publishes + pays there; the inline checkout
- * popover is gone). Actions collapse into a single per-row menu; a draft keeps
- * a primary "Publish" that also lands on edit.
+ * popover is gone). Every row action — publish included — lives in the single
+ * per-row overflow menu; a draft's "Publish" lands on the edit page.
  */
 import { getSeoBase } from '../server/queries';
 
@@ -267,15 +267,6 @@ function JobRow({
       </TableCell>
       <TableCell>
         <div className="flex min-w-max items-center justify-end gap-1">
-          {isDraft ? (
-            <Link
-              to="/employers/companies/$slug/jobs/$jobId/edit"
-              params={{ slug, jobId: job.id }}
-              className={buttonVariants({ size: 'sm' })}
-            >
-              {m.employerJobs_publishLabel()}
-            </Link>
-          ) : null}
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
@@ -292,6 +283,20 @@ function JobRow({
               <MoreHorizontalIcon aria-hidden />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              {/* A draft publishes from its own edit page (plan picker + pay). */}
+              {isDraft ? (
+                <DropdownMenuItem
+                  nativeButton={false}
+                  render={
+                    <Link
+                      to="/employers/companies/$slug/jobs/$jobId/edit"
+                      params={{ slug, jobId: job.id }}
+                    />
+                  }
+                >
+                  {m.employerJobs_publishLabel()}
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuItem
                 nativeButton={false}
                 render={

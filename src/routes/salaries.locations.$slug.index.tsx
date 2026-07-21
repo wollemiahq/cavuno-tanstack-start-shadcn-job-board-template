@@ -31,6 +31,8 @@ import {
 } from './-salary-page-layout';
 
 import {
+  salaryLocationSkillsPath,
+  salaryLocationTitlesPath,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
@@ -44,6 +46,8 @@ import {
   type RailItem,
 } from '@/components/board/salary-sections';
 import { JsonLd } from '@/components/json-ld';
+import { PageSection } from '@/components/layout/page';
+import { buttonVariants } from '@/components/ui/button';
 import { headTitle } from '@/lib/page-title';
 
 type City = LocationSalaryDetail['childLocations'][number];
@@ -239,22 +243,44 @@ function LocationSalaryPage() {
             />
           ) : null}
 
-          <SalaryRail
-            vm={toSalaryRailVM(
-              m.salaryDetail_topTitles(),
-              categoryItems,
-              seo.language,
-              seo.labels,
-            )}
-          />
-          <SalaryRail
-            vm={toSalaryRailVM(
-              m.salaryDetail_topSkills(),
-              skillItems,
-              seo.language,
-              seo.labels,
-            )}
-          />
+          {categoryItems.length > 0 ? (
+            <PageSection
+              title={m.salaryDetail_topTitles()}
+              actions={
+                <a
+                  href={salaryLocationTitlesPath(salary.canonicalSlug)}
+                  className={buttonVariants({ variant: 'link', size: 'sm' })}
+                >
+                  {m.salaryDetail_seeAllTitlesInPlaceLabel({
+                    place: salary.placeName,
+                  })}
+                </a>
+              }
+            >
+              <SalaryRail
+                vm={toSalaryRailVM('', categoryItems, seo.language, seo.labels)}
+              />
+            </PageSection>
+          ) : null}
+          {skillItems.length > 0 ? (
+            <PageSection
+              title={m.salaryDetail_topSkills()}
+              actions={
+                <a
+                  href={salaryLocationSkillsPath(salary.canonicalSlug)}
+                  className={buttonVariants({ variant: 'link', size: 'sm' })}
+                >
+                  {m.salaryDetail_seeAllSkillsInPlaceLabel({
+                    place: salary.placeName,
+                  })}
+                </a>
+              }
+            >
+              <SalaryRail
+                vm={toSalaryRailVM('', skillItems, seo.language, seo.labels)}
+              />
+            </PageSection>
+          ) : null}
           <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
         </>
       ) : (

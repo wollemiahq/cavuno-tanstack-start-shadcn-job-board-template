@@ -4,6 +4,7 @@ import { isNotFound } from '@cavuno/board';
 import {
   BOARD_PATHS,
   boardUrl,
+  companyPath,
   companySalaryPath,
   salaryLocationPath,
 } from '@cavuno/board/paths';
@@ -115,9 +116,10 @@ function CompanySalaryPage() {
   const locale = seo.language;
 
   const faqs = buildSalaryFaq(locale, salary.companyName, salary.overallSalary);
-  // The trail locates the ENTITY and stops there (Home → Companies →
-  // {Company}) — IDENTICAL to the profile + jobs tabs; the tab row alone says
-  // we are on Salaries. The BreadcrumbList JSON-LD mirrors the visible trail.
+  // Home → Companies → {Company} → Salaries. The company entity links to its
+  // profile and the trailing Salaries crumb marks the section — matching the
+  // hosted board and the visible shell breadcrumb for this path (the tab row
+  // reinforces the same position). The BreadcrumbList JSON-LD mirrors it.
   const jsonLd = [
     companySalaryJsonLd(locale, salary),
     faqJsonLd(faqs),
@@ -127,7 +129,11 @@ function CompanySalaryPage() {
         label: crumbs.companies,
         href: boardUrl(seo.origin, BOARD_PATHS.companies),
       },
-      { label: salary.companyName },
+      {
+        label: salary.companyName,
+        href: boardUrl(seo.origin, companyPath(salary.companySlug)),
+      },
+      { label: crumbs.salaries },
     ]),
   ].filter((e): e is Record<string, unknown> => e !== null);
 

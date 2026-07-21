@@ -45,9 +45,10 @@ export function SelectedTalentDetail({
             message: m.talentSearch_messageLabel(),
             viewProfile: vm.viewProfileLabel,
           },
-          // The pane is a preview, not the canonical profile page, so it
-          // keeps the secondary "View profile" link.
-          showViewProfile: true,
+          // The candidate's NAME is the link to their canonical profile (both
+          // the expanded identity and the condensed header), so the pane no
+          // longer renders a separate "View profile" button.
+          showViewProfile: false,
           messagingEnabled,
         });
         return (

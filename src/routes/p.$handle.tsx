@@ -10,15 +10,16 @@ import { getSeoBase, getTalentProfile } from '../server/queries';
 
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import { toTalentProfileVM } from '@/board/talent-view-model';
-import { TalentProfileContent } from '@/components/board/talent-profile-content';
+import { PageBody } from '@/components/board/page-body';
+import {
+  TalentProfileContent,
+  TalentProfileIdentity,
+} from '@/components/board/talent-profile-content';
 import { JsonLd } from '@/components/json-ld';
-import { Bleed } from '@/components/layout/bleed';
-import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { DitherCanvas } from '@/components/marketing/dither-canvas';
 import { buttonVariants } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Empty,
   EmptyContent,
@@ -108,6 +109,7 @@ function TalentProfileNotFound() {
 function TalentProfilePage() {
   const { profile, seo } = Route.useLoaderData();
   const copy = boardCopy(seo.language, seo.labels);
+  const vm = toTalentProfileVM(profile, seo.language, getTalentSearchLabels());
   const displayName =
     profile.displayName ?? m.publicProfile_anonymousCandidateLabel();
   const canonical = `${seo.origin}/p/${profile.handle}`;
@@ -136,45 +138,32 @@ function TalentProfilePage() {
   ].filter((entry): entry is Record<string, unknown> => entry !== null);
 
   return (
-    <Page width="wide">
-      <PageContent
-        header={
-          // The decorative dither hero band — the same paper.design treatment
-          // the home hero uses, seated on this page-level talent-detail header
-          // (a single mount per page, respecting prefers-reduced-motion). The
-          // talent search's detail PANE swaps per selection, so the band lives
-          // here on the standalone profile page, never inside that pane.
-          <Bleed>
-            <Box background="secondary" border="bottom">
-              <div className="relative isolate overflow-hidden">
-                <DitherCanvas className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
-                <Container width="wide">
-                  <div className="pb-8 md:pb-10">
-                    <PageHeader title={displayName} />
-                  </div>
-                </Container>
-              </div>
-            </Box>
-          </Bleed>
-        }
-      >
-        <JsonLd data={jsonLd} />
-        <article className="max-w-3xl">
-          <Card>
-            <CardContent className="py-1 md:px-8">
-              <TalentProfileContent
-                vm={toTalentProfileVM(
-                  profile,
-                  seo.language,
-                  getTalentSearchLabels(),
-                )}
-                headingAs="h1"
-                showName={false}
-              />
-            </CardContent>
-          </Card>
-        </article>
-      </PageContent>
-    </Page>
+    // Full-bleed hero band — the SAME composition as the job-detail and
+    // company-profile pages (`PageBody`'s `band`, `bg-secondary` + `border-b`,
+    // seated on the shared `--header-space` rhythm), so every entity page opens
+    // the same way. The band carries the identity (avatar + name H1 + headline
+    // meta line + location/availability badges), replacing the old name-only
+    // hero and the floating headline-but-no-name card. The decorative dither
+    // field mounts once here (never inside the swapping search pane), reading
+    // the live --foreground token and respecting prefers-reduced-motion.
+    <PageBody
+      band={
+        <div className="border-border bg-secondary relative isolate overflow-hidden border-b">
+          <DitherCanvas className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
+          <Container width="wide">
+            <div className="flex flex-col pt-(--header-space) pb-8 md:pb-10">
+              <TalentProfileIdentity vm={vm} headingAs="h1" size="xl" />
+            </div>
+          </Container>
+        </div>
+      }
+    >
+      <JsonLd data={jsonLd} />
+      {/* The band owns the identity (H1), so the body drops its header and
+          leads with the bio; sections render as H2s beneath the single H1. */}
+      <article className="mx-auto w-full max-w-3xl">
+        <TalentProfileContent vm={vm} headingAs="h1" showHeader={false} />
+      </article>
+    </PageBody>
   );
 }

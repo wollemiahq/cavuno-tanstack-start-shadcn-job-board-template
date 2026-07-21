@@ -15,7 +15,7 @@ import {
   fieldLabel,
   getSalaryLexicon,
 } from '@cavuno/board/format';
-import { useRouter } from '@tanstack/react-router';
+import { Link, useRouter } from '@tanstack/react-router';
 
 import {
   DEFAULT_SALARY_TIMEFRAME,
@@ -35,7 +35,7 @@ import type { LocationSuggestionState } from '@/components/location-combobox';
 import { PlaceTagsField } from '@/components/place-tags-field';
 import { RichTextEditor } from '@/components/rich-text-editor';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Field,
@@ -938,11 +938,19 @@ export function EmployerJobForm({
         </Card>
       ) : null}
 
-      {/* In-page form: primary action left-aligned, in reading flow. */}
+      {/* In-page form: primary action left-aligned, Cancel a ghost beside it —
+          a single inline row, not a stacked pair. */}
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={status === 'saving'}>
           {submitLabel}
         </Button>
+        <Link
+          to="/employers/companies/$slug"
+          params={{ slug }}
+          className={buttonVariants({ variant: 'ghost' })}
+        >
+          {m.employerOnboarding_cancelLabel()}
+        </Link>
         {status === 'error' ? <FieldError>{message}</FieldError> : null}
         {notice ? (
           <p role="status" className="text-sm">

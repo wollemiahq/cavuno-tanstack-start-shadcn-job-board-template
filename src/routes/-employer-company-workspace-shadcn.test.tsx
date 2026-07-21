@@ -344,16 +344,20 @@ describe('employer company workspace', () => {
       'href',
       '/employers/companies/$slug/jobs/$jobId/edit',
     );
-    // A draft keeps a primary Publish that also lands on the edit page.
-    expect(screen.getByRole('link', { name: 'Publish' })).toHaveAttribute(
-      'href',
-      '/employers/companies/$slug/jobs/$jobId/edit',
-    );
+    // Publish is no longer a standalone pill — it lives only in the menu.
+    expect(
+      screen.queryByRole('link', { name: 'Publish' }),
+    ).not.toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole('button', {
         name: 'Actions for Senior Product Designer',
       }),
+    );
+    // A draft's Publish menu item lands on the edit page (plan picker + pay).
+    expect(screen.getByRole('menuitem', { name: 'Publish' })).toHaveAttribute(
+      'href',
+      '/employers/companies/$slug/jobs/$jobId/edit',
     );
     expect(screen.getByRole('menuitem', { name: 'Edit' })).toBeInTheDocument();
     expect(

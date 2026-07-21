@@ -32,6 +32,8 @@ const PLATFORM_SANDBOX_CONFIG_WHITELIST = {
   jobAlertsEnabled: 'boolean',
   candidatesEnabled: 'boolean',
   employersEnabled: 'boolean',
+  nativeApplicationsEnabled: 'boolean',
+  applicantMessagingEnabled: 'boolean',
   registrationWallEnabled: 'boolean',
 } as const;
 
@@ -176,6 +178,8 @@ describe('toPreviewBoardConfig', () => {
         candidates: false,
         employers: true,
         registrationWall: false,
+        nativeApplications: false,
+        messaging: true,
       },
       talentDirectoryVisibility: 'employers_only',
     });
@@ -186,8 +190,26 @@ describe('toPreviewBoardConfig', () => {
       jobAlertsEnabled: true,
       candidatesEnabled: false,
       employersEnabled: true,
+      nativeApplicationsEnabled: false,
+      applicantMessagingEnabled: true,
       registrationWallEnabled: false,
     });
+  });
+
+  it('defaults the untyped runtime flags to ON when the API omits them', () => {
+    const config = toPreviewBoardConfig({
+      features: {
+        candidatePaywall: false,
+        blog: true,
+        jobAlerts: true,
+        candidates: true,
+        employers: true,
+        registrationWall: false,
+      },
+      talentDirectoryVisibility: null,
+    });
+    expect(config.nativeApplicationsEnabled).toBe(true);
+    expect(config.applicantMessagingEnabled).toBe(true);
   });
 
   it('defaults a null talent visibility to "off"', () => {

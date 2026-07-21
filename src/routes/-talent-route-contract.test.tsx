@@ -201,9 +201,12 @@ describe('canonical talent profile route', () => {
     }
 
     const { container } = render(<ProfileComponent />);
+    // The profile opens on the shared entity hero band (avatar + name H1),
+    // then drops into the profile article beneath it.
     expect(
-      container.querySelector('article > [data-slot="card"]'),
+      screen.getByRole('heading', { level: 1, name: 'Ada Lovelace' }),
     ).toBeVisible();
+    expect(container.querySelector('article')).toBeVisible();
     const payloads = Array.from(
       container.querySelectorAll<HTMLScriptElement>(
         'script[type="application/ld+json"]',

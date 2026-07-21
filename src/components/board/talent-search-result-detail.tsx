@@ -26,11 +26,12 @@ function TalentMark({ vm }: { vm: TalentProfileVM }) {
 }
 
 /**
- * Message (primary) + View profile (secondary) — the CTA is pre-resolved by
- * `resolveTalentDetailCta`, so this only renders whatever links the viewer's
- * state earned. Nothing renders on the loading placeholder (`interactive`
- * false) or when the viewer earns neither control (e.g. a candidate viewing
- * a handle-less entry).
+ * The Message action — the CTA is pre-resolved by `resolveTalentDetailCta`, so
+ * this only renders when the viewer's state earns a Message link. The route to
+ * the canonical profile is no longer a button here: the candidate's NAME links
+ * there (see `nameHref` on the identity / compact header). Nothing renders on
+ * the loading placeholder (`interactive` false) or when the viewer earns no
+ * Message (e.g. a candidate viewing another candidate).
  */
 function TalentDetailActions({
   cta,
@@ -39,26 +40,16 @@ function TalentDetailActions({
   cta: TalentDetailCta;
   interactive: boolean;
 }) {
-  if (!interactive || (!cta.message && !cta.viewProfile)) return null;
+  if (!interactive || !cta.message) return null;
 
   return (
     <div
       data-slot="talent-detail-actions"
       className="flex flex-wrap items-center gap-2"
     >
-      {cta.message ? (
-        <a href={cta.message.href} className={buttonVariants()}>
-          {cta.message.label}
-        </a>
-      ) : null}
-      {cta.viewProfile ? (
-        <a
-          href={cta.viewProfile.href}
-          className={buttonVariants({ variant: 'outline' })}
-        >
-          {cta.viewProfile.label}
-        </a>
-      ) : null}
+      <a href={cta.message.href} className={buttonVariants()}>
+        {cta.message.label}
+      </a>
     </div>
   );
 }
@@ -72,7 +63,7 @@ function ExpandedTalentDetailHeader({
   cta: TalentDetailCta;
   interactive: boolean;
 }) {
-  const hasActions = interactive && Boolean(cta.message || cta.viewProfile);
+  const hasActions = interactive && Boolean(cta.message);
 
   return (
     <header
@@ -80,7 +71,12 @@ function ExpandedTalentDetailHeader({
       className="grid max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-4 p-5 md:p-6"
     >
       <div className="col-start-1 row-start-1 min-w-0">
-        <TalentProfileIdentity vm={vm} headingAs="h2" />
+        <TalentProfileIdentity
+          vm={vm}
+          headingAs="h2"
+          size="lg"
+          nameHref={interactive ? vm.detailHref : null}
+        />
       </div>
       {hasActions ? (
         <div className="col-start-1 row-start-2 w-fit justify-self-start">
