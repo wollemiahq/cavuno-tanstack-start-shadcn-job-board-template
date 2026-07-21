@@ -210,8 +210,9 @@ describe('employer entry surfaces', () => {
     expect(growthCard).toBeInTheDocument();
     const growthCardElement = growthCard as HTMLElement;
     expect(within(growthCardElement).getByText('Recommended')).toBeVisible();
+    // A job-posting plan's action posts a job — it is not a subscription.
     expect(
-      within(growthCardElement).getByRole('link', { name: 'Subscribe' }),
+      within(growthCardElement).getByRole('link', { name: 'Post a job' }),
     ).toHaveAttribute('href', '/post?plan=plan-growth');
   });
 

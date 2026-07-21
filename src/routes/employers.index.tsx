@@ -132,7 +132,10 @@ function FeatureList({ features }: { features: string[] }) {
 function PlanCard({ plan }: { plan: Plan }) {
   const actionLabel = plan.invoiceOnly
     ? m.employerLanding_requestInvoiceLabel()
-    : m.employerLanding_subscribeLabel();
+    : plan.purpose === 'job_posting'
+      ? // A posting plan (free or one-off) is a job post, not a subscription.
+        m.siteHeader_postJobLabel()
+      : m.employerLanding_subscribeLabel();
   const actionClassName = cn(
     buttonVariants({
       variant: plan.isRecommended ? 'default' : 'outline',

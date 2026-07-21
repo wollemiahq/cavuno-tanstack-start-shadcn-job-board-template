@@ -7,6 +7,7 @@ import { Link } from '@tanstack/react-router';
 import { m } from '../paraglide/messages';
 
 import { FacebookIcon, LinkedInIcon, XIcon } from '@/components/brand-icons';
+import { Badge } from '@/components/ui/badge';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { cn } from '@/lib/utils';
@@ -338,13 +339,17 @@ export default function Footer({
                   href={marketingHref}
                   rel="noopener noreferrer"
                   target="_blank"
-                  className="text-muted-foreground ring-border hover:bg-muted hover:text-foreground focus-visible:ring-ring/30 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm ring-1 transition-colors outline-none ring-inset hover:no-underline focus-visible:ring-3"
+                  className="no-underline"
                 >
-                  {copy.footer.poweredByText}
-                  <CavunoMark />
-                  <span className="text-foreground font-medium">
-                    {m.siteFooter_cavunoLabel()}
-                  </span>
+                  {/* Matches the hosted board's attribution chip: a compact
+                      outline Badge, muted "Powered by" + the mark + Cavuno. */}
+                  <Badge variant="outline" className="gap-1.5">
+                    <span className="text-muted-foreground font-normal">
+                      {copy.footer.poweredByText}
+                    </span>
+                    <CavunoMark />
+                    <span>{m.siteFooter_cavunoLabel()}</span>
+                  </Badge>
                 </a>
               ) : null}
             </div>

@@ -115,6 +115,7 @@
       "name": "badge",
       "status": "used",
       "productionReferences": [
+        "src/components/Footer.tsx",
         "src/components/alert-manager.tsx",
         "src/components/board/blog-article-content.tsx",
         "src/components/board/blog-tag-chips.tsx",
