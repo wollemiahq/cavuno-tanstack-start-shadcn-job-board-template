@@ -7,6 +7,7 @@ import { m } from '../../paraglide/messages';
 import { CompanyAvatar } from '@/components/board/company-avatar';
 import { PageBody } from '@/components/board/page-body';
 import { Container } from '@/components/layout/container';
+import { DitherCanvas } from '@/components/marketing/dither-canvas';
 import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -184,7 +185,13 @@ export function CompanySectionShell({
       // page (CAV-497/502): the breadcrumb + the shared company header + the
       // tab row ride the band; the per-section content stays below on white.
       band={
-        <div className="border-border bg-secondary border-b">
+        <div className="border-border bg-secondary relative isolate overflow-hidden border-b">
+          {/* The same decorative dither field the home hero uses — a faint,
+              static texture behind the header, seated once on this page-level
+              band (never inside a swapping detail pane, so the canvas mounts
+              once per page). It reads the live --foreground token and respects
+              prefers-reduced-motion, exactly as on the home hero. */}
+          <DitherCanvas className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
           {/* Top rhythm comes from the shared --header-space token, so this
               band, the job-detail hero, and every PageHeader start on the same
               line. Bottom padding is deliberately absent — the tab row sits
