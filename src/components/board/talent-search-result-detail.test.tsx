@@ -144,11 +144,14 @@ describe('TalentSearchResultDetail', () => {
     fireEvent.scroll(detail);
 
     const compact = container.querySelector<HTMLElement>(
-      '[data-slot="talent-detail-compact-header"]',
+      '[data-slot="search-detail-header"]',
     );
     if (!compact) throw new Error('Compact talent header was not rendered');
     expect(expanded).toHaveAttribute('aria-hidden', 'true');
-    expect(within(compact).getByText('Ada Lovelace')).toBeVisible();
+    // The condensed header's name links to the talent's /p/{handle} profile.
+    expect(
+      within(compact).getByRole('link', { name: 'Ada Lovelace' }),
+    ).toHaveAttribute('href', '/p/ada-lovelace');
     expect(within(compact).getByText('Computing pioneer')).toBeVisible();
     expect(
       within(compact).getByRole('link', { name: 'Message' }),

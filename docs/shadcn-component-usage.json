@@ -102,6 +102,7 @@
         "src/components/board/blog-article-content.tsx",
         "src/components/board/company-avatar.tsx",
         "src/components/board/talent-profile-content.tsx",
+        "src/components/board/talent-search-result-detail.tsx",
         "src/components/board/talent-search-result.tsx",
         "src/components/employer/applicant-pipeline-board.tsx",
         "src/components/messages/avatar.tsx",

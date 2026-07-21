@@ -28,9 +28,18 @@ import {
   createRouter,
 } from '@tanstack/react-router';
 import { cleanup, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CompanySectionShell } from './company-section-header';
+
+beforeEach(() => {
+  // The band's decorative DitherCanvas asks for a 2D context; jsdom has none,
+  // so stub it to null — the canvas degrades to a transparent no-op, exactly
+  // its production fallback path.
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
+    null as never,
+  );
+});
 
 afterEach(cleanup);
 

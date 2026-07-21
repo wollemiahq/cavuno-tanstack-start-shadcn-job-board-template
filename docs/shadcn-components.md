@@ -21,7 +21,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `alert-dialog` | Used (3) | `src/components/danger-zone.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>`src/components/preview/preview-toolbar.tsx` |
 | `aspect-ratio` | Available | Installed for adoption when the product needs this behavior. |
 | `attachment` | Used (1) | `src/components/resume-upload.tsx` |
-| `avatar` | Used (13) | `src/components/Header.tsx`<br>`src/components/account-shell.tsx`<br>`src/components/avatar-upload.tsx`<br>+10 more in the JSON ledger |
+| `avatar` | Used (14) | `src/components/Header.tsx`<br>`src/components/account-shell.tsx`<br>`src/components/avatar-upload.tsx`<br>+11 more in the JSON ledger |
 | `badge` | Used (38) | `src/components/Footer.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+35 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |

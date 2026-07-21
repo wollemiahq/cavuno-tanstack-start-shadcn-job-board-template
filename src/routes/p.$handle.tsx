@@ -12,7 +12,11 @@ import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import { toTalentProfileVM } from '@/board/talent-view-model';
 import { TalentProfileContent } from '@/components/board/talent-profile-content';
 import { JsonLd } from '@/components/json-ld';
+import { Bleed } from '@/components/layout/bleed';
+import { Box } from '@/components/layout/box';
+import { Container } from '@/components/layout/container';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
+import { DitherCanvas } from '@/components/marketing/dither-canvas';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -133,7 +137,27 @@ function TalentProfilePage() {
 
   return (
     <Page width="wide">
-      <PageContent header={<PageHeader title={displayName} />}>
+      <PageContent
+        header={
+          // The decorative dither hero band — the same paper.design treatment
+          // the home hero uses, seated on this page-level talent-detail header
+          // (a single mount per page, respecting prefers-reduced-motion). The
+          // talent search's detail PANE swaps per selection, so the band lives
+          // here on the standalone profile page, never inside that pane.
+          <Bleed>
+            <Box background="secondary" border="bottom">
+              <div className="relative isolate overflow-hidden">
+                <DitherCanvas className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
+                <Container width="wide">
+                  <div className="pb-8 md:pb-10">
+                    <PageHeader title={displayName} />
+                  </div>
+                </Container>
+              </div>
+            </Box>
+          </Bleed>
+        }
+      >
         <JsonLd data={jsonLd} />
         <article className="max-w-3xl">
           <Card>

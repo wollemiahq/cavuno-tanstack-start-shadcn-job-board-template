@@ -262,13 +262,18 @@ describe('JobSearchResultDetail', () => {
     fireEvent.scroll(detail);
 
     const compact = container.querySelector(
-      '[data-slot="job-detail-compact-header"]',
+      '[data-slot="search-detail-header"]',
     );
     expect(compact).toBeInTheDocument();
     expect(expanded).toHaveAttribute('aria-hidden', 'true');
-    expect(
-      within(compact as HTMLElement).getByText('Product designer'),
-    ).toBeVisible();
+    // The condensed header's name links to the job's own detail page.
+    const compactName = within(compact as HTMLElement).getByRole('link', {
+      name: 'Product designer',
+    });
+    expect(compactName).toHaveAttribute(
+      'href',
+      '/companies/acme/jobs/product-designer',
+    );
     expect(
       within(compact as HTMLElement).getByRole('button', { name: 'Apply' }),
     ).toBeVisible();

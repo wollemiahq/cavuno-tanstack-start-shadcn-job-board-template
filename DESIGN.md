@@ -920,6 +920,38 @@ Props:
 - `returnTo: string`
 - `viewer: { emailVerified: boolean; } | null`
 
+### SearchDetailHeader — `src/components/board/search-detail-header.tsx`
+
+The condensed (sticky) detail header shared by ALL three master/detail
+search surfaces — jobs, companies, and talent. Each detail panel used to
+hand-roll its own sticky row, so they drifted apart (different borders,
+paddings, and whether the name was even a link). This is the one row they
+all render now: the entity mark, the entity NAME, an optional one-line
+subtitle, and the primary action(s).
+
+The NAME links to that entity's own detail page when `nameHref` is set — a
+job → its job-detail page, a company → its company page, a talent → their
+`/p/{handle}` profile. The href is always a fully-resolved string from the
+board view-model (never string-built here), so the component stays purely
+presentational.
+
+Geometry contract — it is seated inside `SearchResultDetailHeader`'s sticky
+`h-16` anchor, so its own box is a single flush row that matches the shared
+results-column surface:
+ - Left inset only (`pl-5 md:pl-6`); NO right padding, so the action(s) sit
+   flush with the pane's right edge instead of leaving the asymmetric gap
+   the results list just removed.
+ - A subtle hairline divider (`border-border/60`) under the backdrop-blur —
+   an intentional, quiet separator rather than a heavy full-strength rule.
+
+Props:
+
+- `actions?: ReactNode`
+- `mark?: ReactNode`
+- `name: ReactNode`
+- `nameHref?: string | null | undefined`
+- `subtitle?: ReactNode`
+
 ### TalentProfileContent — `src/components/board/talent-profile-content.tsx`
 
 Props:
