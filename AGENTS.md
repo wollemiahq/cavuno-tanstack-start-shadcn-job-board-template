@@ -72,9 +72,9 @@ need different grounding is a platform operation, not a code edit.
    `src/components/ui/`; merge classes with `cn` from `@/lib/utils`.
    App code consumes their canonical public APIs, never Base UI internals or
    data attributes, so adopters may swap in their own Base UI-backed shadcn
-   source. Radix is an explicit migration, not a drop-in swap. The inherited
-   Untitled UI layer has been removed: never reintroduce its component paths,
-   icons, CSS utilities, or tokens.
+   source. Radix is an explicit migration, not a drop-in swap. There is one
+   design system: never add a parallel component tree, icon set, CSS utility
+   layer, or token system alongside `src/components/ui/` + `src/theme.css`.
 7. **Board URL paths come from `@cavuno/board/paths`** (`jobDetailPath`,
    `jobsCategoryPath`, `jobsSkillPath`, `companyPath`, `companySalaryPath`,
    …) — never string-build a `/companies/…/jobs/…` or `/jobs/…` path.
@@ -112,12 +112,11 @@ do's-and-don'ts live in **`DESIGN.md`** (generated from `src/theme.css`
   select a pattern before composing a route; never hand-roll a
   listing/detail/form/empty surface.
 
-Primitives, in order: use or add current shadcn Rhea components under
+Primitives, in order: use or add current shadcn components under
 `src/components/ui/`, backed by Base UI and styled from `src/theme.css`.
 Route and pattern code depends only on canonical shadcn component props.
-There is no parallel component or token system: `src/components/base/`,
-`src/components/application/`, and the Untitled UI CSS compatibility layer are
-not part of the release. New dependencies cannot be added at build time, so
+There is no parallel component or token system — structural tests reject
+second component trees. New dependencies cannot be added at build time, so
 compose from what is installed.
 
 ## Framework skills

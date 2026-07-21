@@ -90,12 +90,12 @@ describe('shadcn Rhea foundation', () => {
   });
 
   it('tells future agents to use owned shadcn components exclusively', () => {
+    // Contract anchor, not a prose pin: the builder derives its system
+    // prompt from AGENTS.md, so the single-design-system rule must exist —
+    // its wording is the owner's.
     const agents = read('AGENTS.md');
     expect(agents).toMatch(/shadcn.*Base UI/i);
-    expect(agents).toMatch(
-      /Untitled UI layer has been removed[\s\S]*never reintroduce/i,
-    );
-    expect(agents).not.toMatch(/New components compose \*\*Untitled UI/i);
+    expect(agents).toMatch(/parallel component/i);
   });
 
 
