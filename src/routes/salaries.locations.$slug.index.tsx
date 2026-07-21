@@ -2,6 +2,13 @@ import { boardCopy } from '#/copy';
 
 import { isNotFound, type LocationSalaryDetail } from '@cavuno/board';
 import {
+  BOARD_PATHS,
+  boardUrl,
+  salaryLocationPath,
+  salarySkillPath,
+  salaryTitlePath,
+} from '@cavuno/board/paths';
+import {
   buildSalaryFaq,
   createBreadcrumbJsonLd,
   faqJsonLd,
@@ -45,7 +52,7 @@ const cityItem =
   (locale: string) =>
   (x: City): RailItem => ({
     name: x.placeName,
-    href: `/salaries/locations/${x.placeSlug}`,
+    href: salaryLocationPath(x.placeSlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   });
@@ -102,7 +109,10 @@ export const Route = createFileRoute('/salaries/locations/$slug/')({
           links: [
             {
               rel: 'canonical',
-              href: `${loaderData.seo.origin}/salaries/locations/${loaderData.salary.canonicalSlug}`,
+              href: boardUrl(
+                loaderData.seo.origin,
+                salaryLocationPath(loaderData.salary.canonicalSlug),
+              ),
             },
           ],
         }
@@ -128,21 +138,24 @@ function LocationSalaryPage() {
     faqJsonLd(faqs),
     createBreadcrumbJsonLd([
       { label: crumbs.home, href: seo.origin },
-      { label: crumbs.salaries, href: `${seo.origin}/salaries` },
-      { label: crumbs.locations, href: `${seo.origin}/salaries/locations` },
+      { label: crumbs.salaries, href: boardUrl(seo.origin, BOARD_PATHS.salaries) },
+      {
+        label: crumbs.locations,
+        href: boardUrl(seo.origin, BOARD_PATHS.salaryLocations),
+      },
       { label: salary.placeName },
     ]),
   ].filter((e): e is Record<string, unknown> => e !== null);
 
   const categoryItems: RailItem[] = salary.topCategories.map((x) => ({
     name: x.categoryName,
-    href: `/salaries/titles/${x.categorySlug}`,
+    href: salaryTitlePath(x.categorySlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
   const skillItems: RailItem[] = salary.topSkills.map((x) => ({
     name: x.skillName,
-    href: `/salaries/skills/${x.skillSlug}`,
+    href: salarySkillPath(x.skillSlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
@@ -161,9 +174,9 @@ function LocationSalaryPage() {
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
         [
-          { name: crumbs.home, href: '/' },
-          { name: crumbs.salaries, href: '/salaries' },
-          { name: crumbs.locations, href: '/salaries/locations' },
+          { name: crumbs.home, href: BOARD_PATHS.home },
+          { name: crumbs.salaries, href: BOARD_PATHS.salaries },
+          { name: crumbs.locations, href: BOARD_PATHS.salaryLocations },
           { name: salary.placeName },
         ],
         seo.language,

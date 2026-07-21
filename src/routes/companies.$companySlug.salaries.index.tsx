@@ -2,6 +2,12 @@ import { boardCopy } from '#/copy';
 
 import { isNotFound } from '@cavuno/board';
 import {
+  BOARD_PATHS,
+  boardUrl,
+  companySalaryPath,
+  salaryLocationPath,
+} from '@cavuno/board/paths';
+import {
   buildSalaryFaq,
   companySalaryJsonLd,
   createBreadcrumbJsonLd,
@@ -14,6 +20,7 @@ import { m } from '../paraglide/messages';
 import { getCompany, getCompanySalary, getSeoBase } from '../server/queries';
 
 import {
+  companyCategorySalaryPath,
   toOverallSalaryVM,
   toSalaryFaqVM,
   toSalaryRailVM,
@@ -85,7 +92,10 @@ export const Route = createFileRoute('/companies/$companySlug/salaries/')({
           links: [
             {
               rel: 'canonical',
-              href: `${loaderData.seo.origin}/companies/${loaderData.salary.companySlug}/salaries`,
+              href: boardUrl(
+                loaderData.seo.origin,
+                companySalaryPath(loaderData.salary.companySlug),
+              ),
             },
           ],
         }
@@ -113,27 +123,30 @@ function CompanySalaryPage() {
     faqJsonLd(faqs),
     createBreadcrumbJsonLd([
       { label: crumbs.home, href: seo.origin },
-      { label: crumbs.companies, href: `${seo.origin}/companies` },
+      {
+        label: crumbs.companies,
+        href: boardUrl(seo.origin, BOARD_PATHS.companies),
+      },
       { label: salary.companyName },
     ]),
   ].filter((e): e is Record<string, unknown> => e !== null);
 
   const categoryItems: RailItem[] = salary.byCategory.map((x) => ({
     name: x.categoryName,
-    href: `/companies/${salary.companySlug}/salaries/${x.categorySlug}`,
+    href: companyCategorySalaryPath(salary.companySlug, x.categorySlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
   const competitorItems: RailItem[] = salary.competitors.map((x) => ({
     name: x.companyName,
-    href: `/companies/${x.companySlug}`,
+    href: companySalaryPath(x.companySlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
     logoPath: x.logoPath,
   }));
   const locationItems: RailItem[] = salary.topLocations.map((x) => ({
     name: x.locationName,
-    href: `/salaries/locations/${x.placeSlug}`,
+    href: salaryLocationPath(x.placeSlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));

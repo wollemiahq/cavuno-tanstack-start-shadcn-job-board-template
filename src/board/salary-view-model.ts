@@ -13,7 +13,68 @@ import { boardCopy } from '#/copy';
  * salary page is pure markup over these stable contracts.
  */
 import { fieldLabel, type BoardLabelOverrides } from '@cavuno/board/format';
+import {
+  companySalaryPath,
+  salaryLocationPath,
+  salarySkillPath,
+  salaryTitlePath,
+} from '@cavuno/board/paths';
 import { formatRange, formatUsd } from '@cavuno/board/seo';
+
+/**
+ * Salary URL composers — the Layer-1b seam for the salary hrefs the SDK's
+ * `@cavuno/board/paths` does not expose directly. The SDK owns the canonical
+ * single-axis paths (`companySalaryPath`, `salaryTitlePath`, `salarySkillPath`,
+ * `salaryLocationPath`); these compose the cross-axis and company-category
+ * hrefs ON TOP of those helpers so the whole salary URL structure has ONE
+ * source of truth and never drifts from the hosted board (AGENTS.md rule 7).
+ * Routes call these instead of string-building `/salaries/…` or
+ * `/companies/…/salaries` paths inline.
+ */
+
+/** A company's salary page for a single job category. */
+export function companyCategorySalaryPath(
+  companySlug: string,
+  categorySlug: string,
+): string {
+  return `${companySalaryPath(companySlug)}/${categorySlug}`;
+}
+
+/** Cross-axis: a job title's salary in one place. */
+export function salaryTitleInLocationPath(
+  titleSlug: string,
+  placeSlug: string,
+): string {
+  return `${salaryTitlePath(titleSlug)}/${placeSlug}`;
+}
+
+/** Cross-axis: the "all locations" fan-out for a job title's salary. */
+export function salaryTitleLocationsPath(titleSlug: string): string {
+  return `${salaryTitlePath(titleSlug)}/locations`;
+}
+
+/** Cross-axis: a skill's salary in one place. */
+export function salarySkillInLocationPath(
+  skillSlug: string,
+  placeSlug: string,
+): string {
+  return `${salarySkillPath(skillSlug)}/${placeSlug}`;
+}
+
+/** Cross-axis: the "all locations" fan-out for a skill's salary. */
+export function salarySkillLocationsPath(skillSlug: string): string {
+  return `${salarySkillPath(skillSlug)}/locations`;
+}
+
+/** Cross-axis: the job-titles fan-out inside a place's salary page. */
+export function salaryLocationTitlesPath(placeSlug: string): string {
+  return `${salaryLocationPath(placeSlug)}/titles`;
+}
+
+/** Cross-axis: the skills fan-out inside a place's salary page. */
+export function salaryLocationSkillsPath(placeSlug: string): string {
+  return `${salaryLocationPath(placeSlug)}/skills`;
+}
 
 export interface OverallSalary {
   avgMin: number;

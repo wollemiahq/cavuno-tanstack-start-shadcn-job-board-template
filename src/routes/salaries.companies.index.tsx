@@ -1,5 +1,6 @@
 import { boardCopy } from '#/copy';
 
+import { BOARD_PATHS, boardUrl, companySalaryPath } from '@cavuno/board/paths';
 import {
   createBreadcrumbJsonLd,
   formatRange,
@@ -70,19 +71,19 @@ function SalaryCompaniesIndex() {
     itemListJsonLd(
       companies.map((c) => ({
         name: c.companyName,
-        url: `${seo.origin}/companies/${c.companySlug}`,
+        url: boardUrl(seo.origin, companySalaryPath(c.companySlug)),
       })),
     ),
     createBreadcrumbJsonLd([
       { label: crumbs.home, href: seo.origin },
-      { label: crumbs.salaries, href: `${seo.origin}/salaries` },
+      { label: crumbs.salaries, href: boardUrl(seo.origin, BOARD_PATHS.salaries) },
       { label: crumbs.companies },
     ]),
   ].filter((e): e is Record<string, unknown> => e !== null);
 
   const items: RailItem[] = companies.map((c) => ({
     name: c.companyName,
-    href: `/companies/${c.companySlug}`,
+    href: companySalaryPath(c.companySlug),
     range: formatRange(locale, c.avgSalaryMin, c.avgSalaryMax),
     jobCount: c.jobCount,
     logoPath: c.logoPath,
@@ -92,8 +93,8 @@ function SalaryCompaniesIndex() {
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
         [
-          { name: crumbs.home, href: '/' },
-          { name: crumbs.salaries, href: '/salaries' },
+          { name: crumbs.home, href: BOARD_PATHS.home },
+          { name: crumbs.salaries, href: BOARD_PATHS.salaries },
           { name: crumbs.companies },
         ],
         seo.language,
