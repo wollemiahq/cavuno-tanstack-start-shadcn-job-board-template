@@ -1370,14 +1370,16 @@ shader (https://shaders.paper.design/dithering), tuned for Stripe-landing
 restraint: a faint, theme-coloured texture behind a headline, never a
 poster. Content contrast always wins.
 
- - Theme-driven: the ink colour is read from the live `--foreground`
-   token at mount and re-read on theme flips, so light/dark just work.
+ - Theme-driven: the `--foreground` token (which the browser reports as
+   `oklch(…)`, a format paper's colour parser rejects) is round-tripped to
+   an `rgb()` string through a 1×1 2D canvas at mount and re-read on theme
+   flips, so light/dark just work.
  - Kept faint via a low element opacity — the shader's own output is a
    hard two-colour field; the opacity is what makes it a texture.
  - Static under `prefers-reduced-motion`; a slow drift otherwise.
- - Client-only + WebGL-guarded: renders nothing on the server, in jsdom,
-   or where WebGL is unavailable, so the band's plain background is the
-   graceful fallback and there is one WebGL context per band, no more.
+ - Client-only + WebGL2-guarded: the band's plain background is the
+   graceful fallback on the server, in jsdom, or where WebGL2 is
+   unavailable, so we never mount a shader that cannot draw.
  - Decorative: `aria-hidden`, non-interactive.
 
 The public API is a single `className` (positioning/sizing owned by the
