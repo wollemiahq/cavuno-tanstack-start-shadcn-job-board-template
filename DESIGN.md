@@ -1365,6 +1365,25 @@ Props:
 
 ### DitherCanvas — `src/components/marketing/dither-canvas.tsx`
 
+The decorative hero dithering band — the real paper.design Dithering
+shader (https://shaders.paper.design/dithering), tuned for Stripe-landing
+restraint: a faint, theme-coloured texture behind a headline, never a
+poster. Content contrast always wins.
+
+ - Theme-driven: the ink colour is read from the live `--foreground`
+   token at mount and re-read on theme flips, so light/dark just work.
+ - Kept faint via a low element opacity — the shader's own output is a
+   hard two-colour field; the opacity is what makes it a texture.
+ - Static under `prefers-reduced-motion`; a slow drift otherwise.
+ - Client-only + WebGL-guarded: renders nothing on the server, in jsdom,
+   or where WebGL is unavailable, so the band's plain background is the
+   graceful fallback and there is one WebGL context per band, no more.
+ - Decorative: `aria-hidden`, non-interactive.
+
+The public API is a single `className` (positioning/sizing owned by the
+caller), unchanged from the previous canvas-2D implementation so every
+consumer is a drop-in.
+
 Props:
 
 - `className?: string | undefined`
