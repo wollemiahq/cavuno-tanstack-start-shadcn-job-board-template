@@ -1,7 +1,7 @@
 import { Loader2Icon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { m } from '@/paraglide/messages';
+import { m } from '../../paraglide/messages';
 
 function Spinner({ className, ...props }: React.ComponentProps<'svg'>) {
   return (

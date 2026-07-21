@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { m } from '@/paraglide/messages';
+import { m } from '../../paraglide/messages';
 
 export function JobAboutCompanyCard({
   company,

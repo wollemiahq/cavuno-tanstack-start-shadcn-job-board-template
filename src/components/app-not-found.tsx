@@ -8,7 +8,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
-import * as m from '@/paraglide/messages';
+import * as m from '../paraglide/messages';
 
 export function NotFound() {
   return (

@@ -1,4 +1,4 @@
-import { m } from '@/paraglide/messages';
+import { m } from '../paraglide/messages';
 
 /**
  * The canonical save-outcome toasts. These replace the old inline

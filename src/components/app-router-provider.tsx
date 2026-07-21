@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useRouter } from '@tanstack/react-router';
 import { RouterProvider } from 'react-aria-components';
 
-import { localizeHref } from '@/paraglide/runtime';
+import { localizeHref } from '../paraglide/runtime';
 
 /** Keeps React Aria links on the TanStack Router and locale-aware URL seam. */
 export function AppRouterProvider({ children }: { children: ReactNode }) {

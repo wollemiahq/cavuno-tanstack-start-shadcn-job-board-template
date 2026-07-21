@@ -13,7 +13,7 @@ import { JsonLd } from '@/components/json-ld';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { initialsOf } from '@/lib/initials';
 import { headTitle } from '@/lib/page-title';
-import { m } from '@/paraglide/messages';
+import { m } from '../paraglide/messages';
 import { getBlogAuthor, getSeoBase, listBlogPosts } from '@/server/queries';
 
 interface BlogAuthorSearch {

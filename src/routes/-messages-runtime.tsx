@@ -23,7 +23,7 @@ import {
 import { errorMessage } from '@/lib/message-error';
 import { useVisiblePoll } from '@/lib/use-visible-poll';
 import { cn } from '@/lib/utils';
-import { m } from '@/paraglide/messages';
+import { m } from '../paraglide/messages';
 import {
   archiveConversation,
   blockUser,

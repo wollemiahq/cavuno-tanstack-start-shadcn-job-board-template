@@ -1,4 +1,4 @@
-import { m } from '@/paraglide/messages';
+import { m } from '../paraglide/messages';
 
 import type { TalentViewModelLabels } from '@/board/talent-view-model';
 

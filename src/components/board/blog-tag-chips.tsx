@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 
 import { Badge } from '@/components/ui/badge';
-import { m } from '@/paraglide/messages';
+import { m } from '../../paraglide/messages';
 import type { PublicBlogTag } from '@cavuno/board';
 
 export interface BlogTagChipsProps {
