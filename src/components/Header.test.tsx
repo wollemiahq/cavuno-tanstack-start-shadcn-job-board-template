@@ -408,9 +408,7 @@ describe('Header — native-applications account gating', () => {
     expect(
       await screen.findByRole('menuitem', { name: 'Saved jobs' }),
     ).toBeTruthy();
-    expect(
-      screen.queryByRole('menuitem', { name: 'Applications' }),
-    ).toBeNull();
+    expect(screen.queryByRole('menuitem', { name: 'Applications' })).toBeNull();
   });
 });
 

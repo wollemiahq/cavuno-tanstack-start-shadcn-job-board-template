@@ -104,8 +104,7 @@ describe('PreviewEmailsSheet', () => {
     expect(rows).toHaveLength(2);
     // Newest-first order is preserved from the roster.
     expect(
-      first.compareDocumentPosition(second) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
+      first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     // Row shows recipient and the template type when present…
     expect(within(list()).getByText('nadia@example.com')).toBeInTheDocument();

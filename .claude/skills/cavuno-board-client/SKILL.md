@@ -1,6 +1,6 @@
 ---
 name: cavuno-board-client
-description: Create and configure the @cavuno/board client — baseUrl and the pk_ board identifier, global headers, request/response hooks, per-call FetchOptions caching passthrough, the client.fetch escape hatch, and the rule that keeps one shared instance safe under SSR.
+description: Create and configure the @cavuno/board client — the pk_ board identifier, optional API-origin override, global headers, hooks, per-call FetchOptions, and the rule that keeps one shared instance safe under SSR.
 ---
 
 # The Board API client
@@ -23,7 +23,6 @@ description: Create and configure the @cavuno/board client — baseUrl and the p
 import { createBoardClient } from '@cavuno/board';
 
 const board = createBoardClient({
-  baseUrl: 'https://api.cavuno.com',
   board: 'pk_a8f3...', // pk_ key (preferred) | boards_ id | slug
 });
 ```
@@ -34,7 +33,6 @@ Use the `pk_…` publishable key for `board`, not the slug: the slug is operator
 
 ```ts no-check
 const board = createBoardClient({
-  baseUrl: process.env.PUBLIC_CAVUNO_API_URL!,
   board: process.env.PUBLIC_CAVUNO_BOARD!,
   globalHeaders: { 'Accept-Language': 'en' },
   onRequest: async (req) => req,          // mutate/replace the request (locale, URL rewrite)
@@ -69,7 +67,6 @@ import { createBoardClient } from '@cavuno/board';
 
 // Safe: shared, stateless. Per-user token rides per call.
 export const board = createBoardClient({
-  baseUrl: process.env.PUBLIC_CAVUNO_API_URL!,
   board: process.env.PUBLIC_CAVUNO_BOARD!,
 });
 ```

@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { act, cleanup, render, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
 import { toast } from 'sonner';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { Toaster } from './sonner';
 

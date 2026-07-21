@@ -76,7 +76,10 @@ function SalaryCompaniesIndex() {
     ),
     createBreadcrumbJsonLd([
       { label: crumbs.home, href: seo.origin },
-      { label: crumbs.salaries, href: boardUrl(seo.origin, BOARD_PATHS.salaries) },
+      {
+        label: crumbs.salaries,
+        href: boardUrl(seo.origin, BOARD_PATHS.salaries),
+      },
       { label: crumbs.companies },
     ]),
   ].filter((e): e is Record<string, unknown> => e !== null);

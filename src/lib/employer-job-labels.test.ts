@@ -18,9 +18,9 @@ describe('isEmployerJobExpired', () => {
   const now = Date.parse('2026-07-20T00:00:00.000Z');
 
   it('treats an explicit expired status as expired', () => {
-    expect(isEmployerJobExpired({ status: 'expired', expiresAt: null }, now)).toBe(
-      true,
-    );
+    expect(
+      isEmployerJobExpired({ status: 'expired', expiresAt: null }, now),
+    ).toBe(true);
   });
 
   it('flips a still-"published" job once its expiry has passed', () => {

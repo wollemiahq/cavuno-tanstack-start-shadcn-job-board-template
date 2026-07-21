@@ -145,12 +145,7 @@ function PlanCard({
 }) {
   const popular = offer.isDefault;
   return (
-    <Card
-      className={cn(
-        'flex flex-col',
-        popular && 'ring-primary ring-2',
-      )}
-    >
+    <Card className={cn('flex flex-col', popular && 'ring-primary ring-2')}>
       <CardHeader>
         <CardTitle className="flex items-center justify-between gap-2">
           <span className="truncate">{offer.label}</span>
@@ -380,9 +375,7 @@ export function AccessPage() {
   if (polling) {
     return (
       <Page width="content">
-        <PageContent
-          header={<PageHeader title={m.accountAccess_title()} />}
-        >
+        <PageContent header={<PageHeader title={m.accountAccess_title()} />}>
           <Empty className="min-h-80 border-0">
             <EmptyHeader>
               <EmptyMedia variant="icon">
@@ -458,9 +451,7 @@ export function AccessPage() {
         <div
           className={cn(
             'grid gap-4',
-            offers.length > 1
-              ? 'sm:grid-cols-2'
-              : 'mx-auto w-full max-w-sm',
+            offers.length > 1 ? 'sm:grid-cols-2' : 'mx-auto w-full max-w-sm',
           )}
         >
           {offers.map((offer) => (

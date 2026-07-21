@@ -12,13 +12,14 @@ import {
   redirect,
 } from '@tanstack/react-router';
 
+import { m } from '../paraglide/messages';
+
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogArticleContent } from '@/components/board/blog-article-content';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
 import { headTitle } from '@/lib/page-title';
 import { selectRelatedPosts } from '@/lib/related-posts';
-import { m } from '../paraglide/messages';
 import {
   EMPTY_ADJACENT,
   getBlogPost,

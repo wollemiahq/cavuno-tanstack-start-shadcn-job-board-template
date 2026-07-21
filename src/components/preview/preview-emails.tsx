@@ -4,11 +4,12 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { ChevronLeft, Mail, RotateCw, TriangleAlert } from 'lucide-react';
 
-import type { PreviewEmail } from '../../lib/preview';
 import { PREVIEW_EMAILS_DEFAULT_LIMIT } from '../../lib/preview';
+import { m } from '../../paraglide/messages';
 import { listSandboxEmails } from '../../server/preview';
 import { HydrationSafeDate } from '../messages/hydration-safe-date';
 
+import type { PreviewEmail } from '../../lib/preview';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,7 +30,6 @@ import {
 } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import { m } from '../../paraglide/messages';
 
 type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -332,7 +332,8 @@ function EmailDetail({
           </MetaRow>
         ) : null}
         <MetaRow label={m.previewToolbar_emailsReceived()} mono>
-          <HydrationSafeDate iso={iso} presentation="day" />{' · '}
+          <HydrationSafeDate iso={iso} presentation="day" />
+          {' · '}
           <HydrationSafeDate iso={iso} presentation="clock" />
         </MetaRow>
       </dl>

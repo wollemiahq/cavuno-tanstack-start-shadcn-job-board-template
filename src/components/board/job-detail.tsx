@@ -1,3 +1,5 @@
+import { m } from '../../paraglide/messages';
+
 /**
  * Job detail page — composed as an owned shadcn page (CAV-486,"as
  * Jordan Hughes would design it"). PURE MARKUP over `JobDetailVM`
@@ -26,8 +28,8 @@ import type {
   JobDetailFactVM,
   JobDetailVM,
 } from '@/board/job-detail-view-model';
-import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
 import { CompanyAvatar } from '@/components/board/company-avatar';
+import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
 import { PageBody } from '@/components/board/page-body';
 import { TaxonomyTags } from '@/components/board/taxonomy-tags';
 import { Container } from '@/components/layout/container';
@@ -36,7 +38,6 @@ import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { m } from '../../paraglide/messages';
 
 function TaxonomySection({
   heading,

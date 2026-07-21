@@ -97,6 +97,4 @@ describe('shadcn Rhea foundation', () => {
     expect(agents).toMatch(/shadcn.*Base UI/i);
     expect(agents).toMatch(/parallel component/i);
   });
-
-
 });

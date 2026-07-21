@@ -151,9 +151,7 @@ describe('sandbox config whitelist ⇄ platform contract', () => {
   });
 
   it('the talentDirectoryVisibility control maps directly to the enum members', () => {
-    const enumFlag = PREVIEW_FEATURE_FLAGS.find(
-      (flag) => flag.kind === 'enum',
-    );
+    const enumFlag = PREVIEW_FEATURE_FLAGS.find((flag) => flag.kind === 'enum');
     expect(enumFlag?.key).toBe('talentDirectoryVisibility');
     expect(enumFlag?.kind === 'enum' ? enumFlag.options : []).toEqual([
       'off',

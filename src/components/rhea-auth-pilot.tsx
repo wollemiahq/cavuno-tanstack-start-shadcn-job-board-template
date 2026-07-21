@@ -2,6 +2,8 @@ import { useState } from 'react';
 
 import { BriefcaseBusiness } from 'lucide-react';
 
+import { m } from '../paraglide/messages';
+
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
@@ -15,7 +17,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
-import { m } from '../paraglide/messages';
 
 export function RheaAuthCard({
   title,

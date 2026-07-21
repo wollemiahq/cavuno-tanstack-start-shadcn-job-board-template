@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useState, type ReactNode } from 'react';
-
 import { createPortal } from 'react-dom';
 
 import { cn } from '@/lib/utils';
@@ -70,7 +69,11 @@ export function FloatingStackItem({
     <div
       data-slot="floating-stack-item"
       style={order === undefined ? undefined : { order }}
-      className={cn('pointer-events-auto', flush ? undefined : 'mb-4', className)}
+      className={cn(
+        'pointer-events-auto',
+        flush ? undefined : 'mb-4',
+        className,
+      )}
     >
       {children}
     </div>

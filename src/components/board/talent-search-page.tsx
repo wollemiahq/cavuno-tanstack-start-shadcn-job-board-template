@@ -149,38 +149,38 @@ export function TalentSearchPage({
                   label={m.talentSearch_resultsRegionLabel()}
                   scrollRestorationId="talent-search-results"
                 >
-                    {resultsBar}
+                  {resultsBar}
 
-                    <div className="space-y-3">
-                      {candidateVms.map((vm, index) => (
-                        <TalentSearchResult
-                          key={vm.handle ?? `candidate-${index}`}
-                          vm={vm}
-                          selected={
-                            vm.handle !== null &&
-                            vm.handle === selection.selectedId
-                          }
-                          onActivate={
-                            vm.handle
-                              ? (event) =>
-                                  selection.onResultActivate(event, vm.handle!)
-                              : undefined
-                          }
-                        />
-                      ))}
+                  <div className="space-y-3">
+                    {candidateVms.map((vm, index) => (
+                      <TalentSearchResult
+                        key={vm.handle ?? `candidate-${index}`}
+                        vm={vm}
+                        selected={
+                          vm.handle !== null &&
+                          vm.handle === selection.selectedId
+                        }
+                        onActivate={
+                          vm.handle
+                            ? (event) =>
+                                selection.onResultActivate(event, vm.handle!)
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </div>
+
+                  {hasMore && onNextResults ? (
+                    <div className="flex justify-center">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={onNextResults}
+                      >
+                        {m.talentSearch_nextResultsLabel()}
+                      </Button>
                     </div>
-
-                    {hasMore && onNextResults ? (
-                      <div className="flex justify-center">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={onNextResults}
-                        >
-                          {m.talentSearch_nextResultsLabel()}
-                        </Button>
-                      </div>
-                    ) : null}
+                  ) : null}
                 </SearchResultsList>
               }
               detail={

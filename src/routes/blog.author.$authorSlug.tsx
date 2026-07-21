@@ -7,13 +7,14 @@ import {
 } from '@cavuno/board/seo';
 import { createFileRoute, Link, notFound } from '@tanstack/react-router';
 
+import { m } from '../paraglide/messages';
+
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { initialsOf } from '@/lib/initials';
 import { headTitle } from '@/lib/page-title';
-import { m } from '../paraglide/messages';
 import { getBlogAuthor, getSeoBase, listBlogPosts } from '@/server/queries';
 
 interface BlogAuthorSearch {

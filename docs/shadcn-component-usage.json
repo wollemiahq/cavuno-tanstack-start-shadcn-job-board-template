@@ -252,6 +252,9 @@
         "src/routes/p.$handle.tsx",
         "src/routes/password.tsx",
         "src/routes/salaries.index.tsx",
+        "src/routes/salaries.locations.$slug.index.tsx",
+        "src/routes/salaries.skills.$slug.index.tsx",
+        "src/routes/salaries.titles.$slug.index.tsx",
         "src/routes/settings.tsx",
         "src/routes/talent.index.tsx"
       ]
@@ -302,8 +305,7 @@
         "src/routes/employers.companies.$slug.index.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.index.tsx",
-        "src/routes/employers.onboarding.$slug.tsx",
-        "src/routes/p.$handle.tsx"
+        "src/routes/employers.onboarding.$slug.tsx"
       ]
     },
     {

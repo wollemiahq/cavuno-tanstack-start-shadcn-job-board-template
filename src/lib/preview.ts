@@ -192,7 +192,8 @@ export const PREVIEW_FEATURE_FLAGS: readonly PreviewFeatureFlag[] = [
     key: 'jobAccessPaywallEnabled',
     kind: 'boolean',
     label: 'Candidate paywall',
-    description: 'Gate job browsing behind a paid offer (anonymous gatedCount).',
+    description:
+      'Gate job browsing behind a paid offer (anonymous gatedCount).',
   },
   {
     key: 'talentDirectoryVisibility',

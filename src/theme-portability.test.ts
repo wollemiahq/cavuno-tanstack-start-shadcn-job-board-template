@@ -90,7 +90,11 @@ function appSourceFiles(dir: string): string[] {
 /** Non-portable color escape hatches in one source string. Pure — unit-tested. */
 export function findHardcodedColors(source: string): string[] {
   const hits: string[] = [];
-  for (const re of [PALETTE_CLASS_RE, ABSOLUTE_COLOR_CLASS_RE, HEX_LITERAL_RE]) {
+  for (const re of [
+    PALETTE_CLASS_RE,
+    ABSOLUTE_COLOR_CLASS_RE,
+    HEX_LITERAL_RE,
+  ]) {
     for (const match of source.matchAll(re)) hits.push(match[0]);
   }
   for (const match of source.matchAll(RAW_COLOR_FN_RE)) {
@@ -124,9 +128,9 @@ describe('findHardcodedColors (scanner fixtures)', () => {
   });
 
   it('flags raw hex and non-token color functions', () => {
-    expect(findHardcodedColors('color: #0A66C2; fill: oklch(0.7 0.1 200)')).toEqual(
-      ['#0A66C2', 'oklch(0.7 0.1 200)'],
-    );
+    expect(
+      findHardcodedColors('color: #0A66C2; fill: oklch(0.7 0.1 200)'),
+    ).toEqual(['#0A66C2', 'oklch(0.7 0.1 200)']);
   });
 
   it('exempts token-derived color functions', () => {
@@ -141,7 +145,10 @@ describe('findHardcodedColors (scanner fixtures)', () => {
 describe('theme-portability boundary', () => {
   it('styles app surfaces only through theme tokens (no hardcoded colors)', () => {
     const offenders: string[] = [];
-    for (const dir of [join(ROOT, 'src/components'), join(ROOT, 'src/routes')]) {
+    for (const dir of [
+      join(ROOT, 'src/components'),
+      join(ROOT, 'src/routes'),
+    ]) {
       for (const path of appSourceFiles(dir)) {
         const file = relative(ROOT, path).split('\\').join('/');
         if (file in ALLOWLIST) continue;
@@ -170,7 +177,9 @@ describe('theme-portability boundary', () => {
         continue;
       }
       if (findHardcodedColors(source).length === 0) {
-        stale.push(`${file} — no longer has hardcoded colors; remove the entry.`);
+        stale.push(
+          `${file} — no longer has hardcoded colors; remove the entry.`,
+        );
       }
     }
     expect(

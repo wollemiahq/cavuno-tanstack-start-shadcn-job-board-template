@@ -128,7 +128,10 @@ function SalariesHub() {
   return (
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
-        [{ name: crumbs.home, href: BOARD_PATHS.home }, { name: crumbs.salaries }],
+        [
+          { name: crumbs.home, href: BOARD_PATHS.home },
+          { name: crumbs.salaries },
+        ],
         seo.language,
         seo.labels,
       )}

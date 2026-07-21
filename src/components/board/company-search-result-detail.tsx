@@ -1,5 +1,7 @@
 import { Link } from '@tanstack/react-router';
 
+import { m } from '../../paraglide/messages';
+
 import type { CompanyDetailVM } from '@/board/company-view-model';
 import type { JobCardVM } from '@/board/job-view-model';
 import type { OverallSalaryVM } from '@/board/salary-view-model';
@@ -12,7 +14,6 @@ import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { m } from '../../paraglide/messages';
 
 function CompanyDetailActions({
   vm,

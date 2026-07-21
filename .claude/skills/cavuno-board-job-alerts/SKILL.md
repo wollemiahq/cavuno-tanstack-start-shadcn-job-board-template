@@ -28,17 +28,16 @@ Only the methods and fields shown here exist. There is no pause/suspend: deactiv
 const sub = await board.jobAlerts.subscribe({
   email: 'ada@example.com',
   consent: true,
-  frequency: 'weekly', // 'daily' | 'weekly'
+  frequency: 'weekly', // the only supported cadence
   filters: { jobFunctions: ['engineering'], remoteOptions: ['remote'], placeSlugs: ['berlin'] },
 });
-sub.status;               // 'created' | 'duplicate'
-sub.requiresConfirmation; // true when the opt-in email was sent
+sub.status;               // always 'submitted' — uniform, never reveals new vs. already-subscribed
 
 // Confirm page — token from the email link:
 const res = await board.jobAlerts.confirm({ token });
 res.status; // 'confirmed' | 'already_confirmed' | 'expired' | 'not_found'
 if (res.status === 'expired') {
-  await board.jobAlerts.resendConfirmation({ email }); // status: 'sent' | 'throttled' | ...
+  await board.jobAlerts.resendConfirmation({ email }); // status: always 'submitted'
 }
 ```
 
@@ -67,7 +66,7 @@ await board.jobAlerts.updatePreference({
   subscriptionId,
   preferenceId: pref.id,
   token,
-  frequency: 'daily',    // required — restate even if unchanged
+  frequency: 'weekly',   // required — restate even if unchanged
   filters: pref.filters, // round-trip stored filters you aren't editing
 });
 ```
@@ -94,7 +93,7 @@ await board.me.alerts.remove(alert.id); // 204 → void; the only way to stop an
 ```ts snippet
 const current = await board.me.alerts.retrieve(alertId);
 await board.me.alerts.update(alertId, {
-  frequency: 'daily', // the one edit
+  frequency: 'weekly',
   jobFunctions: current.filters.jobFunctions,
   seniorityLevels: current.filters.seniorityLevels,
   remoteOptions: current.filters.remoteOptions,
@@ -107,9 +106,10 @@ await board.me.alerts.update(alertId, {
 
 ## Verify
 
-- [ ] Subscribe form sends `consent: true` and handles `status: 'duplicate'` without erroring.
+- [ ] Subscribe form sends `consent: true` and shows a uniform "check your email" message on `status: 'submitted'` (never reveals already-subscribed).
 - [ ] Confirm page branches on all four statuses (including `expired` → resend).
 - [ ] Manage page reads `subscription` + `token` from the email link's query string; writes send `subscriptionId` in the body.
 - [ ] Editing one preference field leaves the others intact (full-replace round-trip, both surfaces).
 - [ ] Alert UI only promises filtering on job function / place / remote option.
+- [ ] Alert UI offers weekly cadence only and never sends a legacy daily value.
 - [ ] Alert surfaces are hidden when `features.jobAlerts` is false.

@@ -25,10 +25,10 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `badge` | Used (38) | `src/components/Footer.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+35 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
-| `button` | Used (80) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+77 more in the JSON ledger |
+| `button` | Used (83) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+80 more in the JSON ledger |
 | `button-group` | Used (2) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx` |
 | `calendar` | Available | Installed for adoption when the product needs this behavior. |
-| `card` | Used (31) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>`src/components/board/company-search-result-detail.tsx`<br>+28 more in the JSON ledger |
+| `card` | Used (30) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>`src/components/board/company-search-result-detail.tsx`<br>+27 more in the JSON ledger |
 | `carousel` | Available | Installed for adoption when the product needs this behavior. |
 | `chart` | Available | Installed for adoption when the product needs this behavior. |
 | `checkbox` | Used (7) | `src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/custom-fields-group.tsx`<br>+4 more in the JSON ledger |

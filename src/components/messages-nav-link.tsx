@@ -3,8 +3,8 @@ import { MessageSquare } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 
-import { UnreadCountBadge } from '@/components/unread-count-badge';
 import { buttonVariants } from '@/components/ui/button';
+import { UnreadCountBadge } from '@/components/unread-count-badge';
 import { cn } from '@/lib/utils';
 
 export function MessagesNavLink({ unreadCount }: { unreadCount: number }) {
