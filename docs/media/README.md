@@ -1,10 +1,11 @@
 # README media — shot list
 
-The README references the images below from `docs/media/`. They are **not yet
-captured** — this file is the spec for capturing them. Shoot each on the
-**sandbox board** (`pk_c2f66367a3abaa6bafd00fd3c2de3297`) at **1440×900**,
-light theme, real SSR (serve the production build, e.g. `pnpm run preview`),
-unless noted. Filenames must match exactly so the README image tags resolve.
+The README references the images below from `docs/media/`. All four stills
+are **captured** (2026-07-21, hosted sandbox board
+`pk_c2f66367a3abaa6bafd00fd3c2de3297`, 1440×900 @2x, light theme, dev SSR).
+This file remains the re-capture spec: shoot each on the **sandbox board**
+at **1440×900**, light theme, unless noted. Filenames must match exactly so
+the README image tags resolve.
 
 Some equivalent captures already exist under
 [`../release-evidence/`](../release-evidence/README.md) and can be reused or

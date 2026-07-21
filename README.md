@@ -9,9 +9,9 @@ Built on [TanStack Start](https://tanstack.com/start),
 [Cloudflare Workers](https://workers.cloudflare.com),
 [shadcn/ui](https://ui.shadcn.com) on [Base UI](https://base-ui.com),
 [Tailwind CSS](https://tailwindcss.com), [Geist](https://vercel.com/font), and
-[Lucide](https://lucide.dev). Data comes from the hosted
-[Cavuno Board API](https://cavuno.com) (`@cavuno/board`), so every surface is
-a real page wired to a real backend — not a mock.
+[Lucide](https://lucide.dev). Data comes from [Cavuno](https://cavuno.com)
+via the [Cavuno SDK](https://cavuno.com/sdk) (`@cavuno/board`), so every
+surface is a real page wired to a real backend — not a mock.
 
 > **Hosted demo:** `<DEMO_URL>` — _placeholder; see [Deploy](#deploy). The demo
 > deploy target exists (`wrangler deploy --env demo`) but the public URL is the
@@ -190,7 +190,8 @@ Cross-cutting capabilities that ship on top of those routes:
 | Runtime | [Cloudflare Workers](https://workers.cloudflare.com) |
 | Build | Vite+ (`vp`) |
 | UI | [shadcn/ui](https://ui.shadcn.com) on [Base UI](https://base-ui.com), [Tailwind CSS 4](https://tailwindcss.com), [Geist](https://vercel.com/font), [Lucide](https://lucide.dev) |
-| Data | [`@cavuno/board`](https://cavuno.com) — hosted job-board backend SDK |
+| Backend | [Cavuno](https://cavuno.com) — the hosted job-board platform |
+| Data | [Cavuno SDK](https://cavuno.com/sdk) (`@cavuno/board`) |
 | i18n | [Paraglide JS](https://paraglidejs.com) |
 
 Exact versions are in [`package.json`](package.json). `@cavuno/board` and
