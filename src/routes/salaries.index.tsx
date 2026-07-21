@@ -1,5 +1,12 @@
 import { boardCopy } from '#/copy';
 
+import {
+  BOARD_PATHS,
+  companySalaryPath,
+  salaryLocationPath,
+  salarySkillPath,
+  salaryTitlePath,
+} from '@cavuno/board/paths';
 import { createBreadcrumbJsonLd, formatRange } from '@cavuno/board/seo';
 import { createFileRoute } from '@tanstack/react-router';
 
@@ -88,26 +95,26 @@ function SalariesHub() {
 
   const companyItems: RailItem[] = companies.slice(0, PREVIEW).map((x) => ({
     name: x.companyName,
-    href: `/companies/${x.companySlug}`,
+    href: companySalaryPath(x.companySlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
     logoPath: x.logoPath,
   }));
   const titleItems: RailItem[] = titles.slice(0, PREVIEW).map((x) => ({
     name: x.name,
-    href: `/salaries/titles/${x.slug}`,
+    href: salaryTitlePath(x.slug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
   const skillItems: RailItem[] = skills.slice(0, PREVIEW).map((x) => ({
     name: x.name,
-    href: `/salaries/skills/${x.slug}`,
+    href: salarySkillPath(x.slug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
   const locationItems: RailItem[] = locations.slice(0, PREVIEW).map((x) => ({
     name: x.placeName,
-    href: `/salaries/locations/${x.placeSlug}`,
+    href: salaryLocationPath(x.placeSlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
@@ -121,7 +128,7 @@ function SalariesHub() {
   return (
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
-        [{ name: crumbs.home, href: '/' }, { name: crumbs.salaries }],
+        [{ name: crumbs.home, href: BOARD_PATHS.home }, { name: crumbs.salaries }],
         seo.language,
         seo.labels,
       )}
@@ -133,25 +140,25 @@ function SalariesHub() {
         <>
           <HubSection
             title={crumbs.companies}
-            seeAll="/salaries/companies"
+            seeAll={BOARD_PATHS.salaryCompanies}
             items={companyItems}
             seo={seo}
           />
           <HubSection
             title={crumbs.titles}
-            seeAll="/salaries/titles"
+            seeAll={BOARD_PATHS.salaryTitles}
             items={titleItems}
             seo={seo}
           />
           <HubSection
             title={crumbs.skills}
-            seeAll="/salaries/skills"
+            seeAll={BOARD_PATHS.salarySkills}
             items={skillItems}
             seo={seo}
           />
           <HubSection
             title={crumbs.locations}
-            seeAll="/salaries/locations"
+            seeAll={BOARD_PATHS.salaryLocations}
             items={locationItems}
             seo={seo}
           />

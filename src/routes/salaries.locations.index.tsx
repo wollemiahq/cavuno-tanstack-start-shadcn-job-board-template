@@ -1,6 +1,7 @@
 import { boardCopy } from '#/copy';
 
 import { type SalaryLocation } from '@cavuno/board';
+import { BOARD_PATHS, boardUrl, salaryLocationPath } from '@cavuno/board/paths';
 import {
   createBreadcrumbJsonLd,
   formatRange,
@@ -83,7 +84,7 @@ function LocationTree({
       {nodes.map((n) => (
         <li key={n.placeSlug}>
           <a
-            href={`/salaries/locations/${n.placeSlug}`}
+            href={salaryLocationPath(n.placeSlug)}
             className="text-foreground outline-ring hover:text-foreground/80 rounded-xs font-medium transition-colors hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             {n.placeName}
@@ -117,12 +118,12 @@ function SalaryLocationsIndex() {
     itemListJsonLd(
       locations.map((l) => ({
         name: l.placeName,
-        url: `${seo.origin}/salaries/locations/${l.placeSlug}`,
+        url: boardUrl(seo.origin, salaryLocationPath(l.placeSlug)),
       })),
     ),
     createBreadcrumbJsonLd([
       { label: crumbs.home, href: seo.origin },
-      { label: crumbs.salaries, href: `${seo.origin}/salaries` },
+      { label: crumbs.salaries, href: boardUrl(seo.origin, BOARD_PATHS.salaries) },
       { label: crumbs.locations },
     ]),
   ].filter((e): e is Record<string, unknown> => e !== null);
@@ -131,8 +132,8 @@ function SalaryLocationsIndex() {
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
         [
-          { name: crumbs.home, href: '/' },
-          { name: crumbs.salaries, href: '/salaries' },
+          { name: crumbs.home, href: BOARD_PATHS.home },
+          { name: crumbs.salaries, href: BOARD_PATHS.salaries },
           { name: crumbs.locations },
         ],
         seo.language,

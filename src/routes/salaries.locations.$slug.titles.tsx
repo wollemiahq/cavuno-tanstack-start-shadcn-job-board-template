@@ -1,6 +1,7 @@
 import { boardCopy } from '#/copy';
 
 import { isNotFound } from '@cavuno/board';
+import { BOARD_PATHS, boardUrl, salaryLocationPath } from '@cavuno/board/paths';
 import {
   createBreadcrumbJsonLd,
   formatRange,
@@ -17,6 +18,8 @@ import {
 } from './-salary-page-layout';
 
 import {
+  salaryLocationTitlesPath,
+  salaryTitleInLocationPath,
   toSalaryBreadcrumbVM,
   toSalaryRailVM,
 } from '@/board/salary-view-model';
@@ -71,7 +74,10 @@ export const Route = createFileRoute('/salaries/locations/$slug/titles')({
           links: [
             {
               rel: 'canonical',
-              href: `${loaderData.seo.origin}/salaries/locations/${loaderData.data.canonicalSlug}/titles`,
+              href: boardUrl(
+                loaderData.seo.origin,
+                salaryLocationTitlesPath(loaderData.data.canonicalSlug),
+              ),
             },
           ],
         }
@@ -89,7 +95,7 @@ function LocationTitlesPage() {
   const locale = seo.language;
   const items: RailItem[] = data.titles.map((t) => ({
     name: t.name,
-    href: `/salaries/titles/${t.slug}/${data.canonicalSlug}`,
+    href: salaryTitleInLocationPath(t.slug, data.canonicalSlug),
     range: formatRange(locale, t.avgSalaryMin, t.avgSalaryMax),
     jobCount: t.jobCount,
   }));
@@ -97,16 +103,22 @@ function LocationTitlesPage() {
     itemListJsonLd(
       data.titles.map((t) => ({
         name: t.name,
-        url: `${seo.origin}/salaries/titles/${t.slug}/${data.canonicalSlug}`,
+        url: boardUrl(
+          seo.origin,
+          salaryTitleInLocationPath(t.slug, data.canonicalSlug),
+        ),
       })),
     ),
     createBreadcrumbJsonLd([
       { label: crumbs.home, href: seo.origin },
-      { label: crumbs.salaries, href: `${seo.origin}/salaries` },
-      { label: crumbs.locations, href: `${seo.origin}/salaries/locations` },
+      { label: crumbs.salaries, href: boardUrl(seo.origin, BOARD_PATHS.salaries) },
+      {
+        label: crumbs.locations,
+        href: boardUrl(seo.origin, BOARD_PATHS.salaryLocations),
+      },
       {
         label: data.placeName,
-        href: `${seo.origin}/salaries/locations/${data.canonicalSlug}`,
+        href: boardUrl(seo.origin, salaryLocationPath(data.canonicalSlug)),
       },
       { label: crumbs.titles },
     ]),
@@ -119,12 +131,12 @@ function LocationTitlesPage() {
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
         [
-          { name: crumbs.home, href: '/' },
-          { name: crumbs.salaries, href: '/salaries' },
-          { name: crumbs.locations, href: '/salaries/locations' },
+          { name: crumbs.home, href: BOARD_PATHS.home },
+          { name: crumbs.salaries, href: BOARD_PATHS.salaries },
+          { name: crumbs.locations, href: BOARD_PATHS.salaryLocations },
           {
             name: data.placeName,
-            href: `/salaries/locations/${data.canonicalSlug}`,
+            href: salaryLocationPath(data.canonicalSlug),
           },
           { name: crumbs.titles },
         ],

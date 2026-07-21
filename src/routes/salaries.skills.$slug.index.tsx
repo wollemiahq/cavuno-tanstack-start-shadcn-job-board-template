@@ -2,6 +2,14 @@ import { boardCopy } from '#/copy';
 
 import { isNotFound } from '@cavuno/board';
 import {
+  BOARD_PATHS,
+  boardUrl,
+  companySalaryPath,
+  salaryLocationPath,
+  salarySkillPath,
+  salaryTitlePath,
+} from '@cavuno/board/paths';
+import {
   buildSalaryFaq,
   createBreadcrumbJsonLd,
   faqJsonLd,
@@ -94,7 +102,10 @@ export const Route = createFileRoute('/salaries/skills/$slug/')({
           links: [
             {
               rel: 'canonical',
-              href: `${loaderData.seo.origin}/salaries/skills/${loaderData.salary.canonicalSlug}`,
+              href: boardUrl(
+                loaderData.seo.origin,
+                salarySkillPath(loaderData.salary.canonicalSlug),
+              ),
             },
           ],
         }
@@ -120,34 +131,37 @@ function SkillSalaryPage() {
     faqJsonLd(faqs),
     createBreadcrumbJsonLd([
       { label: crumbs.home, href: seo.origin },
-      { label: crumbs.salaries, href: `${seo.origin}/salaries` },
-      { label: crumbs.skills, href: `${seo.origin}/salaries/skills` },
+      { label: crumbs.salaries, href: boardUrl(seo.origin, BOARD_PATHS.salaries) },
+      {
+        label: crumbs.skills,
+        href: boardUrl(seo.origin, BOARD_PATHS.salarySkills),
+      },
       { label: salary.skillName },
     ]),
   ].filter((e): e is Record<string, unknown> => e !== null);
 
   const companyItems: RailItem[] = salary.topCompanies.map((x) => ({
     name: x.companyName,
-    href: `/companies/${x.companySlug}`,
+    href: companySalaryPath(x.companySlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
     logoPath: x.logoPath,
   }));
   const locationItems: RailItem[] = salary.topLocations.map((x) => ({
     name: x.placeName,
-    href: `/salaries/locations/${x.placeSlug}`,
+    href: salaryLocationPath(x.placeSlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
   const titleItems: RailItem[] = salary.topTitles.map((x) => ({
     name: x.categoryName,
-    href: `/salaries/titles/${x.categorySlug}`,
+    href: salaryTitlePath(x.categorySlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
   const relatedItems: RailItem[] = salary.relatedSkills.map((x) => ({
     name: x.skillName,
-    href: `/salaries/skills/${x.skillSlug}`,
+    href: salarySkillPath(x.skillSlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
@@ -166,9 +180,9 @@ function SkillSalaryPage() {
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
         [
-          { name: crumbs.home, href: '/' },
-          { name: crumbs.salaries, href: '/salaries' },
-          { name: crumbs.skills, href: '/salaries/skills' },
+          { name: crumbs.home, href: BOARD_PATHS.home },
+          { name: crumbs.salaries, href: BOARD_PATHS.salaries },
+          { name: crumbs.skills, href: BOARD_PATHS.salarySkills },
           { name: salary.skillName },
         ],
         seo.language,

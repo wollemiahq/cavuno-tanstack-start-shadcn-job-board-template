@@ -2,6 +2,12 @@ import { boardCopy } from '#/copy';
 
 import { isNotFound } from '@cavuno/board';
 import {
+  BOARD_PATHS,
+  boardUrl,
+  companyPath,
+  companySalaryPath,
+} from '@cavuno/board/paths';
+import {
   buildSalaryFaq,
   companyCategorySalaryJsonLd,
   createBreadcrumbJsonLd,
@@ -24,6 +30,7 @@ import {
 } from './-salary-page-layout';
 
 import {
+  companyCategorySalaryPath,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
@@ -109,7 +116,13 @@ export const Route = createFileRoute(
           links: [
             {
               rel: 'canonical',
-              href: `${loaderData.seo.origin}/companies/${loaderData.salary.companySlug}/salaries/${loaderData.salary.categoryCanonicalSlug}`,
+              href: boardUrl(
+                loaderData.seo.origin,
+                companyCategorySalaryPath(
+                  loaderData.salary.companySlug,
+                  loaderData.salary.categoryCanonicalSlug,
+                ),
+              ),
             },
           ],
         }
@@ -139,14 +152,17 @@ function CompanyCategorySalaryPage() {
     faqJsonLd(faqs),
     createBreadcrumbJsonLd([
       { label: crumbs.home, href: seo.origin },
-      { label: crumbs.companies, href: `${seo.origin}/companies` },
+      {
+        label: crumbs.companies,
+        href: boardUrl(seo.origin, BOARD_PATHS.companies),
+      },
       {
         label: salary.companyName,
-        href: `${seo.origin}/companies/${salary.companySlug}`,
+        href: boardUrl(seo.origin, companyPath(salary.companySlug)),
       },
       {
         label: crumbs.salaries,
-        href: `${seo.origin}/companies/${salary.companySlug}/salaries`,
+        href: boardUrl(seo.origin, companySalaryPath(salary.companySlug)),
       },
       { label: salary.categoryName },
     ]),
@@ -154,7 +170,7 @@ function CompanyCategorySalaryPage() {
 
   const competitorItems: RailItem[] = salary.competitors.map((x) => ({
     name: x.companyName,
-    href: `/companies/${x.companySlug}/salaries/${salary.categoryCanonicalSlug}`,
+    href: companyCategorySalaryPath(x.companySlug, salary.categoryCanonicalSlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
     logoPath: x.logoPath,
@@ -174,15 +190,15 @@ function CompanyCategorySalaryPage() {
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
         [
-          { name: crumbs.home, href: '/' },
-          { name: crumbs.companies, href: '/companies' },
+          { name: crumbs.home, href: BOARD_PATHS.home },
+          { name: crumbs.companies, href: BOARD_PATHS.companies },
           {
             name: salary.companyName,
-            href: `/companies/${salary.companySlug}`,
+            href: companyPath(salary.companySlug),
           },
           {
             name: crumbs.salaries,
-            href: `/companies/${salary.companySlug}/salaries`,
+            href: companySalaryPath(salary.companySlug),
           },
           { name: salary.categoryName },
         ],

@@ -1,6 +1,19 @@
+import {
+  companySalaryPath,
+  salaryLocationPath,
+  salarySkillPath,
+  salaryTitlePath,
+} from '@cavuno/board/paths';
 import { describe, expect, it } from 'vitest';
 
 import {
+  companyCategorySalaryPath,
+  salaryLocationSkillsPath,
+  salaryLocationTitlesPath,
+  salarySkillInLocationPath,
+  salarySkillLocationsPath,
+  salaryTitleInLocationPath,
+  salaryTitleLocationsPath,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
@@ -151,5 +164,51 @@ describe('toSalaryFaqVM', () => {
     const vm = toSalaryFaqVM(items, 'en');
     expect(vm.heading.length).toBeGreaterThan(0);
     expect(vm.items).toEqual(items);
+  });
+});
+
+/**
+ * Salary URL composers (Layer 1b). These pin the CORRECTED cross-link
+ * behaviour: every composed salary href is built ON TOP of the canonical
+ * SDK path helpers (`@cavuno/board/paths`), never string-built. The relational
+ * assertions (composed === base + suffix) guarantee that if the SDK's URL
+ * structure ever changes, these composers move with it and cannot drift.
+ */
+describe('salary path composers', () => {
+  it('companyCategorySalaryPath extends the company salary page (never the profile)', () => {
+    expect(companyCategorySalaryPath('acme', 'engineering')).toBe(
+      `${companySalaryPath('acme')}/engineering`,
+    );
+    // The exemplar bug: a company salary card must NOT point at the profile.
+    expect(companyCategorySalaryPath('acme', 'engineering')).not.toBe(
+      '/companies/acme',
+    );
+  });
+
+  it('salaryTitleInLocationPath / salaryTitleLocationsPath compose on salaryTitlePath', () => {
+    expect(salaryTitleInLocationPath('data-scientist', 'london')).toBe(
+      `${salaryTitlePath('data-scientist')}/london`,
+    );
+    expect(salaryTitleLocationsPath('data-scientist')).toBe(
+      `${salaryTitlePath('data-scientist')}/locations`,
+    );
+  });
+
+  it('salarySkillInLocationPath / salarySkillLocationsPath compose on salarySkillPath', () => {
+    expect(salarySkillInLocationPath('react', 'berlin')).toBe(
+      `${salarySkillPath('react')}/berlin`,
+    );
+    expect(salarySkillLocationsPath('react')).toBe(
+      `${salarySkillPath('react')}/locations`,
+    );
+  });
+
+  it('salaryLocationTitlesPath / salaryLocationSkillsPath compose on salaryLocationPath', () => {
+    expect(salaryLocationTitlesPath('london')).toBe(
+      `${salaryLocationPath('london')}/titles`,
+    );
+    expect(salaryLocationSkillsPath('london')).toBe(
+      `${salaryLocationPath('london')}/skills`,
+    );
   });
 });
