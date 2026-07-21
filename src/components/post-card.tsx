@@ -23,12 +23,12 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
 
   return (
     <article className="group h-full">
-      <Card className="h-full has-[>a:first-child]:pt-0">
+      <Card className="relative h-full has-[>a:first-child]:pt-0">
         {post.coverUrl ? (
           <Link
             to="/blog/$postSlug"
             params={{ postSlug: post.slug }}
-            className="block aspect-video overflow-hidden rounded-t-[inherit]"
+            className="relative z-10 block aspect-video overflow-hidden rounded-t-[inherit]"
           >
             <img
               src={post.coverUrl}
@@ -46,7 +46,7 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
             <Link
               to="/blog/tag/$tagSlug"
               params={{ tagSlug: eyebrow.slug }}
-              className="focus-visible:ring-ring/30 w-fit rounded-2xl outline-none focus-visible:ring-3"
+              className="focus-visible:ring-ring/30 relative z-10 w-fit rounded-2xl outline-none focus-visible:ring-3"
             >
               <Badge
                 variant="secondary"
@@ -61,7 +61,7 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
             <Link
               to="/blog/$postSlug"
               params={{ postSlug: post.slug }}
-              className="hover:text-primary/70 focus-visible:ring-ring/30 flex items-start justify-between gap-3 rounded-sm transition-colors outline-none focus-visible:ring-3"
+              className="hover:text-primary/70 focus-visible:ring-ring/30 flex items-start justify-between gap-3 rounded-sm transition-colors outline-none after:absolute after:inset-0 after:rounded-[inherit] focus-visible:ring-3"
             >
               <span>{post.title}</span>
               <ArrowUpRight
@@ -99,7 +99,7 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
                       <Link
                         to="/blog/author/$authorSlug"
                         params={{ authorSlug: author.slug }}
-                        className="focus-visible:ring-ring/30 rounded-sm outline-none hover:underline focus-visible:ring-3"
+                        className="focus-visible:ring-ring/30 relative z-10 rounded-sm outline-none hover:underline focus-visible:ring-3"
                       >
                         {author.name}
                       </Link>

@@ -87,12 +87,12 @@ function CategoryBrowse({ categories }: { categories: HomeCategoryCard[] }) {
         <li key={category.slug}>
           <Card
             size="sm"
-            className="h-full transition-shadow hover:shadow-md"
+            className="relative h-full transition-shadow hover:shadow-md"
           >
             <CardContent className="flex flex-col gap-1">
               <a
                 href={category.href}
-                className="focus-visible:ring-ring/30 text-foreground rounded-sm text-sm font-medium outline-none hover:underline focus-visible:ring-3"
+                className="focus-visible:ring-ring/30 text-foreground rounded-sm text-sm font-medium outline-none after:absolute after:inset-0 after:rounded-[inherit] hover:underline focus-visible:ring-3"
               >
                 {category.name}
               </a>
@@ -115,7 +115,7 @@ function HomeJobCard({ vm }: { vm: JobCardVM }) {
       <Link
         to="/companies/$companySlug/jobs/$jobSlug"
         params={{ companySlug: vm.companySlug, jobSlug: vm.jobSlug }}
-        className="focus-visible:ring-ring/30 rounded-sm outline-none hover:underline focus-visible:ring-3"
+        className="focus-visible:ring-ring/30 rounded-sm outline-none after:absolute after:inset-0 after:rounded-[inherit] hover:underline focus-visible:ring-3"
       >
         {vm.title}
       </Link>
@@ -129,7 +129,7 @@ function HomeJobCard({ vm }: { vm: JobCardVM }) {
 
   return (
     <article className="h-full">
-      <Card className="h-full transition-shadow hover:shadow-md">
+      <Card className="relative h-full transition-shadow hover:shadow-md">
         <CardHeader>
           <div className="flex items-start gap-3">
             <CompanyAvatar
@@ -167,6 +167,7 @@ function HomeJobCard({ vm }: { vm: JobCardVM }) {
               <Badge
                 key={tag.key}
                 variant="secondary"
+                className="relative z-10"
                 render={<a href={tag.href} />}
               >
                 {tag.name}
@@ -208,7 +209,7 @@ function HiringIndex({
       <Grid as="ul" columns={{ base: 1, sm: 2, lg: 3 }} gap="3">
         {companies.map((company) => (
           <li key={company.id}>
-            <Card size="sm" className="h-full transition-shadow hover:shadow-md">
+            <Card size="sm" className="relative h-full transition-shadow hover:shadow-md">
               <CardHeader>
                 <div className="flex items-start gap-3">
                   <CompanyAvatar
@@ -222,7 +223,7 @@ function HiringIndex({
                         <Link
                           to="/companies/$companySlug"
                           params={{ companySlug: company.slug }}
-                          className="focus-visible:ring-ring/30 rounded-sm outline-none hover:underline focus-visible:ring-3"
+                          className="focus-visible:ring-ring/30 rounded-sm outline-none after:absolute after:inset-0 after:rounded-[inherit] hover:underline focus-visible:ring-3"
                         >
                           {company.name}
                         </Link>

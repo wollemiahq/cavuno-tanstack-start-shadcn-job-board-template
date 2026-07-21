@@ -29,7 +29,7 @@ export function TalentCard({ candidate }: { candidate: TalentDirectoryEntry }) {
   );
 
   return (
-    <Card role="article" className="h-full">
+    <Card role="article" className="relative h-full">
       <CardContent className="space-y-3">
         <div className="flex items-center gap-3">
           <Avatar size="lg">
@@ -43,7 +43,7 @@ export function TalentCard({ candidate }: { candidate: TalentDirectoryEntry }) {
               <Link
                 to="/p/$handle"
                 params={{ handle: candidate.handle }}
-                className="text-foreground font-semibold hover:no-underline"
+                className="text-foreground font-semibold outline-none after:absolute after:inset-0 after:rounded-[inherit] hover:no-underline"
               >
                 {displayName}
               </Link>
