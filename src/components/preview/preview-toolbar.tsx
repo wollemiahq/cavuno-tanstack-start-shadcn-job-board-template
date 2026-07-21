@@ -45,7 +45,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import { m } from '@/paraglide/messages';
+import { m } from '../../paraglide/messages';
 
 /**
  * The developer-preview toolbar — Workstream B of the sandbox-preview-state

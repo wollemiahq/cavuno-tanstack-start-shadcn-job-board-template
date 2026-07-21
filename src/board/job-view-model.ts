@@ -26,7 +26,7 @@ import {
 } from '@cavuno/board/paths';
 
 import { deriveSummary } from '@/lib/derive-summary';
-import { m } from '@/paraglide/messages';
+import { m } from '../paraglide/messages';
 import type { PublicJob, PublicJobCard } from '@cavuno/board';
 
 export interface JobCardTagVM {

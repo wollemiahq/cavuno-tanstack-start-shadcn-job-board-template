@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ListingPagination } from './listing-pagination';
 
-import { overwriteGetLocale } from '@/paraglide/runtime';
+import { overwriteGetLocale } from '../../paraglide/runtime';
 
 beforeEach(() => {
   overwriteGetLocale(() => 'en');

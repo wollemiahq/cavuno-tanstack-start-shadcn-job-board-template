@@ -36,7 +36,7 @@ import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { m } from '@/paraglide/messages';
+import { m } from '../../paraglide/messages';
 
 function TaxonomySection({
   heading,

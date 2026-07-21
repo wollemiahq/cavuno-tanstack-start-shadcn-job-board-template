@@ -31,7 +31,7 @@ import {
 } from '@/lib/article-toc';
 import { initialsOf } from '@/lib/initials';
 import { cn } from '@/lib/utils';
-import { m } from '@/paraglide/messages';
+import { m } from '../../paraglide/messages';
 import type {
   PublicBlogAdjacentPosts,
   PublicBlogPost,

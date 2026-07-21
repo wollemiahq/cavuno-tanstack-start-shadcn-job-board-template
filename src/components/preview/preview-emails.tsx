@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import { m } from '@/paraglide/messages';
+import { m } from '../../paraglide/messages';
 
 type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 

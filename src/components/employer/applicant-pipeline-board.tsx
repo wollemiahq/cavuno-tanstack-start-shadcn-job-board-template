@@ -67,7 +67,7 @@ import {
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { m } from '@/paraglide/messages';
+import { m } from '../../paraglide/messages';
 import {
   addApplicantNote,
   bulkRejectApplicants,

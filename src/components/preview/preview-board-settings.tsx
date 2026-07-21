@@ -26,7 +26,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
-import { m } from '@/paraglide/messages';
+import { m } from '../../paraglide/messages';
 
 /**
  * The "Board settings" surface — the sandbox analog of the dashboard's board

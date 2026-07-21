@@ -18,7 +18,7 @@ import { PublicContentPending } from '@/components/board/public-content-pending'
 import { JsonLd } from '@/components/json-ld';
 import { headTitle } from '@/lib/page-title';
 import { selectRelatedPosts } from '@/lib/related-posts';
-import { m } from '@/paraglide/messages';
+import { m } from '../paraglide/messages';
 import {
   EMPTY_ADJACENT,
   getBlogPost,

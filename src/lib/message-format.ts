@@ -5,7 +5,7 @@
  *   - `daySeparator`  — "Today" / "Yesterday" / weekday (last 7d) / "Mon 15".
  *   - `EDIT_WINDOW_MS` — the 15-minute edit/unsend window.
  */
-import { m } from '@/paraglide/messages';
+import { m } from '../paraglide/messages';
 
 export const EDIT_WINDOW_MS = 15 * 60 * 1000;
 

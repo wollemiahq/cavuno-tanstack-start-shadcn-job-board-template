@@ -1,7 +1,7 @@
 import { formatDate } from '@cavuno/board/format';
 
 import { initialsOf } from '@/lib/initials';
-import { m } from '@/paraglide/messages';
+import { m } from '../paraglide/messages';
 import type { EmployerApplicant, EmployerPipeline } from '@cavuno/board';
 
 /**
