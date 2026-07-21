@@ -5,7 +5,14 @@ import { m } from '../paraglide/messages';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { clampList } from '@/lib/clamp-list';
 import type { TalentDirectoryEntry } from '@cavuno/board';
 
@@ -13,8 +20,11 @@ import type { TalentDirectoryEntry } from '@cavuno/board';
  * One candidate as a talent-directory card. PURE MARKUP shared by the
  * `/talent` directory grid and the home landing's "Featured talent" strip,
  * so the two surfaces read as one system (mirrors how `JobCard` /
- * `CompanyCard` / `PostCard` are shared). The avatar falls back to two-letter
- * initials; location, headline, and skills are honestly omitted when absent.
+ * `CompanyCard` / `PostCard` are shared). Standard card anatomy: the name is
+ * the CardTitle (a stretched link to the profile when the candidate has a
+ * handle), location is the CardDescription, and the card lifts on hover like
+ * its siblings. The avatar falls back to two-letter initials; location,
+ * headline, and skills are honestly omitted when absent.
  */
 const MAX_SKILL_TAGS = 4;
 
@@ -27,10 +37,24 @@ export function TalentCard({ candidate }: { candidate: TalentDirectoryEntry }) {
     candidate.skills,
     MAX_SKILL_TAGS,
   );
+  const name = candidate.handle ? (
+    <Link
+      to="/p/$handle"
+      params={{ handle: candidate.handle }}
+      className="focus-visible:ring-ring/30 rounded-sm outline-none after:absolute after:inset-0 after:z-[1] after:rounded-[inherit] hover:underline focus-visible:ring-3"
+    >
+      {displayName}
+    </Link>
+  ) : (
+    displayName
+  );
 
   return (
-    <Card role="article" className="relative h-full">
-      <CardContent className="space-y-3">
+    <Card
+      role="article"
+      className="relative h-full transition-shadow hover:shadow-md"
+    >
+      <CardHeader>
         <div className="flex items-center gap-3">
           <Avatar size="lg">
             {candidate.avatarUrl ? (
@@ -38,41 +62,33 @@ export function TalentCard({ candidate }: { candidate: TalentDirectoryEntry }) {
             ) : null}
             <AvatarFallback>{initialsOf(displayName)}</AvatarFallback>
           </Avatar>
-          <div className="min-w-0">
-            {candidate.handle ? (
-              <Link
-                to="/p/$handle"
-                params={{ handle: candidate.handle }}
-                className="text-foreground font-semibold outline-none after:absolute after:inset-0 after:z-[1] after:rounded-[inherit] hover:no-underline"
-              >
-                {displayName}
-              </Link>
-            ) : (
-              <span className="font-semibold">{displayName}</span>
-            )}
+          <div className="min-w-0 flex-1">
+            <CardTitle>
+              <h3 className="truncate text-balance">{name}</h3>
+            </CardTitle>
             {candidate.location ? (
-              <p className="text-muted-foreground text-sm">
-                {candidate.location}
-              </p>
+              <CardDescription>{candidate.location}</CardDescription>
             ) : null}
           </div>
         </div>
-        {candidate.headline ? (
+      </CardHeader>
+      {candidate.headline ? (
+        <CardContent>
           <p className="text-muted-foreground text-sm">{candidate.headline}</p>
-        ) : null}
-        {candidate.skills.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {visibleSkills.map((skill) => (
-              <Badge key={skill} variant="outline">
-                {skill}
-              </Badge>
-            ))}
-            {hiddenSkillCount > 0 ? (
-              <Badge variant="secondary">+{hiddenSkillCount}</Badge>
-            ) : null}
-          </div>
-        ) : null}
-      </CardContent>
+        </CardContent>
+      ) : null}
+      {candidate.skills.length > 0 ? (
+        <CardFooter className="mt-auto flex-wrap gap-1.5">
+          {visibleSkills.map((skill) => (
+            <Badge key={skill} variant="outline">
+              {skill}
+            </Badge>
+          ))}
+          {hiddenSkillCount > 0 ? (
+            <Badge variant="secondary">+{hiddenSkillCount}</Badge>
+          ) : null}
+        </CardFooter>
+      ) : null}
     </Card>
   );
 }
