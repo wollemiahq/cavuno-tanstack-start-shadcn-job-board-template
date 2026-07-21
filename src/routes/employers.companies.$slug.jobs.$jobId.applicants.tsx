@@ -2,6 +2,7 @@ import {
   createFileRoute,
   getRouteApi,
   notFound,
+  redirect,
 } from '@tanstack/react-router';
 
 import { toPipelineBoardVM } from '../board/pipeline-view-model';
@@ -40,6 +41,14 @@ export const Route = createFileRoute(
         getPipeline({ data: { slug: params.slug, job: params.jobId } }),
         getSeoBase(),
       ]);
+      // A draft has never taken applications — there is no pipeline to show.
+      // The workspace menu already hides the link; this guards direct URLs.
+      if (pipeline.job.status === 'draft') {
+        throw redirect({
+          to: '/employers/companies/$slug/jobs/$jobId/edit',
+          params: { slug: params.slug, jobId: params.jobId },
+        });
+      }
       return { ...pipeline, seo };
     } catch (error) {
       return await handleEmployerLoaderError(
