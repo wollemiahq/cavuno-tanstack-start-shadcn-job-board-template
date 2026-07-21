@@ -3,6 +3,7 @@
 import { useRef, useState, type ReactNode } from 'react';
 
 import { boardCopy } from '#/copy';
+import { MENU_COLOR } from '#/starter-config';
 
 import { Link, useRouter } from '@tanstack/react-router';
 import {
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { initialsOf } from '../lib/initials';
+import { menuColorClasses } from '../lib/menu-color';
 import { resolveSignupDestination } from '../lib/signup-destination';
 import { m } from '../paraglide/messages';
 import { signOut } from '../server/auth';
@@ -557,7 +559,13 @@ export default function Header({
 
   return (
     <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-      <header className="border-border bg-background text-foreground border-b">
+      <header
+        data-menu-color={MENU_COLOR}
+        className={cn(
+          'border-border text-foreground border-b',
+          ...menuColorClasses(MENU_COLOR),
+        )}
+      >
         <Box paddingX={{ base: '4', md: '8' }}>
           <div className="grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
             {headerLeft}
