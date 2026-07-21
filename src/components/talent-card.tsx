@@ -43,7 +43,7 @@ export function TalentCard({ candidate }: { candidate: TalentDirectoryEntry }) {
               <Link
                 to="/p/$handle"
                 params={{ handle: candidate.handle }}
-                className="text-foreground font-semibold outline-none after:absolute after:inset-0 after:rounded-[inherit] hover:no-underline"
+                className="text-foreground font-semibold outline-none after:absolute after:inset-0 after:z-[1] after:rounded-[inherit] hover:no-underline"
               >
                 {displayName}
               </Link>

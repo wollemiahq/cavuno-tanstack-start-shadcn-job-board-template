@@ -92,7 +92,7 @@ function CategoryBrowse({ categories }: { categories: HomeCategoryCard[] }) {
             <CardContent className="flex flex-col gap-1">
               <a
                 href={category.href}
-                className="focus-visible:ring-ring/30 text-foreground rounded-sm text-sm font-medium outline-none after:absolute after:inset-0 after:rounded-[inherit] hover:underline focus-visible:ring-3"
+                className="focus-visible:ring-ring/30 text-foreground rounded-sm text-sm font-medium outline-none after:absolute after:inset-0 after:z-[1] after:rounded-[inherit] hover:underline focus-visible:ring-3"
               >
                 {category.name}
               </a>
@@ -115,7 +115,7 @@ function HomeJobCard({ vm }: { vm: JobCardVM }) {
       <Link
         to="/companies/$companySlug/jobs/$jobSlug"
         params={{ companySlug: vm.companySlug, jobSlug: vm.jobSlug }}
-        className="focus-visible:ring-ring/30 rounded-sm outline-none after:absolute after:inset-0 after:rounded-[inherit] hover:underline focus-visible:ring-3"
+        className="focus-visible:ring-ring/30 rounded-sm outline-none after:absolute after:inset-0 after:z-[1] after:rounded-[inherit] hover:underline focus-visible:ring-3"
       >
         {vm.title}
       </Link>
@@ -223,7 +223,7 @@ function HiringIndex({
                         <Link
                           to="/companies/$companySlug"
                           params={{ companySlug: company.slug }}
-                          className="focus-visible:ring-ring/30 rounded-sm outline-none after:absolute after:inset-0 after:rounded-[inherit] hover:underline focus-visible:ring-3"
+                          className="focus-visible:ring-ring/30 rounded-sm outline-none after:absolute after:inset-0 after:z-[1] after:rounded-[inherit] hover:underline focus-visible:ring-3"
                         >
                           {company.name}
                         </Link>

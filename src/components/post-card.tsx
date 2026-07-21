@@ -61,7 +61,7 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
             <Link
               to="/blog/$postSlug"
               params={{ postSlug: post.slug }}
-              className="hover:text-primary/70 focus-visible:ring-ring/30 flex items-start justify-between gap-3 rounded-sm transition-colors outline-none after:absolute after:inset-0 after:rounded-[inherit] focus-visible:ring-3"
+              className="hover:text-primary/70 focus-visible:ring-ring/30 flex items-start justify-between gap-3 rounded-sm transition-colors outline-none after:absolute after:inset-0 after:z-[1] after:rounded-[inherit] focus-visible:ring-3"
             >
               <span>{post.title}</span>
               <ArrowUpRight
