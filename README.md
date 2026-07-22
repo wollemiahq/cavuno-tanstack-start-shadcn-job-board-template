@@ -22,7 +22,7 @@ running against the live sandbox board.
 
 ## Why this template is different
 
-Most job-board templates are a beautiful frontend with no real backend behind
+Most job board templates are a beautiful frontend with no real backend behind
 it — the listings are hardcoded or mocked, and to actually launch you either
 build the backend yourself (auth, applications, payments, emails, search) or
 bolt on a separate service. This one is wired to a real backend from the first
@@ -71,7 +71,7 @@ correctness can't be redesigned away:
   components you can restructure freely without ever mis-calling a formatter.
 
 That separation is what makes this one of the first genuinely
-**agent-buildable** job-board templates: an agent can redesign the surface
+**agent-buildable** job board templates: an agent can redesign the surface
 without breaking salary math, canonical URLs, or SEO.
 
 ---

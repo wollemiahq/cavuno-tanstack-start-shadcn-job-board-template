@@ -16,7 +16,7 @@ export function getRouter() {
     // it cannot fix that. At 30s, a hovered link commits from cache
     // (measured: click → content 119ms, zero requests, vs ~1.9s cold);
     // route data can be up to 30s stale on quick revisits — acceptable for
-    // job-board content.
+    // job board content.
     defaultStaleTime: 30_000,
     // The default 404 is a real shadcn Empty page instead of TanStack's
     // built-in placeholder. The error boundary is deliberately NOT set here:
