@@ -6,18 +6,19 @@
  * from `@cavuno/board*` and the design is free to restructure without
  * touching the data/correctness layer.
  *
- * Anatomy: page header (company avatar + name link, display
- * title, meta pills, posted date) → two-column body. The main column
- * carries the sanitized description prose, facts, taxonomy links, operator
- * custom fields, and the similar-jobs card grid; the sticky right rail is
- * the apply card (apply CTA, salary, save/copy controls, compact company
- * card). On mobile the apply card is ordered first — the CTA sits directly
- * under the header — while the description and similar jobs follow.
+ * Anatomy: page header (company avatar + name link, display title, meta
+ * pills, posted date) → two-column body. The main column carries the
+ * sanitized description prose, facts, taxonomy links, and operator custom
+ * fields. The sticky right rail is a stack: the ACTIONS card (full-width
+ * primary Apply on top, a two-up Save + Copy-link row beneath it) → the alert
+ * signup card → the compact about-company card → the similar-jobs grid. On
+ * mobile the actions card is a fixed bottom bar under the header.
  *
  * Framework seams (owned by the route, need client interactivity):
- * - `applySlot` (native/external apply), `secondaryActions` (save +
- *   copy-link), `similarSlot` (the CAV-485 JobCard grid over the raw
- *   PublicJobCard[]), and `alertSlot` (the CAV-483 alert form).
+ * - `applySlot` (native/external apply), `secondaryActions` (the Save + the
+ *   Copy-link controls, laid out two-up), `similarSlot` (the CAV-485 JobCard
+ *   grid over the raw PublicJobCard[]), and `alertSlot` (the CAV-483 alert
+ *   form). The about-company card is composed here from `vm.company`.
  * - JSON-LD + head meta live in the route, never here.
  */
 import type {
@@ -178,33 +179,30 @@ export function JobDetail({
       }
       rail={
         <>
+          {/* Sidebar actions card: full-width primary Apply on top, then a
+              two-up row of the Save and Copy-link controls beneath it. On
+              mobile it is a fixed bottom bar; on lg it joins the sticky rail. */}
           <div
             data-slot="job-actions"
             className="border-border bg-background/95 fixed inset-x-0 bottom-0 z-40 border-t p-4 shadow-lg backdrop-blur lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none"
           >
             <Card size="sm" className="gap-0 py-0">
-              <CardContent className="grid grid-cols-2 gap-2 p-4 lg:flex lg:flex-col lg:gap-4">
+              <CardContent className="flex flex-col gap-3 p-4">
                 {applySlot ? (
                   <div className="flex flex-col gap-2">{applySlot}</div>
                 ) : null}
                 {secondaryActions ? (
-                  <div className="flex flex-col gap-2">{secondaryActions}</div>
+                  <div className="grid grid-cols-2 gap-2">{secondaryActions}</div>
                 ) : null}
               </CardContent>
             </Card>
           </div>
-          {/* Similar jobs sit directly under the apply card (CAV-500). */}
-          {similarSlot ? (
-            <section
-              aria-label={vm.similarJobsHeading}
-              className="flex flex-col gap-4"
-            >
-              <Text as="h2" variant="heading4">
-                {vm.similarJobsHeading}
-              </Text>
-              {similarSlot}
-            </section>
-          ) : null}
+          {/* Sidebar stack under the actions card: alerts → about-company →
+              similar jobs. The caller owns each section so a deferred, streamed
+              rail can stay hidden until it resolves with content. */}
+          {alertSlot}
+          {vm.company ? <JobAboutCompanyCard company={vm.company} /> : null}
+          {similarSlot}
         </>
       }
       railLabel={m.jobDetail_sidebarAriaLabel()}
@@ -235,10 +233,6 @@ export function JobDetail({
           fields={vm.customFields}
           heading={vm.additionalDetailsHeading}
         />
-
-        {vm.company ? <JobAboutCompanyCard company={vm.company} /> : null}
-
-        {alertSlot}
       </article>
     </PageBody>
   );

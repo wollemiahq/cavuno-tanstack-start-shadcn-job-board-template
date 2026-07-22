@@ -1,4 +1,5 @@
 import { isNotFound } from '@cavuno/board';
+import type { PublicJobCard } from '@cavuno/board';
 import { companyIntro } from '@cavuno/board/format';
 import {
   buildJobBreadcrumbs,
@@ -15,7 +16,9 @@ import {
  * matching the hosted page (the rail is never fatal to the render).
  */
 import {
+  Await,
   createFileRoute,
+  getRouteApi,
   notFound,
   useLocation,
   useRouter,
@@ -27,21 +30,25 @@ import { m } from '../paraglide/messages';
 import { getSessionUser, saveJob } from '../server/account';
 import { applyToJob, myApplicationForJob } from '../server/applications';
 import {
-  getBoardContext,
   getCompany,
   getJob,
   getSeoBase,
   getSimilarJobs,
+  resolveTaxonomyChips,
   subscribeJobAlert,
 } from '../server/queries';
 
 import { toJobDetailVM } from '@/board/job-detail-view-model';
+import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 import { AlertSignupForm } from '@/components/board/alert-signup-form';
 import { ApplyButton } from '@/components/board/apply-button';
+import { CopyLinkButton } from '@/components/board/copy-link-button';
 import { JobDetail } from '@/components/board/job-detail';
+import { toJobCardVM } from '@/board/job-view-model';
 import { JobList } from '@/components/board/job-list';
 import { PageBody } from '@/components/board/page-body';
 import { SaveJobButton } from '@/components/board/save-job-button';
+import { Text } from '@/components/text';
 import { JsonLd } from '@/components/json-ld';
 import {
   Empty,
@@ -55,32 +62,63 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
     try {
-      const [job, board, user, similar, company, seo] = await Promise.all([
+      // `board` comes from the root loader (read via rootApi in the component):
+      // this loader neither gates on it nor uses it in head(), so it is not
+      // re-fetched here — that would be a duplicate board-context read.
+      const [job, user, company, seo] = await Promise.all([
         getJob({ data: { jobSlug: params.jobSlug } }),
-        getBoardContext(),
         getSessionUser(),
-        // The rail is non-fatal — a search outage (503) hides it, never
-        // breaks the page (mirrors the hosted similar-jobs loader).
-        getSimilarJobs({ data: { jobSlug: params.jobSlug } })
-          .then((r) => r.data)
-          .catch(() => []),
         getCompany({ data: { companySlug: params.companySlug } }).catch(
           () => null,
         ),
         getSeoBase(),
       ]);
+      // Similar-jobs is a below-the-fold, search-backed rail — defer it so a
+      // slow (or failing) similar backend never blocks the job's first paint.
+      // Streamed via <Await>; a search outage (503) hides it, never breaks the
+      // page (mirrors the hosted similar-jobs loader).
+      // Resolve the similar cards' own tag pills alongside the deferred rail —
+      // the similar jobs carry their own categories/skills, distinct from this
+      // job's, so they need their own resolves-or-omits map.
+      const similar = getSimilarJobs({ data: { jobSlug: params.jobSlug } })
+        .then(async (r) => ({
+          jobs: r.data,
+          resolvableTaxonomy: await resolveCardTaxonomy(r.data),
+        }))
+        .catch(() => ({
+          jobs: [] as PublicJobCard[],
+          resolvableTaxonomy: {} as Record<string, string>,
+        }));
       const application = user?.emailVerified
         ? await myApplicationForJob({
             data: { jobSlug: params.jobSlug },
           }).catch(() => null)
         : null;
+      // Drop category/skill chips whose slug the taxonomy resolver rejects (a
+      // facet/taxonomy read-model drift on the board would otherwise render a
+      // chip that 404s). On a healthy board every tag resolves and the set is
+      // complete. A resolve outage degrades to "no chips", never a broken link.
+      const resolvableTaxonomy = await resolveTaxonomyChips({
+        data: {
+          candidates: [
+            ...(job.categories ?? []).map((c) => ({
+              type: 'category' as const,
+              slug: c.slug,
+            })),
+            ...(job.skills ?? []).map((s) => ({
+              type: 'skill' as const,
+              slug: s.slug,
+            })),
+          ],
+        },
+      }).catch(() => ({}) as Record<string, string>);
       return {
         job,
-        board,
         user,
         similar,
         company,
         seo,
+        resolvableTaxonomy,
         alreadyApplied: application !== null,
       };
     } catch (error) {
@@ -143,9 +181,12 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
   ),
 });
 
+const rootApi = getRouteApi('__root__');
+
 function JobDetailPage() {
-  const { job, board, user, similar, company, seo, alreadyApplied } =
+  const { job, user, similar, company, seo, resolvableTaxonomy, alreadyApplied } =
     Route.useLoaderData();
+  const { board } = rootApi.useLoaderData();
   const { companySlug } = Route.useParams();
   const defaults = jobAlertDefaultsFromJob(job);
   const router = useRouter();
@@ -154,10 +195,14 @@ function JobDetailPage() {
   const vm = toJobDetailVM(
     job,
     board.customFields,
-    similar,
+    // The live similar-jobs rail is deferred and rendered via `similarSlot`
+    // below; `<JobDetail>` does not consume `vm.similar`, so an empty list here
+    // keeps the VM call intact without blocking first paint on the rail.
+    [],
     companyIntro(null, company?.description ?? null),
     board.language,
     board.labels,
+    resolvableTaxonomy,
   );
 
   const jsonLd = [
@@ -191,31 +236,64 @@ function JobDetailPage() {
           />
         }
         secondaryActions={
-          <SaveJobButton
-            jobId={job.id}
-            viewer={user ? { emailVerified: user.emailVerified } : null}
-            returnTo={returnTo}
-            labels={{
-              save: m.companyJobDetail_saveJobLabel(),
-              saving: m.companyJobDetail_savingLabel(),
-              saved: m.companyJobDetail_savedViewInAccountLabel(),
-              error: m.saveJobButton_errorText(),
-            }}
-            onSave={async (jobId) => {
-              await saveJob({ data: { jobId } });
-            }}
-            onSaved={() => router.invalidate()}
-          />
+          <>
+            <SaveJobButton
+              jobId={job.id}
+              viewer={user ? { emailVerified: user.emailVerified } : null}
+              returnTo={returnTo}
+              block
+              labels={{
+                save: m.companyJobDetail_saveJobLabel(),
+                saving: m.companyJobDetail_savingLabel(),
+                saved: m.companyJobDetail_savedViewInAccountLabel(),
+                error: m.saveJobButton_errorText(),
+              }}
+              onSave={async (jobId) => {
+                await saveJob({ data: { jobId } });
+              }}
+              onSaved={() => router.invalidate()}
+            />
+            {/* Copy the job's canonical public URL (the API's links.public via
+                the VM) — works for everyone, no gating. */}
+            {vm.canonicalUrl ? (
+              <CopyLinkButton
+                url={vm.canonicalUrl}
+                language={board.language}
+                labels={board.labels}
+              />
+            ) : (
+              <span />
+            )}
+          </>
         }
         similarSlot={
-          similar.length > 0 ? (
-            <JobList
-              jobs={similar}
-              language={board.language}
-              labels={board.labels}
-              variant="compact"
-            />
-          ) : null
+          <Await promise={similar} fallback={null}>
+            {(similarRail) =>
+              similarRail.jobs.length > 0 ? (
+                <section
+                  aria-label={vm.similarJobsHeading}
+                  className="flex flex-col gap-4"
+                >
+                  <Text as="h2" variant="heading4">
+                    {vm.similarJobsHeading}
+                  </Text>
+                  <JobList
+                    jobs={similarRail.jobs.map((job) =>
+                      toJobCardVM(
+                        job,
+                        board.language,
+                        board.labels,
+                        similarRail.resolvableTaxonomy,
+                      ),
+                    )}
+                    language={board.language}
+                    labels={board.labels}
+                    variant="compact"
+                  />
+                </section>
+              ) : null
+            }
+          </Await>
         }
         alertSlot={
           board.features.jobAlerts ? (

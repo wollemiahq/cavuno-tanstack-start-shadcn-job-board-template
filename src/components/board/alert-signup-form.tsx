@@ -57,7 +57,7 @@ export function AlertSignupForm({
   labels,
   title,
   description,
-  surface = 'accent',
+  surface = 'default',
 }: {
   filters?: JobAlertSubscribeInput['filters'];
   context?: JobAlertSubscribeInput['context'];
@@ -72,12 +72,13 @@ export function AlertSignupForm({
   title?: string;
   description?: string;
   /**
-   * Card surface. `accent` (default) is the in-flow tinted `bg-primary/5`
-   * band used on solid page backgrounds; `card` is an opaque `bg-card`
-   * surface with a lift shadow for the floating prompt, which sits over
-   * page content and must not read as washed-out/transparent.
+   * Card surface. Both variants render the standard `Card` (opaque `bg-card`,
+   * default border/ring/spacing) so the box reads like every other card on the
+   * page. `card` adds a stronger lift shadow and header clearance for the
+   * floating prompt, which sits over page content and carries an absolute
+   * close button; `default` is the plain in-flow card.
    */
-  surface?: 'accent' | 'card';
+  surface?: 'default' | 'card';
 }) {
   const emailInputId = useId();
   const [email, setEmail] = useState('');
@@ -94,13 +95,8 @@ export function AlertSignupForm({
 
   return (
     <section aria-label={vm.sectionAriaLabel}>
-      <Card
-        className={cn(
-          'border-primary gap-3 border py-5 ring-0',
-          surface === 'card' ? 'bg-card shadow-lg' : 'bg-primary/5 shadow-none',
-        )}
-      >
-        <CardHeader className="pr-12">
+      <Card className={cn(surface === 'card' && 'shadow-lg')}>
+        <CardHeader className={cn(surface === 'card' && 'pr-12')}>
           <CardTitle>
             <h2 className="text-foreground flex items-center gap-2 text-base font-semibold">
               <BellIcon className="text-primary size-4" aria-hidden="true" />
@@ -136,16 +132,10 @@ export function AlertSignupForm({
                 {vm.emailAriaLabel}
               </FieldLabel>
               <ButtonGroup className="w-full">
-                {/* The accent surface tints the whole card, so the field
-                    keeps bg-background for contrast; on the plain card
-                    surface the standard input treatment applies — a white
-                    override there made the field invisible. */}
-                <InputGroup
-                  className={cn(
-                    'flex-1',
-                    surface === 'accent' && 'bg-background',
-                  )}
-                >
+                {/* Standard card surface — the input keeps its default
+                    treatment (a bg override here once made the field
+                    invisible on the opaque card). */}
+                <InputGroup className="flex-1">
                   <InputGroupInput
                     id={emailInputId}
                     type="email"

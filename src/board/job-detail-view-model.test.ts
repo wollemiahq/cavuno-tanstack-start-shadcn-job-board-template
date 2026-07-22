@@ -90,6 +90,65 @@ describe('toJobDetailVM', () => {
     ]);
   });
 
+  // The resolves-or-omits contract: when the loader supplies the set of chips
+  // the taxonomy resolver accepts, chips outside it are dropped and survivors
+  // link via their canonical slug. This is the defensive guard against a board
+  // whose facet/tag read model has drifted from its resolve read model — a chip
+  // that 404s is worse than an absent chip. An omitted map means "don't filter".
+  it('omits taxonomy chips whose slug does not resolve, canonicalising the rest', () => {
+    const twoCategoryJob = {
+      ...baseJob,
+      categories: [
+        { slug: 'engineering', name: 'Engineering' },
+        { slug: 'developer-relations', name: 'Developer Relations' },
+      ],
+      skills: [
+        { slug: 'react', name: 'React' },
+        { slug: 'sql', name: 'SQL' },
+      ],
+    } as unknown as PublicJob;
+
+    const filtered = toJobDetailVM(
+      twoCategoryJob,
+      customFields,
+      similar,
+      'Acme intro.',
+      'en',
+      undefined,
+      // engineering + react are rejected by the resolver; developer-relations
+      // resolves (to a slightly different canonical slug), sql resolves as-is.
+      {
+        'category:developer-relations': 'developer-relations-canonical',
+        'skill:sql': 'sql',
+      },
+    );
+
+    expect(filtered.categoryChips).toEqual([
+      {
+        key: 'developer-relations-canonical',
+        name: 'Developer Relations',
+        href: '/jobs/developer-relations-canonical',
+      },
+    ]);
+    expect(filtered.skillChips).toEqual([
+      { key: 'sql', name: 'SQL', href: '/jobs/skills/sql' },
+    ]);
+  });
+
+  it('renders no taxonomy chips when nothing resolves (empty map)', () => {
+    const none = toJobDetailVM(
+      baseJob,
+      customFields,
+      similar,
+      'Acme intro.',
+      'en',
+      undefined,
+      {},
+    );
+    expect(none.categoryChips).toEqual([]);
+    expect(none.skillChips).toEqual([]);
+  });
+
   it('assembles the facts rows (office, permits, timezones, education, experience)', () => {
     const byLabel = Object.fromEntries(vm.facts.map((f) => [f.label, f.value]));
     // Office label falls back to city/region/country when displayName is null.
@@ -134,6 +193,72 @@ describe('toJobDetailVM', () => {
 
     expect(hybrid.locationLabel).toBe('Berlin, BE, DE');
     expect(hybrid.workplaceLabel).toBe('Hybrid');
+  });
+
+  it('resolves a physical location from placeHierarchy when there is no office, matching the card', () => {
+    // on_site job whose location lives in the place taxonomy (no geocoded
+    // office) — the list card shows "Austin, Texas, US", so the detail must
+    // too, not "Location not specified". placeHierarchy is broad→narrow and
+    // the country resolves to its ISO code, like the card's server label.
+    const onSite = toJobDetailVM(
+      {
+        ...baseJob,
+        remoteOption: 'on_site',
+        officeLocations: [],
+        placeHierarchy: [
+          { slug: 'united-states', name: 'United States' },
+          { slug: 'texas-united-states', name: 'Texas' },
+          { slug: 'austin-tx-united-states', name: 'Austin' },
+        ],
+      } as unknown as PublicJob,
+      customFields,
+      [],
+      null,
+      'en',
+    );
+
+    expect(onSite.locationLabel).toBe('Austin, Texas, US');
+    expect(onSite.workplaceLabel).toBe('On-site');
+  });
+
+  it('shows Worldwide for an unconstrained remote job, never "not specified"', () => {
+    // A remote job with no worldwide flag AND no permit countries is
+    // unconstrained → its scope is Worldwide (the card shows "Worldwide").
+    const remoteWorldwide = toJobDetailVM(
+      {
+        ...baseJob,
+        remoteOption: 'remote',
+        remoteWorldwide: null,
+        remoteWorkPermitCountryCodes: [],
+        officeLocations: [],
+        placeHierarchy: [],
+      } as unknown as PublicJob,
+      customFields,
+      [],
+      null,
+      'en',
+    );
+
+    expect(remoteWorldwide.locationLabel).toBe(copy.worldwideLabel);
+  });
+
+  it('lists the constrained countries for a permit-scoped remote job', () => {
+    const remoteConstrained = toJobDetailVM(
+      {
+        ...baseJob,
+        remoteOption: 'remote',
+        remoteWorldwide: false,
+        remoteWorkPermitCountryCodes: ['US', 'GB'],
+      } as unknown as PublicJob,
+      customFields,
+      [],
+      null,
+      'en',
+    );
+
+    expect(remoteConstrained.locationLabel).toBe(
+      'United States, United Kingdom',
+    );
   });
 
   it('resolves a boolean custom field to its yes/no copy, text passes through', () => {

@@ -42,7 +42,7 @@ export function JobAboutCompanyCard({
           </p>
         ) : null}
       </CardContent>
-      <CardFooter className="border-t">
+      <CardFooter>
         <a
           href={company.href}
           className={buttonVariants({

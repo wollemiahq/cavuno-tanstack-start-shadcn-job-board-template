@@ -13,6 +13,7 @@ import { boardCopy } from '@/copy';
  * data/logic (correctness) layer.
  */
 import {
+  countryOptions,
   fieldLabel,
   formatPublishedRelativeDate,
   formatSalaryRange,
@@ -119,9 +120,48 @@ export function toJobDetailVM(
   companyIntro: string | null,
   language: string,
   labels?: BoardLabelOverrides,
+  /**
+   * Optional `${'category' | 'skill'}:${slug}` → canonicalSlug map of the
+   * taxonomy chips that resolve to a real page (from `resolveTaxonomyChips`).
+   * When supplied, category/skill chips whose slug is absent are omitted and
+   * the survivors link via their canonical slug — the defensive guard against a
+   * job tagged with a slug the taxonomy resolver rejects (its `/jobs/:slug`
+   * page would 404). When omitted, every chip renders as-is (the resolver is
+   * consulted only where a loader can afford the round trip).
+   */
+  resolvableTaxonomy?: Record<string, string>,
 ): JobDetailVM {
   const copy = boardCopy(language, labels).jobDetail;
   const company = job.company;
+
+  // Keep only chips that will land on a live page, canonicalising the slug. A
+  // missing map means "don't filter" (see the param doc); an empty map filters
+  // everything out, which is correct when nothing resolved.
+  const taxonomyChip = (
+    type: 'category' | 'skill',
+    term: { slug: string; name: string },
+  ): JobDetailChipVM | null => {
+    if (!resolvableTaxonomy) {
+      return {
+        key: term.slug,
+        name: term.name,
+        href:
+          type === 'skill'
+            ? jobsSkillPath(term.slug)
+            : jobsCategoryPath(term.slug),
+      };
+    }
+    const canonical = resolvableTaxonomy[`${type}:${term.slug}`];
+    if (!canonical) return null;
+    return {
+      key: canonical,
+      name: term.name,
+      href:
+        type === 'skill'
+          ? jobsSkillPath(canonical)
+          : jobsCategoryPath(canonical),
+    };
+  };
 
   const offices = job.officeLocations
     .map(
@@ -222,14 +262,40 @@ export function toJobDetailVM(
       return null;
     }
   })();
+  // Country display-name → ISO code, so a place-hierarchy country renders the
+  // way the card's server label does ("United States" → "US", "United
+  // Kingdom" → "GB"). `countryOptions` is the SDK's canonical, board-language
+  // country lexicon.
+  const countryNameToCode = new Map(
+    countryOptions(language).map((option) => [option.name, option.code]),
+  );
+  // The list card resolves its location from the API's pre-computed
+  // `locationLabel`, which the full job payload does NOT carry. When a job has
+  // no geocoded office, reconstruct the same place string from
+  // `placeHierarchy` (broad→narrow: country, region, city) — otherwise a job
+  // whose location lives only in the place taxonomy shows "Location not
+  // specified" on the detail page while its card shows the place.
+  const placeHierarchyLabel =
+    job.placeHierarchy
+      .map((place) => countryNameToCode.get(place.name) ?? place.name)
+      .filter(Boolean)
+      .reverse()
+      .join(', ') || null;
+  // Remote permit ISO codes → country names (card-mapper parity).
+  const remoteScopeLabel =
+    job.remoteWorkPermitCountryCodes
+      .map((code) => regionNames?.of(code) ?? code)
+      .filter(Boolean)
+      .join(', ') || null;
   const location =
     job.remoteOption === 'remote'
-      ? job.remoteWorldwide
-        ? copy.worldwideLabel
-        : job.remoteWorkPermitCountryCodes
-            .map((code) => regionNames?.of(code) ?? code)
-            .join(', ') || null
-      : (offices[0] ?? null);
+      ? // A remote job's location is its scope: the constrained permit
+        // countries when constrained, else Worldwide. `remoteWorldwide` is only
+        // true for an explicit single worldwide selection, so an unconstrained
+        // remote job (no permits) also resolves to Worldwide — never
+        // "unspecified", matching the card's "Worldwide".
+        (remoteScopeLabel ?? copy.worldwideLabel)
+      : (offices[0] ?? placeHierarchyLabel);
 
   return {
     breadcrumbs: buildJobBreadcrumbs(job, language, labels).map((crumb) => ({
@@ -262,16 +328,12 @@ export function toJobDetailVM(
     descriptionHtml: job.description ?? null,
     noDescriptionText: copy.noDescriptionText,
     facts,
-    categoryChips: job.categories.map((c) => ({
-      key: c.slug,
-      name: c.name,
-      href: jobsCategoryPath(c.slug),
-    })),
-    skillChips: job.skills.map((s) => ({
-      key: s.slug,
-      name: s.name,
-      href: jobsSkillPath(s.slug),
-    })),
+    categoryChips: job.categories
+      .map((c) => taxonomyChip('category', c))
+      .filter((chip): chip is JobDetailChipVM => chip !== null),
+    skillChips: job.skills
+      .map((s) => taxonomyChip('skill', s))
+      .filter((chip): chip is JobDetailChipVM => chip !== null),
     categoriesHeading: copy.categoriesHeading,
     skillsHeading: copy.skillsHeading,
     customFields: customFieldVms,
