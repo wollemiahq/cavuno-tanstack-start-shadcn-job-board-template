@@ -22,13 +22,13 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `aspect-ratio` | Available | Installed for adoption when the product needs this behavior. |
 | `attachment` | Used (1) | `src/components/resume-upload.tsx` |
 | `avatar` | Used (14) | `src/components/Header.tsx`<br>`src/components/account-shell.tsx`<br>`src/components/avatar-upload.tsx`<br>+11 more in the JSON ledger |
-| `badge` | Used (38) | `src/components/Footer.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+35 more in the JSON ledger |
+| `badge` | Used (37) | `src/components/Footer.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+34 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
-| `button` | Used (80) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+77 more in the JSON ledger |
+| `button` | Used (81) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+78 more in the JSON ledger |
 | `button-group` | Used (2) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx` |
 | `calendar` | Available | Installed for adoption when the product needs this behavior. |
-| `card` | Used (31) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>`src/components/board/company-search-result-detail.tsx`<br>+28 more in the JSON ledger |
+| `card` | Used (30) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>`src/components/board/company-search-result-detail.tsx`<br>+27 more in the JSON ledger |
 | `carousel` | Available | Installed for adoption when the product needs this behavior. |
 | `chart` | Available | Installed for adoption when the product needs this behavior. |
 | `checkbox` | Used (7) | `src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/custom-fields-group.tsx`<br>+4 more in the JSON ledger |
@@ -43,7 +43,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `empty` | Used (40) | `src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+37 more in the JSON ledger |
 | `field` | Used (21) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+18 more in the JSON ledger |
 | `hover-card` | Available | Installed for adoption when the product needs this behavior. |
-| `input` | Used (18) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alerts-band.tsx`<br>+15 more in the JSON ledger |
+| `input` | Used (17) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/custom-fields-group.tsx`<br>+14 more in the JSON ledger |
 | `input-group` | Used (13) | `src/components/Header.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>`src/components/board/listing-page-header.tsx`<br>+10 more in the JSON ledger |
 | `input-otp` | Used (1) | `src/routes/auth.verify-email-required.tsx` |
 | `item` | Used (8) | `src/components/alert-manager.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+5 more in the JSON ledger |
@@ -55,7 +55,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `message-scroller` | Used (1) | `src/components/messages/thread-view.tsx` |
 | `native-select` | Used (1) | `src/components/preview/preview-board-settings.tsx` |
 | `navigation-menu` | Available | Installed for adoption when the product needs this behavior. |
-| `pagination` | Used (2) | `src/components/board/blog-archive-page.tsx`<br>`src/components/board/listing-pagination.tsx` |
+| `pagination` | Used (2) | `src/components/board/cursor-pagination.tsx`<br>`src/components/board/listing-pagination.tsx` |
 | `popover` | Used (2) | `src/components/preview/preview-toolbar.tsx`<br>`src/components/rich-text-editor.tsx` |
 | `progress` | Used (1) | `src/components/profile-completeness-card.tsx` |
 | `radio-group` | Used (4) | `src/components/employer-job-form.tsx`<br>`src/components/post-job-form.tsx`<br>`src/components/rhea-auth-pilot.tsx`<br>+1 more in the JSON ledger |

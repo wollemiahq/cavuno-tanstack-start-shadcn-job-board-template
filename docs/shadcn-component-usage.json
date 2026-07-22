@@ -125,7 +125,6 @@
         "src/components/board/company-search-result-detail.tsx",
         "src/components/board/company-search-result.tsx",
         "src/components/board/company-section-header.tsx",
-        "src/components/board/home-landing.tsx",
         "src/components/board/job-card.tsx",
         "src/components/board/job-detail.tsx",
         "src/components/board/job-search-page.tsx",
@@ -144,7 +143,7 @@
         "src/components/resume-upload.tsx",
         "src/components/skills-section.tsx",
         "src/components/talent-card.tsx",
-        "src/routes/account_.access.tsx",
+        "src/routes/-access-page.tsx",
         "src/routes/alerts.manage.tsx",
         "src/routes/companies.$companySlug.index.tsx",
         "src/routes/embed.jobs.tsx",
@@ -180,7 +179,6 @@
         "src/components/app-route-error.tsx",
         "src/components/avatar-upload.tsx",
         "src/components/board/alert-signup-form.tsx",
-        "src/components/board/alerts-band.tsx",
         "src/components/board/apply-button.tsx",
         "src/components/board/blog-archive-page.tsx",
         "src/components/board/blog-article-content.tsx",
@@ -225,8 +223,9 @@
         "src/components/rhea-auth-pilot.tsx",
         "src/components/rich-text-editor.tsx",
         "src/components/skills-section.tsx",
+        "src/routes/-access-page.tsx",
         "src/routes/-messages-dock-controller.tsx",
-        "src/routes/account_.access.tsx",
+        "src/routes/-restricted-talent-directory.tsx",
         "src/routes/account_.saved.tsx",
         "src/routes/alerts.manage.tsx",
         "src/routes/auth.employer.sign-up.tsx",
@@ -242,8 +241,6 @@
         "src/routes/companies.$companySlug.index.tsx",
         "src/routes/embed.jobs.tsx",
         "src/routes/employers.companies.$slug.index.tsx",
-        "src/routes/employers.companies.$slug.jobs.$jobId.edit.tsx",
-        "src/routes/employers.companies.$slug.jobs.new.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.dashboard.tsx",
         "src/routes/employers.index.tsx",
@@ -252,6 +249,9 @@
         "src/routes/p.$handle.tsx",
         "src/routes/password.tsx",
         "src/routes/salaries.index.tsx",
+        "src/routes/salaries.locations.$slug.index.tsx",
+        "src/routes/salaries.skills.$slug.index.tsx",
+        "src/routes/salaries.titles.$slug.index.tsx",
         "src/routes/settings.tsx",
         "src/routes/talent.index.tsx"
       ]
@@ -296,14 +296,13 @@
         "src/components/search-results/search-result-card.tsx",
         "src/components/skills-section.tsx",
         "src/components/talent-card.tsx",
+        "src/routes/-access-page.tsx",
         "src/routes/account.tsx",
-        "src/routes/account_.access.tsx",
         "src/routes/companies.$companySlug.index.tsx",
         "src/routes/employers.companies.$slug.index.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
         "src/routes/employers.index.tsx",
-        "src/routes/employers.onboarding.$slug.tsx",
-        "src/routes/p.$handle.tsx"
+        "src/routes/employers.onboarding.$slug.tsx"
       ]
     },
     {
@@ -420,8 +419,9 @@
         "src/components/post-job-form.tsx",
         "src/components/preview/preview-emails.tsx",
         "src/components/skills-section.tsx",
+        "src/routes/-access-page.tsx",
         "src/routes/-messages-dock-controller.tsx",
-        "src/routes/account_.access.tsx",
+        "src/routes/-restricted-talent-directory.tsx",
         "src/routes/alerts.manage.tsx",
         "src/routes/auth.employer.sign-up.tsx",
         "src/routes/auth.join.tsx",
@@ -433,8 +433,7 @@
         "src/routes/employers.index.tsx",
         "src/routes/jobs.locations.index.tsx",
         "src/routes/messages.tsx",
-        "src/routes/p.$handle.tsx",
-        "src/routes/talent.index.tsx"
+        "src/routes/p.$handle.tsx"
       ]
     },
     {
@@ -475,7 +474,6 @@
       "productionReferences": [
         "src/components/alert-manager.tsx",
         "src/components/auth-form.tsx",
-        "src/components/board/alerts-band.tsx",
         "src/components/custom-fields-group.tsx",
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",
@@ -589,7 +587,7 @@
       "name": "pagination",
       "status": "used",
       "productionReferences": [
-        "src/components/board/blog-archive-page.tsx",
+        "src/components/board/cursor-pagination.tsx",
         "src/components/board/listing-pagination.tsx"
       ]
     },
@@ -712,7 +710,7 @@
         "src/components/post-job-form.tsx",
         "src/components/preview/preview-emails.tsx",
         "src/components/preview/preview-toolbar.tsx",
-        "src/routes/account_.access.tsx",
+        "src/routes/-access-page.tsx",
         "src/routes/employers.dashboard.tsx",
         "src/routes/employers.onboarding.$slug.tsx"
       ]

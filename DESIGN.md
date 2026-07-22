@@ -142,6 +142,18 @@ Radius scale rides `--radius` in `src/theme.css` (cards use
 `--radius-xl`, controls `--radius-md`). Spacing is Tailwind default
 scale; no custom spacing tokens.
 
+Interactive links and cards share ONE focus ring:
+`focus-visible:ring-ring/50 focus-visible:ring-2` (use `focus-within` in
+its place only for the stretched-overlay-link card, matching
+`SearchResultCard`). Form-control primitives keep the shadcn default
+ring; do not invent a third focus idiom.
+
+Stacking order is the named z-index scale in `src/styles.css`
+(`--z-card-overlay` 1 → `--z-floating-stack` 40 → `--z-overlay` 50 →
+`--z-preview-toolbar` 60 → `--z-skip-link` 100). Reach for a token
+(`z-(--z-…)`, `after:z-(--z-card-overlay)`) instead of a magic `z-[…]`
+value so the layering order stays legible in one place.
+
 ## Layout primitives
 
 Token-backed geometry with constrained responsive APIs. These components deliberately omit `className` and `style`.
@@ -225,28 +237,6 @@ Defaults:
 Invariants:
 
 - Column count is constrained to one through four and spacing uses the shared token scale.
-
-### Stack — `src/components/layout/stack.tsx`
-
-Mobile-first flex layout for vertical or horizontal groups.
-
-Props:
-
-- `align?: Responsive<StackAlignment> | undefined`
-- `as?: Element | undefined`
-- `children?: ReactNode`
-- `direction?: Responsive<StackDirection> | undefined`
-- `gap?: Responsive<Space> | undefined`
-- `justify?: Responsive<StackJustification> | undefined`
-- `wrap?: "wrap" | "nowrap" | undefined`
-
-Defaults:
-
-- Column, zero gap, stretch alignment, start justification, and no wrapping.
-
-Invariants:
-
-- Responsive values always declare a base value and use the shared token scale.
 
 ## Components
 
@@ -364,17 +354,8 @@ Props:
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `onSubscribe: (input: JobAlertSubscribeInput) => Promise<{ status: "submitted"; }>`
-- `surface?: "accent" | "card" | undefined`
+- `surface?: "default" | "card" | undefined`
 - `title?: string | undefined`
-
-### AlertsBand — `src/components/board/alerts-band.tsx`
-
-Props:
-
-- `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
-- `language: string`
-- `onSubscribe: (input: JobAlertSubscribeInput) => Promise<{ status: "submitted"; }>`
-- `source: string`
 
 ### ApplyButton — `src/components/board/apply-button.tsx`
 
@@ -404,7 +385,7 @@ Props:
 - `description?: string | null | undefined`
 - `empty: BlogArchiveEmptyState`
 - `filters?: ReactNode`
-- `nextLink?: ReactNode`
+- `pagination?: ReactNode`
 - `posts: { id: string; object: "public_blog_post"; title: string; slug: string; featured: boolean; coverUrl: string | null; fe…`
 - `search?: ReactNode`
 - `title: string`
@@ -522,15 +503,17 @@ Props:
 Props:
 
 - `breadcrumb?: BreadcrumbData | undefined`
-- `companies: { id: string; object: "public_company"; name: string; slug: string; website: string | null; logoUrl: string | null; d…`
+- `companies: CompanyCardVM[]`
 - `count: number`
 - `detail: ReactNode`
 - `endAd?: AdPlacement | undefined`
-- `hasMore?: boolean | undefined`
+- `hasPreviousResults?: boolean | undefined`
 - `heading?: string | undefined`
 - `markets: { slug: string; name: string; }[]`
-- `onLoadMore?: (() => void) | undefined`
+- `nextCursor?: string | null | undefined`
+- `onNextResults?: (() => void) | undefined`
 - `onPageChange: (page: number) => void`
+- `onPreviousResults?: (() => void) | undefined`
 - `onSelectedCompanyPush: (companySlug: string) => void`
 - `onSelectedCompanyReplace: (companySlug: string) => void`
 - `page: number`
@@ -577,6 +560,28 @@ Props:
 - `size?: "sm" | "lg" | "md" | undefined`
 - `url: string`
 
+### CursorPagination — `src/components/board/cursor-pagination.tsx`
+
+Previous/Next pagination for CURSOR-only listings — the blog archives, the
+talent directory, and free-text company search. Their public SDK endpoints
+page by opaque forward cursor (they reject `offset` and return no total
+`count`), so numbered pages (`ListingPagination`) are impossible; this mirrors
+the hosted board's Previous/Next affordance on the same shadcn pagination
+primitives instead of a bespoke "load more" button.
+
+`Next` is a real, crawlable anchor pointing at the next cursor URL (SEO); the
+`onNext` handler upgrades the click to an in-app navigation. `Previous` has no
+backward cursor to link to, so it walks router history back and disables on
+the first page.
+
+Props:
+
+- `hasNext: boolean`
+- `hasPrevious: boolean`
+- `nextHref?: string | undefined`
+- `onNext?: (() => void) | undefined`
+- `onPrevious?: (() => void) | undefined`
+
 ### HomeLanding — `src/components/board/home-landing.tsx`
 
 Props:
@@ -589,11 +594,13 @@ Props:
 - `employersEnabled: boolean`
 - `jobs: JobCardVM[]`
 - `jobsCountLabel?: string | undefined`
+- `onSaveJob: (jobId: string) => Promise<void>`
 - `posts: { id: string; object: "public_blog_post"; title: string; slug: string; featured: boolean; coverUrl: string | null; fe…`
 - `postsCountLabel?: string | undefined`
 - `publicJobSubmission?: boolean | undefined`
 - `talent: { object: "talent_directory_entry"; handle: string | null; displayName: string | null; headline: string | null; locat…`
 - `talentCountLabel?: string | undefined`
+- `viewer: { emailVerified: boolean; } | null`
 
 ### JobAboutCompanyCard — `src/components/board/job-about-company-card.tsx`
 
@@ -612,6 +619,7 @@ Props:
 - `action?: ReactNode`
 - `compact?: boolean | undefined`
 - `layout?: "card" | "row" | undefined`
+- `linkTo?: "detail" | "workspace" | undefined`
 - `vm: JobCardVM`
 
 ### JobDetail — `src/components/board/job-detail.tsx`
@@ -633,7 +641,7 @@ Props:
 Props:
 
 - `compact?: boolean | undefined`
-- `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "full_time…`
+- `jobs: JobCardVM[]`
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `variant?: "grid" | "rows" | "compact" | undefined`
@@ -642,14 +650,12 @@ Props:
 
 Props:
 
-- `applySlot?: ReactNode`
+- `detail?: ReactNode`
 - `errorTitle: string`
 - `loadingLabel: string`
 - `onRetry: () => void`
 - `retryLabel: string`
-- `saveSlot?: ReactNode`
 - `status: "idle" | "loading" | "ready" | "error"`
-- `vm?: JobDetailVM | undefined`
 
 ### JobSearchPage — `src/components/board/job-search-page.tsx`
 
@@ -666,7 +672,7 @@ Props:
 - `filters: ListingFilters`
 - `gatedCount?: number | undefined`
 - `heading?: string | undefined`
-- `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "full_time…`
+- `jobs: JobCardVM[]`
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `onFiltersChange: (next: ListingFilters) => void`
@@ -810,36 +816,6 @@ Props:
 - `page: number`
 - `pageSize: number`
 
-### ListingRail — `src/components/board/listing-rail.tsx`
-
-Listing rail (CAV-511) — the sticky right-hand column of a search/browse
-listing (jobs search, the programmatic jobs pages, companies index). It
-seats, top to bottom:
-
- 1. An optional **operator ad seam** (`adSlot`). It renders FIRST and
-    renders NOTHING when absent — no ad network ships in this template.
-    An operator wires their own unit here without touching the layout, e.g.
-
-      <PageBody rail={<ListingRail adSlot={<MyAdUnit slot="listing-rail" />} … />}>
-
- 2. A **Related searches** card — the `relatedSearches` the browse API
-    already returns (jobs: category/skill terms; companies: market terms),
-    rendered as the same crawlable `TaxonomyTags` anchors used across the
-    board (the SEO internal-linking spine, never static text). The card is
-    omitted when there are no chips, so the rail stays honest.
-
-Pure markup over resolved props — the caller maps its `RelatedSearch[]` (or
-markets) to `{ key, name, href }` chips via the `@cavuno/board/paths`
-helpers, so this file never string-builds a path. `railHasContent` tells the
-route whether to switch `PageBody` into two-column rail mode at all (an empty
-rail must not leave a dead column).
-
-Props:
-
-- `adSlot?: ReactNode`
-- `relatedChips: TaxonomyChip[]`
-- `relatedTitle: string`
-
 ### PageBody — `src/components/board/page-body.tsx`
 
 Migration-only compatibility shell for detail surfaces that need a
@@ -912,6 +888,7 @@ Props:
 
 Props:
 
+- `block?: boolean | undefined`
 - `jobId: string`
 - `labels: { save: string; saving: string; saved: string; error: string; }`
 - `onSave: (jobId: string) => Promise<void>`
@@ -964,10 +941,25 @@ Props:
 
 ### TalentProfileIdentity — `src/components/board/talent-profile-content.tsx`
 
+The talent header block — the avatar + name + headline meta line + the
+location/availability badge row. Modeled on the job-detail and
+company-profile headers (`CompanySectionShell`, `JobDetail`): the mark sits
+left of a stacked name → headline → badges column, so every entity page
+opens the same way.
+
+`size="xl"` drives the full-page hero band (a larger avatar + an `md:text-3xl`
+title, matching the company/job hero); `size="lg"` is the condensed detail
+pane. `nameHref` turns the NAME into the link to the canonical `/p/{handle}`
+profile — the accessible route to the profile now that the "View profile"
+button is gone. It is left null on the canonical page itself and whenever the
+surface is a non-interactive placeholder.
+
 Props:
 
 - `headingAs?: "h1" | "h2" | undefined`
+- `nameHref?: string | null | undefined`
 - `showName?: boolean | undefined`
+- `size?: "lg" | "xl" | undefined`
 - `vm: TalentProfileVM`
 
 ### TalentSearchDetailState — `src/components/board/talent-search-detail-state.tsx`
@@ -985,11 +977,13 @@ Props:
 
 Props:
 
-- `candidates: { object: "talent_directory_entry"; handle: string | null; displayName: string | null; headline: string | null; locat…`
+- `candidates: TalentCardVM[]`
 - `detail: ReactNode`
 - `endAd?: AdPlacement | undefined`
-- `hasMore?: boolean | undefined`
+- `hasPreviousResults?: boolean | undefined`
+- `nextCursor?: string | null | undefined`
 - `onNextResults?: (() => void) | undefined`
+- `onPreviousResults?: (() => void) | undefined`
 - `onSelectedTalentPush: (handle: string) => void`
 - `onSelectedTalentReplace: (handle: string) => void`
 - `q?: string | undefined`
@@ -1020,6 +1014,7 @@ Props:
 Props:
 
 - `chips: TaxonomyChip[]`
+- `className?: string | undefined`
 - `overflow?: number | undefined`
 - `size?: "sm" | "lg" | "md" | undefined`
 
@@ -1107,18 +1102,6 @@ Props:
 - `location?: { slug: string; name?: string | undefined; } | null | undefined`
 - `locationSuggestions: LocationSuggestionState`
 
-### CompanySearchBar — `src/components/company-search-bar.tsx`
-
-The companies index keyword search (CAV-487, CAV-502) — a thin wrapper of
-the shared `ListingSearchBand`, so it is the SAME white panel the jobs and
-blog headers use (no duplicate search-band markup). Semantics unchanged: a
-free-text query matched against company name, submitting to the companies
-index results (`/companies?query=`), backed by `companies.search`.
-
-Props:
-
-- `defaultValue?: string | undefined`
-
 ### CompanySearchCombobox — `src/components/company-search-combobox.tsx`
 
 One unrestricted Companies search with canonical market suggestions.
@@ -1196,6 +1179,7 @@ the board header and each column's menu (system stages are immutable).
 
 Props:
 
+- `actions: PipelineActions`
 - `board: PipelineBoardVM`
 - `defaultOpenCardId?: string | undefined`
 - `defaultStageDialog?: StageDialogState | undefined`
@@ -1273,10 +1257,12 @@ stacked above it still keeps its `mb-4` gap and never overlaps. This lets
 the dock be flush-bottom whether or not the job-alert prompt is present,
 without the prompt losing its float margin when the dock is absent.
 
-The container sits at `z-40` — below the `z-50` overlay layer — so menus,
-popovers, and dialogs (which portal to the body at `z-50`) still render
-above the stack. It is `pointer-events-none` so empty gaps never trap
-clicks meant for the page; each item re-enables pointer events.
+The container sits at `--z-floating-stack` (40) — below the
+`--z-overlay` (50) layer (see the z-index scale in `src/styles.css`) — so
+menus, popovers, and dialogs (which portal to the body at that overlay
+level) still render above the stack. It is `pointer-events-none` so empty
+gaps never trap clicks meant for the page; each item re-enables pointer
+events.
 
 Props:
 
@@ -1731,21 +1717,6 @@ Props:
 - `locationSuggestions: LocationSuggestionState`
 - `profile: { id: string; object: "candidate_profile"; displayName: string | null; bio: string | null; avatarUrl: string | null; …`
 
-### ProgrammaticJobsView — `src/components/programmatic-jobs-view.tsx`
-
-Props:
-
-- `count?: number | undefined`
-- `filters: JobsSearch`
-- `gatedCount?: number | undefined`
-- `heading: string`
-- `jobs: { id: string; object: "job_card"; slug: string; title: string; publishedAt: string | null; employmentType: "full_time…`
-- `location?: { slug: string; label: string; } | undefined`
-- `origin?: string | undefined`
-- `page: number`
-- `pageSize: number`
-- `relatedSearches?: RelatedSearch[] | undefined`
-
 ### Prose — `src/components/prose.tsx`
 
 Props:
@@ -2139,6 +2110,7 @@ Props:
 Props:
 
 - `size?: "default" | "sm" | undefined`
+- `variant?: "default" | "elevated" | undefined`
 
 ### CardAction — `src/components/ui/card.tsx`
 
@@ -3115,9 +3087,9 @@ Primitives: CandidateAccountShell, CandidateShell, AccountShell, EmployerCompany
 
 ### Alert capture — `docs/patterns/alert-capture.md`
 
-The email job-alert subscribe surfaces — dark band, inline form, and floating prompt — over one subscribe contract.
+The email job-alert subscribe surfaces — inline form and floating prompt — over one subscribe contract.
 
-Primitives: AlertsBand, AlertSignupForm, JobAlertFloatingPrompt, Card, Field, FieldLabel, FieldDescription, FieldError, InputGroup, ButtonGroup, Button, Spinner
+Primitives: AlertSignupForm, JobAlertFloatingPrompt, Card, Field, FieldLabel, FieldDescription, FieldError, InputGroup, ButtonGroup, Button, Spinner
 
 ### Auth page — `docs/patterns/auth-page.md`
 
@@ -3175,9 +3147,9 @@ Primitives: Page, PageContent, JobsFilterControls, SearchResultsLayout, JobsResu
 
 ### Listing rail — `docs/patterns/listing-rail.md`
 
-The sticky right-hand rail of a search/browse listing — an operator ad seam over a related-searches card.
+The listing surface's operator ad seam plus its crawlable related-searches links, seated around the results column.
 
-Primitives: PageContent, ListingRail, TaxonomyTags
+Primitives: SearchResultsLayout, AdRail, Badge
 
 ### Messaging — `docs/patterns/messaging.md`
 
