@@ -4,10 +4,15 @@ import {
   STAT_PLACEHOLDER,
   toEmployerJobStatCellsVM,
   toEmployerJobStatsIndex,
+  toEmployerProfileViewsVM,
   toEmployerStatsChartVM,
 } from './employer-stats-view-model';
 
-import type { EmployerJobStat, EmployerJobStatsPoint } from '@cavuno/board';
+import type {
+  EmployerJobStat,
+  EmployerJobStatsPoint,
+  EmployerProfileViewsPoint,
+} from '@cavuno/board';
 
 function stat(overrides: Partial<EmployerJobStat> = {}): EmployerJobStat {
   return {
@@ -112,5 +117,51 @@ describe('toEmployerStatsChartVM', () => {
       'en-US',
     );
     expect(vm.isEmpty).toBe(true);
+  });
+});
+
+function viewsPoint(
+  overrides: Partial<EmployerProfileViewsPoint> = {},
+): EmployerProfileViewsPoint {
+  return {
+    object: 'employer_profile_views_point',
+    date: '2026-07-01',
+    views: 0,
+    ...overrides,
+  };
+}
+
+describe('toEmployerProfileViewsVM', () => {
+  it('formats the total and plots the sparkline when there are views', () => {
+    const vm = toEmployerProfileViewsVM(
+      1204,
+      [viewsPoint({ date: '2026-07-01', views: 4 }), viewsPoint({ date: '2026-07-02', views: 8 })],
+      'en-US',
+    );
+
+    expect(vm.total).toBe('1,204');
+    expect(vm.isEmpty).toBe(false);
+    expect(vm.points).toHaveLength(2);
+    expect(vm.points[0]).toMatchObject({ date: '2026-07-01', views: 4 });
+    expect(vm.points[0].label).not.toBe('');
+  });
+
+  it('is the honest zero state when the total is zero (also covers an outage)', () => {
+    const vm = toEmployerProfileViewsVM(0, [], 'en-US');
+
+    expect(vm.total).toBe('0');
+    expect(vm.isEmpty).toBe(true);
+    expect(vm.points).toEqual([]);
+  });
+
+  it('never plots an all-zero sparkline even when buckets exist', () => {
+    const vm = toEmployerProfileViewsVM(
+      0,
+      [viewsPoint({ views: 0 }), viewsPoint({ views: 0 })],
+      'en-US',
+    );
+
+    expect(vm.isEmpty).toBe(true);
+    expect(vm.points).toEqual([]);
   });
 });

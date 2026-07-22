@@ -284,6 +284,7 @@
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",
         "src/components/employer-job-form.tsx",
+        "src/components/employer/employer-profile-views-stat.tsx",
         "src/components/employer/employer-stats-chart.tsx",
         "src/components/experience-section.tsx",
         "src/components/languages-section.tsx",
@@ -315,6 +316,7 @@
       "name": "chart",
       "status": "used",
       "productionReferences": [
+        "src/components/employer/employer-profile-views-stat.tsx",
         "src/components/employer/employer-stats-chart.tsx"
       ]
     },
@@ -707,6 +709,7 @@
       "productionReferences": [
         "src/components/board/alert-signup-form.tsx",
         "src/components/company-search-combobox.tsx",
+        "src/components/employer/employer-profile-views-stat.tsx",
         "src/components/employer/employer-stats-chart.tsx",
         "src/components/keyword-combobox.tsx",
         "src/components/location-combobox.tsx",

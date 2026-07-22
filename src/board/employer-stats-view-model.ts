@@ -1,6 +1,10 @@
 import { formatDate } from '@cavuno/board/format';
 
-import type { EmployerJobStat, EmployerJobStatsPoint } from '@cavuno/board';
+import type {
+  EmployerJobStat,
+  EmployerJobStatsPoint,
+  EmployerProfileViewsPoint,
+} from '@cavuno/board';
 
 /**
  * Employer job-stats VIEW-MODEL — the Layer-1b seam for the reporting funnel
@@ -113,5 +117,55 @@ export function toEmployerStatsChartVM(
     isEmpty: rows.length === 0 || (totalViews === 0 && totalApplyClicks === 0),
     totalViews,
     totalApplyClicks,
+  };
+}
+
+/** One resolved profile-views sparkline bucket. */
+export interface EmployerProfileViewsPointVM {
+  /** The raw `YYYY-MM-DD` bucket key (recharts XAxis dataKey). */
+  date: string;
+  /** Short, locale-formatted date for the tooltip heading. */
+  label: string;
+  views: number;
+}
+
+/**
+ * The resolved profile-views summary for the company-profile page header — a
+ * number-formatted total plus an optional sparkline. `isEmpty` gates the honest
+ * "No views yet" state: it's true when the total is zero (which also covers an
+ * analytics outage, since the endpoint zero-fills). The sparkline is only worth
+ * drawing when a bucket actually has a view, so `points` is left empty until then.
+ */
+export interface EmployerProfileViewsVM {
+  /** Locale-formatted total over the window (e.g. "1,204"). */
+  total: string;
+  /** True when there is nothing to report — drives "No views yet". */
+  isEmpty: boolean;
+  /** Sparkline buckets, or `[]` when every bucket is zero (nothing to plot). */
+  points: EmployerProfileViewsPointVM[];
+}
+
+/**
+ * Resolve the profile-views header stat. `total` is the authoritative
+ * last-30-days summary (from `profileStats.retrieve`); `points` is the daily
+ * timeseries for the sparkline. Both degrade to the empty state on zero.
+ */
+export function toEmployerProfileViewsVM(
+  total: number,
+  points: readonly EmployerProfileViewsPoint[],
+  language: string,
+): EmployerProfileViewsVM {
+  const rows: EmployerProfileViewsPointVM[] = points.map((point) => ({
+    date: point.date,
+    label: formatDate(language, point.date) ?? point.date,
+    views: point.views,
+  }));
+  const hasPlottableViews = rows.some((row) => row.views > 0);
+  return {
+    total: total.toLocaleString(language),
+    isEmpty: total === 0,
+    // Never plot a flat all-zero sparkline — leave it empty so the stat stands
+    // alone with its honest zero state instead of a dead axis.
+    points: hasPlottableViews ? rows : [],
   };
 }

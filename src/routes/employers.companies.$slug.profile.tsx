@@ -10,6 +10,7 @@
 import { useState } from 'react';
 
 import {
+  Await,
   createFileRoute,
   getRouteApi,
   useRouter,
@@ -26,10 +27,20 @@ import {
   toSocialUrl,
 } from '../lib/post-form';
 import { m } from '../paraglide/messages';
-import { getCompanyWorkspace, updateCompany } from '../server/employers';
+import {
+  getCompanyWorkspace,
+  getEmployerProfileStats,
+  getEmployerProfileStatsTimeseries,
+  updateCompany,
+} from '../server/employers';
 import { getSeoBase, getCompany } from '../server/queries';
 
+import { toEmployerProfileViewsVM } from '@/board/employer-stats-view-model';
 import { EmployerIdentityAvatar } from '@/components/account-shell';
+import {
+  EmployerProfileViewsStat,
+  EmployerProfileViewsStatPending,
+} from '@/components/employer/employer-profile-views-stat';
 import { Page, PageContent } from '@/components/layout/page';
 import { Text } from '@/components/text';
 import { RichTextEditor } from '@/components/rich-text-editor';
@@ -50,6 +61,7 @@ import {
   InputGroupText,
 } from '@/components/ui/input-group';
 import { headTitle } from '@/lib/page-title';
+import type { EmployerProfileViewsPoint } from '@cavuno/board';
 
 const rootApi = getRouteApi('__root__');
 
@@ -61,7 +73,21 @@ export const Route = createFileRoute('/employers/companies/$slug/profile')({
         getCompany({ data: { companySlug: params.slug } }),
         getSeoBase(),
       ]);
-      return { workspace, company, seo };
+      // Reporting is non-critical: defer both profile-views reads so a slow or
+      // failing analytics backend never blocks the profile form's first paint.
+      // They stream in together via a single <Await>-able promise (stable across
+      // re-renders); each read degrades to zeros (the stat shows its honest
+      // "No views yet" state) and is never fatal. The retrieve endpoint itself
+      // zero-fills on outage.
+      const profileViews = Promise.all([
+        getEmployerProfileStats({ data: { slug: params.slug } })
+          .then((result) => result.profileViews)
+          .catch(() => 0),
+        getEmployerProfileStatsTimeseries({ data: { slug: params.slug } })
+          .then((result) => result.data)
+          .catch(() => [] as EmployerProfileViewsPoint[]),
+      ]).then(([total, points]) => ({ total, points }));
+      return { workspace, company, seo, profileViews };
     } catch (error) {
       return await handleEmployerLoaderError(
         error,
@@ -92,7 +118,13 @@ function stripProtocol(url: string): string {
 
 function CompanyProfilePage() {
   const { workspace, company } = Route.useLoaderData();
-  rootApi.useLoaderData();
+  const { board } = rootApi.useLoaderData();
+  // Typed as possibly-undefined: the loader always supplies this on the happy
+  // path, but component-level tests spy the loader data without it, so the
+  // render guards on its presence rather than assuming the deferred promise.
+  const { profileViews } = Route.useLoaderData() as {
+    profileViews?: Promise<{ total: number; points: EmployerProfileViewsPoint[] }>;
+  };
 
   return (
     <Page width="content">
@@ -119,6 +151,24 @@ function CompanyProfilePage() {
               </a>
             ) : null}
           </header>
+
+          {/* Profile-views stat — deferred (streamed via <Await>) so a slow or
+              failing analytics backend never blocks the form. Its zero state
+              covers the no-views window; the fallback reserves its space.
+              Guarded on the promise so the existing loader-spied tests (which
+              don't supply it) still render the form unchanged. */}
+          {profileViews ? (
+            <Await
+              promise={profileViews}
+              fallback={<EmployerProfileViewsStatPending />}
+            >
+              {({ total, points }) => (
+                <EmployerProfileViewsStat
+                  vm={toEmployerProfileViewsVM(total, points, board.language)}
+                />
+              )}
+            </Await>
+          ) : null}
 
           <ProfileEditorCard slug={workspace.slug} company={company} />
 

@@ -304,6 +304,47 @@ export const getEmployerJobStatsTimeseries = createServerFn({ method: 'GET' })
     ),
   );
 
+// ── Reporting — company profile-page views ──────────────────────────────────
+
+/**
+ * The company's profile-page view total over the API's last-30-days window
+ * (`/companies/{slug}` itself, tabs + bots excluded). A gated read like the
+ * workspace; carries no cache tags, so it stays no-store under the authed
+ * read-cache policy. The endpoint zero-fills on an analytics outage, so a `0`
+ * means "no views" OR "analytics briefly down" — the surface renders an honest
+ * empty state either way.
+ */
+export const getEmployerProfileStats = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, () =>
+      getBoard().me.companies.profileStats.retrieve(data.slug, {
+        headers: authedHeaders(context),
+      }),
+    ),
+  );
+
+/**
+ * Daily profile-page views, ascending by date. Defaults to the API's
+ * last-30-days window when `since`/`until` are omitted. Gated read, no cache
+ * tags — no-store like the summary retrieve.
+ */
+export const getEmployerProfileStatsTimeseries = createServerFn({
+  method: 'GET',
+})
+  .validator((input: { slug: string; since?: string; until?: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, () =>
+      getBoard().me.companies.profileStats.timeseries(
+        data.slug,
+        { since: data.since, until: data.until },
+        { headers: authedHeaders(context) },
+      ),
+    ),
+  );
+
 // ── ATS — applicants + pipeline stages ──────────────────────────────────────
 
 /** One job's pipeline (job header + stage rail + applicants with timelines). */

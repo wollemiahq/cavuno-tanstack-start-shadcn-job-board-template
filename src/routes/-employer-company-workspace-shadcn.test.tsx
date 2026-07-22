@@ -24,6 +24,8 @@ const mocks = vi.hoisted(() => ({
   getCompanyWorkspace: vi.fn(),
   getEmployerJobStats: vi.fn(),
   getEmployerJobStatsTimeseries: vi.fn(),
+  getEmployerProfileStats: vi.fn(),
+  getEmployerProfileStatsTimeseries: vi.fn(),
   getCompany: vi.fn(),
   getJob: vi.fn(),
   getSeoBase: vi.fn(),
@@ -88,6 +90,8 @@ vi.mock('../server/employers', () => ({
   getCompanyWorkspace: mocks.getCompanyWorkspace,
   getEmployerJobStats: mocks.getEmployerJobStats,
   getEmployerJobStatsTimeseries: mocks.getEmployerJobStatsTimeseries,
+  getEmployerProfileStats: mocks.getEmployerProfileStats,
+  getEmployerProfileStatsTimeseries: mocks.getEmployerProfileStatsTimeseries,
   getJob: mocks.getJob,
   getPipeline: mocks.getPipeline,
   moveApplicant: mocks.moveApplicant,
@@ -221,6 +225,11 @@ beforeEach(() => {
   // override them to exercise the join and the chart.
   mocks.getEmployerJobStats.mockResolvedValue({ data: [] });
   mocks.getEmployerJobStatsTimeseries.mockResolvedValue({ data: [] });
+  mocks.getEmployerProfileStats.mockResolvedValue({
+    object: 'employer_profile_stats',
+    profileViews: 0,
+  });
+  mocks.getEmployerProfileStatsTimeseries.mockResolvedValue({ data: [] });
   // The applicants loader gates on the native-applications feature flag;
   // default it on so the existing pipeline tests exercise the API path.
   mocks.getBoardContext.mockResolvedValue({
@@ -670,6 +679,58 @@ describe('employer company workspace', () => {
       target: { value: 'https://www.linkedin.com/company/northstar' },
     });
     expect(linkedin).toHaveValue('company/northstar');
+  });
+
+  it('streams the profile-views stat into the header once the deferred read resolves', async () => {
+    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
+      workspace: { slug: 'northstar-labs', membership: { company } },
+      company,
+      profileViews: Promise.resolve({
+        total: 1204,
+        points: [
+          {
+            object: 'employer_profile_views_point',
+            date: '2026-07-01',
+            views: 4,
+          },
+          {
+            object: 'employer_profile_views_point',
+            date: '2026-07-02',
+            views: 8,
+          },
+        ],
+      }),
+    } as never);
+
+    const ProfilePage = ProfileRoute.options.component;
+    if (!ProfilePage) throw new Error('needs a component');
+    // The deferred stat suspends via <Await>; await the render so the resolved
+    // promise flushes inside act (the strict setup rejects un-awaited suspense).
+    await act(async () => {
+      render(<ProfilePage />);
+    });
+
+    expect(
+      screen.getByText('Profile views · last 30 days'),
+    ).toBeInTheDocument();
+    // 'en-AU' locale (from the mocked root loader) groups thousands with commas.
+    expect(screen.getByText('1,204')).toBeInTheDocument();
+  });
+
+  it('shows the honest zero state when the company has no profile views yet', async () => {
+    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
+      workspace: { slug: 'northstar-labs', membership: { company } },
+      company,
+      profileViews: Promise.resolve({ total: 0, points: [] }),
+    } as never);
+
+    const ProfilePage = ProfileRoute.options.component;
+    if (!ProfilePage) throw new Error('needs a component');
+    await act(async () => {
+      render(<ProfilePage />);
+    });
+
+    expect(screen.getByText('No views yet')).toBeInTheDocument();
   });
 
   it('renders the applicant pipeline as a kanban board with cards in their stage column', () => {

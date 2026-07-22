@@ -522,13 +522,9 @@ Props:
 - `count: number`
 - `detail: ReactNode`
 - `endAd?: AdPlacement | undefined`
-- `hasPreviousResults?: boolean | undefined`
 - `heading?: string | undefined`
 - `markets: { slug: string; name: string; }[]`
-- `nextCursor?: string | null | undefined`
-- `onNextResults?: (() => void) | undefined`
 - `onPageChange: (page: number) => void`
-- `onPreviousResults?: (() => void) | undefined`
 - `onSelectedCompanyPush: (companySlug: string) => void`
 - `onSelectedCompanyReplace: (companySlug: string) => void`
 - `page: number`
@@ -993,14 +989,15 @@ Props:
 Props:
 
 - `candidates: TalentCardVM[]`
+- `count: number`
 - `detail: ReactNode`
 - `endAd?: AdPlacement | undefined`
-- `hasPreviousResults?: boolean | undefined`
-- `nextCursor?: string | null | undefined`
-- `onNextResults?: (() => void) | undefined`
-- `onPreviousResults?: (() => void) | undefined`
+- `language: string`
+- `onPageChange: (page: number) => void`
 - `onSelectedTalentPush: (handle: string) => void`
 - `onSelectedTalentReplace: (handle: string) => void`
+- `page: number`
+- `pageSize: number`
 - `q?: string | undefined`
 - `selectedTalent?: string | undefined`
 - `skill?: string | undefined`
@@ -1200,6 +1197,24 @@ Props:
 - `defaultStageDialog?: StageDialogState | undefined`
 - `jobId: string`
 - `slug: string`
+
+### EmployerProfileViewsStat — `src/components/employer/employer-profile-views-stat.tsx`
+
+Compact profile-views stat for the company-profile page header — the
+last-30-days total, with a small sparkline when there is anything to plot.
+Presentational only: it renders from a resolved {@link EmployerProfileViewsVM}
+(the number formatting, the honest "No views yet" zero state, and whether the
+sparkline is worth drawing are all decided by the mapper).
+
+Props:
+
+- `vm: EmployerProfileViewsVM`
+
+### EmployerProfileViewsStatPending — `src/components/employer/employer-profile-views-stat.tsx`
+
+Deferred-load fallback for {@link EmployerProfileViewsStat} — the same compact
+card with a spinner, so the profile form paints first and the stat reserves
+its space instead of shifting layout when the data streams in.
 
 ### EmployerStatsChart — `src/components/employer/employer-stats-chart.tsx`
 
