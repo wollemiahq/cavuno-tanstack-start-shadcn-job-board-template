@@ -19,6 +19,7 @@ export function SaveJobButton({
   onSave,
   onSaved,
   presentation = 'default',
+  block = false,
 }: {
   jobId: string;
   viewer: { emailVerified: boolean } | null;
@@ -32,6 +33,8 @@ export function SaveJobButton({
   onSave: (jobId: string) => Promise<void>;
   onSaved?: () => Promise<void> | void;
   presentation?: 'default' | 'icon';
+  /** Fill the container width — for the sidebar's two-up actions row. */
+  block?: boolean;
 }) {
   const [trackedJobId, setTrackedJobId] = useState(jobId);
   const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'error'>(
@@ -46,6 +49,8 @@ export function SaveJobButton({
   const iconOnly = presentation === 'icon';
   const controlVariant = iconOnly ? 'ghost' : 'outline';
   const controlSize = iconOnly ? 'icon' : 'lg';
+  // Full-width only makes sense for the text presentation (icon stays square).
+  const blockClass = block && !iconOnly ? 'w-full' : undefined;
 
   function controlLabel(
     label: string,
@@ -81,6 +86,7 @@ export function SaveJobButton({
             variant: controlVariant,
             size: controlSize,
           }),
+          blockClass,
         )}
       >
         {controlLabel(labels.save, 'idle')}
@@ -98,6 +104,7 @@ export function SaveJobButton({
             variant: controlVariant,
             size: controlSize,
           }),
+          blockClass,
         )}
       >
         {controlLabel(labels.save, 'idle')}
@@ -115,6 +122,7 @@ export function SaveJobButton({
             variant: controlVariant,
             size: controlSize,
           }),
+          blockClass,
         )}
       >
         {controlLabel(labels.saved, 'saved')}
@@ -123,13 +131,15 @@ export function SaveJobButton({
   }
 
   return (
-    <div className={cn('flex flex-col gap-1', iconOnly && 'relative')}>
+    <div
+      className={cn('flex flex-col gap-1', iconOnly && 'relative', blockClass)}
+    >
       <Button
         type="button"
         variant={iconOnly ? 'ghost' : 'outline'}
         size={iconOnly ? 'icon' : 'lg'}
         data-presentation={presentation}
-        className={cn(state === 'saving' && 'cursor-wait')}
+        className={cn(state === 'saving' && 'cursor-wait', blockClass)}
         disabled={state === 'saving'}
         onClick={async () => {
           setState('saving');

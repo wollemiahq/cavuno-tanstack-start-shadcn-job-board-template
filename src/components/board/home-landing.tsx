@@ -1,10 +1,12 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import { ArrowRight, Search } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
 import type { JobCardVM } from '@/board/job-view-model';
-import { CompanyAvatar } from '@/components/board/company-avatar';
+import { CompanyCard } from '@/components/board/company-card';
+import { JobCard } from '@/components/board/job-card';
+import { SaveJobButton } from '@/components/board/save-job-button';
 import { Bleed } from '@/components/layout/bleed';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
@@ -18,7 +20,6 @@ import {
 import { DitherCanvas } from '@/components/marketing/dither-canvas';
 import { PostCard } from '@/components/post-card';
 import { TalentCard } from '@/components/talent-card';
-import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import {
   Card,
@@ -35,20 +36,20 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { clampList } from '@/lib/clamp-list';
 import type {
   PublicBlogPostSummary,
   TalentDirectoryEntry,
 } from '@cavuno/board';
-
-const MAX_JOB_TAGS = 2;
 
 export interface HomeCompanyCard {
   id: string;
   slug: string;
   name: string;
   logoUrl: string | null;
+  /** Long-form company description (pre-sanitized HTML) or null. */
   description: string | null;
+  publishedJobCount: number;
+  /** Pre-resolved, pluralized "N open job(s)" label from the route. */
   openJobsLabel: string;
 }
 
@@ -92,7 +93,7 @@ function CategoryBrowse({ categories }: { categories: HomeCategoryCard[] }) {
             <CardContent className="flex flex-col gap-1">
               <a
                 href={category.href}
-                className="focus-visible:ring-ring/30 text-foreground rounded-sm text-sm font-medium outline-none after:absolute after:inset-0 after:z-[1] after:rounded-[inherit] hover:underline focus-visible:ring-3"
+                className="focus-visible:ring-ring/50 text-foreground rounded-sm text-sm font-medium outline-none after:absolute after:inset-0 after:z-(--z-card-overlay) after:rounded-[inherit] hover:underline focus-visible:ring-2"
               >
                 {category.name}
               </a>
@@ -106,87 +107,6 @@ function CategoryBrowse({ categories }: { categories: HomeCategoryCard[] }) {
         </li>
       ))}
     </Grid>
-  );
-}
-
-function HomeJobCard({ vm }: { vm: JobCardVM }) {
-  const title =
-    vm.hasDetailLink && vm.companySlug && vm.jobSlug ? (
-      <Link
-        to="/companies/$companySlug/jobs/$jobSlug"
-        params={{ companySlug: vm.companySlug, jobSlug: vm.jobSlug }}
-        className="focus-visible:ring-ring/30 rounded-sm outline-none after:absolute after:inset-0 after:z-[1] after:rounded-[inherit] hover:underline focus-visible:ring-3"
-      >
-        {vm.title}
-      </Link>
-    ) : (
-      vm.title
-    );
-  const { visible: visibleTags, overflow: hiddenTagCount } = clampList(
-    vm.tags,
-    MAX_JOB_TAGS,
-  );
-
-  return (
-    <article className="h-full">
-      <Card className="relative h-full transition-shadow hover:shadow-md">
-        <CardHeader>
-          <div className="flex items-start gap-3">
-            <CompanyAvatar
-              name={vm.companyAvatarName}
-              logoUrl={vm.companyLogoUrl}
-              size="lg"
-            />
-            <div className="min-w-0 flex-1">
-              {vm.companyName ? (
-                <p className="text-muted-foreground text-xs font-medium">
-                  {vm.companyName}
-                </p>
-              ) : null}
-              <CardTitle>
-                <h3 className="line-clamp-2 text-balance">{title}</h3>
-              </CardTitle>
-              {vm.summary ? (
-                <CardDescription className="line-clamp-2">
-                  {vm.summary}
-                </CardDescription>
-              ) : null}
-            </div>
-          </div>
-        </CardHeader>
-
-        {vm.compLine ? (
-          <CardContent>
-            <p className="text-sm font-medium">{vm.compLine}</p>
-          </CardContent>
-        ) : null}
-
-        {visibleTags.length > 0 || vm.postedAtLabel ? (
-          <CardFooter className="mt-auto flex-wrap gap-2">
-            {visibleTags.map((tag) => (
-              <Badge
-                key={tag.key}
-                variant="secondary"
-                className="relative z-10"
-                render={<a href={tag.href} />}
-              >
-                {tag.name}
-              </Badge>
-            ))}
-            {hiddenTagCount > 0 ? (
-              <span className="text-muted-foreground text-xs">
-                +{hiddenTagCount}
-              </span>
-            ) : null}
-            {vm.postedAtLabel ? (
-              <span className="text-muted-foreground ml-auto text-xs">
-                {vm.postedAtLabel}
-              </span>
-            ) : null}
-          </CardFooter>
-        ) : null}
-      </Card>
-    </article>
   );
 }
 
@@ -206,34 +126,19 @@ function HiringIndex({
         <ViewAllAction label={m.home_viewAllCompaniesLabel()} to="/companies" />
       }
     >
-      <Grid as="ul" columns={{ base: 1, sm: 2, lg: 3 }} gap="3">
+      <Grid as="ul" columns={{ base: 1, sm: 2, lg: 3 }} gap="4">
         {companies.map((company) => (
-          <li key={company.id}>
-            <Card size="sm" className="relative h-full transition-shadow hover:shadow-md">
-              <CardHeader>
-                <div className="flex items-start gap-3">
-                  <CompanyAvatar
-                    name={company.name}
-                    logoUrl={company.logoUrl}
-                    size="lg"
-                  />
-                  <div className="min-w-0">
-                    <CardTitle>
-                      <h3 className="line-clamp-2">
-                        <Link
-                          to="/companies/$companySlug"
-                          params={{ companySlug: company.slug }}
-                          className="focus-visible:ring-ring/30 rounded-sm outline-none after:absolute after:inset-0 after:z-[1] after:rounded-[inherit] hover:underline focus-visible:ring-3"
-                        >
-                          {company.name}
-                        </Link>
-                      </h3>
-                    </CardTitle>
-                    <CardDescription>{company.openJobsLabel}</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
+          <li key={company.id} className="h-full">
+            {/* Reuse the shared CompanyCard (the companies index card) rather
+                than a call-site pill variant — one design system. */}
+            <CompanyCard
+              companySlug={company.slug}
+              name={company.name}
+              logoUrl={company.logoUrl}
+              description={company.description}
+              publishedJobCount={company.publishedJobCount}
+              jobCountLabel={company.openJobsLabel}
+            />
           </li>
         ))}
       </Grid>
@@ -283,6 +188,8 @@ export function HomeLanding({
   candidatesEnabled,
   employersEnabled,
   publicJobSubmission = false,
+  viewer,
+  onSaveJob,
 }: {
   jobs: JobCardVM[];
   /** Pre-resolved "N jobs" eyebrow for the Latest jobs section. */
@@ -301,7 +208,19 @@ export function HomeLanding({
   candidatesEnabled: boolean;
   employersEnabled: boolean;
   publicJobSubmission?: boolean;
+  /**
+   * Signed-in candidate (or `null` when anonymous), threaded from the root
+   * loader by the route — same source the `/jobs` surfaces read. Gates the
+   * per-card save control exactly like the workspace list (anonymous → a
+   * sign-in redirect affordance).
+   */
+  viewer: { emailVerified: boolean } | null;
+  /** Persists a saved job — the route forwards the `saveJob` server function. */
+  onSaveJob: (jobId: string) => Promise<void>;
 }) {
+  // Return here after the save flow's sign-in / verify-email detour (mirrors
+  // the `/jobs` list, which reads the current href the same way).
+  const returnTo = useLocation({ select: (location) => location.href });
   const latestJobs = jobs;
   const hiringCompanies = companies;
   const latestPosts = posts ?? [];
@@ -383,7 +302,25 @@ export function HomeLanding({
             <Grid as="ul" columns={{ base: 1, md: 2 }} gap="5">
               {latestJobs.map((vm) => (
                 <li key={vm.id}>
-                  <HomeJobCard vm={vm} />
+                  <JobCard
+                    vm={vm}
+                    linkTo="workspace"
+                    action={
+                      <SaveJobButton
+                        jobId={vm.id}
+                        viewer={viewer}
+                        returnTo={returnTo}
+                        presentation="icon"
+                        labels={{
+                          save: m.companyJobDetail_saveJobLabel(),
+                          saving: m.companyJobDetail_savingLabel(),
+                          saved: m.companyJobDetail_savedViewInAccountLabel(),
+                          error: m.saveJobButton_errorText(),
+                        }}
+                        onSave={onSaveJob}
+                      />
+                    }
+                  />
                 </li>
               ))}
             </Grid>

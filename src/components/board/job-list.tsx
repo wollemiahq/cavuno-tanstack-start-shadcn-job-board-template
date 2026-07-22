@@ -2,7 +2,6 @@ import { boardCopy } from '#/copy';
 
 import { Search } from 'lucide-react';
 
-import { toJobCardVM } from '@/board/job-view-model';
 import { JobCard } from '@/components/board/job-card';
 import {
   Empty,
@@ -16,12 +15,12 @@ import {
  * Card tiles, or single-column Lumen-style listing rows, with the
  * collection's `Empty` when nothing matches.
  *
- * Thin binding layer: takes the loader's `PublicJobCard[]` and maps each
- * to a `JobCardVM` for the pure-markup `JobCard`. Consumers keep passing
- * wire cards; the view-model boundary lives here so every list surface
- * shares it (ADR-0070).
+ * Pure MARKUP over `JobCardVM[]` (ADR-0070 Layer 2): the loader/pane maps
+ * `PublicJobCard[]` through `toJobCardVM` before handing this list the
+ * resolved cards, so the view-model seam lives outside the presentation
+ * layer and this file imports no `@cavuno/board` wire types or mappers.
  */
-import type { PublicJobCard } from '@cavuno/board';
+import type { JobCardVM } from '@/board/job-view-model';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 export function JobList({
@@ -31,7 +30,7 @@ export function JobList({
   variant = 'grid',
   compact = false,
 }: {
-  jobs: PublicJobCard[];
+  jobs: JobCardVM[];
   language: string;
   /** Operator label overrides (`board.context().labels`), ADR-0059. */
   labels?: BoardLabelOverrides;
@@ -69,12 +68,8 @@ export function JobList({
   if (variant === 'rows') {
     return (
       <div className="flex flex-col gap-4">
-        {jobs.map((job) => (
-          <JobCard
-            key={job.id}
-            vm={toJobCardVM(job, language, labels)}
-            layout="row"
-          />
+        {jobs.map((vm) => (
+          <JobCard key={vm.id} vm={vm} layout="row" />
         ))}
       </div>
     );
@@ -83,12 +78,8 @@ export function JobList({
   if (variant === 'compact') {
     return (
       <div className="flex flex-col gap-4">
-        {jobs.map((job) => (
-          <JobCard
-            key={job.id}
-            vm={toJobCardVM(job, language, labels)}
-            compact
-          />
+        {jobs.map((vm) => (
+          <JobCard key={vm.id} vm={vm} compact />
         ))}
       </div>
     );
@@ -96,12 +87,8 @@ export function JobList({
 
   return (
     <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-      {jobs.map((job) => (
-        <JobCard
-          key={job.id}
-          vm={toJobCardVM(job, language, labels)}
-          compact={compact}
-        />
+      {jobs.map((vm) => (
+        <JobCard key={vm.id} vm={vm} compact={compact} />
       ))}
     </div>
   );

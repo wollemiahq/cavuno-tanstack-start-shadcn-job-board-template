@@ -30,11 +30,9 @@ const baseVM: JobCardVM = {
   companySlug: null,
   jobSlug: null,
   detailHref: null,
-  hasDetailLink: false,
   companyName: 'Acme',
   companyLogoUrl: null,
   companyAvatarName: 'Acme',
-  sector: 'Engineering',
   compLine: '$120k–$160k · Remote',
   salaryLabel: '$120k–$160k',
   locationLabel: 'Worldwide (Remote)',
@@ -82,11 +80,45 @@ describe('JobCard stress invariants', () => {
     expect(screen.queryByText(/^\+\d+$/)).toBeNull();
   });
 
-  it('omits the salary/location line when the VM has none', () => {
+  it('renders location and salary as separate lines like the workspace card, omitting salary when absent', () => {
     const { rerender } = render(<JobCard vm={baseVM} />);
-    expect(screen.getByText('$120k–$160k · Remote')).toBeTruthy();
-    rerender(<JobCard vm={{ ...baseVM, compLine: null }} />);
+    // Location uses the workspace string ("Worldwide (Remote)"), NOT the old
+    // combined "$… · Remote" compLine.
+    expect(screen.getByText('Worldwide (Remote)')).toBeTruthy();
+    expect(screen.getByText('$120k–$160k')).toBeTruthy();
     expect(screen.queryByText('$120k–$160k · Remote')).toBeNull();
+    // Salary omitted when the VM has none; location still shows.
+    rerender(<JobCard vm={{ ...baseVM, salaryLabel: null }} />);
+    expect(screen.queryByText('$120k–$160k')).toBeNull();
+    expect(screen.getByText('Worldwide (Remote)')).toBeTruthy();
+  });
+
+  it('orders the tile like the workspace result card: title → company → location → salary → description', () => {
+    const { container } = render(
+      <JobCard
+        vm={{ ...baseVM, postedAtLabel: '2d ago' }}
+        linkTo="detail"
+      />,
+    );
+    const text = (container.textContent ?? '').replace(/\s+/g, ' ');
+    const order = [
+      'Staff Platform Engineer', // title first
+      'Acme', // company
+      'Worldwide (Remote)', // location
+      '$120k–$160k', // salary
+      'Own the deploy platform end to end.', // description
+      '2d ago', // posted-date footer
+    ].map((s) => text.indexOf(s));
+    // Every field present and in ascending document order.
+    expect(order.every((i) => i >= 0)).toBe(true);
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+  });
+
+  it('shows the relative posted-date label in the tile footer when the VM carries one', () => {
+    const { rerender } = render(<JobCard vm={baseVM} />);
+    expect(screen.queryByText('3w ago')).toBeNull();
+    rerender(<JobCard vm={{ ...baseVM, postedAtLabel: '3w ago' }} />);
+    expect(screen.getByText('3w ago')).toBeTruthy();
   });
 
   it('omits the summary when the VM has none', () => {
@@ -130,7 +162,6 @@ describe('JobCard title link (URL contract)', () => {
       companySlug: 'acme',
       jobSlug: 'staff-platform-engineer',
       detailHref: '/companies/acme/jobs/staff-platform-engineer',
-      hasDetailLink: true,
     });
     const link = await screen.findByRole('link', {
       name: 'Staff Platform Engineer',

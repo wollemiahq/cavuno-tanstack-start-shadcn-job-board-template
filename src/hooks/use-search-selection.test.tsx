@@ -7,7 +7,7 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useSearchSelection } from './use-search-selection';
 
@@ -55,6 +55,18 @@ function Harness({
         }}
         data-testid="detail-pane"
       />
+      <section
+        ref={(node) => {
+          selection.listRef.current = node;
+        }}
+        data-testid="results-list"
+      >
+        {jobSlugs.map((slug) => (
+          <div key={slug} data-result-id={slug}>
+            {slug}
+          </div>
+        ))}
+      </section>
       <a
         href="/companies/acme/jobs/second-job"
         onClick={(event) => selection.onResultActivate(event, 'second-job')}
@@ -129,5 +141,60 @@ describe('useSearchSelection', () => {
 
     fireEvent.click(screen.getByRole('link', { name: 'Second job' }));
     expect(onPush).not.toHaveBeenCalled();
+  });
+
+  describe('arrival scroll (URL-selected job aligns to list top)', () => {
+    // jsdom ships no scrollIntoView; the hook guards on its presence, so
+    // provide a spy to observe the arrival alignment.
+    const scrollIntoView = vi.fn();
+    beforeEach(() => {
+      scrollIntoView.mockClear();
+      Element.prototype.scrollIntoView = scrollIntoView;
+    });
+
+    it('scrolls the URL-selected row to the top on initial arrival', () => {
+      setDesktop(true);
+      render(
+        <Harness
+          selectedJob="second-job"
+          jobSlugs={['first-job', 'second-job', 'third-job']}
+        />,
+      );
+
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+      const target = scrollIntoView.mock.instances[0] as HTMLElement;
+      expect(target.getAttribute('data-result-id')).toBe('second-job');
+    });
+
+    it('does not scroll a later in-page selection made after arrival', () => {
+      setDesktop(true);
+      const { rerender } = render(
+        <Harness selectedJob={undefined} jobSlugs={['first-job', 'second-job']} />,
+      );
+      expect(scrollIntoView).not.toHaveBeenCalled();
+
+      // A click selects a row post-mount — the list must not jump.
+      rerender(
+        <Harness selectedJob="second-job" jobSlugs={['first-job', 'second-job']} />,
+      );
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    });
+
+    it('is a no-op when the arrived job is absent from this page', () => {
+      setDesktop(true);
+      render(
+        <Harness selectedJob="off-page" jobSlugs={['first-job', 'second-job']} />,
+      );
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    });
+
+    it('does not scroll on mobile', () => {
+      setDesktop(false);
+      render(
+        <Harness selectedJob="second-job" jobSlugs={['first-job', 'second-job']} />,
+      );
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    });
   });
 });

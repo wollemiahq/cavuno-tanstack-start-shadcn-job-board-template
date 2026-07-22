@@ -12,7 +12,11 @@ vi.mock('../server/queries', () => ({
   listCompanies: vi.fn(),
   listJobs: vi.fn(),
   listTalent: vi.fn(),
+  listTopJobCategories: vi.fn(),
   searchJobs: vi.fn(),
+}));
+vi.mock('../server/account', () => ({
+  saveJob: vi.fn(),
 }));
 
 import { Route } from './index';

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { toJobCardVM, toSavedJobCardVM } from './job-view-model';
+import {
+  collectCardTaxonomyCandidates,
+  toJobCardVM,
+  toSavedJobCardVM,
+} from './job-view-model';
 
 import type { PublicJob, PublicJobCard } from '@cavuno/board';
 
@@ -36,7 +40,6 @@ describe('toJobCardVM', () => {
     expect(vm.companySlug).toBe('acme-co');
     expect(vm.jobSlug).toBe('senior-engineer');
     expect(vm.detailHref).toBe('/companies/acme-co/jobs/senior-engineer');
-    expect(vm.hasDetailLink).toBe(true);
   });
 
   it('keeps salary and essential location metadata independently renderable', () => {
@@ -73,10 +76,47 @@ describe('toJobCardVM', () => {
     ]);
   });
 
-  it('carries the featured flag + resolved label and the sector', () => {
+  // The resolves-or-omits contract for card pills — identical semantics to the
+  // detail VM. A tag whose slug the taxonomy resolver rejects would link to a
+  // `/jobs/:slug` that 404s (facet/tag read-model drift), so when the loader
+  // supplies the resolvable map, non-resolving pills are dropped and survivors
+  // link via their canonical slug. An omitted map means "don't filter".
+  it('omits card tag pills whose slug does not resolve, canonicalising the rest', () => {
+    const twoTagJob = {
+      ...baseJob,
+      categories: [
+        { slug: 'engineering', name: 'Engineering' },
+        { slug: 'developer-relations', name: 'Developer Relations' },
+      ],
+      skills: [
+        { slug: 'react', name: 'React' },
+        { slug: 'sql', name: 'SQL' },
+      ],
+    } as unknown as PublicJobCard;
+
+    const filtered = toJobCardVM(twoTagJob, 'en', undefined, {
+      'category:developer-relations': 'developer-relations-canonical',
+      'skill:sql': 'sql',
+    });
+
+    expect(filtered.tags).toEqual([
+      {
+        key: 'c-developer-relations-canonical',
+        name: 'Developer Relations',
+        href: '/jobs/developer-relations-canonical',
+      },
+      { key: 's-sql', name: 'SQL', href: '/jobs/skills/sql' },
+    ]);
+  });
+
+  it('renders no card tag pills when nothing resolves (empty map)', () => {
+    const none = toJobCardVM(baseJob, 'en', undefined, {});
+    expect(none.tags).toEqual([]);
+  });
+
+  it('carries the featured flag + resolved label', () => {
     expect(vm.isFeatured).toBe(true);
     expect(vm.featuredLabel.length).toBeGreaterThan(0);
-    expect(vm.sector).toBe('Engineering');
     expect(vm.companyAvatarName).toBe('Acme Co');
   });
 
@@ -85,9 +125,38 @@ describe('toJobCardVM', () => {
       { ...baseJob, company: null } as unknown as PublicJobCard,
       'en',
     );
-    expect(noCompany.hasDetailLink).toBe(false);
     expect(noCompany.detailHref).toBeNull();
     expect(noCompany.companyAvatarName).toBe('Senior Engineer');
+  });
+});
+
+describe('collectCardTaxonomyCandidates', () => {
+  it('dedupes the tag slug union across a page of cards, one entry per type+slug', () => {
+    const cards = [
+      {
+        categories: [{ slug: 'engineering', name: 'Engineering' }],
+        skills: [{ slug: 'react', name: 'React' }],
+      },
+      {
+        // engineering repeats (dropped); data + typescript are new.
+        categories: [
+          { slug: 'engineering', name: 'Engineering' },
+          { slug: 'data', name: 'Data' },
+        ],
+        skills: [{ slug: 'typescript', name: 'TypeScript' }],
+      },
+    ] as unknown as PublicJobCard[];
+
+    expect(collectCardTaxonomyCandidates(cards)).toEqual([
+      { type: 'category', slug: 'engineering' },
+      { type: 'skill', slug: 'react' },
+      { type: 'category', slug: 'data' },
+      { type: 'skill', slug: 'typescript' },
+    ]);
+  });
+
+  it('returns an empty candidate set for a page with no cards', () => {
+    expect(collectCardTaxonomyCandidates([])).toEqual([]);
   });
 });
 

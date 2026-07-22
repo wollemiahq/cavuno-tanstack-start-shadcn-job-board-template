@@ -11,8 +11,12 @@ import '@testing-library/jest-dom/vitest';
  *  - the companies / blog / talent strips render their shared cards and are
  *    each OMITTED WHOLE when their collection is empty or their feature is off
  *    (the loader passes `null` and the section does not render);
- *  - the latest-jobs grid links each job to its typed detail route — the home
- *    page MUST carry job-detail links (the read.jobs doctor probes `/`);
+ *  - the latest-jobs grid reuses the shared `JobCard` (one design system: the
+ *    featured pill is a real Badge, the featured tile earns the primary ring)
+ *    and links each job into the `/jobs` two-pane workspace with that job
+ *    PRESELECTED (the `selectedJob` search param), not the standalone detail
+ *    page — the canonical job URL for crawlers stays on the `/jobs` listing and
+ *    in the homepage JSON-LD (emitted by the route from `links.public`);
  *  - the dual-path sign-up band mirrors `resolveSignupDestination`: the
  *    candidate card points at /auth/sign-up and the employer card at
  *    /auth/employer/sign-up, each shows ONLY when its role is enabled, and the
@@ -70,16 +74,14 @@ const job: JobCardVM = {
   companySlug: 'technova-labs',
   jobSlug: 'senior-backend-engineer',
   detailHref: '/companies/technova-labs/jobs/senior-backend-engineer',
-  hasDetailLink: true,
   companyName: 'TechNova Labs',
   companyLogoUrl: null,
   companyAvatarName: 'TechNova Labs',
-  sector: null,
   compLine: null,
   salaryLabel: null,
   locationLabel: 'Worldwide (Remote)',
   summary: null,
-  isFeatured: false,
+  isFeatured: true,
   featuredLabel: 'Featured',
   postedAtLabel: null,
   tags: [],
@@ -91,11 +93,9 @@ const productDesignerJob: JobCardVM = {
   companySlug: 'technova-labs',
   jobSlug: 'product-designer',
   detailHref: '/companies/technova-labs/jobs/product-designer',
-  hasDetailLink: true,
   companyName: 'TechNova Labs',
   companyLogoUrl: 'https://cdn.example.com/technova-logo.png',
   companyAvatarName: 'TechNova Labs',
-  sector: null,
   compLine: null,
   salaryLabel: null,
   locationLabel: 'Sydney, NSW (Hybrid)',
@@ -120,11 +120,9 @@ const machineLearningJob: JobCardVM = {
   companySlug: 'technova-labs',
   jobSlug: 'machine-learning-engineer',
   detailHref: '/companies/technova-labs/jobs/machine-learning-engineer',
-  hasDetailLink: true,
   companyName: 'TechNova Labs',
   companyLogoUrl: null,
   companyAvatarName: 'TechNova Labs',
-  sector: null,
   compLine: null,
   salaryLabel: null,
   locationLabel: 'Worldwide (Remote)',
@@ -144,7 +142,8 @@ const company: LandingProps['companies'][number] = {
   slug: 'technova-labs',
   name: 'TechNova Labs',
   logoUrl: null,
-  description: null,
+  description: '<p>We build robotics tooling for warehouses.</p>',
+  publishedJobCount: 3,
   openJobsLabel: '3 open jobs',
 };
 
@@ -154,7 +153,8 @@ const hiringCompanies: LandingProps['companies'] = [
     slug: 'fieldstone-robotics',
     name: 'Fieldstone Robotics',
     logoUrl: null,
-    description: null,
+    description: '<p>Autonomous field robots for agriculture.</p>',
+    publishedJobCount: 3,
     openJobsLabel: '3 open jobs',
   },
   {
@@ -163,6 +163,7 @@ const hiringCompanies: LandingProps['companies'] = [
     name: 'Brightpath Health',
     logoUrl: null,
     description: null,
+    publishedJobCount: 3,
     openJobsLabel: '3 open jobs',
   },
   company,
@@ -172,6 +173,7 @@ const hiringCompanies: LandingProps['companies'] = [
     name: 'Harborline Analytics',
     logoUrl: null,
     description: null,
+    publishedJobCount: 3,
     openJobsLabel: '3 open jobs',
   },
 ];
@@ -209,6 +211,8 @@ const baseProps: LandingProps = {
   boardName: 'Robotics Jobs',
   candidatesEnabled: true,
   employersEnabled: true,
+  viewer: { emailVerified: true },
+  onSaveJob: async () => {},
 };
 
 /** Mount the landing under a real router so its typed `Link`s resolve. */
@@ -302,15 +306,64 @@ describe('HomeLanding — pure landing hero', () => {
   });
 });
 
-describe('HomeLanding — latest jobs carry detail links (read.jobs doctor)', () => {
-  it('links each job to its typed detail route on the home page', async () => {
+describe('HomeLanding — latest jobs reuse the shared card into the workspace', () => {
+  it('links each job into the /jobs workspace with that job preselected, not the standalone detail page', async () => {
     renderLanding(baseProps);
     const link = await screen.findByRole('link', {
       name: 'Senior Backend Engineer',
     });
-    expect(link.getAttribute('href')).toBe(
-      '/companies/technova-labs/jobs/senior-backend-engineer',
+    const href = link.getAttribute('href') ?? '';
+    // Opens the two-pane workspace with the job in the detail pane, NOT the
+    // standalone /companies/{c}/jobs/{s} page.
+    expect(href).toMatch(/^\/jobs\?/);
+    expect(href).toContain('selectedJob=senior-backend-engineer');
+    expect(href).not.toContain('/companies/');
+  });
+
+  it('gives a signed-in candidate a save control on every job card, like the /jobs cards', async () => {
+    renderLanding(baseProps);
+    const jobsSection = await screen.findByRole('region', {
+      name: 'Latest jobs',
+    });
+    // One save Button per job (icon presentation exposes the "Save" label).
+    const saveButtons = within(jobsSection).getAllByRole('button', {
+      name: 'Save',
+    });
+    expect(saveButtons).toHaveLength(baseProps.jobs.length);
+  });
+
+  it('shows an anonymous visitor a sign-in redirect affordance for saving, not a live save button', async () => {
+    renderLanding({ ...baseProps, viewer: null });
+    const jobsSection = await screen.findByRole('region', {
+      name: 'Latest jobs',
+    });
+    // Anonymous: the save control is a link into the candidate sign-in flow
+    // (with a returnTo), mirroring the /jobs list — never a live save button.
+    expect(
+      within(jobsSection).queryByRole('button', { name: 'Save' }),
+    ).toBeNull();
+    const saveLinks = within(jobsSection).getAllByRole('link', {
+      name: 'Save',
+    });
+    expect(saveLinks.length).toBe(baseProps.jobs.length);
+    expect(saveLinks[0].getAttribute('href')).toMatch(
+      /^\/auth\/sign-in\?returnTo=/,
     );
+  });
+
+  it('renders the shared JobCard — a featured job earns the Badge pill and primary ring, not muted prose', async () => {
+    renderLanding(baseProps);
+    const link = await screen.findByRole('link', {
+      name: 'Senior Backend Engineer',
+    });
+    // The whole tile is the shared owned Card...
+    const cardTile = link.closest('[data-slot="card"]');
+    expect(cardTile).not.toBeNull();
+    expect(cardTile?.className).toContain('ring-primary');
+    // ...and "Featured" is a real Badge, not plain muted text.
+    const article = link.closest('article');
+    const featured = within(article as HTMLElement).getByText('Featured');
+    expect(featured).toHaveAttribute('data-slot', 'badge');
   });
 
   it('previews the latest real fixture roles rather than invented marketing content', async () => {
@@ -362,6 +415,23 @@ describe('HomeLanding — hiring index', () => {
       within(index).getByRole('link', { name: 'Harborline Analytics' }),
     ).toHaveAttribute('href', '/companies/harborline-analytics');
     expect(within(index).getAllByText('3 open jobs')).toHaveLength(4);
+  });
+
+  it('renders the shared CompanyCard with the company description, not a slim pill', async () => {
+    renderLanding(baseProps);
+    const index = await screen.findByRole('region', {
+      name: 'Companies hiring now',
+    });
+    // Shared owned Card surface (not a bespoke homepage pill).
+    expect(
+      index.querySelector('[data-slot="card"]'),
+    ).not.toBeNull();
+    // The clamped company description (flattened from the API's HTML) is shown.
+    expect(
+      within(index).getByText(
+        'Autonomous field robots for agriculture.',
+      ),
+    ).toBeTruthy();
   });
 
   it('omits the whole section when the board surfaced no companies', async () => {

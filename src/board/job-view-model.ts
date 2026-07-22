@@ -43,13 +43,10 @@ export interface JobCardVM {
   jobSlug: string | null;
   /** Canonical board-relative detail href, or `null` when unlinkable. */
   detailHref: string | null;
-  hasDetailLink: boolean;
   companyName: string | null;
   companyLogoUrl: string | null;
   /** Avatar fallback name (company name, else the job title). */
   companyAvatarName: string;
-  /** First category name — the honest "sector" analogue, or `null`. */
-  sector: string | null;
   /** "Salary · Location", omitting whichever half is missing. */
   compLine: string | null;
   /** Salary is independent so dense search cards do not hide location. */
@@ -66,12 +63,65 @@ export interface JobCardVM {
   tags: JobCardTagVM[];
 }
 
+/**
+ * Collect the DEDUPED union of category/skill tag slugs across a page of job
+ * cards, as `resolveTaxonomyChips` candidates. A loader resolves this set once
+ * (a 20-card page has far fewer unique tags than 20×N) and threads the returned
+ * map into every card's `toJobCardVM`, so the whole page's pills share one
+ * batched resolve round trip.
+ */
+export function collectCardTaxonomyCandidates(
+  jobs: readonly Pick<PublicJobCard, 'categories' | 'skills'>[],
+): { type: 'category' | 'skill'; slug: string }[] {
+  const seen = new Set<string>();
+  const candidates: { type: 'category' | 'skill'; slug: string }[] = [];
+  const add = (type: 'category' | 'skill', slug: string) => {
+    const key = `${type}:${slug}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    candidates.push({ type, slug });
+  };
+  for (const job of jobs) {
+    for (const c of job.categories ?? []) add('category', c.slug);
+    for (const s of job.skills ?? []) add('skill', s.slug);
+  }
+  return candidates;
+}
+
 export function toJobCardVM(
   job: PublicJobCard,
   language: string,
   labels?: BoardLabelOverrides,
+  /**
+   * Optional `${'category' | 'skill'}:${slug}` → canonicalSlug map of the tag
+   * pills that resolve to a real page (from `resolveTaxonomyChips`). When
+   * supplied, category/skill pills whose slug is absent are omitted and the
+   * survivors link via their canonical slug — the same resolves-or-omits guard
+   * `toJobDetailVM` applies, so a card never links to a `/jobs/:slug` that 404s
+   * on a board whose facet/tag read model has drifted from its resolve read
+   * model. When omitted, every pill renders as-is (the resolver is consulted
+   * only where a loader can afford the round trip).
+   */
+  resolvableTaxonomy?: Record<string, string>,
 ): JobCardVM {
   const company = job.company;
+
+  // Keep only pills that will land on a live page, canonicalising the slug. A
+  // missing map means "don't filter"; an empty map filters everything out,
+  // which is correct when nothing resolved (e.g. a resolve outage).
+  const tagPill = (
+    type: 'category' | 'skill',
+    term: { slug: string; name: string },
+  ): JobCardTagVM | null => {
+    const prefix = type === 'category' ? 'c' : 's';
+    const path = type === 'category' ? jobsCategoryPath : jobsSkillPath;
+    if (!resolvableTaxonomy) {
+      return { key: `${prefix}-${term.slug}`, name: term.name, href: path(term.slug) };
+    }
+    const canonical = resolvableTaxonomy[`${type}:${term.slug}`];
+    if (!canonical) return null;
+    return { key: `${prefix}-${canonical}`, name: term.name, href: path(canonical) };
+  };
   const salaryLabel = formatSalaryRange(
     language,
     job.salaryMin,
@@ -102,11 +152,9 @@ export function toJobCardVM(
     jobSlug: job.slug ?? null,
     detailHref:
       company?.slug && job.slug ? jobDetailPath(company.slug, job.slug) : null,
-    hasDetailLink: Boolean(company?.slug && job.slug),
     companyName: company?.name ?? null,
     companyLogoUrl: company?.logoUrl ?? null,
     companyAvatarName: company?.name ?? job.title,
-    sector: job.categories[0]?.name ?? null,
     compLine,
     salaryLabel,
     locationLabel,
@@ -115,17 +163,9 @@ export function toJobCardVM(
     featuredLabel: boardCopy(language, labels).jobCard.featuredLabel,
     postedAtLabel: formatPublishedRelativeDate(language, job.publishedAt),
     tags: [
-      ...job.categories.map((c) => ({
-        key: `c-${c.slug}`,
-        name: c.name,
-        href: jobsCategoryPath(c.slug),
-      })),
-      ...job.skills.map((s) => ({
-        key: `s-${s.slug}`,
-        name: s.name,
-        href: jobsSkillPath(s.slug),
-      })),
-    ],
+      ...job.categories.map((c) => tagPill('category', c)),
+      ...job.skills.map((s) => tagPill('skill', s)),
+    ].filter((tag): tag is JobCardTagVM => tag !== null),
   };
 }
 

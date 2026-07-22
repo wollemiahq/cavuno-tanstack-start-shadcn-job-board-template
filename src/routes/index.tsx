@@ -18,6 +18,7 @@ import { JobAlertFloatingPrompt } from '../components/job-alert-floating-prompt'
 import { JsonLd } from '../components/json-ld';
 import { jobAlertDefaultsFromSearch } from '../lib/job-alert-defaults';
 import { m } from '../paraglide/messages';
+import { saveJob } from '../server/account';
 import {
   getBoardContext,
   getSeoBase,
@@ -25,11 +26,13 @@ import {
   listCompanies,
   listJobs,
   listTalent,
+  listTopJobCategories,
 } from '../server/queries';
 
 import { toJobCardVM } from '@/board/job-view-model';
 import { HomeLanding } from '@/components/board/home-landing';
 import { headTitle } from '@/lib/page-title';
+import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 
 interface JobsSearch extends ListingFilters {
   cursor?: string;
@@ -76,29 +79,39 @@ export const Route = createFileRoute('/')({
     });
     // Additive companies read for the landing's "companies hiring" strip.
     const companiesP = listCompanies({ data: { limit: 6 } });
+    // Board-wide top categories by live job count — its OWN read, so the
+    // "Browse by category" section ranks the whole board, not the cards below.
+    const topCategoriesP = listTopJobCategories();
     const seoP = getSeoBase();
 
     const board = await boardP;
-    const [page, companies, seo, blog, talent] = await Promise.all([
-      jobsP,
-      companiesP,
-      seoP,
-      // Blog preview — only when the board runs a blog.
-      board.features.blog
-        ? listBlogPosts({ data: { limit: 3 } })
-        : Promise.resolve(null),
-      // Talent preview — only when the directory feature is on. The serialised
-      // restricted result omits the preview for anonymous home visitors.
-      board.features.talentDirectory
-        ? listTalent({ data: { limit: 6 } })
-        : Promise.resolve(null),
-    ]);
+    const [page, companies, topCategories, seo, blog, talent] =
+      await Promise.all([
+        jobsP,
+        companiesP,
+        topCategoriesP,
+        seoP,
+        // Blog preview — only when the board runs a blog.
+        board.features.blog
+          ? listBlogPosts({ data: { limit: 3 } })
+          : Promise.resolve(null),
+        // Talent preview — only when the directory feature is on. The
+        // serialised restricted result omits the preview for anonymous home
+        // visitors.
+        board.features.talentDirectory
+          ? listTalent({ data: { limit: 6 } })
+          : Promise.resolve(null),
+      ]);
     const talentPage = talent?.status === 'available' ? talent.page : null;
+    // Resolve the "Latest jobs" cards' tag pills so none links to a 404.
+    const resolvableTaxonomy = await resolveCardTaxonomy(page.data);
     return {
       page,
       companies: companies.data,
       companiesCount: companies.count ?? null,
+      topCategories,
       seo,
+      resolvableTaxonomy,
       posts: blog?.data ?? null,
       postsCount: blog?.count ?? null,
       talent: talentPage?.data ?? null,
@@ -134,13 +147,15 @@ function HomePage() {
     page,
     companies,
     companiesCount,
+    topCategories,
     seo,
+    resolvableTaxonomy,
     posts,
     postsCount,
     talent,
     talentCount,
   } = Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
+  const { board, user } = rootApi.useLoaderData();
   const copy = boardCopy(board.language, board.labels);
 
   // ONE section-header eyebrow pattern: "{localized count} {noun}", resolved
@@ -178,7 +193,7 @@ function HomePage() {
     m.home_postPlural(),
   );
   const jobs = page.data.map((job) =>
-    toJobCardVM(job, board.language, board.labels),
+    toJobCardVM(job, board.language, board.labels, resolvableTaxonomy),
   );
   const hiringCompanies = companies
     .filter((company) => company.publishedJobCount > 0)
@@ -188,6 +203,7 @@ function HomePage() {
       name: company.name,
       logoUrl: company.logoUrl,
       description: company.description,
+      publishedJobCount: company.publishedJobCount,
       openJobsLabel:
         company.publishedJobCount === 1
           ? m.companyDetail_openJobsCountOne({
@@ -198,10 +214,12 @@ function HomePage() {
             }),
     }));
 
-  // The browse envelope's related searches are already ranked and counted, so
-  // the category rail costs no extra read. Paths come from the SDK helper.
-  const categoryCards = (page.relatedSearches ?? [])
-    .filter((related) => related.type === 'category')
+  // The board's top categories BY LIVE JOB COUNT — from the dedicated
+  // `listTopJobCategories` read (canonical server counts), ranked highest-first
+  // and capped to fill the browse grid. Paths come from the SDK helper.
+  const categoryCards = [...topCategories]
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8)
     .map((related) => ({
       slug: related.slug,
       name: related.term,
@@ -243,6 +261,10 @@ function HomePage() {
         candidatesEnabled={board.features.candidates}
         employersEnabled={board.features.employers}
         publicJobSubmission={board.features.publicJobSubmission}
+        viewer={user ? { emailVerified: user.emailVerified } : null}
+        onSaveJob={async (jobId) => {
+          await saveJob({ data: { jobId } });
+        }}
       />
       {board.features.jobAlerts ? (
         <JobAlertFloatingPrompt

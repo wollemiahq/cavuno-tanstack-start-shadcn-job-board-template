@@ -23,6 +23,8 @@ export interface SearchSelectionController {
   isDesktop: boolean;
   selectedId?: string;
   detailRef: RefObject<HTMLElement | null>;
+  /** The scrolling list region — attached so an arrival selection can align. */
+  listRef: RefObject<HTMLElement | null>;
   onResultActivate: (
     event: ReactMouseEvent<HTMLAnchorElement>,
     resultId: string,
@@ -46,6 +48,7 @@ export function useSearchSelection({
     getServerDesktopSnapshot,
   );
   const detailRef = useRef<HTMLElement>(null);
+  const listRef = useRef<HTMLElement>(null);
   const selectedIsVisible = selectedId ? resultIds.includes(selectedId) : false;
   const activeId = isDesktop
     ? selectedIsVisible
@@ -67,10 +70,39 @@ export function useSearchSelection({
     }
   }, [activeId]);
 
+  // On ARRIVAL with a URL-selected job (e.g. from a homepage card), bring its
+  // row to the top of the list's own scroll container — ONCE, and only for the
+  // initial URL selection. Later in-page clicks must never yank a visible row
+  // away. Instant jump (no smooth-scroll), so it is reduced-motion-safe.
+  const didArrivalScroll = useRef(false);
+  useEffect(() => {
+    if (didArrivalScroll.current || !isDesktop) return;
+    // Wait until the list has rendered its rows before deciding.
+    if (resultIds.length === 0) return;
+    // Mark the arrival window closed no matter what, so a later manual
+    // selection (which sets `selectedId` after mount) never triggers a scroll.
+    didArrivalScroll.current = true;
+    // The arrived job may legitimately be absent from this page (the detail
+    // pane fetches it independently) — then there is no row to align, no-op.
+    if (!selectedId || !resultIds.includes(selectedId)) return;
+    const rows = listRef.current?.querySelectorAll<HTMLElement>(
+      '[data-result-id]',
+    );
+    const row = rows
+      ? Array.from(rows).find((el) => el.dataset.resultId === selectedId)
+      : undefined;
+    // `scrollIntoView` is absent in some non-browser runtimes (jsdom) — guard
+    // so the arrival alignment degrades to a no-op rather than throwing.
+    if (typeof row?.scrollIntoView === 'function') {
+      row.scrollIntoView({ block: 'start' });
+    }
+  }, [isDesktop, selectedId, resultIds]);
+
   return {
     isDesktop,
     selectedId: activeId,
     detailRef,
+    listRef,
     onResultActivate: (event, resultId) => {
       if (
         !isDesktop ||

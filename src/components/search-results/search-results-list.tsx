@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
@@ -12,16 +13,23 @@ export type SearchResultsListProps = Omit<
 };
 
 /** The independently scrolling master region of a search-results surface. */
-export function SearchResultsList({
-  label,
-  scrollRestorationId = 'search-results-list',
-  className,
-  children,
-  ...props
-}: SearchResultsListProps) {
+export const SearchResultsList = forwardRef<
+  HTMLElement,
+  SearchResultsListProps
+>(function SearchResultsList(
+  {
+    label,
+    scrollRestorationId = 'search-results-list',
+    className,
+    children,
+    ...props
+  },
+  ref,
+) {
   return (
     <section
       {...props}
+      ref={ref}
       aria-label={label}
       data-slot="search-results-list"
       data-scroll-restoration-id={scrollRestorationId}
@@ -38,4 +46,4 @@ export function SearchResultsList({
       <div className="space-y-4 py-4">{children}</div>
     </section>
   );
-}
+});
