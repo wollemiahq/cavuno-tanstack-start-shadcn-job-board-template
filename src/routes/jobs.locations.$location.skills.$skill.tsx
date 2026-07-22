@@ -15,11 +15,13 @@ import {
 import {
   ProgrammaticJobsView,
   PROGRAMMATIC_JOBS_PAGE_SIZE,
-} from '../components/programmatic-jobs-view';
+} from '@/routes/-programmatic-jobs-view';
+import { saveJob } from '../server/account';
 import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
 import { pageToOffset } from '../lib/pagination';
 import { m } from '../paraglide/messages';
 import {
+  filterRelatedSearches,
   getSeoBase,
   listJobs,
   resolvePlace,
@@ -27,6 +29,7 @@ import {
 } from '../server/queries';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
+import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 
 export const Route = createFileRoute('/jobs/locations/$location/skills/$skill')(
   {
@@ -46,6 +49,7 @@ export const Route = createFileRoute('/jobs/locations/$location/skills/$skill')(
             location: place.redirectTo ?? params.location,
             skill: skill.redirectTo ?? params.skill,
           },
+          statusCode: 308,
         });
       }
       const [list, seo] = await Promise.all([
@@ -65,7 +69,13 @@ export const Route = createFileRoute('/jobs/locations/$location/skills/$skill')(
         }),
         getSeoBase(),
       ]);
-      return { place, skill, list, seo };
+      const relatedSearches = list.relatedSearches?.length
+        ? await filterRelatedSearches({
+            data: { related: list.relatedSearches },
+          })
+        : list.relatedSearches;
+      const resolvableTaxonomy = await resolveCardTaxonomy(list.data);
+      return { place, skill, list, seo, relatedSearches, resolvableTaxonomy };
     },
     head: ({ loaderData, params }) =>
       loaderData
@@ -91,7 +101,8 @@ export const Route = createFileRoute('/jobs/locations/$location/skills/$skill')(
 );
 
 function LocationSkillPage() {
-  const { place, skill, list, seo } = Route.useLoaderData();
+  const { place, skill, list, seo, relatedSearches, resolvableTaxonomy } =
+    Route.useLoaderData();
   const { location } = Route.useParams();
   const search = Route.useSearch();
   return (
@@ -105,9 +116,13 @@ function LocationSkillPage() {
       jobs={list.data}
       page={search.page ?? 1}
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
-      relatedSearches={list.relatedSearches}
+      relatedSearches={relatedSearches}
+      resolvableTaxonomy={resolvableTaxonomy}
       origin={seo.origin}
       filters={search}
+      onSaveJob={async (jobId) => {
+        await saveJob({ data: { jobId } });
+      }}
       location={{ slug: location, label: place.displayName }}
     />
   );

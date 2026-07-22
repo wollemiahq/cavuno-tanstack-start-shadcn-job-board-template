@@ -19,15 +19,17 @@ export function TaxonomyTags({
   chips,
   overflow = 0,
   size = 'md',
+  className,
 }: {
   chips: TaxonomyChip[];
   overflow?: number;
   size?: 'sm' | 'md' | 'lg';
+  className?: string;
 }) {
   if (chips.length === 0 && overflow <= 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className={cn('flex flex-wrap items-center gap-1.5', className)}>
       {chips.map((chip) => (
         <Badge
           key={chip.key}

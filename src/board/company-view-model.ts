@@ -16,6 +16,8 @@ export interface CompanySearchLabels {
 
 export interface CompanyCardVM {
   id: string;
+  /** Board slug — the result-selection key for the search-results list. */
+  slug: string;
   name: string;
   logoUrl: string | null;
   avatarName: string;
@@ -54,6 +56,7 @@ export function toCompanyCardVM(
 ): CompanyCardVM {
   return {
     id: company.id,
+    slug: company.slug,
     name: company.name,
     logoUrl: company.logoUrl,
     avatarName: company.name,

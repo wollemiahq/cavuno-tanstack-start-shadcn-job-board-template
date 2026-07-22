@@ -31,6 +31,7 @@ describe('company view models', () => {
   it('maps a list company to honest, canonical card data', () => {
     expect(toCompanyCardVM(company, labels)).toEqual({
       id: 'company-1',
+      slug: 'acme-research',
       name: 'Acme Research',
       logoUrl: 'https://cdn.example/acme.svg',
       avatarName: 'Acme Research',

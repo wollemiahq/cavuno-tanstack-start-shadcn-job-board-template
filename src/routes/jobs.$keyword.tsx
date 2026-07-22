@@ -12,13 +12,20 @@ import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 import {
   ProgrammaticJobsView,
   PROGRAMMATIC_JOBS_PAGE_SIZE,
-} from '../components/programmatic-jobs-view';
+} from '@/routes/-programmatic-jobs-view';
+import { saveJob } from '../server/account';
 import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
 import { pageToOffset } from '../lib/pagination';
 import { m } from '../paraglide/messages';
-import { getSeoBase, listJobs, resolveCategory } from '../server/queries';
+import {
+  filterRelatedSearches,
+  getSeoBase,
+  listJobs,
+  resolveCategory,
+} from '../server/queries';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
+import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 
 export const Route = createFileRoute('/jobs/$keyword')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
@@ -31,6 +38,7 @@ export const Route = createFileRoute('/jobs/$keyword')({
       throw redirect({
         to: '/jobs/$keyword',
         params: { keyword: category.redirectTo },
+        statusCode: 308,
       });
     }
     const [list, seo] = await Promise.all([
@@ -49,7 +57,11 @@ export const Route = createFileRoute('/jobs/$keyword')({
       }),
       getSeoBase(),
     ]);
-    return { category, list, seo };
+    const relatedSearches = list.relatedSearches?.length
+      ? await filterRelatedSearches({ data: { related: list.relatedSearches } })
+      : list.relatedSearches;
+    const resolvableTaxonomy = await resolveCardTaxonomy(list.data);
+    return { category, list, seo, relatedSearches, resolvableTaxonomy };
   },
   head: ({ loaderData, params }) =>
     loaderData
@@ -67,7 +79,8 @@ export const Route = createFileRoute('/jobs/$keyword')({
 });
 
 function CategoryPage() {
-  const { category, list, seo } = Route.useLoaderData();
+  const { category, list, seo, relatedSearches, resolvableTaxonomy } =
+    Route.useLoaderData();
   const search = Route.useSearch();
   return (
     <ProgrammaticJobsView
@@ -77,9 +90,13 @@ function CategoryPage() {
       jobs={list.data}
       page={search.page ?? 1}
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
-      relatedSearches={list.relatedSearches}
+      relatedSearches={relatedSearches}
+      resolvableTaxonomy={resolvableTaxonomy}
       origin={seo.origin}
       filters={search}
+      onSaveJob={async (jobId) => {
+        await saveJob({ data: { jobId } });
+      }}
     />
   );
 }

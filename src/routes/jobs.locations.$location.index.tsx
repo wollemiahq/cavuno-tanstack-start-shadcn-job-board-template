@@ -10,11 +10,13 @@ import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 import {
   ProgrammaticJobsView,
   PROGRAMMATIC_JOBS_PAGE_SIZE,
-} from '../components/programmatic-jobs-view';
+} from '@/routes/-programmatic-jobs-view';
+import { saveJob } from '../server/account';
 import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
 import { pageToOffset } from '../lib/pagination';
 import { m } from '../paraglide/messages';
 import {
+  filterRelatedSearches,
   getSeoBase,
   listJobs,
   resolvePlace,
@@ -22,6 +24,7 @@ import {
 } from '../server/queries';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
+import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 
 export const Route = createFileRoute('/jobs/locations/$location/')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
@@ -34,6 +37,7 @@ export const Route = createFileRoute('/jobs/locations/$location/')({
       throw redirect({
         to: '/jobs/locations/$location',
         params: { location: place.redirectTo },
+        statusCode: 308,
       });
     }
     const [list, seo] = await Promise.all([
@@ -71,7 +75,13 @@ export const Route = createFileRoute('/jobs/locations/$location/')({
           }),
       getSeoBase(),
     ]);
-    return { place, list, seo };
+    const rawRelated =
+      'relatedSearches' in list ? list.relatedSearches : undefined;
+    const relatedSearches = rawRelated?.length
+      ? await filterRelatedSearches({ data: { related: rawRelated } })
+      : rawRelated;
+    const resolvableTaxonomy = await resolveCardTaxonomy(list.data);
+    return { place, list, seo, relatedSearches, resolvableTaxonomy };
   },
   head: ({ loaderData, params }) =>
     loaderData
@@ -89,7 +99,8 @@ export const Route = createFileRoute('/jobs/locations/$location/')({
 });
 
 function LocationPage() {
-  const { place, list, seo } = Route.useLoaderData();
+  const { place, list, seo, relatedSearches, resolvableTaxonomy } =
+    Route.useLoaderData();
   const { location } = Route.useParams();
   const search = Route.useSearch();
   return (
@@ -100,11 +111,13 @@ function LocationPage() {
       jobs={list.data}
       page={search.page ?? 1}
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
-      relatedSearches={
-        'relatedSearches' in list ? list.relatedSearches : undefined
-      }
+      relatedSearches={relatedSearches}
+      resolvableTaxonomy={resolvableTaxonomy}
       origin={seo.origin}
       filters={search}
+      onSaveJob={async (jobId) => {
+        await saveJob({ data: { jobId } });
+      }}
       location={{ slug: location, label: place.displayName }}
     />
   );

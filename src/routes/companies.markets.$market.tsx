@@ -1,5 +1,6 @@
 import { boardCopy } from '#/copy';
 
+import { BOARD_PATHS, boardUrl, companyMarketPath } from '@cavuno/board/paths';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
@@ -83,7 +84,10 @@ export const Route = createFileRoute('/companies/markets/$market')({
           links: [
             {
               rel: 'canonical',
-              href: `${loaderData.seo.origin}/companies/markets/${params.market}`,
+              href: boardUrl(
+                loaderData.seo.origin,
+                companyMarketPath(params.market),
+              ),
             },
           ],
         }
@@ -115,7 +119,10 @@ function MarketPage() {
   const jsonLd = [
     createBreadcrumbJsonLd([
       { label: crumbs.home, href: seo.origin },
-      { label: crumbs.companies, href: `${seo.origin}/companies` },
+      {
+        label: crumbs.companies,
+        href: boardUrl(seo.origin, BOARD_PATHS.companies),
+      },
       { label: market.displayName },
     ]),
   ].filter((entry): entry is Record<string, unknown> => entry !== null);

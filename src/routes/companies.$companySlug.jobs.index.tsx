@@ -41,6 +41,7 @@ import {
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { CompanySectionShell } from '@/components/board/company-section-header';
+import { toJobCardVM } from '@/board/job-view-model';
 import { JobList } from '@/components/board/job-list';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { JsonLd } from '@/components/json-ld';
@@ -233,7 +234,9 @@ function CompanyJobsPage() {
       <p className="text-foreground text-base font-semibold">{countLabel}</p>
 
       <JobList
-        jobs={page.data}
+        jobs={page.data.map((job) =>
+          toJobCardVM(job, board.language, board.labels),
+        )}
         language={board.language}
         labels={board.labels}
         variant="grid"

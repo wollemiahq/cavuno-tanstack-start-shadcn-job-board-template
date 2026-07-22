@@ -1,7 +1,9 @@
 import { boardCopy } from '#/copy';
 
-import { getRouteApi, useNavigate } from '@tanstack/react-router';
+import { getRouteApi, useNavigate, useRouter } from '@tanstack/react-router';
 
+import { getCompanySearchLabels } from '@/board/company-search-labels';
+import { toCompanyCardVM } from '@/board/company-view-model';
 import { CompanySearchPage } from '@/components/board/company-search-page';
 import {
   includeSelectedCompanyMarket,
@@ -45,6 +47,7 @@ export function ProgrammaticCompaniesView({
   search: CompaniesSearch;
 }) {
   const navigate = useNavigate() as unknown as LooseNavigate;
+  const router = useRouter();
   const { board } = rootApi.useLoaderData();
   const copy = boardCopy(board.language, board.labels);
   const marketOptions = includeSelectedCompanyMarket(markets, market);
@@ -54,9 +57,13 @@ export function ProgrammaticCompaniesView({
       : undefined,
   );
 
+  const companyLabels = getCompanySearchLabels();
+
   return (
     <CompanySearchPage
-      companies={page.data}
+      companies={page.data.map((company) =>
+        toCompanyCardVM(company, companyLabels),
+      )}
       count={page.count ?? page.data.length}
       page={search.page ?? 1}
       pageSize={pageSize}
@@ -84,8 +91,10 @@ export function ProgrammaticCompaniesView({
           }),
         })
       }
-      hasMore={page.hasMore}
-      onLoadMore={
+      hasPreviousResults={Boolean(search.cursor)}
+      nextCursor={page.hasMore ? page.nextCursor : null}
+      onPreviousResults={() => router.history.back()}
+      onNextResults={
         page.hasMore && page.nextCursor
           ? () =>
               navigate({

@@ -5,14 +5,14 @@ import { getRouteApi, useNavigate } from '@tanstack/react-router';
 
 import { jobAlertDefaultsFromSearch } from '../lib/job-alert-defaults';
 import { pageSearchValue } from '../lib/pagination';
-import { SelectedJobDetail } from '../routes/-selected-job-detail';
-import { useSelectedJob } from '../routes/-use-selected-job';
-import { JobAlertFloatingPrompt } from './job-alert-floating-prompt';
-import { JsonLd } from './json-ld';
+import { SelectedJobDetail } from './-selected-job-detail';
+import { useSelectedJob } from './-use-selected-job';
+import { JobAlertFloatingPrompt } from '../components/job-alert-floating-prompt';
+import { JsonLd } from '../components/json-ld';
 
+import { toJobCardVM } from '@/board/job-view-model';
 import { JobSearchPage } from '@/components/board/job-search-page';
 import type { JobsSearch } from '@/lib/jobs-search';
-import { saveJob } from '@/server/account';
 import type { PublicJobCard, RelatedSearch } from '@cavuno/board';
 
 const rootApi = getRouteApi('__root__');
@@ -35,9 +35,11 @@ export function ProgrammaticJobsView({
   page,
   pageSize,
   relatedSearches,
+  resolvableTaxonomy,
   origin,
   filters,
   location,
+  onSaveJob,
 }: {
   heading: string;
   count?: number;
@@ -46,9 +48,13 @@ export function ProgrammaticJobsView({
   page: number;
   pageSize: number;
   relatedSearches?: RelatedSearch[];
+  /** Card tag-pill resolvability map (see `JobSearchPage`). */
+  resolvableTaxonomy?: Record<string, string>;
   origin?: string;
   filters: JobsSearch;
   location?: { slug: string; label: string };
+  /** Save-job mutation, threaded from the route (server fns stay route-owned). */
+  onSaveJob: (jobId: string) => Promise<void>;
 }) {
   const { board, user } = rootApi.useLoaderData();
   const copy = boardCopy(board.language, board.labels);
@@ -63,7 +69,8 @@ export function ProgrammaticJobsView({
     ? listingJsonLd({
         origin,
         breadcrumbs: [
-          { name: copy.breadcrumbs.jobs, path: '/' },
+          { name: copy.breadcrumbs.home, path: '/' },
+          { name: copy.breadcrumbs.jobs, path: '/jobs' },
           { name: heading },
         ],
         jobs,
@@ -85,7 +92,9 @@ export function ProgrammaticJobsView({
         }}
         count={count}
         gatedCount={gatedCount}
-        jobs={jobs}
+        jobs={jobs.map((job) =>
+          toJobCardVM(job, board.language, board.labels, resolvableTaxonomy),
+        )}
         page={page}
         pageSize={pageSize}
         relatedSearches={relatedSearches}
@@ -93,9 +102,7 @@ export function ProgrammaticJobsView({
         language={board.language}
         labels={board.labels}
         viewer={user ? { emailVerified: user.emailVerified } : null}
-        onSaveJob={async (jobId) => {
-          await saveJob({ data: { jobId } });
-        }}
+        onSaveJob={onSaveJob}
         onFiltersChange={(next) =>
           navigate({
             search: (prev) => ({

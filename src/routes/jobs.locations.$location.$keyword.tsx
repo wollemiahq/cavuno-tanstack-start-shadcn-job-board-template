@@ -10,11 +10,13 @@ import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 import {
   ProgrammaticJobsView,
   PROGRAMMATIC_JOBS_PAGE_SIZE,
-} from '../components/programmatic-jobs-view';
+} from '@/routes/-programmatic-jobs-view';
+import { saveJob } from '../server/account';
 import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
 import { pageToOffset } from '../lib/pagination';
 import { m } from '../paraglide/messages';
 import {
+  filterRelatedSearches,
   getSeoBase,
   listJobs,
   resolveCategory,
@@ -22,6 +24,7 @@ import {
 } from '../server/queries';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
+import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 
 export const Route = createFileRoute('/jobs/locations/$location/$keyword')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
@@ -40,6 +43,7 @@ export const Route = createFileRoute('/jobs/locations/$location/$keyword')({
           location: place.redirectTo ?? params.location,
           keyword: category.redirectTo ?? params.keyword,
         },
+        statusCode: 308,
       });
     }
     const [list, seo] = await Promise.all([
@@ -59,7 +63,11 @@ export const Route = createFileRoute('/jobs/locations/$location/$keyword')({
       }),
       getSeoBase(),
     ]);
-    return { place, category, list, seo };
+    const relatedSearches = list.relatedSearches?.length
+      ? await filterRelatedSearches({ data: { related: list.relatedSearches } })
+      : list.relatedSearches;
+    const resolvableTaxonomy = await resolveCardTaxonomy(list.data);
+    return { place, category, list, seo, relatedSearches, resolvableTaxonomy };
   },
   head: ({ loaderData, params }) =>
     loaderData
@@ -78,7 +86,8 @@ export const Route = createFileRoute('/jobs/locations/$location/$keyword')({
 });
 
 function LocationCategoryPage() {
-  const { place, category, list, seo } = Route.useLoaderData();
+  const { place, category, list, seo, relatedSearches, resolvableTaxonomy } =
+    Route.useLoaderData();
   const { location } = Route.useParams();
   const search = Route.useSearch();
   return (
@@ -92,9 +101,13 @@ function LocationCategoryPage() {
       jobs={list.data}
       page={search.page ?? 1}
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
-      relatedSearches={list.relatedSearches}
+      relatedSearches={relatedSearches}
+      resolvableTaxonomy={resolvableTaxonomy}
       origin={seo.origin}
       filters={search}
+      onSaveJob={async (jobId) => {
+        await saveJob({ data: { jobId } });
+      }}
       location={{ slug: location, label: place.displayName }}
     />
   );

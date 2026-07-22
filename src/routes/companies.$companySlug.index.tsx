@@ -4,6 +4,7 @@ import { isNotFound } from '@cavuno/board';
 import { companySalaryPath } from '@cavuno/board/paths';
 import { createBreadcrumbJsonLd, formatRange } from '@cavuno/board/seo';
 import {
+  Await,
   createFileRoute,
   getRouteApi,
   interpolatePath,
@@ -22,6 +23,7 @@ import {
 } from '../server/queries';
 
 import { toJobCardVM } from '@/board/job-view-model';
+import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 import {
   toOverallSalaryVM,
   toSalaryRailVM,
@@ -52,28 +54,38 @@ export const Route = createFileRoute('/companies/$companySlug/')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
     try {
-      const [company, jobs, similar, seo, salarySummary] = await Promise.all([
+      const [company, jobs, seo, salarySummary] = await Promise.all([
         getCompany({ data: { companySlug: params.companySlug } }),
         listCompanyJobs({ data: { companySlug: params.companySlug } }),
-        getSimilarCompanies({
-          data: { companySlug: params.companySlug, limit: 6 },
-        }),
         getSeoBase(),
+        // Salary summary stays awaited: it is the Salaries tab gate
+        // (`hasSalaries`), which renders in the above-the-fold section shell.
         getCompanySalarySummary({ data: { companySlug: params.companySlug } }),
       ]);
+      // Similar companies is a below-the-fold, search-backed rail — defer it so
+      // a slow (or failing) similar backend never blocks the profile's first
+      // paint. Streamed in via <Await>; degrades to empty, never fatal.
+      const similar = getSimilarCompanies({
+        data: { companySlug: params.companySlug, limit: 6 },
+      })
+        .then((r) => r.data)
+        .catch(() => []);
       // The salary summary IS the tab gate: the Salaries tab shows when there
       // is real salary data (an overall aggregate or per-category rows), the
       // same condition the salary route renders its empty state against.
       const hasSalaries =
         salarySummary.overallSalary !== null ||
         salarySummary.byCategory.length > 0;
+      // Resolve the company jobs-tab cards' tag pills so none links to a 404.
+      const resolvableTaxonomy = await resolveCardTaxonomy(jobs.data);
       return {
         company,
         jobs,
-        similar: similar.data,
+        similar,
         seo,
         salarySummary,
         hasSalaries,
+        resolvableTaxonomy,
       };
     } catch (error) {
       if (isNotFound(error)) throw notFound();
@@ -90,22 +102,28 @@ export const Route = createFileRoute('/companies/$companySlug/')({
                 loaderData.company.name,
               ),
             },
-            ...(loaderData.company.description
-              ? [
-                  {
-                    name: 'description',
-                    content: loaderData.company.description
-                      .replace(/<[^>]+>/g, ' ')
-                      .trim()
-                      .slice(0, 160),
-                  },
-                ]
-              : []),
+            {
+              name: 'description',
+              content: loaderData.company.description
+                ? loaderData.company.description
+                    .replace(/<[^>]+>/g, ' ')
+                    .trim()
+                    .slice(0, 160)
+                : m.companyDetail_metaDescriptionFallback({
+                    name: loaderData.company.name,
+                    board: loaderData.seo.boardName,
+                  }),
+            },
           ],
           links: [
             {
               rel: 'canonical',
-              href: `${loaderData.seo.origin}/companies/${loaderData.company.slug}`,
+              // Prefer the API's canonical public URL (the cross-surface
+              // contract) — like job-detail — falling back to the composed
+              // board-relative path when the board sets no public link.
+              href:
+                loaderData.company.links.public ??
+                `${loaderData.seo.origin}/companies/${loaderData.company.slug}`,
             },
           ],
         }
@@ -150,8 +168,15 @@ function openJobsHeading(count: number) {
 const JOBS_PREVIEW_COUNT = 6;
 
 function CompanyPage() {
-  const { company, jobs, similar, seo, salarySummary, hasSalaries } =
-    Route.useLoaderData();
+  const {
+    company,
+    jobs,
+    similar,
+    seo,
+    salarySummary,
+    hasSalaries,
+    resolvableTaxonomy,
+  } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const copy = boardCopy(seo.language, seo.labels);
   const crumbs = copy.breadcrumbs;
@@ -284,7 +309,12 @@ function CompanyPage() {
                 {previewJobs.map((job) => (
                   <JobCard
                     key={job.id}
-                    vm={toJobCardVM(job, board.language, board.labels)}
+                    vm={toJobCardVM(
+                      job,
+                      board.language,
+                      board.labels,
+                      resolvableTaxonomy,
+                    )}
                     compact
                   />
                 ))}
@@ -356,30 +386,37 @@ function CompanyPage() {
           </Card>
 
           {/* Similar companies sit directly under the key-facts card, the same
-              way similar jobs sit under the apply card on job detail. */}
-          {similar.length > 0 ? (
-            <section
-              aria-label={m.companyDetail_similarCompaniesHeading()}
-              className="flex flex-col gap-4"
-            >
-              <Text as="h2" variant="heading4">
-                {m.companyDetail_similarCompaniesHeading()}
-              </Text>
-              <div className="flex flex-col gap-4">
-                {similar.map((c) => (
-                  <CompanyCard
-                    key={c.id}
-                    companySlug={c.slug}
-                    name={c.name}
-                    logoUrl={c.logoUrl}
-                    description={c.description}
-                    publishedJobCount={c.publishedJobCount}
-                    jobCountLabel={jobCountLabel(c.publishedJobCount)}
-                  />
-                ))}
-              </div>
-            </section>
-          ) : null}
+              way similar jobs sit under the apply card on job detail. Deferred
+              (streamed via <Await>): the rail fills in when the search backend
+              answers, and stays hidden while it resolves or if it degrades to
+              empty. */}
+          <Await promise={similar} fallback={null}>
+            {(similarCompanies) =>
+              similarCompanies.length > 0 ? (
+                <section
+                  aria-label={m.companyDetail_similarCompaniesHeading()}
+                  className="flex flex-col gap-4"
+                >
+                  <Text as="h2" variant="heading4">
+                    {m.companyDetail_similarCompaniesHeading()}
+                  </Text>
+                  <div className="flex flex-col gap-4">
+                    {similarCompanies.map((c) => (
+                      <CompanyCard
+                        key={c.id}
+                        companySlug={c.slug}
+                        name={c.name}
+                        logoUrl={c.logoUrl}
+                        description={c.description}
+                        publishedJobCount={c.publishedJobCount}
+                        jobCountLabel={jobCountLabel(c.publishedJobCount)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ) : null
+            }
+          </Await>
         </aside>
       </div>
     </CompanySectionShell>

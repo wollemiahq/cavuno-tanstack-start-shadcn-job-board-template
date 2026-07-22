@@ -16,9 +16,13 @@ vi.mock('../server/queries', () => ({
   }),
 }));
 
-vi.mock('../components/programmatic-jobs-view', () => ({
+vi.mock('@/routes/-programmatic-jobs-view', () => ({
   PROGRAMMATIC_JOBS_PAGE_SIZE: 20,
   ProgrammaticJobsView: () => null,
+}));
+
+vi.mock('../server/account', () => ({
+  saveJob: vi.fn(),
 }));
 
 vi.mock('./-use-location-suggestions', () => ({

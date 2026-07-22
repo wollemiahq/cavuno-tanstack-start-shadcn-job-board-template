@@ -19,7 +19,15 @@ import { jobAlertDefaultsFromSearch } from '../lib/job-alert-defaults';
 import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
 import { pageSearchValue, pageToOffset } from '../lib/pagination';
 import { saveJob } from '../server/account';
-import { getSeoBase, listJobs, searchJobs } from '../server/queries';
+import {
+  filterRelatedSearches,
+  getSeoBase,
+  listJobs,
+  searchJobs,
+} from '../server/queries';
+
+import { toJobCardVM } from '@/board/job-view-model';
+import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 import { SelectedJobDetail } from './-selected-job-detail';
 import { useSelectedJob } from './-use-selected-job';
 
@@ -69,7 +77,17 @@ export const Route = createFileRoute('/jobs/')({
           }),
       getSeoBase(),
     ]);
-    return { page, seo };
+    // Keep only related-search chips that resolve to a live taxonomy page —
+    // the browse facets can name a category/skill the resolver rejects, whose
+    // chip would 404 (see the taxonomy-chip guard in queries.ts).
+    const rawRelated =
+      'relatedSearches' in page ? page.relatedSearches : undefined;
+    const relatedSearches = rawRelated?.length
+      ? await filterRelatedSearches({ data: { related: rawRelated } })
+      : rawRelated;
+    // Resolve the page's card tag pills so a card never links to a 404.
+    const resolvableTaxonomy = await resolveCardTaxonomy(page.data);
+    return { page, seo, relatedSearches, resolvableTaxonomy };
   },
   head: ({ loaderData }) =>
     loaderData
@@ -87,7 +105,8 @@ export const Route = createFileRoute('/jobs/')({
 const rootApi = getRouteApi('__root__');
 
 function JobsPage() {
-  const { page, seo } = Route.useLoaderData();
+  const { page, seo, relatedSearches, resolvableTaxonomy } =
+    Route.useLoaderData();
   const search = Route.useSearch();
   const { board, user } = rootApi.useLoaderData();
   const navigate = useNavigate({ from: '/jobs/' });
@@ -104,13 +123,19 @@ function JobsPage() {
         data={listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
+            {
+              name: boardCopy(board.language, board.labels).breadcrumbs.home,
+              path: '/',
+            },
             { name: boardCopy(board.language, board.labels).breadcrumbs.jobs },
           ],
           jobs: page.data,
         })}
       />
       <JobSearchPage
-        jobs={page.data}
+        jobs={page.data.map((job) =>
+          toJobCardVM(job, board.language, board.labels, resolvableTaxonomy),
+        )}
         count={page.count}
         gatedCount={page.gatedCount}
         page={search.page ?? 1}
@@ -122,9 +147,7 @@ function JobsPage() {
         onSaveJob={async (jobId) => {
           await saveJob({ data: { jobId } });
         }}
-        relatedSearches={
-          'relatedSearches' in page ? page.relatedSearches : undefined
-        }
+        relatedSearches={relatedSearches}
         onFiltersChange={(next) =>
           navigate({
             to: '/jobs',
