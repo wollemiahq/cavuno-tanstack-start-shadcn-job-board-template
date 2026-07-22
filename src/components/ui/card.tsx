@@ -5,14 +5,26 @@ import { cn } from '@/lib/utils';
 function Card({
   className,
   size = 'default',
+  variant = 'default',
   ...props
-}: React.ComponentProps<'div'> & { size?: 'default' | 'sm' }) {
+}: React.ComponentProps<'div'> & {
+  size?: 'default' | 'sm';
+  /**
+   * `elevated` lifts the card off the page — a translucent, blurred surface
+   * with a soft `shadow-xl` — for cards that float over content (e.g. the
+   * auth panel). `default` is the standard flush card.
+   */
+  variant?: 'default' | 'elevated';
+}) {
   return (
     <div
       data-slot="card"
       data-size={size}
+      data-variant={variant}
       className={cn(
         'group/card bg-card text-card-foreground ring-foreground/5 dark:ring-foreground/10 flex flex-col gap-(--card-spacing) overflow-hidden rounded-[min(var(--radius-4xl),24px)] py-(--card-spacing) text-sm shadow-sm ring-1 [--card-spacing:--spacing(5)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(4)] *:[img:first-child]:rounded-t-[min(var(--radius-4xl),24px)] *:[img:last-child]:rounded-b-[min(var(--radius-4xl),24px)]',
+        variant === 'elevated' &&
+          'bg-card/95 shadow-foreground/5 border-0 shadow-xl backdrop-blur',
         className,
       )}
       {...props}

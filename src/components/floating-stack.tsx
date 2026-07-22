@@ -24,10 +24,12 @@ const FloatingStackContext = createContext<HTMLElement | null>(null);
  * the dock be flush-bottom whether or not the job-alert prompt is present,
  * without the prompt losing its float margin when the dock is absent.
  *
- * The container sits at `z-40` — below the `z-50` overlay layer — so menus,
- * popovers, and dialogs (which portal to the body at `z-50`) still render
- * above the stack. It is `pointer-events-none` so empty gaps never trap
- * clicks meant for the page; each item re-enables pointer events.
+ * The container sits at `--z-floating-stack` (40) — below the
+ * `--z-overlay` (50) layer (see the z-index scale in `src/styles.css`) — so
+ * menus, popovers, and dialogs (which portal to the body at that overlay
+ * level) still render above the stack. It is `pointer-events-none` so empty
+ * gaps never trap clicks meant for the page; each item re-enables pointer
+ * events.
  */
 export function FloatingStackProvider({ children }: { children: ReactNode }) {
   const [container, setContainer] = useState<HTMLElement | null>(null);
@@ -38,7 +40,7 @@ export function FloatingStackProvider({ children }: { children: ReactNode }) {
       <div
         ref={setContainer}
         data-slot="floating-stack"
-        className="pointer-events-none fixed right-4 bottom-0 z-40 flex flex-col items-end"
+        className="pointer-events-none fixed right-4 bottom-0 z-(--z-floating-stack) flex flex-col items-end"
       />
     </FloatingStackContext.Provider>
   );

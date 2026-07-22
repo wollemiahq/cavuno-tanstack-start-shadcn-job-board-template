@@ -101,14 +101,14 @@ function FooterLinkItem({ link }: { link: FooterLink }) {
       {link.external ? (
         <a
           href={link.href}
-          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/30 rounded-sm text-sm transition-colors outline-none hover:no-underline focus-visible:ring-3"
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 rounded-sm text-sm transition-colors outline-none hover:no-underline focus-visible:ring-2"
         >
           {link.label}
         </a>
       ) : (
         <Link
           to={link.href}
-          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/30 rounded-sm text-sm transition-colors outline-none hover:no-underline focus-visible:ring-3"
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 rounded-sm text-sm transition-colors outline-none hover:no-underline focus-visible:ring-2"
         >
           {link.label}
         </Link>
@@ -320,7 +320,7 @@ export default function Footer({
             <div className="max-w-xs space-y-4">
               <Link
                 to="/"
-                className="text-foreground focus-visible:ring-ring/30 flex items-center gap-2.5 rounded-md text-lg font-semibold outline-none hover:no-underline focus-visible:ring-3"
+                className="text-foreground focus-visible:ring-ring/50 flex items-center gap-2.5 rounded-md text-lg font-semibold outline-none hover:no-underline focus-visible:ring-2"
               >
                 {logoUrl ? (
                   <img
@@ -372,7 +372,7 @@ export default function Footer({
                       aria-label={social.label}
                       rel="noopener noreferrer"
                       target="_blank"
-                      className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/30 flex size-10 items-center justify-center rounded-full transition-colors outline-none focus-visible:ring-3"
+                      className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 flex size-10 items-center justify-center rounded-full transition-colors outline-none focus-visible:ring-2"
                     >
                       {social.icon}
                     </a>
@@ -389,7 +389,7 @@ export default function Footer({
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/30 rounded-sm text-sm transition-colors outline-none hover:no-underline focus-visible:ring-3"
+                  className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 rounded-sm text-sm transition-colors outline-none hover:no-underline focus-visible:ring-2"
                 >
                   {link.label}
                 </Link>

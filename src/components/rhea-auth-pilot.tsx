@@ -30,7 +30,7 @@ export function RheaAuthCard({
 }) {
   return (
     <div className="mx-auto w-full max-w-md py-6 sm:py-12">
-      <Card className="bg-card/95 shadow-foreground/5 overflow-hidden border-0 shadow-xl backdrop-blur">
+      <Card variant="elevated">
         {/* CardHeader is a grid, so `items-center` only aligns the cross axis
             (vertical) — `justify-items-center` is what centres the mark and
             heading horizontally. */}

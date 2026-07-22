@@ -163,7 +163,7 @@ export function PreviewToolbar({
 
   return (
     <div
-      className="fixed bottom-4 left-4 z-[60] print:hidden"
+      className="fixed bottom-4 left-4 z-(--z-preview-toolbar) print:hidden"
       data-test="preview-toolbar"
     >
       <Popover open={menuOpen} onOpenChange={setMenuOpen}>

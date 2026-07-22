@@ -64,6 +64,32 @@ html {
   scrollbar-width: thin;
 }
 
+/* ── Z-index scale ──
+   The app's named stacking order, low → high. Keep magic `z-[…]` values out
+   of components: reach for a token (`z-(--z-skip-link)`, `after:z-(--z-card-overlay)`)
+   so the whole layering order stays legible and collision-free in one place.
+
+     --z-card-overlay    1   a card's stretched-link ::after hit target — above
+                             sibling card content, below page chrome
+     --z-floating-stack 40   bottom-corner floating widgets (job-alert prompt,
+                             messaging dock)
+     --z-overlay        50   portalled overlays: menus, popovers, dialogs,
+                             sheets, drawers, tooltips (the shadcn default)
+     --z-preview-toolbar 60  the sandbox preview toolbar, above app overlays
+     --z-skip-link     100   the keyboard skip-to-content link, always on top */
+:root {
+  --z-card-overlay: 1;
+  --z-floating-stack: 40;
+  --z-overlay: 50;
+  --z-preview-toolbar: 60;
+  --z-skip-link: 100;
+
+  /* Shared minimum height for a master/detail result pane (and its loading /
+     error placeholders) so the jobs, companies, talent, and applicant-pipeline
+     detail surfaces reserve the same space. Use `min-h-(--detail-pane-min-h)`. */
+  --detail-pane-min-h: 28rem;
+}
+
 html,
 body,
 #app {
