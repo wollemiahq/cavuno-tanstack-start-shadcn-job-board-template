@@ -5,7 +5,6 @@ import {
   BOARD_PATHS,
   boardUrl,
   companySalaryPath,
-  salaryLocationPath,
   salarySkillPath,
   salaryTitlePath,
 } from '@cavuno/board/paths';
@@ -32,6 +31,8 @@ import {
 } from './-salary-page-layout';
 
 import {
+  salaryEntityTitle,
+  salarySkillInLocationPath,
   salarySkillLocationsPath,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
@@ -78,10 +79,20 @@ export const Route = createFileRoute('/salaries/skills/$slug/')({
           meta: [
             {
               title: headTitle(
-                loaderData?.seo.boardName,
-                m.salaryDetail_skillMetaTitle({
-                  skill: loaderData.salary.skillName,
-                }),
+                loaderData.seo.boardName,
+                loaderData.salary.overallSalary
+                  ? salaryEntityTitle(
+                      loaderData.seo.language,
+                      loaderData.salary.skillName,
+                      formatRange(
+                        loaderData.seo.language,
+                        loaderData.salary.overallSalary.avgMin,
+                        loaderData.salary.overallSalary.avgMax,
+                      ),
+                    )
+                  : m.salaryDetail_skillHeading({
+                      skill: loaderData.salary.skillName,
+                    }),
               ),
             },
             {
@@ -149,9 +160,12 @@ function SkillSalaryPage() {
     jobCount: x.jobCount,
     logoPath: x.logoPath,
   }));
+  // Cross-axis: "{Skill} salaries in {Place}" (mirrors the hosted board). The
+  // skill×location loader resolves + 308s the inbound placeSlug, so the target
+  // always has data — unlike the generic /salaries/locations/{place} page.
   const locationItems: RailItem[] = salary.topLocations.map((x) => ({
     name: x.placeName,
-    href: salaryLocationPath(x.placeSlug),
+    href: salarySkillInLocationPath(salary.canonicalSlug, x.placeSlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));

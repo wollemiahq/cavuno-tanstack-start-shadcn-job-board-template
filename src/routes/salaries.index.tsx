@@ -2,6 +2,7 @@ import { boardCopy } from '#/copy';
 
 import {
   BOARD_PATHS,
+  boardUrl,
   companySalaryPath,
   salaryLocationPath,
   salarySkillPath,
@@ -73,7 +74,10 @@ export const Route = createFileRoute('/salaries/')({
             },
           ],
           links: [
-            { rel: 'canonical', href: `${loaderData.seo.origin}/salaries` },
+            {
+              rel: 'canonical',
+              href: boardUrl(loaderData.seo.origin, BOARD_PATHS.salaries),
+            },
           ],
         }
       : {},

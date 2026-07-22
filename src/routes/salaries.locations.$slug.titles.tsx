@@ -49,7 +49,17 @@ export const Route = createFileRoute('/salaries/locations/$slug/titles')({
       });
     }
     const seo = await getSeoBase();
-    return { data, seo };
+    // Flat hosted shape: Home › Salaries › Locations › {Place}(linked) › Titles.
+    // Injected so the place crumb shows its resolved name, not the raw slug.
+    const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+    const breadcrumbTrail = [
+      { name: crumbs.home, href: BOARD_PATHS.home },
+      { name: crumbs.salaries, href: BOARD_PATHS.salaries },
+      { name: crumbs.locations, href: BOARD_PATHS.salaryLocations },
+      { name: data.placeName, href: salaryLocationPath(data.canonicalSlug) },
+      { name: crumbs.titles },
+    ];
+    return { data, seo, breadcrumbTrail };
   },
   head: ({ loaderData }) =>
     loaderData

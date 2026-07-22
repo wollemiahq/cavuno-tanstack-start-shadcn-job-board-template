@@ -19,9 +19,11 @@ import { createFileRoute, getRouteApi, notFound } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getCompany, getCompanySalary, getSeoBase } from '../server/queries';
+import { SalaryNotFoundPage } from './-salary-page-layout';
 
 import {
   companyCategorySalaryPath,
+  salaryCompanyTitle,
   toOverallSalaryVM,
   toSalaryFaqVM,
   toSalaryRailVM,
@@ -29,7 +31,6 @@ import {
 } from '@/board/salary-view-model';
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import {
-  SalaryEmptyState,
   OverallSalaryCard,
   SalaryFaq,
   SalaryRail,
@@ -67,10 +68,18 @@ export const Route = createFileRoute('/companies/$companySlug/salaries/')({
           meta: [
             {
               title: headTitle(
-                loaderData?.seo.boardName,
-                m.companySalaries_metaTitle({
-                  company: loaderData.salary.companyName,
-                }),
+                loaderData.seo.boardName,
+                salaryCompanyTitle(
+                  loaderData.seo.language,
+                  loaderData.salary.companyName,
+                  loaderData.salary.overallSalary
+                    ? formatRange(
+                        loaderData.seo.language,
+                        loaderData.salary.overallSalary.avgMin,
+                        loaderData.salary.overallSalary.avgMax,
+                      )
+                    : null,
+                ),
               ),
             },
             {
@@ -102,8 +111,13 @@ export const Route = createFileRoute('/companies/$companySlug/salaries/')({
         }
       : {},
   component: CompanySalaryPage,
+  // A company with no salary data 404s at the API (same as an unknown
+  // company — parity with the hosted board, which returns null → notFound
+  // for both). The empty body must still carry the page chrome: an h1 via
+  // PageHeader, matching every sibling salary route (the standalone
+  // SalaryEmptyState rendered no h1).
   notFoundComponent: () => (
-    <SalaryEmptyState title={m.companySalaries_notFoundCompany()} />
+    <SalaryNotFoundPage title={m.companySalaries_notFoundCompany()} />
   ),
 });
 

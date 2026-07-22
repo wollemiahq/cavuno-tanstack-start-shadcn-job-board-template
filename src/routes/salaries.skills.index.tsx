@@ -50,7 +50,7 @@ export const Route = createFileRoute('/salaries/skills/')({
           links: [
             {
               rel: 'canonical',
-              href: `${loaderData.seo.origin}/salaries/skills`,
+              href: boardUrl(loaderData.seo.origin, BOARD_PATHS.salarySkills),
             },
           ],
         }
@@ -103,7 +103,7 @@ function SalarySkillsIndex() {
         <SalaryRail vm={toSalaryRailVM('', items, seo.language, seo.labels)} />
       ) : (
         <SalaryEmptyState
-          title={m.salaryHub_skillsHeading()}
+          title={m.salaryHub_skillsEmptyTitle()}
           description={m.salaryHub_emptyDescription()}
         />
       )}

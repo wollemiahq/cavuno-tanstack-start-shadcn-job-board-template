@@ -53,7 +53,7 @@ export const Route = createFileRoute('/salaries/companies/')({
           links: [
             {
               rel: 'canonical',
-              href: `${loaderData.seo.origin}/salaries/companies`,
+              href: boardUrl(loaderData.seo.origin, BOARD_PATHS.salaryCompanies),
             },
           ],
         }

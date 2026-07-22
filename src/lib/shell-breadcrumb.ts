@@ -78,6 +78,39 @@ function entityLabel(value: unknown, fields: string[]) {
   return undefined;
 }
 
+/**
+ * Route-injected trail override. A route whose visible trail cannot be derived
+ * from its path segments alone (the salary-location hierarchy, whose ancestor
+ * chain lives in API data, not the URL) may return a fully-resolved
+ * `breadcrumbTrail: { name; href? }[]` from its loader. The shell renders it
+ * verbatim in place of the path-derived trail — keeping every entity/section's
+ * shape OUT of this shared, path-based lib. Deepest match with a valid trail
+ * wins; malformed or empty candidates are ignored so the path fallback runs.
+ */
+export function resolveShellBreadcrumbTrail(
+  matches: readonly RouteMatch[],
+): { name: string; href?: string }[] | null {
+  let trail: { name: string; href?: string }[] | null = null;
+  for (const match of matches) {
+    const candidate = record(match.loaderData)?.breadcrumbTrail;
+    if (!Array.isArray(candidate) || candidate.length === 0) continue;
+    const parsed: { name: string; href?: string }[] = [];
+    let valid = true;
+    for (const item of candidate) {
+      const row = record(item);
+      const name = typeof row?.name === 'string' ? row.name.trim() : '';
+      if (name === '') {
+        valid = false;
+        break;
+      }
+      const href = typeof row?.href === 'string' ? row.href : undefined;
+      parsed.push(href ? { name, href } : { name });
+    }
+    if (valid) trail = parsed;
+  }
+  return trail;
+}
+
 /** Extract API-resolved labels without coupling the shell to route data types. */
 export function resolveShellBreadcrumbEntities(
   matches: readonly RouteMatch[],
@@ -130,11 +163,16 @@ export function resolveShellBreadcrumb({
   labels,
   privateLabels = {},
   entities = {},
+  override = null,
 }: {
   pathname: string;
   labels: ShellBreadcrumbLabels;
   privateLabels?: Partial<ShellBreadcrumbPrivateLabels>;
   entities?: ShellBreadcrumbEntities;
+  /** A route-provided fully-resolved trail (see resolveShellBreadcrumbTrail).
+   * When present it wins over path derivation; the excluded-prefix gate still
+   * applies first so embeds and the password screen stay bare. */
+  override?: readonly { name: string; href?: string }[] | null;
 }): { items: { name: string; href?: string }[] } | null {
   if (
     excludedPrefixes.some(
@@ -142,6 +180,10 @@ export function resolveShellBreadcrumb({
     )
   ) {
     return null;
+  }
+
+  if (override && override.length > 0) {
+    return finish(override.map((crumb) => ({ ...crumb })));
   }
 
   const priv = (key: keyof ShellBreadcrumbPrivateLabels, segment: string) =>

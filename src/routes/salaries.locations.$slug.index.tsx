@@ -1,13 +1,7 @@
 import { boardCopy } from '#/copy';
 
 import { isNotFound, type LocationSalaryDetail } from '@cavuno/board';
-import {
-  BOARD_PATHS,
-  boardUrl,
-  salaryLocationPath,
-  salarySkillPath,
-  salaryTitlePath,
-} from '@cavuno/board/paths';
+import { BOARD_PATHS, boardUrl, salaryLocationPath } from '@cavuno/board/paths';
 import {
   buildSalaryFaq,
   createBreadcrumbJsonLd,
@@ -23,7 +17,11 @@ import {
 } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import { getLocationSalary, getSeoBase } from '../server/queries';
+import {
+  getLocationSalary,
+  getSeoBase,
+  listSalaryLocations,
+} from '../server/queries';
 import {
   SalaryNotFoundPage,
   SalaryPageLayout,
@@ -33,6 +31,10 @@ import {
 import {
   salaryLocationSkillsPath,
   salaryLocationTitlesPath,
+  salaryPlaceTitle,
+  salarySkillInLocationPath,
+  salaryTitleInLocationPath,
+  toLocationHierarchyCrumbs,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
@@ -78,8 +80,29 @@ export const Route = createFileRoute('/salaries/locations/$slug/')({
         statusCode: 308,
       });
     }
-    const seo = await getSeoBase();
-    return { salary, seo };
+    // The flat place tree is the only public-SDK source of place ancestry —
+    // it rebuilds the country → region → city breadcrumb chain (the hosted
+    // board reads the same hierarchy from its internal places table).
+    const [seo, tree] = await Promise.all([
+      getSeoBase(),
+      listSalaryLocations(),
+    ]);
+    const hierarchy = toLocationHierarchyCrumbs(
+      tree.data,
+      salary.canonicalSlug,
+      salary.placeName,
+    );
+    // The visible shell trail can't derive the ancestor chain from the URL, so
+    // this route injects its fully-resolved trail (Home › Salaries › Locations
+    // › {ancestors…} › {place}). The shell renders it verbatim.
+    const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+    const breadcrumbTrail = [
+      { name: crumbs.home, href: BOARD_PATHS.home },
+      { name: crumbs.salaries, href: BOARD_PATHS.salaries },
+      { name: crumbs.locations, href: BOARD_PATHS.salaryLocations },
+      ...hierarchy,
+    ];
+    return { salary, seo, hierarchy, breadcrumbTrail };
   },
   head: ({ loaderData }) =>
     loaderData
@@ -87,10 +110,18 @@ export const Route = createFileRoute('/salaries/locations/$slug/')({
           meta: [
             {
               title: headTitle(
-                loaderData?.seo.boardName,
-                m.salaryDetail_placeMetaTitle({
-                  place: loaderData.salary.placeName,
-                }),
+                loaderData.seo.boardName,
+                salaryPlaceTitle(
+                  loaderData.seo.language,
+                  loaderData.salary.placeName,
+                  loaderData.salary.overallSalary
+                    ? formatRange(
+                        loaderData.seo.language,
+                        loaderData.salary.overallSalary.avgMin,
+                        loaderData.salary.overallSalary.avgMax,
+                      )
+                    : null,
+                ),
               ),
             },
             {
@@ -131,10 +162,15 @@ export const Route = createFileRoute('/salaries/locations/$slug/')({
 const rootApi = getRouteApi('__root__');
 
 function LocationSalaryPage() {
-  const { salary, seo } = Route.useLoaderData();
+  const { salary, seo, hierarchy } = Route.useLoaderData();
   const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
   const { board } = rootApi.useLoaderData();
   const locale = seo.language;
+
+  // The place hierarchy is the breadcrumb tail (country → region → current),
+  // ancestors linked and the current place terminal — used by both the visible
+  // trail VM and the BreadcrumbList JSON-LD, mirroring the hosted board.
+  const hierarchyCrumbs = hierarchy.map((c) => ({ name: c.name, href: c.href }));
 
   const faqs = buildSalaryFaq(locale, salary.placeName, salary.overallSalary);
   const jsonLd = [
@@ -147,19 +183,25 @@ function LocationSalaryPage() {
         label: crumbs.locations,
         href: boardUrl(seo.origin, BOARD_PATHS.salaryLocations),
       },
-      { label: salary.placeName },
+      ...hierarchy.map((c) =>
+        c.href
+          ? { label: c.name, href: boardUrl(seo.origin, c.href) }
+          : { label: c.name },
+      ),
     ]),
   ].filter((e): e is Record<string, unknown> => e !== null);
 
+  // Cross-axis: top titles/skills stay scoped to THIS place ("{Title} salaries
+  // in {Place}"), matching the hosted board — not the bare title/skill pages.
   const categoryItems: RailItem[] = salary.topCategories.map((x) => ({
     name: x.categoryName,
-    href: salaryTitlePath(x.categorySlug),
+    href: salaryTitleInLocationPath(x.categorySlug, salary.canonicalSlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
   const skillItems: RailItem[] = salary.topSkills.map((x) => ({
     name: x.skillName,
-    href: salarySkillPath(x.skillSlug),
+    href: salarySkillInLocationPath(x.skillSlug, salary.canonicalSlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
@@ -181,7 +223,7 @@ function LocationSalaryPage() {
           { name: crumbs.home, href: BOARD_PATHS.home },
           { name: crumbs.salaries, href: BOARD_PATHS.salaries },
           { name: crumbs.locations, href: BOARD_PATHS.salaryLocations },
-          { name: salary.placeName },
+          ...hierarchyCrumbs,
         ],
         seo.language,
         seo.labels,

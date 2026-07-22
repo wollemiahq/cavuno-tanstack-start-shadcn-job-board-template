@@ -1,12 +1,7 @@
 import { boardCopy } from '#/copy';
 
 import { isNotFound } from '@cavuno/board';
-import {
-  BOARD_PATHS,
-  boardUrl,
-  salarySkillPath,
-  salaryTitlePath,
-} from '@cavuno/board/paths';
+import { BOARD_PATHS, boardUrl, salaryTitlePath } from '@cavuno/board/paths';
 import {
   createBreadcrumbJsonLd,
   crossAxisSalaryJsonLd,
@@ -28,6 +23,8 @@ import {
 } from './-salary-page-layout';
 
 import {
+  salaryEntityInPlaceTitle,
+  salarySkillInLocationPath,
   salaryTitleInLocationPath,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
@@ -80,11 +77,22 @@ export const Route = createFileRoute('/salaries/titles/$slug/$locationSlug')({
           meta: [
             {
               title: headTitle(
-                loaderData?.seo.boardName,
-                m.salaryDetail_titleInPlaceMetaTitle({
-                  title: loaderData.salary.categoryName,
-                  place: loaderData.salary.placeName,
-                }),
+                loaderData.seo.boardName,
+                loaderData.salary.overallSalary
+                  ? salaryEntityInPlaceTitle(
+                      loaderData.seo.language,
+                      loaderData.salary.categoryName,
+                      loaderData.salary.placeName,
+                      formatRange(
+                        loaderData.seo.language,
+                        loaderData.salary.overallSalary.avgMin,
+                        loaderData.salary.overallSalary.avgMax,
+                      ),
+                    )
+                  : m.salaryDetail_titleInPlaceHeading({
+                      title: loaderData.salary.categoryName,
+                      place: loaderData.salary.placeName,
+                    }),
               ),
             },
             {
@@ -169,15 +177,17 @@ function TitleLocationSalaryPage() {
       jobCount: x.jobCount,
     }));
 
+  // Cross-axis rails stay scoped to THIS place (skill/title salaries in the
+  // current location), matching the hosted board — not the bare axis pages.
   const skillItems: RailItem[] = salary.topSkills.map((x) => ({
     name: x.skillName,
-    href: salarySkillPath(x.skillSlug),
+    href: salarySkillInLocationPath(x.skillSlug, salary.locationCanonicalSlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
   const titleItems: RailItem[] = salary.topTitles.map((x) => ({
     name: x.categoryName,
-    href: salaryTitlePath(x.categorySlug),
+    href: salaryTitleInLocationPath(x.categorySlug, salary.locationCanonicalSlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));

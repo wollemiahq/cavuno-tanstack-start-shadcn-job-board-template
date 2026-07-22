@@ -12,7 +12,11 @@ import { boardCopy } from '@/copy';
  * and import nothing from `@cavuno/board*` or `#/copy` — so restructuring a
  * salary page is pure markup over these stable contracts.
  */
-import { fieldLabel, type BoardLabelOverrides } from '@cavuno/board/format';
+import {
+  fieldLabel,
+  getSalaryLexicon,
+  type BoardLabelOverrides,
+} from '@cavuno/board/format';
 import {
   companySalaryPath,
   salaryLocationPath,
@@ -74,6 +78,75 @@ export function salaryLocationTitlesPath(placeSlug: string): string {
 /** Cross-axis: the skills fan-out inside a place's salary page. */
 export function salaryLocationSkillsPath(placeSlug: string): string {
   return `${salaryLocationPath(placeSlug)}/skills`;
+}
+
+/**
+ * Salary page `<title>` sentence frames — the ONE seam onto the SDK's
+ * board-language salary lexicon (`getSalaryLexicon(language).frames`), the same
+ * builders the hosted board uses. A tenant frontend inherits the canonical
+ * plural, board-localized "{Entity} Salaries (range)" phrasing instead of a
+ * starter-local Paraglide duplicate (which drifted to a singular "salary").
+ * Numbers arrive pre-formatted (`formatRange`); the frame supplies the words.
+ * The visible H1 stays a starter copy key — the SDK has no range-less heading
+ * frame — so only the metadata titles route through here.
+ */
+export function salaryEntityTitle(
+  language: string,
+  entity: string,
+  range: string,
+): string {
+  return getSalaryLexicon(language).frames.entitySalariesTitle({
+    entity,
+    range,
+  });
+}
+
+export function salaryEntityInPlaceTitle(
+  language: string,
+  entity: string,
+  place: string,
+  range: string,
+): string {
+  return getSalaryLexicon(language).frames.entitySalariesInPlaceTitle({
+    entity,
+    place,
+    range,
+  });
+}
+
+export function salaryPlaceTitle(
+  language: string,
+  place: string,
+  range: string | null,
+): string {
+  const { frames } = getSalaryLexicon(language);
+  return range
+    ? frames.salariesInPlaceTitle({ place, range })
+    : frames.salariesInPlaceTitleNoRange({ place });
+}
+
+export function salaryCompanyTitle(
+  language: string,
+  company: string,
+  range: string | null,
+): string {
+  return getSalaryLexicon(language).frames.companySalariesTitle({
+    company,
+    range,
+  });
+}
+
+export function salaryCompanyCategoryTitle(
+  language: string,
+  company: string,
+  category: string,
+  range: string | null,
+): string {
+  return getSalaryLexicon(language).frames.companyCategorySalariesTitle({
+    company,
+    category,
+    range,
+  });
 }
 
 export interface OverallSalary {
@@ -260,6 +333,49 @@ export function toSalaryFaqVM(
     heading: boardCopy(language, labels).salary.faqHeading,
     items,
   };
+}
+
+/**
+ * A node of the flat place tree returned by `salaries.locations.list()` — the
+ * only public-SDK source of place ancestry (`LocationSalaryDetail` itself has
+ * no hierarchy field; the hosted board reads it from an internal places table).
+ */
+export interface SalaryLocationNode {
+  placeSlug: string;
+  placeName: string;
+  parentSlug: string | null;
+}
+
+/**
+ * Resolve a place's ancestor breadcrumb chain from the flat location tree.
+ * Walks `parentSlug` up from the current place to the root, orders it
+ * country → … → current, links every ANCESTOR to its own
+ * `/salaries/locations/{slug}` page, and leaves the CURRENT place terminal
+ * (no href) — mirroring the hosted salary-location breadcrumb. Falls back to a
+ * single terminal crumb when the place is absent from the tree or has no
+ * resolvable ancestors. Paths compose through `salaryLocationPath`, never
+ * string-built.
+ */
+export function toLocationHierarchyCrumbs(
+  tree: SalaryLocationNode[],
+  currentSlug: string,
+  currentName: string,
+): { name: string; href?: string }[] {
+  const bySlug = new Map(tree.map((n) => [n.placeSlug, n]));
+  const chain: SalaryLocationNode[] = [];
+  const seen = new Set<string>();
+  let node = bySlug.get(currentSlug);
+  while (node && !seen.has(node.placeSlug)) {
+    seen.add(node.placeSlug);
+    chain.unshift(node);
+    node = node.parentSlug ? bySlug.get(node.parentSlug) : undefined;
+  }
+  if (chain.length === 0) return [{ name: currentName }];
+  return chain.map((n, index) =>
+    index === chain.length - 1
+      ? { name: currentName }
+      : { name: n.placeName, href: salaryLocationPath(n.placeSlug) },
+  );
 }
 
 export interface SalaryBreadcrumbVM {

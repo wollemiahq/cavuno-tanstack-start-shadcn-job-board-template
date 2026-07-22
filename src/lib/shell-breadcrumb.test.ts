@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   resolveShellBreadcrumb,
   resolveShellBreadcrumbEntities,
+  resolveShellBreadcrumbTrail,
 } from './shell-breadcrumb';
 
 const labels = {
@@ -190,5 +191,97 @@ describe('resolveShellBreadcrumb — authed surfaces (footer trails everywhere)'
     expect(
       resolveShellBreadcrumb({ pathname: '/me/saved', labels })?.items[1],
     ).toEqual({ name: 'Saved' });
+  });
+});
+
+describe('resolveShellBreadcrumb — route-injected trail override', () => {
+  it('renders a provided trail verbatim, forcing the last crumb terminal', () => {
+    // The salary-location hierarchy: ancestors linked, current place terminal.
+    const trail = [
+      { name: 'Home', href: '/' },
+      { name: 'Salaries', href: '/salaries' },
+      { name: 'Locations', href: '/salaries/locations' },
+      { name: 'United States', href: '/salaries/locations/united-states' },
+      { name: 'Texas', href: '/salaries/locations/texas' },
+      // Even a trailing href on the current place is stripped by finish().
+      { name: 'Austin', href: '/salaries/locations/austin' },
+    ];
+    expect(
+      resolveShellBreadcrumb({
+        pathname: '/salaries/locations/austin',
+        labels,
+        override: trail,
+      }),
+    ).toEqual({
+      items: [
+        { name: 'Home', href: '/' },
+        { name: 'Salaries', href: '/salaries' },
+        { name: 'Locations', href: '/salaries/locations' },
+        { name: 'United States', href: '/salaries/locations/united-states' },
+        { name: 'Texas', href: '/salaries/locations/texas' },
+        { name: 'Austin' },
+      ],
+    });
+  });
+
+  it('keeps the excluded-prefix gate ahead of any override', () => {
+    expect(
+      resolveShellBreadcrumb({
+        pathname: '/embed/jobs',
+        labels,
+        override: [{ name: 'Home', href: '/' }, { name: 'X' }],
+      }),
+    ).toBeNull();
+  });
+
+  it('falls back to the path-derived trail when no override is provided', () => {
+    // The fan-out path keeps its flat shape from segments alone (no override).
+    expect(
+      resolveShellBreadcrumb({
+        pathname: '/salaries/locations/austin/titles',
+        labels,
+      })?.items,
+    ).toEqual([
+      { name: 'Home', href: '/' },
+      { name: 'Salaries', href: '/salaries' },
+      { name: 'Locations', href: '/salaries/locations' },
+      { name: 'Austin', href: '/salaries/locations/austin' },
+      { name: 'Titles' },
+    ]);
+  });
+});
+
+describe('resolveShellBreadcrumbTrail', () => {
+  it('reads a valid trail from loader data (deepest match wins)', () => {
+    expect(
+      resolveShellBreadcrumbTrail([
+        { loaderData: { salary: {} } },
+        {
+          loaderData: {
+            breadcrumbTrail: [
+              { name: 'Home', href: '/' },
+              { name: 'Austin' },
+            ],
+          },
+        },
+      ]),
+    ).toEqual([{ name: 'Home', href: '/' }, { name: 'Austin' }]);
+  });
+
+  it('ignores malformed or empty trails so the path fallback runs', () => {
+    expect(resolveShellBreadcrumbTrail([{ loaderData: {} }])).toBeNull();
+    expect(
+      resolveShellBreadcrumbTrail([{ loaderData: { breadcrumbTrail: [] } }]),
+    ).toBeNull();
+    expect(
+      resolveShellBreadcrumbTrail([
+        { loaderData: { breadcrumbTrail: [{ name: '' }] } },
+      ]),
+    ).toBeNull();
+    expect(
+      resolveShellBreadcrumbTrail([
+        { loaderData: { breadcrumbTrail: 'not-an-array' } },
+      ]),
+    ).toBeNull();
   });
 });

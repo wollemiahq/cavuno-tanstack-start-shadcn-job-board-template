@@ -4,7 +4,6 @@ import { isNotFound } from '@cavuno/board';
 import {
   BOARD_PATHS,
   boardUrl,
-  salaryLocationPath,
   salarySkillPath,
   salaryTitlePath,
 } from '@cavuno/board/paths';
@@ -32,6 +31,8 @@ import {
 
 import {
   companyCategorySalaryPath,
+  salaryEntityTitle,
+  salaryTitleInLocationPath,
   salaryTitleLocationsPath,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
@@ -80,10 +81,20 @@ export const Route = createFileRoute('/salaries/titles/$slug/')({
           meta: [
             {
               title: headTitle(
-                loaderData?.seo.boardName,
-                m.salaryDetail_titleMetaTitle({
-                  title: loaderData.salary.categoryName,
-                }),
+                loaderData.seo.boardName,
+                loaderData.salary.overallSalary
+                  ? salaryEntityTitle(
+                      loaderData.seo.language,
+                      loaderData.salary.categoryName,
+                      formatRange(
+                        loaderData.seo.language,
+                        loaderData.salary.overallSalary.avgMin,
+                        loaderData.salary.overallSalary.avgMax,
+                      ),
+                    )
+                  : m.salaryDetail_titleHeading({
+                      title: loaderData.salary.categoryName,
+                    }),
               ),
             },
             {
@@ -155,9 +166,13 @@ function TitleSalaryPage() {
     jobCount: x.jobCount,
     logoPath: x.logoPath,
   }));
+  // Cross-axis: "{Title} salaries in {Place}" (mirrors the hosted board). The
+  // generic /salaries/locations/{place} page has no data for a place that only
+  // exists inside this title's sample, so link the title×location page whose
+  // loader resolves + 308s the inbound placeSlug to its canonical form.
   const locationItems: RailItem[] = salary.topLocations.map((x) => ({
     name: x.placeName,
-    href: salaryLocationPath(x.placeSlug),
+    href: salaryTitleInLocationPath(salary.canonicalSlug, x.placeSlug),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));

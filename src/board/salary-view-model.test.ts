@@ -8,18 +8,22 @@ import { describe, expect, it } from 'vitest';
 
 import {
   companyCategorySalaryPath,
+  salaryCompanyTitle,
   salaryLocationSkillsPath,
   salaryLocationTitlesPath,
+  salaryPlaceTitle,
   salarySkillInLocationPath,
   salarySkillLocationsPath,
   salaryTitleInLocationPath,
   salaryTitleLocationsPath,
+  toLocationHierarchyCrumbs,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
   toSalaryRailVM,
   toSeniorityTableVM,
   type RailItem,
+  type SalaryLocationNode,
   type SeniorityRow,
 } from './salary-view-model';
 
@@ -210,5 +214,102 @@ describe('salary path composers', () => {
     expect(salaryLocationSkillsPath('london')).toBe(
       `${salaryLocationPath('london')}/skills`,
     );
+  });
+
+  // The cross-axis-link regression these composers guard (formerly pinned by a
+  // grep of each salary route's source): a salary detail's "top {axis}" rail
+  // must land on the CROSS-AXIS "{Entity} salaries in {Place}" page — which the
+  // loader resolves + 308s so the target always has data — never the bare
+  // single-axis page, which dead-ends for a place/entity that only exists
+  // inside the other axis's sample.
+  it('cross-axis rails resolve the entity×place page, never the bare single-axis dead end', () => {
+    // Title / skill detail top-locations rails → the entity×place page, not the
+    // bare /salaries/locations/{place} page.
+    expect(salaryTitleInLocationPath('data-scientist', 'london')).not.toBe(
+      salaryLocationPath('london'),
+    );
+    expect(salarySkillInLocationPath('react', 'berlin')).not.toBe(
+      salaryLocationPath('berlin'),
+    );
+
+    // Location detail top-titles / top-skills keep the place as the SECOND
+    // segment, so the rail stays scoped to the current place. Binding order is
+    // load-bearing — the two axes never collapse to the same URL.
+    expect(salaryTitleInLocationPath('data-scientist', 'london')).toBe(
+      `${salaryTitlePath('data-scientist')}/london`,
+    );
+    expect(salarySkillInLocationPath('react', 'london')).toBe(
+      `${salarySkillPath('react')}/london`,
+    );
+    expect(salaryTitleInLocationPath('london', 'data-scientist')).not.toBe(
+      salaryTitleInLocationPath('data-scientist', 'london'),
+    );
+
+    // Company competitor cards stay on the salary path (category-scoped on a
+    // category page), never the bare company profile.
+    expect(companyCategorySalaryPath('stripe', 'engineering')).toBe(
+      `${companySalaryPath('stripe')}/engineering`,
+    );
+  });
+});
+
+/**
+ * The location breadcrumb hierarchy (Layer 1b). Rebuilt from the flat
+ * `salaries.locations.list()` tree (the only public-SDK source of ancestry),
+ * it links every ANCESTOR to its own salary page and leaves the CURRENT place
+ * terminal — mirroring the hosted board, which reads the same chain from its
+ * internal places table.
+ */
+describe('toLocationHierarchyCrumbs', () => {
+  const tree: SalaryLocationNode[] = [
+    { placeSlug: 'united-states', placeName: 'United States', parentSlug: null },
+    { placeSlug: 'texas', placeName: 'Texas', parentSlug: 'united-states' },
+    { placeSlug: 'austin', placeName: 'Austin', parentSlug: 'texas' },
+  ];
+
+  it('links every ancestor and leaves the current place terminal, country → current', () => {
+    const crumbs = toLocationHierarchyCrumbs(tree, 'austin', 'Austin');
+    expect(crumbs).toEqual([
+      { name: 'United States', href: salaryLocationPath('united-states') },
+      { name: 'Texas', href: salaryLocationPath('texas') },
+      { name: 'Austin' },
+    ]);
+    // The terminal crumb never carries an href.
+    expect(crumbs.at(-1)?.href).toBeUndefined();
+  });
+
+  it('falls back to a single terminal crumb when the place is absent from the tree', () => {
+    expect(toLocationHierarchyCrumbs(tree, 'nowhere', 'Nowhere')).toEqual([
+      { name: 'Nowhere' },
+    ]);
+  });
+
+  it('renders a top-level place as a single terminal crumb', () => {
+    expect(
+      toLocationHierarchyCrumbs(tree, 'united-states', 'United States'),
+    ).toEqual([{ name: 'United States' }]);
+  });
+});
+
+/**
+ * Salary <title> frames route through the SDK lexicon so a tenant inherits the
+ * canonical plural, board-localized phrasing (never a starter-local singular
+ * duplicate). These pin the CONTRACT — the null-range branch is handled, and
+ * the entity/place variants differ — not the exact lexicon copy.
+ */
+describe('salary title frames', () => {
+  it('salaryPlaceTitle picks the ranged vs no-range frame and never emits an empty range', () => {
+    const ranged = salaryPlaceTitle('en', 'Austin', '$90K–$140K');
+    const bare = salaryPlaceTitle('en', 'Austin', null);
+    expect(ranged).not.toBe(bare);
+    expect(ranged).toContain('Austin');
+    expect(bare).toContain('Austin');
+    expect(bare).not.toContain('()');
+  });
+
+  it('salaryCompanyTitle accepts a null range without fabricating a band', () => {
+    const bare = salaryCompanyTitle('en', 'Acme', null);
+    expect(bare).toContain('Acme');
+    expect(bare).not.toContain('()');
   });
 });

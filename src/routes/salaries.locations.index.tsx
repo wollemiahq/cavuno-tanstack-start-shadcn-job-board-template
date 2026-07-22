@@ -49,7 +49,7 @@ export const Route = createFileRoute('/salaries/locations/')({
           links: [
             {
               rel: 'canonical',
-              href: `${loaderData.seo.origin}/salaries/locations`,
+              href: boardUrl(loaderData.seo.origin, BOARD_PATHS.salaryLocations),
             },
           ],
         }
@@ -146,7 +146,7 @@ function SalaryLocationsIndex() {
         <LocationTree parentSlug={null} byParent={byParent} />
       ) : (
         <SalaryEmptyState
-          title={m.salaryHub_locationsHeading()}
+          title={m.salaryHub_locationsEmptyTitle()}
           description={m.salaryHub_emptyDescription()}
         />
       )}

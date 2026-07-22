@@ -65,10 +65,16 @@ export const Route = createFileRoute('/salaries/titles/$slug/locations')({
             },
             {
               name: 'description',
-              content: m.salaryDetail_titleLocationsMetaDescription({
-                title: loaderData.data.categoryName,
-                count: loaderData.data.locations.length,
-              }),
+              content:
+                loaderData.data.locations.length === 1
+                  ? m.salaryDetail_titleLocationsMetaDescriptionOne({
+                      title: loaderData.data.categoryName,
+                      count: loaderData.data.locations.length,
+                    })
+                  : m.salaryDetail_titleLocationsMetaDescriptionMany({
+                      title: loaderData.data.categoryName,
+                      count: loaderData.data.locations.length,
+                    }),
             },
           ],
           links: [

@@ -31,6 +31,7 @@ import {
 
 import {
   companyCategorySalaryPath,
+  salaryCompanyCategoryTitle,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
@@ -87,11 +88,19 @@ export const Route = createFileRoute(
           meta: [
             {
               title: headTitle(
-                loaderData?.seo.boardName,
-                m.companySalaries_categoryMetaTitle({
-                  company: loaderData.salary.companyName,
-                  category: loaderData.salary.categoryName,
-                }),
+                loaderData.seo.boardName,
+                salaryCompanyCategoryTitle(
+                  loaderData.seo.language,
+                  loaderData.salary.companyName,
+                  loaderData.salary.categoryName,
+                  loaderData.salary.overallSalary
+                    ? formatRange(
+                        loaderData.seo.language,
+                        loaderData.salary.overallSalary.avgMin,
+                        loaderData.salary.overallSalary.avgMax,
+                      )
+                    : null,
+                ),
               ),
             },
             {
