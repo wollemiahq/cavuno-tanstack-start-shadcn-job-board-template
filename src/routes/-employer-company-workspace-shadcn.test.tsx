@@ -22,6 +22,8 @@ const mocks = vi.hoisted(() => ({
   createStage: vi.fn(),
   deleteJob: vi.fn(),
   getCompanyWorkspace: vi.fn(),
+  getEmployerJobStats: vi.fn(),
+  getEmployerJobStatsTimeseries: vi.fn(),
   getCompany: vi.fn(),
   getJob: vi.fn(),
   getSeoBase: vi.fn(),
@@ -84,6 +86,8 @@ vi.mock('../server/employers', () => ({
   createStage: mocks.createStage,
   deleteJob: mocks.deleteJob,
   getCompanyWorkspace: mocks.getCompanyWorkspace,
+  getEmployerJobStats: mocks.getEmployerJobStats,
+  getEmployerJobStatsTimeseries: mocks.getEmployerJobStatsTimeseries,
   getJob: mocks.getJob,
   getPipeline: mocks.getPipeline,
   moveApplicant: mocks.moveApplicant,
@@ -159,17 +163,48 @@ const company = {
   links: { public: 'https://jobs.example/companies/northstar-labs' },
 };
 
-function renderJobs(jobs: unknown[]) {
+type EmployerJobStat = {
+  object: 'employer_job_stat';
+  jobId: string;
+  views: number;
+  applyClicks: number;
+  applications: number | null;
+};
+type EmployerJobStatsPoint = {
+  object: 'employer_job_stats_point';
+  date: string;
+  views: number;
+  applyClicks: number;
+};
+
+// The jobs page defers its stats via <Await> (per-row stat cells + the chart),
+// so the render must flush the resolved promises inside an async act — a bare
+// sync render would leave suspense pending and trip the strict console guard.
+async function renderJobs(
+  jobs: unknown[],
+  deferred: {
+    stats?: EmployerJobStat[];
+    timeseries?: EmployerJobStatsPoint[];
+  } = {},
+) {
+  const statsIndex = Promise.resolve(
+    new Map((deferred.stats ?? []).map((stat) => [stat.jobId, stat])),
+  );
+  const timeseries = Promise.resolve(deferred.timeseries ?? []);
   vi.spyOn(JobsRoute, 'useLoaderData').mockReturnValue({
     slug: 'northstar-labs',
     membership: { company: { name: 'Northstar Labs' } },
     jobs: { data: jobs },
     billingOptions: { data: [] },
     plans: [],
+    statsIndex,
+    timeseries,
   } as never);
   const JobsPage = JobsRoute.options.component;
   if (!JobsPage) throw new Error('The jobs route must expose its component');
-  render(<JobsPage />);
+  await act(async () => {
+    render(<JobsPage />);
+  });
 }
 
 afterEach(() => {
@@ -182,6 +217,10 @@ afterEach(() => {
 beforeEach(() => {
   mocks.getSeoBase.mockResolvedValue({ boardName: 'Acme Board' });
   mocks.refreshSession.mockResolvedValue({ ok: false });
+  // Deferred reporting reads default to empty envelopes; individual tests
+  // override them to exercise the join and the chart.
+  mocks.getEmployerJobStats.mockResolvedValue({ data: [] });
+  mocks.getEmployerJobStatsTimeseries.mockResolvedValue({ data: [] });
   // The applicants loader gates on the native-applications feature flag;
   // default it on so the existing pipeline tests exercise the API path.
   mocks.getBoardContext.mockResolvedValue({
@@ -335,8 +374,8 @@ describe('employer company workspace', () => {
     expect(mocks.getPipeline).not.toHaveBeenCalled();
   });
 
-  it('titles the jobs list with the company name and its active-job count', () => {
-    renderJobs([
+  it('titles the jobs list with the company name and its active-job count', async () => {
+    await renderJobs([
       { ...draftJob, id: 'a', status: 'published', publishedAt: '2026-07-01' },
       { ...draftJob, id: 'b', status: 'published', publishedAt: '2026-07-02' },
       { ...draftJob, id: 'c', status: 'draft' },
@@ -347,8 +386,8 @@ describe('employer company workspace', () => {
     expect(screen.getByText('You have 2 active jobs.')).toBeInTheDocument();
   });
 
-  it('links every role name to its edit page and hides applicants for drafts', () => {
-    renderJobs([draftJob]);
+  it('links every role name to its edit page and hides applicants for drafts', async () => {
+    await renderJobs([draftJob]);
 
     const roleLink = screen.getByRole('link', {
       name: 'Senior Product Designer',
@@ -378,8 +417,147 @@ describe('employer company workspace', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('shows a distinct Expired chip and flips the date to the expiry', () => {
-    renderJobs([
+  it('joins per-job view / apply-click / application stats into the table', async () => {
+    await renderJobs(
+      [
+        {
+          ...draftJob,
+          id: 'job-live',
+          status: 'published',
+          publishedAt: '2026-07-01',
+        },
+      ],
+      {
+        stats: [
+          {
+            object: 'employer_job_stat',
+            jobId: 'job-live',
+            views: 1234,
+            applyClicks: 56,
+            applications: 7,
+          },
+        ],
+      },
+    );
+
+    // Column headers exist immediately (table paints before stats stream in).
+    expect(
+      screen.getByRole('columnheader', { name: 'Views' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('columnheader', { name: 'Apply clicks' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('columnheader', { name: 'Applications' }),
+    ).toBeInTheDocument();
+
+    // The joined figures fill in once the deferred stats resolve, formatted.
+    expect(await screen.findByText('1,234')).toBeInTheDocument();
+    expect(screen.getByText('56')).toBeInTheDocument();
+    expect(screen.getByText('7')).toBeInTheDocument();
+  });
+
+  it('renders the not-applicable dash for an external-apply job, never a zero', async () => {
+    await renderJobs(
+      [
+        {
+          ...draftJob,
+          id: 'job-external',
+          status: 'published',
+          publishedAt: '2026-07-01',
+        },
+      ],
+      {
+        stats: [
+          {
+            object: 'employer_job_stat',
+            jobId: 'job-external',
+            views: 40,
+            applyClicks: 5,
+            applications: null,
+          },
+        ],
+      },
+    );
+
+    // Views/clicks still show their numbers…
+    expect(await screen.findByText('40')).toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument();
+    // …but a null application count reads as the dash + an accessible label,
+    // and is never coerced to 0.
+    expect(screen.getByText('Not available')).toBeInTheDocument();
+    expect(screen.queryByText('0')).not.toBeInTheDocument();
+  });
+
+  it('still renders the jobs table when the stats read degrades', async () => {
+    // A rejected deferred stats promise (the loader catch → empty Map) must not
+    // take the table down: the rows render, the stat cells resolve to dashes.
+    vi.spyOn(JobsRoute, 'useLoaderData').mockReturnValue({
+      slug: 'northstar-labs',
+      membership: { company: { name: 'Northstar Labs' } },
+      jobs: {
+        data: [
+          {
+            ...draftJob,
+            id: 'job-live',
+            status: 'published',
+            publishedAt: '2026-07-01',
+          },
+        ],
+      },
+      billingOptions: { data: [] },
+      plans: [],
+      statsIndex: Promise.resolve(new Map()),
+      timeseries: Promise.resolve([]),
+    } as never);
+    const JobsPage = JobsRoute.options.component;
+    if (!JobsPage) throw new Error('needs a component');
+    await act(async () => {
+      render(<JobsPage />);
+    });
+
+    expect(
+      screen.getByRole('link', { name: 'Senior Product Designer' }),
+    ).toBeInTheDocument();
+    // No stats row for the job → dashes, resolved after the empty Map settles.
+    expect(await screen.findAllByText('—')).not.toHaveLength(0);
+  });
+
+  it('renders the reporting chart with data and its empty state on all-zero', async () => {
+    const publishedJob = {
+      ...draftJob,
+      id: 'job-live',
+      status: 'published',
+      publishedAt: '2026-07-01',
+    };
+
+    // All-zero window → the honest empty panel, not a chart on a broken axis.
+    await renderJobs([publishedJob], {
+      timeseries: [
+        { object: 'employer_job_stats_point', date: '2026-07-01', views: 0, applyClicks: 0 },
+        { object: 'employer_job_stats_point', date: '2026-07-02', views: 0, applyClicks: 0 },
+      ],
+    });
+    expect(await screen.findByText('No activity yet')).toBeInTheDocument();
+    cleanup();
+
+    // Real activity → the chart renders (its accessible label is present).
+    await renderJobs([publishedJob], {
+      timeseries: [
+        { object: 'employer_job_stats_point', date: '2026-07-01', views: 12, applyClicks: 3 },
+        { object: 'employer_job_stats_point', date: '2026-07-02', views: 18, applyClicks: 5 },
+      ],
+    });
+    expect(
+      await screen.findByRole('img', {
+        name: 'Daily views and apply clicks over the last 30 days',
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('No activity yet')).not.toBeInTheDocument();
+  });
+
+  it('shows a distinct Expired chip and flips the date to the expiry', async () => {
+    await renderJobs([
       {
         ...draftJob,
         status: 'published',
@@ -395,7 +573,7 @@ describe('employer company workspace', () => {
 
   it('republishes an entitled job in place and toasts', async () => {
     mocks.publishJob.mockResolvedValue({ ok: true, data: {} });
-    renderJobs([
+    await renderJobs([
       {
         ...draftJob,
         status: 'expired',
@@ -420,7 +598,7 @@ describe('employer company workspace', () => {
       ok: false,
       message: 'Payment required',
     });
-    renderJobs([
+    await renderJobs([
       {
         ...draftJob,
         status: 'expired',

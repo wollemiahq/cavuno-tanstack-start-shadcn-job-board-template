@@ -2,6 +2,7 @@ import { boardCopy } from '#/copy';
 
 import { formatDate } from '@cavuno/board/format';
 import {
+  Await,
   createFileRoute,
   getRouteApi,
   Link,
@@ -24,9 +25,20 @@ import { m } from '../paraglide/messages';
 import {
   deleteJob,
   getCompanyWorkspace,
+  getEmployerJobStats,
+  getEmployerJobStatsTimeseries,
   publishJob,
   unpublishJob,
 } from '../server/employers';
+import {
+  toEmployerJobStatCellsVM,
+  toEmployerJobStatsIndex,
+  toEmployerStatsChartVM,
+} from '@/board/employer-stats-view-model';
+import {
+  EmployerStatsChart,
+  EmployerStatsChartPending,
+} from '@/components/employer/employer-stats-chart';
 /**
  * Company workspace — the company's jobs. Each row's role name links to the
  * job's own edit page (a draft publishes + pays there; the inline checkout
@@ -36,6 +48,7 @@ import {
 import { getSeoBase } from '../server/queries';
 
 import { Page, PageContent } from '@/components/layout/page';
+import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -62,8 +75,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 import { headTitle } from '@/lib/page-title';
-import type { EmployerJobSummary } from '@cavuno/board';
+import type {
+  EmployerJobStat,
+  EmployerJobStatsPoint,
+  EmployerJobSummary,
+} from '@cavuno/board';
 
 const rootApi = getRouteApi('__root__');
 
@@ -74,7 +92,20 @@ export const Route = createFileRoute('/employers/companies/$slug/')({
         getCompanyWorkspace({ data: { slug: params.slug } }),
         getSeoBase(),
       ]);
-      return { ...workspace, seo };
+      // Reporting is non-critical: defer both stats reads so a slow or failing
+      // analytics backend never blocks the jobs table's first paint. They
+      // stream in via <Await>; each degrades to an empty result (the table
+      // renders with dashed stat cells, the chart shows its empty state) and is
+      // never fatal. The retrieve endpoint itself zero-fills on outage.
+      const statsIndex = getEmployerJobStats({ data: { slug: params.slug } })
+        .then((result) => toEmployerJobStatsIndex(result.data))
+        .catch(() => new Map<string, EmployerJobStat>());
+      const timeseries = getEmployerJobStatsTimeseries({
+        data: { slug: params.slug },
+      })
+        .then((result) => result.data)
+        .catch(() => [] as EmployerJobStatsPoint[]);
+      return { ...workspace, seo, statsIndex, timeseries };
     } catch (error) {
       return await handleEmployerLoaderError(
         error,
@@ -104,7 +135,8 @@ function activeJobsSubtitle(count: number) {
 }
 
 function CompanyJobsPage() {
-  const { slug, membership, jobs } = Route.useLoaderData();
+  const { slug, membership, jobs, statsIndex, timeseries } =
+    Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const copy = boardCopy(board.language, board.labels);
   const company = membership?.company;
@@ -131,9 +163,9 @@ function CompanyJobsPage() {
         <div className="space-y-6">
           <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1">
-              <h1 className="font-heading text-2xl font-semibold tracking-tight">
+              <Text as="h1" variant="heading1">
                 {m.employerJobs_companyJobsHeading({ company: companyName })}
-              </h1>
+              </Text>
               {jobs.data.length > 0 ? (
                 <p className="text-muted-foreground text-sm">
                   {activeJobsSubtitle(activeCount)}
@@ -157,30 +189,56 @@ function CompanyJobsPage() {
               <EmptyContent>{postJobLink}</EmptyContent>
             </Empty>
           ) : (
-            <Card className="py-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{m.employerJobs_roleColumn()}</TableHead>
-                    <TableHead>{m.employerJobs_typeColumn()}</TableHead>
-                    <TableHead>{m.employerJobs_statusColumn()}</TableHead>
-                    <TableHead className="text-right">
-                      {m.employerJobs_actionsColumn()}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {jobs.data.map((job) => (
-                    <JobRow
-                      key={job.id}
-                      slug={slug}
-                      job={job}
-                      language={board.language}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
-            </Card>
+            <>
+              {/* Reporting chart — deferred (streamed via <Await>) so it never
+                  blocks the table below. Its empty state covers the zero-activity
+                  window; the fallback reserves the chart's height. */}
+              <Await
+                promise={timeseries}
+                fallback={<EmployerStatsChartPending />}
+              >
+                {(points) => (
+                  <EmployerStatsChart
+                    vm={toEmployerStatsChartVM(points, board.language)}
+                  />
+                )}
+              </Await>
+
+              <Card className="py-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{m.employerJobs_roleColumn()}</TableHead>
+                      <TableHead>{m.employerJobs_typeColumn()}</TableHead>
+                      <TableHead>{m.employerJobs_statusColumn()}</TableHead>
+                      <TableHead className="text-right">
+                        {m.employerJobs_viewsColumn()}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {m.employerJobs_applyClicksColumn()}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {m.employerJobs_applicationsColumn()}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {m.employerJobs_actionsColumn()}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {jobs.data.map((job) => (
+                      <JobRow
+                        key={job.id}
+                        slug={slug}
+                        job={job}
+                        language={board.language}
+                        statsIndex={statsIndex}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
+            </>
           )}
         </div>
       </PageContent>
@@ -188,14 +246,75 @@ function CompanyJobsPage() {
   );
 }
 
+/** The three right-aligned stat cells for one row, resolved from the join. */
+function StatCells({
+  cells,
+}: {
+  cells: {
+    views: string;
+    applyClicks: string;
+    applications: string;
+    applicationsNotApplicable: boolean;
+  };
+}) {
+  return (
+    <>
+      <TableCell className="text-muted-foreground text-right tabular-nums">
+        {cells.views}
+      </TableCell>
+      <TableCell className="text-muted-foreground text-right tabular-nums">
+        {cells.applyClicks}
+      </TableCell>
+      <TableCell
+        className="text-muted-foreground text-right tabular-nums"
+        title={
+          cells.applicationsNotApplicable
+            ? m.employerJobs_statUnavailableLabel()
+            : undefined
+        }
+      >
+        {cells.applicationsNotApplicable ? (
+          <>
+            <span aria-hidden>{cells.applications}</span>
+            <span className="sr-only">
+              {m.employerJobs_statUnavailableLabel()}
+            </span>
+          </>
+        ) : (
+          cells.applications
+        )}
+      </TableCell>
+    </>
+  );
+}
+
+/** The pending placeholder for the three stat cells while stats stream in. */
+function StatCellsPending() {
+  return (
+    <>
+      <TableCell className="text-right">
+        <Skeleton className="ml-auto h-4 w-8" />
+      </TableCell>
+      <TableCell className="text-right">
+        <Skeleton className="ml-auto h-4 w-8" />
+      </TableCell>
+      <TableCell className="text-right">
+        <Skeleton className="ml-auto h-4 w-8" />
+      </TableCell>
+    </>
+  );
+}
+
 function JobRow({
   slug,
   job,
   language,
+  statsIndex,
 }: {
   slug: string;
   job: EmployerJobSummary;
   language: string;
+  statsIndex: Promise<Map<string, EmployerJobStat>>;
 }) {
   const router = useRouter();
   const expired = isEmployerJobExpired(job);
@@ -265,6 +384,13 @@ function JobRow({
           {employerJobStatusLabel(displayStatus)}
         </Badge>
       </TableCell>
+      <Await promise={statsIndex} fallback={<StatCellsPending />}>
+        {(index) => (
+          <StatCells
+            cells={toEmployerJobStatCellsVM(index.get(job.id), language)}
+          />
+        )}
+      </Await>
       <TableCell>
         <div className="flex min-w-max items-center justify-end gap-1">
           <DropdownMenu>

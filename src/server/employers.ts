@@ -266,6 +266,44 @@ export const checkoutJob = createServerFn({ method: 'POST' })
     ),
   );
 
+// ── Reporting — per-job stats + the company timeseries ──────────────────────
+
+/**
+ * Per-job reporting funnel for every job the company owns (views, apply
+ * clicks, native applications), keyed by `jobId`. A gated read like the
+ * workspace; carries no cache tags, so it stays no-store under the authed
+ * read-cache policy. The endpoint zero-fills on an analytics outage and never
+ * fails on stats, so a `0` means "no activity" OR "analytics briefly down".
+ */
+export const getEmployerJobStats = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, () =>
+      getBoard().me.companies.jobStats.retrieve(data.slug, {
+        headers: authedHeaders(context),
+      }),
+    ),
+  );
+
+/**
+ * Daily views + apply-clicks aggregated across the company's jobs, ascending
+ * by date. Defaults to the API's last-30-days window when `since`/`until` are
+ * omitted. Gated read, no cache tags — no-store like the per-job stats.
+ */
+export const getEmployerJobStatsTimeseries = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string; since?: string; until?: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, () =>
+      getBoard().me.companies.jobStats.timeseries(
+        data.slug,
+        { since: data.since, until: data.until },
+        { headers: authedHeaders(context) },
+      ),
+    ),
+  );
+
 // ── ATS — applicants + pipeline stages ──────────────────────────────────────
 
 /** One job's pipeline (job header + stage rail + applicants with timelines). */
