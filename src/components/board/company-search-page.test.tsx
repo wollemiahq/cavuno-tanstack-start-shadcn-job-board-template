@@ -236,6 +236,64 @@ describe('CompanySearchPage — search results pattern', () => {
   });
 });
 
+describe('CompanySearchPage — results description line', () => {
+  function renderPage(props: Partial<React.ComponentProps<typeof CompanySearchPage>>) {
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => (
+        <CompanySearchPage
+          companies={[companyVm]}
+          count={1}
+          page={1}
+          pageSize={24}
+          markets={[]}
+          onPageChange={vi.fn()}
+          onSelectedCompanyReplace={vi.fn()}
+          onSelectedCompanyPush={vi.fn()}
+          detail={<p>Selected company details</p>}
+          {...props}
+        />
+      ),
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    return render(<RouterProvider router={router} />);
+  }
+
+  it('renders the exact "Showing X–Y of N" range on the browse index (offset)', async () => {
+    // Browse mode (no free-text query) is offset-paginated with a total, so the
+    // description line states the precise range.
+    renderPage({ count: 37, page: 1, pageSize: 24 });
+
+    expect(
+      await screen.findByText('Showing 1–24 of 37 companies'),
+    ).toBeVisible();
+  });
+
+  it('reports the honest on-page count with a more-available hint on cursor search', async () => {
+    // Free-text search is cursor-based (no total/offset). The line reports the
+    // count actually rendered — singular here — and flags that more follow.
+    renderPage({ query: 'acme', count: 999, nextCursor: 'cursor-page-2' });
+
+    expect(
+      await screen.findByText('Showing 1 company, more available'),
+    ).toBeVisible();
+    // Never a fabricated range on a cursor surface.
+    expect(screen.queryByText(/of \d+ companies/)).toBeNull();
+  });
+
+  it('drops the more-available hint on the last cursor page', async () => {
+    renderPage({ query: 'acme', count: 999, nextCursor: null });
+
+    expect(await screen.findByText('Showing 1 company')).toBeVisible();
+    expect(screen.queryByText(/more available/)).toBeNull();
+  });
+});
+
 describe('CompanySearchPage — arrival scroll', () => {
   // jsdom ships no scrollIntoView; the hook guards on its presence, so provide
   // a spy to observe the arrival alignment.

@@ -7,6 +7,7 @@ import { m } from '../../paraglide/messages';
 
 import type { TalentCardVM } from '@/board/talent-view-model';
 import { CursorPagination } from '@/components/board/cursor-pagination';
+import { ListingResultsHeader } from '@/components/board/listing-page-header';
 import { TalentSearchResult } from '@/components/board/talent-search-result';
 import { Page } from '@/components/layout/page';
 import {
@@ -77,15 +78,38 @@ export function TalentSearchPage({
     onReplace: onSelectedTalentReplace,
     onPush: onSelectedTalentPush,
   });
+  // The talent directory is cursor-based — the SDK returns no total and no
+  // offset — so the description line under the heading reports the honest count
+  // actually on this page (never a fabricated "X–Y of N"), and flags that more
+  // may follow when a next cursor exists. `shownCount` is the rendered length,
+  // which keeps the copy honest on cursor page 2+, where absolute position is
+  // unknowable.
+  const shownCount = candidateVms.length;
+  const hasMore = Boolean(nextCursor);
+  const resultDescription =
+    shownCount > 0
+      ? hasMore
+        ? shownCount === 1
+          ? m.talentSearch_resultsShowingMoreOne({ count: shownCount })
+          : m.talentSearch_resultsShowingMoreMany({ count: shownCount })
+        : shownCount === 1
+          ? m.talentSearch_resultsShowingCountOne({ count: shownCount })
+          : m.talentSearch_resultsShowingCountMany({ count: shownCount })
+      : null;
   const resultsBar = (
-    <div
-      data-slot="talent-results-bar"
-      className={candidateVms.length > 0 ? 'px-4 pb-3 md:px-0' : 'pb-3'}
-    >
-      <h1 className="text-foreground text-lg font-semibold tracking-tight">
-        {m.talentSearch_resultsHeading()}
-      </h1>
-    </div>
+    <ListingResultsHeader>
+      <div
+        data-slot="talent-results-bar"
+        className={candidateVms.length > 0 ? 'px-4 pb-3 md:px-0' : 'pb-3'}
+      >
+        <h1 className="text-foreground text-lg font-semibold tracking-tight">
+          {m.talentSearch_resultsHeading()}
+        </h1>
+        {resultDescription ? (
+          <p className="text-muted-foreground text-xs">{resultDescription}</p>
+        ) : null}
+      </div>
+    </ListingResultsHeader>
   );
 
   return (

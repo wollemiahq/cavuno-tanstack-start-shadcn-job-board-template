@@ -94,6 +94,33 @@ export function CompanySearchPage({
     count === 1
       ? m.companySearch_resultsCountOne({ count })
       : m.companySearch_resultsCountMany({ count });
+  // The description line under the count mirrors the jobs results header. On the
+  // browse index (offset pagination with a total) it renders the exact
+  // "Showing X–Y of N" range. Free-text search is cursor-based — the API returns
+  // no total or offset — so it reports the honest count actually on the page
+  // (never a fabricated range), flagging that more may follow when a next cursor
+  // exists. `shownCount` is the rendered length so the copy stays honest on
+  // cursor page 2+, which has no absolute position.
+  const isCursor = Boolean(query);
+  const shownCount = companyVms.length;
+  const hasMore = Boolean(nextCursor);
+  const resultDescription = isCursor
+    ? shownCount > 0
+      ? hasMore
+        ? shownCount === 1
+          ? m.companySearch_resultsShowingMoreOne({ count: shownCount })
+          : m.companySearch_resultsShowingMoreMany({ count: shownCount })
+        : shownCount === 1
+          ? m.companySearch_resultsShowingCountOne({ count: shownCount })
+          : m.companySearch_resultsShowingCountMany({ count: shownCount })
+      : null
+    : count > 0
+      ? m.companySearch_resultsShowingRange({
+          from: (page - 1) * pageSize + 1,
+          to: Math.min(page * pageSize, count),
+          count,
+        })
+      : null;
   const resultsBar = (
     <div
       data-slot="company-results-bar"
@@ -102,6 +129,9 @@ export function CompanySearchPage({
       <h1 className="text-foreground text-lg font-semibold tracking-tight">
         {resultCountLabel}
       </h1>
+      {resultDescription ? (
+        <p className="text-muted-foreground text-xs">{resultDescription}</p>
+      ) : null}
     </div>
   );
   return (

@@ -200,6 +200,81 @@ describe('TalentSearchPage — search results pattern', () => {
   });
 });
 
+const candidate2 = {
+  object: 'talent_directory_entry',
+  handle: 'grace-hopper',
+  displayName: 'Grace Hopper',
+  headline: 'Compiler pioneer',
+  location: 'New York',
+  avatarUrl: null,
+  bio: null,
+  jobSearchStatus: 'open_to_offers',
+  skills: ['COBOL'],
+  experiences: [],
+  education: [],
+} as TalentDirectoryEntry;
+const candidateVm2 = toTalentCardVM(candidate2, getTalentSearchLabels());
+
+describe('TalentSearchPage — results description line', () => {
+  function renderPage(
+    props: Partial<React.ComponentProps<typeof TalentSearchPage>>,
+  ) {
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => (
+        <TalentSearchPage
+          candidates={[candidateVm]}
+          onSelectedTalentReplace={vi.fn()}
+          onSelectedTalentPush={vi.fn()}
+          detail={<p>Selected profile details</p>}
+          {...props}
+        />
+      ),
+    });
+    const profileRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/p/$handle',
+      component: () => <p>Full profile</p>,
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute, profileRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    return render(<RouterProvider router={router} />);
+  }
+
+  it('reports the honest on-page count (singular) with a more-available hint', async () => {
+    // The talent directory is cursor-only — no total, no offset — so the line
+    // states the rendered count and flags that more follow, never a range.
+    renderPage({ nextCursor: 'cursor-page-2' });
+
+    expect(
+      await screen.findByText('Showing 1 candidate, more available'),
+    ).toBeVisible();
+    expect(screen.queryByText(/of \d+ candidates/)).toBeNull();
+  });
+
+  it('pluralizes the count and keeps the hint on a full cursor page', async () => {
+    renderPage({
+      candidates: [candidateVm, candidateVm2],
+      nextCursor: 'cursor-page-2',
+    });
+
+    expect(
+      await screen.findByText('Showing 2 candidates, more available'),
+    ).toBeVisible();
+  });
+
+  it('drops the more-available hint on the last cursor page', async () => {
+    renderPage({ nextCursor: null });
+
+    expect(await screen.findByText('Showing 1 candidate')).toBeVisible();
+    expect(screen.queryByText(/more available/)).toBeNull();
+  });
+});
+
 describe('TalentSearchPage — arrival scroll', () => {
   // jsdom ships no scrollIntoView; the hook guards on its presence, so provide
   // a spy to observe the arrival alignment.
