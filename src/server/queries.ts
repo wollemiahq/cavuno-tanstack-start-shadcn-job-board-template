@@ -21,6 +21,7 @@ import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { getServerEnv } from '../lib/env';
+import { boardGlobalReadCache } from '../lib/read-cache';
 import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 import { readTalentDirectory } from './talent-directory-read';
@@ -44,6 +45,7 @@ import type {
   PlacesListQuery,
   PlansListQuery,
   PublicBlogAdjacentPosts,
+  RelatedSearch,
   SuggestionsListQuery,
   TalentDirectoryQuery,
   TaxonomyResolution,
@@ -104,9 +106,11 @@ export const getBoardContext = createServerFn({ method: 'GET' }).handler(
 export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
   async () => {
     try {
+      // Board-global, always-anonymous reads on the root loader's critical
+      // path — edge-cache them with the longer board-global TTL.
       const [plans, salesLed] = await Promise.all([
-        getBoard().plans.list({}),
-        getBoard().plans.salesLed(),
+        getBoard().plans.list({}, boardGlobalReadCache()),
+        getBoard().plans.salesLed(boardGlobalReadCache()),
       ]);
       return {
         hasEmployerOfferPage: plans.data.length > 0 || salesLed.data.length > 0,
@@ -118,16 +122,6 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
       return { hasEmployerOfferPage: false };
     }
   },
-);
-
-/**
- * Deployment analytics config (cutover runbook P2): the publishable
- * Tinybird tracker token, read server-side (cloudflare:workers env can't
- * be imported by client code) and threaded to the root document's flock
- * script tag. Null ⇒ analytics disabled, no script tag.
- */
-export const getAnalyticsConfig = createServerFn({ method: 'GET' }).handler(
-  async () => ({ trackerToken: getServerEnv().trackerToken }),
 );
 
 /**
@@ -153,11 +147,19 @@ export const getSeoBase = createServerFn({ method: 'GET' }).handler(
 
 /**
  * Board SEO infra (resolved favicon/app-icon URLs + web-manifest meta + the
- * canonical base) for the root <head>. OPEN — the hosted board serves these
- * publicly even when password-protected.
+ * canonical base) for the root <head>, plus the deployment analytics token
+ * (cutover runbook P2): the publishable Tinybird tracker token, read
+ * server-side (cloudflare:workers env can't be imported by client code) and
+ * threaded to the root document's flock script tag. `trackerToken` null ⇒
+ * analytics disabled, no script tag. Folded into this root-only head-infra read
+ * so the root loader carries one fewer server function. OPEN — the hosted board
+ * serves the SEO infra publicly even when password-protected.
  */
-export const getBoardSeo = createServerFn({ method: 'GET' }).handler(() =>
-  getBoard().seo(),
+export const getBoardSeo = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    const seo = await getBoard().seo();
+    return { ...seo, trackerToken: getServerEnv().trackerToken };
+  },
 );
 
 // ── GATED content reads (behind the board-password wall) ────────────────────
@@ -176,6 +178,47 @@ export const searchJobs = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().jobs.search(data, undefined, { headers: h }),
     ),
+  );
+
+/**
+ * Top job categories for the homepage's "Browse by category" section — the
+ * server-computed category facets from the browse envelope's `relatedSearches`
+ * (ADR-0037 §8), NOT a client-side tally. The facets are derived from the
+ * returned page window (parity with the hosted page-derived related-searches),
+ * so this reads a FULL page to collect the board's busiest categories — a
+ * `limit: 1` read returns no facets at all.
+ *
+ * Each surviving facet is then run through the taxonomy resolver — the SAME
+ * check the `/jobs/:keyword` category page runs — and only the ones that
+ * resolve are kept, linked via their CANONICAL slug. This is a defensive guard
+ * against a board whose facet read model has drifted from its taxonomy-resolve
+ * read model (see the platform bug note): a tile that 404s is worse than an
+ * absent tile. Anonymous, and gated behind the board-password wall like the
+ * other content reads.
+ */
+export const listTopJobCategories = createServerFn({ method: 'GET' })
+  .middleware([boardAccessMiddleware])
+  .handler(({ context }) =>
+    gatedRead(context, async (h) => {
+      const board = getBoard();
+      const envelope = await board.jobs.list({ limit: 20 }, { headers: h });
+      const categories = (envelope.relatedSearches ?? []).filter(
+        (related) => related.type === 'category',
+      );
+      const resolved = await Promise.all(
+        categories.map(async (related) => {
+          const resolution = await resolveOrNull(
+            board.taxonomy.categories.resolve(related.slug, { headers: h }),
+          );
+          return resolution
+            ? { ...related, slug: resolution.canonicalSlug }
+            : null;
+        }),
+      );
+      return resolved.filter(
+        (related): related is RelatedSearch => related !== null,
+      );
+    }),
   );
 
 /**
@@ -608,6 +651,87 @@ export const listPlaces = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().taxonomy.places.list(undefined, { headers: h }),
     ),
+  );
+
+// ── Taxonomy-chip resolvability guard ──────────────────────────────────────
+// The board's browse/facet endpoints (`GET /categories`, `GET /skills`, and a
+// jobs listing's `relatedSearches`) can emit taxonomy slugs that the resolver —
+// the SAME check the `/jobs/:keyword` and `/jobs/skills/:skill` pages run —
+// then rejects, so a chip/tile linking to one 404s (`JobsNotFound`). These
+// helpers let a loader drop such chips before they render. On a board whose
+// read models agree, everything resolves and nothing is dropped. See the
+// platform bug note in the change summary.
+
+/**
+ * Resolve a batch of `category`/`skill` chip candidates, returning a
+ * `${type}:${slug}` → canonicalSlug map for the subset that resolves. Callers
+ * (e.g. the job-detail chips) keep only chips whose key is present and link via
+ * the canonical slug. Resolves run in parallel behind one server-fn round trip.
+ */
+export const resolveTaxonomyChips = createServerFn({ method: 'GET' })
+  .validator(
+    (input: { candidates: { type: 'category' | 'skill'; slug: string }[] }) =>
+      input,
+  )
+  .middleware([boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, async (h) => {
+      const board = getBoard();
+      const entries = await Promise.all(
+        data.candidates.map(async ({ type, slug }) => {
+          const resolver =
+            type === 'skill'
+              ? board.taxonomy.skills
+              : board.taxonomy.categories;
+          const resolution = await resolveOrNull(
+            resolver.resolve(slug, { headers: h }),
+          );
+          return resolution
+            ? ([`${type}:${slug}`, resolution.canonicalSlug] as const)
+            : null;
+        }),
+      );
+      return Object.fromEntries(
+        entries.filter(
+          (entry): entry is NonNullable<(typeof entries)[number]> =>
+            entry !== null,
+        ),
+      ) as Record<string, string>;
+    }),
+  );
+
+/**
+ * Filter a jobs listing's `relatedSearches` down to the chips that will land on
+ * a real page (see `resolveTaxonomyChips`), swapping each surviving
+ * `category`/`skill` slug for its canonical form. `market` terms pass through
+ * untouched — they resolve through the companies-markets surface. Loaders hand
+ * the result to the listing rail so the rail never links to a 404.
+ */
+export const filterRelatedSearches = createServerFn({ method: 'GET' })
+  .validator((input: { related: RelatedSearch[] }) => input)
+  .middleware([boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, async (h) => {
+      const board = getBoard();
+      const resolved = await Promise.all(
+        data.related.map(async (related) => {
+          if (related.type === 'market') return related;
+          const resolver =
+            related.type === 'skill'
+              ? board.taxonomy.skills
+              : board.taxonomy.categories;
+          const resolution = await resolveOrNull(
+            resolver.resolve(related.slug, { headers: h }),
+          );
+          return resolution
+            ? { ...related, slug: resolution.canonicalSlug }
+            : null;
+        }),
+      );
+      return resolved.filter(
+        (related): related is RelatedSearch => related !== null,
+      );
+    }),
   );
 
 // ── Salary pages (ADR-0041) ─────────────────────────────────────────────────
