@@ -30,15 +30,15 @@ jobs:
       - name: Test
         run: pnpm test
 
-      # D15 (ADR-0066): DESIGN.md + design/tokens.dtcg.json are generated
-      # artifacts — regenerate and reject any drift/hand-edit.
+      # DESIGN.md + design/tokens.dtcg.json are generated artifacts —
+      # regenerate them and reject any drift or hand-edit.
       - name: Design artifacts check
         run: pnpm run gen:design -- --check
 
       - name: Build
         run: pnpm run build
 
-  # Conformance gate (ADR-0061 decision 3): capability, not markup.
+  # Conformance gate: verifies board capability, not markup.
   # Tier 1 static + tier 2 read probes against THIS starter's built
   # frontend + tier 3 write probes against the platform sandbox board
   # (writes are refused server-side unless the board is marked test, so

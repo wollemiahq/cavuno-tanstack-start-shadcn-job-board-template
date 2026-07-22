@@ -22,8 +22,7 @@ pnpm dev                         # http://localhost:3000
 The default `.dev.vars` grounds the app on the **sandbox board**, so you get
 the full preview toolbar (persona switching, feature-flag toggles, captured
 emails, reseed) with no keys or account. See
-[`docs/preview-states.md`](docs/preview-states.md) and the guided tour in
-[`docs/DEMO.md`](docs/DEMO.md).
+[`docs/preview-states.md`](docs/preview-states.md) for the guided tour.
 
 ## The verify triad
 

@@ -13,9 +13,9 @@ Built on [TanStack Start](https://tanstack.com/start),
 via the [Cavuno SDK](https://cavuno.com/sdk) (`@cavuno/board`), so every
 surface is a real page wired to a real backend — not a mock.
 
-> **Hosted demo:** `<DEMO_URL>` — _placeholder; see [Deploy](#deploy). The demo
-> deploy target exists (`wrangler deploy --env demo`) but the public URL is the
-> owner's go-live decision._
+<!-- Hosted demo: the demo deploy target exists (`wrangler deploy --env demo`,
+     see Deploy), but there is no public URL yet — flipping it live is the
+     owner's go-live decision. Add the link here once it's public. -->
 
 ![Cavuno job board home — real sandbox jobs and company cards](docs/media/home.png)
 
@@ -112,6 +112,7 @@ way; you're just pointing it at your real board instead of the sandbox.
 |---|---|---|
 | `CAVUNO_API_URL` | Board API base URL (`https://api.cavuno.com`) | `.dev.vars` / `wrangler.jsonc` |
 | `CAVUNO_BOARD` | Your board's `pk_…` publishable key (Dashboard → Settings → API) | `.dev.vars` / `wrangler.jsonc` |
+| `CAVUNO_TRACKER_TOKEN` | Optional — analytics only, safe to leave unset (unset ⇒ no analytics script) | `.dev.vars` / `wrangler.jsonc` |
 
 The `pk_…` key is **client-safe by design**; user sessions live in a
 host-owned httpOnly cookie this app manages itself. The Board API is only ever
@@ -225,14 +226,20 @@ The template targets **Cloudflare Workers** (config in
 pnpm run deploy            # builds, then `wrangler deploy`
 ```
 
+Going live means pointing the frontend at your own board: a human operator
+sets `CAVUNO_BOARD` (and `CAVUNO_API_URL`) in `wrangler.jsonc` before
+deploying. That deploy-time grounding is the operator's job, not a code edit
+— which is why [`AGENTS.md`](AGENTS.md) tells coding agents to never touch
+these values.
+
 A `demo` environment is pre-wired for the hosted showcase deploy:
 
 ```sh
 wrangler deploy --env demo
 ```
 
-> The public demo URL (`<DEMO_URL>` above) is intentionally a placeholder —
-> flipping it live is the owner's decision.
+> There is no public demo URL yet — flipping the `demo` deploy live is the
+> owner's decision.
 
 [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/wollemiahq/cavuno-shadcn-ui-job-board-template)
 

@@ -16,8 +16,8 @@ export interface ServerEnv {
   /** Board identifier — the deployment's pk_… publishable key. */
   board: string;
   /**
-   * Tinybird tracker token (publishable) — enables the flock analytics
-   * script (cutover runbook P2). Optional: unset ⇒ no script tag, no
+   * Publishable analytics tracker token — when set, enables the
+   * client-side analytics script. Optional: unset ⇒ no script tag, no
    * analytics; everything else works.
    */
   trackerToken: string | null;

@@ -12,14 +12,17 @@ app from scratch, never replace the chassis wholesale, never fork the
 data layer. If a request seems to require starting over, it doesn't:
 find the smallest edit to the existing surface.
 
-## Grounding config is not editable
+## Grounding config is not an agent edit
 
 `CAVUNO_API_URL`, `CAVUNO_BOARD` (the `pk_…` publishable key), and
 `CAVUNO_TRACKER_TOKEN` bind this frontend to one specific board. They
-are injected by the platform — `wrangler.jsonc` vars in production,
-`.dev.vars` in dev/sandbox — and are never edited, hardcoded,
-duplicated, or moved by an agent. A change request that appears to
-need different grounding is a platform operation, not a code edit.
+are set at deploy time by a human operator (or the platform) —
+`wrangler.jsonc` vars in production, `.dev.vars` in dev/sandbox. That
+is exactly how a board goes live: an operator swaps `CAVUNO_BOARD` for
+their own `pk_…` (see the README "Deploy" note). You, the agent, never
+touch grounding: never edit, hardcode, duplicate, or move these values
+in code. A change request that appears to need different grounding is
+an operator/deploy operation, not a code edit for you to make.
 
 ## The customization surface
 

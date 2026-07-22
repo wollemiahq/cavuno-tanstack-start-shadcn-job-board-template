@@ -2,7 +2,7 @@
 name: Results header
 purpose: The contextual results-count H1 and sort control on a single compact row above the results.
 primitives: [JobsResultsBar, Select]
-usedBy: [src/components/board/jobs-results-bar.tsx, src/components/board/job-search-page.tsx, src/components/programmatic-jobs-view.tsx]
+usedBy: [src/components/board/jobs-results-bar.tsx, src/components/board/job-search-page.tsx, src/routes/-programmatic-jobs-view.tsx]
 ---
 
 ## Purpose

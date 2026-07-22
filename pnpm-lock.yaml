@@ -16,7 +16,7 @@ importers:
         version: 1.38.0
       '@cloudflare/vite-plugin':
         specifier: 1.40.2
-        version: 1.40.2(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))(workerd@1.20260611.1)(wrangler@4.100.0)
+        version: 1.40.2(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))(workerd@1.20260611.1)(wrangler@4.100.0)
       '@fontsource-variable/geist':
         specifier: ^5.2.9
         version: 5.2.9
@@ -49,7 +49,7 @@ importers:
         version: 9.8.0
       '@tailwindcss/vite':
         specifier: 4.3.0
-        version: 4.3.0(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+        version: 4.3.0(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       '@tanstack/react-devtools':
         specifier: 0.10.5
         version: 0.10.5(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(csstype@3.2.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(solid-js@1.9.14)
@@ -64,13 +64,13 @@ importers:
         version: 1.167.1(@tanstack/query-core@5.101.2)(@tanstack/react-query@5.101.2(react@19.2.7))(@tanstack/react-router@1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(@tanstack/router-core@1.171.13)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@tanstack/react-start':
         specifier: 1.168.25
-        version: 1.168.25(esbuild@0.27.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rolldown@1.1.4)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+        version: 1.168.25(esbuild@0.27.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rolldown@1.1.4)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       '@tanstack/react-table':
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@tanstack/router-plugin':
         specifier: 1.168.18
-        version: 1.168.18(@tanstack/react-router@1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+        version: 1.168.18(@tanstack/react-router@1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       '@tiptap/extension-character-count':
         specifier: 3.27.3
         version: 3.27.3(@tiptap/extensions@3.27.3(@tiptap/core@3.27.3(@tiptap/pm@3.27.3))(@tiptap/pm@3.27.3))
@@ -176,7 +176,7 @@ importers:
         version: 4.4.0
       '@tanstack/devtools-vite':
         specifier: 0.7.0
-        version: 0.7.0(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+        version: 0.7.0(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       '@testing-library/dom':
         specifier: 10.4.1
         version: 10.4.1
@@ -187,8 +187,8 @@ importers:
         specifier: 16.3.2
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@types/node':
-        specifier: 22.19.21
-        version: 22.19.21
+        specifier: ^24
+        version: 24.13.3
       '@types/react':
         specifier: 19.2.17
         version: 19.2.17
@@ -197,7 +197,7 @@ importers:
         version: 19.2.3(@types/react@19.2.17)
       '@vitejs/plugin-react':
         specifier: 6.0.2
-        version: 6.0.2(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+        version: 6.0.2(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       jsdom:
         specifier: 28.1.0
         version: 28.1.0
@@ -209,13 +209,13 @@ importers:
         version: '@typescript/typescript6@6.0.2'
       vite:
         specifier: 8.1.3
-        version: 8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)
+        version: 8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)
       vite-plus:
         specifier: 0.2.2
-        version: 0.2.2(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+        version: 0.2.2(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       vitest:
         specifier: 4.1.9
-        version: 4.1.9(@types/node@22.19.21)(@vitest/browser-preview@4.1.9)(jsdom@28.1.0)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+        version: 4.1.9(@types/node@24.13.3)(@vitest/browser-preview@4.1.9)(jsdom@28.1.0)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       wrangler:
         specifier: 4.100.0
         version: 4.100.0
@@ -2368,8 +2368,8 @@ packages:
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
 
-  '@types/node@22.19.21':
-    resolution: {integrity: sha512-VMeFBSCKQKmm2swI2kW51SFusDqekC6q9trBCvJ/JliDchFSuoYYKN7yVNjPthP1HKZcx3U1gI/wTcEBjEFKTA==}
+  '@types/node@24.13.3':
+    resolution: {integrity: sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q==}
 
   '@types/react-dom@19.2.3':
     resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
@@ -4565,8 +4565,8 @@ packages:
   ufo@1.6.4:
     resolution: {integrity: sha512-JFNbkD1Svwe0KvGi8GOeLcP4kAWQ609twvCdcHxq1oSL8svv39ZuSvajcD8B+5D0eL4+s1Is2D/O6KN3qcTeRA==}
 
-  undici-types@6.21.0:
-    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
+  undici-types@7.18.2:
+    resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
   undici@7.24.8:
     resolution: {integrity: sha512-6KQ/+QxK49Z/p3HO6E5ZCZWNnCasyZLa5ExaVYyvPxUwKtbCPMKELJOqh7EqOle0t9cH/7d2TaaTRRa6Nhs4YQ==}
@@ -5165,12 +5165,12 @@ snapshots:
     optionalDependencies:
       workerd: 1.20260611.1
 
-  '@cloudflare/vite-plugin@1.40.2(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))(workerd@1.20260611.1)(wrangler@4.100.0)':
+  '@cloudflare/vite-plugin@1.40.2(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))(workerd@1.20260611.1)(wrangler@4.100.0)':
     dependencies:
       '@cloudflare/unenv-preset': 2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260611.1)
       miniflare: 4.20260611.0
       unenv: 2.0.0-rc.24
-      vite: 8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)
+      vite: 8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)
       wrangler: 4.100.0
       ws: 8.20.1
     transitivePeerDependencies:
@@ -6218,12 +6218,12 @@ snapshots:
       '@tailwindcss/oxide-win32-arm64-msvc': 4.3.0
       '@tailwindcss/oxide-win32-x64-msvc': 4.3.0
 
-  '@tailwindcss/vite@4.3.0(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))':
+  '@tailwindcss/vite@4.3.0(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))':
     dependencies:
       '@tailwindcss/node': 4.3.0
       '@tailwindcss/oxide': 4.3.0
       tailwindcss: 4.3.0
-      vite: 8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)
+      vite: 8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)
 
   '@tanstack/devtools-client@0.0.6':
     dependencies:
@@ -6247,7 +6247,7 @@ snapshots:
     transitivePeerDependencies:
       - csstype
 
-  '@tanstack/devtools-vite@0.7.0(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))':
+  '@tanstack/devtools-vite@0.7.0(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))':
     dependencies:
       '@tanstack/devtools-client': 0.0.6
       '@tanstack/devtools-event-bus': 0.4.1
@@ -6256,7 +6256,7 @@ snapshots:
       magic-string: 0.30.21
       oxc-parser: 0.120.0(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
       picomatch: 4.0.5
-      vite: 8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)
+      vite: 8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
@@ -6340,14 +6340,14 @@ snapshots:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
-  '@tanstack/react-start-rsc@0.1.24(esbuild@0.27.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rolldown@1.1.4)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))':
+  '@tanstack/react-start-rsc@0.1.24(esbuild@0.27.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rolldown@1.1.4)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))':
     dependencies:
       '@tanstack/react-router': 1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@tanstack/router-core': 1.171.13
       '@tanstack/router-utils': 1.162.2
       '@tanstack/start-client-core': 1.170.12
       '@tanstack/start-fn-stubs': 1.162.0
-      '@tanstack/start-plugin-core': 1.171.17(@tanstack/react-router@1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+      '@tanstack/start-plugin-core': 1.171.17(@tanstack/react-router@1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       '@tanstack/start-server-core': 1.169.14
       '@tanstack/start-storage-context': 1.167.15
       pathe: 2.0.3
@@ -6377,21 +6377,21 @@ snapshots:
     transitivePeerDependencies:
       - crossws
 
-  '@tanstack/react-start@1.168.25(esbuild@0.27.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rolldown@1.1.4)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))':
+  '@tanstack/react-start@1.168.25(esbuild@0.27.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rolldown@1.1.4)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))':
     dependencies:
       '@tanstack/react-router': 1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@tanstack/react-start-client': 1.168.13(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@tanstack/react-start-rsc': 0.1.24(esbuild@0.27.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rolldown@1.1.4)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+      '@tanstack/react-start-rsc': 0.1.24(esbuild@0.27.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rolldown@1.1.4)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       '@tanstack/react-start-server': 1.167.19(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@tanstack/router-utils': 1.162.2
       '@tanstack/start-client-core': 1.170.12
-      '@tanstack/start-plugin-core': 1.171.17(@tanstack/react-router@1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+      '@tanstack/start-plugin-core': 1.171.17(@tanstack/react-router@1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       '@tanstack/start-server-core': 1.169.14
       pathe: 2.0.3
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
     optionalDependencies:
-      vite: 8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)
+      vite: 8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)
     transitivePeerDependencies:
       - '@farmfe/core'
       - '@rspack/core'
@@ -6447,7 +6447,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@tanstack/router-plugin@1.168.18(@tanstack/react-router@1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))':
+  '@tanstack/router-plugin@1.168.18(@tanstack/react-router@1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/template': 7.29.7
@@ -6456,11 +6456,11 @@ snapshots:
       '@tanstack/router-generator': 1.167.17
       '@tanstack/router-utils': 1.162.2
       chokidar: 5.0.0
-      unplugin: 3.3.0(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+      unplugin: 3.3.0(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       zod: 4.4.3
     optionalDependencies:
       '@tanstack/react-router': 1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      vite: 8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)
+      vite: 8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)
     transitivePeerDependencies:
       - '@farmfe/core'
       - '@rspack/core'
@@ -6498,14 +6498,14 @@ snapshots:
 
   '@tanstack/start-fn-stubs@1.162.0': {}
 
-  '@tanstack/start-plugin-core@1.171.17(@tanstack/react-router@1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))':
+  '@tanstack/start-plugin-core@1.171.17(@tanstack/react-router@1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))':
     dependencies:
       '@babel/code-frame': 7.27.1
       '@babel/core': 7.29.7
       '@babel/types': 7.29.7
       '@tanstack/router-core': 1.171.13
       '@tanstack/router-generator': 1.167.17
-      '@tanstack/router-plugin': 1.168.18(@tanstack/react-router@1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+      '@tanstack/router-plugin': 1.168.18(@tanstack/react-router@1.170.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       '@tanstack/router-utils': 1.162.2
       '@tanstack/start-server-core': 1.169.14
       exsolve: 1.1.0
@@ -6517,11 +6517,11 @@ snapshots:
       srvx: 0.11.20
       tinyglobby: 0.2.17
       ufo: 1.6.4
-      vitefu: 1.1.3(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+      vitefu: 1.1.3(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       xmlbuilder2: 4.0.3
       zod: 4.4.3
     optionalDependencies:
-      vite: 8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)
+      vite: 8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)
     transitivePeerDependencies:
       - '@farmfe/core'
       - '@rspack/core'
@@ -6818,9 +6818,9 @@ snapshots:
 
   '@types/estree@1.0.9': {}
 
-  '@types/node@22.19.21':
+  '@types/node@24.13.3':
     dependencies:
-      undici-types: 6.21.0
+      undici-types: 7.18.2
 
   '@types/react-dom@19.2.3(@types/react@19.2.17)':
     dependencies:
@@ -6898,33 +6898,33 @@ snapshots:
     dependencies:
       '@typescript/old': typescript@6.0.3
 
-  '@vitejs/plugin-react@6.0.2(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))':
+  '@vitejs/plugin-react@6.0.2(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
-      vite: 8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)
+      vite: 8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)
 
-  '@vitest/browser-preview@4.1.9(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))(vitest@4.1.9)':
+  '@vitest/browser-preview@4.1.9(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))(vitest@4.1.9)':
     dependencies:
       '@testing-library/dom': 10.4.1
       '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.1)
-      '@vitest/browser': 4.1.9(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))(vitest@4.1.9)
-      vitest: 4.1.9(@types/node@22.19.21)(@vitest/browser-preview@4.1.9)(jsdom@28.1.0)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+      '@vitest/browser': 4.1.9(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))(vitest@4.1.9)
+      vitest: 4.1.9(@types/node@24.13.3)(@vitest/browser-preview@4.1.9)(jsdom@28.1.0)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
     transitivePeerDependencies:
       - bufferutil
       - msw
       - utf-8-validate
       - vite
 
-  '@vitest/browser@4.1.9(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))(vitest@4.1.9)':
+  '@vitest/browser@4.1.9(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))(vitest@4.1.9)':
     dependencies:
       '@blazediff/core': 1.9.1
-      '@vitest/mocker': 4.1.9(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+      '@vitest/mocker': 4.1.9(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       '@vitest/utils': 4.1.9
       magic-string: 0.30.21
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.1.0
-      vitest: 4.1.9(@types/node@22.19.21)(@vitest/browser-preview@4.1.9)(jsdom@28.1.0)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+      vitest: 4.1.9(@types/node@24.13.3)(@vitest/browser-preview@4.1.9)(jsdom@28.1.0)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       ws: 8.20.1
     transitivePeerDependencies:
       - bufferutil
@@ -6941,13 +6941,13 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.1.0
 
-  '@vitest/mocker@4.1.9(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))':
+  '@vitest/mocker@4.1.9(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))':
     dependencies:
       '@vitest/spy': 4.1.9
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)
+      vite: 8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)
 
   '@vitest/pretty-format@4.1.9':
     dependencies:
@@ -6973,14 +6973,14 @@ snapshots:
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.0
 
-  '@voidzero-dev/vite-plus-core@0.2.2(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)(typescript@7.0.2)':
+  '@voidzero-dev/vite-plus-core@0.2.2(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)(typescript@7.0.2)':
     dependencies:
       '@oxc-project/runtime': 0.138.0
       '@oxc-project/types': 0.138.0
       lightningcss: 1.32.0
       postcss: 8.5.16
     optionalDependencies:
-      '@types/node': 22.19.21
+      '@types/node': 24.13.3
       esbuild: 0.27.3
       fsevents: 2.3.3
       jiti: 2.7.0
@@ -8117,7 +8117,7 @@ snapshots:
       - '@emnapi/core'
       - '@emnapi/runtime'
 
-  oxfmt@0.57.0(vite-plus@0.2.2(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))):
+  oxfmt@0.57.0(vite-plus@0.2.2(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))):
     dependencies:
       tinypool: 2.1.0
     optionalDependencies:
@@ -8140,7 +8140,7 @@ snapshots:
       '@oxfmt/binding-win32-arm64-msvc': 0.57.0
       '@oxfmt/binding-win32-ia32-msvc': 0.57.0
       '@oxfmt/binding-win32-x64-msvc': 0.57.0
-      vite-plus: 0.2.2(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+      vite-plus: 0.2.2(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
 
   oxlint-tsgolint@0.24.0:
     optionalDependencies:
@@ -8151,7 +8151,7 @@ snapshots:
       '@oxlint-tsgolint/win32-arm64': 0.24.0
       '@oxlint-tsgolint/win32-x64': 0.24.0
 
-  oxlint@1.72.0(oxlint-tsgolint@0.24.0)(vite-plus@0.2.2(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))):
+  oxlint@1.72.0(oxlint-tsgolint@0.24.0)(vite-plus@0.2.2(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))):
     optionalDependencies:
       '@oxlint/binding-android-arm-eabi': 1.72.0
       '@oxlint/binding-android-arm64': 1.72.0
@@ -8173,7 +8173,7 @@ snapshots:
       '@oxlint/binding-win32-ia32-msvc': 1.72.0
       '@oxlint/binding-win32-x64-msvc': 1.72.0
       oxlint-tsgolint: 0.24.0
-      vite-plus: 0.2.2(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+      vite-plus: 0.2.2(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
 
   p-limit@2.3.0:
     dependencies:
@@ -8911,7 +8911,7 @@ snapshots:
 
   ufo@1.6.4: {}
 
-  undici-types@6.21.0: {}
+  undici-types@7.18.2: {}
 
   undici@7.24.8: {}
 
@@ -8939,7 +8939,7 @@ snapshots:
       picomatch: 4.0.5
       webpack-virtual-modules: 0.6.2
 
-  unplugin@3.3.0(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)):
+  unplugin@3.3.0(esbuild@0.27.3)(rolldown@1.1.4)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)):
     dependencies:
       '@jridgewell/remapping': 2.3.5
       picomatch: 4.0.5
@@ -8947,7 +8947,7 @@ snapshots:
     optionalDependencies:
       esbuild: 0.27.3
       rolldown: 1.1.4
-      vite: 8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)
+      vite: 8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)
 
   update-browserslist-db@1.2.3(browserslist@4.28.4):
     dependencies:
@@ -9001,24 +9001,24 @@ snapshots:
       d3-time: 3.1.0
       d3-timer: 3.0.1
 
-  vite-plus@0.2.2(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)):
+  vite-plus@0.2.2(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)):
     dependencies:
       '@oxc-project/types': 0.138.0
       '@oxlint/plugins': 1.68.0
-      '@vitest/browser': 4.1.9(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))(vitest@4.1.9)
-      '@vitest/browser-preview': 4.1.9(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))(vitest@4.1.9)
+      '@vitest/browser': 4.1.9(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))(vitest@4.1.9)
+      '@vitest/browser-preview': 4.1.9(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))(vitest@4.1.9)
       '@vitest/expect': 4.1.9
-      '@vitest/mocker': 4.1.9(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+      '@vitest/mocker': 4.1.9(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       '@vitest/pretty-format': 4.1.9
       '@vitest/runner': 4.1.9
       '@vitest/snapshot': 4.1.9
       '@vitest/spy': 4.1.9
       '@vitest/utils': 4.1.9
-      '@voidzero-dev/vite-plus-core': 0.2.2(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)(typescript@7.0.2)
-      oxfmt: 0.57.0(vite-plus@0.2.2(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)))
-      oxlint: 1.72.0(oxlint-tsgolint@0.24.0)(vite-plus@0.2.2(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)))
+      '@voidzero-dev/vite-plus-core': 0.2.2(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)(typescript@7.0.2)
+      oxfmt: 0.57.0(vite-plus@0.2.2(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)))
+      oxlint: 1.72.0(oxlint-tsgolint@0.24.0)(vite-plus@0.2.2(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)(jsdom@28.1.0)(typescript@7.0.2)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)))
       oxlint-tsgolint: 0.24.0
-      vitest: 4.1.9(@types/node@22.19.21)(@vitest/browser-preview@4.1.9)(jsdom@28.1.0)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+      vitest: 4.1.9(@types/node@24.13.3)(@vitest/browser-preview@4.1.9)(jsdom@28.1.0)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
     optionalDependencies:
       '@voidzero-dev/vite-plus-darwin-arm64': 0.2.2
       '@voidzero-dev/vite-plus-darwin-x64': 0.2.2
@@ -9059,7 +9059,7 @@ snapshots:
       - vite
       - yaml
 
-  vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0):
+  vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0):
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.5
@@ -9067,19 +9067,19 @@ snapshots:
       rolldown: 1.1.4
       tinyglobby: 0.2.17
     optionalDependencies:
-      '@types/node': 22.19.21
+      '@types/node': 24.13.3
       esbuild: 0.27.3
       fsevents: 2.3.3
       jiti: 2.7.0
 
-  vitefu@1.1.3(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)):
+  vitefu@1.1.3(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)):
     optionalDependencies:
-      vite: 8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)
+      vite: 8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)
 
-  vitest@4.1.9(@types/node@22.19.21)(@vitest/browser-preview@4.1.9)(jsdom@28.1.0)(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)):
+  vitest@4.1.9(@types/node@24.13.3)(@vitest/browser-preview@4.1.9)(jsdom@28.1.0)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)):
     dependencies:
       '@vitest/expect': 4.1.9
-      '@vitest/mocker': 4.1.9(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))
+      '@vitest/mocker': 4.1.9(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))
       '@vitest/pretty-format': 4.1.9
       '@vitest/runner': 4.1.9
       '@vitest/snapshot': 4.1.9
@@ -9096,11 +9096,11 @@ snapshots:
       tinyexec: 1.2.4
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.0
-      vite: 8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0)
+      vite: 8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 22.19.21
-      '@vitest/browser-preview': 4.1.9(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))(vitest@4.1.9)
+      '@types/node': 24.13.3
+      '@vitest/browser-preview': 4.1.9(vite@8.1.3(@types/node@24.13.3)(esbuild@0.27.3)(jiti@2.7.0))(vitest@4.1.9)
       jsdom: 28.1.0
     transitivePeerDependencies:
       - msw

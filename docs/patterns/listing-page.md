@@ -2,7 +2,7 @@
 name: Listing page
 purpose: The canonical search/filter → contextual results heading → collection → pagination browse surface.
 primitives: [Page, PageContent, JobsFilterControls, SearchResultsLayout, JobsResultsBar, JobList, ListingPagination]
-usedBy: [src/components/board/home-landing.tsx, src/components/board/job-search-page.tsx, src/components/programmatic-jobs-view.tsx, src/routes/index.tsx, src/routes/jobs.index.tsx, src/routes/jobs.$keyword.tsx, src/routes/jobs.locations.$location.index.tsx, src/routes/jobs.skills.$skill.tsx, src/routes/companies.$companySlug.jobs.index.tsx, src/routes/blog.index.tsx]
+usedBy: [src/components/board/home-landing.tsx, src/components/board/job-search-page.tsx, src/routes/-programmatic-jobs-view.tsx, src/routes/index.tsx, src/routes/jobs.index.tsx, src/routes/jobs.$keyword.tsx, src/routes/jobs.locations.$location.index.tsx, src/routes/jobs.skills.$skill.tsx, src/routes/companies.$companySlug.jobs.index.tsx, src/routes/blog.index.tsx]
 ---
 
 ## Purpose

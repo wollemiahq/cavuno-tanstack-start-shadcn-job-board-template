@@ -1,88 +1,93 @@
 ---
 name: Listing rail
-purpose: The sticky right-hand rail of a search/browse listing — an operator ad seam over a related-searches card.
-primitives: [PageContent, ListingRail, TaxonomyTags]
-usedBy: [src/components/board/listing-rail.tsx, src/components/board/job-search-page.tsx, src/components/programmatic-jobs-view.tsx, src/routes/companies.index.tsx]
+purpose: The listing surface's operator ad seam plus its crawlable related-searches links, seated around the results column.
+primitives: [SearchResultsLayout, AdRail, Badge]
+usedBy: [src/components/search-results/search-results-layout.tsx, src/components/search-results/ad-rail.tsx, src/components/board/job-search-page.tsx, src/components/board/company-search-page.tsx]
 ---
 
 ## Purpose
 
-A search/browse listing (the jobs search page, the programmatic jobs pages, the
-companies index) puts its results in the left column and a **sticky rail** on
-the right. The rail houses two things, top to bottom: an optional operator **ad
-seam** and a **Related searches** card of crawlable taxonomy links. It turns the
-dead right margin of a wide listing into an internal-linking + monetisation
-surface without disturbing the results, pagination, or search band.
+A search/browse listing (the jobs search page, the programmatic `/jobs/*`
+pages, the companies index) turns the space around its results into two
+operator seams: an optional **ad seam** and a **related-searches** internal-
+linking surface. This keeps monetisation and SEO internal linking on a listing
+without disturbing the results, pagination, or filter band.
 
 ## When to use
 
-- A **listing/browse surface with room for a rail** — jobs search (`/jobs`), the
-  programmatic `/jobs/*` pages, and the companies index (`/companies`).
+- A **listing/browse surface** — jobs search (`/jobs`), the programmatic
+  `/jobs/*` pages, and the companies index (`/companies`).
 - **When NOT to use** — a detail page (that rail is the [Detail page](detail-page.md)
-  apply/meta rail, not this one), or a listing with nothing to put in the rail
-  (no ad unit and no related searches): let the results run full width rather
-  than open a dead column.
+  apply/meta rail, not this one). When there is no ad unit, let the ad column
+  render nothing rather than open a dead margin.
 
 ## Anatomy
 
-Rendered through `PageContent`'s named `aside` (no new grid) — results left,
-`ListingRail` in the sticky right column. `asideOrder` controls its mobile
-placement. Inside `ListingRail`, top to bottom:
+The listing is composed with `SearchResultsLayout` (results + selected-detail
+columns). The two operator seams hang off it:
 
-- `adSlot` — the operator ad seam. Renders FIRST, and renders **nothing** when
-  absent (no ad network ships in the template).
-- The **Related searches** card — a ringed `bg-primary` surface with a heading
-  and [Board card](board-card.md)-style `TaxonomyTags` links. Omitted when there
-  are no chips.
+- The **ad seam** — `SearchResultsLayout`'s `startAd` / `endAd` slots, each an
+  `AdRail`. `AdRail` renders FIRST/last and renders **nothing** when absent (no
+  ad network ships in the template). An operator wires their own unit here
+  without touching the layout.
+- The **related-searches** links — rendered inline at the foot of the results
+  list, as crawlable `Badge` anchors (jobs: category/skill terms via
+  `relatedSearchesToChips`; companies: browse-by-market terms). The section is
+  omitted when there are no chips, so the listing stays honest.
 
 ## Composition
 
-`board/listing-rail.tsx` is pure markup over resolved props; the caller maps its
-`RelatedSearch[]` (or markets) to `{ key, name, href }` chips via
-`@cavuno/board/paths` helpers (`src/board/related-searches.ts`), and
-`railHasContent` decides whether the route hands `PageContent` an `aside` at
-all. Existing listing shells translate this to migration-only `PageBody`
-internally until those routes move to the Page family:
+`SearchResultsLayout` takes `startAd` / `endAd` / `list` / `detail` nodes; the
+route hands it `AdRail` seams and the results list. The caller maps its
+`RelatedSearch[]` (or markets) to `{ key, name, href }` chips via the
+`@cavuno/board/paths` helpers (`src/board/related-searches.ts`), so this surface
+never string-builds a path. The chips render as `Badge` anchors, and the whole
+section is dropped when the chip list is empty.
 
 ```tsx
 const relatedChips = relatedSearchesToChips(relatedSearches);
-const rail = railHasContent(adSlot, relatedChips) ? (
-  <ListingRail adSlot={adSlot} relatedTitle={relatedSearchesTitle(labels)} relatedChips={relatedChips} />
-) : undefined;
 
 return (
-  <PageContent aside={rail} asideLabel={relatedTitle}>
-    {/* results */}
-  </PageContent>
+  <SearchResultsLayout
+    startAd={startAd ? <AdRail label={startAd.label}>{startAd.content}</AdRail> : undefined}
+    endAd={endAd ? <AdRail label={endAd.label}>{endAd.content}</AdRail> : undefined}
+    list={
+      <SearchResultsList label={resultsLabel}>
+        {/* results, pagination */}
+        {relatedChips.length > 0 ? (
+          <section aria-label={relatedSearchesTitle(labels)} className="border-border space-y-3 border-t pt-4">
+            <h2 className="text-sm font-semibold">{relatedSearchesTitle(labels)}</h2>
+            <div className="flex flex-wrap gap-1.5">
+              {relatedChips.map((chip) => (
+                <Badge key={chip.key} variant="outline" render={<a href={chip.href} />}>
+                  {chip.name}
+                </Badge>
+              ))}
+            </div>
+          </section>
+        ) : null}
+      </SearchResultsList>
+    }
+    detail={/* selected-result detail */}
+  />
 );
-```
-
-```tsx
-// ListingRail body
-{adSlot}
-{relatedChips.length > 0 ? (
-  <section aria-label={relatedTitle} className="… rounded-xl bg-primary p-5 ring-1 ring-secondary_alt">
-    <h2 className="text-sm font-semibold text-secondary">{relatedTitle}</h2>
-    <TaxonomyTags chips={relatedChips} size="md" />
-  </section>
-) : null}
 ```
 
 ## Do / Don't
 
 | Do | Don't |
 |---|---|
-| Render the rail via `PageContent`'s named `aside`. | Start new work on migration-only `PageBody`, or hand-roll a second two-column grid. |
-| Put the ad seam FIRST and let it render nothing when absent. | Ship an ad-network dependency in the template — the seam is a wired-by-operator `ReactNode`. |
-| Gate `rail` on `railHasContent` so an empty rail leaves no dead column. | Force two-column mode when there is no ad and no related searches. |
-| Feed `TaxonomyTags` real `@cavuno/board/paths` hrefs (the crawlable internal-linking spine). | String-build `/jobs/…` or `/companies/markets/…` paths, or render the related searches at the page bottom. |
+| Compose the listing with `SearchResultsLayout`'s named slots. | Hand-roll a second two-column grid alongside it. |
+| Put the ad seam in `startAd` / `endAd` and let `AdRail` render nothing when absent. | Ship an ad-network dependency in the template — the seam is a wired-by-operator `ReactNode`. |
+| Drop the related-searches section when there are no chips. | Force an empty related-searches heading with no links under it. |
+| Feed the chips real `@cavuno/board/paths` hrefs (the crawlable internal-linking spine). | String-build `/jobs/…` or `/companies/markets/…` paths, or bury the related searches below the fold. |
 
 ## Used by
 
-- `board/listing-rail.tsx` — the composition (ad seam + related-searches card).
-- `board/job-search-page.tsx` — the `/jobs` search surface.
-- `programmatic-jobs-view.tsx` — the programmatic `/jobs/*` listings.
-- `routes/companies.index.tsx` — the companies index (browse-by-market card).
+- `search-results/search-results-layout.tsx` — the results + detail columns with the ad seams.
+- `search-results/ad-rail.tsx` — the operator ad seam (renders nothing when absent).
+- `board/job-search-page.tsx` — the `/jobs` search + programmatic listings (related-search chips).
+- `board/company-search-page.tsx` — the `/companies` index (browse-by-market chips).
 
 ## Related
 
