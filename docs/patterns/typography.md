@@ -29,6 +29,28 @@ starter without introducing route-specific type scales.
 - `src/typeset.css` owns links, lists, headings, tables, code, and block quotes
   inside rendered HTML, including dark mode.
 
+## Page-title scale
+
+Every page's `h1` resolves its size from a primitive variant — never a raw
+`text-*` class at the call site. There is ONE standard page-title size and ONE
+sanctioned larger hero exception; the smaller `h1` roles below are deliberate,
+not page titles.
+
+| Role | Size | Primitive |
+| --- | --- | --- |
+| **Standard page title** (the default for every page) | `text-3xl` | `PageHeader` (default `size`) or `Text variant="heading1"` |
+| **Hero band** (marketing / home top-of-page only) | `text-4xl md:text-5xl` | `PageHeader size="display"` or `Text variant="display"` |
+| Detail identity band (job / company / talent profile hero) | `text-2xl md:text-3xl` | `Text variant="heading2"` in the [Detail page](detail-page.md) band |
+| Results-count heading (paginated listings) | `text-lg` | `JobsResultsBar` ([Results header](results-header.md)) |
+| Auth shell heading | `text-2xl` | the centered [Auth page](auth-page.md) shell |
+| Empty / error / not-found state title | `text-lg`–`text-xl` | the state card, not a page title |
+
+Standard workspace and form pages (employer company workspace, candidate
+settings, saved jobs, "Post a job", onboarding, applicants) all take the
+**standard** tier — `text-3xl`. Do not drop a workspace page to `text-2xl`; that
+was accidental drift, corrected to the standard here. Reach for `display` only
+for a genuine marketing hero band, never a workspace or form page.
+
 ## Composition
 
 ```tsx

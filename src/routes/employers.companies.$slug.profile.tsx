@@ -31,6 +31,7 @@ import { getSeoBase, getCompany } from '../server/queries';
 
 import { EmployerIdentityAvatar } from '@/components/account-shell';
 import { Page, PageContent } from '@/components/layout/page';
+import { Text } from '@/components/text';
 import { RichTextEditor } from '@/components/rich-text-editor';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -99,9 +100,9 @@ function CompanyProfilePage() {
         <div className="space-y-6">
           <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1">
-              <h1 className="font-heading text-2xl font-semibold tracking-tight">
+              <Text as="h1" variant="heading1">
                 {m.employerCompany_profileHeading()}
-              </h1>
+              </Text>
               <p className="text-muted-foreground text-sm">
                 {m.employerProfile_editIntroText({ company: company.name })}
               </p>

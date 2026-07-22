@@ -136,6 +136,21 @@ values in components.
 - Sans: `'Geist Variable', sans-serif`
 - Headings: `var(--font-sans)`
 
+Page titles resolve their size from a primitive variant, never a raw
+`text-*` class at the call site. ONE standard page-title size and ONE
+larger hero exception:
+
+- Standard page title (every workspace, form, and content page):
+  `text-3xl` via `PageHeader` (default) or `Text variant="heading1"`.
+- Hero band (marketing / home top-of-page only): `text-4xl md:text-5xl`
+  via `PageHeader size="display"` or `Text variant="display"`.
+
+Smaller `h1` roles are deliberate and not page titles: the detail
+identity band (`Text variant="heading2"`, `text-2xl md:text-3xl`), the
+results-count listing heading (`text-lg`), the auth shell, and empty /
+error state cards. Never drop a workspace or form page to `text-2xl`.
+See `docs/patterns/typography.md`.
+
 ## Layout
 
 Radius scale rides `--radius` in `src/theme.css` (cards use
@@ -1185,6 +1200,18 @@ Props:
 - `defaultStageDialog?: StageDialogState | undefined`
 - `jobId: string`
 - `slug: string`
+
+### EmployerStatsChart — `src/components/employer/employer-stats-chart.tsx`
+
+Props:
+
+- `vm: EmployerStatsChartVM`
+
+### EmployerStatsChartPending — `src/components/employer/employer-stats-chart.tsx`
+
+Deferred-load fallback for {@link EmployerStatsChart} — the same card at the
+chart's height with a spinner, so the table above paints first and the chart
+area reserves its space instead of shifting layout when the data streams in.
 
 ### EmptyState — `src/components/empty-state.tsx`
 

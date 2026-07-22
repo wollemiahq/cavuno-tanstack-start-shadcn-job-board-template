@@ -16,8 +16,8 @@
     "total": 61
   },
   "summary": {
-    "used": 40,
-    "available": 20
+    "used": 41,
+    "available": 19
   },
   "registryCompositions": [
     {
@@ -284,6 +284,7 @@
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",
         "src/components/employer-job-form.tsx",
+        "src/components/employer/employer-stats-chart.tsx",
         "src/components/experience-section.tsx",
         "src/components/languages-section.tsx",
         "src/components/messages/message-bubble.tsx",
@@ -312,8 +313,10 @@
     },
     {
       "name": "chart",
-      "status": "available",
-      "productionReferences": []
+      "status": "used",
+      "productionReferences": [
+        "src/components/employer/employer-stats-chart.tsx"
+      ]
     },
     {
       "name": "checkbox",
@@ -410,6 +413,7 @@
         "src/components/board/talent-search-page.tsx",
         "src/components/candidate-route-state.tsx",
         "src/components/education-section.tsx",
+        "src/components/employer/employer-stats-chart.tsx",
         "src/components/empty-state.tsx",
         "src/components/experience-section.tsx",
         "src/components/languages-section.tsx",
@@ -681,7 +685,8 @@
         "src/components/board/public-content-pending.tsx",
         "src/components/board/talent-search-result-detail.tsx",
         "src/components/candidate-route-state.tsx",
-        "src/routes/-messages-dock-controller.tsx"
+        "src/routes/-messages-dock-controller.tsx",
+        "src/routes/employers.companies.$slug.index.tsx"
       ]
     },
     {
@@ -702,6 +707,7 @@
       "productionReferences": [
         "src/components/board/alert-signup-form.tsx",
         "src/components/company-search-combobox.tsx",
+        "src/components/employer/employer-stats-chart.tsx",
         "src/components/keyword-combobox.tsx",
         "src/components/location-combobox.tsx",
         "src/components/location-suggest-field.tsx",

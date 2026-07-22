@@ -23,6 +23,7 @@ import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { EmployerJobForm } from '@/components/employer-job-form';
 import { Page, PageContent } from '@/components/layout/page';
+import { Text } from '@/components/text';
 import { headTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
@@ -70,9 +71,9 @@ function NewJobPage() {
       <PageContent>
         <div className="space-y-6">
           <header className="space-y-1">
-            <h1 className="font-heading text-2xl font-semibold tracking-tight">
+            <Text as="h1" variant="heading1">
               {m.employerCompany_postJobHeading()}
-            </h1>
+            </Text>
             <p className="text-muted-foreground text-sm">
               {m.employerPostJob_subtitleText()}
             </p>

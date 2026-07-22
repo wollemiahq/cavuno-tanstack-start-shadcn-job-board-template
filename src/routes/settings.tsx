@@ -29,6 +29,7 @@ import {
 } from '@/components/candidate-route-state';
 import { CandidateShell } from '@/components/candidate-shell';
 import { Page, PageContent } from '@/components/layout/page';
+import { Text } from '@/components/text';
 import { buttonVariants } from '@/components/ui/button';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
@@ -175,9 +176,9 @@ function SignedInSettings({
     <CandidateShell>
       <div className="space-y-6">
         <header>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">
+          <Text as="h1" variant="heading1">
             {m.settings_title()}
-          </h1>
+          </Text>
           <p className="text-muted-foreground text-sm">
             {m.settings_emailNotificationsText()}
           </p>
