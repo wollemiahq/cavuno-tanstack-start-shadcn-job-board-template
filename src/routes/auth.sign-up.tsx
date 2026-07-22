@@ -28,7 +28,10 @@ export const Route = createFileRoute('/auth/sign-up')({
     return { boardName: board.name };
   },
   head: ({ loaderData }) => ({
-    meta: [{ title: headTitle(loaderData?.boardName, m.authSignUp_title()) }],
+    meta: [
+      { title: headTitle(loaderData?.boardName, m.authSignUp_title()) },
+      { name: 'robots', content: 'noindex' },
+    ],
   }),
   component: SignUpPage,
 });

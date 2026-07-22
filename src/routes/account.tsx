@@ -183,6 +183,10 @@ export const Route = createFileRoute('/account')({
   head: ({ loaderData }) => ({
     meta: [
       { title: headTitle(loaderData?.seo.boardName, m.accountHome_title()) },
+      // Private, signed-in surface — keep it out of the index (hosted
+      // parity: the hosted board noindexes account/me/messages/settings
+      // via meta, and its robots.txt disallows nothing).
+      { name: 'robots', content: 'noindex' },
     ],
   }),
   component: AccountPage,

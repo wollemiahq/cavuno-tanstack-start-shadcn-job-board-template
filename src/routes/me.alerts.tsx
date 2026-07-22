@@ -53,7 +53,10 @@ export const Route = createFileRoute('/me/alerts')({
     }
   },
   head: ({ loaderData }) => ({
-    meta: [{ title: headTitle(loaderData?.seo.boardName, m.meAlerts_title()) }],
+    meta: [
+      { title: headTitle(loaderData?.seo.boardName, m.meAlerts_title()) },
+      { name: 'robots', content: 'noindex' },
+    ],
   }),
   component: AlertsPage,
 });

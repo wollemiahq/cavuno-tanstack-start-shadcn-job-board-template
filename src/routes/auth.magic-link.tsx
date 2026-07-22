@@ -44,6 +44,7 @@ export const Route = createFileRoute('/auth/magic-link')({
   head: ({ loaderData }) => ({
     meta: [
       { title: headTitle(loaderData?.seo.boardName, m.authMagicLink_title()) },
+      { name: 'robots', content: 'noindex' },
     ],
   }),
   component: MagicLinkPage,

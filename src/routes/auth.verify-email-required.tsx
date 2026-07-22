@@ -58,6 +58,7 @@ export const Route = createFileRoute('/auth/verify-email-required')({
           m.authVerifyEmailRequired_title(),
         ),
       },
+      { name: 'robots', content: 'noindex' },
     ],
   }),
   component: VerifyEmailRequiredPage,

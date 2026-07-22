@@ -26,6 +26,7 @@ export const Route = createFileRoute('/auth/forgot-password')({
   head: ({ loaderData }) => ({
     meta: [
       { title: headTitle(loaderData?.boardName, m.authForgotPassword_title()) },
+      { name: 'robots', content: 'noindex' },
     ],
   }),
   component: ForgotPasswordPage,

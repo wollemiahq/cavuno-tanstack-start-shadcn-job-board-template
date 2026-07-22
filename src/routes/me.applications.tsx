@@ -86,6 +86,7 @@ export const Route = createFileRoute('/me/applications')({
       {
         title: headTitle(loaderData?.seo.boardName, m.meApplications_title()),
       },
+      { name: 'robots', content: 'noindex' },
     ],
   }),
   component: ApplicationsPage,

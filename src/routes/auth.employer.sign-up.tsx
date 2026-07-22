@@ -25,6 +25,7 @@ export const Route = createFileRoute('/auth/employer/sign-up')({
   head: ({ loaderData }) => ({
     meta: [
       { title: headTitle(loaderData?.boardName, m.authEmployerSignUp_title()) },
+      { name: 'robots', content: 'noindex' },
     ],
   }),
   component: EmployerSignUpPage,

@@ -34,33 +34,81 @@ export interface SessionContext {
   authHeaders: Record<string, string>;
 }
 
-async function resolveSession(): Promise<SessionContext> {
-  const cookieHeader = getRequestHeader('cookie') ?? null;
-  const session = parseSessionCookie(cookieHeader);
-  if (!session) return { session: null, authHeaders: {} };
+/** The single-use rotation call the decision drives; `null` on a 401. */
+export type SessionRefresh = (
+  session: BoardSession,
+) => Promise<BoardSession | null>;
 
-  if (!isExpiringSoon(session, Date.now())) {
-    return { session, authHeaders: authHeaders(session.accessToken) };
+/**
+ * The resolved session plus the cookie side-effect the adapter must perform.
+ * `null` cookie → leave the request cookie untouched; `'clear'` → emit the
+ * clearing Set-Cookie; `'rotate'` → persist `session` back.
+ */
+export interface SessionResolution {
+  session: BoardSession | null;
+  setCookie: 'clear' | 'rotate' | null;
+}
+
+/**
+ * PURE session-refresh decision (no request/response globals) — the security
+ * seam, isolated for unit testing. Given the parsed session, the clock, and
+ * the single-flight refresher, decide the next session state and the cookie
+ * action, WITHOUT touching headers:
+ *
+ *  - no session               → stay signed out, no cookie change
+ *  - valid (not expiring soon) → pass the session through, no cookie change
+ *  - expiring soon, refresh ok → rotate to the fresh pair, persist it
+ *  - expiring soon, refresh KO → clear the cookie, continue signed out
+ *
+ * The catch collapses ANY refresh throw to the signed-out/clear branch (the
+ * refresher returns null only on a 401 and rethrows the rest) — the pre-SDK
+ * middleware's behavior: never loop, never surface the error to the caller.
+ */
+export async function decideSession(
+  session: BoardSession | null,
+  now: number,
+  refresh: SessionRefresh,
+): Promise<SessionResolution> {
+  if (!session) return { session: null, setCookie: null };
+
+  if (!isExpiringSoon(session, now)) {
+    return { session, setCookie: null };
   }
 
   let next: BoardSession | null;
   try {
-    next = await getSessionRefresher()(session);
+    next = await refresh(session);
   } catch {
-    // Preserves the pre-SDK middleware's behavior: ANY refresh failure
-    // (the refresher returns null only on a 401 and rethrows the rest)
-    // clears the cookie and continues signed out — never loop.
     next = null;
   }
 
   if (!next) {
     // Burned single-use token (parallel refresh won) or revoked session.
-    setResponseHeader('Set-Cookie', clearSessionCookie());
-    return { session: null, authHeaders: {} };
+    return { session: null, setCookie: 'clear' };
   }
 
-  setResponseHeader('Set-Cookie', serializeSessionCookie(next));
-  return { session: next, authHeaders: authHeaders(next.accessToken) };
+  return { session: next, setCookie: 'rotate' };
+}
+
+/** Thin request/response adapter around the pure {@link decideSession}. */
+async function resolveSession(): Promise<SessionContext> {
+  const cookieHeader = getRequestHeader('cookie') ?? null;
+  const { session, setCookie } = await decideSession(
+    parseSessionCookie(cookieHeader),
+    Date.now(),
+    getSessionRefresher(),
+  );
+
+  if (setCookie === 'clear') {
+    setResponseHeader('Set-Cookie', clearSessionCookie());
+  } else if (setCookie === 'rotate' && session) {
+    setResponseHeader('Set-Cookie', serializeSessionCookie(session));
+  }
+
+  return {
+    session,
+    authHeaders: session ? authHeaders(session.accessToken) : {},
+  };
 }
 
 /** Optional session: context carries null when signed out. */

@@ -50,6 +50,7 @@ export const Route = createFileRoute('/auth/verify-email')({
       {
         title: headTitle(loaderData?.seo.boardName, m.authVerifyEmail_title()),
       },
+      { name: 'robots', content: 'noindex' },
     ],
   }),
   component: VerifyEmailPage,

@@ -61,6 +61,7 @@ export const Route = createFileRoute('/messages/$conversationId')({
           m.messagesPage_conversationTitle(),
         ),
       },
+      { name: 'robots', content: 'noindex' },
     ],
   }),
   component: ThreadPage,

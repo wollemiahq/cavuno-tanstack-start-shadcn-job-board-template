@@ -66,6 +66,7 @@ export const Route = createFileRoute('/messages')({
   head: ({ loaderData }) => ({
     meta: [
       { title: headTitle(loaderData?.seo.boardName, m.messagesPage_title()) },
+      { name: 'robots', content: 'noindex' },
     ],
   }),
   component: MessagesPage,

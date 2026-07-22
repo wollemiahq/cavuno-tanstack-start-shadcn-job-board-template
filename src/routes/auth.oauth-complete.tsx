@@ -49,6 +49,7 @@ export const Route = createFileRoute('/auth/oauth-complete')({
           m.authOauthComplete_title(),
         ),
       },
+      { name: 'robots', content: 'noindex' },
     ],
   }),
   component: OAuthCompletePage,

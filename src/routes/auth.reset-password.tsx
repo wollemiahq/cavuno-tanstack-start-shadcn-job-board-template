@@ -34,6 +34,7 @@ export const Route = createFileRoute('/auth/reset-password')({
   head: ({ loaderData }) => ({
     meta: [
       { title: headTitle(loaderData?.boardName, m.authResetPassword_title()) },
+      { name: 'robots', content: 'noindex' },
     ],
   }),
   component: ResetPasswordPage,

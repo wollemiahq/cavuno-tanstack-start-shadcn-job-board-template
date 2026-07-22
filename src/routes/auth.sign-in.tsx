@@ -42,7 +42,12 @@ export const Route = createFileRoute('/auth/sign-in')({
     return getSeoBase();
   },
   head: ({ loaderData }) => ({
-    meta: [{ title: headTitle(loaderData?.boardName, m.authSignIn_title()) }],
+    meta: [
+      { title: headTitle(loaderData?.boardName, m.authSignIn_title()) },
+      // Transactional auth surface — noindex (hosted parity; robots.txt
+      // stays permissive, meta does the gating).
+      { name: 'robots', content: 'noindex' },
+    ],
   }),
   component: SignInPage,
 });

@@ -87,6 +87,7 @@ export const Route = createFileRoute('/account_/saved')({
           m.accountShell_savedJobsNav(),
         ),
       },
+      { name: 'robots', content: 'noindex' },
     ],
   }),
   component: SavedJobsPage,

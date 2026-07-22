@@ -97,7 +97,10 @@ export const Route = createFileRoute('/settings')({
     }
   },
   head: ({ loaderData }) => ({
-    meta: [{ title: headTitle(loaderData?.seo.boardName, m.settings_title()) }],
+    meta: [
+      { title: headTitle(loaderData?.seo.boardName, m.settings_title()) },
+      { name: 'robots', content: 'noindex' },
+    ],
   }),
   component: SettingsPage,
 });
