@@ -7,11 +7,10 @@ import {
 } from './companies-search';
 
 describe('parseCompaniesSearch', () => {
-  it('keeps only the company listing query, cursor, page, and selected company', () => {
+  it('keeps only the company listing query, unified page, and selected company', () => {
     expect(
       parseCompaniesSearch({
         query: 'venture capital',
-        cursor: 'next-page-token',
         page: '3',
         selectedCompany: 'acme-ventures',
         q: 'job-only query',
@@ -19,21 +18,22 @@ describe('parseCompaniesSearch', () => {
       }),
     ).toEqual({
       query: 'venture capital',
-      cursor: 'next-page-token',
       page: 3,
       selectedCompany: 'acme-ventures',
     });
   });
 
-  it('coerces a numeric-looking cursor back to a string so a direct load keeps the page', () => {
-    // `?cursor=2` reaches validateSearch as the number 2; the free-text search
-    // cursor must survive as a string instead of 307-ing to the first page.
-    expect(parseCompaniesSearch({ query: 'acme', cursor: 2 })).toEqual({
+  it('collapses page 1 to a clean URL and rejects invalid page values', () => {
+    // Both browse and search are offset-paginated with one 1-based `?page=`;
+    // page 1 drops from the URL, and anything invalid collapses to page 1.
+    expect(parseCompaniesSearch({ query: 'acme', page: '1' })).toEqual({
       query: 'acme',
-      cursor: '2',
       page: undefined,
       selectedCompany: undefined,
     });
+    expect(parseCompaniesSearch({ page: '0' }).page).toBeUndefined();
+    expect(parseCompaniesSearch({ page: 'nope' }).page).toBeUndefined();
+    expect(parseCompaniesSearch({ page: '4' }).page).toBe(4);
   });
 
   it('drops empty or non-string selections from the canonical URL', () => {
@@ -52,14 +52,12 @@ describe('companiesListingLoaderDeps', () => {
       companiesListingLoaderDeps(
         parseCompaniesSearch({
           query: 'venture capital',
-          cursor: 'next-page-token',
           page: '3',
           selectedCompany: 'acme-ventures',
         }),
       ),
     ).toEqual({
       query: 'venture capital',
-      cursor: 'next-page-token',
       page: 3,
     });
   });

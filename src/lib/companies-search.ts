@@ -1,13 +1,7 @@
-import {
-  cursorSearchValue,
-  pageSearchValue,
-  parsePageParam,
-} from '@/lib/pagination';
+import { pageSearchValue, parsePageParam } from '@/lib/pagination';
 
 export interface CompaniesSearch {
-  /** Opaque cursor used by text-search pagination. */
-  cursor?: string;
-  /** 1-based page used by browse pagination; page 1 drops from the URL. */
+  /** 1-based page used by both browse and search pagination; page 1 drops from the URL. */
   page?: number;
   query?: string;
   /** Desktop detail-pane selection; the value is the canonical company slug. */
@@ -29,7 +23,6 @@ export function parseCompaniesSearch(
 ): CompaniesSearch {
   return {
     query: stringSearchValue(search.query),
-    cursor: cursorSearchValue(search.cursor),
     page: pageSearchValue(parsePageParam(search.page)),
     selectedCompany: selectedCompanySearchValue(search.selectedCompany),
   };
@@ -41,7 +34,6 @@ export function companiesListingLoaderDeps(
 ): CompaniesListingSearch {
   return {
     query: search.query,
-    cursor: search.cursor,
     page: search.page,
   };
 }

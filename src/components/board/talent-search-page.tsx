@@ -6,7 +6,7 @@ import { Users } from 'lucide-react';
 import { m } from '../../paraglide/messages';
 
 import type { TalentCardVM } from '@/board/talent-view-model';
-import { CursorPagination } from '@/components/board/cursor-pagination';
+import { ListingPagination } from '@/components/board/listing-pagination';
 import { ListingResultsHeader } from '@/components/board/listing-page-header';
 import { TalentSearchResult } from '@/components/board/talent-search-result';
 import { Page } from '@/components/layout/page';
@@ -26,7 +26,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
-import { cursorPageHref } from '@/lib/pagination';
+import { listingPageHref } from '@/lib/pagination';
 
 type AdPlacement = {
   label: string;
@@ -37,10 +37,11 @@ export function TalentSearchPage({
   candidates,
   q,
   skill,
-  hasPreviousResults = false,
-  nextCursor,
-  onPreviousResults,
-  onNextResults,
+  count,
+  page,
+  pageSize,
+  language,
+  onPageChange,
   selectedTalent,
   onSelectedTalentReplace,
   onSelectedTalentPush,
@@ -53,12 +54,15 @@ export function TalentSearchPage({
   q?: string;
   /** `?skill=` facet from a deep link — drives the empty-state copy. */
   skill?: string;
-  /** Cursor pagination — a previous cursor page exists (not the first page). */
-  hasPreviousResults?: boolean;
-  /** The opaque forward cursor for the next page, or null on the last page. */
-  nextCursor?: string | null;
-  onPreviousResults?: () => void;
-  onNextResults?: () => void;
+  /** Total result count — drives the exact "Showing X–Y of N" range line. */
+  count: number;
+  /** Current 1-based page. */
+  page: number;
+  /** Directory page size — the offset window the loader requested. */
+  pageSize: number;
+  /** Board language, for number-formatting the range figures. */
+  language: string;
+  onPageChange: (page: number) => void;
   selectedTalent?: string;
   onSelectedTalentReplace: (handle: string) => void;
   onSelectedTalentPush: (handle: string) => void;
@@ -78,23 +82,16 @@ export function TalentSearchPage({
     onReplace: onSelectedTalentReplace,
     onPush: onSelectedTalentPush,
   });
-  // The talent directory is cursor-based — the SDK returns no total and no
-  // offset — so the description line under the heading reports the honest count
-  // actually on this page (never a fabricated "X–Y of N"), and flags that more
-  // may follow when a next cursor exists. `shownCount` is the rendered length,
-  // which keeps the copy honest on cursor page 2+, where absolute position is
-  // unknowable.
-  const shownCount = candidateVms.length;
-  const hasMore = Boolean(nextCursor);
+  // The talent directory is offset-paginated with a total `count`, so the
+  // description line under the heading reports the exact "Showing X–Y of N"
+  // range — the same honest range as Jobs and the companies browse index.
   const resultDescription =
-    shownCount > 0
-      ? hasMore
-        ? shownCount === 1
-          ? m.talentSearch_resultsShowingMoreOne({ count: shownCount })
-          : m.talentSearch_resultsShowingMoreMany({ count: shownCount })
-        : shownCount === 1
-          ? m.talentSearch_resultsShowingCountOne({ count: shownCount })
-          : m.talentSearch_resultsShowingCountMany({ count: shownCount })
+    count > 0
+      ? m.talentSearch_resultsShowingRange({
+          from: ((page - 1) * pageSize + 1).toLocaleString(language),
+          to: Math.min(page * pageSize, count).toLocaleString(language),
+          count: count.toLocaleString(language),
+        })
       : null;
   const resultsBar = (
     <ListingResultsHeader>
@@ -204,18 +201,17 @@ export function TalentSearchPage({
                       ))}
                     </div>
 
-                    <CursorPagination
-                      hasPrevious={hasPreviousResults}
-                      hasNext={Boolean(nextCursor)}
-                      nextHref={
-                        nextCursor
-                          ? cursorPageHref(currentHref, nextCursor, [
-                              'selectedTalent',
-                            ])
-                          : undefined
+                    <ListingPagination
+                      compact
+                      page={page}
+                      count={count}
+                      pageSize={pageSize}
+                      hrefForPage={(nextPage) =>
+                        listingPageHref(currentHref, nextPage, [
+                          'selectedTalent',
+                        ])
                       }
-                      onPrevious={onPreviousResults}
-                      onNext={onNextResults}
+                      onPageChange={onPageChange}
                     />
                 </SearchResultsList>
               }

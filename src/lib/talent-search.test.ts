@@ -8,28 +8,30 @@ describe('parseTalentSearch', () => {
       parseTalentSearch({
         q: '  product researcher  ',
         skill: '  accessibility  ',
-        cursor: '  next-page-token  ',
+        page: '3',
         selectedTalent: '  ada-lovelace  ',
         query: 'company-only query',
-        page: '3',
       }),
     ).toEqual({
       q: 'product researcher',
       skill: 'accessibility',
-      cursor: 'next-page-token',
+      page: 3,
       selectedTalent: 'ada-lovelace',
     });
   });
 
-  it('coerces a numeric-looking cursor back to a string so it survives a direct load', () => {
-    // The router parses `?cursor=2` as the number 2 before validateSearch runs;
-    // the cursor must not be dropped or the paginated directory URL 307s home.
-    expect(parseTalentSearch({ cursor: 2 })).toEqual({
+  it('collapses page 1 to a clean URL and rejects invalid page values', () => {
+    // The directory is offset-paginated with a 1-based `?page=`; page 1 drops
+    // from the URL, and anything invalid collapses to page 1 (also dropped).
+    expect(parseTalentSearch({ page: '1' })).toEqual({
       q: undefined,
       skill: undefined,
-      cursor: '2',
+      page: undefined,
       selectedTalent: undefined,
     });
+    expect(parseTalentSearch({ page: '0' }).page).toBeUndefined();
+    expect(parseTalentSearch({ page: 'nope' }).page).toBeUndefined();
+    expect(parseTalentSearch({ page: '4' }).page).toBe(4);
   });
 
   it('drops blank and non-string URL values', () => {
@@ -37,13 +39,12 @@ describe('parseTalentSearch', () => {
       parseTalentSearch({
         q: '  ',
         skill: 42,
-        cursor: null,
         selectedTalent: ['ada-lovelace'],
       }),
     ).toEqual({
       q: undefined,
       skill: undefined,
-      cursor: undefined,
+      page: undefined,
       selectedTalent: undefined,
     });
   });
@@ -55,7 +56,7 @@ describe('talentListingLoaderDeps', () => {
       parseTalentSearch({
         q: 'researcher',
         skill: 'accessibility',
-        cursor: 'next-page-token',
+        page: '2',
         selectedTalent: 'first-candidate',
       }),
     );
@@ -63,7 +64,7 @@ describe('talentListingLoaderDeps', () => {
       parseTalentSearch({
         q: 'researcher',
         skill: 'accessibility',
-        cursor: 'next-page-token',
+        page: '2',
         selectedTalent: 'second-candidate',
       }),
     );
@@ -71,7 +72,7 @@ describe('talentListingLoaderDeps', () => {
     expect(first).toEqual({
       q: 'researcher',
       skill: 'accessibility',
-      cursor: 'next-page-token',
+      page: 2,
     });
     expect(first).toEqual(second);
     expect(first).not.toHaveProperty('selectedTalent');
@@ -82,6 +83,6 @@ describe('talentListingLoaderDeps', () => {
     // query), but a `?skill=` link must still filter the directory.
     expect(
       talentListingLoaderDeps(parseTalentSearch({ skill: 'accessibility' })),
-    ).toEqual({ q: undefined, skill: 'accessibility', cursor: undefined });
+    ).toEqual({ q: undefined, skill: 'accessibility', page: undefined });
   });
 });

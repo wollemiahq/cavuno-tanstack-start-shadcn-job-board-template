@@ -56,7 +56,7 @@ beforeEach(() => {
 
 afterEach(cleanup);
 
-function renderPage(onNextResults = vi.fn(), onPreviousResults = vi.fn()) {
+function renderPage(onPageChange = vi.fn()) {
   const rootRoute = createRootRoute();
   const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -66,10 +66,11 @@ function renderPage(onNextResults = vi.fn(), onPreviousResults = vi.fn()) {
         candidates={[candidateVm]}
         q="engineer"
         skill="Mathematics"
-        hasPreviousResults
-        nextCursor="cursor-page-2"
-        onPreviousResults={onPreviousResults}
-        onNextResults={onNextResults}
+        count={50}
+        page={1}
+        pageSize={24}
+        language="en"
+        onPageChange={onPageChange}
         selectedTalent="ada-lovelace"
         onSelectedTalentReplace={vi.fn()}
         onSelectedTalentPush={vi.fn()}
@@ -91,8 +92,7 @@ function renderPage(onNextResults = vi.fn(), onPreviousResults = vi.fn()) {
 
   return {
     ...render(<RouterProvider router={router} />),
-    onNextResults,
-    onPreviousResults,
+    onPageChange,
   };
 }
 
@@ -132,28 +132,20 @@ describe('TalentSearchPage — search results pattern', () => {
     ).toBeVisible();
   });
 
-  it('paginates the cursor directory with a design-system Previous/Next pager, not numbered pages', async () => {
-    const { onNextResults, onPreviousResults } = renderPage();
+  it('paginates the directory with numbered, crawlable page links, not a cursor pager', async () => {
+    const { onPageChange } = renderPage();
 
-    // The talent SDK surface is cursor-only (no total count, no offset), so
-    // the affordance is Previous/Next on the shared pagination primitive — a
-    // crawlable next anchor, no numbered page links.
-    const next = await screen.findByRole('link', {
-      name: m.pagination_nextPageLabel(),
+    // The talent directory is offset-paginated with a total, so the affordance
+    // is numbered pages on the shared pagination primitive — each a crawlable
+    // ?page= anchor. Page 1 of 50 at pageSize 24 spans three pages.
+    const pageTwo = await screen.findByRole('link', {
+      name: `${m.pagination_ariaLabel()} 2`,
     });
-    expect(next).toHaveAttribute('href', '/?cursor=cursor-page-2');
-    expect(
-      screen.queryByRole('link', { name: `${m.pagination_ariaLabel()} 2` }),
-    ).toBeNull();
+    expect(pageTwo).toHaveAttribute('href', '/?page=2');
     expect(screen.queryByText('Load more')).toBeNull();
 
-    fireEvent.click(next);
-    expect(onNextResults).toHaveBeenCalledTimes(1);
-
-    fireEvent.click(
-      screen.getByRole('link', { name: m.pagination_previousPageLabel() }),
-    );
-    expect(onPreviousResults).toHaveBeenCalledTimes(1);
+    fireEvent.click(pageTwo);
+    expect(onPageChange).toHaveBeenCalledWith(2);
   });
 
   it('keeps a filtered no-match state inside the sponsored workspace and offers a primary reset', async () => {
@@ -166,6 +158,11 @@ describe('TalentSearchPage — search results pattern', () => {
           candidates={[]}
           q="no-such-candidate"
           skill="Cobol"
+          count={0}
+          page={1}
+          pageSize={24}
+          language="en"
+          onPageChange={vi.fn()}
           onSelectedTalentReplace={vi.fn()}
           onSelectedTalentPush={vi.fn()}
           detail={<p>Unused talent detail</p>}
@@ -226,6 +223,11 @@ describe('TalentSearchPage — results description line', () => {
       component: () => (
         <TalentSearchPage
           candidates={[candidateVm]}
+          count={1}
+          page={1}
+          pageSize={24}
+          language="en"
+          onPageChange={vi.fn()}
           onSelectedTalentReplace={vi.fn()}
           onSelectedTalentPush={vi.fn()}
           detail={<p>Selected profile details</p>}
@@ -245,33 +247,33 @@ describe('TalentSearchPage — results description line', () => {
     return render(<RouterProvider router={router} />);
   }
 
-  it('reports the honest on-page count (singular) with a more-available hint', async () => {
-    // The talent directory is cursor-only — no total, no offset — so the line
-    // states the rendered count and flags that more follow, never a range.
-    renderPage({ nextCursor: 'cursor-page-2' });
-
-    expect(
-      await screen.findByText('Showing 1 candidate, more available'),
-    ).toBeVisible();
-    expect(screen.queryByText(/of \d+ candidates/)).toBeNull();
-  });
-
-  it('pluralizes the count and keeps the hint on a full cursor page', async () => {
+  it('renders the exact "Showing X–Y of N" range on the first page (offset)', async () => {
+    // The directory is offset-paginated with a total, so the line states the
+    // precise range, never a fabricated cursor count.
     renderPage({
       candidates: [candidateVm, candidateVm2],
-      nextCursor: 'cursor-page-2',
+      count: 50,
+      page: 1,
+      pageSize: 24,
     });
 
     expect(
-      await screen.findByText('Showing 2 candidates, more available'),
+      await screen.findByText('Showing 1–24 of 50 candidates'),
     ).toBeVisible();
+    expect(screen.queryByText(/more available/)).toBeNull();
   });
 
-  it('drops the more-available hint on the last cursor page', async () => {
-    renderPage({ nextCursor: null });
+  it('advances the range window on a later page and caps it at the total', async () => {
+    renderPage({
+      candidates: [candidateVm, candidateVm2],
+      count: 50,
+      page: 3,
+      pageSize: 24,
+    });
 
-    expect(await screen.findByText('Showing 1 candidate')).toBeVisible();
-    expect(screen.queryByText(/more available/)).toBeNull();
+    expect(
+      await screen.findByText('Showing 49–50 of 50 candidates'),
+    ).toBeVisible();
   });
 });
 
@@ -294,6 +296,11 @@ describe('TalentSearchPage — arrival scroll', () => {
           </button>
           <TalentSearchPage
             candidates={[candidateVm]}
+            count={1}
+            page={1}
+            pageSize={24}
+            language="en"
+            onPageChange={vi.fn()}
             onSelectedTalentReplace={vi.fn()}
             onSelectedTalentPush={vi.fn()}
             selectedTalent={selected}

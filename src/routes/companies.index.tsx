@@ -33,7 +33,7 @@ export const Route = createFileRoute('/companies/')({
         ? searchCompanies({
             data: {
               query: deps.query,
-              cursor: deps.cursor,
+              offset: pageToOffset(deps.page ?? 1, COMPANIES_PAGE_SIZE),
               limit: COMPANIES_PAGE_SIZE,
             },
           })

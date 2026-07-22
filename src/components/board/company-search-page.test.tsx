@@ -139,9 +139,8 @@ describe('CompanySearchPage — search results pattern', () => {
     expect(detail).toHaveTextContent('Selected company details');
   });
 
-  it('uses a cursor Previous/Next pager for company-name search instead of numbered pages', async () => {
-    const onNextResults = vi.fn();
-    const onPreviousResults = vi.fn();
+  it('uses numbered, crawlable page links for company-name search, unified with browse', async () => {
+    const onPageChange = vi.fn();
     const rootRoute = createRootRoute();
     const indexRoute = createRoute({
       getParentRoute: () => rootRoute,
@@ -154,11 +153,7 @@ describe('CompanySearchPage — search results pattern', () => {
           pageSize={24}
           query="acme"
           markets={[]}
-          onPageChange={vi.fn()}
-          hasPreviousResults
-          nextCursor="cursor-page-2"
-          onPreviousResults={onPreviousResults}
-          onNextResults={onNextResults}
+          onPageChange={onPageChange}
           onSelectedCompanyReplace={vi.fn()}
           onSelectedCompanyPush={vi.fn()}
           detail={<p>Selected company details</p>}
@@ -171,23 +166,15 @@ describe('CompanySearchPage — search results pattern', () => {
     });
     render(<RouterProvider router={router} />);
 
-    // companies.search is cursor-only (no offset), so free-text search paginates
-    // by opaque cursor: a crawlable next anchor, never numbered page links.
-    const next = await screen.findByRole('link', {
-      name: m.pagination_nextPageLabel(),
+    // companies.search is now offset-paginated with a total, so free-text search
+    // paginates by numbered ?page= anchors, the same as browse.
+    const pageTwo = await screen.findByRole('link', {
+      name: `${m.pagination_ariaLabel()} 2`,
     });
-    expect(next).toHaveAttribute('href', '/?cursor=cursor-page-2');
-    expect(
-      screen.queryByRole('link', { name: `${m.pagination_ariaLabel()} 2` }),
-    ).toBeNull();
+    expect(pageTwo).toHaveAttribute('href', '/?page=2');
 
-    fireEvent.click(next);
-    expect(onNextResults).toHaveBeenCalledTimes(1);
-
-    fireEvent.click(
-      screen.getByRole('link', { name: m.pagination_previousPageLabel() }),
-    );
-    expect(onPreviousResults).toHaveBeenCalledTimes(1);
+    fireEvent.click(pageTwo);
+    expect(onPageChange).toHaveBeenCalledWith(2);
   });
 
   it('keeps a no-match search inside the sponsored workspace and offers a primary reset', async () => {
@@ -274,22 +261,14 @@ describe('CompanySearchPage — results description line', () => {
     ).toBeVisible();
   });
 
-  it('reports the honest on-page count with a more-available hint on cursor search', async () => {
-    // Free-text search is cursor-based (no total/offset). The line reports the
-    // count actually rendered — singular here — and flags that more follow.
-    renderPage({ query: 'acme', count: 999, nextCursor: 'cursor-page-2' });
+  it('renders the same exact range for free-text search, now offset-paginated', async () => {
+    // Search is unified with browse: offset pagination with a total, so the line
+    // states the precise range — never a fabricated cursor count.
+    renderPage({ query: 'acme', count: 37, page: 2, pageSize: 24 });
 
     expect(
-      await screen.findByText('Showing 1 company, more available'),
+      await screen.findByText('Showing 25–37 of 37 companies'),
     ).toBeVisible();
-    // Never a fabricated range on a cursor surface.
-    expect(screen.queryByText(/of \d+ companies/)).toBeNull();
-  });
-
-  it('drops the more-available hint on the last cursor page', async () => {
-    renderPage({ query: 'acme', count: 999, nextCursor: null });
-
-    expect(await screen.findByText('Showing 1 company')).toBeVisible();
     expect(screen.queryByText(/more available/)).toBeNull();
   });
 });

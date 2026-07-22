@@ -1,6 +1,6 @@
 import { boardCopy } from '#/copy';
 
-import { getRouteApi, useNavigate, useRouter } from '@tanstack/react-router';
+import { getRouteApi, useNavigate } from '@tanstack/react-router';
 
 import { getCompanySearchLabels } from '@/board/company-search-labels';
 import { toCompanyCardVM } from '@/board/company-view-model';
@@ -27,8 +27,6 @@ const rootApi = getRouteApi('__root__');
 export type CompaniesPageData = {
   data: PublicCompany[];
   count?: number;
-  hasMore?: boolean;
-  nextCursor?: string | null;
 };
 
 export function ProgrammaticCompaniesView({
@@ -47,7 +45,6 @@ export function ProgrammaticCompaniesView({
   search: CompaniesSearch;
 }) {
   const navigate = useNavigate() as unknown as LooseNavigate;
-  const router = useRouter();
   const { board } = rootApi.useLoaderData();
   const copy = boardCopy(board.language, board.labels);
   const marketOptions = includeSelectedCompanyMarket(markets, market);
@@ -86,26 +83,9 @@ export function ProgrammaticCompaniesView({
           search: (previous) => ({
             ...previous,
             page: pageSearchValue(nextPage),
-            cursor: undefined,
             selectedCompany: undefined,
           }),
         })
-      }
-      hasPreviousResults={Boolean(search.cursor)}
-      nextCursor={page.hasMore ? page.nextCursor : null}
-      onPreviousResults={() => router.history.back()}
-      onNextResults={
-        page.hasMore && page.nextCursor
-          ? () =>
-              navigate({
-                search: (previous) => ({
-                  ...previous,
-                  cursor: page.nextCursor ?? undefined,
-                  page: undefined,
-                  selectedCompany: undefined,
-                }),
-              })
-          : undefined
       }
       selectedCompany={search.selectedCompany}
       onSelectedCompanyReplace={(companySlug) =>

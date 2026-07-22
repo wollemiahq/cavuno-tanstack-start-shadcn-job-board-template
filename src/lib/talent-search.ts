@@ -1,8 +1,8 @@
-import { cursorSearchValue } from '@/lib/pagination';
+import { pageSearchValue, parsePageParam } from '@/lib/pagination';
 
 export interface TalentSearch {
-  /** Opaque cursor used by the Talent API. */
-  cursor?: string;
+  /** 1-based page used by directory pagination; page 1 drops from the URL. */
+  page?: number;
   /** Candidate name or headline query. */
   q?: string;
   /** Free-form skill-name filter. */
@@ -24,7 +24,7 @@ export function parseTalentSearch(
   return {
     q: stringSearchValue(search.q),
     skill: stringSearchValue(search.skill),
-    cursor: cursorSearchValue(search.cursor),
+    page: pageSearchValue(parsePageParam(search.page)),
     selectedTalent: stringSearchValue(search.selectedTalent),
   };
 }
@@ -36,6 +36,6 @@ export function talentListingLoaderDeps(
   return {
     q: search.q,
     skill: search.skill,
-    cursor: search.cursor,
+    page: search.page,
   };
 }

@@ -45,7 +45,7 @@ export const Route = createFileRoute('/companies/markets/$market')({
             data: {
               query: deps.query,
               marketSlug: params.market,
-              cursor: deps.cursor,
+              offset: pageToOffset(deps.page ?? 1, COMPANIES_PAGE_SIZE),
               limit: COMPANIES_PAGE_SIZE,
             },
           })

@@ -8,7 +8,6 @@ import {
   notFound,
   useLocation,
   useNavigate,
-  useRouter,
 } from '@tanstack/react-router';
 import { Users } from 'lucide-react';
 
@@ -28,6 +27,7 @@ import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { buttonVariants } from '@/components/ui/button';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
 import { headTitle } from '@/lib/page-title';
+import { pageSearchValue, pageToOffset } from '@/lib/pagination';
 import {
   parseTalentSearch,
   talentListingLoaderDeps,
@@ -49,7 +49,7 @@ export const Route = createFileRoute('/talent/')({
     try {
       const result = await listTalent({
         data: {
-          cursor: deps.cursor,
+          offset: pageToOffset(deps.page ?? 1, TALENT_PAGE_SIZE),
           q: deps.q,
           skill: deps.skill,
           limit: TALENT_PAGE_SIZE,
@@ -130,7 +130,6 @@ function TalentDirectoryPage() {
   const search = Route.useSearch();
   const location = useLocation();
   const navigate = useNavigate({ from: '/talent/' });
-  const router = useRouter();
   const copy = boardCopy(seo.language, seo.labels);
   // Gate the detail-pane Message CTA by the viewer's role. A candidate cannot
   // cold-message another candidate; an employer's Message hands off to the
@@ -177,20 +176,18 @@ function TalentDirectoryPage() {
         )}
         q={search.q}
         skill={search.skill}
-        hasPreviousResults={Boolean(search.cursor)}
-        nextCursor={page.hasMore ? page.nextCursor : null}
-        onPreviousResults={() => router.history.back()}
-        onNextResults={
-          page.hasMore && page.nextCursor
-            ? () =>
-                navigate({
-                  search: (previous) => ({
-                    ...previous,
-                    cursor: page.nextCursor ?? undefined,
-                    selectedTalent: undefined,
-                  }),
-                })
-            : undefined
+        count={page.count ?? page.data.length}
+        page={search.page ?? 1}
+        pageSize={TALENT_PAGE_SIZE}
+        language={seo.language}
+        onPageChange={(next) =>
+          navigate({
+            search: (previous) => ({
+              ...previous,
+              page: pageSearchValue(next),
+              selectedTalent: undefined,
+            }),
+          })
         }
         selectedTalent={search.selectedTalent}
         onSelectedTalentReplace={(handle) =>

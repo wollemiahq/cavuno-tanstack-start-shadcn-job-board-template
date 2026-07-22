@@ -91,17 +91,15 @@ describe('companies route — URL-backed master-detail search', () => {
     expect(source).not.toContain('subscribeJobAlert');
   });
 
-  it('accepts the data query, cursor, browse page, and selected company', () => {
+  it('accepts the data query, unified page, and selected company', () => {
     expect(
       validateSearch(CompaniesRoute, {
         query: 'acme',
-        cursor: 'next-token',
         page: '3',
         selectedCompany: 'acme-ventures',
       }),
     ).toEqual({
       query: 'acme',
-      cursor: 'next-token',
       page: 3,
       selectedCompany: 'acme-ventures',
     });
@@ -132,19 +130,17 @@ describe('company market route — scoped browse and search', () => {
     expect(
       validateSearch(MarketRoute, {
         query: 'acme',
-        cursor: 'next-token',
         page: '3',
         selectedCompany: 'acme-ventures',
       }),
     ).toEqual({
       query: 'acme',
-      cursor: 'next-token',
       page: 3,
       selectedCompany: 'acme-ventures',
     });
   });
 
-  it('retains page pagination for browse and sends query plus market to search', async () => {
+  it('offset-paginates both browse and search, sending query plus market on search', async () => {
     const load = loader(MarketRoute);
 
     await load({
@@ -163,14 +159,14 @@ describe('company market route — scoped browse and search', () => {
     listCompanies.mockClear();
     await load({
       params: { market: 'venture-capital' },
-      deps: { query: 'acme', cursor: 'next-token' },
+      deps: { query: 'acme', page: 2 },
     } as never);
 
     expect(searchCompanies).toHaveBeenCalledWith({
       data: {
         query: 'acme',
         marketSlug: 'venture-capital',
-        cursor: 'next-token',
+        offset: 24,
         limit: 24,
       },
     });

@@ -9,7 +9,6 @@ import { m } from '../../paraglide/messages';
 import type { CompanyCardVM } from '@/board/company-view-model';
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
 import { CompanySearchResult } from '@/components/board/company-search-result';
-import { CursorPagination } from '@/components/board/cursor-pagination';
 import { ListingResultsHeader } from '@/components/board/listing-page-header';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { Page } from '@/components/layout/page';
@@ -30,7 +29,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
-import { cursorPageHref, listingPageHref } from '@/lib/pagination';
+import { listingPageHref } from '@/lib/pagination';
 
 type AdPlacement = {
   label: string;
@@ -47,10 +46,6 @@ export function CompanySearchPage({
   query,
   markets,
   onPageChange,
-  hasPreviousResults = false,
-  nextCursor,
-  onPreviousResults,
-  onNextResults,
   selectedCompany,
   onSelectedCompanyReplace,
   onSelectedCompanyPush,
@@ -67,12 +62,6 @@ export function CompanySearchPage({
   query?: string;
   markets: Array<{ slug: string; name: string }>;
   onPageChange: (page: number) => void;
-  /** Cursor (free-text search) pagination — a previous cursor page exists. */
-  hasPreviousResults?: boolean;
-  /** The opaque forward cursor for the next search page, or null on the last. */
-  nextCursor?: string | null;
-  onPreviousResults?: () => void;
-  onNextResults?: () => void;
   selectedCompany?: string;
   onSelectedCompanyReplace: (companySlug: string) => void;
   onSelectedCompanyPush: (companySlug: string) => void;
@@ -94,27 +83,11 @@ export function CompanySearchPage({
     count === 1
       ? m.companySearch_resultsCountOne({ count })
       : m.companySearch_resultsCountMany({ count });
-  // The description line under the count mirrors the jobs results header. On the
-  // browse index (offset pagination with a total) it renders the exact
-  // "Showing X–Y of N" range. Free-text search is cursor-based — the API returns
-  // no total or offset — so it reports the honest count actually on the page
-  // (never a fabricated range), flagging that more may follow when a next cursor
-  // exists. `shownCount` is the rendered length so the copy stays honest on
-  // cursor page 2+, which has no absolute position.
-  const isCursor = Boolean(query);
-  const shownCount = companyVms.length;
-  const hasMore = Boolean(nextCursor);
-  const resultDescription = isCursor
-    ? shownCount > 0
-      ? hasMore
-        ? shownCount === 1
-          ? m.companySearch_resultsShowingMoreOne({ count: shownCount })
-          : m.companySearch_resultsShowingMoreMany({ count: shownCount })
-        : shownCount === 1
-          ? m.companySearch_resultsShowingCountOne({ count: shownCount })
-          : m.companySearch_resultsShowingCountMany({ count: shownCount })
-      : null
-    : count > 0
+  // Both browse and free-text search are offset-paginated with a total `count`,
+  // so the description line always renders the exact "Showing X–Y of N" range —
+  // the same honest range as the jobs results header.
+  const resultDescription =
+    count > 0
       ? m.companySearch_resultsShowingRange({
           from: (page - 1) * pageSize + 1,
           to: Math.min(page * pageSize, count),
@@ -226,35 +199,18 @@ export function CompanySearchPage({
                       })}
                     </div>
 
-                    {query ? (
-                      <CursorPagination
-                        hasPrevious={hasPreviousResults}
-                        hasNext={Boolean(nextCursor)}
-                        nextHref={
-                          nextCursor
-                            ? cursorPageHref(currentHref, nextCursor, [
-                                'selectedCompany',
-                              ])
-                            : undefined
-                        }
-                        onPrevious={onPreviousResults}
-                        onNext={onNextResults}
-                      />
-                    ) : (
-                      <ListingPagination
-                        compact
-                        page={page}
-                        count={count}
-                        pageSize={pageSize}
-                        hrefForPage={(nextPage) =>
-                          listingPageHref(currentHref, nextPage, [
-                            'cursor',
-                            'selectedCompany',
-                          ])
-                        }
-                        onPageChange={onPageChange}
-                      />
-                    )}
+                    <ListingPagination
+                      compact
+                      page={page}
+                      count={count}
+                      pageSize={pageSize}
+                      hrefForPage={(nextPage) =>
+                        listingPageHref(currentHref, nextPage, [
+                          'selectedCompany',
+                        ])
+                      }
+                      onPageChange={onPageChange}
+                    />
 
                     {markets.length > 0 ? (
                       <section

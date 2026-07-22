@@ -120,12 +120,12 @@ afterEach(() => {
 });
 
 describe('talent directory route — query and capability contracts', () => {
-  it('passes the complete URL-backed query to the talent directory', async () => {
+  it('passes the complete URL-backed query, paging by offset, to the talent directory', async () => {
     await routeLoader(TalentRoute)({
       deps: {
         q: 'robotics engineer',
         skill: 'TypeScript',
-        cursor: 'next-talent-page',
+        page: 3,
       },
     } as never);
 
@@ -133,7 +133,7 @@ describe('talent directory route — query and capability contracts', () => {
       data: {
         q: 'robotics engineer',
         skill: 'TypeScript',
-        cursor: 'next-talent-page',
+        offset: 48,
         limit: 24,
       },
     });
