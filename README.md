@@ -13,9 +13,8 @@ Built on [TanStack Start](https://tanstack.com/start),
 via the [Cavuno SDK](https://cavuno.com/sdk) (`@cavuno/board`), so every
 surface is a real page wired to a real backend — not a mock.
 
-<!-- Hosted demo: the demo deploy target exists (`wrangler deploy --env demo`,
-     see Deploy), but there is no public URL yet — flipping it live is the
-     owner's go-live decision. Add the link here once it's public. -->
+**Hosted demo:** [demo.cavuno.app](https://demo.cavuno.app) — this template
+running against the live sandbox board.
 
 ![Cavuno job board home — real sandbox jobs and company cards](docs/media/home.png)
 
@@ -238,8 +237,7 @@ A `demo` environment is pre-wired for the hosted showcase deploy:
 wrangler deploy --env demo
 ```
 
-> There is no public demo URL yet — flipping the `demo` deploy live is the
-> owner's decision.
+> The public demo lives at [demo.cavuno.app](https://demo.cavuno.app).
 
 [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/wollemiahq/cavuno-shadcn-ui-job-board-template)
 
