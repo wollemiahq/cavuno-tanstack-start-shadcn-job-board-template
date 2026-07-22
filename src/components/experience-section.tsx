@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 
-import { formatMonthYear } from '@cavuno/board/format';
 import { useRouter } from '@tanstack/react-router';
 import { Briefcase, Pencil, Trash2 } from 'lucide-react';
 
@@ -13,6 +12,7 @@ import {
   updateExperience,
 } from '../server/account';
 
+import { profileMonthLabel } from '@/board/profile-view-model';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { LocationSuggestField } from '@/components/location-suggest-field';
 import { MonthYearField } from '@/components/month-year-field';
@@ -91,12 +91,6 @@ function toDraft(item: CandidateExperience): Draft {
     current: !item.endDate,
     description: item.description ?? '',
   };
-}
-
-/** Month-granular display for stored `YYYY-MM-DD` / `YYYY-MM-01` dates. */
-function monthLabel(language: string, value: string | null): string {
-  if (!value) return '';
-  return formatMonthYear(language, value);
 }
 
 /**
@@ -324,10 +318,10 @@ export function ExperienceSection({
                     {item.location ? ` · ${item.location}` : ''}
                   </ItemDescription>
                   <ItemDescription className="text-xs">
-                    {monthLabel(language, item.startDate)}
+                    {profileMonthLabel(language, item.startDate)}
                     {' – '}
                     {item.endDate
-                      ? monthLabel(language, item.endDate)
+                      ? profileMonthLabel(language, item.endDate)
                       : m.experienceSection_presentLabel()}
                   </ItemDescription>
                 </ItemContent>

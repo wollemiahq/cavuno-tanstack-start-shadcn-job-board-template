@@ -45,7 +45,7 @@ export function TalentSearchDetailState({
 
   if (status === 'error' && !detail) {
     return (
-      <Empty role="alert" className="min-h-[28rem]">
+      <Empty role="alert" className="min-h-(--detail-pane-min-h)">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <AlertCircle aria-hidden="true" />

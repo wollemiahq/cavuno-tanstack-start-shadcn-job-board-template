@@ -1,11 +1,12 @@
 'use client';
 
+import { useLocation } from '@tanstack/react-router';
 import { Users } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
-import { getTalentSearchLabels } from '@/board/talent-search-labels';
-import { toTalentCardVM } from '@/board/talent-view-model';
+import type { TalentCardVM } from '@/board/talent-view-model';
+import { CursorPagination } from '@/components/board/cursor-pagination';
 import { TalentSearchResult } from '@/components/board/talent-search-result';
 import { Page } from '@/components/layout/page';
 import {
@@ -14,7 +15,7 @@ import {
   SearchResultsLayout,
   SearchResultsList,
 } from '@/components/search-results/search-results';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import {
   Empty,
   EmptyContent,
@@ -24,7 +25,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
-import type { TalentDirectoryEntry } from '@cavuno/board';
+import { cursorPageHref } from '@/lib/pagination';
 
 type AdPlacement = {
   label: string;
@@ -35,7 +36,9 @@ export function TalentSearchPage({
   candidates,
   q,
   skill,
-  hasMore = false,
+  hasPreviousResults = false,
+  nextCursor,
+  onPreviousResults,
   onNextResults,
   selectedTalent,
   onSelectedTalentReplace,
@@ -44,12 +47,16 @@ export function TalentSearchPage({
   startAd,
   endAd,
 }: {
-  candidates: TalentDirectoryEntry[];
+  candidates: TalentCardVM[];
   /** Header-owned candidate query (ADR-0075) — drives the empty-state copy. */
   q?: string;
   /** `?skill=` facet from a deep link — drives the empty-state copy. */
   skill?: string;
-  hasMore?: boolean;
+  /** Cursor pagination — a previous cursor page exists (not the first page). */
+  hasPreviousResults?: boolean;
+  /** The opaque forward cursor for the next page, or null on the last page. */
+  nextCursor?: string | null;
+  onPreviousResults?: () => void;
   onNextResults?: () => void;
   selectedTalent?: string;
   onSelectedTalentReplace: (handle: string) => void;
@@ -58,11 +65,9 @@ export function TalentSearchPage({
   startAd?: AdPlacement;
   endAd?: AdPlacement;
 }) {
-  const labels = getTalentSearchLabels();
+  const currentHref = useLocation({ select: (location) => location.href });
   const hasActiveSearch = Boolean(q || skill);
-  const candidateVms = candidates.map((candidate) =>
-    toTalentCardVM(candidate, labels),
-  );
+  const candidateVms = candidates;
   const selectableHandles = candidateVms.flatMap((vm) =>
     vm.handle ? [vm.handle] : [],
   );
@@ -146,6 +151,7 @@ export function TalentSearchPage({
               }
               list={
                 <SearchResultsList
+                  ref={selection.listRef}
                   label={m.talentSearch_resultsRegionLabel()}
                   scrollRestorationId="talent-search-results"
                 >
@@ -153,34 +159,40 @@ export function TalentSearchPage({
 
                     <div className="space-y-3">
                       {candidateVms.map((vm, index) => (
-                        <TalentSearchResult
+                        <div
                           key={vm.handle ?? `candidate-${index}`}
-                          vm={vm}
-                          selected={
-                            vm.handle !== null &&
-                            vm.handle === selection.selectedId
-                          }
-                          onActivate={
-                            vm.handle
-                              ? (event) =>
-                                  selection.onResultActivate(event, vm.handle!)
-                              : undefined
-                          }
-                        />
+                          data-result-id={vm.handle ?? undefined}
+                        >
+                          <TalentSearchResult
+                            vm={vm}
+                            selected={
+                              vm.handle !== null &&
+                              vm.handle === selection.selectedId
+                            }
+                            onActivate={
+                              vm.handle
+                                ? (event) =>
+                                    selection.onResultActivate(event, vm.handle!)
+                                : undefined
+                            }
+                          />
+                        </div>
                       ))}
                     </div>
 
-                    {hasMore && onNextResults ? (
-                      <div className="flex justify-center">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={onNextResults}
-                        >
-                          {m.talentSearch_nextResultsLabel()}
-                        </Button>
-                      </div>
-                    ) : null}
+                    <CursorPagination
+                      hasPrevious={hasPreviousResults}
+                      hasNext={Boolean(nextCursor)}
+                      nextHref={
+                        nextCursor
+                          ? cursorPageHref(currentHref, nextCursor, [
+                              'selectedTalent',
+                            ])
+                          : undefined
+                      }
+                      onPrevious={onPreviousResults}
+                      onNext={onNextResults}
+                    />
                 </SearchResultsList>
               }
               detail={

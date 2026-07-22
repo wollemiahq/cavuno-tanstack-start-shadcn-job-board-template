@@ -15,10 +15,14 @@ import {
   screen,
   within,
 } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TalentSearchPage } from './talent-search-page';
 
+import { getTalentSearchLabels } from '@/board/talent-search-labels';
+import { toTalentCardVM } from '@/board/talent-view-model';
+import { m } from '@/paraglide/messages';
 import type { TalentDirectoryEntry } from '@cavuno/board';
 
 const candidate = {
@@ -35,6 +39,10 @@ const candidate = {
   education: [],
 } as TalentDirectoryEntry;
 
+// The page now takes resolved `TalentCardVM[]`; the test maps the wire
+// fixture exactly as the route does.
+const candidateVm = toTalentCardVM(candidate, getTalentSearchLabels());
+
 beforeEach(() => {
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
@@ -48,17 +56,19 @@ beforeEach(() => {
 
 afterEach(cleanup);
 
-function renderPage(onNextResults = vi.fn()) {
+function renderPage(onNextResults = vi.fn(), onPreviousResults = vi.fn()) {
   const rootRoute = createRootRoute();
   const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
     component: () => (
       <TalentSearchPage
-        candidates={[candidate]}
+        candidates={[candidateVm]}
         q="engineer"
         skill="Mathematics"
-        hasMore
+        hasPreviousResults
+        nextCursor="cursor-page-2"
+        onPreviousResults={onPreviousResults}
         onNextResults={onNextResults}
         selectedTalent="ada-lovelace"
         onSelectedTalentReplace={vi.fn()}
@@ -79,7 +89,11 @@ function renderPage(onNextResults = vi.fn()) {
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
 
-  return { ...render(<RouterProvider router={router} />), onNextResults };
+  return {
+    ...render(<RouterProvider router={router} />),
+    onNextResults,
+    onPreviousResults,
+  };
 }
 
 describe('TalentSearchPage — search results pattern', () => {
@@ -118,13 +132,28 @@ describe('TalentSearchPage — search results pattern', () => {
     ).toBeVisible();
   });
 
-  it('uses an honest cursor replacement action', async () => {
-    const { onNextResults } = renderPage();
-    fireEvent.click(
-      await screen.findByRole('button', { name: 'Next results' }),
-    );
-    expect(onNextResults).toHaveBeenCalledTimes(1);
+  it('paginates the cursor directory with a design-system Previous/Next pager, not numbered pages', async () => {
+    const { onNextResults, onPreviousResults } = renderPage();
+
+    // The talent SDK surface is cursor-only (no total count, no offset), so
+    // the affordance is Previous/Next on the shared pagination primitive — a
+    // crawlable next anchor, no numbered page links.
+    const next = await screen.findByRole('link', {
+      name: m.pagination_nextPageLabel(),
+    });
+    expect(next).toHaveAttribute('href', '/?cursor=cursor-page-2');
+    expect(
+      screen.queryByRole('link', { name: `${m.pagination_ariaLabel()} 2` }),
+    ).toBeNull();
     expect(screen.queryByText('Load more')).toBeNull();
+
+    fireEvent.click(next);
+    expect(onNextResults).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(
+      screen.getByRole('link', { name: m.pagination_previousPageLabel() }),
+    );
+    expect(onPreviousResults).toHaveBeenCalledTimes(1);
   });
 
   it('keeps a filtered no-match state inside the sponsored workspace and offers a primary reset', async () => {
@@ -168,5 +197,72 @@ describe('TalentSearchPage — search results pattern', () => {
       screen.getByRole('complementary', { name: 'Sponsored end' }),
     ).toHaveTextContent('End creative');
     expect(screen.queryByText('Unused talent detail')).toBeNull();
+  });
+});
+
+describe('TalentSearchPage — arrival scroll', () => {
+  // jsdom ships no scrollIntoView; the hook guards on its presence, so provide
+  // a spy to observe the arrival alignment.
+  const scrollIntoView = vi.fn();
+  beforeEach(() => {
+    scrollIntoView.mockClear();
+    Element.prototype.scrollIntoView = scrollIntoView;
+  });
+
+  function renderArrival(initialSelected?: string) {
+    function ArrivalHarness() {
+      const [selected, setSelected] = useState(initialSelected);
+      return (
+        <>
+          <button type="button" onClick={() => setSelected('ada-lovelace')}>
+            select-ada
+          </button>
+          <TalentSearchPage
+            candidates={[candidateVm]}
+            onSelectedTalentReplace={vi.fn()}
+            onSelectedTalentPush={vi.fn()}
+            selectedTalent={selected}
+            detail={<p>Selected profile details</p>}
+          />
+        </>
+      );
+    }
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: ArrivalHarness,
+    });
+    const profileRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/p/$handle',
+      component: () => <p>Full profile</p>,
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute, profileRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    return render(<RouterProvider router={router} />);
+  }
+
+  it('scrolls the URL-selected row to the top on arrival', async () => {
+    renderArrival('ada-lovelace');
+
+    await screen.findByRole('main');
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+    const target = scrollIntoView.mock.instances[0] as HTMLElement;
+    expect(target.getAttribute('data-result-id')).toBe('ada-lovelace');
+  });
+
+  it('does not scroll a manual selection made after arrival', async () => {
+    renderArrival(undefined);
+
+    await screen.findByRole('main');
+    expect(scrollIntoView).not.toHaveBeenCalled();
+
+    // A post-mount selection (as from an in-page click) must not yank the list.
+    fireEvent.click(screen.getByRole('button', { name: 'select-ada' }));
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 });

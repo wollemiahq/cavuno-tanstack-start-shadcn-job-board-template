@@ -116,19 +116,19 @@ export function TalentSearchResultDetailSkeleton() {
             data-slot="talent-detail-header-loading"
             className="space-y-4 p-5 md:p-6"
           >
-            <div className="flex items-center gap-3">
-              <Skeleton className="size-12 rounded-full" />
+            <div className="flex items-start gap-4">
+              <Skeleton className="size-10 rounded-full" />
               <div className="min-w-0 flex-1 space-y-2">
                 <Skeleton className="h-7 w-48 max-w-full" />
                 <Skeleton className="h-4 w-64 max-w-full" />
               </div>
             </div>
-            <div className="flex gap-2">
-              <Skeleton className="h-6 w-40" />
-              <Skeleton className="h-6 w-28" />
+            <div className="flex gap-1.5">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-5 w-28" />
             </div>
             <div data-slot="talent-detail-actions-loading">
-              <Skeleton className="h-9 w-28" />
+              <Skeleton className="h-8 w-28" />
             </div>
           </header>
         }
@@ -137,7 +137,7 @@ export function TalentSearchResultDetailSkeleton() {
             mark={<Skeleton className="size-10 rounded-full" />}
             name={<Skeleton className="h-5 w-44 max-w-full" />}
             subtitle={<Skeleton className="h-4 w-56 max-w-full" />}
-            actions={<Skeleton className="h-9 w-28" />}
+            actions={<Skeleton className="h-8 w-28" />}
           />
         }
       />

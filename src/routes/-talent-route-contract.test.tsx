@@ -6,11 +6,23 @@ import { isNotFound as isRouteNotFound } from '@tanstack/react-router';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getSeoBase, getTalentProfile, listTalent } = vi.hoisted(() => ({
-  getSeoBase: vi.fn(),
-  getTalentProfile: vi.fn(),
-  listTalent: vi.fn(),
-}));
+const { getSeoBase, getTalentProfile, listTalent, rootData } = vi.hoisted(
+  () => ({
+    getSeoBase: vi.fn(),
+    getTalentProfile: vi.fn(),
+    listTalent: vi.fn(),
+    // The profile hero reads the viewer session from the root loader (via
+    // getRouteApi('__root__')) and the current URL (useLocation), exactly like
+    // the talent search pane. Mock that seam so the CTA gating can be exercised
+    // per viewer without a full RouterProvider.
+    rootData: {
+      value: {
+        user: null as null | { role: 'employer' | 'candidate' },
+        board: { features: { messaging: true } },
+      },
+    },
+  }),
+);
 
 vi.mock('../server/queries', () => ({
   getSeoBase,
@@ -18,11 +30,22 @@ vi.mock('../server/queries', () => ({
   listTalent,
 }));
 
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@tanstack/react-router')>();
+  return {
+    ...actual,
+    useLocation: () => ({ href: '/p/ada-lovelace' }),
+    getRouteApi: (id: string) =>
+      id === '__root__'
+        ? { useLoaderData: () => rootData.value }
+        : (actual.getRouteApi as (routeId: string) => unknown)(id),
+  };
+});
+
 import { Route as ProfileRoute } from './p.$handle';
-import {
-  RestrictedTalentDirectory,
-  Route as TalentRoute,
-} from './talent.index';
+import { RestrictedTalentDirectory } from './-restricted-talent-directory';
+import { Route as TalentRoute } from './talent.index';
 
 const seo = {
   boardName: 'Acme Careers',
@@ -70,7 +93,26 @@ beforeEach(() => {
   getTalentProfile.mockResolvedValue(profile);
   listTalent.mockReset();
   listTalent.mockResolvedValue({ data: [], hasMore: false, nextCursor: null });
+  rootData.value = {
+    user: null,
+    board: { features: { messaging: true } },
+  };
 });
+
+/** Render the canonical profile component with the mocked route loader data. */
+function renderProfile() {
+  vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
+    profile,
+    seo,
+  } as never);
+
+  const ProfileComponent = ProfileRoute.options.component;
+  if (typeof ProfileComponent !== 'function') {
+    throw new Error('The public profile route does not define a component');
+  }
+
+  return render(<ProfileComponent />);
+}
 
 afterEach(() => {
   cleanup();
@@ -190,17 +232,7 @@ describe('canonical talent profile route', () => {
   });
 
   it('retains ProfilePage and Person structured data for the canonical profile', () => {
-    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
-      profile,
-      seo,
-    } as never);
-
-    const ProfileComponent = ProfileRoute.options.component;
-    if (typeof ProfileComponent !== 'function') {
-      throw new Error('The public profile route does not define a component');
-    }
-
-    const { container } = render(<ProfileComponent />);
+    const { container } = renderProfile();
     // The profile opens on the shared entity hero band (avatar + name H1),
     // then drops into the profile article beneath it.
     expect(
@@ -229,5 +261,64 @@ describe('canonical talent profile route', () => {
         }),
       ]),
     );
+  });
+
+  it('offers an allowed employer the gated Message action in the profile hero', () => {
+    rootData.value = {
+      user: { role: 'employer' },
+      board: { features: { messaging: true } },
+    };
+
+    const { container } = renderProfile();
+
+    const actions = container.querySelector<HTMLElement>(
+      "[data-slot='talent-profile-actions']",
+    );
+    if (!actions) throw new Error('The profile hero action was not rendered');
+    // An employer with talent access is handed off to the canonical profile
+    // (where the conversation opens) — the same target as the search pane.
+    expect(screen.getByRole('link', { name: 'Message' })).toHaveAttribute(
+      'href',
+      '/p/ada-lovelace',
+    );
+  });
+
+  it('routes an anonymous viewer’s Message action to sign-in', () => {
+    rootData.value = {
+      user: null,
+      board: { features: { messaging: true } },
+    };
+
+    renderProfile();
+
+    const message = screen.getByRole('link', { name: 'Message' });
+    const href = message.getAttribute('href') ?? '';
+    expect(href).toContain('/auth/sign-in');
+    expect(href).toContain('returnTo');
+  });
+
+  it('hides the Message action from a candidate viewer (no cold-messaging) ', () => {
+    rootData.value = {
+      user: { role: 'candidate' },
+      board: { features: { messaging: true } },
+    };
+
+    const { container } = renderProfile();
+
+    expect(
+      container.querySelector("[data-slot='talent-profile-actions']"),
+    ).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Message' })).toBeNull();
+  });
+
+  it('hides the Message action when board messaging is disabled', () => {
+    rootData.value = {
+      user: { role: 'employer' },
+      board: { features: { messaging: false } },
+    };
+
+    renderProfile();
+
+    expect(screen.queryByRole('link', { name: 'Message' })).toBeNull();
   });
 });

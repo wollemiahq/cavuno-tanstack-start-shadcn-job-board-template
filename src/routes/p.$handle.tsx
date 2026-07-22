@@ -2,14 +2,23 @@ import { boardCopy } from '#/copy';
 
 import { isNotFound } from '@cavuno/board';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
-import { createFileRoute, notFound } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  getRouteApi,
+  notFound,
+  useLocation,
+} from '@tanstack/react-router';
 import { UserRoundX } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getSeoBase, getTalentProfile } from '../server/queries';
 
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
-import { toTalentProfileVM } from '@/board/talent-view-model';
+import {
+  resolveTalentDetailCta,
+  toTalentProfileVM,
+  type TalentDetailViewer,
+} from '@/board/talent-view-model';
 import { PageBody } from '@/components/board/page-body';
 import {
   TalentProfileContent,
@@ -28,7 +37,13 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { candidateSignInHref } from '@/lib/candidate-return-to';
 import { headTitle } from '@/lib/page-title';
+
+/** The board's employer pricing / talent-plan offer surface. */
+const PRICING_HREF = '/employers';
+
+const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/p/$handle')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -108,8 +123,37 @@ function TalentProfileNotFound() {
 
 function TalentProfilePage() {
   const { profile, seo } = Route.useLoaderData();
+  // The viewer session is read from the root loader (identity + board
+  // features) exactly as the talent search pane does (talent.index →
+  // -selected-talent-detail), so the profile hero's Message CTA is gated by
+  // the SAME matrix as the pane — no Board API call from the browser.
+  const { user, board } = rootApi.useLoaderData();
+  const location = useLocation();
   const copy = boardCopy(seo.language, seo.labels);
   const vm = toTalentProfileVM(profile, seo.language, getTalentSearchLabels());
+  const viewer: TalentDetailViewer =
+    user === null
+      ? { kind: 'anonymous' }
+      : user.role === 'employer'
+        ? { kind: 'employer', hasTalentAccess: true }
+        : { kind: 'candidate' };
+  // Reuse the canonical CTA resolver. `showViewProfile` stays off — this IS the
+  // canonical profile, and the candidate's name is the profile link — so the
+  // resolver yields only the gated Message action (sign-in for anonymous,
+  // pricing for an employer without access, none for a candidate / when board
+  // messaging is off).
+  const cta = resolveTalentDetailCta({
+    viewer,
+    detailHref: vm.detailHref,
+    signInHref: candidateSignInHref(location.href),
+    pricingHref: PRICING_HREF,
+    labels: {
+      message: m.talentSearch_messageLabel(),
+      viewProfile: vm.viewProfileLabel,
+    },
+    showViewProfile: false,
+    messagingEnabled: board.features.messaging,
+  });
   const displayName =
     profile.displayName ?? m.publicProfile_anonymousCandidateLabel();
   const canonical = `${seo.origin}/p/${profile.handle}`;
@@ -152,7 +196,24 @@ function TalentProfilePage() {
           <DitherCanvas className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
           <Container width="wide">
             <div className="flex flex-col pt-(--header-space) pb-8 md:pb-10">
-              <TalentProfileIdentity vm={vm} headingAs="h1" size="xl" />
+              {/* Identity left, primary action right — the same header-row
+                  structure the canonical PageHeader (and the job-detail /
+                  company headers) use: `md:flex-row md:items-start
+                  md:justify-between`, with the actions `shrink-0` on the right.
+                  The Message action is gated by the resolved CTA. */}
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <TalentProfileIdentity vm={vm} headingAs="h1" size="xl" />
+                {cta.message ? (
+                  <div
+                    data-slot="talent-profile-actions"
+                    className="flex shrink-0 flex-wrap items-center gap-2"
+                  >
+                    <a href={cta.message.href} className={buttonVariants()}>
+                      {cta.message.label}
+                    </a>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </Container>
         </div>
@@ -160,8 +221,12 @@ function TalentProfilePage() {
     >
       <JsonLd data={jsonLd} />
       {/* The band owns the identity (H1), so the body drops its header and
-          leads with the bio; sections render as H2s beneath the single H1. */}
-      <article className="mx-auto w-full max-w-3xl">
+          leads with the bio; sections render as H2s beneath the single H1. The
+          article carries NO bespoke max-width — it shares the page's wide
+          container geometry with the hero band above (same left gutter, same
+          column), so the hero and body align as one column, the job-detail
+          width rhythm. */}
+      <article className="min-w-0">
         <TalentProfileContent vm={vm} headingAs="h1" showHeader={false} />
       </article>
     </PageBody>

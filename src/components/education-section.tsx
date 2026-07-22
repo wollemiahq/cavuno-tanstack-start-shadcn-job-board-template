@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 
-import { formatMonthYear } from '@cavuno/board/format';
 import { useRouter } from '@tanstack/react-router';
 import { GraduationCap, Pencil, Trash2 } from 'lucide-react';
 
@@ -13,6 +12,7 @@ import {
   updateEducation,
 } from '../server/account';
 
+import { profileMonthLabel } from '@/board/profile-view-model';
 import { MonthYearField } from '@/components/month-year-field';
 import { Button } from '@/components/ui/button';
 import {
@@ -84,12 +84,6 @@ function toDraft(item: CandidateEducation): Draft {
     endDate: item.endDate ?? '',
     description: item.description ?? '',
   };
-}
-
-/** Month-granular display for stored `YYYY-MM-DD` / `YYYY-MM-01` dates. */
-function monthLabel(language: string, value: string | null): string {
-  if (!value) return '';
-  return formatMonthYear(language, value);
 }
 
 /**
@@ -296,9 +290,9 @@ export function EducationSection({
                   </ItemDescription>
                   {item.startDate || item.endDate ? (
                     <ItemDescription className="text-xs">
-                      {monthLabel(language, item.startDate)} –{' '}
+                      {profileMonthLabel(language, item.startDate)} –{' '}
                       {item.endDate
-                        ? monthLabel(language, item.endDate)
+                        ? profileMonthLabel(language, item.endDate)
                         : m.educationSection_presentLabel()}
                     </ItemDescription>
                   ) : null}
