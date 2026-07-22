@@ -35,10 +35,14 @@ function testFilesUnder(dir: string): string[] {
 function currencyLiterals(path: string): string[] {
   const hits: string[] = [];
   const lines = readFileSync(path, 'utf8').split('\n');
+  // Scan EVERY match on the line — an allowed `$0` early in a line must
+  // never hide a real pin later on it (grok review, chassis #6).
+  const global = new RegExp(CURRENCY_LITERAL.source, 'g');
   lines.forEach((line, index) => {
-    const match = line.match(CURRENCY_LITERAL);
-    if (match && !ALLOWED.has(match[0].trim())) {
-      hits.push(`${path}:${index + 1} → ${match[0].trim()}`);
+    for (const match of line.matchAll(global)) {
+      if (!ALLOWED.has(match[0].trim())) {
+        hits.push(`${path}:${index + 1} → ${match[0].trim()}`);
+      }
     }
   });
   return hits;
@@ -47,9 +51,9 @@ function currencyLiterals(path: string): string[] {
 describe('test doctrine — no formatter-shaped literals in tests', () => {
   it('components/ and board/ tests carry no currency-shaped literals', () => {
     const files = [
-      ...testFilesUnder(join(__dirname, 'components')),
-      ...testFilesUnder(join(__dirname, 'board')),
-      ...testFilesUnder(join(__dirname, 'routes')),
+      ...testFilesUnder(join(import.meta.dirname, 'components')),
+      ...testFilesUnder(join(import.meta.dirname, 'board')),
+      ...testFilesUnder(join(import.meta.dirname, 'routes')),
     ];
     expect(files.length).toBeGreaterThan(0);
     const offenders = files.flatMap(currencyLiterals);

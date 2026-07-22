@@ -1,3 +1,4 @@
+import { fieldLabel } from '@cavuno/board/format';
 import {
   companySalaryPath,
   salaryLocationPath,
@@ -120,7 +121,8 @@ describe('toSeniorityTableVM', () => {
   const vm = toSeniorityTableVM(rows, 'en');
 
   it('resolves the seniority key through the taxonomy label', () => {
-    expect(vm.rows[0].level).toBe('Senior');
+    // Delegation-style: same SDK label call the mapper makes.
+    expect(vm.rows[0].level).toBe(fieldLabel('en', 'senior'));
   });
 
   it('renders a dash baseline when the board average is missing', () => {
