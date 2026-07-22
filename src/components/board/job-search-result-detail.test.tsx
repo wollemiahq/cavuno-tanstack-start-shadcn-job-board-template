@@ -23,12 +23,14 @@ const vm: JobDetailVM = {
   companyLogoUrl: null,
   companyAvatarName: 'Acme',
   sector: 'Design',
-  locationLabel: 'Sydney, NSW',
-  workplaceLabel: 'On-site',
-  employmentTypeLabel: 'Full time',
-  seniorityLabel: 'Senior',
-  salaryLabel: '$140k–$170k',
-  publishedLabel: 'Posted 2d ago',
+  // Values are NOT formatter-shaped; formatted output is pinned by the
+  // SDK goldens, and assertions below reference these fields symbolically.
+  locationLabel: 'location label',
+  workplaceLabel: 'workplace label',
+  employmentTypeLabel: 'employment label',
+  seniorityLabel: 'seniority label',
+  salaryLabel: 'salary label',
+  publishedLabel: 'published label',
   canonicalUrl: 'https://jobs.example.com/companies/acme/jobs/product-designer',
   detailHref: '/companies/acme/jobs/product-designer',
   descriptionHtml: '<h2>About the role</h2><p>Own product discovery.</p>',
@@ -70,12 +72,12 @@ describe('JobSearchResultDetail', () => {
     expect(
       screen.getByRole('heading', { level: 2, name: 'Product designer' }),
     ).toBeVisible();
-    expect(screen.getByText('$140k–$170k')).toBeVisible();
+    expect(screen.getByText(vm.salaryLabel!)).toBeVisible();
     expect(
-      screen.getByText('$140k–$170k').closest('[data-slot="badge"]'),
+      screen.getByText(vm.salaryLabel!).closest('[data-slot="badge"]'),
     ).not.toBeNull();
-    expect(screen.getByText('On-site')).toBeVisible();
-    expect(screen.getByText(/Sydney, NSW/)).toBeVisible();
+    expect(screen.getByText(vm.workplaceLabel!)).toBeVisible();
+    expect(screen.getByText(new RegExp(vm.locationLabel!))).toBeVisible();
     expect(
       screen.getByRole('heading', { name: 'About the role' }),
     ).toBeVisible();

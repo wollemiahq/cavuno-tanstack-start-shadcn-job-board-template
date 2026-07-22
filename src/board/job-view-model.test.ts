@@ -1,3 +1,8 @@
+import {
+  cardLocationLabel,
+  fieldLabel,
+  formatSalaryRange,
+} from '@cavuno/board/format';
 import { describe, expect, it } from 'vitest';
 
 import { toJobCardVM, toSavedJobCardVM } from './job-view-model';
@@ -39,11 +44,35 @@ describe('toJobCardVM', () => {
     expect(vm.hasDetailLink).toBe(true);
   });
 
-  it('keeps salary and essential location metadata independently renderable', () => {
-    expect(vm.compLine).toContain('·');
-    expect(vm.compLine).toMatch(/\$/);
-    expect(vm.salaryLabel).toMatch(/\$/);
-    expect(vm.locationLabel).toBe('Worldwide (Remote)');
+  // Delegation-style: expectations CALL the same SDK formatters the
+  // mapper delegates to, instead of hard-coding their output. The SDK's
+  // own goldens pin the formatted shape; these pin only the wiring, so
+  // an SDK formatting change (or an intentional presentation change)
+  // breaks nothing here.
+  it('delegates salary + compLine to the SDK formatters', () => {
+    const expectedSalary = formatSalaryRange(
+      'en',
+      100000,
+      140000,
+      'year',
+      'USD',
+    );
+    expect(vm.salaryLabel).toBe(expectedSalary);
+    expect(vm.compLine).toBe(
+      [expectedSalary, cardLocationLabel('en', baseJob)].join(' · '),
+    );
+  });
+
+  it('exposes the raw wire salary values for component-level re-presentation', () => {
+    expect(vm.salaryMin).toBe(100000);
+    expect(vm.salaryMax).toBe(140000);
+    expect(vm.salaryCurrency).toBe('USD');
+    expect(vm.salaryTimeframe).toBe('year');
+    expect(vm.publishedAt).toBeNull();
+  });
+
+  it('composes locationLabel from the place label and the SDK workplace label', () => {
+    expect(vm.locationLabel).toBe(`Worldwide (${fieldLabel('en', 'remote')})`);
   });
 
   it('states when an on-site card is missing its physical location', () => {
@@ -58,7 +87,7 @@ describe('toJobCardVM', () => {
     );
 
     expect(missingLocation.locationLabel).toBe(
-      'Location not specified (On-site)',
+      `Location not specified (${fieldLabel('en', 'on_site')})`,
     );
   });
 

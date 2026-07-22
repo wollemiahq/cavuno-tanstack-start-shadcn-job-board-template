@@ -21,13 +21,15 @@ import type {
 
 afterEach(cleanup);
 
+// Fixture values are NOT formatter-shaped (formatted output is pinned by
+// the SDK goldens); assertions reference these fields symbolically.
 const overall: OverallSalaryVM = {
   headlineLabel: 'Average salary',
-  headlineValue: '$120,000–$160,000',
+  headlineValue: 'headline value',
   perYearSuffix: '/ yr',
   stats: [
-    { label: '25th percentile', value: '$110,000' },
-    { label: 'Median', value: '$140,000', emphasis: true },
+    { label: '25th percentile', value: 'p25 value' },
+    { label: 'Median', value: 'median value', emphasis: true },
     { label: 'Based on', value: '12 jobs' },
   ],
 };
@@ -43,14 +45,14 @@ const seniority: SeniorityTableVM = {
     {
       key: 'senior',
       level: 'Senior',
-      avg: '$150,000–$180,000',
-      baseline: '$140,000–$170,000',
+      avg: 'senior avg range',
+      baseline: 'senior baseline range',
       diff: { text: '+6%', positive: true },
     },
     {
       key: 'principal',
       level: 'Principal',
-      avg: '$175,000–$205,000',
+      avg: 'principal avg range',
       baseline: '—',
       diff: null,
     },
@@ -63,14 +65,14 @@ const rail: SalaryRailVM = {
     {
       name: 'Acme Robotics',
       href: '/companies/acme-robotics/salaries',
-      range: '$130,000–$175,000',
+      range: 'range a',
       jobCountLabel: '7 jobs',
       logoPath: null,
     },
     {
       name: 'Long Range Labs',
       href: '/companies/long-range-labs/salaries',
-      range: '$125,000–$168,000',
+      range: 'range b',
       jobCountLabel: '3 jobs',
       logoPath: 'https://cdn.example/long-range-labs.png',
     },
@@ -91,13 +93,13 @@ describe('salary sections', () => {
   it('renders every resolved salary metric', () => {
     render(<OverallSalaryCard vm={overall} />);
 
-    expect(screen.getByText('Average salary')).toBeVisible();
-    expect(screen.getByText('$120,000–$160,000')).toBeVisible();
-    expect(screen.getByText('/ yr')).toBeVisible();
-    expect(screen.getByText('25th percentile')).toBeVisible();
-    expect(screen.getByText('$110,000')).toBeVisible();
-    expect(screen.getByText('Median')).toBeVisible();
-    expect(screen.getByText('$140,000')).toBeVisible();
+    expect(screen.getByText(overall.headlineLabel)).toBeVisible();
+    expect(screen.getByText(overall.headlineValue)).toBeVisible();
+    expect(screen.getByText(overall.perYearSuffix)).toBeVisible();
+    expect(screen.getByText(overall.stats[0].label)).toBeVisible();
+    expect(screen.getByText(overall.stats[0].value)).toBeVisible();
+    expect(screen.getByText(overall.stats[1].label)).toBeVisible();
+    expect(screen.getByText(overall.stats[1].value)).toBeVisible();
     expect(screen.getByText('Based on')).toBeVisible();
     expect(screen.getByText('12 jobs')).toBeVisible();
   });
@@ -114,7 +116,7 @@ describe('salary sections', () => {
     const principalRow = within(table).getByRole('row', {
       name: /Principal/,
     });
-    expect(principalRow).toHaveTextContent('$175,000–$205,000');
+    expect(principalRow).toHaveTextContent(seniority.rows[1].avg);
     expect(principalRow).toHaveTextContent('—');
   });
 
@@ -127,10 +129,10 @@ describe('salary sections', () => {
       '/companies/long-range-labs/salaries',
     ]);
     expect(screen.getByText('Acme Robotics')).toBeVisible();
-    expect(screen.getByText('$130,000–$175,000')).toBeVisible();
+    expect(screen.getByText(rail.items[0].range)).toBeVisible();
     expect(screen.getByText('7 jobs')).toBeVisible();
     expect(screen.getByText('Long Range Labs')).toBeVisible();
-    expect(screen.getByText('$125,000–$168,000')).toBeVisible();
+    expect(screen.getByText(rail.items[1].range)).toBeVisible();
     expect(screen.getByText('3 jobs')).toBeVisible();
     expect(screen.getByText('AR')).toBeVisible();
   });

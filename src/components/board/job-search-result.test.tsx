@@ -6,31 +6,25 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { JobSearchResult } from './job-search-result';
 
-import type { JobCardVM } from '@/board/job-view-model';
+import { makeJobCardVM } from '@/test/fixtures';
 
-const vm: JobCardVM = {
+// Fixture values are NOT formatter-shaped (see src/test/fixtures.ts);
+// assertions reference the VM fields symbolically.
+const vm = makeJobCardVM({
   id: 'job-1',
   title: 'Product designer',
   companySlug: 'acme',
   jobSlug: 'product-designer',
   detailHref: '/companies/acme/jobs/product-designer',
   hasDetailLink: true,
-  companyName: 'Acme',
-  companyLogoUrl: null,
-  companyAvatarName: 'Acme',
   sector: 'Design',
-  compLine: '$140k–$170k · Sydney, NSW (On-site)',
-  salaryLabel: '$140k–$170k',
-  locationLabel: 'Sydney, NSW (On-site)',
-  summary: 'Own discovery and the product design system.',
   isFeatured: true,
-  featuredLabel: 'Featured',
-  postedAtLabel: '2d ago',
+  postedAtLabel: 'posted label',
   tags: [
     { key: 'category-design', name: 'Design', href: '/jobs/categories/design' },
     { key: 'skill-figma', name: 'Figma', href: '/jobs/skills/figma' },
   ],
-};
+});
 
 afterEach(cleanup);
 
@@ -66,14 +60,12 @@ describe('JobSearchResult', () => {
   it('renders honest compact metadata and a transparent paid-placement label', () => {
     render(<JobSearchResult vm={vm} />);
 
-    expect(screen.getByText('Acme')).toBeVisible();
-    expect(screen.getByText('Sydney, NSW (On-site)')).toBeVisible();
-    expect(screen.getByText('$140k–$170k')).toBeVisible();
-    expect(
-      screen.getByText('Own discovery and the product design system.'),
-    ).toBeVisible();
-    expect(screen.getByText('2d ago')).toBeVisible();
-    expect(screen.getByText('Featured')).toBeVisible();
+    expect(screen.getByText(vm.companyName!)).toBeVisible();
+    expect(screen.getByText(vm.locationLabel)).toBeVisible();
+    expect(screen.getByText(vm.salaryLabel!)).toBeVisible();
+    expect(screen.getByText(vm.summary!)).toBeVisible();
+    expect(screen.getByText(vm.postedAtLabel!)).toBeVisible();
+    expect(screen.getByText(vm.featuredLabel)).toBeVisible();
   });
 
   it('keeps essential location while omitting unavailable optional metadata', () => {
@@ -91,10 +83,10 @@ describe('JobSearchResult', () => {
       />,
     );
 
-    expect(screen.queryByText('Acme')).toBeNull();
-    expect(screen.getByText('Sydney, NSW (On-site)')).toBeVisible();
-    expect(screen.queryByText('$140k–$170k')).toBeNull();
-    expect(screen.queryByText('Featured')).toBeNull();
+    expect(screen.queryByText(vm.companyName!)).toBeNull();
+    expect(screen.getByText(vm.locationLabel)).toBeVisible();
+    expect(screen.queryByText(vm.salaryLabel!)).toBeNull();
+    expect(screen.queryByText(vm.featuredLabel)).toBeNull();
   });
 
   it('keeps a trailing Save control above the card link without activating the job', () => {

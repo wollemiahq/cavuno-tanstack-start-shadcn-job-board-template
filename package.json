@@ -29,6 +29,7 @@
     "precheck": "pnpm run check:shadcn",
     "check": "vp fmt -c .oxfmtrc.json --check && vp check --no-fmt",
     "check:shadcn": "node scripts/check-shadcn-components.mjs",
+    "check:test-doctrine": "vp test run src/test-doctrine.test.ts",
     "deploy": "pnpm run build && wrangler deploy",
     "cf-typegen": "wrangler types",
     "typecheck": "tsc --noEmit",

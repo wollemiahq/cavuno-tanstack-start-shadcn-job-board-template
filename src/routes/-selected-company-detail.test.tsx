@@ -11,6 +11,8 @@ import {
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { formatRange } from '@cavuno/board/seo';
+
 import { SelectedCompanyDetail } from './-selected-company-detail';
 
 import type { PublicCompanyDetail, PublicJobCard } from '@cavuno/board';
@@ -156,7 +158,11 @@ describe('SelectedCompanyDetail', () => {
     );
     expect(screen.getByRole('link', { name: 'Role 4' })).toBeVisible();
     expect(screen.queryByRole('link', { name: 'Role 5' })).toBeNull();
-    expect(screen.getByText('$180K – $240K')).toBeVisible();
+    // Delegation-style: wire data runs the REAL mapper, so the expectation
+    // calls the same SDK formatter instead of pinning its output shape.
+    expect(
+      screen.getByText(formatRange('en', 180_000, 240_000)),
+    ).toBeVisible();
     expect(screen.getByText('Based on 12 jobs')).toBeVisible();
   });
 
@@ -185,7 +191,9 @@ describe('SelectedCompanyDetail', () => {
     ).toHaveLength(2);
     expect(screen.queryByRole('link', { name: 'View jobs' })).toBeNull();
     expect(screen.getByText('Engineering')).toBeVisible();
-    expect(screen.getByText('$120K – $160K')).toBeVisible();
+    expect(
+      screen.getByText(formatRange('en', 120_000, 160_000)),
+    ).toBeVisible();
     expect(screen.getByText('Based on 5 jobs')).toBeVisible();
   });
 });
