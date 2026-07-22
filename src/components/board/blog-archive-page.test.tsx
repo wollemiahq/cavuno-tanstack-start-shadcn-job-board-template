@@ -9,10 +9,12 @@ import {
   createRouter,
 } from '@tanstack/react-router';
 import { cleanup, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { BlogArchivePage } from './blog-archive-page';
+import { CursorPagination } from './cursor-pagination';
 
+import { m } from '@/paraglide/messages';
 import type { PublicBlogPostSummary } from '@cavuno/board';
 
 const post = {
@@ -139,7 +141,15 @@ describe('BlogArchivePage — Page-family archive presentation', () => {
         }
         posts={[post]}
         empty={empty}
-        nextLink={<a href="/blog?cursor=opaque%3Apage%3A2">Next results</a>}
+        pagination={
+          <CursorPagination
+            hasPrevious
+            hasNext
+            nextHref="/blog?cursor=opaque%3Apage%3A2"
+            onPrevious={vi.fn()}
+            onNext={vi.fn()}
+          />
+        }
       />,
     );
 
@@ -165,16 +175,20 @@ describe('BlogArchivePage — Page-family archive presentation', () => {
         name: /Design-system decisions that survive product growth/i,
       }),
     ).toHaveAttribute('href', '/blog/design-system-decisions');
-    expect(screen.getByRole('link', { name: 'Next results' })).toHaveAttribute(
-      'href',
-      '/blog?cursor=opaque%3Apage%3A2',
-    );
+    // The blog SDK surface is cursor-only, so the archive paginates by opaque
+    // cursor: the Next control stays a real crawlable anchor (SEO), rendered on
+    // the shared design-system pagination primitive.
+    const next = screen.getByRole('link', {
+      name: m.pagination_nextPageLabel(),
+    });
+    expect(next).toHaveAttribute('href', '/blog?cursor=opaque%3Apage%3A2');
+    expect(next.closest('[data-slot="pagination"]')).toBeVisible();
     expect(
-      screen
-        .getByRole('link', { name: 'Next results' })
-        .closest('[data-slot="pagination"]'),
+      screen.queryByRole('button', { name: m.pagination_nextPageLabel() }),
+    ).toBeNull();
+    expect(
+      screen.getByRole('link', { name: m.pagination_previousPageLabel() }),
     ).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Next results' })).toBeNull();
   });
 
   it('leads the h1 with a decorative avatar without polluting the heading name', async () => {

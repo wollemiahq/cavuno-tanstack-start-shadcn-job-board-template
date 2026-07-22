@@ -1,13 +1,23 @@
 import { boardCopy } from '#/copy';
 
 import { isNotFound } from '@cavuno/board';
+import { BOARD_PATHS, blogTagPath, boardUrl } from '@cavuno/board/paths';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
-import { createFileRoute, Link, notFound } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  notFound,
+  useLocation,
+  useNavigate,
+  useRouter,
+} from '@tanstack/react-router';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogTagChips } from '@/components/board/blog-tag-chips';
+import { CursorPagination } from '@/components/board/cursor-pagination';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
+import { BLOG_PAGE_SIZE } from '@/lib/blog';
+import { cursorPageHref } from '@/lib/pagination';
 import { headTitle } from '@/lib/page-title';
 import { m } from '../paraglide/messages';
 import {
@@ -38,7 +48,11 @@ export const Route = createFileRoute('/blog/tag/$tagSlug')({
       const [tag, posts, tags, seo] = await Promise.all([
         getBlogTag({ data: { tagSlug: params.tagSlug } }),
         listBlogPosts({
-          data: { tagSlug: params.tagSlug, cursor: deps.cursor, limit: 24 },
+          data: {
+            tagSlug: params.tagSlug,
+            cursor: deps.cursor,
+            limit: BLOG_PAGE_SIZE,
+          },
         }),
         listBlogTags({ data: {} }),
         getSeoBase(),
@@ -75,7 +89,10 @@ export const Route = createFileRoute('/blog/tag/$tagSlug')({
           links: [
             {
               rel: 'canonical',
-              href: `${loaderData.seo.origin}/blog/tag/${loaderData.tag.slug}`,
+              href: boardUrl(
+                loaderData.seo.origin,
+                blogTagPath(loaderData.tag.slug),
+              ),
             },
           ],
         }
@@ -108,12 +125,16 @@ function BlogTagNotFound() {
 
 function TagPage() {
   const { tag, posts, tags, seo } = Route.useLoaderData();
+  const search = Route.useSearch();
+  const location = useLocation();
+  const navigate = useNavigate({ from: '/blog/tag/$tagSlug' });
+  const router = useRouter();
   const copy = boardCopy(seo.language, seo.labels);
   const crumbs = copy.breadcrumbs;
   const jsonLd = [
     createBreadcrumbJsonLd([
       { label: crumbs.home, href: seo.origin },
-      { label: crumbs.blog, href: `${seo.origin}/blog` },
+      { label: crumbs.blog, href: boardUrl(seo.origin, BOARD_PATHS.blog) },
       { label: tag.name },
     ]),
   ].filter((entry): entry is Record<string, unknown> => entry !== null);
@@ -139,16 +160,27 @@ function TagPage() {
           description: m.blogTag_emptyText({ tag: tag.name }),
           action: { label: m.blogIndex_browseAllLabel(), href: '/blog' },
         }}
-        nextLink={
-          posts.hasMore && posts.nextCursor ? (
-            <Link
-              to="/blog/tag/$tagSlug"
-              params={{ tagSlug: tag.slug }}
-              search={{ cursor: posts.nextCursor }}
-            >
-              {m.blogIndex_nextResultsLabel()}
-            </Link>
-          ) : undefined
+        pagination={
+          <CursorPagination
+            hasPrevious={Boolean(search.cursor)}
+            hasNext={Boolean(posts.hasMore && posts.nextCursor)}
+            nextHref={
+              posts.nextCursor
+                ? cursorPageHref(location.href, posts.nextCursor)
+                : undefined
+            }
+            onPrevious={() => router.history.back()}
+            onNext={
+              posts.hasMore && posts.nextCursor
+                ? () =>
+                    navigate({
+                      to: '/blog/tag/$tagSlug',
+                      params: { tagSlug: tag.slug },
+                      search: { cursor: posts.nextCursor ?? undefined },
+                    })
+                : undefined
+            }
+          />
         }
       />
     </>

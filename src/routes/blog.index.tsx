@@ -1,12 +1,21 @@
 import { boardCopy } from '#/copy';
 
+import { BOARD_PATHS, boardUrl } from '@cavuno/board/paths';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  useLocation,
+  useNavigate,
+  useRouter,
+} from '@tanstack/react-router';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogTagChips } from '@/components/board/blog-tag-chips';
+import { CursorPagination } from '@/components/board/cursor-pagination';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
+import { BLOG_PAGE_SIZE } from '@/lib/blog';
+import { cursorPageHref } from '@/lib/pagination';
 import { headTitle } from '@/lib/page-title';
 import { m } from '../paraglide/messages';
 import {
@@ -38,7 +47,7 @@ export const Route = createFileRoute('/blog/')({
     const [page, tags, seo] = await Promise.all([
       deps.q
         ? searchBlogPosts({ data: { query: deps.q, cursor: deps.cursor } })
-        : listBlogPosts({ data: { cursor: deps.cursor, limit: 12 } }),
+        : listBlogPosts({ data: { cursor: deps.cursor, limit: BLOG_PAGE_SIZE } }),
       listBlogTags({ data: {} }),
       getSeoBase(),
     ]);
@@ -58,7 +67,12 @@ export const Route = createFileRoute('/blog/')({
               }),
             },
           ],
-          links: [{ rel: 'canonical', href: `${loaderData.seo.origin}/blog` }],
+          links: [
+            {
+              rel: 'canonical',
+              href: boardUrl(loaderData.seo.origin, BOARD_PATHS.blog),
+            },
+          ],
         }
       : { meta: [{ title: headTitle(undefined, m.blogIndex_title()) }] },
   component: BlogPage,
@@ -66,6 +80,10 @@ export const Route = createFileRoute('/blog/')({
 
 function BlogPage() {
   const { page, tags, seo, q } = Route.useLoaderData();
+  const search = Route.useSearch();
+  const location = useLocation();
+  const navigate = useNavigate({ from: '/blog/' });
+  const router = useRouter();
   const copy = boardCopy(seo.language, seo.labels);
   const crumbs = copy.breadcrumbs;
   const jsonLd = [
@@ -92,18 +110,29 @@ function BlogPage() {
             ? { label: m.blogIndex_browseAllLabel(), href: '/blog' }
             : undefined,
         }}
-        nextLink={
-          page.hasMore && page.nextCursor ? (
-            <Link
-              to="/blog"
-              search={(previous) => ({
-                ...previous,
-                cursor: page.nextCursor ?? undefined,
-              })}
-            >
-              {m.blogIndex_nextResultsLabel()}
-            </Link>
-          ) : undefined
+        pagination={
+          <CursorPagination
+            hasPrevious={Boolean(search.cursor)}
+            hasNext={Boolean(page.hasMore && page.nextCursor)}
+            nextHref={
+              page.nextCursor
+                ? cursorPageHref(location.href, page.nextCursor)
+                : undefined
+            }
+            onPrevious={() => router.history.back()}
+            onNext={
+              page.hasMore && page.nextCursor
+                ? () =>
+                    navigate({
+                      to: '/blog',
+                      search: (previous) => ({
+                        ...previous,
+                        cursor: page.nextCursor ?? undefined,
+                      }),
+                    })
+                : undefined
+            }
+          />
         }
       />
     </>

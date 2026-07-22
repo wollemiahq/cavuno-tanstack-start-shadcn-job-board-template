@@ -1,7 +1,7 @@
-import { formatDate } from '@cavuno/board/format';
 import { Link, getRouteApi } from '@tanstack/react-router';
 import { ArrowUpRight } from 'lucide-react';
 
+import { toBlogPostCardVM } from '@/board/blog-view-model';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +17,7 @@ const rootApi = getRouteApi('__root__');
  */
 export function PostCard({ post }: { post: PublicBlogPostSummary }) {
   const { board } = rootApi.useLoaderData();
-  const date = formatDate(board.language, post.publishedAt);
+  const date = toBlogPostCardVM(post, board.language).publishedAtLabel;
   const eyebrow = post.tags[0] ?? null;
   const firstAuthor = post.authors[0] ?? null;
 
@@ -46,7 +46,7 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
             <Link
               to="/blog/tag/$tagSlug"
               params={{ tagSlug: eyebrow.slug }}
-              className="focus-visible:ring-ring/30 relative z-10 w-fit rounded-2xl outline-none focus-visible:ring-3"
+              className="focus-visible:ring-ring/50 relative z-10 w-fit rounded-2xl outline-none focus-visible:ring-2"
             >
               <Badge
                 variant="secondary"
@@ -61,7 +61,7 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
             <Link
               to="/blog/$postSlug"
               params={{ postSlug: post.slug }}
-              className="hover:text-primary/70 focus-visible:ring-ring/30 flex items-start justify-between gap-3 rounded-sm transition-colors outline-none after:absolute after:inset-0 after:z-[1] after:rounded-[inherit] focus-visible:ring-3"
+              className="hover:text-primary/70 focus-visible:ring-ring/50 flex items-start justify-between gap-3 rounded-sm transition-colors outline-none after:absolute after:inset-0 after:z-(--z-card-overlay) after:rounded-[inherit] focus-visible:ring-2"
             >
               <span>{post.title}</span>
               <ArrowUpRight
@@ -99,7 +99,7 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
                       <Link
                         to="/blog/author/$authorSlug"
                         params={{ authorSlug: author.slug }}
-                        className="focus-visible:ring-ring/30 relative z-10 rounded-sm outline-none hover:underline focus-visible:ring-3"
+                        className="focus-visible:ring-ring/50 relative z-10 rounded-sm outline-none hover:underline focus-visible:ring-2"
                       >
                         {author.name}
                       </Link>

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 
-import { formatDate } from '@cavuno/board/format';
 import { Link } from '@tanstack/react-router';
 import { FileWarning } from 'lucide-react';
 
+import { toBlogArticleVM } from '@/board/blog-view-model';
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
 import { FacebookIcon, LinkedInIcon, XIcon } from '@/components/brand-icons';
 import {
@@ -175,7 +175,7 @@ function PostMeta({
   className?: string;
 }) {
   const dateLine = [
-    post.publishedAt ? formatDate(language, post.publishedAt) : null,
+    toBlogArticleVM(post, language).publishedAtLabel,
     post.readingTimeMin
       ? m.blogPost_readingTimeText({ minutes: post.readingTimeMin })
       : null,

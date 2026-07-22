@@ -2,8 +2,6 @@ import type { ReactNode } from 'react';
 
 import { FileText } from 'lucide-react';
 
-import { m } from '../../paraglide/messages';
-
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
 import {
   Page,
@@ -21,11 +19,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-} from '@/components/ui/pagination';
 import type { PublicBlogPostSummary } from '@cavuno/board';
 
 export interface BlogArchiveEmptyState {
@@ -48,8 +41,12 @@ export interface BlogArchivePageProps {
   search?: ReactNode;
   posts: PublicBlogPostSummary[];
   empty: BlogArchiveEmptyState;
-  /** Route-owned because blog cursors are opaque and router-specific. */
-  nextLink?: ReactNode;
+  /**
+   * Route-owned Previous/Next cursor pagination (the blog SDK surface is
+   * cursor-only — no total count, no offset — so numbered pages are impossible);
+   * built with the shared `CursorPagination` on the design-system primitives.
+   */
+  pagination?: ReactNode;
 }
 
 /** Shared Page-family presentation for the blog, tag, and author archives. */
@@ -61,7 +58,7 @@ export function BlogArchivePage({
   search,
   posts,
   empty,
-  nextLink,
+  pagination,
 }: BlogArchivePageProps) {
   const heading = avatar ? (
     <span className="flex items-center gap-3">
@@ -112,13 +109,7 @@ export function BlogArchivePage({
           )}
         </PageSection>
 
-        {posts.length > 0 && nextLink ? (
-          <Pagination aria-label={m.pagination_ariaLabel()}>
-            <PaginationContent>
-              <PaginationItem>{nextLink}</PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        ) : null}
+        {posts.length > 0 ? pagination : null}
       </PageContent>
     </Page>
   );

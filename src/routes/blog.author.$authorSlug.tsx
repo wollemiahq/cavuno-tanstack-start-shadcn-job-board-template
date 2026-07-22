@@ -1,17 +1,27 @@
 import { boardCopy } from '#/copy';
 
 import { isNotFound } from '@cavuno/board';
+import { BOARD_PATHS, blogAuthorPath, boardUrl } from '@cavuno/board/paths';
 import {
   createAuthorProfileJsonLd,
   createBreadcrumbJsonLd,
 } from '@cavuno/board/seo';
-import { createFileRoute, Link, notFound } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  notFound,
+  useLocation,
+  useNavigate,
+  useRouter,
+} from '@tanstack/react-router';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
+import { CursorPagination } from '@/components/board/cursor-pagination';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { initialsOf } from '@/lib/initials';
+import { BLOG_PAGE_SIZE } from '@/lib/blog';
+import { cursorPageHref } from '@/lib/pagination';
 import { headTitle } from '@/lib/page-title';
 import { m } from '../paraglide/messages';
 import { getBlogAuthor, getSeoBase, listBlogPosts } from '@/server/queries';
@@ -40,7 +50,7 @@ export const Route = createFileRoute('/blog/author/$authorSlug')({
           data: {
             authorSlug: params.authorSlug,
             cursor: deps.cursor,
-            limit: 24,
+            limit: BLOG_PAGE_SIZE,
           },
         }),
         getSeoBase(),
@@ -77,7 +87,10 @@ export const Route = createFileRoute('/blog/author/$authorSlug')({
           links: [
             {
               rel: 'canonical',
-              href: `${loaderData.seo.origin}/blog/author/${loaderData.author.slug}`,
+              href: boardUrl(
+                loaderData.seo.origin,
+                blogAuthorPath(loaderData.author.slug),
+              ),
             },
           ],
         }
@@ -147,7 +160,11 @@ function AuthorLinks({
 
 function AuthorPage() {
   const { author, posts, seo } = Route.useLoaderData();
-  const permalink = `${seo.origin}/blog/author/${author.slug}`;
+  const search = Route.useSearch();
+  const location = useLocation();
+  const navigate = useNavigate({ from: '/blog/author/$authorSlug' });
+  const router = useRouter();
+  const permalink = boardUrl(seo.origin, blogAuthorPath(author.slug));
   const copy = boardCopy(seo.language, seo.labels);
   const crumbs = copy.breadcrumbs;
   const jsonLd = [
@@ -166,7 +183,7 @@ function AuthorPage() {
     }),
     createBreadcrumbJsonLd([
       { label: crumbs.home, href: seo.origin },
-      { label: crumbs.blog, href: `${seo.origin}/blog` },
+      { label: crumbs.blog, href: boardUrl(seo.origin, BOARD_PATHS.blog) },
       { label: author.name },
     ]),
   ].filter((entry): entry is Record<string, unknown> => entry !== null);
@@ -200,16 +217,27 @@ function AuthorPage() {
           description: m.blogAuthor_emptyText({ author: author.name }),
           action: { label: m.blogIndex_browseAllLabel(), href: '/blog' },
         }}
-        nextLink={
-          posts.hasMore && posts.nextCursor ? (
-            <Link
-              to="/blog/author/$authorSlug"
-              params={{ authorSlug: author.slug }}
-              search={{ cursor: posts.nextCursor }}
-            >
-              {m.blogIndex_nextResultsLabel()}
-            </Link>
-          ) : undefined
+        pagination={
+          <CursorPagination
+            hasPrevious={Boolean(search.cursor)}
+            hasNext={Boolean(posts.hasMore && posts.nextCursor)}
+            nextHref={
+              posts.nextCursor
+                ? cursorPageHref(location.href, posts.nextCursor)
+                : undefined
+            }
+            onPrevious={() => router.history.back()}
+            onNext={
+              posts.hasMore && posts.nextCursor
+                ? () =>
+                    navigate({
+                      to: '/blog/author/$authorSlug',
+                      params: { authorSlug: author.slug },
+                      search: { cursor: posts.nextCursor ?? undefined },
+                    })
+                : undefined
+            }
+          />
         }
       />
     </>
