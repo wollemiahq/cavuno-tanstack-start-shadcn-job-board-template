@@ -55,7 +55,10 @@ describe('shadcn Rhea theme foundation', () => {
     const fontHeading = theme.match(/--font-heading:\s*([^;]+);/)?.[1] ?? '';
     if (!/var\(--font-sans\)/.test(fontHeading)) {
       const headingSlug = familySlug(fontHeading);
-      expect(headingSlug, '--font-heading must inherit or name a quoted family').toBeTruthy();
+      expect(
+        headingSlug,
+        '--font-heading must inherit or name a quoted family',
+      ).toBeTruthy();
       expect(importedSlugs).toContain(headingSlug);
     }
   });
@@ -87,7 +90,10 @@ describe('shadcn Rhea theme foundation', () => {
       '@fontsource/fira-sans',
     ];
     for (const name of CATALOG_PACKAGES) {
-      expect(pkg.dependencies[name], `${name} must be pre-installed`).toBeTruthy();
+      expect(
+        pkg.dependencies[name],
+        `${name} must be pre-installed`,
+      ).toBeTruthy();
     }
   });
 
