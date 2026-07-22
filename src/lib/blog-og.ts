@@ -32,9 +32,12 @@ export interface BlogOgCard {
   authorAvatarUrl: string | null;
   /** Pre-formatted published date, or `null` to omit. */
   dateLabel: string | null;
+  /** Satori font name registered by the route (FNT-02: the theme font). */
+  fontFamily?: string;
 }
 
 export function buildBlogOgHtml(card: BlogOgCard): string {
+  const fontFamily = escapeHtml(card.fontFamily ?? 'Inter');
   const title = escapeHtml(truncate(card.title, 70));
   const excerpt = card.excerpt ? escapeHtml(truncate(card.excerpt, 140)) : null;
   const boardName = escapeHtml(card.boardName);
@@ -53,7 +56,7 @@ export function buildBlogOgHtml(card: BlogOgCard): string {
   ].join('');
 
   return `
-    <div style="display:flex;flex-direction:column;width:1200px;height:630px;background:#ffffff;font-family:Inter;">
+    <div style="display:flex;flex-direction:column;width:1200px;height:630px;background:#ffffff;font-family:${fontFamily};">
       <div style="display:flex;width:1200px;height:14px;background:${themeColor};"></div>
       <div style="display:flex;flex-direction:column;justify-content:space-between;flex:1;padding:72px 80px;">
         <div style="display:flex;flex-direction:column;gap:28px;">

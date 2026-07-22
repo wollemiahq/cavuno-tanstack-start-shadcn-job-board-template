@@ -11,11 +11,13 @@ export const themeMeta: {
   fontSans: string | null
   fontHeading: string | null
   fontsImport: string | null
+  ogFontFamily: string | null
 } = {
   "mode": "system",
   "fontSans": "geist",
   "fontHeading": "inherit",
-  "fontsImport": null
+  "fontsImport": null,
+  "ogFontFamily": "Geist"
 }
 
 export const themeTokens: {

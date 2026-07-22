@@ -11,7 +11,8 @@ import { createHash } from 'node:crypto';
  * @param {string} css
  * @returns {{ light: Record<string, string>, dark: Record<string, string>,
  *   meta: { mode: string | null, fontSans: string | null,
- *   fontHeading: string | null, fontsImport: string | null } }}
+ *   fontHeading: string | null, fontsImport: string | null,
+ *   ogFontFamily: string | null } }}
  */
 export function parseTokens(css) {
   const block = (selector) => {
@@ -36,11 +37,29 @@ export function parseTokens(css) {
     meta[key] = css.match(new RegExp(`\\* ${key}: (.+)`))?.[1]?.trim() || null;
   }
   meta.mode ??= 'system';
+  // FNT-01: static (per-weight subpath) fontsource imports parse like
+  // variable ones. Banner keys stay authoritative — this fallback only
+  // covers themes that predate the banner.
   meta.fontSans ??=
-    css.match(/@import\s+["']@fontsource-variable\/([^"']+)["'];?/)?.[1] ??
-    null;
+    css.match(
+      /@import\s+["']@fontsource(?:-variable)?\/([a-z0-9-]+)(?:\/[^"']+)?["'];?/,
+    )?.[1] ?? null;
   meta.fontHeading ??=
     light['--font-heading'] === 'var(--font-sans)' ? 'inherit' : null;
+  // FNT-02: the one concrete family OG/Satori renders (cards are
+  // title-dominant): the heading family when it names one, else the
+  // body family. First quoted name, ' Variable' suffix kept — Satori
+  // only uses it as a lookup label, but loadGoogleFont needs the plain
+  // family, so strip the suffix here where the derivation lives.
+  const firstFamily = (value) =>
+    value?.match(/['"]([^'"]+)['"]/)?.[1]?.replace(/\s+Variable$/i, '') ??
+    null;
+  meta.ogFontFamily =
+    (light['--font-heading'] !== 'var(--font-sans)'
+      ? firstFamily(light['--font-heading'])
+      : null) ??
+    firstFamily(light['--font-sans']) ??
+    null;
   return { light, dark, meta };
 }
 
