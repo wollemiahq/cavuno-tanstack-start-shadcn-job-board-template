@@ -52,6 +52,47 @@ describe('parseTokens', () => {
     expect(parsed.meta.fontsImport).toContain('fonts.googleapis.com');
   });
 
+  // FNT-01: a swapped theme (banner keys + fontsource imports for a
+  // body sans + heading serif) round-trips — banner keys win over the
+  // import-derived fallback, and static (non-variable) fontsource
+  // imports parse the same as variable ones.
+  it('parses a swapped body+heading font theme with banner keys authoritative', () => {
+    const parsed = parseTokens(`/*
+ * mode: system
+ * fontSans: inter
+ * fontHeading: lora
+ */
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/lora';
+@theme inline {
+  --font-heading: 'Lora Variable', serif;
+  --font-sans: 'Inter Variable', sans-serif;
+}
+:root { --background: #FFFFFF; --foreground: #18181B; --primary: #27272A; --muted: #F4F4F5; --muted-foreground: #71717A; --border: #D4D4D8; --ring: #52525B; }
+.dark { --background: #18181B; }
+`);
+    expect(parsed.meta.fontSans).toBe('inter');
+    expect(parsed.meta.fontHeading).toBe('lora');
+    expect(parsed.light['--font-sans']).toBe("'Inter Variable', sans-serif");
+    expect(parsed.light['--font-heading']).toBe("'Lora Variable', serif");
+  });
+
+  it('parses static (per-weight) fontsource imports like variable ones', () => {
+    const parsed = parseTokens(`
+@import '@fontsource/poppins/400.css';
+@import '@fontsource/poppins/600.css';
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: 'Poppins', sans-serif;
+}
+:root { --background: white; }
+.dark { --background: black; }
+`);
+    expect(parsed.meta.fontSans).toBe('poppins');
+    expect(parsed.meta.fontHeading).toBe('inherit');
+  });
+
   it('derives a non-Geist Fontsource family from shadcn-style theme CSS', () => {
     const parsed = parseTokens(`
 @import "@fontsource-variable/roboto-slab";

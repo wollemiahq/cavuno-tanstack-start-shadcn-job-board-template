@@ -74,6 +74,64 @@ The CLI syntax comes from the shadcn docs:
 [partial preset apply](https://ui.shadcn.com/docs/changelog/2026-04-partial-preset-apply)
 (the `--only theme,font` flag).
 
+## Fonts — swap from the bundled catalog, one file (FNT)
+
+The starter pre-installs the platform's full 20-font catalog as fontsource
+packages, so **changing the font is a `src/theme.css`-only edit** — no
+`package.json` change, no install. Everything a font swap touches lives in
+that one file:
+
+1. **Banner keys** (authoritative metadata, parsed by `gen:theme`):
+
+   ```css
+   /*
+    * fontSans: inter
+    * fontHeading: lora        ← only when headings differ from the body
+    */
+   ```
+
+2. **The fontsource import block** — exactly the active families, nothing
+   more (unused imports bloat the built assets):
+
+   ```css
+   @import '@fontsource-variable/inter';
+   @import '@fontsource-variable/lora';
+   ```
+
+   Variable packages exist for most of the catalog; the four static fonts
+   (`be-vietnam-pro`, `poppins`, `hind`, `fira-sans`) import per-weight:
+   `@import '@fontsource/poppins/400.css';` (repeat for 500/600/700).
+
+3. **The two tokens**, using the family name the package registers
+   (variable packages append ` Variable`):
+
+   ```css
+   --font-heading: 'Lora Variable', serif;
+   --font-sans: 'Inter Variable', sans-serif;
+   ```
+
+Then regenerate the derived artifacts — `pnpm run gen:theme && pnpm run
+gen:design` — and verify. OG images follow automatically: `gen:theme`
+derives `ogFontFamily` (heading family, else body) into
+`src/theme/resolved.ts` and the OG routes render with it.
+
+The catalog keys: `be-vietnam-pro`, `inter`, `plus-jakarta-sans`,
+`dm-sans`, `outfit`, `space-grotesk`, `geist` (default), `public-sans`,
+`figtree`, `work-sans`, `open-sans`, `poppins`, `hind`, `lexend`,
+`fira-sans`, `manrope`, `source-sans-pro` (package
+`@fontsource-variable/source-sans-3`), `source-serif-4`, `lora`,
+`crimson-pro`.
+
+**Never** set `font-family` on individual components — use the
+`font-sans` / `font-heading` utilities so a later swap stays one file.
+
+**Off-catalog fonts** are a deliberate tradeoff, not a free choice: the
+platform's dependency gate refuses agent-added packages, and the brand
+snapshot only recognizes catalog keys — transactional emails fall back to
+Inter for unknown fonts. If a board truly needs an off-catalog font, it is
+a platform-reviewed dependency change, and you should say that tradeoff
+out loud to the operator instead of silently substituting.
+
 ## Why this works — theme portability
 
 Every app-authored surface styles through the theme's **semantic tokens**

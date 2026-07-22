@@ -964,10 +964,25 @@ Props:
 
 ### TalentProfileIdentity — `src/components/board/talent-profile-content.tsx`
 
+The talent header block — the avatar + name + headline meta line + the
+location/availability badge row. Modeled on the job-detail and
+company-profile headers (`CompanySectionShell`, `JobDetail`): the mark sits
+left of a stacked name → headline → badges column, so every entity page
+opens the same way.
+
+`size="xl"` drives the full-page hero band (a larger avatar + an `md:text-3xl`
+title, matching the company/job hero); `size="lg"` is the condensed detail
+pane. `nameHref` turns the NAME into the link to the canonical `/p/{handle}`
+profile — the accessible route to the profile now that the "View profile"
+button is gone. It is left null on the canonical page itself and whenever the
+surface is a non-interactive placeholder.
+
 Props:
 
 - `headingAs?: "h1" | "h2" | undefined`
+- `nameHref?: string | null | undefined`
 - `showName?: boolean | undefined`
+- `size?: "lg" | "xl" | undefined`
 - `vm: TalentProfileVM`
 
 ### TalentSearchDetailState — `src/components/board/talent-search-detail-state.tsx`

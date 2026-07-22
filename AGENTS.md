@@ -27,7 +27,15 @@ need different grounding is a platform operation, not a code edit.
   Data arrives from loaders; components never fetch.
 - `src/theme.css` — the canonical, shadcn CLI-owned theme. Edit it
   directly or with `shadcn apply`, then run `pnpm run gen:theme`; never edit
-  `src/theme/resolved.ts` (generated).
+  `src/theme/resolved.ts` (generated). **Fonts are part of this surface**
+  (docs/theming.md §Fonts): the 20-font catalog is pre-installed, so a font
+  change edits ONLY this file — banner `fontSans`/`fontHeading` keys, the
+  fontsource import block (exactly the active families), and the
+  `--font-sans`/`--font-heading` tokens — then `pnpm run gen:theme &&
+  pnpm run gen:design`. Never set `font-family` on components (use the
+  `font-sans`/`font-heading` utilities); never add font packages — the
+  catalog covers font changes, and the platform's dependency gate refuses
+  agent-added packages.
 - `src/styles.css` — global resets, app-shell defaults, and shared layout
   utilities. Theme tokens and radii live in `src/theme.css`.
 - `src/routes/*.tsx` — page composition (markup, layout, copy). Keep
