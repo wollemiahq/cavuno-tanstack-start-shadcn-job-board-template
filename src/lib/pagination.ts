@@ -37,6 +37,28 @@ export function listingPageHref(
   return `${url.pathname}${url.search}${url.hash}`;
 }
 
+/**
+ * Build a crawlable "next page" URL for a CURSOR-paginated listing (the blog,
+ * the talent directory, and free-text company search — surfaces whose public
+ * SDK endpoint is cursor-only and rejects `offset`). Sets the opaque `cursor`
+ * and drops the page-based `?page=` param so the two pagination models never
+ * mix in one URL.
+ */
+export function cursorPageHref(
+  currentHref: string,
+  cursor: string,
+  transientParams: string[] = [],
+): string {
+  const url = new URL(currentHref, 'https://board.local');
+
+  for (const param of transientParams) url.searchParams.delete(param);
+
+  url.searchParams.delete('page');
+  url.searchParams.set('cursor', cursor);
+
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
 /** Zero-based API offset for a 1-based page. */
 export function pageToOffset(page: number, pageSize: number): number {
   return (page - 1) * pageSize;

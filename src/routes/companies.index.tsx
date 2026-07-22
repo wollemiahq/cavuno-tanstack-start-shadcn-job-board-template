@@ -1,5 +1,6 @@
 import { boardCopy } from '#/copy';
 
+import { BOARD_PATHS, boardUrl } from '@cavuno/board/paths';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { createFileRoute } from '@tanstack/react-router';
 
@@ -65,7 +66,10 @@ export const Route = createFileRoute('/companies/')({
             },
           ],
           links: [
-            { rel: 'canonical', href: `${loaderData.seo.origin}/companies` },
+            {
+              rel: 'canonical',
+              href: boardUrl(loaderData.seo.origin, BOARD_PATHS.companies),
+            },
           ],
         }
       : {

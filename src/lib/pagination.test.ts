@@ -8,6 +8,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  cursorPageHref,
   listingPageHref,
   pageSearchValue,
   pageToOffset,
@@ -29,6 +30,23 @@ describe('listingPageHref (crawlable pagination URLs)', () => {
     expect(listingPageHref('/companies?market=robotics&page=2', 1)).toBe(
       '/companies?market=robotics',
     );
+  });
+});
+
+describe('cursorPageHref (crawlable next-cursor URLs for cursor-only listings)', () => {
+  it('sets the opaque cursor and drops the numbered page param', () => {
+    expect(cursorPageHref('/blog?cursor=old', 'opaque:page:2')).toBe(
+      '/blog?cursor=opaque%3Apage%3A2',
+    );
+    expect(cursorPageHref('/talent?page=3', 'next')).toBe('/talent?cursor=next');
+  });
+
+  it('preserves active filters while replacing transient selection state', () => {
+    expect(
+      cursorPageHref('/talent?q=react&selectedTalent=old&cursor=a', 'b', [
+        'selectedTalent',
+      ]),
+    ).toBe('/talent?q=react&cursor=b');
   });
 });
 
