@@ -13,10 +13,12 @@ import {
   useNavigate,
   useRouterState,
 } from '@tanstack/react-router';
+import { useEffect } from 'react';
 
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import { toPreviewBoardConfig } from '../lib/preview';
+import { emitRoutesReport } from '../lib/routes-report';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getSessionUser } from '../server/account';
@@ -201,6 +203,21 @@ function RootLayout() {
     select: (state) => resolveShellBreadcrumbEntities(state.matches),
   });
   const navigate = useNavigate();
+
+  // LNK-11: once after hydration, report path templates to the builder
+  // parent when this board is embedded in the preview iframe.
+  // Lazy-import routeTree so the root module does not statically cycle
+  // with routeTree.gen (which imports every route including this one).
+  useEffect(() => {
+    void import('../routeTree.gen')
+      .then(({ routeTree }) => {
+        // Structural cast: SDK walker accepts id/path/fullPath/children only.
+        emitRoutesReport(routeTree as never);
+      })
+      .catch(() => {
+        // Fire-and-forget: never block render on a missing tree.
+      });
+  }, []);
   // Identity-aware default search scope: an approved employer hunts talent
   // (when the board's directory is visible to them); everyone else hunts
   // jobs. Section routes (companies/talent/blog) still override.

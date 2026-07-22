@@ -12,8 +12,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0(@date-fns/tz@1.5.0)(@types/react@19.2.17)(date-fns@4.4.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@cavuno/board':
-        specifier: 1.39.0
-        version: 1.39.0
+        specifier: 1.42.0
+        version: 1.42.0
       '@cloudflare/vite-plugin':
         specifier: 1.40.2
         version: 1.40.2(vite@8.1.3(@types/node@22.19.21)(esbuild@0.27.3)(jiti@2.7.0))(workerd@1.20260611.1)(wrangler@4.100.0)
@@ -470,8 +470,8 @@ packages:
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
     hasBin: true
 
-  '@cavuno/board@1.39.0':
-    resolution: {integrity: sha512-qU47pjrOYc1SJul10m/A8oDTnqj+u3p9nhqnI1poVoZhNuZbOHOBBzRwhhzoGfRX7nQzd6SqrDD4x6uzsYxSNQ==}
+  '@cavuno/board@1.42.0':
+    resolution: {integrity: sha512-PgzVTMiECmiRmw7ecDuX1TSACVqYleAXJ0uI5jo0n1FAloCJFJTXVkUJzEyFsFR6EgTizmVd9KS5OYv8lFfqyg==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -5269,7 +5269,7 @@ snapshots:
     dependencies:
       css-tree: 3.2.1
 
-  '@cavuno/board@1.39.0': {}
+  '@cavuno/board@1.42.0': {}
 
   '@cloudflare/kv-asset-handler@0.5.0': {}
 
