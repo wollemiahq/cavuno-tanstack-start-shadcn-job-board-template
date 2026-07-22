@@ -21,29 +21,14 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { JobCard } from './job-card';
 
 import type { JobCardVM } from '@/board/job-view-model';
+import { makeJobCardVM } from '@/test/fixtures';
 
 afterEach(cleanup);
 
-const baseVM: JobCardVM = {
-  id: 'j1',
-  title: 'Staff Platform Engineer',
-  companySlug: null,
-  jobSlug: null,
-  detailHref: null,
-  hasDetailLink: false,
-  companyName: 'Acme',
-  companyLogoUrl: null,
-  companyAvatarName: 'Acme',
-  sector: 'Engineering',
-  compLine: '$120k–$160k · Remote',
-  salaryLabel: '$120k–$160k',
-  locationLabel: 'Worldwide (Remote)',
-  summary: 'Own the deploy platform end to end.',
-  isFeatured: false,
-  featuredLabel: 'Featured',
-  postedAtLabel: null,
-  tags: [],
-};
+// Fixture values are deliberately NOT formatter-shaped (see
+// src/test/fixtures.ts): assertions reference VM fields symbolically so
+// a presentation change never requires a content update in this file.
+const baseVM = makeJobCardVM();
 
 const tag = (name: string): JobCardVM['tags'][number] => ({
   key: `k-${name}`,
@@ -84,9 +69,9 @@ describe('JobCard stress invariants', () => {
 
   it('omits the salary/location line when the VM has none', () => {
     const { rerender } = render(<JobCard vm={baseVM} />);
-    expect(screen.getByText('$120k–$160k · Remote')).toBeTruthy();
+    expect(screen.getByText(baseVM.compLine!)).toBeTruthy();
     rerender(<JobCard vm={{ ...baseVM, compLine: null }} />);
-    expect(screen.queryByText('$120k–$160k · Remote')).toBeNull();
+    expect(screen.queryByText(baseVM.compLine!)).toBeNull();
   });
 
   it('omits the summary when the VM has none', () => {

@@ -52,8 +52,7 @@ export function parseTokens(css) {
   // only uses it as a lookup label, but loadGoogleFont needs the plain
   // family, so strip the suffix here where the derivation lives.
   const firstFamily = (value) =>
-    value?.match(/['"]([^'"]+)['"]/)?.[1]?.replace(/\s+Variable$/i, '') ??
-    null;
+    value?.match(/['"]([^'"]+)['"]/)?.[1]?.replace(/\s+Variable$/i, '') ?? null;
   meta.ogFontFamily =
     (light['--font-heading'] !== 'var(--font-sans)'
       ? firstFamily(light['--font-heading'])

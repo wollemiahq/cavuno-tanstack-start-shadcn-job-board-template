@@ -25,9 +25,11 @@ import { AppRouterProvider } from '@/components/app-router-provider';
 
 afterEach(cleanup);
 
+// Fixture values are NOT formatter-shaped; assertions reference them
+// symbolically (formatted output is pinned once, by the SDK goldens).
 const overall: OverallSalaryVM = {
   headlineLabel: 'Average salary',
-  headlineValue: '$191K – $256K',
+  headlineValue: 'overall range value',
   perYearSuffix: '/ yr',
   stats: [{ label: 'Based on', value: '54 jobs' }],
 };
@@ -37,13 +39,13 @@ const categories: SalaryRailVM = {
     {
       name: 'Software Engineering',
       href: '/companies/anduril/salaries/software-engineering',
-      range: '$200K – $250K',
+      range: 'category range a',
       jobCountLabel: '20 jobs',
     },
     {
       name: 'Hardware',
       href: '/companies/anduril/salaries/hardware',
-      range: '$180K – $230K',
+      range: 'category range b',
       jobCountLabel: '10 jobs',
     },
   ],
@@ -89,11 +91,11 @@ describe('CompanySalarySummary — condenses the Salaries tab on the Overview', 
     ).toBeTruthy();
 
     // The overall salary range, condensed from the Salaries tab.
-    expect(screen.getByText('$191K – $256K')).toBeTruthy();
+    expect(screen.getByText(overall.headlineValue)).toBeTruthy();
 
     // The top category rows carry each category's name + range.
     expect(screen.getByText('Software Engineering')).toBeTruthy();
-    expect(screen.getByText('$200K – $250K')).toBeTruthy();
+    expect(screen.getByText(categories.items[0].range)).toBeTruthy();
     expect(screen.getByText('Hardware')).toBeTruthy();
 
     // The "View salaries" CTA is a real anchor into the salaries tab (the

@@ -349,7 +349,14 @@ describe('PostJobForm', () => {
       />,
     );
 
-    expect(screen.getByText('$199')).toBeVisible();
+    // Delegation-style: the expectation runs the SAME Intl formatting the
+    // component uses, instead of pinning its locale-dependent output.
+    const expectedPrice = new Intl.NumberFormat('en-AU', {
+      style: 'currency',
+      currency: 'AUD',
+      maximumFractionDigits: 0,
+    }).format(199);
+    expect(screen.getByText(expectedPrice)).toBeVisible();
     expect(screen.queryByText('Free')).toBeNull();
   });
 });

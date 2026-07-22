@@ -54,6 +54,19 @@ export interface JobCardVM {
   compLine: string | null;
   /** Salary is independent so dense search cards do not hide location. */
   salaryLabel: string | null;
+  /**
+   * Raw wire salary values alongside the formatted label. When the
+   * operator wants a DIFFERENT salary presentation than the hosted
+   * default (full numbers, no currency symbol, monthly, …), re-format
+   * these in the component (e.g. `Intl.NumberFormat`) — never parse or
+   * post-process `salaryLabel`, whose shape is locale-dependent.
+   */
+  salaryMin: number | null;
+  salaryMax: number | null;
+  salaryCurrency: string | null;
+  salaryTimeframe: string | null;
+  /** Raw publish timestamp behind `postedAtLabel`, for re-presentation. */
+  publishedAt: string | null;
   /** Physical/applicant geography followed by the workplace type. */
   locationLabel: string;
   /** Honest one-line summary from the real description, or `null`. */
@@ -109,6 +122,11 @@ export function toJobCardVM(
     sector: job.categories[0]?.name ?? null,
     compLine,
     salaryLabel,
+    salaryMin: job.salaryMin ?? null,
+    salaryMax: job.salaryMax ?? null,
+    salaryCurrency: job.salaryCurrency ?? null,
+    salaryTimeframe: job.salaryTimeframe ?? null,
+    publishedAt: job.publishedAt ?? null,
     locationLabel,
     summary: deriveSummary(job.description),
     isFeatured: job.isFeatured,

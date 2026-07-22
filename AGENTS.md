@@ -91,6 +91,23 @@ need different grounding is a platform operation, not a code edit.
    for a job/company still comes from the API's `links.public`. Route
    `<Link to>` uses TanStack's typed route ids as usual.
 
+## Operator overrides win; tests assert structure
+
+Hosted-board parity is the DEFAULT, not a ceiling. When the operator
+asks for a different presentation of a resolved value (salary/date
+style, icons, labels — anything), produce exactly that: add a mapper
+field or transform in the component, re-formatting from the VM's RAW
+wire values (`salaryMin`, `publishedAt`, …) with e.g. `Intl.NumberFormat`.
+"Golden-tested" pins the SDK's default rendering, never what this board
+may show. Never parse the SDK's locale-shaped formatted strings.
+
+Formatted output is pinned once, by the SDK's goldens — never re-pinned
+here. Component tests assert wiring symbolically (`vm.salaryLabel`)
+over non-formatter-shaped fixtures (`src/test/fixtures.ts`); mapper
+tests assert delegation by CALLING the SDK formatter in the
+expectation. A presentation edit should touch no test content — a test failing on a literal formatted string is a wrong TEST
+— make it structural. CI gate: `pnpm run check:test-doctrine`.
+
 ## Dependencies
 
 Package manager is **pnpm 11**, pinned in `package.json`. Installs in

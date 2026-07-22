@@ -27,6 +27,22 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
       invalidate: mocks.invalidate,
       navigate: mocks.navigate,
     }),
+    // The form's cancel action is a router Link; the real component
+    // resolves the router internally (not via the mocked useRouter
+    // export), so a bare render warns "useRouter must be used inside a
+    // <RouterProvider>". These tests exercise form behaviour, not
+    // navigation — a plain anchor keeps them router-free.
+    Link: ({
+      children,
+      className,
+    }: {
+      children: React.ReactNode;
+      className?: string;
+    }) => (
+      <a href="#cancel" className={className}>
+        {children}
+      </a>
+    ),
   };
 });
 

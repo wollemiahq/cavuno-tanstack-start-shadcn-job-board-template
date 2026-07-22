@@ -49,7 +49,9 @@ describe('TalentProfileContent', () => {
     expect(
       screen.getByRole('link', { name: 'Analytical Engines' }),
     ).toHaveAttribute('href', 'https://analytical.example');
-    expect(screen.getByText('Jan 2022 – Present')).toBeVisible();
+    expect(
+      screen.getByText(profileVm.experiences[0].dateRangeLabel),
+    ).toBeVisible();
     expect(screen.getByText('Full time')).toBeVisible();
     expect(screen.getByText('Hybrid')).toBeVisible();
     expect(screen.getByText('Found via referral')).toBeVisible();
