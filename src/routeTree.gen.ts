@@ -41,6 +41,7 @@ import { Route as MeAlertsRouteImport } from './routes/me.alerts'
 import { Route as JsMetricsDotjsRouteImport } from './routes/js.metrics[.]js'
 import { Route as JobsRssDotxmlRouteImport } from './routes/jobs.rss[.]xml'
 import { Route as JobsKeywordRouteImport } from './routes/jobs.$keyword'
+import { Route as GoSplatRouteImport } from './routes/go.$'
 import { Route as EmployersDashboardRouteImport } from './routes/employers.dashboard'
 import { Route as EmbedJobsRouteImport } from './routes/embed.jobs'
 import { Route as BlogRssDotxmlRouteImport } from './routes/blog.rss[.]xml'
@@ -59,6 +60,7 @@ import { Route as AlertsManageRouteImport } from './routes/alerts.manage'
 import { Route as AlertsConfirmRouteImport } from './routes/alerts.confirm'
 import { Route as AccountSavedRouteImport } from './routes/account_.saved'
 import { Route as AccountAccessRouteImport } from './routes/account_.access'
+import { Route as DotwellKnownCavunoDotjsonRouteImport } from './routes/[.]well-known.cavuno[.]json'
 import { Route as SalariesTitlesIndexRouteImport } from './routes/salaries.titles.index'
 import { Route as SalariesSkillsIndexRouteImport } from './routes/salaries.skills.index'
 import { Route as SalariesLocationsIndexRouteImport } from './routes/salaries.locations.index'
@@ -256,6 +258,11 @@ const JobsKeywordRoute = JobsKeywordRouteImport.update({
   path: '/jobs/$keyword',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GoSplatRoute = GoSplatRouteImport.update({
+  id: '/go/$',
+  path: '/go/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EmployersDashboardRoute = EmployersDashboardRouteImport.update({
   id: '/employers/dashboard',
   path: '/employers/dashboard',
@@ -346,6 +353,12 @@ const AccountAccessRoute = AccountAccessRouteImport.update({
   path: '/account/access',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DotwellKnownCavunoDotjsonRoute =
+  DotwellKnownCavunoDotjsonRouteImport.update({
+    id: '/.well-known/cavuno.json',
+    path: '/.well-known/cavuno.json',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const SalariesTitlesIndexRoute = SalariesTitlesIndexRouteImport.update({
   id: '/salaries/titles/',
   path: '/salaries/titles/',
@@ -567,6 +580,7 @@ export interface FileRoutesByFullPath {
   '/site.webmanifest': typeof SiteDotwebmanifestRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
   '/account/access': typeof AccountAccessRoute
   '/account/saved': typeof AccountSavedRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
@@ -585,6 +599,7 @@ export interface FileRoutesByFullPath {
   '/blog/rss.xml': typeof BlogRssDotxmlRoute
   '/embed/jobs': typeof EmbedJobsRoute
   '/employers/dashboard': typeof EmployersDashboardRoute
+  '/go/$': typeof GoSplatRoute
   '/jobs/$keyword': typeof JobsKeywordRoute
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
   '/js/metrics.js': typeof JsMetricsDotjsRoute
@@ -655,6 +670,7 @@ export interface FileRoutesByTo {
   '/site.webmanifest': typeof SiteDotwebmanifestRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
   '/account/access': typeof AccountAccessRoute
   '/account/saved': typeof AccountSavedRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
@@ -673,6 +689,7 @@ export interface FileRoutesByTo {
   '/blog/rss.xml': typeof BlogRssDotxmlRoute
   '/embed/jobs': typeof EmbedJobsRoute
   '/employers/dashboard': typeof EmployersDashboardRoute
+  '/go/$': typeof GoSplatRoute
   '/jobs/$keyword': typeof JobsKeywordRoute
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
   '/js/metrics.js': typeof JsMetricsDotjsRoute
@@ -744,6 +761,7 @@ export interface FileRoutesById {
   '/site.webmanifest': typeof SiteDotwebmanifestRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
   '/account_/access': typeof AccountAccessRoute
   '/account_/saved': typeof AccountSavedRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
@@ -762,6 +780,7 @@ export interface FileRoutesById {
   '/blog/rss.xml': typeof BlogRssDotxmlRoute
   '/embed/jobs': typeof EmbedJobsRoute
   '/employers/dashboard': typeof EmployersDashboardRoute
+  '/go/$': typeof GoSplatRoute
   '/jobs/$keyword': typeof JobsKeywordRoute
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
   '/js/metrics.js': typeof JsMetricsDotjsRoute
@@ -834,6 +853,7 @@ export interface FileRouteTypes {
     | '/site.webmanifest'
     | '/sitemap.xml'
     | '/terms-of-service'
+    | '/.well-known/cavuno.json'
     | '/account/access'
     | '/account/saved'
     | '/alerts/confirm'
@@ -852,6 +872,7 @@ export interface FileRouteTypes {
     | '/blog/rss.xml'
     | '/embed/jobs'
     | '/employers/dashboard'
+    | '/go/$'
     | '/jobs/$keyword'
     | '/jobs/rss.xml'
     | '/js/metrics.js'
@@ -922,6 +943,7 @@ export interface FileRouteTypes {
     | '/site.webmanifest'
     | '/sitemap.xml'
     | '/terms-of-service'
+    | '/.well-known/cavuno.json'
     | '/account/access'
     | '/account/saved'
     | '/alerts/confirm'
@@ -940,6 +962,7 @@ export interface FileRouteTypes {
     | '/blog/rss.xml'
     | '/embed/jobs'
     | '/employers/dashboard'
+    | '/go/$'
     | '/jobs/$keyword'
     | '/jobs/rss.xml'
     | '/js/metrics.js'
@@ -1010,6 +1033,7 @@ export interface FileRouteTypes {
     | '/site.webmanifest'
     | '/sitemap.xml'
     | '/terms-of-service'
+    | '/.well-known/cavuno.json'
     | '/account_/access'
     | '/account_/saved'
     | '/alerts/confirm'
@@ -1028,6 +1052,7 @@ export interface FileRouteTypes {
     | '/blog/rss.xml'
     | '/embed/jobs'
     | '/employers/dashboard'
+    | '/go/$'
     | '/jobs/$keyword'
     | '/jobs/rss.xml'
     | '/js/metrics.js'
@@ -1099,6 +1124,7 @@ export interface RootRouteChildren {
   SiteDotwebmanifestRoute: typeof SiteDotwebmanifestRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
+  DotwellKnownCavunoDotjsonRoute: typeof DotwellKnownCavunoDotjsonRoute
   AccountAccessRoute: typeof AccountAccessRoute
   AccountSavedRoute: typeof AccountSavedRoute
   AlertsConfirmRoute: typeof AlertsConfirmRoute
@@ -1117,6 +1143,7 @@ export interface RootRouteChildren {
   BlogRssDotxmlRoute: typeof BlogRssDotxmlRoute
   EmbedJobsRoute: typeof EmbedJobsRoute
   EmployersDashboardRoute: typeof EmployersDashboardRoute
+  GoSplatRoute: typeof GoSplatRoute
   JobsKeywordRoute: typeof JobsKeywordRoute
   JobsRssDotxmlRoute: typeof JobsRssDotxmlRoute
   JsMetricsDotjsRoute: typeof JsMetricsDotjsRoute
@@ -1393,6 +1420,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobsKeywordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/go/$': {
+      id: '/go/$'
+      path: '/go/$'
+      fullPath: '/go/$'
+      preLoaderRoute: typeof GoSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/employers/dashboard': {
       id: '/employers/dashboard'
       path: '/employers/dashboard'
@@ -1517,6 +1551,13 @@ declare module '@tanstack/react-router' {
       path: '/account/access'
       fullPath: '/account/access'
       preLoaderRoute: typeof AccountAccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/cavuno.json': {
+      id: '/.well-known/cavuno.json'
+      path: '/.well-known/cavuno.json'
+      fullPath: '/.well-known/cavuno.json'
+      preLoaderRoute: typeof DotwellKnownCavunoDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/salaries/titles/': {
@@ -1831,6 +1872,7 @@ const rootRouteChildren: RootRouteChildren = {
   SiteDotwebmanifestRoute: SiteDotwebmanifestRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
+  DotwellKnownCavunoDotjsonRoute: DotwellKnownCavunoDotjsonRoute,
   AccountAccessRoute: AccountAccessRoute,
   AccountSavedRoute: AccountSavedRoute,
   AlertsConfirmRoute: AlertsConfirmRoute,
@@ -1849,6 +1891,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogRssDotxmlRoute: BlogRssDotxmlRoute,
   EmbedJobsRoute: EmbedJobsRoute,
   EmployersDashboardRoute: EmployersDashboardRoute,
+  GoSplatRoute: GoSplatRoute,
   JobsKeywordRoute: JobsKeywordRoute,
   JobsRssDotxmlRoute: JobsRssDotxmlRoute,
   JsMetricsDotjsRoute: JsMetricsDotjsRoute,

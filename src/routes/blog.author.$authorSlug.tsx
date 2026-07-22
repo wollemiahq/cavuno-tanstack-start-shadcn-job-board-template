@@ -14,6 +14,8 @@ import {
   useRouter,
 } from '@tanstack/react-router';
 
+import { m } from '../paraglide/messages';
+
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { CursorPagination } from '@/components/board/cursor-pagination';
 import { PublicContentPending } from '@/components/board/public-content-pending';
@@ -23,7 +25,6 @@ import { initialsOf } from '@/lib/initials';
 import { BLOG_PAGE_SIZE } from '@/lib/blog';
 import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
 import { headTitle } from '@/lib/page-title';
-import { m } from '../paraglide/messages';
 import { getBlogAuthor, getSeoBase, listBlogPosts } from '@/server/queries';
 
 interface BlogAuthorSearch {

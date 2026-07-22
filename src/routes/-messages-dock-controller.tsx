@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { companyPath } from '@cavuno/board/paths';
 
+import { m } from '../paraglide/messages';
 import {
   MessagesSidebarController,
   ThreadController,
@@ -19,7 +20,6 @@ import {
 } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useVisiblePoll } from '@/lib/use-visible-poll';
-import { m } from '../paraglide/messages';
 import { getInbox, getThread, getUnreadCount } from '@/server/messaging';
 import type {
   Conversation,

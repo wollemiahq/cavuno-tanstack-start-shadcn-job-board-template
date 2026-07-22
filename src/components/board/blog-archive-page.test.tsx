@@ -222,9 +222,7 @@ describe('BlogArchivePage — Page-family archive presentation', () => {
     expect(heading.querySelector('[data-slot="avatar"]')).not.toBeNull();
     // The bio is the description line, the social link a quiet affordance below.
     expect(
-      screen.getByText(
-        'Writes about hiring systems and editorial operations.',
-      ),
+      screen.getByText('Writes about hiring systems and editorial operations.'),
     ).toBeVisible();
     expect(screen.getByRole('link', { name: 'LinkedIn' })).toHaveAttribute(
       'href',

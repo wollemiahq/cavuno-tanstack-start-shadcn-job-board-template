@@ -1,5 +1,3 @@
-import { boardCopy } from '@/copy';
-
 /**
  * Salary VIEW-MODEL — the Layer-1b seam for the salary block (ADR-0070
  * Phase 2). These mappers are the ONLY place SDK formatters (`formatRange`,
@@ -24,6 +22,8 @@ import {
   salaryTitlePath,
 } from '@cavuno/board/paths';
 import { formatRange, formatUsd } from '@cavuno/board/seo';
+
+import { boardCopy } from '@/copy';
 
 /**
  * Salary URL composers — the Layer-1b seam for the salary hrefs the SDK's

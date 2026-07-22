@@ -1,9 +1,8 @@
-import { boardCopy } from '@/copy';
-
 import { describe, expect, it } from 'vitest';
 
 import { toJobDetailVM } from './job-detail-view-model';
 
+import { boardCopy } from '@/copy';
 import type { PublicBoard, PublicJob, PublicJobCard } from '@cavuno/board';
 
 const copy = boardCopy('en').jobDetail;

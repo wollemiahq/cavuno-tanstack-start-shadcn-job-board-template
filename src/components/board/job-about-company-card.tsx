@@ -1,3 +1,5 @@
+import { m } from '../../paraglide/messages';
+
 import type { JobDetailCompanyVM } from '@/board/job-detail-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
 import { buttonVariants } from '@/components/ui/button';
@@ -8,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { m } from '../../paraglide/messages';
 
 export function JobAboutCompanyCard({
   company,

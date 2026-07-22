@@ -1,69 +1,57 @@
 ---
 name: cavuno-board-theme
-description: Board branding with @cavuno/board/theme — map the board's stored theme (16 semantic colors × light/dark + typography from board.context().theme) onto shadcn CSS variables, resolve the color-scheme mode, and build the Google Fonts request. Use when wiring the app shell, dark mode, or brand styling for a tenant frontend.
+description: Optional hosted-board theme compatibility with @cavuno/board/theme. Use only when a custom frontend deliberately mirrors or migrates an existing Cavuno hosted theme; the consuming application normally owns tokens, fonts, and color mode.
 ---
 
-# Theme: board branding → shadcn tokens
+# Optional hosted-board theme compatibility
 
-`@cavuno/board/theme` maps the board's stored theme onto the canonical
-shadcn token vocabulary as CSS-variable overrides. One contract, two
-consumers: the dashboard edits the board theme; agents restyle through the
-standard shadcn theme file — both end up in the same tokens.
+The custom frontend owns its visual system by default: semantic design tokens, component styles, font loading, and light/dark-mode state belong in the application. Do not make remote `board.context().theme` the default source of truth for a new SDK frontend.
+
+`@cavuno/board/theme` exists for a narrower job: mirroring an existing hosted board or providing a starting point during a hosted-to-custom migration.
 
 ## When to use
 
-- The app shell/root layout of any tenant frontend, once.
-- Wiring dark mode or brand fonts.
+- The human explicitly wants the custom frontend to mirror the current hosted board.
+- A migration needs a temporary compatibility layer while tokens move into the application.
+- One application intentionally renders many Cavuno boards with different operator-owned themes.
 
 ## When not to use
 
-- Component-level styling — write normal Tailwind/shadcn classes; they pick
-  the overridden tokens up automatically.
+- A normal custom frontend whose design system already defines tokens and fonts.
+- Component-level styling.
+- As a replacement for the framework's theme provider or font system.
 
-## Wire it once at the shell
+## Read compatibility values
 
 ```ts snippet
-import { boardThemeToCss, themeMode, googleFontsUrl } from '@cavuno/board/theme';
+import {
+  boardThemeToCss,
+  googleFontsUrl,
+  themeMode,
+} from '@cavuno/board/theme';
 
 const context = await board.context();
-const css = boardThemeToCss(context.theme);   // ':root {…}' + '.dark {…}'
-const mode = themeMode(context.theme);        // 'light' | 'dark' | 'system'
-const fontsHref = googleFontsUrl(context.theme); // one <link>, or null
+const hostedTheme = {
+  css: boardThemeToCss(context.theme),
+  fontUrl: googleFontsUrl(context.theme),
+  mode: themeMode(context.theme),
+};
 ```
 
-Inject `css` in a `<style>` AFTER the static theme stylesheet so the
-overrides win; render nothing when it's empty (a null theme means the app's
-default theme applies untouched). Apply `mode` by toggling the `.dark`
-class (`system` = follow `prefers-color-scheme`).
+`boardThemeToCss` validates the stored colors before emitting CSS. A null theme returns no CSS, so the application default remains intact.
 
-## The mapping is the contract
+## Migration guidance
 
-All 16 board color keys are consumed — a coverage golden in-monorepo
-asserts neither the hosted board nor this module drops one. Standard
-shadcn tokens carry the core (background/foreground, card, popover,
-primary, secondary, muted, accent, destructive, border, input, ring);
-the four keys shadcn has no standard token for ship as
-`--contrast-background`, `--contrast-foreground`, `--foreground-subtle`,
-`--foreground-disabled`, plus `--foreground-error`.
+1. Compare the returned colors, fonts, and mode with the consuming design system.
+2. Move the chosen values into the application's own semantic tokens and font loader.
+3. Remove the runtime theme injection when the application becomes authoritative.
 
-## Anti-patterns
-
-```ts no-check
-// NEVER hardcode brand colors in components — they bypass the board theme:
-<button style={{ background: '#7c3aed' }} />
-// NEVER re-map theme keys ad hoc per page; the shell mapping is the single source.
-// NEVER fetch fonts per-family — googleFontsUrl builds ONE deduped request.
-```
-
-## Out of scope — do not invent exports
-
-No color math (hover/pressed derivation, contrast checking — the hosted
-dashboard owns palette design), no per-component theme props, no CSS-in-JS
-runtime. The module emits strings; the app owns injection.
+If permanent multi-board mirroring is an explicit requirement, inject the validated CSS after the static theme and make the framework's theme provider apply the returned mode. Do not interpolate raw stored colors or build font URLs yourself.
 
 ## Verify
 
-- [ ] A board with a custom theme renders its brand color on primary
-      buttons and focus rings; a board without one renders the app default.
-- [ ] Dark palette applies under `.dark` and `mode` drives the class.
-- [ ] The Google Fonts request appears once, covering sans + heading.
+- [ ] The application renders correctly when `context.theme` is null.
+- [ ] New custom frontends do not fetch theme data merely to establish basic styling.
+- [ ] Compatibility CSS never contains unsafe stored color syntax.
+- [ ] Font loading and color-mode ownership are explicit and tested.
+- [ ] A migration has a documented point where the application becomes authoritative.

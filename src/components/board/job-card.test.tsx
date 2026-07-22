@@ -21,27 +21,14 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { JobCard } from './job-card';
 
 import type { JobCardVM } from '@/board/job-view-model';
+import { makeJobCardVM } from '@/test/fixtures';
 
 afterEach(cleanup);
 
-const baseVM: JobCardVM = {
-  id: 'j1',
-  title: 'Staff Platform Engineer',
-  companySlug: null,
-  jobSlug: null,
-  detailHref: null,
-  companyName: 'Acme',
-  companyLogoUrl: null,
-  companyAvatarName: 'Acme',
-  compLine: '$120k–$160k · Remote',
-  salaryLabel: '$120k–$160k',
-  locationLabel: 'Worldwide (Remote)',
-  summary: 'Own the deploy platform end to end.',
-  isFeatured: false,
-  featuredLabel: 'Featured',
-  postedAtLabel: null,
-  tags: [],
-};
+// Fixture values are deliberately NOT formatter-shaped (see
+// src/test/fixtures.ts): assertions reference VM fields symbolically so
+// a presentation change never requires a content update in this file.
+const baseVM = makeJobCardVM();
 
 const tag = (name: string): JobCardVM['tags'][number] => ({
   key: `k-${name}`,
@@ -82,31 +69,29 @@ describe('JobCard stress invariants', () => {
 
   it('renders location and salary as separate lines like the workspace card, omitting salary when absent', () => {
     const { rerender } = render(<JobCard vm={baseVM} />);
-    // Location uses the workspace string ("Worldwide (Remote)"), NOT the old
-    // combined "$… · Remote" compLine.
-    expect(screen.getByText('Worldwide (Remote)')).toBeTruthy();
-    expect(screen.getByText('$120k–$160k')).toBeTruthy();
-    expect(screen.queryByText('$120k–$160k · Remote')).toBeNull();
+    // Location and salary render as separate lines, NOT the combined
+    // compLine. Fields are referenced symbolically (neutral fixture values)
+    // so a salary/location presentation change never edits this test.
+    expect(screen.getByText(baseVM.locationLabel)).toBeTruthy();
+    expect(screen.getByText(baseVM.salaryLabel!)).toBeTruthy();
+    expect(screen.queryByText(baseVM.compLine!)).toBeNull();
     // Salary omitted when the VM has none; location still shows.
     rerender(<JobCard vm={{ ...baseVM, salaryLabel: null }} />);
-    expect(screen.queryByText('$120k–$160k')).toBeNull();
-    expect(screen.getByText('Worldwide (Remote)')).toBeTruthy();
+    expect(screen.queryByText(baseVM.salaryLabel!)).toBeNull();
+    expect(screen.getByText(baseVM.locationLabel)).toBeTruthy();
   });
 
   it('orders the tile like the workspace result card: title → company → location → salary → description', () => {
     const { container } = render(
-      <JobCard
-        vm={{ ...baseVM, postedAtLabel: '2d ago' }}
-        linkTo="detail"
-      />,
+      <JobCard vm={{ ...baseVM, postedAtLabel: '2d ago' }} linkTo="detail" />,
     );
     const text = (container.textContent ?? '').replace(/\s+/g, ' ');
     const order = [
-      'Staff Platform Engineer', // title first
-      'Acme', // company
-      'Worldwide (Remote)', // location
-      '$120k–$160k', // salary
-      'Own the deploy platform end to end.', // description
+      baseVM.title, // title first
+      baseVM.companyName!, // company
+      baseVM.locationLabel, // location
+      baseVM.salaryLabel!, // salary
+      baseVM.summary!, // description
       '2d ago', // posted-date footer
     ].map((s) => text.indexOf(s));
     // Every field present and in ascending document order.

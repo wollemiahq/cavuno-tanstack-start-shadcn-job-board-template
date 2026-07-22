@@ -210,7 +210,9 @@ describe('candidate access actions', () => {
     });
 
     render(<AccessPage />);
-    fireEvent.click(screen.getByRole('button', { name: 'Manage subscription' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Manage subscription' }),
+    );
 
     await waitFor(() => {
       expect(mocks.openBillingPortal).toHaveBeenCalledWith({

@@ -46,41 +46,44 @@ export function JobAlertFloatingPrompt({
       className="relative w-80 max-w-[calc(100vw-2rem)]"
     >
       <div data-test="job-alert-floating-prompt">
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-xs"
-        aria-label={m.jobAlertFloatingPrompt_dismissAriaLabel()}
-        onClick={() => {
-          localStorage.setItem(SUPPRESS_KEY, String(Date.now() + SUPPRESS_MS));
-          setVisible(false);
-        }}
-        className="absolute top-2 right-2"
-      >
-        <XIcon aria-hidden="true" />
-      </Button>
-      <AlertSignupForm
-        surface="card"
-        filters={defaults.filters}
-        context={defaults.context}
-        language={language}
-        labels={labels}
-        onSubscribe={async (input) => {
-          const result = await subscribeJobAlert({ data: input });
-          return { status: result.status };
-        }}
-        // Listing-page alert variant — stored as jobCardLabels.jobAlert
-        // {Title,Description} on the hosted board; the starter's English
-        // is the floor (catalog variant keys land with the authed slice).
-        title={
-          labels?.jobCardLabels?.jobAlertTitle ||
-          m.jobAlertFloatingPrompt_defaultTitle()
-        }
-        description={
-          labels?.jobCardLabels?.jobAlertDescription ||
-          m.jobAlertFloatingPrompt_defaultDescription()
-        }
-      />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          aria-label={m.jobAlertFloatingPrompt_dismissAriaLabel()}
+          onClick={() => {
+            localStorage.setItem(
+              SUPPRESS_KEY,
+              String(Date.now() + SUPPRESS_MS),
+            );
+            setVisible(false);
+          }}
+          className="absolute top-2 right-2"
+        >
+          <XIcon aria-hidden="true" />
+        </Button>
+        <AlertSignupForm
+          surface="card"
+          filters={defaults.filters}
+          context={defaults.context}
+          language={language}
+          labels={labels}
+          onSubscribe={async (input) => {
+            const result = await subscribeJobAlert({ data: input });
+            return { status: result.status };
+          }}
+          // Listing-page alert variant — stored as jobCardLabels.jobAlert
+          // {Title,Description} on the hosted board; the starter's English
+          // is the floor (catalog variant keys land with the authed slice).
+          title={
+            labels?.jobCardLabels?.jobAlertTitle ||
+            m.jobAlertFloatingPrompt_defaultTitle()
+          }
+          description={
+            labels?.jobCardLabels?.jobAlertDescription ||
+            m.jobAlertFloatingPrompt_defaultDescription()
+          }
+        />
       </div>
     </FloatingStackItem>
   );

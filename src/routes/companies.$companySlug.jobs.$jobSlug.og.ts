@@ -9,9 +9,10 @@ import { formatSalaryRange, locationLabel } from '@cavuno/board/format';
  * Worker runtime via `workers-og` (satori + resvg-wasm + HTMLRewriter).
  */
 import { createFileRoute, notFound } from '@tanstack/react-router';
-import { ImageResponse, loadGoogleFont } from 'workers-og';
+import { ImageResponse } from 'workers-og';
 
 import { getBoard } from '../lib/board';
+import { loadOgFont } from '../lib/og-font';
 import { themeTokens } from '../theme/resolved';
 
 function escapeHtml(value: string): string {
@@ -54,13 +55,10 @@ export const Route = createFileRoute(
           ) ?? '';
         const logo = job.company?.logoUrl ?? null;
 
-        // Subset the font to exactly the glyphs the card renders.
+        // Subset the theme font (FNT-02) to exactly the glyphs the card
+        // renders.
         const text = [title, company, location, salary].join(' ');
-        const font = await loadGoogleFont({
-          family: 'Inter',
-          weight: 600,
-          text,
-        });
+        const font = await loadOgFont(text);
 
         const metaParts = [location, salary].filter(Boolean).map(escapeHtml);
 
@@ -69,7 +67,7 @@ export const Route = createFileRoute(
         // the canonical src/theme.css. Light values by rule.
         const t = themeTokens.light;
         const html = `
-            <div style="display:flex;flex-direction:column;justify-content:space-between;width:1200px;height:630px;padding:80px;background:${t['--background']};font-family:Inter;">
+            <div style="display:flex;flex-direction:column;justify-content:space-between;width:1200px;height:630px;padding:80px;background:${t['--background']};font-family:${font.name};">
               <div style="display:flex;align-items:center;gap:24px;">
                 ${
                   logo
@@ -87,7 +85,9 @@ export const Route = createFileRoute(
         return new ImageResponse(html, {
           width: 1200,
           height: 630,
-          fonts: [{ name: 'Inter', data: font, weight: 600, style: 'normal' }],
+          fonts: [
+            { name: font.name, data: font.data, weight: 600, style: 'normal' },
+          ],
         });
       },
     },

@@ -23,6 +23,7 @@ import type { CompanyDetailVM } from '@/board/company-view-model';
 import type { JobCardVM } from '@/board/job-view-model';
 import type { OverallSalaryVM } from '@/board/salary-view-model';
 import { SearchResultDetail } from '@/components/search-results/search-results';
+import { makeJobCardVM } from '@/test/fixtures';
 
 const vm: CompanyDetailVM = {
   id: 'company-1',
@@ -53,28 +54,24 @@ const vm: CompanyDetailVM = {
   websiteHeading: 'Website',
 };
 
-const jobPreviews: JobCardVM[] = Array.from({ length: 5 }, (_, index) => ({
-  id: `job-${index + 1}`,
-  title: `Role ${index + 1}`,
-  companySlug: 'acme-research',
-  jobSlug: `role-${index + 1}`,
-  detailHref: `/companies/acme-research/jobs/role-${index + 1}`,
-  companyName: 'Acme Research',
-  companyLogoUrl: null,
-  companyAvatarName: 'Acme Research',
-  compLine: '$180K – $240K · Sydney (Hybrid)',
-  salaryLabel: '$180K – $240K',
-  locationLabel: 'Sydney (Hybrid)',
-  summary: 'Build useful tools.',
-  isFeatured: false,
-  featuredLabel: 'Featured',
-  postedAtLabel: '2d ago',
-  tags: [],
-}));
+const jobPreviews: JobCardVM[] = Array.from({ length: 5 }, (_, index) =>
+  makeJobCardVM({
+    id: `job-${index + 1}`,
+    title: `Role ${index + 1}`,
+    companySlug: 'acme-research',
+    jobSlug: `role-${index + 1}`,
+    detailHref: `/companies/acme-research/jobs/role-${index + 1}`,
+    companyName: 'Acme Research',
+    companyAvatarName: 'Acme Research',
+    summary: 'Build useful tools.',
+    postedAtLabel: 'posted label',
+  }),
+);
 
+// Values are NOT formatter-shaped; assertions reference them symbolically.
 const salaryOverall: OverallSalaryVM = {
   headlineLabel: 'Average salary',
-  headlineValue: '$180K – $240K',
+  headlineValue: 'headline salary value',
   perYearSuffix: '/ yr',
   stats: [{ label: 'Based on', value: '12 jobs' }],
 };
@@ -266,7 +263,7 @@ describe('CompanySearchResultDetail', () => {
     );
     expect(screen.getByRole('link', { name: 'Role 4' })).toBeVisible();
     expect(screen.queryByRole('link', { name: 'Role 5' })).toBeNull();
-    expect(screen.getByText('$180K – $240K')).toBeVisible();
+    expect(screen.getByText(salaryOverall.headlineValue)).toBeVisible();
     expect(screen.getByText('Based on 12 jobs')).toBeVisible();
     expect(container.querySelectorAll("[data-slot='card']")).toHaveLength(5);
   });

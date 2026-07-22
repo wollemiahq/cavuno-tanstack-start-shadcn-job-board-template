@@ -1,6 +1,6 @@
 ---
 name: cavuno-board-jobs
-description: Browse, search, and render jobs with the @cavuno/board SDK — jobs.list, jobs.search, jobs.retrieve, jobs.similar. Covers the slim card vs full job shapes, storefront pagination (count/limit/offset + opaque cursor), filters, and the candidate-paywall gatedCount.
+description: Browse, search, and render jobs with the @cavuno/board SDK — jobs.list, jobs.search, jobs.retrieve, jobs.similar. Covers the slim card vs full job shapes, catalog pagination (count/limit/offset + opaque cursor), filters, and the candidate-paywall gatedCount.
 ---
 
 # Jobs: browse, search, detail
@@ -19,7 +19,7 @@ The highest-traffic surface. Listing and search return slim `PublicJobCard`s; th
 
 ## List and render cards
 
-`jobs.list` returns a `JobCardListEnvelope`: storefront pagination fields plus `data: PublicJobCard[]` and optional `relatedSearches`.
+`jobs.list` returns a `JobCardListEnvelope`: catalog pagination fields plus `data: PublicJobCard[]` and optional `relatedSearches`.
 
 ```ts snippet
 const page = await board.jobs.list({ limit: 20, seniority: ['senior', 'lead'] });
@@ -35,7 +35,7 @@ for (const card of page.data) {
 
 ### Filters and pagination
 
-`JobsListQuery` supports `limit` (1–100), `offset` (takes precedence over `cursor`), `cursor`, and filters: `companyId`, `remoteOption`, `employmentType`, `seniority` (single or repeated → OR-matched), `location` + `radius` (km), `category`, `skill`. Paginate by passing back `nextCursor`, or use numbered pages with `offset`:
+`JobsListQuery` supports `limit` (1–100), `offset` (takes precedence over `cursor`), `cursor`, and filters: `companyId`, `companySlug`, `remoteOption`, `employmentType`, `seniority` (single or repeated → OR-matched), `location` + `radius` (km), `category`, `skill`. Paginate by passing back `nextCursor`, or use numbered pages with `offset`:
 
 ```ts snippet
 const p1 = await board.jobs.list({ limit: 20 });
@@ -46,9 +46,24 @@ const p2 = p1.nextCursor
 const page3 = await board.jobs.list({ limit: 20, offset: 40 });
 ```
 
+### Company filter via public slug
+
+`companySlug` is the public URL identity (what listing URLs carry). Prefer it
+over `companyId` in frontends — the API resolves slugs server-side. Unknown
+slugs are **ignored** (they contribute no matches, not an error); an entirely
+unknown set yields an empty result list with `count: 0`. Combined with
+`companyId` as a union when both are set. Cap is 10 values.
+
+```ts snippet
+const page = await board.jobs.list({
+  limit: 20,
+  companySlug: ['acme', 'globex'],
+});
+```
+
 ## Search
 
-`jobs.search` posts a `JobsSearchBody` (free-text `query` + structured `filters`) and returns a `JobCardSearchEnvelope`:
+`jobs.search` posts a `JobsSearchBody` (free-text `query` + structured `filters`) and returns a `JobCardSearchEnvelope`. The same `companySlug` rule applies under `filters`:
 
 ```ts snippet
 const results = await board.jobs.search({
@@ -56,6 +71,7 @@ const results = await board.jobs.search({
   filters: {
     seniority: ['senior'],
     remoteOption: ['remote'],
+    companySlug: ['acme'],
     publishedAt: { gte: '2026-01-01T00:00:00Z' },
   },
   limit: 20,

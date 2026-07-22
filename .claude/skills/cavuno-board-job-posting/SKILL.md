@@ -1,6 +1,6 @@
 ---
 name: cavuno-board-job-posting
-description: Build the anonymous "Post a job" funnel with the @cavuno/board SDK — jobPosting.plans, create and its status-discriminated JobPostingResult (checkout / published / pending_approval / invoice_sent), logo upload + fetchLogoByDomain, and the email-verified billing helpers (checkBilling, sendBillingVerification, getBillingOptions, checkSubscriptionEntitlements).
+description: Build the anonymous "Post a job" funnel with the @cavuno/board SDK — jobPosting.plans, create and its status-discriminated JobPostingResult (checkout / published / pending_approval / invoice_sent), logo upload + fetchLogoByDomain, and the email-verified billing helpers (sendBillingVerification, getBillingOptions).
 ---
 
 # Job posting: the anonymous submission funnel
@@ -87,16 +87,15 @@ The five billing paths map onto those four statuses: paid-Stripe → `checkout`;
 
 ## Existing credit: the verified-email branch
 
-A submitter whose email already holds a plan/bundle can post against remaining capacity — no new charge. Verify the email first; an option's fields become `selectedBilling`:
+A submitter whose email already holds a plan/bundle can post against remaining capacity — no new charge. Verification is the gate: there is deliberately no pre-check by bare email (that would let anyone probe whether an address holds billing). Send the verification email, then read the options with the token; an option's fields become `selectedBilling`:
 
 ```ts snippet
-const { hasActiveBilling } = await board.jobPosting.checkBilling({ email });
-if (hasActiveBilling) {
-  await board.jobPosting.sendBillingVerification({ email }); // emails a token
-  // …the poster pastes/clicks the token…
-  const { options } = await board.jobPosting.getBillingOptions({
-    verificationToken,
-  });
+await board.jobPosting.sendBillingVerification({ email }); // emails a token
+// …the poster pastes/clicks the token…
+const { options } = await board.jobPosting.getBillingOptions({
+  verificationToken,
+});
+if (options.length > 0) {
   const option = options[0]!;
   option.jobsRemaining;     // capacity left
   option.featuredRemaining; // featured slots left
@@ -107,19 +106,6 @@ if (hasActiveBilling) {
     selectedBilling: { type: option.type, id: option.id, planId: option.planId },
   });
 }
-```
-
-For subscription holders, gate the "featured" toggle on entitlements:
-
-```ts snippet
-const ent = await board.jobPosting.checkSubscriptionEntitlements({
-  email,
-  planId: plan.id,
-});
-ent.hasSubscription;
-ent.canFeature;             // may the wizard offer isFeatured?
-ent.featuredSlotsRemaining; // and how many
-ent.maxActiveRemaining;
 ```
 
 ## Verify

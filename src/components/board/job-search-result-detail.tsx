@@ -1,3 +1,5 @@
+import { m } from '../../paraglide/messages';
+
 import type {
   JobDetailChipVM,
   JobDetailCustomFieldVM,
@@ -12,7 +14,6 @@ import { SearchResultDetailHeader } from '@/components/search-results/search-res
 import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { m } from '../../paraglide/messages';
 
 function DefinitionList({
   rows,

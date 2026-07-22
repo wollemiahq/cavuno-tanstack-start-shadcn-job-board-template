@@ -10,9 +10,8 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ListingPagination } from './listing-pagination';
-
 import { overwriteGetLocale } from '../../paraglide/runtime';
+import { ListingPagination } from './listing-pagination';
 
 beforeEach(() => {
   overwriteGetLocale(() => 'en');

@@ -1,10 +1,10 @@
-import { m } from '../paraglide/messages';
-
 import {
   companyMarketPath,
   jobsCategoryPath,
   jobsSkillPath,
 } from '@cavuno/board/paths';
+
+import { m } from '../paraglide/messages';
 
 import type { TaxonomyChip } from '@/components/board/taxonomy-tags';
 import type { RelatedSearch } from '@cavuno/board';

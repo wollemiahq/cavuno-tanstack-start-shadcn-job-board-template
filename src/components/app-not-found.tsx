@@ -1,5 +1,7 @@
 import { Link } from '@tanstack/react-router';
 
+import * as m from '../paraglide/messages';
+
 import { buttonVariants } from '@/components/ui/button';
 import {
   Empty,
@@ -8,7 +10,6 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
-import * as m from '../paraglide/messages';
 
 export function NotFound() {
   return (

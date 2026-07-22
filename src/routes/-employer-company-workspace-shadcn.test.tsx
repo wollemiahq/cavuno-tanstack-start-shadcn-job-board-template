@@ -2,7 +2,10 @@
 
 import '@testing-library/jest-dom/vitest';
 import { BoardApiError } from '@cavuno/board';
-import { isNotFound as isRouteNotFound, isRedirect } from '@tanstack/react-router';
+import {
+  isNotFound as isRouteNotFound,
+  isRedirect,
+} from '@tanstack/react-router';
 import {
   act,
   cleanup,

@@ -1,7 +1,8 @@
 'use client';
 
-import { Dithering } from '@paper-design/shaders-react';
 import { useEffect, useState } from 'react';
+
+import { Dithering } from '@paper-design/shaders-react';
 
 import { cn } from '@/lib/utils';
 

@@ -11,10 +11,11 @@ import { formatDate } from '@cavuno/board/format';
  * fetches the data, subsets the font, and returns the image.
  */
 import { createFileRoute, notFound } from '@tanstack/react-router';
-import { ImageResponse, loadGoogleFont } from 'workers-og';
+import { ImageResponse } from 'workers-og';
 
 import { buildBlogOgHtml, truncate } from '../lib/blog-og';
 import { getBoard } from '../lib/board';
+import { loadOgFont } from '../lib/og-font';
 import { themeTokens } from '../theme/resolved';
 
 export const Route = createFileRoute('/blog/$postSlug/og')({
@@ -60,17 +61,23 @@ export const Route = createFileRoute('/blog/$postSlug/og')({
           card.authorName ?? '',
           card.dateLabel ?? '',
         ].join(' ');
-        const font = await loadGoogleFont({
-          family: 'Inter',
-          weight: 600,
-          text,
-        });
+        const font = await loadOgFont(text);
 
-        return new ImageResponse(buildBlogOgHtml(card), {
-          width: 1200,
-          height: 630,
-          fonts: [{ name: 'Inter', data: font, weight: 600, style: 'normal' }],
-        });
+        return new ImageResponse(
+          buildBlogOgHtml({ ...card, fontFamily: font.name }),
+          {
+            width: 1200,
+            height: 630,
+            fonts: [
+              {
+                name: font.name,
+                data: font.data,
+                weight: 600,
+                style: 'normal',
+              },
+            ],
+          },
+        );
       },
     },
   },

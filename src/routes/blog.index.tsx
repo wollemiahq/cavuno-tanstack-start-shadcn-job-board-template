@@ -9,6 +9,8 @@ import {
   useRouter,
 } from '@tanstack/react-router';
 
+import { m } from '../paraglide/messages';
+
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogTagChips } from '@/components/board/blog-tag-chips';
 import { CursorPagination } from '@/components/board/cursor-pagination';
@@ -17,7 +19,6 @@ import { JsonLd } from '@/components/json-ld';
 import { BLOG_PAGE_SIZE } from '@/lib/blog';
 import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
 import { headTitle } from '@/lib/page-title';
-import { m } from '../paraglide/messages';
 import {
   getSeoBase,
   listBlogPosts,

@@ -121,7 +121,10 @@ function formatPrice(
   }).format(amountCents / 100);
 }
 
-function initialForm(job: EmployerJob | undefined, countryName: (code: string) => string) {
+function initialForm(
+  job: EmployerJob | undefined,
+  countryName: (code: string) => string,
+) {
   if (!job) {
     return {
       title: '',
@@ -614,7 +617,9 @@ export function EmployerJobForm({
               </FieldDescription>
             ) : null}
             {fieldErrors.officeLocations ? (
-              <FieldError>{m.postJob_officeLocationsRequiredError()}</FieldError>
+              <FieldError>
+                {m.postJob_officeLocationsRequiredError()}
+              </FieldError>
             ) : null}
           </Field>
 
@@ -666,7 +671,9 @@ export function EmployerJobForm({
                 onQueryChange={setPermitQuery}
                 placeholder={m.postJob_remoteRestrictionPlaceholder()}
                 searchingText={m.locationCombobox_searchingText()}
-                removeAriaLabel={(name) => m.placeTags_removeAriaLabel({ name })}
+                removeAriaLabel={(name) =>
+                  m.placeTags_removeAriaLabel({ name })
+                }
               />
               <FieldDescription>
                 {m.postJob_remoteRestrictionHelperText()}

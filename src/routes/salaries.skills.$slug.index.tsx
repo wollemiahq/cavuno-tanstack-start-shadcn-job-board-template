@@ -144,7 +144,10 @@ function SkillSalaryPage() {
     faqJsonLd(faqs),
     createBreadcrumbJsonLd([
       { label: crumbs.home, href: seo.origin },
-      { label: crumbs.salaries, href: boardUrl(seo.origin, BOARD_PATHS.salaries) },
+      {
+        label: crumbs.salaries,
+        href: boardUrl(seo.origin, BOARD_PATHS.salaries),
+      },
       {
         label: crumbs.skills,
         href: boardUrl(seo.origin, BOARD_PATHS.salarySkills),

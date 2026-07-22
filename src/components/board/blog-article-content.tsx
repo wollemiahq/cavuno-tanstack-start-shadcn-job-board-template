@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { FileWarning } from 'lucide-react';
 
+import { m } from '../../paraglide/messages';
+
 import { toBlogArticleVM } from '@/board/blog-view-model';
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
 import { FacebookIcon, LinkedInIcon, XIcon } from '@/components/brand-icons';
@@ -31,7 +33,6 @@ import {
 } from '@/lib/article-toc';
 import { initialsOf } from '@/lib/initials';
 import { cn } from '@/lib/utils';
-import { m } from '../../paraglide/messages';
 import type {
   PublicBlogAdjacentPosts,
   PublicBlogPost,

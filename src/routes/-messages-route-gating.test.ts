@@ -28,8 +28,8 @@ vi.mock('@/server/messaging', () => ({
   getThread: messagingMocks.getThread,
 }));
 
-import { Route as ConversationRoute } from './messages.$conversationId';
 import { Route as MessagesRoute } from './messages';
+import { Route as ConversationRoute } from './messages.$conversationId';
 
 const inbox = { conversations: { object: 'list', data: [] } };
 

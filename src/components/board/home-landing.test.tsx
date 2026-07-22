@@ -38,6 +38,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HomeLanding } from './home-landing';
 
 import type { JobCardVM } from '@/board/job-view-model';
+import { makeJobCardVM } from '@/test/fixtures';
 import type {
   PublicBlogPostSummary,
   TalentDirectoryEntry,
@@ -68,26 +69,21 @@ afterEach(() => {
 
 type LandingProps = React.ComponentProps<typeof HomeLanding>;
 
-const job: JobCardVM = {
+const job: JobCardVM = makeJobCardVM({
   id: 'j1',
   title: 'Senior Backend Engineer',
   companySlug: 'technova-labs',
   jobSlug: 'senior-backend-engineer',
   detailHref: '/companies/technova-labs/jobs/senior-backend-engineer',
   companyName: 'TechNova Labs',
-  companyLogoUrl: null,
   companyAvatarName: 'TechNova Labs',
   compLine: null,
   salaryLabel: null,
-  locationLabel: 'Worldwide (Remote)',
   summary: null,
   isFeatured: true,
-  featuredLabel: 'Featured',
-  postedAtLabel: null,
-  tags: [],
-};
+});
 
-const productDesignerJob: JobCardVM = {
+const productDesignerJob: JobCardVM = makeJobCardVM({
   id: 'j2',
   title: 'Product Designer',
   companySlug: 'technova-labs',
@@ -98,7 +94,6 @@ const productDesignerJob: JobCardVM = {
   companyAvatarName: 'TechNova Labs',
   compLine: null,
   salaryLabel: null,
-  locationLabel: 'Sydney, NSW (Hybrid)',
   summary:
     'Design the dashboards our customers live in. You will run discovery with design partners and ship high-fidelity Figma specs alongside a design system.',
   isFeatured: false,
@@ -112,20 +107,18 @@ const productDesignerJob: JobCardVM = {
       href: '/jobs?skills=design-systems',
     },
   ],
-};
+});
 
-const machineLearningJob: JobCardVM = {
+const machineLearningJob: JobCardVM = makeJobCardVM({
   id: 'j3',
   title: 'Machine Learning Engineer',
   companySlug: 'technova-labs',
   jobSlug: 'machine-learning-engineer',
   detailHref: '/companies/technova-labs/jobs/machine-learning-engineer',
   companyName: 'TechNova Labs',
-  companyLogoUrl: null,
   companyAvatarName: 'TechNova Labs',
   compLine: null,
   salaryLabel: null,
-  locationLabel: 'Worldwide (Remote)',
   summary:
     'Build anomaly-detection models over build telemetry. Production Python, feature pipelines, and model monitoring — not research.',
   isFeatured: false,
@@ -135,7 +128,7 @@ const machineLearningJob: JobCardVM = {
     { key: 's-python', name: 'Python', href: '/jobs?skills=python' },
     { key: 's-pytorch', name: 'PyTorch', href: '/jobs?skills=pytorch' },
   ],
-};
+});
 
 const company: LandingProps['companies'][number] = {
   id: 'c1',

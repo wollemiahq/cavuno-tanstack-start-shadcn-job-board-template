@@ -63,10 +63,7 @@ export function AccountShell({
                 ) : null}
               </div>
               {rail ? (
-                <div
-                  className="shrink-0"
-                  data-slot="employer-account-rail"
-                >
+                <div className="shrink-0" data-slot="employer-account-rail">
                   {rail}
                 </div>
               ) : null}

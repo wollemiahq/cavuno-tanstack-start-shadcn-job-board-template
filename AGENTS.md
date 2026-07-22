@@ -16,13 +16,13 @@ find the smallest edit to the existing surface.
 
 `CAVUNO_API_URL`, `CAVUNO_BOARD` (the `pk_…` publishable key), and
 `CAVUNO_TRACKER_TOKEN` bind this frontend to one specific board. They
-are set at deploy time by a human operator (or the platform) —
-`wrangler.jsonc` vars in production, `.dev.vars` in dev/sandbox. That
-is exactly how a board goes live: an operator swaps `CAVUNO_BOARD` for
-their own `pk_…` (see the README "Deploy" note). You, the agent, never
-touch grounding: never edit, hardcode, duplicate, or move these values
-in code. A change request that appears to need different grounding is
-an operator/deploy operation, not a code edit for you to make.
+are set at deploy time by a human operator (or the platform):
+`wrangler.jsonc` vars in production, `.dev.vars` in dev/sandbox. That is
+how a board goes live — an operator swaps `CAVUNO_BOARD` for their own
+`pk_…` (README "Deploy"). You, the agent, never touch grounding: never
+edit, hardcode, duplicate, or move these values in code. A change
+request that appears to need different grounding is an operator/deploy
+operation, not a code edit for you to make.
 
 ## The customization surface
 
@@ -30,7 +30,14 @@ an operator/deploy operation, not a code edit for you to make.
   Data arrives from loaders; components never fetch.
 - `src/theme.css` — the canonical, shadcn CLI-owned theme. Edit it
   directly or with `shadcn apply`, then run `pnpm run gen:theme`; never edit
-  `src/theme/resolved.ts` (generated).
+  `src/theme/resolved.ts` (generated). **Fonts are part of this surface**
+  (docs/theming.md §Fonts): the 20-font catalog is pre-installed, so a font
+  change edits ONLY this file — banner `fontSans`/`fontHeading` keys, the
+  fontsource import block (active families only), and `--font-sans`/
+  `--font-heading` tokens — then `pnpm run gen:theme && pnpm run gen:design`.
+  Never set `font-family` on components (use the `font-sans`/`font-heading`
+  utilities); never add font packages — the catalog covers changes and the
+  dependency gate refuses agent-added ones.
 - `src/styles.css` — global resets, app-shell defaults, and shared layout
   utilities. Theme tokens and radii live in `src/theme.css`.
 - `src/routes/*.tsx` — page composition (markup, layout, copy). Keep
@@ -85,6 +92,21 @@ an operator/deploy operation, not a code edit for you to make.
    match the hosted board, sitemap, and emails); the absolute canonical URL
    for a job/company still comes from the API's `links.public`. Route
    `<Link to>` uses TanStack's typed route ids as usual.
+
+## Operator overrides win; tests assert structure
+
+Hosted-board parity is the DEFAULT, not a ceiling. When the operator
+asks for a different presentation of a resolved value (salary/date
+style, icons, labels), produce it: add a mapper field or transform the
+VM's RAW wire values (`salaryMin`, `publishedAt`, …) with e.g.
+`Intl.NumberFormat`. "Golden-tested" pins only the SDK's DEFAULT
+rendering; never parse its locale-shaped formatted strings.
+Formatted output is pinned once, by the SDK's goldens — never re-pinned
+here. Component tests assert wiring symbolically (`vm.salaryLabel`) over
+non-formatter-shaped fixtures (`src/test/fixtures.ts`); mapper tests
+assert delegation by CALLING the SDK formatter in the expectation.
+Presentation edits touch no test content; a failing literal pin is a
+wrong TEST. Gate `check:test-doctrine` bans `$`-shapes; dates/labels by review.
 
 ## Dependencies
 

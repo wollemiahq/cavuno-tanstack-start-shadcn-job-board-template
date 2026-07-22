@@ -1,9 +1,11 @@
+import { fieldLabel } from '@cavuno/board/format';
 import {
   companySalaryPath,
   salaryLocationPath,
   salarySkillPath,
   salaryTitlePath,
 } from '@cavuno/board/paths';
+import { formatRange, formatUsd } from '@cavuno/board/seo';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -54,8 +56,11 @@ describe('toOverallSalaryVM', () => {
       false,
       false,
     ]);
-    // median = round((110000 + 130000) / 2) = 120000, formatted abbreviated
-    expect(vm.stats[1].value).toBe('$120K');
+    // Delegation-style: median = round((110000 + 130000) / 2) = 120000,
+    // formatted by the SAME SDK helper the mapper delegates to — the
+    // formatted shape is pinned once, by the SDK's goldens.
+    expect(vm.stats[1].value).toBe(formatUsd('en', 120000));
+    expect(vm.headlineValue).toBe(formatRange('en', 100000, 140000));
     expect(vm.stats.at(-1)?.value.startsWith('12 ')).toBe(true);
   });
 
@@ -120,7 +125,8 @@ describe('toSeniorityTableVM', () => {
   const vm = toSeniorityTableVM(rows, 'en');
 
   it('resolves the seniority key through the taxonomy label', () => {
-    expect(vm.rows[0].level).toBe('Senior');
+    // Delegation-style: same SDK label call the mapper makes.
+    expect(vm.rows[0].level).toBe(fieldLabel('en', 'senior'));
   });
 
   it('renders a dash baseline when the board average is missing', () => {
@@ -135,17 +141,19 @@ describe('toSeniorityTableVM', () => {
 
 describe('toSalaryRailVM', () => {
   it('pluralises the per-item job count and preserves the pre-formatted range + href', () => {
+    // `range` is a pass-through field pre-formatted by the route, so the
+    // fixture value is arbitrary — deliberately NOT formatter-shaped.
     const items: RailItem[] = [
       {
         name: 'Acme',
         href: '/companies/acme',
-        range: '$100k–$140k',
+        range: 'range a',
         jobCount: 1,
       },
       {
         name: 'Globex',
         href: '/companies/globex',
-        range: '$90k–$120k',
+        range: 'range b',
         jobCount: 4,
       },
     ];
@@ -157,7 +165,7 @@ describe('toSalaryRailVM', () => {
     expect(vm.items[0].jobCountLabel.slice(2)).not.toBe(
       vm.items[1].jobCountLabel.slice(2),
     );
-    expect(vm.items[0].range).toBe('$100k–$140k');
+    expect(vm.items[0].range).toBe('range a');
     expect(vm.items[0].href).toBe('/companies/acme');
   });
 });
@@ -299,7 +307,9 @@ describe('toLocationHierarchyCrumbs', () => {
  */
 describe('salary title frames', () => {
   it('salaryPlaceTitle picks the ranged vs no-range frame and never emits an empty range', () => {
-    const ranged = salaryPlaceTitle('en', 'Austin', '$90K–$140K');
+    // Neutral, non-formatter-shaped range input (doctrine gate): the branch
+    // under test is "ranged vs no-range", not the range's exact copy.
+    const ranged = salaryPlaceTitle('en', 'Austin', 'pay range');
     const bare = salaryPlaceTitle('en', 'Austin', null);
     expect(ranged).not.toBe(bare);
     expect(ranged).toContain('Austin');

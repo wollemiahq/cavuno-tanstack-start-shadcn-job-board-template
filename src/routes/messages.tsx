@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-router';
 import { MessageSquare } from 'lucide-react';
 
+import { m } from '../paraglide/messages';
 import { MessagesSidebarController } from './-messages-runtime';
 
 import type { MessagesView } from './-messages-controller';
@@ -19,7 +20,6 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { headTitle } from '@/lib/page-title';
-import { m } from '../paraglide/messages';
 import { getBlocked, getInbox } from '@/server/messaging';
 import { getBoardContext, getSeoBase } from '@/server/queries';
 

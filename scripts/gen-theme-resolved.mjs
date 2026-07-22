@@ -44,6 +44,7 @@ export const themeMeta: {
   fontSans: string | null
   fontHeading: string | null
   fontsImport: string | null
+  ogFontFamily: string | null
 } = ${JSON.stringify(parsed.meta, null, 2)}
 
 export const themeTokens: {

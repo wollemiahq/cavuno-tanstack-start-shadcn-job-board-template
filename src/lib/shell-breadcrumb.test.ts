@@ -113,8 +113,12 @@ describe('shell breadcrumb resolver', () => {
     ]) {
       expect(resolveShellBreadcrumb({ pathname, labels })).not.toBeNull();
     }
-    expect(resolveShellBreadcrumb({ pathname: '/embed/jobs', labels })).toBeNull();
-    expect(resolveShellBreadcrumb({ pathname: '/password', labels })).toBeNull();
+    expect(
+      resolveShellBreadcrumb({ pathname: '/embed/jobs', labels }),
+    ).toBeNull();
+    expect(
+      resolveShellBreadcrumb({ pathname: '/password', labels }),
+    ).toBeNull();
   });
 });
 
