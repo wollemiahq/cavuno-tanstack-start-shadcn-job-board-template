@@ -13,7 +13,15 @@ import {
   isReauthRetry,
 } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
-import { getPipeline } from '../server/employers';
+import {
+  addApplicantNote,
+  bulkRejectApplicants,
+  createStage,
+  getPipeline,
+  moveApplicant,
+  removeStage,
+  renameStage,
+} from '../server/employers';
 import { getBoardContext, getSeoBase } from '../server/queries';
 
 import { Page, PageContent } from '@/components/layout/page';
@@ -104,6 +112,14 @@ function ApplicantsPage() {
               slug={slug}
               jobId={pipeline.job.id}
               board={boardVM}
+              actions={{
+                moveApplicant,
+                bulkRejectApplicants,
+                addApplicantNote,
+                createStage,
+                renameStage,
+                removeStage,
+              }}
             />
           ) : (
             <Empty className="border">

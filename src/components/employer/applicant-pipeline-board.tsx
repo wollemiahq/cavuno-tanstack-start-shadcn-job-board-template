@@ -68,16 +68,37 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { m } from '../../paraglide/messages';
-import {
-  addApplicantNote,
-  bulkRejectApplicants,
-  createStage,
-  moveApplicant,
-  removeStage,
-  renameStage,
-} from '@/server/employers';
 
 const DRAG_TYPE = 'cavuno/application';
+
+/** The settle result every pipeline mutation resolves to. */
+type PipelineActionResult = { ok: boolean; message?: string };
+
+/**
+ * The six pipeline mutations, threaded from the route as one typed bag so this
+ * presentational board never imports `@/server/*` (Layer 2 stays free of the
+ * server surface; the route owns auth and the server-function calls).
+ */
+export interface PipelineActions {
+  moveApplicant: (opts: {
+    data: { slug: string; applicationId: string; stageId: string };
+  }) => Promise<PipelineActionResult>;
+  bulkRejectApplicants: (opts: {
+    data: { slug: string; applicationIds: string[] };
+  }) => Promise<PipelineActionResult>;
+  addApplicantNote: (opts: {
+    data: { slug: string; applicationId: string; body: string };
+  }) => Promise<PipelineActionResult>;
+  createStage: (opts: {
+    data: { slug: string; jobId: string; label: string };
+  }) => Promise<PipelineActionResult>;
+  renameStage: (opts: {
+    data: { slug: string; stageId: string; label: string };
+  }) => Promise<PipelineActionResult>;
+  removeStage: (opts: {
+    data: { slug: string; stageId: string };
+  }) => Promise<PipelineActionResult>;
+}
 
 type StageDialogState =
   | { kind: 'add' }
@@ -89,6 +110,8 @@ export interface ApplicantPipelineBoardProps {
   slug: string;
   jobId: string;
   board: PipelineBoardVM;
+  /** Pipeline mutations, owned by the route (server-function calls). */
+  actions: PipelineActions;
   /** Test/preview hook: open a card's detail sheet on mount. */
   defaultOpenCardId?: string;
   /** Test/preview hook: render a stage dialog open on mount. */
@@ -112,6 +135,7 @@ export function ApplicantPipelineBoard({
   slug,
   jobId,
   board,
+  actions,
   defaultOpenCardId,
   defaultStageDialog = null,
 }: ApplicantPipelineBoardProps) {
@@ -158,7 +182,7 @@ export function ApplicantPipelineBoard({
 
       <div className="-mx-1 overflow-x-auto overscroll-x-contain px-1 pb-2">
         <div
-          className="grid min-h-[28rem] items-stretch gap-3"
+          className="grid min-h-(--detail-pane-min-h) items-stretch gap-3"
           style={{
             gridTemplateColumns: `repeat(${Math.max(stages.length, 1)}, minmax(min(18rem, calc(100vw - 3rem)), 1fr))`,
           }}
@@ -180,6 +204,7 @@ export function ApplicantPipelineBoard({
                   setPendingMoves,
                   slug,
                   invalidate,
+                  moveApplicant: actions.moveApplicant,
                 });
               }}
             />
@@ -206,8 +231,10 @@ export function ApplicantPipelineBoard({
             setPendingMoves,
             slug,
             invalidate,
+            moveApplicant: actions.moveApplicant,
           });
         }}
+        actions={actions}
         onInvalidate={invalidate}
         onRejected={() => setOpenCardId(null)}
       />
@@ -216,6 +243,7 @@ export function ApplicantPipelineBoard({
         slug={slug}
         jobId={jobId}
         state={stageDialog}
+        actions={actions}
         onClose={() => setStageDialog(null)}
         onInvalidate={invalidate}
       />
@@ -232,6 +260,7 @@ async function moveCard({
   setPendingMoves,
   slug,
   invalidate,
+  moveApplicant,
 }: {
   cardId: string;
   toStageId: string;
@@ -240,6 +269,7 @@ async function moveCard({
   setPendingMoves: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   slug: string;
   invalidate: () => Promise<void>;
+  moveApplicant: PipelineActions['moveApplicant'];
 }) {
   const card = cards.find((item) => item.id === cardId);
   const currentColumn = pendingMoves[cardId] ?? card?.columnStageId;
@@ -418,6 +448,7 @@ function ApplicantDetailSheet({
   open,
   onOpenChange,
   onMove,
+  actions,
   onInvalidate,
   onRejected,
 }: {
@@ -428,6 +459,7 @@ function ApplicantDetailSheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onMove: (toStageId: string) => void;
+  actions: PipelineActions;
   onInvalidate: () => Promise<void>;
   onRejected: () => void;
 }) {
@@ -442,6 +474,7 @@ function ApplicantDetailSheet({
             stages={stages}
             currentStageId={currentStageId}
             onMove={onMove}
+            actions={actions}
             onInvalidate={onInvalidate}
             onRejected={onRejected}
           />
@@ -457,6 +490,7 @@ function ApplicantDetailBody({
   stages,
   currentStageId,
   onMove,
+  actions,
   onInvalidate,
   onRejected,
 }: {
@@ -465,6 +499,7 @@ function ApplicantDetailBody({
   stages: PipelineStageVM[];
   currentStageId: string;
   onMove: (toStageId: string) => void;
+  actions: PipelineActions;
   onInvalidate: () => Promise<void>;
   onRejected: () => void;
 }) {
@@ -601,7 +636,7 @@ function ApplicantDetailBody({
             event.preventDefault();
             if (!note.trim()) return;
             const ok = await run('note', () =>
-              addApplicantNote({
+              actions.addApplicantNote({
                 data: { slug, applicationId: card.id, body: note.trim() },
               }),
             );
@@ -661,7 +696,7 @@ function ApplicantDetailBody({
           disabled={action.pending}
           onClick={async () => {
             const ok = await run('reject', () =>
-              bulkRejectApplicants({
+              actions.bulkRejectApplicants({
                 data: { slug, applicationIds: [card.id] },
               }),
             );
@@ -686,12 +721,14 @@ function StageDialogs({
   slug,
   jobId,
   state,
+  actions,
   onClose,
   onInvalidate,
 }: {
   slug: string;
   jobId: string;
   state: StageDialogState;
+  actions: PipelineActions;
   onClose: () => void;
   onInvalidate: () => Promise<void>;
 }) {
@@ -753,11 +790,13 @@ function StageDialogs({
               if (!label.trim()) return;
               if (state?.kind === 'add') {
                 void submit(() =>
-                  createStage({ data: { slug, jobId, label: label.trim() } }),
+                  actions.createStage({
+                    data: { slug, jobId, label: label.trim() },
+                  }),
                 );
               } else if (state?.kind === 'rename') {
                 void submit(() =>
-                  renameStage({
+                  actions.renameStage({
                     data: {
                       slug,
                       stageId: state.stage.id,
@@ -839,7 +878,9 @@ function StageDialogs({
                 event.preventDefault();
                 if (state?.kind === 'delete') {
                   void submit(() =>
-                    removeStage({ data: { slug, stageId: state.stage.id } }),
+                    actions.removeStage({
+                      data: { slug, stageId: state.stage.id },
+                    }),
                   );
                 }
               }}

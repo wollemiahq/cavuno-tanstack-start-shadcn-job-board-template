@@ -15,7 +15,7 @@ import {
   fieldLabel,
   getSalaryLexicon,
 } from '@cavuno/board/format';
-import { Link, useRouter } from '@tanstack/react-router';
+import { useRouter } from '@tanstack/react-router';
 
 import {
   DEFAULT_SALARY_TIMEFRAME,
@@ -35,7 +35,7 @@ import type { LocationSuggestionState } from '@/components/location-combobox';
 import { PlaceTagsField } from '@/components/place-tags-field';
 import { RichTextEditor } from '@/components/rich-text-editor';
 import { Badge } from '@/components/ui/badge';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Field,
@@ -944,13 +944,18 @@ export function EmployerJobForm({
         <Button type="submit" disabled={status === 'saving'}>
           {submitLabel}
         </Button>
-        <Link
-          to="/employers/companies/$slug"
-          params={{ slug }}
-          className={buttonVariants({ variant: 'ghost' })}
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() =>
+            void router.navigate({
+              to: '/employers/companies/$slug',
+              params: { slug },
+            })
+          }
         >
           {m.employerOnboarding_cancelLabel()}
-        </Link>
+        </Button>
         {status === 'error' ? <FieldError>{message}</FieldError> : null}
         {notice ? (
           <p role="status" className="text-sm">

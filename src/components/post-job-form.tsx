@@ -7,7 +7,7 @@ import {
   fieldLabel,
   getSalaryLexicon,
 } from '@cavuno/board/format';
-import { ImagePlus } from 'lucide-react';
+import { Check, ImagePlus } from 'lucide-react';
 
 import {
   DEFAULT_SALARY_TIMEFRAME,
@@ -241,9 +241,22 @@ export function PostJobForm({
     );
   }
 
-  const selectedPlan = plans.some((plan) => plan.id === initialPlanId)
+  // Default the picker to the deep-linked plan when valid, otherwise to the
+  // plan the board marks recommended, falling back to the first listed plan —
+  // so a plan is always selected when the form opens.
+  const defaultPlanId = plans.some((plan) => plan.id === initialPlanId)
     ? initialPlanId
-    : plans[0]?.id;
+    : (plans.find((plan) => plan.isRecommended) ?? plans[0])?.id;
+  const [selectedPlanId, setSelectedPlanId] = useState<string | undefined>(
+    defaultPlanId,
+  );
+  const selectedPlan = plans.find((plan) => plan.id === selectedPlanId);
+  // A free plan publishes on submit; a paid plan hands off to checkout — the
+  // primary label names whichever the chosen plan will do.
+  const submitLabel =
+    selectedPlan?.kind === 'free'
+      ? m.postJob_submitButtonLabel()
+      : m.postJob_checkoutButtonLabel();
   const employmentItems = EMPLOYMENT_TYPES.map((value) => ({
     value,
     label: fieldLabel(locale, value) ?? value,
@@ -437,7 +450,7 @@ export function PostJobForm({
         salaryMax,
         salaryCurrency: currency,
         salaryTimeframe,
-        selectedPlan: readString(form, 'selectedPlan'),
+        selectedPlan: selectedPlanId,
         logoUrl: logoUrl ?? undefined,
       });
 
@@ -818,7 +831,10 @@ export function PostJobForm({
       <PageSection title={m.postJob_planHeading()}>
         <RadioGroup
           name="selectedPlan"
-          defaultValue={selectedPlan}
+          value={selectedPlanId ?? null}
+          onValueChange={(value) =>
+            setSelectedPlanId((value as string | null) ?? undefined)
+          }
           aria-label={m.postJob_planHeading()}
         >
           {plans.map((plan) => {
@@ -855,9 +871,17 @@ export function PostJobForm({
                       <FieldDescription>{plan.description}</FieldDescription>
                     ) : null}
                     {features.length > 0 ? (
-                      <FieldDescription>
-                        {features.join(' · ')}
-                      </FieldDescription>
+                      <ul className="text-muted-foreground mt-1 space-y-1 text-sm">
+                        {features.map((feature) => (
+                          <li key={feature} className="flex items-start gap-2">
+                            <Check
+                              className="text-primary mt-0.5 size-4 shrink-0"
+                              aria-hidden
+                            />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
                     ) : null}
                   </FieldContent>
                   <span className="text-foreground font-medium">
@@ -889,9 +913,7 @@ export function PostJobForm({
           {status.kind === 'pending' ? (
             <Spinner data-icon="inline-start" />
           ) : null}
-          {status.kind === 'pending'
-            ? m.postJob_submittingLabel()
-            : m.postJob_submitButtonLabel()}
+          {status.kind === 'pending' ? m.postJob_submittingLabel() : submitLabel}
         </Button>
       </div>
     </form>

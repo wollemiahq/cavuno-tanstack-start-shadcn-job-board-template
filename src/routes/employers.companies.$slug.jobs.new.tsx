@@ -10,7 +10,7 @@
  * The form itself lives in `EmployerJobForm`, shared with the per-job edit
  * page so the two never drift.
  */
-import { createFileRoute, getRouteApi, Link } from '@tanstack/react-router';
+import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
 import {
   handleEmployerLoaderError,
@@ -23,7 +23,6 @@ import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { EmployerJobForm } from '@/components/employer-job-form';
 import { Page, PageContent } from '@/components/layout/page';
-import { buttonVariants } from '@/components/ui/button';
 import { headTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
@@ -88,14 +87,6 @@ function NewJobPage() {
             officeLocationSuggestions={officeLocationSuggestions}
             mode={{ kind: 'create' }}
           />
-
-          <Link
-            to="/employers/companies/$slug"
-            params={{ slug: workspace.slug }}
-            className={buttonVariants({ variant: 'ghost' })}
-          >
-            {m.employerOnboarding_cancelLabel()}
-          </Link>
         </div>
       </PageContent>
     </Page>

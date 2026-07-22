@@ -255,10 +255,13 @@ function ConnectCompany({ onBack }: { onBack?: () => void }) {
           open: true,
         }));
       } else {
+        // Surface the error below the field WITHOUT slamming the panel shut
+        // mid-typing — the "add as a new company" row stays reachable.
         setState((current) => ({
           ...current,
+          results: [],
           message: result.message,
-          open: false,
+          open: true,
         }));
       }
     }, 250);
@@ -315,7 +318,16 @@ function ConnectCompany({ onBack }: { onBack?: () => void }) {
               }
               onInputValueChange={(nextQuery, details) => {
                 if (details.reason !== 'input-change') return;
-                updateState({ query: nextQuery, open: false, message: '' });
+                // Keep the panel open while typing — it holds the previous
+                // results until the debounced search replaces them in place.
+                // Closing here (then reopening when results land) is what made
+                // the panel flicker on every keystroke. Only an empty query
+                // closes it; selection and blur/escape close via onOpenChange.
+                updateState({
+                  query: nextQuery,
+                  open: nextQuery.trim().length > 0,
+                  message: '',
+                });
               }}
               onValueChange={(company) => {
                 if (company) void claim(company.slug);

@@ -21,7 +21,10 @@ export function useCompanyMarketSuggestions(enabled: boolean) {
     }
 
     let cancelled = false;
-    setSuggestions([]);
+    // Keep the previous suggestions on screen while the new (debounced) query
+    // is in flight — clearing them here empties the popup on every keystroke,
+    // collapsing it to a loading state and back, which reads as flicker. The
+    // list is replaced in place once fresh results resolve.
     setLoading(true);
     const timer = setTimeout(() => {
       void getCompanyMarkets({ data: { search, limit: 10 } })

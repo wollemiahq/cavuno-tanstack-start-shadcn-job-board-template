@@ -132,7 +132,13 @@ describe('PostJobForm', () => {
       target: { value: '180000' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Post job' }));
+    // Select the submit control structurally — its label now tracks the chosen
+    // plan (free → publish, paid → checkout), so pinning the copy would be brittle.
+    const submitButton = screen
+      .getAllByRole('button')
+      .find((button) => (button as HTMLButtonElement).type === 'submit');
+    if (!submitButton) throw new Error('The post form needs a submit button');
+    fireEvent.click(submitButton);
 
     await waitFor(() =>
       expect(onSubmit).toHaveBeenCalledWith({

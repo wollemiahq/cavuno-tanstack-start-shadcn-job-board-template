@@ -5,7 +5,7 @@
  * from its own edit page rather than an inline popover on the jobs list. A
  * published/expired job edits its details only.
  */
-import { createFileRoute, getRouteApi, Link } from '@tanstack/react-router';
+import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
 import {
   handleEmployerLoaderError,
@@ -18,7 +18,6 @@ import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { EmployerJobForm } from '@/components/employer-job-form';
 import { Page, PageContent } from '@/components/layout/page';
-import { buttonVariants } from '@/components/ui/button';
 import { headTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
@@ -89,14 +88,6 @@ function EditJobPage() {
             mode={{ kind: 'edit', jobId: job.id, status: job.status }}
             job={job}
           />
-
-          <Link
-            to="/employers/companies/$slug"
-            params={{ slug: workspace.slug }}
-            className={buttonVariants({ variant: 'ghost' })}
-          >
-            {m.employerOnboarding_cancelLabel()}
-          </Link>
         </div>
       </PageContent>
     </Page>

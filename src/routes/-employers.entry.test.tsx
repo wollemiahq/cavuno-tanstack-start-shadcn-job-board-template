@@ -313,6 +313,63 @@ describe('employer entry surfaces', () => {
     expect(dialog).toHaveAttribute('data-slot', 'dialog-content');
   });
 
+  it('keeps the connect-company panel open across keystrokes while results update in place', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(DashboardRoute, 'useSearch').mockReturnValue({});
+    vi.spyOn(DashboardRoute, 'useLoaderData').mockReturnValue({ data: [] });
+    // Echo the query back through the result so we can watch the list swap.
+    vi.mocked(searchCompanies).mockImplementation((({
+      data,
+    }: {
+      data: { q: string };
+    }) =>
+      Promise.resolve({
+        ok: true,
+        data: {
+          object: 'list',
+          url: '/v1/me/companies/search',
+          data: [
+            {
+              id: `co-${data.q}`,
+              name: `Match ${data.q}`,
+              slug: `match-${data.q}`,
+              website: null,
+            },
+          ],
+          hasMore: false,
+          nextCursor: null,
+        },
+      })) as never);
+    const DashboardPage = DashboardRoute.options.component;
+    if (!DashboardPage)
+      throw new Error('The employer dashboard route needs a component');
+
+    render(<DashboardPage />);
+    const companySearch = screen.getByLabelText('Search companies by name...');
+
+    fireEvent.change(companySearch, { target: { value: 'Ac' } });
+    await act(() => vi.advanceTimersByTimeAsync(250));
+    expect(
+      document.querySelector('[data-slot="combobox-content"]'),
+    ).toBeVisible();
+    expect(screen.getByText('Match Ac')).toBeVisible();
+
+    // A second keystroke must NOT close the panel while the next search
+    // debounces — the previous results stay visible in place.
+    fireEvent.change(companySearch, { target: { value: 'Acm' } });
+    expect(
+      document.querySelector('[data-slot="combobox-content"]'),
+    ).toBeVisible();
+    expect(screen.getByText('Match Ac')).toBeVisible();
+
+    // Once the debounce resolves, the list updates in place and stays open.
+    await act(() => vi.advanceTimersByTimeAsync(250));
+    expect(
+      document.querySelector('[data-slot="combobox-content"]'),
+    ).toBeVisible();
+    expect(screen.getByText('Match Acm')).toBeVisible();
+  });
+
   it('keeps a pending membership inside the employer workspace while awaiting approval', () => {
     vi.spyOn(OnboardingRoute, 'useLoaderData').mockReturnValue({
       membership: { ...membership, status: 'awaiting_admin' },

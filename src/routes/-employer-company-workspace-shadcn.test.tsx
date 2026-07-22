@@ -108,7 +108,20 @@ import { Route as JobsRoute } from './employers.companies.$slug.index';
 import { Route as ApplicantsRoute } from './employers.companies.$slug.jobs.$jobId.applicants';
 import { Route as ProfileRoute } from './employers.companies.$slug.profile';
 
+import type { PipelineActions } from '../components/employer/applicant-pipeline-board';
 import type { PipelineBoardVM } from '../board/pipeline-view-model';
+
+// The board takes its mutations as a typed `actions` prop now; inject the same
+// hoisted doubles the route would pass. (The `../server/employers` module mock
+// above still covers the workspace routes imported in this file.)
+const pipelineActions: PipelineActions = {
+  moveApplicant: mocks.moveApplicant,
+  bulkRejectApplicants: mocks.bulkRejectApplicants,
+  addApplicantNote: mocks.addApplicantNote,
+  createStage: mocks.createStage,
+  renameStage: mocks.renameStage,
+  removeStage: mocks.removeStage,
+};
 
 const draftJob = {
   id: 'job-1',
@@ -598,6 +611,7 @@ describe('employer company workspace', () => {
       <ApplicantPipelineBoard
         slug="northstar-labs"
         jobId="job-1"
+        actions={pipelineActions}
         board={reviewBoardVM()}
         defaultOpenCardId="application-1"
       />,
@@ -621,6 +635,7 @@ describe('employer company workspace', () => {
       <ApplicantPipelineBoard
         slug="northstar-labs"
         jobId="job-1"
+        actions={pipelineActions}
         board={{
           stages: [
             {
@@ -666,6 +681,7 @@ describe('employer company workspace', () => {
       <ApplicantPipelineBoard
         slug="northstar-labs"
         jobId="job-1"
+        actions={pipelineActions}
         board={reviewBoardVM()}
         defaultOpenCardId="application-1"
       />,
@@ -693,6 +709,7 @@ describe('employer company workspace', () => {
       <ApplicantPipelineBoard
         slug="northstar-labs"
         jobId="job-1"
+        actions={pipelineActions}
         board={{
           stages: [
             {
