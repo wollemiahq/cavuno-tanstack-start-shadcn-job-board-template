@@ -76,6 +76,7 @@ const profile = {
       title: 'Analytical engineer',
       companyName: 'Analytical Engines',
       companyUrl: 'analytical.example',
+      companyLogoUrl: null,
       location: 'London, United Kingdom',
       employmentType: 'full_time',
       locationType: 'hybrid',
@@ -90,6 +91,7 @@ const profile = {
     {
       institutionName: 'University of London',
       institutionUrl: 'university.example',
+      institutionLogoUrl: null,
       degree: 'Bachelor of Science',
       fieldOfStudy: 'Mathematics',
       grade: 'First class honours',
