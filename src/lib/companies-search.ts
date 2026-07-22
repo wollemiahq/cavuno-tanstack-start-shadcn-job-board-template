@@ -1,4 +1,8 @@
-import { pageSearchValue, parsePageParam } from '@/lib/pagination';
+import {
+  cursorSearchValue,
+  pageSearchValue,
+  parsePageParam,
+} from '@/lib/pagination';
 
 export interface CompaniesSearch {
   /** Opaque cursor used by text-search pagination. */
@@ -25,7 +29,7 @@ export function parseCompaniesSearch(
 ): CompaniesSearch {
   return {
     query: stringSearchValue(search.query),
-    cursor: stringSearchValue(search.cursor),
+    cursor: cursorSearchValue(search.cursor),
     page: pageSearchValue(parsePageParam(search.page)),
     selectedCompany: selectedCompanySearchValue(search.selectedCompany),
   };

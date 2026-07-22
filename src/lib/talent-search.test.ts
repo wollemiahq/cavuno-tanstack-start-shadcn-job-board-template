@@ -21,6 +21,17 @@ describe('parseTalentSearch', () => {
     });
   });
 
+  it('coerces a numeric-looking cursor back to a string so it survives a direct load', () => {
+    // The router parses `?cursor=2` as the number 2 before validateSearch runs;
+    // the cursor must not be dropped or the paginated directory URL 307s home.
+    expect(parseTalentSearch({ cursor: 2 })).toEqual({
+      q: undefined,
+      skill: undefined,
+      cursor: '2',
+      selectedTalent: undefined,
+    });
+  });
+
   it('drops blank and non-string URL values', () => {
     expect(
       parseTalentSearch({

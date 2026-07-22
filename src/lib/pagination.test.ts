@@ -5,10 +5,15 @@
  * drops), invalid/`<1` input coerces to page 1 (listing URLs are public input,
  * never throw), and the pagination nav only shows once there is a second page.
  */
+import {
+  defaultParseSearch,
+  defaultStringifySearch,
+} from '@tanstack/react-router';
 import { describe, expect, it } from 'vitest';
 
 import {
   cursorPageHref,
+  cursorSearchValue,
   listingPageHref,
   pageSearchValue,
   pageToOffset,
@@ -47,6 +52,55 @@ describe('cursorPageHref (crawlable next-cursor URLs for cursor-only listings)',
         'selectedTalent',
       ]),
     ).toBe('/talent?q=react&cursor=b');
+  });
+
+  it('JSON-encodes a numeric-looking cursor so the href is router-canonical', () => {
+    // The list endpoint mints cursors like "2". `URLSearchParams` would emit a
+    // bare `cursor=2`, which the router re-parses as the NUMBER 2, drops on the
+    // string guard, and 307-redirects back to the bare archive — a dead link.
+    // The router's own codec quotes it, so a direct GET SSRs the cursor page.
+    expect(cursorPageHref('/blog', '2')).toBe('/blog?cursor=%222%22');
+  });
+
+  it('emits a href that survives the router parse → validate round-trip', () => {
+    // The whole crawlability contract: whatever the Next anchor points at must
+    // re-parse (and pass `cursorSearchValue`) back to the SAME cursor, so a
+    // crawler or new-tab open lands on the cursor page instead of page one.
+    for (const cursor of ['2', 'opaque:page:2', 'kn7abc', '1.5']) {
+      const href = cursorPageHref('/blog', cursor);
+      const parsed = defaultParseSearch(new URL(href, 'https://b.local').search);
+      expect(cursorSearchValue((parsed as { cursor?: unknown }).cursor)).toBe(
+        cursor,
+      );
+    }
+  });
+});
+
+describe('cursorSearchValue (opaque-cursor coercion)', () => {
+  it('keeps a string cursor as-is', () => {
+    expect(cursorSearchValue('next-token')).toBe('next-token');
+  });
+
+  it('coerces a numeric cursor (router-parsed as a number) back to a string', () => {
+    // `?cursor=2` parses to the number 2 before validateSearch sees it; without
+    // coercion the string guard drops it and the page 307s to the archive.
+    expect(cursorSearchValue(2)).toBe('2');
+    expect(cursorSearchValue(1.5)).toBe('1.5');
+  });
+
+  it('drops empty, null, boolean, and non-finite values', () => {
+    expect(cursorSearchValue('')).toBeUndefined();
+    expect(cursorSearchValue(null)).toBeUndefined();
+    expect(cursorSearchValue(undefined)).toBeUndefined();
+    expect(cursorSearchValue(true)).toBeUndefined();
+    expect(cursorSearchValue(Number.NaN)).toBeUndefined();
+  });
+
+  it('round-trips a numeric cursor through the router codec without loss', () => {
+    // Emit the way `cursorPageHref` does, then read it the way the route does.
+    const href = defaultStringifySearch({ cursor: '2' });
+    const parsed = defaultParseSearch(href) as { cursor?: unknown };
+    expect(cursorSearchValue(parsed.cursor)).toBe('2');
   });
 });
 

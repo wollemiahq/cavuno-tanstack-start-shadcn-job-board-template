@@ -25,6 +25,17 @@ describe('parseCompaniesSearch', () => {
     });
   });
 
+  it('coerces a numeric-looking cursor back to a string so a direct load keeps the page', () => {
+    // `?cursor=2` reaches validateSearch as the number 2; the free-text search
+    // cursor must survive as a string instead of 307-ing to the first page.
+    expect(parseCompaniesSearch({ query: 'acme', cursor: 2 })).toEqual({
+      query: 'acme',
+      cursor: '2',
+      page: undefined,
+      selectedCompany: undefined,
+    });
+  });
+
   it('drops empty or non-string selections from the canonical URL', () => {
     expect(
       parseCompaniesSearch({ selectedCompany: '  ' }).selectedCompany,

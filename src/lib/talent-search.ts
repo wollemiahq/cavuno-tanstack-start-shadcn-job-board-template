@@ -1,3 +1,5 @@
+import { cursorSearchValue } from '@/lib/pagination';
+
 export interface TalentSearch {
   /** Opaque cursor used by the Talent API. */
   cursor?: string;
@@ -22,7 +24,7 @@ export function parseTalentSearch(
   return {
     q: stringSearchValue(search.q),
     skill: stringSearchValue(search.skill),
-    cursor: stringSearchValue(search.cursor),
+    cursor: cursorSearchValue(search.cursor),
     selectedTalent: stringSearchValue(search.selectedTalent),
   };
 }

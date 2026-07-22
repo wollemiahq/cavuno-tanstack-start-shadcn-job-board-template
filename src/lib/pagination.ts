@@ -9,6 +9,27 @@
  * page 1. Page 1 serialises to a CLEAN URL — `pageSearchValue` returns
  * `undefined` for it so TanStack drops the search param entirely.
  */
+import {
+  defaultParseSearch,
+  defaultStringifySearch,
+} from '@tanstack/react-router';
+
+/**
+ * Coerce a raw `?cursor=` search value to an opaque cursor string.
+ *
+ * Cursors are opaque tokens the API mints; some (e.g. the list endpoint's
+ * `"2"`) look numeric. The router parses search with JSON semantics, so a
+ * `?cursor=2` document load hands `validateSearch` back the NUMBER `2`. A
+ * naive `typeof === 'string'` guard then drops it, and the route
+ * 307-redirects to the bare archive — the cursor page URL is dead for
+ * crawlers and new-tab opens. Coerce any finite scalar to its string form so
+ * a numeric-looking cursor survives instead of being silently stripped.
+ */
+export function cursorSearchValue(raw: unknown): string | undefined {
+  if (typeof raw === 'string') return raw.trim() || undefined;
+  if (typeof raw === 'number' && Number.isFinite(raw)) return String(raw);
+  return undefined;
+}
 
 /** Coerce a raw `?page=` search value to a valid 1-based page number. */
 export function parsePageParam(raw: unknown): number {
@@ -43,6 +64,15 @@ export function listingPageHref(
  * SDK endpoint is cursor-only and rejects `offset`). Sets the opaque `cursor`
  * and drops the page-based `?page=` param so the two pagination models never
  * mix in one URL.
+ *
+ * The search string is (de)serialised with the router's OWN default codec, not
+ * `URLSearchParams`. That matters for numeric-looking cursors: the router
+ * encodes the string `"2"` as `cursor=%222%22` (JSON-quoted) and re-parses it
+ * back to the string `"2"`. A plain `URLSearchParams` `cursor=2` re-parses as
+ * the number `2`, fails the string guard, and 307-redirects the page URL to
+ * the bare archive — a dead crawlable href. Emitting the router-canonical form
+ * makes a direct GET of the Next link SSR the cursor page with a 200, no
+ * redirect hop.
  */
 export function cursorPageHref(
   currentHref: string,
@@ -50,13 +80,14 @@ export function cursorPageHref(
   transientParams: string[] = [],
 ): string {
   const url = new URL(currentHref, 'https://board.local');
+  const search = defaultParseSearch(url.search) as Record<string, unknown>;
 
-  for (const param of transientParams) url.searchParams.delete(param);
+  for (const param of transientParams) delete search[param];
 
-  url.searchParams.delete('page');
-  url.searchParams.set('cursor', cursor);
+  delete search.page;
+  search.cursor = cursor;
 
-  return `${url.pathname}${url.search}${url.hash}`;
+  return `${url.pathname}${defaultStringifySearch(search)}${url.hash}`;
 }
 
 /** Zero-based API offset for a 1-based page. */

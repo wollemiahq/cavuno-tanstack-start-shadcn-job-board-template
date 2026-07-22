@@ -21,7 +21,7 @@ import { JsonLd } from '@/components/json-ld';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { initialsOf } from '@/lib/initials';
 import { BLOG_PAGE_SIZE } from '@/lib/blog';
-import { cursorPageHref } from '@/lib/pagination';
+import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
 import { headTitle } from '@/lib/page-title';
 import { m } from '../paraglide/messages';
 import { getBlogAuthor, getSeoBase, listBlogPosts } from '@/server/queries';
@@ -36,10 +36,7 @@ export const Route = createFileRoute('/blog/author/$authorSlug')({
     <PublicContentPending label={m.publicContent_loadingLabel()} />
   ),
   validateSearch: (search: Record<string, unknown>): BlogAuthorSearch => ({
-    cursor:
-      typeof search.cursor === 'string' && search.cursor
-        ? search.cursor
-        : undefined,
+    cursor: cursorSearchValue(search.cursor),
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ params, deps }) => {

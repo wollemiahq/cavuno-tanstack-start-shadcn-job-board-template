@@ -17,7 +17,7 @@ import { CursorPagination } from '@/components/board/cursor-pagination';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
 import { BLOG_PAGE_SIZE } from '@/lib/blog';
-import { cursorPageHref } from '@/lib/pagination';
+import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
 import { headTitle } from '@/lib/page-title';
 import { m } from '../paraglide/messages';
 import {
@@ -37,10 +37,7 @@ export const Route = createFileRoute('/blog/tag/$tagSlug')({
     <PublicContentPending label={m.publicContent_loadingLabel()} />
   ),
   validateSearch: (search: Record<string, unknown>): BlogTagSearch => ({
-    cursor:
-      typeof search.cursor === 'string' && search.cursor
-        ? search.cursor
-        : undefined,
+    cursor: cursorSearchValue(search.cursor),
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ params, deps }) => {
