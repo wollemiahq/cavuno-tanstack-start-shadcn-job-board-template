@@ -33,9 +33,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HomeLanding } from './home-landing';
 
-import { makeJobCardVM } from '@/test/fixtures';
-
 import type { JobCardVM } from '@/board/job-view-model';
+import { makeJobCardVM } from '@/test/fixtures';
 import type {
   PublicBlogPostSummary,
   TalentDirectoryEntry,

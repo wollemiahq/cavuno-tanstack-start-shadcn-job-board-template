@@ -1,7 +1,7 @@
+import { describe, expect, it } from 'vitest';
+
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { describe, expect, it } from 'vitest';
 
 /**
  * Test-doctrine gate (AGENTS.md "Tests assert structure, never formatted

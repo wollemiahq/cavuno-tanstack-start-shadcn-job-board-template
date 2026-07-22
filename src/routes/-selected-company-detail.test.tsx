@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
+import { formatRange } from '@cavuno/board/seo';
 import {
   RouterProvider,
   createMemoryHistory,
@@ -10,8 +11,6 @@ import {
 } from '@tanstack/react-router';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-
-import { formatRange } from '@cavuno/board/seo';
 
 import { SelectedCompanyDetail } from './-selected-company-detail';
 
@@ -160,9 +159,7 @@ describe('SelectedCompanyDetail', () => {
     expect(screen.queryByRole('link', { name: 'Role 5' })).toBeNull();
     // Delegation-style: wire data runs the REAL mapper, so the expectation
     // calls the same SDK formatter instead of pinning its output shape.
-    expect(
-      screen.getByText(formatRange('en', 180_000, 240_000)),
-    ).toBeVisible();
+    expect(screen.getByText(formatRange('en', 180_000, 240_000))).toBeVisible();
     expect(screen.getByText('Based on 12 jobs')).toBeVisible();
   });
 
@@ -191,9 +188,7 @@ describe('SelectedCompanyDetail', () => {
     ).toHaveLength(2);
     expect(screen.queryByRole('link', { name: 'View jobs' })).toBeNull();
     expect(screen.getByText('Engineering')).toBeVisible();
-    expect(
-      screen.getByText(formatRange('en', 120_000, 160_000)),
-    ).toBeVisible();
+    expect(screen.getByText(formatRange('en', 120_000, 160_000))).toBeVisible();
     expect(screen.getByText('Based on 5 jobs')).toBeVisible();
   });
 });

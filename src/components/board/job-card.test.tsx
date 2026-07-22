@@ -20,9 +20,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { JobCard } from './job-card';
 
-import { makeJobCardVM } from '@/test/fixtures';
-
 import type { JobCardVM } from '@/board/job-view-model';
+import { makeJobCardVM } from '@/test/fixtures';
 
 afterEach(cleanup);
 
