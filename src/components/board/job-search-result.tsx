@@ -42,7 +42,7 @@ export function JobSearchResult({
                 )}
               </h2>
               {vm.companyName ? (
-                <p className="text-muted-foreground mt-0.5 truncate text-sm">
+                <p className="text-foreground mt-0.5 truncate text-sm font-semibold">
                   {vm.companyName}
                 </p>
               ) : null}

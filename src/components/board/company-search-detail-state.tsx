@@ -37,8 +37,8 @@ function CompanyDetailLoadingHeader({
         name={<Skeleton className="h-5 w-40" />}
         actions={
           <>
-            <Skeleton className="h-9 w-24 rounded-md" />
-            <Skeleton className="h-9 w-28 rounded-md" />
+            <Skeleton className="h-7 w-24" />
+            <Skeleton className="h-7 w-28" />
           </>
         }
       />
@@ -51,15 +51,15 @@ function CompanyDetailLoadingHeader({
       className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-4 p-5 md:p-6"
     >
       <div className="flex min-w-0 items-center gap-3">
-        <Skeleton className="size-12 rounded-xl" />
-        <div className="min-w-0 space-y-2">
+        <Skeleton className="size-10 rounded-full" />
+        <div className="min-w-0 space-y-1">
           <Skeleton className="h-7 w-52" />
-          <Skeleton className="h-5 w-24 rounded-full" />
+          <Skeleton className="h-5 w-24" />
         </div>
       </div>
       <div className="col-start-1 row-start-2 flex items-center gap-2">
-        <Skeleton className="h-9 w-24 rounded-md" />
-        <Skeleton className="h-9 w-28 rounded-md" />
+        <Skeleton className="h-8 w-24" />
+        <Skeleton className="h-8 w-28" />
       </div>
     </div>
   );
@@ -90,7 +90,7 @@ function CompanyDetailLoadingSkeleton({
         <section className="space-y-3" aria-hidden="true">
           <div className="flex items-center justify-between gap-4">
             <Skeleton className="h-5 w-24" />
-            <Skeleton className="h-8 w-28 rounded-md" />
+            <Skeleton className="h-7 w-28" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {Array.from({ length: 4 }, (_, index) => (
@@ -115,7 +115,7 @@ function CompanyDetailLoadingSkeleton({
         <section className="space-y-3" aria-hidden="true">
           <div className="flex items-center justify-between gap-4">
             <Skeleton className="h-5 w-20" />
-            <Skeleton className="h-8 w-28 rounded-md" />
+            <Skeleton className="h-7 w-28" />
           </div>
           <div className="border-border space-y-3 rounded-xl border p-4">
             <Skeleton className="h-4 w-28" />
@@ -145,7 +145,7 @@ export function CompanySearchDetailState({
 
   if (status === 'error' && !detail) {
     return (
-      <Empty role="alert" className="min-h-[28rem]">
+      <Empty role="alert" className="min-h-(--detail-pane-min-h)">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <AlertCircle aria-hidden="true" />

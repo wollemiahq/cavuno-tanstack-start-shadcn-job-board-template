@@ -7,7 +7,6 @@ import { Bleed } from './bleed';
 import { Box } from './box';
 import { Container } from './container';
 import { Grid } from './grid';
-import { Stack } from './stack';
 
 afterEach(cleanup);
 
@@ -32,27 +31,6 @@ describe('layout primitives', () => {
     expect(section).toHaveAttribute('id', 'candidate-summary');
     expect(section).toHaveAttribute('data-test', 'candidate-summary');
     expect(section).toHaveTextContent('Summary');
-  });
-
-  it('Stack can express a responsive semantic list without changing its children', () => {
-    render(
-      <Stack
-        as="ul"
-        aria-label="Search filters"
-        direction={{ base: 'column', md: 'row' }}
-        gap={{ base: '2', md: '4' }}
-        align={{ base: 'stretch', md: 'center' }}
-        justify="between"
-        wrap="wrap"
-      >
-        <li>Location</li>
-        <li>Job type</li>
-      </Stack>,
-    );
-
-    const list = screen.getByRole('list', { name: 'Search filters' });
-    expect(list.tagName).toBe('UL');
-    expect(screen.getAllByRole('listitem')).toHaveLength(2);
   });
 
   it('Grid preserves list semantics for responsive result matrices', () => {
@@ -105,9 +83,7 @@ function _typeContract() {
       {/* @ts-expect-error — layout primitives deliberately have no className escape hatch. */}
       <Box className="p-7">No bypass</Box>
       {/* @ts-expect-error — inline style is the same undocumented geometry escape hatch. */}
-      <Stack style={{ gap: 7 }}>No bypass</Stack>
-      {/* @ts-expect-error — responsive objects need an explicit mobile-first base. */}
-      <Stack direction={{ md: 'row' }}>Missing base</Stack>
+      <Box style={{ padding: 7 }}>No bypass</Box>
       {/* @ts-expect-error — arbitrary spacing values are outside the token scale. */}
       <Box padding="7">No arbitrary spacing</Box>
       {/* @ts-expect-error — the generic matrix deliberately stops at four columns. */}

@@ -24,6 +24,7 @@ vi.mock('../server/queries', () => ({
   getJob,
   getSeoBase,
   getSimilarJobs,
+  resolveTaxonomyChips: vi.fn().mockResolvedValue({}),
   subscribeJobAlert: vi.fn(),
 }));
 

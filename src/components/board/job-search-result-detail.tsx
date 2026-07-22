@@ -128,7 +128,7 @@ function JobDetailHeadingSkeleton() {
     >
       <div
         data-slot="job-detail-company-row"
-        className="flex min-h-10 items-center gap-3"
+        className="flex min-h-10 min-w-0 items-center gap-2"
       >
         <Skeleton className="size-10 rounded-full" />
         <Skeleton className="h-5 w-36" />
@@ -360,7 +360,7 @@ export function JobSearchResultDetailPending({
   loadingLabel: string;
 }) {
   return (
-    <article aria-busy="true" className="min-h-[28rem] max-w-full min-w-0">
+    <article aria-busy="true" className="min-h-(--detail-pane-min-h) max-w-full min-w-0">
       <span className="sr-only" role="status">
         {loadingLabel}
       </span>

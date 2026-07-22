@@ -15,10 +15,14 @@ import {
   screen,
   within,
 } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CompanySearchPage } from './company-search-page';
 
+import { getCompanySearchLabels } from '@/board/company-search-labels';
+import { toCompanyCardVM } from '@/board/company-view-model';
+import { m } from '@/paraglide/messages';
 import type { PublicCompany } from '@cavuno/board';
 
 const company = {
@@ -33,6 +37,10 @@ const company = {
   publishedJobCount: 3,
   links: { public: 'https://jobs.example/companies/acme' },
 } as PublicCompany;
+
+// The page now takes resolved `CompanyCardVM[]`; the test maps the wire
+// fixture exactly as the route pane does.
+const companyVm = toCompanyCardVM(company, getCompanySearchLabels());
 
 beforeEach(() => {
   Object.defineProperty(window, 'matchMedia', {
@@ -55,7 +63,7 @@ describe('CompanySearchPage — search results pattern', () => {
       path: '/',
       component: () => (
         <CompanySearchPage
-          companies={[company]}
+          companies={[companyVm]}
           count={1}
           page={1}
           pageSize={24}
@@ -131,23 +139,26 @@ describe('CompanySearchPage — search results pattern', () => {
     expect(detail).toHaveTextContent('Selected company details');
   });
 
-  it('uses cursor load-more for company-name search instead of page-number pagination', async () => {
-    const onLoadMore = vi.fn();
+  it('uses a cursor Previous/Next pager for company-name search instead of numbered pages', async () => {
+    const onNextResults = vi.fn();
+    const onPreviousResults = vi.fn();
     const rootRoute = createRootRoute();
     const indexRoute = createRoute({
       getParentRoute: () => rootRoute,
       path: '/',
       component: () => (
         <CompanySearchPage
-          companies={[company]}
+          companies={[companyVm]}
           count={30}
           page={1}
           pageSize={24}
           query="acme"
           markets={[]}
           onPageChange={vi.fn()}
-          hasMore
-          onLoadMore={onLoadMore}
+          hasPreviousResults
+          nextCursor="cursor-page-2"
+          onPreviousResults={onPreviousResults}
+          onNextResults={onNextResults}
           onSelectedCompanyReplace={vi.fn()}
           onSelectedCompanyPush={vi.fn()}
           detail={<p>Selected company details</p>}
@@ -160,14 +171,23 @@ describe('CompanySearchPage — search results pattern', () => {
     });
     render(<RouterProvider router={router} />);
 
-    fireEvent.click(
-      await screen.findByRole('button', { name: 'Next results' }),
-    );
-
-    expect(onLoadMore).toHaveBeenCalledTimes(1);
+    // companies.search is cursor-only (no offset), so free-text search paginates
+    // by opaque cursor: a crawlable next anchor, never numbered page links.
+    const next = await screen.findByRole('link', {
+      name: m.pagination_nextPageLabel(),
+    });
+    expect(next).toHaveAttribute('href', '/?cursor=cursor-page-2');
     expect(
-      screen.queryByRole('navigation', { name: /pagination/i }),
-    ).not.toBeInTheDocument();
+      screen.queryByRole('link', { name: `${m.pagination_ariaLabel()} 2` }),
+    ).toBeNull();
+
+    fireEvent.click(next);
+    expect(onNextResults).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(
+      screen.getByRole('link', { name: m.pagination_previousPageLabel() }),
+    );
+    expect(onPreviousResults).toHaveBeenCalledTimes(1);
   });
 
   it('keeps a no-match search inside the sponsored workspace and offers a primary reset', async () => {
@@ -213,5 +233,72 @@ describe('CompanySearchPage — search results pattern', () => {
       screen.getByRole('complementary', { name: 'Sponsored end' }),
     ).toHaveTextContent('End creative');
     expect(screen.queryByText('Unused company detail')).toBeNull();
+  });
+});
+
+describe('CompanySearchPage — arrival scroll', () => {
+  // jsdom ships no scrollIntoView; the hook guards on its presence, so provide
+  // a spy to observe the arrival alignment.
+  const scrollIntoView = vi.fn();
+  beforeEach(() => {
+    scrollIntoView.mockClear();
+    Element.prototype.scrollIntoView = scrollIntoView;
+  });
+
+  function renderArrival(initialSelected?: string) {
+    function ArrivalHarness() {
+      const [selected, setSelected] = useState(initialSelected);
+      return (
+        <>
+          <button type="button" onClick={() => setSelected('acme')}>
+            select-acme
+          </button>
+          <CompanySearchPage
+            companies={[companyVm]}
+            count={1}
+            page={1}
+            pageSize={24}
+            markets={[]}
+            onPageChange={vi.fn()}
+            selectedCompany={selected}
+            onSelectedCompanyReplace={vi.fn()}
+            onSelectedCompanyPush={vi.fn()}
+            detail={<p>Selected company details</p>}
+          />
+        </>
+      );
+    }
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: ArrivalHarness,
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    return render(<RouterProvider router={router} />);
+  }
+
+  it('scrolls the URL-selected row to the top on arrival', async () => {
+    renderArrival('acme');
+
+    await screen.findByRole('main');
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+    const target = scrollIntoView.mock.instances[0] as HTMLElement;
+    expect(target.getAttribute('data-result-id')).toBe('acme');
+  });
+
+  it('does not scroll a manual selection made after arrival', async () => {
+    renderArrival(undefined);
+
+    await screen.findByRole('main');
+    expect(scrollIntoView).not.toHaveBeenCalled();
+
+    // A post-mount selection (as from an in-page click) must not yank the list.
+    fireEvent.click(screen.getByRole('button', { name: 'select-acme' }));
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 });

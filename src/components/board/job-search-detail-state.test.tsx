@@ -6,43 +6,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { JobSearchDetailState } from './job-search-detail-state';
 
-import type { JobDetailVM } from '@/board/job-detail-view-model';
-
-const vm: JobDetailVM = {
-  breadcrumbs: [],
-  breadcrumbAriaLabel: 'Breadcrumbs',
-  title: 'Previous job',
-  companyName: 'Acme',
-  companyLogoUrl: null,
-  companyAvatarName: 'Acme',
-  sector: null,
-  locationLabel: 'Sydney',
-  workplaceLabel: 'On-site',
-  employmentTypeLabel: null,
-  seniorityLabel: null,
-  salaryLabel: null,
-  publishedLabel: null,
-  canonicalUrl: null,
-  detailHref: '/companies/acme/jobs/previous-job',
-  descriptionHtml: '<p>Previous description.</p>',
-  noDescriptionText: 'No description.',
-  facts: [],
-  categoryChips: [],
-  skillChips: [],
-  categoriesHeading: 'Categories',
-  skillsHeading: 'Skills',
-  customFields: [],
-  additionalDetailsHeading: 'Additional details',
-  company: null,
-  similar: [],
-  similarJobsHeading: 'Similar jobs',
-};
-
 afterEach(cleanup);
 
+// The vm → JobSearchResultDetail assembly (incl. the inert-on-error apply/save
+// slots) moved to the route pane; those contracts live in
+// `-selected-job-detail.test.tsx` now. This file pins the dumb wrapper: the
+// idle / loading / error chrome around a prebuilt `detail`.
 describe('JobSearchDetailState', () => {
-  it('announces the first detail load', () => {
-    render(
+  it('announces the first detail load without marking the live region busy', () => {
+    const { container } = render(
       <JobSearchDetailState
         status="loading"
         loadingLabel="Loading job details…"
@@ -52,10 +24,11 @@ describe('JobSearchDetailState', () => {
       />,
     );
 
+    // The pending skeleton carries aria-busy on its article; the polite status
+    // region itself must not be busy (it would be announced as such otherwise).
     expect(screen.getByRole('status')).not.toHaveAttribute('aria-busy');
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Loading job details…',
-    );
+    expect(screen.getByRole('status')).toHaveTextContent('Loading job details…');
+    expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
   });
 
   it('renders no loading state when there is no selected job', () => {
@@ -73,43 +46,39 @@ describe('JobSearchDetailState', () => {
     expect(screen.queryByRole('status')).toBeNull();
   });
 
-  it('removes changing content and actions while the next job loads', () => {
+  it('replaces a preserved detail with the pending skeleton while the next job loads', () => {
     render(
       <JobSearchDetailState
         status="loading"
-        vm={vm}
+        detail={<article aria-label="Previous job">Previous description.</article>}
         loadingLabel="Loading job details…"
         errorTitle="Could not load job"
         retryLabel="Retry"
         onRetry={vi.fn()}
-        applySlot={<button>Apply previous job</button>}
-        saveSlot={<button>Save previous job</button>}
       />,
     );
 
+    expect(screen.queryByRole('article', { name: 'Previous job' })).toBeNull();
     expect(screen.queryByText('Previous description.')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Apply' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
-    expect(screen.queryByText('Apply previous job')).toBeNull();
-    expect(screen.queryByText('Save previous job')).toBeNull();
     expect(screen.getAllByRole('status')).toHaveLength(1);
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Loading job details…',
-    );
+    expect(screen.getByRole('status')).toHaveTextContent('Loading job details…');
   });
 
-  it('keeps the previous job visible behind an owned retry alert when a transition fails', () => {
+  it('keeps the preserved detail visible behind an owned retry alert when a transition fails', () => {
     const onRetry = vi.fn();
     render(
       <JobSearchDetailState
         status="error"
-        vm={vm}
+        detail={
+          <article aria-label="Previous job">
+            <h2>Previous job</h2>
+            Previous description.
+          </article>
+        }
         loadingLabel="Loading job details…"
         errorTitle="Could not load job"
         retryLabel="Retry"
         onRetry={onRetry}
-        applySlot={<button>Apply previous job</button>}
-        saveSlot={<button>Save previous job</button>}
       />,
     );
 
@@ -117,22 +86,12 @@ describe('JobSearchDetailState', () => {
       screen.getByRole('heading', { level: 2, name: 'Previous job' }),
     ).toBeVisible();
     expect(screen.getByRole('alert')).toHaveTextContent('Could not load job');
-    expect(
-      screen
-        .getByRole('button', { name: 'Apply previous job', hidden: true })
-        .closest('[data-inert="true"]'),
-    ).not.toBeNull();
-    expect(
-      screen
-        .getByRole('button', { name: 'Save previous job', hidden: true })
-        .closest('[data-inert="true"]'),
-    ).not.toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
-  it('offers an explicit retry for a recoverable detail error', () => {
+  it('offers an explicit retry for a recoverable first-load error', () => {
     const onRetry = vi.fn();
     render(
       <JobSearchDetailState

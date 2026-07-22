@@ -26,6 +26,7 @@ import { SearchResultDetail } from '@/components/search-results/search-results';
 
 const vm: CompanyDetailVM = {
   id: 'company-1',
+  slug: 'acme-research',
   name: 'Acme Research',
   logoUrl: null,
   avatarName: 'Acme Research',
@@ -58,11 +59,9 @@ const jobPreviews: JobCardVM[] = Array.from({ length: 5 }, (_, index) => ({
   companySlug: 'acme-research',
   jobSlug: `role-${index + 1}`,
   detailHref: `/companies/acme-research/jobs/role-${index + 1}`,
-  hasDetailLink: true,
   companyName: 'Acme Research',
   companyLogoUrl: null,
   companyAvatarName: 'Acme Research',
-  sector: 'Engineering',
   compLine: '$180K – $240K · Sydney (Hybrid)',
   salaryLabel: '$180K – $240K',
   locationLabel: 'Sydney (Hybrid)',

@@ -10,6 +10,7 @@ import type { CompanyCardVM } from '@/board/company-view-model';
 
 const vm: CompanyCardVM = {
   id: 'company-1',
+  slug: 'acme-research',
   name: 'Acme Research',
   logoUrl: 'https://cdn.example/acme.svg',
   avatarName: 'Acme Research',

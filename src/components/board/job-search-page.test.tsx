@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { JobSearchPage } from './job-search-page';
 
+import { toJobCardVM } from '@/board/job-view-model';
 import type { PublicJobCard } from '@cavuno/board';
 
 const job = {
@@ -35,6 +36,10 @@ const job = {
   skills: [],
 } as unknown as PublicJobCard;
 
+// The mapping seam now lives in the loader/pane, so the page takes resolved
+// `JobCardVM[]`; the test maps the wire fixture the same way a route would.
+const jobVm = toJobCardVM(job, 'en');
+
 beforeEach(() => {
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
@@ -56,7 +61,7 @@ describe('JobSearchPage — search results pattern', () => {
       path: '/',
       component: () => (
         <JobSearchPage
-          jobs={[job]}
+          jobs={[jobVm]}
           count={12}
           page={1}
           pageSize={20}
@@ -226,7 +231,7 @@ describe('JobSearchPage — search results pattern', () => {
       path: '/',
       component: () => (
         <JobSearchPage
-          jobs={[job]}
+          jobs={[jobVm]}
           count={1}
           gatedCount={24}
           page={1}
@@ -262,8 +267,10 @@ describe('JobSearchPage — search results pattern', () => {
     expect(alert).toHaveTextContent(
       '24 more roles are available with full access.',
     );
+    // The unlock action links to the paywall and carries the originating path
+    // as `returnTo`, so the buyer is returned here once the grant is confirmed.
     expect(
       within(alert).getByRole('link', { name: 'Unlock more roles' }),
-    ).toHaveAttribute('href', '/account/access');
+    ).toHaveAttribute('href', '/account/access?returnTo=%2F');
   });
 });

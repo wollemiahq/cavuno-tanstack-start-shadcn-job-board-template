@@ -6,10 +6,10 @@ import { Building2 } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
-import { getCompanySearchLabels } from '@/board/company-search-labels';
-import { toCompanyCardVM } from '@/board/company-view-model';
+import type { CompanyCardVM } from '@/board/company-view-model';
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
 import { CompanySearchResult } from '@/components/board/company-search-result';
+import { CursorPagination } from '@/components/board/cursor-pagination';
 import { ListingResultsHeader } from '@/components/board/listing-page-header';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { Page } from '@/components/layout/page';
@@ -20,7 +20,6 @@ import {
   SearchResultsList,
 } from '@/components/search-results/search-results';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { buttonVariants } from '@/components/ui/button';
 import {
   Empty,
@@ -31,8 +30,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
-import { listingPageHref } from '@/lib/pagination';
-import type { PublicCompany } from '@cavuno/board';
+import { cursorPageHref, listingPageHref } from '@/lib/pagination';
 
 type AdPlacement = {
   label: string;
@@ -49,8 +47,10 @@ export function CompanySearchPage({
   query,
   markets,
   onPageChange,
-  hasMore = false,
-  onLoadMore,
+  hasPreviousResults = false,
+  nextCursor,
+  onPreviousResults,
+  onNextResults,
   selectedCompany,
   onSelectedCompanyReplace,
   onSelectedCompanyPush,
@@ -58,7 +58,7 @@ export function CompanySearchPage({
   startAd,
   endAd,
 }: {
-  companies: PublicCompany[];
+  companies: CompanyCardVM[];
   count: number;
   page: number;
   pageSize: number;
@@ -67,8 +67,12 @@ export function CompanySearchPage({
   query?: string;
   markets: Array<{ slug: string; name: string }>;
   onPageChange: (page: number) => void;
-  hasMore?: boolean;
-  onLoadMore?: () => void;
+  /** Cursor (free-text search) pagination — a previous cursor page exists. */
+  hasPreviousResults?: boolean;
+  /** The opaque forward cursor for the next search page, or null on the last. */
+  nextCursor?: string | null;
+  onPreviousResults?: () => void;
+  onNextResults?: () => void;
   selectedCompany?: string;
   onSelectedCompanyReplace: (companySlug: string) => void;
   onSelectedCompanyPush: (companySlug: string) => void;
@@ -77,12 +81,9 @@ export function CompanySearchPage({
   endAd?: AdPlacement;
 }) {
   const currentHref = useLocation({ select: (location) => location.href });
-  const labels = getCompanySearchLabels();
   const hasActiveSearch = Boolean(query || breadcrumb);
-  const companyVms = companies.map((company) =>
-    toCompanyCardVM(company, labels),
-  );
-  const companySlugs = companies.map((company) => company.slug);
+  const companyVms = companies;
+  const companySlugs = companyVms.map((company) => company.slug);
   const selection = useSearchSelection({
     selectedId: selectedCompany,
     resultIds: companySlugs,
@@ -170,6 +171,7 @@ export function CompanySearchPage({
               }
               list={
                 <SearchResultsList
+                  ref={selection.listRef}
                   label={m.companySearch_resultsRegionLabel()}
                   scrollRestorationId="companies-search-results"
                 >
@@ -181,30 +183,33 @@ export function CompanySearchPage({
                       {companyVms.map((vm, index) => {
                         const companySlug = companySlugs[index]!;
                         return (
-                          <CompanySearchResult
-                            key={vm.id}
-                            vm={vm}
-                            selected={companySlug === selection.selectedId}
-                            onActivate={(event) =>
-                              selection.onResultActivate(event, companySlug)
-                            }
-                          />
+                          <div key={vm.id} data-result-id={companySlug}>
+                            <CompanySearchResult
+                              vm={vm}
+                              selected={companySlug === selection.selectedId}
+                              onActivate={(event) =>
+                                selection.onResultActivate(event, companySlug)
+                              }
+                            />
+                          </div>
                         );
                       })}
                     </div>
 
                     {query ? (
-                      hasMore && onLoadMore ? (
-                        <div className="flex justify-center">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={onLoadMore}
-                          >
-                            {m.companiesIndex_nextResultsLabel()}
-                          </Button>
-                        </div>
-                      ) : null
+                      <CursorPagination
+                        hasPrevious={hasPreviousResults}
+                        hasNext={Boolean(nextCursor)}
+                        nextHref={
+                          nextCursor
+                            ? cursorPageHref(currentHref, nextCursor, [
+                                'selectedCompany',
+                              ])
+                            : undefined
+                        }
+                        onPrevious={onPreviousResults}
+                        onNext={onNextResults}
+                      />
                     ) : (
                       <ListingPagination
                         compact

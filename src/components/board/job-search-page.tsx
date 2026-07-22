@@ -5,7 +5,6 @@ import { Search } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
-import { toJobCardVM } from '@/board/job-view-model';
 import {
   relatedSearchesTitle,
   relatedSearchesToChips,
@@ -39,7 +38,8 @@ import {
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { listingPageHref } from '@/lib/pagination';
-import type { PublicJobCard, RelatedSearch } from '@cavuno/board';
+import type { JobCardVM } from '@/board/job-view-model';
+import type { RelatedSearch } from '@cavuno/board';
 import type { ListingFilters } from '@cavuno/board/filters';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
@@ -111,7 +111,7 @@ export function JobSearchPage({
   viewer,
   onSaveJob,
 }: {
-  jobs: PublicJobCard[];
+  jobs: JobCardVM[];
   count?: number;
   /** Honest count of paywalled results withheld from this viewer. */
   gatedCount?: number;
@@ -135,7 +135,7 @@ export function JobSearchPage({
   onSaveJob: (jobId: string) => Promise<void>;
 }) {
   const returnTo = useLocation({ select: (location) => location.href });
-  const jobVms = jobs.map((job) => toJobCardVM(job, language, labels));
+  const jobVms = jobs;
   const selectableSlugs = jobVms.flatMap((vm) =>
     vm.jobSlug && vm.detailHref ? [vm.jobSlug] : [],
   );
@@ -222,6 +222,7 @@ export function JobSearchPage({
               }
               list={
                 <SearchResultsList
+                  ref={selection.listRef}
                   label={m.jobSearch_resultsRegionLabel()}
                   scrollRestorationId="jobs-search-results"
                 >
@@ -231,8 +232,8 @@ export function JobSearchPage({
 
                     <div className="space-y-3">
                       {jobVms.map((vm) => (
+                        <div key={vm.id} data-result-id={vm.jobSlug ?? undefined}>
                         <JobSearchResult
-                          key={vm.id}
                           vm={vm}
                           selected={vm.jobSlug === selection.selectedId}
                           onActivate={
@@ -258,6 +259,7 @@ export function JobSearchPage({
                             />
                           }
                         />
+                        </div>
                       ))}
                     </div>
 
@@ -273,7 +275,7 @@ export function JobSearchPage({
                         </AlertDescription>
                         <AlertAction className="static">
                           <a
-                            href="/account/access"
+                            href={`/account/access?${new URLSearchParams({ returnTo }).toString()}`}
                             className={buttonVariants({ size: 'sm' })}
                           >
                             {m.jobSearch_unlockMoreLabel()}
