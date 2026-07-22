@@ -27,6 +27,9 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../paraglide/messages';
+import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
+
 // Header imports the signed-in Messages link even for this anonymous public
 // shell suite. Stub its Board API boundary so jsdom never resolves the
 // Cloudflare Workers environment module.
@@ -70,6 +73,7 @@ function renderHeader({
   features = allFeatures,
   talentDirectoryVisibility = features.talentDirectory ? 'public' : 'off',
   user = null,
+  hasAccessGrant = false,
   locationSuggestions = [],
   keywordSuggestions = [],
   companyMarketSuggestions = [],
@@ -79,6 +83,7 @@ function renderHeader({
   features?: HeaderFeatures;
   talentDirectoryVisibility?: TalentDirectoryVisibility;
   user?: React.ComponentProps<typeof Header>['user'];
+  hasAccessGrant?: boolean;
   locationSuggestions?: Array<{
     id: string;
     slug: string;
@@ -170,6 +175,7 @@ function renderHeader({
               user={user}
               language="en"
               features={features}
+              hasAccessGrant={hasAccessGrant}
               talentDirectoryVisibility={talentDirectoryVisibility}
               search={{
                 ...initialSearch,
@@ -237,20 +243,20 @@ describe('Header — feature-gated public collections', () => {
       },
     });
 
-    expect(await screen.findByRole('link', { name: 'Jobs' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Companies' })).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'Blog' })).toBeNull();
-    expect(screen.queryByRole('link', { name: 'Talent' })).toBeNull();
+    expect(await screen.findByRole('link', { name: m.nav_home() })).toBeTruthy();
+    expect(screen.getByRole('link', { name: m.nav_companies() })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: m.nav_blog() })).toBeNull();
+    expect(screen.queryByRole('link', { name: m.nav_talent() })).toBeNull();
   });
 
   it('links Blog and Talent to their collection pages when enabled', async () => {
     renderHeader();
 
     expect(
-      (await screen.findByRole('link', { name: 'Blog' })).getAttribute('href'),
+      (await screen.findByRole('link', { name: m.nav_blog() })).getAttribute('href'),
     ).toBe('/blog');
     expect(
-      screen.getByRole('link', { name: 'Talent' }).getAttribute('href'),
+      screen.getByRole('link', { name: m.nav_talent() }).getAttribute('href'),
     ).toBe('/talent');
   });
 
@@ -262,13 +268,13 @@ describe('Header — feature-gated public collections', () => {
     });
 
     expect(
-      (await screen.findByRole('link', { name: 'Talent' })).getAttribute(
+      (await screen.findByRole('link', { name: m.nav_talent() })).getAttribute(
         'href',
       ),
     ).toBe('/talent');
     expect(screen.getByLabelText(/keyword/i)).toHaveAttribute(
       'placeholder',
-      'Search candidates…',
+      m.talentDirectory_searchPlaceholder(),
     );
   });
 });
@@ -284,10 +290,10 @@ describe('Header — role and public-posting gates', () => {
       },
     });
 
-    await screen.findByRole('link', { name: 'Jobs' });
-    expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
-    expect(screen.queryByRole('link', { name: 'Sign up' })).toBeNull();
-    expect(screen.queryByRole('link', { name: 'Post a job' })).toBeNull();
+    await screen.findByRole('link', { name: m.nav_home() });
+    expect(screen.queryByRole('link', { name: m.siteHeader_signInLabel() })).toBeNull();
+    expect(screen.queryByRole('link', { name: m.siteHeader_signUpLabel() })).toBeNull();
+    expect(screen.queryByRole('link', { name: m.siteHeader_postJobLabel() })).toBeNull();
   });
 
   it.each([
@@ -322,12 +328,12 @@ describe('Header — role and public-posting gates', () => {
       });
 
       expect(
-        (await screen.findByRole('link', { name: 'Sign up' })).getAttribute(
+        (await screen.findByRole('link', { name: m.siteHeader_signUpLabel() })).getAttribute(
           'href',
         ),
       ).toBe(href);
       expect(
-        screen.getByRole('link', { name: 'Sign in' }).getAttribute('href'),
+        screen.getByRole('link', { name: m.siteHeader_signInLabel() }).getAttribute('href'),
       ).toBe('/auth/sign-in');
     },
   );
@@ -367,12 +373,12 @@ describe('Header — role and public-posting gates', () => {
     });
 
     expect(
-      (await screen.findByRole('link', { name: 'Post a job' })).getAttribute(
+      (await screen.findByRole('link', { name: m.siteHeader_postJobLabel() })).getAttribute(
         'href',
       ),
     ).toBe('/post');
-    expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
-    expect(screen.queryByRole('link', { name: 'Sign up' })).toBeNull();
+    expect(screen.queryByRole('link', { name: m.siteHeader_signInLabel() })).toBeNull();
+    expect(screen.queryByRole('link', { name: m.siteHeader_signUpLabel() })).toBeNull();
   });
 });
 
@@ -389,10 +395,10 @@ describe('Header — native-applications account gating', () => {
   it('shows the Applications account entry when native applications are on', async () => {
     renderHeader({ user: signedInUser });
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Account' }));
+    fireEvent.click(await screen.findByRole('button', { name: m.siteHeader_accountLabel() }));
 
     expect(
-      await screen.findByRole('menuitem', { name: 'Applications' }),
+      await screen.findByRole('menuitem', { name: m.accountShell_applicationsNav() }),
     ).toBeTruthy();
   });
 
@@ -402,15 +408,65 @@ describe('Header — native-applications account gating', () => {
       features: { ...allFeatures, nativeApplications: false },
     });
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Account' }));
+    fireEvent.click(await screen.findByRole('button', { name: m.siteHeader_accountLabel() }));
 
     // The menu is open (a sibling item resolves) but Applications is absent.
     expect(
-      await screen.findByRole('menuitem', { name: 'Saved jobs' }),
+      await screen.findByRole('menuitem', { name: m.accountShell_savedJobsNav() }),
     ).toBeTruthy();
     expect(
-      screen.queryByRole('menuitem', { name: 'Applications' }),
+      screen.queryByRole('menuitem', { name: m.accountShell_applicationsNav() }),
     ).toBeNull();
+  });
+});
+
+describe('Header — subscription entry gating', () => {
+  const signedInUser = {
+    id: 'user-1',
+    object: 'board_user',
+    role: 'candidate',
+    email: 'ada@example.com',
+    displayName: 'Ada Lovelace',
+    emailVerified: true,
+  } as const;
+
+  it('shows the Subscription account entry when the viewer holds an active grant', async () => {
+    renderHeader({ user: signedInUser, hasAccessGrant: true });
+
+    fireEvent.click(await screen.findByRole('button', { name: m.siteHeader_accountLabel() }));
+
+    const subscription = await screen.findByRole('menuitem', {
+      name: m.accountShell_subscriptionNav(),
+    });
+    expect(subscription).toHaveAttribute('href', '/account/access');
+  });
+
+  it('hides the Subscription account entry for a signed-in viewer without a grant', async () => {
+    // A non-subscriber reaches the paywall via the gated-listing teaser, not
+    // this menu — the account entry would advertise a page of no use to them.
+    renderHeader({ user: signedInUser, hasAccessGrant: false });
+
+    fireEvent.click(await screen.findByRole('button', { name: m.siteHeader_accountLabel() }));
+
+    // The menu is open (a sibling item resolves) but Subscription is absent.
+    expect(
+      await screen.findByRole('menuitem', { name: m.accountShell_savedJobsNav() }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('menuitem', { name: m.accountShell_subscriptionNav() }),
+    ).toBeNull();
+  });
+
+  it('gates the loader flag on the candidate-paywall feature so a paywall-off board never shows it', () => {
+    // The Header receives a single resolved boolean; the "paywall off ⇒ hidden"
+    // half of the contract lives in the root loader's derivation. Pin the
+    // behavior of that pure gate (used by __root) rather than its source text:
+    // a paywall-off board discards the grant, so even a grant-holder is hidden.
+    expect(resolveSubscriptionEntryVisible(false, true)).toBe(false);
+    expect(resolveSubscriptionEntryVisible(false, false)).toBe(false);
+    expect(resolveSubscriptionEntryVisible(true, false)).toBe(false);
+    // Only a paywall board with an actual grant surfaces the entry.
+    expect(resolveSubscriptionEntryVisible(true, true)).toBe(true);
   });
 });
 
@@ -428,7 +484,7 @@ describe('Header — mobile navigation disclosure', () => {
     fireEvent.click(toggle);
 
     const dialog = await screen.findByRole('dialog', {
-      name: 'Primary navigation',
+      name: m.siteHeader_primaryNavigationAriaLabel(),
     });
     expect(toggle.closest('[aria-hidden="true"]')).not.toBeNull();
     await waitFor(() => expect(document.activeElement).not.toBe(toggle));
@@ -437,7 +493,7 @@ describe('Header — mobile navigation disclosure', () => {
 
     await waitFor(() =>
       expect(
-        screen.queryByRole('dialog', { name: 'Primary navigation' }),
+        screen.queryByRole('dialog', { name: m.siteHeader_primaryNavigationAriaLabel() }),
       ).toBeNull(),
     );
     expect(toggle).toHaveFocus();
@@ -452,19 +508,19 @@ describe('Header — mobile navigation disclosure', () => {
     fireEvent.click(toggle);
 
     const mobileMenu = await screen.findByRole('dialog', {
-      name: 'Primary navigation',
+      name: m.siteHeader_primaryNavigationAriaLabel(),
     });
 
     const actions = mobileMenu.querySelector<HTMLElement>(
       '[data-test="header-actions"]',
     );
     if (!actions) throw new Error('Expected header actions');
-    const signIn = within(actions).getByRole('link', { name: 'Sign in' });
-    const signUp = within(actions).getByRole('link', { name: 'Sign up' });
+    const signIn = within(actions).getByRole('link', { name: m.siteHeader_signInLabel() });
+    const signUp = within(actions).getByRole('link', { name: m.siteHeader_signUpLabel() });
     expect(signIn).toHaveAttribute('href', '/auth/sign-in');
     expect(signUp).toHaveAttribute('href', '/auth/join');
     expect(
-      within(mobileMenu).getByRole('link', { name: 'Post a job' }),
+      within(mobileMenu).getByRole('link', { name: m.siteHeader_postJobLabel() }),
     ).toHaveAttribute('href', '/post');
   });
 });
@@ -488,7 +544,7 @@ describe('Header — pathname-scoped submit-only search', () => {
       "[data-test='header-left']",
     );
     const primaryNavigation = screen.getByRole('navigation', {
-      name: 'Primary navigation',
+      name: m.siteHeader_primaryNavigationAriaLabel(),
     });
     const actions = document.querySelector<HTMLElement>(
       "[data-test='header-actions']",
@@ -501,7 +557,7 @@ describe('Header — pathname-scoped submit-only search', () => {
     const search = screen.getByRole('search');
     expect(left).toContainElement(search);
     expect(
-      screen.queryByRole('combobox', { name: 'Search category' }),
+      screen.queryByRole('combobox', { name: m.siteHeader_searchTypeAriaLabel() }),
     ).toBeNull();
     expect(
       left.compareDocumentPosition(primaryNavigation) &

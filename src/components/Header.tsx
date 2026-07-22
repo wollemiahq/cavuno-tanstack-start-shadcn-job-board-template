@@ -73,9 +73,9 @@ import type { BoardUser, CompanyMembership } from '@cavuno/board';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 const navItemClassName =
-  'relative flex min-w-16 flex-col items-center justify-center gap-0.5 border-b-2 border-transparent px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30';
+  'relative flex min-w-16 flex-col items-center justify-center gap-0.5 border-b-2 border-transparent px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50';
 const mobileNavItemClassName =
-  'flex items-center rounded-xl px-4 py-3 text-lg font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30';
+  'flex items-center rounded-xl px-4 py-3 text-lg font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50';
 
 function HeaderSearch({
   search,
@@ -227,12 +227,13 @@ function HeaderSearch({
  */
 function AccountMenu({
   user,
-  candidatePaywall,
+  hasAccessGrant,
   nativeApplications,
   employerCompanies,
 }: {
   user: BoardUser;
-  candidatePaywall: boolean;
+  /** true ⇒ the viewer holds an active access grant; shows "Subscription". */
+  hasAccessGrant: boolean;
   /** false ⇒ the board is external-apply-only; hide the Applications entry. */
   nativeApplications: boolean;
   employerCompanies: CompanyMembership[] | null;
@@ -287,7 +288,7 @@ function AccountMenu({
             {m.accountShell_applicationsNav()}
           </DropdownMenuItem>
         ) : null}
-        {candidatePaywall ? (
+        {hasAccessGrant ? (
           <DropdownMenuItem
             nativeButton={false}
             render={<Link to="/account/access" />}
@@ -377,7 +378,7 @@ export default function Header({
   language,
   labels,
   features,
-  candidatePaywall = false,
+  hasAccessGrant = false,
   employerCompanies = null,
   talentDirectoryVisibility,
   search,
@@ -396,7 +397,7 @@ export default function Header({
     talentDirectory: boolean;
     nativeApplications: boolean;
   };
-  candidatePaywall?: boolean;
+  hasAccessGrant?: boolean;
   employerCompanies?: CompanyMembership[] | null;
   talentDirectoryVisibility: 'off' | 'public' | 'employers_only' | null;
   messagesNav?: ReactNode;
@@ -448,7 +449,7 @@ export default function Header({
     <Link
       to="/post"
       className={cn(
-        buttonVariants({ variant: 'outline' }),
+        buttonVariants({ variant: 'outline', size: 'sm' }),
         'hidden xl:inline-flex',
       )}
     >
@@ -463,7 +464,7 @@ export default function Header({
     >
       <Link
         to="/"
-        className="text-foreground focus-visible:ring-ring/30 col-start-1 row-start-1 flex shrink-0 items-center gap-2.5 rounded-xl text-base font-semibold outline-none hover:no-underline focus-visible:ring-3"
+        className="text-foreground focus-visible:ring-ring/50 col-start-1 row-start-1 flex shrink-0 items-center gap-2.5 rounded-xl text-base font-semibold outline-none hover:no-underline focus-visible:ring-2"
       >
         {logoUrl ? (
           <img
@@ -504,7 +505,7 @@ export default function Header({
       {messagesNav}
       <AccountMenu
         user={user}
-        candidatePaywall={candidatePaywall}
+        hasAccessGrant={hasAccessGrant}
         nativeApplications={features.nativeApplications}
         employerCompanies={employerCompanies}
       />
@@ -533,7 +534,7 @@ export default function Header({
       {messagesNav}
       <AccountMenu
         user={user}
-        candidatePaywall={candidatePaywall}
+        hasAccessGrant={hasAccessGrant}
         nativeApplications={features.nativeApplications}
         employerCompanies={employerCompanies}
       />

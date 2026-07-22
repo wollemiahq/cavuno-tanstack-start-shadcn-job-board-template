@@ -17,13 +17,14 @@ import {
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import { toPreviewBoardConfig } from '../lib/preview';
+import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getSessionUser } from '../server/account';
 import { listCompanies } from '../server/employers';
+import { getAccessGrant } from '../server/paywall';
 import { getPreviewState } from '../server/preview';
 import {
-  getAnalyticsConfig,
   getBoardContext,
   getBoardSeo,
   getEmployerOfferGate,
@@ -58,6 +59,7 @@ import {
 import {
   resolveShellBreadcrumb,
   resolveShellBreadcrumbEntities,
+  resolveShellBreadcrumbTrail,
 } from '@/lib/shell-breadcrumb';
 
 declare module '@tanstack/react-router' {
@@ -76,12 +78,11 @@ declare module '@tanstack/react-router' {
 
 export const Route = createRootRoute({
   loader: async () => {
-    const [board, user, seo, analytics, offerGate, employerCompanies, preview] =
+    const [board, user, seo, offerGate, employerCompanies, preview, hasGrant] =
       await Promise.all([
         getBoardContext(),
         getSessionUser(),
         getBoardSeo(),
-        getAnalyticsConfig(),
         getEmployerOfferGate(),
         // Signed-in header menu: the viewer's company workspaces. Signed-out
         // (or any failure) is simply "no companies".
@@ -99,15 +100,30 @@ export const Route = createRootRoute({
           },
           personas: [],
         })),
+        // Candidate paywall: does the signed-in viewer hold an active grant?
+        // `getAccessGrant`'s requireSession middleware throws BEFORE any API
+        // call for anonymous visitors, so the `.catch` yields `false` at zero
+        // cost; a signed-in read is authed and therefore always no-store
+        // (read-cache policy). Runs in the fan-out, never a waterfall.
+        getAccessGrant()
+          .then((grant) => grant.hasAccess)
+          .catch(() => false),
       ]);
     return {
       board,
       user,
       seo,
-      analytics,
       offerGate,
       employerCompanies,
       preview,
+      // Only surface the account "Subscription" entry to an entitled viewer,
+      // and only on a paywall board — non-subscribers reach the paywall via the
+      // gated-listing teaser instead. The AND keeps a signed-in viewer on a
+      // paywall-off board (whose grant read is discarded) from ever seeing it.
+      hasAccessGrant: resolveSubscriptionEntryVisible(
+        board.features.candidatePaywall,
+        hasGrant,
+      ),
     };
   },
   head: ({ loaderData }) => {
@@ -115,7 +131,7 @@ export const Route = createRootRoute({
     const seo = loaderData?.seo;
     const icons = seo?.icons;
     // Board-resolved favicons / app icons — only the configured variants.
-    const iconLinks = icons
+    const boardIconLinks = icons
       ? [
           ...(icons.svg
             ? [{ rel: 'icon', type: 'image/svg+xml', href: icons.svg }]
@@ -146,6 +162,15 @@ export const Route = createRootRoute({
             : []),
         ]
       : [];
+    // When the board resolves no icon at all, fall back to the bundled
+    // Cavuno mark rather than the platform-default /favicon.ico alone.
+    const iconLinks =
+      boardIconLinks.length > 0
+        ? boardIconLinks
+        : [
+            { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+            { rel: 'icon', href: '/favicon.ico' },
+          ];
     return {
       meta: [
         { charSet: 'utf-8' },
@@ -179,7 +204,7 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
-  const { board, user, offerGate, employerCompanies, preview } =
+  const { board, user, offerGate, employerCompanies, preview, hasAccessGrant } =
     Route.useLoaderData();
   const isEmbed = useRouterState({
     select: (s) => s.location.pathname.startsWith('/embed'),
@@ -199,6 +224,9 @@ function RootLayout() {
   });
   const breadcrumbEntities = useRouterState({
     select: (state) => resolveShellBreadcrumbEntities(state.matches),
+  });
+  const breadcrumbOverride = useRouterState({
+    select: (state) => resolveShellBreadcrumbTrail(state.matches),
   });
   const navigate = useNavigate();
   // Identity-aware default search scope: an approved employer hunts talent
@@ -250,6 +278,7 @@ function RootLayout() {
       location: breadcrumbEntities.location ?? resolvedHeaderLabels.location,
       query: breadcrumbEntities.query ?? resolvedHeaderLabels.query,
     },
+    override: breadcrumbOverride,
   });
 
   function submitHeaderSearch({
@@ -351,7 +380,7 @@ function RootLayout() {
       language={board.language}
       labels={board.labels}
       features={board.features}
-      candidatePaywall={board.features.candidatePaywall}
+      hasAccessGrant={hasAccessGrant}
       employerCompanies={employerCompanies}
       talentDirectoryVisibility={board.talentDirectoryVisibility}
       messagesNav={
@@ -490,11 +519,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             first-party page views + custom events keyed by tenant_id =
             board slug, via the /t proxy. Renders only when the
             deployment carries a tracker token. */}
-        {data?.analytics?.trackerToken && data?.board?.slug ? (
+        {data?.seo?.trackerToken && data?.board?.slug ? (
           <script
             defer
             src="/js/metrics.js"
-            data-token={data.analytics.trackerToken}
+            data-token={data.seo.trackerToken}
             data-host="/t"
             data-tenant-id={data.board.slug}
             data-web-vitals="true"

@@ -16,15 +16,30 @@ const mocks = vi.hoisted(() => ({
   getAccessGrant: vi.fn(),
   getPaywallOffers: vi.fn(),
   invalidate: vi.fn(),
+  navigate: vi.fn(() => Promise.resolve()),
   openBillingPortal: vi.fn(),
   startCheckout: vi.fn(),
   toastActionError: vi.fn(),
+  // AccessPage reads its route data via `getRouteApi('/account_/access')`; the
+  // hook stubs below stand in for that route match under jsdom.
+  useLoaderData: vi.fn(),
+  useSearch: vi.fn(),
 }));
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual =
     await importOriginal<typeof import('@tanstack/react-router')>();
-  return { ...actual, useRouter: () => ({ invalidate: mocks.invalidate }) };
+  return {
+    ...actual,
+    useRouter: () => ({
+      invalidate: mocks.invalidate,
+      navigate: mocks.navigate,
+    }),
+    getRouteApi: () => ({
+      useLoaderData: mocks.useLoaderData,
+      useSearch: mocks.useSearch,
+    }),
+  };
 });
 
 // The route threads getSeoBase through its loader for the page title; the
@@ -45,7 +60,7 @@ vi.mock('@/lib/action-toast', () => ({
   toastActionSuccess: vi.fn(),
 }));
 
-import { AccessPage, Route } from './account_.access';
+import { AccessPage } from './-access-page';
 
 const grant = {
   object: 'access_grant',
@@ -89,11 +104,11 @@ afterEach(() => {
 
 describe('candidate access actions', () => {
   it('disables every offer while checkout is starting', async () => {
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
+    mocks.useLoaderData.mockReturnValue({
       grant,
       offers: [offer, annualOffer],
     });
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ session_id: undefined });
+    mocks.useSearch.mockReturnValue({ session_id: undefined });
     let rejectCheckout!: (reason?: unknown) => void;
     mocks.startCheckout.mockImplementation(
       () =>
@@ -115,11 +130,11 @@ describe('candidate access actions', () => {
   });
 
   it('fires a recoverable error toast and re-enables checkout when session creation fails', async () => {
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
+    mocks.useLoaderData.mockReturnValue({
       grant,
       offers: [offer],
     });
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ session_id: undefined });
+    mocks.useSearch.mockReturnValue({ session_id: undefined });
     mocks.startCheckout.mockRejectedValue(new Error('checkout unavailable'));
 
     render(<AccessPage />);
@@ -132,7 +147,7 @@ describe('candidate access actions', () => {
   });
 
   it('fires a recoverable error toast and re-enables the billing portal after failure', async () => {
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
+    mocks.useLoaderData.mockReturnValue({
       grant: {
         ...grant,
         hasAccess: true,
@@ -141,7 +156,7 @@ describe('candidate access actions', () => {
       },
       offers: [],
     });
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ session_id: undefined });
+    mocks.useSearch.mockReturnValue({ session_id: undefined });
     mocks.openBillingPortal.mockRejectedValue(new Error('portal unavailable'));
 
     render(<AccessPage />);
@@ -158,11 +173,11 @@ describe('candidate access actions', () => {
   });
 
   it('renders a plan option per offer for a viewer without access', () => {
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
+    mocks.useLoaderData.mockReturnValue({
       grant,
       offers: [offer, annualOffer],
     });
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ session_id: undefined });
+    mocks.useSearch.mockReturnValue({ session_id: undefined });
 
     render(<AccessPage />);
 
@@ -173,7 +188,7 @@ describe('candidate access actions', () => {
   });
 
   it('opens the billing portal for a recurring subscription', async () => {
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
+    mocks.useLoaderData.mockReturnValue({
       grant: {
         ...grant,
         hasAccess: true,
@@ -182,7 +197,7 @@ describe('candidate access actions', () => {
       },
       offers: [],
     });
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ session_id: undefined });
+    mocks.useSearch.mockReturnValue({ session_id: undefined });
     mocks.openBillingPortal.mockResolvedValue({
       url: 'https://billing.example/session',
     });
@@ -212,7 +227,7 @@ describe('candidate access actions', () => {
   });
 
   it('shows the lifetime entitlement with no billing portal', () => {
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
+    mocks.useLoaderData.mockReturnValue({
       grant: {
         ...grant,
         hasAccess: true,
@@ -221,7 +236,7 @@ describe('candidate access actions', () => {
       },
       offers: [],
     });
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ session_id: undefined });
+    mocks.useSearch.mockReturnValue({ session_id: undefined });
 
     render(<AccessPage />);
 
@@ -235,8 +250,8 @@ describe('candidate access actions', () => {
 
   it('turns a rejected grant poll into an error toast with a refresh action', async () => {
     vi.useFakeTimers();
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({ grant, offers: [] });
-    vi.spyOn(Route, 'useSearch').mockReturnValue({
+    mocks.useLoaderData.mockReturnValue({ grant, offers: [] });
+    mocks.useSearch.mockReturnValue({
       session_id: 'checkout-session',
     });
     mocks.getAccessGrant.mockRejectedValue(new Error('grant unavailable'));
@@ -250,5 +265,54 @@ describe('candidate access actions', () => {
 
     expect(mocks.toastActionError).toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Refresh' })).toBeEnabled();
+  });
+
+  it('returns the buyer to the captured path once the grant is confirmed', async () => {
+    mocks.useLoaderData.mockReturnValue({
+      grant: {
+        ...grant,
+        hasAccess: true,
+        status: 'active',
+        offerType: 'recurring',
+      },
+      offers: [],
+    });
+    mocks.useSearch.mockReturnValue({
+      session_id: 'checkout-session',
+      returnTo: '/jobs?q=react',
+    });
+
+    render(<AccessPage />);
+
+    await waitFor(() => {
+      expect(mocks.navigate).toHaveBeenCalledWith({ href: '/jobs?q=react' });
+    });
+    // The bridge state shows instead of parking on the entitled surface.
+    expect(
+      screen.queryByRole('button', { name: 'Manage subscription' }),
+    ).toBeNull();
+  });
+
+  it('ignores an unsafe returnTo and keeps the buyer on the entitled surface', () => {
+    mocks.useLoaderData.mockReturnValue({
+      grant: {
+        ...grant,
+        hasAccess: true,
+        status: 'active',
+        offerType: 'recurring',
+      },
+      offers: [],
+    });
+    mocks.useSearch.mockReturnValue({
+      session_id: 'checkout-session',
+      returnTo: 'https://evil.example/phish',
+    });
+
+    render(<AccessPage />);
+
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('button', { name: 'Manage subscription' }),
+    ).toBeVisible();
   });
 });
