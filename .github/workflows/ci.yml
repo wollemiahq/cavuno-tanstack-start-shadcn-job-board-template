@@ -94,9 +94,12 @@ jobs:
           PUBLIC_CAVUNO_API_URL: https://api.cavuno.com
           PUBLIC_CAVUNO_BOARD: pk_c2f66367a3abaa6bafd00fd3c2de3297
 
-      # en-XA coverage gate (Phase 1): catalog-backed chrome must render
-      # pseudo-localized on /en-XA/ — proves URL locale → middleware →
-      # seam → messages end to end. The static ratchet
+      # Pseudo-locale gate (Phase 1): catalog-backed chrome must render
+      # pseudo-localized on /en-XA/ and /ar-XB/ — proves URL locale →
+      # middleware → seam → messages end to end. The static ratchet
       # (src/copy-scan.test.ts) guards the hardcoded-string burn-down.
+      # /ar-XB/ additionally pins the RTL contract: the document serves
+      # dir="rtl" there and dir="ltr" on every real locale, which is what
+      # makes a physical→logical utility migration verifiable.
       - name: Pseudo-locale gate
         run: node scripts/pseudo-locale-gate.mjs http://localhost:4173
