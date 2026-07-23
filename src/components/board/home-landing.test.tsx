@@ -416,14 +416,10 @@ describe('HomeLanding — hiring index', () => {
       name: 'Companies hiring now',
     });
     // Shared owned Card surface (not a bespoke homepage pill).
-    expect(
-      index.querySelector('[data-slot="card"]'),
-    ).not.toBeNull();
+    expect(index.querySelector('[data-slot="card"]')).not.toBeNull();
     // The clamped company description (flattened from the API's HTML) is shown.
     expect(
-      within(index).getByText(
-        'Autonomous field robots for agriculture.',
-      ),
+      within(index).getByText('Autonomous field robots for agriculture.'),
     ).toBeTruthy();
   });
 

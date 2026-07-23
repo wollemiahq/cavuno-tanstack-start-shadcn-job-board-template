@@ -185,7 +185,10 @@ export function JobCard({
     <article className="h-full">
       <Card size={compact ? 'sm' : 'default'} className={cn(surface, 'h-full')}>
         <CardContent
-          className={cn('flex h-full items-start gap-3', compact ? 'p-4' : 'p-5')}
+          className={cn(
+            'flex h-full items-start gap-3',
+            compact ? 'p-4' : 'p-5',
+          )}
         >
           <CompanyAvatar
             name={vm.companyAvatarName}

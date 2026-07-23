@@ -21,8 +21,8 @@ vi.mock('../server/applications', () => ({ applyToJob: vi.fn() }));
 vi.mock('../server/queries', () => ({ getBoardContext: vi.fn() }));
 
 import { SelectedJobDetail } from './-selected-job-detail';
-import type { SelectedJobState } from './-use-selected-job';
 
+import type { SelectedJobState } from './-use-selected-job';
 import { m } from '@/paraglide/messages';
 import type { PublicJob } from '@cavuno/board';
 

@@ -88,9 +88,9 @@ describe('programmatic jobs routes — canonical-slug redirects are permanent (3
       deps: {},
     });
     expect(isRedirect(result)).toBe(true);
-    expect((result as { options: { statusCode?: number } }).options).toMatchObject(
-      { to: '/jobs/$keyword', statusCode: 308 },
-    );
+    expect(
+      (result as { options: { statusCode?: number } }).options,
+    ).toMatchObject({ to: '/jobs/$keyword', statusCode: 308 });
   });
 
   it('/jobs/skills/$skill 308s an alias skill slug', async () => {
@@ -100,9 +100,9 @@ describe('programmatic jobs routes — canonical-slug redirects are permanent (3
       deps: {},
     });
     expect(isRedirect(result)).toBe(true);
-    expect((result as { options: { statusCode?: number } }).options).toMatchObject(
-      { to: '/jobs/skills/$skill', statusCode: 308 },
-    );
+    expect(
+      (result as { options: { statusCode?: number } }).options,
+    ).toMatchObject({ to: '/jobs/skills/$skill', statusCode: 308 });
   });
 
   it('/jobs/locations/$location 308s an alias place slug', async () => {
@@ -112,9 +112,9 @@ describe('programmatic jobs routes — canonical-slug redirects are permanent (3
       deps: {},
     });
     expect(isRedirect(result)).toBe(true);
-    expect((result as { options: { statusCode?: number } }).options).toMatchObject(
-      { to: '/jobs/locations/$location', statusCode: 308 },
-    );
+    expect(
+      (result as { options: { statusCode?: number } }).options,
+    ).toMatchObject({ to: '/jobs/locations/$location', statusCode: 308 });
   });
 
   it('/jobs/locations/$location/$keyword 308s when either slug is an alias', async () => {
@@ -130,9 +130,12 @@ describe('programmatic jobs routes — canonical-slug redirects are permanent (3
       deps: {},
     });
     expect(isRedirect(result)).toBe(true);
-    expect((result as { options: { statusCode?: number } }).options).toMatchObject(
-      { to: '/jobs/locations/$location/$keyword', statusCode: 308 },
-    );
+    expect(
+      (result as { options: { statusCode?: number } }).options,
+    ).toMatchObject({
+      to: '/jobs/locations/$location/$keyword',
+      statusCode: 308,
+    });
   });
 
   it('/jobs/locations/$location/skills/$skill 308s when either slug is an alias', async () => {
@@ -148,8 +151,11 @@ describe('programmatic jobs routes — canonical-slug redirects are permanent (3
       deps: {},
     });
     expect(isRedirect(result)).toBe(true);
-    expect((result as { options: { statusCode?: number } }).options).toMatchObject(
-      { to: '/jobs/locations/$location/skills/$skill', statusCode: 308 },
-    );
+    expect(
+      (result as { options: { statusCode?: number } }).options,
+    ).toMatchObject({
+      to: '/jobs/locations/$location/skills/$skill',
+      statusCode: 308,
+    });
   });
 });

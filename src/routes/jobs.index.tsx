@@ -25,13 +25,12 @@ import {
   listJobs,
   searchJobs,
 } from '../server/queries';
-
-import { toJobCardVM } from '@/board/job-view-model';
-import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 import { SelectedJobDetail } from './-selected-job-detail';
 import { useSelectedJob } from './-use-selected-job';
 
+import { toJobCardVM } from '@/board/job-view-model';
 import { JobSearchPage } from '@/components/board/job-search-page';
+import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 
 const JOBS_PAGE_SIZE = 20;
 

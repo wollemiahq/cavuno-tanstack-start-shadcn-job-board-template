@@ -21,6 +21,20 @@ rewriting unrelated tests.
 5. **Distribution gates** may inspect files only when the file itself is the
    product contract: generated design artifacts, theme output, the installed
    shadcn inventory, or the absence of the retired UI dependency tree.
+6. **Bundle budgets** inspect TanStack Start's emitted route manifest after a
+   production build. The shared shell and global CSS have independent budgets;
+   route increments use a conservative default with explicit allowances for
+   the editor, chart, and applicant-pipeline routes that intentionally own
+   heavier code. This guards regressions without pretending every lazy chunk
+   is part of every page's initial download. Gated root features such as the
+   sandbox preview toolbar and signed-in messaging dock are dynamically loaded
+   and therefore charged only to routes that actually reference their shared
+   UI. The model follows TanStack
+   Router's [automatic code-splitting contract](https://tanstack.com/router/latest/docs/guide/automatic-code-splitting):
+   route components and error/not-found UI are lazy while loaders normally stay
+   in the critical graph to avoid an extra request waterfall. The gate prints
+   the largest shared-shell assets so a regression is attributable without
+   adding a bundle-analyzer dependency.
 
 ## What does not belong in the suite
 
@@ -54,6 +68,7 @@ pnpm run typecheck
 pnpm test
 pnpm run check
 pnpm run build
+pnpm run check:bundle
 ```
 
 For a visual change, also exercise the affected route at desktop and mobile

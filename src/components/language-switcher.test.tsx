@@ -23,9 +23,6 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
 import { baseLocale, locales, overwriteGetLocale } from '../paraglide/runtime';
 import {
   LOCALE_ENDONYMS,
@@ -33,6 +30,9 @@ import {
   buildLocaleOptions,
   LanguageSwitcher,
 } from './language-switcher';
+
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 afterEach(() => {
   overwriteGetLocale(() => baseLocale);
@@ -124,8 +124,9 @@ describe('LanguageSwitcher rendering', () => {
     expect(current).not.toBeNull();
     expect(current).toHaveAttribute('href', '/de/jobs');
     // The switch-to-English option preserves the path, unprefixed.
-    expect(
-      within(menu).getByText('English').closest('a'),
-    ).toHaveAttribute('href', '/jobs');
+    expect(within(menu).getByText('English').closest('a')).toHaveAttribute(
+      'href',
+      '/jobs',
+    );
   });
 });

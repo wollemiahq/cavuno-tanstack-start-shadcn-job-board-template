@@ -3,12 +3,12 @@ import { boardCopy } from '#/copy';
 import { listingJsonLd } from '@cavuno/board/seo';
 import { getRouteApi, useNavigate } from '@tanstack/react-router';
 
+import { JobAlertFloatingPrompt } from '../components/job-alert-floating-prompt';
+import { JsonLd } from '../components/json-ld';
 import { jobAlertDefaultsFromSearch } from '../lib/job-alert-defaults';
 import { pageSearchValue } from '../lib/pagination';
 import { SelectedJobDetail } from './-selected-job-detail';
 import { useSelectedJob } from './-use-selected-job';
-import { JobAlertFloatingPrompt } from '../components/job-alert-floating-prompt';
-import { JsonLd } from '../components/json-ld';
 
 import { toJobCardVM } from '@/board/job-view-model';
 import { JobSearchPage } from '@/components/board/job-search-page';

@@ -193,7 +193,9 @@ export function JobDetail({
                   <div className="flex flex-col gap-2">{applySlot}</div>
                 ) : null}
                 {secondaryActions ? (
-                  <div className="grid grid-cols-2 gap-2">{secondaryActions}</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {secondaryActions}
+                  </div>
                 ) : null}
               </CardContent>
             </Card>

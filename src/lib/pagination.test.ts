@@ -43,7 +43,9 @@ describe('cursorPageHref (crawlable next-cursor URLs for cursor-only listings)',
     expect(cursorPageHref('/blog?cursor=old', 'opaque:page:2')).toBe(
       '/blog?cursor=opaque%3Apage%3A2',
     );
-    expect(cursorPageHref('/talent?page=3', 'next')).toBe('/talent?cursor=next');
+    expect(cursorPageHref('/talent?page=3', 'next')).toBe(
+      '/talent?cursor=next',
+    );
   });
 
   it('preserves active filters while replacing transient selection state', () => {
@@ -68,7 +70,9 @@ describe('cursorPageHref (crawlable next-cursor URLs for cursor-only listings)',
     // crawler or new-tab open lands on the cursor page instead of page one.
     for (const cursor of ['2', 'opaque:page:2', 'kn7abc', '1.5']) {
       const href = cursorPageHref('/blog', cursor);
-      const parsed = defaultParseSearch(new URL(href, 'https://b.local').search);
+      const parsed = defaultParseSearch(
+        new URL(href, 'https://b.local').search,
+      );
       expect(cursorSearchValue((parsed as { cursor?: unknown }).cursor)).toBe(
         cursor,
       );

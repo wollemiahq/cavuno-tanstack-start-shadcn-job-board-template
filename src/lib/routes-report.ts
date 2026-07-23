@@ -25,9 +25,7 @@ export type RoutesReportPayload = {
  * (`$param` → `:param`, bare `$` → `*`). Same enumeration as the
  * well-known manifest route.
  */
-export function mapRouteTreeToPathTemplates(
-  tree: TanStackRouteNode,
-): string[] {
+export function mapRouteTreeToPathTemplates(tree: TanStackRouteNode): string[] {
   return routeEntriesFromTanStackRouteTree(tree).map((entry) => entry.template);
 }
 

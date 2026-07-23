@@ -361,7 +361,10 @@ export function JobSearchResultDetailPending({
   loadingLabel: string;
 }) {
   return (
-    <article aria-busy="true" className="min-h-(--detail-pane-min-h) max-w-full min-w-0">
+    <article
+      aria-busy="true"
+      className="min-h-(--detail-pane-min-h) max-w-full min-w-0"
+    >
       <span className="sr-only" role="status">
         {loadingLabel}
       </span>

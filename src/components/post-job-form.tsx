@@ -913,7 +913,9 @@ export function PostJobForm({
           {status.kind === 'pending' ? (
             <Spinner data-icon="inline-start" />
           ) : null}
-          {status.kind === 'pending' ? m.postJob_submittingLabel() : submitLabel}
+          {status.kind === 'pending'
+            ? m.postJob_submittingLabel()
+            : submitLabel}
         </Button>
       </div>
     </form>

@@ -30,6 +30,14 @@ import {
   publishJob,
   unpublishJob,
 } from '../server/employers';
+/**
+ * Company workspace — the company's jobs. Each row's role name links to the
+ * job's own edit page (a draft publishes + pays there; the inline checkout
+ * popover is gone). Every row action — publish included — lives in the single
+ * per-row overflow menu; a draft's "Publish" lands on the edit page.
+ */
+import { getSeoBase } from '../server/queries';
+
 import {
   toEmployerJobStatCellsVM,
   toEmployerJobStatsIndex,
@@ -39,14 +47,6 @@ import {
   EmployerStatsChart,
   EmployerStatsChartPending,
 } from '@/components/employer/employer-stats-chart';
-/**
- * Company workspace — the company's jobs. Each row's role name links to the
- * job's own edit page (a draft publishes + pays there; the inline checkout
- * popover is gone). Every row action — publish included — lives in the single
- * per-row overflow menu; a draft's "Publish" lands on the edit page.
- */
-import { getSeoBase } from '../server/queries';
-
 import { Page, PageContent } from '@/components/layout/page';
 import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
@@ -67,6 +67,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -75,7 +76,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
 import { headTitle } from '@/lib/page-title';
 import type {
   EmployerJobStat,

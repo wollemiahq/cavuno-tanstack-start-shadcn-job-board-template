@@ -1,6 +1,6 @@
 import { uiCopy } from '@cavuno/board/format';
 
-import { pseudoLocalize } from './pseudo-locale.mjs';
+import { pseudoBidi, pseudoLocalize } from './pseudo-locale.mjs';
 
 /**
  * uiCopy → Paraglide messages generator (ADR-0063 decision 2).
@@ -109,12 +109,20 @@ for (const locale of LOCALES) {
   if (locale === 'en') enMessages = messages;
 }
 
-// en-XA pseudo-locale — derived from whatever the CURRENT en source is
+// Pseudo-locales — derived from whatever the CURRENT en source is
 // (uiCopy today, builder-authored keys as they land), so the coverage
-// gate survives the catalog→coded copy migration for free.
-const pseudo = { $schema: enMessages.$schema };
-for (const [key, value] of Object.entries(enMessages)) {
-  if (key.startsWith('$')) continue;
-  pseudo[key] = pseudoLocalize(value);
+// gates survive the catalog→coded copy migration for free.
+//   en-XA — pseudo-accent: proves every string came through Paraglide.
+//   ar-XB — pseudo-bidi: same, plus it is the RTL locale the layout is
+//           verified against (dir="rtl", mirrored chrome).
+for (const [locale, derive] of [
+  ['en-XA', pseudoLocalize],
+  ['ar-XB', pseudoBidi],
+]) {
+  const pseudo = { $schema: enMessages.$schema };
+  for (const [key, value] of Object.entries(enMessages)) {
+    if (key.startsWith('$')) continue;
+    pseudo[key] = derive(value);
+  }
+  writeMessages(locale, pseudo);
 }
-writeMessages('en-XA', pseudo);

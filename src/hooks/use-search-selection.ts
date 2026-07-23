@@ -85,9 +85,8 @@ export function useSearchSelection({
     // The arrived job may legitimately be absent from this page (the detail
     // pane fetches it independently) — then there is no row to align, no-op.
     if (!selectedId || !resultIds.includes(selectedId)) return;
-    const rows = listRef.current?.querySelectorAll<HTMLElement>(
-      '[data-result-id]',
-    );
+    const rows =
+      listRef.current?.querySelectorAll<HTMLElement>('[data-result-id]');
     const row = rows
       ? Array.from(rows).find((el) => el.dataset.resultId === selectedId)
       : undefined;

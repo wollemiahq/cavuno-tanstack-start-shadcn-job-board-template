@@ -39,16 +39,19 @@ vi.mock('../lib/auth-guard', () => ({ redirectIfAuthenticated: vi.fn() }));
 
 import { Route as AccountRoute } from './account';
 import { Route as SavedRoute } from './account_.saved';
-import { Route as ApplicationsRoute } from './me.applications';
+import { Route as SignInRoute } from './auth.sign-in';
 import { Route as AlertsRoute } from './me.alerts';
+import { Route as ApplicationsRoute } from './me.applications';
 import { Route as MessagesRoute } from './messages';
 import { Route as SettingsRoute } from './settings';
-import { Route as SignInRoute } from './auth.sign-in';
 
 /** Extract the robots directive a route's head emits with no loader data. */
 function robotsOf(head: unknown): string | undefined {
   if (typeof head !== 'function') throw new Error('route defines no head');
-  const result = head({ loaderData: undefined, match: { status: 'success' } }) as {
+  const result = head({
+    loaderData: undefined,
+    match: { status: 'success' },
+  }) as {
     meta?: Array<{ name?: string; content?: string }>;
   };
   return result.meta?.find((entry) => entry.name === 'robots')?.content;

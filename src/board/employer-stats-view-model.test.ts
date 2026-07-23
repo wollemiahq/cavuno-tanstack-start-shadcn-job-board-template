@@ -113,7 +113,10 @@ describe('toEmployerStatsChartVM', () => {
 
   it('is empty when every bucket is a zero for both series', () => {
     const vm = toEmployerStatsChartVM(
-      [point({ views: 0, applyClicks: 0 }), point({ views: 0, applyClicks: 0 })],
+      [
+        point({ views: 0, applyClicks: 0 }),
+        point({ views: 0, applyClicks: 0 }),
+      ],
       'en-US',
     );
     expect(vm.isEmpty).toBe(true);
@@ -135,7 +138,10 @@ describe('toEmployerProfileViewsVM', () => {
   it('formats the total and plots the sparkline when there are views', () => {
     const vm = toEmployerProfileViewsVM(
       1204,
-      [viewsPoint({ date: '2026-07-01', views: 4 }), viewsPoint({ date: '2026-07-02', views: 8 })],
+      [
+        viewsPoint({ date: '2026-07-01', views: 4 }),
+        viewsPoint({ date: '2026-07-02', views: 8 }),
+      ],
       'en-US',
     );
 

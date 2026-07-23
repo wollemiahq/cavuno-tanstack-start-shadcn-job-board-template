@@ -1,3 +1,10 @@
+import {
+  compileManifest,
+  enumerateRouteEntries,
+} from '@cavuno/board/route-contract';
+import { routeEntriesFromTanStackRouteTree } from '@cavuno/board/well-known';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 /**
  * Mount contract for `/.well-known/cavuno.json` (LNK-08). Pins the starter
  * wiring of createWellKnownHandler + routeEntriesFromTanStackRouteTree
@@ -11,13 +18,6 @@
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-
-import {
-  compileManifest,
-  enumerateRouteEntries,
-} from '@cavuno/board/route-contract';
-import { routeEntriesFromTanStackRouteTree } from '@cavuno/board/well-known';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * Minimal TanStack-shaped tree covering the roles the mount must publish.
@@ -87,16 +87,12 @@ describe('/.well-known/cavuno.json mount', () => {
       roles: Record<string, string>;
     };
     expect(body.version).toBe(1);
-    expect(body.roles.jobDetail).toBe(
-      '/companies/:companySlug/jobs/:jobSlug',
-    );
+    expect(body.roles.jobDetail).toBe('/companies/:companySlug/jobs/:jobSlug');
     expect(body.roles.alertsManage).toBe('/alerts/manage');
     expect(body.roles.alertsConfirm).toBe('/alerts/confirm');
 
     // At least one $param route converted to :param form.
-    const withParams = Object.values(body.roles).filter((t) =>
-      t.includes(':'),
-    );
+    const withParams = Object.values(body.roles).filter((t) => t.includes(':'));
     expect(withParams.length).toBeGreaterThan(0);
     expect(withParams.some((t) => t.includes('$'))).toBe(false);
   });

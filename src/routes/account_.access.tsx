@@ -9,11 +9,7 @@
  * lives in the colocated `./-access-page` module so this route file exports only
  * `Route` and stays cleanly code-split.
  */
-import {
-  createFileRoute,
-  isRedirect,
-  redirect,
-} from '@tanstack/react-router';
+import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getAccessGrant, getPaywallOffers } from '../server/paywall';

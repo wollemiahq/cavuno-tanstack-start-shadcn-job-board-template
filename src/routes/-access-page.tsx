@@ -13,6 +13,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 
+import { safeRedirectPath } from '@cavuno/board/server';
 import { getRouteApi, useRouter } from '@tanstack/react-router';
 import { Clock, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 
@@ -46,7 +47,6 @@ import { Spinner } from '@/components/ui/spinner';
 import { toastActionError } from '@/lib/action-toast';
 import { cn } from '@/lib/utils';
 import type { AccessCheckoutSession, PaywallOffer } from '@cavuno/board';
-import { safeRedirectPath } from '@cavuno/board/server';
 
 /** The paywall page's own path — the return-to fallback and the loader's redirect target. */
 export const RETURN_PATH = '/account/access';
@@ -98,12 +98,7 @@ function PlanCard({
 }) {
   const popular = offer.isDefault;
   return (
-    <Card
-      className={cn(
-        'flex flex-col',
-        popular && 'ring-primary ring-2',
-      )}
-    >
+    <Card className={cn('flex flex-col', popular && 'ring-primary ring-2')}>
       <CardHeader>
         <CardTitle className="flex items-center justify-between gap-2">
           <span className="truncate">{offer.label}</span>
@@ -351,9 +346,7 @@ export function AccessPage() {
   if (polling) {
     return (
       <Page width="content">
-        <PageContent
-          header={<PageHeader title={m.accountAccess_title()} />}
-        >
+        <PageContent header={<PageHeader title={m.accountAccess_title()} />}>
           <Empty className="min-h-80 border-0">
             <EmptyHeader>
               <EmptyMedia variant="icon">
@@ -428,9 +421,7 @@ export function AccessPage() {
         <div
           className={cn(
             'grid gap-4',
-            offers.length > 1
-              ? 'sm:grid-cols-2'
-              : 'mx-auto w-full max-w-sm',
+            offers.length > 1 ? 'sm:grid-cols-2' : 'mx-auto w-full max-w-sm',
           )}
         >
           {offers.map((offer) => (

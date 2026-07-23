@@ -23,7 +23,6 @@ import {
 } from '../server/queries';
 
 import { toJobCardVM } from '@/board/job-view-model';
-import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 import {
   toOverallSalaryVM,
   toSalaryRailVM,
@@ -47,6 +46,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { headTitle } from '@/lib/page-title';
+import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/companies/$companySlug/')({

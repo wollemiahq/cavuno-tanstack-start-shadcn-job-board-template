@@ -2,10 +2,10 @@ import { Area, AreaChart } from 'recharts';
 
 import { m } from '../../paraglide/messages';
 
+import type { EmployerProfileViewsVM } from '@/board/employer-stats-view-model';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChartContainer, type ChartConfig } from '@/components/ui/chart';
 import { Spinner } from '@/components/ui/spinner';
-import type { EmployerProfileViewsVM } from '@/board/employer-stats-view-model';
 
 /**
  * Compact profile-views stat for the company-profile page header — the

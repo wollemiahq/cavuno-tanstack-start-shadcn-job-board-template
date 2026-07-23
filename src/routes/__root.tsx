@@ -1,3 +1,5 @@
+import { lazy, Suspense, useEffect } from 'react';
+
 /**
  * Root: loads the board context once (identity, theme, features) plus
  * the session user, injects the board theme as overrides of the shadcn
@@ -13,10 +15,10 @@ import {
   useNavigate,
   useRouterState,
 } from '@tanstack/react-router';
-import { useEffect } from 'react';
 
 import Footer from '../components/Footer';
 import Header from '../components/Header';
+import { localeDirection } from '../lib/locale-direction';
 import { toPreviewBoardConfig } from '../lib/preview';
 import { emitRoutesReport } from '../lib/routes-report';
 import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
@@ -33,7 +35,6 @@ import {
 } from '../server/queries';
 import appCss from '../styles.css?url';
 import { themeMeta } from '../theme/resolved';
-import { MessagesDockController } from './-messages-dock-controller';
 import { MessagesNavController } from './-messages-nav-controller';
 import { useCompanyMarketSuggestions } from './-use-company-market-suggestions';
 import { useKeywordSuggestions } from './-use-keyword-suggestions';
@@ -47,7 +48,6 @@ import { FloatingStackProvider } from '@/components/floating-stack';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { NavigationProgress } from '@/components/navigation-progress';
-import { PreviewToolbar } from '@/components/preview/preview-toolbar';
 import {
   MainContentTarget,
   SkipToContentLink,
@@ -63,6 +63,18 @@ import {
   resolveShellBreadcrumbEntities,
   resolveShellBreadcrumbTrail,
 } from '@/lib/shell-breadcrumb';
+
+const LazyMessagesDockController = lazy(() =>
+  import('./-messages-dock-controller').then(({ MessagesDockController }) => ({
+    default: MessagesDockController,
+  })),
+);
+
+const LazyPreviewToolbar = lazy(() =>
+  import('@/components/preview/preview-toolbar').then(({ PreviewToolbar }) => ({
+    default: PreviewToolbar,
+  })),
+);
 
 declare module '@tanstack/react-router' {
   interface StaticDataRouteOption {
@@ -481,23 +493,27 @@ function RootLayout() {
           // that must unmount wholesale when the signed-in identity changes
           // (sign-out/in, persona switch) — never survive across viewers. The
           // whole messaging surface is hidden when the board flag is off.
-          <MessagesDockController key={user.id} />
+          <Suspense fallback={null}>
+            <LazyMessagesDockController key={user.id} />
+          </Suspense>
         ) : null}
         {preview.capability.canPreview ? (
-          <PreviewToolbar
-            capability={preview.capability}
-            personas={preview.personas}
-            viewer={
-              user
-                ? {
-                    displayName: user.displayName,
-                    email: user.email,
-                    role: user.role,
-                  }
-                : null
-            }
-            config={toPreviewBoardConfig(board)}
-          />
+          <Suspense fallback={null}>
+            <LazyPreviewToolbar
+              capability={preview.capability}
+              personas={preview.personas}
+              viewer={
+                user
+                  ? {
+                      displayName: user.displayName,
+                      email: user.email,
+                      role: user.role,
+                    }
+                  : null
+              }
+              config={toPreviewBoardConfig(board)}
+            />
+          </Suspense>
         ) : null}
       </FloatingStackProvider>
     </AppRouterProvider>
@@ -512,23 +528,30 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     themeMeta.mode === 'dark' || themeMeta.mode === 'light'
       ? themeMeta.mode
       : ('system' as const);
+  const locale = getLocale();
   return (
     <html
       // The document declares the RUNTIME locale (ADR-0063): the base
       // locale (=== board language, generation-time invariant) on
       // unprefixed routes, the chrome locale under /de/-style prefixes.
-      lang={getLocale()}
+      lang={locale}
+      // …and its writing direction, server-side on the first byte, so
+      // logical properties and `rtl:` variants resolve before paint
+      // rather than mirroring the page after hydration. en/de/fr → ltr;
+      // the ar-XB pseudo-bidi CI locale → rtl.
+      dir={localeDirection(locale)}
       className={mode === 'dark' ? 'dark' : undefined}
       data-theme-mode={mode}
       suppressHydrationWarning
     >
       <head>
-        {/* en-XA is the CI coverage pseudo-locale (never for humans or
-            crawlers): noindex it. Real prefixed chrome locales stay
-            indexable — their route canonicals already point at the
-            unprefixed base (chrome-translated duplicates, ADR-0063 D4;
-            hreflang deliberately deferred until content translates). */}
-        {getLocale() === 'en-XA' && (
+        {/* en-XA / ar-XB are the CI coverage pseudo-locales (never for
+            humans or crawlers): noindex them. Real prefixed chrome
+            locales stay indexable — their route canonicals already point
+            at the unprefixed base (chrome-translated duplicates,
+            ADR-0063 D4; hreflang deliberately deferred until content
+            translates). */}
+        {(locale === 'en-XA' || locale === 'ar-XB') && (
           <meta name="robots" content="noindex, nofollow" />
         )}
         <HeadContent />

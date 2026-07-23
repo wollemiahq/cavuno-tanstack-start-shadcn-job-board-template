@@ -1,5 +1,4 @@
 import { isNotFound } from '@cavuno/board';
-import type { PublicJobCard } from '@cavuno/board';
 import { companyIntro } from '@cavuno/board/format';
 import {
   buildJobBreadcrumbs,
@@ -39,17 +38,16 @@ import {
 } from '../server/queries';
 
 import { toJobDetailVM } from '@/board/job-detail-view-model';
-import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
+import { toJobCardVM } from '@/board/job-view-model';
 import { AlertSignupForm } from '@/components/board/alert-signup-form';
 import { ApplyButton } from '@/components/board/apply-button';
 import { CopyLinkButton } from '@/components/board/copy-link-button';
 import { JobDetail } from '@/components/board/job-detail';
-import { toJobCardVM } from '@/board/job-view-model';
 import { JobList } from '@/components/board/job-list';
 import { PageBody } from '@/components/board/page-body';
 import { SaveJobButton } from '@/components/board/save-job-button';
-import { Text } from '@/components/text';
 import { JsonLd } from '@/components/json-ld';
+import { Text } from '@/components/text';
 import {
   Empty,
   EmptyHeader,
@@ -57,6 +55,8 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { headTitle } from '@/lib/page-title';
+import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
+import type { PublicJobCard } from '@cavuno/board';
 
 export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -184,8 +184,15 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
 const rootApi = getRouteApi('__root__');
 
 function JobDetailPage() {
-  const { job, user, similar, company, seo, resolvableTaxonomy, alreadyApplied } =
-    Route.useLoaderData();
+  const {
+    job,
+    user,
+    similar,
+    company,
+    seo,
+    resolvableTaxonomy,
+    alreadyApplied,
+  } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const { companySlug } = Route.useParams();
   const defaults = jobAlertDefaultsFromJob(job);

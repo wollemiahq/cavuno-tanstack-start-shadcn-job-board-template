@@ -21,10 +21,10 @@ import { CursorPagination } from '@/components/board/cursor-pagination';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { initialsOf } from '@/lib/initials';
 import { BLOG_PAGE_SIZE } from '@/lib/blog';
-import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
+import { initialsOf } from '@/lib/initials';
 import { headTitle } from '@/lib/page-title';
+import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
 import { getBlogAuthor, getSeoBase, listBlogPosts } from '@/server/queries';
 
 interface BlogAuthorSearch {

@@ -44,7 +44,9 @@ describe('mapRouteTreeToPathTemplates', () => {
 describe('emitRoutesReport', () => {
   it('does not emit when not embedded (parent === self)', () => {
     const postMessage = vi.fn();
-    const selfWin = { parent: null as unknown as { postMessage: typeof postMessage } };
+    const selfWin = {
+      parent: null as unknown as { postMessage: typeof postMessage },
+    };
     // Parent points at self — top-level window.
     selfWin.parent = selfWin as never;
 

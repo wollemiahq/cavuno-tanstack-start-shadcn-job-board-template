@@ -78,7 +78,10 @@ describe('blog index cursor pagination contract', () => {
     // A bare `?cursor=2` document load hands validateSearch the NUMBER 2; the
     // cursor must survive as a string instead of being dropped and 307-ing the
     // page URL back to the archive root.
-    expect(validateSearch({ cursor: 2 })).toEqual({ cursor: '2', q: undefined });
+    expect(validateSearch({ cursor: 2 })).toEqual({
+      cursor: '2',
+      q: undefined,
+    });
     expect(validateSearch({ cursor: 'kn7abc' })).toEqual({
       cursor: 'kn7abc',
       q: undefined,

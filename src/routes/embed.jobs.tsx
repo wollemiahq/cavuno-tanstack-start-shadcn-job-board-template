@@ -16,7 +16,6 @@ import { embedJobs, getBoardContext } from '../server/queries';
 
 import { toJobCardVM } from '@/board/job-view-model';
 import { JobCard } from '@/components/board/job-card';
-import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -26,6 +25,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { headTitle } from '@/lib/page-title';
+import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 import { cn } from '@/lib/utils';
 import type {
   EmploymentType,

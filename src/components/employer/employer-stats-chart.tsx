@@ -1,14 +1,16 @@
-import {
-  Area,
-  CartesianGrid,
-  ComposedChart,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { ChartColumnIcon } from 'lucide-react';
+import { Area, CartesianGrid, ComposedChart, XAxis, YAxis } from 'recharts';
 
 import { m } from '../../paraglide/messages';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import type { EmployerStatsChartVM } from '@/board/employer-stats-view-model';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   ChartContainer,
   ChartLegend,
@@ -25,8 +27,6 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
-import type { EmployerStatsChartVM } from '@/board/employer-stats-view-model';
-import { ChartColumnIcon } from 'lucide-react';
 
 /**
  * Employer reporting chart — daily views + apply clicks across the company's
@@ -73,9 +73,7 @@ export function EmployerStatsChart({ vm }: { vm: EmployerStatsChartVM }) {
                 <ChartColumnIcon aria-hidden />
               </EmptyMedia>
               <EmptyTitle>{m.employerStats_emptyTitle()}</EmptyTitle>
-              <EmptyDescription>
-                {m.employerStats_emptyText()}
-              </EmptyDescription>
+              <EmptyDescription>{m.employerStats_emptyText()}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (
@@ -85,11 +83,29 @@ export function EmployerStatsChart({ vm }: { vm: EmployerStatsChartVM }) {
             role="img"
             aria-label={m.employerStats_chartAriaLabel()}
           >
-            <ComposedChart accessibilityLayer data={vm.points} margin={{ left: 4, right: 8 }}>
+            <ComposedChart
+              accessibilityLayer
+              data={vm.points}
+              margin={{ left: 4, right: 8 }}
+            >
               <defs>
-                <linearGradient id="employer-stats-views" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--color-views)" stopOpacity={0.28} />
-                  <stop offset="100%" stopColor="var(--color-views)" stopOpacity={0.02} />
+                <linearGradient
+                  id="employer-stats-views"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop
+                    offset="0%"
+                    stopColor="var(--color-views)"
+                    stopOpacity={0.28}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="var(--color-views)"
+                    stopOpacity={0.02}
+                  />
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} />
@@ -108,7 +124,10 @@ export function EmployerStatsChart({ vm }: { vm: EmployerStatsChartVM }) {
                 allowDecimals={false}
                 tickMargin={4}
               />
-              <ChartTooltip cursor content={<ChartTooltipContent indicator="line" />} />
+              <ChartTooltip
+                cursor
+                content={<ChartTooltipContent indicator="line" />}
+              />
               <ChartLegend content={<ChartLegendContent />} />
               <Area
                 dataKey="views"

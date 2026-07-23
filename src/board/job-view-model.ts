@@ -129,11 +129,19 @@ export function toJobCardVM(
     const prefix = type === 'category' ? 'c' : 's';
     const path = type === 'category' ? jobsCategoryPath : jobsSkillPath;
     if (!resolvableTaxonomy) {
-      return { key: `${prefix}-${term.slug}`, name: term.name, href: path(term.slug) };
+      return {
+        key: `${prefix}-${term.slug}`,
+        name: term.name,
+        href: path(term.slug),
+      };
     }
     const canonical = resolvableTaxonomy[`${type}:${term.slug}`];
     if (!canonical) return null;
-    return { key: `${prefix}-${canonical}`, name: term.name, href: path(canonical) };
+    return {
+      key: `${prefix}-${canonical}`,
+      name: term.name,
+      href: path(canonical),
+    };
   };
   const salaryLabel = formatSalaryRange(
     language,

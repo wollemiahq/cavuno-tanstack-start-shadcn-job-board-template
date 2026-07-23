@@ -1,11 +1,21 @@
 /**
- * en-XA pseudo-localization (Phase-1 coverage gate).
+ * Pseudo-locale derivations (Phase-1 coverage gates).
  *
- * Derives the en-XA locale mechanically from en messages: every letter is
- * accented and the whole string is wrapped in ⟦…⟧, while ICU `{param}`
- * inputs and board `{{token}}` placeholders pass through verbatim. On a
- * /en-XA/ render, anything NOT bracketed did not come through Paraglide —
- * a hardcoded string, instantly visible in a screenshot or curl.
+ * `en-XA` — pseudo-ACCENT. Derives mechanically from en messages: every
+ * letter is accented and the whole string is wrapped in ⟦…⟧, while ICU
+ * `{param}` inputs and board `{{token}}` placeholders pass through
+ * verbatim. On a /en-XA/ render, anything NOT bracketed did not come
+ * through Paraglide — a hardcoded string, instantly visible in a
+ * screenshot or curl.
+ *
+ * `ar-XB` — pseudo-BIDI, the conventional RTL sibling of en-XA (same
+ * Android/CLDR pseudo-locale pair). Same accented, bracketed text so the
+ * coverage property is identical, additionally wrapped in a
+ * RIGHT-TO-LEFT ISOLATE (U+2067 … U+2069) so every message is genuinely
+ * bidi-marked. Served under /ar-XB/ with `dir="rtl"`, it is how a
+ * mirrored layout gets proven without shipping a real Arabic catalog.
+ * Kept greppable on purpose: the runtime gate still substring-matches
+ * the ⟦…⟧ text.
  *
  * Shared by scripts/gen-paraglide-messages.mjs (emit) and
  * src/pseudo-locale.test.ts (freshness gate).
@@ -83,4 +93,18 @@ export function pseudoLocalize(value) {
   }
   out += accent(value.slice(last));
   return `⟦${out}⟧`;
+}
+
+/** U+2067 RIGHT-TO-LEFT ISOLATE … U+2069 POP DIRECTIONAL ISOLATE. */
+export const RLI = '⁧';
+export const PDI = '⁩';
+
+/**
+ * ar-XB pseudo-bidi: the en-XA text inside an RTL isolate. Isolate (not
+ * override) so embedded `{param}` values still render by their own
+ * direction — the same thing a real Arabic string does to an English
+ * job title.
+ */
+export function pseudoBidi(value) {
+  return `${RLI}${pseudoLocalize(value)}${PDI}`;
 }

@@ -27,8 +27,9 @@ import {
 import { cn } from '@/lib/utils';
 
 /**
- * The public chrome locales. `en-XA` is the CI pseudo-locale (QA/coverage
- * only) and is deliberately excluded from the human-facing switcher.
+ * The public chrome locales. `en-XA` (pseudo-accent) and `ar-XB`
+ * (pseudo-bidi/RTL) are the CI pseudo-locales (QA/coverage only) and are
+ * deliberately excluded from the human-facing switcher.
  */
 export const PUBLIC_LOCALES = ['en', 'de', 'fr'] as const;
 export type PublicLocale = (typeof PUBLIC_LOCALES)[number];

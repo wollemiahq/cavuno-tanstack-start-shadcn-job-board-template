@@ -36,12 +36,12 @@ import {
 } from '@/components/candidate-route-state';
 import { EmptyState } from '@/components/empty-state';
 import { Page } from '@/components/layout/page';
-import { Text } from '@/components/text';
 import {
   SearchResultDetail,
   SearchResultsLayout,
   SearchResultsList,
 } from '@/components/search-results/search-results';
+import { Text } from '@/components/text';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { toastActionError } from '@/lib/action-toast';

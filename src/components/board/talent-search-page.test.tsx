@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
+import { useState } from 'react';
+
 import {
   RouterProvider,
   createMemoryHistory,
@@ -15,7 +17,6 @@ import {
   screen,
   within,
 } from '@testing-library/react';
-import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TalentSearchPage } from './talent-search-page';

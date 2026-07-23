@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
+import { useState } from 'react';
+
 import {
   RouterProvider,
   createMemoryHistory,
@@ -15,7 +17,6 @@ import {
   screen,
   within,
 } from '@testing-library/react';
-import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CompanySearchPage } from './company-search-page';
@@ -224,7 +225,9 @@ describe('CompanySearchPage — search results pattern', () => {
 });
 
 describe('CompanySearchPage — results description line', () => {
-  function renderPage(props: Partial<React.ComponentProps<typeof CompanySearchPage>>) {
+  function renderPage(
+    props: Partial<React.ComponentProps<typeof CompanySearchPage>>,
+  ) {
     const rootRoute = createRootRoute();
     const indexRoute = createRoute({
       getParentRoute: () => rootRoute,

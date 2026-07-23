@@ -17,6 +17,8 @@ import {
   type DropItem,
 } from 'react-aria-components/useDragAndDrop';
 
+import { m } from '../../paraglide/messages';
+
 import type {
   PipelineBoardVM,
   PipelineCardVM,
@@ -67,7 +69,6 @@ import {
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { m } from '../../paraglide/messages';
 
 const DRAG_TYPE = 'cavuno/application';
 

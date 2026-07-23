@@ -190,7 +190,10 @@ function TitleLocationSalaryPage() {
   }));
   const titleItems: RailItem[] = salary.topTitles.map((x) => ({
     name: x.categoryName,
-    href: salaryTitleInLocationPath(x.categorySlug, salary.locationCanonicalSlug),
+    href: salaryTitleInLocationPath(
+      x.categorySlug,
+      salary.locationCanonicalSlug,
+    ),
     range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));

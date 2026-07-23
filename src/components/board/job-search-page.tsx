@@ -5,6 +5,7 @@ import { Search } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
+import type { JobCardVM } from '@/board/job-view-model';
 import {
   relatedSearchesTitle,
   relatedSearchesToChips,
@@ -38,7 +39,6 @@ import {
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { listingPageHref } from '@/lib/pagination';
-import type { JobCardVM } from '@/board/job-view-model';
 import type { RelatedSearch } from '@cavuno/board';
 import type { ListingFilters } from '@cavuno/board/filters';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
@@ -226,13 +226,13 @@ export function JobSearchPage({
                   label={m.jobSearch_resultsRegionLabel()}
                   scrollRestorationId="jobs-search-results"
                 >
-                    <ListingResultsHeader breadcrumb={breadcrumb}>
-                      {resultsBar}
-                    </ListingResultsHeader>
+                  <ListingResultsHeader breadcrumb={breadcrumb}>
+                    {resultsBar}
+                  </ListingResultsHeader>
 
-                    <div className="space-y-3">
-                      {jobVms.map((vm) => (
-                        <div key={vm.id} data-result-id={vm.jobSlug ?? undefined}>
+                  <div className="space-y-3">
+                    {jobVms.map((vm) => (
+                      <div key={vm.id} data-result-id={vm.jobSlug ?? undefined}>
                         <JobSearchResult
                           vm={vm}
                           selected={vm.jobSlug === selection.selectedId}
@@ -259,63 +259,63 @@ export function JobSearchPage({
                             />
                           }
                         />
-                        </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
+                  </div>
 
-                    {gatedCount && gatedCount > 0 ? (
-                      <Alert
-                        aria-label={m.jobSearch_unlockMoreLabel()}
-                        className="bg-muted flex flex-col items-start gap-3 pr-4"
-                      >
-                        <AlertDescription>
-                          {m.jobSearch_gatedCountText({
-                            count: gatedCount.toLocaleString(language),
-                          })}
-                        </AlertDescription>
-                        <AlertAction className="static">
-                          <a
-                            href={`/account/access?${new URLSearchParams({ returnTo }).toString()}`}
-                            className={buttonVariants({ size: 'sm' })}
+                  {gatedCount && gatedCount > 0 ? (
+                    <Alert
+                      aria-label={m.jobSearch_unlockMoreLabel()}
+                      className="bg-muted flex flex-col items-start gap-3 pr-4"
+                    >
+                      <AlertDescription>
+                        {m.jobSearch_gatedCountText({
+                          count: gatedCount.toLocaleString(language),
+                        })}
+                      </AlertDescription>
+                      <AlertAction className="static">
+                        <a
+                          href={`/account/access?${new URLSearchParams({ returnTo }).toString()}`}
+                          className={buttonVariants({ size: 'sm' })}
+                        >
+                          {m.jobSearch_unlockMoreLabel()}
+                        </a>
+                      </AlertAction>
+                    </Alert>
+                  ) : null}
+
+                  <ListingPagination
+                    compact
+                    page={page}
+                    count={count ?? 0}
+                    pageSize={pageSize}
+                    hrefForPage={(nextPage) =>
+                      listingPageHref(returnTo, nextPage, ['selectedJob'])
+                    }
+                    onPageChange={onPageChange}
+                  />
+
+                  {relatedChips.length > 0 ? (
+                    <section
+                      aria-label={relatedSearchesTitle(labels)}
+                      className="border-border space-y-3 border-t pt-4"
+                    >
+                      <h2 className="text-sm font-semibold">
+                        {relatedSearchesTitle(labels)}
+                      </h2>
+                      <div className="flex flex-wrap gap-1.5">
+                        {relatedChips.map((chip) => (
+                          <Badge
+                            key={chip.key}
+                            variant="outline"
+                            render={<a href={chip.href} />}
                           >
-                            {m.jobSearch_unlockMoreLabel()}
-                          </a>
-                        </AlertAction>
-                      </Alert>
-                    ) : null}
-
-                    <ListingPagination
-                      compact
-                      page={page}
-                      count={count ?? 0}
-                      pageSize={pageSize}
-                      hrefForPage={(nextPage) =>
-                        listingPageHref(returnTo, nextPage, ['selectedJob'])
-                      }
-                      onPageChange={onPageChange}
-                    />
-
-                    {relatedChips.length > 0 ? (
-                      <section
-                        aria-label={relatedSearchesTitle(labels)}
-                        className="border-border space-y-3 border-t pt-4"
-                      >
-                        <h2 className="text-sm font-semibold">
-                          {relatedSearchesTitle(labels)}
-                        </h2>
-                        <div className="flex flex-wrap gap-1.5">
-                          {relatedChips.map((chip) => (
-                            <Badge
-                              key={chip.key}
-                              variant="outline"
-                              render={<a href={chip.href} />}
-                            >
-                              {chip.name}
-                            </Badge>
-                          ))}
-                        </div>
-                      </section>
-                    ) : null}
+                            {chip.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
                 </SearchResultsList>
               }
               detail={

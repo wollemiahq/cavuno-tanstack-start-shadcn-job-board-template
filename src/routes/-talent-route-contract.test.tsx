@@ -43,8 +43,8 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   };
 });
 
-import { Route as ProfileRoute } from './p.$handle';
 import { RestrictedTalentDirectory } from './-restricted-talent-directory';
+import { Route as ProfileRoute } from './p.$handle';
 import { Route as TalentRoute } from './talent.index';
 
 const seo = {

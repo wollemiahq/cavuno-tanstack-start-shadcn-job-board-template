@@ -170,7 +170,10 @@ function LocationSalaryPage() {
   // The place hierarchy is the breadcrumb tail (country → region → current),
   // ancestors linked and the current place terminal — used by both the visible
   // trail VM and the BreadcrumbList JSON-LD, mirroring the hosted board.
-  const hierarchyCrumbs = hierarchy.map((c) => ({ name: c.name, href: c.href }));
+  const hierarchyCrumbs = hierarchy.map((c) => ({
+    name: c.name,
+    href: c.href,
+  }));
 
   const faqs = buildSalaryFaq(locale, salary.placeName, salary.overallSalary);
   const jsonLd = [

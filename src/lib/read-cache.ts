@@ -57,8 +57,7 @@ export function applyReadCache(req: BoardRequest): BoardRequest {
   const init = req.init as WorkersRequestInit;
   const method = (init.method ?? 'GET').toUpperCase();
   const headers = init.headers as Headers;
-  const authed =
-    headers.has('authorization') || headers.has('x-board-access');
+  const authed = headers.has('authorization') || headers.has('x-board-access');
 
   if (method === 'GET' && !authed) {
     // Respect an explicit board-global TTL a call site already tagged;

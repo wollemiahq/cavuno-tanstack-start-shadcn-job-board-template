@@ -9,14 +9,10 @@ import { listingHead } from '@cavuno/board/seo';
  */
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
-import {
-  ProgrammaticJobsView,
-  PROGRAMMATIC_JOBS_PAGE_SIZE,
-} from '@/routes/-programmatic-jobs-view';
-import { saveJob } from '../server/account';
 import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
 import { pageToOffset } from '../lib/pagination';
 import { m } from '../paraglide/messages';
+import { saveJob } from '../server/account';
 import {
   filterRelatedSearches,
   getSeoBase,
@@ -26,6 +22,10 @@ import {
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
 import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
+import {
+  ProgrammaticJobsView,
+  PROGRAMMATIC_JOBS_PAGE_SIZE,
+} from '@/routes/-programmatic-jobs-view';
 
 export const Route = createFileRoute('/jobs/$keyword')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },

@@ -40,8 +40,8 @@ import {
 } from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
-import { CompanySectionShell } from '@/components/board/company-section-header';
 import { toJobCardVM } from '@/board/job-view-model';
+import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobList } from '@/components/board/job-list';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { JsonLd } from '@/components/json-ld';

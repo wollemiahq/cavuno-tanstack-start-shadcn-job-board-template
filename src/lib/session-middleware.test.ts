@@ -1,3 +1,5 @@
+import { describe, expect, it, vi } from 'vitest';
+
 /**
  * `decideSession` is the extracted, pure heart of the session middleware — the
  * single-flight-refresh decision and the catch→clear→signed-out branch, with
@@ -7,7 +9,6 @@
  * reads the cookie, applies the returned cookie action, and derives headers.
  */
 import type { BoardSession } from '@cavuno/board/server';
-import { describe, expect, it, vi } from 'vitest';
 
 // The module imports `./board`, which pulls `cloudflare:workers` at load.
 // `decideSession` takes its refresher as an argument, so the real board is
@@ -47,9 +48,10 @@ describe('decideSession — the session-refresh security seam', () => {
 
   it('valid session (not expiring soon) → passes through, no refresh, no cookie', async () => {
     const current = session();
-    await expect(
-      decideSession(current, NOW, neverRefresh),
-    ).resolves.toEqual({ session: current, setCookie: null });
+    await expect(decideSession(current, NOW, neverRefresh)).resolves.toEqual({
+      session: current,
+      setCookie: null,
+    });
   });
 
   it('expiring-soon session triggers exactly one refresh', async () => {

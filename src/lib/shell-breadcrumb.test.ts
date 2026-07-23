@@ -262,10 +262,7 @@ describe('resolveShellBreadcrumbTrail', () => {
         { loaderData: { salary: {} } },
         {
           loaderData: {
-            breadcrumbTrail: [
-              { name: 'Home', href: '/' },
-              { name: 'Austin' },
-            ],
+            breadcrumbTrail: [{ name: 'Home', href: '/' }, { name: 'Austin' }],
           },
         },
       ]),

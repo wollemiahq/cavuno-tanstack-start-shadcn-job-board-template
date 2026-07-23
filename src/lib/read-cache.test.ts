@@ -1,3 +1,11 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+  READ_CACHE_TTL,
+  applyReadCache,
+  boardGlobalReadCache,
+} from './read-cache';
+
 /**
  * The edge-cache policy is a SECURITY seam: a shared, URL-keyed Cloudflare
  * cache must only ever hold the anonymous public view, and an authed/grant
@@ -7,9 +15,6 @@
  * silently. See `read-cache.ts` for the invariant this locks.
  */
 import type { BoardRequest } from '@cavuno/board';
-import { describe, expect, it } from 'vitest';
-
-import { READ_CACHE_TTL, applyReadCache, boardGlobalReadCache } from './read-cache';
 
 /** Build a BoardRequest the way the SDK hands one to the `onRequest` hook. */
 function req(
@@ -58,7 +63,9 @@ describe('applyReadCache — the anonymous/authed edge-cache split', () => {
   });
 
   it('GET carrying an Authorization bearer → cache no-store, never cacheable', () => {
-    const r = applyReadCache(req('GET', { authorization: 'Bearer abc.def.ghi' }));
+    const r = applyReadCache(
+      req('GET', { authorization: 'Bearer abc.def.ghi' }),
+    );
     expect(init(r).cache).toBe('no-store');
     expect(init(r).cf).toBeUndefined();
   });
@@ -91,9 +98,7 @@ describe('applyReadCache — the anonymous/authed edge-cache split', () => {
   });
 
   it('an authed mutation is still no-store (never cacheable)', () => {
-    const r = applyReadCache(
-      req('POST', { authorization: 'Bearer abc' }),
-    );
+    const r = applyReadCache(req('POST', { authorization: 'Bearer abc' }));
     expect(init(r).cache).toBe('no-store');
     expect(init(r).cf).toBeUndefined();
   });
@@ -110,7 +115,11 @@ describe('boardGlobalReadCache — the opt-in longer TTL, only where tagged', ()
     // A call site pre-tagged the request; the hook must not clobber it back
     // down to the short content TTL.
     const r = applyReadCache(
-      req('GET', {}, { cacheTtl: READ_CACHE_TTL.boardGlobal, cacheEverything: true }),
+      req(
+        'GET',
+        {},
+        { cacheTtl: READ_CACHE_TTL.boardGlobal, cacheEverything: true },
+      ),
     );
     expect(init(r).cf).toEqual({
       cacheTtl: READ_CACHE_TTL.boardGlobal,

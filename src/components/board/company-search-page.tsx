@@ -178,63 +178,61 @@ export function CompanySearchPage({
                   label={m.companySearch_resultsRegionLabel()}
                   scrollRestorationId="companies-search-results"
                 >
-                    <ListingResultsHeader breadcrumb={breadcrumb}>
-                      {resultsBar}
-                    </ListingResultsHeader>
+                  <ListingResultsHeader breadcrumb={breadcrumb}>
+                    {resultsBar}
+                  </ListingResultsHeader>
 
-                    <div className="space-y-3">
-                      {companyVms.map((vm, index) => {
-                        const companySlug = companySlugs[index]!;
-                        return (
-                          <div key={vm.id} data-result-id={companySlug}>
-                            <CompanySearchResult
-                              vm={vm}
-                              selected={companySlug === selection.selectedId}
-                              onActivate={(event) =>
-                                selection.onResultActivate(event, companySlug)
-                              }
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    <ListingPagination
-                      compact
-                      page={page}
-                      count={count}
-                      pageSize={pageSize}
-                      hrefForPage={(nextPage) =>
-                        listingPageHref(currentHref, nextPage, [
-                          'selectedCompany',
-                        ])
-                      }
-                      onPageChange={onPageChange}
-                    />
-
-                    {markets.length > 0 ? (
-                      <section
-                        aria-label={m.companiesIndex_browseByMarketHeading()}
-                        className="border-border space-y-3 border-t pt-4"
-                      >
-                        <h2 className="text-sm font-semibold">
-                          {m.companiesIndex_browseByMarketHeading()}
-                        </h2>
-                        <div className="flex flex-wrap gap-1.5">
-                          {markets.map((market) => (
-                            <Badge
-                              key={market.slug}
-                              variant="outline"
-                              render={
-                                <a href={companyMarketPath(market.slug)} />
-                              }
-                            >
-                              {market.name}
-                            </Badge>
-                          ))}
+                  <div className="space-y-3">
+                    {companyVms.map((vm, index) => {
+                      const companySlug = companySlugs[index]!;
+                      return (
+                        <div key={vm.id} data-result-id={companySlug}>
+                          <CompanySearchResult
+                            vm={vm}
+                            selected={companySlug === selection.selectedId}
+                            onActivate={(event) =>
+                              selection.onResultActivate(event, companySlug)
+                            }
+                          />
                         </div>
-                      </section>
-                    ) : null}
+                      );
+                    })}
+                  </div>
+
+                  <ListingPagination
+                    compact
+                    page={page}
+                    count={count}
+                    pageSize={pageSize}
+                    hrefForPage={(nextPage) =>
+                      listingPageHref(currentHref, nextPage, [
+                        'selectedCompany',
+                      ])
+                    }
+                    onPageChange={onPageChange}
+                  />
+
+                  {markets.length > 0 ? (
+                    <section
+                      aria-label={m.companiesIndex_browseByMarketHeading()}
+                      className="border-border space-y-3 border-t pt-4"
+                    >
+                      <h2 className="text-sm font-semibold">
+                        {m.companiesIndex_browseByMarketHeading()}
+                      </h2>
+                      <div className="flex flex-wrap gap-1.5">
+                        {markets.map((market) => (
+                          <Badge
+                            key={market.slug}
+                            variant="outline"
+                            render={<a href={companyMarketPath(market.slug)} />}
+                          >
+                            {market.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
                 </SearchResultsList>
               }
               detail={

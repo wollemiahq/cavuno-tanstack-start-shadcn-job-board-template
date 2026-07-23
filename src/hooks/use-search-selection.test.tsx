@@ -170,13 +170,19 @@ describe('useSearchSelection', () => {
     it('does not scroll a later in-page selection made after arrival', () => {
       setDesktop(true);
       const { rerender } = render(
-        <Harness selectedJob={undefined} jobSlugs={['first-job', 'second-job']} />,
+        <Harness
+          selectedJob={undefined}
+          jobSlugs={['first-job', 'second-job']}
+        />,
       );
       expect(scrollIntoView).not.toHaveBeenCalled();
 
       // A click selects a row post-mount — the list must not jump.
       rerender(
-        <Harness selectedJob="second-job" jobSlugs={['first-job', 'second-job']} />,
+        <Harness
+          selectedJob="second-job"
+          jobSlugs={['first-job', 'second-job']}
+        />,
       );
       expect(scrollIntoView).not.toHaveBeenCalled();
     });
@@ -184,7 +190,10 @@ describe('useSearchSelection', () => {
     it('is a no-op when the arrived job is absent from this page', () => {
       setDesktop(true);
       render(
-        <Harness selectedJob="off-page" jobSlugs={['first-job', 'second-job']} />,
+        <Harness
+          selectedJob="off-page"
+          jobSlugs={['first-job', 'second-job']}
+        />,
       );
       expect(scrollIntoView).not.toHaveBeenCalled();
     });
@@ -192,7 +201,10 @@ describe('useSearchSelection', () => {
     it('does not scroll on mobile', () => {
       setDesktop(false);
       render(
-        <Harness selectedJob="second-job" jobSlugs={['first-job', 'second-job']} />,
+        <Harness
+          selectedJob="second-job"
+          jobSlugs={['first-job', 'second-job']}
+        />,
       );
       expect(scrollIntoView).not.toHaveBeenCalled();
     });

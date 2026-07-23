@@ -43,9 +43,7 @@ describe('/go/* mount — createGoHandler', () => {
   it('GET /go/alerts-manage?token=abc&x=1 → 302 /alerts/manage (query verbatim) + noindex/no-store', async () => {
     const res = await getGo('/go/alerts-manage?token=abc&x=1');
     expect(res.status).toBe(302);
-    expect(locationPathAndSearch(res)).toBe(
-      '/alerts/manage?token=abc&x=1',
-    );
+    expect(locationPathAndSearch(res)).toBe('/alerts/manage?token=abc&x=1');
     expect(res.headers.get('X-Robots-Tag')).toBe('noindex, nofollow');
     expect(res.headers.get('Cache-Control')).toBe('private, no-store');
   });

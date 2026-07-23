@@ -270,7 +270,11 @@ describe('salary path composers', () => {
  */
 describe('toLocationHierarchyCrumbs', () => {
   const tree: SalaryLocationNode[] = [
-    { placeSlug: 'united-states', placeName: 'United States', parentSlug: null },
+    {
+      placeSlug: 'united-states',
+      placeName: 'United States',
+      parentSlug: null,
+    },
     { placeSlug: 'texas', placeName: 'Texas', parentSlug: 'united-states' },
     { placeSlug: 'austin', placeName: 'Austin', parentSlug: 'texas' },
   ];

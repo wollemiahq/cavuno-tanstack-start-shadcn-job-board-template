@@ -19,8 +19,8 @@ import { CursorPagination } from '@/components/board/cursor-pagination';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
 import { BLOG_PAGE_SIZE } from '@/lib/blog';
-import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
 import { headTitle } from '@/lib/page-title';
+import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
 import {
   getBlogTag,
   getSeoBase,

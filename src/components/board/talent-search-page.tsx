@@ -6,8 +6,8 @@ import { Users } from 'lucide-react';
 import { m } from '../../paraglide/messages';
 
 import type { TalentCardVM } from '@/board/talent-view-model';
-import { ListingPagination } from '@/components/board/listing-pagination';
 import { ListingResultsHeader } from '@/components/board/listing-page-header';
+import { ListingPagination } from '@/components/board/listing-pagination';
 import { TalentSearchResult } from '@/components/board/talent-search-result';
 import { Page } from '@/components/layout/page';
 import {
@@ -176,43 +176,41 @@ export function TalentSearchPage({
                   label={m.talentSearch_resultsRegionLabel()}
                   scrollRestorationId="talent-search-results"
                 >
-                    {resultsBar}
+                  {resultsBar}
 
-                    <div className="space-y-3">
-                      {candidateVms.map((vm, index) => (
-                        <div
-                          key={vm.handle ?? `candidate-${index}`}
-                          data-result-id={vm.handle ?? undefined}
-                        >
-                          <TalentSearchResult
-                            vm={vm}
-                            selected={
-                              vm.handle !== null &&
-                              vm.handle === selection.selectedId
-                            }
-                            onActivate={
-                              vm.handle
-                                ? (event) =>
-                                    selection.onResultActivate(event, vm.handle!)
-                                : undefined
-                            }
-                          />
-                        </div>
-                      ))}
-                    </div>
+                  <div className="space-y-3">
+                    {candidateVms.map((vm, index) => (
+                      <div
+                        key={vm.handle ?? `candidate-${index}`}
+                        data-result-id={vm.handle ?? undefined}
+                      >
+                        <TalentSearchResult
+                          vm={vm}
+                          selected={
+                            vm.handle !== null &&
+                            vm.handle === selection.selectedId
+                          }
+                          onActivate={
+                            vm.handle
+                              ? (event) =>
+                                  selection.onResultActivate(event, vm.handle!)
+                              : undefined
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
 
-                    <ListingPagination
-                      compact
-                      page={page}
-                      count={count}
-                      pageSize={pageSize}
-                      hrefForPage={(nextPage) =>
-                        listingPageHref(currentHref, nextPage, [
-                          'selectedTalent',
-                        ])
-                      }
-                      onPageChange={onPageChange}
-                    />
+                  <ListingPagination
+                    compact
+                    page={page}
+                    count={count}
+                    pageSize={pageSize}
+                    hrefForPage={(nextPage) =>
+                      listingPageHref(currentHref, nextPage, ['selectedTalent'])
+                    }
+                    onPageChange={onPageChange}
+                  />
                 </SearchResultsList>
               }
               detail={

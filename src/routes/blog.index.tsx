@@ -17,8 +17,8 @@ import { CursorPagination } from '@/components/board/cursor-pagination';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
 import { BLOG_PAGE_SIZE } from '@/lib/blog';
-import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
 import { headTitle } from '@/lib/page-title';
+import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
 import {
   getSeoBase,
   listBlogPosts,
@@ -45,7 +45,9 @@ export const Route = createFileRoute('/blog/')({
     const [page, tags, seo] = await Promise.all([
       deps.q
         ? searchBlogPosts({ data: { query: deps.q, cursor: deps.cursor } })
-        : listBlogPosts({ data: { cursor: deps.cursor, limit: BLOG_PAGE_SIZE } }),
+        : listBlogPosts({
+            data: { cursor: deps.cursor, limit: BLOG_PAGE_SIZE },
+          }),
       listBlogTags({ data: {} }),
       getSeoBase(),
     ]);

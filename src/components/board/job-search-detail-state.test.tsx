@@ -27,7 +27,9 @@ describe('JobSearchDetailState', () => {
     // The pending skeleton carries aria-busy on its article; the polite status
     // region itself must not be busy (it would be announced as such otherwise).
     expect(screen.getByRole('status')).not.toHaveAttribute('aria-busy');
-    expect(screen.getByRole('status')).toHaveTextContent('Loading job details…');
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Loading job details…',
+    );
     expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
   });
 
@@ -50,7 +52,9 @@ describe('JobSearchDetailState', () => {
     render(
       <JobSearchDetailState
         status="loading"
-        detail={<article aria-label="Previous job">Previous description.</article>}
+        detail={
+          <article aria-label="Previous job">Previous description.</article>
+        }
         loadingLabel="Loading job details…"
         errorTitle="Could not load job"
         retryLabel="Retry"
@@ -61,7 +65,9 @@ describe('JobSearchDetailState', () => {
     expect(screen.queryByRole('article', { name: 'Previous job' })).toBeNull();
     expect(screen.queryByText('Previous description.')).toBeNull();
     expect(screen.getAllByRole('status')).toHaveLength(1);
-    expect(screen.getByRole('status')).toHaveTextContent('Loading job details…');
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Loading job details…',
+    );
   });
 
   it('keeps the preserved detail visible behind an owned retry alert when a transition fails', () => {

@@ -2,14 +2,6 @@ import { boardCopy } from '#/copy';
 
 import { Search } from 'lucide-react';
 
-import { JobCard } from '@/components/board/job-card';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
 /**
  * The job list (CAV-485, rows CAV-497) — a responsive two-column grid of
  * Card tiles, or single-column Lumen-style listing rows, with the
@@ -21,6 +13,14 @@ import {
  * layer and this file imports no `@cavuno/board` wire types or mappers.
  */
 import type { JobCardVM } from '@/board/job-view-model';
+import { JobCard } from '@/components/board/job-card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 export function JobList({
