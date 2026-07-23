@@ -25,6 +25,8 @@ const mocks = vi.hoisted(() => ({
   createStage: vi.fn(),
   deleteJob: vi.fn(),
   getCompanyWorkspace: vi.fn(),
+  getEmployerCompany: vi.fn(),
+  uploadCompanyLogo: vi.fn(),
   getEmployerJobStats: vi.fn(),
   getEmployerJobStatsTimeseries: vi.fn(),
   getEmployerProfileStats: vi.fn(),
@@ -91,6 +93,8 @@ vi.mock('../server/employers', () => ({
   createStage: mocks.createStage,
   deleteJob: mocks.deleteJob,
   getCompanyWorkspace: mocks.getCompanyWorkspace,
+  getEmployerCompany: mocks.getEmployerCompany,
+  uploadCompanyLogo: mocks.uploadCompanyLogo,
   getEmployerJobStats: mocks.getEmployerJobStats,
   getEmployerJobStatsTimeseries: mocks.getEmployerJobStatsTimeseries,
   getEmployerProfileStats: mocks.getEmployerProfileStats,
@@ -168,6 +172,22 @@ const company = {
   publishedJobCount: 1,
   markets: [{ id: 'market-1', name: 'Hiring', slug: 'hiring' }],
   links: { public: 'https://jobs.example/companies/northstar-labs' },
+};
+
+// The editable `board.me.companies.retrieve` shape — unlike the public company,
+// it carries the write-side fields the form prefills (summary + social URLs).
+const employerCompany = {
+  id: 'company-1',
+  object: 'employer_company',
+  name: 'Northstar Labs',
+  slug: 'northstar-labs',
+  website: 'https://northstar.example',
+  description: '<p>Building better hiring tools.</p>',
+  summary: 'Hiring, humanely.',
+  xUrl: null,
+  linkedinUrl: 'https://linkedin.com/company/northstar',
+  facebookUrl: null,
+  logoUrl: null,
 };
 
 type EmployerJobStat = {
@@ -639,6 +659,7 @@ describe('employer company workspace', () => {
     vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
       workspace: { slug: 'northstar-labs', membership: { company } },
       company,
+      employerCompany,
     } as never);
 
     const ProfilePage = ProfileRoute.options.component;
@@ -671,6 +692,7 @@ describe('employer company workspace', () => {
     vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
       workspace: { slug: 'northstar-labs', membership: { company } },
       company,
+      employerCompany,
     } as never);
 
     const ProfilePage = ProfileRoute.options.component;
@@ -684,10 +706,69 @@ describe('employer company workspace', () => {
     expect(linkedin).toHaveValue('company/northstar');
   });
 
+  it('prefills the tagline and social fields from the editable company read', () => {
+    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
+      workspace: { slug: 'northstar-labs', membership: { company } },
+      company,
+      employerCompany,
+    } as never);
+
+    const ProfilePage = ProfileRoute.options.component;
+    if (!ProfilePage) throw new Error('needs a component');
+    render(<ProfilePage />);
+
+    // The tagline is no longer a write-only blank — it round-trips from
+    // `summary`, so the field carries the stored value on load.
+    expect(screen.getByRole('textbox', { name: 'Tagline' })).toHaveValue(
+      'Hiring, humanely.',
+    );
+    // A stored social URL prefills as the bare handle behind its domain addon.
+    expect(screen.getByRole('textbox', { name: 'LinkedIn' })).toHaveValue(
+      'company/northstar',
+    );
+  });
+
+  it('uploads a new company logo through the profile logo control', async () => {
+    mocks.uploadCompanyLogo.mockResolvedValue({
+      ...employerCompany,
+      logoUrl: 'https://cdn.example/logo.png',
+    });
+    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
+      workspace: { slug: 'northstar-labs', membership: { company } },
+      company,
+      employerCompany,
+    } as never);
+
+    const ProfilePage = ProfileRoute.options.component;
+    if (!ProfilePage) throw new Error('needs a component');
+    render(<ProfilePage />);
+
+    // The upload control is present now (no more "not available here yet").
+    expect(
+      screen.getByRole('button', { name: 'Change logo' }),
+    ).toBeInTheDocument();
+
+    const input = document.querySelector(
+      '[data-test="logo-file-input"]',
+    ) as HTMLInputElement;
+    expect(input).not.toBeNull();
+    const file = new File(['logo-bytes'], 'logo.png', { type: 'image/png' });
+    await act(async () => {
+      fireEvent.change(input, { target: { files: [file] } });
+    });
+
+    expect(mocks.uploadCompanyLogo).toHaveBeenCalledTimes(1);
+    const formData = mocks.uploadCompanyLogo.mock.calls[0][0].data as FormData;
+    expect(formData.get('slug')).toBe('northstar-labs');
+    expect(formData.get('logo')).toBe(file);
+    await waitFor(() => expect(mocks.invalidate).toHaveBeenCalled());
+  });
+
   it('streams the profile-views stat into the header once the deferred read resolves', async () => {
     vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
       workspace: { slug: 'northstar-labs', membership: { company } },
       company,
+      employerCompany,
       profileViews: Promise.resolve({
         total: 1204,
         points: [
@@ -724,6 +805,7 @@ describe('employer company workspace', () => {
     vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
       workspace: { slug: 'northstar-labs', membership: { company } },
       company,
+      employerCompany,
       profileViews: Promise.resolve({ total: 0, points: [] }),
     } as never);
 

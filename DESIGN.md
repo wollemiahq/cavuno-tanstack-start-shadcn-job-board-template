@@ -1429,6 +1429,19 @@ Props:
 - `suggestions: LocationSuggestionVM[]`
 - `value: string`
 
+### LogoUpload — `src/components/logo-upload.tsx`
+
+Company-logo uploader — mirrors the candidate `AvatarUpload` mechanism: pick a
+file, POST it as multipart (`slug` + `logo`) to the route-mediated upload, then
+refresh so the new `logoUrl` repaints. The SDK call behind the server function
+is `board.me.companies.uploadLogo(slug, file)`.
+
+Props:
+
+- `companyName: string`
+- `logoUrl: string | null`
+- `slug: string`
+
 ### DitherCanvas — `src/components/marketing/dither-canvas.tsx`
 
 The decorative hero dithering band — the real paper.design Dithering

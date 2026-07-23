@@ -4,8 +4,11 @@
  * what the board shows, edits save in place. It stands alone at the shared
  * employer page width — no tabs; navigate via the header account menu.
  *
- * `summary` (tagline) and the social links are write-only on the v1 wire, so
- * they start blank and are only sent when filled (never wiping a stored value).
+ * The form prefills from `board.me.companies.retrieve` (an `EmployerCompany`,
+ * loaded as `employerCompany`): unlike the public company read, that shape
+ * returns the write-side fields the form edits — `summary` (tagline), the social
+ * URLs, and `logoUrl` — so every field round-trips. The public `company` read
+ * still supplies the header's public-page link and the markets card.
  */
 import { useState } from 'react';
 
@@ -29,6 +32,7 @@ import {
 import { m } from '../paraglide/messages';
 import {
   getCompanyWorkspace,
+  getEmployerCompany,
   getEmployerProfileStats,
   getEmployerProfileStatsTimeseries,
   updateCompany,
@@ -36,12 +40,12 @@ import {
 import { getSeoBase, getCompany } from '../server/queries';
 
 import { toEmployerProfileViewsVM } from '@/board/employer-stats-view-model';
-import { EmployerIdentityAvatar } from '@/components/account-shell';
 import {
   EmployerProfileViewsStat,
   EmployerProfileViewsStatPending,
 } from '@/components/employer/employer-profile-views-stat';
 import { Page, PageContent } from '@/components/layout/page';
+import { LogoUpload } from '@/components/logo-upload';
 import { Text } from '@/components/text';
 import { RichTextEditor } from '@/components/rich-text-editor';
 import { Badge } from '@/components/ui/badge';
@@ -68,9 +72,10 @@ const rootApi = getRouteApi('__root__');
 export const Route = createFileRoute('/employers/companies/$slug/profile')({
   loader: async ({ params, location }) => {
     try {
-      const [workspace, company, seo] = await Promise.all([
+      const [workspace, company, employerCompany, seo] = await Promise.all([
         getCompanyWorkspace({ data: { slug: params.slug } }),
         getCompany({ data: { companySlug: params.slug } }),
+        getEmployerCompany({ data: { slug: params.slug } }),
         getSeoBase(),
       ]);
       // Reporting is non-critical: defer both profile-views reads so a slow or
@@ -87,7 +92,7 @@ export const Route = createFileRoute('/employers/companies/$slug/profile')({
           .then((result) => result.data)
           .catch(() => [] as EmployerProfileViewsPoint[]),
       ]).then(([total, points]) => ({ total, points }));
-      return { workspace, company, seo, profileViews };
+      return { workspace, company, employerCompany, seo, profileViews };
     } catch (error) {
       return await handleEmployerLoaderError(
         error,
@@ -110,14 +115,14 @@ export const Route = createFileRoute('/employers/companies/$slug/profile')({
   component: CompanyProfilePage,
 });
 
-type PublicCompany = Awaited<ReturnType<typeof getCompany>>;
+type EmployerCompany = Awaited<ReturnType<typeof getEmployerCompany>>;
 
 function stripProtocol(url: string): string {
   return url.replace(/^https?:\/\//i, '');
 }
 
 function CompanyProfilePage() {
-  const { workspace, company } = Route.useLoaderData();
+  const { workspace, company, employerCompany } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   // Typed as possibly-undefined: the loader always supplies this on the happy
   // path, but component-level tests spy the loader data without it, so the
@@ -170,7 +175,7 @@ function CompanyProfilePage() {
             </Await>
           ) : null}
 
-          <ProfileEditorCard slug={workspace.slug} company={company} />
+          <ProfileEditorCard slug={workspace.slug} company={employerCompany} />
 
           {company.markets.length > 0 ? (
             <Card size="sm">
@@ -199,17 +204,25 @@ function ProfileEditorCard({
   company,
 }: {
   slug: string;
-  company: PublicCompany;
+  company: EmployerCompany;
 }) {
   const router = useRouter();
   const [form, setForm] = useState({
     name: company.name,
     website: stripProtocol(company.website ?? ''),
-    summary: '',
+    summary: company.summary ?? '',
     description: company.description ?? '',
-    linkedinUrl: '',
-    xUrl: '',
-    facebookUrl: '',
+    // Stored as full URLs; the fields edit the bare handle behind the domain
+    // addon, so prefill strips the scheme + domain back down to that handle.
+    linkedinUrl: company.linkedinUrl
+      ? stripSocialHandle(company.linkedinUrl, ['linkedin.com'])
+      : '',
+    xUrl: company.xUrl
+      ? stripSocialHandle(company.xUrl, ['x.com', 'twitter.com'])
+      : '',
+    facebookUrl: company.facebookUrl
+      ? stripSocialHandle(company.facebookUrl, ['facebook.com'])
+      : '',
   });
   const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
   const [message, setMessage] = useState('');
@@ -227,20 +240,19 @@ function ProfileEditorCard({
           description: isRichTextEmpty(form.description)
             ? ''
             : form.description,
-          ...(form.summary.trim() ? { summary: form.summary.trim() } : {}),
-          // Write-only fields: only sent when filled, so a blank input never
-          // wipes a stored link we can't read back to prefill.
-          ...(form.linkedinUrl.trim()
-            ? { linkedinUrl: toSocialUrl(form.linkedinUrl, 'linkedin.com') }
-            : {}),
-          ...(form.xUrl.trim()
-            ? {
-                xUrl: toSocialUrl(form.xUrl, 'x.com', ['x.com', 'twitter.com']),
-              }
-            : {}),
-          ...(form.facebookUrl.trim()
-            ? { facebookUrl: toSocialUrl(form.facebookUrl, 'facebook.com') }
-            : {}),
+          // Every field round-trips (prefilled from the EmployerCompany read),
+          // so each is always sent: a blank input now means "clear it", not
+          // "keep the stored value we couldn't read".
+          summary: form.summary.trim(),
+          linkedinUrl: form.linkedinUrl.trim()
+            ? toSocialUrl(form.linkedinUrl, 'linkedin.com')
+            : '',
+          xUrl: form.xUrl.trim()
+            ? toSocialUrl(form.xUrl, 'x.com', ['x.com', 'twitter.com'])
+            : '',
+          facebookUrl: form.facebookUrl.trim()
+            ? toSocialUrl(form.facebookUrl, 'facebook.com')
+            : '',
         },
       },
     });
@@ -263,21 +275,17 @@ function ProfileEditorCard({
             void save();
           }}
         >
-          {/* Logo is read-only on this surface: the board returns `logoUrl`
-              but exposes no employer logo-write path, so we preview it and do
-              not offer an upload control (nothing would persist). */}
+          {/* Logo upload posts multipart to `uploadCompanyLogo`
+              (`board.me.companies.uploadLogo`) and invalidates so the new
+              `logoUrl` repaints — same mechanism as the candidate avatar flow. */}
           <Field>
             <FieldLabel>{m.employerProfile_logoLabel()}</FieldLabel>
-            <div className="flex items-center gap-4">
-              <EmployerIdentityAvatar
-                name={company.name}
-                logoUrl={company.logoUrl}
-                size="lg"
-              />
-              <FieldDescription>
-                {m.employerProfile_logoHint()}
-              </FieldDescription>
-            </div>
+            <LogoUpload
+              slug={slug}
+              logoUrl={company.logoUrl}
+              companyName={company.name}
+            />
+            <FieldDescription>{m.employerProfile_logoHint()}</FieldDescription>
           </Field>
           <div className="grid gap-5 sm:grid-cols-2">
             <Field>

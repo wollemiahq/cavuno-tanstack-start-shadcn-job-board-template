@@ -113,6 +113,24 @@ export const cancelClaim = createServerFn({ method: 'POST' })
     ),
   );
 
+/**
+ * The signed-in manager's editable company record (`board.me.companies.retrieve`,
+ * an `EmployerCompany`). Unlike the public `companies.retrieve`, this returns the
+ * write-side fields the profile form edits — `summary` (tagline), the social
+ * URLs, and `logoUrl` — so the form prefills from the same shape it submits. A
+ * gated read like the workspace.
+ */
+export const getEmployerCompany = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, () =>
+      getBoard().me.companies.retrieve(data.slug, {
+        headers: authedHeaders(context),
+      }),
+    ),
+  );
+
 export const updateCompany = createServerFn({ method: 'POST' })
   .validator(
     (input: { slug: string; body: UpdateEmployerCompanyBody }) => input,
@@ -124,6 +142,34 @@ export const updateCompany = createServerFn({ method: 'POST' })
         headers: authedHeaders(context),
       }),
     ),
+  );
+
+/**
+ * Company logo upload — the client posts FormData with a `slug` and a `logo`
+ * file, mirroring the candidate avatar flow (`uploadAvatar`). Wraps
+ * `board.me.companies.uploadLogo(slug, file)`, which returns the updated
+ * `EmployerCompany` (its new `logoUrl`); the caller invalidates to repaint.
+ */
+export const uploadCompanyLogo = createServerFn({ method: 'POST' })
+  .validator((data) => {
+    if (!(data instanceof FormData)) {
+      throw new Error('Expected FormData');
+    }
+    const slug = data.get('slug');
+    if (typeof slug !== 'string' || !slug) {
+      throw new Error('Expected a company slug');
+    }
+    const file = data.get('logo');
+    if (!(file instanceof File)) {
+      throw new Error('Expected a logo file');
+    }
+    return { slug, file };
+  })
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    getBoard().me.companies.uploadLogo(data.slug, data.file, {
+      headers: authedHeaders(context),
+    }),
   );
 
 export const sendWorkEmail = createServerFn({ method: 'POST' })

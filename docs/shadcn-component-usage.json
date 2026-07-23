@@ -208,6 +208,7 @@
         "src/components/job-alert-floating-prompt.tsx",
         "src/components/language-switcher.tsx",
         "src/components/languages-section.tsx",
+        "src/components/logo-upload.tsx",
         "src/components/messages-nav-link.tsx",
         "src/components/messages/blocked-list.tsx",
         "src/components/messages/inbox-list.tsx",
