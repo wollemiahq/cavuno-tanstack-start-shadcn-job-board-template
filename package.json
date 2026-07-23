@@ -43,7 +43,8 @@
     "pretypecheck": "pnpm run gen:paraglide",
     "gen:theme": "node scripts/gen-theme-resolved.mjs",
     "gen:design": "node scripts/gen-design.mjs",
-    "theme:apply": "node scripts/theme-apply.mjs"
+    "theme:apply": "node scripts/theme-apply.mjs",
+    "icons:apply": "node scripts/icons-apply.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

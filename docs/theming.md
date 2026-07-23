@@ -221,6 +221,110 @@ For an off-catalog family the wrapper says so instead, and points at the
 operator decision (install it, or pick a catalog family). A clean swap prints
 `✔ Font check: every declared family has a matching @fontsource import.`
 
+## Icons — the third axis (ICO)
+
+Colors and fonts are the two axes `theme:apply` covers. Iconography is the
+third, and it has its own command:
+
+```sh
+pnpm run icons:apply --to tabler              # migrate the whole app surface
+pnpm run icons:apply --to phosphor --dry-run  # coverage report, run nothing
+```
+
+Targets are the six libraries the shadcn CLI can migrate between: `lucide`
+(the current one), `tabler`, `phosphor`, `remixicon`, `hugeicons`, and
+`radix`. The list is read from the CLI's own catalog (`shadcn/icons`), not
+hardcoded here, so it tracks the CLI.
+
+**Requires shadcn >= 4.14.0.** That release added `--from`/`--to`, made the
+`[path]` argument work for the icons migration, and taught the rewrite about
+usage shapes older versions corrupted. The wrapper checks the installed
+version and refuses to run below it, because 4.13.0 accepts `--from`, `--to`
+and a path glob and then **silently ignores all three**, migrating only
+`src/components/ui/`. The `package.json` range already permits 4.14.0;
+picking it up is a plain `pnpm update shadcn`, gated by the one-day
+`minimumReleaseAge` cooldown in `pnpm-workspace.yaml`.
+
+### What the CLI does, and what it leaves to us
+
+On 4.14.0 the CLI does the hard part well, and `icons:apply` delegates all of
+it: six libraries, non-interactive with `-y`, a glob-scoped file set, and a
+ts-morph rewrite that correctly handles self-closing JSX, paired JSX
+(`<Icon>…</Icon>`), icons passed as JSX attribute values (`icon={BoldIcon}`),
+hugeicons' `<HugeiconsIcon icon={…} />` wrapper shape, and lucide's
+`CheckIcon`/`Check` name aliasing. Icons it cannot handle are reported with a
+reason rather than corrupted. The wrapper contains no transform of its own.
+
+Five things are still ours:
+
+- **The CLI exits 0 on a partial migration.** Anything it cannot map is
+  printed as a warning and left importing the old library. "Migration
+  complete." is not the claim "nothing imports the old library any more".
+- **It does not know about brand marks** (below).
+- **It skips the `components.json` update whenever a path is given** — that
+  write is guarded by `if (!path)`, and a whole-repo migration is exactly the
+  path case. The wrapper writes `iconLibrary` itself.
+- **It leaves `gen:shadcn` and `gen:design` artifacts stale.**
+- **It never verifies the end state**, and it installs the target package
+  itself — which is an operator decision here (AGENTS.md §Dependencies), so
+  the wrapper prints the `pnpm` commands and stops.
+
+### The brand-mark exception
+
+`src/components/brand-icons.tsx` is **never rewritten**. It holds third-party
+brand marks (Google, X, LinkedIn, Facebook) — hand-inlined precisely because
+no icon library ships them, with Google's mark carrying literal brand fills
+that must not be recolored. Swapping the icon library does not change what
+Google's logo looks like, so these are out of scope by definition. This is the
+same file `src/theme-portability.test.ts` allowlists, for the same reason.
+
+### Name coverage is the real blocker
+
+The mapping comes from the CLI's own table,
+`https://ui.shadcn.com/r/icons/index.json` — a **curated 191-icon subset**,
+not a complete index of either library. It is fetched live, so it is the same
+data on every CLI version: 4.14.0 does not improve it.
+
+This app uses **88 distinct icons**, and no target covers all of them.
+Migrating to tabler, 67 map; the remaining 21 include `BriefcaseBusiness`,
+`MapPin`, `GraduationCap` and `ChartColumnIcon`. A further handful
+(`icon: Users` and friends — icons referenced outside JSX) are skipped as
+unsupported usage, and lucide's `LucideIcon` **type** is skipped silently,
+appearing in no report at all.
+
+So `icons:apply` runs a **pre-flight and refuses to start** unless every
+identifier maps. That is the point of the wrapper. A partial migration
+compiles, builds, and passes almost every test while the app quietly runs two
+icon sets — both `pnpm run typecheck` and `pnpm run build` were confirmed
+green on a knowingly half-migrated tree. A clean report is not evidence of a
+clean migration.
+
+To get past a refusal, swap the unmapped icons at their call sites for ones
+the map covers, compare targets with `--dry-run`, or migrate the remainder by
+hand and re-run to verify.
+
+### The gate that actually holds the line
+
+`src/icon-set-contract.test.ts` (ICO) fails whenever **more than one icon
+library appears across `src/**`**, brand marks excluded. It asserts
+_cardinality, not identity_: it is derived from what is actually imported, so
+a **complete** migration to any of the six passes untouched and only a
+**partial** one fails. It also checks that `components.json.iconLibrary` and
+the declared package match what the source really imports.
+
+That is the durable guarantee — running the CLI by hand instead of through
+`icons:apply` is fine, because the gate is what makes a half-migrated tree
+impossible to commit.
+
+Two older assertions still pin the literal string `"lucide"`
+(`src/rhea-foundation.test.ts`, `src/shadcn-only-release.test.ts`), as does
+`scripts/check-shadcn-components.mjs`. They fail on any migration, complete or
+not, and pass on a half-finished one — the opposite of what ICO does.
+Relaxing them to "declared, and one of the CLI's libraries" (the
+`tailwind.baseColor` comment in `src/rhea-foundation.test.ts` is the
+precedent) is an operator decision, and safe to make now that ICO covers the
+real invariant.
+
 ## Why this works — theme portability
 
 Every app-authored surface styles through the theme's **semantic tokens**
