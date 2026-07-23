@@ -153,7 +153,7 @@ Every surface is a real, SSR-rendered page wired to the Board API:
 | Talent directory | `/talent`, `/p/:handle` |
 | Blog (+ tags, authors, RSS) | `/blog`, `/blog/:postSlug`, `/blog/tag/:tagSlug`, `/blog/author/:authorSlug` |
 | Candidate auth, account, saved jobs, messaging | `/auth/*`, `/account`, `/settings`, `/messages` |
-| Employer app (dashboard, jobs, **applicant pipeline**) | `/employers/*` |
+| Employer workspace (jobs + stats chart, **applicant pipeline kanban**, company profile) | `/employers` (pricing), `/employers/dashboard` (join/choose a company), `/employers/companies/:slug` (+ `…/jobs/new`, `…/jobs/:jobId/edit`, `…/jobs/:jobId/applicants`, `…/profile`) |
 | Post a job (anonymous funnel) | `/post` |
 | Embeds | `/embed/jobs` |
 | SEO artifacts | `/sitemap.xml`, `/robots.txt`, `/blog/rss.xml` |
