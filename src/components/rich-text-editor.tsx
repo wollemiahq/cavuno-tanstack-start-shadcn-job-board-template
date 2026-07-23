@@ -6,7 +6,14 @@ import { CharacterCount } from '@tiptap/extension-character-count';
 import { Link } from '@tiptap/extension-link';
 import { TextAlign } from '@tiptap/extension-text-align';
 import { Underline } from '@tiptap/extension-underline';
-import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
+import {
+  EditorContent,
+  getMarkRange,
+  posToDOMRect,
+  useEditor,
+  useEditorState,
+  type Editor,
+} from '@tiptap/react';
 import { StarterKit } from '@tiptap/starter-kit';
 import {
   AlignCenterIcon,
@@ -87,6 +94,45 @@ const ToolbarButton = ({
   </Tooltip>
 );
 
+/**
+ * A floating-UI virtual element: Base UI's `anchor` accepts anything that can
+ * report a viewport rect, so the link popover can hang off the selected text
+ * instead of the toolbar button that opened it.
+ */
+interface SelectionAnchor {
+  getBoundingClientRect: () => DOMRect;
+  contextElement?: Element;
+}
+
+/**
+ * The range the link popover is about to edit. A real text selection is that
+ * selection; a bare caret sitting inside an existing link is the whole link
+ * mark, so the popover points at the link it will change rather than at the
+ * cursor. Mirrors the `extendMarkRange('link')` that `applyLink` runs.
+ */
+const linkAnchorRange = (editor: Editor): { from: number; to: number } => {
+  const { from, to, $from } = editor.state.selection;
+  if (from !== to) return { from, to };
+
+  const linkMark = editor.schema?.marks?.link;
+  const markRange = linkMark ? getMarkRange($from, linkMark) : undefined;
+  return markRange ? { from: markRange.from, to: markRange.to } : { from, to };
+};
+
+/**
+ * Anchor the popover to the live document coordinates of `range`. The rect is
+ * read lazily on every measure so scrolling and layout shifts keep the popover
+ * glued to the text; the primitive's collision handling flips/shifts it to stay
+ * on screen.
+ */
+const selectionAnchor = (
+  editor: Editor,
+  range: { from: number; to: number },
+): SelectionAnchor => ({
+  getBoundingClientRect: () => posToDOMRect(editor.view, range.from, range.to),
+  contextElement: editor.view.dom,
+});
+
 const Divider = () => (
   <Separator
     orientation="vertical"
@@ -102,6 +148,11 @@ export const RichTextEditor = ({
 }: RichTextEditorProps) => {
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
+  // Captured when the popover opens so it hangs off the text being linked, not
+  // off the toolbar button. `undefined` falls back to the trigger.
+  const [linkAnchor, setLinkAnchor] = useState<SelectionAnchor | undefined>(
+    undefined,
+  );
   // The link popover moves focus to its input, so remember the editor selection
   // and restore it on apply — otherwise setLink has no range to mark.
   const savedRange = useRef<{ from: number; to: number } | null>(null);
@@ -162,6 +213,7 @@ export const RichTextEditor = ({
       const { from, to } = editor.state.selection;
       savedRange.current = { from, to };
       setLinkUrl(editor.getAttributes('link').href ?? '');
+      setLinkAnchor(selectionAnchor(editor, linkAnchorRange(editor)));
     }
     setLinkOpen(open);
   };
@@ -221,6 +273,7 @@ export const RichTextEditor = ({
               )}
             </PopoverTrigger>
             <PopoverContent
+              anchor={linkAnchor}
               side="bottom"
               align="start"
               sideOffset={8}

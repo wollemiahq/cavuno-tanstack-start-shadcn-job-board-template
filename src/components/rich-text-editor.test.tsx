@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 interface SelectionRange {
@@ -20,6 +26,8 @@ interface EditorOptions {
 const editorHarness = vi.hoisted(() => {
   const calls = {
     extendMarkRange: vi.fn(),
+    getMarkRange: vi.fn(),
+    posToDOMRect: vi.fn(),
     focus: vi.fn(),
     run: vi.fn(),
     setLink: vi.fn(),
@@ -80,6 +88,8 @@ const editorHarness = vi.hoisted(() => {
   };
 
   const active = new Set(['bold', 'link']);
+  const linkMark = { name: 'link' };
+  const resolvedFrom = { pos: 3 };
   const editor = {
     chain: vi.fn(() => chain),
     getAttributes: vi.fn(() => ({ href: 'https://existing.example' })),
@@ -88,23 +98,50 @@ const editorHarness = vi.hoisted(() => {
       if (typeof query === 'string') return active.has(query);
       return query.textAlign === 'left';
     }),
-    state: { selection: { from: 3, to: 9 } },
+    schema: { marks: { link: linkMark } },
+    state: { selection: { from: 3, to: 9, $from: resolvedFrom } },
     storage: {
       characterCount: {
         characters: vi.fn(() => 7),
       },
     },
+    view: { dom: undefined as Element | undefined },
   };
 
   return {
     active,
     calls,
     editor,
+    linkMark,
+    // Set per-test; `undefined` means "the caret is not inside a link mark".
+    markRange: undefined as SelectionRange | undefined,
     options: undefined as EditorOptions | undefined,
+    resolvedFrom,
   };
 });
 
+const rectFor = (from: number, to: number) =>
+  ({
+    x: from,
+    y: 100,
+    top: 100,
+    bottom: 120,
+    left: from,
+    right: to,
+    width: to - from,
+    height: 20,
+    toJSON: () => ({}),
+  }) as DOMRect;
+
 vi.mock('@tiptap/react', () => ({
+  getMarkRange: (...args: unknown[]) => {
+    editorHarness.calls.getMarkRange(...args);
+    return editorHarness.markRange;
+  },
+  posToDOMRect: (view: unknown, from: number, to: number) => {
+    editorHarness.calls.posToDOMRect(view, from, to);
+    return rectFor(from, to);
+  },
   EditorContent: () => {
     const attributes = editorHarness.options?.editorProps.attributes ?? {};
     return (
@@ -131,6 +168,12 @@ import { RichTextEditor } from './rich-text-editor';
 
 beforeEach(() => {
   editorHarness.options = undefined;
+  editorHarness.markRange = undefined;
+  editorHarness.editor.state.selection = {
+    from: 3,
+    to: 9,
+    $from: editorHarness.resolvedFrom,
+  };
   editorHarness.active.clear();
   editorHarness.active.add('bold');
   editorHarness.active.add('link');
@@ -205,5 +248,88 @@ describe('RichTextEditor', () => {
     expect(editorHarness.calls.unsetLink).toHaveBeenCalledOnce();
     expect(editorHarness.calls.setLink).not.toHaveBeenCalled();
     expect(editorHarness.calls.run).toHaveBeenCalledOnce();
+  });
+
+  it('anchors the link popover to the selected text rather than the toolbar button', async () => {
+    renderEditor();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove link' }));
+    await screen.findByRole('textbox', { name: 'URL' });
+
+    // The popover measures its anchor, which resolves to the selection's own
+    // document coordinates — not the trigger's.
+    await waitFor(() =>
+      expect(editorHarness.calls.posToDOMRect).toHaveBeenCalledWith(
+        editorHarness.editor.view,
+        3,
+        9,
+      ),
+    );
+  });
+
+  it('anchors to the whole link mark when the caret sits inside a link', async () => {
+    editorHarness.editor.state.selection = {
+      from: 5,
+      to: 5,
+      $from: editorHarness.resolvedFrom,
+    };
+    editorHarness.markRange = { from: 2, to: 11 };
+    renderEditor();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove link' }));
+    await screen.findByRole('textbox', { name: 'URL' });
+
+    expect(editorHarness.calls.getMarkRange).toHaveBeenCalledWith(
+      editorHarness.resolvedFrom,
+      editorHarness.linkMark,
+    );
+    await waitFor(() =>
+      expect(editorHarness.calls.posToDOMRect).toHaveBeenCalledWith(
+        editorHarness.editor.view,
+        2,
+        11,
+      ),
+    );
+  });
+
+  it('applies the link to the saved selection and keeps it after the popover closes', async () => {
+    renderEditor();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove link' }));
+    const url = await screen.findByRole('textbox', { name: 'URL' });
+    fireEvent.change(url, { target: { value: 'example.com/careers' } });
+    fireEvent.keyDown(url, { key: 'Enter' });
+
+    expect(editorHarness.calls.focus).toHaveBeenCalledOnce();
+    expect(editorHarness.calls.setTextSelection).toHaveBeenCalledWith({
+      from: 3,
+      to: 9,
+    });
+    expect(editorHarness.calls.extendMarkRange).toHaveBeenCalledWith('link');
+    expect(editorHarness.calls.setLink).toHaveBeenCalledWith({
+      href: 'https://example.com/careers',
+    });
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('textbox', { name: 'URL' }),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it('closes on Escape without touching the document', async () => {
+    renderEditor();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove link' }));
+    const url = await screen.findByRole('textbox', { name: 'URL' });
+    fireEvent.keyDown(url, { key: 'Escape' });
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('textbox', { name: 'URL' }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(editorHarness.calls.setLink).not.toHaveBeenCalled();
+    expect(editorHarness.calls.unsetLink).not.toHaveBeenCalled();
+    expect(editorHarness.calls.run).not.toHaveBeenCalled();
   });
 });
