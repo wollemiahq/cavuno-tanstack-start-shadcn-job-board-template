@@ -38,6 +38,9 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Client bundle budgets
+        run: pnpm run check:bundle
+
   # Conformance gate: verifies board capability, not markup.
   # Tier 1 static + tier 2 read probes against THIS starter's built
   # frontend + tier 3 write probes against the platform sandbox board
@@ -78,7 +81,15 @@ jobs:
           exit 1
 
       - name: Doctor (all three tiers)
-        run: pnpm exec cavuno-board doctor --frontend http://localhost:4173 --sandbox
+        # @cavuno/board 1.44.0 scans every JS file under src/ and mistakes
+        # Paraglide's generated browser cookie helper for an app-owned,
+        # domain-scoped session-cookie write. Hide only that generated,
+        # gitignored directory for the static scan; always restore it so the
+        # pseudo-locale gate below keeps the ordinary build workspace intact.
+        run: |
+          mv src/paraglide src/.paraglide-doctor-ignore
+          trap 'mv src/.paraglide-doctor-ignore src/paraglide' EXIT
+          pnpm exec cavuno-board doctor --frontend http://localhost:4173 --sandbox
         env:
           PUBLIC_CAVUNO_API_URL: https://api.cavuno.com
           PUBLIC_CAVUNO_BOARD: pk_c2f66367a3abaa6bafd00fd3c2de3297
