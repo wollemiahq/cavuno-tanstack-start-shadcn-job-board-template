@@ -36,8 +36,8 @@ operation, not a code edit for you to make.
   fontsource import block (active families only), and `--font-sans`/
   `--font-heading` tokens — then `pnpm run gen:theme && pnpm run gen:design`.
   Never set `font-family` on components (use the `font-sans`/`font-heading`
-  utilities); never add font packages — the catalog covers changes and the
-  dependency gate refuses agent-added ones.
+  utilities); never add font packages — an AGENT rule, not a ban (operators
+  may, via `--only theme,font`); token, import, and package must agree.
 - `src/styles.css` — global resets, app-shell defaults, and shared layout
   utilities. Theme tokens and radii live in `src/theme.css`.
 - `src/routes/*.tsx` — page composition (markup, layout, copy). Keep

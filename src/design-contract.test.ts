@@ -104,8 +104,9 @@ describe('DESIGN.md + DTCG export (D15 generated artifacts)', () => {
     expect(fm.colors.primary).toBe(tokens.light['--primary']);
     expect(fm.colors.accent).toBe(tokens.light['--accent']);
     expect(fm.colors).not.toHaveProperty('radius');
-    // Typography derives from the font vars.
-    expect(fm.typography.sans.fontFamily).toContain('Geist');
+    // Typography derives from the font vars — assert the DERIVATION, not
+    // the family: any preset may name a different one (docs/theming.md).
+    expect(fm.typography.sans.fontFamily).toBe(tokens.light['--font-sans']);
   });
 
   it('documents theme.css as the radius token source', () => {
@@ -225,9 +226,12 @@ describe('DESIGN.md + DTCG export (D15 generated artifacts)', () => {
       tokens.dark['--background'].toLowerCase(),
     );
     expect(dtcg.fontFamily.sans.$type).toBe('fontFamily');
+    // Shape + derivation, not the value: `--radius` is the preset's to set.
+    const [, radiusValue, radiusUnit] =
+      tokens.light['--radius'].match(/^([\d.]+)([a-z%]+)$/) ?? [];
     expect(dtcg.dimension.radius).toEqual({
       $type: 'dimension',
-      $value: { value: 0.625, unit: 'rem' },
+      $value: { value: Number(radiusValue), unit: radiusUnit },
     });
   });
 

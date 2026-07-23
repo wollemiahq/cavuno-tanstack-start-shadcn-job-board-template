@@ -15,6 +15,15 @@ export function SearchResultCard({
 }: SearchResultCardProps) {
   const { children, ...articleProps } = props;
 
+  // Selection is a `--primary` ring plus a near-transparent tint, NOT a
+  // swapped surface. Entity children style with `text-card-foreground` /
+  // `text-muted-foreground`, which are tuned against `--card`; the old
+  // `data-[selected=true]:bg-accent` stranded them on a surface they were
+  // never paired with (a saturated dark theme measured ~1.4:1 on the
+  // selected card's location, description and timestamp). Holding the
+  // surface at `--card` keeps the selected state legible under ANY preset,
+  // and a `--primary` ring among `ring-foreground/5` cards reads at least
+  // as loudly as the fill did.
   return (
     <article
       {...articleProps}
@@ -25,7 +34,11 @@ export function SearchResultCard({
         size="sm"
         data-selected={selected}
         className={cn(
-          'hover:bg-accent/50 focus-within:ring-ring/50 data-[selected=true]:bg-accent data-[selected=true]:ring-ring/60 gap-0 py-0 shadow-none transition-colors ring-inset focus-within:ring-2',
+          // `dark:data-[selected=true]:` is not redundant: Card's base ring is
+          // `ring-foreground/5 dark:ring-foreground/10`, and the single-variant
+          // selected ring ties that dark rule on specificity — losing the
+          // colour while keeping the width. Stacking both variants wins.
+          'hover:bg-accent/50 focus-within:ring-ring/50 data-[selected=true]:bg-primary/5 data-[selected=true]:ring-primary dark:data-[selected=true]:ring-primary gap-0 py-0 shadow-none transition-colors ring-inset focus-within:ring-2 data-[selected=true]:ring-2',
           className,
         )}
       >

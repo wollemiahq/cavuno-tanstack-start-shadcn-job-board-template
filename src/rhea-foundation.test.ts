@@ -17,11 +17,19 @@ describe('shadcn Rhea foundation', () => {
       menuColor: 'default',
       menuAccent: 'subtle',
       tailwind: {
-        baseColor: 'neutral',
         cssVariables: true,
         prefix: '',
       },
     });
+    // `tailwind.baseColor` is deliberately NOT pinned to a value.
+    // `shadcn apply` rewrites components.json to match the applied preset
+    // (a taupe-based preset legitimately flips it to `taupe`), and the
+    // field's job is to keep a LATER `shadcn add` resolving registry colors
+    // against the theme that is actually installed. Pinning `neutral` would
+    // turn every real theme swap red for no correctness gain; what must hold
+    // is that the CLI-owned field is still declared.
+    expect(typeof config.tailwind.baseColor).toBe('string');
+    expect(config.tailwind.baseColor.length).toBeGreaterThan(0);
   });
 
   it('owns the Rhea theme globally without a parallel compatibility theme', () => {
@@ -74,13 +82,78 @@ describe('shadcn Rhea foundation', () => {
     expect(read('src/routes/__root.tsx')).not.toContain('tokens.css?url');
   });
 
-  it('carries representative exact values from the official Neutral preset', () => {
+  // The starter's headline claim (docs/theming.md) is that ANY shadcn preset
+  // re-skins the board with zero component edits. That makes token VALUES the
+  // preset's business, not the test suite's — pinning literals here turned
+  // every real swap red. What the foundation must guarantee is STRUCTURE: a
+  // complete shadcn token set declared in both color schemes, so no surface
+  // can reference a token the applied theme forgot to define.
+  it('declares the complete shadcn token set in both color schemes', () => {
     const theme = read('src/theme.css');
-    expect(theme).toContain('--primary: oklch(0.205 0 0)');
-    expect(theme).toContain('--destructive: oklch(0.577 0.245 27.325)');
-    expect(theme).toContain('--radius: 0.625rem');
-    expect(theme).toContain('--primary: oklch(0.922 0 0)');
-    expect(theme).toContain('--sidebar-primary: oklch(0.488 0.243 264.376)');
+
+    const declaredIn = (selector: string) => {
+      const body = theme.match(
+        new RegExp(`${selector.replace('.', '\\.')}\\s*\\{([^}]*)\\}`),
+      )?.[1];
+      expect(body, `${selector} must declare a token block`).toBeTruthy();
+      return [...(body ?? '').matchAll(/^\s*(--[\w-]+):/gm)].map((m) => m[1]);
+    };
+
+    const REQUIRED_COLOR_TOKENS = [
+      '--background',
+      '--foreground',
+      '--card',
+      '--card-foreground',
+      '--popover',
+      '--popover-foreground',
+      '--primary',
+      '--primary-foreground',
+      '--secondary',
+      '--secondary-foreground',
+      '--muted',
+      '--muted-foreground',
+      '--accent',
+      '--accent-foreground',
+      '--destructive',
+      '--destructive-foreground',
+      '--border',
+      '--input',
+      '--ring',
+      '--chart-1',
+      '--chart-2',
+      '--chart-3',
+      '--chart-4',
+      '--chart-5',
+      '--sidebar',
+      '--sidebar-foreground',
+      '--sidebar-primary',
+      '--sidebar-primary-foreground',
+      '--sidebar-accent',
+      '--sidebar-accent-foreground',
+      '--sidebar-border',
+      '--sidebar-ring',
+    ];
+
+    const light = declaredIn(':root');
+    const dark = declaredIn('.dark');
+    for (const token of REQUIRED_COLOR_TOKENS) {
+      expect(light, `:root must declare ${token}`).toContain(token);
+      expect(dark, `.dark must declare ${token}`).toContain(token);
+    }
+
+    // The radius scale in @theme is computed from one root-level `--radius`.
+    expect(light).toContain('--radius');
+  });
+
+  it('derives the whole radius scale from the single --radius token', () => {
+    const theme = read('src/theme.css');
+
+    for (const step of ['sm', 'md', 'lg', 'xl', '2xl', '3xl', '4xl']) {
+      expect(
+        theme,
+        `--radius-${step} must be derived from var(--radius)`,
+      ).toMatch(new RegExp(`--radius-${step}:[^;]*var\\(--radius\\)`));
+    }
   });
 
   it('keeps app composition on replaceable Base UI-backed shadcn APIs', () => {

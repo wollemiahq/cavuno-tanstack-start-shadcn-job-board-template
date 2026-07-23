@@ -32,27 +32,42 @@ export function parseTokens(css) {
     const value = css.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1]?.trim();
     if (value) light[name] = value;
   }
+  // FNT-02: the one concrete family OG/Satori renders (cards are
+  // title-dominant): the heading family when it names one, else the
+  // body family. First family in the stack — quoted OR bare, since
+  // third-party presets write `--font-sans: Poppins, sans-serif`. The
+  // ' Variable' suffix is stripped: Satori only uses the name as a lookup
+  // label, but loadGoogleFont needs the plain family.
+  const firstFamily = (value) => {
+    const first = value?.split(',')[0]?.trim();
+    if (!first || first.startsWith('var(')) return null;
+    const family = first.match(/^['"]([^'"]+)['"]$/)?.[1] ?? first;
+    return family.replace(/\s+Variable$/i, '') || null;
+  };
+  /** …and the same family as a fontsource package slug. */
+  const familySlug = (value) =>
+    firstFamily(value)?.toLowerCase().replace(/\s+/g, '-') ?? null;
+
   const meta = {};
   for (const key of ['mode', 'fontSans', 'fontHeading', 'fontsImport']) {
     meta[key] = css.match(new RegExp(`\\* ${key}: (.+)`))?.[1]?.trim() || null;
   }
   meta.mode ??= 'system';
-  // FNT-01: static (per-weight subpath) fontsource imports parse like
-  // variable ones. Banner keys stay authoritative — this fallback only
-  // covers themes that predate the banner.
+  // FNT-01: banner keys stay authoritative. When a theme predates the banner
+  // (or a preset rewrote it away), derive from the `--font-sans` TOKEN — the
+  // thing that actually renders — and only then fall back to the leftover
+  // `@import`. Import-first got this backwards: `--only theme` rewrites the
+  // token but leaves the previous font's import in place, so a Poppins theme
+  // reported `geist`.
+  meta.fontSans ??= familySlug(light['--font-sans']) ?? null;
+  // FNT-03: static (per-weight subpath) fontsource imports parse like
+  // variable ones.
   meta.fontSans ??=
     css.match(
       /@import\s+["']@fontsource(?:-variable)?\/([a-z0-9-]+)(?:\/[^"']+)?["'];?/,
     )?.[1] ?? null;
   meta.fontHeading ??=
     light['--font-heading'] === 'var(--font-sans)' ? 'inherit' : null;
-  // FNT-02: the one concrete family OG/Satori renders (cards are
-  // title-dominant): the heading family when it names one, else the
-  // body family. First quoted name, ' Variable' suffix kept — Satori
-  // only uses it as a lookup label, but loadGoogleFont needs the plain
-  // family, so strip the suffix here where the derivation lives.
-  const firstFamily = (value) =>
-    value?.match(/['"]([^'"]+)['"]/)?.[1]?.replace(/\s+Variable$/i, '') ?? null;
   meta.ogFontFamily =
     (light['--font-heading'] !== 'var(--font-sans)'
       ? firstFamily(light['--font-heading'])
