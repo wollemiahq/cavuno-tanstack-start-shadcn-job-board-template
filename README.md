@@ -183,7 +183,7 @@ Cross-cutting capabilities that ship on top of those routes:
 | Runtime | [Cloudflare Workers](https://workers.cloudflare.com) |
 | Build | Vite+ (`vp`) |
 | UI | [shadcn/ui](https://ui.shadcn.com) on [Base UI](https://base-ui.com), [Tailwind CSS 4](https://tailwindcss.com), [Geist](https://vercel.com/font), [Lucide](https://lucide.dev) |
-| Backend | [Cavuno](https://cavuno.com) — the hosted job-board platform |
+| Backend | [Cavuno](https://cavuno.com) — the hosted job board platform |
 | Data | [Cavuno SDK](https://cavuno.com/sdk) (`@cavuno/board`) |
 | i18n | [Paraglide JS](https://paraglidejs.com) |
 

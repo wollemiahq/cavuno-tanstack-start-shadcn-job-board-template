@@ -80,7 +80,7 @@ typography:
 
 ## Overview
 
-A job-board frontend for one Cavuno board, grounded in the Board API
+A job board frontend for one Cavuno board, grounded in the Board API
 via its publishable key. Theme source of truth is `src/theme.css`
 (mode: system); this file carries the
 derived tokens and the component inventory for agents.
