@@ -8,7 +8,7 @@ This standalone starter owns the complete shadcn (Base UI) source set generated 
 - Theme: `src/theme.css`.
 - Icons: Lucide.
 - Installed source: 60 UI components plus `src/hooks/use-mobile.ts` (61 files total).
-- Production adoption: 41 used, 19 available.
+- Production adoption: 42 used, 18 available.
 
 Installing every primitive is a source-ownership and discoverability decision. It is not a requirement to render every primitive: use the semantic component that fits the interaction instead of manufacturing UI solely to increase the used count.
 
@@ -37,7 +37,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `command` | Available | Installed for adoption when the product needs this behavior. |
 | `context-menu` | Available | Installed for adoption when the product needs this behavior. |
 | `dialog` | Used (8) | `src/components/alert-manager.tsx`<br>`src/components/education-section.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>+5 more in the JSON ledger |
-| `direction` | Available | Installed for adoption when the product needs this behavior. |
+| `direction` | Used (3) | `src/components/employer/employer-profile-views-stat.tsx`<br>`src/components/employer/employer-stats-chart.tsx`<br>`src/routes/__root.tsx` |
 | `drawer` | Available | Installed for adoption when the product needs this behavior. |
 | `dropdown-menu` | Used (6) | `src/components/Header.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>`src/components/language-switcher.tsx`<br>+3 more in the JSON ledger |
 | `empty` | Used (41) | `src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+38 more in the JSON ledger |

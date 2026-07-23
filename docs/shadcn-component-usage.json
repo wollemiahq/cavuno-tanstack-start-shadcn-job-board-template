@@ -16,8 +16,8 @@
     "total": 61
   },
   "summary": {
-    "used": 41,
-    "available": 19
+    "used": 42,
+    "available": 18
   },
   "registryCompositions": [
     {
@@ -378,8 +378,12 @@
     },
     {
       "name": "direction",
-      "status": "available",
-      "productionReferences": []
+      "status": "used",
+      "productionReferences": [
+        "src/components/employer/employer-profile-views-stat.tsx",
+        "src/components/employer/employer-stats-chart.tsx",
+        "src/routes/__root.tsx"
+      ]
     },
     {
       "name": "drawer",

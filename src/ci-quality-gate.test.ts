@@ -15,6 +15,24 @@ describe('CI quality gate', () => {
     expect(workflow).not.toContain('--fix');
   });
 
+  it('pins every external action to an immutable commit SHA', () => {
+    const workflows = ['ci.yml', 'update.yaml'].map((name) =>
+      readFileSync(resolve(process.cwd(), '.github/workflows', name), 'utf8'),
+    );
+
+    for (const workflow of workflows) {
+      const externalActions = [
+        ...workflow.matchAll(/^\s*-\s+uses:\s+([^./\s][^@\s]*)@([^\s#]+)/gm),
+      ];
+      expect(externalActions.length).toBeGreaterThan(0);
+      for (const [, action, reference] of externalActions) {
+        expect(reference, `${action} must use a full commit SHA`).toMatch(
+          /^[a-f0-9]{40}$/,
+        );
+      }
+    }
+  });
+
   it('owns the formatter contract and generated ignores', () => {
     const config = JSON.parse(
       readFileSync(resolve(process.cwd(), '.oxfmtrc.json'), 'utf8'),

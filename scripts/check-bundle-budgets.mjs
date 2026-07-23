@@ -29,7 +29,9 @@ const BUDGETS = {
   styles: { raw: 260_000, gzip: 40_000 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {
-    '/employers/companies/$slug/profile': { raw: 800_000, gzip: 250_000 },
+    // Rebaselined for the intentional RTL-aware Recharts axis support. Keep
+    // the increase narrow: the measured route is ~800.6 kB raw.
+    '/employers/companies/$slug/profile': { raw: 805_000, gzip: 250_000 },
     '/post': { raw: 550_000, gzip: 180_000 },
     '/employers/companies/$slug/': { raw: 370_000, gzip: 115_000 },
     '/employers/companies/$slug/jobs/$jobId/applicants': {

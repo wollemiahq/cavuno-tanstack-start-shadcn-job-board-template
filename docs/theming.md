@@ -368,8 +368,9 @@ makes a class physical rather than logical:
 - `calendar.tsx` — range-edge radii keyed to nth-child position; the browser
   already lays the week out RTL.
 - `preview-toolbar.tsx` — a fixed dev-only QA corner.
-- the recharts stat charts — `margin={{ left, right }}` are JS props on a
-  component that lays out LTR internally.
+- the recharts stat charts — nothing there is a class. recharts draws in SVG
+  coordinates, which `<html dir>` does not mirror, so those charts flip
+  themselves in JS (see "Direction that lives in JS" below).
 
 Positional utilities (`left-*`, `right-*`, `translate-x-*`) are never batch
 rewritten either: some need a logical inset (`end-2` for a menu checkmark that
@@ -377,6 +378,38 @@ follows its `pe-8` gutter), some need an `rtl:` variant (a chevron gets
 `rtl:rotate-180`, the switch thumb gets a per-direction translate), and some
 are already correct in both directions (`left-1/2 -translate-x-1/2` centring).
 `--dry-run` lists them so the remainder is reviewed, not assumed.
+
+### Direction that lives in JS
+
+CSS mirrors the page, but two libraries lay themselves out in coordinates the
+browser will not flip for us: **recharts** draws into an SVG viewport, and
+**embla** translates its track in raw pixels. Both expose a first-class flip,
+and both need to know the direction at render time.
+
+That seam is Base UI's `DirectionProvider`, mounted once in `__root.tsx` from
+the same `localeDirection(locale)` that sets `<html dir>`. Components read it
+with `useDirection()` (re-exported from `@/components/ui/direction`). Because
+the value is computed in the server render, the first byte is already correct
+— a `document.dir` read in an effect would mirror the chart after paint. It
+is a shared seam, not a chart one: Base UI reads the same context for popup
+placement.
+
+- `employer-stats-chart.tsx` — `<XAxis reversed>` puts the oldest bucket on
+  the right; `<YAxis orientation="right">` moves the value axis to the leading
+  edge; the `margin` gutter that keeps the last tick off the plot edge is
+  mirrored with it. The tooltip and legend need nothing — recharts pins the
+  tooltip wrapper at `left: 0` and positions it by transform, and the legend
+  is a centred flex row that mirrors itself.
+- `employer-profile-views-stat.tsx` — the sparkline has no visible axes, so it
+  carries a **hidden** `<XAxis reversed>`: the flip without the gutter.
+- `ui/carousel.tsx` — embla's `direction: 'rtl'`. Note that this reverses the
+  TRACK, not embla's notion of prev/next: the previous slide is still the one
+  toward the start, which under RTL is physically the right. So the `rtl:`
+  variants on the arrow buttons stay as they are — there is no double flip to
+  undo. What does have to swap on a horizontal carousel is the keyboard
+  handler, because arrow KEYS are physical: under RTL, ArrowLeft advances.
+  Vertical carousels retain their existing key mapping because Embla does not
+  mirror the y-axis.
 
 ### Content direction is not chrome direction
 

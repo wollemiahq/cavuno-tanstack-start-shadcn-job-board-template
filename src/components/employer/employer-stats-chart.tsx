@@ -19,6 +19,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
+import { useDirection } from '@/components/ui/direction';
 import {
   Empty,
   EmptyDescription,
@@ -40,12 +41,24 @@ import { Spinner } from '@/components/ui/spinner';
  * signal), plus an always-present legend and the shared tooltip. All-zero
  * windows render an honest "No activity yet" panel at the chart's height rather
  * than a flat line on a collapsed axis.
+ *
+ * DIRECTION: recharts lays a chart out in SVG coordinates, which `<html dir>`
+ * does not mirror — the axes have to be flipped in JS. Under RTL the time axis
+ * is `reversed` (oldest bucket on the right, so the series reads with the
+ * chrome) and the value axis moves to the physical right, the leading edge.
+ * Direction comes from the app-wide {@link useDirection} context, which the
+ * root document publishes from the SAME `localeDirection(locale)` it puts on
+ * `<html dir>` — resolved server-side, so the first paint is already mirrored.
+ * The tooltip and legend need nothing: recharts pins the tooltip wrapper at
+ * `left: 0` and translates it, and the legend is a centred flex row that
+ * mirrors itself.
  */
 
 // 30 daily buckets is too many x-ticks; thin them so labels never collide.
 const X_TICK_INTERVAL = 4;
 
 export function EmployerStatsChart({ vm }: { vm: EmployerStatsChartVM }) {
+  const isRtl = useDirection() === 'rtl';
   // Built at render so the legend labels resolve to the active board locale
   // (module-scope `m.*` would freeze them to the import-time locale).
   const chartConfig = {
@@ -86,7 +99,10 @@ export function EmployerStatsChart({ vm }: { vm: EmployerStatsChartVM }) {
             <ComposedChart
               accessibilityLayer
               data={vm.points}
-              margin={{ left: 4, right: 8 }}
+              // The wider margin is the gutter that keeps the LAST x tick
+              // from clipping at the plot's trailing edge — which is the
+              // left edge once the axis is reversed.
+              margin={isRtl ? { left: 8, right: 4 } : { left: 4, right: 8 }}
             >
               <defs>
                 <linearGradient
@@ -116,10 +132,12 @@ export function EmployerStatsChart({ vm }: { vm: EmployerStatsChartVM }) {
                 tickMargin={8}
                 interval={X_TICK_INTERVAL}
                 minTickGap={16}
+                reversed={isRtl}
               />
               <YAxis
                 tickLine={false}
                 axisLine={false}
+                orientation={isRtl ? 'right' : 'left'}
                 width={32}
                 allowDecimals={false}
                 tickMargin={4}

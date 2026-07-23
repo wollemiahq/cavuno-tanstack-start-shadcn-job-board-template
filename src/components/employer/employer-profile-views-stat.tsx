@@ -1,10 +1,11 @@
-import { Area, AreaChart } from 'recharts';
+import { Area, AreaChart, XAxis } from 'recharts';
 
 import { m } from '../../paraglide/messages';
 
 import type { EmployerProfileViewsVM } from '@/board/employer-stats-view-model';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChartContainer, type ChartConfig } from '@/components/ui/chart';
+import { useDirection } from '@/components/ui/direction';
 import { Spinner } from '@/components/ui/spinner';
 
 /**
@@ -13,12 +14,20 @@ import { Spinner } from '@/components/ui/spinner';
  * Presentational only: it renders from a resolved {@link EmployerProfileViewsVM}
  * (the number formatting, the honest "No views yet" zero state, and whether the
  * sparkline is worth drawing are all decided by the mapper).
+ *
+ * DIRECTION: the sparkline is a time series with no visible axes, but time
+ * still has to run with the chrome, and recharts draws in SVG coordinates that
+ * `<html dir>` does not mirror. Under RTL a HIDDEN x-axis carries `reversed`
+ * — the first-class recharts flip — so the oldest bucket sits on the right
+ * without the axis consuming any of the 48×128 box. Direction comes from the
+ * app-wide {@link useDirection} context (see EmployerStatsChart).
  */
 export function EmployerProfileViewsStat({
   vm,
 }: {
   vm: EmployerProfileViewsVM;
 }) {
+  const isRtl = useDirection() === 'rtl';
   // Built at render so the label resolves to the active board locale.
   const chartConfig = {
     views: {
@@ -75,6 +84,7 @@ export function EmployerProfileViewsStat({
                   />
                 </linearGradient>
               </defs>
+              <XAxis hide dataKey="date" reversed={isRtl} />
               <Area
                 dataKey="views"
                 type="monotone"

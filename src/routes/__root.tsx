@@ -52,6 +52,7 @@ import {
   MainContentTarget,
   SkipToContentLink,
 } from '@/components/shell-accessibility';
+import { DirectionProvider } from '@/components/ui/direction';
 import { Toaster } from '@/components/ui/sonner';
 import {
   resolveHeaderRouteLabels,
@@ -529,55 +530,63 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       ? themeMeta.mode
       : ('system' as const);
   const locale = getLocale();
+  const direction = localeDirection(locale);
   return (
-    <html
-      // The document declares the RUNTIME locale (ADR-0063): the base
-      // locale (=== board language, generation-time invariant) on
-      // unprefixed routes, the chrome locale under /de/-style prefixes.
-      lang={locale}
-      // …and its writing direction, server-side on the first byte, so
-      // logical properties and `rtl:` variants resolve before paint
-      // rather than mirroring the page after hydration. en/de/fr → ltr;
-      // the ar-XB pseudo-bidi CI locale → rtl.
-      dir={localeDirection(locale)}
-      className={mode === 'dark' ? 'dark' : undefined}
-      data-theme-mode={mode}
-      suppressHydrationWarning
-    >
-      <head>
-        {/* en-XA / ar-XB are the CI coverage pseudo-locales (never for
+    // The SAME resolved direction the document declares, published as React
+    // context so components whose direction lives in JS rather than CSS can
+    // read it (recharts axes, embla's scroll axis) and Base UI reads it for
+    // popup placement. Computed in this server render, so the value is
+    // already correct on the first byte and hydration cannot flip it.
+    <DirectionProvider direction={direction}>
+      <html
+        // The document declares the RUNTIME locale (ADR-0063): the base
+        // locale (=== board language, generation-time invariant) on
+        // unprefixed routes, the chrome locale under /de/-style prefixes.
+        lang={locale}
+        // …and its writing direction, server-side on the first byte, so
+        // logical properties and `rtl:` variants resolve before paint
+        // rather than mirroring the page after hydration. en/de/fr → ltr;
+        // the ar-XB pseudo-bidi CI locale → rtl.
+        dir={direction}
+        className={mode === 'dark' ? 'dark' : undefined}
+        data-theme-mode={mode}
+        suppressHydrationWarning
+      >
+        <head>
+          {/* en-XA / ar-XB are the CI coverage pseudo-locales (never for
             humans or crawlers): noindex them. Real prefixed chrome
             locales stay indexable — their route canonicals already point
             at the unprefixed base (chrome-translated duplicates,
             ADR-0063 D4; hreflang deliberately deferred until content
             translates). */}
-        {(locale === 'en-XA' || locale === 'ar-XB') && (
-          <meta name="robots" content="noindex, nofollow" />
-        )}
-        <HeadContent />
-        {/* Tinybird flock analytics (cutover runbook P2, hosted parity):
+          {(locale === 'en-XA' || locale === 'ar-XB') && (
+            <meta name="robots" content="noindex, nofollow" />
+          )}
+          <HeadContent />
+          {/* Tinybird flock analytics (cutover runbook P2, hosted parity):
             first-party page views + custom events keyed by tenant_id =
             board slug, via the /t proxy. Renders only when the
             deployment carries a tracker token. */}
-        {data?.seo?.trackerToken && data?.board?.slug ? (
-          <script
-            defer
-            src="/js/metrics.js"
-            data-token={data.seo.trackerToken}
-            data-host="/t"
-            data-tenant-id={data.board.slug}
-            data-web-vitals="true"
-          />
-        ) : null}
-      </head>
-      <body className="bg-background text-foreground flex min-h-screen flex-col font-sans antialiased">
-        {/* System-mode resolution before first paint (no theme flash). */}
-        <script dangerouslySetInnerHTML={{ __html: themeModeScript(mode) }} />
-        <SkipToContentLink label={m.siteHeader_skipToContentLabel()} />
-        {children}
-        <Toaster />
-        <Scripts />
-      </body>
-    </html>
+          {data?.seo?.trackerToken && data?.board?.slug ? (
+            <script
+              defer
+              src="/js/metrics.js"
+              data-token={data.seo.trackerToken}
+              data-host="/t"
+              data-tenant-id={data.board.slug}
+              data-web-vitals="true"
+            />
+          ) : null}
+        </head>
+        <body className="bg-background text-foreground flex min-h-screen flex-col font-sans antialiased">
+          {/* System-mode resolution before first paint (no theme flash). */}
+          <script dangerouslySetInnerHTML={{ __html: themeModeScript(mode) }} />
+          <SkipToContentLink label={m.siteHeader_skipToContentLabel()} />
+          {children}
+          <Toaster />
+          <Scripts />
+        </body>
+      </html>
+    </DirectionProvider>
   );
 }

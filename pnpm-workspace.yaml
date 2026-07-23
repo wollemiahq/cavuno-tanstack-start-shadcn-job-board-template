@@ -16,6 +16,14 @@ minimumReleaseAgeExclude:
   - '@typescript/*'
   - '@cavuno/board'
 
+# Security patches for transitive packages whose parents currently pin
+# vulnerable releases. Remove these once the parent ranges resolve to the
+# patched versions without an override.
+overrides:
+  '@hono/node-server': 2.0.11
+  sharp: 0.35.3
+  ws: 8.21.1
+
 # esbuild/sharp/workerd all ship prebuilt binaries as optional
 # dependencies — their postinstall scripts are fallbacks we don't need.
 allowBuilds:

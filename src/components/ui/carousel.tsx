@@ -10,6 +10,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { m } from '../../paraglide/messages';
 
 import { Button } from '@/components/ui/button';
+import { useDirection } from '@/components/ui/direction';
 import { cn } from '@/lib/utils';
 
 type CarouselApi = UseEmblaCarouselType[1];
@@ -52,12 +53,24 @@ function Carousel({
   plugins,
   className,
   children,
+  dir,
   ...props
 }: React.ComponentProps<'div'> & CarouselProps) {
+  // Embla translates the track in raw pixels, so `<html dir>` alone does NOT
+  // mirror it: under RTL the flex track lays its slides out right-to-left
+  // while embla keeps scrolling the LTR way, and the arrows (already flipped
+  // by `rtl:` variants) end up pointing opposite the content. `direction` is
+  // embla's own first-class flip. A caller who passes `opts.direction`
+  // explicitly still wins — this only supplies the document's default.
+  const contextDirection = useDirection();
+  const direction =
+    opts?.direction ??
+    (dir === 'ltr' || dir === 'rtl' ? dir : contextDirection);
   const [carouselRef, api] = useEmblaCarousel(
     {
       ...opts,
       axis: orientation === 'horizontal' ? 'x' : 'y',
+      direction,
     },
     plugins,
   );
@@ -78,17 +91,24 @@ function Carousel({
     api?.scrollNext();
   }, [api]);
 
+  // Arrow keys are PHYSICAL, the scroll is LOGICAL: with a horizontal axis
+  // flipped, the next slide is the one to the left, so ArrowLeft advances.
+  // Embla does not mirror a vertical axis, so preserve its existing key
+  // mapping there.
+  const isHorizontalRtl = orientation === 'horizontal' && direction === 'rtl';
   const handleKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
-        scrollPrev();
+        if (isHorizontalRtl) scrollNext();
+        else scrollPrev();
       } else if (event.key === 'ArrowRight') {
         event.preventDefault();
-        scrollNext();
+        if (isHorizontalRtl) scrollPrev();
+        else scrollNext();
       }
     },
-    [scrollPrev, scrollNext],
+    [scrollPrev, scrollNext, isHorizontalRtl],
   );
 
   React.useEffect(() => {
@@ -127,6 +147,7 @@ function Carousel({
         role="region"
         aria-roledescription="carousel"
         data-slot="carousel"
+        dir={direction}
         {...props}
       >
         {children}
@@ -198,6 +219,10 @@ function CarouselPrevious({
       onClick={scrollPrev}
       {...props}
     >
+      {/* No double flip: embla's `direction: 'rtl'` reverses the TRACK, not
+          prev/next, so the previous slide is still the one toward the start —
+          physically the right under RTL, which is where `-start-12` puts this
+          button and where `rtl:rotate-180` points its chevron. */}
       <ChevronLeftIcon className="rtl:rotate-180" />
       <span className="sr-only">{m.ui_carouselPreviousLabel()}</span>
     </Button>

@@ -181,13 +181,17 @@ const EXCLUSIONS = [
     file: 'src/components/employer/employer-stats-chart.tsx',
     families: '*',
     reason:
-      'recharts `margin={{ left, right }}` are JS props on a chart that ' +
-      'lays out LTR internally. (Not class-list-eligible either.)',
+      'recharts draws in SVG coordinates that `<html dir>` does not mirror, ' +
+      'so this chart flips itself in JS instead — `XAxis reversed`, ' +
+      '`YAxis orientation`, and a mirrored `margin={{ left, right }}`, all ' +
+      'keyed off `useDirection()`. None of it is class-list-eligible.',
   },
   {
     file: 'src/components/employer/employer-profile-views-stat.tsx',
     families: '*',
-    reason: 'Same recharts physical margin props as employer-stats-chart.',
+    reason:
+      'Same recharts JS-props story as employer-stats-chart: the sparkline ' +
+      'mirrors via a hidden `XAxis reversed`, not via classes.',
   },
 ];
 
