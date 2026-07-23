@@ -12,8 +12,8 @@ Requirements: **pnpm 11** (pinned in `package.json`) and **Node 24** (matches
 CI).
 
 ```sh
-git clone https://github.com/wollemiahq/cavuno-shadcn-ui-job-board-template
-cd cavuno-shadcn-ui-job-board-template
+git clone https://github.com/wollemiahq/cavuno-tanstack-start-shadcn-job-board-template
+cd cavuno-tanstack-start-shadcn-job-board-template
 cp .dev.vars.example .dev.vars   # already points at the live sandbox board
 pnpm install
 pnpm dev                         # http://localhost:3000
@@ -41,6 +41,7 @@ pnpm run typecheck
 pnpm test
 pnpm run gen:design -- --check # DESIGN.md / tokens must not drift
 pnpm run build
+pnpm run check:bundle         # route-aware client bundle budgets
 ```
 
 A separate CI job runs the Board API conformance probe against the built

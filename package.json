@@ -1,7 +1,7 @@
 {
-  "name": "cavuno-shadcn-ui-job-board-template",
+  "name": "cavuno-tanstack-start-shadcn-job-board-template",
   "private": true,
-  "description": "A complete shadcn/ui job board template powered by Cavuno.",
+  "description": "A production-ready TanStack Start + shadcn/ui job board template powered by Cavuno.",
   "keywords": [
     "base-ui",
     "job-board",
@@ -9,12 +9,14 @@
     "shadcn-ui",
     "tailwindcss",
     "tanstack",
+    "tanstack-start",
     "template"
   ],
+  "homepage": "https://cavuno.com",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wollemiahq/cavuno-shadcn-ui-job-board-template.git"
+    "url": "https://github.com/wollemiahq/cavuno-tanstack-start-shadcn-job-board-template.git"
   },
   "type": "module",
   "imports": {
@@ -23,6 +25,7 @@
   "scripts": {
     "dev": "vp dev --port 3000",
     "build": "vp build",
+    "check:bundle": "node scripts/check-bundle-budgets.mjs",
     "preview": "pnpm run build && vp preview",
     "test": "vp test run",
     "test:watch": "vp test",

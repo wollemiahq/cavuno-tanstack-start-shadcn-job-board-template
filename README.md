@@ -1,4 +1,4 @@
-# Cavuno — a job board template that runs the moment you clone it
+# TanStack Start + shadcn/ui job board template — powered by Cavuno
 
 **Clone it, `pnpm dev`, and in under a minute you have a populated,
 production-realistic job board** — real jobs and companies, a working
@@ -12,9 +12,6 @@ Built on [TanStack Start](https://tanstack.com/start),
 [Lucide](https://lucide.dev). Data comes from [Cavuno](https://cavuno.com)
 via the [Cavuno SDK](https://cavuno.com/sdk) (`@cavuno/board`), so every
 surface is a real page wired to a real backend — not a mock.
-
-**Hosted demo:** [demo.cavuno.app](https://demo.cavuno.app) — this template
-running against the live sandbox board.
 
 ![Cavuno job board home — real sandbox jobs and company cards](docs/media/home.png)
 
@@ -79,8 +76,8 @@ without breaking salary math, canonical URLs, or SEO.
 ## Quickstart
 
 ```sh
-git clone https://github.com/wollemiahq/cavuno-shadcn-ui-job-board-template
-cd cavuno-shadcn-ui-job-board-template
+git clone https://github.com/wollemiahq/cavuno-tanstack-start-shadcn-job-board-template
+cd cavuno-tanstack-start-shadcn-job-board-template
 cp .dev.vars.example .dev.vars   # already points at the live sandbox board
 pnpm install
 pnpm dev                         # http://localhost:3000
@@ -140,23 +137,35 @@ The sandbox exists so you can see every state without seeding anything:
 
 ## What's inside
 
-Every surface is a real, SSR-rendered page wired to the Board API:
+Every product surface is a real, SSR-rendered page wired to the Board API.
+Feeds, metadata, redirects, and other machine endpoints ship alongside them:
 
 | Surface | Route(s) |
 |---|---|
 | Home (company discovery + latest jobs) | `/` |
-| Jobs search (filters + master/detail) | `/jobs` |
+| Jobs search (filters + master/detail) | `/jobs`, `/jobs/locations` |
 | Job detail (meta + Google for Jobs JSON-LD) | `/companies/:companySlug/jobs/:jobSlug` |
-| Programmatic SEO listings | `/jobs/:keyword`, `/jobs/skills/:skill`, `/jobs/locations/:location`, and the compound pages `/jobs/locations/:location/:keyword` + `/jobs/locations/:location/skills/:skill` |
-| Companies | `/companies`, `/companies/:companySlug`, `/companies/markets/:market` |
-| Salaries explorer | `/salaries` + company/title/skill/location trees |
-| Talent directory | `/talent`, `/p/:handle` |
-| Blog (+ tags, authors, RSS) | `/blog`, `/blog/:postSlug`, `/blog/tag/:tagSlug`, `/blog/author/:authorSlug` |
-| Candidate auth, account, saved jobs, messaging | `/auth/*`, `/account`, `/settings`, `/messages` |
-| Employer workspace (jobs + stats chart, **applicant pipeline kanban**, company profile) | `/employers` (pricing), `/employers/dashboard` (join/choose a company), `/employers/companies/:slug` (+ `…/jobs/new`, `…/jobs/:jobId/edit`, `…/jobs/:jobId/applicants`, `…/profile`) |
+| Programmatic SEO job listings | `/jobs/:keyword`, `/jobs/skills/:skill`, `/jobs/locations/:location`, `/jobs/locations/:location/:keyword`, `/jobs/locations/:location/skills/:skill` |
+| Companies, company jobs, and company salaries | `/companies`, `/companies/:companySlug`, `/companies/markets/:market`, `/companies/:companySlug/jobs`, `/companies/:companySlug/salaries`, `/companies/:companySlug/salaries/:categorySlug` |
+| Salaries hubs | `/salaries`, `/salaries/companies`, `/salaries/titles`, `/salaries/skills`, `/salaries/locations` |
+| Salary title and skill explorers | `/salaries/titles/:slug`, `/salaries/titles/:slug/locations`, `/salaries/titles/:slug/:locationSlug`, `/salaries/skills/:slug`, `/salaries/skills/:slug/locations`, `/salaries/skills/:slug/:locationSlug` |
+| Salary location explorers | `/salaries/locations/:slug`, `/salaries/locations/:slug/titles`, `/salaries/locations/:slug/skills` |
+| Talent directory and profiles | `/talent`, `/p/:handle` |
+| Blog, tags, and authors | `/blog`, `/blog/:postSlug`, `/blog/tag/:tagSlug`, `/blog/author/:authorSlug` |
+| Candidate and employer authentication | `/auth/sign-in`, `/auth/sign-up`, `/auth/employer/sign-up`, `/auth/join`, `/auth/magic-link`, `/auth/oauth-complete`, `/auth/forgot-password`, `/auth/reset-password`, `/auth/verify-email`, `/auth/verify-email-required`, `/auth/verify-work-email` |
+| Candidate profile, applications, saved jobs, and settings | `/account`, `/account/saved`, `/account/access`, `/me/applications`, `/settings` |
+| Candidate alerts and messaging | `/me/alerts`, `/alerts/confirm`, `/alerts/manage`, `/messages`, `/messages/:conversationId` |
+| Employer entry and onboarding | `/employers`, `/employers/dashboard`, `/employers/onboarding/:slug` |
+| Employer company workspace (jobs + stats chart, **applicant pipeline kanban**, company profile) | `/employers/companies/:slug`, `/employers/companies/:slug/jobs/new`, `/employers/companies/:slug/jobs/:jobId/edit`, `/employers/companies/:slug/jobs/:jobId/applicants`, `/employers/companies/:slug/profile` |
 | Post a job (anonymous funnel) | `/post` |
-| Embeds | `/embed/jobs` |
-| SEO artifacts | `/sitemap.xml`, `/robots.txt`, `/blog/rss.xml` |
+| Board access and embeds | `/password`, `/embed/jobs` |
+| Content and legal pages | `/about`, `/privacy-policy`, `/terms-of-service`, `/cookie-policy`, `/impressum` |
+| Feeds and discovery | `/jobs/rss.xml`, `/blog/rss.xml`, `/sitemap.xml`, `/sitemap/:file`, `/robots.txt`, `/indexnow-key.txt` |
+| OpenGraph assets | `/companies/:companySlug/jobs/:jobSlug/og`, `/blog/:postSlug/og`, `/blog/og/:postSlug.json` |
+| Platform and integration endpoints | `/.well-known/cavuno.json`, `/site.webmanifest`, `/ads.txt`, `/js/metrics.js`, `/go/*`, `/t/*` |
+
+The same supported surfaces are available under locale prefixes such as `/de`
+and `/fr`; the default locale stays unprefixed.
 
 Cross-cutting capabilities that ship on top of those routes:
 
@@ -171,10 +180,9 @@ Cross-cutting capabilities that ship on top of those routes:
   `/fr/…`) powered by [Paraglide JS](https://paraglidejs.com): compile-time
   catalogs (`en`/`de`/`fr` + a pseudo-locale for QA), SSR-resolved on Workers
   so there's no flash of the wrong language, and a footer language switcher
-  wired out of the box — try it on the [demo](https://demo.cavuno.app).
-  Deliberately chrome-only: the UI localizes while board content (jobs,
-  companies) stays in the board's own language, matching the platform's
-  single-language board model.
+  wired out of the box. Deliberately chrome-only: the UI localizes while board
+  content (jobs, companies) stays in the board's own language, matching the
+  platform's single-language board model.
 - **Dark mode** keyed to a single `.dark` class, and **accessibility** from
   Base UI semantics and the owned components' explicit ARIA contracts.
 
@@ -236,15 +244,7 @@ deploying. That deploy-time grounding is the operator's job, not a code edit
 — which is why [`AGENTS.md`](AGENTS.md) tells coding agents to never touch
 these values.
 
-A `demo` environment is pre-wired for the hosted showcase deploy:
-
-```sh
-wrangler deploy --env demo
-```
-
-> The public demo lives at [demo.cavuno.app](https://demo.cavuno.app).
-
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/wollemiahq/cavuno-shadcn-ui-job-board-template)
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/wollemiahq/cavuno-tanstack-start-shadcn-job-board-template)
 
 <!-- The Deploy button above works once the repo is public; while private it
      will not resolve for external visitors. -->
