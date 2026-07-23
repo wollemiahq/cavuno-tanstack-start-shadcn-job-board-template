@@ -27,7 +27,10 @@ export function JobSearchResult({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="text-foreground line-clamp-2 text-base font-semibold">
+              <h2
+                className="text-foreground line-clamp-2 text-base font-semibold"
+                dir="auto"
+              >
                 {vm.detailHref ? (
                   <a
                     href={vm.detailHref}
@@ -42,7 +45,10 @@ export function JobSearchResult({
                 )}
               </h2>
               {vm.companyName ? (
-                <p className="text-foreground mt-0.5 truncate text-sm font-semibold">
+                <p
+                  className="text-foreground mt-0.5 truncate text-sm font-semibold"
+                  dir="auto"
+                >
                   {vm.companyName}
                 </p>
               ) : null}
@@ -61,7 +67,10 @@ export function JobSearchResult({
             <p className="text-foreground mt-2 text-sm">{vm.salaryLabel}</p>
           ) : null}
           {vm.summary ? (
-            <p className="text-muted-foreground mt-2 line-clamp-2 text-sm">
+            <p
+              className="text-muted-foreground mt-2 line-clamp-2 text-sm"
+              dir="auto"
+            >
               {vm.summary}
             </p>
           ) : null}

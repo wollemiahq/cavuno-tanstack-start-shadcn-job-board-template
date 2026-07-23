@@ -228,7 +228,7 @@ export function JobsFilterToolbar({
             render={
               <Button
                 variant="ghost"
-                className="bg-secondary absolute top-4 right-4"
+                className="bg-secondary absolute end-4 top-4"
                 size="icon-sm"
               />
             }

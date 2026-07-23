@@ -52,16 +52,25 @@ export function LegalPageView({
     // the capped column, so the prose fills the 48rem measure.
     <PageBody>
       <div className="mx-auto w-full max-w-3xl">
-        <Prose as="article">
+        {/* `dir` is pinned off `auto` on the wrapper on purpose: the JSON-LD
+            <script> below is a text-node descendant, so first-strong would
+            resolve against `{"@context":"https://…` rather than the prose.
+            Each real content field carries its own `dir="auto"` instead. */}
+        <Prose as="article" dir={undefined}>
           <JsonLd data={jsonLd} />
-          <h1>{page.title}</h1>
+          <h1 dir="auto">{page.title}</h1>
           {page.legalEntity ? (
             <section className="not-typeset border-border mb-6 rounded-lg border p-4 text-sm">
               {page.legalEntity.legalName ? (
-                <p className="font-medium">{page.legalEntity.legalName}</p>
+                <p className="font-medium" dir="auto">
+                  {page.legalEntity.legalName}
+                </p>
               ) : null}
               {page.legalEntity.address ? (
-                <p className="text-muted-foreground whitespace-pre-line">
+                <p
+                  className="text-muted-foreground whitespace-pre-line"
+                  dir="auto"
+                >
                   {page.legalEntity.address}
                 </p>
               ) : null}
@@ -69,7 +78,10 @@ export function LegalPageView({
           ) : null}
           {page.content ? (
             // Prose arrives pre-sanitized from the Board API (portable HTML).
-            <div dangerouslySetInnerHTML={{ __html: page.content }} />
+            <div
+              dir="auto"
+              dangerouslySetInnerHTML={{ __html: page.content }}
+            />
           ) : null}
         </Prose>
       </div>

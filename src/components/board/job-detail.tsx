@@ -144,13 +144,21 @@ export function JobDetail({
                       {vm.companyName}
                     </a>
                   ) : vm.companyName ? (
-                    <span className="text-foreground text-base font-semibold">
+                    <span
+                      className="text-foreground text-base font-semibold"
+                      dir="auto"
+                    >
                       {vm.companyName}
                     </span>
                   ) : null}
                 </div>
 
-                <Text as="h1" variant="heading2" className="md:text-3xl">
+                <Text
+                  as="h1"
+                  variant="heading2"
+                  className="md:text-3xl"
+                  dir="auto"
+                >
                   {vm.title}
                 </Text>
 

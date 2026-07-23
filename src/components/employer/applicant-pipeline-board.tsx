@@ -343,7 +343,7 @@ function StageColumn({
           {cards.length}
         </span>
         {stage.isProtected ? (
-          <Badge variant="secondary" className="ml-auto">
+          <Badge variant="secondary" className="ms-auto">
             {m.employerApplicants_systemBadge()}
           </Badge>
         ) : (
@@ -353,7 +353,7 @@ function StageColumn({
                 <Button
                   variant="ghost"
                   size="icon-xs"
-                  className="ml-auto"
+                  className="ms-auto"
                   aria-label={`${m.employerApplicants_stageOptionsLabel()} · ${stage.label}`}
                 />
               }
@@ -562,7 +562,7 @@ function ApplicantDetailBody({
             type="button"
             onClick={copyEmail}
             aria-label={m.employerApplicants_copyEmailLabel()}
-            className="text-muted-foreground hover:text-foreground inline-flex w-fit max-w-full items-center gap-1.5 text-left text-sm transition-colors"
+            className="text-muted-foreground hover:text-foreground inline-flex w-fit max-w-full items-center gap-1.5 text-start text-sm transition-colors"
           >
             <span className="min-w-0 truncate">
               {copied ? m.employerApplicants_emailCopiedLabel() : card.email}

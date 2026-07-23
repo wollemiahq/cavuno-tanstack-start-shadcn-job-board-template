@@ -72,6 +72,7 @@ export function TalentProfileIdentity({
                 as={headingAs}
                 variant="heading2"
                 className={size === 'xl' ? 'md:text-3xl' : undefined}
+                dir="auto"
               >
                 {nameHref ? (
                   <a
@@ -86,7 +87,9 @@ export function TalentProfileIdentity({
               </Text>
             ) : null}
             {vm.headline ? (
-              <p className="text-muted-foreground text-base">{vm.headline}</p>
+              <p className="text-muted-foreground text-base" dir="auto">
+                {vm.headline}
+              </p>
             ) : null}
           </div>
         ) : null}
@@ -132,7 +135,10 @@ export function TalentProfileContent({
       ) : null}
 
       {vm.bio ? (
-        <p className="text-foreground text-sm leading-6 whitespace-pre-line">
+        <p
+          className="text-foreground text-sm leading-6 whitespace-pre-line"
+          dir="auto"
+        >
           {vm.bio}
         </p>
       ) : null}
@@ -197,7 +203,10 @@ export function TalentProfileContent({
                     </div>
                   ) : null}
                   {experience.description ? (
-                    <p className="text-foreground text-sm leading-6 whitespace-pre-line">
+                    <p
+                      className="text-foreground text-sm leading-6 whitespace-pre-line"
+                      dir="auto"
+                    >
                       {experience.description}
                     </p>
                   ) : null}
@@ -260,7 +269,10 @@ export function TalentProfileContent({
                     </p>
                   ) : null}
                   {education.description ? (
-                    <p className="text-foreground text-sm leading-6 whitespace-pre-line">
+                    <p
+                      className="text-foreground text-sm leading-6 whitespace-pre-line"
+                      dir="auto"
+                    >
                       {education.description}
                     </p>
                   ) : null}

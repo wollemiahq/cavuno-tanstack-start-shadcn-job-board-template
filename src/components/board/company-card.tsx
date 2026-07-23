@@ -60,7 +60,7 @@ export function CompanyCard({
         <CompanyAvatar name={name} logoUrl={logoUrl} size="lg" />
         <div className="min-w-0">
           <CardTitle>
-            <h3>
+            <h3 dir="auto">
               <Link
                 to="/companies/$companySlug"
                 params={{ companySlug }}
@@ -71,7 +71,7 @@ export function CompanyCard({
             </h3>
           </CardTitle>
           {descriptionText ? (
-            <CardDescription className="mt-1 line-clamp-2">
+            <CardDescription className="mt-1 line-clamp-2" dir="auto">
               {descriptionText}
             </CardDescription>
           ) : null}

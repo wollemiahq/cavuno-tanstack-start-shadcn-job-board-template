@@ -103,7 +103,7 @@ export function LocationSuggestField({
               <ComboboxItem key={place.id} value={place}>
                 <span className="min-w-0 truncate">{place.name}</span>
                 {place.contextLabel ? (
-                  <span className="text-muted-foreground ml-auto shrink-0 pl-3 text-sm">
+                  <span className="text-muted-foreground ms-auto shrink-0 ps-3 text-sm">
                     {place.contextLabel}
                   </span>
                 ) : null}

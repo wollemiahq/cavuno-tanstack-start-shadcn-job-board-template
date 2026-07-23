@@ -109,7 +109,7 @@ export function MessagingDock({
           onClick={() => onOpenChange(true)}
         >
           <MessageSquare aria-hidden="true" />
-          <span className="flex-1 text-left">{messagesLabel}</span>
+          <span className="flex-1 text-start">{messagesLabel}</span>
           <UnreadCountBadge count={unreadCount} />
         </Button>
       )}

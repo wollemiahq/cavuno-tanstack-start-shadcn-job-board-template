@@ -22,7 +22,7 @@ export function MessagesNavLink({ unreadCount }: { unreadCount: number }) {
       <UnreadCountBadge
         count={unreadCount}
         data-test="nav-unread"
-        className="absolute -top-1.5 -right-1.5"
+        className="absolute -end-1.5 -top-1.5"
       />
     </Link>
   );

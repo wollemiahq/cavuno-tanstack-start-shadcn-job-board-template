@@ -51,7 +51,7 @@ function MetricPanel({
         >
           {value}
           {suffix ? (
-            <span className="text-muted-foreground ml-1.5 text-sm font-normal">
+            <span className="text-muted-foreground ms-1.5 text-sm font-normal">
               {suffix}
             </span>
           ) : null}
@@ -102,7 +102,7 @@ export function CompactCompanySalarySummary({
           <p className="text-muted-foreground text-sm">{vm.headlineLabel}</p>
           <p className="text-card-foreground text-xl font-semibold tabular-nums">
             {vm.headlineValue}
-            <span className="text-muted-foreground ml-1.5 text-sm font-normal">
+            <span className="text-muted-foreground ms-1.5 text-sm font-normal">
               {vm.perYearSuffix}
             </span>
           </p>
@@ -238,7 +238,7 @@ export function CompanySalarySummary({
           )}
         >
           {viewAllLabel}
-          <ArrowRight data-icon="inline-end" />
+          <ArrowRight className="rtl:rotate-180" data-icon="inline-end" />
         </a>
       </div>
       {overall ? <OverallSalaryCard vm={overall} /> : null}

@@ -182,7 +182,7 @@ export const RichTextEditor = ({
       attributes: {
         'aria-label': ariaLabel,
         class:
-          'min-h-40 w-full px-3 py-2.5 text-sm text-foreground outline-hidden [&_ul]:list-disc [&_ol]:list-decimal [&_ul,&_ol]:pl-6',
+          'min-h-40 w-full px-3 py-2.5 text-sm text-foreground outline-hidden [&_ul]:list-disc [&_ol]:list-decimal [&_ul,&_ol]:ps-6',
       },
     },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),

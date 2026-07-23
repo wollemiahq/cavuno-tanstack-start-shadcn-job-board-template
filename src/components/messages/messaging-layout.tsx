@@ -32,7 +32,7 @@ export function MessagingLayout({
       <nav
         aria-label={listLabel}
         className={cn(
-          'border-border min-h-0 flex-col md:flex md:border-r',
+          'border-border min-h-0 flex-col md:flex md:border-e',
           mobilePane === 'conversation' ? 'hidden' : 'flex',
         )}
       >

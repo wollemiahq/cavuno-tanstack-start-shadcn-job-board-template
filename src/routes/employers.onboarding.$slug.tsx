@@ -202,7 +202,7 @@ function WorkEmailStep({
         })}
       />
       <Field
-        className="mx-auto max-w-sm text-left"
+        className="mx-auto max-w-sm text-start"
         data-invalid={status === 'error'}
       >
         <FieldLabel htmlFor="work-email">

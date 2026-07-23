@@ -101,7 +101,7 @@ function LocationTree({
               : m.salaryHub_jobCountPlural({ count: n.jobCount })}
           </span>
           {byParent.has(n.placeSlug) ? (
-            <div className="border-border mt-1 ml-3 border-l pl-3">
+            <div className="border-border ms-3 mt-1 border-s ps-3">
               <LocationTree parentSlug={n.placeSlug} byParent={byParent} />
             </div>
           ) : null}

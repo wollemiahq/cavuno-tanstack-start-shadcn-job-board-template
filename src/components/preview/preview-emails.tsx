@@ -129,7 +129,7 @@ export function PreviewEmailsSheet({
           <Button
             variant="outline"
             size="sm"
-            className="mr-10 shrink-0"
+            className="me-10 shrink-0"
             disabled={status === 'loading'}
             onClick={() => void load()}
             data-test="preview-emails-refresh"
@@ -222,7 +222,7 @@ function PanelBody({
     <div className="flex min-h-0 w-full flex-1">
       <ul
         className={cn(
-          'flex min-h-0 w-full flex-col overflow-y-auto sm:w-72 sm:shrink-0 sm:border-r',
+          'flex min-h-0 w-full flex-col overflow-y-auto sm:w-72 sm:shrink-0 sm:border-e',
           selected && 'hidden sm:flex',
         )}
         data-test="preview-emails-list"
@@ -272,7 +272,7 @@ function EmailListRow({
         onClick={onSelect}
         aria-current={selected || undefined}
         className={cn(
-          'hover:bg-muted border-border flex w-full flex-col gap-1 border-b px-4 py-3 text-left transition-colors',
+          'hover:bg-muted border-border flex w-full flex-col gap-1 border-b px-4 py-3 text-start transition-colors',
           selected && 'bg-muted',
         )}
       >

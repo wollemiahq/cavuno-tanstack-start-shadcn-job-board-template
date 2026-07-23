@@ -20,7 +20,7 @@
   },
   "menuColor": "default",
   "menuAccent": "subtle",
-  "rtl": false,
+  "rtl": true,
   "registries": {
     "@cavuno": "https://cavuno.com/r/{name}.json"
   }

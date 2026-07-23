@@ -63,16 +63,19 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
               params={{ postSlug: post.slug }}
               className="hover:text-primary/70 focus-visible:ring-ring/50 flex items-start justify-between gap-3 rounded-sm transition-colors outline-none after:absolute after:inset-0 after:z-(--z-card-overlay) after:rounded-[inherit] focus-visible:ring-2"
             >
-              <span>{post.title}</span>
+              <span dir="auto">{post.title}</span>
               <ArrowUpRight
                 aria-hidden
-                className="text-muted-foreground mt-0.5 size-5 shrink-0"
+                className="text-muted-foreground mt-0.5 size-5 shrink-0 rtl:-scale-x-100"
               />
             </Link>
           </CardTitle>
 
           {post.customExcerpt ? (
-            <p className="text-muted-foreground line-clamp-2 text-sm">
+            <p
+              className="text-muted-foreground line-clamp-2 text-sm"
+              dir="auto"
+            >
               {post.customExcerpt}
             </p>
           ) : null}

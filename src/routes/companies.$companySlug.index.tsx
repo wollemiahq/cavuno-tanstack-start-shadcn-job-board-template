@@ -294,7 +294,10 @@ function CompanyPage() {
                   )}
                 >
                   {m.companyDetail_viewOpenJobsLabel()}
-                  <ArrowRight data-icon="inline-end" />
+                  <ArrowRight
+                    className="rtl:rotate-180"
+                    data-icon="inline-end"
+                  />
                 </Link>
               ) : null}
             </div>

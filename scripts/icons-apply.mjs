@@ -249,6 +249,8 @@ async function loadIconMap() {
     if (entry?.[from] && entry?.[to]) byName.set(entry[from], entry[to]);
   }
   if (from === 'lucide') {
+    // Snapshot: the loop writes aliases back into `byName` as it goes.
+    // eslint-disable-next-line unicorn/no-useless-spread
     for (const [name, mapped] of [...byName]) {
       const alias = name.endsWith('Icon') ? name.slice(0, -4) : `${name}Icon`;
       if (alias && !byName.has(alias)) byName.set(alias, mapped);

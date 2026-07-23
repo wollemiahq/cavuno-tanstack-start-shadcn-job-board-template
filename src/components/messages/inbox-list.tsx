@@ -41,7 +41,7 @@ function ConversationRow({
           className="size-10"
         />
       </ItemMedia>
-      <ItemContent className="min-w-0 text-left">
+      <ItemContent className="min-w-0 text-start">
         <ItemTitle className="w-full justify-between gap-2">
           <span
             className={cn(
@@ -68,7 +68,7 @@ function ConversationRow({
           </span>
           {conversation.hasUnread ? (
             <span
-              className="bg-primary ml-auto size-2 shrink-0 rounded-full"
+              className="bg-primary ms-auto size-2 shrink-0 rounded-full"
               aria-label={m.inboxList_unreadAriaLabel()}
               data-test="unread-dot"
             />
@@ -78,7 +78,7 @@ function ConversationRow({
     </>
   );
   const className = cn(
-    'hover:bg-muted flex-nowrap rounded-none border-0 px-3 py-3 text-left',
+    'hover:bg-muted flex-nowrap rounded-none border-0 px-3 py-3 text-start',
     selected && 'bg-muted',
   );
 

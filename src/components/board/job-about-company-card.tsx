@@ -32,7 +32,9 @@ export function JobAboutCompanyCard({
                 logoUrl={company.logoUrl}
                 size="lg"
               />
-              <p className="min-w-0 truncate font-medium">{company.name}</p>
+              <p className="min-w-0 truncate font-medium" dir="auto">
+                {company.name}
+              </p>
             </div>
           ) : null}
         </div>

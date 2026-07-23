@@ -44,11 +44,11 @@ export function SearchDetailHeader({
   return (
     <header
       data-slot="search-detail-header"
-      className="border-border/60 bg-background/95 flex h-16 min-w-0 items-center gap-3 border-b pl-5 backdrop-blur md:pl-6"
+      className="border-border/60 bg-background/95 flex h-16 min-w-0 items-center gap-3 border-b ps-5 backdrop-blur md:ps-6"
     >
       {mark ? <div className="shrink-0">{mark}</div> : null}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-semibold">
+        <p className="truncate text-base font-semibold" dir="auto">
           {nameHref ? (
             <a
               href={nameHref}
@@ -61,7 +61,9 @@ export function SearchDetailHeader({
           )}
         </p>
         {subtitle ? (
-          <p className="text-muted-foreground truncate text-sm">{subtitle}</p>
+          <p className="text-muted-foreground truncate text-sm" dir="auto">
+            {subtitle}
+          </p>
         ) : null}
       </div>
       {actions ? (

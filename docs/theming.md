@@ -325,6 +325,89 @@ Relaxing them to "declared, and one of the CLI's libraries" (the
 precedent) is an operator decision, and safe to make now that ICO covers the
 real invariant.
 
+## Direction — the fourth axis (DIR)
+
+Colors, fonts, and icons are three axes. Writing direction is the fourth, and
+like the others it is a repo-owned command rather than a hand edit:
+
+```sh
+pnpm run rtl:apply --dry-run   # every site it would touch, plus what it won't
+pnpm run rtl:apply             # apply
+```
+
+`components.json` declares `"rtl": true`. `<html dir>` is set server-side from
+the UI locale (`src/lib/locale-direction.ts`), and because the layout is
+flexbox/`gap`/`justify`-based, direction alone mirrors most of the page. What
+it cannot mirror is anything pinned to a physical edge, and that is what the
+script rewrites: `pl-*`/`pr-*` → `ps-*`/`pe-*`, `ml-*`/`mr-*` → `ms-*`/`me-*`,
+`text-left`/`text-right` → `text-start`/`text-end`, `border-l`/`border-r` →
+`border-s`/`border-e`, `rounded-l-*`/`rounded-r-*` → `rounded-s-*`/`rounded-e-*`.
+Under LTR every one of those substitutions is a no-op — the logical property
+resolves to the same physical edge — so applying it cannot regress the default
+direction.
+
+**Do not run `shadcn migrate rtl`.** It was tried here. The glob form replaced
+a route file with a 9-line stub; even the bare default form silently deleted
+`// @vitest-environment jsdom` pragmas from ten test files; and its rewrite is
+semantically wrong on physical APIs — it turned sheet's
+`data-[side=left]:border-r` into `border-e` while leaving the neighbouring
+`data-[side=left]:left-0` physical. `rtl:apply` splices into class-list string
+literals located on the TypeScript AST and never re-prints the file, so
+comments and pragmas survive byte-for-byte.
+
+### What stays physical, on purpose
+
+The script carries an `EXCLUSIONS` table, each entry naming the invariant that
+makes a class physical rather than logical:
+
+- `sheet.tsx` / `drawer.tsx` — `side="left" | "right"` is an explicitly
+  physical public prop; its edge classes pair with `left-0`/`right-0`, which
+  have no logical form. A `side="right"` sheet opens on the physical right in
+  both directions.
+- `layout/box.tsx` — `BoxBorder`'s literal `left`/`right` keys.
+- `calendar.tsx` — range-edge radii keyed to nth-child position; the browser
+  already lays the week out RTL.
+- `preview-toolbar.tsx` — a fixed dev-only QA corner.
+- the recharts stat charts — `margin={{ left, right }}` are JS props on a
+  component that lays out LTR internally.
+
+Positional utilities (`left-*`, `right-*`, `translate-x-*`) are never batch
+rewritten either: some need a logical inset (`end-2` for a menu checkmark that
+follows its `pe-8` gutter), some need an `rtl:` variant (a chevron gets
+`rtl:rotate-180`, the switch thumb gets a per-direction translate), and some
+are already correct in both directions (`left-1/2 -translate-x-1/2` centring).
+`--dry-run` lists them so the remainder is reviewed, not assumed.
+
+### Content direction is not chrome direction
+
+The chrome's direction comes from the UI locale. The **content's** does not.
+A board is a single-language product, but a single posting can be written in
+anything, so every field of API-served text carries `dir="auto"` and the
+browser resolves direction from that field's own first strong character —
+`Prose` (job/company descriptions, blog bodies, legal pages), job and company
+titles, talent headlines and bios, blog titles and excerpts. Without it, an
+LTR description under RTL chrome renders with displaced punctuation
+(`".strategy, the team"`). Pinning content to the chrome's direction, or to
+the board's language, is wrong for at least one of the four combinations.
+
+Two honest limits, both inherent to `dir="auto"`:
+
+- **First-strong is a heuristic.** Content opening with a number, an emoji,
+  punctuation, or a Latin brand name (`Acme Corp — وصف الوظيفة…`) resolves LTR
+  even when the body is RTL. A per-item content-language field on the Board
+  API would be the principled fix; no such field exists today.
+- **Pre-sanitized HTML takes one direction for the whole blob.** AGENTS.md
+  rule 4 forbids interpolating into API HTML, so per-paragraph `dir` is not
+  available; a genuinely mixed-direction body follows its first strong
+  character throughout.
+
+Chrome components (`PageHeader`, nav, buttons) deliberately do **not** get
+`dir="auto"`: they render UI-locale copy, and the `ar-XB` pseudo-locale wraps
+its text in a U+2067 isolate that first-strong is specified to skip.
+
+`scripts/pseudo-locale-gate.mjs` asserts `dir="rtl"` on `/ar-XB/*` and
+`dir="ltr"` everywhere else.
+
 ## Why this works — theme portability
 
 Every app-authored surface styles through the theme's **semantic tokens**

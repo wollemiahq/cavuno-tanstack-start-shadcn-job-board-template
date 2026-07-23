@@ -111,7 +111,9 @@ export function JobCard({
         </Link>
       )
     ) : (
-      <span className="text-foreground">{vm.title}</span>
+      <span className="text-foreground" dir="auto">
+        {vm.title}
+      </span>
     );
 
   const surface = cn(
@@ -139,17 +141,26 @@ export function JobCard({
                   className="sm:hidden"
                 />
                 {vm.companyName ? (
-                  <p className="text-foreground truncate text-sm font-semibold">
+                  <p
+                    className="text-foreground truncate text-sm font-semibold"
+                    dir="auto"
+                  >
                     {vm.companyName}
                   </p>
                 ) : null}
                 {vm.isFeatured ? <Badge>{vm.featuredLabel}</Badge> : null}
               </div>
-              <h3 className="font-heading line-clamp-2 text-lg font-semibold tracking-tight">
+              <h3
+                className="font-heading line-clamp-2 text-lg font-semibold tracking-tight"
+                dir="auto"
+              >
                 {title}
               </h3>
               {vm.summary ? (
-                <p className="text-muted-foreground line-clamp-2 text-sm">
+                <p
+                  className="text-muted-foreground line-clamp-2 text-sm"
+                  dir="auto"
+                >
                   {vm.summary}
                 </p>
               ) : null}
@@ -206,11 +217,17 @@ export function JobCard({
                     height (that opened a gap under 1-line titles), company
                     directly beneath in the bolder foreground weight the row
                     layout uses. */}
-                <h3 className="font-heading line-clamp-2 text-lg font-semibold tracking-tight">
+                <h3
+                  className="font-heading line-clamp-2 text-lg font-semibold tracking-tight"
+                  dir="auto"
+                >
                   {title}
                 </h3>
                 {vm.companyName ? (
-                  <p className="text-foreground mt-0.5 truncate text-sm font-semibold">
+                  <p
+                    className="text-foreground mt-0.5 truncate text-sm font-semibold"
+                    dir="auto"
+                  >
                     {vm.companyName}
                   </p>
                 ) : null}
@@ -239,7 +256,10 @@ export function JobCard({
                   </p>
                 ) : null}
                 {vm.summary ? (
-                  <p className="text-muted-foreground mt-2 line-clamp-2 text-sm">
+                  <p
+                    className="text-muted-foreground mt-2 line-clamp-2 text-sm"
+                    dir="auto"
+                  >
                     {vm.summary}
                   </p>
                 ) : null}

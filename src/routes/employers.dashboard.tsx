@@ -170,7 +170,7 @@ function CompanyRow({ membership }: { membership: CompanyMembership }) {
           {approved ? membership.role : STATUS_LABEL[membership.status]()}
         </Badge>
         <ChevronRight
-          className="text-muted-foreground size-4 shrink-0"
+          className="text-muted-foreground size-4 shrink-0 rtl:rotate-180"
           aria-hidden
         />
       </ItemActions>
@@ -442,7 +442,7 @@ function CreateCompanyModal({
           render={
             <Button
               variant="ghost"
-              className="bg-secondary absolute top-4 right-4"
+              className="bg-secondary absolute end-4 top-4"
               size="icon-sm"
             />
           }

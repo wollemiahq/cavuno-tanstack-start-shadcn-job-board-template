@@ -104,14 +104,14 @@ function ArticleToc({
       <p className="text-foreground mb-3 text-sm font-medium">
         {m.blogPost_inThisArticleHeading()}
       </p>
-      <ul className="border-border flex flex-col border-l">
+      <ul className="border-border flex flex-col border-s">
         {headings.map((heading) => (
           <li key={heading.id}>
             <a
               href={`#${heading.id}`}
               aria-current={activeId === heading.id ? 'true' : undefined}
               className={cn(
-                'focus-visible:ring-ring/30 -ml-px block border-l-2 py-1.5 pl-4 text-sm transition-colors outline-none focus-visible:ring-3',
+                'focus-visible:ring-ring/30 -ms-px block border-s-2 py-1.5 ps-4 text-sm transition-colors outline-none focus-visible:ring-3',
                 activeId === heading.id
                   ? 'border-foreground text-foreground font-medium'
                   : 'text-muted-foreground hover:text-foreground border-transparent',
@@ -250,8 +250,20 @@ export function BlogArticleContent({
   return (
     <Page>
       <PageContent
+        // The post title and excerpt are API content, so each resolves its
+        // own direction from its own first strong character. PageHeader
+        // itself stays chrome-directional — it also renders UI-locale titles
+        // elsewhere, and the ar-XB pseudo-locale's isolate wrapper would
+        // defeat first-strong there.
         header={
-          <PageHeader title={post.title} description={post.customExcerpt} />
+          <PageHeader
+            title={<span dir="auto">{post.title}</span>}
+            description={
+              post.customExcerpt ? (
+                <span dir="auto">{post.customExcerpt}</span>
+              ) : undefined
+            }
+          />
         }
       >
         <article className="flex min-w-0 flex-col gap-10">
@@ -367,7 +379,7 @@ export function BlogArticleContent({
                     <Link
                       to="/blog/$postSlug"
                       params={{ postSlug: adjacent.next.slug }}
-                      className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/30 rounded-sm text-right outline-none focus-visible:ring-3"
+                      className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/30 rounded-sm text-end outline-none focus-visible:ring-3"
                     >
                       {adjacent.next.title} →
                     </Link>

@@ -266,7 +266,7 @@ export function JobSearchPage({
                   {gatedCount && gatedCount > 0 ? (
                     <Alert
                       aria-label={m.jobSearch_unlockMoreLabel()}
-                      className="bg-muted flex flex-col items-start gap-3 pr-4"
+                      className="bg-muted flex flex-col items-start gap-3 pe-4"
                     >
                       <AlertDescription>
                         {m.jobSearch_gatedCountText({

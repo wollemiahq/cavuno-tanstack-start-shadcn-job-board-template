@@ -26,11 +26,17 @@ export function CompanySearchResult({
           <CompanyAvatar name={vm.avatarName} logoUrl={vm.logoUrl} size="lg" />
 
           <div className="min-w-0 flex-1">
-            <h2 className="text-foreground line-clamp-2 text-base font-semibold">
+            <h2
+              className="text-foreground line-clamp-2 text-base font-semibold"
+              dir="auto"
+            >
               {vm.name}
             </h2>
             {vm.descriptionText ? (
-              <p className="text-muted-foreground mt-2 line-clamp-2 text-sm">
+              <p
+                className="text-muted-foreground mt-2 line-clamp-2 text-sm"
+                dir="auto"
+              >
                 {vm.descriptionText}
               </p>
             ) : null}

@@ -112,7 +112,7 @@ export function SkillsSection({ skills }: { skills: string[] }) {
                 key={skill}
                 variant="secondary"
                 render={<li />}
-                className="h-6 gap-0.5 pr-0.5"
+                className="h-6 gap-0.5 pe-0.5"
               >
                 {skill}
                 <Button

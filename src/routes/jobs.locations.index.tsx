@@ -99,7 +99,7 @@ function PlaceTree({ nodes }: { nodes: PlaceNode[] }) {
             <Badge variant="secondary">{node.place.jobCount}</Badge>
           </div>
           {node.children.length > 0 ? (
-            <div className="border-border mt-1 ml-4 border-l pl-3">
+            <div className="border-border ms-4 mt-1 border-s ps-3">
               <PlaceTree nodes={node.children} />
             </div>
           ) : null}

@@ -188,7 +188,7 @@ function SavedJobsPage() {
                 >
                   <div
                     data-slot="saved-jobs-content"
-                    className="space-y-4 pt-4 pr-4 pb-4"
+                    className="space-y-4 pe-4 pt-4 pb-4"
                   >
                     {header}
                     <div className="space-y-3">

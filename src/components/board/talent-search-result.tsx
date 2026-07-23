@@ -26,11 +26,17 @@ export function TalentSearchResult({
       </Avatar>
 
       <div className="min-w-0 flex-1">
-        <h2 className="text-foreground line-clamp-2 text-base font-semibold">
+        <h2
+          className="text-foreground line-clamp-2 text-base font-semibold"
+          dir="auto"
+        >
           {vm.displayName}
         </h2>
         {vm.headline ? (
-          <p className="text-muted-foreground mt-0.5 line-clamp-2 text-sm">
+          <p
+            className="text-muted-foreground mt-0.5 line-clamp-2 text-sm"
+            dir="auto"
+          >
             {vm.headline}
           </p>
         ) : null}

@@ -278,10 +278,10 @@ export function MessageBubble({
             <HydrationSafeDate iso={message.sentAt} presentation="clock" />
           </time>
           {message.editedAt && !deleted ? (
-            <span className="ml-1">{m.messageBubble_editedText()}</span>
+            <span className="ms-1">{m.messageBubble_editedText()}</span>
           ) : null}
           {showSeen && message.readAt ? (
-            <span className="ml-1" data-slot="message-footer" data-test="seen">
+            <span className="ms-1" data-slot="message-footer" data-test="seen">
               <HydrationSafeDate iso={message.readAt} presentation="clock">
                 {(time) => m.messageBubble_seenText({ time })}
               </HydrationSafeDate>

@@ -39,7 +39,7 @@ export function FloatingStackProvider({ children }: { children: ReactNode }) {
       <div
         ref={setContainer}
         data-slot="floating-stack"
-        className="pointer-events-none fixed right-4 bottom-0 z-(--z-floating-stack) flex flex-col items-end"
+        className="pointer-events-none fixed end-4 bottom-0 z-(--z-floating-stack) flex flex-col items-end"
       />
     </FloatingStackContext.Provider>
   );

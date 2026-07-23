@@ -105,7 +105,7 @@ export function JobsFilterControls({
       >
         <SelectTrigger
           aria-label={copy.jobSearch.sortPlaceholder}
-          className="ml-auto"
+          className="ms-auto"
         >
           <ArrowUpDown aria-hidden="true" />
           <span>{copy.jobSearch.sortPlaceholder}:</span>

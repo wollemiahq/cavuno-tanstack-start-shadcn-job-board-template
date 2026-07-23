@@ -89,7 +89,7 @@ export function PlaceTagsField({
               key={tag.key}
               variant="secondary"
               render={<li />}
-              className="h-6 gap-0.5 pr-0.5"
+              className="h-6 gap-0.5 pe-0.5"
             >
               {tag.label}
               <Button
@@ -171,7 +171,7 @@ export function PlaceTagsField({
                 <ComboboxItem key={place.id} value={place}>
                   <span className="min-w-0 truncate">{place.name}</span>
                   {place.contextLabel ? (
-                    <span className="text-muted-foreground ml-auto shrink-0 pl-3 text-sm">
+                    <span className="text-muted-foreground ms-auto shrink-0 ps-3 text-sm">
                       {place.contextLabel}
                     </span>
                   ) : null}

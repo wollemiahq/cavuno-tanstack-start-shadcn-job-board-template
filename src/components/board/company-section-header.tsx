@@ -208,11 +208,19 @@ export function CompanySectionShell({
                   size="xl"
                 />
                 <div className="flex min-w-0 flex-col gap-1">
-                  <Text as="h1" variant="heading2" className="md:text-3xl">
+                  <Text
+                    as="h1"
+                    variant="heading2"
+                    className="md:text-3xl"
+                    dir="auto"
+                  >
                     {company.name}
                   </Text>
                   {descriptionText ? (
-                    <p className="text-muted-foreground line-clamp-1 text-base">
+                    <p
+                      className="text-muted-foreground line-clamp-1 text-base"
+                      dir="auto"
+                    >
                       {descriptionText}
                     </p>
                   ) : null}

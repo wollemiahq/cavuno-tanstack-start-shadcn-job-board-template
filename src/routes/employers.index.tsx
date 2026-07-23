@@ -162,7 +162,7 @@ function PlanCard({ plan }: { plan: Plan }) {
             ? m.employerLanding_freeLabel()
             : formatPrice(plan.price)}
           {plan.kind !== 'free' && plan.price ? (
-            <span className="text-muted-foreground ml-1 text-sm font-normal">
+            <span className="text-muted-foreground ms-1 text-sm font-normal">
               {intervalSuffix(plan.billingInterval)}
             </span>
           ) : null}

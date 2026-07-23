@@ -211,16 +211,16 @@ function CompanyJobsPage() {
                       <TableHead>{m.employerJobs_roleColumn()}</TableHead>
                       <TableHead>{m.employerJobs_typeColumn()}</TableHead>
                       <TableHead>{m.employerJobs_statusColumn()}</TableHead>
-                      <TableHead className="text-right">
+                      <TableHead className="text-end">
                         {m.employerJobs_viewsColumn()}
                       </TableHead>
-                      <TableHead className="text-right">
+                      <TableHead className="text-end">
                         {m.employerJobs_applyClicksColumn()}
                       </TableHead>
-                      <TableHead className="text-right">
+                      <TableHead className="text-end">
                         {m.employerJobs_applicationsColumn()}
                       </TableHead>
-                      <TableHead className="text-right">
+                      <TableHead className="text-end">
                         {m.employerJobs_actionsColumn()}
                       </TableHead>
                     </TableRow>
@@ -259,14 +259,14 @@ function StatCells({
 }) {
   return (
     <>
-      <TableCell className="text-muted-foreground text-right tabular-nums">
+      <TableCell className="text-muted-foreground text-end tabular-nums">
         {cells.views}
       </TableCell>
-      <TableCell className="text-muted-foreground text-right tabular-nums">
+      <TableCell className="text-muted-foreground text-end tabular-nums">
         {cells.applyClicks}
       </TableCell>
       <TableCell
-        className="text-muted-foreground text-right tabular-nums"
+        className="text-muted-foreground text-end tabular-nums"
         title={
           cells.applicationsNotApplicable
             ? m.employerJobs_statUnavailableLabel()
@@ -292,14 +292,14 @@ function StatCells({
 function StatCellsPending() {
   return (
     <>
-      <TableCell className="text-right">
-        <Skeleton className="ml-auto h-4 w-8" />
+      <TableCell className="text-end">
+        <Skeleton className="ms-auto h-4 w-8" />
       </TableCell>
-      <TableCell className="text-right">
-        <Skeleton className="ml-auto h-4 w-8" />
+      <TableCell className="text-end">
+        <Skeleton className="ms-auto h-4 w-8" />
       </TableCell>
-      <TableCell className="text-right">
-        <Skeleton className="ml-auto h-4 w-8" />
+      <TableCell className="text-end">
+        <Skeleton className="ms-auto h-4 w-8" />
       </TableCell>
     </>
   );

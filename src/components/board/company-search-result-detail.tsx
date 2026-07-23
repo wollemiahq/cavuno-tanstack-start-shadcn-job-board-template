@@ -85,7 +85,7 @@ function ExpandedCompanyDetailHeader({
         >
           <CompanyAvatar name={vm.avatarName} logoUrl={vm.logoUrl} size="lg" />
           <div className="min-w-0 space-y-1">
-            <Text as="h2" variant="heading2" className="truncate">
+            <Text as="h2" variant="heading2" className="truncate" dir="auto">
               {interactive ? (
                 <a
                   href={vm.detailHref}
@@ -242,7 +242,7 @@ export function CompanySearchResultDetail({
                 </p>
                 <p className="text-card-foreground text-xl font-semibold tabular-nums">
                   {salaryOverall.headlineValue}
-                  <span className="text-muted-foreground ml-1.5 text-sm font-normal">
+                  <span className="text-muted-foreground ms-1.5 text-sm font-normal">
                     {salaryOverall.perYearSuffix}
                   </span>
                 </p>

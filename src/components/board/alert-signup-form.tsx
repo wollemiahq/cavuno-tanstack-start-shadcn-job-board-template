@@ -96,7 +96,7 @@ export function AlertSignupForm({
   return (
     <section aria-label={vm.sectionAriaLabel}>
       <Card className={cn(surface === 'card' && 'shadow-lg')}>
-        <CardHeader className={cn(surface === 'card' && 'pr-12')}>
+        <CardHeader className={cn(surface === 'card' && 'pe-12')}>
           <CardTitle>
             <h2 className="text-foreground flex items-center gap-2 text-base font-semibold">
               <BellIcon className="text-primary size-4" aria-hidden="true" />
