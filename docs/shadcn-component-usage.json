@@ -206,6 +206,7 @@
         "src/components/employer/applicant-pipeline-board.tsx",
         "src/components/experience-section.tsx",
         "src/components/job-alert-floating-prompt.tsx",
+        "src/components/language-switcher.tsx",
         "src/components/languages-section.tsx",
         "src/components/messages-nav-link.tsx",
         "src/components/messages/blocked-list.tsx",
@@ -390,6 +391,7 @@
       "productionReferences": [
         "src/components/Header.tsx",
         "src/components/employer/applicant-pipeline-board.tsx",
+        "src/components/language-switcher.tsx",
         "src/components/messages/message-bubble.tsx",
         "src/components/messages/thread-view.tsx",
         "src/routes/employers.companies.$slug.index.tsx"

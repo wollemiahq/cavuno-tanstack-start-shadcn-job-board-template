@@ -1236,5 +1236,6 @@
   "previewToolbar_talentVisibility_public": "Öffentlich",
   "previewToolbar_talentVisibility_employersOnly": "Nur Arbeitgeber",
   "postJob_checkoutButtonLabel": "Weiter zur sicheren Kaufabwicklung",
-  "accountAccess_redirectingText": "Du wirst dorthin zurückgebracht, wo du aufgehört hast …"
+  "accountAccess_redirectingText": "Du wirst dorthin zurückgebracht, wo du aufgehört hast …",
+  "languageSwitcher_label": "Sprache"
 }

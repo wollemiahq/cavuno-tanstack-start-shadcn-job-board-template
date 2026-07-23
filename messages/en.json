@@ -1254,5 +1254,6 @@
   "previewToolbar_talentVisibility_public": "Public",
   "previewToolbar_talentVisibility_employersOnly": "Employers only",
   "postJob_checkoutButtonLabel": "Proceed to secure checkout",
-  "accountAccess_redirectingText": "Taking you back to where you left off…"
+  "accountAccess_redirectingText": "Taking you back to where you left off…",
+  "languageSwitcher_label": "Language"
 }

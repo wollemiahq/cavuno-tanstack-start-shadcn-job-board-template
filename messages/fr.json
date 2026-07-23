@@ -1236,5 +1236,6 @@
   "previewToolbar_talentVisibility_public": "Public",
   "previewToolbar_talentVisibility_employersOnly": "Employeurs uniquement",
   "postJob_checkoutButtonLabel": "Procéder au paiement sécurisé",
-  "accountAccess_redirectingText": "Retour là où vous en étiez…"
+  "accountAccess_redirectingText": "Retour là où vous en étiez…",
+  "languageSwitcher_label": "Langue"
 }

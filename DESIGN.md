@@ -1354,6 +1354,12 @@ Props:
 - `suggestions: KeywordSuggestionVM[]`
 - `value: string`
 
+### LanguageSwitcher — `src/components/language-switcher.tsx`
+
+Props:
+
+- `className?: string | undefined`
+
 ### LanguagesSection — `src/components/languages-section.tsx`
 
 Languages — name + proficiency entries over the whole-set replace

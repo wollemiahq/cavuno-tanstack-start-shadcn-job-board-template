@@ -7,6 +7,7 @@ import { Link } from '@tanstack/react-router';
 import { m } from '../paraglide/messages';
 
 import { FacebookIcon, LinkedInIcon, XIcon } from '@/components/brand-icons';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { Badge } from '@/components/ui/badge';
@@ -382,19 +383,22 @@ export default function Footer({
             </FooterColumn>
           </div>
 
-          <div className="border-border mt-12 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t pt-8">
+          <div className="border-border mt-12 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-t pt-8">
             <span className="text-muted-foreground text-sm">{copyright}</span>
-            <nav className="flex flex-wrap gap-x-6 gap-y-3">
-              {legalLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 rounded-sm text-sm transition-colors outline-none hover:no-underline focus-visible:ring-2"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+              <nav className="flex flex-wrap gap-x-6 gap-y-3">
+                {legalLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 rounded-sm text-sm transition-colors outline-none hover:no-underline focus-visible:ring-2"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+              <LanguageSwitcher />
+            </div>
           </div>
         </Box>
       </Container>
