@@ -11,10 +11,14 @@
  */
 import handler from '@tanstack/react-start/server-entry';
 
+import { withBaselineSecurityHeaders } from './lib/security-headers';
 import { paraglideMiddleware } from './paraglide/server';
 
 export default {
-  fetch(request: Request): Promise<Response> {
-    return paraglideMiddleware(request, () => handler.fetch(request));
+  async fetch(request: Request): Promise<Response> {
+    const response = await paraglideMiddleware(request, () =>
+      handler.fetch(request),
+    );
+    return withBaselineSecurityHeaders(response);
   },
 };
