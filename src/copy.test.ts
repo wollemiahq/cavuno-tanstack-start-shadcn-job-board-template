@@ -48,6 +48,41 @@ describe('boardCopy is locale-driven (ADR-0063 D7 — the URL locale, not the bo
       }).jobDetail.experienceYears(2),
     ).toBe('2+ Jahre');
   });
+
+  it('keeps every public UiCopy message in the statically tree-shakeable map', () => {
+    const publicGroups = new Set([
+      'alerts',
+      'apply',
+      'blog',
+      'breadcrumbs',
+      'copyLink',
+      'entity',
+      'footer',
+      'jobCard',
+      'jobDetail',
+      'jobSearch',
+      'nav',
+      'pagination',
+      'salary',
+    ]);
+    const catalog = JSON.parse(
+      readFileSync(join(import.meta.dirname, '../messages/en.json'), 'utf8'),
+    ) as Record<string, string>;
+    const expected = Object.keys(catalog)
+      .filter((key) => publicGroups.has(key.slice(0, key.indexOf('_'))))
+      .sort();
+    const copy = boardCopy('en') as unknown as Record<
+      string,
+      Record<string, unknown>
+    >;
+    const actual = Object.entries(copy)
+      .flatMap(([group, values]) =>
+        Object.keys(values).map((key) => `${group}_${key}`),
+      )
+      .sort();
+
+    expect(actual).toEqual(expected);
+  });
 });
 
 describe('the copy seam is the only catalog call site (ADR-0061 D7)', () => {
