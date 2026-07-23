@@ -125,6 +125,16 @@ arrives in an inbox.
 **What's captured:** all sandbox board email, regardless of persona —
 transactional and scheduled alike.
 
+**Links open in this app:** captured mail is templated with the board's
+canonical origin (e.g. `https://sandbox.cavuno.com/auth/verify-email?token=…`).
+The viewer retargets any link whose origin matches the board's canonical origin
+(`seo().canonicalBase`) to the origin serving the viewer (your local app),
+preserving path/query/hash exactly, so a verify / magic / alert-manage link
+completes in the running app instead of bouncing to the hosted board. External
+links (third-party unsubscribe, marketing) are left untouched. This is a
+dev-viewer transform in `listSandboxEmails` (`src/server/preview.ts`) only —
+email templates and real-board behavior are unchanged.
+
 **Flows it unlocks (read the link out of the body, then follow it):**
 
 | Flow | Email to look for |

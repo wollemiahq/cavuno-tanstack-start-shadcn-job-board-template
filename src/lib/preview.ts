@@ -95,6 +95,133 @@ export interface PreviewEmailsRoster {
   emails: PreviewEmail[];
 }
 
+// ── Captured-email link rewriting (dev viewer only) ─────────────────────────
+
+/**
+ * The two origins the viewer's link rewrite diffs. Captured sandbox emails are
+ * templated with the BOARD's canonical origin (`boardOrigin`, e.g.
+ * `https://sandbox.cavuno.com` — the `seo().canonicalBase` origin), so a link
+ * clicked in the viewer would leave a developer's local app for the hosted
+ * board. `appOrigin` is the frontend actually serving the viewer (the request
+ * origin, e.g. `http://[::1]:3030`). Both are normalized origins
+ * (`new URL(x).origin`) so the comparison is protocol + host + port exact.
+ */
+export interface PreviewEmailOrigins {
+  /** The board's canonical origin — links pointing here get rewritten. */
+  boardOrigin: string;
+  /** The frontend serving the viewer — links get rewritten to here. */
+  appOrigin: string;
+}
+
+/**
+ * Normalize any absolute URL to its origin (protocol + host + port), or `null`
+ * when it is not a parseable absolute URL. The one place both the board origin
+ * (from `seo().canonicalBase`) and the app origin (from the request URL) are
+ * derived, so the diff compares like against like.
+ */
+export function toOrigin(url: string): string | null {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return null;
+  }
+}
+
+/** Escape a string for use as a literal inside a `RegExp`. */
+function escapeRegExp(literal: string): string {
+  return literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Swap the ORIGIN of a single absolute URL from `boardOrigin` to `appOrigin`,
+ * preserving path + query + hash byte-for-byte from the original string
+ * (entities like `&amp;` and any percent-encoding are never re-serialized —
+ * only the origin prefix is replaced). Anything that is not a board-origin
+ * absolute URL — a relative href, a `mailto:`, an external `https://…` — is
+ * returned unchanged.
+ */
+function rewriteUrlOrigin(
+  value: string,
+  { boardOrigin, appOrigin }: PreviewEmailOrigins,
+): string {
+  if (boardOrigin === appOrigin) return value;
+  if (toOrigin(value) !== boardOrigin) return value;
+  // Locate where the path/query/hash starts in the ORIGINAL string so the
+  // remainder is preserved exactly (independent of any case-normalization the
+  // URL parser applied to the authority).
+  const schemeSep = value.indexOf('://');
+  if (schemeSep === -1) return value;
+  const afterAuthority = value.slice(schemeSep + 3);
+  const pathStart = afterAuthority.search(/[/?#]/);
+  const remainder = pathStart === -1 ? '' : afterAuthority.slice(pathStart);
+  return appOrigin + remainder;
+}
+
+/**
+ * Rewrite every `href="…"` / `href='…'` in a captured email's HTML body whose
+ * origin is the board's canonical origin so it opens in the frontend serving
+ * the viewer instead of the hosted board. A conservative transform of the
+ * platform's already-sanitized HTML (AGENTS.md rule 4): it matches only the
+ * quoted value of `href` attributes and rewrites ONLY the origin — no other
+ * string is interpolated, and non-board-origin hrefs (external links, relative
+ * links, `mailto:`) are left untouched.
+ */
+export function rewriteEmailHtmlLinks(
+  html: string,
+  origins: PreviewEmailOrigins,
+): string {
+  if (origins.boardOrigin === origins.appOrigin) return html;
+  return html.replace(
+    /(\bhref\s*=\s*)(["'])(.*?)\2/gi,
+    (match, prefix: string, quote: string, url: string) => {
+      const rewritten = rewriteUrlOrigin(url, origins);
+      return rewritten === url
+        ? match
+        : `${prefix}${quote}${rewritten}${quote}`;
+    },
+  );
+}
+
+/**
+ * Rewrite board-origin URLs in a captured email's plain-text body to the app
+ * origin, guarded so only the exact origin at a URL boundary is swapped (a
+ * longer look-alike host like `…cavuno.com.evil.test` is never matched). Path +
+ * query + hash are preserved verbatim.
+ */
+export function rewriteEmailTextLinks(
+  text: string,
+  { boardOrigin, appOrigin }: PreviewEmailOrigins,
+): string {
+  if (boardOrigin === appOrigin) return text;
+  const boundary = new RegExp(
+    `${escapeRegExp(boardOrigin)}(?=[/?#"'\\s]|$)`,
+    'g',
+  );
+  return text.replace(boundary, appOrigin);
+}
+
+/**
+ * Rewrite the board-origin links in one captured email (HTML body + plain-text
+ * fallback) to the viewer's own origin, leaving everything else — subject,
+ * recipient, external links — untouched. Pure so the server fn's per-email map
+ * is unit-testable without the runtime; a no-op when the two origins match
+ * (e.g. the viewer is served from the board's own origin).
+ */
+export function rewritePreviewEmailLinks(
+  email: PreviewEmail,
+  origins: PreviewEmailOrigins,
+): PreviewEmail {
+  if (origins.boardOrigin === origins.appOrigin) return email;
+  return {
+    ...email,
+    html: rewriteEmailHtmlLinks(email.html, origins),
+    text:
+      email.text == null
+        ? email.text
+        : rewriteEmailTextLinks(email.text, origins),
+  };
+}
+
 /** Default page size the panel requests (matches the platform contract). */
 export const PREVIEW_EMAILS_DEFAULT_LIMIT = 50;
 /** Hard cap the server enforces before proxying to the sandbox endpoint. */

@@ -7,11 +7,16 @@ import {
   PREVIEW_EMAILS_DEFAULT_LIMIT,
   PREVIEW_EMAILS_MAX_LIMIT,
   PREVIEW_FEATURE_FLAGS,
+  rewriteEmailHtmlLinks,
+  rewriteEmailTextLinks,
+  rewritePreviewEmailLinks,
   SANDBOX_CONFIG_WHITELIST,
   TALENT_DIRECTORY_VISIBILITIES,
+  toOrigin,
   toPreviewBoardConfig,
   projectPersona,
   resolveCapability,
+  type PreviewEmail,
   type RawPreviewPersona,
   unmetFlagRequirements,
 } from './preview';
@@ -339,5 +344,124 @@ describe('unmetFlagRequirements (dependency gating)', () => {
         employersEnabled: false,
       }),
     ).toEqual([]);
+  });
+});
+
+describe('toOrigin', () => {
+  it('normalizes an absolute URL to protocol + host + port', () => {
+    expect(toOrigin('https://sandbox.cavuno.com/auth/verify?token=abc')).toBe(
+      'https://sandbox.cavuno.com',
+    );
+    // The current-origin computation the server fn feeds from the request URL:
+    // an IPv6 dev origin with an explicit port is preserved.
+    expect(toOrigin('http://[::1]:3030/preview/emails')).toBe(
+      'http://[::1]:3030',
+    );
+  });
+
+  it('returns null for a non-absolute / unparseable URL', () => {
+    expect(toOrigin('/auth/verify?token=abc')).toBeNull();
+    expect(toOrigin('not a url')).toBeNull();
+  });
+});
+
+describe('rewriteEmailHtmlLinks', () => {
+  const origins = {
+    boardOrigin: 'https://sandbox.cavuno.com',
+    appOrigin: 'http://[::1]:3030',
+  };
+
+  it('rewrites a board-origin href to the app origin, preserving path/query/hash', () => {
+    const html =
+      '<p>Click <a href="https://sandbox.cavuno.com/auth/verify-email?token=a%2Bb&amp;x=1#done">here</a>.</p>';
+    expect(rewriteEmailHtmlLinks(html, origins)).toBe(
+      '<p>Click <a href="http://[::1]:3030/auth/verify-email?token=a%2Bb&amp;x=1#done">here</a>.</p>',
+    );
+  });
+
+  it('leaves external links and relative links untouched', () => {
+    const html =
+      '<a href="https://unsubscribe.mailer.com/u/9">out</a>' +
+      '<a href="/local/path?x=1">rel</a>' +
+      '<a href="mailto:hi@cavuno.com">mail</a>';
+    expect(rewriteEmailHtmlLinks(html, origins)).toBe(html);
+  });
+
+  it('handles single-quoted hrefs and multiple links in one body', () => {
+    const html =
+      "<a href='https://sandbox.cavuno.com/a'>a</a>" +
+      '<a href="https://sandbox.cavuno.com/b?q=2">b</a>';
+    expect(rewriteEmailHtmlLinks(html, origins)).toBe(
+      "<a href='http://[::1]:3030/a'>a</a>" +
+        '<a href="http://[::1]:3030/b?q=2">b</a>',
+    );
+  });
+
+  it('is a no-op when the two origins are identical', () => {
+    const same = {
+      boardOrigin: 'https://sandbox.cavuno.com',
+      appOrigin: 'https://sandbox.cavuno.com',
+    };
+    const html = '<a href="https://sandbox.cavuno.com/a">a</a>';
+    expect(rewriteEmailHtmlLinks(html, same)).toBe(html);
+  });
+});
+
+describe('rewriteEmailTextLinks', () => {
+  const origins = {
+    boardOrigin: 'https://sandbox.cavuno.com',
+    appOrigin: 'http://[::1]:3030',
+  };
+
+  it('rewrites a board-origin URL boundary, preserving the rest', () => {
+    expect(
+      rewriteEmailTextLinks(
+        'Verify: https://sandbox.cavuno.com/auth/verify?token=def now',
+        origins,
+      ),
+    ).toBe('Verify: http://[::1]:3030/auth/verify?token=def now');
+  });
+
+  it('does not match a longer look-alike host', () => {
+    const text = 'Beware https://sandbox.cavuno.com.evil.test/phish';
+    expect(rewriteEmailTextLinks(text, origins)).toBe(text);
+  });
+});
+
+describe('rewritePreviewEmailLinks', () => {
+  const origins = {
+    boardOrigin: 'https://sandbox.cavuno.com',
+    appOrigin: 'http://[::1]:3030',
+  };
+
+  it('rewrites both the HTML body and the plain-text fallback', () => {
+    const email: PreviewEmail = {
+      id: 'email-verify',
+      to: 'adam@example.com',
+      subject: 'Verify your email address',
+      html: '<a href="https://sandbox.cavuno.com/auth/verify?token=t">verify</a>',
+      text: 'Open https://sandbox.cavuno.com/auth/verify?token=t',
+      type: 'verification',
+      createdAt: 0,
+    };
+    const out = rewritePreviewEmailLinks(email, origins);
+    expect(out.html).toContain('href="http://[::1]:3030/auth/verify?token=t"');
+    expect(out.text).toBe('Open http://[::1]:3030/auth/verify?token=t');
+    // Metadata is never touched.
+    expect(out.subject).toBe(email.subject);
+    expect(out.to).toBe(email.to);
+  });
+
+  it('leaves a null text body null', () => {
+    const email: PreviewEmail = {
+      id: 'e',
+      to: 'x@example.com',
+      subject: 's',
+      html: '<a href="https://sandbox.cavuno.com/x">x</a>',
+      text: null,
+      type: null,
+      createdAt: 0,
+    };
+    expect(rewritePreviewEmailLinks(email, origins).text).toBeNull();
   });
 });

@@ -20,7 +20,7 @@ import {
   type BoardSession,
 } from '@cavuno/board/server';
 import { createServerFn } from '@tanstack/react-start';
-import { setResponseHeader } from '@tanstack/react-start/server';
+import { getRequest, setResponseHeader } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
 import {
@@ -28,6 +28,8 @@ import {
   pickWhitelistedConfig,
   projectPersona,
   resolveCapability,
+  rewritePreviewEmailLinks,
+  toOrigin,
   type PreviewActionResult,
   type PreviewCapability,
   type PreviewEmail,
@@ -58,6 +60,31 @@ function fetchRoster(): Promise<PreviewRoster> {
 function fetchEmails(limit: number): Promise<PreviewEmailsRoster> {
   return getBoard().client.fetch<PreviewEmailsRoster>(
     `/sandbox/emails?limit=${limit}`,
+  );
+}
+
+/**
+ * Retarget the board-origin links in captured emails at the frontend serving
+ * the viewer. Captured mail is templated with the BOARD's canonical origin
+ * (`seo().canonicalBase`, e.g. `https://sandbox.cavuno.com`), so a developer
+ * running this starter locally who clicks a verify / magic link in the viewer
+ * would land on the hosted board instead of their own app — breaking the
+ * "every inbox flow is completable on the spot" promise. This VIEWER-ONLY
+ * transform (dev tooling, sandbox-gated) diffs the board's canonical origin
+ * against the request origin and rewrites only same-board-origin hrefs to the
+ * request origin, preserving path/query/hash exactly; email templates and the
+ * real board are never touched. A no-op when the two origins already match
+ * (the viewer is served from the board's own origin) or when the canonical
+ * base is unavailable.
+ */
+async function retargetEmailLinks(
+  emails: PreviewEmail[],
+): Promise<PreviewEmail[]> {
+  const boardOrigin = toOrigin((await getBoard().seo()).canonicalBase);
+  const appOrigin = toOrigin(getRequest().url);
+  if (!boardOrigin || !appOrigin || boardOrigin === appOrigin) return emails;
+  return emails.map((email) =>
+    rewritePreviewEmailLinks(email, { boardOrigin, appOrigin }),
   );
 }
 
@@ -120,10 +147,12 @@ export const getPreviewState = createServerFn({ method: 'GET' }).handler(
  * panel. Every board email (magic links, verification, alert-manage HMAC URLs,
  * digests) lands here so a preview session can complete flows that normally
  * require reading an inbox. `html` is platform-generated and pre-sanitized, so
- * nothing is stripped — the viewer needs it verbatim. Sandbox-gated exactly
- * like `listPersonas`: `[]` on any non-sandbox board (the endpoint 404s there
- * anyway), so the panel never renders real data off the sandbox. `limit` is
- * clamped to `[1, 200]` server-side (default 50) before it reaches the API.
+ * nothing is stripped — the viewer needs it verbatim, save for a conservative
+ * link-origin retarget (`retargetEmailLinks`) that points board-origin hrefs at
+ * the frontend serving the viewer so those flows complete locally. Sandbox-gated
+ * exactly like `listPersonas`: `[]` on any non-sandbox board (the endpoint 404s
+ * there anyway), so the panel never renders real data off the sandbox. `limit`
+ * is clamped to `[1, 200]` server-side (default 50) before it reaches the API.
  */
 export const listSandboxEmails = createServerFn({ method: 'GET' })
   .validator((input: { limit?: number } | undefined) => input)
@@ -131,7 +160,10 @@ export const listSandboxEmails = createServerFn({ method: 'GET' })
     const capability = await resolveCapabilityFromBoard();
     if (!capability.canPreview) return [];
     const roster = await fetchEmails(clampEmailLimit(data?.limit));
-    return roster.emails;
+    // Retarget board-origin links at the viewer's own origin so inbox flows
+    // (verify, magic link, alert-manage) complete in the running app, not the
+    // hosted board. Viewer-only; templates and the real board are untouched.
+    return retargetEmailLinks(roster.emails);
   });
 
 // ── Switch / exit ─────────────────────────────────────────────────────────

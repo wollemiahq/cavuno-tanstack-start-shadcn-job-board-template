@@ -10,6 +10,8 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { rewritePreviewEmailLinks } from '../../lib/preview';
+
 import type { PreviewEmail } from '../../lib/preview';
 
 const mocks = vi.hoisted(() => ({
@@ -150,6 +152,38 @@ describe('PreviewEmailsSheet', () => {
     ).toBeInTheDocument();
     // No iframe is mounted for a plain-text-only capture.
     expect(within(pane).queryByTitle('Email body')).toBeNull();
+  });
+
+  it('renders the server-retargeted verify link at the local origin, not the board', async () => {
+    // The server fn (`listSandboxEmails`) rewrites board-origin links to the
+    // frontend serving the viewer before the data crosses to the browser; here
+    // we run that same transform on a board-origin capture, then pin that the
+    // viewer frames the retargeted href verbatim.
+    const captured: PreviewEmail = {
+      id: 'email-verify-html',
+      to: 'adam@example.com',
+      subject: 'Verify your email address',
+      html: '<p><a href="https://sandbox.cavuno.com/auth/verify-email?token=xyz">Verify</a></p>',
+      text: null,
+      type: 'verification',
+      createdAt: Date.parse('2026-07-17T12:00:00.000Z'),
+    };
+    const retargeted = rewritePreviewEmailLinks(captured, {
+      boardOrigin: 'https://sandbox.cavuno.com',
+      appOrigin: 'http://[::1]:3030',
+    });
+    mocks.listSandboxEmails.mockResolvedValue([retargeted]);
+    openPanel();
+
+    const pane = await findDetail();
+    const frame = within(pane).getByTitle('Email body') as HTMLIFrameElement;
+    const srcdoc = frame.getAttribute('srcdoc') ?? '';
+    // The link now opens in the running app, path/query preserved…
+    expect(srcdoc).toContain(
+      'href="http://[::1]:3030/auth/verify-email?token=xyz"',
+    );
+    // …and no longer points at the hosted board.
+    expect(srcdoc).not.toContain('https://sandbox.cavuno.com');
   });
 
   it('shows the empty state when nothing has been captured', async () => {
