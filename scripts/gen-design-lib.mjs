@@ -593,14 +593,27 @@ function dtcgExport(tokens) {
       $value: splitFontStack(tokens.light['--font-heading']),
     },
   };
-  const radius = tokens.light['--radius'].match(/^([\d.]+)(rem)$/);
-  if (!radius) {
-    throw new Error('Expected --radius to be a rem dimension');
+  // A DTCG dimension needs a unit, but `--radius: 0` is legal CSS with
+  // none — and a zero length is the same in every unit. Accept it (and
+  // `0px`) rather than failing the whole design regen, which took down
+  // every "square corners" edit until 2026-07-23.
+  const declared = tokens.light['--radius'].trim().toLowerCase();
+  const radius = declared.match(/^([\d.]+)(rem|px)?$/);
+  const magnitude = radius ? Number(radius[1]) : Number.NaN;
+  if (!radius || !Number.isFinite(magnitude)) {
+    throw new Error(
+      `Expected --radius to be a rem dimension, got ${JSON.stringify(tokens.light['--radius'])}`,
+    );
+  }
+  if (magnitude !== 0 && radius[2] !== 'rem') {
+    throw new Error(
+      `Expected --radius to be a rem dimension, got ${JSON.stringify(tokens.light['--radius'])}`,
+    );
   }
   dtcg.dimension = {
     radius: {
       $type: 'dimension',
-      $value: { value: Number(radius[1]), unit: radius[2] },
+      $value: { value: magnitude, unit: 'rem' },
     },
   };
   return (
