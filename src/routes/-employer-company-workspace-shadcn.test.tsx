@@ -123,8 +123,8 @@ import { Route as JobsRoute } from './employers.companies.$slug.index';
 import { Route as ApplicantsRoute } from './employers.companies.$slug.jobs.$jobId.applicants';
 import { Route as ProfileRoute } from './employers.companies.$slug.profile';
 
-import type { PipelineActions } from '../components/employer/applicant-pipeline-board';
 import type { PipelineBoardVM } from '../board/pipeline-view-model';
+import type { PipelineActions } from '../components/employer/applicant-pipeline-board';
 
 // The board takes its mutations as a typed `actions` prop now; inject the same
 // hoisted doubles the route would pass. (The `../server/employers` module mock
@@ -566,8 +566,18 @@ describe('employer company workspace', () => {
     // All-zero window → the honest empty panel, not a chart on a broken axis.
     await renderJobs([publishedJob], {
       timeseries: [
-        { object: 'employer_job_stats_point', date: '2026-07-01', views: 0, applyClicks: 0 },
-        { object: 'employer_job_stats_point', date: '2026-07-02', views: 0, applyClicks: 0 },
+        {
+          object: 'employer_job_stats_point',
+          date: '2026-07-01',
+          views: 0,
+          applyClicks: 0,
+        },
+        {
+          object: 'employer_job_stats_point',
+          date: '2026-07-02',
+          views: 0,
+          applyClicks: 0,
+        },
       ],
     });
     expect(await screen.findByText('No activity yet')).toBeInTheDocument();
@@ -576,8 +586,18 @@ describe('employer company workspace', () => {
     // Real activity → the chart renders (its accessible label is present).
     await renderJobs([publishedJob], {
       timeseries: [
-        { object: 'employer_job_stats_point', date: '2026-07-01', views: 12, applyClicks: 3 },
-        { object: 'employer_job_stats_point', date: '2026-07-02', views: 18, applyClicks: 5 },
+        {
+          object: 'employer_job_stats_point',
+          date: '2026-07-01',
+          views: 12,
+          applyClicks: 3,
+        },
+        {
+          object: 'employer_job_stats_point',
+          date: '2026-07-02',
+          views: 18,
+          applyClicks: 5,
+        },
       ],
     });
     expect(
@@ -680,7 +700,7 @@ describe('employer company workspace', () => {
       'northstar.example',
     );
     // The three per-network social fields sit behind their domain addons.
-    expect(screen.getByText('linkedin.com/')).toBeInTheDocument();
+    expect(screen.getByText('linkedin.com/company/')).toBeInTheDocument();
     expect(screen.getByText('x.com/')).toBeInTheDocument();
     expect(screen.getByText('facebook.com/')).toBeInTheDocument();
     expect(screen.getByRole('toolbar', { name: 'About' })).toBeInTheDocument();
@@ -703,7 +723,7 @@ describe('employer company workspace', () => {
     fireEvent.change(linkedin, {
       target: { value: 'https://www.linkedin.com/company/northstar' },
     });
-    expect(linkedin).toHaveValue('company/northstar');
+    expect(linkedin).toHaveValue('northstar');
   });
 
   it('prefills the tagline and social fields from the editable company read', () => {
@@ -724,7 +744,7 @@ describe('employer company workspace', () => {
     );
     // A stored social URL prefills as the bare handle behind its domain addon.
     expect(screen.getByRole('textbox', { name: 'LinkedIn' })).toHaveValue(
-      'company/northstar',
+      'northstar',
     );
   });
 

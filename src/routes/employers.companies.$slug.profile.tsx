@@ -46,8 +46,8 @@ import {
 } from '@/components/employer/employer-profile-views-stat';
 import { Page, PageContent } from '@/components/layout/page';
 import { LogoUpload } from '@/components/logo-upload';
-import { Text } from '@/components/text';
 import { RichTextEditor } from '@/components/rich-text-editor';
+import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -68,6 +68,15 @@ import { headTitle } from '@/lib/page-title';
 import type { EmployerProfileViewsPoint } from '@cavuno/board';
 
 const rootApi = getRouteApi('__root__');
+
+/**
+ * A company's LinkedIn page always lives under `/company/`, so that segment is
+ * part of the field's prefix — the employer types (and sees) just the slug.
+ * The strip list keeps the bare-domain form second so pasting a URL without
+ * `/company` still normalizes instead of doubling the segment.
+ */
+const LINKEDIN_COMPANY_DOMAIN = 'linkedin.com/company';
+const LINKEDIN_COMPANY_DOMAINS = [LINKEDIN_COMPANY_DOMAIN, 'linkedin.com'];
 
 export const Route = createFileRoute('/employers/companies/$slug/profile')({
   loader: async ({ params, location }) => {
@@ -128,7 +137,10 @@ function CompanyProfilePage() {
   // path, but component-level tests spy the loader data without it, so the
   // render guards on its presence rather than assuming the deferred promise.
   const { profileViews } = Route.useLoaderData() as {
-    profileViews?: Promise<{ total: number; points: EmployerProfileViewsPoint[] }>;
+    profileViews?: Promise<{
+      total: number;
+      points: EmployerProfileViewsPoint[];
+    }>;
   };
 
   return (
@@ -215,7 +227,7 @@ function ProfileEditorCard({
     // Stored as full URLs; the fields edit the bare handle behind the domain
     // addon, so prefill strips the scheme + domain back down to that handle.
     linkedinUrl: company.linkedinUrl
-      ? stripSocialHandle(company.linkedinUrl, ['linkedin.com'])
+      ? stripSocialHandle(company.linkedinUrl, LINKEDIN_COMPANY_DOMAINS)
       : '',
     xUrl: company.xUrl
       ? stripSocialHandle(company.xUrl, ['x.com', 'twitter.com'])
@@ -245,7 +257,11 @@ function ProfileEditorCard({
           // "keep the stored value we couldn't read".
           summary: form.summary.trim(),
           linkedinUrl: form.linkedinUrl.trim()
-            ? toSocialUrl(form.linkedinUrl, 'linkedin.com')
+            ? toSocialUrl(
+                form.linkedinUrl,
+                LINKEDIN_COMPANY_DOMAIN,
+                LINKEDIN_COMPANY_DOMAINS,
+              )
             : '',
           xUrl: form.xUrl.trim()
             ? toSocialUrl(form.xUrl, 'x.com', ['x.com', 'twitter.com'])
@@ -349,8 +365,8 @@ function ProfileEditorCard({
               <SocialField
                 id="company-linkedin"
                 label={m.employerProfile_linkedinLabel()}
-                domain="linkedin.com"
-                domains={['linkedin.com']}
+                domain={LINKEDIN_COMPANY_DOMAIN}
+                domains={LINKEDIN_COMPANY_DOMAINS}
                 value={form.linkedinUrl}
                 onChange={(linkedinUrl) => setForm({ ...form, linkedinUrl })}
               />
