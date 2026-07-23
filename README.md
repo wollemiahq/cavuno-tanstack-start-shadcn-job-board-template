@@ -167,9 +167,14 @@ Cross-cutting capabilities that ship on top of those routes:
 - **Real-data discipline** — the design handles messy data by construction:
   long titles clamp, absent salaries are omitted (never an empty label), skill
   tags cap at `3 + N`, missing logos fall back to initials.
-- **i18n chrome** — [Paraglide JS](https://paraglidejs.com) with `en`/`de`/`fr`
-  catalogs, compile-time, SSR-native. UI chrome only; board content stays its
-  own language.
+- **i18n built in, with a live switcher** — path-prefixed locales (`/de/…`,
+  `/fr/…`) powered by [Paraglide JS](https://paraglidejs.com): compile-time
+  catalogs (`en`/`de`/`fr` + a pseudo-locale for QA), SSR-resolved on Workers
+  so there's no flash of the wrong language, and a footer language switcher
+  wired out of the box — try it on the [demo](https://demo.cavuno.app).
+  Deliberately chrome-only: the UI localizes while board content (jobs,
+  companies) stays in the board's own language, matching the platform's
+  single-language board model.
 - **Dark mode** keyed to a single `.dark` class, and **accessibility** from
   Base UI semantics and the owned components' explicit ARIA contracts.
 
