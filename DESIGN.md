@@ -76,7 +76,7 @@ typography:
 
 <!-- GENERATED FILE — do not edit. `pnpm run gen:design` regenerates
      from src/theme.css + component source + design/registry-items.json;
-     CI diffs the output and rejects hand-edits (ADR-0066 D15). -->
+     CI diffs the output and rejects hand-edits. -->
 
 ## Overview
 
@@ -255,7 +255,7 @@ Invariants:
 
 ## Components
 
-Generated inventory of reusable components under `src/components`. This inventory includes explicitly labelled migration-only compatibility components; never select those for new page-level composition.
+Generated inventory of reusable components under `src/components`.
 
 ### AccountShell — `src/components/account-shell.tsx`
 
@@ -379,8 +379,6 @@ Props:
 - `alreadyApplied?: boolean | undefined`
 - `applicationsHref?: string | undefined`
 - `applicationUrl: string | null`
-- `companySlug?: string | undefined`
-- `jobId: string`
 - `jobSlug: string | null`
 - `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
@@ -456,7 +454,7 @@ Props:
 ### CandidateAccountShell — `src/components/board/candidate-account-shell.tsx`
 
 Candidate account content wrapper. Account navigation now lives in the
-signed-in header's avatar menu (CAV-510), so this shell owns only the page's
+signed-in header's avatar menu, so this shell owns only the page's
 single main landmark and content column. `title`/`description`/`actions`
 render the canonical PageHeader; pages with a complementary rail (e.g. the
 profile-completeness card on /account) pass `aside` + `asideLabel` and get
@@ -635,7 +633,7 @@ Props:
 
 ### JobDetail — `src/components/board/job-detail.tsx`
 
-Full job page: breadcrumbs, header badges, facts, taxonomy chips, operator custom fields (CAV-294), sanitized description, company block, similar jobs. Server-renderable; apply/alert controls arrive via slots.
+Full job page: breadcrumbs, header badges, facts, taxonomy chips, operator custom fields, sanitized description, company block, and similar jobs. Server-renderable; apply and alert controls arrive via slots.
 
 Usage: Load with board.jobs.retrieve(jobSlug) + board.jobs.similar(jobSlug). Pass @cavuno/apply-flow's ApplyButton through `actions` and @cavuno/alert-signup's form through `alertSlot`. Render JSON-LD (createJobPostingJsonLd from @cavuno/board/seo) in your route's head — head management is framework-specific.
 
@@ -676,7 +674,6 @@ Usage: Fetch with board.jobs.list({ ...filters, cursor, limit: 20 }) (board.jobs
 
 Props:
 
-- `breadcrumb?: BreadcrumbData | undefined`
 - `count?: number | undefined`
 - `detail: ReactNode`
 - `endAd?: AdPlacement | undefined`
@@ -744,7 +741,7 @@ Props:
 
 ### JobsNotFound — `src/components/board/jobs-not-found.tsx`
 
-The not-found state for the programmatic jobs pages (CAV-502). A visitor
+The not-found state for the programmatic jobs pages. A visitor
 can search a term and land on a slug that no longer resolves. The global
 header remains the single keyword/location search owner, while this state
 describes the failed search rather than exposing the missing taxonomy.
@@ -761,34 +758,22 @@ Props:
 - `page?: number | undefined`
 - `pageSize?: number | undefined`
 
-### ListingPageHeader — `src/components/board/listing-page-header.tsx`
-
-Migration-only listing header for routes that predate the canonical
-`PageHeader`. Do not use `ListingPageHeader` for new pages; compose the
-header through the `Page` family and use `Bleed` when the band must span the
-viewport. Existing listing routes retain this component until migrated.
-
-The `search` slot still receives the shared `ListingSearchBand` (or a thin
-wrapper of it), preserving current route behavior during that migration.
+### ListingPagination — `src/components/board/listing-pagination.tsx`
 
 Props:
 
-- `breadcrumb?: BreadcrumbData | undefined`
-- `eyebrow?: ReactNode`
-- `search?: ReactNode`
-- `subtitle?: string | null | undefined`
-- `title: string`
+- `compact?: boolean | undefined`
+- `count: number`
+- `hrefForPage: (page: number) => string`
+- `onPageChange: (page: number) => void`
+- `page: number`
+- `pageSize: number`
 
-### ListingResultsHeader — `src/components/board/listing-page-header.tsx`
+### ListingSearchBand — `src/components/board/listing-search-band.tsx`
 
-Props:
-
-- `breadcrumb?: BreadcrumbData | undefined`
-- `children: ReactNode`
-
-### ListingSearchBand — `src/components/board/listing-page-header.tsx`
-
-The ONE search band (CAV-502, CAV-517) — the white rounded panel that lives
+The shared search band: a keyword input with a leading search icon, an
+inline clear action, a primary Search button, and optional slots for
+surface-specific controls.
 inside every listing header: a keyword input with a leading search icon, an
 inline clear (the X inside the field), and a primary Search button, with
 optional slots for the extra controls a surface needs (the jobs location
@@ -796,7 +781,7 @@ field, or the facet-pill row). Companies, blog, jobs, and the not-found
 headers all consume THIS markup — there is no duplicate search-band markup
 anywhere.
 
-SUBMIT-ONLY (CAV-517): the keyword is controlled local state owned by the
+The keyword is controlled local state owned by the
 parent; `onChange` mutates only that state (never the URL), and the URL is
 committed ONLY on form submit (Enter in the field or the Search button) via
 `onSubmit`. The inline X clears the field locally (`onChange("")`) and
@@ -815,31 +800,6 @@ Props:
 - `searchAriaLabel?: string | undefined`
 - `searchLabel: string`
 - `value: string`
-
-### ListingPagination — `src/components/board/listing-pagination.tsx`
-
-Props:
-
-- `compact?: boolean | undefined`
-- `count: number`
-- `hrefForPage: (page: number) => string`
-- `onPageChange: (page: number) => void`
-- `page: number`
-- `pageSize: number`
-
-### PageBody — `src/components/board/page-body.tsx`
-
-Migration-only compatibility shell for detail surfaces that need a
-full-bleed band and an optional sticky rail. Geometry is delegated to the
-canonical Page family; global navigation context is owned by the root shell
-breadcrumb.
-
-Props:
-
-- `band?: ReactNode`
-- `children: ReactNode`
-- `rail?: ReactNode`
-- `railLabel?: string | undefined`
 
 ### PublicContentPending — `src/components/board/public-content-pending.tsx`
 
@@ -911,11 +871,8 @@ Props:
 ### SearchDetailHeader — `src/components/board/search-detail-header.tsx`
 
 The condensed (sticky) detail header shared by ALL three master/detail
-search surfaces — jobs, companies, and talent. Each detail panel used to
-hand-roll its own sticky row, so they drifted apart (different borders,
-paddings, and whether the name was even a link). This is the one row they
-all render now: the entity mark, the entity NAME, an optional one-line
-subtitle, and the primary action(s).
+search surfaces — jobs, companies, and talent. It renders the entity mark,
+linked entity name, optional one-line subtitle, and primary actions.
 
 The NAME links to that entity's own detail page when `nameHref` is set — a
 job → its job-detail page, a company → its company page, a talent → their
@@ -927,8 +884,7 @@ Geometry contract — it is seated inside `SearchResultDetailHeader`'s sticky
 `h-16` anchor, so its own box is a single flush row that matches the shared
 results-column surface:
  - Left inset only (`pl-5 md:pl-6`); NO right padding, so the action(s) sit
-   flush with the pane's right edge instead of leaving the asymmetric gap
-   the results list just removed.
+   flush with the pane's right edge.
  - A subtle hairline divider (`border-border/60`) under the backdrop-blur —
    an intentional, quiet separator rather than a heavy full-strength rule.
 
@@ -1077,7 +1033,7 @@ Props:
 ### CandidateShell — `src/components/candidate-shell.tsx`
 
 Thin wrapper for the candidate account pages. The account navigation moved to
-the signed-in header avatar menu (CAV-510); this simply renders the page
+the signed-in header avatar menu; this simply renders the page
 content inside the shared account content shell. `title`/`description`/
 `actions` render the canonical PageHeader; an optional `aside` (with its
 accessible `asideLabel`) renders as the shell's complementary rail.
@@ -1093,7 +1049,7 @@ Props:
 
 ### CompanyJobsSearchBar — `src/components/company-jobs-search-bar.tsx`
 
-The company-jobs subpage search (CAV-501, CAV-511) — a thin wrapper of the
+The company-jobs subpage search is a thin wrapper of the
 shared `ListingSearchBand`, so it is the SAME white panel the jobs,
 companies, and blog headers use (no duplicate search-band markup). Scoped to
 ONE company: it submits to that company's jobs subpage
@@ -1132,8 +1088,8 @@ Props:
 
 ### CustomFieldsGroup — `src/components/custom-fields-group.tsx`
 
-Board-defined custom fields for the public posting form (ADR-0008: they
-render as their own group after the built-in fields, in operator-config
+Board-defined custom fields for the public posting form. They render as
+their own group after the built-in fields, in operator-config
 order). Uncontrolled per-field values roll up into one `customFieldValues`
 record keyed by the definition's immutable `key`; select values store
 option KEYS, never labels — the same contract `resolveCustomFieldDisplay`
@@ -1380,10 +1336,21 @@ Props:
 
 - `languages: Language[]`
 
+### PageLayout — `src/components/layout/page-layout.tsx`
+
+Reusable Page-family composition with a full-bleed header and optional rail.
+
+Props:
+
+- `band?: ReactNode`
+- `children: ReactNode`
+- `rail?: ReactNode`
+- `railLabel?: string | undefined`
+
 ### LegalPageView — `src/components/legal-page.tsx`
 
-Shared render for the legal/about surfaces. Per ADR-0039 the starter owns the
-layout + JSON-LD; the Board API serves the portable-HTML prose (+ impressum
+Shared render for the legal/about surfaces. The starter owns the layout and
+JSON-LD; the Board API serves the portable-HTML prose (+ impressum
 legal-entity facts).
 
 Props:
@@ -1687,7 +1654,7 @@ Props:
 ### PreviewBoardSettingsSheet — `src/components/preview/preview-board-settings.tsx`
 
 The "Board settings" surface — the sandbox analog of the dashboard's board
-settings (spec §4b item 5), split out of the persona menu into its own
+settings, split out of the persona menu into its own
 focused sheet (progressive disclosure: the persona popover does ONE job, the
 flag controls live behind their own affordance). Reached from the toolbar
 footer's gear and controlled by the parent; closing it returns to nothing
@@ -1708,7 +1675,7 @@ Props:
 ### PreviewEmailsSheet — `src/components/preview/preview-emails.tsx`
 
 The "Emails" panel — a Mailpit/letter_opener-style viewer for the sandbox's
-captured outbound mail (spec §4b). A Sheet triggered from inside the preview
+captured outbound mail. A Sheet triggered from inside the preview
 toolbar: every board email (magic links, verification, alert-manage HMAC
 URLs, digests) is listed newest-first in a compact master list, and
 selecting one opens a workbench detail — a metadata header (To / Subject /
@@ -1734,7 +1701,7 @@ Props:
 
 ### PreviewToolbar — `src/components/preview/preview-toolbar.tsx`
 
-The developer-preview toolbar — Workstream B of the sandbox-preview-state
+The developer-preview toolbar for the sandbox preview state
 spec. A floating, unobtrusive pill that renders ONLY when the server-side
 capability check passes (`sandbox: true`), never on a tenant board.
 
@@ -1748,7 +1715,7 @@ footer action row, each in its own focused surface:
   - Exit preview   → immediate sign-out + reload
 Opening any of them dismisses the persona menu; closing them returns to
 nothing (never re-opens the menu). The same server functions are scriptable
-headlessly for agents (spec §3.7).
+headlessly for agents.
 
 Positioned bottom-LEFT to clear the app's own bottom-right chrome (the
 messages dock at `right-6 bottom-0`, the job-alert prompt at `right-4
@@ -1793,6 +1760,38 @@ Props:
 - `children?: ReactNode`
 - `html?: string | undefined`
 
+### AuthPageCard — `src/components/registration-page.tsx`
+
+Props:
+
+- `announceTitle?: boolean | undefined`
+- `children: ReactNode`
+- `supportingText?: ReactNode`
+- `title: string`
+
+### RegistrationPage — `src/components/registration-page.tsx`
+
+Props:
+
+- `copy: RegistrationCopy`
+- `footer?: ReactNode`
+- `onSubmit: (values: { displayName: string; email: string; password: string; }) => Promise<RegistrationResult>`
+- `successHref: string`
+- `supportingText: ReactNode`
+- `title: string`
+
+### RoleSelector — `src/components/registration-page.tsx`
+
+Props:
+
+- `ariaLabel: string`
+- `candidateBody: string`
+- `candidateTitle: string`
+- `employerBody: string`
+- `employerTitle: string`
+- `onValueChange: (value: "candidate" | "employer") => void`
+- `value: "candidate" | "employer"`
+
 ### ResumeImportDialog — `src/components/resume-import-dialog.tsx`
 
 "Import resume" page-header action: the resume pipeline (upload → parse →
@@ -1809,38 +1808,6 @@ Props:
 
 - `resume: { object: "resume"; parseStatus: "parsing" | "parsed" | "failed" | null; parseFailureReason: string | null; parsedAt:…`
 - `variant?: "section" | "embedded" | undefined`
-
-### RheaAuthCard — `src/components/rhea-auth-pilot.tsx`
-
-Props:
-
-- `announceTitle?: boolean | undefined`
-- `children: ReactNode`
-- `supportingText?: ReactNode`
-- `title: string`
-
-### RheaRegistrationPage — `src/components/rhea-auth-pilot.tsx`
-
-Props:
-
-- `copy: RegistrationCopy`
-- `footer?: ReactNode`
-- `onSubmit: (values: { displayName: string; email: string; password: string; }) => Promise<RegistrationResult>`
-- `successHref: string`
-- `supportingText: ReactNode`
-- `title: string`
-
-### RoleSelector — `src/components/rhea-auth-pilot.tsx`
-
-Props:
-
-- `ariaLabel: string`
-- `candidateBody: string`
-- `candidateTitle: string`
-- `employerBody: string`
-- `employerTitle: string`
-- `onValueChange: (value: "candidate" | "employer") => void`
-- `value: "candidate" | "employer"`
 
 ### RichTextEditor — `src/components/rich-text-editor.tsx`
 
@@ -3056,7 +3023,7 @@ Page, PageHeader, PageContent, and PageSection are the sole canonical page-level
 
 ### Page — `src/components/layout/page.tsx`
 
-Establishes the Rhea token scope and shared page width for a route.
+Establishes the theme-token scope and shared page width for a route.
 
 Props:
 
@@ -3275,8 +3242,7 @@ Primitives: PageHeader, PageSection, CardTitle, Prose
 - Do keep components presentational (typed props, no fetching);
   data arrives from route loaders and `src/server/` functions.
 - Do compose every new page with `Page`, `PageHeader`, `PageContent`,
-  and `PageSection`; do not start new work on migration-only
-  `PageBody` or `ListingPageHeader`.
+  and `PageSection`.
 - Do reuse the inventory above; don't duplicate an existing
   component to change its style — extend via props/variants.
 - Do edit `src/theme.css` directly or with the shadcn CLI and regenerate

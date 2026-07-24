@@ -3,7 +3,7 @@ import { loadGoogleFont } from 'workers-og';
 import { themeMeta } from '../theme/resolved';
 
 /**
- * FNT-02: OG cards render the board's theme font the way they already
+ * OG cards render the board's theme font the way they already
  * render its colors. `ogFontFamily` is derived by gen:theme (heading
  * family when set, else body family, ' Variable' suffix stripped) —
  * every catalog font is Google-loadable, so `loadGoogleFont` can fetch

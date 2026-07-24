@@ -1,5 +1,5 @@
 /**
- * Page-based pagination for the listing surfaces (CAV-496) — the pure math
+ * Page-based pagination for the listing surfaces — the pure math
  * behind the `?page=N` URL contract. The loaders turn a 1-based page into the
  * Board API's zero-based `offset`; the components turn a result `count` into a
  * page total for the owned shadcn pagination nav.

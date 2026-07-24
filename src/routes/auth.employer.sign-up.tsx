@@ -10,7 +10,7 @@ import { m } from '../paraglide/messages';
 import { signUpEmployer } from '../server/auth';
 import { getBoardContext } from '../server/queries';
 
-import { RheaRegistrationPage } from '@/components/rhea-auth-pilot';
+import { RegistrationPage } from '@/components/registration-page';
 import { buttonVariants } from '@/components/ui/button';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
 import { headTitle } from '@/lib/page-title';
@@ -47,7 +47,7 @@ function EmployerSignUpPage() {
   const { boardName } = Route.useLoaderData();
 
   return (
-    <RheaRegistrationPage
+    <RegistrationPage
       title={m.authEmployerSignUp_cardTitle({ boardName })}
       supportingText={m.authEmployerSignUp_supportingText()}
       copy={{

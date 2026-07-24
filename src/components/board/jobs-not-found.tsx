@@ -27,7 +27,7 @@ import { parseJobsSearch } from '@/lib/jobs-search';
 const rootApi = getRouteApi('__root__');
 
 /**
- * The not-found state for the programmatic jobs pages (CAV-502). A visitor
+ * The not-found state for the programmatic jobs pages. A visitor
  * can search a term and land on a slug that no longer resolves. The global
  * header remains the single keyword/location search owner, while this state
  * describes the failed search rather than exposing the missing taxonomy.

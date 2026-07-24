@@ -1,23 +1,23 @@
 import { Bleed } from '@/components/layout/bleed';
 import { Page, PageContent } from '@/components/layout/page';
 
-type PageBodyRailProps =
+type PageLayoutRailProps =
   | { rail?: never; railLabel?: never }
   | { rail: React.ReactNode; railLabel: string };
 
-type PageBodyProps = PageBodyRailProps & {
+type PageLayoutProps = PageLayoutRailProps & {
   /** Full-bleed section rendered above the constrained content. */
   band?: React.ReactNode;
   children: React.ReactNode;
 };
 
-/**
- * Migration-only compatibility shell for detail surfaces that need a
- * full-bleed band and an optional sticky rail. Geometry is delegated to the
- * canonical Page family; global navigation context is owned by the root shell
- * breadcrumb.
- */
-export function PageBody({ band, rail, railLabel, children }: PageBodyProps) {
+/** Reusable Page-family composition with a full-bleed header and optional rail. */
+export function PageLayout({
+  band,
+  rail,
+  railLabel,
+  children,
+}: PageLayoutProps) {
   const header = band ? <Bleed>{band}</Bleed> : undefined;
 
   return (

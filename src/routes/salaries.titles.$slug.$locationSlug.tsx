@@ -54,7 +54,7 @@ export const Route = createFileRoute('/salaries/titles/$slug/$locationSlug')({
       if (isNotFound(error)) throw notFound();
       throw error;
     }
-    // Double canonical redirect (S3) — both axes resolve to their canonical slug.
+    // Both axes must resolve to their canonical slug in the same redirect.
     if (
       salary.categoryCanonicalSlug !== params.slug ||
       salary.locationCanonicalSlug !== params.locationSlug

@@ -221,9 +221,8 @@ function HeaderSearch({
 
 /**
  * Signed-in identity menu — a Facebook-style avatar that opens the candidate's
- * account navigation. This owns the account destinations that used to live in
- * the sidebar shell, plus the sign-out action (mirrors `/account`'s semantics:
- * end the session, invalidate the router cache, return home).
+ * account navigation and sign-out action. Sign-out mirrors `/account`:
+ * end the session, invalidate the router cache, and return home.
  */
 function AccountMenu({
   user,

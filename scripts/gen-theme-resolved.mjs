@@ -5,15 +5,15 @@ import {
 } from './theme-resolved-lib.mjs';
 
 /**
- * `npm run gen:theme` — derive src/theme/resolved.ts from the canonical
- * src/theme.css (ADR-0065 D2). OG routes import the resolved values
+ * `pnpm run gen:theme` — derive src/theme/resolved.ts from the canonical
+ * src/theme.css. OG routes import the resolved values
  * (Satori cannot read CSS variables); the module carries the source
- * hash so doctor can flag drift (D6). Never hand-edit the output.
+ * hash so doctor can flag drift. Never hand-edit the output.
  *
  * `--payload` prints the `boards/themeSnapshot:sync` args JSON instead —
  * pipe it to `npx convex run boards/themeSnapshot:sync` (from the
  * platform repo) after a theme change to keep server-rendered surfaces
- * (emails) in step with the repo theme (D3).
+ * such as emails in step with the repository theme.
  */
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 
@@ -35,7 +35,7 @@ writeFileSync(
  * GENERATED from src/theme.css — do not edit (npm run gen:theme).
  * Resolved theme values for renderers that cannot read CSS variables
  * (workers-og/Satori). The hash ties this module to its source; doctor
- * compares it against theme.css and the platform snapshot (ADR-0065).
+ * compares it against theme.css and the platform snapshot.
  */
 export const tokensHash = '${hash}'
 

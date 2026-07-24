@@ -19,7 +19,6 @@ import {
   toTalentProfileVM,
   type TalentDetailViewer,
 } from '@/board/talent-view-model';
-import { PageBody } from '@/components/board/page-body';
 import {
   TalentProfileContent,
   TalentProfileIdentity,
@@ -27,6 +26,7 @@ import {
 import { JsonLd } from '@/components/json-ld';
 import { Container } from '@/components/layout/container';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
+import { PageLayout } from '@/components/layout/page-layout';
 import { DitherCanvas } from '@/components/marketing/dither-canvas';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -183,14 +183,13 @@ function TalentProfilePage() {
 
   return (
     // Full-bleed hero band — the SAME composition as the job-detail and
-    // company-profile pages (`PageBody`'s `band`, `bg-secondary` + `border-b`,
+    // company-profile pages (the shared full-bleed band,
     // seated on the shared `--header-space` rhythm), so every entity page opens
     // the same way. The band carries the identity (avatar + name H1 + headline
-    // meta line + location/availability badges), replacing the old name-only
-    // hero and the floating headline-but-no-name card. The decorative dither
-    // field mounts once here (never inside the swapping search pane), reading
-    // the live --foreground token and respecting prefers-reduced-motion.
-    <PageBody
+    // meta line + location/availability badges). The decorative dither field
+    // mounts once here (never inside the swapping search pane), reads the live
+    // --foreground token, and respects prefers-reduced-motion.
+    <PageLayout
       band={
         <div className="border-border bg-secondary relative isolate overflow-hidden border-b">
           <DitherCanvas className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
@@ -229,6 +228,6 @@ function TalentProfilePage() {
       <article className="min-w-0">
         <TalentProfileContent vm={vm} headingAs="h1" showHeader={false} />
       </article>
-    </PageBody>
+    </PageLayout>
   );
 }

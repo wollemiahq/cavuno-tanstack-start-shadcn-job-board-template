@@ -5,14 +5,14 @@ import {
 } from './gen-design-lib.mjs';
 
 /**
- * CLI for the D15 artifacts: writes DESIGN.md + design/tokens.dtcg.json
+ * Writes DESIGN.md + design/tokens.dtcg.json
  * from canonical sources (see gen-design-lib.mjs).
  *
  *   pnpm run gen:design                      regenerate both artifacts
  *   pnpm run gen:design -- --check           exit 1 if committed files drift
  *   pnpm run gen:design -- --frontmatter     regenerate ONLY the DESIGN.md
  *                                            frontmatter (+ DTCG), body kept —
- *                                            builder-workspace mode (D15)
+ *                                            customized body preserved
  *   pnpm run gen:design -- --frontmatter --check   exit 1 on frontmatter drift,
  *                                            body edits tolerated
  *   pnpm run gen:design -- --refresh-registry  refetch design/registry-items.json
@@ -39,9 +39,8 @@ if (args.includes('--refresh-registry')) {
   console.log('design/registry-items.json refreshed');
 }
 
-// --frontmatter: builder-workspace mode (ADR-0066 D15) — regenerate
-// ONLY the tokens-derived frontmatter (+ the DTCG export), preserving
-// the DESIGN.md body where workspaces accumulate design intent.
+// --frontmatter regenerates only token-derived frontmatter and the DTCG
+// export, preserving the existing DESIGN.md body.
 let targets;
 if (args.includes('--frontmatter')) {
   const { frontmatterBlock, dtcgJson } = await generateDesignFrontmatter(root);

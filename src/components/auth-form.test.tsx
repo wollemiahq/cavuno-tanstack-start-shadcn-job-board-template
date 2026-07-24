@@ -3,17 +3,9 @@ import '@testing-library/jest-dom/vitest';
 import { useState } from 'react';
 
 /**
- * auth-form native-form parity (CAV-482 chassis conversion).
- *
- * The auth routes all submit by reading `new FormData(event.currentTarget)`
- * off a plain <form> — never controlled state. When `Field` moved from the
- * legacy Base UI input to the Untitled UI react-aria `Input`, that contract
- * had to survive byte-for-byte: the rendered element must still be a real
- * <input> that carries `name`, `type`, `autoComplete`, and a NATIVE
- * `required` attribute (so the browser blocks empty submits exactly as
- * before) and whose typed value is picked up by FormData. If react-aria's
- * validationBehavior regressed to aria-only, `required` would silently drop
- * off the DOM node and every auth form would submit empty payloads.
+ * Auth routes submit native forms through FormData. Fields must therefore
+ * render real inputs with the expected name, type, autocomplete, required,
+ * and current-value semantics.
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -36,7 +28,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
 });
 
 import { AuthCard, AuthDivider, Field, FormError } from './auth-form';
-import { RheaRegistrationPage, RoleSelector } from './rhea-auth-pilot';
+import { RegistrationPage, RoleSelector } from './registration-page';
 
 afterEach(cleanup);
 
@@ -62,7 +54,7 @@ describe('Field renders a native, form-participating input', () => {
     expect(input!.type).toBe('email');
     expect(input!.autocomplete).toBe('email');
     // The native `required` attribute — not merely aria-required — is what
-    // makes the browser block an empty submit, matching the legacy input.
+    // makes the browser block an empty submit.
     expect(input!.hasAttribute('required')).toBe(true);
     // The visible label text is still rendered (accessible labelling).
     expect(screen.getByText('Email address')).toBeTruthy();
@@ -131,7 +123,7 @@ describe('AuthCard + FormError chrome', () => {
   });
 });
 
-describe('RheaRegistrationPage', () => {
+describe('RegistrationPage', () => {
   const copy = {
     nameLabel: 'Name',
     emailLabel: 'Email',
@@ -145,7 +137,7 @@ describe('RheaRegistrationPage', () => {
 
   it('reports a registration error without losing the submitted values', async () => {
     render(
-      <RheaRegistrationPage
+      <RegistrationPage
         title="Create your account"
         supportingText="Join the board."
         copy={copy}
@@ -176,7 +168,7 @@ describe('RheaRegistrationPage', () => {
 
   it('recovers when the registration request rejects unexpectedly', async () => {
     render(
-      <RheaRegistrationPage
+      <RegistrationPage
         title="Create your account"
         supportingText="Join the board."
         copy={copy}
@@ -208,7 +200,7 @@ describe('RheaRegistrationPage', () => {
 
   it('replaces the initial heading with one announced success heading', async () => {
     render(
-      <RheaRegistrationPage
+      <RegistrationPage
         title="Create your account"
         supportingText="Join the board."
         copy={copy}
@@ -241,7 +233,7 @@ describe('RheaRegistrationPage', () => {
 
   it('keeps the pending Base UI submit in the tab order', async () => {
     render(
-      <RheaRegistrationPage
+      <RegistrationPage
         title="Create your account"
         supportingText="Join the board."
         copy={copy}

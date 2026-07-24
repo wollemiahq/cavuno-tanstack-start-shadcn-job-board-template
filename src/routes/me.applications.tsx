@@ -1,5 +1,5 @@
 /**
- * `/me/applications` — the signed-in candidate's applications (ADR-0054), over
+ * `/me/applications` — the signed-in candidate's applications, over
  * `board.me.applications.*` (list / withdraw). Status is the coarse,
  * Himalayas-grounded candidate view (applied → interviewing → … → archived).
  */

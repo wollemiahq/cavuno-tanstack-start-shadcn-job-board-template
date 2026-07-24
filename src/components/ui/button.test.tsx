@@ -7,7 +7,7 @@ import { Button } from './button';
 afterEach(cleanup);
 
 describe('Button', () => {
-  it('exposes native button behavior through the owned Rhea component', () => {
+  it('exposes native button behavior through the owned component', () => {
     const onClick = vi.fn();
 
     render(<Button onClick={onClick}>Create account</Button>);

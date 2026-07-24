@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { JobSearchPage } from './job-search-page';
 
 import { toJobCardVM } from '@/board/job-view-model';
+import { m } from '@/paraglide/messages';
 import type { PublicJobCard } from '@cavuno/board';
 
 const job = {
@@ -65,13 +66,6 @@ describe('JobSearchPage — search results pattern', () => {
           count={12}
           page={1}
           pageSize={20}
-          breadcrumb={{
-            ariaLabel: 'Breadcrumb',
-            items: [
-              { name: 'Jobs', href: '/jobs' },
-              { name: 'Product design' },
-            ],
-          }}
           filters={{ q: 'product designer' }}
           language="en"
           viewer={null}
@@ -105,10 +99,10 @@ describe('JobSearchPage — search results pattern', () => {
     ).not.toBeInTheDocument();
 
     const filterBar = container.querySelector("[data-slot='jobs-filter-bar']");
-    const heading = screen.getByRole('heading', { level: 1, name: '12 jobs' });
-    expect(
-      screen.queryByText('Browse every open role — search, filter, and apply.'),
-    ).not.toBeInTheDocument();
+    const heading = screen.getByRole('heading', {
+      level: 1,
+      name: m.jobSearch_resultsCountMany({ count: '12' }),
+    });
     expect(filterBar).toBeInTheDocument();
     if (!filterBar) throw new Error('Expected the Jobs filter bar');
     expect(
@@ -116,8 +110,12 @@ describe('JobSearchPage — search results pattern', () => {
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 
-    const results = screen.getByRole('region', { name: 'Job results' });
-    const detail = screen.getByRole('region', { name: 'Selected job' });
+    const results = screen.getByRole('region', {
+      name: m.jobSearch_resultsRegionLabel(),
+    });
+    const detail = screen.getByRole('region', {
+      name: m.jobSearch_selectedJobRegionLabel(),
+    });
     expect(screen.queryByRole('navigation', { name: 'Breadcrumb' })).toBeNull();
     expect(
       within(results).getByRole('link', { name: /Product designer/i }),
@@ -162,13 +160,19 @@ describe('JobSearchPage — search results pattern', () => {
     const { container } = render(<RouterProvider router={router} />);
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: '0 jobs' }),
+      await screen.findByRole('heading', {
+        level: 1,
+        name: m.jobSearch_resultsCountMany({ count: '0' }),
+      }),
     ).toBeVisible();
-    expect(screen.getByText('No jobs match your search')).toBeVisible();
-    expect(screen.getByRole('link', { name: 'Reset filters' })).toHaveAttribute(
-      'href',
-      '/jobs',
-    );
+    expect(
+      screen.getByText(m.jobSearch_noMatchingResultsHeading()),
+    ).toBeVisible();
+    expect(
+      screen.getByRole('link', {
+        name: m.jobSearch_resetFiltersAction(),
+      }),
+    ).toHaveAttribute('href', '/jobs');
     expect(
       container.querySelector("[data-slot='search-results-layout']"),
     ).toBeInTheDocument();
@@ -178,7 +182,11 @@ describe('JobSearchPage — search results pattern', () => {
     expect(
       screen.getByRole('complementary', { name: 'Sponsored end' }),
     ).toHaveTextContent('End creative');
-    expect(screen.queryByRole('region', { name: 'Selected job' })).toBeNull();
+    expect(
+      screen.queryByRole('region', {
+        name: m.jobSearch_selectedJobRegionLabel(),
+      }),
+    ).toBeNull();
     expect(screen.queryByText('Unused detail pane')).toBeNull();
   });
 
@@ -217,11 +225,14 @@ describe('JobSearchPage — search results pattern', () => {
     });
     render(<RouterProvider router={router} />);
 
-    expect(await screen.findByText('No jobs match your search')).toBeVisible();
-    expect(screen.getByRole('link', { name: 'Reset filters' })).toHaveAttribute(
-      'href',
-      '/jobs',
-    );
+    expect(
+      await screen.findByText(m.jobSearch_noMatchingResultsHeading()),
+    ).toBeVisible();
+    expect(
+      screen.getByRole('link', {
+        name: m.jobSearch_resetFiltersAction(),
+      }),
+    ).toHaveAttribute('href', '/jobs');
   });
 
   it('surfaces withheld results in an owned alert without changing the access action', async () => {
@@ -261,16 +272,18 @@ describe('JobSearchPage — search results pattern', () => {
     render(<RouterProvider router={router} />);
 
     const alert = await screen.findByRole('alert', {
-      name: 'Unlock more roles',
+      name: m.jobSearch_unlockMoreLabel(),
     });
     expect(alert).toHaveAttribute('data-slot', 'alert');
     expect(alert).toHaveTextContent(
-      '24 more roles are available with full access.',
+      m.jobSearch_gatedCountText({ count: '24' }),
     );
     // The unlock action links to the paywall and carries the originating path
     // as `returnTo`, so the buyer is returned here once the grant is confirmed.
     expect(
-      within(alert).getByRole('link', { name: 'Unlock more roles' }),
+      within(alert).getByRole('link', {
+        name: m.jobSearch_unlockMoreLabel(),
+      }),
     ).toHaveAttribute('href', '/account/access?returnTo=%2F');
   });
 });

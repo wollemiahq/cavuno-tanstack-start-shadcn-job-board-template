@@ -6,8 +6,6 @@ import { Search, X } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
-import type { BreadcrumbData } from '@/components/board/breadcrumb';
-import { Text } from '@/components/text';
 import { Button } from '@/components/ui/button';
 import {
   InputGroup,
@@ -15,67 +13,10 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from '@/components/ui/input-group';
-import { cn } from '@/lib/utils';
-
 /**
- * Migration-only listing header for routes that predate the canonical
- * `PageHeader`. Do not use `ListingPageHeader` for new pages; compose the
- * header through the `Page` family and use `Bleed` when the band must span the
- * viewport. Existing listing routes retain this component until migrated.
- *
- * The `search` slot still receives the shared `ListingSearchBand` (or a thin
- * wrapper of it), preserving current route behavior during that migration.
- */
-export function ListingPageHeader({
-  breadcrumb: _breadcrumb,
-  eyebrow,
-  title,
-  subtitle,
-  search,
-}: {
-  /** @deprecated Trails are rendered once by the root shell. */
-  breadcrumb?: BreadcrumbData;
-  /** Optional eyebrow above the title (e.g. the home hero's honest job-count Badge). Omitted when absent. */
-  eyebrow?: React.ReactNode;
-  title: string;
-  subtitle?: string | null;
-  /** The search band (the shared `ListingSearchBand` / a wrapper of it). */
-  search?: React.ReactNode;
-}) {
-  return (
-    <section className="border-border bg-muted border-b">
-      <div
-        className={cn(
-          'mx-auto flex w-full max-w-7xl flex-col items-center gap-4 px-4 py-10 md:px-8 md:py-14',
-        )}
-      >
-        {eyebrow}
-        <Text as="h1" variant="display" className="max-w-3xl text-center">
-          {title}
-        </Text>
-        {subtitle ? (
-          <p className="text-muted-foreground max-w-2xl text-center text-lg">
-            {subtitle}
-          </p>
-        ) : null}
-        {search ? <div className="mt-4 w-full max-w-5xl">{search}</div> : null}
-      </div>
-    </section>
-  );
-}
-
-export function ListingResultsHeader({
-  breadcrumb: _breadcrumb,
-  children,
-}: {
-  breadcrumb?: BreadcrumbData;
-  children: React.ReactNode;
-}) {
-  return <div className="space-y-4">{children}</div>;
-}
-
-/**
- * The ONE search band (CAV-502, CAV-517) — the white rounded panel that lives
+ * The shared search band: a keyword input with a leading search icon, an
+ * inline clear action, a primary Search button, and optional slots for
+ * surface-specific controls.
  * inside every listing header: a keyword input with a leading search icon, an
  * inline clear (the X inside the field), and a primary Search button, with
  * optional slots for the extra controls a surface needs (the jobs location
@@ -83,7 +24,7 @@ export function ListingResultsHeader({
  * headers all consume THIS markup — there is no duplicate search-band markup
  * anywhere.
  *
- * SUBMIT-ONLY (CAV-517): the keyword is controlled local state owned by the
+ * The keyword is controlled local state owned by the
  * parent; `onChange` mutates only that state (never the URL), and the URL is
  * committed ONLY on form submit (Enter in the field or the Search button) via
  * `onSubmit`. The inline X clears the field locally (`onChange("")`) and

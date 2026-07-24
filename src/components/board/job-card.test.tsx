@@ -1,9 +1,6 @@
 // @vitest-environment jsdom
 /**
- * JobCard stress invariants (CAV-485). The card was recomposed as an
- * Untitled UI card row; these lock the real-data behaviours that the
- * recomposition must preserve — the reasons the card exists, not its
- * markup: honest omission of absent salary/summary, the skill-tag cap
+ * JobCard honest-data invariants: omission of absent salary/summary, the skill-tag cap
  * with an overflow count, the FEATURED pill shown ONLY for truly
  * featured jobs (no fake-featuring), and the title linking to the typed
  * job-detail route through the TanStack router seam.

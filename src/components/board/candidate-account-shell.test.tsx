@@ -23,7 +23,7 @@ describe('CandidateAccountShell', () => {
     ).not.toBeNull();
   });
 
-  it('renders no sidebar navigation — account nav lives in the header avatar menu (CAV-510)', () => {
+  it('renders no sidebar navigation because account nav lives in the header avatar menu', () => {
     render(
       <CandidateAccountShell>
         <p>Content</p>

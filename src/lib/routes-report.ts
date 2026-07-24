@@ -1,6 +1,6 @@
 /**
- * LNK-11 — preview routes-report emitter. When this board runs embedded in
- * the builder preview iframe, post the route enumeration to the parent once
+ * Preview routes-report emitter. When this board runs embedded in the
+ * builder preview iframe, post the route enumeration to the parent once
  * after boot so the builder can pin path templates against the live tree.
  *
  * Fire-and-forget: never throws, never blocks render.

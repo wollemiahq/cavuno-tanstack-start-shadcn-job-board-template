@@ -1,10 +1,10 @@
 /**
- * The connected-account embedded-checkout mount (doc 36 / ADR-0056). The SDK is
+ * The connected-account embedded-checkout mount. The SDK is
  * Stripe-agnostic and hands back a mount kit; this is where the frontend brings
  * `@stripe/stripe-js`. The critical detail: Stripe.js is initialised WITH the
  * board's connected account (`loadStripe(publishableKey, { stripeAccount })`)
  * so the embedded form renders that account's session — the mount the shared
- * hosted embed got wrong (doc 36 open-Q2).
+ * hosted embed got wrong.
  *
  * The mount node stays in the DOM the whole time (Stripe needs a stable ref);
  * a centred spinner overlays it until the form finishes mounting so the panel

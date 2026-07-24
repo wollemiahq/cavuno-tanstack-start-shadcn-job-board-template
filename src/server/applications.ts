@@ -5,7 +5,7 @@ import {
   type UpdateApplicationFactsBody,
 } from '@cavuno/board';
 /**
- * Authenticated server functions — candidate applications (ADR-0054).
+ * Authenticated server functions for candidate applications.
  * Native apply lives on `board.jobs.*` (apply / uploadApplicationResume /
  * myApplication); the candidate's own list + detail + withdraw live on
  * `board.me.applications.*`. Same session-bearer + board-access pattern as the

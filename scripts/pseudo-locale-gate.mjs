@@ -1,13 +1,11 @@
 /**
- * Pseudo-locale runtime gate — the curl half of the Phase-1 pair (the
- * static half is src/copy-scan.test.ts).
+ * Pseudo-locale runtime gate, paired with the static copy scan.
  *
  * Fetches the pseudo-locale routes from a running build and asserts
  * catalog-backed chrome renders PSEUDO-LOCALIZED (⟦…⟧): proves the URL
  * locale flows through the server entry → seam → messages end to end.
  * Hardcoded strings render unbracketed on these pages — visible in any
- * screenshot; their burn-down is ratcheted by the static scan, not
- * failed here.
+ * screenshot; the static scan rejects them in source.
  *
  * Two pseudo-locales, both noindex:
  *   /en-XA/ — pseudo-accent, coverage only.
@@ -89,7 +87,7 @@ for (const route of ['/jobs', '/de/jobs', '/fr/jobs']) {
   }
 }
 
-// SEO invariants for real prefixed chrome locales (ADR-0063 D4/D5):
+// SEO invariants for real prefixed chrome locales:
 // /de/ pages canonicalize to the UNPREFIXED base (chrome-translated
 // duplicates), stay indexable, and never appear in the sitemap.
 {

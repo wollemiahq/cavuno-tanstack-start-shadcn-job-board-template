@@ -29,7 +29,7 @@ export function candidateSignUpHref(value: unknown) {
 }
 
 /**
- * The single sign-up entry point (CAV-514). Send users here when the role is
+ * The single sign-up entry point. Send users here when the role is
  * unknown — `/auth/join` resolves it via `resolveSignupDestination`, skipping
  * the chooser when the board only enables one role.
  */

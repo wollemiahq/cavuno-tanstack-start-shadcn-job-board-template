@@ -135,3 +135,20 @@ describe('identity-aware fallback scope', () => {
     ).toBe('blog');
   });
 });
+
+describe('route-owned search scope', () => {
+  it('uses the blog scope for the archive and nested blog routes', () => {
+    expect(resolveHeaderSearchState('/blog', {}).scope).toBe('blog');
+    expect(resolveHeaderSearchState('/blog/example-post', {}).scope).toBe(
+      'blog',
+    );
+  });
+
+  it('hides shared search on private shells without pinning header markup', () => {
+    expect(resolveHeaderSearchState('/account', {}).visible).toBe(false);
+    expect(resolveHeaderSearchState('/employers/dashboard', {}).visible).toBe(
+      false,
+    );
+    expect(resolveHeaderSearchState('/jobs', {}).visible).toBe(true);
+  });
+});

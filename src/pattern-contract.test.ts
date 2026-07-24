@@ -8,7 +8,7 @@ import {
 } from '../scripts/gen-design-lib.mjs';
 
 /**
- * Pattern-doc contract (CAV-503). The Polaris-style pattern layer lives in
+ * Pattern-doc contract. The pattern layer lives in
  * docs/patterns/ as markdown with a fixed shape, so agents (and the DESIGN.md
  * generator that reads the frontmatter) can rely on it. This gate keeps the
  * docs structurally honest:
@@ -97,9 +97,8 @@ describe('pattern docs (docs/patterns/)', () => {
 describe('breadcrumb singleton (P6 — one implementation only)', () => {
   // The chevron-separated trail markup (the `<ol>` + `aria-current="page"`
   // current-page crumb) is the canonical breadcrumb primitive. It must live
-  // in exactly ONE file: src/components/board/breadcrumb.tsx. `job-detail.tsx`
-  // once embedded a byte-identical private copy (CAV-510 collapsed it); a new
-  // hand-rolled trail anywhere else re-forks the primitive and drifts.
+  // in exactly one file: src/components/ui/breadcrumb.tsx. A hand-rolled
+  // trail anywhere else would fork the primitive and drift.
   const OL_SIGNATURE = 'flex flex-wrap items-center gap-1.5 text-sm';
   const CURRENT_CRUMB = 'aria-current="page"';
   const CANONICAL = join('src', 'components', 'ui', 'breadcrumb.tsx');
@@ -158,17 +157,10 @@ describe('breadcrumb placement (P6 — one shell placement)', () => {
   });
 });
 
-describe('typography scale (P17 — authored headings use the Rhea heading role)', () => {
-  // Rhea uses explicit semantic headings with the Geist heading role. Larger
-  // Tailwind sizes are valid only when the same authored heading also carries
-  // `font-heading`; this keeps interface typography explicit without routing
-  // shadcn surfaces back through the inherited Untitled Text component.
-  //
-  // Scope is authored surfaces ONLY — `src/routes` + `src/components/board`.
-  // It deliberately excludes the vendored UUI collection
-  // (`base`/`application`/`foundations`, which ship their own scale) and the
-  // `Prose` rich-text surface (whose headings come from rendered HTML strings,
-  // never authored `<hN className>` JSX).
+describe('typography scale (P17 — authored headings use the heading role)', () => {
+  // Larger Tailwind sizes are valid only when the same authored heading also
+  // carries `font-heading`. Prose is excluded because its headings come from
+  // sanitized HTML rather than authored JSX.
   const HEADING = /<h[1-6]\b[^>]*>/g;
   const LARGE_SIZE = /\btext-(?:2xl|3xl|4xl|5xl|6xl)\b/;
   const SCANNED = [
@@ -188,7 +180,7 @@ describe('typography scale (P17 — authored headings use the Rhea heading role)
       .sort();
     expect(
       offenders,
-      'an authored heading carries a large size without the Rhea font-heading role ' +
+      'an authored heading carries a large size without the font-heading role ' +
         '(see docs/patterns/typography.md)',
     ).toEqual([]);
   });

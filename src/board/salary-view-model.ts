@@ -1,6 +1,6 @@
 /**
- * Salary VIEW-MODEL — the Layer-1b seam for the salary block (ADR-0070
- * Phase 2). These mappers are the ONLY place SDK formatters (`formatRange`,
+ * Salary VIEW-MODEL — the Layer-1b seam for the salary block. These mappers
+ * are the only place SDK formatters (`formatRange`,
  * `formatUsd`), taxonomy label resolution (`fieldLabel`) and i18n copy
  * (`boardCopy`) touch the salary sections. Each maps raw route data to a
  * plain, fully-resolved view-model.

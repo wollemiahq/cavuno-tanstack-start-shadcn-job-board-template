@@ -1,6 +1,6 @@
 /**
  * Alert-signup VIEW-MODEL — the Layer-1b seam for the job-alert subscribe
- * block (ADR-0070 Phase 2). `toAlertSignupVM` is the ONLY place the i18n
+ * block. `toAlertSignupVM` is the only place the i18n
  * alert copy (`boardCopy`) touches the form: it resolves every label the
  * markup renders plus the per-status result messages.
  *
@@ -9,7 +9,7 @@
  * can't drift the copy resolution. (The form's props still reference the
  * subscribe wire types `JobAlertSubscribeInput`/`BoardLabelOverrides`
  * type-only — they are its API contract with the route, erased at runtime,
- * and kept precise so the generated DESIGN.md tells the builder what to pass.)
+ * and kept precise so the generated DESIGN.md records what to pass.)
  *
  * NOTE: unlike `apply-view-model`, this VM deliberately does NOT re-export
  * those wire types for the component to import — routing these indexed/mapped

@@ -6,7 +6,7 @@
  * unless the board has whitelabelled it off (`context.showCavunoBranding`).
  *
  * Chrome (the badge, the "see all jobs" CTA, the empty state) is owned by THIS
- * frontend (ADR-0039 — the API is a data contract only); only the card data +
+ * frontend (the API is a data contract only); only the card data +
  * the branding flag come from the API.
  */
 import { createFileRoute, getRouteApi, Link } from '@tanstack/react-router';

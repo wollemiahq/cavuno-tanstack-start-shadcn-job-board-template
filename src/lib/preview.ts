@@ -3,15 +3,15 @@
  * sandbox-only server functions (`src/server/preview.ts`) and the toolbar
  * UI (`src/components/preview/*`).
  *
- * Workstream B of the sandbox-preview-state spec. Everything here is pure
+ * Sandbox preview state. Everything here is pure
  * data + pure functions: no SDK, no env, no cookies — so the gating logic,
  * the persona projection, and the feature-flag whitelist are unit-testable
  * without the server runtime, and the whitelist lives in exactly one place
- * (spec §4b item 5).
+ * by the sandbox settings endpoint.
  *
  * SAFETY NOTE: the persona roster endpoint returns `email` and a shared
  * `password`. Neither must ever reach the browser — the switch seam is keyed
- * by persona **id** and the server resolves credentials (spec §4b item 3).
+ * by persona **id** and the server resolves credentials.
  * `projectPersona` is the boundary that strips them.
  */
 
@@ -20,7 +20,7 @@
  * capability so a FUTURE builder-preview context — where the board reads
  * `sandbox: true` but `auth.login` is a 403'd write inside the embedded
  * preview — can answer `canPreview: false` with `'switch-blocked'` WITHOUT
- * changing this seam (spec §4b item 3).
+ * changing this seam.
  */
 export type PreviewReason = 'sandbox' | 'not-sandbox' | 'switch-blocked';
 
@@ -66,7 +66,7 @@ export interface PreviewState {
  * send path and pre-sanitized (AGENTS.md hard rule 4), so the viewer renders
  * it as-is inside the rich-text container; `text` is the plain-text fallback.
  * Nothing here is a credential, but a magic-link / verification / alert-manage
- * URL rides inside the body — the whole point of the panel (spec §4b).
+ * URL rides inside the body — the whole point of the panel.
  */
 export interface PreviewEmail {
   id: string;
@@ -229,7 +229,7 @@ export const PREVIEW_EMAILS_MAX_LIMIT = 200;
 
 /**
  * Normalize an incoming `limit` to `[1, 200]`, defaulting to 50. Pure so the
- * server fn's clamp is unit-testable without the runtime (spec §4b: one place
+ * server fn's clamp is unit-testable without the runtime (one place
  * for the bound).
  */
 export function clampEmailLimit(limit?: number): number {

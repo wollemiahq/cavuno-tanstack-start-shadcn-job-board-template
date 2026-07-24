@@ -32,13 +32,11 @@ import { Route as JobsIndexRouteImport } from './routes/jobs.index'
 import { Route as EmployersIndexRouteImport } from './routes/employers.index'
 import { Route as CompaniesIndexRouteImport } from './routes/companies.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
-import { Route as TSplatRouteImport } from './routes/t.$'
 import { Route as SitemapFileRouteImport } from './routes/sitemap.$file'
 import { Route as PHandleRouteImport } from './routes/p.$handle'
 import { Route as MessagesConversationIdRouteImport } from './routes/messages.$conversationId'
 import { Route as MeApplicationsRouteImport } from './routes/me.applications'
 import { Route as MeAlertsRouteImport } from './routes/me.alerts'
-import { Route as JsMetricsDotjsRouteImport } from './routes/js.metrics[.]js'
 import { Route as JobsRssDotxmlRouteImport } from './routes/jobs.rss[.]xml'
 import { Route as JobsKeywordRouteImport } from './routes/jobs.$keyword'
 import { Route as GoSplatRouteImport } from './routes/go.$'
@@ -213,11 +211,6 @@ const BlogIndexRoute = BlogIndexRouteImport.update({
   path: '/blog/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TSplatRoute = TSplatRouteImport.update({
-  id: '/t/$',
-  path: '/t/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SitemapFileRoute = SitemapFileRouteImport.update({
   id: '/sitemap/$file',
   path: '/sitemap/$file',
@@ -241,11 +234,6 @@ const MeApplicationsRoute = MeApplicationsRouteImport.update({
 const MeAlertsRoute = MeAlertsRouteImport.update({
   id: '/me/alerts',
   path: '/me/alerts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const JsMetricsDotjsRoute = JsMetricsDotjsRouteImport.update({
-  id: '/js/metrics.js',
-  path: '/js/metrics.js',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JobsRssDotxmlRoute = JobsRssDotxmlRouteImport.update({
@@ -602,13 +590,11 @@ export interface FileRoutesByFullPath {
   '/go/$': typeof GoSplatRoute
   '/jobs/$keyword': typeof JobsKeywordRoute
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
-  '/js/metrics.js': typeof JsMetricsDotjsRoute
   '/me/alerts': typeof MeAlertsRoute
   '/me/applications': typeof MeApplicationsRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
   '/p/$handle': typeof PHandleRoute
   '/sitemap/$file': typeof SitemapFileRoute
-  '/t/$': typeof TSplatRoute
   '/blog/': typeof BlogIndexRoute
   '/companies/': typeof CompaniesIndexRoute
   '/employers/': typeof EmployersIndexRoute
@@ -692,13 +678,11 @@ export interface FileRoutesByTo {
   '/go/$': typeof GoSplatRoute
   '/jobs/$keyword': typeof JobsKeywordRoute
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
-  '/js/metrics.js': typeof JsMetricsDotjsRoute
   '/me/alerts': typeof MeAlertsRoute
   '/me/applications': typeof MeApplicationsRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
   '/p/$handle': typeof PHandleRoute
   '/sitemap/$file': typeof SitemapFileRoute
-  '/t/$': typeof TSplatRoute
   '/blog': typeof BlogIndexRoute
   '/companies': typeof CompaniesIndexRoute
   '/employers': typeof EmployersIndexRoute
@@ -783,13 +767,11 @@ export interface FileRoutesById {
   '/go/$': typeof GoSplatRoute
   '/jobs/$keyword': typeof JobsKeywordRoute
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
-  '/js/metrics.js': typeof JsMetricsDotjsRoute
   '/me/alerts': typeof MeAlertsRoute
   '/me/applications': typeof MeApplicationsRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
   '/p/$handle': typeof PHandleRoute
   '/sitemap/$file': typeof SitemapFileRoute
-  '/t/$': typeof TSplatRoute
   '/blog/': typeof BlogIndexRoute
   '/companies/': typeof CompaniesIndexRoute
   '/employers/': typeof EmployersIndexRoute
@@ -875,13 +857,11 @@ export interface FileRouteTypes {
     | '/go/$'
     | '/jobs/$keyword'
     | '/jobs/rss.xml'
-    | '/js/metrics.js'
     | '/me/alerts'
     | '/me/applications'
     | '/messages/$conversationId'
     | '/p/$handle'
     | '/sitemap/$file'
-    | '/t/$'
     | '/blog/'
     | '/companies/'
     | '/employers/'
@@ -965,13 +945,11 @@ export interface FileRouteTypes {
     | '/go/$'
     | '/jobs/$keyword'
     | '/jobs/rss.xml'
-    | '/js/metrics.js'
     | '/me/alerts'
     | '/me/applications'
     | '/messages/$conversationId'
     | '/p/$handle'
     | '/sitemap/$file'
-    | '/t/$'
     | '/blog'
     | '/companies'
     | '/employers'
@@ -1055,13 +1033,11 @@ export interface FileRouteTypes {
     | '/go/$'
     | '/jobs/$keyword'
     | '/jobs/rss.xml'
-    | '/js/metrics.js'
     | '/me/alerts'
     | '/me/applications'
     | '/messages/$conversationId'
     | '/p/$handle'
     | '/sitemap/$file'
-    | '/t/$'
     | '/blog/'
     | '/companies/'
     | '/employers/'
@@ -1146,12 +1122,10 @@ export interface RootRouteChildren {
   GoSplatRoute: typeof GoSplatRoute
   JobsKeywordRoute: typeof JobsKeywordRoute
   JobsRssDotxmlRoute: typeof JobsRssDotxmlRoute
-  JsMetricsDotjsRoute: typeof JsMetricsDotjsRoute
   MeAlertsRoute: typeof MeAlertsRoute
   MeApplicationsRoute: typeof MeApplicationsRoute
   PHandleRoute: typeof PHandleRoute
   SitemapFileRoute: typeof SitemapFileRoute
-  TSplatRoute: typeof TSplatRoute
   BlogIndexRoute: typeof BlogIndexRoute
   CompaniesIndexRoute: typeof CompaniesIndexRoute
   EmployersIndexRoute: typeof EmployersIndexRoute
@@ -1357,13 +1331,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/t/$': {
-      id: '/t/$'
-      path: '/t/$'
-      fullPath: '/t/$'
-      preLoaderRoute: typeof TSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/sitemap/$file': {
       id: '/sitemap/$file'
       path: '/sitemap/$file'
@@ -1397,13 +1364,6 @@ declare module '@tanstack/react-router' {
       path: '/me/alerts'
       fullPath: '/me/alerts'
       preLoaderRoute: typeof MeAlertsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/js/metrics.js': {
-      id: '/js/metrics.js'
-      path: '/js/metrics.js'
-      fullPath: '/js/metrics.js'
-      preLoaderRoute: typeof JsMetricsDotjsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/jobs/rss.xml': {
@@ -1894,12 +1854,10 @@ const rootRouteChildren: RootRouteChildren = {
   GoSplatRoute: GoSplatRoute,
   JobsKeywordRoute: JobsKeywordRoute,
   JobsRssDotxmlRoute: JobsRssDotxmlRoute,
-  JsMetricsDotjsRoute: JsMetricsDotjsRoute,
   MeAlertsRoute: MeAlertsRoute,
   MeApplicationsRoute: MeApplicationsRoute,
   PHandleRoute: PHandleRoute,
   SitemapFileRoute: SitemapFileRoute,
-  TSplatRoute: TSplatRoute,
   BlogIndexRoute: BlogIndexRoute,
   CompaniesIndexRoute: CompaniesIndexRoute,
   EmployersIndexRoute: EmployersIndexRoute,

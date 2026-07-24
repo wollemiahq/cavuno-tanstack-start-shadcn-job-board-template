@@ -159,13 +159,11 @@ function validateConfiguration() {
   const expected = {
     style: 'base-rhea',
     rsc: false,
-    iconLibrary: 'lucide',
     theme: 'src/theme.css',
   };
   const actual = {
     style: config.style,
     rsc: config.rsc,
-    iconLibrary: config.iconLibrary,
     theme: config.tailwind?.css,
   };
 
@@ -174,8 +172,14 @@ function validateConfiguration() {
       `components.json does not match the starter contract: ${JSON.stringify(actual)}`,
     );
   }
+  if (
+    typeof config.iconLibrary !== 'string' ||
+    config.iconLibrary.length === 0
+  ) {
+    throw new Error('components.json must declare one iconLibrary.');
+  }
 
-  return actual;
+  return { ...actual, iconLibrary: config.iconLibrary };
 }
 
 function buildArtifacts() {

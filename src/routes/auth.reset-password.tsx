@@ -10,7 +10,7 @@ import {
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { resetPassword } from '../server/auth';
-/** Reset-password landing — the route reset emails link to (ADR-0035). */
+/** Reset-password landing linked from reset emails. */
 import { getSeoBase } from '../server/queries';
 
 import { Button, buttonVariants } from '@/components/ui/button';

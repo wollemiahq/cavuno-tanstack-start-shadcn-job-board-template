@@ -49,9 +49,9 @@ Anything else (a bare word with a slash or dot, a URL that won't parse, a
 ui.shadcn.com link with no `?preset=`) fails with a usage message listing both
 forms — the wrapper never guesses.
 
-**Why both paths matter:** all eight first-party presets are near-monochrome
-(max chroma 0.021 — see "Proof" below). A dramatic re-skin — a real brand hue,
-a different radius — comes from the registry path.
+**Why both paths matter:** the first-party presets are intentionally restrained.
+A dramatic re-skin — a real brand hue or a different radius — comes from the
+registry path.
 
 That wrapper (`scripts/theme-apply.mjs`) then runs the same steps for either
 input:
@@ -133,7 +133,7 @@ The CLI syntax comes from the shadcn docs:
 [partial preset apply](https://ui.shadcn.com/docs/changelog/2026-04-partial-preset-apply)
 (the `--only theme,font` flag).
 
-## Fonts — swap from the bundled catalog, one file (FNT)
+## Fonts — swap from the bundled catalog
 
 The starter pre-installs the platform's full 20-font catalog as fontsource
 packages, so **changing the font is a `src/theme.css`-only edit** — no
@@ -195,10 +195,10 @@ operator instead of silently substituting.
 **Whoever applies it, the import and the token must agree.** A
 `--font-sans` naming a family with no matching `@import`, or an `@import`
 whose package is not installed, renders the board in a silent system
-fallback. Two gates in `src/theme-foundation.test.ts` catch both directions
-(FNT-01 and FNT-03); the fix is always to install the package or write the
-import, never to use fewer fonts. Third-party presets are the usual source
-of the mismatch: they rewrite `--font-sans` but not the import block.
+fallback. The theme foundation tests catch both directions; the fix is always
+to install the package or write the import, never to use fewer fonts.
+Third-party presets are the usual source of the mismatch: they rewrite
+`--font-sans` but not the import block.
 
 `theme:apply` checks the same condition right after applying, so you learn it
 at the moment of the swap rather than at `pnpm test`. It **never edits
@@ -221,7 +221,7 @@ For an off-catalog family the wrapper says so instead, and points at the
 operator decision (install it, or pick a catalog family). A clean swap prints
 `✔ Font check: every declared family has a matching @fontsource import.`
 
-## Icons — the third axis (ICO)
+## Icons
 
 Colors and fonts are the two axes `theme:apply` covers. Iconography is the
 third, and it has its own command:
@@ -305,7 +305,7 @@ hand and re-run to verify.
 
 ### The gate that actually holds the line
 
-`src/icon-set-contract.test.ts` (ICO) fails whenever **more than one icon
+`src/icon-set-contract.test.ts` fails whenever **more than one icon
 library appears across `src/**`**, brand marks excluded. It asserts
 _cardinality, not identity_: it is derived from what is actually imported, so
 a **complete** migration to any of the six passes untouched and only a
@@ -316,16 +316,7 @@ That is the durable guarantee — running the CLI by hand instead of through
 `icons:apply` is fine, because the gate is what makes a half-migrated tree
 impossible to commit.
 
-Two older assertions still pin the literal string `"lucide"`
-(`src/rhea-foundation.test.ts`, `src/shadcn-only-release.test.ts`), as does
-`scripts/check-shadcn-components.mjs`. They fail on any migration, complete or
-not, and pass on a half-finished one — the opposite of what ICO does.
-Relaxing them to "declared, and one of the CLI's libraries" (the
-`tailwind.baseColor` comment in `src/rhea-foundation.test.ts` is the
-precedent) is an operator decision, and safe to make now that ICO covers the
-real invariant.
-
-## Direction — the fourth axis (DIR)
+## Right-to-left layouts
 
 Colors, fonts, and icons are three axes. Writing direction is the fourth, and
 like the others it is a repo-owned command rather than a hand edit:
@@ -456,65 +447,3 @@ a swap unchanged. A short, reasoned allowlist covers the legitimate exceptions
 (third-party brand marks like the Google/LinkedIn logos, captured email
 documents that render on white, the PWA splash metadata). If you add a
 deliberately fixed color, allowlist it there with a reason.
-
-## Proof — a real swap, start to green
-
-### What the first-party presets actually change
-
-Be clear about the ceiling before reading the proof: **all eight first-party
-presets on ui.shadcn.com/create are monochrome** (max chroma 0.021). They vary
-the neutral ramp and the chart palette, not the brand color. `b2D0vQ7G4`, cited
-here in earlier revisions as the headline proof, is the extreme case — its
-**entire** diff is ten lines:
-
-```
---chart-1..5   oklch(0.87 0 0) …          →  oklch(0.845 0.143 164.978) …
-               (in both :root and .dark)      (an emerald chart palette)
-```
-
-It touches neither `--primary` nor `--radius` nor any font. Running it proves
-the pipeline executes; it does not demonstrate a re-skin, because almost
-nothing visible changes outside a chart. A convincing swap needs a third-party
-registry theme or a custom `create` preset.
-
-### A real re-skin — tweakcn `bubblegum`
-
-Applied in this repo as a third-party registry theme, with **no component
-edits**:
-
-```sh
-pnpm run theme:apply https://tweakcn.com/r/themes/bubblegum.json
-#   → shadcn add https://tweakcn.com/r/themes/bubblegum.json -y
-#     Updating src/theme.css ✔   133 insertions, 67 deletions
-#     --primary  oklch(0.205 0 0)  → oklch(0.6209 0.1801 348.1385)  (hot pink)
-#     --radius   0.625rem          → 0.4rem
-#     --card, --accent, --muted-foreground, the chart + sidebar ramps: all new,
-#     in both :root and .dark
-#   → gen:theme + gen:design re-derived (the wrapper does this for you)
-#   → ⚠ Font check: …declares Poppins but no @fontsource import (see below)
-
-pnpm run typecheck   # ✔ tsc --noEmit, 0 errors
-pnpm test            # ✔ 1087 tests / 189 files passed
-pnpm run build       # ✔ built
-```
-
-Every surface re-skinned in light and dark — header, filter bar, job cards,
-detail pane, badges, buttons, the alert prompt — with no `.tsx` touched. Only
-`src/theme.css` and the derived artifacts (`src/theme/resolved.ts`,
-`DESIGN.md`, `design/tokens.dtcg.json`) changed.
-
-**Fonts were the one deliberate extra step**, and they illustrate the rule
-above. `bubblegum` sets `--font-sans: Poppins, sans-serif` but, being a
-theme-only registry item, writes no `@import` — leaving the previous
-`@fontsource-variable/geist` import in place. `theme:apply` warned about it
-immediately, and FNT-01 then failed loudly (`--font-sans names "Poppins,
-sans-serif" but no @fontsource import matches "poppins"`) rather than shipping
-a silent fallback. Poppins is in the pre-installed catalog, so
-completing the swap was a four-line edit to the import block in `src/theme.css`
-— no dependency change. Had the preset asked for an off-catalog family, that
-would have been an operator decision (`--only theme,font`, or an explicit
-install), not something to paper over.
-
-The theme was then reverted (`git checkout src/theme.css && pnpm run gen:theme
-&& pnpm run gen:design`) so the shipped look is unchanged; this section is the
-record of the run.

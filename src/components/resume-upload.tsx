@@ -24,7 +24,7 @@ import { toastActionError } from '@/lib/action-toast';
 import type { Resume } from '@cavuno/board';
 
 /**
- * Resume uploader — mirrors the hosted onboarding resume pipeline (ADR-0055):
+ * Resume uploader — mirrors the hosted onboarding resume pipeline:
  * pick a file, POST it as multipart, then poll parse status. The SDK calls are
  * `board.me.resume.{upload,retrieve,delete}`. Upload returns `parsing`; the
  * worker fills in parsed profile fields asynchronously.

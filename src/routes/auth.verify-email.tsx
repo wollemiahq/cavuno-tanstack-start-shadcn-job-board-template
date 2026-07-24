@@ -1,7 +1,7 @@
 /**
- * Email-verification landing — the route board-auth emails link to
- * (ADR-0035: the emailed link carries this deployment's origin when its
- * publishable key has a registered origin). Consumes ?token= on load.
+ * Email-verification landing — the route linked from board-auth emails.
+ * The emailed link carries this deployment's origin when its publishable
+ * key has a registered origin. Consumes ?token= on load.
  */
 import { createFileRoute } from '@tanstack/react-router';
 

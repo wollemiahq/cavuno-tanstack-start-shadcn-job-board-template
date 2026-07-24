@@ -1,14 +1,13 @@
 /**
- * Developer-preview server functions — Workstream B of the
- * sandbox-preview-state spec.
+ * Developer-preview server functions.
  *
  * These proxy three SANDBOX-ONLY Board API endpoints and drive persona
  * session switching. Every function is server-verified against
  * `board.context().sandbox` — a client can never coax them into acting on a
  * real tenant board, and the endpoints themselves 404 off-sandbox. The
  * switch seam is keyed by persona **id**: credentials are resolved here from
- * the roster and never cross to the browser (spec §4b item 3), so Phase 4
- * can swap `auth.login` for token-consume with zero template churn.
+ * the roster and never cross to the browser, so the authentication mechanism
+ * can change without exposing credentials or changing the client contract.
  *
  * All Board API traffic goes through the shared SDK client's `client.fetch`
  * escape hatch (custom endpoints, no SDK release) or the existing auth
@@ -102,7 +101,7 @@ function storeSession(session: BoardAuthSession): void {
 
 /**
  * "May this context COMPLETE a persona switch for this board?" — the single
- * server-side question that gates the whole toolbar (spec §3.3). The shape
+ * server-side question that gates the whole toolbar. The shape
  * carries a reason so a future builder-preview context can answer
  * `canPreview: false, reason: 'switch-blocked'` without changing this seam.
  */
@@ -174,7 +173,7 @@ export const listSandboxEmails = createServerFn({ method: 'GET' })
  * sign-in path (`auth.login` → session cookie) so every authed loader sees a
  * real session. A failed login (401 — the persona was reseeded out from under
  * a stale menu) surfaces as a typed `persona-unavailable` result the toolbar
- * turns into a "reseed, then re-switch" affordance (spec §4b item 3).
+ * turns into a "reseed, then re-switch" affordance.
  */
 export const switchPersona = createServerFn({ method: 'POST' })
   .validator((input: { personaId: string }) => input)
@@ -239,7 +238,7 @@ export const exitPreview = createServerFn({ method: 'POST' }).handler(
 /**
  * Toggle whitelisted board-config keys on the sandbox — the toolbar's "Board
  * settings" section, the sandbox analog of the dashboard's board settings
- * (spec §4b item 5). `config` speaks the platform's board-config vocabulary
+ * `config` speaks the platform's board-config vocabulary
  * (`jobAccessPaywallEnabled`, `talentDirectoryVisibility`, …) and rides inside
  * the `{ features }` wrapper the platform's `ConfigBody` schema requires
  * (`sandbox/config/route.ts` — strict, so top-level keys 400). Non-whitelisted
@@ -268,7 +267,7 @@ export const updateSandboxFlags = createServerFn({ method: 'POST' })
 /**
  * Reseed the sandbox personas + baseline config on demand — repairs consumed
  * demo states (a read unread badge, a hijacked credential) and decouples from
- * the 23:30 UTC nightly reset (spec §4b prerequisites). Sandbox-gated.
+ * the nightly reset. Sandbox-gated.
  */
 export const reseedSandbox = createServerFn({ method: 'POST' }).handler(
   async (): Promise<PreviewActionResult> => {

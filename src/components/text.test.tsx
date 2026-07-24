@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * Text typography primitive (CAV-513). These lock the primitive's CONTRACT,
+ * Text typography primitive. These lock the primitive's contract,
  * not incidental markup:
  *
  *  - The role-named variants map to exactly the shadcn typeset step the design

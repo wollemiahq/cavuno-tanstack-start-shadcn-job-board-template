@@ -15,7 +15,7 @@ import {
 
 afterEach(cleanup);
 
-describe('official Rhea Card source', () => {
+describe('owned shadcn Card', () => {
   it('owns the complete public API and small spacing variant', () => {
     const { container } = render(
       <Card size="sm">

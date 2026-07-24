@@ -84,7 +84,7 @@
       "name": "job-detail",
       "type": "registry:block",
       "title": "Job detail page",
-      "description": "Full job page: breadcrumbs, header badges, facts, taxonomy chips, operator custom fields (CAV-294), sanitized description, company block, similar jobs. Server-renderable; apply/alert controls arrive via slots.",
+      "description": "Full job page: breadcrumbs, header badges, facts, taxonomy chips, operator custom fields, sanitized description, company block, and similar jobs. Server-renderable; apply and alert controls arrive via slots.",
       "dependencies": ["@cavuno/board@^1.31.0"],
       "registryDependencies": [
         "badge",
@@ -112,7 +112,7 @@
       "name": "apply-flow",
       "type": "registry:block",
       "title": "Apply flow",
-      "description": "Native apply (ADR-0054) with the hosted board's exact fallback ladder: external-only jobs, anonymous visitors, unverified candidates, verified native apply. Idempotent against the Board API.",
+      "description": "Native apply with the hosted board's exact fallback ladder: external-only jobs, anonymous visitors, unverified candidates, and verified native apply. Idempotent against the Board API.",
       "dependencies": ["@cavuno/board@^1.31.0"],
       "registryDependencies": ["button"],
       "files": [
@@ -144,7 +144,7 @@
       "name": "salary-page",
       "type": "registry:block",
       "title": "Salary page sections",
-      "description": "The salary-page building blocks (ADR-0041): headline range card with percentiles, by-seniority comparison table, cross-link rails, FAQ, breadcrumb \u2014 typed against the board.salaries.* wire shapes.",
+      "description": "Salary-page building blocks: headline range card with percentiles, by-seniority comparison table, cross-link rails, FAQ, and breadcrumb, typed against the board.salaries.* wire shapes.",
       "dependencies": ["@cavuno/board@^1.31.0"],
       "registryDependencies": ["badge", "card", "@cavuno/breadcrumb"],
       "files": [

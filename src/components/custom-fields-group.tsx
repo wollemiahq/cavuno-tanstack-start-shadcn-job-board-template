@@ -27,8 +27,8 @@ export type CustomFieldValues = Record<
 >;
 
 /**
- * Board-defined custom fields for the public posting form (ADR-0008: they
- * render as their own group after the built-in fields, in operator-config
+ * Board-defined custom fields for the public posting form. They render as
+ * their own group after the built-in fields, in operator-config
  * order). Uncontrolled per-field values roll up into one `customFieldValues`
  * record keyed by the definition's immutable `key`; select values store
  * option KEYS, never labels — the same contract `resolveCustomFieldDisplay`

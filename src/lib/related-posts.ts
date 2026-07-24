@@ -1,5 +1,5 @@
 /**
- * Related-posts selection (CAV-500) — the pure seam the article page uses
+ * Related-posts selection — the pure seam the article page uses
  * to fill its "Related posts" rail. Posts sharing the current post's first
  * tag come first; the latest posts fill any remainder. The current post is
  * always excluded, a post surfaced by both sources appears once, and the

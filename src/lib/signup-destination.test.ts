@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { resolveSignupDestination } from './signup-destination';
 
 /**
- * The single sign-up entry-point gate (CAV-514). One pure map from a board's
+ * The single sign-up entry-point gate. One pure map from a board's
  * enabled roles to the href every consumer (header Sign up, `/auth/join`
  * loader) routes to:
  *   - both roles → `/auth/join` (the chooser earns its keep),

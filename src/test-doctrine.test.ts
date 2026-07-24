@@ -13,9 +13,8 @@ import { join } from 'node:path';
  * formatter) or a fixture embeds formatter-shaped values (use neutral
  * values / `src/test/fixtures.ts`).
  *
- * Why a gate: every re-pinned literal makes EVERY presentation edit fan
- * out into test-content rewrites — the dominant cost of the 2026-07-22
- * fourteen-minute "change the salary text" builder run.
+ * Every re-pinned literal makes presentation edits fan out into unrelated
+ * test-content rewrites, so the suite enforces this rule mechanically.
  */
 
 /** `$120k` / `$120K` / `$120,000` / `$90 K` — currency-shaped literals. */

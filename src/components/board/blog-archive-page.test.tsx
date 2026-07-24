@@ -240,12 +240,10 @@ describe('BlogArchivePage — Page-family archive presentation', () => {
       />,
     );
 
-    expect(await screen.findByText('No articles found')).toBeVisible();
+    expect(await screen.findByText(empty.title)).toBeVisible();
+    expect(screen.getByText(empty.description)).toBeVisible();
     expect(
-      screen.getByText('There are no published articles in this archive yet.'),
-    ).toBeVisible();
-    expect(
-      screen.getByRole('link', { name: 'Browse every article' }),
+      screen.getByRole('link', { name: empty.action.label }),
     ).toHaveAttribute('href', '/blog');
   });
 });

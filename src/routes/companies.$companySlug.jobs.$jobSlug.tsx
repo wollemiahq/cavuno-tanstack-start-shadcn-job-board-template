@@ -7,7 +7,7 @@ import {
 } from '@cavuno/board/seo';
 /**
  * Job detail — hosted-parity URL (/companies/:companySlug/jobs/:jobSlug),
- * rendered by the @cavuno registry `job-detail` block (Wave D, ADR-0058):
+ * rendered by the @cavuno registry `job-detail` block:
  * the route owns the loader, head/JSON-LD, and the interactive slots
  * (apply via `@cavuno/apply-flow`, alerts via `@cavuno/alert-signup`,
  * plus the starter's own save-job control); the block owns the page
@@ -44,9 +44,9 @@ import { ApplyButton } from '@/components/board/apply-button';
 import { CopyLinkButton } from '@/components/board/copy-link-button';
 import { JobDetail } from '@/components/board/job-detail';
 import { JobList } from '@/components/board/job-list';
-import { PageBody } from '@/components/board/page-body';
 import { SaveJobButton } from '@/components/board/save-job-button';
 import { JsonLd } from '@/components/json-ld';
+import { PageLayout } from '@/components/layout/page-layout';
 import { Text } from '@/components/text';
 import {
   Empty,
@@ -168,7 +168,7 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
   },
   component: JobDetailPage,
   notFoundComponent: () => (
-    <PageBody>
+    <PageLayout>
       <Empty className="py-12">
         <EmptyHeader>
           <EmptyMedia variant="icon">
@@ -177,7 +177,7 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
           <EmptyTitle>{m.companyJobDetail_notFoundText()}</EmptyTitle>
         </EmptyHeader>
       </Empty>
-    </PageBody>
+    </PageLayout>
   ),
 });
 
@@ -194,7 +194,6 @@ function JobDetailPage() {
     alreadyApplied,
   } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
-  const { companySlug } = Route.useParams();
   const defaults = jobAlertDefaultsFromJob(job);
   const router = useRouter();
   const returnTo = useLocation({ select: (location) => location.href });
@@ -227,8 +226,6 @@ function JobDetailPage() {
         vm={vm}
         applySlot={
           <ApplyButton
-            jobId={job.id}
-            companySlug={companySlug}
             jobSlug={job.slug}
             applicationUrl={job.applicationUrl}
             language={board.language}

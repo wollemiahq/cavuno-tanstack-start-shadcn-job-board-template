@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * The employer charts mirror under RTL (ADR-0063, docs/theming.md
+ * The employer charts mirror under RTL (docs/theming.md
  * §"Direction that lives in JS").
  *
  * recharts draws into an SVG viewport, so `<html dir="rtl">` mirrors the card

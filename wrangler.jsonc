@@ -15,22 +15,6 @@
     // replace with your board's pk_ before deploy
     "CAVUNO_BOARD": "pk_d9ce40a106227b615ec710de3f3d73dc",
   },
-  // A separate `demo` deploy target for the hosted showcase — the same
-  // reference board, deployed with `wrangler deploy --env demo`.
-  // CAVUNO_TRACKER_TOKEN is a publishable analytics token that rides only
-  // this env; unset ⇒ analytics off. See AGENTS.md: an operator sets these
-  // at deploy time — agents never edit grounding.
-  "env": {
-    "demo": {
-      "name": "cavuno-shadcn-ui-job-board-template-demo",
-      "vars": {
-        "CAVUNO_API_URL": "https://api.cavuno.com",
-        // replace with your board's pk_ before deploy
-        "CAVUNO_BOARD": "pk_d9ce40a106227b615ec710de3f3d73dc",
-        "CAVUNO_TRACKER_TOKEN": "p.eyJ1IjogImFlYTA1MjUxLWMzNDItNGM3ZC04OTU5LTc4YjVlMzIzZDAwOCIsICJpZCI6ICI0ZjlhYjIyNi1jMmE4LTRkOWEtODBmOC05NGE0OTFhZTBjMWIiLCAiaG9zdCI6ICJ1cy1lYXN0LWF3cyJ9.N2TgJClX6oaHP9utUxTqnbqc3aHQT32LCpeDbK_5Xdg",
-      },
-    },
-  },
   "observability": {
     "enabled": true,
   },

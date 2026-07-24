@@ -10,11 +10,9 @@ import {
   relatedSearchesTitle,
   relatedSearchesToChips,
 } from '@/board/related-searches';
-import type { BreadcrumbData } from '@/components/board/breadcrumb';
 import { JobSearchResult } from '@/components/board/job-search-result';
 import { JobsFilterControls } from '@/components/board/jobs-filter-controls';
 import { JobsResultsBar } from '@/components/board/jobs-results-bar';
-import { ListingResultsHeader } from '@/components/board/listing-page-header';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { SaveJobButton } from '@/components/board/save-job-button';
 import { Box } from '@/components/layout/box';
@@ -98,7 +96,6 @@ export function JobSearchPage({
   language,
   labels,
   heading,
-  breadcrumb,
   relatedSearches,
   onFiltersChange,
   onPageChange,
@@ -121,7 +118,6 @@ export function JobSearchPage({
   language: string;
   labels?: BoardLabelOverrides;
   heading?: string;
-  breadcrumb?: BreadcrumbData;
   relatedSearches?: RelatedSearch[];
   onFiltersChange: (next: ListingFilters) => void;
   onPageChange: (page: number) => void;
@@ -197,9 +193,7 @@ export function JobSearchPage({
                   data-slot="job-empty-results"
                   className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0"
                 >
-                  <ListingResultsHeader breadcrumb={breadcrumb}>
-                    {resultsBar}
-                  </ListingResultsHeader>
+                  <div className="space-y-4">{resultsBar}</div>
                   <JobsEmpty
                     filters={filters}
                     hasRouteConstraint={Boolean(heading)}
@@ -226,9 +220,7 @@ export function JobSearchPage({
                   label={m.jobSearch_resultsRegionLabel()}
                   scrollRestorationId="jobs-search-results"
                 >
-                  <ListingResultsHeader breadcrumb={breadcrumb}>
-                    {resultsBar}
-                  </ListingResultsHeader>
+                  <div className="space-y-4">{resultsBar}</div>
 
                   <div className="space-y-3">
                     {jobVms.map((vm) => (

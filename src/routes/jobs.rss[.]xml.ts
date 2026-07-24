@@ -19,6 +19,11 @@ function xmlEscape(value: string): string {
     .replaceAll('>', '&gt;');
 }
 
+/** Keep API-authored HTML inside its CDATA section even if it contains `]]>`. */
+function sanitizeCdata(value: string): string {
+  return value.replaceAll(']]>', ']]&gt;');
+}
+
 function rssDate(iso: string | null): string {
   return (iso ? new Date(iso) : new Date(0)).toUTCString();
 }
@@ -58,7 +63,7 @@ export const Route = createFileRoute('/jobs/rss.xml')({
             if (job.employmentType)
               parts.push(`Type: ${formatEmploymentType(job.employmentType)}`);
             if (job.description) parts.push(job.description);
-            const description = parts.join(' — ');
+            const description = sanitizeCdata(parts.join(' — '));
             const categories = job.categories
               .map(
                 (category) =>

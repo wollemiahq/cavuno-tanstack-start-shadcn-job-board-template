@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { selectRelatedPosts } from './related-posts';
 
 /**
- * Related-posts selection (CAV-500). The article page shows posts related
+ * Related-posts selection. The article page shows posts related
  * to the one being read: those sharing its first tag come first, latest
  * posts fill any remainder, the current post is never in its own related
  * rail, and a post surfaced by both sources appears once. These lock the

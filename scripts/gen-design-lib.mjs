@@ -7,7 +7,7 @@ import ts from 'typescript-6';
 import { parseTokens } from './theme-resolved-lib.mjs';
 
 /**
- * DESIGN.md + DTCG generator (Builder-2 Phase 1; ADR-0066 D15).
+ * DESIGN.md + DTCG generator.
  *
  * Emits the two agent-facing design-system artifacts from canonical
  * sources ONLY — generated-or-nothing, hand-authored parallel
@@ -15,7 +15,7 @@ import { parseTokens } from './theme-resolved-lib.mjs';
  *
  *   DESIGN.md               Google Labs design.md spec, pinned `alpha`:
  *                           YAML-frontmatter tokens derived from
- *                           src/theme.css (ADR-0065 D1 canonical) +
+ *                           src/theme.css +
  *                           body sections; the Components inventory is
  *                           extracted from src/components source with
  *                           the TypeScript checker (react-docgen-class
@@ -461,7 +461,7 @@ export async function generateDesignArtifacts(root) {
     '',
     '<!-- GENERATED FILE — do not edit. `pnpm run gen:design` regenerates',
     '     from src/theme.css + component source + design/registry-items.json;',
-    '     CI diffs the output and rejects hand-edits (ADR-0066 D15). -->',
+    '     CI diffs the output and rejects hand-edits. -->',
     '',
     '## Overview',
     '',
@@ -538,7 +538,7 @@ export async function generateDesignArtifacts(root) {
     ),
     componentsSection(
       'Components',
-      'Generated inventory of reusable components under `src/components`. This inventory includes explicitly labelled migration-only compatibility components; never select those for new page-level composition.',
+      'Generated inventory of reusable components under `src/components`.',
       uiComponents,
       registry,
       false,
@@ -559,8 +559,7 @@ export async function generateDesignArtifacts(root) {
     '- Do keep components presentational (typed props, no fetching);',
     '  data arrives from route loaders and `src/server/` functions.',
     '- Do compose every new page with `Page`, `PageHeader`, `PageContent`,',
-    '  and `PageSection`; do not start new work on migration-only',
-    '  `PageBody` or `ListingPageHeader`.',
+    '  and `PageSection`.',
     "- Do reuse the inventory above; don't duplicate an existing",
     '  component to change its style — extend via props/variants.',
     '- Do edit `src/theme.css` directly or with the shadcn CLI and regenerate',
@@ -630,10 +629,8 @@ function dtcgExport(tokens) {
 }
 
 /**
- * Frontmatter-only generation for BUILDER WORKSPACES (ADR-0066 D15):
- * the DESIGN.md body accumulates per-workspace design intent there, so
- * the platform regenerates/checks only the tokens-derived frontmatter
- * (plus the DTCG export, which has no body concept).
+ * Frontmatter-only generation preserves a customized DESIGN.md body while
+ * refreshing token-derived frontmatter and the DTCG export.
  */
 export async function generateDesignFrontmatter(root) {
   const css = readFileSync(join(root, 'src', 'theme.css'), 'utf8');

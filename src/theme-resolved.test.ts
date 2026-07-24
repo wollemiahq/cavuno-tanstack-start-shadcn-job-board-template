@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
- * ADR-0065 D2/D3 — theme.css is canonical; everything else derives.
+ * theme.css is canonical; everything else derives.
  * These tests pin the two derivations: the resolved-values module OG
  * consumes (Satori can't read CSS variables) and the platform snapshot
  * payload (email-safe subset, themeConfig key names — the fixed contract
@@ -52,7 +52,7 @@ describe('parseTokens', () => {
     expect(parsed.meta.fontsImport).toContain('fonts.googleapis.com');
   });
 
-  // FNT-01: a swapped theme (banner keys + fontsource imports for a
+  // A swapped theme (banner keys + fontsource imports for a
   // body sans + heading serif) round-trips — banner keys win over the
   // import-derived fallback, and static (non-variable) fontsource
   // imports parse the same as variable ones.

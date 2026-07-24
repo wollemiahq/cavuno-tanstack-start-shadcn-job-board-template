@@ -5,27 +5,18 @@
 import ts from 'typescript-6';
 import { describe, expect, it } from 'vitest';
 
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 /**
- * Hardcoded-copy ratchet (Phase-1 gate; ported from the monorepo's
- * registry copy-catalog scan, ADR-0059 gate 1).
- *
  * Finds user-visible string literals in source: JSX text with letters,
  * string literals in known user-visible attributes, and bare literals in
  * JSX expression containers. Hardcoded copy renders English on every
  * locale and is invisible on /en-XA/ (unbracketed).
- *
- * RATCHET, not allowlist: `copy-scan-baseline.json` freezes the offender
- * count per file at gate-introduction time. New offenders fail CI; burning
- * offenders down requires re-baselining (run with
- * UPDATE_COPY_SCAN_BASELINE=1) so the count only ever decreases.
  */
 
 const ROOT = join(import.meta.dirname, '..');
 const SRC_ROOT = join(ROOT, 'src');
-const BASELINE_PATH = join(ROOT, 'copy-scan-baseline.json');
 
 const USER_VISIBLE_ATTRS = new Set([
   'placeholder',
@@ -112,61 +103,18 @@ function scan(): Map<string, string[]> {
   return byFile;
 }
 
-describe('hardcoded-copy ratchet (en-XA coverage companion)', () => {
+describe('hardcoded-copy guard (en-XA coverage companion)', () => {
   const results = scan();
-  const counts = Object.fromEntries(
-    [...results.entries()].map(([file, v]) => [file, v.length]),
-  );
 
-  if (process.env.UPDATE_COPY_SCAN_BASELINE === '1') {
-    it('baseline updated', () => {
-      writeFileSync(
-        BASELINE_PATH,
-        JSON.stringify(
-          Object.fromEntries(Object.entries(counts).sort()),
-          null,
-          2,
-        ) + '\n',
-      );
-      expect(true).toBe(true);
-    });
-    return;
-  }
-
-  const baseline = JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) as Record<
-    string,
-    number
-  >;
-
-  it('no file gains hardcoded user-visible strings', () => {
-    const regressions: string[] = [];
-    for (const [file, violations] of results) {
-      const allowed = baseline[file] ?? 0;
-      if (violations.length > allowed) {
-        regressions.push(
-          `${file} — ${violations.length} > baseline ${allowed}:\n` +
-            violations.map((v) => `  ${file}${v}`).join('\n'),
-        );
-      }
-    }
+  it('routes user-visible strings through the localization seams', () => {
+    const violations = [...results.entries()].flatMap(([file, hits]) =>
+      hits.map((hit) => `${file}${hit}`),
+    );
     expect(
-      regressions,
-      `New hardcoded copy — route it through Paraglide messages ` +
+      violations,
+      `Hardcoded user-visible copy — route it through Paraglide messages ` +
         `(messages/en.json + de/fr, npm run gen:messages) or the boardCopy ` +
-        `seam:\n${regressions.join('\n')}`,
-    ).toEqual([]);
-  });
-
-  it('the baseline ratchets down as strings are burned down', () => {
-    const stale: string[] = [];
-    for (const [file, allowed] of Object.entries(baseline)) {
-      const current = counts[file] ?? 0;
-      if (current < allowed) stale.push(`${file}: ${allowed} → ${current}`);
-    }
-    expect(
-      stale,
-      `Offender counts dropped — lock in the progress: ` +
-        `UPDATE_COPY_SCAN_BASELINE=1 npx vitest run src/copy-scan.test.ts\n${stale.join('\n')}`,
+        `seam:\n${violations.join('\n')}`,
     ).toEqual([]);
   });
 });

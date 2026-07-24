@@ -52,7 +52,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
 /**
- * The developer-preview toolbar — Workstream B of the sandbox-preview-state
+ * The developer-preview toolbar for the sandbox preview state
  * spec. A floating, unobtrusive pill that renders ONLY when the server-side
  * capability check passes (`sandbox: true`), never on a tenant board.
  *
@@ -66,7 +66,7 @@ import { cn } from '@/lib/utils';
  *   - Exit preview   → immediate sign-out + reload
  * Opening any of them dismisses the persona menu; closing them returns to
  * nothing (never re-opens the menu). The same server functions are scriptable
- * headlessly for agents (spec §3.7).
+ * headlessly for agents.
  *
  * Positioned bottom-LEFT to clear the app's own bottom-right chrome (the
  * messages dock at `right-6 bottom-0`, the job-alert prompt at `right-4
@@ -115,7 +115,7 @@ export function PreviewToolbar({
         window.location.reload();
         return;
       } else if (result.code === 'persona-unavailable') {
-        // Reseeded out from under a stale menu (spec §4b item 3).
+        // Reseeded out from under a stale menu.
         setStalePersona(persona.id);
       }
     } finally {

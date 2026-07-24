@@ -1,10 +1,9 @@
 /**
- * Runtime board feature flags (Board PR #968) that `@cavuno/board@1.38.0`
- * carries on the board CONTEXT at RUNTIME but does not yet TYPE on the
- * public board-context shape. Resolve them ONCE, at the single server
- * boundary that reads the context (`getBoardContext` in
- * `src/server/queries.ts`), and hand components clean typed booleans — so no
- * `as` cast leaks into presentation.
+ * Runtime board feature flags that `@cavuno/board` carries on the board
+ * context at runtime but does not yet type on the public board-context
+ * shape. Resolve them once, at the single server boundary that reads the
+ * context (`getBoardContext` in `src/server/queries.ts`), and hand
+ * components clean typed booleans so no cast leaks into presentation.
  *
  * Polarity is additive / default-ON, mirroring the platform's enforcement:
  * a flag ABSENT from an older API deployment ⇒ the feature is ON.
@@ -14,8 +13,8 @@
  *  - `messaging === false` ⇒ the whole applicant↔employer messaging surface
  *    is off.
  *
- * TODO(sdk-release): drop the boundary cast below once `@cavuno/board` types
- * `features.nativeApplications` / `features.messaging` on the board context.
+ * The boundary cast can be removed once `@cavuno/board` types
+ * `features.nativeApplications` and `features.messaging`.
  */
 import type { BoardSdk } from '@cavuno/board';
 

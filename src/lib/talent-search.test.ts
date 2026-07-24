@@ -79,8 +79,8 @@ describe('talentListingLoaderDeps', () => {
   });
 
   it('preserves a deep-linked ?skill= facet as a directory dependency', () => {
-    // The in-page skill box was removed (ADR-0075: the header owns the
-    // query), but a `?skill=` link must still filter the directory.
+    // The header owns the free-text query, while a deep-linked `?skill=`
+    // value still filters the directory.
     expect(
       talentListingLoaderDeps(parseTalentSearch({ skill: 'accessibility' })),
     ).toEqual({ q: undefined, skill: 'accessibility', page: undefined });

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * CompanySectionShell — the shared company-section header (CAV-512). These
+ * CompanySectionShell — the shared company-section header. These
  * lock the invariants the tabbed navigation exists to enforce, not the
  * markup:
  *

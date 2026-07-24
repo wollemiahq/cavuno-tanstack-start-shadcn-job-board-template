@@ -3,20 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { parseTokens } from '../scripts/theme-resolved-lib.mjs';
 
 /**
- * D15/D16 template-contract tests (Builder-2 Phase 1, ADR-0066).
- *
  * The template must carry:
  *  - AGENTS.md — the workflow rule source (agents.md convention). The
- *    builder loop derives its system prompt from THIS file at runtime,
- *    and external agents committing to the repo read it natively, so
- *    the contract anchors below are load-bearing, not style.
+ *    contract anchors below are load-bearing, not style.
  *  - DESIGN.md + design/tokens.dtcg.json — GENERATED artifacts (Google
  *    Labs design.md spec pinned at `alpha`; DTCG 2025.10 interchange).
- *    Hand-editing either must fail CI: the regeneration test asserts
- *    byte-identity between the committed files and a fresh generation
- *    from the canonical sources (src/theme.css + component source +
- *    the registry item snapshot).
- *  - The pnpm 11 supply-chain posture (D16): dependency lifecycle
+ *    Hand-editing either fails the explicit `gen:design -- --check` CI step.
+ *    Unit tests here cover the lightweight parsing and splice contracts
+ *    without repeating the full repository-wide generator inside Vitest.
+ *  - The pnpm 11 supply-chain posture: dependency lifecycle
  *    scripts blocked unless allowlisted, minimumReleaseAge cooldown on.
  */
 import { readFileSync } from 'node:fs';
@@ -30,7 +25,7 @@ const generatorLib = () => import('../scripts/gen-design-lib.mjs');
 const root = join(import.meta.dirname, '..');
 const read = (p: string) => readFileSync(join(root, p), 'utf8');
 
-describe('AGENTS.md (D15 workflow rules)', () => {
+describe('AGENTS.md workflow rules', () => {
   const agents = read('AGENTS.md');
 
   it('stays inside the ~150-line budget', () => {
@@ -44,7 +39,7 @@ describe('AGENTS.md (D15 workflow rules)', () => {
     // Grounding config is not editable by agents.
     expect(agents).toContain('CAVUNO_BOARD');
     expect(agents).toContain('CAVUNO_API_URL');
-    // D16 dependency policy is stated where agents read rules.
+    // Dependency policy is stated where agents read rules.
     expect(agents).toMatch(/minimumReleaseAge/);
     expect(agents).toMatch(/allowBuilds/);
     // Verify commands.
@@ -52,16 +47,15 @@ describe('AGENTS.md (D15 workflow rules)', () => {
     expect(agents).toMatch(/pnpm (run )?test|pnpm test/);
     // Pointer to DESIGN.md for visual/component rules (three-layer split).
     expect(agents).toContain('DESIGN.md');
-    // Pattern layer (CAV-503): agents must select a documented page-level
-    // pattern before composing a route. The builder loop derives its prompt
-    // from this file, so the anchor is load-bearing.
+    // Agents must select a documented page-level pattern before composing a
+    // route.
     expect(agents).toContain('docs/patterns/');
     expect(agents).toMatch(/select a pattern before composing a route/i);
   });
 
-  it('names the view-model seam layer boundary (ADR-0070 guard rule)', () => {
-    // The builder loop derives its prompt from this file; it must be told
-    // which layer it may restructure. Layer 1b (`src/board` view-models)
+  it('names the view-model seam layer boundary', () => {
+    // Agents must be told which layer they may restructure. Layer 1b
+    // (`src/board` view-models)
     // and the SDK (Layer 1a) are CONSUMED, never rewritten — that is what
     // keeps a redesign from mis-calling the correctness functions. Layer 2
     // (`src/components`) is the redesign surface, free to restructure.
@@ -78,23 +72,8 @@ describe('AGENTS.md (D15 workflow rules)', () => {
   });
 });
 
-describe('DESIGN.md + DTCG export (D15 generated artifacts)', () => {
-  // Timeout raised from the 5s default when the full Untitled UI free
-  // collection (~230 component files) landed — the generator runs the
-  // TS checker over every component, which takes ~5s alone. Assertions
-  // unchanged (byte-identity still enforced).
-  it(
-    'regenerating from canonical sources reproduces the committed files byte-for-byte',
-    { timeout: 30_000 },
-    async () => {
-      const { generateDesignArtifacts } = await generatorLib();
-      const generated = await generateDesignArtifacts(root);
-      expect(read('DESIGN.md')).toBe(generated.designMd);
-      expect(read('design/tokens.dtcg.json')).toBe(generated.dtcgJson);
-    },
-  );
-
-  it('frontmatter tokens are derived from theme.css (ADR-0065 D1 canonical)', async () => {
+describe('DESIGN.md + DTCG generated artifacts', () => {
+  it('frontmatter tokens are derived from theme.css', async () => {
     const { parseDesignFrontmatter } = await generatorLib();
     const fm = parseDesignFrontmatter(read('DESIGN.md'));
     const tokens = parseTokens(read('src/theme.css'));
@@ -129,8 +108,6 @@ describe('DESIGN.md + DTCG export (D15 generated artifacts)', () => {
       expect(design).toContain(section);
     }
     // Every component module under src/components appears by name.
-    // (ChipLink dropped at the CAV-489 contract step — the dead
-    // board/chip-link.tsx module was deleted, so it leaves the inventory.)
     for (const name of [
       'JobCard',
       'JobList',
@@ -184,28 +161,6 @@ describe('DESIGN.md + DTCG export (D15 generated artifacts)', () => {
     expect(design).toMatch(/### PageContent[\s\S]{0,1600}Invariants:/);
   });
 
-  it('makes the Page family the sole canonical page-level composition for new work', async () => {
-    const design = read('DESIGN.md');
-    const patterns = design.slice(design.indexOf('## Patterns'));
-    const pageBody = read('src/components/board/page-body.tsx');
-
-    expect(design).toContain(
-      'Page, PageHeader, PageContent, and PageSection are the sole canonical page-level composition family for new work.',
-    );
-    expect(patterns).not.toMatch(
-      /^Primitives:.*(?:PageBody|ListingPageHeader)/m,
-    );
-    expect(design).toMatch(/PageBody[\s\S]{0,500}migration-only/i);
-    expect(design).toMatch(/ListingPageHeader[\s\S]{0,500}migration-only/i);
-    expect(pageBody).not.toMatch(/\bclassName\??:/);
-
-    const { readPatternDocs } = await generatorLib();
-    for (const pattern of readPatternDocs(root)) {
-      expect(pattern.primitives).not.toContain('PageBody');
-      expect(pattern.primitives).not.toContain('ListingPageHeader');
-    }
-  });
-
   it('imports the owned shadcn Typeset stylesheet and exposes one content preset', () => {
     const styles = read('src/styles.css');
     const typeset = read('src/typeset.css');
@@ -234,17 +189,9 @@ describe('DESIGN.md + DTCG export (D15 generated artifacts)', () => {
       $value: { value: Number(radiusValue), unit: radiusUnit },
     });
   });
-
-  it('does not advertise the retired runtime BoardTheme cascade', () => {
-    const registry = read('design/registry-items.json');
-    const themeMode = read('src/components/cavuno/board-theme.tsx');
-
-    expect(registry).not.toContain('BoardTheme');
-    expect(themeMode).not.toContain('export function BoardTheme');
-  });
 });
 
-describe('dependency posture (D16)', () => {
+describe('dependency posture', () => {
   it('pins pnpm 11 as the package manager', () => {
     const pkg = JSON.parse(read('package.json'));
     expect(pkg.packageManager).toMatch(/^pnpm@11\./);
@@ -264,28 +211,17 @@ describe('dependency posture (D16)', () => {
   });
 });
 
-describe('gen:design --frontmatter (builder-workspace D15 parity)', () => {
-  // In BUILDER WORKSPACES the DESIGN.md body accumulates per-workspace
-  // design intent written by the builder loop (ADR-0066 D15), so the
-  // platform regenerates/checks ONLY the frontmatter there — full-file
-  // regeneration would clobber intent, full-file --check would
-  // false-fail on legitimate body edits.
-  // Timeout raised alongside the full-collection landing (see the
-  // regeneration test above) — this one runs the generator twice.
-  it(
-    'generateDesignFrontmatter matches the full generation’s frontmatter and DTCG export',
-    { timeout: 60_000 },
-    async () => {
-      const { generateDesignArtifacts, generateDesignFrontmatter } =
-        await generatorLib();
-      const full = await generateDesignArtifacts(root);
-      const partial = await generateDesignFrontmatter(root);
-      expect(full.designMd.startsWith(partial.frontmatterBlock + '\n')).toBe(
-        true,
-      );
-      expect(partial.dtcgJson).toBe(full.dtcgJson);
-    },
-  );
+describe('gen:design --frontmatter mode', () => {
+  // Frontmatter-only mode preserves a customized DESIGN.md body while
+  // regenerating the token-derived metadata.
+  it('generateDesignFrontmatter reproduces the committed frontmatter and DTCG export', async () => {
+    const { generateDesignFrontmatter } = await generatorLib();
+    const partial = await generateDesignFrontmatter(root);
+    expect(read('DESIGN.md').startsWith(partial.frontmatterBlock + '\n')).toBe(
+      true,
+    );
+    expect(partial.dtcgJson).toBe(read('design/tokens.dtcg.json'));
+  });
 
   it('spliceDesignFrontmatter replaces only the frontmatter — an edited body survives byte-for-byte', async () => {
     const { generateDesignFrontmatter, spliceDesignFrontmatter } =

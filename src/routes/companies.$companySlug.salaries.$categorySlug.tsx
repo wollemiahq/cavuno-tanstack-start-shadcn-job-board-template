@@ -67,8 +67,8 @@ export const Route = createFileRoute(
       if (isNotFound(error)) throw notFound();
       throw error;
     }
-    // The API returns the board-language canonical category slug and never 308s;
-    // the starter performs the redirect (S3). The company slug is never localized.
+    // The API returns the board-language canonical category slug as data; the
+    // starter owns the 308 redirect. The company slug is never localized.
     if (salary.categoryCanonicalSlug !== params.categorySlug) {
       throw redirect({
         to: '/companies/$companySlug/salaries/$categorySlug',

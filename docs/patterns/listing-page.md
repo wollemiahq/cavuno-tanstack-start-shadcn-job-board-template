@@ -92,8 +92,8 @@ system rather than parallel route shells:
 - `ProgrammaticJobsView` — `jobs.$keyword`, `jobs.locations.*`, `jobs.skills.*`.
 - `companies.index` and `companies.markets.$market` deliberately use the
   sibling [Search results](search-results.md) pattern instead.
-- `companies.$companySlug.jobs.index` — the company-jobs subpage. As of CAV-512
-  its hero is the shared [Company section](company-section.md) shell header (not
+- `companies.$companySlug.jobs.index` — the company-jobs subpage. Its hero is
+  the shared [Company section](company-section.md) shell header (not
   a second centered header band — the two would double up), but it still
   composes this pattern's search + results primitives below that header: the
   shared `ListingSearchBand` (via `CompanyJobsSearchBar`), the honest count, the

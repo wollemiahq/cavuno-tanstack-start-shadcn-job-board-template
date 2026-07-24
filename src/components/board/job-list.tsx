@@ -3,11 +3,11 @@ import { boardCopy } from '#/copy';
 import { Search } from 'lucide-react';
 
 /**
- * The job list (CAV-485, rows CAV-497) — a responsive two-column grid of
- * Card tiles, or single-column Lumen-style listing rows, with the
+ * A responsive two-column grid of
+ * Card tiles, or single-column listing rows, with the
  * collection's `Empty` when nothing matches.
  *
- * Pure MARKUP over `JobCardVM[]` (ADR-0070 Layer 2): the loader/pane maps
+ * Pure markup over `JobCardVM[]`: the loader/pane maps
  * `PublicJobCard[]` through `toJobCardVM` before handing this list the
  * resolved cards, so the view-model seam lives outside the presentation
  * layer and this file imports no `@cavuno/board` wire types or mappers.
@@ -32,12 +32,12 @@ export function JobList({
 }: {
   jobs: JobCardVM[];
   language: string;
-  /** Operator label overrides (`board.context().labels`), ADR-0059. */
+  /** Operator label overrides from `board.context().labels`. */
   labels?: BoardLabelOverrides;
   /**
-   * `grid` — two-column tiles; `rows` — the Lumen-style single-column
-   * listing rows (CAV-497); `compact` — a single-column stack of lean
-   * cards (no summary/tags) for the similar-jobs right rail (CAV-500).
+   * `grid` — two-column tiles; `rows` — the single-column
+   * listing rows; `compact` — a single-column stack of lean cards (no
+   * summary/tags) for the similar-jobs right rail.
    */
   variant?: 'grid' | 'rows' | 'compact';
   /**

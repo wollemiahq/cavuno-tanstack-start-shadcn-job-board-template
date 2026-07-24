@@ -1,6 +1,6 @@
 /**
  * Authenticated server functions — the `/messages` surface (board-to-board
- * messaging, doc 34 / ADR-0053). Transport is POLLED REST: the routes poll
+ * messaging. Transport is polled REST: the routes poll
  * the read fns on an interval (see `use-visible-poll`), the API stays
  * stateless. Auth is enforced here per function via the session middleware,
  * plus the board-access grant so a password-protected board answers.

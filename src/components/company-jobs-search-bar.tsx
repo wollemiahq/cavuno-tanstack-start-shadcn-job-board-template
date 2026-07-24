@@ -6,14 +6,14 @@ import { useNavigate } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 
-import { ListingSearchBand } from '@/components/board/listing-page-header';
+import { ListingSearchBand } from '@/components/board/listing-search-band';
 import {
   LocationCombobox,
   type LocationSuggestionState,
 } from '@/components/location-combobox';
 
 /**
- * The company-jobs subpage search (CAV-501, CAV-511) — a thin wrapper of the
+ * The company-jobs subpage search is a thin wrapper of the
  * shared `ListingSearchBand`, so it is the SAME white panel the jobs,
  * companies, and blog headers use (no duplicate search-band markup). Scoped to
  * ONE company: it submits to that company's jobs subpage

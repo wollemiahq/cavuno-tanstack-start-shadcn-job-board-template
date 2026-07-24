@@ -11,14 +11,14 @@ describe('deriveSummary', () => {
     ).toBe('We build surgical robots that people trust.');
   });
 
-  it('pads tag boundaries so stripped blocks do not fuse (S7)', () => {
+  it('pads tag boundaries so stripped blocks do not fuse', () => {
     const out = deriveSummary(
       '<h2>Overview</h2><p>We are hiring a controls engineer for the arm team and beyond.</p>',
     );
     expect(out).toContain('Overview We are hiring');
   });
 
-  it('suppresses unrendered ATS template tokens (S8)', () => {
+  it('suppresses unrendered ATS template tokens', () => {
     expect(
       deriveSummary('<p>Requisition ID: [[id]] Location: [[loc]]</p>'),
     ).toBeNull();

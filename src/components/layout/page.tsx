@@ -24,7 +24,7 @@ export type PageProps = PageNativeProps & {
 };
 
 /**
- * Establishes the Rhea token scope and shared page width for a route.
+ * Establishes the theme-token scope and shared page width for a route.
  *
  * @default width is `wide` (80rem) with 1rem mobile and 2rem desktop gutters.
  * @invariant Page owns geometry; callers cannot pass className or style.

@@ -1,5 +1,5 @@
 /**
- * Candidate job-access paywall (doc 36 / ADR-0056) — the reference money flow.
+ * Candidate job-access paywall reference flow.
  * `offers` is public (grant-gated on password boards); the rest wrap
  * `board.me.access.*` with the session bearer + the board-access grant. The SDK
  * stays Stripe-agnostic: `startCheckout` returns a connected-account mount kit

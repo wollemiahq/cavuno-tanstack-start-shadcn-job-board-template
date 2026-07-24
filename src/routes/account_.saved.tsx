@@ -5,7 +5,7 @@
  * projection than the `PublicJob` type promises and cannot feed the detail
  * pane; see the array defaults below for the card side of the same problem).
  *
- * Routing note (CAV-510): the file is `account_.saved` (trailing underscore) so
+ * Routing note: the file is `account_.saved` (trailing underscore) so
  * `/account/saved` is NOT nested under the `/account` leaf route. `/account`
  * renders the profile page and has no `<Outlet/>`, so nesting here meant
  * navigating to `/account/saved` rendered nothing — the page "did nothing".

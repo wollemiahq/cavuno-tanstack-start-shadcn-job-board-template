@@ -1,6 +1,6 @@
 /**
  * site.webmanifest — the board-specific PWA manifest, assembled from the Board
- * API's SEO icons + manifest metadata (ADR-0039: the API serves the data, the
+ * API's SEO icons + manifest metadata (the API serves the data, the
  * starter builds the document). Mirrors the hosted board's /site.webmanifest.
  */
 import { createFileRoute } from '@tanstack/react-router';

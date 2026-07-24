@@ -1,5 +1,5 @@
 /**
- * Chrome-locale switcher (ADR-0063). Switches only the PARAGLIDE UI locale
+ * Chrome-locale switcher. Switches only the Paraglide UI locale
  * via the URL prefix (`/de/`, `/fr/`); the board's content language is
  * unaffected — jobs, companies, and blog stay in the board's single
  * language while labels, nav, and headings follow the chosen locale.
@@ -9,7 +9,7 @@
  * load: `paraglideMiddleware` resolves the locale server-side, `getLocale()`
  * feeds the copy seam, and there is no flash of the wrong language. Real
  * hrefs (not client-only handlers) keep the alternates crawlable and let
- * each carry an `hrefLang` hint. The base locale is served unprefixed (D5).
+ * each carry an `hrefLang` hint. The base locale is served unprefixed.
  */
 import { useRouterState } from '@tanstack/react-router';
 import { Check, ChevronDown, Globe } from 'lucide-react';

@@ -2,7 +2,7 @@
  * Custom server entry: every request runs inside `paraglideMiddleware`,
  * which resolves the locale from the URL (strategy: ['url','baseLocale'])
  * and scopes it in AsyncLocalStorage so `getLocale()` works in loaders,
- * server functions, and the copy seam during SSR (ADR-0063).
+ * server functions, and the copy seam during SSR.
  *
  * Footgun (TanStack + Paraglide docs): pass the ORIGINAL request to the
  * handler, not the delocalized one the middleware offers — the router's

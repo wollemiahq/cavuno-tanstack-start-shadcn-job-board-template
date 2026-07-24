@@ -14,8 +14,7 @@ Every new route starts with the canonical page-level composition family:
 `Bleed` is the sanctioned full-width band. P18 Search results is the deliberate
 exception: its explicit `Page` → `main` shell keeps the full-width header and
 independently scrolling master-detail frame outside `PageContent`'s ordinary
-body grid. `PageBody` and `ListingPageHeader` remain app-level layout aliases
-for older routes and are not primitives for new work.
+body grid.
 
 Every page follows [`_template.md`](_template.md): the section order (Purpose /
 When to use / Anatomy / Composition / Do / Don't / Used by / Related) and the

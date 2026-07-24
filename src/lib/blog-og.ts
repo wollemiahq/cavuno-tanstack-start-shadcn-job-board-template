@@ -32,7 +32,7 @@ export interface BlogOgCard {
   authorAvatarUrl: string | null;
   /** Pre-formatted published date, or `null` to omit. */
   dateLabel: string | null;
-  /** Satori font name registered by the route (FNT-02: the theme font). */
+  /** Satori font name registered by the route. */
   fontFamily?: string;
 }
 

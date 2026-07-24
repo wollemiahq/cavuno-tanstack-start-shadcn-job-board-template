@@ -15,7 +15,7 @@ import {
 
 afterEach(cleanup);
 
-describe('owned Rhea editor primitives', () => {
+describe('owned shadcn editor primitives', () => {
   it('exposes a pressed button contract for formatting controls', () => {
     const onPressedChange = vi.fn();
 

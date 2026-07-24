@@ -7,7 +7,7 @@ import {
 import { jobsCategoryPath } from '@cavuno/board/paths';
 import { listingJsonLd } from '@cavuno/board/seo';
 /**
- * Home `/` — the designed LANDING (CAV-495), not the bare search page.
+ * Home `/` — the designed landing, not the bare search page.
  * The root is a pure landing page. Old root search/filter URLs redirect to
  * `/jobs`, while the loader fetches only the latest jobs and the collections
  * needed by enabled landing sections.

@@ -9,7 +9,6 @@ import { m } from '../../paraglide/messages';
 import type { CompanyCardVM } from '@/board/company-view-model';
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
 import { CompanySearchResult } from '@/components/board/company-search-result';
-import { ListingResultsHeader } from '@/components/board/listing-page-header';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { Page } from '@/components/layout/page';
 import {
@@ -131,9 +130,7 @@ export function CompanySearchPage({
               }
               list={
                 <div className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0">
-                  <ListingResultsHeader breadcrumb={breadcrumb}>
-                    {resultsBar}
-                  </ListingResultsHeader>
+                  <div className="space-y-4">{resultsBar}</div>
                   <Empty className="min-h-[calc(100dvh-16rem)] border-0">
                     <EmptyHeader>
                       <EmptyMedia variant="icon">
@@ -178,9 +175,7 @@ export function CompanySearchPage({
                   label={m.companySearch_resultsRegionLabel()}
                   scrollRestorationId="companies-search-results"
                 >
-                  <ListingResultsHeader breadcrumb={breadcrumb}>
-                    {resultsBar}
-                  </ListingResultsHeader>
+                  <div className="space-y-4">{resultsBar}</div>
 
                   <div className="space-y-3">
                     {companyVms.map((vm, index) => {

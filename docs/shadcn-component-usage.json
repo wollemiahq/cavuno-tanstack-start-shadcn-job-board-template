@@ -5,8 +5,8 @@
   "config": {
     "style": "base-rhea",
     "rsc": false,
-    "iconLibrary": "lucide",
-    "theme": "src/theme.css"
+    "theme": "src/theme.css",
+    "iconLibrary": "lucide"
   },
   "installedFiles": {
     "componentFiles": 60,
@@ -193,7 +193,7 @@
         "src/components/board/job-search-page.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
         "src/components/board/jobs-not-found.tsx",
-        "src/components/board/listing-page-header.tsx",
+        "src/components/board/listing-search-band.tsx",
         "src/components/board/salary-sections.tsx",
         "src/components/board/save-job-button.tsx",
         "src/components/board/talent-search-detail-state.tsx",
@@ -220,9 +220,9 @@
         "src/components/preview/preview-emails.tsx",
         "src/components/preview/preview-toolbar.tsx",
         "src/components/profile-form.tsx",
+        "src/components/registration-page.tsx",
         "src/components/resume-import-dialog.tsx",
         "src/components/resume-upload.tsx",
-        "src/components/rhea-auth-pilot.tsx",
         "src/components/rich-text-editor.tsx",
         "src/components/skills-section.tsx",
         "src/routes/-access-page.tsx",
@@ -296,7 +296,7 @@
         "src/components/post-card.tsx",
         "src/components/post-job-form.tsx",
         "src/components/profile-completeness-card.tsx",
-        "src/components/rhea-auth-pilot.tsx",
+        "src/components/registration-page.tsx",
         "src/components/search-results/search-result-card.tsx",
         "src/components/skills-section.tsx",
         "src/components/talent-card.tsx",
@@ -468,7 +468,7 @@
         "src/components/month-year-field.tsx",
         "src/components/post-job-form.tsx",
         "src/components/profile-form.tsx",
-        "src/components/rhea-auth-pilot.tsx",
+        "src/components/registration-page.tsx",
         "src/components/skills-section.tsx",
         "src/routes/auth.verify-email-required.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
@@ -496,7 +496,7 @@
         "src/components/languages-section.tsx",
         "src/components/post-job-form.tsx",
         "src/components/profile-form.tsx",
-        "src/components/rhea-auth-pilot.tsx",
+        "src/components/registration-page.tsx",
         "src/components/rich-text-editor.tsx",
         "src/components/skills-section.tsx",
         "src/routes/employers.companies.$slug.profile.tsx",
@@ -510,7 +510,7 @@
       "productionReferences": [
         "src/components/Header.tsx",
         "src/components/board/alert-signup-form.tsx",
-        "src/components/board/listing-page-header.tsx",
+        "src/components/board/listing-search-band.tsx",
         "src/components/company-search-combobox.tsx",
         "src/components/keyword-combobox.tsx",
         "src/components/location-combobox.tsx",
@@ -625,7 +625,7 @@
       "productionReferences": [
         "src/components/employer-job-form.tsx",
         "src/components/post-job-form.tsx",
-        "src/components/rhea-auth-pilot.tsx",
+        "src/components/registration-page.tsx",
         "src/routes/auth.sign-in.tsx"
       ]
     },

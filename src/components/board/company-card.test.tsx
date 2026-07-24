@@ -1,10 +1,8 @@
 // @vitest-environment jsdom
 /**
- * CompanyCard honest-data invariants (CAV-487). The company row was
- * recomposed as an Untitled UI card; these lock the real-data behaviours
- * the recomposition must preserve — the reasons the card exists, not its
- * markup: the name links to the typed company-detail route through the
- * TanStack router seam (SEO-load-bearing, never static), the open-count
+ * CompanyCard honest-data invariants. The name links to the typed
+ * company-detail route through the TanStack router seam (SEO-load-bearing,
+ * never static), the open-count
  * Badge shows ONLY when the company has open roles (no "0 open jobs"
  * noise), and the description line is honestly omitted when absent and
  * rendered as plain text (tag-stripped) when the API sends HTML.

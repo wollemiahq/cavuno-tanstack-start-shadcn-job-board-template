@@ -1,5 +1,5 @@
 /**
- * The single sign-up entry-point gate (CAV-514).
+ * The single sign-up entry-point gate.
  *
  * One pure map from a board's enabled roles to the href every sign-up entry
  * point routes to — the header's Sign up button and the `/auth/join` loader

@@ -36,9 +36,7 @@ under the header.
 
 ## Composition
 
-The canonical assembly uses the Page family. `JobDetail` still produces the
-same visible result through migration-only `PageBody`; migrate that internal
-implementation without changing the domain component's public contract:
+The canonical assembly uses the Page family:
 
 ```tsx
 <Page>
@@ -63,7 +61,7 @@ implementation without changing the domain component's public contract:
 
 | Do                                                                                     | Don't                                                                                                   |
 | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Use `PageContent`'s named `aside` for the sticky column.                               | Start new work on migration-only `PageBody`, or hand-roll the grid and sticky geometry in a route.      |
+| Use `PageContent`'s named `aside` for the sticky column.                               | Hand-roll the grid and sticky geometry in a route.                                                       |
 | Render sanitized API HTML (`job.description`, `post.html`) as-is through `Prose`.      | Interpolate other strings into `dangerouslySetInnerHTML`, or hand-roll a `prose` class set per surface. |
 | Keep the job-detail `head()` meta + JobPosting JSON-LD in the route.                   | Move or drop the SEO contract.                                                                          |
 | Let the root shell render the one visible breadcrumb above the footer.                | Add another breadcrumb inside the detail hero or prose column.                                          |
@@ -71,7 +69,7 @@ implementation without changing the domain component's public contract:
 
 ## Used by
 
-- `JobDetail` — the domain-level detail assembly; its internal `PageBody` use is migration-only.
+- `JobDetail` — the domain-level detail assembly.
 - `companies.$companySlug.index` — company profile (still hand-rolls part of the rail geometry).
 - `blog.$postSlug` — complete Page-family article with an internal table of
   contents and author rail; it still has one `PageContent` main landmark.

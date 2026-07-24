@@ -2,7 +2,7 @@
  * Low-risk headers the starter can apply to every response without knowing a
  * tenant's integrations or deployment domain.
  *
- * Deliberately absent here: CSP (tenant media, Stripe, analytics, and inline
+ * Deliberately absent here: CSP (tenant media, Stripe, and inline
  * bootstraps need a per-deployment policy), framing headers (`/embed/jobs`
  * must remain embeddable), HSTS (operator/domain policy), and broad browser
  * feature restrictions that could block an adopter's customization.

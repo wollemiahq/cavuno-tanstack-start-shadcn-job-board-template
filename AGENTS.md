@@ -1,8 +1,7 @@
 # Agent rules — Cavuno board frontend
 
-Rules for ANY agent committing to this repo: the hosted builder (whose
-system prompt is derived from this file at runtime), a tenant's own
-coding agent, and platform fleet runs all read the same contract.
+Rules for any coding agent working in this repo. Keep this file concise and
+self-contained: it is the shared contract for automated customization.
 
 ## Never greenfield
 
@@ -14,9 +13,9 @@ find the smallest edit to the existing surface.
 
 ## Grounding config is not an agent edit
 
-`CAVUNO_API_URL`, `CAVUNO_BOARD` (the `pk_…` publishable key), and
-`CAVUNO_TRACKER_TOKEN` bind this frontend to one specific board. They
-are set at deploy time by a human operator (or the platform):
+`CAVUNO_API_URL` and `CAVUNO_BOARD` (the `pk_…` publishable key) bind
+this frontend to one specific board. They are set at deploy time by a
+human operator (or the platform):
 `wrangler.jsonc` vars in production, `.dev.vars` in dev/sandbox. That is
 how a board goes live — an operator swaps `CAVUNO_BOARD` for their own
 `pk_…` (README "Deploy"). You, the agent, never touch grounding: never
@@ -71,8 +70,8 @@ operation, not a code edit for you to make.
    Workers. Use `getServerEnv()` from `src/lib/env.ts` inside handlers.
 2. **Never call the Board API from the browser** — add data needs as
    server functions in `src/server/`.
-3. **Never store tokens anywhere but the session cookie** — no
-   localStorage, no module state.
+3. **Never persist private Cavuno auth/session credentials in browser storage or
+   module state** — the user session belongs only in the host-owned httpOnly cookie.
 4. **HTML from the API** (`job.description`, `post.html`,
    `company.description`) **is pre-sanitized** — render as-is; never
    interpolate other strings into `dangerouslySetInnerHTML`.
@@ -93,7 +92,7 @@ operation, not a code edit for you to make.
    for a job/company still comes from the API's `links.public`. Route
    `<Link to>` uses TanStack's typed route ids as usual.
 
-## Operator overrides win; tests assert structure
+## Operator overrides win; tests protect behavior
 
 Hosted-board parity is the DEFAULT, not a ceiling. When the operator
 asks for a different presentation of a resolved value (salary/date
@@ -101,12 +100,13 @@ style, icons, labels), produce it: add a mapper field or transform the
 VM's RAW wire values (`salaryMin`, `publishedAt`, …) with e.g.
 `Intl.NumberFormat`. "Golden-tested" pins only the SDK's DEFAULT
 rendering; never parse its locale-shaped formatted strings.
-Formatted output is pinned once, by the SDK's goldens — never re-pinned
-here. Component tests assert wiring symbolically (`vm.salaryLabel`) over
-non-formatter-shaped fixtures (`src/test/fixtures.ts`); mapper tests
-assert delegation by CALLING the SDK formatter in the expectation.
-Presentation edits touch no test content; a failing literal pin is a
-wrong TEST. Gate `check:test-doctrine` bans `$`-shapes; dates/labels by review.
+
+Tests protect stable behavior, not incidental markup, classes, implementation details, or prose.
+Prefer observable roles/states, navigation, permissions, data flow, and errors.
+Never test only sentence/heading presence; derive catalog expectations from messages or fixtures.
+Component tests use neutral VM fixtures; SDK goldens own exact salary/date/location formatting.
+Mapper tests cover our transformations and delegation, not the SDK's own test matrix.
+Update tests with behavior; loosen brittle copy/visual failures. A green structural gate proves little.
 
 ## Dependencies
 
@@ -114,9 +114,9 @@ Package manager is **pnpm 11**, pinned in `package.json`. Installs in
 CI and sandboxes run with a frozen lockfile. Supply-chain posture
 (`pnpm-workspace.yaml`): dependency lifecycle scripts are blocked —
 `allowBuilds` is an empty allowlist — and `minimumReleaseAge` keeps a
-1-day cooldown (1440) on newly published versions. Do not add
-dependencies unless the instruction explicitly requires one; packages
-outside the platform's reviewed allowlist fail the deploy closed.
+1-day cooldown (1440) on newly published versions. Add a dependency only
+when the change genuinely needs it and the reviewed packages cannot solve
+the problem; packages outside the platform allowlist fail deploy closed.
 
 ## Verify every change
 

@@ -60,6 +60,8 @@ import { isRedirect, redirect } from '@tanstack/react-router';
 
 import { Route } from './auth.verify-email-required';
 
+import { m } from '@/paraglide/messages';
+
 const emptyResume: Resume = {
   object: 'resume',
   parseStatus: null,
@@ -163,7 +165,7 @@ describe('/auth/verify-email-required search contract', () => {
     fireEvent.change(code, { target: { value: '123456' } });
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Something went wrong. Try again.',
+      m.candidateAction_errorText(),
     );
     expect(screen.getByRole('alert')).toHaveAttribute(
       'data-slot',
@@ -177,42 +179,57 @@ describe('/auth/verify-email-required search contract', () => {
     mocks.resendOtp.mockRejectedValue(new Error('network unavailable'));
 
     renderVerifyPage();
-    fireEvent.click(screen.getByRole('button', { name: 'Resend code' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.authVerifyEmailRequired_resendLabel(),
+      }),
+    );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Something went wrong. Try again.',
+      m.candidateAction_errorText(),
     );
-    expect(screen.getByRole('button', { name: 'Resend code' })).toBeEnabled();
+    expect(
+      screen.getByRole('button', {
+        name: m.authVerifyEmailRequired_resendLabel(),
+      }),
+    ).toBeEnabled();
   });
 
   it('announces a resent verification code with the owned alert', async () => {
     mocks.resendOtp.mockResolvedValue({ ok: true });
 
     renderVerifyPage();
-    fireEvent.click(screen.getByRole('button', { name: 'Resend code' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.authVerifyEmailRequired_resendLabel(),
+      }),
+    );
 
     const status = await screen.findByRole('status');
     expect(status).toHaveAttribute('data-slot', 'alert');
-    expect(status).toHaveTextContent('A fresh code is on its way.');
+    expect(status).toHaveTextContent(m.authVerifyEmailRequired_resentText());
   });
 
   it('composes the verification code control as an owned field', () => {
     const { container } = renderVerifyPage();
     const code = container.querySelector('input[name="code"]');
     expect(code?.closest('[data-slot="field"]')).not.toBeNull();
-    expect(screen.getByText('6-digit code')).toHaveAttribute(
-      'data-slot',
-      'field-label',
-    );
+    expect(
+      screen.getByText(m.authVerifyEmailRequired_codeLabel()),
+    ).toHaveAttribute('data-slot', 'field-label');
   });
 
   it('offers no sign-in escape hatch — the gate is verify or resend', () => {
-    // The candidate here is already signed in; a "back to sign in" link was
-    // a circular exit and was removed deliberately (CAV session decision).
+    // The candidate here is already signed in, so returning to sign-in would
+    // create a circular exit from the verification gate.
     renderVerifyPage();
 
     expect(screen.queryByRole('link')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Verify email' })).toBeNull();
+    expect(
+      screen.queryByRole('button', {
+        name: m.authVerifyEmailRequired_verifyLabel(),
+      }),
+    ).toBeNull();
   });
 });
 
@@ -226,14 +243,20 @@ describe('/auth/verify-email-required resume offer step', () => {
       target: { value: '123456' },
     });
 
-    expect(await screen.findByText('Add your resume')).toBeInTheDocument();
+    expect(
+      await screen.findByText(m.authVerifyEmailRequired_resumeTitle()),
+    ).toBeInTheDocument();
     expect(
       document.querySelector('[data-test="resume-upload"]'),
     ).toBeInTheDocument();
     // Offering the step must not navigate away on its own.
     expect(mocks.navigate).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Skip for now' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.authVerifyEmailRequired_resumeSkipLabel(),
+      }),
+    );
     await waitFor(() => {
       expect(mocks.navigate).toHaveBeenCalledWith({ href: returnTo });
     });
@@ -254,7 +277,9 @@ describe('/auth/verify-email-required resume offer step', () => {
     await waitFor(() => {
       expect(mocks.navigate).toHaveBeenCalledWith({ href: returnTo });
     });
-    expect(screen.queryByText('Add your resume')).toBeNull();
+    expect(
+      screen.queryByText(m.authVerifyEmailRequired_resumeTitle()),
+    ).toBeNull();
   });
 });
 

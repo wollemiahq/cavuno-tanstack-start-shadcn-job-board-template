@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../server/queries', () => ({
@@ -9,6 +9,8 @@ vi.mock('../server/queries', () => ({
 }));
 
 import { JobAlertFloatingPrompt } from './job-alert-floating-prompt';
+
+import { m } from '@/paraglide/messages';
 
 afterEach(() => {
   cleanup();
@@ -24,15 +26,11 @@ describe('JobAlertFloatingPrompt', () => {
       />,
     );
 
-    await screen.findByRole('heading', { name: 'Never miss a job' });
-    await waitFor(() =>
-      expect(
-        screen.getByText('Get new matching jobs in your inbox.'),
-      ).toBeVisible(),
-    );
-    expect(screen.getByRole('textbox', { name: 'email' })).toHaveAttribute(
-      'type',
-      'email',
-    );
+    await screen.findByRole('heading', {
+      name: m.jobAlertFloatingPrompt_defaultTitle(),
+    });
+    expect(
+      screen.getByRole('textbox', { name: m.alerts_emailAriaLabel() }),
+    ).toHaveAttribute('type', 'email');
   });
 });

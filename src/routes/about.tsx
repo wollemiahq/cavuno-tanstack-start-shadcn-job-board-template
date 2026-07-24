@@ -6,13 +6,13 @@ import { LEGAL_PAGES, legalMetaDescription } from '../lib/legal';
 import { m } from '../paraglide/messages';
 import { getLegalPage, getSeoBase } from '../server/queries';
 
-import { PageBody } from '@/components/board/page-body';
+import { PageLayout } from '@/components/layout/page-layout';
 import { headTitle } from '@/lib/page-title';
 
 const META = LEGAL_PAGES.about;
 
 export const Route = createFileRoute('/about')({
-  // Full-bleed: the shared `PageBody` owns the width (CAV-502).
+  // The shared page layout owns the full-width route geometry.
   staticData: { fullBleed: true, ownsMain: true },
   loader: async () => {
     try {
@@ -48,11 +48,11 @@ export const Route = createFileRoute('/about')({
       : {},
   component: AboutPage,
   notFoundComponent: () => (
-    <PageBody>
+    <PageLayout>
       <p className="border-border text-muted-foreground rounded-lg border border-dashed p-10 text-center">
         {m.notFound_pageNotFound()}
       </p>
-    </PageBody>
+    </PageLayout>
   ),
 });
 

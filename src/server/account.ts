@@ -269,7 +269,7 @@ export const unsaveJob = createServerFn({ method: 'POST' })
     return { ok: true as const };
   });
 
-// ── Resume (onboarding async parse pipeline, ADR-0055) ───────────────────────
+// ── Resume (onboarding async parse pipeline) ─────────────────────────────────
 
 /** Current resume state: parse status + stored file. Poll after an upload. */
 export const getResume = createServerFn({ method: 'GET' })
@@ -316,7 +316,7 @@ export const deleteResume = createServerFn({ method: 'POST' })
     return { ok: true as const };
   });
 
-// ── Job-alert management (authed /me/alerts CRUD, ADR-0053) ───────────────────
+// ── Job-alert management (authenticated /me/alerts CRUD) ──────────────────────
 
 export const getMyAlerts = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])

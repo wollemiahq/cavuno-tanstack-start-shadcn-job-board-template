@@ -1,5 +1,5 @@
 /**
- * Page-based pagination math + the `?page=` URL contract (CAV-496). These
+ * Page-based pagination math + the `?page=` URL contract. These
  * lock the WHY, not the widget: the listing loaders turn a 1-based `?page=N`
  * into a zero-based API `offset`, page 1 serialises to a CLEAN URL (the param
  * drops), invalid/`<1` input coerces to page 1 (listing URLs are public input,

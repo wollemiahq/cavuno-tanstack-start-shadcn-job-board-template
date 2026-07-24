@@ -35,7 +35,7 @@ type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 /**
  * The "Emails" panel — a Mailpit/letter_opener-style viewer for the sandbox's
- * captured outbound mail (spec §4b). A Sheet triggered from inside the preview
+ * captured outbound mail. A Sheet triggered from inside the preview
  * toolbar: every board email (magic links, verification, alert-manage HMAC
  * URLs, digests) is listed newest-first in a compact master list, and
  * selecting one opens a workbench detail — a metadata header (To / Subject /

@@ -6,7 +6,7 @@
  * in as `filters`/`context` — not visible inputs — matching the hosted
  * board's capture form.
  *
- * Now MARKUP + interaction over `AlertSignupVM` (ADR-0070 Phase 2): all
+ * Markup and interaction over `AlertSignupVM`: all
  * copy resolves through `toAlertSignupVM` (src/board/alert-signup-view-model.ts),
  * so the form makes no runtime SDK/copy call and can be restyled freely. The
  * only `@cavuno/board*` imports left are TYPE-ONLY — `JobAlertSubscribeInput`
@@ -67,7 +67,7 @@ export function AlertSignupForm({
   ) => Promise<{ status: 'submitted' }>;
   /** Board language (ISO code) from `board.context()`. */
   language: string;
-  /** Operator label overrides (`board.context().labels`), ADR-0059. */
+  /** Operator label overrides from `board.context().labels`. */
   labels?: BoardLabelOverrides;
   title?: string;
   description?: string;

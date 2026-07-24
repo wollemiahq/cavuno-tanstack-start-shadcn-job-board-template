@@ -12,6 +12,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PostJobForm } from './post-job-form';
 
+import { m } from '@/paraglide/messages';
 import type { JobPostingPlan } from '@cavuno/board';
 
 vi.mock('./rich-text-editor', () => ({
@@ -99,36 +100,38 @@ describe('PostJobForm', () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText('Company name'), {
+    fireEvent.change(screen.getByLabelText(m.postJob_companyNameLabel()), {
       target: { value: 'Acme Studio' },
     });
-    fireEvent.change(screen.getByLabelText('Company website'), {
+    fireEvent.change(screen.getByLabelText(m.postJob_companyWebsiteLabel()), {
       target: { value: 'acme.example' },
     });
-    fireEvent.change(screen.getByLabelText('Contact name'), {
+    fireEvent.change(screen.getByLabelText(m.postJob_contactNameLabel()), {
       target: { value: 'Ada Lovelace' },
     });
-    fireEvent.change(screen.getByLabelText('Contact email'), {
+    fireEvent.change(screen.getByLabelText(m.postJob_contactEmailLabel()), {
       target: { value: 'ada@acme.example' },
     });
-    fireEvent.change(screen.getByLabelText('Job title'), {
+    fireEvent.change(screen.getByLabelText(m.postJob_jobTitleLabel()), {
       target: { value: 'Staff Product Designer' },
     });
-    fireEvent.change(screen.getByLabelText('Description'), {
+    fireEvent.change(screen.getByLabelText(m.postJob_descriptionLabel()), {
       target: { value: 'Lead product design across the company.' },
     });
-    fireEvent.change(screen.getByLabelText('Application URL'), {
+    fireEvent.change(screen.getByLabelText(m.postJob_applicationUrlLabel()), {
       target: { value: 'acme.example/careers/staff-designer' },
     });
     // Hybrid (the default) requires somewhere to be on-site at — commit a
     // free-text office location through the place picker.
-    const officeLocations = screen.getByLabelText('Office locations');
+    const officeLocations = screen.getByLabelText(
+      m.postJob_officeLocationsLabel(),
+    );
     fireEvent.change(officeLocations, { target: { value: 'Berlin' } });
     fireEvent.keyDown(officeLocations, { key: 'Enter' });
-    fireEvent.change(screen.getByLabelText('Salary min'), {
+    fireEvent.change(screen.getByLabelText(m.postJob_salaryMinLabel()), {
       target: { value: '140000' },
     });
-    fireEvent.change(screen.getByLabelText('Salary max'), {
+    fireEvent.change(screen.getByLabelText(m.postJob_salaryMaxLabel()), {
       target: { value: '180000' },
     });
 
@@ -162,7 +165,10 @@ describe('PostJobForm', () => {
     );
 
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Your job is live' }),
+      screen.getByRole('heading', {
+        level: 2,
+        name: m.postJob_publishedTitle(),
+      }),
     ).toBeInTheDocument();
   });
 
@@ -185,11 +191,9 @@ describe('PostJobForm', () => {
       />,
     );
 
+    expect(screen.getByText(m.postJob_noPlansTitle())).toBeInTheDocument();
     expect(
-      screen.getByText('No job posting plans are available.'),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Post job' }),
+      screen.queryByRole('button', { name: m.postJob_submitButtonLabel() }),
     ).not.toBeInTheDocument();
   });
 
@@ -213,11 +217,13 @@ describe('PostJobForm', () => {
     );
 
     expect(
-      screen.getByLabelText('Company name').closest('[data-slot="field"]'),
+      screen
+        .getByLabelText(m.postJob_companyNameLabel())
+        .closest('[data-slot="field"]'),
     ).not.toBeNull();
     expect(
       screen
-        .getByLabelText('Company website')
+        .getByLabelText(m.postJob_companyWebsiteLabel())
         .closest('[data-slot="input-group"]'),
     ).not.toBeNull();
     expect(
@@ -363,6 +369,6 @@ describe('PostJobForm', () => {
       maximumFractionDigits: 0,
     }).format(199);
     expect(screen.getByText(expectedPrice)).toBeVisible();
-    expect(screen.queryByText('Free')).toBeNull();
+    expect(screen.queryByText(m.postJob_freeLabel())).toBeNull();
   });
 });

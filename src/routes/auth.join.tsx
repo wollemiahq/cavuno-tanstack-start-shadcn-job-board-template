@@ -20,7 +20,7 @@ import { m } from '../paraglide/messages';
 import { getBoardContext, getSeoBase } from '../server/queries';
 
 import { JsonLd } from '@/components/json-ld';
-import { RheaAuthCard, RoleSelector } from '@/components/rhea-auth-pilot';
+import { AuthPageCard, RoleSelector } from '@/components/registration-page';
 import { buttonVariants } from '@/components/ui/button';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
 import { headTitle } from '@/lib/page-title';
@@ -104,7 +104,7 @@ function JoinPage() {
     ]),
   ].filter((entry): entry is Record<string, unknown> => entry !== null);
   return (
-    <RheaAuthCard
+    <AuthPageCard
       title={m.authJoin_heading({ boardName })}
       supportingText={m.authJoin_subheading()}
     >
@@ -146,6 +146,6 @@ function JoinPage() {
           {m.authJoin_logInLink()}
         </Link>
       </p>
-    </RheaAuthCard>
+    </AuthPageCard>
   );
 }

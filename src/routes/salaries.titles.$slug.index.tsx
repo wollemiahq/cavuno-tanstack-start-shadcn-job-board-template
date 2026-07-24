@@ -63,8 +63,8 @@ export const Route = createFileRoute('/salaries/titles/$slug/')({
       if (isNotFound(error)) throw notFound();
       throw error;
     }
-    // The API returns the board-language canonical slug as data and never 308s;
-    // the starter performs the redirect (S3), mirroring the hosted board.
+    // The API returns the board-language canonical slug as data; the starter
+    // owns the 308 redirect, mirroring the hosted board.
     if (salary.canonicalSlug !== params.slug) {
       throw redirect({
         to: '/salaries/titles/$slug',

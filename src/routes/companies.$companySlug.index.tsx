@@ -31,9 +31,9 @@ import {
 import { CompanyCard } from '@/components/board/company-card';
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobCard } from '@/components/board/job-card';
-import { PageBody } from '@/components/board/page-body';
 import { CompanySalarySummary } from '@/components/board/salary-sections';
 import { JsonLd } from '@/components/json-ld';
+import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
 import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
@@ -50,7 +50,7 @@ import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/companies/$companySlug/')({
-  // Full-bleed so the shared PageBody owns the canonical page geometry.
+  // The shared page layout owns the canonical route geometry.
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
     try {
@@ -130,7 +130,7 @@ export const Route = createFileRoute('/companies/$companySlug/')({
       : {},
   component: CompanyPage,
   notFoundComponent: () => (
-    <PageBody>
+    <PageLayout>
       <Empty className="py-12">
         <EmptyHeader>
           <EmptyMedia variant="icon">
@@ -139,7 +139,7 @@ export const Route = createFileRoute('/companies/$companySlug/')({
           <EmptyTitle>{m.companyDetail_notFoundText()}</EmptyTitle>
         </EmptyHeader>
       </Empty>
-    </PageBody>
+    </PageLayout>
   ),
 });
 
@@ -181,7 +181,7 @@ function CompanyPage() {
   const copy = boardCopy(seo.language, seo.labels);
   const crumbs = copy.breadcrumbs;
 
-  // Salary summary VMs (CAV-516) — condense the Salaries tab: the overall
+  // Salary summary VMs condense the Salaries tab: the overall
   // range + the top few category rows, built through the SAME mappers the
   // Salaries tab uses so the figures stay consistent.
   const salaryOverallVM = salarySummary.overallSalary
@@ -226,7 +226,7 @@ function CompanyPage() {
       ? company.website
       : `https://${company.website}`
     : null;
-  // ProfilePage + Organization + BreadcrumbList — starter-rendered per ADR-0039
+  // ProfilePage + Organization + BreadcrumbList are starter-rendered
   // from the API's company fields (mirrors the hosted company page's JSON-LD).
   const jsonLd = [
     {

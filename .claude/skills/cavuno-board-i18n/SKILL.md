@@ -23,7 +23,7 @@ So there are two separate things:
 2. **`⊕ board.context().labels`** — the operator's per-board overrides,
    API-served (e.g. `featuredLabel` → "Top Job").
 3. **`⊕ generated code`** — per-board copy the AI builder ejects to native
-   code (ADR-0059 layer 3). Supersedes the catalog for that board.
+   code. Supersedes the catalog for that board.
 
 Every surface resolves copy through **one seam module** (`src/copy.ts`),
 never by calling the catalog inline:
@@ -62,7 +62,7 @@ extra locales are prefixed (`/de/`, `/fr/`).
    from `getLocale()` (it replaces the static `board.language` in the root).
 5. **Seam.** Point `boardCopy` at the URL locale (`getLocale()`) instead of
    only `board.language`, so `/de/` renders German chrome even on an English
-   board. This is the opt-in that ADR-0063 adds over the single-language model.
+   board. This is the opt-in over the single-language model.
 6. **SEO slice.** Per-locale `hreflang`, canonical, and sitemap entries are
    part of completing multi-language — do them when you add real locales, not
    in the foundation.
@@ -78,5 +78,4 @@ extra locales are prefixed (`/de/`, `/fr/`).
 - **Do not scatter catalog calls** through markup — everything imports the one
   seam, so the catalog→code migration is a single-file change.
 
-Reference: ADR-0063 (starter i18n), ADR-0059 (copy catalog), ADR-0010 (entity
-translation). Wiring flavor: `cavuno-board-tanstack-start`.
+Wiring flavor: `cavuno-board-tanstack-start`.

@@ -816,7 +816,7 @@ export function PostJobForm({
               placeholder={m.postJob_applicationUrlPlaceholder()}
             />
           </Field>
-          {/* ADR-0008: board-defined custom fields render as their own group
+          {/* Board-defined custom fields render as their own group
               after the built-in fields, in operator-config order. */}
           <CustomFieldsGroup
             definitions={customFields}

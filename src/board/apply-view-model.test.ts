@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { toApplyButtonVM } from './apply-view-model';
 
 /**
- * The apply mapper is Layer 1b — it owns the decision ladder (ADR-0054)
+ * The apply mapper is Layer 1b and owns the decision ladder
  * and the copy resolution. These pin the ladder so the pure-markup button
  * can be restyled without the invariant drifting: an external URL is the
  * apply path for everyone; only a native job with no URL gates an

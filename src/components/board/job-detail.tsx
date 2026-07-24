@@ -1,9 +1,8 @@
 import { m } from '../../paraglide/messages';
 
 /**
- * Job detail page — composed as an owned shadcn page (CAV-486,"as
- * Jordan Hughes would design it"). PURE MARKUP over `JobDetailVM`
- * (ADR-0070 Layer 2): every value is pre-resolved by `toJobDetailVM`
+ * Job detail page composed as owned shadcn markup over `JobDetailVM`.
+ * Every value is pre-resolved by `toJobDetailVM`
  * (src/board/job-detail-view-model.ts), so this file imports nothing
  * from `@cavuno/board*` and the design is free to restructure without
  * touching the data/correctness layer.
@@ -18,8 +17,8 @@ import { m } from '../../paraglide/messages';
  *
  * Framework seams (owned by the route, need client interactivity):
  * - `applySlot` (native/external apply), `secondaryActions` (the Save + the
- *   Copy-link controls, laid out two-up), `similarSlot` (the CAV-485 JobCard
- *   grid over the raw PublicJobCard[]), and `alertSlot` (the CAV-483 alert
+ *   Copy-link controls, laid out two-up), `similarSlot` (the JobCard
+ *   grid over the raw PublicJobCard[]), and `alertSlot` (the alert
  *   form). The about-company card is composed here from `vm.company`.
  * - JSON-LD + head meta live in the route, never here.
  */
@@ -31,9 +30,9 @@ import type {
 } from '@/board/job-detail-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
 import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
-import { PageBody } from '@/components/board/page-body';
 import { TaxonomyTags } from '@/components/board/taxonomy-tags';
 import { Container } from '@/components/layout/container';
+import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
 import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
@@ -114,14 +113,14 @@ export function JobDetail({
   applySlot?: React.ReactNode;
   /** Save control — the route wires this. */
   secondaryActions?: React.ReactNode;
-  /** Compact copy-link utility — sits by the meta in the header (CAV-500). */
-  /** Similar-jobs grid (the CAV-485 JobCard grid over PublicJobCard[]). */
+  /** Compact copy-link utility that sits by the meta in the header. */
+  /** Similar-jobs grid over PublicJobCard[]. */
   similarSlot?: React.ReactNode;
-  /** Alert signup form (CAV-483) — the route wires this. */
+  /** Alert signup form wired by the route. */
   alertSlot?: React.ReactNode;
 }) {
   return (
-    <PageBody
+    <PageLayout
       band={
         <div className="border-border bg-muted/50 border-b">
           <Container width="wide">
@@ -245,6 +244,6 @@ export function JobDetail({
           heading={vm.additionalDetailsHeading}
         />
       </article>
-    </PageBody>
+    </PageLayout>
   );
 }

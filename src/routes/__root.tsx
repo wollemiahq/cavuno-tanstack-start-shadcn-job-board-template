@@ -104,7 +104,7 @@ export const Route = createRootRoute({
         listCompanies()
           .then((memberships) => memberships.data)
           .catch(() => null),
-        // Developer-preview capability + persona roster (Workstream B). The
+        // Developer-preview capability + persona roster. The
         // server-verified `sandbox: true` gate resolves false on every tenant
         // board, so the toolbar never renders there. Fail closed so a sandbox
         // hiccup only hides the toolbar, never faults the page.
@@ -245,8 +245,8 @@ function RootLayout() {
   });
   const navigate = useNavigate();
 
-  // LNK-11: once after hydration, report path templates to the builder
-  // parent when this board is embedded in the preview iframe.
+  // Once after hydration, report path templates to the builder parent when
+  // this board is embedded in the preview iframe.
   // Lazy-import routeTree so the root module does not statically cycle
   // with routeTree.gen (which imports every route including this one).
   useEffect(() => {
@@ -522,9 +522,8 @@ function RootLayout() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const data = Route.useLoaderData();
   // Theme mode is repo-canonical too (theme.css → resolved
-  // module), not the wire theme (ADR-0065 D5: migrated boards ignore it).
+  // module), not the wire theme.
   const mode =
     themeMeta.mode === 'dark' || themeMeta.mode === 'light'
       ? themeMeta.mode
@@ -539,7 +538,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     // already correct on the first byte and hydration cannot flip it.
     <DirectionProvider direction={direction}>
       <html
-        // The document declares the RUNTIME locale (ADR-0063): the base
+        // The document declares the runtime locale: the base
         // locale (=== board language, generation-time invariant) on
         // unprefixed routes, the chrome locale under /de/-style prefixes.
         lang={locale}
@@ -556,27 +555,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           {/* en-XA / ar-XB are the CI coverage pseudo-locales (never for
             humans or crawlers): noindex them. Real prefixed chrome
             locales stay indexable — their route canonicals already point
-            at the unprefixed base (chrome-translated duplicates,
-            ADR-0063 D4; hreflang deliberately deferred until content
-            translates). */}
+            at the unprefixed base; hreflang is deliberately deferred until
+            content translates). */}
           {(locale === 'en-XA' || locale === 'ar-XB') && (
             <meta name="robots" content="noindex, nofollow" />
           )}
           <HeadContent />
-          {/* Tinybird flock analytics (cutover runbook P2, hosted parity):
-            first-party page views + custom events keyed by tenant_id =
-            board slug, via the /t proxy. Renders only when the
-            deployment carries a tracker token. */}
-          {data?.seo?.trackerToken && data?.board?.slug ? (
-            <script
-              defer
-              src="/js/metrics.js"
-              data-token={data.seo.trackerToken}
-              data-host="/t"
-              data-tenant-id={data.board.slug}
-              data-web-vitals="true"
-            />
-          ) : null}
         </head>
         <body className="bg-background text-foreground flex min-h-screen flex-col font-sans antialiased">
           {/* System-mode resolution before first paint (no theme flash). */}

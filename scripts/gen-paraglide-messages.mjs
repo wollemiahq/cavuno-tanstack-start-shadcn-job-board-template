@@ -3,7 +3,7 @@ import { uiCopy } from '@cavuno/board/format';
 import { pseudoBidi, pseudoLocalize } from './pseudo-locale.mjs';
 
 /**
- * uiCopy → Paraglide messages generator (ADR-0063 decision 2).
+ * uiCopy → Paraglide messages generator.
  *
  * The SDK's `uiCopy` catalog is the single source of truth for chrome
  * copy. This emits `messages/{locale}.json` (inlang message-format) from

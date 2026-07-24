@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { RheaAuthCard } from '@/components/rhea-auth-pilot';
+import { AuthPageCard } from '@/components/registration-page';
 import {
   Field as FormField,
   FieldError,
@@ -19,9 +19,9 @@ export function AuthCard({
   children: ReactNode;
 }) {
   return (
-    <RheaAuthCard title={title} supportingText={supportingText}>
+    <AuthPageCard title={title} supportingText={supportingText}>
       {children}
-    </RheaAuthCard>
+    </AuthPageCard>
   );
 }
 

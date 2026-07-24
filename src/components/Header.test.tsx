@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 /**
- * Public-header behavior (CAV-503).
+ * Public-header behavior.
  *
  * These tests exercise the user-visible seam under a real TanStack memory
  * router: optional collections follow board feature flags, account entry

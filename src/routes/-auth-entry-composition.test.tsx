@@ -15,6 +15,8 @@ vi.mock('../server/account', () => ({ getSessionUser: vi.fn() }));
 import { Route as EmployerSignUpRoute } from './auth.employer.sign-up';
 import { Route as JoinRoute } from './auth.join';
 
+import { m } from '@/paraglide/messages';
+
 afterEach(cleanup);
 
 function renderNotFound(route: typeof JoinRoute | typeof EmployerSignUpRoute) {
@@ -25,29 +27,26 @@ function renderNotFound(route: typeof JoinRoute | typeof EmployerSignUpRoute) {
 }
 
 describe('auth entry not-found states', () => {
-  it('renders unavailable join as the owned empty state', () => {
+  it('renders unavailable entry routes as owned empty states', () => {
     renderNotFound(JoinRoute);
+    const candidateDescription = screen.getByText(
+      m.authJoin_notAvailableText(),
+    );
+    expect(candidateDescription).toHaveAttribute(
+      'data-slot',
+      'empty-description',
+    );
+    expect(candidateDescription.closest('[data-slot="empty"]')).not.toBeNull();
 
-    expect(
-      screen.getByText('Sign-up is not available on this board.'),
-    ).toHaveAttribute('data-slot', 'empty-description');
-    expect(
-      screen
-        .getByText('Sign-up is not available on this board.')
-        .closest('[data-slot="empty"]'),
-    ).not.toBeNull();
-  });
-
-  it('renders unavailable employer sign-up as the owned empty state', () => {
+    cleanup();
     renderNotFound(EmployerSignUpRoute);
-
-    expect(
-      screen.getByText('Employer sign-up is not available on this board.'),
-    ).toHaveAttribute('data-slot', 'empty-description');
-    expect(
-      screen
-        .getByText('Employer sign-up is not available on this board.')
-        .closest('[data-slot="empty"]'),
-    ).not.toBeNull();
+    const employerDescription = screen.getByText(
+      m.authEmployerSignUp_notAvailableText(),
+    );
+    expect(employerDescription).toHaveAttribute(
+      'data-slot',
+      'empty-description',
+    );
+    expect(employerDescription.closest('[data-slot="empty"]')).not.toBeNull();
   });
 });

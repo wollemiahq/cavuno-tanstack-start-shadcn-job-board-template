@@ -4,7 +4,7 @@ import { Page, PageContent, PageHeader } from '@/components/layout/page';
 
 /**
  * Candidate account content wrapper. Account navigation now lives in the
- * signed-in header's avatar menu (CAV-510), so this shell owns only the page's
+ * signed-in header's avatar menu, so this shell owns only the page's
  * single main landmark and content column. `title`/`description`/`actions`
  * render the canonical PageHeader; pages with a complementary rail (e.g. the
  * profile-completeness card on /account) pass `aside` + `asideLabel` and get

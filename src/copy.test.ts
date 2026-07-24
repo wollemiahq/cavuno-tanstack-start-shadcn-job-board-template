@@ -6,7 +6,7 @@ import { baseLocale, overwriteGetLocale } from './paraglide/runtime';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-describe('boardCopy is locale-driven (ADR-0063 D7 — the URL locale, not the board constant)', () => {
+describe('boardCopy is driven by the URL locale, not the board constant', () => {
   afterEach(() => {
     overwriteGetLocale(() => baseLocale);
   });
@@ -85,7 +85,7 @@ describe('boardCopy is locale-driven (ADR-0063 D7 — the URL locale, not the bo
   });
 });
 
-describe('the copy seam is the only catalog call site (ADR-0061 D7)', () => {
+describe('the copy seam is the only catalog call site', () => {
   const SRC = join(import.meta.dirname);
 
   function walk(dir: string): string[] {

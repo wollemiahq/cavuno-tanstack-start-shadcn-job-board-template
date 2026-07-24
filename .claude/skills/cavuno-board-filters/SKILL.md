@@ -69,7 +69,7 @@ const sorts = sortLabels(language);       // English defaults on every locale
 Seniority renders as a MULTI-select (hosted parity). `EMPLOYMENT_TYPES`
 deliberately offers 5 of the 7 wire values (`volunteer`/`other` exist on
 jobs but are not filter options). `JOB_SORTS` deliberately excludes
-`oldest` (ADR-0048); `relevance` is the featured-ranked default.
+`oldest`; `relevance` is the featured-ranked default.
 
 ## Load category, skill, and keyword options
 

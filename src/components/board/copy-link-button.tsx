@@ -19,7 +19,7 @@ export function CopyLinkButton({
   url: string;
   /** Board language (ISO code) from `board.context()`. */
   language: string;
-  /** Operator label overrides (`board.context().labels`), ADR-0059. */
+  /** Operator label overrides from `board.context().labels`. */
   labels?: BoardLabelOverrides;
   /** Button size — `sm` for the compact hero utility placement. */
   size?: 'sm' | 'md' | 'lg';

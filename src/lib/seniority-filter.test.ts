@@ -1,8 +1,6 @@
 import { SENIORITIES } from '@cavuno/board/filters';
 /**
- * Seniority MultiSelect ⇄ URL-filter mapping (CAV-495). The seniority chips
- * became the Untitled UI `MultiSelect`; these lock the URL-semantics the
- * swap must preserve — the WHY, not the widget: an empty selection CLEARS
+ * Seniority MultiSelect ⇄ URL-filter mapping. An empty selection clears
  * the filter (undefined, so the param drops from the URL rather than
  * persisting an empty `[]`), the "all" sentinel expands to every canonical
  * level, and a concrete selection round-trips through the controlled value.

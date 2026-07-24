@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { JobsResultsBar } from './jobs-results-bar';
 
+import { m } from '@/paraglide/messages';
+
 beforeEach(() => {
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
@@ -32,9 +34,24 @@ describe('JobsResultsBar', () => {
     );
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      '12 Engineering jobs',
+      m.jobSearch_contextualResultsHeading({
+        count: '12',
+        heading: 'Engineering jobs',
+      }),
     );
-    expect(screen.getByText('Showing 1–12 of 12 jobs')).toBeVisible();
-    expect(screen.queryByRole('combobox', { name: 'Sort' })).toBeNull();
+    expect(
+      screen.getByText(
+        m.jobSearch_resultsShowingRange({
+          from: '1',
+          to: '12',
+          count: '12',
+        }),
+      ),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('combobox', {
+        name: m.jobSearch_sortPlaceholder(),
+      }),
+    ).toBeNull();
   });
 });

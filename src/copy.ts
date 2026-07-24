@@ -1,12 +1,12 @@
 /**
- * The ONE chrome-copy seam (ADR-0061 decision 7).
+ * The single chrome-copy seam.
  *
  * Every route and component resolves chrome copy through this module —
  * never by calling a catalog inline. Content data (jobs, companies, blog,
  * taxonomy, salaries) is API-served and never flows through here.
  *
- * ADR-0063 D7 (the Paraglide step, done): copy resolves from the compiled
- * Paraglide messages keyed by the RUNTIME locale (`getLocale()` — the URL
+ * Copy resolves from compiled Paraglide messages keyed by the runtime locale
+ * (`getLocale()` — the URL
  * locale under the `/de/`-style chrome prefixes), overlaid with the
  * board's operator label overrides. The `language` parameter callers
  * thread is retained for the block prop contract but no longer selects
@@ -14,9 +14,6 @@
  * invariant (project.inlang/settings.json is emitted per board), so the
  * unprefixed site renders the board language and prefixed locales follow
  * the URL.
- *
- * Builder-2's layer-3 ejection (ADR-0059: per-board generated-code copy
- * overrides) is a regeneration of `messages/{locale}.json` + this file.
  */
 import { m } from './paraglide/messages';
 

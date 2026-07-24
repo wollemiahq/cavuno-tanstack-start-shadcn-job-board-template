@@ -7,10 +7,6 @@ const root = join(import.meta.dirname, '..');
 const read = (path: string) => readFileSync(join(root, path), 'utf8');
 
 describe('package metadata', () => {
-  // The one machine contract this file still pins. The prose-pinning tests
-  // that used to live here (README phrasing, publish-gate wording) were
-  // deleted deliberately: copy is the owner's voice, and a test that must be
-  // rewritten whenever the words change pins nothing.
   it('carries useful package metadata without becoming publishable to npm', () => {
     const packageJson = JSON.parse(read('package.json')) as {
       description?: string;

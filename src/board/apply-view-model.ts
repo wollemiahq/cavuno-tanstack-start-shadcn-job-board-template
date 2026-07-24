@@ -1,7 +1,6 @@
 /**
- * Apply-button VIEW-MODEL — the Layer-1b seam for the apply block
- * (ADR-0070 Phase 2). `toApplyButtonVM` is the ONLY place the apply
- * decision ladder (`resolveApplyAction`, ADR-0054) and the i18n apply copy
+ * Apply-button VIEW-MODEL — the Layer-1b seam for the apply block.
+ * `toApplyButtonVM` is the only place the apply decision ladder and i18n copy
  * (`boardCopy`) touch the button. It returns the resolved action + the
  * labels the markup renders.
  *

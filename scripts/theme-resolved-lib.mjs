@@ -1,8 +1,8 @@
 /**
- * theme.css derivation library (ADR-0065 D2/D3) — pure functions shared
- * by `npm run gen:theme` (emits src/theme/resolved.ts) and the snapshot
+ * theme.css derivation library — pure functions shared
+ * by `pnpm run gen:theme` (emits src/theme/resolved.ts) and the snapshot
  * sync payload printer. theme.css is canonical; these are the only two
- * derivations, both hash-stamped so doctor can detect drift (D6).
+ * derivations, both hash-stamped so doctor can detect drift.
  */
 import { createHash } from 'node:crypto';
 
@@ -32,7 +32,7 @@ export function parseTokens(css) {
     const value = css.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1]?.trim();
     if (value) light[name] = value;
   }
-  // FNT-02: the one concrete family OG/Satori renders (cards are
+  // The one concrete family OG/Satori renders (cards are
   // title-dominant): the heading family when it names one, else the
   // body family. First family in the stack — quoted OR bare, since
   // third-party presets write `--font-sans: Poppins, sans-serif`. The
@@ -53,14 +53,14 @@ export function parseTokens(css) {
     meta[key] = css.match(new RegExp(`\\* ${key}: (.+)`))?.[1]?.trim() || null;
   }
   meta.mode ??= 'system';
-  // FNT-01: banner keys stay authoritative. When a theme predates the banner
+  // Banner keys stay authoritative. When a theme predates the banner
   // (or a preset rewrote it away), derive from the `--font-sans` TOKEN — the
   // thing that actually renders — and only then fall back to the leftover
   // `@import`. Import-first got this backwards: `--only theme` rewrites the
   // token but leaves the previous font's import in place, so a Poppins theme
   // reported `geist`.
   meta.fontSans ??= familySlug(light['--font-sans']) ?? null;
-  // FNT-03: static (per-weight subpath) fontsource imports parse like
+  // Static (per-weight subpath) fontsource imports parse like
   // variable ones.
   meta.fontSans ??=
     css.match(

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * CompanySalarySummary — the Overview-tab salary summary (CAV-516). The
+ * CompanySalarySummary — the Overview-tab salary summary. The
  * Overview reads as a page of section summaries: it already previews the
  * company's jobs, and this block condenses the Salaries tab into the same
  * rhythm — the company's overall salary range + a few top category rows +

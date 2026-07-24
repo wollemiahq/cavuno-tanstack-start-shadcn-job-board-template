@@ -1,7 +1,5 @@
 // @vitest-environment jsdom
-/**
- * LNK-11 routes-report emitter — pure unit tests (mapping, cap, embed gate).
- */
+/** Routes-report emitter unit tests (mapping, cap, and embed gate). */
 import { describe, expect, it, vi } from 'vitest';
 
 import {

@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
- * en-XA pseudo-locale (Phase-1 coverage gate). Derived mechanically from
+ * en-XA pseudo-locale. Derived mechanically from
  * the en messages: letters get accented, the whole string is wrapped in
  * ⟦…⟧. A screenshot or curl of /en-XA/ makes un-tokenized copy instantly
  * visible — anything NOT bracketed did not come through Paraglide.

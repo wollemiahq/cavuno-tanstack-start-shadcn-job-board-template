@@ -31,7 +31,7 @@ import { Switch } from '@/components/ui/switch';
 
 /**
  * The "Board settings" surface — the sandbox analog of the dashboard's board
- * settings (spec §4b item 5), split out of the persona menu into its own
+ * settings, split out of the persona menu into its own
  * focused sheet (progressive disclosure: the persona popover does ONE job, the
  * flag controls live behind their own affordance). Reached from the toolbar
  * footer's gear and controlled by the parent; closing it returns to nothing

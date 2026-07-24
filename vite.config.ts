@@ -24,9 +24,9 @@ const config = defineConfig({
     ? { server: { hmr: { protocol: 'wss' as const, clientPort: 443 } } }
     : {}),
   plugins: [
-    // Compile-time i18n (ADR-0063): messages/{locale}.json → tree-shakeable
+    // Compile-time i18n: messages/{locale}.json → tree-shakeable
     // functions in src/paraglide (generated; gitignored). Messages are
-    // generated from the SDK uiCopy catalog — `npm run gen:messages`.
+    // generated from the SDK uiCopy catalog — `pnpm run gen:messages`.
     paraglideVitePlugin({
       project: './project.inlang',
       outdir: './src/paraglide',

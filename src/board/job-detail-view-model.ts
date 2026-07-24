@@ -1,6 +1,6 @@
 /**
- * Job detail VIEW-MODEL — the Layer-1b seam for the job-detail block
- * (ADR-0070 Phase 2). `toJobDetailVM` is the ONLY place SDK wire types,
+ * Job detail VIEW-MODEL — the Layer-1b seam for the job-detail block.
+ * `toJobDetailVM` is the only place SDK wire types,
  * formatters, i18n copy, taxonomy/custom-field resolution, breadcrumbs,
  * and path construction touch the job-detail page. It maps the loader's
  * data to a plain, fully-resolved `JobDetailVM` (strings + booleans).

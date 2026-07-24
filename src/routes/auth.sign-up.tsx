@@ -10,7 +10,7 @@ import { m } from '../paraglide/messages';
 import { signUp } from '../server/auth';
 import { getBoardContext } from '../server/queries';
 
-import { RheaRegistrationPage } from '@/components/rhea-auth-pilot';
+import { RegistrationPage } from '@/components/registration-page';
 import { buttonVariants } from '@/components/ui/button';
 import { headTitle } from '@/lib/page-title';
 
@@ -43,7 +43,7 @@ function SignUpPage() {
   const returnTo = candidateReturnTo(search.returnTo);
 
   return (
-    <RheaRegistrationPage
+    <RegistrationPage
       title={m.authSignUp_title()}
       supportingText={m.authSignUp_supportingText({ boardName })}
       copy={{

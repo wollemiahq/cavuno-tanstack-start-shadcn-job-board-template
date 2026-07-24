@@ -1,5 +1,5 @@
 /**
- * Locale → writing direction for the document element (ADR-0063).
+ * Locale → writing direction for the document element.
  *
  * `<html dir>` is the single switch every RTL affordance hangs off:
  * CSS logical properties (`ms-*`, `pe-*`, `text-start`, `border-s`)

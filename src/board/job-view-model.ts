@@ -1,6 +1,6 @@
 /**
  * Job card VIEW-MODEL — the Layer-1b seam for the job-card / job-search
- * block (ADR-0070 Phase 2). `toJobCardVM` is the ONLY place SDK wire
+ * block. `toJobCardVM` is the only place SDK wire
  * types, formatters, i18n copy, the honest-summary derivation, and path
  * helpers touch a job card. It maps a `PublicJobCard` to a plain,
  * fully-resolved `JobCardVM`.

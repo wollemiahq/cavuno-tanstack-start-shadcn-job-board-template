@@ -3,7 +3,7 @@ import { boardCopy } from '#/copy';
 import { isNotFound } from '@cavuno/board';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 /**
- * Company jobs subpage (CAV-501) — every open job at one company, with a
+ * Company jobs subpage — every open job at one company, with a
  * keyword search and page-based pagination. The `/companies/:slug/jobs/`
  * index sits alongside the job-detail route (`…/jobs/:jobSlug`) without
  * shadowing it (TanStack matches the exact index path).
@@ -69,7 +69,7 @@ const rootApi = getRouteApi('__root__');
 export const Route = createFileRoute('/companies/$companySlug/jobs/')({
   // Full-bleed: the shared company-section shell owns the page container +
   // breadcrumb placement (the shell header is the hero here — no centered
-  // ListingPageHeader band — matching /companies + /companies/…/salaries).
+  // shared company header band — matching /companies + /companies/…/salaries).
   staticData: { fullBleed: true, ownsMain: true },
   validateSearch: (search: Record<string, unknown>): CompanyJobsSearch => ({
     q: typeof search.q === 'string' && search.q ? search.q : undefined,

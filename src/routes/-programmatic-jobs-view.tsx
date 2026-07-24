@@ -83,13 +83,6 @@ export function ProgrammaticJobsView({
 
       <JobSearchPage
         heading={heading}
-        breadcrumb={{
-          ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
-          items: [
-            { name: copy.breadcrumbs.jobs, href: '/jobs' },
-            { name: heading },
-          ],
-        }}
         count={count}
         gatedCount={gatedCount}
         jobs={jobs.map((job) =>

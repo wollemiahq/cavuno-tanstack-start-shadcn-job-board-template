@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
- * The carousel's scroll axis follows the document direction (ADR-0063,
- * docs/theming.md §"Direction that lives in JS").
+ * The carousel's scroll axis follows the document direction described in
+ * docs/theming.md §"Direction that lives in JS".
  *
  * Embla translates its track in raw pixels, so `<html dir="rtl">` mirrors the
  * arrow buttons — they use logical insets and `rtl:` variants — without

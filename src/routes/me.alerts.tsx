@@ -1,5 +1,5 @@
 /**
- * `/me/alerts` — authenticated job-alert management (ADR-0053). Distinct from
+ * `/me/alerts` — authenticated job-alert management. Distinct from
  * the anonymous `/alerts/manage` (token-based) flow: this is the signed-in
  * candidate's own alerts over `board.me.alerts.*` (list / create / update /
  * remove). The loader also pulls the board places directory once so stored

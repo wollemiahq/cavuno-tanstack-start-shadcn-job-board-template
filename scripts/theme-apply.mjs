@@ -30,7 +30,7 @@
  * `--font-sans: Poppins, sans-serif` without an `@fontsource` import, which
  * silently renders a system fallback. The wrapper warns, naming the font and
  * the exact fix; it never edits `src/theme.css` for you. (The same condition
- * is a hard gate — FNT-01/FNT-03 in `src/theme-foundation.test.ts`.)
+ * is enforced by `src/theme-foundation.test.ts`.)
  *
  * `src/theme.css` stays the single source of truth (AGENTS.md: no parallel
  * token system) — the CLI owns it, the generators only derive from it. We do
@@ -199,7 +199,7 @@ if (mode === 'apply') {
 run('pnpm', ['run', 'gen:theme']);
 run('pnpm', ['run', 'gen:design']);
 
-// ── 4. Font sanity (FNT-01/FNT-03) ────────────────────────────────────────
+// ── 4. Font sanity ────────────────────────────────────────────────────────
 
 /** First family of a font stack (quoted or bare) as a fontsource slug. */
 function familySlug(value) {
@@ -301,7 +301,7 @@ function checkFonts() {
     }
   }
   console.warn(
-    '\n  Until then `pnpm test` fails honestly on FNT-01 in src/theme-foundation.test.ts.',
+    '\n  Until then `pnpm test` fails in src/theme-foundation.test.ts.',
   );
 }
 

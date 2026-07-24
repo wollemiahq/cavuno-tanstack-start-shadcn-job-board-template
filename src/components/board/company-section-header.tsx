@@ -5,20 +5,21 @@ import { Link } from '@tanstack/react-router';
 import { m } from '../../paraglide/messages';
 
 import { CompanyAvatar } from '@/components/board/company-avatar';
-import { PageBody } from '@/components/board/page-body';
 import { Container } from '@/components/layout/container';
+import { PageLayout } from '@/components/layout/page-layout';
 import { DitherCanvas } from '@/components/marketing/dither-canvas';
 import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 /**
- * The company section shell (CAV-512). A company's three public surfaces —
+ * The company section shell. A company's three public surfaces —
  * profile (`/companies/:slug`), the jobs subpage (`…/jobs`), and the salary
  * overview (`…/salaries`) — read as ONE entity by opening every one with THIS
  * byte-identical header, seated in a full-bleed gray band: the company mark +
  * name (H1) + one-line description, then a row of section tabs.
- * The band is the SAME composition as the job-detail page (`PageBody`'s `band`
+ * The band is the same composition as the job-detail page (the shared
+ * full-bleed header
  * slot, `bg-secondary` + `border-b`) so the two
  * top sections feel like the same component. Only the content BELOW the tabs,
  * on the white surface, changes per surface.
@@ -180,9 +181,9 @@ export function CompanySectionShell({
     : '';
 
   return (
-    <PageBody
+    <PageLayout
       // Full-bleed gray header band — the SAME composition as the job-detail
-      // page (CAV-497/502): the breadcrumb + the shared company header + the
+      // page: the breadcrumb + the shared company header + the
       // tab row ride the band; the per-section content stays below on white.
       band={
         <div className="border-border bg-secondary relative isolate overflow-hidden border-b">
@@ -238,6 +239,6 @@ export function CompanySectionShell({
       }
     >
       {children}
-    </PageBody>
+    </PageLayout>
   );
 }

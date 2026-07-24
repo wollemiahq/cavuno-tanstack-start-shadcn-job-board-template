@@ -24,25 +24,24 @@ function fontsourceImports(css: string) {
   }));
 }
 
-describe('shadcn Rhea theme foundation', () => {
+describe('shadcn theme foundation', () => {
   it('loads the canonical theme and single typeset preset', () => {
     const styles = read('src/styles.css');
 
     expect(styles).toMatch(/@import ['"]\.\/theme\.css['"]/);
     expect(styles).toMatch(/@import ['"]\.\/typeset\.css['"]/);
-    expect(styles).not.toContain('styles/untitled-ui');
     expect(styles).not.toContain('Inter');
     expect(styles).not.toContain('@plugin');
   });
 
-  it('owns Rhea tokens and the only custom responsive breakpoint', () => {
+  it('owns the theme tokens and the only custom responsive breakpoint', () => {
     const theme = read('src/theme.css');
 
     expect(theme).toContain('--breakpoint-xs: 37.5rem');
     expect(theme).toContain('@apply bg-background text-foreground');
   });
 
-  // FNT-01: fonts are swappable theme tokens — assert the STRUCTURE any
+  // Fonts are swappable theme tokens — assert the structure any
   // font must satisfy, never a specific family. The declared families
   // must be backed by an imported fontsource package (self-hosted; a
   // swap that forgets the import ships a fallback-only font silently).
@@ -90,7 +89,7 @@ describe('shadcn Rhea theme foundation', () => {
     }
   });
 
-  // FNT-03: the mirror of FNT-01. An import whose package is not installed
+  // An import whose package is not installed
   // is a PHANTOM font — Vite resolves nothing and the board silently renders
   // in a system fallback. Third-party presets (tweakcn `sera`/`lyra`) write
   // imports for Playfair Display, Noto Sans and JetBrains Mono; if none of

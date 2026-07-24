@@ -24,8 +24,8 @@ export function relatedSearchesTitle(labels?: BoardLabelOverrides): string {
 }
 
 /**
- * Map the browse API's `RelatedSearch[]` (ADR-0037 §8 — jobs surface
- * `category`/`skill` terms, the companies list surfaces `market` terms) to the
+ * Map the browse API's `RelatedSearch[]` (job `category`/`skill` terms and
+ * company `market` terms) to the
  * crawlable `TaxonomyChip`s the listing rail renders. The href for each term
  * comes from the `@cavuno/board/paths` helper for its type — never a
  * hand-built path — so the rail's internal-linking spine matches the hosted

@@ -49,7 +49,7 @@ const rangeLabel = showRange
 
 | Do | Don't |
 |---|---|
-| Render `JobsResultsBar` and pass raw `count` / `page` / `pageSize`. | Inline the `resultsShowingRange` / `resultsCount*` math into a route (the pre-CAV-502 `companies/…/jobs` drift — that route was removed and the message keys are now referenced only inside `jobs-results-bar.tsx`). |
+| Render `JobsResultsBar` and pass raw `count` / `page` / `pageSize`. | Inline the `resultsShowingRange` / `resultsCount*` math into a route. |
 | Route sort edits back through `onSortChange` with the same sort enum the URL carries. | Build a second sort dropdown buried in a filter bar. |
 
 ## Used by

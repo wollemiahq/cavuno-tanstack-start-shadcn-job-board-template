@@ -11,14 +11,13 @@ import { LocationCombobox } from './location-combobox';
 
 // @vitest-environment jsdom
 /**
- * LocationCombobox parity contract.
+ * LocationCombobox behavior contract.
  *
- * The location field is the last bespoke legacy consumer converted in the
- * Its behaviour is load-bearing for the /jobs listing: a
- * debounced `places.list({ q })` typeahead whose selection writes the
- * `/jobs/locations/$location` URL. The conversion to owned shadcn primitives
- * must preserve that behaviour EXACTLY — same request shape, same 200ms
- * debounce, same min-query gate, and same onSelect/onClear callbacks.
+ * The field is load-bearing for the /jobs listing: a debounced
+ * `places.list({ q })` typeahead whose selection writes the
+ * `/jobs/locations/$location` URL. The owned shadcn composition must preserve
+ * the request shape, 200ms debounce, minimum-query gate, and
+ * onSelect/onClear callbacks.
  */
 const suggestion = (
   over: Partial<{

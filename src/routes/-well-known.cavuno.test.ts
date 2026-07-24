@@ -6,9 +6,9 @@ import { routeEntriesFromTanStackRouteTree } from '@cavuno/board/well-known';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
- * Mount contract for `/.well-known/cavuno.json` (LNK-08). Pins the starter
- * wiring of createWellKnownHandler + routeEntriesFromTanStackRouteTree
- * against this board's canonical path structure.
+ * Mount contract for `/.well-known/cavuno.json`. Pins the starter wiring of
+ * createWellKnownHandler and routeEntriesFromTanStackRouteTree against this
+ * board's canonical path structure.
  *
  * The route lazy-imports routeTree.gen at request time; we mock that module
  * with a tree that mirrors the starter's public roles so the test stays free

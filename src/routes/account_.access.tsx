@@ -1,5 +1,5 @@
 /**
- * Candidate job-access paywall reference flow (doc 36 / ADR-0056):
+ * Candidate job-access paywall reference flow:
  *
  *   offers → connected-account embedded checkout → poll grant → ungated + manage
  *

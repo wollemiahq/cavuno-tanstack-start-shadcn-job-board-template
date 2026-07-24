@@ -29,10 +29,7 @@ click. Only the content BELOW the tabs changes per surface.
 ## Anatomy
 
 The canonical anatomy is `Page` → `PageContent`, with the shared identity in
-`PageHeader` and each tab's body grouped by `PageSection`. The existing
-`CompanySectionShell` preserves that visible anatomy while it remains on the
-migration-only `PageBody` internally. New route composition must not consume
-`PageBody` directly.
+`PageHeader` and each tab's body grouped by `PageSection`.
 
 - The root shell's bottom breadcrumb locates the current company section. The
   company shell never hand-places trail markup.
@@ -47,9 +44,7 @@ migration-only `PageBody` internally. New route composition must not consume
   description + jobs preview; the jobs search band + results + pagination; the
   salary cards + rails + FAQ).
 
-### Codified design rule — the shell locates the page; the tabs navigate the entity
-
-Baked in verbatim from the operator design review:
+### The shell locates the page; the tabs navigate the entity
 
 The page trail is rendered once by the root shell above the footer. The tabs
 remain the immediate navigation between Overview, Jobs, and Salaries; they are
@@ -58,8 +53,7 @@ not duplicated by another breadcrumb inside the company band.
 ## Composition
 
 `CompanySectionShell` is the domain assembly: it owns the shared header, tab
-row, and section content. Its current internal use of
-`PageBody` is a migration detail, not a public composition recommendation:
+row, and section content:
 
 ```tsx
 <CompanySectionShell
@@ -95,8 +89,7 @@ than switching panels in the current document, so they must remain crawlable
 - `routes/companies.$companySlug.index` — the profile (Overview tab): the
   sticky facts rail + description + 6-job preview below the shell.
 - `routes/companies.$companySlug.jobs.index` — the jobs subpage (Jobs tab): the
-  search band + honest count + results + pagination below the shell (the shell
-  header replaces the former migration-only listing-header band).
+  search band + honest count + results + pagination below the shell.
 - `routes/companies.$companySlug.salaries.index` — the salary overview
   (Salaries tab): the salary cards + rails + FAQ below the shell.
 

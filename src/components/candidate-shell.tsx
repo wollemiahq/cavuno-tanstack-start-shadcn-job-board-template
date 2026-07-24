@@ -4,7 +4,7 @@ import { CandidateAccountShell } from '@/components/board/candidate-account-shel
 
 /**
  * Thin wrapper for the candidate account pages. The account navigation moved to
- * the signed-in header avatar menu (CAV-510); this simply renders the page
+ * the signed-in header avatar menu; this simply renders the page
  * content inside the shared account content shell. `title`/`description`/
  * `actions` render the canonical PageHeader; an optional `aside` (with its
  * accessible `asideLabel`) renders as the shell's complementary rail.

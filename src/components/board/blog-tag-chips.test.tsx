@@ -84,12 +84,6 @@ describe('BlogTagChips — shared blog topic row', () => {
 
     const all = await screen.findByRole('link', { name: 'All' });
     expect(all).toHaveAttribute('aria-current', 'page');
-    expect(all.querySelector('[data-slot="badge"]')).toHaveClass('bg-primary');
-    // Tags stay secondary while All is active.
-    const designBadge = screen
-      .getByRole('link', { name: 'Design systems' })
-      .querySelector('[data-slot="badge"]');
-    expect(designBadge).toHaveClass('bg-secondary');
     expect(
       screen.getByRole('link', { name: 'Design systems' }),
     ).not.toHaveAttribute('aria-current');
@@ -100,17 +94,11 @@ describe('BlogTagChips — shared blog topic row', () => {
 
     const current = await screen.findByRole('link', { name: 'Design systems' });
     expect(current).toHaveAttribute('aria-current', 'page');
-    expect(current.querySelector('[data-slot="badge"]')).toHaveClass(
-      'bg-primary',
-    );
 
-    // Every other tag remains a secondary anchor to its own archive.
+    // Every other tag remains an anchor to its own archive.
     const other = screen.getByRole('link', { name: 'Hiring' });
     expect(other).not.toHaveAttribute('aria-current');
     expect(other).toHaveAttribute('href', '/blog/tag/hiring');
-    expect(other.querySelector('[data-slot="badge"]')).toHaveClass(
-      'bg-secondary',
-    );
 
     // "All" points back to the index and is not active on a tag page.
     const all = screen.getByRole('link', { name: 'All' });

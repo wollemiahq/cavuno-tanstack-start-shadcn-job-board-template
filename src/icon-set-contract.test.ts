@@ -1,28 +1,4 @@
 import { iconLibraries } from 'shadcn/icons';
-/**
- * ICO — one icon set, whichever one it is.
- *
- * AGENTS.md §Hard rules forbids a parallel icon set ("never add a parallel
- * component tree, icon set, CSS utility layer, or token system"), but until
- * this gate existed nothing enforced it. A half-finished icon migration
- * typechecks clean, builds clean, and passes every other test while the app
- * ships TWO icon libraries — verified empirically: a knowingly partial
- * lucide → tabler migration produced 0 type errors and a successful
- * production build.
- *
- * The shadcn CLI cannot close this itself. `shadcn migrate icons` skips any
- * icon it cannot map — no target equivalent, or a usage shape it does not
- * rewrite — prints them as warnings, and **exits 0**. "Migration complete."
- * is not the same claim as "nothing imports the old library any more".
- *
- * So this gate asserts CARDINALITY, not identity: exactly one icon library
- * may appear across `src/**`. It is deliberately NOT pinned to lucide — a
- * complete migration to tabler, phosphor, remixicon, hugeicons or radix
- * passes untouched, and only a PARTIAL one fails. That is the opposite of
- * the `iconLibrary: 'lucide'` string pins in `src/rhea-foundation.test.ts`
- * and `src/shadcn-only-release.test.ts`, which fail on any migration,
- * complete or not, and pass on a half-finished one.
- */
 import { describe, expect, it } from 'vitest';
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -86,7 +62,7 @@ function iconLibrariesInUse(): Map<string, string[]> {
   return inUse;
 }
 
-describe('icon set contract (ICO)', () => {
+describe('icon set contract', () => {
   it('ships exactly one icon library across src/**', () => {
     const inUse = iconLibrariesInUse();
 

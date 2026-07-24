@@ -1,7 +1,7 @@
 /**
- * Mount contract for `/go/*` (LNK-04). The SDK's own suite pins handler
- * semantics; these tests pin that the starter mounts createGoHandler and
- * surfaces its Response intact.
+ * Mount contract for `/go/*`. The SDK's own suite pins handler semantics;
+ * these tests pin that the starter mounts createGoHandler and surfaces its
+ * response intact.
  */
 import { describe, expect, it } from 'vitest';
 

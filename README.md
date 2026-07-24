@@ -54,9 +54,8 @@ the headless server-function equivalents — is in
 
 ### 2. Agent-ready by construction
 
-[`AGENTS.md`](AGENTS.md) is a machine-readable contract that any coding agent —
-the hosted Cavuno builder, a tenant's own agent, or a fleet run — reads before
-touching the repo. It works because the codebase is layered so that
+[`AGENTS.md`](AGENTS.md) is a machine-readable contract for coding agents
+working in this repo. It works because the codebase is layered so that
 correctness can't be redesigned away:
 
 - **Layer 1a — the `@cavuno/board` SDK**: formatters, path helpers,
@@ -67,9 +66,25 @@ correctness can't be redesigned away:
 - **Layer 2 — presentation** (`src/components/**`): dumb, typed-props
   components you can restructure freely without ever mis-calling a formatter.
 
-That separation is what makes this one of the first genuinely
-**agent-buildable** job board templates: an agent can redesign the surface
-without breaking salary math, canonical URLs, or SEO.
+The pinned SDK also ships version-matched **Cavuno Agent Skills** for Codex,
+Claude Code, Cursor, and other compatible coding agents. This starter checks
+in the Claude-compatible copy under `.claude/skills`; the same corpus can be
+installed or refreshed in any existing compatible agent skills directory with:
+
+```sh
+npx @cavuno/board setup
+```
+
+The skills cover the complete board surface—including TanStack Start and
+Cloudflare wiring, auth and session ownership, jobs, companies, salaries,
+applications, messaging, SEO, i18n, theming, and runtime verification—so an
+agent works from the contracts for the exact SDK version installed here rather
+than stale generic documentation. `cavuno-board doctor` also detects when the
+checked-in skills no longer match that version.
+
+That separation makes this an **agent-buildable** job board template: an agent
+can redesign the surface without breaking salary math, canonical URLs, auth
+and session ownership, or SEO.
 
 ---
 
@@ -108,7 +123,6 @@ way; you're just pointing it at your real board instead of the sandbox.
 |---|---|---|
 | `CAVUNO_API_URL` | Board API base URL (`https://api.cavuno.com`) | `.dev.vars` / `wrangler.jsonc` |
 | `CAVUNO_BOARD` | Your board's `pk_…` publishable key (Dashboard → Settings → API) | `.dev.vars` / `wrangler.jsonc` |
-| `CAVUNO_TRACKER_TOKEN` | Optional — analytics only, safe to leave unset (unset ⇒ no analytics script) | `.dev.vars` / `wrangler.jsonc` |
 
 The `pk_…` key is **client-safe by design**; user sessions live in a
 host-owned httpOnly cookie this app manages itself. The Board API is only ever
@@ -162,7 +176,7 @@ Feeds, metadata, redirects, and other machine endpoints ship alongside them:
 | Content and legal pages | `/about`, `/privacy-policy`, `/terms-of-service`, `/cookie-policy`, `/impressum` |
 | Feeds and discovery | `/jobs/rss.xml`, `/blog/rss.xml`, `/sitemap.xml`, `/sitemap/:file`, `/robots.txt`, `/indexnow-key.txt` |
 | OpenGraph assets | `/companies/:companySlug/jobs/:jobSlug/og`, `/blog/:postSlug/og`, `/blog/og/:postSlug.json` |
-| Platform and integration endpoints | `/.well-known/cavuno.json`, `/site.webmanifest`, `/ads.txt`, `/js/metrics.js`, `/go/*`, `/t/*` |
+| Platform and integration endpoints | `/.well-known/cavuno.json`, `/site.webmanifest`, `/ads.txt`, `/go/*` |
 
 The same supported surfaces are available under locale prefixes such as `/de`
 and `/fr`; the default locale stays unprefixed.
@@ -170,9 +184,9 @@ and `/fr`; the default locale stays unprefixed.
 Cross-cutting capabilities that ship on top of those routes:
 
 - **SEO built in** — canonical URLs, `JobPosting` JSON-LD (Google for Jobs),
-  `sitemap.xml`, `robots.txt`, blog RSS, and OpenGraph images. Job-detail URLs
-  mirror Cavuno's hosted board, so a board migrating hosted → headless keeps
-  its indexed URLs.
+  `sitemap.xml`, `robots.txt`, job and blog RSS feeds, and OpenGraph images.
+  Job-detail URLs mirror Cavuno's hosted board, so a board migrating hosted →
+  headless keeps its indexed URLs.
 - **Real-data discipline** — the design handles messy data by construction:
   long titles clamp, absent salaries are omitted (never an empty label), skill
   tags cap at `3 + N`, missing logos fall back to initials.
@@ -245,9 +259,6 @@ deploying. That deploy-time grounding is the operator's job, not a code edit
 these values.
 
 [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/wollemiahq/cavuno-tanstack-start-shadcn-job-board-template)
-
-<!-- The Deploy button above works once the repo is public; while private it
-     will not resolve for external visitors. -->
 
 ---
 

@@ -35,8 +35,8 @@ import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 const JOBS_PAGE_SIZE = 20;
 
 export const Route = createFileRoute('/jobs/')({
-  // Full-bleed: the page opens with the Lumen-style gray hero band
-  // (CAV-497) and owns its own containers.
+  // Full-bleed: the page opens with the gray hero band and owns its own
+  // containers.
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseJobsSearch,
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),

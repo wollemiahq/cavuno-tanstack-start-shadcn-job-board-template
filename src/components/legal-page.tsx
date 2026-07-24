@@ -4,15 +4,15 @@ import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 
 import { legalMetaDescription, type LegalPageMeta } from '../lib/legal';
 
-import { PageBody } from '@/components/board/page-body';
 import { JsonLd } from '@/components/json-ld';
+import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
 import type { PublicLegalPage } from '@cavuno/board';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 /**
- * Shared render for the legal/about surfaces. Per ADR-0039 the starter owns the
- * layout + JSON-LD; the Board API serves the portable-HTML prose (+ impressum
+ * Shared render for the legal/about surfaces. The starter owns the layout and
+ * JSON-LD; the Board API serves the portable-HTML prose (+ impressum
  * legal-entity facts).
  */
 export function LegalPageView({
@@ -45,12 +45,12 @@ export function LegalPageView({
   ].filter((e): e is Record<string, unknown> => e !== null);
 
   return (
-    // Keep `PageBody` for the structural padding/width system, but constrain
+    // Keep the shared page geometry, but constrain
     // the content column (title + prose) to a readable measure — matching the
     // blog article's center column. Long legal text at full container width is
     // an unreadable line length. `Prose`'s `max-w-none` still applies inside
     // the capped column, so the prose fills the 48rem measure.
-    <PageBody>
+    <PageLayout>
       <div className="mx-auto w-full max-w-3xl">
         {/* `dir` is pinned off `auto` on the wrapper on purpose: the JSON-LD
             <script> below is a text-node descendant, so first-strong would
@@ -85,6 +85,6 @@ export function LegalPageView({
           ) : null}
         </Prose>
       </div>
-    </PageBody>
+    </PageLayout>
   );
 }

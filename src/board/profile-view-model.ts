@@ -1,7 +1,7 @@
 import { formatMonthYear } from '@cavuno/board/format';
 
 /**
- * Candidate-profile VIEW-MODEL seam (ADR-0070). The month-granular date
+ * Candidate-profile VIEW-MODEL seam. The month-granular date
  * formatter (`formatMonthYear`) the education / experience sections display is
  * called ONLY here, so those components import no SDK formatter and render
  * from a resolved string.

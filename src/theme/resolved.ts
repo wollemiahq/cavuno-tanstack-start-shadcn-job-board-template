@@ -2,7 +2,7 @@
  * GENERATED from src/theme.css — do not edit (npm run gen:theme).
  * Resolved theme values for renderers that cannot read CSS variables
  * (workers-og/Satori). The hash ties this module to its source; doctor
- * compares it against theme.css and the platform snapshot (ADR-0065).
+ * compares it against theme.css and the platform snapshot.
  */
 export const tokensHash = '87957b5f5b4751206fa98acd95140833b9da7dca81d150e303a3e26fb3ba0b83'
 

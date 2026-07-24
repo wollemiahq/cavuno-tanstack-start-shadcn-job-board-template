@@ -193,7 +193,7 @@ describe('toSavedJobCardVM', () => {
   // The saved-jobs list embeds a SLIMMER job projection than the PublicJob
   // type promises: officeLocations / categories / skills can be absent on the
   // wire. That shape crashed the SDK's fullJobToCard (`officeLocations[0]`)
-  // and took the whole /account/saved page down (CAV-510 regression).
+  // and took the whole /account/saved page down.
   const slimSavedJob = {
     id: 'job_2',
     slug: 'staff-engineer',

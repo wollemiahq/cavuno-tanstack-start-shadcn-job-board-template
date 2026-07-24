@@ -51,8 +51,6 @@ export function SelectedJobDetail({
 
   const applySlot = state.job ? (
     <ApplyButton
-      jobId={state.job.id}
-      companySlug={state.job.company?.slug ?? undefined}
       jobSlug={state.job.slug}
       applicationUrl={state.job.applicationUrl}
       language={board.language}

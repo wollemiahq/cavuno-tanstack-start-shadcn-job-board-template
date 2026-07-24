@@ -7,28 +7,15 @@ import ts from 'typescript-6';
  * `pnpm run rtl:apply` — rewrite the board's PHYSICAL Tailwind utilities to
  * their LOGICAL equivalents, so the app mirrors under `dir="rtl"`.
  *
- * This is the layout half of the bidi story (ADR-0063). `<html dir>` is
+ * `<html dir>` is
  * already wired from the UI locale (src/lib/locale-direction.ts) and this
  * codebase is flexbox/`gap`/`justify`-based, so direction alone mirrors most
  * of the page. What it does NOT mirror is anything pinned to a physical
  * edge — `pl-*`, `mr-*`, `text-right`, `border-l`, `rounded-r-*`. Those are
  * what this script converts.
  *
- * WHY NOT `shadcn migrate rtl`. It was tried and it is destructive here:
- *
- *   • The glob form (`shadcn migrate rtl 'src/**‍/*.tsx'`) replaced
- *     `src/routes/settings.tsx` with a 9-line stub — 201 files, 4961
- *     deletions in one run.
- *   • Even the bare default form silently deleted the
- *     `// @vitest-environment jsdom` pragma from 10 test files. It rewrites
- *     through a formatter that drops leading comments.
- *   • Its rewrite is semantically wrong on PHYSICAL APIs. In `sheet.tsx` it
- *     turned `data-[side=left]:border-r` into `data-[side=left]:border-e`
- *     while leaving the neighbouring `data-[side=left]:left-0` physical —
- *     so a left-side sheet grew its border on the wrong edge in RTL. It has
- *     no notion of "this class is keyed to an explicitly physical prop".
- *
- * So the transform is ours. Its design, in three rules:
+ * This transform preserves leading comments and can exclude classes tied to
+ * explicitly physical component props. Its design has three rules:
  *
  *   1. **Only class-list string literals are touched.** Eligibility is
  *      decided on the TypeScript AST, not by regex over the file: a string

@@ -1,8 +1,8 @@
 'use client';
 
 /**
- * Native apply (ADR-0054) with the hosted board's fallback ladder. Now
- * PURE MARKUP + interaction over `ApplyButtonVM` (ADR-0070 Phase 2): the
+ * Native apply with the hosted board's fallback ladder. Pure markup and
+ * interaction over `ApplyButtonVM`: the
  * decision ladder and copy are resolved by `toApplyButtonVM`
  * (src/board/apply-view-model.ts), so this file imports nothing from
  * `@cavuno/board*` or `#/copy` and the button can be restyled freely.
@@ -26,15 +26,12 @@ import {
   type BoardLabelOverrides,
 } from '@/board/apply-view-model';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { trackJobApplyClick } from '@/lib/analytics';
 import {
   candidateSignInHref,
   candidateVerifyEmailHref,
 } from '@/lib/candidate-return-to';
 
 export function ApplyButton({
-  jobId,
-  companySlug,
   jobSlug,
   applicationUrl,
   viewer,
@@ -46,10 +43,6 @@ export function ApplyButton({
   applicationsHref = '/me/applications',
   nativeApplications = true,
 }: {
-  /** Convex job _id — keys the `job_apply_click` analytics event (P2). */
-  jobId: string;
-  /** Company slug for the analytics payload, when known. */
-  companySlug?: string;
   /** Null when the job has no native-apply support (external-only). */
   jobSlug: string | null;
   /** The employer's external application URL, when the job carries one. */
@@ -60,7 +53,7 @@ export function ApplyButton({
   language: string;
   /** Complete internal URL to restore after candidate authentication. */
   returnTo: string;
-  /** Operator label overrides (`board.context().labels`), ADR-0059. */
+  /** Operator label overrides from `board.context().labels`. */
   labels?: BoardLabelOverrides;
   /**
    * Perform the native apply. Throw an error whose message contains
@@ -116,11 +109,8 @@ export function ApplyButton({
           target="_blank"
           rel="noreferrer"
           className={buttonVariants({ size: 'lg' })}
-          // The outbound click IS the apply for external jobs — record it
-          // for employer reporting (hosted parity; P2).
-          onClick={() => trackJobApplyClick({ jobId, companySlug })}
         >
-          {/* Primary apply label is just "Apply" (CAV-500); the SDK's
+          {/* Primary apply label is just "Apply"; the SDK's
               longer applyOnEmployerSiteLabel is dropped from the CTA. */}
           {m.applyButton_applyLabel()}
         </a>
@@ -159,10 +149,6 @@ export function ApplyButton({
             size="lg"
             disabled={state === 'applying'}
             onClick={async () => {
-              // Fired only on the press that performs the apply — the
-              // sign-in/verify walls above never emit ("forcing sign-up
-              // isn't an apply"), and the applied state renders a link.
-              trackJobApplyClick({ jobId, companySlug });
               setState('applying');
               try {
                 await onApply(action.jobSlug);

@@ -1,11 +1,8 @@
-# README media — shot list
+# README media
 
-The README references the images below from `docs/media/`. All four stills
-are **captured** (2026-07-21, hosted sandbox board
-`pk_c2f66367a3abaa6bafd00fd3c2de3297`, 1440×900 @2x, light theme, dev SSR).
-This file remains the re-capture spec: shoot each on the **sandbox board**
-at **1440×900**, light theme, unless noted. Filenames must match exactly so
-the README image tags resolve.
+The README references the images below from `docs/media/`. To refresh them,
+use the sandbox board at 1440×900 in the light theme. Keep the filenames
+unchanged so the README image links continue to resolve.
 
 | File | Shows | Route / how to reach it |
 |---|---|---|

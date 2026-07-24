@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 
-export function RheaAuthCard({
+export function AuthPageCard({
   title,
   supportingText,
   announceTitle = false,
@@ -146,7 +146,7 @@ type RegistrationStatus =
   | { state: 'error'; message: string }
   | { state: 'success' };
 
-export function RheaRegistrationPage({
+export function RegistrationPage({
   title,
   supportingText,
   copy,
@@ -169,7 +169,7 @@ export function RheaRegistrationPage({
   const succeeded = status.state === 'success';
 
   return (
-    <RheaAuthCard
+    <AuthPageCard
       title={succeeded ? copy.successTitle : title}
       supportingText={succeeded ? copy.successText : supportingText}
       announceTitle={succeeded}
@@ -192,7 +192,7 @@ export function RheaRegistrationPage({
           {footer}
         </>
       )}
-    </RheaAuthCard>
+    </AuthPageCard>
   );
 }
 

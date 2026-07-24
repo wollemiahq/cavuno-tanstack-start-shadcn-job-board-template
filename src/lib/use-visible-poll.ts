@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * Poll a callback on an interval while the tab is visible — the ADR-0053 REST
+ * Poll a callback on an interval while the tab is visible — the REST
  * transport for messaging (no sockets, no SSE in v1). Uses a recursive
  * `setTimeout` (not `setInterval`) so a slow tick never stacks, pauses while
  * the tab is hidden to avoid background churn, and fires an immediate refresh

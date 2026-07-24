@@ -25,7 +25,7 @@ export function JobsResultsBar({
   /** Route context, such as “Engineering jobs” or “Jobs in Sydney”. */
   heading?: string;
   language: string;
-  /** Operator label overrides (`board.context().labels`), ADR-0059. */
+  /** Operator label overrides from `board.context().labels`. */
   labels?: BoardLabelOverrides;
   className?: string;
 }) {

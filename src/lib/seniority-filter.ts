@@ -1,7 +1,7 @@
 import { SENIORITIES } from '@cavuno/board/filters';
 
 /**
- * Seniority multi-select ⇄ URL-filter bridge (CAV-495).
+ * Seniority multi-select ⇄ URL-filter bridge.
  *
  * The `/jobs` seniority control is the owned shadcn multi-select composition,
  * whose value is a react-aria `Selection` (a `Set` of keys, or the sentinel

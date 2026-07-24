@@ -108,7 +108,7 @@ describe('TalentSearchPage — search results pattern', () => {
       'Candidates',
     );
     expect(screen.queryByRole('searchbox', { name: /candidate/i })).toBeNull();
-    // The redundant in-page skill box is gone (ADR-0075): the header owns
+    // The redundant in-page skill box is gone: the header owns
     // the candidate query; `?skill=` still filters via the loader.
     expect(screen.queryByRole('textbox', { name: /skill/i })).toBeNull();
     expect(

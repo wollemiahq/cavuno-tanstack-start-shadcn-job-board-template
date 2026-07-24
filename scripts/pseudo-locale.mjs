@@ -1,5 +1,5 @@
 /**
- * Pseudo-locale derivations (Phase-1 coverage gates).
+ * Pseudo-locale derivations.
  *
  * `en-XA` — pseudo-ACCENT. Derives mechanically from en messages: every
  * letter is accented and the whole string is wrapped in ⟦…⟧, while ICU

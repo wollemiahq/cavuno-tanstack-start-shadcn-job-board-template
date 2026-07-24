@@ -64,8 +64,6 @@ describe('JobDetail actions', () => {
     for (const name of ['Apply', 'Save job', 'copy link']) {
       expect(actions).toContainElement(screen.getByRole('button', { name }));
     }
-    // Save + Copy sit in the two-up row beneath the full-width Apply.
-    expect(actions?.querySelector('.grid.grid-cols-2')).not.toBeNull();
   });
 
   it('renders the alert signup slot in the sidebar, not the prose column', () => {

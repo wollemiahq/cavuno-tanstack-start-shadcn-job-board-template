@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 /**
- * One company as an owned shadcn card row (CAV-487). PURE MARKUP: the
+ * One company as an owned shadcn card row. Pure markup: the
  * companies index, the market-scoped browse, and the similar-companies
  * rail all share this row, so the surface reads as one system (mirrors
  * how every list surface shares `JobCard`).

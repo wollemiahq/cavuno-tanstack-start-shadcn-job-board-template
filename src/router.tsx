@@ -23,9 +23,9 @@ export function getRouter() {
     // a router-wide default would give every route its own boundary, so an
     // error would never reach the root's `errorComponent`.
     defaultNotFoundComponent: NotFound,
-    // Paraglide locale routing (ADR-0063): route matching sees the
+    // Paraglide locale routing: route matching sees the
     // delocalized path (/de/jobs → /jobs), rendered hrefs re-localize for
-    // the current locale. The base locale stays unprefixed (D5).
+    // the current locale. The base locale stays unprefixed.
     rewrite: {
       input: ({ url }) => deLocalizeUrl(url),
       output: ({ url }) => localizeUrl(url),

@@ -6,7 +6,6 @@ import { Users } from 'lucide-react';
 import { m } from '../../paraglide/messages';
 
 import type { TalentCardVM } from '@/board/talent-view-model';
-import { ListingResultsHeader } from '@/components/board/listing-page-header';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { TalentSearchResult } from '@/components/board/talent-search-result';
 import { Page } from '@/components/layout/page';
@@ -50,7 +49,7 @@ export function TalentSearchPage({
   endAd,
 }: {
   candidates: TalentCardVM[];
-  /** Header-owned candidate query (ADR-0075) — drives the empty-state copy. */
+  /** Header-owned candidate query that drives the empty-state copy. */
   q?: string;
   /** `?skill=` facet from a deep link — drives the empty-state copy. */
   skill?: string;
@@ -94,19 +93,17 @@ export function TalentSearchPage({
         })
       : null;
   const resultsBar = (
-    <ListingResultsHeader>
-      <div
-        data-slot="talent-results-bar"
-        className={candidateVms.length > 0 ? 'px-4 pb-3 md:px-0' : 'pb-3'}
-      >
-        <h1 className="text-foreground text-lg font-semibold tracking-tight">
-          {m.talentSearch_resultsHeading()}
-        </h1>
-        {resultDescription ? (
-          <p className="text-muted-foreground text-xs">{resultDescription}</p>
-        ) : null}
-      </div>
-    </ListingResultsHeader>
+    <div
+      data-slot="talent-results-bar"
+      className={candidateVms.length > 0 ? 'px-4 pb-3 md:px-0' : 'pb-3'}
+    >
+      <h1 className="text-foreground text-lg font-semibold tracking-tight">
+        {m.talentSearch_resultsHeading()}
+      </h1>
+      {resultDescription ? (
+        <p className="text-muted-foreground text-xs">{resultDescription}</p>
+      ) : null}
+    </div>
   );
 
   return (

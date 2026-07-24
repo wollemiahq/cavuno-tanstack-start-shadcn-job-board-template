@@ -1,8 +1,7 @@
 import { Link } from '@tanstack/react-router';
 
 /**
- * One job as an owned shadcn card (CAV-485, row layout CAV-497) — PURE
- * MARKUP over `JobCardVM` (ADR-0070 Layer 2). Every value is pre-resolved
+ * One job as owned shadcn markup over `JobCardVM`. Every value is pre-resolved
  * by `toJobCardVM`; this file imports nothing from `@cavuno/board*`, so the
  * card is restyled/recomposed as pure markup over the stable VM contract.
  *
@@ -11,17 +10,16 @@ import { Link } from '@tanstack/react-router';
  *    element order mirrors the /jobs workspace result card (JobSearchResult):
  *    avatar alongside TITLE → company → location → salary → description →
  *    footer (posted date + tags/action), so the two surfaces read identically.
- *  - `row` — the Lumen-style horizontal listing row: logo left, company +
+ *  - `row` — the horizontal listing row: logo left, company +
  *    title + summary + pills in the middle, the relative posted date on
  *    the right edge. The listing surfaces (/jobs, programmatic) use rows.
  *
  * The same card shape is used either way: rounded surface, subtle ring and
  * shadow lifting on hover. A featured job earns the primary ring + pill.
  *
- * Real-data stress fixes preserved: 2-line title clamp (S1); honest 2-line
- * summary or omitted (S2/S6); salary line omitted when the VM has none (never
- * an empty label); skill tags capped at 3 with an honest overflow count (S4);
- * company mark falls back to initials when no logo (S3/S5). The title +
+ * Real-data constraints: two-line title clamp; two-line summary or omission;
+ * salary omitted when the VM has none; skill tags capped at three with an
+ * honest overflow count; and company initials when no logo exists. The title +
  * company read as one tight lockup — no reserved title height — with card
  * bottoms aligned across a grid row via `h-full` + the `mt-auto` footer.
  */

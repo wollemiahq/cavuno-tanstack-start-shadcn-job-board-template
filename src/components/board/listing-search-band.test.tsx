@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ListingSearchBand } from './listing-page-header';
+import { ListingSearchBand } from './listing-search-band';
 
 afterEach(cleanup);
 

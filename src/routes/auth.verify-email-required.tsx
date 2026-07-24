@@ -1,5 +1,5 @@
 /**
- * Verification-required gate for authenticated starter routes (ADR-0055).
+ * Verification-required gate for authenticated starter routes.
  * The signed-in-but-unverified candidate either enters the 6-digit OTP from the
  * verification email (`board.auth.verifyEmailWithCode`) or opens the magic link
  * (which lands on `/auth/verify-email`). Resend re-sends both. A successful

@@ -30,6 +30,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AppRouteError, AppRouteErrorPage } from './app-route-error';
 
+import { m } from '@/paraglide/messages';
+
 beforeEach(() => {
   // Reaching a boundary is the behaviour under test, and TanStack reports it
   // through console.warn/error on the way. The suite's strict console policy
@@ -96,7 +98,10 @@ describe('public route error backstop', () => {
     await renderRejectingLoader();
 
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Something went wrong' }),
+      screen.getByRole('heading', {
+        level: 1,
+        name: m.appError_heading(),
+      }),
     ).toBeVisible();
     // The dead end the bug reported: the route's own component never rendered,
     // and without the backstop nothing rendered in its place.
@@ -108,9 +113,11 @@ describe('public route error backstop', () => {
   it('offers the visitor both ways forward: retry in place, or leave for home', async () => {
     await renderRejectingLoader();
 
-    expect(screen.getByRole('button', { name: 'Try again' })).toBeVisible();
     expect(
-      screen.getByRole('link', { name: 'Go to homepage' }),
+      screen.getByRole('button', { name: m.appError_retryAction() }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole('link', { name: m.appError_homeLink() }),
     ).toHaveAttribute('href', '/');
   });
 
@@ -148,10 +155,6 @@ describe('public route error backstop', () => {
 
     // A fetch failure is not visitor-facing copy.
     expect(screen.queryByText(/Failed to fetch/)).not.toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "This page didn't load. Try again, or head back to the homepage.",
-      ),
-    ).toBeVisible();
+    expect(screen.getByText(m.appError_body())).toBeVisible();
   });
 });

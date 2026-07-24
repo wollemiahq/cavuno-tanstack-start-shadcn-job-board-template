@@ -2,11 +2,8 @@ import type { ReactNode } from 'react';
 
 /**
  * The condensed (sticky) detail header shared by ALL three master/detail
- * search surfaces — jobs, companies, and talent. Each detail panel used to
- * hand-roll its own sticky row, so they drifted apart (different borders,
- * paddings, and whether the name was even a link). This is the one row they
- * all render now: the entity mark, the entity NAME, an optional one-line
- * subtitle, and the primary action(s).
+ * search surfaces — jobs, companies, and talent. It renders the entity mark,
+ * linked entity name, optional one-line subtitle, and primary actions.
  *
  * The NAME links to that entity's own detail page when `nameHref` is set — a
  * job → its job-detail page, a company → its company page, a talent → their
@@ -18,8 +15,7 @@ import type { ReactNode } from 'react';
  * `h-16` anchor, so its own box is a single flush row that matches the shared
  * results-column surface:
  *  - Left inset only (`pl-5 md:pl-6`); NO right padding, so the action(s) sit
- *    flush with the pane's right edge instead of leaving the asymmetric gap
- *    the results list just removed.
+ *    flush with the pane's right edge.
  *  - A subtle hairline divider (`border-border/60`) under the backdrop-blur —
  *    an intentional, quiet separator rather than a heavy full-strength rule.
  */

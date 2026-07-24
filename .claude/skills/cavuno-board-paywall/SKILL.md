@@ -5,7 +5,7 @@ description: Build the candidate job-access paywall with the @cavuno/board SDK â
 
 # Candidate paywall: offers, checkout, grant
 
-The candidate-facing money flow (doc 36 / ADR-0056): anonymous pricing, gated job lists, and an embedded Stripe checkout that ends in an access grant.
+The candidate-facing money flow: anonymous pricing, gated job lists, and an embedded Stripe checkout that ends in an access grant.
 
 Out of scope â€” do not invent exports: the SDK is Stripe-agnostic. It returns a *mount kit*; loading Stripe.js (`loadStripe`, `initEmbeddedCheckout`) and every redirect is host-app-owned. There is no SDK helper that mounts, redirects, or handles webhooks.
 

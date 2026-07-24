@@ -2,7 +2,7 @@ import { currentPathFromReferer, parseGrantCookie } from '@cavuno/board/server';
 /**
  * Board-access middleware: composes the per-call headers for gated SDK
  * content reads. Mirrors the session middleware's per-request,
- * per-call-header pattern (ADR-0006) — nothing lives on the module-scoped
+ * per-call-header pattern — nothing lives on the module-scoped
  * SDK instance, so SSR stays stateless. Two headers ride along:
  *
  *  - `X-Board-Access` — the host-owned board-password grant cookie.

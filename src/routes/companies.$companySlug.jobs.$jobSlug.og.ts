@@ -55,14 +55,14 @@ export const Route = createFileRoute(
           ) ?? '';
         const logo = job.company?.logoUrl ?? null;
 
-        // Subset the theme font (FNT-02) to exactly the glyphs the card
+        // Subset the theme font to exactly the glyphs the card
         // renders.
         const text = [title, company, location, salary].join(' ');
         const font = await loadOgFont(text);
 
         const metaParts = [location, salary].filter(Boolean).map(escapeHtml);
 
-        // Board theme (ADR-0065 D2): Satori can't read CSS variables, so
+        // Satori can't read CSS variables, so
         // the card renders from the resolved tokens module derived from
         // the canonical src/theme.css. Light values by rule.
         const t = themeTokens.light;

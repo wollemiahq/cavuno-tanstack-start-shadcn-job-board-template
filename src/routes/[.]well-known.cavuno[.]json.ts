@@ -1,7 +1,7 @@
 /**
- * `/.well-known/cavuno.json` — LNK-08 route-contract manifest. Serves the
- * compiled ManifestV1 so the platform (and digests/emails) can resolve
- * board path roles against this app's actual route tree.
+ * `/.well-known/cavuno.json` route-contract manifest. Serves the compiled
+ * ManifestV1 so the platform (and digests/emails) can resolve board path
+ * roles against this app's actual route tree.
  *
  * Routes are enumerated from the generated TanStack route tree via the
  * SDK's structural walker. No cavunoPage markers exist in this app yet.

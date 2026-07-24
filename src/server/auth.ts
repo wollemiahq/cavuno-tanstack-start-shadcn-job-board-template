@@ -6,7 +6,7 @@ import {
   type BoardSession,
 } from '@cavuno/board/server';
 /**
- * Auth server functions — the host-app side of ADR-0006: the SDK never
+ * Auth server functions. The SDK never
  * stores tokens on the server; these functions move the bearer pair in
  * and out of the `__Host-` session cookie.
  */
@@ -152,7 +152,7 @@ export const verifyEmail = createServerFn({ method: 'POST' })
   });
 
 /**
- * OTP email verification (ADR-0055). The signed-in-but-unverified user submits
+ * OTP email verification. The signed-in-but-unverified user submits
  * the 6-digit code from the verification email; the call is scoped to their
  * session bearer, so it verifies THEIR email (no anonymous cross-user guessing).
  */

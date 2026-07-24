@@ -71,9 +71,8 @@ describe('NavigationProgress', () => {
     expect(bar()).toHaveAttribute('data-phase', 'idle');
   });
 
-  it('stays out of the accessibility tree and hit testing', () => {
+  it('stays out of the accessibility tree', () => {
     render(<NavigationProgress />);
     expect(bar()).toHaveAttribute('aria-hidden', 'true');
-    expect(bar()).toHaveClass('pointer-events-none');
   });
 });

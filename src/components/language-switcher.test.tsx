@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 /**
- * Chrome language switcher (ADR-0063). The switcher flips only the
+ * Chrome language switcher. The switcher flips only the
  * Paraglide UI locale via the URL prefix; board content stays in the
  * board's single language. These tests pin the locale-resolution
  * contract, the three public options (never the en-XA pseudo-locale),
@@ -46,7 +46,7 @@ describe('locale-resolution contract', () => {
     // the locale from the path. The paraglide vite plugin is the source of
     // truth for the request-time strategy (the CLI-compiled runtime carries
     // a different default). `baseLocale` (=== board language) serves
-    // unprefixed (D5).
+    // unprefixed.
     const viteConfig = readFileSync(
       join(import.meta.dirname, '..', '..', 'vite.config.ts'),
       'utf8',

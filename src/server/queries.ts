@@ -20,7 +20,6 @@ import { getRequest } from '@tanstack/react-start/server';
 import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
-import { getServerEnv } from '../lib/env';
 import { boardGlobalReadCache } from '../lib/read-cache';
 import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
@@ -76,10 +75,9 @@ export const getBoardContext = createServerFn({ method: 'GET' }).handler(
     };
     return {
       ...context,
-      // Runtime feature flags (Board PR #968) resolved to clean typed
-      // booleans here at the single context boundary — absent ⇒ on. See
-      // src/board/board-feature-flags.ts for the additive polarity + the
-      // SDK-types TODO.
+      // Runtime feature flags are resolved to clean typed booleans here at
+      // the single context boundary — absent ⇒ on. See
+      // src/board/board-feature-flags.ts for the additive polarity.
       features: {
         ...context.features,
         ...resolveRuntimeFeatureFlags(context.features),
@@ -129,7 +127,7 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
  * request origin (for absolute `<link rel=canonical>` / `og:url`). A server fn
  * so `getRequest` resolves on both SSR and client navigation; the board
  * context is already cached by the SDK client. The language feeds the
- * board-language-required `@cavuno/board/seo` helpers (ADR-0057).
+ * board-language-required `@cavuno/board/seo` helpers.
  */
 export const getSeoBase = createServerFn({ method: 'GET' }).handler(
   async () => {
@@ -137,7 +135,7 @@ export const getSeoBase = createServerFn({ method: 'GET' }).handler(
     return {
       boardName: board.name,
       language: board.language,
-      // Operator label overrides (ADR-0059) — head/meta copy resolves
+      // Operator label overrides — head/meta copy resolves
       // boardCopy(language, labels) same as the blocks.
       labels: board.labels,
       origin: new URL(getRequest().url).origin,
@@ -147,19 +145,11 @@ export const getSeoBase = createServerFn({ method: 'GET' }).handler(
 
 /**
  * Board SEO infra (resolved favicon/app-icon URLs + web-manifest meta + the
- * canonical base) for the root <head>, plus the deployment analytics token
- * (cutover runbook P2): the publishable Tinybird tracker token, read
- * server-side (cloudflare:workers env can't be imported by client code) and
- * threaded to the root document's flock script tag. `trackerToken` null ⇒
- * analytics disabled, no script tag. Folded into this root-only head-infra read
- * so the root loader carries one fewer server function. OPEN — the hosted board
- * serves the SEO infra publicly even when password-protected.
+ * canonical base) for the root <head>. The hosted board serves this publicly
+ * even when password-protected.
  */
-export const getBoardSeo = createServerFn({ method: 'GET' }).handler(
-  async () => {
-    const seo = await getBoard().seo();
-    return { ...seo, trackerToken: getServerEnv().trackerToken };
-  },
+export const getBoardSeo = createServerFn({ method: 'GET' }).handler(async () =>
+  getBoard().seo(),
 );
 
 // ── GATED content reads (behind the board-password wall) ────────────────────
@@ -183,7 +173,7 @@ export const searchJobs = createServerFn({ method: 'GET' })
 /**
  * Top job categories for the homepage's "Browse by category" section — the
  * server-computed category facets from the browse envelope's `relatedSearches`
- * (ADR-0037 §8), NOT a client-side tally. The facets are derived from the
+ * rather than a client-side tally. The facets are derived from the
  * returned page window (parity with the hosted page-derived related-searches),
  * so this reads a FULL page to collect the board's busiest categories — a
  * `limit: 1` read returns no facets at all.
@@ -363,7 +353,7 @@ export const getCompany = createServerFn({ method: 'GET' })
     ),
   );
 
-// ── Candidate-profile / talent (roadmap §K, public read) ─────────────────────
+// ── Candidate-profile / talent (public read) ─────────────────────────────────
 // The directory throws `talent_directory_restricted` (403) on an employers-only
 // board — the route loader catches it to render the upsell; both reads are gated
 // behind the board-password wall like the other content reads.
@@ -386,7 +376,7 @@ export const getTalentProfile = createServerFn({ method: 'GET' })
     ),
   );
 
-// ── Employer pricing / plans (roadmap §L, ADR-0047) ──────────────────────────
+// ── Employer pricing / plans ─────────────────────────────────────────────────
 
 export const listPlans = createServerFn({ method: 'GET' })
   .validator((input: PlansListQuery) => input)
@@ -457,7 +447,7 @@ export const getCompanyMarkets = createServerFn({ method: 'GET' })
 
 /**
  * Resolve a company-market slug to its page-meta — the canonical/source slug,
- * display name, and a `redirectTo` the market page 308s to (CAV-291). Returns
+ * display name, and a `redirectTo` the market page 308s to. Returns
  * `null` on a 404 so the route loader can `notFound()` (mirrors resolve*).
  */
 export const getCompanyMarket = createServerFn({ method: 'GET' })
@@ -596,7 +586,7 @@ export const getBlogAuthor = createServerFn({ method: 'GET' })
     ),
   );
 
-// ── Programmatic taxonomy pages (ADR-0037 §7) ──────────────────────────────
+// ── Programmatic taxonomy pages ──────────────────────────────────────────────
 // resolve* return null on a 404 so the route loader can `throw notFound()`.
 // The BoardApiError instance is intact here (same process as the SDK call);
 // it would not survive the server-fn RPC boundary back to the loader.
@@ -734,11 +724,11 @@ export const filterRelatedSearches = createServerFn({ method: 'GET' })
     }),
   );
 
-// ── Salary pages (ADR-0041) ─────────────────────────────────────────────────
+// ── Salary pages ─────────────────────────────────────────────────────────────
 // Stats are English-keyed; the REQUEST locale drives the read-time overlay
 // (localized names + canonical slugs). Unprefixed routes resolve to the base
 // locale (=== board language, a generation-time invariant); /de/-style chrome
-// prefixes localize entity data too (ADR-0063 D4). A 404 (no salary stats)
+// prefixes localize entity data too. A 404 (no salary stats)
 // propagates as a BoardApiError the route loader maps to `notFound()`.
 
 export const getTitleSalary = createServerFn({ method: 'GET' })
@@ -905,7 +895,7 @@ export const getSkillLocationSalary = createServerFn({ method: 'GET' })
     }),
   );
 
-// ── Company salary pages (ADR-0046) ─────────────────────────────────────────
+// ── Company salary pages ─────────────────────────────────────────────────────
 // The overview takes no locale — the loader localizes `byCategory` by the board
 // language internally; the company slug/name are never localized. The category
 // route passes the request locale (base locale === board language on
@@ -921,7 +911,7 @@ export const getCompanySalary = createServerFn({ method: 'GET' })
   );
 
 /**
- * Company salary presence (CAV-512) — the honest gate for the section shell's
+ * Company salary presence — the honest gate for the section shell's
  * Salaries tab. There is no board-level salaries feature flag: a company's
  * salary overview exists purely as a function of its jobs' salary data, and
  * the endpoint 404s when there is none (the salary route renders its empty
@@ -948,7 +938,7 @@ export const getCompanySalaryPresence = createServerFn({ method: 'GET' })
   );
 
 /**
- * Company salary SUMMARY (CAV-516) — the condensed salary block for the
+ * Company salary summary — the condensed salary block for the
  * company Overview tab. Returns the company's overall salary range plus the
  * top few category rows, so the Overview can render a "Salaries" summary that
  * defers to the full Salaries tab. The Overview derives `hasSalaries` (the tab

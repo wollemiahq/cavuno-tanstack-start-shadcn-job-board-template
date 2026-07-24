@@ -56,9 +56,8 @@ export const Route = createFileRoute('/blog/$postSlug')({
     }
 
     const firstTagSlug = post.tags[0]?.slug ?? null;
-    // Adjacent nav and the related-posts rails are garnish — a failure there
-    // (a filtered-list API hiccup once took every article down with it) must
-    // degrade to an article without rails, never a 500. SEO stays load-bearing.
+    // Adjacent nav and related-post rails are optional: a failure must degrade
+    // to an article without rails, never a 500. SEO stays load-bearing.
     const [adjacent, byTag, latest, seo] = await Promise.all([
       getBlogPostAdjacent({ data: { postSlug: post.slug } }).catch(
         () => EMPTY_ADJACENT,
