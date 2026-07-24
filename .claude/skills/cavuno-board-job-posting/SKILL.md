@@ -5,7 +5,7 @@ description: Build the anonymous "Post a job" funnel with the @cavuno/board SDK 
 
 # Job posting: the anonymous submission funnel
 
-The no-account "Post a job" wizard: pick a plan, upload a logo, submit — then branch on the status-discriminated result. Anonymous by design (no board-user token) and rate-limited server-side.
+The no-account "Post a job" wizard (ADR-0042): pick a plan, upload a logo, submit — then branch on the status-discriminated result. Anonymous by design (no board-user token) and rate-limited server-side.
 
 Out of scope — do not invent exports: the `checkout` branch returns a Stripe Checkout **URL** — the full-page redirect is host-app-owned, and the webhook publishes the job after payment. The SDK ships no Stripe code and no publish/confirm method for the paid path.
 

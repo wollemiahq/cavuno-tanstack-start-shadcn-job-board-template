@@ -5,7 +5,7 @@ description: Build the board-user messaging inbox with the @cavuno/board SDK —
 
 # Messaging: the polled inbox
 
-Employer↔candidate direct messaging for signed-in board users. The v1 transport is **polled REST by design** — there is no realtime primitive; near-live UX comes from re-fetching on an interval (3–5s is the reference cadence).
+Employer↔candidate direct messaging for signed-in board users. The v1 transport is **polled REST by design (ADR-0053)** — there is no realtime primitive; near-live UX comes from re-fetching on an interval (3–5s is the reference cadence).
 
 Out of scope — do not invent exports: no websockets, no SSE, no `subscribe`/`onMessage` — polling `list` / `listMessages` / `unreadCount` IS the contract.
 
