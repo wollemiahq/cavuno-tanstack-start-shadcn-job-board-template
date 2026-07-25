@@ -48,10 +48,11 @@ export const Route = createFileRoute('/blog/')({
         : listBlogPosts({
             data: { cursor: deps.cursor, limit: BLOG_PAGE_SIZE },
           }),
-      listBlogTags({ data: {} }),
+      // Additive tag chips: a failing tags read must not fault the archive.
+      listBlogTags({ data: {} }).catch(() => null),
       getSeoBase(),
     ]);
-    return { page, tags: tags.data, seo, q: deps.q ?? null };
+    return { page, tags: tags?.data ?? [], seo, q: deps.q ?? null };
   },
   head: ({ loaderData }) =>
     loaderData

@@ -31,6 +31,7 @@ import {
   withHeadingAnchors,
   type TocEntry,
 } from '@/lib/article-toc';
+import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { initialsOf } from '@/lib/initials';
 import { cn } from '@/lib/utils';
 import type {
@@ -283,6 +284,7 @@ export function BlogArticleContent({
                 height={675}
                 fetchPriority="high"
                 className="ring-foreground/5 aspect-video w-full rounded-3xl object-cover shadow-sm ring-1"
+                onError={hideBrokenImage}
               />
               {post.featureImageCaption ? (
                 <figcaption className="text-muted-foreground text-sm">

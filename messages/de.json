@@ -1003,6 +1003,7 @@
   "passwordPage_title": "Passwort eingeben",
   "passwordPage_cardTitle": "Dieses Board ist passwortgeschützt",
   "passwordPage_incorrectPasswordError": "Falsches Passwort.",
+  "passwordPage_genericError": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
   "passwordPage_passwordLabel": "Passwort",
   "passwordPage_checkingLabel": "Wird geprüft…",
   "passwordPage_continueLabel": "Weiter",

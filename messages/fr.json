@@ -1003,6 +1003,7 @@
   "passwordPage_title": "Saisir le mot de passe",
   "passwordPage_cardTitle": "Ce tableau est protégé par un mot de passe",
   "passwordPage_incorrectPasswordError": "Mot de passe incorrect.",
+  "passwordPage_genericError": "Une erreur est survenue. Veuillez réessayer.",
   "passwordPage_passwordLabel": "Mot de passe",
   "passwordPage_checkingLabel": "Vérification…",
   "passwordPage_continueLabel": "Continuer",

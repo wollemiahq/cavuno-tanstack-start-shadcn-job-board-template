@@ -78,10 +78,12 @@ export const Route = createFileRoute('/')({
       },
     });
     // Additive companies read for the landing's "companies hiring" strip.
-    const companiesP = listCompanies({ data: { limit: 6 } });
+    // Every additive section read fails soft: the landing hides an empty
+    // section, so a rejecting preview strip must never fault the whole page.
+    const companiesP = listCompanies({ data: { limit: 6 } }).catch(() => null);
     // Board-wide top categories by live job count — its OWN read, so the
     // "Browse by category" section ranks the whole board, not the cards below.
-    const topCategoriesP = listTopJobCategories();
+    const topCategoriesP = listTopJobCategories().catch(() => []);
     const seoP = getSeoBase();
 
     const board = await boardP;
@@ -93,13 +95,13 @@ export const Route = createFileRoute('/')({
         seoP,
         // Blog preview — only when the board runs a blog.
         board.features.blog
-          ? listBlogPosts({ data: { limit: 3 } })
+          ? listBlogPosts({ data: { limit: 3 } }).catch(() => null)
           : Promise.resolve(null),
         // Talent preview — only when the directory feature is on. The
         // serialised restricted result omits the preview for anonymous home
         // visitors.
         board.features.talentDirectory
-          ? listTalent({ data: { limit: 6 } })
+          ? listTalent({ data: { limit: 6 } }).catch(() => null)
           : Promise.resolve(null),
       ]);
     const talentPage = talent?.status === 'available' ? talent.page : null;
@@ -107,8 +109,8 @@ export const Route = createFileRoute('/')({
     const resolvableTaxonomy = await resolveCardTaxonomy(page.data);
     return {
       page,
-      companies: companies.data,
-      companiesCount: companies.count ?? null,
+      companies: companies?.data ?? [],
+      companiesCount: companies?.count ?? null,
       topCategories,
       seo,
       resolvableTaxonomy,

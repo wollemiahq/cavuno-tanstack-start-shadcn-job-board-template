@@ -695,7 +695,9 @@ export const resolveTaxonomyChips = createServerFn({ method: 'GET' })
  * a real page (see `resolveTaxonomyChips`), swapping each surviving
  * `category`/`skill` slug for its canonical form. `market` terms pass through
  * untouched — they resolve through the companies-markets surface. Loaders hand
- * the result to the listing rail so the rail never links to a 404.
+ * the result to the listing rail so the rail never links to a 404. Each
+ * resolve also fails soft: the rail is additive, so a transient upstream
+ * error drops the chip rather than faulting the listing page.
  */
 export const filterRelatedSearches = createServerFn({ method: 'GET' })
   .validator((input: { related: RelatedSearch[] }) => input)
@@ -712,7 +714,7 @@ export const filterRelatedSearches = createServerFn({ method: 'GET' })
               : board.taxonomy.categories;
           const resolution = await resolveOrNull(
             resolver.resolve(related.slug, { headers: h }),
-          );
+          ).catch(() => null);
           return resolution
             ? { ...related, slug: resolution.canonicalSlug }
             : null;

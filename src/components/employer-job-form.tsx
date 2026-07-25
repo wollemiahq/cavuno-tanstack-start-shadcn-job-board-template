@@ -407,41 +407,49 @@ export function EmployerJobForm({
     setMessage('');
     setNotice('');
 
-    if (mode.kind === 'create') {
+    // The `!result.ok` branches carry the server's message; this catch covers
+    // a rejecting call (network drop, 5xx) so the form never sticks on
+    // "Saving" with no feedback.
+    try {
+      if (mode.kind === 'create') {
+        const body = {
+          ...buildBody(),
+          ...(applicationUrl ? { applicationUrl } : {}),
+        } satisfies CreateEmployerJobBody;
+        const result = await createJob({ data: { slug, body } });
+        if (!result.ok) {
+          setStatus('error');
+          setMessage(result.message);
+          return;
+        }
+        if (!selectedBilling) {
+          await goToList();
+          return;
+        }
+        await runCheckout(result.data.id);
+        return;
+      }
+
+      // Edit.
       const body = {
         ...buildBody(),
-        ...(applicationUrl ? { applicationUrl } : {}),
-      } satisfies CreateEmployerJobBody;
-      const result = await createJob({ data: { slug, body } });
+        applicationUrl: applicationUrl ?? null,
+      } satisfies UpdateEmployerJobBody;
+      const result = await updateJob({ data: { slug, id: mode.jobId, body } });
       if (!result.ok) {
         setStatus('error');
         setMessage(result.message);
         return;
       }
-      if (!selectedBilling) {
-        await goToList();
+      if (isDraftEdit && selectedBilling) {
+        await runCheckout(mode.jobId);
         return;
       }
-      await runCheckout(result.data.id);
-      return;
-    }
-
-    // Edit.
-    const body = {
-      ...buildBody(),
-      applicationUrl: applicationUrl ?? null,
-    } satisfies UpdateEmployerJobBody;
-    const result = await updateJob({ data: { slug, id: mode.jobId, body } });
-    if (!result.ok) {
+      await goToList();
+    } catch {
       setStatus('error');
-      setMessage(result.message);
-      return;
+      setMessage(m.employerCompany_genericError());
     }
-    if (isDraftEdit && selectedBilling) {
-      await runCheckout(mode.jobId);
-      return;
-    }
-    await goToList();
   }
 
   const submitLabel =

@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
+import { toastActionError } from '@/lib/action-toast';
 import { headTitle } from '@/lib/page-title';
 import type { CompanyMembership } from '@cavuno/board';
 
@@ -121,17 +122,23 @@ function WorkEmailStep({
   async function send(target: string) {
     setStatus('sending');
     setMessage('');
-    const result = await sendWorkEmail({
-      data: { slug, body: { workEmail: target } },
-    });
-    if (!result.ok) {
+    try {
+      const result = await sendWorkEmail({
+        data: { slug, body: { workEmail: target } },
+      });
+      if (!result.ok) {
+        setStatus('error');
+        setMessage(result.message);
+        return;
+      }
+      setStatus('idle');
+      setEditing(false);
+      await router.invalidate();
+    } catch {
+      // A rejecting call (network drop, 5xx) must not strand "Sending".
       setStatus('error');
-      setMessage(result.message);
-      return;
+      setMessage(m.employerCompany_genericError());
     }
-    setStatus('idle');
-    setEditing(false);
-    await router.invalidate();
   }
 
   if (!editing && membership.workEmail) {
@@ -277,6 +284,10 @@ function CancelClaimButton({ slug }: { slug: string }) {
           await cancelClaim({ data: { slug } });
           await router.invalidate();
           await router.navigate({ to: '/employers/dashboard' });
+        } catch {
+          // Without this a rejecting call is an unhandled rejection and the
+          // silently-skipped navigation reads as a dead button.
+          void toastActionError(m.employerCompany_genericError());
         } finally {
           setCancelling(false);
         }

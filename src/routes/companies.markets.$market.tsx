@@ -56,10 +56,12 @@ export const Route = createFileRoute('/companies/markets/$market')({
               limit: COMPANIES_PAGE_SIZE,
             },
           }),
-      getCompanyMarkets({ data: { limit: 24 } }),
+      // Additive market filter: a failing markets read must not fault the
+      // market page.
+      getCompanyMarkets({ data: { limit: 24 } }).catch(() => null),
       getSeoBase(),
     ]);
-    return { market, page, markets: markets.data, seo };
+    return { market, page, markets: markets?.data ?? [], seo };
   },
   head: ({ loaderData, params }) =>
     loaderData

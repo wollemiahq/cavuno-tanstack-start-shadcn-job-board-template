@@ -270,16 +270,21 @@ function ConnectCompany({ onBack }: { onBack?: () => void }) {
 
   async function claim(slug: string) {
     updateState({ message: '', open: false });
-    const result = await claimCompany({ data: { slug } });
-    if (!result.ok) {
-      updateState({ message: result.message });
-      return;
+    try {
+      const result = await claimCompany({ data: { slug } });
+      if (!result.ok) {
+        updateState({ message: result.message });
+        return;
+      }
+      await router.invalidate();
+      await router.navigate({
+        to: '/employers/onboarding/$slug',
+        params: { slug },
+      });
+    } catch {
+      // A rejecting call (network drop, 5xx) must surface, not vanish.
+      updateState({ message: m.employerCompany_genericError() });
     }
-    await router.invalidate();
-    await router.navigate({
-      to: '/employers/onboarding/$slug',
-      params: { slug },
-    });
   }
 
   return (
@@ -456,26 +461,32 @@ function CreateCompanyModal({
             event.preventDefault();
             setStatus('saving');
             const website = form.website.trim();
-            const result = await createCompany({
-              data: {
-                name: form.name.trim(),
-                ...(website ? { website: `https://${website}` } : {}),
-              },
-            });
-            if (!result.ok) {
-              setStatus('error');
-              setMessage(result.message);
-              return;
-            }
-            await router.invalidate();
-            const slug = result.data.company.slug;
-            if (slug && result.data.status !== 'approved') {
-              await router.navigate({
-                to: '/employers/onboarding/$slug',
-                params: { slug },
+            try {
+              const result = await createCompany({
+                data: {
+                  name: form.name.trim(),
+                  ...(website ? { website: `https://${website}` } : {}),
+                },
               });
-            } else {
-              onClose();
+              if (!result.ok) {
+                setStatus('error');
+                setMessage(result.message);
+                return;
+              }
+              await router.invalidate();
+              const slug = result.data.company.slug;
+              if (slug && result.data.status !== 'approved') {
+                await router.navigate({
+                  to: '/employers/onboarding/$slug',
+                  params: { slug },
+                });
+              } else {
+                onClose();
+              }
+            } catch {
+              // A rejecting call (network drop, 5xx) must not strand "Saving".
+              setStatus('error');
+              setMessage(m.employerCompany_genericError());
             }
           }}
         >
