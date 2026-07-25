@@ -5,6 +5,7 @@ import { toBlogPostCardVM } from '@/board/blog-view-model';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { initialsOf } from '@/lib/initials';
 import type { PublicBlogPostSummary } from '@cavuno/board';
 
@@ -37,6 +38,7 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
               height={675}
               className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transform-none motion-reduce:transition-none"
               loading="lazy"
+              onError={hideBrokenImage}
             />
           </Link>
         ) : null}

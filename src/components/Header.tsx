@@ -68,6 +68,7 @@ import type {
   HeaderSearchSubmission,
   HeaderSearchScope,
 } from '@/lib/header-search';
+import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { cn } from '@/lib/utils';
 import type { BoardUser, CompanyMembership } from '@cavuno/board';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
@@ -472,6 +473,7 @@ export default function Header({
             width={32}
             height={32}
             className="size-8 rounded-xl"
+            onError={hideBrokenImage}
           />
         ) : null}
         <span

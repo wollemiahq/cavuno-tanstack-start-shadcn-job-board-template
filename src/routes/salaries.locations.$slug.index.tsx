@@ -85,10 +85,12 @@ export const Route = createFileRoute('/salaries/locations/$slug/')({
     // board reads the same hierarchy from its internal places table).
     const [seo, tree] = await Promise.all([
       getSeoBase(),
-      listSalaryLocations(),
+      // Breadcrumb enrichment only: on failure the trail degrades to the
+      // place itself instead of faulting a page whose own data loaded fine.
+      listSalaryLocations().catch(() => null),
     ]);
     const hierarchy = toLocationHierarchyCrumbs(
-      tree.data,
+      tree?.data ?? [],
       salary.canonicalSlug,
       salary.placeName,
     );

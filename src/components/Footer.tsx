@@ -11,6 +11,7 @@ import { LanguageSwitcher } from '@/components/language-switcher';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { Badge } from '@/components/ui/badge';
+import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { cn } from '@/lib/utils';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
@@ -330,6 +331,7 @@ export default function Footer({
                     width={32}
                     height={32}
                     className="size-8 rounded-md"
+                    onError={hideBrokenImage}
                   />
                 ) : null}
                 {boardName}

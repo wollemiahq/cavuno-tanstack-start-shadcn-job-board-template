@@ -323,11 +323,16 @@ function JobRow({
   const isPublished = job.status === 'published' && !expired;
 
   async function act(fn: () => Promise<{ ok: boolean; message?: string }>) {
-    const result = await fn();
-    if (result.ok) {
-      await router.invalidate();
-    } else {
-      toast.error(result.message ?? m.employerCompany_genericError());
+    try {
+      const result = await fn();
+      if (result.ok) {
+        await router.invalidate();
+      } else {
+        toast.error(result.message ?? m.employerCompany_genericError());
+      }
+    } catch {
+      // A rejecting call (network drop, 5xx) must surface, not vanish.
+      toast.error(m.employerCompany_genericError());
     }
   }
 
@@ -336,7 +341,15 @@ function JobRow({
   // toast; anything the server refuses (payment required, expired credit)
   // routes to the edit page, where the plan picker + payment live.
   async function republish() {
-    const result = await publishJob({ data: { slug, id: job.id } });
+    let result;
+    try {
+      result = await publishJob({ data: { slug, id: job.id } });
+    } catch {
+      // A transport failure is not a server refusal — routing to the edit
+      // page would misread it as "payment required". Surface and stop.
+      toast.error(m.employerCompany_genericError());
+      return;
+    }
     if (result.ok) {
       toast.success(m.employerJobs_republishedToast());
       await router.invalidate();

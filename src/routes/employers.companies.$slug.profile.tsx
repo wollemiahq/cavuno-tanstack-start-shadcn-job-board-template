@@ -243,6 +243,17 @@ function ProfileEditorCard({
     setStatus('saving');
     setMessage('');
     const website = form.website.trim();
+    try {
+      await runSave(website);
+    } catch {
+      // A rejecting call (network drop, 5xx) must not strand the "Saving"
+      // state without feedback.
+      setStatus('error');
+      setMessage(m.employerCompany_genericError());
+    }
+  }
+
+  async function runSave(website: string) {
     const result = await updateCompany({
       data: {
         slug,

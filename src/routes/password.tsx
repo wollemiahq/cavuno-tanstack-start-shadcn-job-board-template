@@ -44,15 +44,22 @@ function PasswordPage() {
           setPending(true);
           setError(null);
           const form = new FormData(event.currentTarget);
-          const result = await verifyBoardPassword({
-            data: { password: String(form.get('password')) },
-          });
-          setPending(false);
-          if (result.ok) {
-            await router.invalidate();
-            await router.navigate({ href: safeRedirectPath(redirect) });
-          } else {
-            setError(m.passwordPage_incorrectPasswordError());
+          try {
+            const result = await verifyBoardPassword({
+              data: { password: String(form.get('password')) },
+            });
+            if (result.ok) {
+              await router.invalidate();
+              await router.navigate({ href: safeRedirectPath(redirect) });
+            } else {
+              setError(m.passwordPage_incorrectPasswordError());
+            }
+          } catch {
+            // Transport failure (network drop, 5xx) — distinct from a wrong
+            // password, and the form must come back usable.
+            setError(m.passwordPage_genericError());
+          } finally {
+            setPending(false);
           }
         }}
       >

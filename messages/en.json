@@ -1012,6 +1012,7 @@
   "passwordPage_title": "Enter password",
   "passwordPage_cardTitle": "This board is password-protected",
   "passwordPage_incorrectPasswordError": "Incorrect password.",
+  "passwordPage_genericError": "Something went wrong. Try again.",
   "passwordPage_passwordLabel": "Password",
   "passwordPage_checkingLabel": "Checking…",
   "passwordPage_continueLabel": "Continue",
