@@ -23,6 +23,8 @@ vi.mock('../server/queries', () => ({
   subscribeJobAlert: vi.fn(),
 }));
 
+import type { ReactNode } from 'react';
+
 import { m } from '../paraglide/messages';
 import {
   CookieConsentBanner,
@@ -30,8 +32,6 @@ import {
   CookiePreferencesFooterAction,
 } from './cookie-consent';
 import { JobAlertFloatingPrompt } from './job-alert-floating-prompt';
-
-import type { ReactNode } from 'react';
 
 const STORAGE_KEY = 'cavuno:cookie-consent';
 
@@ -49,10 +49,7 @@ function renderWithRouter(ui: () => ReactNode) {
   const route = (path: string, component?: () => ReactNode) =>
     createRoute({ getParentRoute: () => rootRoute, path, component });
   const router = createRouter({
-    routeTree: rootRoute.addChildren([
-      route('/', ui),
-      route('/cookie-policy'),
-    ]),
+    routeTree: rootRoute.addChildren([route('/', ui), route('/cookie-policy')]),
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
   render(<RouterProvider router={router} />);
