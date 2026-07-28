@@ -9,6 +9,7 @@ import { subscribeJobAlert } from '../server/queries';
 
 import type { JobAlertDefaults } from '../lib/job-alert-defaults';
 import { AlertSignupForm } from '@/components/board/alert-signup-form';
+import { useCookieConsent } from '@/components/cookie-consent';
 import { FloatingStackItem } from '@/components/floating-stack';
 import { Button } from '@/components/ui/button';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
@@ -32,13 +33,16 @@ export function JobAlertFloatingPrompt({
   labels?: BoardLabelOverrides;
 }) {
   const [visible, setVisible] = useState(false);
+  // The cookie-consent banner takes over this bottom-corner slot until the
+  // visitor decides; the prompt yields rather than stacking beneath it.
+  const { bannerOpen } = useCookieConsent();
 
   useEffect(() => {
     const until = Number(localStorage.getItem(SUPPRESS_KEY) ?? 0);
     if (!Number.isFinite(until) || Date.now() > until) setVisible(true);
   }, []);
 
-  if (!visible) return null;
+  if (!visible || bannerOpen) return null;
 
   return (
     <FloatingStackItem

@@ -84,6 +84,16 @@ export const getBoardContext = createServerFn({ method: 'GET' }).handler(
       },
       footer: parity.footer ?? null,
       talentDirectoryVisibility: parity.talentDirectoryVisibility ?? null,
+      // The `analytics` group is in the published SDK types, but an API
+      // deployment predating it would omit it from the body — default to
+      // "no trackers, no consent gate" rather than faulting the root render.
+      analytics: context.analytics ?? {
+        ga4MeasurementId: null,
+        gtmId: null,
+        metaPixelId: null,
+        linkedInPartnerId: null,
+        cookieConsentRequired: false,
+      },
       theme: context.theme
         ? {
             ...context.theme,

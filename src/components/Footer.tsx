@@ -169,6 +169,7 @@ export default function Footer({
   hasEmployerOfferPage,
   flush = false,
   breadcrumb,
+  cookiePreferencesAction,
 }: {
   boardName: string;
   logoUrl: string | null;
@@ -211,6 +212,12 @@ export default function Footer({
   flush?: boolean;
   /** Optional compact navigation trail rendered as the footer's first row. */
   breadcrumb?: ReactNode;
+  /**
+   * Optional action rendered among the legal links (the "Cookie
+   * preferences" reopener on consent-required boards). A node, not a
+   * callback, so the footer stays a dumb typed-props component.
+   */
+  cookiePreferencesAction?: ReactNode;
 }) {
   const copy = boardCopy(language, labels);
 
@@ -398,6 +405,7 @@ export default function Footer({
                     {link.label}
                   </Link>
                 ))}
+                {cookiePreferencesAction}
               </nav>
               <LanguageSwitcher />
             </div>
