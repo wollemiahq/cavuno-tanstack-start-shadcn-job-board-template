@@ -11,6 +11,10 @@
  * root and rendered, and the visitor gets both ways forward — retry in
  * place, or leave for the homepage.
  *
+ * Dual-source (F1 sticky-demo): when the active source is a dead demo tenant,
+ * retry loops forever. The page gains a "Switch back to your board" action
+ * that clears the data-source cookie — only when dual-source facts say so.
+ *
  * Note the routers below deliberately set no `defaultErrorComponent`: that
  * option would give every child route its own boundary and catch the error
  * BEFORE it ever reached the root, silently voiding what these assert. The
@@ -25,12 +29,30 @@ import {
   createRoute,
   createRouter,
 } from '@tanstack/react-router';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const mocks = vi.hoisted(() => ({
+  getDataSourceFacts: vi.fn<() => Promise<unknown>>(),
+}));
+
+vi.mock('../server/preview', () => ({
+  getDataSourceFacts: mocks.getDataSourceFacts,
+}));
 
 import { AppRouteError, AppRouteErrorPage } from './app-route-error';
 
 import { m } from '@/paraglide/messages';
+
+/** Captures every `document.cookie = …` write. */
+const cookieWrites: string[] = [];
+const reloadMock = vi.fn();
 
 beforeEach(() => {
   // Reaching a boundary is the behaviour under test, and TanStack reports it
@@ -40,9 +62,30 @@ beforeEach(() => {
   // unmounts the tree and every assertion here sees an empty container.
   vi.spyOn(console, 'warn').mockImplementation(() => {});
   vi.spyOn(console, 'error').mockImplementation(() => {});
+  // Default: no dual-source — keeps existing tests free of the switcher.
+  mocks.getDataSourceFacts.mockResolvedValue({
+    demoConfigured: false,
+    demoBoardPrivate: false,
+    dataSource: 'board',
+  });
+  cookieWrites.length = 0;
+  Object.defineProperty(document, 'cookie', {
+    configurable: true,
+    get: () => cookieWrites[cookieWrites.length - 1] ?? '',
+    set: (value: string) => {
+      cookieWrites.push(value);
+    },
+  });
+  Object.defineProperty(window, 'location', {
+    value: { ...window.location, reload: reloadMock },
+    writable: true,
+  });
 });
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 /**
  * Mount a public route whose loader rejects, under a root route wired like
@@ -156,5 +199,80 @@ describe('public route error backstop', () => {
     // A fetch failure is not visitor-facing copy.
     expect(screen.queryByText(/Failed to fetch/)).not.toBeInTheDocument();
     expect(screen.getByText(m.appError_body())).toBeVisible();
+  });
+});
+
+describe('sticky-demo escape hatch on the error surface (F1)', () => {
+  it('renders switch-back action when dual-source is on demo, and click writes board cookie + reloads', async () => {
+    mocks.getDataSourceFacts.mockResolvedValue({
+      demoConfigured: true,
+      demoBoardPrivate: false,
+      dataSource: 'demo',
+    });
+    await renderInRouter(
+      <AppRouteErrorPage
+        error={new TypeError('Failed to fetch')}
+        reset={vi.fn()}
+      />,
+    );
+
+    const action = await screen.findByRole('button', {
+      name: m.appError_switchToYourBoard(),
+    });
+    fireEvent.click(action);
+    expect(
+      cookieWrites.some((w) => w.includes('cavuno_data_source=board')),
+    ).toBe(true);
+    expect(reloadMock).toHaveBeenCalled();
+  });
+
+  it('hides the action when dataSource is board', async () => {
+    mocks.getDataSourceFacts.mockResolvedValue({
+      demoConfigured: true,
+      demoBoardPrivate: false,
+      dataSource: 'board',
+    });
+    await renderInRouter(
+      <AppRouteErrorPage
+        error={new TypeError('Failed to fetch')}
+        reset={vi.fn()}
+      />,
+    );
+    await waitFor(() => expect(mocks.getDataSourceFacts).toHaveBeenCalled());
+    expect(
+      screen.queryByRole('button', { name: m.appError_switchToYourBoard() }),
+    ).toBeNull();
+  });
+
+  it('hides the action when demo is not configured', async () => {
+    mocks.getDataSourceFacts.mockResolvedValue({
+      demoConfigured: false,
+      demoBoardPrivate: false,
+      dataSource: 'demo',
+    });
+    await renderInRouter(
+      <AppRouteErrorPage
+        error={new TypeError('Failed to fetch')}
+        reset={vi.fn()}
+      />,
+    );
+    await waitFor(() => expect(mocks.getDataSourceFacts).toHaveBeenCalled());
+    expect(
+      screen.queryByRole('button', { name: m.appError_switchToYourBoard() }),
+    ).toBeNull();
+  });
+
+  it('hides the action when facts fetch fails', async () => {
+    mocks.getDataSourceFacts.mockRejectedValue(new Error('offline'));
+    await renderInRouter(
+      <AppRouteErrorPage
+        error={new TypeError('Failed to fetch')}
+        reset={vi.fn()}
+      />,
+    );
+    await waitFor(() => expect(mocks.getDataSourceFacts).toHaveBeenCalled());
+    expect(
+      screen.queryByRole('button', { name: m.appError_switchToYourBoard() }),
+    ).toBeNull();
   });
 });

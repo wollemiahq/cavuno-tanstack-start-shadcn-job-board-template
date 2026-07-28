@@ -27,7 +27,7 @@ import { getLocale } from '../paraglide/runtime';
 import { getSessionUser } from '../server/account';
 import { listCompanies } from '../server/employers';
 import { getAccessGrant } from '../server/paywall';
-import { getPreviewState } from '../server/preview';
+import { getDataSourceFacts, getPreviewState } from '../server/preview';
 import {
   getBoardContext,
   getBoardSeo,
@@ -112,15 +112,27 @@ export const Route = createRootRoute({
           .catch(() => null),
         // Developer-preview capability + persona roster. The
         // server-verified `sandbox: true` gate resolves false on every tenant
-        // board, so the toolbar never renders there. Fail closed so a sandbox
-        // hiccup only hides the toolbar, never faults the page.
-        getPreviewState().catch(() => ({
-          capability: {
-            canPreview: false as const,
-            reason: 'not-sandbox' as const,
-          },
-          personas: [],
-        })),
+        // board, so the toolbar never renders there. Fail closed on the
+        // persona RPC so a sandbox hiccup never faults the page — but dual-
+        // source basics (env + cookie, via getDataSourceFacts server fn) still
+        // flow through so the "Your board" escape hatch remains available when
+        // the demo cookie is set. Never import data-source.server from this
+        // route file — import-protection denies .server modules on the client.
+        getPreviewState().catch(async () => {
+          const facts = await getDataSourceFacts().catch(() => ({
+            demoConfigured: false,
+            demoBoardPrivate: false,
+            dataSource: 'board' as const,
+          }));
+          return {
+            capability: {
+              canPreview: false as const,
+              reason: 'not-sandbox' as const,
+            },
+            personas: [],
+            ...facts,
+          };
+        }),
         // Candidate paywall: does the signed-in viewer hold an active grant?
         // `getAccessGrant`'s requireSession middleware throws BEFORE any API
         // call for anonymous visitors, so the `.catch` yields `false` at zero
@@ -512,7 +524,7 @@ function RootLayout() {
               <LazyMessagesDockController key={user.id} />
             </Suspense>
           ) : null}
-          {preview.capability.canPreview ? (
+          {preview.capability.canPreview || preview.demoConfigured ? (
             <Suspense fallback={null}>
               <LazyPreviewToolbar
                 capability={preview.capability}
@@ -527,6 +539,9 @@ function RootLayout() {
                     : null
                 }
                 config={toPreviewBoardConfig(board)}
+                demoConfigured={preview.demoConfigured}
+                demoBoardPrivate={preview.demoBoardPrivate}
+                dataSource={preview.dataSource}
               />
             </Suspense>
           ) : null}

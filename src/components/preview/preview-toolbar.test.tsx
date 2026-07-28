@@ -80,6 +80,9 @@ const config: PreviewBoardConfig = {
 function renderToolbar({
   capability = capable,
   viewer = null as PreviewViewer | null,
+  demoConfigured = false,
+  demoBoardPrivate = false,
+  dataSource = 'board' as 'board' | 'demo',
 } = {}) {
   return render(
     <PreviewToolbar
@@ -87,6 +90,9 @@ function renderToolbar({
       personas={personas}
       viewer={viewer}
       config={config}
+      demoConfigured={demoConfigured}
+      demoBoardPrivate={demoBoardPrivate}
+      dataSource={dataSource}
     />,
   );
 }
@@ -106,10 +112,20 @@ function openBoardSettings() {
 // jsdom cannot navigate; the toolbar full-reloads after identity-changing
 // actions (switch/reseed/exit) so every viewer-scoped client surface resets.
 const reloadMock = vi.fn();
+/** Captures every `document.cookie = …` write (data-source preference). */
+const cookieWrites: string[] = [];
 beforeEach(() => {
   // The footer's Emails action mounts the (lazy) emails sheet, which reads
   // this on open — resolve empty so it never throws in unrelated tests.
   mocks.listSandboxEmails.mockResolvedValue([]);
+  cookieWrites.length = 0;
+  Object.defineProperty(document, 'cookie', {
+    configurable: true,
+    get: () => cookieWrites[cookieWrites.length - 1] ?? '',
+    set: (value: string) => {
+      cookieWrites.push(value);
+    },
+  });
   Object.defineProperty(window, 'location', {
     value: { ...window.location, reload: reloadMock },
     writable: true,
@@ -338,5 +354,144 @@ describe('PreviewToolbar', () => {
     await waitFor(() => expect(mocks.reseedSandbox).toHaveBeenCalled());
     // Reseed purges the viewer's own board user — reload to the honest state.
     await waitFor(() => expect(reloadMock).toHaveBeenCalled());
+  });
+});
+
+describe('PreviewToolbar dual-source switcher (T5)', () => {
+  it('renders "Your board (real data)" only when a demo key is configured', () => {
+    const { unmount } = renderToolbar({ demoConfigured: false });
+    openMenu();
+    expect(
+      screen.queryByRole('button', { name: /Your board \(real data\)/i }),
+    ).toBeNull();
+    unmount();
+
+    renderToolbar({ demoConfigured: true, dataSource: 'board' });
+    openMenu();
+    expect(
+      screen.getByRole('button', { name: /Your board \(real data\)/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('hides board-settings + reseed when demo is shared (private unset)', () => {
+    renderToolbar({
+      demoConfigured: true,
+      demoBoardPrivate: false,
+      dataSource: 'demo',
+    });
+    openMenu();
+    const actions = document.querySelector(
+      '[data-test="preview-actions"]',
+    ) as HTMLElement;
+    expect(
+      within(actions).queryByRole('button', { name: 'Board settings' }),
+    ).toBeNull();
+    expect(
+      within(actions).queryByRole('button', { name: 'Reseed' }),
+    ).toBeNull();
+    // Emails + Exit remain — shared-tenant tools that do not mutate config.
+    expect(
+      within(actions).getByRole('button', { name: 'Emails' }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows board-settings + reseed only in demo mode when PRIVATE is "1"', () => {
+    // Dual-source private shadow: controls are demo-mode-only (never while
+    // viewing "Your board" — that would PATCH the demo from primary config).
+    const { unmount } = renderToolbar({
+      demoConfigured: true,
+      demoBoardPrivate: true,
+      dataSource: 'board',
+    });
+    openMenu();
+    let actions = document.querySelector(
+      '[data-test="preview-actions"]',
+    ) as HTMLElement;
+    expect(
+      within(actions).queryByRole('button', { name: 'Board settings' }),
+    ).toBeNull();
+    expect(
+      within(actions).queryByRole('button', { name: 'Reseed' }),
+    ).toBeNull();
+    unmount();
+
+    renderToolbar({
+      demoConfigured: true,
+      demoBoardPrivate: true,
+      dataSource: 'demo',
+    });
+    openMenu();
+    actions = document.querySelector(
+      '[data-test="preview-actions"]',
+    ) as HTMLElement;
+    expect(
+      within(actions).getByRole('button', { name: 'Board settings' }),
+    ).toBeInTheDocument();
+    expect(
+      within(actions).getByRole('button', { name: 'Reseed' }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe('PreviewToolbar data-source cookie + escape hatch (R1/R2/R4)', () => {
+  it('failed switchPersona leaves the data-source cookie unchanged', async () => {
+    mocks.switchPersona.mockResolvedValue({
+      ok: false,
+      code: 'persona-unavailable',
+      message: 'reseeded',
+    });
+    renderToolbar({ demoConfigured: true, dataSource: 'board' });
+    openMenu();
+    fireEvent.click(screen.getByText('Nadia New'));
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        /reseeded.*re-switch/i,
+      ),
+    );
+    // No cookie write, no reload — chrome and data source stay aligned.
+    expect(
+      cookieWrites.some((w) => w.includes('cavuno_data_source=demo')),
+    ).toBe(false);
+    expect(reloadMock).not.toHaveBeenCalled();
+  });
+
+  it('successful switch writes demo cookie then reloads', async () => {
+    mocks.switchPersona.mockResolvedValue({
+      ok: true,
+      viewer: {
+        displayName: 'Nadia New',
+        email: 'n@x.com',
+        role: 'candidate',
+      },
+    });
+    renderToolbar({ demoConfigured: true, dataSource: 'board' });
+    openMenu();
+    fireEvent.click(screen.getByText('Nadia New'));
+
+    await waitFor(() => expect(mocks.switchPersona).toHaveBeenCalled());
+    await waitFor(() => expect(reloadMock).toHaveBeenCalled());
+    expect(
+      cookieWrites.some((w) => w.includes('cavuno_data_source=demo')),
+    ).toBe(true);
+  });
+
+  it('with canPreview=false + demoConfigured=true the Your board switcher still renders', () => {
+    renderToolbar({
+      capability: { canPreview: false, reason: 'not-sandbox' },
+      demoConfigured: true,
+      dataSource: 'demo',
+    });
+    // Escape hatch visible even when the preview RPC is down.
+    expect(
+      document.querySelector('[data-test="preview-toolbar"]'),
+    ).not.toBeNull();
+    openMenu();
+    expect(
+      screen.getByRole('button', { name: /Your board \(real data\)/i }),
+    ).toBeInTheDocument();
+    // Persona machinery + secondary tools stay hidden off-capability.
+    expect(screen.queryByText('Nadia New')).toBeNull();
+    expect(document.querySelector('[data-test="preview-actions"]')).toBeNull();
   });
 });

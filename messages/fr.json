@@ -1207,6 +1207,7 @@
   "planFeature_featuredOther": "Inclut {count} offres mises en avant",
   "appError_retryAction": "Réessayer",
   "appError_homeLink": "Aller à l’accueil",
+  "appError_switchToYourBoard": "Revenir à votre board",
   "previewToolbar_viewingAs": "Vu en tant que :",
   "previewToolbar_anonymous": "Anonyme",
   "previewToolbar_title": "Aperçu",
@@ -1245,6 +1246,8 @@
   "previewToolbar_talentVisibility_off": "Désactivé",
   "previewToolbar_talentVisibility_public": "Public",
   "previewToolbar_talentVisibility_employersOnly": "Employeurs uniquement",
+  "previewToolbar_yourBoard": "Votre board (données réelles)",
+  "previewToolbar_yourBoardHint": "Clé publicable primaire · données du tenant",
   "postJob_checkoutButtonLabel": "Procéder au paiement sécurisé",
   "accountAccess_redirectingText": "Retour là où vous en étiez…",
   "languageSwitcher_label": "Langue"

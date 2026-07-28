@@ -1,30 +1,38 @@
 import { isBoardApiError } from '@cavuno/board';
-import { serializeGrantCookie } from '@cavuno/board/server';
 /**
  * Board-password challenge: verify the password (storing the grant in a
- * host-owned httpOnly cookie) and convert a gated read's wall error into the
- * /password redirect.
+ * host-owned httpOnly cookie scoped to the active data source) and convert a
+ * gated read's wall error into the /password redirect.
  */
 import { redirect } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 import { setResponseHeader } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
+import {
+  getDataSource,
+  serializeGrantForSource,
+} from '../lib/data-source.server';
 
 import type { BoardAccessContext } from '../lib/board-access-middleware';
 
 /**
  * Verify a board password and persist the grant as a host-owned httpOnly
- * cookie. Opaque on failure — a wrong password AND a board that isn't protected
- * both return `{ ok: false }` (the v1 endpoint 401s `board_password_invalid` in
- * both cases), so a caller can't probe protection state.
+ * cookie for the **active data source** only (dual-source: primary and demo
+ * grants are isolated by cookie name, same as sessions). Opaque on failure —
+ * a wrong password AND a board that isn't protected both return `{ ok: false }`
+ * (the v1 endpoint 401s `board_password_invalid` in both cases), so a caller
+ * can't probe protection state.
  */
 export const verifyBoardPassword = createServerFn({ method: 'POST' })
   .validator((input: { password: string }) => input)
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
     try {
       const grant = await getBoard().password.verify(data.password);
-      setResponseHeader('Set-Cookie', serializeGrantCookie(grant.token));
+      setResponseHeader(
+        'Set-Cookie',
+        serializeGrantForSource(grant.token, getDataSource()),
+      );
       return { ok: true };
     } catch (error) {
       if (isBoardApiError(error)) return { ok: false };

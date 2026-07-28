@@ -1225,6 +1225,7 @@
   "planFeature_featuredOther": "Includes {count} featured posts",
   "appError_retryAction": "Try again",
   "appError_homeLink": "Go to homepage",
+  "appError_switchToYourBoard": "Switch back to your board",
   "previewToolbar_viewingAs": "Viewing as:",
   "previewToolbar_anonymous": "Anonymous",
   "previewToolbar_title": "Preview",
@@ -1263,6 +1264,8 @@
   "previewToolbar_talentVisibility_off": "Off",
   "previewToolbar_talentVisibility_public": "Public",
   "previewToolbar_talentVisibility_employersOnly": "Employers only",
+  "previewToolbar_yourBoard": "Your board (real data)",
+  "previewToolbar_yourBoardHint": "Primary publishable key · live tenant data",
   "postJob_checkoutButtonLabel": "Proceed to secure checkout",
   "accountAccess_redirectingText": "Taking you back to where you left off…",
   "languageSwitcher_label": "Language"

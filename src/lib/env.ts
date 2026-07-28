@@ -15,6 +15,19 @@ export interface ServerEnv {
   apiUrl: string;
   /** Board identifier — the deployment's pk_… publishable key. */
   board: string;
+  /**
+   * Optional demo-tenant publishable key (builder-injected). When set, the
+   * preview toolbar becomes a dual data-source switcher and persona/session
+   * machinery runs against this tenant. Absent ⇒ every dual-source path
+   * collapses to the primary board (byte-compatible with pre-dual-source).
+   */
+  demoBoard?: string;
+  /**
+   * True when `CAVUNO_DEMO_BOARD_PRIVATE=1` — the demo tenant is a private
+   * per-board shadow (reseed + board-settings toggles allowed). Unset ⇒
+   * shared public fixture (those mutating affordances stay hidden).
+   */
+  demoBoardPrivate: boolean;
 }
 
 export function getServerEnv(): ServerEnv {
@@ -27,5 +40,13 @@ export function getServerEnv(): ServerEnv {
   if (typeof board !== 'string' || board.length === 0) {
     throw new Error('CAVUNO_BOARD is not set (wrangler vars / .dev.vars)');
   }
-  return { apiUrl, board };
+
+  const demoRaw = raw.CAVUNO_DEMO_BOARD;
+  const demoBoard =
+    typeof demoRaw === 'string' && demoRaw.length > 0 ? demoRaw : undefined;
+
+  // Only the exact string "1" enables private-shadow affordances.
+  const demoBoardPrivate = raw.CAVUNO_DEMO_BOARD_PRIVATE === '1';
+
+  return { apiUrl, board, demoBoard, demoBoardPrivate };
 }

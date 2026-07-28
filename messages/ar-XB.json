@@ -1225,6 +1225,7 @@
   "planFeature_featuredOther": "⁧⟦Íñçĺúðéš {count} ƒéáţúŕéð þóšţš⟧⁩",
   "appError_retryAction": "⁧⟦Ţŕý áğáíñ⟧⁩",
   "appError_homeLink": "⁧⟦Ğó ţó ĥóɱéþáğé⟧⁩",
+  "appError_switchToYourBoard": "⁧⟦Šŵíţçĥ ƀáçķ ţó ýóúŕ ƀóáŕð⟧⁩",
   "previewToolbar_viewingAs": "⁧⟦Ṽíéŵíñğ áš:⟧⁩",
   "previewToolbar_anonymous": "⁧⟦Áñóñýɱóúš⟧⁩",
   "previewToolbar_title": "⁧⟦Þŕéṽíéŵ⟧⁩",
@@ -1263,6 +1264,8 @@
   "previewToolbar_talentVisibility_off": "⁧⟦Óƒƒ⟧⁩",
   "previewToolbar_talentVisibility_public": "⁧⟦Þúƀĺíç⟧⁩",
   "previewToolbar_talentVisibility_employersOnly": "⁧⟦Éɱþĺóýéŕš óñĺý⟧⁩",
+  "previewToolbar_yourBoard": "⁧⟦Ýóúŕ ƀóáŕð (ŕéáĺ ðáţá)⟧⁩",
+  "previewToolbar_yourBoardHint": "⁧⟦Þŕíɱáŕý þúƀĺíšĥáƀĺé ķéý · ĺíṽé ţéñáñţ ðáţá⟧⁩",
   "postJob_checkoutButtonLabel": "⁧⟦Þŕóçééð ţó šéçúŕé çĥéçķóúţ⟧⁩",
   "accountAccess_redirectingText": "⁧⟦Ţáķíñğ ýóú ƀáçķ ţó ŵĥéŕé ýóú ĺéƒţ óƒƒ…⟧⁩",
   "languageSwitcher_label": "⁧⟦Ĺáñğúáğé⟧⁩"

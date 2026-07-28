@@ -10,9 +10,22 @@ import { describe, expect, it, vi } from 'vitest';
  */
 import type { BoardSession } from '@cavuno/board/server';
 
-// The module imports `./board`, which pulls `cloudflare:workers` at load.
-// `decideSession` takes its refresher as an argument, so the real board is
-// never touched — stub the module to keep the import graph node-safe.
+// The module imports `./board` and `./data-source.server`, which pull
+// `cloudflare:workers` / request headers at load. `decideSession` takes its
+// refresher as an argument, so the real board is never touched — stub the
+// seams to keep the import graph node-safe.
+vi.mock('cloudflare:workers', () => ({ env: {} }));
+vi.mock('@tanstack/react-start/server', () => ({
+  getRequestHeader: () => null,
+  setResponseHeader: () => {},
+}));
+vi.mock('./env', () => ({
+  getServerEnv: () => ({
+    apiUrl: 'https://api.example.test',
+    board: 'pk_test',
+    demoBoardPrivate: false,
+  }),
+}));
 vi.mock('./board', () => ({
   authHeaders: (token: string) => ({ authorization: `Bearer ${token}` }),
   getSessionRefresher: () => async () => null,

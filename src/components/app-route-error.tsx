@@ -1,10 +1,14 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 import { isRateLimited } from '@cavuno/board';
 import { Link } from '@tanstack/react-router';
 import { CircleAlert } from 'lucide-react';
 
+import { serializeDataSourceCookie } from '../lib/data-source';
 import { m } from '../paraglide/messages';
+import { getDataSourceFacts } from '../server/preview';
 
 import { Page } from '@/components/layout/page';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -30,6 +34,11 @@ import type { ErrorComponentProps } from '@tanstack/react-router';
  *  - It reads NO loader data. The root loader is one of the things that can
  *    fail, so board context may never have resolved; copy comes from the
  *    Paraglide seam and the recovery link is a static typed route.
+ *
+ * Dual-source sticky-demo: when the active data source is a dead demo tenant,
+ * retry re-hits the same dead tenant. This surface probes
+ * `getDataSourceFacts` (env+cookie only — works when the demo API is down)
+ * and offers "Switch back to your board" when dual-source is on demo.
  */
 export function AppRouteError({
   title,
@@ -37,12 +46,15 @@ export function AppRouteError({
   retryLabel,
   homeLabel,
   reset,
+  switchToYourBoard,
 }: {
   title: string;
   description: string;
   retryLabel: string;
   homeLabel: string;
   reset: () => void;
+  /** Dual-source escape hatch — only when stuck on a dead demo tenant. */
+  switchToYourBoard?: { label: string; onClick: () => void } | null;
 }) {
   return (
     <Page width="wide">
@@ -61,6 +73,15 @@ export function AppRouteError({
             <Button type="button" onClick={reset}>
               {retryLabel}
             </Button>
+            {switchToYourBoard ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={switchToYourBoard.onClick}
+              >
+                {switchToYourBoard.label}
+              </Button>
+            ) : null}
             <Link to="/" className={buttonVariants({ variant: 'outline' })}>
               {homeLabel}
             </Link>
@@ -79,6 +100,31 @@ export function AppRouteErrorPage({ error, reset }: ErrorComponentProps) {
   const rateLimited =
     isRateLimited(error) || /rate limit/i.test(error?.message ?? '');
 
+  // Dual-source escape hatch. Facts come from env+cookie only (no board API),
+  // so this still resolves when the demo tenant is the thing that is down.
+  // Failure is swallowed — the page stays a plain retry/home error.
+  const [stuckOnDemo, setStuckOnDemo] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    getDataSourceFacts()
+      .then((facts) => {
+        if (!cancelled && facts.demoConfigured && facts.dataSource === 'demo') {
+          setStuckOnDemo(true);
+        }
+      })
+      .catch(() => {
+        // No action — prefer a plain error surface over a broken one.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function onSwitchToYourBoard() {
+    document.cookie = serializeDataSourceCookie('board');
+    window.location.reload();
+  }
+
   return (
     <AppRouteError
       title={m.appError_heading()}
@@ -88,6 +134,14 @@ export function AppRouteErrorPage({ error, reset }: ErrorComponentProps) {
       retryLabel={m.appError_retryAction()}
       homeLabel={m.appError_homeLink()}
       reset={reset}
+      switchToYourBoard={
+        stuckOnDemo
+          ? {
+              label: m.appError_switchToYourBoard(),
+              onClick: onSwitchToYourBoard,
+            }
+          : null
+      }
     />
   );
 }
