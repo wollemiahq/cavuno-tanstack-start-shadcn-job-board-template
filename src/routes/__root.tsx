@@ -18,11 +18,6 @@ import {
 
 import Footer from '../components/Footer';
 import Header from '../components/Header';
-import {
-  getDataSource,
-  isDemoBoardConfigured,
-  isDemoBoardPrivate,
-} from '../lib/data-source.server';
 import { localeDirection } from '../lib/locale-direction';
 import { toPreviewBoardConfig } from '../lib/preview';
 import { emitRoutesReport } from '../lib/routes-report';
@@ -32,7 +27,7 @@ import { getLocale } from '../paraglide/runtime';
 import { getSessionUser } from '../server/account';
 import { listCompanies } from '../server/employers';
 import { getAccessGrant } from '../server/paywall';
-import { getPreviewState } from '../server/preview';
+import { getDataSourceFacts, getPreviewState } from '../server/preview';
 import {
   getBoardContext,
   getBoardSeo,
@@ -119,19 +114,23 @@ export const Route = createRootRoute({
         // server-verified `sandbox: true` gate resolves false on every tenant
         // board, so the toolbar never renders there. Fail closed on the
         // persona RPC so a sandbox hiccup never faults the page — but dual-
-        // source basics (env + cookie) still flow through so the "Your board"
-        // escape hatch remains available when the demo cookie is set.
-        getPreviewState().catch(() => {
-          const demoConfigured = isDemoBoardConfigured();
+        // source basics (env + cookie, via getDataSourceFacts server fn) still
+        // flow through so the "Your board" escape hatch remains available when
+        // the demo cookie is set. Never import data-source.server from this
+        // route file — import-protection denies .server modules on the client.
+        getPreviewState().catch(async () => {
+          const facts = await getDataSourceFacts().catch(() => ({
+            demoConfigured: false,
+            demoBoardPrivate: false,
+            dataSource: 'board' as const,
+          }));
           return {
             capability: {
               canPreview: false as const,
               reason: 'not-sandbox' as const,
             },
             personas: [],
-            demoConfigured,
-            demoBoardPrivate: isDemoBoardPrivate(),
-            dataSource: getDataSource(),
+            ...facts,
           };
         }),
         // Candidate paywall: does the signed-in viewer hold an active grant?

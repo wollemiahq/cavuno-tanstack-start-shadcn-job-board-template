@@ -152,6 +152,27 @@ export const listPersonas = createServerFn({ method: 'GET' }).handler(
 );
 
 /**
+ * Dual-source facts that need NO preview/sandbox RPC — env + data-source
+ * cookie only. Used by the root loader's getPreviewState catch so the
+ * "Your board" escape hatch survives a preview RPC failure without pulling
+ * data-source.server into the client bundle (import-protection denies
+ * .server modules from route files).
+ */
+export interface PreviewDataSourceFacts {
+  demoConfigured: boolean;
+  demoBoardPrivate: boolean;
+  dataSource: DataSource;
+}
+
+export const getDataSourceFacts = createServerFn({ method: 'GET' }).handler(
+  (): PreviewDataSourceFacts => ({
+    demoConfigured: isDemoBoardConfigured(),
+    demoBoardPrivate: isDemoBoardPrivate(),
+    dataSource: getDataSource(),
+  }),
+);
+
+/**
  * Capability + roster + dual-source flags in one call — what the root loader
  * reads so the toolbar renders from loader data (components never fetch their
  * own reads). Off sandbox this is a single cached `context()` read and an

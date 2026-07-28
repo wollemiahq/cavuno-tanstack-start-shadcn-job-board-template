@@ -1743,10 +1743,18 @@ The developer-preview toolbar for the sandbox preview state
 spec. A floating, unobtrusive pill that renders ONLY when the server-side
 capability check passes (`sandbox: true`), never on a tenant board.
 
+Dual-source (DMO-01): when `CAVUNO_DEMO_BOARD` is configured, the persona
+menu gains a top "Your board (real data)" entry that sets the data-source
+cookie to `board`. Choosing any persona sets it to `demo` then runs the
+existing switchPersona flow. Exit preview clears the persona session but
+stays in demo mode. Board-settings + reseed are hidden on shared public
+demo fixtures (`CAVUNO_DEMO_BOARD_PRIVATE` unset) and shown for private
+shadows (`=1`).
+
 Information architecture (Stripe test-mode helper pattern): the pill anchors
 a persistent mode indicator whose PRIMARY surface does one job — switch
-persona. Everything else is progressive disclosure behind the popover's
-footer action row, each in its own focused surface:
+persona / data source. Everything else is progressive disclosure behind the
+popover's footer action row, each in its own focused surface:
   - Board settings → its own sheet (`PreviewBoardSettingsSheet`)
   - Emails         → its own sheet (`PreviewEmailsSheet`)
   - Reseed         → a confirm dialog
@@ -1764,6 +1772,9 @@ Props:
 
 - `capability: PreviewCapability`
 - `config: PreviewBoardConfig`
+- `dataSource?: DataSource | undefined`
+- `demoBoardPrivate?: boolean | undefined`
+- `demoConfigured?: boolean | undefined`
 - `personas: PreviewPersona[]`
 - `viewer: PreviewViewer | null`
 
