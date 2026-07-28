@@ -311,12 +311,18 @@ Two constraints shape this surface:
    fail, so board context may never have resolved; copy comes from the
    Paraglide seam and the recovery link is a static typed route.
 
+Dual-source sticky-demo: when the active data source is a dead demo tenant,
+retry re-hits the same dead tenant. This surface probes
+`getDataSourceFacts` (env+cookie only — works when the demo API is down)
+and offers "Switch back to your board" when dual-source is on demo.
+
 Props:
 
 - `description: string`
 - `homeLabel: string`
 - `reset: () => void`
 - `retryLabel: string`
+- `switchToYourBoard?: { label: string; onClick: () => void; } | null | undefined`
 - `title: string`
 
 ### AppRouteErrorPage — `src/components/app-route-error.tsx`
