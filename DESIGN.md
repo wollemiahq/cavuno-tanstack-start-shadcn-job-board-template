@@ -282,6 +282,18 @@ Props:
 - `alerts: { id: string; object: "alert"; label: string | null; frequency: "weekly"; isActive: boolean; filters: { jobFunctions:…`
 - `places: AlertPlaceOption[]`
 
+### AnalyticsScripts — `src/components/analytics-scripts.tsx`
+
+Injects the board's configured trackers (GTM, GA4, Meta Pixel, LinkedIn
+Insight) client-side. When the board requires cookie consent, injection
+waits for an explicit accept — a deny (or no choice yet) loads nothing.
+Scripts already loaded in this document stay until the next navigation;
+a later revocation applies from the next page load.
+
+Props:
+
+- `analytics: BoardAnalyticsConfig`
+
 ### NotFound — `src/components/app-not-found.tsx`
 
 ### AppRouteError — `src/components/app-route-error.tsx`
@@ -1085,6 +1097,32 @@ Props:
 - `placeholder: string`
 - `suggestions: CompanyMarketSuggestion[]`
 - `value: string`
+
+### CookieConsentBanner — `src/components/cookie-consent.tsx`
+
+The bottom-corner accept/deny banner. Occupies the same floating-stack
+slot as the job-alert prompt (which hides itself while this is open) and
+stays until the visitor decides — no dismiss without a choice, since the
+choice is what gates the analytics scripts.
+
+### CookieConsentProvider — `src/components/cookie-consent.tsx`
+
+Site-wide cookie-consent state for boards whose operator enabled
+"cookie consent required" (`board.analytics.cookieConsentRequired`).
+The choice persists in localStorage (mirroring the job-alert prompt's
+suppression storage) and resolves only after mount, so SSR and the first
+client render agree and the banner never flashes on hydration.
+
+Props:
+
+- `children: ReactNode`
+- `required: boolean`
+
+### CookiePreferencesFooterAction — `src/components/cookie-consent.tsx`
+
+The footer's "Cookie preferences" entry — rendered only after a choice
+exists to revisit. Clears the saved choice, which immediately reopens the
+banner. Styled to sit among the footer's legal links.
 
 ### CustomFieldsGroup — `src/components/custom-fields-group.tsx`
 
