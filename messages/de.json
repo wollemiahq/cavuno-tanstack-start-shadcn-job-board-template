@@ -1207,6 +1207,7 @@
   "planFeature_featuredOther": "Enthält {count} hervorgehobene Jobs",
   "appError_retryAction": "Erneut versuchen",
   "appError_homeLink": "Zur Startseite",
+  "appError_switchToYourBoard": "Zurück zu deinem Board",
   "previewToolbar_viewingAs": "Ansicht als:",
   "previewToolbar_anonymous": "Anonym",
   "previewToolbar_title": "Vorschau",
