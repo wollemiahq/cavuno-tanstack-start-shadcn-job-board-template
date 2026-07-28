@@ -120,6 +120,9 @@ export const Route = createRootRoute({
             reason: 'not-sandbox' as const,
           },
           personas: [],
+          demoConfigured: false,
+          demoBoardPrivate: false,
+          dataSource: 'board' as const,
         })),
         // Candidate paywall: does the signed-in viewer hold an active grant?
         // `getAccessGrant`'s requireSession middleware throws BEFORE any API
@@ -527,6 +530,9 @@ function RootLayout() {
                     : null
                 }
                 config={toPreviewBoardConfig(board)}
+                demoConfigured={preview.demoConfigured}
+                demoBoardPrivate={preview.demoBoardPrivate}
+                dataSource={preview.dataSource}
               />
             </Suspense>
           ) : null}

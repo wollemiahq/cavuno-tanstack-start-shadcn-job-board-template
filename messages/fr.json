@@ -1245,6 +1245,8 @@
   "previewToolbar_talentVisibility_off": "Désactivé",
   "previewToolbar_talentVisibility_public": "Public",
   "previewToolbar_talentVisibility_employersOnly": "Employeurs uniquement",
+  "previewToolbar_yourBoard": "Votre board (données réelles)",
+  "previewToolbar_yourBoardHint": "Clé publicable primaire · données du tenant",
   "postJob_checkoutButtonLabel": "Procéder au paiement sécurisé",
   "accountAccess_redirectingText": "Retour là où vous en étiez…",
   "languageSwitcher_label": "Langue"

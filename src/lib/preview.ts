@@ -58,6 +58,19 @@ export interface PreviewRoster {
 export interface PreviewState {
   capability: PreviewCapability;
   personas: PreviewPersona[];
+  /**
+   * Dual-source: builder injected `CAVUNO_DEMO_BOARD`. When true the toolbar
+   * shows the "Your board (real data)" entry and capability is resolved from
+   * the demo tenant. When false, legacy single-key sandbox-on-primary.
+   */
+  demoConfigured: boolean;
+  /**
+   * Dual-source: `CAVUNO_DEMO_BOARD_PRIVATE=1`. When false on a dual-source
+   * deploy, board-settings toggles + reseed stay hidden (shared fixture).
+   */
+  demoBoardPrivate: boolean;
+  /** Effective data source for this request (`board` when demo is not configured). */
+  dataSource: 'board' | 'demo';
 }
 
 /**
@@ -258,7 +271,35 @@ export type PreviewSwitchResult =
 /** Result of a config toggle / reseed. */
 export type PreviewActionResult =
   | { ok: true }
-  | { ok: false; code: 'not-sandbox' | 'unknown'; message: string };
+  | {
+      ok: false;
+      code: 'not-sandbox' | 'not-private' | 'unknown';
+      message: string;
+    };
+
+/**
+ * Server-side private-shadow gate for config PATCH + reseed (F1).
+ * When a dual-source deploy points at a shared public demo fixture
+ * (`CAVUNO_DEMO_BOARD` set, `CAVUNO_DEMO_BOARD_PRIVATE` unset), mutating
+ * endpoints must reject even if `canPreview` is true — the UI already hides
+ * the controls, but a crafted server-fn RPC must not reseed / flag-toggle
+ * the shared tenant. Returns `null` when the mutation is allowed (legacy
+ * sandbox-on-primary, or a private demo shadow).
+ */
+export function rejectSharedDemoMutation(opts: {
+  demoConfigured: boolean;
+  demoBoardPrivate: boolean;
+}): Extract<PreviewActionResult, { ok: false }> | null {
+  if (opts.demoConfigured && !opts.demoBoardPrivate) {
+    return {
+      ok: false,
+      code: 'not-private',
+      message:
+        'Board settings and reseed are only available on a private demo board.',
+    };
+  }
+  return null;
+}
 
 /**
  * Talent-directory access mode. Mirrors the board config's tri-state

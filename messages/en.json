@@ -1263,6 +1263,8 @@
   "previewToolbar_talentVisibility_off": "Off",
   "previewToolbar_talentVisibility_public": "Public",
   "previewToolbar_talentVisibility_employersOnly": "Employers only",
+  "previewToolbar_yourBoard": "Your board (real data)",
+  "previewToolbar_yourBoardHint": "Primary publishable key · live tenant data",
   "postJob_checkoutButtonLabel": "Proceed to secure checkout",
   "accountAccess_redirectingText": "Taking you back to where you left off…",
   "languageSwitcher_label": "Language"

@@ -80,6 +80,9 @@ const config: PreviewBoardConfig = {
 function renderToolbar({
   capability = capable,
   viewer = null as PreviewViewer | null,
+  demoConfigured = false,
+  demoBoardPrivate = false,
+  dataSource = 'board' as 'board' | 'demo',
 } = {}) {
   return render(
     <PreviewToolbar
@@ -87,6 +90,9 @@ function renderToolbar({
       personas={personas}
       viewer={viewer}
       config={config}
+      demoConfigured={demoConfigured}
+      demoBoardPrivate={demoBoardPrivate}
+      dataSource={dataSource}
     />,
   );
 }
@@ -338,5 +344,81 @@ describe('PreviewToolbar', () => {
     await waitFor(() => expect(mocks.reseedSandbox).toHaveBeenCalled());
     // Reseed purges the viewer's own board user — reload to the honest state.
     await waitFor(() => expect(reloadMock).toHaveBeenCalled());
+  });
+});
+
+describe('PreviewToolbar dual-source switcher (T5)', () => {
+  it('renders "Your board (real data)" only when a demo key is configured', () => {
+    const { unmount } = renderToolbar({ demoConfigured: false });
+    openMenu();
+    expect(
+      screen.queryByRole('button', { name: /Your board \(real data\)/i }),
+    ).toBeNull();
+    unmount();
+
+    renderToolbar({ demoConfigured: true, dataSource: 'board' });
+    openMenu();
+    expect(
+      screen.getByRole('button', { name: /Your board \(real data\)/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('hides board-settings + reseed when demo is shared (private unset)', () => {
+    renderToolbar({
+      demoConfigured: true,
+      demoBoardPrivate: false,
+      dataSource: 'demo',
+    });
+    openMenu();
+    const actions = document.querySelector(
+      '[data-test="preview-actions"]',
+    ) as HTMLElement;
+    expect(
+      within(actions).queryByRole('button', { name: 'Board settings' }),
+    ).toBeNull();
+    expect(
+      within(actions).queryByRole('button', { name: 'Reseed' }),
+    ).toBeNull();
+    // Emails + Exit remain — shared-tenant tools that do not mutate config.
+    expect(
+      within(actions).getByRole('button', { name: 'Emails' }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows board-settings + reseed only in demo mode when PRIVATE is "1"', () => {
+    // Dual-source private shadow: controls are demo-mode-only (never while
+    // viewing "Your board" — that would PATCH the demo from primary config).
+    const { unmount } = renderToolbar({
+      demoConfigured: true,
+      demoBoardPrivate: true,
+      dataSource: 'board',
+    });
+    openMenu();
+    let actions = document.querySelector(
+      '[data-test="preview-actions"]',
+    ) as HTMLElement;
+    expect(
+      within(actions).queryByRole('button', { name: 'Board settings' }),
+    ).toBeNull();
+    expect(
+      within(actions).queryByRole('button', { name: 'Reseed' }),
+    ).toBeNull();
+    unmount();
+
+    renderToolbar({
+      demoConfigured: true,
+      demoBoardPrivate: true,
+      dataSource: 'demo',
+    });
+    openMenu();
+    actions = document.querySelector(
+      '[data-test="preview-actions"]',
+    ) as HTMLElement;
+    expect(
+      within(actions).getByRole('button', { name: 'Board settings' }),
+    ).toBeInTheDocument();
+    expect(
+      within(actions).getByRole('button', { name: 'Reseed' }),
+    ).toBeInTheDocument();
   });
 });

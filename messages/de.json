@@ -1245,6 +1245,8 @@
   "previewToolbar_talentVisibility_off": "Aus",
   "previewToolbar_talentVisibility_public": "Öffentlich",
   "previewToolbar_talentVisibility_employersOnly": "Nur Arbeitgeber",
+  "previewToolbar_yourBoard": "Dein Board (echte Daten)",
+  "previewToolbar_yourBoardHint": "Primärer Publishable-Key · Live-Tenant-Daten",
   "postJob_checkoutButtonLabel": "Weiter zur sicheren Kaufabwicklung",
   "accountAccess_redirectingText": "Du wirst dorthin zurückgebracht, wo du aufgehört hast …",
   "languageSwitcher_label": "Sprache"

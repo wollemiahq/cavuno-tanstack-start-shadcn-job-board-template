@@ -15,6 +15,10 @@ import {
 } from 'lucide-react';
 
 import {
+  serializeDataSourceCookie,
+  type DataSource,
+} from '../../lib/data-source';
+import {
   groupPersonasByRole,
   type PreviewBoardConfig,
   type PreviewCapability,
@@ -56,10 +60,18 @@ import { cn } from '@/lib/utils';
  * spec. A floating, unobtrusive pill that renders ONLY when the server-side
  * capability check passes (`sandbox: true`), never on a tenant board.
  *
+ * Dual-source (DMO-01): when `CAVUNO_DEMO_BOARD` is configured, the persona
+ * menu gains a top "Your board (real data)" entry that sets the data-source
+ * cookie to `board`. Choosing any persona sets it to `demo` then runs the
+ * existing switchPersona flow. Exit preview clears the persona session but
+ * stays in demo mode. Board-settings + reseed are hidden on shared public
+ * demo fixtures (`CAVUNO_DEMO_BOARD_PRIVATE` unset) and shown for private
+ * shadows (`=1`).
+ *
  * Information architecture (Stripe test-mode helper pattern): the pill anchors
  * a persistent mode indicator whose PRIMARY surface does one job — switch
- * persona. Everything else is progressive disclosure behind the popover's
- * footer action row, each in its own focused surface:
+ * persona / data source. Everything else is progressive disclosure behind the
+ * popover's footer action row, each in its own focused surface:
  *   - Board settings → its own sheet (`PreviewBoardSettingsSheet`)
  *   - Emails         → its own sheet (`PreviewEmailsSheet`)
  *   - Reseed         → a confirm dialog
@@ -78,11 +90,20 @@ export function PreviewToolbar({
   personas,
   viewer,
   config,
+  demoConfigured = false,
+  demoBoardPrivate = false,
+  dataSource = 'board',
 }: {
   capability: PreviewCapability;
   personas: PreviewPersona[];
   viewer: PreviewViewer | null;
   config: PreviewBoardConfig;
+  /** Builder injected `CAVUNO_DEMO_BOARD`. */
+  demoConfigured?: boolean;
+  /** `CAVUNO_DEMO_BOARD_PRIVATE=1` — private shadow allows reseed/settings. */
+  demoBoardPrivate?: boolean;
+  /** Effective data source for this request. */
+  dataSource?: DataSource;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
@@ -97,15 +118,37 @@ export function PreviewToolbar({
   // defensive second gate — the root layout already withholds it off-sandbox.
   if (!capability.canPreview) return null;
 
+  // Legacy sandbox-on-primary always shows mutating tools. Dual-source: only
+  // while viewing demo data on a private shadow — never on "Your board"
+  // (would PATCH demo from primary config) and never on shared fixtures.
+  const showBoardControls =
+    !demoConfigured || (demoBoardPrivate && dataSource === 'demo');
+
   const busy = switching !== null || reseeding || exiting;
   const grouped = groupPersonasByRole(personas);
-  const viewerLabel =
-    viewer?.displayName ?? viewer?.email ?? m.previewToolbar_anonymous();
+  const onYourBoard = demoConfigured && dataSource === 'board';
+  const viewerLabel = onYourBoard
+    ? m.previewToolbar_yourBoard()
+    : (viewer?.displayName ?? viewer?.email ?? m.previewToolbar_anonymous());
+
+  function writeDataSourceCookie(source: DataSource) {
+    // UI preference — not httpOnly; Path=/ SameSite=Lax.
+    document.cookie = serializeDataSourceCookie(source);
+  }
+
+  async function onSelectYourBoard() {
+    writeDataSourceCookie('board');
+    // Full reload so every loader re-reads against the primary client.
+    window.location.reload();
+  }
 
   async function onSwitch(persona: PreviewPersona) {
     setStalePersona(null);
     setSwitching(persona.id);
     try {
+      if (demoConfigured) {
+        writeDataSourceCookie('demo');
+      }
       const result = await switchPersona({ data: { personaId: persona.id } });
       if (result.ok) {
         // Full reload, not router.invalidate(): a persona switch changes the
@@ -140,6 +183,8 @@ export function PreviewToolbar({
     setExiting(true);
     try {
       await exitPreview();
+      // Dual-source: exit clears the persona session but leaves the
+      // data-source cookie alone (stays in demo mode).
       window.location.reload();
     } finally {
       setExiting(false);
@@ -225,10 +270,40 @@ export function PreviewToolbar({
             className="max-h-72 overflow-y-auto p-2"
             data-test="preview-personas"
           >
+            {demoConfigured ? (
+              <div className="mb-1">
+                <button
+                  type="button"
+                  disabled={busy}
+                  aria-current={onYourBoard || undefined}
+                  aria-label={m.previewToolbar_yourBoard()}
+                  data-test="preview-your-board"
+                  onClick={() => void onSelectYourBoard()}
+                  className={cn(
+                    'hover:bg-muted flex w-full items-start gap-2 rounded-2xl px-2 py-1.5 text-left transition-colors disabled:pointer-events-none disabled:opacity-50',
+                    onYourBoard && 'bg-muted',
+                  )}
+                >
+                  <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center">
+                    {onYourBoard ? (
+                      <Check className="text-primary size-3.5" />
+                    ) : null}
+                  </span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="text-sm font-medium">
+                      {m.previewToolbar_yourBoard()}
+                    </span>
+                    <span className="text-muted-foreground text-xs">
+                      {m.previewToolbar_yourBoardHint()}
+                    </span>
+                  </span>
+                </button>
+              </div>
+            ) : null}
             <PersonaGroup
               label={m.previewToolbar_candidates()}
               personas={grouped.candidate}
-              viewer={viewer}
+              viewer={onYourBoard ? null : viewer}
               switching={switching}
               disabled={busy}
               onSwitch={onSwitch}
@@ -236,7 +311,7 @@ export function PreviewToolbar({
             <PersonaGroup
               label={m.previewToolbar_employers()}
               personas={grouped.employer}
-              viewer={viewer}
+              viewer={onYourBoard ? null : viewer}
               switching={switching}
               disabled={busy}
               onSwitch={onSwitch}
@@ -255,28 +330,32 @@ export function PreviewToolbar({
             className="grid grid-cols-2 gap-1 p-2"
             data-test="preview-actions"
           >
-            <FooterAction
-              icon={Settings}
-              label={m.previewToolbar_boardSettings()}
-              disabled={busy}
-              onClick={openBoardSettings}
-            />
+            {showBoardControls ? (
+              <FooterAction
+                icon={Settings}
+                label={m.previewToolbar_boardSettings()}
+                disabled={busy}
+                onClick={openBoardSettings}
+              />
+            ) : null}
             <FooterAction
               icon={Mail}
               label={m.previewToolbar_emails()}
               disabled={busy}
               onClick={openEmails}
             />
-            <FooterAction
-              icon={RotateCcw}
-              label={m.previewToolbar_reseed()}
-              disabled={busy}
-              onClick={openReseed}
-            />
+            {showBoardControls ? (
+              <FooterAction
+                icon={RotateCcw}
+                label={m.previewToolbar_reseed()}
+                disabled={busy}
+                onClick={openReseed}
+              />
+            ) : null}
             <FooterAction
               icon={exiting ? undefined : LogOut}
               label={m.previewToolbar_exit()}
-              disabled={busy || !viewer}
+              disabled={busy || !viewer || onYourBoard}
               onClick={handleExit}
             />
           </div>
@@ -285,35 +364,39 @@ export function PreviewToolbar({
 
       {/* Secondary surfaces — siblings of the menu, so they persist after it
           closes and closing them returns to nothing. */}
-      <PreviewBoardSettingsSheet
-        config={config}
-        open={boardSettingsOpen}
-        onOpenChange={setBoardSettingsOpen}
-      />
+      {showBoardControls ? (
+        <PreviewBoardSettingsSheet
+          config={config}
+          open={boardSettingsOpen}
+          onOpenChange={setBoardSettingsOpen}
+        />
+      ) : null}
 
       <PreviewEmailsSheet open={emailsOpen} onOpenChange={setEmailsOpen} />
 
-      <AlertDialog open={reseedOpen} onOpenChange={setReseedOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {m.previewToolbar_reseedConfirmTitle()}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {m.previewToolbar_reseedConfirmBody()}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={reseeding}>
-              {m.previewToolbar_cancel()}
-            </AlertDialogCancel>
-            <AlertDialogAction disabled={reseeding} onClick={onReseed}>
-              {reseeding ? <Spinner /> : null}
-              {m.previewToolbar_reseed()}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {showBoardControls ? (
+        <AlertDialog open={reseedOpen} onOpenChange={setReseedOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {m.previewToolbar_reseedConfirmTitle()}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {m.previewToolbar_reseedConfirmBody()}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={reseeding}>
+                {m.previewToolbar_cancel()}
+              </AlertDialogCancel>
+              <AlertDialogAction disabled={reseeding} onClick={onReseed}>
+                {reseeding ? <Spinner /> : null}
+                {m.previewToolbar_reseed()}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      ) : null}
     </div>
   );
 }

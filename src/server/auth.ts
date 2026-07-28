@@ -1,14 +1,10 @@
 import { isBoardApiError, type BoardAuthSession } from '@cavuno/board';
-import {
-  clearSessionCookie,
-  parseSessionCookie,
-  serializeSessionCookie,
-  type BoardSession,
-} from '@cavuno/board/server';
+import { type BoardSession } from '@cavuno/board/server';
 /**
  * Auth server functions. The SDK never
  * stores tokens on the server; these functions move the bearer pair in
- * and out of the `__Host-` session cookie.
+ * and out of the `__Host-` session cookie for the **active data source**
+ * (dual-source: primary and demo sessions are isolated by cookie name).
  */
 import { createServerFn } from '@tanstack/react-start';
 import {
@@ -17,6 +13,12 @@ import {
 } from '@tanstack/react-start/server';
 
 import { getBoard, getSessionRefresher } from '../lib/board';
+import {
+  clearSessionForSource,
+  getDataSource,
+  parseSessionForSource,
+  serializeSessionForSource,
+} from '../lib/data-source.server';
 import { sessionMiddleware } from '../lib/session-middleware';
 
 function storeSession(session: BoardAuthSession): BoardSession {
@@ -25,7 +27,12 @@ function storeSession(session: BoardAuthSession): BoardSession {
     refreshToken: session.refreshToken,
     expiresAt: session.expiresAt,
   };
-  setResponseHeader('Set-Cookie', serializeSessionCookie(next));
+  // Write into the active data source's cookie only — never clobber the
+  // other source's session when dual-source is on.
+  setResponseHeader(
+    'Set-Cookie',
+    serializeSessionForSource(next, getDataSource()),
+  );
   return next;
 }
 
@@ -107,15 +114,22 @@ export const signUpEmployer = createServerFn({ method: 'POST' })
  */
 export const refreshSession = createServerFn({ method: 'POST' }).handler(
   async () => {
-    const session = parseSessionCookie(getRequestHeader('cookie') ?? null);
+    const dataSource = getDataSource();
+    const session = parseSessionForSource(
+      getRequestHeader('cookie') ?? null,
+      dataSource,
+    );
     if (!session) return { ok: false as const };
     try {
       const next = await getSessionRefresher()(session);
       if (!next) {
-        setResponseHeader('Set-Cookie', clearSessionCookie());
+        setResponseHeader('Set-Cookie', clearSessionForSource(dataSource));
         return { ok: false as const };
       }
-      setResponseHeader('Set-Cookie', serializeSessionCookie(next));
+      setResponseHeader(
+        'Set-Cookie',
+        serializeSessionForSource(next, dataSource),
+      );
       return { ok: true as const };
     } catch {
       return { ok: false as const };
@@ -126,6 +140,7 @@ export const refreshSession = createServerFn({ method: 'POST' }).handler(
 export const signOut = createServerFn({ method: 'POST' })
   .middleware([sessionMiddleware])
   .handler(async ({ context }) => {
+    const dataSource = context.dataSource ?? getDataSource();
     if (context.session) {
       try {
         await getBoard().auth.logout({
@@ -136,7 +151,7 @@ export const signOut = createServerFn({ method: 'POST' })
         // not strand the user signed in locally.
       }
     }
-    setResponseHeader('Set-Cookie', clearSessionCookie());
+    setResponseHeader('Set-Cookie', clearSessionForSource(dataSource));
     return { ok: true as const };
   });
 

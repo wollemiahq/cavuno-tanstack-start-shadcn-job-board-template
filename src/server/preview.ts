@@ -9,23 +9,34 @@
  * the roster and never cross to the browser, so the authentication mechanism
  * can change without exposing credentials or changing the client contract.
  *
+ * Dual-source (DMO-01): when `CAVUNO_DEMO_BOARD` is configured, every
+ * preview function uses the **demo** client (personas, emails, config, reseed
+ * live on the demo tenant) and stores the persona session under the demo
+ * session cookie. Capability is resolved from the demo board's context so the
+ * toolbar can render on a non-sandbox operator board.
+ *
  * All Board API traffic goes through the shared SDK client's `client.fetch`
  * escape hatch (custom endpoints, no SDK release) or the existing auth
  * namespace — never a browser fetch.
  */
 import { isUnauthorized } from '@cavuno/board';
-import {
-  serializeSessionCookie,
-  type BoardSession,
-} from '@cavuno/board/server';
+import { type BoardSession } from '@cavuno/board/server';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest, setResponseHeader } from '@tanstack/react-start/server';
 
-import { getBoard } from '../lib/board';
+import { getPreviewBoard } from '../lib/board';
+import {
+  getDataSource,
+  isDemoBoardConfigured,
+  isDemoBoardPrivate,
+  previewSessionSource,
+  serializeSessionForSource,
+} from '../lib/data-source.server';
 import {
   clampEmailLimit,
   pickWhitelistedConfig,
   projectPersona,
+  rejectSharedDemoMutation,
   resolveCapability,
   rewritePreviewEmailLinks,
   toOrigin,
@@ -40,24 +51,30 @@ import {
 } from '../lib/preview';
 import { signOut } from './auth';
 
+import type { DataSource } from '../lib/data-source';
 import type { BoardAuthSession } from '@cavuno/board';
 
 // ── Internal helpers (pure-ish; the exported server fns are thin wrappers) ────
 
-/** Resolve v0 capability from the server-fetched board context. */
+/** Preview board client: demo when configured, else primary (legacy). */
+function previewBoard() {
+  return getPreviewBoard();
+}
+
+/** Resolve v0 capability from the preview board's context. */
 async function resolveCapabilityFromBoard(): Promise<PreviewCapability> {
-  const context = await getBoard().context();
+  const context = await previewBoard().context();
   return resolveCapability({ sandbox: context.sandbox });
 }
 
 /** Fetch the raw roster (credentials included) — SERVER-SIDE ONLY. */
 function fetchRoster(): Promise<PreviewRoster> {
-  return getBoard().client.fetch<PreviewRoster>('/sandbox/personas');
+  return previewBoard().client.fetch<PreviewRoster>('/sandbox/personas');
 }
 
 /** Fetch captured outbound sandbox emails, newest-first — SERVER-SIDE ONLY. */
 function fetchEmails(limit: number): Promise<PreviewEmailsRoster> {
-  return getBoard().client.fetch<PreviewEmailsRoster>(
+  return previewBoard().client.fetch<PreviewEmailsRoster>(
     `/sandbox/emails?limit=${limit}`,
   );
 }
@@ -79,7 +96,7 @@ function fetchEmails(limit: number): Promise<PreviewEmailsRoster> {
 async function retargetEmailLinks(
   emails: PreviewEmail[],
 ): Promise<PreviewEmail[]> {
-  const boardOrigin = toOrigin((await getBoard().seo()).canonicalBase);
+  const boardOrigin = toOrigin((await previewBoard().seo()).canonicalBase);
   const appOrigin = toOrigin(getRequest().url);
   if (!boardOrigin || !appOrigin || boardOrigin === appOrigin) return emails;
   return emails.map((email) =>
@@ -87,14 +104,20 @@ async function retargetEmailLinks(
   );
 }
 
-/** Store a freshly minted session through the SAME cookie path as sign-in. */
+/**
+ * Store a freshly minted persona session under the preview source's cookie
+ * (demo cookie when dual-source is on — never the primary board cookie).
+ */
 function storeSession(session: BoardAuthSession): void {
   const next: BoardSession = {
     accessToken: session.accessToken,
     refreshToken: session.refreshToken,
     expiresAt: session.expiresAt,
   };
-  setResponseHeader('Set-Cookie', serializeSessionCookie(next));
+  setResponseHeader(
+    'Set-Cookie',
+    serializeSessionForSource(next, previewSessionSource()),
+  );
 }
 
 // ── Capability ────────────────────────────────────────────────────────────
@@ -104,6 +127,9 @@ function storeSession(session: BoardAuthSession): void {
  * server-side question that gates the whole toolbar. The shape
  * carries a reason so a future builder-preview context can answer
  * `canPreview: false, reason: 'switch-blocked'` without changing this seam.
+ *
+ * When `CAVUNO_DEMO_BOARD` is set, capability is read from the **demo**
+ * client's context (the demo tenant serves `sandbox: true`).
  */
 export const getPreviewCapability = createServerFn({ method: 'GET' }).handler(
   (): Promise<PreviewCapability> => resolveCapabilityFromBoard(),
@@ -126,16 +152,34 @@ export const listPersonas = createServerFn({ method: 'GET' }).handler(
 );
 
 /**
- * Capability + roster in one call — what the root loader reads so the toolbar
- * renders from loader data (components never fetch their own reads). Off
- * sandbox this is a single cached `context()` read and an empty roster.
+ * Capability + roster + dual-source flags in one call — what the root loader
+ * reads so the toolbar renders from loader data (components never fetch their
+ * own reads). Off sandbox this is a single cached `context()` read and an
+ * empty roster.
  */
 export const getPreviewState = createServerFn({ method: 'GET' }).handler(
   async (): Promise<PreviewState> => {
     const capability = await resolveCapabilityFromBoard();
-    if (!capability.canPreview) return { capability, personas: [] };
+    const demoConfigured = isDemoBoardConfigured();
+    const demoBoardPrivate = isDemoBoardPrivate();
+    const dataSource: DataSource = getDataSource();
+    if (!capability.canPreview) {
+      return {
+        capability,
+        personas: [],
+        demoConfigured,
+        demoBoardPrivate,
+        dataSource,
+      };
+    }
     const roster = await fetchRoster();
-    return { capability, personas: roster.personas.map(projectPersona) };
+    return {
+      capability,
+      personas: roster.personas.map(projectPersona),
+      demoConfigured,
+      demoBoardPrivate,
+      dataSource,
+    };
   },
 );
 
@@ -152,6 +196,8 @@ export const getPreviewState = createServerFn({ method: 'GET' }).handler(
  * exactly like `listPersonas`: `[]` on any non-sandbox board (the endpoint 404s
  * there anyway), so the panel never renders real data off the sandbox. `limit`
  * is clamped to `[1, 200]` server-side (default 50) before it reaches the API.
+ *
+ * Dual-source: always the demo client's captures when a demo key is configured.
  */
 export const listSandboxEmails = createServerFn({ method: 'GET' })
   .validator((input: { limit?: number } | undefined) => input)
@@ -174,6 +220,10 @@ export const listSandboxEmails = createServerFn({ method: 'GET' })
  * real session. A failed login (401 — the persona was reseeded out from under
  * a stale menu) surfaces as a typed `persona-unavailable` result the toolbar
  * turns into a "reseed, then re-switch" affordance.
+ *
+ * Dual-source: login hits the demo client and the session is stored under the
+ * demo cookie name so a persona token never contaminates the real-tenant
+ * session.
  */
 export const switchPersona = createServerFn({ method: 'POST' })
   .validator((input: { personaId: string }) => input)
@@ -199,7 +249,7 @@ export const switchPersona = createServerFn({ method: 'POST' })
     }
 
     try {
-      const session = await getBoard().auth.login({
+      const session = await previewBoard().auth.login({
         email: persona.email,
         password: roster.password,
       });
@@ -225,7 +275,11 @@ export const switchPersona = createServerFn({ method: 'POST' })
     }
   });
 
-/** Leave preview — sign out through the existing signOut path (clears the cookie). */
+/**
+ * Leave preview — sign out through the existing signOut path (clears the
+ * active data source's session cookie). Dual-source: stays in demo mode
+ * when the data-source cookie is `demo`; only the persona session ends.
+ */
 export const exitPreview = createServerFn({ method: 'POST' }).handler(
   async (): Promise<{ ok: true }> => {
     await signOut();
@@ -243,7 +297,7 @@ export const exitPreview = createServerFn({ method: 'POST' }).handler(
  * the `{ features }` wrapper the platform's `ConfigBody` schema requires
  * (`sandbox/config/route.ts` — strict, so top-level keys 400). Non-whitelisted
  * keys are dropped first (the API whitelists too; this is defense in depth).
- * Sandbox-gated.
+ * Sandbox-gated. Dual-source: always the demo client when configured.
  */
 export const updateSandboxFlags = createServerFn({ method: 'POST' })
   .validator((input: { config: Record<string, unknown> }) => input)
@@ -256,8 +310,15 @@ export const updateSandboxFlags = createServerFn({ method: 'POST' })
         message: 'Board settings can only be changed on the sandbox board.',
       };
     }
+    // F1: shared public demo fixtures must not accept config PATCH via RPC.
+    const shared = rejectSharedDemoMutation({
+      demoConfigured: isDemoBoardConfigured(),
+      demoBoardPrivate: isDemoBoardPrivate(),
+    });
+    if (shared) return shared;
+
     const config = pickWhitelistedConfig(data.config);
-    await getBoard().client.fetch<{ ok: true }>('/sandbox/config', {
+    await previewBoard().client.fetch<{ ok: true }>('/sandbox/config', {
       method: 'PATCH',
       body: { features: config },
     });
@@ -267,7 +328,9 @@ export const updateSandboxFlags = createServerFn({ method: 'POST' })
 /**
  * Reseed the sandbox personas + baseline config on demand — repairs consumed
  * demo states (a read unread badge, a hijacked credential) and decouples from
- * the nightly reset. Sandbox-gated.
+ * the nightly reset. Sandbox-gated. Dual-source: always the demo client when
+ * configured (hidden in the toolbar for shared public fixtures; also rejected
+ * server-side when the demo is not a private shadow — F1).
  */
 export const reseedSandbox = createServerFn({ method: 'POST' }).handler(
   async (): Promise<PreviewActionResult> => {
@@ -279,7 +342,14 @@ export const reseedSandbox = createServerFn({ method: 'POST' }).handler(
         message: 'Reseed is only available on the sandbox board.',
       };
     }
-    await getBoard().client.fetch<{ ok: true }>('/sandbox/reseed', {
+    // F1: shared public demo fixtures must not accept reseed via RPC.
+    const shared = rejectSharedDemoMutation({
+      demoConfigured: isDemoBoardConfigured(),
+      demoBoardPrivate: isDemoBoardPrivate(),
+    });
+    if (shared) return shared;
+
+    await previewBoard().client.fetch<{ ok: true }>('/sandbox/reseed', {
       method: 'POST',
     });
     return { ok: true };

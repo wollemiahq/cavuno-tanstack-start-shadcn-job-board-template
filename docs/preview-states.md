@@ -23,6 +23,38 @@ and clicks are exact — copy them.
 The capability gate is board truth (`board.context().sandbox === true`),
 never an env var — the toolbar can never render on a tenant board.
 
+## Dual data source (builder preview)
+
+When the Cavuno AI builder injects a second publishable key, the starter
+becomes a dual-source app:
+
+| Var | Meaning |
+|---|---|
+| `CAVUNO_DEMO_BOARD` | Optional. Publishable key of the demo tenant (sandbox with seeded personas). Absent ⇒ every path stays on `CAVUNO_BOARD` (byte-identical to a single-key deploy). |
+| `CAVUNO_DEMO_BOARD_PRIVATE` | Optional. Set to `1` when the demo tenant is a **private per-board shadow** (reseed + board-settings toggles are safe). Unset ⇒ shared public fixture — those mutating affordances stay hidden to avoid contention. |
+
+A UI-preference cookie `cavuno_data_source` (`board` \| `demo`, default
+`board`; Path=/, SameSite=Lax, not httpOnly) selects which key serves page
+data. Server helpers force `board` whenever `CAVUNO_DEMO_BOARD` is absent,
+regardless of cookie value.
+
+**Toolbar behavior with a demo key configured:**
+
+- Capability is resolved from the **demo** client's `sandbox` flag (so the
+  toolbar can appear on a non-sandbox operator board).
+- The persona menu gains a top entry **Your board (real data)** that sets the
+  cookie to `board` and reloads against the primary key.
+- Choosing any persona sets the cookie to `demo`, then runs the existing
+  `switchPersona` flow against the demo client. The session is stored under a
+  demo-scoped cookie name so it never collides with a real-tenant session.
+- **Exit preview** clears the persona session but stays in demo mode; pick
+  **Your board (real data)** to return to the primary key.
+- Emails always read from the demo client. Board settings + reseed show only
+  when `CAVUNO_DEMO_BOARD_PRIVATE=1`.
+
+Each data source has its own client singleton, session refresher, and session
+cookie. Switching source never destroys the other source's session.
+
 ## Persona roster
 
 The eight seeded personas. **Ids are stable; credentials are not hardcoded
