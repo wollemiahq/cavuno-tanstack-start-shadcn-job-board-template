@@ -18,6 +18,11 @@ import {
 
 import Footer from '../components/Footer';
 import Header from '../components/Header';
+import {
+  getDataSource,
+  isDemoBoardConfigured,
+  isDemoBoardPrivate,
+} from '../lib/data-source.server';
 import { localeDirection } from '../lib/locale-direction';
 import { toPreviewBoardConfig } from '../lib/preview';
 import { emitRoutesReport } from '../lib/routes-report';
@@ -112,18 +117,23 @@ export const Route = createRootRoute({
           .catch(() => null),
         // Developer-preview capability + persona roster. The
         // server-verified `sandbox: true` gate resolves false on every tenant
-        // board, so the toolbar never renders there. Fail closed so a sandbox
-        // hiccup only hides the toolbar, never faults the page.
-        getPreviewState().catch(() => ({
-          capability: {
-            canPreview: false as const,
-            reason: 'not-sandbox' as const,
-          },
-          personas: [],
-          demoConfigured: false,
-          demoBoardPrivate: false,
-          dataSource: 'board' as const,
-        })),
+        // board, so the toolbar never renders there. Fail closed on the
+        // persona RPC so a sandbox hiccup never faults the page — but dual-
+        // source basics (env + cookie) still flow through so the "Your board"
+        // escape hatch remains available when the demo cookie is set.
+        getPreviewState().catch(() => {
+          const demoConfigured = isDemoBoardConfigured();
+          return {
+            capability: {
+              canPreview: false as const,
+              reason: 'not-sandbox' as const,
+            },
+            personas: [],
+            demoConfigured,
+            demoBoardPrivate: isDemoBoardPrivate(),
+            dataSource: getDataSource(),
+          };
+        }),
         // Candidate paywall: does the signed-in viewer hold an active grant?
         // `getAccessGrant`'s requireSession middleware throws BEFORE any API
         // call for anonymous visitors, so the `.catch` yields `false` at zero
@@ -515,7 +525,7 @@ function RootLayout() {
               <LazyMessagesDockController key={user.id} />
             </Suspense>
           ) : null}
-          {preview.capability.canPreview ? (
+          {preview.capability.canPreview || preview.demoConfigured ? (
             <Suspense fallback={null}>
               <LazyPreviewToolbar
                 capability={preview.capability}

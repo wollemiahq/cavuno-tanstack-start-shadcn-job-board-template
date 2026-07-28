@@ -112,10 +112,20 @@ function openBoardSettings() {
 // jsdom cannot navigate; the toolbar full-reloads after identity-changing
 // actions (switch/reseed/exit) so every viewer-scoped client surface resets.
 const reloadMock = vi.fn();
+/** Captures every `document.cookie = …` write (data-source preference). */
+const cookieWrites: string[] = [];
 beforeEach(() => {
   // The footer's Emails action mounts the (lazy) emails sheet, which reads
   // this on open — resolve empty so it never throws in unrelated tests.
   mocks.listSandboxEmails.mockResolvedValue([]);
+  cookieWrites.length = 0;
+  Object.defineProperty(document, 'cookie', {
+    configurable: true,
+    get: () => cookieWrites[cookieWrites.length - 1] ?? '',
+    set: (value: string) => {
+      cookieWrites.push(value);
+    },
+  });
   Object.defineProperty(window, 'location', {
     value: { ...window.location, reload: reloadMock },
     writable: true,
@@ -420,5 +430,68 @@ describe('PreviewToolbar dual-source switcher (T5)', () => {
     expect(
       within(actions).getByRole('button', { name: 'Reseed' }),
     ).toBeInTheDocument();
+  });
+});
+
+describe('PreviewToolbar data-source cookie + escape hatch (R1/R2/R4)', () => {
+  it('failed switchPersona leaves the data-source cookie unchanged', async () => {
+    mocks.switchPersona.mockResolvedValue({
+      ok: false,
+      code: 'persona-unavailable',
+      message: 'reseeded',
+    });
+    renderToolbar({ demoConfigured: true, dataSource: 'board' });
+    openMenu();
+    fireEvent.click(screen.getByText('Nadia New'));
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        /reseeded.*re-switch/i,
+      ),
+    );
+    // No cookie write, no reload — chrome and data source stay aligned.
+    expect(
+      cookieWrites.some((w) => w.includes('cavuno_data_source=demo')),
+    ).toBe(false);
+    expect(reloadMock).not.toHaveBeenCalled();
+  });
+
+  it('successful switch writes demo cookie then reloads', async () => {
+    mocks.switchPersona.mockResolvedValue({
+      ok: true,
+      viewer: {
+        displayName: 'Nadia New',
+        email: 'n@x.com',
+        role: 'candidate',
+      },
+    });
+    renderToolbar({ demoConfigured: true, dataSource: 'board' });
+    openMenu();
+    fireEvent.click(screen.getByText('Nadia New'));
+
+    await waitFor(() => expect(mocks.switchPersona).toHaveBeenCalled());
+    await waitFor(() => expect(reloadMock).toHaveBeenCalled());
+    expect(
+      cookieWrites.some((w) => w.includes('cavuno_data_source=demo')),
+    ).toBe(true);
+  });
+
+  it('with canPreview=false + demoConfigured=true the Your board switcher still renders', () => {
+    renderToolbar({
+      capability: { canPreview: false, reason: 'not-sandbox' },
+      demoConfigured: true,
+      dataSource: 'demo',
+    });
+    // Escape hatch visible even when the preview RPC is down.
+    expect(
+      document.querySelector('[data-test="preview-toolbar"]'),
+    ).not.toBeNull();
+    openMenu();
+    expect(
+      screen.getByRole('button', { name: /Your board \(real data\)/i }),
+    ).toBeInTheDocument();
+    // Persona machinery + secondary tools stay hidden off-capability.
+    expect(screen.queryByText('Nadia New')).toBeNull();
+    expect(document.querySelector('[data-test="preview-actions"]')).toBeNull();
   });
 });

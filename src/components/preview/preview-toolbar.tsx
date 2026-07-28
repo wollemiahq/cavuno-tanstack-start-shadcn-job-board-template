@@ -114,18 +114,24 @@ export function PreviewToolbar({
   const [exiting, setExiting] = useState(false);
   const [stalePersona, setStalePersona] = useState<string | null>(null);
 
-  // Server-verified: the toolbar can never render on a real board. This is a
-  // defensive second gate — the root layout already withholds it off-sandbox.
-  if (!capability.canPreview) return null;
+  // Full sandbox preview (personas/emails/settings) needs canPreview. Dual-
+  // source escape hatch: when the demo key is configured we still render so
+  // the user can always return to "Your board" even if the preview RPC failed
+  // (canPreview false, empty roster).
+  if (!capability.canPreview && !demoConfigured) return null;
+
+  const previewLive = capability.canPreview;
 
   // Legacy sandbox-on-primary always shows mutating tools. Dual-source: only
   // while viewing demo data on a private shadow — never on "Your board"
   // (would PATCH demo from primary config) and never on shared fixtures.
+  // Also require live preview capability (RPC healthy).
   const showBoardControls =
-    !demoConfigured || (demoBoardPrivate && dataSource === 'demo');
+    previewLive &&
+    (!demoConfigured || (demoBoardPrivate && dataSource === 'demo'));
 
   const busy = switching !== null || reseeding || exiting;
-  const grouped = groupPersonasByRole(personas);
+  const grouped = groupPersonasByRole(previewLive ? personas : []);
   const onYourBoard = demoConfigured && dataSource === 'board';
   const viewerLabel = onYourBoard
     ? m.previewToolbar_yourBoard()
@@ -146,11 +152,13 @@ export function PreviewToolbar({
     setStalePersona(null);
     setSwitching(persona.id);
     try {
-      if (demoConfigured) {
-        writeDataSourceCookie('demo');
-      }
       const result = await switchPersona({ data: { personaId: persona.id } });
       if (result.ok) {
+        // R1: only flip the data-source cookie AFTER a successful switch so a
+        // failed RPC never leaves the browser on demo data with board chrome.
+        if (demoConfigured) {
+          writeDataSourceCookie('demo');
+        }
         // Full reload, not router.invalidate(): a persona switch changes the
         // viewer identity, and every client-held surface (open dock threads,
         // polled inbox state, loader caches) must reset with it — invalidate
@@ -300,65 +308,73 @@ export function PreviewToolbar({
                 </button>
               </div>
             ) : null}
-            <PersonaGroup
-              label={m.previewToolbar_candidates()}
-              personas={grouped.candidate}
-              viewer={onYourBoard ? null : viewer}
-              switching={switching}
-              disabled={busy}
-              onSwitch={onSwitch}
-            />
-            <PersonaGroup
-              label={m.previewToolbar_employers()}
-              personas={grouped.employer}
-              viewer={onYourBoard ? null : viewer}
-              switching={switching}
-              disabled={busy}
-              onSwitch={onSwitch}
-            />
-            {personas.length === 0 ? (
-              <p className="text-muted-foreground p-2 text-xs">
-                {m.previewToolbar_noPersonas()}
-              </p>
+            {previewLive ? (
+              <>
+                <PersonaGroup
+                  label={m.previewToolbar_candidates()}
+                  personas={grouped.candidate}
+                  viewer={onYourBoard ? null : viewer}
+                  switching={switching}
+                  disabled={busy}
+                  onSwitch={onSwitch}
+                />
+                <PersonaGroup
+                  label={m.previewToolbar_employers()}
+                  personas={grouped.employer}
+                  viewer={onYourBoard ? null : viewer}
+                  switching={switching}
+                  disabled={busy}
+                  onSwitch={onSwitch}
+                />
+                {personas.length === 0 ? (
+                  <p className="text-muted-foreground p-2 text-xs">
+                    {m.previewToolbar_noPersonas()}
+                  </p>
+                ) : null}
+              </>
             ) : null}
           </div>
 
-          <Separator />
+          {previewLive ? (
+            <>
+              <Separator />
 
-          {/* Compact toolbar of secondary tools — each opens its own surface. */}
-          <div
-            className="grid grid-cols-2 gap-1 p-2"
-            data-test="preview-actions"
-          >
-            {showBoardControls ? (
-              <FooterAction
-                icon={Settings}
-                label={m.previewToolbar_boardSettings()}
-                disabled={busy}
-                onClick={openBoardSettings}
-              />
-            ) : null}
-            <FooterAction
-              icon={Mail}
-              label={m.previewToolbar_emails()}
-              disabled={busy}
-              onClick={openEmails}
-            />
-            {showBoardControls ? (
-              <FooterAction
-                icon={RotateCcw}
-                label={m.previewToolbar_reseed()}
-                disabled={busy}
-                onClick={openReseed}
-              />
-            ) : null}
-            <FooterAction
-              icon={exiting ? undefined : LogOut}
-              label={m.previewToolbar_exit()}
-              disabled={busy || !viewer || onYourBoard}
-              onClick={handleExit}
-            />
-          </div>
+              {/* Compact toolbar of secondary tools — each opens its own surface. */}
+              <div
+                className="grid grid-cols-2 gap-1 p-2"
+                data-test="preview-actions"
+              >
+                {showBoardControls ? (
+                  <FooterAction
+                    icon={Settings}
+                    label={m.previewToolbar_boardSettings()}
+                    disabled={busy}
+                    onClick={openBoardSettings}
+                  />
+                ) : null}
+                <FooterAction
+                  icon={Mail}
+                  label={m.previewToolbar_emails()}
+                  disabled={busy}
+                  onClick={openEmails}
+                />
+                {showBoardControls ? (
+                  <FooterAction
+                    icon={RotateCcw}
+                    label={m.previewToolbar_reseed()}
+                    disabled={busy}
+                    onClick={openReseed}
+                  />
+                ) : null}
+                <FooterAction
+                  icon={exiting ? undefined : LogOut}
+                  label={m.previewToolbar_exit()}
+                  disabled={busy || !viewer || onYourBoard}
+                  onClick={handleExit}
+                />
+              </div>
+            </>
+          ) : null}
         </PopoverContent>
       </Popover>
 
