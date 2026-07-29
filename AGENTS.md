@@ -11,6 +11,50 @@ app from scratch, never replace the chassis wholesale, never fork the
 data layer. If a request seems to require starting over, it doesn't:
 find the smallest edit to the existing surface.
 
+## Repo orientation
+
+Where things live — content search (grep) confirms anything not listed:
+
+- `src/routes/` — page composition: markup, layout, copy. Keep
+  loaders/server-function calls intact. Route tests are the co-located
+  `-*.test.tsx` files.
+- `src/board/` — view-model mappers (locked layer, see below): VMs
+  carry raw + formatted values.
+- `src/components/board/`, `src/components/search-results/` — board and
+  search presentation; restructure freely.
+- `src/components/ui/` — owned shadcn components; inventory and
+  do/don'ts live in DESIGN.md.
+- `src/components/` (layout, marketing, employer, messages, …) —
+  shared presentation.
+- `src/server/` — the only place the Board API is called.
+- `src/lib/` — env access, SDK client, session, correctness invariants.
+- `src/hooks/` — shared presentation hooks.
+- `src/theme.css` — canonical theme tokens: site-wide colors and fonts
+  live HERE. `src/theme/` and `src/paraglide/` are GENERATED output —
+  never edit them; run `pnpm run gen:theme` / `pnpm run gen:messages`.
+- `messages/` — UI copy catalogs (Paraglide); edit, then
+  `pnpm run gen:messages`.
+- `DESIGN.md` + `design/tokens.dtcg.json` — GENERATED design contract;
+  regenerate with `pnpm run gen:design`, never hand-edit.
+- Tests sit next to their sources (`foo.test.tsx` beside `foo.tsx`).
+
+## Working style
+
+- Search first: locate copy, markup, and identifiers with content
+  search rather than reading whole directories — the catalogs and route
+  files are large.
+- Batch independent reads and searches in a single response; it is
+  always better to speculatively read the few probably-relevant files
+  in one go than to read them one per turn.
+- One coherent change that touches several files should land as ONE
+  batched multi-file edit (`apply_patch` where your environment
+  provides it), never a chain of single-file edits.
+- After editing generator inputs, run the matching generator
+  (`gen:messages`, `gen:theme`, `gen:design`); never hand-edit
+  generated output.
+- Before final verification, run ONLY the co-located tests of the files
+  you changed — never the whole suite.
+
 ## Grounding config is not an agent edit
 
 `CAVUNO_API_URL` and `CAVUNO_BOARD` (the `pk_…` publishable key) bind
@@ -123,6 +167,10 @@ the problem; packages outside the platform allowlist fail deploy closed.
 ```sh
 pnpm run typecheck && pnpm test && pnpm run build
 ```
+
+Hosted agent environments provide a `verify` tool that runs this whole
+gate plus live page checks — there, call it once when the work is
+complete instead of running these commands yourself.
 
 ## Design system
 
