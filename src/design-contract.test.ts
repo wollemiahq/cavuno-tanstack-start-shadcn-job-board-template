@@ -28,8 +28,13 @@ const read = (p: string) => readFileSync(join(root, p), 'utf8');
 describe('AGENTS.md workflow rules', () => {
   const agents = read('AGENTS.md');
 
-  it('stays inside the ~150-line budget', () => {
-    expect(agents.split('\n').length).toBeLessThanOrEqual(150);
+  it('stays inside the ~190-line budget', () => {
+    // Raised from 150 when AGENTS.md became the carrier for repo
+    // orientation + working style (hosted-builder native-dialect arc):
+    // those sections REPLACED the platform's larger computed
+    // workspace-map injection, so net prompt size fell. The budget
+    // stays tight on purpose — additions must trim elsewhere.
+    expect(agents.split('\n').length).toBeLessThanOrEqual(190);
   });
 
   it('carries the five required rule anchors', () => {
