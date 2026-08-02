@@ -13,7 +13,6 @@ const {
   resolvePlace,
   listJobs,
   searchJobs,
-  filterRelatedSearches,
   getSeoBase,
 } = vi.hoisted(() => ({
   resolveCategory: vi.fn(),
@@ -21,7 +20,6 @@ const {
   resolvePlace: vi.fn(),
   listJobs: vi.fn(),
   searchJobs: vi.fn(),
-  filterRelatedSearches: vi.fn(),
   getSeoBase: vi.fn().mockResolvedValue({}),
 }));
 
@@ -31,7 +29,6 @@ vi.mock('../server/queries', () => ({
   resolvePlace,
   listJobs,
   searchJobs,
-  filterRelatedSearches,
   getSeoBase,
 }));
 

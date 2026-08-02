@@ -200,23 +200,14 @@ export const listTopJobCategories = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
     gatedRead(context, async (h) => {
-      const board = getBoard();
-      const envelope = await board.jobs.list({ limit: 20 }, { headers: h });
-      const categories = (envelope.relatedSearches ?? []).filter(
-        (related) => related.type === 'category',
+      const envelope = await getBoard().jobs.list(
+        { limit: 20 },
+        { headers: h },
       );
-      const resolved = await Promise.all(
-        categories.map(async (related) => {
-          const resolution = await resolveOrNull(
-            board.taxonomy.categories.resolve(related.slug, { headers: h }),
-          );
-          return resolution
-            ? { ...related, slug: resolution.canonicalSlug }
-            : null;
-        }),
-      );
-      return resolved.filter(
-        (related): related is RelatedSearch => related !== null,
+      // Every facet slug the API emits resolves — guaranteed by the platform
+      // (ADR-0099, documented on the endpoint), so the tiles link directly.
+      return (envelope.relatedSearches ?? []).filter(
+        (related): related is RelatedSearch => related.type === 'category',
       );
     }),
   );
@@ -651,89 +642,6 @@ export const listPlaces = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().taxonomy.places.list(undefined, { headers: h }),
     ),
-  );
-
-// ── Taxonomy-chip resolvability guard ──────────────────────────────────────
-// The board's browse/facet endpoints (`GET /categories`, `GET /skills`, and a
-// jobs listing's `relatedSearches`) can emit taxonomy slugs that the resolver —
-// the SAME check the `/jobs/:keyword` and `/jobs/skills/:skill` pages run —
-// then rejects, so a chip/tile linking to one 404s (`JobsNotFound`). These
-// helpers let a loader drop such chips before they render. On a board whose
-// read models agree, everything resolves and nothing is dropped. See the
-// platform bug note in the change summary.
-
-/**
- * Resolve a batch of `category`/`skill` chip candidates, returning a
- * `${type}:${slug}` → canonicalSlug map for the subset that resolves. Callers
- * (e.g. the job-detail chips) keep only chips whose key is present and link via
- * the canonical slug. Resolves run in parallel behind one server-fn round trip.
- */
-export const resolveTaxonomyChips = createServerFn({ method: 'GET' })
-  .validator(
-    (input: { candidates: { type: 'category' | 'skill'; slug: string }[] }) =>
-      input,
-  )
-  .middleware([boardAccessMiddleware])
-  .handler(({ data, context }) =>
-    gatedRead(context, async (h) => {
-      const board = getBoard();
-      const entries = await Promise.all(
-        data.candidates.map(async ({ type, slug }) => {
-          const resolver =
-            type === 'skill'
-              ? board.taxonomy.skills
-              : board.taxonomy.categories;
-          const resolution = await resolveOrNull(
-            resolver.resolve(slug, { headers: h }),
-          );
-          return resolution
-            ? ([`${type}:${slug}`, resolution.canonicalSlug] as const)
-            : null;
-        }),
-      );
-      return Object.fromEntries(
-        entries.filter(
-          (entry): entry is NonNullable<(typeof entries)[number]> =>
-            entry !== null,
-        ),
-      ) as Record<string, string>;
-    }),
-  );
-
-/**
- * Filter a jobs listing's `relatedSearches` down to the chips that will land on
- * a real page (see `resolveTaxonomyChips`), swapping each surviving
- * `category`/`skill` slug for its canonical form. `market` terms pass through
- * untouched — they resolve through the companies-markets surface. Loaders hand
- * the result to the listing rail so the rail never links to a 404. Each
- * resolve also fails soft: the rail is additive, so a transient upstream
- * error drops the chip rather than faulting the listing page.
- */
-export const filterRelatedSearches = createServerFn({ method: 'GET' })
-  .validator((input: { related: RelatedSearch[] }) => input)
-  .middleware([boardAccessMiddleware])
-  .handler(({ data, context }) =>
-    gatedRead(context, async (h) => {
-      const board = getBoard();
-      const resolved = await Promise.all(
-        data.related.map(async (related) => {
-          if (related.type === 'market') return related;
-          const resolver =
-            related.type === 'skill'
-              ? board.taxonomy.skills
-              : board.taxonomy.categories;
-          const resolution = await resolveOrNull(
-            resolver.resolve(related.slug, { headers: h }),
-          ).catch(() => null);
-          return resolution
-            ? { ...related, slug: resolution.canonicalSlug }
-            : null;
-        }),
-      );
-      return resolved.filter(
-        (related): related is RelatedSearch => related !== null,
-      );
-    }),
   );
 
 // ── Salary pages ─────────────────────────────────────────────────────────────

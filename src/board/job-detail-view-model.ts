@@ -119,46 +119,23 @@ export function toJobDetailVM(
   companyIntro: string | null,
   language: string,
   labels?: BoardLabelOverrides,
-  /**
-   * Optional `${'category' | 'skill'}:${slug}` → canonicalSlug map of the
-   * taxonomy chips that resolve to a real page (from `resolveTaxonomyChips`).
-   * When supplied, category/skill chips whose slug is absent are omitted and
-   * the survivors link via their canonical slug — the defensive guard against a
-   * job tagged with a slug the taxonomy resolver rejects (its `/jobs/:slug`
-   * page would 404). When omitted, every chip renders as-is (the resolver is
-   * consulted only where a loader can afford the round trip).
-   */
-  resolvableTaxonomy?: Record<string, string>,
 ): JobDetailVM {
   const copy = boardCopy(language, labels).jobDetail;
   const company = job.company;
 
-  // Keep only chips that will land on a live page, canonicalising the slug. A
-  // missing map means "don't filter" (see the param doc); an empty map filters
-  // everything out, which is correct when nothing resolved.
+  // Every emitted slug resolves — the platform guarantees it (ADR-0099), so
+  // chips link directly with no resolve round trip and no filtering.
   const taxonomyChip = (
     type: 'category' | 'skill',
     term: { slug: string; name: string },
-  ): JobDetailChipVM | null => {
-    if (!resolvableTaxonomy) {
-      return {
-        key: term.slug,
-        name: term.name,
-        href:
-          type === 'skill'
-            ? jobsSkillPath(term.slug)
-            : jobsCategoryPath(term.slug),
-      };
-    }
-    const canonical = resolvableTaxonomy[`${type}:${term.slug}`];
-    if (!canonical) return null;
+  ): JobDetailChipVM => {
     return {
-      key: canonical,
+      key: term.slug,
       name: term.name,
       href:
         type === 'skill'
-          ? jobsSkillPath(canonical)
-          : jobsCategoryPath(canonical),
+          ? jobsSkillPath(term.slug)
+          : jobsCategoryPath(term.slug),
     };
   };
 
@@ -327,12 +304,8 @@ export function toJobDetailVM(
     descriptionHtml: job.description ?? null,
     noDescriptionText: copy.noDescriptionText,
     facts,
-    categoryChips: job.categories
-      .map((c) => taxonomyChip('category', c))
-      .filter((chip): chip is JobDetailChipVM => chip !== null),
-    skillChips: job.skills
-      .map((s) => taxonomyChip('skill', s))
-      .filter((chip): chip is JobDetailChipVM => chip !== null),
+    categoryChips: job.categories.map((c) => taxonomyChip('category', c)),
+    skillChips: job.skills.map((s) => taxonomyChip('skill', s)),
     categoriesHeading: copy.categoriesHeading,
     skillsHeading: copy.skillsHeading,
     customFields: customFieldVms,

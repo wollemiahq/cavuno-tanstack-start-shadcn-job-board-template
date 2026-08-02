@@ -94,59 +94,6 @@ describe('toJobDetailVM', () => {
   // link via their canonical slug. This is the defensive guard against a board
   // whose facet/tag read model has drifted from its resolve read model — a chip
   // that 404s is worse than an absent chip. An omitted map means "don't filter".
-  it('omits taxonomy chips whose slug does not resolve, canonicalising the rest', () => {
-    const twoCategoryJob = {
-      ...baseJob,
-      categories: [
-        { slug: 'engineering', name: 'Engineering' },
-        { slug: 'developer-relations', name: 'Developer Relations' },
-      ],
-      skills: [
-        { slug: 'react', name: 'React' },
-        { slug: 'sql', name: 'SQL' },
-      ],
-    } as unknown as PublicJob;
-
-    const filtered = toJobDetailVM(
-      twoCategoryJob,
-      customFields,
-      similar,
-      'Acme intro.',
-      'en',
-      undefined,
-      // engineering + react are rejected by the resolver; developer-relations
-      // resolves (to a slightly different canonical slug), sql resolves as-is.
-      {
-        'category:developer-relations': 'developer-relations-canonical',
-        'skill:sql': 'sql',
-      },
-    );
-
-    expect(filtered.categoryChips).toEqual([
-      {
-        key: 'developer-relations-canonical',
-        name: 'Developer Relations',
-        href: '/jobs/developer-relations-canonical',
-      },
-    ]);
-    expect(filtered.skillChips).toEqual([
-      { key: 'sql', name: 'SQL', href: '/jobs/skills/sql' },
-    ]);
-  });
-
-  it('renders no taxonomy chips when nothing resolves (empty map)', () => {
-    const none = toJobDetailVM(
-      baseJob,
-      customFields,
-      similar,
-      'Acme intro.',
-      'en',
-      undefined,
-      {},
-    );
-    expect(none.categoryChips).toEqual([]);
-    expect(none.skillChips).toEqual([]);
-  });
 
   it('assembles the facts rows (office, permits, timezones, education, experience)', () => {
     const byLabel = Object.fromEntries(vm.facts.map((f) => [f.label, f.value]));

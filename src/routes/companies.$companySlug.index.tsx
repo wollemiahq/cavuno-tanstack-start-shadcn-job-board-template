@@ -46,7 +46,6 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { headTitle } from '@/lib/page-title';
-import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/companies/$companySlug/')({
@@ -76,8 +75,6 @@ export const Route = createFileRoute('/companies/$companySlug/')({
       const hasSalaries =
         salarySummary.overallSalary !== null ||
         salarySummary.byCategory.length > 0;
-      // Resolve the company jobs-tab cards' tag pills so none links to a 404.
-      const resolvableTaxonomy = await resolveCardTaxonomy(jobs.data);
       return {
         company,
         jobs,
@@ -85,7 +82,6 @@ export const Route = createFileRoute('/companies/$companySlug/')({
         seo,
         salarySummary,
         hasSalaries,
-        resolvableTaxonomy,
       };
     } catch (error) {
       if (isNotFound(error)) throw notFound();
@@ -168,15 +164,8 @@ function openJobsHeading(count: number) {
 const JOBS_PREVIEW_COUNT = 6;
 
 function CompanyPage() {
-  const {
-    company,
-    jobs,
-    similar,
-    seo,
-    salarySummary,
-    hasSalaries,
-    resolvableTaxonomy,
-  } = Route.useLoaderData();
+  const { company, jobs, similar, seo, salarySummary, hasSalaries } =
+    Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const copy = boardCopy(seo.language, seo.labels);
   const crumbs = copy.breadcrumbs;
@@ -312,12 +301,7 @@ function CompanyPage() {
                 {previewJobs.map((job) => (
                   <JobCard
                     key={job.id}
-                    vm={toJobCardVM(
-                      job,
-                      board.language,
-                      board.labels,
-                      resolvableTaxonomy,
-                    )}
+                    vm={toJobCardVM(job, board.language, board.labels)}
                     compact
                   />
                 ))}
