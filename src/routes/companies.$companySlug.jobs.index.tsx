@@ -9,9 +9,9 @@ import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
  * shadowing it (TanStack matches the exact index path).
  *
  * Honest pagination + search, both server-side: the jobs SEARCH endpoint
- * (`filters.companyId`) narrows a free-text query to this company and
+ * (`filters.companySlug`) narrows a free-text query to this company and
  * accepts `offset`, so the `?page=` numbered nav addresses the result set;
- * with no query the BROWSE list (`companyId` + `offset`) does the same.
+ * with no query the BROWSE list (`companySlug` + `offset`) does the same.
  * Both share the `src/lib/pagination.ts` seam that `/jobs` uses. Submitting
  * a fresh query drops `?page=` (see CompanyJobsSearchBar), resetting to
  * page 1.
@@ -99,7 +99,7 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
               data: {
                 query: deps.q,
                 filters: {
-                  companyId: [company.id],
+                  companySlug: [company.slug],
                   ...(deps.location ? { location: deps.location } : {}),
                 },
                 offset,
@@ -108,7 +108,7 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
             })
           : listJobs({
               data: {
-                companyId: [company.id],
+                companySlug: [company.slug],
                 ...(deps.location ? { location: deps.location } : {}),
                 offset,
                 limit: COMPANY_JOBS_PAGE_SIZE,
@@ -231,29 +231,31 @@ function CompanyJobsPage() {
         locationSuggestions={locationSuggestions}
       />
 
-      <p className="text-foreground text-base font-semibold">{countLabel}</p>
+      <div data-pagination-scroll-target className="space-y-8">
+        <p className="text-foreground text-base font-semibold">{countLabel}</p>
 
-      <JobList
-        jobs={page.data.map((job) =>
-          toJobCardVM(job, board.language, board.labels),
-        )}
-        language={board.language}
-        labels={board.labels}
-        variant="grid"
-        compact
-      />
+        <JobList
+          jobs={page.data.map((job) =>
+            toJobCardVM(job, board.language, board.labels),
+          )}
+          language={board.language}
+          labels={board.labels}
+          variant="grid"
+          compact
+        />
 
-      <ListingPagination
-        page={currentPage}
-        count={count}
-        pageSize={COMPANY_JOBS_PAGE_SIZE}
-        hrefForPage={(nextPage) => listingPageHref(currentHref, nextPage)}
-        onPageChange={(next) =>
-          navigate({
-            search: (prev) => ({ ...prev, page: pageSearchValue(next) }),
-          })
-        }
-      />
+        <ListingPagination
+          page={currentPage}
+          count={count}
+          pageSize={COMPANY_JOBS_PAGE_SIZE}
+          hrefForPage={(nextPage) => listingPageHref(currentHref, nextPage)}
+          onPageChange={(next) =>
+            navigate({
+              search: (prev) => ({ ...prev, page: pageSearchValue(next) }),
+            })
+          }
+        />
+      </div>
     </CompanySectionShell>
   );
 }

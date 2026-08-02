@@ -91,6 +91,36 @@ describe('ListingPagination — owned shadcn navigation', () => {
     expect(onPageChange.mock.calls).toEqual([[1], [4], [3]]);
   });
 
+  it('scrolls the containing list to its top before changing pages', () => {
+    const onPageChange = vi.fn();
+    const scrollIntoView = vi.fn();
+    const scrollTo = vi.fn();
+    const { container } = render(
+      <section data-pagination-scroll-target>
+        <ListingPagination
+          page={2}
+          count={80}
+          pageSize={20}
+          hrefForPage={(page) => `/jobs?page=${page}`}
+          onPageChange={onPageChange}
+        />
+      </section>,
+    );
+    const list = container.querySelector<HTMLElement>(
+      '[data-pagination-scroll-target]',
+    )!;
+    list.scrollIntoView = scrollIntoView;
+    list.scrollTo = scrollTo;
+
+    fireEvent.click(screen.getByLabelText(/next page/i));
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0 });
+    expect(scrollIntoView.mock.invocationCallOrder[0]).toBeLessThan(
+      onPageChange.mock.invocationCallOrder[0]!,
+    );
+  });
+
   it('keeps compact pagination navigable at a later page', () => {
     render(
       <ListingPagination
