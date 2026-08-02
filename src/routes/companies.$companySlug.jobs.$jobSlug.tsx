@@ -33,7 +33,6 @@ import {
   getJob,
   getSeoBase,
   getSimilarJobs,
-  resolveTaxonomyChips,
   subscribeJobAlert,
 } from '../server/queries';
 
@@ -55,7 +54,6 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { headTitle } from '@/lib/page-title';
-import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 import type { PublicJobCard } from '@cavuno/board';
 
 export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
@@ -77,48 +75,22 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
       // slow (or failing) similar backend never blocks the job's first paint.
       // Streamed via <Await>; a search outage (503) hides it, never breaks the
       // page (mirrors the hosted similar-jobs loader).
-      // Resolve the similar cards' own tag pills alongside the deferred rail —
-      // the similar jobs carry their own categories/skills, distinct from this
-      // job's, so they need their own resolves-or-omits map.
       const similar = getSimilarJobs({ data: { jobSlug: params.jobSlug } })
-        .then(async (r) => ({
-          jobs: r.data,
-          resolvableTaxonomy: await resolveCardTaxonomy(r.data),
-        }))
-        .catch(() => ({
-          jobs: [] as PublicJobCard[],
-          resolvableTaxonomy: {} as Record<string, string>,
-        }));
+        .then((r) => ({ jobs: r.data }))
+        .catch(() => ({ jobs: [] as PublicJobCard[] }));
       const application = user?.emailVerified
         ? await myApplicationForJob({
             data: { jobSlug: params.jobSlug },
           }).catch(() => null)
         : null;
-      // Drop category/skill chips whose slug the taxonomy resolver rejects (a
-      // facet/taxonomy read-model drift on the board would otherwise render a
-      // chip that 404s). On a healthy board every tag resolves and the set is
-      // complete. A resolve outage degrades to "no chips", never a broken link.
-      const resolvableTaxonomy = await resolveTaxonomyChips({
-        data: {
-          candidates: [
-            ...(job.categories ?? []).map((c) => ({
-              type: 'category' as const,
-              slug: c.slug,
-            })),
-            ...(job.skills ?? []).map((s) => ({
-              type: 'skill' as const,
-              slug: s.slug,
-            })),
-          ],
-        },
-      }).catch(() => ({}) as Record<string, string>);
+      // Category/skill chips link directly: every slug the API emits
+      // resolves (ADR-0099 platform guarantee) — no re-verification round trip.
       return {
         job,
         user,
         similar,
         company,
         seo,
-        resolvableTaxonomy,
         alreadyApplied: application !== null,
       };
     } catch (error) {
@@ -184,15 +156,8 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
 const rootApi = getRouteApi('__root__');
 
 function JobDetailPage() {
-  const {
-    job,
-    user,
-    similar,
-    company,
-    seo,
-    resolvableTaxonomy,
-    alreadyApplied,
-  } = Route.useLoaderData();
+  const { job, user, similar, company, seo, alreadyApplied } =
+    Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const defaults = jobAlertDefaultsFromJob(job);
   const router = useRouter();
@@ -208,7 +173,6 @@ function JobDetailPage() {
     companyIntro(null, company?.description ?? null),
     board.language,
     board.labels,
-    resolvableTaxonomy,
   );
 
   const jsonLd = [
@@ -283,12 +247,7 @@ function JobDetailPage() {
                   </Text>
                   <JobList
                     jobs={similarRail.jobs.map((job) =>
-                      toJobCardVM(
-                        job,
-                        board.language,
-                        board.labels,
-                        similarRail.resolvableTaxonomy,
-                      ),
+                      toJobCardVM(job, board.language, board.labels),
                     )}
                     language={board.language}
                     labels={board.labels}

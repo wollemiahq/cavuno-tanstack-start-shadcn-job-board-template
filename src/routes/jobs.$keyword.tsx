@@ -13,15 +13,9 @@ import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
 import { pageToOffset } from '../lib/pagination';
 import { m } from '../paraglide/messages';
 import { saveJob } from '../server/account';
-import {
-  filterRelatedSearches,
-  getSeoBase,
-  listJobs,
-  resolveCategory,
-} from '../server/queries';
+import { getSeoBase, listJobs, resolveCategory } from '../server/queries';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
-import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 import {
   ProgrammaticJobsView,
   PROGRAMMATIC_JOBS_PAGE_SIZE,
@@ -57,11 +51,8 @@ export const Route = createFileRoute('/jobs/$keyword')({
       }),
       getSeoBase(),
     ]);
-    const relatedSearches = list.relatedSearches?.length
-      ? await filterRelatedSearches({ data: { related: list.relatedSearches } })
-      : list.relatedSearches;
-    const resolvableTaxonomy = await resolveCardTaxonomy(list.data);
-    return { category, list, seo, relatedSearches, resolvableTaxonomy };
+    const relatedSearches = list.relatedSearches;
+    return { category, list, seo, relatedSearches };
   },
   head: ({ loaderData, params }) =>
     loaderData
@@ -79,8 +70,7 @@ export const Route = createFileRoute('/jobs/$keyword')({
 });
 
 function CategoryPage() {
-  const { category, list, seo, relatedSearches, resolvableTaxonomy } =
-    Route.useLoaderData();
+  const { category, list, seo, relatedSearches } = Route.useLoaderData();
   const search = Route.useSearch();
   return (
     <ProgrammaticJobsView
@@ -91,7 +81,6 @@ function CategoryPage() {
       page={search.page ?? 1}
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
       relatedSearches={relatedSearches}
-      resolvableTaxonomy={resolvableTaxonomy}
       origin={seo.origin}
       filters={search}
       onSaveJob={async (jobId) => {

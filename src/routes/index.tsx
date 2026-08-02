@@ -32,7 +32,6 @@ import {
 import { toJobCardVM } from '@/board/job-view-model';
 import { HomeLanding } from '@/components/board/home-landing';
 import { headTitle } from '@/lib/page-title';
-import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 
 interface JobsSearch extends ListingFilters {
   cursor?: string;
@@ -105,15 +104,12 @@ export const Route = createFileRoute('/')({
           : Promise.resolve(null),
       ]);
     const talentPage = talent?.status === 'available' ? talent.page : null;
-    // Resolve the "Latest jobs" cards' tag pills so none links to a 404.
-    const resolvableTaxonomy = await resolveCardTaxonomy(page.data);
     return {
       page,
       companies: companies?.data ?? [],
       companiesCount: companies?.count ?? null,
       topCategories,
       seo,
-      resolvableTaxonomy,
       posts: blog?.data ?? null,
       postsCount: blog?.count ?? null,
       talent: talentPage?.data ?? null,
@@ -151,7 +147,6 @@ function HomePage() {
     companiesCount,
     topCategories,
     seo,
-    resolvableTaxonomy,
     posts,
     postsCount,
     talent,
@@ -195,7 +190,7 @@ function HomePage() {
     m.home_postPlural(),
   );
   const jobs = page.data.map((job) =>
-    toJobCardVM(job, board.language, board.labels, resolvableTaxonomy),
+    toJobCardVM(job, board.language, board.labels),
   );
   const hiringCompanies = companies
     .filter((company) => company.publishedJobCount > 0)

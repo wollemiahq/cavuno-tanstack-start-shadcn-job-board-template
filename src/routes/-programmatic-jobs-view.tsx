@@ -35,7 +35,6 @@ export function ProgrammaticJobsView({
   page,
   pageSize,
   relatedSearches,
-  resolvableTaxonomy,
   origin,
   filters,
   location,
@@ -48,8 +47,6 @@ export function ProgrammaticJobsView({
   page: number;
   pageSize: number;
   relatedSearches?: RelatedSearch[];
-  /** Card tag-pill resolvability map (see `JobSearchPage`). */
-  resolvableTaxonomy?: Record<string, string>;
   origin?: string;
   filters: JobsSearch;
   location?: { slug: string; label: string };
@@ -85,9 +82,7 @@ export function ProgrammaticJobsView({
         heading={heading}
         count={count}
         gatedCount={gatedCount}
-        jobs={jobs.map((job) =>
-          toJobCardVM(job, board.language, board.labels, resolvableTaxonomy),
-        )}
+        jobs={jobs.map((job) => toJobCardVM(job, board.language, board.labels))}
         page={page}
         pageSize={pageSize}
         relatedSearches={relatedSearches}

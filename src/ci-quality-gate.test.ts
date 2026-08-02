@@ -67,4 +67,38 @@ describe('CI quality gate', () => {
       'vp fmt -c .oxfmtrc.json --check && vp check --no-fmt',
     );
   });
+  it('never re-verifies emitted taxonomy slugs — the API guarantees they resolve (ADR-0099)', () => {
+    // The per-slug resolve fan-out this guards against once cost a real board
+    // 297 API round trips and ~15s of TTFB per /jobs render. Card/chip slugs
+    // come from the jobs list/detail responses, whose contract guarantees
+    // every emitted slug resolves — so no loader may re-check them. The
+    // legitimate taxonomy resolvers (one resolve per LANDING page, e.g.
+    // /jobs/:keyword) take a single slug; what this pins is the absence of
+    // per-item resolution primitives.
+    const sourceDirectory = resolve(process.cwd(), 'src');
+    const banned = [
+      'resolveTaxonomyChips',
+      'filterRelatedSearches',
+      'resolveCardTaxonomy',
+      'collectCardTaxonomyCandidates',
+    ];
+    const offenders: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const path = resolve(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(path);
+          continue;
+        }
+        if (!/\.(ts|tsx)$/.test(entry.name)) continue;
+        if (entry.name === 'ci-quality-gate.test.ts') continue;
+        const content = readFileSync(path, 'utf8');
+        for (const name of banned) {
+          if (content.includes(name)) offenders.push(`${path}: ${name}`);
+        }
+      }
+    };
+    walk(sourceDirectory);
+    expect(offenders).toEqual([]);
+  });
 });

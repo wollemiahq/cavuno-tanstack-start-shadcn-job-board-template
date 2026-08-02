@@ -76,71 +76,25 @@ export interface JobCardVM {
   tags: JobCardTagVM[];
 }
 
-/**
- * Collect the DEDUPED union of category/skill tag slugs across a page of job
- * cards, as `resolveTaxonomyChips` candidates. A loader resolves this set once
- * (a 20-card page has far fewer unique tags than 20×N) and threads the returned
- * map into every card's `toJobCardVM`, so the whole page's pills share one
- * batched resolve round trip.
- */
-export function collectCardTaxonomyCandidates(
-  jobs: readonly Pick<PublicJobCard, 'categories' | 'skills'>[],
-): { type: 'category' | 'skill'; slug: string }[] {
-  const seen = new Set<string>();
-  const candidates: { type: 'category' | 'skill'; slug: string }[] = [];
-  const add = (type: 'category' | 'skill', slug: string) => {
-    const key = `${type}:${slug}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    candidates.push({ type, slug });
-  };
-  for (const job of jobs) {
-    for (const c of job.categories ?? []) add('category', c.slug);
-    for (const s of job.skills ?? []) add('skill', s.slug);
-  }
-  return candidates;
-}
-
 export function toJobCardVM(
   job: PublicJobCard,
   language: string,
   labels?: BoardLabelOverrides,
-  /**
-   * Optional `${'category' | 'skill'}:${slug}` → canonicalSlug map of the tag
-   * pills that resolve to a real page (from `resolveTaxonomyChips`). When
-   * supplied, category/skill pills whose slug is absent are omitted and the
-   * survivors link via their canonical slug — the same resolves-or-omits guard
-   * `toJobDetailVM` applies, so a card never links to a `/jobs/:slug` that 404s
-   * on a board whose facet/tag read model has drifted from its resolve read
-   * model. When omitted, every pill renders as-is (the resolver is consulted
-   * only where a loader can afford the round trip).
-   */
-  resolvableTaxonomy?: Record<string, string>,
 ): JobCardVM {
   const company = job.company;
 
-  // Keep only pills that will land on a live page, canonicalising the slug. A
-  // missing map means "don't filter"; an empty map filters everything out,
-  // which is correct when nothing resolved (e.g. a resolve outage).
+  // Every emitted slug resolves — the platform guarantees it (ADR-0099), so
+  // pills link directly with no resolve round trip and no filtering.
   const tagPill = (
     type: 'category' | 'skill',
     term: { slug: string; name: string },
-  ): JobCardTagVM | null => {
+  ): JobCardTagVM => {
     const prefix = type === 'category' ? 'c' : 's';
     const path = type === 'category' ? jobsCategoryPath : jobsSkillPath;
-    if (!resolvableTaxonomy) {
-      return {
-        key: `${prefix}-${term.slug}`,
-        name: term.name,
-        href: path(term.slug),
-      };
-    }
-    const canonical = resolvableTaxonomy[`${type}:${term.slug}`];
-    if (!canonical) return null;
     return {
-      key: `${prefix}-${canonical}`,
+      key: `${prefix}-${term.slug}`,
       name: term.name,
-      href: path(canonical),
+      href: path(term.slug),
     };
   };
   const salaryLabel = formatSalaryRange(
@@ -191,7 +145,7 @@ export function toJobCardVM(
     tags: [
       ...job.categories.map((c) => tagPill('category', c)),
       ...job.skills.map((s) => tagPill('skill', s)),
-    ].filter((tag): tag is JobCardTagVM => tag !== null),
+    ],
   };
 }
 

@@ -25,7 +25,6 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { headTitle } from '@/lib/page-title';
-import { resolveCardTaxonomy } from '@/lib/resolve-card-taxonomy';
 import { cn } from '@/lib/utils';
 import type {
   EmploymentType,
@@ -118,13 +117,10 @@ export const Route = createFileRoute('/embed/jobs')({
       }),
       getBoardContext(),
     ]);
-    // Resolve the embed cards' tag pills so none links to a 404.
-    const resolvableTaxonomy = await resolveCardTaxonomy(page.data);
     return {
       page,
       showCavunoBranding: context.showCavunoBranding,
       boardName: context.name,
-      resolvableTaxonomy,
     };
   },
   // The embed widget is a fragment meant to be iframed — never indexed (parity
@@ -190,8 +186,7 @@ function buildEmbedCta(
 const rootApi = getRouteApi('__root__');
 
 function EmbedJobsPage() {
-  const { page, showCavunoBranding, resolvableTaxonomy } =
-    Route.useLoaderData();
+  const { page, showCavunoBranding } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const search = Route.useSearch();
   const jobs = page.data as PublicJobCard[];
@@ -205,12 +200,7 @@ function EmbedJobsPage() {
           {jobs.map((job) => (
             <JobCard
               key={job.id}
-              vm={toJobCardVM(
-                job,
-                board.language,
-                board.labels,
-                resolvableTaxonomy,
-              )}
+              vm={toJobCardVM(job, board.language, board.labels)}
             />
           ))}
         </div>
