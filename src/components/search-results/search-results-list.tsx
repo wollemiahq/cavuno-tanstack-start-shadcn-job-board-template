@@ -39,11 +39,11 @@ export const SearchResultsList = forwardRef<
       )}
     >
       {/* The one content-padding contract shared by jobs, companies, and
-          talent: vertical inset only. The column's horizontal gutters come
-          from the search-results grid, so this must NOT add side padding
-          (an asymmetric right inset was leaving a gap beside the sticky
-          results header). */}
-      <div className="space-y-4 py-4">{children}</div>
+          talent. On mobile the master column is full-width, so this wrapper
+          supplies the page gutter for cards, pagination, and related-search
+          chips. From the desktop split view onward, SearchResultsLayout owns
+          the outer gutter and the list sits flush against the detail pane. */}
+      <div className="space-y-4 px-4 py-4 md:px-0">{children}</div>
     </section>
   );
 });

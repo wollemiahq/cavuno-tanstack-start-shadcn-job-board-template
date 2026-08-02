@@ -38,7 +38,7 @@ export function SearchResultCard({
           // `ring-foreground/5 dark:ring-foreground/10`, and the single-variant
           // selected ring ties that dark rule on specificity — losing the
           // colour while keeping the width. Stacking both variants wins.
-          'hover:bg-accent/50 focus-within:ring-ring/50 data-[selected=true]:bg-primary/5 data-[selected=true]:ring-primary dark:data-[selected=true]:ring-primary gap-0 py-0 shadow-none transition-colors ring-inset focus-within:ring-2 data-[selected=true]:ring-2',
+          'hover:bg-accent/50 focus-within:ring-ring/50 data-[selected=true]:bg-primary/5 data-[selected=true]:ring-primary dark:data-[selected=true]:ring-primary gap-0 py-0 transition-[color,background-color,box-shadow] ring-inset focus-within:ring-2 hover:shadow-md data-[selected=true]:ring-2',
           className,
         )}
       >

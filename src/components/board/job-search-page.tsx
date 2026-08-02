@@ -150,7 +150,6 @@ export function JobSearchPage({
       heading={heading}
       language={language}
       labels={labels}
-      className={jobVms.length > 0 ? 'px-4 md:px-0' : undefined}
     />
   );
   return (

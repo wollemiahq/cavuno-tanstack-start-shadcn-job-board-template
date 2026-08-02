@@ -4,9 +4,8 @@ import { CompanyAvatar } from '@/components/board/company-avatar';
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
-  CardAction,
+  CardContent,
   CardDescription,
-  CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 /**
@@ -56,9 +55,9 @@ export function CompanyCard({
       role="article"
       className="h-full gap-4 transition-shadow hover:shadow-md"
     >
-      <CardHeader className="grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3">
+      <CardContent className="flex items-start gap-3">
         <CompanyAvatar name={name} logoUrl={logoUrl} size="lg" />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <CardTitle>
             <h3 dir="auto">
               <Link
@@ -76,14 +75,14 @@ export function CompanyCard({
             </CardDescription>
           ) : null}
         </div>
-        {/* The open-count rides the card's top-right action slot — the real
-            link is still the company name. */}
+        {/* The count stays at the top-right while the flexible identity column
+            keeps the name beside the logo even when there is no description. */}
         {publishedJobCount > 0 ? (
-          <CardAction className="col-start-3">
+          <div className="shrink-0">
             <Badge variant="secondary">{jobCountLabel}</Badge>
-          </CardAction>
+          </div>
         ) : null}
-      </CardHeader>
+      </CardContent>
     </Card>
   );
 }

@@ -93,10 +93,7 @@ export function TalentSearchPage({
         })
       : null;
   const resultsBar = (
-    <div
-      data-slot="talent-results-bar"
-      className={candidateVms.length > 0 ? 'px-4 pb-3 md:px-0' : 'pb-3'}
-    >
+    <div data-slot="talent-results-bar" className="pb-3">
       <h1 className="text-foreground text-lg font-semibold tracking-tight">
         {m.talentSearch_resultsHeading()}
       </h1>
