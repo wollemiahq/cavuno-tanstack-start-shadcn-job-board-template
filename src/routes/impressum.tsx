@@ -2,25 +2,18 @@ import { isNotFound } from '@cavuno/board';
 import { createFileRoute, notFound } from '@tanstack/react-router';
 
 import { LegalPageView } from '../components/legal-page';
-import { LEGAL_PAGES, legalMetaDescription } from '../lib/legal';
 import { m } from '../paraglide/messages';
-import { getLegalPage, getSeoBase } from '../server/queries';
+import { getLegalPageView } from '../server/legal-pages';
 
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageLayout } from '@/components/layout/page-layout';
-import { headTitle } from '@/lib/page-title';
-
-const META = LEGAL_PAGES.impressum;
 
 export const Route = createFileRoute('/impressum')({
   // The shared page layout owns the full-width route geometry.
   staticData: { fullBleed: true, ownsMain: true },
   loader: async () => {
     try {
-      const [page, seo] = await Promise.all([
-        getLegalPage({ data: { type: 'impressum' } }),
-        getSeoBase(),
-      ]);
-      return { page, seo };
+      return await getLegalPageView({ data: { type: 'impressum' } });
     } catch (error) {
       // Impressum is gated on the board's `impressumEnabled` flag → 404 when off.
       if (isNotFound(error)) throw notFound();
@@ -29,23 +22,7 @@ export const Route = createFileRoute('/impressum')({
   },
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData?.seo.boardName,
-                loaderData.page.title,
-              ),
-            },
-            {
-              name: 'description',
-              content: legalMetaDescription(loaderData.page.content),
-            },
-          ],
-          links: [
-            { rel: 'canonical', href: `${loaderData.seo.origin}${META.path}` },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: ImpressumPage,
   notFoundComponent: () => (
@@ -58,14 +35,6 @@ export const Route = createFileRoute('/impressum')({
 });
 
 function ImpressumPage() {
-  const { page, seo } = Route.useLoaderData();
-  return (
-    <LegalPageView
-      page={page}
-      origin={seo.origin}
-      meta={META}
-      language={seo.language}
-      labels={seo.labels}
-    />
-  );
+  const { page } = Route.useLoaderData();
+  return <LegalPageView page={page} />;
 }
