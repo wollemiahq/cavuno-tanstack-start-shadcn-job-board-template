@@ -17,12 +17,15 @@ import {
   type BoardLabelOverrides,
 } from '@cavuno/board/format';
 import {
+  formatSalaryStatRange as formatRange,
+  formatSalaryStatUsd as formatUsd,
+} from '@cavuno/board/format';
+import {
   companySalaryPath,
   salaryLocationPath,
   salarySkillPath,
   salaryTitlePath,
 } from '@cavuno/board/paths';
-import { formatRange, formatUsd } from '@cavuno/board/seo';
 
 /**
  * Presentation re-export of the SDK range formatter. Route modules must not

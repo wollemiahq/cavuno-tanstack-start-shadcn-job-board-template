@@ -37,7 +37,14 @@ const BUDGETS = {
     // Rebaselined for the intentional RTL-aware Recharts axis support. Keep
     // the increase narrow: the measured route is ~800.6 kB raw.
     '/employers/companies/$slug/profile': { raw: 820_000, gzip: 250_000 },
-    '/post': { raw: 550_000, gzip: 180_000 },
+    // @cavuno/board 3.2.0 splits its ESM entries, so the format helpers this
+    // form needs are charged here instead of riding the shared shell. Public
+    // routes all gained 2.2 KiB gzip; /post is the one surface that nets
+    // WORSE (+2.1 KiB total first load) from ~2 KiB of chunk-boundary
+    // duplication. Accepted deliberately: /post is an authenticated,
+    // low-traffic form, not an indexed surface, and the shell win applies to
+    // every public page. Measured 548.6 KiB raw / 178.4 KiB gzip.
+    '/post': { raw: 565_000, gzip: 183_000 },
     // Shell→route reassignment after salary SEO left main (job-detail /
     // resolve-copy-group no longer shell-shared). Total first load fell.
     '/employers/companies/$slug/': { raw: 440_000, gzip: 135_000 },

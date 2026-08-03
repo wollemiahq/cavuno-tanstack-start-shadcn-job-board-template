@@ -18,13 +18,13 @@ import {
   resolveCustomFieldDisplay,
   type BoardLabelOverrides,
 } from '@cavuno/board/format';
+import { buildJobBreadcrumbs } from '@cavuno/board/format';
 import {
   companyPath,
   jobDetailPath,
   jobsCategoryPath,
   jobsSkillPath,
 } from '@cavuno/board/paths';
-import { buildJobBreadcrumbs } from '@cavuno/board/seo';
 
 import { jobDetailCopy } from '@/copy-groups/job-detail';
 import type { PublicBoard, PublicJob, PublicJobCard } from '@cavuno/board';

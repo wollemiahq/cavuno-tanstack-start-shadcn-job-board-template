@@ -210,10 +210,7 @@ export const getSalaryTitlesIndexPage = createServerFn({ method: 'GET' })
   .handler(({ context }) =>
     gatedRead(context, async (headers) => {
       const [titles, seo] = await Promise.all([
-        getBoard().salaries.titles.list(
-          { locale: getLocale() },
-          { headers },
-        ),
+        getBoard().salaries.titles.list({ locale: getLocale() }, { headers }),
         seoBase(),
       ]);
       const c = crumbs(seo);
@@ -263,10 +260,7 @@ export const getSalarySkillsIndexPage = createServerFn({ method: 'GET' })
   .handler(({ context }) =>
     gatedRead(context, async (headers) => {
       const [skills, seo] = await Promise.all([
-        getBoard().salaries.skills.list(
-          { locale: getLocale() },
-          { headers },
-        ),
+        getBoard().salaries.skills.list({ locale: getLocale() }, { headers }),
         seoBase(),
       ]);
       const c = crumbs(seo);
@@ -416,10 +410,7 @@ export const getTitleSalaryPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: boardUrl(
-              seo.origin,
-              salaryTitlePath(salary.canonicalSlug),
-            ),
+            href: boardUrl(seo.origin, salaryTitlePath(salary.canonicalSlug)),
           },
         ],
       };
@@ -500,14 +491,15 @@ export const getSkillSalaryPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: boardUrl(
-              seo.origin,
-              salarySkillPath(salary.canonicalSlug),
-            ),
+            href: boardUrl(seo.origin, salarySkillPath(salary.canonicalSlug)),
           },
         ],
       };
-      const faqs = buildSalaryFaq(locale, salary.skillName, salary.overallSalary);
+      const faqs = buildSalaryFaq(
+        locale,
+        salary.skillName,
+        salary.overallSalary,
+      );
       const jsonLd = asJsonObjects(
         [
           skillSalaryJsonLd(salary),
@@ -600,7 +592,11 @@ export const getLocationSalaryPage = createServerFn({ method: 'GET' })
           },
         ],
       };
-      const faqs = buildSalaryFaq(locale, salary.placeName, salary.overallSalary);
+      const faqs = buildSalaryFaq(
+        locale,
+        salary.placeName,
+        salary.overallSalary,
+      );
       const jsonLd = asJsonObjects(
         [
           locationSalaryJsonLd(salary),

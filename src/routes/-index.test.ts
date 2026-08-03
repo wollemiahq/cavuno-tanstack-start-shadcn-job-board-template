@@ -96,9 +96,7 @@ describe('home route — landing contracts', () => {
               content: 'https://careers.acme.test/',
             },
           ],
-          links: [
-            { rel: 'canonical', href: 'https://careers.acme.test/' },
-          ],
+          links: [{ rel: 'canonical', href: 'https://careers.acme.test/' }],
         },
         jsonLd: [
           {

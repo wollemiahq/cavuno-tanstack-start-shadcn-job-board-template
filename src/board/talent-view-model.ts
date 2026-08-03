@@ -1,4 +1,4 @@
-import { normalizeWebsiteUrl } from '@cavuno/board/seo';
+import { normalizeWebsiteUrl } from '@cavuno/board/format';
 
 import type { TalentDirectoryEntry, TalentProfile } from '@cavuno/board';
 

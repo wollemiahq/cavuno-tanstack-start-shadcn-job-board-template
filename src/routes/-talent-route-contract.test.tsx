@@ -306,9 +306,7 @@ describe('canonical talent profile route', () => {
     };
     const payloads = (scripts ?? [])
       .filter((script) => script.type === 'application/ld+json')
-      .map(
-        (script) => JSON.parse(script.children) as Record<string, unknown>,
-      );
+      .map((script) => JSON.parse(script.children) as Record<string, unknown>);
 
     expect(payloads).toEqual(
       expect.arrayContaining([

@@ -1,3 +1,14 @@
+import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
+import { createServerFn } from '@tanstack/react-start';
+import { getRequest } from '@tanstack/react-start/server';
+
+import { getBoard } from '../lib/board';
+import { boardAccessMiddleware } from '../lib/board-access-middleware';
+import { LEGAL_PAGES, legalMetaDescription } from '../lib/legal';
+import { headTitle } from '../lib/page-title';
+import { gatedRead } from './board-access';
+
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 /**
  * Route-family-owned server boundary for the legal/about surfaces.
  *
@@ -12,17 +23,6 @@
  * in a Suspense segment that does not flush.
  */
 import type { LegalPageType } from '@cavuno/board';
-import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
-import { createServerFn } from '@tanstack/react-start';
-import { getRequest } from '@tanstack/react-start/server';
-
-import { getBoard } from '../lib/board';
-import { boardAccessMiddleware } from '../lib/board-access-middleware';
-import { LEGAL_PAGES, legalMetaDescription } from '../lib/legal';
-import { headTitle } from '../lib/page-title';
-import { gatedRead } from './board-access';
-
-import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 
 /**
  * JSON-LD is schema.org-shaped nested objects. TanStack Start's server-fn
