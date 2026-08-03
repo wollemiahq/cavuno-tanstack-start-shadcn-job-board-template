@@ -1,3 +1,7 @@
+/**
+ * Salary hub — data + head + breadcrumb JSON-LD come from getSalaryHubPage so
+ * `@cavuno/board/seo` stays out of the universal client entry.
+ */
 import {
   BOARD_PATHS,
   companySalaryPath,
@@ -5,7 +9,6 @@ import {
   salarySkillPath,
   salaryTitlePath,
 } from '@cavuno/board/paths';
-import { createBreadcrumbJsonLd, formatRange } from '@cavuno/board/seo';
 import { createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
@@ -14,6 +17,7 @@ import { SalaryPageLayout } from './-salary-page-layout';
 import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
+  formatSalaryRange,
   toSalaryBreadcrumbVM,
   toSalaryRailVM,
 } from '@/board/salary-view-model';
@@ -22,7 +26,7 @@ import {
   SalaryRail,
   type RailItem,
 } from '@/components/board/salary-sections';
-import { JsonLd } from '@/components/json-ld';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
 import { buttonVariants } from '@/components/ui/button';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
@@ -32,7 +36,10 @@ const PREVIEW = 9;
 export const Route = createFileRoute('/salaries/')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: () => getSalaryHubPage(),
-  head: ({ loaderData }) => loaderData?.head ?? {},
+  head: ({ loaderData }) =>
+    loaderData
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
+      : {},
   component: SalariesHub,
   pendingComponent: SalaryPendingPage,
 });
@@ -42,36 +49,29 @@ function SalariesHub() {
   const crumbs = breadcrumbsCopy(seo.language, seo.labels);
   const locale = seo.language;
 
-  const jsonLd = [
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      { label: crumbs.salaries },
-    ]),
-  ].filter((e): e is Record<string, unknown> => e !== null);
-
   const companyItems: RailItem[] = companies.slice(0, PREVIEW).map((x) => ({
     name: x.companyName,
     href: companySalaryPath(x.companySlug),
-    range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
     logoPath: x.logoPath,
   }));
   const titleItems: RailItem[] = titles.slice(0, PREVIEW).map((x) => ({
     name: x.name,
     href: salaryTitlePath(x.slug),
-    range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
   const skillItems: RailItem[] = skills.slice(0, PREVIEW).map((x) => ({
     name: x.name,
     href: salarySkillPath(x.slug),
-    range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
   const locationItems: RailItem[] = locations.slice(0, PREVIEW).map((x) => ({
     name: x.placeName,
     href: salaryLocationPath(x.placeSlug),
-    range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
   const hasSalaryData =
@@ -94,7 +94,6 @@ function SalariesHub() {
       title={crumbs.salaries}
       description={m.salaryHub_subheading()}
     >
-      <JsonLd data={jsonLd} />
       {hasSalaryData ? (
         <>
           <HubSection

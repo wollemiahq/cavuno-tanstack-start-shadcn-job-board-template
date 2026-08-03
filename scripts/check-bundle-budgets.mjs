@@ -30,17 +30,24 @@ const BUDGETS = {
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {
     // The decorative home hero shader is idle-loaded, not initial-route work.
-    '/': { raw: 50_000, gzip: 22_000 },
+    // Residual `-home-page.tsx` still imports `@cavuno/board/seo` (out of the
+    // salaries Family D scope). After salary SEO left the shared main entry,
+    // home pays for its own seo chunk (~5 KiB gzip); total first load still
+    // fell with the shell. Rebaseline to the measured post-D route increment.
+    '/': { raw: 65_000, gzip: 26_000 },
     // Rebaselined for the intentional RTL-aware Recharts axis support. Keep
     // the increase narrow: the measured route is ~800.6 kB raw.
     '/employers/companies/$slug/profile': { raw: 820_000, gzip: 250_000 },
     '/post': { raw: 550_000, gzip: 180_000 },
-    '/employers/companies/$slug/': { raw: 440_000, gzip: 132_000 },
+    // Shell→route reassignment after salary SEO left main (job-detail /
+    // resolve-copy-group no longer shell-shared). Total first load fell.
+    '/employers/companies/$slug/': { raw: 440_000, gzip: 135_000 },
     // React Aria's drag-and-drop/grid runtime belongs only to this private
     // workflow; it is intentionally charged here instead of every public URL.
+    // Same shell→route reassignment as the company index (narrow headroom).
     '/employers/companies/$slug/jobs/$jobId/applicants': {
       raw: 400_000,
-      gzip: 110_000,
+      gzip: 112_000,
     },
     // Desktop-only enhanced search is lazy shell work. Removing the shared
     // Base UI footer menu also made TanStack attribute more of the remaining

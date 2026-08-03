@@ -1,10 +1,9 @@
+/**
+ * Head meta + Occupation/Breadcrumb JSON-LD live in getSkillLocationSalaryPage
+ * so `@cavuno/board/seo` stays out of the universal client entry.
+ */
 import { isNotFound } from '@cavuno/board';
-import { BOARD_PATHS, boardUrl, salarySkillPath } from '@cavuno/board/paths';
-import {
-  createBreadcrumbJsonLd,
-  crossAxisSalaryJsonLd,
-  formatRange,
-} from '@cavuno/board/seo';
+import { BOARD_PATHS, salarySkillPath } from '@cavuno/board/paths';
 import {
   createFileRoute,
   getRouteApi,
@@ -13,12 +12,12 @@ import {
 } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import { getSeoBase, getSkillLocationSalary } from '../server/queries';
+import { getSkillLocationSalaryPage } from '../server/salary-pages';
 import { SalaryNotFoundPage, SalaryPageLayout } from './-salary-page-layout';
 import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
-  salaryEntityInPlaceTitle,
+  formatSalaryRange,
   salarySkillInLocationPath,
   salaryTitleInLocationPath,
   toOverallSalaryVM,
@@ -33,17 +32,16 @@ import {
   SenioritySalaryTable,
   type RailItem,
 } from '@/components/board/salary-sections';
-import { JsonLd } from '@/components/json-ld';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
-import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/salaries/skills/$slug/$locationSlug')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
-    let salary;
+    let page;
     try {
-      salary = await getSkillLocationSalary({
+      page = await getSkillLocationSalaryPage({
         data: { slug: params.slug, locationSlug: params.locationSlug },
       });
     } catch (error) {
@@ -51,77 +49,23 @@ export const Route = createFileRoute('/salaries/skills/$slug/$locationSlug')({
       throw error;
     }
     if (
-      salary.skillCanonicalSlug !== params.slug ||
-      salary.locationCanonicalSlug !== params.locationSlug
+      page.salary.skillCanonicalSlug !== params.slug ||
+      page.salary.locationCanonicalSlug !== params.locationSlug
     ) {
       throw redirect({
         to: '/salaries/skills/$slug/$locationSlug',
         params: {
-          slug: salary.skillCanonicalSlug,
-          locationSlug: salary.locationCanonicalSlug,
+          slug: page.salary.skillCanonicalSlug,
+          locationSlug: page.salary.locationCanonicalSlug,
         },
         statusCode: 308,
       });
     }
-    const seo = await getSeoBase();
-    return { salary, seo };
+    return page;
   },
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData.seo.boardName,
-                loaderData.salary.overallSalary
-                  ? salaryEntityInPlaceTitle(
-                      loaderData.seo.language,
-                      loaderData.salary.skillName,
-                      loaderData.salary.placeName,
-                      formatRange(
-                        loaderData.seo.language,
-                        loaderData.salary.overallSalary.avgMin,
-                        loaderData.salary.overallSalary.avgMax,
-                      ),
-                    )
-                  : m.salaryDetail_skillInPlaceHeading({
-                      skill: loaderData.salary.skillName,
-                      place: loaderData.salary.placeName,
-                    }),
-              ),
-            },
-            {
-              name: 'description',
-              content: loaderData.salary.overallSalary
-                ? m.salaryDetail_skillInPlaceMetaDescriptionWithData({
-                    skill: loaderData.salary.skillName,
-                    place: loaderData.salary.placeName,
-                    range: formatRange(
-                      loaderData.seo.language,
-                      loaderData.salary.overallSalary.avgMin,
-                      loaderData.salary.overallSalary.avgMax,
-                    ),
-                    jobCount: loaderData.salary.overallSalary.jobCount,
-                  })
-                : m.salaryDetail_skillInPlaceMetaDescriptionEmpty({
-                    skill: loaderData.salary.skillName,
-                    place: loaderData.salary.placeName,
-                  }),
-            },
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              href: boardUrl(
-                loaderData.seo.origin,
-                salarySkillInLocationPath(
-                  loaderData.salary.skillCanonicalSlug,
-                  loaderData.salary.locationCanonicalSlug,
-                ),
-              ),
-            },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: SkillLocationSalaryPage,
   pendingComponent: SalaryPendingPage,
@@ -136,42 +80,14 @@ function SkillLocationSalaryPage() {
   const { salary, seo } = Route.useLoaderData();
   const crumbs = breadcrumbsCopy(seo.language, seo.labels);
   const { board } = rootApi.useLoaderData();
-  const c = salary.currency;
   const locale = seo.language;
   const sk = salary.skillCanonicalSlug;
-
-  const jsonLd = [
-    crossAxisSalaryJsonLd(locale, {
-      name: salary.skillName,
-      placeName: salary.placeName,
-      countryCode: salary.countryCode,
-      overall: salary.overallSalary,
-      bySeniority: salary.bySeniority,
-      currency: c,
-    }),
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      {
-        label: crumbs.salaries,
-        href: boardUrl(seo.origin, BOARD_PATHS.salaries),
-      },
-      {
-        label: crumbs.skills,
-        href: boardUrl(seo.origin, BOARD_PATHS.salarySkills),
-      },
-      {
-        label: salary.skillName,
-        href: boardUrl(seo.origin, salarySkillPath(sk)),
-      },
-      { label: salary.placeName },
-    ]),
-  ].filter((e): e is Record<string, unknown> => e !== null);
 
   const toPlaceRail = (rows: typeof salary.childLocations): RailItem[] =>
     rows.map((x) => ({
       name: x.placeName,
       href: salarySkillInLocationPath(sk, x.placeSlug),
-      range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+      range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
       jobCount: x.jobCount,
     }));
 
@@ -180,7 +96,7 @@ function SkillLocationSalaryPage() {
   const skillItems: RailItem[] = salary.topSkills.map((x) => ({
     name: x.skillName,
     href: salarySkillInLocationPath(x.skillSlug, salary.locationCanonicalSlug),
-    range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
   const titleItems: RailItem[] = salary.topTitles.map((x) => ({
@@ -189,7 +105,7 @@ function SkillLocationSalaryPage() {
       x.categorySlug,
       salary.locationCanonicalSlug,
     ),
-    range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
     jobCount: x.jobCount,
   }));
   const hasSalaryContent = Boolean(
@@ -220,7 +136,6 @@ function SkillLocationSalaryPage() {
       )}
       title={heading}
     >
-      <JsonLd data={jsonLd} />
       {hasSalaryContent ? (
         <>
           {salary.overallSalary ? (

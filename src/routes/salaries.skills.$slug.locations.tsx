@@ -1,20 +1,19 @@
+/**
+ * Head meta + ItemList/Breadcrumb JSON-LD live in getSkillLocationsPage so
+ * `@cavuno/board/seo` stays out of the universal client entry.
+ */
 import { isNotFound } from '@cavuno/board';
-import { BOARD_PATHS, boardUrl, salarySkillPath } from '@cavuno/board/paths';
-import {
-  createBreadcrumbJsonLd,
-  formatRange,
-  itemListJsonLd,
-} from '@cavuno/board/seo';
+import { BOARD_PATHS, salarySkillPath } from '@cavuno/board/paths';
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import { getSeoBase, getSkillLocations } from '../server/queries';
+import { getSkillLocationsPage } from '../server/salary-pages';
 import { SalaryNotFoundPage, SalaryPageLayout } from './-salary-page-layout';
 import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
+  formatSalaryRange,
   salarySkillInLocationPath,
-  salarySkillLocationsPath,
   toSalaryBreadcrumbVM,
   toSalaryRailVM,
 } from '@/board/salary-view-model';
@@ -23,66 +22,31 @@ import {
   SalaryRail,
   type RailItem,
 } from '@/components/board/salary-sections';
-import { JsonLd } from '@/components/json-ld';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
-import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/salaries/skills/$slug/locations')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
-    let data;
+    let page;
     try {
-      data = await getSkillLocations({ data: { slug: params.slug } });
+      page = await getSkillLocationsPage({ data: { slug: params.slug } });
     } catch (error) {
       if (isNotFound(error)) throw notFound();
       throw error;
     }
-    if (data.canonicalSlug !== params.slug) {
+    if (page.data.canonicalSlug !== params.slug) {
       throw redirect({
         to: '/salaries/skills/$slug/locations',
-        params: { slug: data.canonicalSlug },
+        params: { slug: page.data.canonicalSlug },
         statusCode: 308,
       });
     }
-    const seo = await getSeoBase();
-    return { data, seo };
+    return page;
   },
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData?.seo.boardName,
-                m.salaryDetail_skillLocationsMetaTitle({
-                  skill: loaderData.data.skillName,
-                }),
-              ),
-            },
-            {
-              name: 'description',
-              content:
-                loaderData.data.locations.length === 1
-                  ? m.salaryDetail_skillLocationsMetaDescriptionOne({
-                      skill: loaderData.data.skillName,
-                      count: loaderData.data.locations.length,
-                    })
-                  : m.salaryDetail_skillLocationsMetaDescriptionMany({
-                      skill: loaderData.data.skillName,
-                      count: loaderData.data.locations.length,
-                    }),
-            },
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              href: boardUrl(
-                loaderData.seo.origin,
-                salarySkillLocationsPath(loaderData.data.canonicalSlug),
-              ),
-            },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: SkillLocationsPage,
   pendingComponent: SalaryPendingPage,
@@ -98,36 +62,9 @@ function SkillLocationsPage() {
   const items: RailItem[] = data.locations.map((l) => ({
     name: l.placeName,
     href: salarySkillInLocationPath(data.canonicalSlug, l.placeSlug),
-    range: formatRange(locale, l.avgSalaryMin, l.avgSalaryMax),
+    range: formatSalaryRange(locale, l.avgSalaryMin, l.avgSalaryMax),
     jobCount: l.jobCount,
   }));
-  const jsonLd = [
-    itemListJsonLd(
-      data.locations.map((l) => ({
-        name: l.placeName,
-        url: boardUrl(
-          seo.origin,
-          salarySkillInLocationPath(data.canonicalSlug, l.placeSlug),
-        ),
-      })),
-    ),
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      {
-        label: crumbs.salaries,
-        href: boardUrl(seo.origin, BOARD_PATHS.salaries),
-      },
-      {
-        label: crumbs.skills,
-        href: boardUrl(seo.origin, BOARD_PATHS.salarySkills),
-      },
-      {
-        label: data.skillName,
-        href: boardUrl(seo.origin, salarySkillPath(data.canonicalSlug)),
-      },
-      { label: crumbs.locations },
-    ]),
-  ].filter((e): e is Record<string, unknown> => e !== null);
   const heading = m.salaryDetail_skillLocationsHeading({
     skill: data.skillName,
   });
@@ -150,7 +87,6 @@ function SkillLocationsPage() {
       )}
       title={heading}
     >
-      <JsonLd data={jsonLd} />
       {items.length > 0 ? (
         <SalaryRail
           vm={toSalaryRailVM(

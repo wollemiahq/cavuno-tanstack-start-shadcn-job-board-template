@@ -1,20 +1,19 @@
+/**
+ * Head meta + ItemList/Breadcrumb JSON-LD live in getTitleLocationsPage so
+ * `@cavuno/board/seo` stays out of the universal client entry.
+ */
 import { isNotFound } from '@cavuno/board';
-import { BOARD_PATHS, boardUrl, salaryTitlePath } from '@cavuno/board/paths';
-import {
-  createBreadcrumbJsonLd,
-  formatRange,
-  itemListJsonLd,
-} from '@cavuno/board/seo';
+import { BOARD_PATHS, salaryTitlePath } from '@cavuno/board/paths';
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import { getSeoBase, getTitleLocations } from '../server/queries';
+import { getTitleLocationsPage } from '../server/salary-pages';
 import { SalaryNotFoundPage, SalaryPageLayout } from './-salary-page-layout';
 import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
+  formatSalaryRange,
   salaryTitleInLocationPath,
-  salaryTitleLocationsPath,
   toSalaryBreadcrumbVM,
   toSalaryRailVM,
 } from '@/board/salary-view-model';
@@ -23,66 +22,31 @@ import {
   SalaryRail,
   type RailItem,
 } from '@/components/board/salary-sections';
-import { JsonLd } from '@/components/json-ld';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
-import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/salaries/titles/$slug/locations')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
-    let data;
+    let page;
     try {
-      data = await getTitleLocations({ data: { slug: params.slug } });
+      page = await getTitleLocationsPage({ data: { slug: params.slug } });
     } catch (error) {
       if (isNotFound(error)) throw notFound();
       throw error;
     }
-    if (data.canonicalSlug !== params.slug) {
+    if (page.data.canonicalSlug !== params.slug) {
       throw redirect({
         to: '/salaries/titles/$slug/locations',
-        params: { slug: data.canonicalSlug },
+        params: { slug: page.data.canonicalSlug },
         statusCode: 308,
       });
     }
-    const seo = await getSeoBase();
-    return { data, seo };
+    return page;
   },
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData?.seo.boardName,
-                m.salaryDetail_titleLocationsMetaTitle({
-                  title: loaderData.data.categoryName,
-                }),
-              ),
-            },
-            {
-              name: 'description',
-              content:
-                loaderData.data.locations.length === 1
-                  ? m.salaryDetail_titleLocationsMetaDescriptionOne({
-                      title: loaderData.data.categoryName,
-                      count: loaderData.data.locations.length,
-                    })
-                  : m.salaryDetail_titleLocationsMetaDescriptionMany({
-                      title: loaderData.data.categoryName,
-                      count: loaderData.data.locations.length,
-                    }),
-            },
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              href: boardUrl(
-                loaderData.seo.origin,
-                salaryTitleLocationsPath(loaderData.data.canonicalSlug),
-              ),
-            },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: TitleLocationsPage,
   pendingComponent: SalaryPendingPage,
@@ -98,36 +62,9 @@ function TitleLocationsPage() {
   const items: RailItem[] = data.locations.map((l) => ({
     name: l.placeName,
     href: salaryTitleInLocationPath(data.canonicalSlug, l.placeSlug),
-    range: formatRange(locale, l.avgSalaryMin, l.avgSalaryMax),
+    range: formatSalaryRange(locale, l.avgSalaryMin, l.avgSalaryMax),
     jobCount: l.jobCount,
   }));
-  const jsonLd = [
-    itemListJsonLd(
-      data.locations.map((l) => ({
-        name: l.placeName,
-        url: boardUrl(
-          seo.origin,
-          salaryTitleInLocationPath(data.canonicalSlug, l.placeSlug),
-        ),
-      })),
-    ),
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      {
-        label: crumbs.salaries,
-        href: boardUrl(seo.origin, BOARD_PATHS.salaries),
-      },
-      {
-        label: crumbs.titles,
-        href: boardUrl(seo.origin, BOARD_PATHS.salaryTitles),
-      },
-      {
-        label: data.categoryName,
-        href: boardUrl(seo.origin, salaryTitlePath(data.canonicalSlug)),
-      },
-      { label: crumbs.locations },
-    ]),
-  ].filter((e): e is Record<string, unknown> => e !== null);
 
   return (
     <SalaryPageLayout
@@ -147,7 +84,6 @@ function TitleLocationsPage() {
       )}
       title={m.salaryDetail_titleLocationsHeading({ title: data.categoryName })}
     >
-      <JsonLd data={jsonLd} />
       {items.length > 0 ? (
         <SalaryRail
           vm={toSalaryRailVM(

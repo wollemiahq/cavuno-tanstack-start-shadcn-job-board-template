@@ -1,61 +1,32 @@
+/**
+ * Head meta + ItemList/Breadcrumb JSON-LD live in getSalaryLocationsIndexPage
+ * so `@cavuno/board/seo` stays out of the universal client entry.
+ */
 import { type SalaryLocation } from '@cavuno/board';
-import { BOARD_PATHS, boardUrl, salaryLocationPath } from '@cavuno/board/paths';
-import {
-  createBreadcrumbJsonLd,
-  formatRange,
-  itemListJsonLd,
-} from '@cavuno/board/seo';
+import { BOARD_PATHS, salaryLocationPath } from '@cavuno/board/paths';
 import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import { getSeoBase, listSalaryLocations } from '../server/queries';
+import { getSalaryLocationsIndexPage } from '../server/salary-pages';
 import { SalaryPageLayout } from './-salary-page-layout';
 import { SalaryPendingPage } from './-salary-pending-page';
 
-import { toSalaryBreadcrumbVM } from '@/board/salary-view-model';
+import {
+  formatSalaryRange,
+  toSalaryBreadcrumbVM,
+} from '@/board/salary-view-model';
 import { SalaryEmptyState } from '@/components/board/salary-sections';
-import { JsonLd } from '@/components/json-ld';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
-import { headTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/salaries/locations/')({
   staticData: { fullBleed: true, ownsMain: true },
-  loader: async () => {
-    const [locations, seo] = await Promise.all([
-      listSalaryLocations(),
-      getSeoBase(),
-    ]);
-    return { locations: locations.data, seo };
-  },
+  loader: () => getSalaryLocationsIndexPage(),
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData?.seo.boardName,
-                m.salaryHub_locationsMetaTitle(),
-              ),
-            },
-            {
-              name: 'description',
-              content: m.salaryHub_locationsMetaDescription({
-                boardName: loaderData.seo.boardName,
-              }),
-            },
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              href: boardUrl(
-                loaderData.seo.origin,
-                BOARD_PATHS.salaryLocations,
-              ),
-            },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: SalaryLocationsIndex,
   pendingComponent: SalaryPendingPage,
@@ -94,7 +65,7 @@ function LocationTree({
           </a>
           <span className="text-muted-foreground text-sm tabular-nums">
             {' · '}
-            {formatRange(board.language, n.avgSalaryMin, n.avgSalaryMax)}
+            {formatSalaryRange(board.language, n.avgSalaryMin, n.avgSalaryMax)}
             {' · '}
             {n.jobCount === 1
               ? m.salaryHub_jobCountSingular({ count: n.jobCount })
@@ -117,23 +88,6 @@ function SalaryLocationsIndex() {
   const byParent = childrenByParent(locations);
   const hasLocations = (byParent.get(null) ?? []).length > 0;
 
-  const jsonLd = [
-    itemListJsonLd(
-      locations.map((l) => ({
-        name: l.placeName,
-        url: boardUrl(seo.origin, salaryLocationPath(l.placeSlug)),
-      })),
-    ),
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      {
-        label: crumbs.salaries,
-        href: boardUrl(seo.origin, BOARD_PATHS.salaries),
-      },
-      { label: crumbs.locations },
-    ]),
-  ].filter((e): e is Record<string, unknown> => e !== null);
-
   return (
     <SalaryPageLayout
       breadcrumb={toSalaryBreadcrumbVM(
@@ -147,7 +101,6 @@ function SalaryLocationsIndex() {
       )}
       title={m.salaryHub_locationsHeading()}
     >
-      <JsonLd data={jsonLd} />
       {hasLocations ? (
         <LocationTree parentSlug={null} byParent={byParent} />
       ) : (
