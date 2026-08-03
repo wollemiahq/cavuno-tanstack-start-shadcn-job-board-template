@@ -1,12 +1,9 @@
 import { jobsCategoryPath } from '@cavuno/board/paths';
-import { listingJsonLd } from '@cavuno/board/seo';
 import { getRouteApi } from '@tanstack/react-router';
 
 import { toJobCardVM } from '@/board/job-view-model';
 import { HomeLanding } from '@/components/board/home-landing';
 import { JobAlertFloatingPrompt } from '@/components/job-alert-floating-prompt';
-import { JsonLd } from '@/components/json-ld';
-import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { entityCopy } from '@/copy-groups/entity';
 import { jobAlertDefaultsFromSearch } from '@/lib/job-alert-defaults';
 import { m } from '@/paraglide/messages';
@@ -21,7 +18,6 @@ export function HomePage() {
     companies,
     companiesCount,
     topCategories,
-    seo,
     posts,
     postsCount,
     talent,
@@ -82,15 +78,6 @@ export function HomePage() {
 
   return (
     <>
-      <JsonLd
-        data={listingJsonLd({
-          origin: seo.origin,
-          breadcrumbs: [
-            { name: breadcrumbsCopy(board.language, board.labels).jobs },
-          ],
-          jobs: page.data,
-        })}
-      />
       <HomeLanding
         jobs={jobs}
         jobsCountLabel={countEyebrow(

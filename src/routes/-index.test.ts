@@ -3,17 +3,16 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { m } from '../paraglide/messages';
 
-// The route module imports the Workers-backed query boundary. This contract
-// exercises routing only, so keep the network boundary inert.
+// The route module imports the Workers-backed home page boundary, and the
+// landing still mounts JobAlertFloatingPrompt (which reaches queries.ts).
+// This contract exercises routing only, so keep the network boundary inert.
+vi.mock('../server/home-page', () => ({
+  getHomePage: vi.fn(),
+}));
 vi.mock('../server/queries', () => ({
+  subscribeJobAlert: vi.fn(),
   getBoardContext: vi.fn(),
   getSeoBase: vi.fn(),
-  listBlogPosts: vi.fn(),
-  listCompanies: vi.fn(),
-  listJobs: vi.fn(),
-  listTalent: vi.fn(),
-  listTopJobCategories: vi.fn(),
-  searchJobs: vi.fn(),
 }));
 vi.mock('../server/account', () => ({
   saveJob: vi.fn(),
@@ -65,12 +64,14 @@ describe('home route — landing contracts', () => {
     });
   });
 
-  it('describes the editorial landing rather than a jobs result count', async () => {
+  it('emits precomputed head meta + JSON-LD scripts rather than a jobs result count', async () => {
     const head = Route.options.head;
     if (typeof head !== 'function') {
       throw new Error('The home route does not define metadata');
     }
 
+    const title = `${m.home_heroHeadline()} | Acme Careers`;
+    const description = m.home_heroSupporting();
     const result = await head({
       loaderData: {
         page: { data: [], count: 42 },
@@ -83,15 +84,44 @@ describe('home route — landing contracts', () => {
           labels: undefined,
           origin: 'https://careers.acme.test',
         },
+        head: {
+          meta: [
+            { title },
+            { name: 'description', content: description },
+            { property: 'og:title', content: title },
+            { property: 'og:description', content: description },
+            { property: 'og:type', content: 'website' },
+            {
+              property: 'og:url',
+              content: 'https://careers.acme.test/',
+            },
+          ],
+          links: [
+            { rel: 'canonical', href: 'https://careers.acme.test/' },
+          ],
+        },
+        jsonLd: [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            itemListElement: [],
+          },
+        ],
       },
     } as never);
 
     expect(result).toMatchObject({
       meta: expect.arrayContaining([
-        { title: `${m.home_heroHeadline()} | Acme Careers` },
-        { name: 'description', content: m.home_heroSupporting() },
+        { title },
+        { name: 'description', content: description },
       ]),
       links: [{ rel: 'canonical', href: 'https://careers.acme.test/' }],
+      scripts: [
+        {
+          type: 'application/ld+json',
+          children: expect.stringContaining('ItemList'),
+        },
+      ],
     });
     expect(JSON.stringify(result)).not.toContain('42');
   });

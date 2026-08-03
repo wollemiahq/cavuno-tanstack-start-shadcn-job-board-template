@@ -30,11 +30,10 @@ const BUDGETS = {
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {
     // The decorative home hero shader is idle-loaded, not initial-route work.
-    // Residual `-home-page.tsx` still imports `@cavuno/board/seo` (out of the
-    // salaries Family D scope). After salary SEO left the shared main entry,
-    // home pays for its own seo chunk (~5 KiB gzip); total first load still
-    // fell with the shell. Rebaseline to the measured post-D route increment.
-    '/': { raw: 65_000, gzip: 26_000 },
+    // Home head + ItemList JSON-LD live in getHomePage, so the ~5 KiB gzip
+    // seo client chunk no longer rides the `/` route increment. Rebaseline
+    // to measured post-move increment + small headroom.
+    '/': { raw: 48_000, gzip: 20_000 },
     // Rebaselined for the intentional RTL-aware Recharts axis support. Keep
     // the increase narrow: the measured route is ~800.6 kB raw.
     '/employers/companies/$slug/profile': { raw: 820_000, gzip: 250_000 },
