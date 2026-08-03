@@ -29,6 +29,11 @@ const IDENTITY_COOKIE_PREFIXES = [
   '__Host-cavuno_board_access',
   '__Host-cavuno_board_session',
   'cavuno_data_source',
+  // Not identity, but SSR output varies on it (banner + dehydrated
+  // consentChoice), and the edge cache does not honor Vary: Cookie — a
+  // decided visitor's banner-less document must never be stored for, or
+  // served to, undecided visitors.
+  'cavuno_cookie_consent',
 ] as const;
 
 const BROWSER_CACHE_CONTROL = 'public, max-age=0, must-revalidate';

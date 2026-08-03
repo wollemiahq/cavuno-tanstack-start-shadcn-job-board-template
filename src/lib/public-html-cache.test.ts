@@ -43,6 +43,10 @@ describe('public HTML cache policy', () => {
       '__Host-cavuno_board_session_pk_demo-123=secret',
       '__Host-cavuno_board_access=grant',
       'cavuno_data_source=demo',
+      // Consent varies SSR output (banner + dehydrated choice); the edge
+      // cache ignores Vary: Cookie, so decided visitors must bypass it.
+      'cavuno_cookie_consent=accepted',
+      'cavuno_cookie_consent=denied',
     ]) {
       expect(
         isAnonymousPublicDocumentRequest(

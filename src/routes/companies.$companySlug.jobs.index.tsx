@@ -1,10 +1,12 @@
 import { isNotFound } from '@cavuno/board';
-import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 /**
  * Company jobs subpage — every open job at one company, with a
  * keyword search and page-based pagination. The `/companies/:slug/jobs/`
  * index sits alongside the job-detail route (`…/jobs/:jobSlug`) without
  * shadowing it (TanStack matches the exact index path).
+ *
+ * Head + breadcrumb JSON-LD are computed in getCompanyJobsPage so
+ * `@cavuno/board/seo` stays out of the universal client entry.
  *
  * Honest pagination + search, both server-side: the jobs SEARCH endpoint
  * (`filters.companySlug`) narrows a free-text query to this company and
@@ -29,22 +31,15 @@ import {
   parsePageParam,
 } from '../lib/pagination';
 import { m } from '../paraglide/messages';
-import {
-  getCompany,
-  getCompanySalaryPresence,
-  getSeoBase,
-  listJobs,
-  searchJobs,
-} from '../server/queries';
+import { getCompanyJobsPage } from '../server/companies-pages';
+import { getCompany } from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { toJobCardVM } from '@/board/job-view-model';
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobList } from '@/components/board/job-list';
 import { ListingPagination } from '@/components/board/listing-pagination';
-import { JsonLd } from '@/components/json-ld';
-import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
-import { headTitle } from '@/lib/page-title';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 
 interface CompanyJobsSearch {
   /** Free-text keyword, scoped to this company via the jobs search endpoint. */
@@ -89,41 +84,22 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
         data: { companySlug: params.companySlug },
       });
       const offset = pageToOffset(deps.page ?? 1, COMPANY_JOBS_PAGE_SIZE);
-      // `location` is a place slug the API geo-resolves; it rides the SEARCH
-      // endpoint's `filters` and the BROWSE endpoint's top level, so it narrows
-      // with or without a keyword.
-      const [page, seo, hasSalaries] = await Promise.all([
-        deps.q
-          ? searchJobs({
-              data: {
-                query: deps.q,
-                filters: {
-                  companySlug: [company.slug],
-                  ...(deps.location ? { location: deps.location } : {}),
-                },
-                offset,
-                limit: COMPANY_JOBS_PAGE_SIZE,
-              },
-            })
-          : listJobs({
-              data: {
-                companySlug: [company.slug],
-                ...(deps.location ? { location: deps.location } : {}),
-                offset,
-                limit: COMPANY_JOBS_PAGE_SIZE,
-              },
-            }),
-        getSeoBase(),
-        getCompanySalaryPresence({ data: { companySlug: params.companySlug } }),
-      ]);
+      const pageData = await getCompanyJobsPage({
+        data: {
+          companySlug: company.slug,
+          companyName: company.name,
+          q: deps.q,
+          location: deps.location,
+          offset,
+          limit: COMPANY_JOBS_PAGE_SIZE,
+        },
+      });
       return {
         company,
-        page,
-        seo,
+        ...pageData,
         q: deps.q ?? null,
         location: deps.location ?? null,
         locationName: deps.locationName ?? null,
-        hasSalaries,
       };
     } catch (error) {
       if (isNotFound(error)) throw notFound();
@@ -132,29 +108,7 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
   },
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData?.seo.boardName,
-                m.companyJobs_metaTitle({ company: loaderData.company.name }),
-              ),
-            },
-            {
-              name: 'description',
-              content: m.companyJobs_metaDescription({
-                company: loaderData.company.name,
-                boardName: loaderData.seo.boardName,
-              }),
-            },
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              href: `${loaderData.seo.origin}/companies/${loaderData.company.slug}/jobs`,
-            },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: CompanyJobsPage,
   notFoundComponent: () => (
@@ -165,17 +119,13 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
 });
 
 function CompanyJobsPage() {
-  const { company, page, seo, q, location, locationName, hasSalaries } =
+  const { company, page, q, location, locationName, hasSalaries } =
     Route.useLoaderData();
   const search = Route.useSearch();
   const { board } = rootApi.useLoaderData();
   const locationSuggestions = useLocationSuggestions(board.language);
   const navigate = Route.useNavigate();
-  const currentHref = useLocation({ select: (location) => location.href });
-  const copy = {
-    breadcrumbs: breadcrumbsCopy(seo.language, seo.labels),
-  };
-  const crumbs = copy.breadcrumbs;
+  const currentHref = useLocation({ select: (loc) => loc.href });
 
   const currentPage = search.page ?? 1;
   const count = page.count ?? 0;
@@ -201,17 +151,6 @@ function CompanyJobsPage() {
           count: count.toLocaleString(board.language),
         });
 
-  // The trail locates the ENTITY and stops there (Home → Companies →
-  // {Company}) — IDENTICAL to the profile + salaries tabs; the tab row alone
-  // says we are on Jobs. The BreadcrumbList JSON-LD mirrors the visible trail.
-  const jsonLd = [
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      { label: crumbs.companies, href: `${seo.origin}/companies` },
-      { label: company.name },
-    ]),
-  ].filter((e): e is Record<string, unknown> => e !== null);
-
   return (
     <CompanySectionShell
       company={company}
@@ -219,8 +158,6 @@ function CompanyJobsPage() {
       jobCount={company.publishedJobCount}
       hasSalaries={hasSalaries}
     >
-      <JsonLd data={jsonLd} />
-
       {/* The shared company header IS the hero here (no doubled-up centered
           listing hero); the search band stays, above the honest count + rows. */}
       <CompanyJobsSearchBar

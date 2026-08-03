@@ -47,7 +47,7 @@ import {
 } from '@/components/shell-accessibility';
 import { DirectionProvider } from '@/components/ui/direction';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
-import { jobDetailCopy } from '@/copy-groups/job-detail';
+import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
 import {
   resolveHeaderRouteLabels,
   resolveHeaderSearchState,
@@ -199,8 +199,15 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
-  const { board, user, offerGate, employerCompanies, preview, hasAccessGrant } =
-    Route.useLoaderData();
+  const {
+    board,
+    user,
+    offerGate,
+    employerCompanies,
+    preview,
+    hasAccessGrant,
+    consentChoice,
+  } = Route.useLoaderData();
   const isEmbed = useRouterState({
     select: (s) => s.location.pathname.startsWith('/embed'),
   });
@@ -264,13 +271,14 @@ function RootLayout() {
   const companyMarketSuggestions = useCompanyMarketSuggestions(
     headerSearch.scope === 'companies',
   );
-  const copy = {
-    breadcrumbs: breadcrumbsCopy(board.language, board.labels),
-    jobDetail: jobDetailCopy(board.language, board.labels),
-  };
+  // Breadcrumb nav aria-label only — do not import the full jobDetail copy
+  // family (21 messages × locales) into the unsplittable root for one string.
+  // Operator overrides ride the same jobCardLabels.breadcrumbAriaLabel key
+  // that jobDetailCopy resolves via resolveCopyGroup.
+  const breadcrumbAriaLabel = resolveJobDetailBreadcrumbAriaLabel(board.labels);
   const shellBreadcrumb = resolveShellBreadcrumb({
     pathname: location.pathname,
-    labels: copy.breadcrumbs,
+    labels: breadcrumbsCopy(board.language, board.labels),
     // Authed surfaces get footer trails too — labels from the template
     // catalogs (the SDK's copy.breadcrumbs only knows public segments).
     privateLabels: {
@@ -438,7 +446,10 @@ function RootLayout() {
   );
 
   return (
-    <CookieConsentProvider required={board.analytics.cookieConsentRequired}>
+    <CookieConsentProvider
+      required={board.analytics.cookieConsentRequired}
+      initialChoice={consentChoice}
+    >
       {/* Consent state wraps the whole chrome: the banner (floating stack),
           the footer's "Cookie preferences" reopener, the job-alert prompt's
           yield, and the analytics gate all read the same choice. The embed
@@ -462,7 +473,7 @@ function RootLayout() {
             shellBreadcrumb ? (
               <ShellBreadcrumb
                 items={shellBreadcrumb.items}
-                ariaLabel={copy.jobDetail.breadcrumbAriaLabel}
+                ariaLabel={breadcrumbAriaLabel}
               />
             ) : undefined
           }

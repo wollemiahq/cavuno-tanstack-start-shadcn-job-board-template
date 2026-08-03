@@ -42,7 +42,7 @@ import { JobDetail } from '@/components/board/job-detail';
 import { JobList } from '@/components/board/job-list';
 import { SaveJobButton } from '@/components/board/save-job-button';
 import { DeferredContent } from '@/components/deferred-content';
-import { JsonLd } from '@/components/json-ld';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Text } from '@/components/text';
 import {
@@ -98,7 +98,10 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
       throw error;
     }
   },
-  head: ({ loaderData }) => loaderData?.head ?? {},
+  head: ({ loaderData }) =>
+    loaderData
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
+      : {},
   component: JobDetailPage,
   notFoundComponent: () => (
     <PageLayout>
@@ -117,8 +120,7 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
 const rootApi = getRouteApi('__root__');
 
 function JobDetailPage() {
-  const { job, user, similar, company, jsonLd, alreadyApplied } =
-    Route.useLoaderData();
+  const { job, user, similar, company, alreadyApplied } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const defaults = jobAlertDefaultsFromJob(job);
   const router = useRouter();
@@ -138,7 +140,6 @@ function JobDetailPage() {
 
   return (
     <>
-      <JsonLd data={jsonLd} />
       <JobDetail
         vm={vm}
         applySlot={

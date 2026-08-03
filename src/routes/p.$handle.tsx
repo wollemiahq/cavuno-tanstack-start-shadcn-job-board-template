@@ -1,5 +1,4 @@
 import { isNotFound } from '@cavuno/board';
-import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import {
   createFileRoute,
   getRouteApi,
@@ -9,7 +8,7 @@ import {
 import { UserRoundX } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
-import { getSeoBase, getTalentProfile } from '../server/queries';
+import { getTalentProfilePage } from '../server/talent-pages';
 
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import {
@@ -21,7 +20,7 @@ import {
   TalentProfileContent,
   TalentProfileIdentity,
 } from '@/components/board/talent-profile-content';
-import { JsonLd } from '@/components/json-ld';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { Container } from '@/components/layout/container';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { PageLayout } from '@/components/layout/page-layout';
@@ -35,9 +34,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
-import { headTitle } from '@/lib/page-title';
 
 /** The board's employer pricing / talent-plan offer surface. */
 const PRICING_HREF = '/employers';
@@ -48,11 +45,7 @@ export const Route = createFileRoute('/p/$handle')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
     try {
-      const [profile, seo] = await Promise.all([
-        getTalentProfile({ data: { handle: params.handle } }),
-        getSeoBase(),
-      ]);
-      return { profile, seo };
+      return await getTalentProfilePage({ data: { handle: params.handle } });
     } catch (error) {
       if (isNotFound(error)) throw notFound();
       throw error;
@@ -60,31 +53,7 @@ export const Route = createFileRoute('/p/$handle')({
   },
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData.seo.boardName,
-                loaderData.profile.displayName ??
-                  m.publicProfile_profileFallbackLabel(),
-              ),
-            },
-            ...(loaderData.profile.headline
-              ? [
-                  {
-                    name: 'description',
-                    content: loaderData.profile.headline,
-                  },
-                ]
-              : []),
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              href: `${loaderData.seo.origin}/p/${loaderData.profile.handle}`,
-            },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: TalentProfilePage,
   notFoundComponent: TalentProfileNotFound,
@@ -128,9 +97,6 @@ function TalentProfilePage() {
   // the SAME matrix as the pane — no Board API call from the browser.
   const { user, board } = rootApi.useLoaderData();
   const location = useLocation();
-  const copy = {
-    breadcrumbs: breadcrumbsCopy(seo.language, seo.labels),
-  };
   const vm = toTalentProfileVM(profile, seo.language, getTalentSearchLabels());
   const viewer: TalentDetailViewer =
     user === null
@@ -155,33 +121,6 @@ function TalentProfilePage() {
     showViewProfile: false,
     messagingEnabled: board.features.messaging,
   });
-  const displayName =
-    profile.displayName ?? m.publicProfile_anonymousCandidateLabel();
-  const canonical = `${seo.origin}/p/${profile.handle}`;
-  const jsonLd = [
-    {
-      '@context': 'https://schema.org',
-      '@type': 'ProfilePage',
-      url: canonical,
-      mainEntity: {
-        '@type': 'Person',
-        '@id': `${canonical}#person`,
-        ...(profile.displayName ? { name: profile.displayName } : {}),
-        ...(profile.headline ? { jobTitle: profile.headline } : {}),
-        ...(profile.bio ? { description: profile.bio } : {}),
-        ...(profile.location ? { homeLocation: profile.location } : {}),
-        ...(profile.skills.length > 0
-          ? { knowsAbout: profile.skills.map((skill) => skill.name) }
-          : {}),
-      },
-    },
-    createBreadcrumbJsonLd([
-      { label: copy.breadcrumbs.home, href: seo.origin },
-      { label: copy.breadcrumbs.talent, href: `${seo.origin}/talent` },
-      { label: displayName },
-    ]),
-  ].filter((entry): entry is Record<string, unknown> => entry !== null);
-
   return (
     // Full-bleed hero band — the SAME composition as the job-detail and
     // company-profile pages (the shared full-bleed band,
@@ -219,7 +158,6 @@ function TalentProfilePage() {
         </div>
       }
     >
-      <JsonLd data={jsonLd} />
       {/* The band owns the identity (H1), so the body drops its header and
           leads with the bio; sections render as H2s beneath the single H1. The
           article carries NO bespoke max-width — it shares the page's wide

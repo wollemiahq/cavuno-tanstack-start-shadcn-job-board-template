@@ -24,6 +24,19 @@ import {
 } from '@cavuno/board/paths';
 import { formatRange, formatUsd } from '@cavuno/board/seo';
 
+/**
+ * Presentation re-export of the SDK range formatter. Route modules must not
+ * import `@cavuno/board/seo` (head/meta lives in route-owned server pages);
+ * components that need a formatted range for rails call this mapper helper.
+ */
+export function formatSalaryRange(
+  language: string,
+  min: number,
+  max: number,
+): string {
+  return formatRange(language, min, max);
+}
+
 import { entityCopy } from '@/copy-groups/entity';
 import { jobDetailCopy } from '@/copy-groups/job-detail';
 import { salaryCopy } from '@/copy-groups/salary';

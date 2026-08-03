@@ -1,10 +1,11 @@
-import { jobsSkillPath } from '@cavuno/board/paths';
-import { listingHead } from '@cavuno/board/seo';
 /**
  * Programmatic skill page — `/jobs/skills/:skill` (hosted parity:
  * `boards/[slug]/(main)/jobs/skills/[skill]/page.tsx`). Same shape as the
  * category page, resolving the slug as a *skill*; the API seeds the search with
  * the skill's English source name server-side.
+ *
+ * Head meta is computed in getJobsSkillPage so `@cavuno/board/seo` stays out
+ * of the universal client entry.
  */
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
@@ -12,9 +13,11 @@ import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
 import { pageToOffset } from '../lib/pagination';
 import { m } from '../paraglide/messages';
 import { saveJob } from '../server/account';
-import { getSeoBase, listJobs, resolveSkill } from '../server/queries';
+import { getJobsSkillPage } from '../server/jobs-listing-pages';
+import { resolveSkill } from '../server/queries';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PROGRAMMATIC_JOBS_PAGE_SIZE } from '@/routes/-programmatic-jobs-constants';
 import { ProgrammaticJobsView } from '@/routes/-programmatic-jobs-view';
 
@@ -32,42 +35,30 @@ export const Route = createFileRoute('/jobs/skills/$skill')({
         statusCode: 308,
       });
     }
-    const [list, seo] = await Promise.all([
-      listJobs({
-        data: {
-          skill: params.skill,
-          remoteOption: deps.remoteOption ? [deps.remoteOption] : undefined,
-          employmentType: deps.employmentType
-            ? [deps.employmentType]
-            : undefined,
-          seniority: deps.seniority?.length ? deps.seniority : undefined,
-          sort: deps.sort,
-          offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
-          limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
-        },
-      }),
-      getSeoBase(),
-    ]);
-    const relatedSearches = list.relatedSearches;
-    return { skill, list, seo, relatedSearches };
+    const page = await getJobsSkillPage({
+      data: {
+        skillSlug: params.skill,
+        displayName: skill.displayName,
+        remoteOption: deps.remoteOption,
+        employmentType: deps.employmentType,
+        seniority: deps.seniority,
+        sort: deps.sort,
+        offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
+        limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
+      },
+    });
+    return { skill, ...page };
   },
-  head: ({ loaderData, params }) =>
+  head: ({ loaderData }) =>
     loaderData
-      ? listingHead({
-          ...loaderData.seo,
-          path: jobsSkillPath(params.skill),
-          heading: m.skillPage_jobsHeading({
-            skill: loaderData.skill.displayName,
-          }),
-          count: loaderData.list.count,
-        })
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: SkillPage,
   notFoundComponent: () => <JobsNotFound />,
 });
 
 function SkillPage() {
-  const { skill, list, seo, relatedSearches } = Route.useLoaderData();
+  const { skill, list, relatedSearches } = Route.useLoaderData();
   const search = Route.useSearch();
   return (
     <ProgrammaticJobsView
@@ -78,7 +69,6 @@ function SkillPage() {
       page={search.page ?? 1}
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
       relatedSearches={relatedSearches}
-      origin={seo.origin}
       filters={search}
       onSaveJob={async (jobId) => {
         await saveJob({ data: { jobId } });

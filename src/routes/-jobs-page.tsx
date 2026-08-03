@@ -1,4 +1,3 @@
-import { listingJsonLd } from '@cavuno/board/seo';
 import { getRouteApi, useNavigate } from '@tanstack/react-router';
 
 import { SelectedJobDetail } from './-selected-job-detail';
@@ -7,8 +6,6 @@ import { useSelectedJob } from './-use-selected-job';
 import { toJobCardVM } from '@/board/job-view-model';
 import { JobSearchPage } from '@/components/board/job-search-page';
 import { JobAlertFloatingPrompt } from '@/components/job-alert-floating-prompt';
-import { JsonLd } from '@/components/json-ld';
-import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { jobAlertDefaultsFromSearch } from '@/lib/job-alert-defaults';
 import { pageSearchValue } from '@/lib/pagination';
 import { saveJob } from '@/server/account';
@@ -18,7 +15,7 @@ const routeApi = getRouteApi('/jobs/');
 const rootApi = getRouteApi('__root__');
 
 export function JobsPage() {
-  const { page, seo, relatedSearches } = routeApi.useLoaderData();
+  const { page, relatedSearches } = routeApi.useLoaderData();
   const search = routeApi.useSearch();
   const { board, user } = rootApi.useLoaderData();
   const navigate = useNavigate({ from: '/jobs/' });
@@ -31,19 +28,6 @@ export function JobsPage() {
 
   return (
     <>
-      <JsonLd
-        data={listingJsonLd({
-          origin: seo.origin,
-          breadcrumbs: [
-            {
-              name: breadcrumbsCopy(board.language, board.labels).home,
-              path: '/',
-            },
-            { name: breadcrumbsCopy(board.language, board.labels).jobs },
-          ],
-          jobs: page.data,
-        })}
-      />
       <JobSearchPage
         jobs={page.data.map((job) =>
           toJobCardVM(job, board.language, board.labels),

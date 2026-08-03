@@ -1,18 +1,20 @@
-import { listingHead } from '@cavuno/board/seo';
 /**
  * The canonical jobs listing at `/jobs` — parity with the hosted board,
  * whose canonical jobs listing is `/jobs` (the home `/` is a landing).
  * A board migrating hosted → headless keeps its indexed `/jobs` URL.
  * Same listing surface as `/`, distinct canonical.
+ *
+ * Head meta is computed in getJobsIndexPage so `@cavuno/board/seo` and the
+ * jobSearch copy family stay out of the universal client entry.
  */
 import { createFileRoute } from '@tanstack/react-router';
 
 import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
 import { pageToOffset } from '../lib/pagination';
-import { getSeoBase, listJobs, searchJobs } from '../server/queries';
+import { getJobsIndexPage } from '../server/jobs-listing-pages';
 import { JobsPage } from './-jobs-page';
 
-import { jobSearchCopy } from '@/copy-groups/job-search';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 
 const JOBS_PAGE_SIZE = 20;
 
@@ -24,55 +26,21 @@ export const Route = createFileRoute('/jobs/')({
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
   loader: async ({ deps }) => {
     const offset = pageToOffset(deps.page ?? 1, JOBS_PAGE_SIZE);
-    const [page, seo] = await Promise.all([
-      deps.q
-        ? searchJobs({
-            data: {
-              query: deps.q,
-              filters: {
-                remoteOption: deps.remoteOption
-                  ? [deps.remoteOption]
-                  : undefined,
-                employmentType: deps.employmentType
-                  ? [deps.employmentType]
-                  : undefined,
-                seniority: deps.seniority?.length ? deps.seniority : undefined,
-              },
-              sort: deps.sort,
-              offset,
-              limit: JOBS_PAGE_SIZE,
-            },
-          })
-        : listJobs({
-            data: {
-              remoteOption: deps.remoteOption ? [deps.remoteOption] : undefined,
-              employmentType: deps.employmentType
-                ? [deps.employmentType]
-                : undefined,
-              seniority: deps.seniority?.length ? deps.seniority : undefined,
-              sort: deps.sort,
-              offset,
-              limit: JOBS_PAGE_SIZE,
-              fields: '+description',
-            },
-          }),
-      getSeoBase(),
-    ]);
-    // Related-search chips and card tag pills link directly: every slug the
-    // API emits resolves (ADR-0099 platform guarantee) — no re-verification.
-    const relatedSearches =
-      'relatedSearches' in page ? page.relatedSearches : undefined;
-    return { page, seo, relatedSearches };
+    return getJobsIndexPage({
+      data: {
+        q: deps.q,
+        remoteOption: deps.remoteOption,
+        employmentType: deps.employmentType,
+        seniority: deps.seniority,
+        sort: deps.sort,
+        offset,
+        limit: JOBS_PAGE_SIZE,
+      },
+    });
   },
   head: ({ loaderData }) =>
     loaderData
-      ? listingHead({
-          ...loaderData.seo,
-          path: '/jobs',
-          heading: jobSearchCopy(loaderData.seo.language, loaderData.seo.labels)
-            .headingJobs,
-          count: loaderData.page.count,
-        })
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: JobsPage,
 });

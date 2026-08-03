@@ -78,6 +78,16 @@ vi.mock('../server/queries', () => ({
   listPlans: vi.fn(),
   listSalesLedPlans: vi.fn(),
 }));
+vi.mock('../server/marketing-pages', () => ({
+  getEmployersPage: vi.fn().mockResolvedValue({
+    plans: [],
+    salesLed: [],
+    seo: { boardName: 'Acme', origin: 'https://example.com', language: 'en' },
+    head: {},
+    jsonLd: [],
+  }),
+  getAuthJoinSeo: vi.fn(),
+}));
 // The employer loader's refresh-before-redirect path; default to no recovery,
 // so an UNAUTHENTICATED loader still redirects to sign-in.
 vi.mock('../server/auth', () => ({
@@ -196,6 +206,7 @@ describe('employer entry surfaces', () => {
         language: 'en',
         labels: {},
       },
+      jsonLd: [],
     });
     const EmployersPage = EmployersRoute.options.component;
     if (!EmployersPage)
@@ -233,6 +244,7 @@ describe('employer entry surfaces', () => {
         language: 'en',
         labels: {},
       },
+      jsonLd: [],
     });
     const EmployersPage = EmployersRoute.options.component;
     if (!EmployersPage)

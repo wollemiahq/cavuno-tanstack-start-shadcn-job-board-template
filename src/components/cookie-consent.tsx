@@ -23,10 +23,17 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  clearCookieConsent,
+  parseCookieConsent,
+  serializeCookieConsent,
+  type CookieConsentChoice,
+} from '@/lib/cookie-consent';
 
+/** Legacy localStorage key — migrated once to the consent cookie on mount. */
 const STORAGE_KEY = 'cavuno:cookie-consent';
 
-export type CookieConsentChoice = 'accepted' | 'denied';
+export type { CookieConsentChoice };
 
 interface CookieConsentState {
   /** The board's `analytics.cookieConsentRequired` flag. */
@@ -59,48 +66,94 @@ export function useCookieConsent(): CookieConsentState {
   return useContext(CookieConsentContext);
 }
 
+function persistChoice(choice: CookieConsentChoice) {
+  document.cookie = serializeCookieConsent(choice);
+  try {
+    localStorage.setItem(STORAGE_KEY, choice);
+  } catch {
+    // localStorage may be blocked; cookie is the source of truth.
+  }
+}
+
+function clearPersistedChoice() {
+  document.cookie = clearCookieConsent();
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 /**
  * Site-wide cookie-consent state for boards whose operator enabled
  * "cookie consent required" (`board.analytics.cookieConsentRequired`).
- * The choice persists in localStorage (mirroring the job-alert prompt's
- * suppression storage) and resolves only after mount, so SSR and the first
- * client render agree and the banner never flashes on hydration.
+ *
+ * The choice lives in a client-readable cookie so SSR can paint the banner
+ * when undecided (LCP on listing pages). `initialChoice` comes from the root
+ * loader reading that cookie; there is no hydration gate — SSR and the first
+ * client render agree on `bannerOpen`.
+ *
+ * Migration: on mount, if no cookie but localStorage still has a legacy
+ * choice, adopt it (set cookie + state). Returning visitors on the old
+ * storage may see a brief banner flash once; that is acceptable.
  */
 export function CookieConsentProvider({
   required,
+  initialChoice = null,
   children,
 }: {
   required: boolean;
+  /** Server-read consent cookie value; `null` when undecided or absent. */
+  initialChoice?: CookieConsentChoice | null;
   children: ReactNode;
 }) {
-  const [choice, setChoice] = useState<CookieConsentChoice | null>(null);
-  const [hydrated, setHydrated] = useState(false);
+  const [choice, setChoice] = useState<CookieConsentChoice | null>(
+    initialChoice,
+  );
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'accepted' || stored === 'denied') setChoice(stored);
-    setHydrated(true);
-  }, []);
+    // Cookie already decided on the server — nothing to migrate.
+    if (initialChoice !== null) return;
+    // The document may be a shared/stale render (edge-cached HTML, bfcache):
+    // the browser's own cookie is the source of truth, so adopt it before
+    // falling back to the legacy localStorage migration.
+    const fromCookie = parseCookieConsent(document.cookie);
+    if (fromCookie !== null) {
+      setChoice(fromCookie);
+      return;
+    }
+    let stored: string | null = null;
+    try {
+      stored = localStorage.getItem(STORAGE_KEY);
+    } catch {
+      return;
+    }
+    if (stored === 'accepted' || stored === 'denied') {
+      document.cookie = serializeCookieConsent(stored);
+      setChoice(stored);
+    }
+  }, [initialChoice]);
 
   const value = useMemo<CookieConsentState>(
     () => ({
       required,
       choice,
-      bannerOpen: required && hydrated && choice === null,
+      // No hydration gate: SSR paints the banner when required && undecided.
+      bannerOpen: required && choice === null,
       accept: () => {
-        localStorage.setItem(STORAGE_KEY, 'accepted');
+        persistChoice('accepted');
         setChoice('accepted');
       },
       deny: () => {
-        localStorage.setItem(STORAGE_KEY, 'denied');
+        persistChoice('denied');
         setChoice('denied');
       },
       reopenBanner: () => {
-        localStorage.removeItem(STORAGE_KEY);
+        clearPersistedChoice();
         setChoice(null);
       },
     }),
-    [required, choice, hydrated],
+    [required, choice],
   );
 
   return (

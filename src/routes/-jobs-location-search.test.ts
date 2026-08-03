@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { listJobs, searchJobs } = vi.hoisted(() => ({
-  listJobs: vi.fn(),
-  searchJobs: vi.fn(),
+const { getJobsLocationPage } = vi.hoisted(() => ({
+  getJobsLocationPage: vi.fn(),
+}));
+
+vi.mock('../server/jobs-listing-pages', () => ({
+  getJobsLocationPage,
 }));
 
 vi.mock('../server/queries', () => ({
-  getSeoBase: vi.fn().mockResolvedValue({}),
-  listJobs,
-  searchJobs,
   resolvePlace: vi.fn().mockResolvedValue({
     id: 'sydney',
     slug: 'sydney',
@@ -33,10 +33,13 @@ import { Route } from './jobs.locations.$location.index';
 
 describe('location jobs route — combined keyword and place filtering', () => {
   beforeEach(() => {
-    listJobs.mockReset();
-    listJobs.mockResolvedValue({ data: [], count: 0 });
-    searchJobs.mockReset();
-    searchJobs.mockResolvedValue({ data: [], count: 0 });
+    getJobsLocationPage.mockReset();
+    getJobsLocationPage.mockResolvedValue({
+      list: { data: [], count: 0 },
+      seo: { origin: 'https://example.com' },
+      relatedSearches: undefined,
+      head: {},
+    });
   });
 
   it('passes q to the jobs query instead of silently dropping the keyword', async () => {
@@ -50,14 +53,11 @@ describe('location jobs route — combined keyword and place filtering', () => {
       deps: { q: 'robotics' },
     } as never);
 
-    expect(searchJobs).toHaveBeenCalledWith({
+    expect(getJobsLocationPage).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        query: 'robotics',
-        filters: expect.objectContaining({
-          location: 'sydney',
-        }),
+        locationSlug: 'sydney',
+        q: 'robotics',
       }),
     });
-    expect(listJobs).not.toHaveBeenCalled();
   });
 });

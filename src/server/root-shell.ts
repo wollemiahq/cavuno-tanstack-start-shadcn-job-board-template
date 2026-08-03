@@ -1,5 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
+import { getRequestHeader } from '@tanstack/react-start/server';
 
+import { parseCookieConsent } from '../lib/cookie-consent';
 import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
 import { getSessionUser } from './account';
 import { listCompanies } from './employers';
@@ -14,6 +16,12 @@ import { getBoardContext, getBoardSeo, getEmployerOfferGate } from './queries';
  */
 export const getRootShellData = createServerFn({ method: 'GET' }).handler(
   async () => {
+    // Consent state is a client-readable cookie (not an auth credential) so
+    // SSR can paint the banner when undecided — listing-page LCP fix.
+    const consentChoice = parseCookieConsent(
+      getRequestHeader('cookie') ?? null,
+    );
+
     const [board, user, seo, offerGate, employerCompanies, preview, hasGrant] =
       await Promise.all([
         getBoardContext(),
@@ -54,6 +62,7 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
         board.features.candidatePaywall,
         hasGrant,
       ),
+      consentChoice,
     };
   },
 );

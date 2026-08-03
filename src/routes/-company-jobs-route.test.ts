@@ -1,25 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const {
-  getCompany,
-  getCompanySalaryPresence,
-  getSeoBase,
-  listJobs,
-  searchJobs,
-} = vi.hoisted(() => ({
+const { getCompany, getCompanyJobsPage } = vi.hoisted(() => ({
   getCompany: vi.fn(),
-  getCompanySalaryPresence: vi.fn(),
-  getSeoBase: vi.fn(),
-  listJobs: vi.fn(),
-  searchJobs: vi.fn(),
+  getCompanyJobsPage: vi.fn(),
 }));
 
 vi.mock('../server/queries', () => ({
   getCompany,
-  getCompanySalaryPresence,
-  getSeoBase,
-  listJobs,
-  searchJobs,
+}));
+
+vi.mock('../server/companies-pages', () => ({
+  getCompanyJobsPage,
 }));
 
 import { Route } from './companies.$companySlug.jobs.index';
@@ -39,14 +30,14 @@ beforeEach(() => {
     slug: 'acme-research',
     name: 'Acme Research',
   });
-  getCompanySalaryPresence.mockReset();
-  getCompanySalaryPresence.mockResolvedValue(false);
-  getSeoBase.mockReset();
-  getSeoBase.mockResolvedValue({});
-  listJobs.mockReset();
-  listJobs.mockResolvedValue({ data: [], count: 0 });
-  searchJobs.mockReset();
-  searchJobs.mockResolvedValue({ data: [], count: 0 });
+  getCompanyJobsPage.mockReset();
+  getCompanyJobsPage.mockResolvedValue({
+    page: { data: [], count: 0 },
+    seo: { origin: 'https://example.com' },
+    hasSalaries: false,
+    head: {},
+    jsonLd: [],
+  });
 });
 
 describe('company jobs route — public company scoping', () => {
@@ -56,14 +47,16 @@ describe('company jobs route — public company scoping', () => {
       deps: {},
     } as never);
 
-    expect(listJobs).toHaveBeenCalledWith({
-      data: {
-        companySlug: ['acme-research'],
+    expect(getCompanyJobsPage).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        companySlug: 'acme-research',
         offset: 0,
         limit: 20,
-      },
+      }),
     });
-    expect(listJobs.mock.calls[0]?.[0].data).not.toHaveProperty('companyId');
+    expect(getCompanyJobsPage.mock.calls[0]?.[0].data).not.toHaveProperty(
+      'companyId',
+    );
   });
 
   it('uses the public company slug for keyword results', async () => {
@@ -72,18 +65,16 @@ describe('company jobs route — public company scoping', () => {
       deps: { q: 'robotics', location: 'sydney', page: 2 },
     } as never);
 
-    expect(searchJobs).toHaveBeenCalledWith({
-      data: {
-        query: 'robotics',
-        filters: {
-          companySlug: ['acme-research'],
-          location: 'sydney',
-        },
+    expect(getCompanyJobsPage).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        companySlug: 'acme-research',
+        q: 'robotics',
+        location: 'sydney',
         offset: 20,
         limit: 20,
-      },
+      }),
     });
-    expect(searchJobs.mock.calls[0]?.[0].data.filters).not.toHaveProperty(
+    expect(getCompanyJobsPage.mock.calls[0]?.[0].data).not.toHaveProperty(
       'companyId',
     );
   });

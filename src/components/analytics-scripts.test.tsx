@@ -14,6 +14,7 @@ import { AnalyticsScripts } from './analytics-scripts';
 import { CookieConsentProvider, useCookieConsent } from './cookie-consent';
 
 import type { BoardAnalyticsConfig } from './analytics-scripts';
+import { COOKIE_CONSENT_COOKIE } from '@/lib/cookie-consent';
 
 const { startWebVitalsReporting } = vi.hoisted(() => ({
   startWebVitalsReporting: vi.fn(),
@@ -41,6 +42,9 @@ afterEach(() => {
   cleanup();
   startWebVitalsReporting.mockClear();
   localStorage.clear();
+  // Consent now persists in a cookie too — clear it or an earlier test's
+  // accept leaks into the next provider mount via the cookie-adoption path.
+  document.cookie = `${COOKIE_CONSENT_COOKIE}=; Path=/; Max-Age=0`;
   for (const el of document.querySelectorAll(
     'script[id^="cavuno-analytics-"]',
   )) {
