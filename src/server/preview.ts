@@ -2,24 +2,27 @@
  * Developer-preview server functions.
  *
  * These proxy three SANDBOX-ONLY Board API endpoints and drive persona
- * session switching. Every function is server-verified against
- * `board.context().sandbox` — a client can never coax them into acting on a
- * real tenant board, and the endpoints themselves 404 off-sandbox. The
- * switch seam is keyed by persona **id**: credentials are resolved here from
- * the roster and never cross to the browser, so the authentication mechanism
- * can change without exposing credentials or changing the client contract.
+ * session switching. Every function is server-verified against sandbox
+ * capability — a client can never coax them into acting on a real tenant
+ * board, and the endpoints themselves 404 off-sandbox. Public board
+ * context no longer exposes a `sandbox` flag (SDK 2.0+ public-only types);
+ * capability is proven by a successful `/sandbox/personas` read instead.
+ * The switch seam is keyed by persona **id**: credentials are resolved
+ * here from the roster and never cross to the browser, so the
+ * authentication mechanism can change without exposing credentials or
+ * changing the client contract.
  *
  * Dual-source (DMO-01): when `CAVUNO_DEMO_BOARD` is configured, every
  * preview function uses the **demo** client (personas, emails, config, reseed
  * live on the demo tenant) and stores the persona session under the demo
- * session cookie. Capability is resolved from the demo board's context so the
+ * session cookie. Capability is resolved against the demo board so the
  * toolbar can render on a non-sandbox operator board.
  *
  * All Board API traffic goes through the shared SDK client's `client.fetch`
  * escape hatch (custom endpoints, no SDK release) or the existing auth
  * namespace — never a browser fetch.
  */
-import { isUnauthorized } from '@cavuno/board';
+import { isNotFound, isUnauthorized } from '@cavuno/board';
 import { type BoardSession } from '@cavuno/board/server';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest, setResponseHeader } from '@tanstack/react-start/server';
@@ -61,10 +64,39 @@ function previewBoard() {
   return getPreviewBoard();
 }
 
-/** Resolve v0 capability from the preview board's context. */
+/**
+ * Resolve v0 capability from the preview board.
+ *
+ * SDK 2.0 limited generated types to the public Board API and dropped
+ * operator-internal fields such as `context.sandbox`. Preview is still
+ * sandbox-only: probe `GET /sandbox/personas` (succeeds on sandbox,
+ * 404s elsewhere) rather than reading a removed context flag.
+ *
+ * Sandbox-ness is deployment-static, and getPreviewState sits on the
+ * root-shell critical path of EVERY request — memoize the probe per
+ * isolate so both answers are paid for once, not per page, and sandbox
+ * boards do not fetch the roster twice per render. Only DEFINITIVE
+ * outcomes are cached (roster ok → sandbox; 404 → not sandbox); a
+ * transient failure answers false for that request without being
+ * cached, so a flaky network cannot lock a sandbox board out of its
+ * toolbar for the isolate's lifetime.
+ */
+let sandboxProbe: Promise<boolean> | null = null;
+
+function probeSandbox(): Promise<boolean> {
+  sandboxProbe ??= fetchRoster().then(
+    () => true,
+    (error: unknown) => {
+      if (isNotFound(error)) return false;
+      sandboxProbe = null;
+      return false;
+    },
+  );
+  return sandboxProbe;
+}
+
 async function resolveCapabilityFromBoard(): Promise<PreviewCapability> {
-  const context = await previewBoard().context();
-  return resolveCapability({ sandbox: context.sandbox });
+  return resolveCapability({ sandbox: await probeSandbox() });
 }
 
 /** Fetch the raw roster (credentials included) — SERVER-SIDE ONLY. */
@@ -128,8 +160,8 @@ function storeSession(session: BoardAuthSession): void {
  * carries a reason so a future builder-preview context can answer
  * `canPreview: false, reason: 'switch-blocked'` without changing this seam.
  *
- * When `CAVUNO_DEMO_BOARD` is set, capability is read from the **demo**
- * client's context (the demo tenant serves `sandbox: true`).
+ * When `CAVUNO_DEMO_BOARD` is set, capability is probed on the **demo**
+ * client (the demo tenant exposes `/sandbox/*`).
  */
 export const getPreviewCapability = createServerFn({ method: 'GET' }).handler(
   (): Promise<PreviewCapability> => resolveCapabilityFromBoard(),
@@ -175,8 +207,8 @@ export const getDataSourceFacts = createServerFn({ method: 'GET' }).handler(
 /**
  * Capability + roster + dual-source flags in one call — what the root loader
  * reads so the toolbar renders from loader data (components never fetch their
- * own reads). Off sandbox this is a single cached `context()` read and an
- * empty roster.
+ * own reads). Off sandbox this is the memoized (once-per-isolate) sandbox
+ * probe answering false and an empty roster.
  */
 export const getPreviewState = createServerFn({ method: 'GET' }).handler(
   async (): Promise<PreviewState> => {

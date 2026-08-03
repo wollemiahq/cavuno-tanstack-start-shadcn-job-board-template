@@ -503,8 +503,12 @@ export function toPreviewBoardConfig(context: {
 }
 
 /**
- * v0 capability logic: capable iff the board context reports `sandbox: true`.
- * The reason is carried so the seam is future-proof (see `PreviewReason`).
+ * v0 capability logic: capable iff the board is a sandbox.
+ *
+ * Callers pass `sandbox: true` when the sandbox surface is reachable
+ * (`GET /sandbox/personas` succeeds). Public board context no longer
+ * carries a `sandbox` flag (SDK 2.0+). The reason field keeps the seam
+ * future-proof (see `PreviewReason`).
  */
 export function resolveCapability(context: {
   sandbox: boolean;

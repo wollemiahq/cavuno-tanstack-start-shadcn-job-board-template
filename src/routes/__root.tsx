@@ -1,9 +1,10 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 
 /**
- * Root: loads the board context once (identity, theme, features) plus
- * the session user, injects the board theme as overrides of the shadcn
- * token block, and renders the shared chrome.
+ * Root: loads the board context once (identity, features) plus the
+ * session user, and renders the shared chrome. Presentation tokens and
+ * light/dark mode are repo-owned (`src/theme.css` → resolved module) —
+ * board context no longer carries a wire theme (SDK 3.x).
  */
 import {
   HeadContent,
@@ -531,8 +532,7 @@ function RootLayout() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  // Theme mode is repo-canonical too (theme.css → resolved
-  // module), not the wire theme.
+  // Theme mode is repo-canonical (theme.css → resolved module).
   const mode =
     themeMeta.mode === 'dark' || themeMeta.mode === 'light'
       ? themeMeta.mode

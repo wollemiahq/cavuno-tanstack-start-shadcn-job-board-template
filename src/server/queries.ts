@@ -50,17 +50,6 @@ import type {
   TaxonomyResolution,
 } from '@cavuno/board';
 
-/**
- * The wire theme's `colors` is typed loosely in the SDK
- * (`Record<string, unknown>`) but is concretely string color values —
- * narrow once here at the boundary so server-fn serializability checks
- * and the theme mapper both get the real shape.
- */
-export interface SerializableThemeColors {
-  light?: Record<string, string>;
-  dark?: Record<string, string>;
-}
-
 // ── OPEN reads (allowlisted-open on the hosted board, even when protected) ──
 
 export const getBoardContext = createServerFn({ method: 'GET' }).handler(
@@ -94,12 +83,6 @@ export const getBoardContext = createServerFn({ method: 'GET' }).handler(
         linkedInPartnerId: null,
         cookieConsentRequired: false,
       },
-      theme: context.theme
-        ? {
-            ...context.theme,
-            colors: context.theme.colors as SerializableThemeColors,
-          }
-        : null,
     };
   },
 );
