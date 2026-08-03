@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound } from '@cavuno/board';
 import { BOARD_PATHS, blogTagPath, boardUrl } from '@cavuno/board/paths';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
@@ -18,6 +16,8 @@ import { BlogTagChips } from '@/components/board/blog-tag-chips';
 import { CursorPagination } from '@/components/board/cursor-pagination';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { jobDetailCopy } from '@/copy-groups/job-detail';
 import { BLOG_PAGE_SIZE } from '@/lib/blog';
 import { headTitle } from '@/lib/page-title';
 import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
@@ -128,7 +128,10 @@ function TagPage() {
   const location = useLocation();
   const navigate = useNavigate({ from: '/blog/tag/$tagSlug' });
   const router = useRouter();
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = {
+    breadcrumbs: breadcrumbsCopy(seo.language, seo.labels),
+    jobDetail: jobDetailCopy(seo.language, seo.labels),
+  };
   const crumbs = copy.breadcrumbs;
   const jsonLd = [
     createBreadcrumbJsonLd([

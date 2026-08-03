@@ -1,7 +1,5 @@
 import { useState } from 'react';
 
-import { boardCopy } from '#/copy';
-
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import {
   Link,
@@ -23,6 +21,7 @@ import { JsonLd } from '@/components/json-ld';
 import { AuthPageCard, RoleSelector } from '@/components/registration-page';
 import { buttonVariants } from '@/components/ui/button';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 
@@ -96,7 +95,7 @@ function JoinPage() {
   const { boardName, seo } = Route.useLoaderData();
   const { returnTo } = Route.useSearch();
   const [role, setRole] = useState<'candidate' | 'employer'>('candidate');
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
   const jsonLd = [
     createBreadcrumbJsonLd([
       { label: crumbs.home, href: seo.origin },

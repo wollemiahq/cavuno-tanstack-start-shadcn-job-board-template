@@ -3,6 +3,18 @@
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/geist';
 
+/* Prefer the already bundled face without extending text paint for a late
+   font swap on constrained mobile connections. Fast and cached visits still
+   use Geist; slow first visits keep the metric-compatible system fallback. */
+@font-face {
+  font-family: 'Geist Variable';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 100 900;
+  src: url('@fontsource-variable/geist/files/geist-latin-wght-normal.woff2')
+    format('woff2-variations');
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

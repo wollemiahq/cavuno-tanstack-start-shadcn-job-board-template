@@ -1,30 +1,18 @@
-import { boardCopy } from '#/copy';
-
-import { listingHead, listingJsonLd } from '@cavuno/board/seo';
+import { listingHead } from '@cavuno/board/seo';
 /**
  * The canonical jobs listing at `/jobs` — parity with the hosted board,
  * whose canonical jobs listing is `/jobs` (the home `/` is a landing).
  * A board migrating hosted → headless keeps its indexed `/jobs` URL.
  * Same listing surface as `/`, distinct canonical.
  */
-import {
-  createFileRoute,
-  getRouteApi,
-  useNavigate,
-} from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 
-import { JobAlertFloatingPrompt } from '../components/job-alert-floating-prompt';
-import { JsonLd } from '../components/json-ld';
-import { jobAlertDefaultsFromSearch } from '../lib/job-alert-defaults';
 import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
-import { pageSearchValue, pageToOffset } from '../lib/pagination';
-import { saveJob } from '../server/account';
+import { pageToOffset } from '../lib/pagination';
 import { getSeoBase, listJobs, searchJobs } from '../server/queries';
-import { SelectedJobDetail } from './-selected-job-detail';
-import { useSelectedJob } from './-use-selected-job';
+import { JobsPage } from './-jobs-page';
 
-import { toJobCardVM } from '@/board/job-view-model';
-import { JobSearchPage } from '@/components/board/job-search-page';
+import { jobSearchCopy } from '@/copy-groups/job-search';
 
 const JOBS_PAGE_SIZE = 20;
 
@@ -81,107 +69,10 @@ export const Route = createFileRoute('/jobs/')({
       ? listingHead({
           ...loaderData.seo,
           path: '/jobs',
-          heading: boardCopy(loaderData.seo.language, loaderData.seo.labels)
-            .jobSearch.headingJobs,
+          heading: jobSearchCopy(loaderData.seo.language, loaderData.seo.labels)
+            .headingJobs,
           count: loaderData.page.count,
         })
       : {},
   component: JobsPage,
 });
-
-const rootApi = getRouteApi('__root__');
-
-function JobsPage() {
-  const { page, seo, relatedSearches } = Route.useLoaderData();
-  const search = Route.useSearch();
-  const { board, user } = rootApi.useLoaderData();
-  const navigate = useNavigate({ from: '/jobs/' });
-  const selectedJob = useSelectedJob(
-    page.data.some((job) => job.slug === search.selectedJob)
-      ? search.selectedJob
-      : undefined,
-    Boolean(user?.emailVerified),
-  );
-
-  return (
-    <>
-      <JsonLd
-        data={listingJsonLd({
-          origin: seo.origin,
-          breadcrumbs: [
-            {
-              name: boardCopy(board.language, board.labels).breadcrumbs.home,
-              path: '/',
-            },
-            { name: boardCopy(board.language, board.labels).breadcrumbs.jobs },
-          ],
-          jobs: page.data,
-        })}
-      />
-      <JobSearchPage
-        jobs={page.data.map((job) =>
-          toJobCardVM(job, board.language, board.labels),
-        )}
-        count={page.count}
-        gatedCount={page.gatedCount}
-        page={search.page ?? 1}
-        pageSize={JOBS_PAGE_SIZE}
-        filters={search}
-        language={board.language}
-        labels={board.labels}
-        viewer={user ? { emailVerified: user.emailVerified } : null}
-        onSaveJob={async (jobId) => {
-          await saveJob({ data: { jobId } });
-        }}
-        relatedSearches={relatedSearches}
-        onFiltersChange={(next) =>
-          navigate({
-            to: '/jobs',
-            search: () => ({
-              ...next,
-              page: undefined,
-              selectedJob: undefined,
-            }),
-          })
-        }
-        onPageChange={(next) =>
-          navigate({
-            to: '/jobs',
-            search: (prev) => ({
-              ...prev,
-              page: pageSearchValue(next),
-              selectedJob: undefined,
-            }),
-          })
-        }
-        selectedJob={search.selectedJob}
-        onSelectedJobReplace={(jobSlug) =>
-          navigate({
-            search: (prev) => ({ ...prev, selectedJob: jobSlug }),
-            replace: true,
-            resetScroll: false,
-          })
-        }
-        onSelectedJobPush={(jobSlug) =>
-          navigate({
-            search: (prev) => ({ ...prev, selectedJob: jobSlug }),
-            resetScroll: false,
-          })
-        }
-        detail={
-          <SelectedJobDetail state={selectedJob} board={board} user={user} />
-        }
-      />
-      {board.features.jobAlerts ? (
-        <JobAlertFloatingPrompt
-          language={board.language}
-          labels={board.labels}
-          defaults={jobAlertDefaultsFromSearch({
-            keyword: search.q,
-            source: 'board_home',
-          })}
-        />
-      ) : null}
-    </>
-  );
-}

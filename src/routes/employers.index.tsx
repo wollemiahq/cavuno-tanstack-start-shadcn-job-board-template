@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { Check } from 'lucide-react';
@@ -31,6 +29,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 import type { Plan, SalesLedPlan } from '@cavuno/board';
@@ -230,7 +229,7 @@ function PlanGroup({ title, plans }: { title: string; plans: Plan[] }) {
 
 function EmployersPage() {
   const { plans, salesLed, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
   const jobPosting = plans.filter((plan) => plan.purpose === 'job_posting');
   const talentAccess = plans.filter((plan) => plan.purpose === 'talent_access');
   const jsonLd = [

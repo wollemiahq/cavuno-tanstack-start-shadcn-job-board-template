@@ -3,7 +3,7 @@ import type { BreadcrumbsCopy } from '@cavuno/board/format';
 
 export interface LegalPageMeta {
   path: string;
-  /** Key into `boardCopy(...).breadcrumbs` — resolves the label at render time. */
+  /** Key into `breadcrumbsCopy(...)` — resolves the label at render time. */
   breadcrumbKey: keyof BreadcrumbsCopy;
   jsonLdType: 'AboutPage' | 'WebPage';
 }

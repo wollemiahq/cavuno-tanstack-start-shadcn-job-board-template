@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react';
 
-import { boardCopy } from '#/copy';
-
 import { Link } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
@@ -11,6 +9,8 @@ import { LanguageSwitcher } from '@/components/language-switcher';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { Badge } from '@/components/ui/badge';
+import { footerCopy } from '@/copy-groups/footer';
+import { navCopy } from '@/copy-groups/nav';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { cn } from '@/lib/utils';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
@@ -219,7 +219,10 @@ export default function Footer({
    */
   cookiePreferencesAction?: ReactNode;
 }) {
-  const copy = boardCopy(language, labels);
+  const copy = {
+    footer: footerCopy(language, labels),
+    nav: navCopy(language, labels),
+  };
 
   // ── For Candidates — operator-ordered system + custom links ──
   const navigationLinks = buildNavigationLinks({

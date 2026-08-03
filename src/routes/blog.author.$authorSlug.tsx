@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound } from '@cavuno/board';
 import { BOARD_PATHS, blogAuthorPath, boardUrl } from '@cavuno/board/paths';
 import {
@@ -21,6 +19,8 @@ import { CursorPagination } from '@/components/board/cursor-pagination';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { jobDetailCopy } from '@/copy-groups/job-detail';
 import { BLOG_PAGE_SIZE } from '@/lib/blog';
 import { initialsOf } from '@/lib/initials';
 import { headTitle } from '@/lib/page-title';
@@ -163,7 +163,10 @@ function AuthorPage() {
   const navigate = useNavigate({ from: '/blog/author/$authorSlug' });
   const router = useRouter();
   const permalink = boardUrl(seo.origin, blogAuthorPath(author.slug));
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = {
+    breadcrumbs: breadcrumbsCopy(seo.language, seo.labels),
+    jobDetail: jobDetailCopy(seo.language, seo.labels),
+  };
   const crumbs = copy.breadcrumbs;
   const jsonLd = [
     createAuthorProfileJsonLd({

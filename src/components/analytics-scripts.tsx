@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 
 import { useCookieConsent } from '@/components/cookie-consent';
+import { startWebVitalsReporting } from '@/lib/web-vitals';
 
 /** The board context's `analytics` group, minus the consent flag. */
 export interface BoardAnalyticsConfig {
@@ -122,6 +123,7 @@ export function AnalyticsScripts({
   useEffect(() => {
     if (!allowed) return;
     injectVendorScripts(analytics);
+    void startWebVitalsReporting();
   }, [allowed, analytics]);
 
   return null;

@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { type SalaryLocation } from '@cavuno/board';
 import { BOARD_PATHS, boardUrl, salaryLocationPath } from '@cavuno/board/paths';
 import {
@@ -11,11 +9,13 @@ import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getSeoBase, listSalaryLocations } from '../server/queries';
-import { SalaryPageLayout, SalaryPendingPage } from './-salary-page-layout';
+import { SalaryPageLayout } from './-salary-page-layout';
+import { SalaryPendingPage } from './-salary-pending-page';
 
 import { toSalaryBreadcrumbVM } from '@/board/salary-view-model';
 import { SalaryEmptyState } from '@/components/board/salary-sections';
 import { JsonLd } from '@/components/json-ld';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { headTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
@@ -113,7 +113,7 @@ function LocationTree({
 
 function SalaryLocationsIndex() {
   const { locations, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
   const byParent = childrenByParent(locations);
   const hasLocations = (byParent.get(null) ?? []).length > 0;
 

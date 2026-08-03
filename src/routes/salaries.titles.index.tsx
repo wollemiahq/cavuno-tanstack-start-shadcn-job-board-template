@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { BOARD_PATHS, boardUrl, salaryTitlePath } from '@cavuno/board/paths';
 import {
   createBreadcrumbJsonLd,
@@ -10,7 +8,8 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getSeoBase, listSalaryTitles } from '../server/queries';
-import { SalaryPageLayout, SalaryPendingPage } from './-salary-page-layout';
+import { SalaryPageLayout } from './-salary-page-layout';
+import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   toSalaryBreadcrumbVM,
@@ -22,6 +21,7 @@ import {
   type RailItem,
 } from '@/components/board/salary-sections';
 import { JsonLd } from '@/components/json-ld';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/salaries/titles/')({
@@ -61,7 +61,7 @@ export const Route = createFileRoute('/salaries/titles/')({
 
 function SalaryTitlesIndex() {
   const { titles, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
   const locale = seo.language;
 
   const jsonLd = [

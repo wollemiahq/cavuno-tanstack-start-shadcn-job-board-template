@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { BOARD_PATHS, boardUrl } from '@cavuno/board/paths';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { createFileRoute } from '@tanstack/react-router';
@@ -13,6 +11,7 @@ import {
 } from '../server/queries';
 
 import { JsonLd } from '@/components/json-ld';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import {
   companiesListingLoaderDeps,
   parseCompaniesSearch,
@@ -83,7 +82,9 @@ export const Route = createFileRoute('/companies/')({
 function CompaniesPage() {
   const { page, markets, seo } = Route.useLoaderData();
   const search = Route.useSearch();
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = {
+    breadcrumbs: breadcrumbsCopy(seo.language, seo.labels),
+  };
   const crumbs = copy.breadcrumbs;
   const jsonLd = [
     createBreadcrumbJsonLd([

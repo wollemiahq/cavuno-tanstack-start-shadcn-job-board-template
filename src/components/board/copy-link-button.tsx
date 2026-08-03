@@ -2,11 +2,10 @@
 
 import { useState } from 'react';
 
-import { boardCopy } from '#/copy';
-
 import { Copy, Link } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { copyLinkCopy } from '@/copy-groups/copy-link';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 export function CopyLinkButton({
@@ -27,7 +26,7 @@ export function CopyLinkButton({
   className?: string;
 }) {
   const [copied, setCopied] = useState(false);
-  const copy = boardCopy(language, labels).copyLink;
+  const copy = copyLinkCopy(language, labels);
   const buttonSize = size === 'md' ? 'default' : size;
   return (
     <Button

@@ -1,9 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { m } from '../paraglide/messages';
-
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
-import { PublicContentPending } from '@/components/board/public-content-pending';
 import { SalaryEmptyState } from '@/components/board/salary-sections';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 
@@ -37,8 +34,4 @@ export function SalaryNotFoundPage({ title }: { title: string }) {
       </PageContent>
     </Page>
   );
-}
-
-export function SalaryPendingPage() {
-  return <PublicContentPending label={m.publicContent_loadingLabel()} />;
 }

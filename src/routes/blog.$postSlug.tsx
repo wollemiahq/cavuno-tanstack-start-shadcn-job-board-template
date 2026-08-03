@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound } from '@cavuno/board';
 import {
   createBlogArticleJsonLd,
@@ -18,6 +16,8 @@ import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogArticleContent } from '@/components/board/blog-article-content';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { JsonLd } from '@/components/json-ld';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { jobDetailCopy } from '@/copy-groups/job-detail';
 import { headTitle } from '@/lib/page-title';
 import { selectRelatedPosts } from '@/lib/related-posts';
 import {
@@ -143,7 +143,10 @@ function PostPage() {
   const { post, adjacent, related, seo } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const permalink = post.canonicalUrl ?? `${seo.origin}/blog/${post.slug}`;
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = {
+    breadcrumbs: breadcrumbsCopy(seo.language, seo.labels),
+    jobDetail: jobDetailCopy(seo.language, seo.labels),
+  };
   const crumbs = copy.breadcrumbs;
   const jsonLd = [
     createBlogArticleJsonLd({

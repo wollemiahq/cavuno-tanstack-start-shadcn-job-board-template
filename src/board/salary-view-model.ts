@@ -2,7 +2,8 @@
  * Salary VIEW-MODEL — the Layer-1b seam for the salary block. These mappers
  * are the only place SDK formatters (`formatRange`,
  * `formatUsd`), taxonomy label resolution (`fieldLabel`) and i18n copy
- * (`boardCopy`) touch the salary sections. Each maps raw route data to a
+ * (the route-owned copy resolvers) touch the salary sections. Each maps raw
+ * route data to a
  * plain, fully-resolved view-model.
  *
  * The presentational sections (`OverallSalaryCard`, `SenioritySalaryTable`,
@@ -23,7 +24,9 @@ import {
 } from '@cavuno/board/paths';
 import { formatRange, formatUsd } from '@cavuno/board/seo';
 
-import { boardCopy } from '@/copy';
+import { entityCopy } from '@/copy-groups/entity';
+import { jobDetailCopy } from '@/copy-groups/job-detail';
+import { salaryCopy } from '@/copy-groups/salary';
 
 /**
  * Salary URL composers — the Layer-1b seam for the salary hrefs the SDK's
@@ -178,7 +181,8 @@ export function toOverallSalaryVM(
   language: string,
   labels?: BoardLabelOverrides,
 ): OverallSalaryVM {
-  const copy = boardCopy(language, labels);
+  const entity = entityCopy(language, labels);
+  const copy = salaryCopy(language, labels);
   const median =
     overall.medianMin !== undefined && overall.medianMax !== undefined
       ? Math.round((overall.medianMin + overall.medianMax) / 2)
@@ -187,34 +191,32 @@ export function toOverallSalaryVM(
   const stats: SalaryStatVM[] = [];
   if (overall.p25Min !== undefined) {
     stats.push({
-      label: copy.salary.comparisonPercentile25Label,
+      label: copy.comparisonPercentile25Label,
       value: formatUsd(language, overall.p25Min),
     });
   }
   if (median !== null) {
     stats.push({
-      label: copy.salary.medianLabel,
+      label: copy.medianLabel,
       value: formatUsd(language, median),
       emphasis: true,
     });
   }
   if (overall.p75Max !== undefined) {
     stats.push({
-      label: copy.salary.comparisonPercentile75Label,
+      label: copy.comparisonPercentile75Label,
       value: formatUsd(language, overall.p75Max),
     });
   }
   stats.push({
-    label: copy.salary.basedOnLabel,
-    value: `${overall.jobCount} ${
-      overall.jobCount === 1 ? copy.entity.jobSingular : copy.entity.jobPlural
-    }`,
+    label: copy.basedOnLabel,
+    value: `${overall.jobCount} ${overall.jobCount === 1 ? entity.jobSingular : entity.jobPlural}`,
   });
 
   return {
-    headlineLabel: copy.salary.comparisonHeadlineAverage,
+    headlineLabel: copy.comparisonHeadlineAverage,
     headlineValue: formatRange(language, overall.avgMin, overall.avgMax),
-    perYearSuffix: copy.salary.perYearSuffix,
+    perYearSuffix: copy.perYearSuffix,
     stats,
   };
 }
@@ -247,7 +249,7 @@ export function toSeniorityTableVM(
   language: string,
   labels?: BoardLabelOverrides,
 ): SeniorityTableVM {
-  const copy = boardCopy(language, labels).salary;
+  const copy = salaryCopy(language, labels);
   return {
     headers: {
       level: copy.seniorityTableHeaderLevel,
@@ -304,7 +306,7 @@ export function toSalaryRailVM(
   language: string,
   labels?: BoardLabelOverrides,
 ): SalaryRailVM {
-  const copy = boardCopy(language, labels).entity;
+  const copy = entityCopy(language, labels);
   return {
     title,
     items: items.map((item) => ({
@@ -312,9 +314,7 @@ export function toSalaryRailVM(
       href: item.href,
       range: item.range,
       logoPath: item.logoPath,
-      jobCountLabel: `${item.jobCount} ${
-        item.jobCount === 1 ? copy.jobSingular : copy.jobPlural
-      }`,
+      jobCountLabel: `${item.jobCount} ${item.jobCount === 1 ? copy.jobSingular : copy.jobPlural}`,
     })),
   };
 }
@@ -330,7 +330,7 @@ export function toSalaryFaqVM(
   labels?: BoardLabelOverrides,
 ): SalaryFaqVM {
   return {
-    heading: boardCopy(language, labels).salary.faqHeading,
+    heading: salaryCopy(language, labels).faqHeading,
     items,
   };
 }
@@ -389,7 +389,7 @@ export function toSalaryBreadcrumbVM(
   labels?: BoardLabelOverrides,
 ): SalaryBreadcrumbVM {
   return {
-    ariaLabel: boardCopy(language, labels).jobDetail.breadcrumbAriaLabel,
+    ariaLabel: jobDetailCopy(language, labels).breadcrumbAriaLabel,
     items,
   };
 }

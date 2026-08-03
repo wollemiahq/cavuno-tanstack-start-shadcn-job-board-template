@@ -1,6 +1,19 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { boardCopy } from './copy';
+import { alertsCopy } from './copy-groups/alerts';
+import { applyCopy } from './copy-groups/apply';
+import { blogCopy } from './copy-groups/blog';
+import { breadcrumbsCopy } from './copy-groups/breadcrumbs';
+import { copyLinkCopy } from './copy-groups/copy-link';
+import { entityCopy } from './copy-groups/entity';
+import { footerCopy } from './copy-groups/footer';
+import { jobCardCopy } from './copy-groups/job-card';
+import { jobDetailCopy } from './copy-groups/job-detail';
+import { jobSearchCopy } from './copy-groups/job-search';
+import { navCopy } from './copy-groups/nav';
+import { paginationCopy } from './copy-groups/pagination';
+import { salaryCopy } from './copy-groups/salary';
 import { baseLocale, overwriteGetLocale } from './paraglide/runtime';
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -83,6 +96,48 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
 
     expect(actual).toEqual(expected);
   });
+
+  it('keeps the route-owned message families equivalent to the canonical adapter', () => {
+    const canonical = boardCopy('en') as unknown as Record<
+      string,
+      Record<string, unknown>
+    >;
+    const modular = {
+      alerts: alertsCopy('en'),
+      apply: applyCopy('en'),
+      blog: blogCopy('en'),
+      breadcrumbs: breadcrumbsCopy('en'),
+      copyLink: copyLinkCopy('en'),
+      entity: entityCopy('en'),
+      footer: footerCopy('en'),
+      jobCard: jobCardCopy('en'),
+      jobDetail: jobDetailCopy('en'),
+      jobSearch: jobSearchCopy('en'),
+      nav: navCopy('en'),
+      pagination: paginationCopy('en'),
+      salary: salaryCopy('en'),
+    } as unknown as Record<string, Record<string, unknown>>;
+
+    for (const [group, values] of Object.entries(canonical)) {
+      expect(Object.keys(modular[group] ?? {}).sort()).toEqual(
+        Object.keys(values).sort(),
+      );
+      for (const [key, value] of Object.entries(values)) {
+        if (typeof value === 'function') {
+          expect(modular[group]?.[key]).toBeTypeOf('function');
+        } else {
+          expect(modular[group]?.[key]).toBe(value);
+        }
+      }
+    }
+
+    expect(jobDetailCopy('en').experienceYears(5)).toBe(
+      boardCopy('en').jobDetail.experienceYears(5),
+    );
+    expect(jobDetailCopy('en').posted('today')).toBe(
+      boardCopy('en').jobDetail.posted('today'),
+    );
+  });
 });
 
 describe('the copy seam is the only catalog call site', () => {
@@ -102,6 +157,19 @@ describe('the copy seam is the only catalog call site', () => {
       const source = readFileSync(path, 'utf8');
       return /\buiCopy\b/.test(source) && /@cavuno\/board\/format/.test(source);
     });
+    expect(offenders).toEqual([]);
+  });
+
+  it('runtime files import route-owned copy groups instead of boardCopy', () => {
+    const offenders = walk(SRC).filter((path) => {
+      if (path.endsWith('.test.ts') || path.endsWith('.test.tsx')) return false;
+      if (path === join(SRC, 'copy.ts')) return false;
+      const source = readFileSync(path, 'utf8');
+      return /import\s*\{[^}]*\bboardCopy\b[^}]*\}\s*from\s*['"][^'"]*copy['"]/.test(
+        source,
+      );
+    });
+
     expect(offenders).toEqual([]);
   });
 });

@@ -47,7 +47,6 @@ import {
   resolveHeaderSearchState,
   type HeaderSearchSubmission,
 } from '../lib/header-search';
-import { AppRouterProvider } from './app-router-provider';
 import Header from './Header';
 
 afterEach(cleanup);
@@ -168,40 +167,38 @@ function renderHeader({
         }
 
         return (
-          <AppRouterProvider>
-            <Header
-              boardName="Robotics Jobs"
-              logoUrl={null}
-              user={user}
-              language="en"
-              features={features}
-              hasAccessGrant={hasAccessGrant}
-              talentDirectoryVisibility={talentDirectoryVisibility}
-              search={{
-                ...initialSearch,
-                onSubmit: submitSearch,
-                locationSuggestions: {
-                  suggestions: locationSuggestions.map((place) => ({
-                    countryCode: null,
-                    regionCode: null,
-                    ...place,
-                  })),
-                  loading: false,
-                  onQueryChange: vi.fn(),
-                },
-                keywordSuggestions: {
-                  suggestions: keywordSuggestions,
-                  loading: false,
-                  onQueryChange: vi.fn(),
-                },
-                companyMarketSuggestions: {
-                  suggestions: companyMarketSuggestions,
-                  loading: false,
-                  onQueryChange: vi.fn(),
-                },
-              }}
-            />
-          </AppRouterProvider>
+          <Header
+            boardName="Robotics Jobs"
+            logoUrl={null}
+            user={user}
+            language="en"
+            features={features}
+            hasAccessGrant={hasAccessGrant}
+            talentDirectoryVisibility={talentDirectoryVisibility}
+            search={{
+              ...initialSearch,
+              onSubmit: submitSearch,
+              locationSuggestions: {
+                suggestions: locationSuggestions.map((place) => ({
+                  countryCode: null,
+                  regionCode: null,
+                  ...place,
+                })),
+                loading: false,
+                onQueryChange: vi.fn(),
+              },
+              keywordSuggestions: {
+                suggestions: keywordSuggestions,
+                loading: false,
+                onQueryChange: vi.fn(),
+              },
+              companyMarketSuggestions: {
+                suggestions: companyMarketSuggestions,
+                loading: false,
+                onQueryChange: vi.fn(),
+              },
+            }}
+          />
         );
       },
     });

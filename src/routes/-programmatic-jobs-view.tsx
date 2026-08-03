@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { listingJsonLd } from '@cavuno/board/seo';
 import { getRouteApi, useNavigate } from '@tanstack/react-router';
 
@@ -12,12 +10,11 @@ import { useSelectedJob } from './-use-selected-job';
 
 import { toJobCardVM } from '@/board/job-view-model';
 import { JobSearchPage } from '@/components/board/job-search-page';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import type { JobsSearch } from '@/lib/jobs-search';
 import type { PublicJobCard, RelatedSearch } from '@cavuno/board';
 
 const rootApi = getRouteApi('__root__');
-
-export const PROGRAMMATIC_JOBS_PAGE_SIZE = 20;
 
 type LooseNavigate = (opts: {
   to?: string;
@@ -54,7 +51,9 @@ export function ProgrammaticJobsView({
   onSaveJob: (jobId: string) => Promise<void>;
 }) {
   const { board, user } = rootApi.useLoaderData();
-  const copy = boardCopy(board.language, board.labels);
+  const copy = {
+    breadcrumbs: breadcrumbsCopy(board.language, board.labels),
+  };
   const navigate = useNavigate() as unknown as LooseNavigate;
   const selectedJob = useSelectedJob(
     jobs.some((job) => job.slug === filters.selectedJob)

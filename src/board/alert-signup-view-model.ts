@@ -1,7 +1,9 @@
+import { alertsCopy } from '@/copy-groups/alerts';
 /**
  * Alert-signup VIEW-MODEL — the Layer-1b seam for the job-alert subscribe
  * block. `toAlertSignupVM` is the only place the i18n
- * alert copy (`boardCopy`) touches the form: it resolves every label the
+ * alert copy (the route-owned copy resolver) touches the form: it resolves
+ * every label the
  * markup renders plus the per-status result messages.
  *
  * The `AlertSignupForm` presentation renders its copy from `AlertSignupVM`,
@@ -19,7 +21,6 @@
  * them directly from `@cavuno/board*` instead. Don't "fix" that to a
  * re-export — it's intentional.
  */
-import { boardCopy } from '@/copy';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 export interface AlertSignupVM {
@@ -39,7 +40,7 @@ export function toAlertSignupVM(
   language: string,
   labels?: BoardLabelOverrides,
 ): AlertSignupVM {
-  const copy = boardCopy(language, labels).alerts;
+  const copy = alertsCopy(language, labels);
   return {
     sectionAriaLabel: copy.sectionAriaLabel,
     defaultTitle: copy.jobAlertTitle,

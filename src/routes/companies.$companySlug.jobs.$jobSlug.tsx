@@ -15,7 +15,6 @@ import {
  * matching the hosted page (the rail is never fatal to the render).
  */
 import {
-  Await,
   createFileRoute,
   getRouteApi,
   notFound,
@@ -44,6 +43,7 @@ import { CopyLinkButton } from '@/components/board/copy-link-button';
 import { JobDetail } from '@/components/board/job-detail';
 import { JobList } from '@/components/board/job-list';
 import { SaveJobButton } from '@/components/board/save-job-button';
+import { DeferredContent } from '@/components/deferred-content';
 import { JsonLd } from '@/components/json-ld';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Text } from '@/components/text';
@@ -235,7 +235,7 @@ function JobDetailPage() {
           </>
         }
         similarSlot={
-          <Await promise={similar} fallback={null}>
+          <DeferredContent promise={similar}>
             {(similarRail) =>
               similarRail.jobs.length > 0 ? (
                 <section
@@ -256,7 +256,7 @@ function JobDetailPage() {
                 </section>
               ) : null
             }
-          </Await>
+          </DeferredContent>
         }
         alertSlot={
           board.features.jobAlerts ? (

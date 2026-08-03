@@ -1151,6 +1151,17 @@ Danger zone — irreversible account delete (`board.me.delete()`). This is
 ahead-of-hosted (no hosted candidate delete UI); the typed confirmation
 guards against accidents. On success we clear the session and go home.
 
+### DeferredContent — `src/components/deferred-content.tsx`
+
+Keep non-critical streamed content inside its own boundary. TanStack's
+`Await` does not create a boundary for a null fallback, so using it directly
+can let a below-the-fold promise blank the whole route while it resolves.
+
+Props:
+
+- `children: (value: T) => ReactNode`
+- `promise: Promise<T>`
+
 ### EducationSection — `src/components/education-section.tsx`
 
 Education — list + add/edit/delete, over `board.me.profile`'s
@@ -1317,6 +1328,40 @@ Props:
 
 - `children: ReactNode`
 
+### HeaderAccountMenu — `src/components/header-account-menu.tsx`
+
+Authenticated-only header UI, split out of the anonymous public shell.
+
+Props:
+
+- `employerCompanies: { id: string; object: "company_membership"; status: "approved" | "pending_work_email" | "awaiting_admin" | "rejected"…`
+- `hasAccessGrant: boolean`
+- `nativeApplications: boolean`
+- `user: { id: string; object: "board_user"; role: "candidate" | "employer"; email: string; displayName: string | null; emailV…`
+
+### HeaderMobileMenu — `src/components/header-mobile-menu.tsx`
+
+Props:
+
+- `accountActions: ReactNode`
+- `closeLabel: string`
+- `headerLeft: ReactNode`
+- `navigationLabel: string`
+- `navLinks: readonly { to: MobileNavDestination; label: string; }[]`
+- `onOpenChange: (open: boolean) => void`
+- `postJobLabel: string`
+- `showPostJob: boolean`
+
+### HeaderSearchEnhanced — `src/components/header-search-enhanced.tsx`
+
+Props:
+
+- `blogPlaceholder: string`
+- `companiesPlaceholder: string`
+- `jobsPlaceholder: string`
+- `search: HeaderSearchState & { onSubmit: (submission: HeaderSearchSubmission) => void; keywordSuggestions: KeywordSuggestionSt…`
+- `talentPlaceholder: string`
+
 ### JobAlertFloatingPrompt — `src/components/job-alert-floating-prompt.tsx`
 
 The hosted board's dismissible bottom-corner job-alert prompt on listing
@@ -1360,6 +1405,15 @@ Props:
 - `placeholder: string`
 - `suggestions: KeywordSuggestionVM[]`
 - `value: string`
+
+### LanguageSwitcherMenu — `src/components/language-switcher-menu.tsx`
+
+Props:
+
+- `activeLabel: string`
+- `className?: string | undefined`
+- `label: string`
+- `options: LocaleOption[]`
 
 ### LanguageSwitcher — `src/components/language-switcher.tsx`
 

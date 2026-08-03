@@ -1,10 +1,7 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound } from '@cavuno/board';
 import { companySalaryPath } from '@cavuno/board/paths';
 import { createBreadcrumbJsonLd, formatRange } from '@cavuno/board/seo';
 import {
-  Await,
   createFileRoute,
   getRouteApi,
   interpolatePath,
@@ -32,6 +29,7 @@ import { CompanyCard } from '@/components/board/company-card';
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobCard } from '@/components/board/job-card';
 import { CompanySalarySummary } from '@/components/board/salary-sections';
+import { DeferredContent } from '@/components/deferred-content';
 import { JsonLd } from '@/components/json-ld';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
@@ -45,6 +43,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 
@@ -167,7 +166,9 @@ function CompanyPage() {
   const { company, jobs, similar, seo, salarySummary, hasSalaries } =
     Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = {
+    breadcrumbs: breadcrumbsCopy(seo.language, seo.labels),
+  };
   const crumbs = copy.breadcrumbs;
 
   // Salary summary VMs condense the Salaries tab: the overall
@@ -377,7 +378,7 @@ function CompanyPage() {
               (streamed via <Await>): the rail fills in when the search backend
               answers, and stays hidden while it resolves or if it degrades to
               empty. */}
-          <Await promise={similar} fallback={null}>
+          <DeferredContent promise={similar}>
             {(similarCompanies) =>
               similarCompanies.length > 0 ? (
                 <section
@@ -403,7 +404,7 @@ function CompanyPage() {
                 </section>
               ) : null
             }
-          </Await>
+          </DeferredContent>
         </aside>
       </div>
     </CompanySectionShell>

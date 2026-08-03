@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound } from '@cavuno/board';
 import { BOARD_PATHS, boardUrl, salaryLocationPath } from '@cavuno/board/paths';
 import {
@@ -11,11 +9,8 @@ import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocationSkills, getSeoBase } from '../server/queries';
-import {
-  SalaryNotFoundPage,
-  SalaryPageLayout,
-  SalaryPendingPage,
-} from './-salary-page-layout';
+import { SalaryNotFoundPage, SalaryPageLayout } from './-salary-page-layout';
+import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   salaryLocationSkillsPath,
@@ -29,6 +24,7 @@ import {
   type RailItem,
 } from '@/components/board/salary-sections';
 import { JsonLd } from '@/components/json-ld';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/salaries/locations/$slug/skills')({
@@ -51,7 +47,7 @@ export const Route = createFileRoute('/salaries/locations/$slug/skills')({
     const seo = await getSeoBase();
     // Flat hosted shape: Home › Salaries › Locations › {Place}(linked) › Skills.
     // Injected so the place crumb shows its resolved name, not the raw slug.
-    const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+    const crumbs = breadcrumbsCopy(seo.language, seo.labels);
     const breadcrumbTrail = [
       { name: crumbs.home, href: BOARD_PATHS.home },
       { name: crumbs.salaries, href: BOARD_PATHS.salaries },
@@ -101,7 +97,7 @@ export const Route = createFileRoute('/salaries/locations/$slug/skills')({
 
 function LocationSkillsPage() {
   const { data, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
   const locale = seo.language;
   const items: RailItem[] = data.skills.map((s) => ({
     name: s.name,

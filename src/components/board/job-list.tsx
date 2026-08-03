@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { Search } from 'lucide-react';
 
 /**
@@ -21,6 +19,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { jobSearchCopy } from '@/copy-groups/job-search';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 export function JobList({
@@ -47,7 +46,9 @@ export function JobList({
    */
   compact?: boolean;
 }) {
-  const copy = boardCopy(language, labels);
+  const copy = {
+    jobSearch: jobSearchCopy(language, labels),
+  };
 
   if (jobs.length === 0) {
     return (

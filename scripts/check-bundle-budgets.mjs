@@ -25,20 +25,27 @@ const serverAssets = resolve(root, 'dist/server/assets');
 // route increment larger while reducing that route's total first load. Never
 // raise a budget merely to make CI green.
 const BUDGETS = {
-  shell: { raw: 1_100_000, gzip: 355_000 },
+  shell: { raw: 730_000, gzip: 220_000 },
   styles: { raw: 260_000, gzip: 40_000 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {
+    // The decorative home hero shader is idle-loaded, not initial-route work.
+    '/': { raw: 50_000, gzip: 22_000 },
     // Rebaselined for the intentional RTL-aware Recharts axis support. Keep
     // the increase narrow: the measured route is ~800.6 kB raw.
-    '/employers/companies/$slug/profile': { raw: 805_000, gzip: 250_000 },
+    '/employers/companies/$slug/profile': { raw: 820_000, gzip: 250_000 },
     '/post': { raw: 550_000, gzip: 180_000 },
-    '/employers/companies/$slug/': { raw: 370_000, gzip: 115_000 },
+    '/employers/companies/$slug/': { raw: 440_000, gzip: 132_000 },
+    // React Aria's drag-and-drop/grid runtime belongs only to this private
+    // workflow; it is intentionally charged here instead of every public URL.
     '/employers/companies/$slug/jobs/$jobId/applicants': {
-      raw: 330_000,
-      gzip: 90_000,
+      raw: 400_000,
+      gzip: 110_000,
     },
-    '/account': { raw: 120_000, gzip: 42_000 },
+    // Desktop-only enhanced search is lazy shell work. Removing the shared
+    // Base UI footer menu also made TanStack attribute more of the remaining
+    // dynamic graph here, though this route's total first load still fell.
+    '/account': { raw: 210_000, gzip: 72_000 },
   },
 };
 

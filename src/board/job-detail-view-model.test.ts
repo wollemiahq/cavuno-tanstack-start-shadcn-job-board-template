@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { toJobDetailVM } from './job-detail-view-model';
 
-import { boardCopy } from '@/copy';
+import { jobDetailCopy } from '@/copy-groups/job-detail';
 import type { PublicBoard, PublicJob, PublicJobCard } from '@cavuno/board';
 
-const copy = boardCopy('en').jobDetail;
+const copy = jobDetailCopy('en');
 
 /**
  * The mapper is Layer 1b — it's where the correctness-critical derivations

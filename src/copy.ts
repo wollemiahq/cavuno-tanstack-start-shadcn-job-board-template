@@ -1,9 +1,11 @@
 /**
- * The single chrome-copy seam.
+ * The canonical chrome-copy compatibility adapter.
  *
- * Every route and component resolves chrome copy through this module —
- * never by calling a catalog inline. Content data (jobs, companies, blog,
- * taxonomy, salaries) is API-served and never flows through here.
+ * Runtime routes and components import the smallest resolver under
+ * `copy-groups/` that they use. Keeping this complete adapter gives tests and
+ * compatibility callers one authoritative representation of the public
+ * `UiCopy` contract without making every message family reachable from the
+ * universal client entry.
  *
  * Copy resolves from compiled Paraglide messages keyed by the runtime locale
  * (`getLocale()` — the URL

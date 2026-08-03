@@ -11,20 +11,22 @@
  * hrefs (not client-only handlers) keep the alternates crawlable and let
  * each carry an `hrefLang` hint. The base locale is served unprefixed.
  */
+import { lazy, Suspense, useState } from 'react';
+
 import { useRouterState } from '@tanstack/react-router';
-import { Check, ChevronDown, Globe } from 'lucide-react';
+import { ChevronDown, Globe } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getLocale, localizeHref } from '../paraglide/runtime';
 
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+
+const LazyLanguageSwitcherMenu = lazy(() =>
+  import('./language-switcher-menu').then(({ LanguageSwitcherMenu }) => ({
+    default: LanguageSwitcherMenu,
+  })),
+);
 
 /**
  * The public chrome locales. `en-XA` (pseudo-accent) and `ar-XB`
@@ -71,6 +73,7 @@ export function buildLocaleOptions(
 }
 
 export function LanguageSwitcher({ className }: { className?: string }) {
+  const [menuRequested, setMenuRequested] = useState(false);
   // The router sees the delocalized href (rewrite.input); localizeHref
   // re-prefixes it per option. Preserves pathname + search + hash.
   const href = useRouterState({ select: (state) => state.location.href });
@@ -79,37 +82,48 @@ export function LanguageSwitcher({ className }: { className?: string }) {
   const active = options.find((option) => option.active) ?? options[0]!;
   const label = m.languageSwitcher_label();
 
+  if (menuRequested) {
+    return (
+      <Suspense fallback={null}>
+        <LazyLanguageSwitcherMenu
+          options={options}
+          activeLabel={active.label}
+          label={label}
+          className={className}
+        />
+      </Suspense>
+    );
+  }
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            aria-label={label}
-            className={cn('gap-2', className)}
-            data-test="language-switcher"
-          />
-        }
+    <>
+      <button
+        type="button"
+        aria-label={label}
+        className={cn(
+          buttonVariants({ variant: 'outline', size: 'sm' }),
+          'gap-2',
+          className,
+        )}
+        data-test="language-switcher"
+        onClick={() => setMenuRequested(true)}
       >
         <Globe className="text-muted-foreground" />
         <span>{active.label}</span>
         <ChevronDown className="text-muted-foreground" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-40">
+      </button>
+      <div hidden aria-hidden="true">
         {options.map((option) => (
-          <DropdownMenuItem
+          <a
             key={option.locale}
-            nativeButton={false}
-            aria-current={option.active ? 'true' : undefined}
-            render={<a href={option.href} hrefLang={option.locale} />}
+            href={option.href}
+            hrefLang={option.locale}
+            tabIndex={-1}
           >
-            <span className="flex-1">{option.label}</span>
-            {option.active ? <Check /> : null}
-          </DropdownMenuItem>
+            {option.label}
+          </a>
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </div>
+    </>
   );
 }

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Optimize Performance"
+  short_description: "Evidence-first software performance tuning"
+  default_prompt: "Use $optimize-performance to diagnose this hot path and verify an improvement."

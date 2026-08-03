@@ -11,14 +11,35 @@
  */
 import handler from '@tanstack/react-start/server-entry';
 
+import {
+  readPublicHtmlCache,
+  withPublicHtmlCacheHeaders,
+  writePublicHtmlCache,
+} from './lib/public-html-cache';
 import { withBaselineSecurityHeaders } from './lib/security-headers';
 import { paraglideMiddleware } from './paraglide/server';
 
 export default {
-  async fetch(request: Request): Promise<Response> {
-    const response = await paraglideMiddleware(request, () =>
+  async fetch(
+    request: Request,
+    _env?: unknown,
+    executionContext?: { waitUntil(promise: Promise<unknown>): void },
+  ): Promise<Response> {
+    const cached = await readPublicHtmlCache(request);
+    if (cached) return cached;
+
+    const rendered = await paraglideMiddleware(request, () =>
       handler.fetch(request),
     );
-    return withBaselineSecurityHeaders(response);
+    const response = withPublicHtmlCacheHeaders(
+      request,
+      withBaselineSecurityHeaders(rendered),
+    );
+    const cacheWrite = writePublicHtmlCache(request, response);
+    if (cacheWrite) {
+      if (executionContext) executionContext.waitUntil(cacheWrite);
+      else void cacheWrite.catch(() => undefined);
+    }
+    return response;
   },
 };

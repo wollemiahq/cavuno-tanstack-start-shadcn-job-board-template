@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound, type LocationSalaryDetail } from '@cavuno/board';
 import { BOARD_PATHS, boardUrl, salaryLocationPath } from '@cavuno/board/paths';
 import {
@@ -22,11 +20,8 @@ import {
   getSeoBase,
   listSalaryLocations,
 } from '../server/queries';
-import {
-  SalaryNotFoundPage,
-  SalaryPageLayout,
-  SalaryPendingPage,
-} from './-salary-page-layout';
+import { SalaryNotFoundPage, SalaryPageLayout } from './-salary-page-layout';
+import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   salaryLocationSkillsPath,
@@ -50,6 +45,7 @@ import {
 import { JsonLd } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
 import { buttonVariants } from '@/components/ui/button';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { headTitle } from '@/lib/page-title';
 
 type City = LocationSalaryDetail['childLocations'][number];
@@ -97,7 +93,7 @@ export const Route = createFileRoute('/salaries/locations/$slug/')({
     // The visible shell trail can't derive the ancestor chain from the URL, so
     // this route injects its fully-resolved trail (Home › Salaries › Locations
     // › {ancestors…} › {place}). The shell renders it verbatim.
-    const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+    const crumbs = breadcrumbsCopy(seo.language, seo.labels);
     const breadcrumbTrail = [
       { name: crumbs.home, href: BOARD_PATHS.home },
       { name: crumbs.salaries, href: BOARD_PATHS.salaries },
@@ -165,7 +161,7 @@ const rootApi = getRouteApi('__root__');
 
 function LocationSalaryPage() {
   const { salary, seo, hierarchy } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
   const { board } = rootApi.useLoaderData();
   const locale = seo.language;
 

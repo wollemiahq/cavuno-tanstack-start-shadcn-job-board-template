@@ -96,7 +96,6 @@
       "name": "avatar",
       "status": "used",
       "productionReferences": [
-        "src/components/Header.tsx",
         "src/components/account-shell.tsx",
         "src/components/avatar-upload.tsx",
         "src/components/board/blog-article-content.tsx",
@@ -105,6 +104,7 @@
         "src/components/board/talent-search-result-detail.tsx",
         "src/components/board/talent-search-result.tsx",
         "src/components/employer/applicant-pipeline-board.tsx",
+        "src/components/header-account-menu.tsx",
         "src/components/messages/avatar.tsx",
         "src/components/post-card.tsx",
         "src/components/post-job-form.tsx",
@@ -206,7 +206,11 @@
         "src/components/employer-job-form.tsx",
         "src/components/employer/applicant-pipeline-board.tsx",
         "src/components/experience-section.tsx",
+        "src/components/header-account-menu.tsx",
+        "src/components/header-mobile-menu.tsx",
+        "src/components/header-search-enhanced.tsx",
         "src/components/job-alert-floating-prompt.tsx",
+        "src/components/language-switcher-menu.tsx",
         "src/components/language-switcher.tsx",
         "src/components/languages-section.tsx",
         "src/components/logo-upload.tsx",
@@ -263,8 +267,8 @@
       "name": "button-group",
       "status": "used",
       "productionReferences": [
-        "src/components/Header.tsx",
-        "src/components/board/alert-signup-form.tsx"
+        "src/components/board/alert-signup-form.tsx",
+        "src/components/header-search-enhanced.tsx"
       ]
     },
     {
@@ -396,9 +400,9 @@
       "name": "dropdown-menu",
       "status": "used",
       "productionReferences": [
-        "src/components/Header.tsx",
         "src/components/employer/applicant-pipeline-board.tsx",
-        "src/components/language-switcher.tsx",
+        "src/components/header-account-menu.tsx",
+        "src/components/language-switcher-menu.tsx",
         "src/components/messages/message-bubble.tsx",
         "src/components/messages/thread-view.tsx",
         "src/routes/employers.companies.$slug.index.tsx"
@@ -510,10 +514,10 @@
       "name": "input-group",
       "status": "used",
       "productionReferences": [
-        "src/components/Header.tsx",
         "src/components/board/alert-signup-form.tsx",
         "src/components/board/listing-search-band.tsx",
         "src/components/company-search-combobox.tsx",
+        "src/components/header-search-enhanced.tsx",
         "src/components/keyword-combobox.tsx",
         "src/components/location-combobox.tsx",
         "src/components/location-suggest-field.tsx",
@@ -671,12 +675,12 @@
       "name": "sheet",
       "status": "used",
       "productionReferences": [
-        "src/components/Header.tsx",
         "src/components/alert-manager.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
         "src/components/education-section.tsx",
         "src/components/employer/applicant-pipeline-board.tsx",
         "src/components/experience-section.tsx",
+        "src/components/header-mobile-menu.tsx",
         "src/components/languages-section.tsx",
         "src/components/preview/preview-board-settings.tsx",
         "src/components/preview/preview-emails.tsx"

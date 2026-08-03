@@ -25,7 +25,7 @@ import {
 
 import { m } from '../paraglide/messages';
 
-import { boardCopy } from '@/copy';
+import { jobCardCopy } from '@/copy-groups/job-card';
 import { deriveSummary } from '@/lib/derive-summary';
 import type { PublicJob, PublicJobCard } from '@cavuno/board';
 
@@ -140,7 +140,7 @@ export function toJobCardVM(
     locationLabel,
     summary: deriveSummary(job.description),
     isFeatured: job.isFeatured,
-    featuredLabel: boardCopy(language, labels).jobCard.featuredLabel,
+    featuredLabel: jobCardCopy(language, labels).featuredLabel,
     postedAtLabel: formatPublishedRelativeDate(language, job.publishedAt),
     tags: [
       ...job.categories.map((c) => tagPill('category', c)),

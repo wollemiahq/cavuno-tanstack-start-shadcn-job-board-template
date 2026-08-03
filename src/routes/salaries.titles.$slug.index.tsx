@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound } from '@cavuno/board';
 import {
   BOARD_PATHS,
@@ -23,11 +21,8 @@ import {
 
 import { m } from '../paraglide/messages';
 import { getSeoBase, getTitleSalary } from '../server/queries';
-import {
-  SalaryNotFoundPage,
-  SalaryPageLayout,
-  SalaryPendingPage,
-} from './-salary-page-layout';
+import { SalaryNotFoundPage, SalaryPageLayout } from './-salary-page-layout';
+import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   companyCategorySalaryPath,
@@ -51,6 +46,7 @@ import {
 import { JsonLd } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
 import { buttonVariants } from '@/components/ui/button';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/salaries/titles/$slug/')({
@@ -136,7 +132,7 @@ const rootApi = getRouteApi('__root__');
 
 function TitleSalaryPage() {
   const { salary, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
   const { board } = rootApi.useLoaderData();
   const locale = seo.language;
 

@@ -145,8 +145,8 @@ export const getSeoBase = createServerFn({ method: 'GET' }).handler(
     return {
       boardName: board.name,
       language: board.language,
-      // Operator label overrides — head/meta copy resolves
-      // boardCopy(language, labels) same as the blocks.
+      // Operator label overrides — head/meta copy resolves through the same
+      // route-owned copy families as the rendered blocks.
       labels: board.labels,
       origin: new URL(getRequest().url).origin,
     };

@@ -49,6 +49,7 @@
     "*.mdoc",
     "dist",
     "build",
+    ".agents",
     ".next",
     "next-env.d.ts",
     "pnpm-lock.yaml",

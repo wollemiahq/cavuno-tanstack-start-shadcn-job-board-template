@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound } from '@cavuno/board';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import {
@@ -37,6 +35,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
 import { headTitle } from '@/lib/page-title';
 
@@ -129,7 +128,9 @@ function TalentProfilePage() {
   // the SAME matrix as the pane — no Board API call from the browser.
   const { user, board } = rootApi.useLoaderData();
   const location = useLocation();
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = {
+    breadcrumbs: breadcrumbsCopy(seo.language, seo.labels),
+  };
   const vm = toTalentProfileVM(profile, seo.language, getTalentSearchLabels());
   const viewer: TalentDetailViewer =
     user === null

@@ -26,7 +26,7 @@ import {
 } from '@cavuno/board/paths';
 import { buildJobBreadcrumbs } from '@cavuno/board/seo';
 
-import { boardCopy } from '@/copy';
+import { jobDetailCopy } from '@/copy-groups/job-detail';
 import type { PublicBoard, PublicJob, PublicJobCard } from '@cavuno/board';
 
 export interface JobDetailChipVM {
@@ -120,7 +120,7 @@ export function toJobDetailVM(
   language: string,
   labels?: BoardLabelOverrides,
 ): JobDetailVM {
-  const copy = boardCopy(language, labels).jobDetail;
+  const copy = jobDetailCopy(language, labels);
   const company = job.company;
 
   // Every emitted slug resolves — the platform guarantees it (ADR-0099), so

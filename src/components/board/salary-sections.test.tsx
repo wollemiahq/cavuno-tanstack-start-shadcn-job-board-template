@@ -21,7 +21,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { CompanySalarySummary } from './salary-sections';
 
 import type { OverallSalaryVM, SalaryRailVM } from '@/board/salary-view-model';
-import { AppRouterProvider } from '@/components/app-router-provider';
 
 afterEach(cleanup);
 
@@ -58,15 +57,13 @@ function renderSummary() {
     getParentRoute: () => rootRoute,
     path: '/',
     component: () => (
-      <AppRouterProvider>
-        <CompanySalarySummary
-          title="Salaries"
-          overall={overall}
-          categories={categories}
-          viewAllHref="/companies/anduril/salaries"
-          viewAllLabel="View salaries"
-        />
-      </AppRouterProvider>
+      <CompanySalarySummary
+        title="Salaries"
+        overall={overall}
+        categories={categories}
+        viewAllHref="/companies/anduril/salaries"
+        viewAllLabel="View salaries"
+      />
     ),
   });
   const salariesRoute = createRoute({

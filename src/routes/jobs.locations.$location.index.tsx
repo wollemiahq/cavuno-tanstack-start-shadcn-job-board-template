@@ -19,10 +19,8 @@ import {
 } from '../server/queries';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
-import {
-  ProgrammaticJobsView,
-  PROGRAMMATIC_JOBS_PAGE_SIZE,
-} from '@/routes/-programmatic-jobs-view';
+import { PROGRAMMATIC_JOBS_PAGE_SIZE } from '@/routes/-programmatic-jobs-constants';
+import { ProgrammaticJobsView } from '@/routes/-programmatic-jobs-view';
 
 export const Route = createFileRoute('/jobs/locations/$location/')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },

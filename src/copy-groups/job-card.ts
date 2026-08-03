@@ -1,0 +1,33 @@
+import { m } from '../paraglide/messages';
+
+import type { BoardCopy } from '@/copy';
+import {
+  resolveCopyGroup,
+  type BoardLabelOverrides,
+  type CopyOverrides,
+  type MessageFn,
+} from '@/copy-groups/resolve-copy-group';
+
+const messages = [
+  ['aiRankedLabel', m.jobCard_aiRankedLabel as unknown as MessageFn],
+  ['featuredLabel', m.jobCard_featuredLabel as unknown as MessageFn],
+  [
+    'relatedSearchesTitle',
+    m.jobCard_relatedSearchesTitle as unknown as MessageFn,
+  ],
+  ['sortNewestLabel', m.jobCard_sortNewestLabel as unknown as MessageFn],
+  [
+    'sortSalaryHighLabel',
+    m.jobCard_sortSalaryHighLabel as unknown as MessageFn,
+  ],
+] as const;
+
+export function jobCardCopy(
+  _language: string | undefined,
+  labels?: BoardLabelOverrides,
+): BoardCopy['jobCard'] {
+  return resolveCopyGroup(
+    messages,
+    labels?.jobCardLabels as CopyOverrides | undefined,
+  ) as unknown as BoardCopy['jobCard'];
+}

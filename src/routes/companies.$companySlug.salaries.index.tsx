@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound } from '@cavuno/board';
 import {
   BOARD_PATHS,
@@ -39,6 +37,7 @@ import {
 } from '@/components/board/salary-sections';
 import { JsonLd } from '@/components/json-ld';
 import { Text } from '@/components/text';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/companies/$companySlug/salaries/')({
@@ -125,7 +124,7 @@ const rootApi = getRouteApi('__root__');
 
 function CompanySalaryPage() {
   const { salary, company, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
   const { board } = rootApi.useLoaderData();
   const locale = seo.language;
 

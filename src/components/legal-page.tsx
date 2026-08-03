@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 
 import { legalMetaDescription, type LegalPageMeta } from '../lib/legal';
@@ -7,6 +5,7 @@ import { legalMetaDescription, type LegalPageMeta } from '../lib/legal';
 import { JsonLd } from '@/components/json-ld';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import type { PublicLegalPage } from '@cavuno/board';
 import type { BoardLabelOverrides } from '@cavuno/board/format';
 
@@ -28,7 +27,7 @@ export function LegalPageView({
   language: string;
   labels?: BoardLabelOverrides;
 }) {
-  const crumbs = boardCopy(language, labels).breadcrumbs;
+  const crumbs = breadcrumbsCopy(language, labels);
   const url = `${origin}${meta.path}`;
   const jsonLd = [
     {

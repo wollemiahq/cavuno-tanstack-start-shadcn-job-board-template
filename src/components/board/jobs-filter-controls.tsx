@@ -1,7 +1,5 @@
 'use client';
 
-import { boardCopy } from '#/copy';
-
 import {
   DEFAULT_SORT,
   EMPLOYMENT_TYPES,
@@ -24,6 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { jobCardCopy } from '@/copy-groups/job-card';
+import { jobSearchCopy } from '@/copy-groups/job-search';
 
 export function JobsFilterControls({
   filters,
@@ -36,7 +36,10 @@ export function JobsFilterControls({
   labels?: BoardLabelOverrides;
   onChange: (next: ListingFilters) => void;
 }) {
-  const copy = boardCopy(language, labels);
+  const copy = {
+    jobCard: jobCardCopy(language, labels),
+    jobSearch: jobSearchCopy(language, labels),
+  };
   const seniorityLabel = seniorityLabels(language, labels);
   const sortItems = [
     { value: 'relevance', label: copy.jobCard.aiRankedLabel },

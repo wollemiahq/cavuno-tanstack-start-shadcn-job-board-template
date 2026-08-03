@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { listingHead, listingJsonLd } from '@cavuno/board/seo';
 /**
  * Locations directory — `/jobs/locations/` (hosted parity:
@@ -29,6 +27,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import type { PublicPlace } from '@cavuno/board';
 
 export const Route = createFileRoute('/jobs/locations/')({
@@ -112,7 +111,7 @@ function PlaceTree({ nodes }: { nodes: PlaceNode[] }) {
 function LocationsIndexPage() {
   const { places, seo } = Route.useLoaderData();
   const tree = buildHierarchy(places.data);
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
 
   return (
     <Page width="wide">

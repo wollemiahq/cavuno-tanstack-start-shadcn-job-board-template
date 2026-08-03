@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound } from '@cavuno/board';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 /**
@@ -45,6 +43,7 @@ import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobList } from '@/components/board/job-list';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { JsonLd } from '@/components/json-ld';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { headTitle } from '@/lib/page-title';
 
 interface CompanyJobsSearch {
@@ -173,7 +172,9 @@ function CompanyJobsPage() {
   const locationSuggestions = useLocationSuggestions(board.language);
   const navigate = Route.useNavigate();
   const currentHref = useLocation({ select: (location) => location.href });
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = {
+    breadcrumbs: breadcrumbsCopy(seo.language, seo.labels),
+  };
   const crumbs = copy.breadcrumbs;
 
   const currentPage = search.page ?? 1;

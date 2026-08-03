@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound } from '@cavuno/board';
 import { BOARD_PATHS, boardUrl, salaryTitlePath } from '@cavuno/board/paths';
 import {
@@ -11,11 +9,8 @@ import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getSeoBase, getTitleLocations } from '../server/queries';
-import {
-  SalaryNotFoundPage,
-  SalaryPageLayout,
-  SalaryPendingPage,
-} from './-salary-page-layout';
+import { SalaryNotFoundPage, SalaryPageLayout } from './-salary-page-layout';
+import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   salaryTitleInLocationPath,
@@ -29,6 +24,7 @@ import {
   type RailItem,
 } from '@/components/board/salary-sections';
 import { JsonLd } from '@/components/json-ld';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/salaries/titles/$slug/locations')({
@@ -97,7 +93,7 @@ export const Route = createFileRoute('/salaries/titles/$slug/locations')({
 
 function TitleLocationsPage() {
   const { data, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
   const locale = seo.language;
   const items: RailItem[] = data.locations.map((l) => ({
     name: l.placeName,

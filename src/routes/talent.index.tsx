@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound } from '@cavuno/board';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import {
@@ -25,6 +23,7 @@ import { EmptyState } from '@/components/empty-state';
 import { JsonLd } from '@/components/json-ld';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { buttonVariants } from '@/components/ui/button';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
 import { headTitle } from '@/lib/page-title';
 import { pageSearchValue, pageToOffset } from '@/lib/pagination';
@@ -130,7 +129,9 @@ function TalentDirectoryPage() {
   const search = Route.useSearch();
   const location = useLocation();
   const navigate = useNavigate({ from: '/talent/' });
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = {
+    breadcrumbs: breadcrumbsCopy(seo.language, seo.labels),
+  };
   // Gate the detail-pane Message CTA by the viewer's role. A candidate cannot
   // cold-message another candidate; an employer's Message hands off to the
   // canonical profile (see resolveTalentDetailCta for the full matrix).
