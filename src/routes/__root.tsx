@@ -565,8 +565,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             humans or crawlers): noindex them. Real prefixed chrome
             locales stay indexable — their route canonicals already point
             at the unprefixed base; hreflang is deliberately deferred until
-            content translates). */}
-          {(locale === 'en-XA' || locale === 'ar-XB') && (
+            content translates). Compare as string[] so the branch typechecks
+            under the prod 3-locale Locale union and the QA 5-locale build. */}
+          {((['en-XA', 'ar-XB'] as readonly string[]).includes(locale)) && (
             <meta name="robots" content="noindex, nofollow" />
           )}
           <HeadContent />

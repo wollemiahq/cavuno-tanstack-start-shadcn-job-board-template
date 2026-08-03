@@ -57,9 +57,9 @@ describe('locale-resolution contract', () => {
 
   it('offers exactly en/de/fr — never the en-XA QA pseudo-locale', () => {
     expect([...PUBLIC_LOCALES]).toEqual(['en', 'de', 'fr']);
-    // en-XA exists in the compiled runtime for coverage, but must never
-    // reach the public switcher.
-    expect(locales).toContain('en-XA');
+    // Prod Paraglide runtime ships only the public chrome locales.
+    // en-XA / ar-XB compile in only under the QA enable script + rebuild.
+    expect([...locales]).toEqual(['en', 'de', 'fr']);
     expect([...PUBLIC_LOCALES]).not.toContain('en-XA');
   });
 
