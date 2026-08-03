@@ -1,28 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const {
-  getBoardContext,
   getCompany,
-  getJob,
-  getSeoBase,
+  getJobDetailPage,
   getSessionUser,
   getSimilarJobs,
   myApplicationForJob,
 } = vi.hoisted(() => ({
-  getBoardContext: vi.fn(),
   getCompany: vi.fn(),
-  getJob: vi.fn(),
-  getSeoBase: vi.fn(),
+  getJobDetailPage: vi.fn(),
   getSessionUser: vi.fn(),
   getSimilarJobs: vi.fn(),
   myApplicationForJob: vi.fn(),
 }));
 
+vi.mock('../server/job-detail-page', () => ({
+  getJobDetailPage,
+}));
+
 vi.mock('../server/queries', () => ({
-  getBoardContext,
   getCompany,
-  getJob,
-  getSeoBase,
   getSimilarJobs,
   subscribeJobAlert: vi.fn(),
 }));
@@ -40,19 +37,20 @@ vi.mock('../server/applications', () => ({
 import { Route } from './companies.$companySlug.jobs.$jobSlug';
 
 beforeEach(() => {
-  getJob.mockReset();
-  getBoardContext.mockReset();
+  getJobDetailPage.mockReset();
   getSessionUser.mockReset();
   getSimilarJobs.mockReset();
   getCompany.mockReset();
-  getSeoBase.mockReset();
   myApplicationForJob.mockReset();
-  getJob.mockResolvedValue({ id: 'job-1', slug: 'platform-engineer' });
-  getBoardContext.mockResolvedValue({ name: 'Board' });
+  getJobDetailPage.mockResolvedValue({
+    job: { id: 'job-1', slug: 'platform-engineer' },
+    seo: { origin: 'https://board.example', boardName: 'Board' },
+    head: { meta: [], links: [] },
+    jsonLd: [],
+  });
   getSessionUser.mockResolvedValue({ emailVerified: true });
   getSimilarJobs.mockResolvedValue({ data: [] });
   getCompany.mockResolvedValue(null);
-  getSeoBase.mockResolvedValue({ origin: 'https://board.example' });
   myApplicationForJob.mockResolvedValue({ id: 'application-1' });
 });
 
