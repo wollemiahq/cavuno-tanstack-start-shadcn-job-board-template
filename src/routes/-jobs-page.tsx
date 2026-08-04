@@ -30,7 +30,7 @@ export function JobsPage() {
     <>
       <JobSearchPage
         jobs={page.data.map((job) =>
-          toJobCardVM(job, board.language, board.labels),
+          toJobCardVM(job, board.language),
         )}
         count={page.count}
         gatedCount={page.gatedCount}
@@ -38,7 +38,6 @@ export function JobsPage() {
         pageSize={JOBS_PAGE_SIZE}
         filters={search}
         language={board.language}
-        labels={board.labels}
         viewer={user ? { emailVerified: user.emailVerified } : null}
         onSaveJob={async (jobId) =>
           saveJob({ data: { jobId } }).then(() => undefined)
@@ -85,7 +84,6 @@ export function JobsPage() {
       {board.features.jobAlerts ? (
         <JobAlertFloatingPrompt
           language={board.language}
-          labels={board.labels}
           defaults={jobAlertDefaultsFromSearch({
             keyword: search.q,
             source: 'board_home',

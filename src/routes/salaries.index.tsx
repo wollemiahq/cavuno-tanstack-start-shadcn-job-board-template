@@ -46,7 +46,7 @@ export const Route = createFileRoute('/salaries/')({
 
 function SalariesHub() {
   const { companies, titles, skills, locations, seo } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
+  const crumbs = breadcrumbsCopy(seo.language);
   const locale = seo.language;
 
   const companyItems: RailItem[] = companies.slice(0, PREVIEW).map((x) => ({
@@ -88,8 +88,7 @@ function SalariesHub() {
           { name: crumbs.home, href: BOARD_PATHS.home },
           { name: crumbs.salaries },
         ],
-        seo.language,
-        seo.labels,
+        seo.language
       )}
       title={crumbs.salaries}
       description={m.salaryHub_subheading()}
@@ -140,7 +139,7 @@ function HubSection({
   title: string;
   seeAll: string;
   items: RailItem[];
-  seo: { language: string; labels: Record<string, Record<string, string>> };
+  seo: { language: string };
 }) {
   if (items.length === 0) return null;
   return (
@@ -155,7 +154,7 @@ function HubSection({
         </a>
       }
     >
-      <SalaryRail vm={toSalaryRailVM('', items, seo.language, seo.labels)} />
+      <SalaryRail vm={toSalaryRailVM('', items, seo.language)} />
     </PageSection>
   );
 }

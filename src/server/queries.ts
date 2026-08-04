@@ -40,12 +40,10 @@ import type {
   JobAlertUpdatePreferenceInput,
   JobsListQuery,
   JobsSearchBody,
-  LegalPageType,
   PlacesListQuery,
   PlansListQuery,
   PublicBlogAdjacentPosts,
   RelatedSearch,
-  SuggestionsListQuery,
   TalentDirectoryQuery,
   TaxonomyResolution,
 } from '@cavuno/board';
@@ -55,13 +53,6 @@ import type {
 export const getBoardContext = createServerFn({ method: 'GET' }).handler(
   async () => {
     const context = await getBoard().context();
-    // The `footer` group + talent tri-state (hosted-footer parity slice)
-    // ride the wire ahead of the published SDK types — pick them off the
-    // body defensively; null against an API deployment predating the slice.
-    const parity = context as {
-      footer?: BoardContextFooter;
-      talentDirectoryVisibility?: 'off' | 'public' | 'employers_only';
-    };
     return {
       ...context,
       // Runtime feature flags are resolved to clean typed booleans here at
@@ -71,8 +62,20 @@ export const getBoardContext = createServerFn({ method: 'GET' }).handler(
         ...context.features,
         ...resolveRuntimeFeatureFlags(context.features),
       },
-      footer: parity.footer ?? null,
-      talentDirectoryVisibility: parity.talentDirectoryVisibility ?? null,
+      // 4.0.0: contact is identity data. Footer description / navigationOrder /
+      // customLinks are app-owned presentation (Puck on hosted; defaults here).
+      footer: {
+        description: null,
+        contactEmail: context.contact?.email ?? null,
+        websiteUrl: context.contact?.websiteUrl ?? null,
+        xUrl: context.contact?.xUrl ?? null,
+        facebookUrl: context.contact?.facebookUrl ?? null,
+        linkedinUrl: context.contact?.linkedinUrl ?? null,
+        navigationOrder: [] as string[],
+        customLinks: [] as Array<{ id: string; label: string; url: string }>,
+      } satisfies BoardContextFooter,
+      // 4.0.0: talent directory is features.talentDirectory enum ('off' is truthy!).
+      talentDirectoryVisibility: context.features.talentDirectory,
       // The `analytics` group is in the published SDK types, but an API
       // deployment predating it would omit it from the body — default to
       // "no trackers, no consent gate" rather than faulting the root render.
@@ -130,7 +133,6 @@ export const getSeoBase = createServerFn({ method: 'GET' }).handler(
       language: board.language,
       // Operator label overrides — head/meta copy resolves through the same
       // route-owned copy families as the rendered blocks.
-      labels: board.labels,
       origin: new URL(getRequest().url).origin,
     };
   },
@@ -246,12 +248,40 @@ export const getRemotePermits = createServerFn({ method: 'GET' })
 
 /** Category/skill autocomplete for the shared Jobs keyword field. */
 export const searchTaxonomySuggestions = createServerFn({ method: 'GET' })
-  .validator((input: SuggestionsListQuery) => input)
+  .validator((input: { q?: string; limit?: number }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
-    gatedRead(context, (h) =>
-      getBoard().taxonomy.suggestions.list(data, { headers: h }),
-    ),
+    gatedRead(context, async (h) => {
+      const result = await getBoard().search.suggest(
+        {
+          q: data.q,
+          limit: data.limit,
+          types: ['category', 'skill'],
+        },
+        { headers: h },
+      );
+      // Preserve the prior `{ data: TaxonomyTerm[] }` shape the keyword
+      // combobox mapper expects (type + displayName + canonicalSlug).
+      return {
+        data: result.items
+          .filter(
+            (
+              item,
+            ): item is Extract<
+              typeof item,
+              { type: 'term'; termType: 'category' | 'skill' }
+            > => item.type === 'term',
+          )
+          .map((item) => ({
+            object: 'taxonomy_term' as const,
+            id: item.id,
+            type: item.termType,
+            sourceSlug: item.sourceSlug,
+            canonicalSlug: item.canonicalSlug,
+            displayName: item.displayName,
+          })),
+      };
+    }),
   );
 
 // ── Job alerts (anonymous, double opt-in — public endpoints, no grant) ───────
@@ -442,20 +472,6 @@ export const getCompanyMarket = createServerFn({ method: 'GET' })
       resolveOrNull(
         getBoard().companies.markets.resolve(data.market, { headers: h }),
       ),
-    ),
-  );
-
-/**
- * A legal/about page — owner prose as portable HTML (+ impressum legal-entity
- * facts). Gated like the other content reads. The loader maps a 404
- * (`board_page_not_found` — impressum disabled / unknown type) to `notFound()`.
- */
-export const getLegalPage = createServerFn({ method: 'GET' })
-  .validator((input: { type: LegalPageType }) => input)
-  .middleware([boardAccessMiddleware])
-  .handler(({ data, context }) =>
-    gatedRead(context, (h) =>
-      getBoard().legal.retrieve(data.type, { headers: h }),
     ),
   );
 

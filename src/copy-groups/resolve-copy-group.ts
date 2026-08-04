@@ -1,5 +1,3 @@
-import type { BoardLabelOverrides } from '@cavuno/board/format';
-
 export type MessageFn = (inputs?: Record<string, unknown>) => string;
 export type CopyOverrides = Record<string, string | null | undefined>;
 
@@ -35,4 +33,3 @@ export function resolveCopyGroup(
   return copy;
 }
 
-export type { BoardLabelOverrides };

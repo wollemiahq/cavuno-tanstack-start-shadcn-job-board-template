@@ -1,14 +1,21 @@
+import { LEGAL_CONTENT } from '@/content/legal';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
-import type { PublicLegalPage } from '@cavuno/board';
+
+import type { LegalPageViewModel } from '@/lib/legal';
 
 /**
- * Shared render for the legal/about surfaces. The starter owns the layout;
- * the Board API serves the portable-HTML prose (+ impressum legal-entity
- * facts). Head meta + JSON-LD are computed in `getLegalPageView` and emitted
- * via route `head()` scripts — not here.
+ * Shared render for the legal/about surfaces. The starter owns the layout and
+ * the prose (`src/content/legal/`). Head meta + JSON-LD are computed in
+ * `getLegalPageView` and emitted via route `head()` scripts — not here.
+ *
+ * Bodies are real React elements from the content module — not HTML strings —
+ * so this view never uses `dangerouslySetInnerHTML` (a security simplification
+ * vs. pre-sanitized API portable HTML).
  */
-export function LegalPageView({ page }: { page: PublicLegalPage }) {
+export function LegalPageView({ page }: { page: LegalPageViewModel }) {
+  const { Body } = LEGAL_CONTENT[page.type];
+
   return (
     // Keep the shared page geometry, but constrain
     // the content column (title + prose) to a readable measure — matching the
@@ -40,13 +47,9 @@ export function LegalPageView({ page }: { page: PublicLegalPage }) {
               ) : null}
             </section>
           ) : null}
-          {page.content ? (
-            // Prose arrives pre-sanitized from the Board API (portable HTML).
-            <div
-              dir="auto"
-              dangerouslySetInnerHTML={{ __html: page.content }}
-            />
-          ) : null}
+          <div dir="auto">
+            <Body />
+          </div>
         </Prose>
       </div>
     </PageLayout>

@@ -13,8 +13,6 @@ import { footerCopy } from '@/copy-groups/footer';
 import { navCopy } from '@/copy-groups/nav';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { cn } from '@/lib/utils';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
-
 /**
  * The board-context `footer` data group (hosted-footer parity slice) —
  * description, contact, website + social links, and the operator's nav
@@ -158,7 +156,6 @@ export default function Footer({
   boardName,
   logoUrl,
   language,
-  labels,
   showCavunoBranding,
   primaryDomain,
   slug,
@@ -174,7 +171,6 @@ export default function Footer({
   boardName: string;
   logoUrl: string | null;
   language: string;
-  labels?: BoardLabelOverrides;
   /**
    * Board-context flag (`board.context().showCavunoBranding`, default
    * true). Plan-gated server-side: lower-tier plans cannot set it false.
@@ -188,7 +184,7 @@ export default function Footer({
   slug: string;
   features: {
     blog: boolean;
-    talentDirectory: boolean;
+    talentDirectory: 'off' | 'public' | 'employers_only' | boolean;
     publicJobSubmission: boolean;
     impressum: boolean;
   };
@@ -220,8 +216,8 @@ export default function Footer({
   cookiePreferencesAction?: ReactNode;
 }) {
   const copy = {
-    footer: footerCopy(language, labels),
-    nav: navCopy(language, labels),
+    footer: footerCopy(language),
+    nav: navCopy(language),
   };
 
   // ── For Candidates — operator-ordered system + custom links ──
@@ -239,9 +235,15 @@ export default function Footer({
   });
 
   // ── For Companies ──
-  const talentLinked = talentDirectoryVisibility
-    ? talentDirectoryVisibility !== 'off'
-    : features.talentDirectory;
+  const talentMode =
+    talentDirectoryVisibility ??
+    (typeof features.talentDirectory === 'string'
+      ? features.talentDirectory
+      : features.talentDirectory
+        ? 'public'
+        : 'off');
+  // 'off' is a truthy string — compare explicitly, never coerce.
+  const talentLinked = talentMode !== 'off';
   const companyLinks: FooterLink[] = [
     ...(features.publicJobSubmission
       ? [{ href: '/post', label: copy.nav.post }]

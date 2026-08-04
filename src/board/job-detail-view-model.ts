@@ -12,13 +12,9 @@
  */
 import {
   countryOptions,
-  fieldLabel,
   formatPublishedRelativeDate,
-  formatSalaryRange,
   resolveCustomFieldDisplay,
-  type BoardLabelOverrides,
 } from '@cavuno/board/format';
-import { buildJobBreadcrumbs } from '@cavuno/board/format';
 import {
   companyPath,
   jobDetailPath,
@@ -27,6 +23,9 @@ import {
 } from '@cavuno/board/paths';
 
 import { jobDetailCopy } from '@/copy-groups/job-detail';
+import { enumLabel } from '@/lib/enum-labels';
+import { jobBreadcrumbItems } from '@/lib/job-breadcrumbs';
+import { formatJobSalary } from '@/lib/salary-display';
 import type { PublicBoard, PublicJob, PublicJobCard } from '@cavuno/board';
 
 export interface JobDetailChipVM {
@@ -118,9 +117,8 @@ export function toJobDetailVM(
   similar: PublicJobCard[],
   companyIntro: string | null,
   language: string,
-  labels?: BoardLabelOverrides,
 ): JobDetailVM {
-  const copy = jobDetailCopy(language, labels);
+  const copy = jobDetailCopy(language);
   const company = job.company;
 
   // Every emitted slug resolves — the platform guarantees it (ADR-0099), so
@@ -163,7 +161,7 @@ export function toJobDetailVM(
       ? job.educationRequirements
           .map(
             (value) =>
-              fieldLabel(language, value, labels) ?? value.replace(/_/g, ' '),
+              enumLabel(value) ?? value.replace(/_/g, ' '),
           )
           .join(', ')
       : null;
@@ -185,8 +183,12 @@ export function toJobDetailVM(
   if (experience)
     facts.push({ label: copy.experienceLabel, value: experience });
 
+  // 4.0.0 keys definitions by model (`customFields.job`); 3.2.0 is a flat array.
+  const customFieldDefinitions = Array.isArray(customFields)
+    ? customFields
+    : customFields.job;
   const customFieldVms: JobDetailCustomFieldVM[] = resolveCustomFieldDisplay(
-    customFields,
+    customFieldDefinitions,
     job.customFieldValues,
   ).map((entry) => ({
     key: entry.key,
@@ -218,13 +220,13 @@ export function toJobDetailVM(
     : null;
 
   const salaryLabel =
-    formatSalaryRange(
+    formatJobSalary(
       language,
       job.salaryMin,
       job.salaryMax,
       job.salaryTimeframe,
       job.salaryCurrency,
-    ) || null;
+    );
   const published = formatPublishedRelativeDate(language, job.publishedAt);
   // Resolve remote work-permit ISO codes to country names the same way the
   // card mapper does (the SDK's card location label reads names the API
@@ -274,10 +276,7 @@ export function toJobDetailVM(
       : (offices[0] ?? placeHierarchyLabel);
 
   return {
-    breadcrumbs: buildJobBreadcrumbs(job, language, labels).map((crumb) => ({
-      name: crumb.name,
-      href: crumb.path,
-    })),
+    breadcrumbs: jobBreadcrumbItems(job),
     breadcrumbAriaLabel: copy.breadcrumbAriaLabel,
 
     title: job.title,
@@ -287,13 +286,13 @@ export function toJobDetailVM(
     sector: job.categories[0]?.name ?? null,
     locationLabel: location,
     workplaceLabel: job.remoteOption
-      ? fieldLabel(language, job.remoteOption, labels)
+      ? enumLabel(job.remoteOption)
       : null,
     employmentTypeLabel: job.employmentType
-      ? fieldLabel(language, job.employmentType, labels)
+      ? enumLabel(job.employmentType)
       : null,
     seniorityLabel: job.seniority
-      ? fieldLabel(language, job.seniority, labels)
+      ? enumLabel(job.seniority)
       : null,
     salaryLabel,
     publishedLabel: published ? copy.posted(published) : null,
@@ -320,7 +319,7 @@ export function toJobDetailVM(
       meta:
         [
           s.company?.name,
-          formatSalaryRange(
+          formatJobSalary(
             language,
             s.salaryMin,
             s.salaryMax,

@@ -1,3 +1,4 @@
+import { jobBreadcrumbJsonLd } from '@/lib/job-breadcrumbs';
 /**
  * One server boundary for the job-detail page's data and SEO payload.
  *
@@ -11,7 +12,6 @@
  * navigation does not grow a second head-only round trip.
  */
 import {
-  buildJobBreadcrumbs,
   createJobPostingJsonLd,
   listingJsonLd,
 } from '@cavuno/board/seo';
@@ -50,7 +50,6 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
       const seo = {
         boardName: boardContext.name,
         language: boardContext.language,
-        labels: boardContext.labels,
         origin,
       };
 
@@ -103,11 +102,7 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
           }),
           ...listingJsonLd({
             origin,
-            breadcrumbs: buildJobBreadcrumbs(
-              job,
-              boardContext.language,
-              boardContext.labels,
-            ),
+            breadcrumbs: jobBreadcrumbJsonLd(job),
           }),
         ].filter((entry) => entry !== null),
       );

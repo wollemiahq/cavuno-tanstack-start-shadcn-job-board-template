@@ -3,8 +3,6 @@ import { m } from '../paraglide/messages';
 import type { BoardCopy } from '@/copy';
 import {
   resolveCopyGroup,
-  type BoardLabelOverrides,
-  type CopyOverrides,
   type MessageFn,
 } from '@/copy-groups/resolve-copy-group';
 
@@ -32,10 +30,9 @@ const messages = [
 
 export function applyCopy(
   _language: string | undefined,
-  labels?: BoardLabelOverrides,
 ): BoardCopy['apply'] {
   return resolveCopyGroup(
     messages,
-    labels?.jobCardLabels as CopyOverrides | undefined,
+    undefined,
   ) as unknown as BoardCopy['apply'];
 }

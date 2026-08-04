@@ -150,8 +150,7 @@ function CompanyPage() {
           avgMax: salarySummary.overallSalary.avgMax,
           jobCount: salarySummary.overallSalary.jobCount,
         },
-        board.language,
-        seo.labels,
+        board.language
       )
     : null;
   const salaryCategoryItems: RailItem[] = salarySummary.byCategory.map(
@@ -175,8 +174,7 @@ function CompanyPage() {
   const salaryCategoriesVM = toSalaryRailVM(
     undefined,
     salaryCategoryItems,
-    seo.language,
-    seo.labels,
+    seo.language
   );
 
   const website = company.website
@@ -240,7 +238,7 @@ function CompanyPage() {
                 {previewJobs.map((job) => (
                   <JobCard
                     key={job.id}
-                    vm={toJobCardVM(job, board.language, board.labels)}
+                    vm={toJobCardVM(job, board.language)}
                     compact
                   />
                 ))}

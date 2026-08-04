@@ -174,10 +174,9 @@ function CompanyJobsPage() {
 
         <JobList
           jobs={page.data.map((job) =>
-            toJobCardVM(job, board.language, board.labels),
+            toJobCardVM(job, board.language),
           )}
           language={board.language}
-          labels={board.labels}
           variant="grid"
           compact
         />

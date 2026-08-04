@@ -32,7 +32,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   return {
     ...actual,
     getRouteApi: () => ({
-      useLoaderData: () => ({ board: { customFields: [] } }),
+      useLoaderData: () => ({ board: { customFields: { job: [] } } }),
     }),
   };
 });

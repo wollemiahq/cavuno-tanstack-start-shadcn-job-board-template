@@ -70,7 +70,6 @@ export const getHomePage = createServerFn({ method: 'GET' })
       const seo = {
         boardName: boardContext.name,
         language: boardContext.language,
-        labels: boardContext.labels,
         origin,
       };
 
@@ -85,7 +84,7 @@ export const getHomePage = createServerFn({ method: 'GET' })
         // Talent preview — only when the directory feature is on. The
         // serialised restricted result omits the preview for anonymous home
         // visitors.
-        boardContext.features.talentDirectory
+        boardContext.features.talentDirectory !== 'off'
           ? readTalentDirectory(() =>
               board.talent.list({ limit: 6 }, { headers }),
             ).catch(() => null)
@@ -114,7 +113,7 @@ export const getHomePage = createServerFn({ method: 'GET' })
         listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: breadcrumbsCopy(seo.language, seo.labels).jobs },
+            { name: breadcrumbsCopy(seo.language).jobs },
           ],
           jobs: page.data,
         }),

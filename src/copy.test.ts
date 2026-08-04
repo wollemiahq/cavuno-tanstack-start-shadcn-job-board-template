@@ -43,24 +43,6 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
     );
   });
 
-  it('applies operator label overrides over the messages', () => {
-    overwriteGetLocale(() => 'de');
-    const copy = boardCopy('en', {
-      jobCardLabels: { featuredLabel: 'Top Job' },
-    });
-    expect(copy.jobCard.featuredLabel).toBe('Top Job');
-    // Empty/whitespace overrides never blank a label.
-    expect(
-      boardCopy('en', { jobCardLabels: { featuredLabel: '  ' } }).jobCard
-        .featuredLabel,
-    ).toBe('Hervorgehoben');
-    // Overrides only apply to string keys — never clobber parameterized fns.
-    expect(
-      boardCopy('en', {
-        jobCardLabels: { experienceYears: 'X' },
-      }).jobDetail.experienceYears(2),
-    ).toBe('2+ Jahre');
-  });
 
   it('keeps every public UiCopy message in the statically tree-shakeable map', () => {
     const publicGroups = new Set([

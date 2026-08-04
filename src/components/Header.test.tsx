@@ -53,7 +53,7 @@ afterEach(cleanup);
 
 type HeaderFeatures = React.ComponentProps<typeof Header>['features'] & {
   blog: boolean;
-  talentDirectory: boolean;
+  talentDirectory: 'off' | 'public' | 'employers_only' | boolean;
 };
 
 const allFeatures: HeaderFeatures = {
@@ -70,7 +70,12 @@ type TalentDirectoryVisibility = 'off' | 'public' | 'employers_only' | null;
 function renderHeader({
   initialEntry = '/',
   features = allFeatures,
-  talentDirectoryVisibility = features.talentDirectory ? 'public' : 'off',
+  talentDirectoryVisibility =
+    typeof features.talentDirectory === 'string'
+      ? features.talentDirectory
+      : features.talentDirectory
+        ? 'public'
+        : 'off',
   user = null,
   hasAccessGrant = false,
   locationSuggestions = [],

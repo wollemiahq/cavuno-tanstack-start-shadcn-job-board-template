@@ -25,7 +25,7 @@ export function HomePage() {
   } = routeApi.useLoaderData();
   const { board, user } = rootApi.useLoaderData();
   const copy = {
-    entity: entityCopy(board.language, board.labels),
+    entity: entityCopy(board.language),
   };
   const countEyebrow = (
     count: number | null | undefined,
@@ -37,7 +37,7 @@ export function HomePage() {
       : undefined;
 
   const jobs = page.data.map((job) =>
-    toJobCardVM(job, board.language, board.labels),
+    toJobCardVM(job, board.language),
   );
   const hiringCompanies = companies
     .filter((company) => company.publishedJobCount > 0)
@@ -116,7 +116,6 @@ export function HomePage() {
       {board.features.jobAlerts ? (
         <JobAlertFloatingPrompt
           language={board.language}
-          labels={board.labels}
           defaults={jobAlertDefaultsFromSearch({ source: 'board_home' })}
         />
       ) : null}

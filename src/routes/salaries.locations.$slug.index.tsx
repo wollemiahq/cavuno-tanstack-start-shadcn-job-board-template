@@ -84,7 +84,7 @@ const rootApi = getRouteApi('__root__');
 
 function LocationSalaryPage() {
   const { salary, seo, hierarchy, faqs } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
+  const crumbs = breadcrumbsCopy(seo.language);
   const { board } = rootApi.useLoaderData();
   const locale = seo.language;
 
@@ -130,8 +130,7 @@ function LocationSalaryPage() {
           { name: crumbs.locations, href: BOARD_PATHS.salaryLocations },
           ...hierarchyCrumbs,
         ],
-        seo.language,
-        seo.labels,
+        seo.language
       )}
       title={heading}
     >
@@ -149,8 +148,7 @@ function LocationSalaryPage() {
                   p25Min: salary.overallSalary.p25Min,
                   p75Max: salary.overallSalary.p75Max,
                 },
-                board.language,
-                seo.labels,
+                board.language
               )}
             />
           ) : null}
@@ -160,8 +158,7 @@ function LocationSalaryPage() {
               vm={toSalaryRailVM(
                 m.salaryDetail_citiesInPlaceLabel({ place: salary.placeName }),
                 salary.childLocations.map(cityItem(locale)),
-                seo.language,
-                seo.labels,
+                seo.language
               )}
             />
           ) : null}
@@ -172,8 +169,7 @@ function LocationSalaryPage() {
               vm={toSalaryRailVM(
                 group.regionName,
                 group.cities.map(cityItem(locale)),
-                seo.language,
-                seo.labels,
+                seo.language
               )}
             />
           ))}
@@ -183,8 +179,7 @@ function LocationSalaryPage() {
               vm={toSalaryRailVM(
                 m.salaryDetail_otherLocations(),
                 salary.siblingLocations.map(cityItem(locale)),
-                seo.language,
-                seo.labels,
+                seo.language
               )}
             />
           ) : null}
@@ -204,7 +199,7 @@ function LocationSalaryPage() {
               }
             >
               <SalaryRail
-                vm={toSalaryRailVM('', categoryItems, seo.language, seo.labels)}
+                vm={toSalaryRailVM('', categoryItems, seo.language)}
               />
             </PageSection>
           ) : null}
@@ -223,11 +218,11 @@ function LocationSalaryPage() {
               }
             >
               <SalaryRail
-                vm={toSalaryRailVM('', skillItems, seo.language, seo.labels)}
+                vm={toSalaryRailVM('', skillItems, seo.language)}
               />
             </PageSection>
           ) : null}
-          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
+          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language)} />
         </>
       ) : (
         <SalaryEmptyState

@@ -27,7 +27,13 @@ const USER_VISIBLE_ATTRS = new Set([
 ]);
 
 /** Generated output and non-UI sources the scan skips. */
-const SKIP_DIRS = new Set(['paraglide']);
+const SKIP_DIRS = new Set([
+  'paraglide',
+  // Application-owned page prose (legal/about, …). Operators edit these
+  // files in place; they are not UI chrome and must not route through
+  // Paraglide. See src/content/legal/.
+  'content',
+]);
 const SKIP_FILES = /\.test\.tsx?$|routeTree\.gen\.ts$/;
 
 function sourceFiles(dir: string): string[] {

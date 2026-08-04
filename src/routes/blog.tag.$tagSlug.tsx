@@ -78,8 +78,8 @@ function TagPage() {
   const location = useLocation();
   const navigate = useNavigate({ from: '/blog/tag/$tagSlug' });
   const router = useRouter();
-  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
-  const ariaLabel = resolveJobDetailBreadcrumbAriaLabel(seo.labels);
+  const crumbs = breadcrumbsCopy(seo.language);
+  const ariaLabel = resolveJobDetailBreadcrumbAriaLabel();
 
   return (
     <>

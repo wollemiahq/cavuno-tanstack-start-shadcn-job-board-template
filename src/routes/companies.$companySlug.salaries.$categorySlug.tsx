@@ -84,7 +84,7 @@ const rootApi = getRouteApi('__root__');
 function CompanyCategorySalaryPage() {
   const { salary, seo, faqs } = Route.useLoaderData();
   // UI breadcrumb trail — component-only copy family (rides the route chunk).
-  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
+  const crumbs = breadcrumbsCopy(seo.language);
   const { board } = rootApi.useLoaderData();
   const locale = seo.language;
 
@@ -125,8 +125,7 @@ function CompanyCategorySalaryPage() {
           },
           { name: salary.categoryName },
         ],
-        seo.language,
-        seo.labels,
+        seo.language
       )}
       title={heading}
     >
@@ -140,8 +139,7 @@ function CompanyCategorySalaryPage() {
                   avgMax: salary.overallSalary.avgMax,
                   jobCount: salary.overallSalary.jobCount,
                 },
-                board.language,
-                seo.labels,
+                board.language
               )}
             />
           ) : null}
@@ -151,8 +149,7 @@ function CompanyCategorySalaryPage() {
               <SenioritySalaryTable
                 vm={toSeniorityTableVM(
                   salary.bySeniority,
-                  board.language,
-                  seo.labels,
+                  board.language
                 )}
               />
             </PageSection>
@@ -164,11 +161,10 @@ function CompanyCategorySalaryPage() {
                 category: salary.categoryName,
               }),
               competitorItems,
-              seo.language,
-              seo.labels,
+              seo.language
             )}
           />
-          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
+          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language)} />
         </>
       ) : (
         <SalaryEmptyState

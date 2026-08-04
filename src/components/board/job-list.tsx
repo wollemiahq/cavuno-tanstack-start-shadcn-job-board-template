@@ -20,19 +20,14 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { jobSearchCopy } from '@/copy-groups/job-search';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
-
 export function JobList({
   jobs,
   language,
-  labels,
   variant = 'grid',
   compact = false,
 }: {
   jobs: JobCardVM[];
   language: string;
-  /** Operator label overrides from `board.context().labels`. */
-  labels?: BoardLabelOverrides;
   /**
    * `grid` — two-column tiles; `rows` — the single-column
    * listing rows; `compact` — a single-column stack of lean cards (no
@@ -47,7 +42,7 @@ export function JobList({
   compact?: boolean;
 }) {
   const copy = {
-    jobSearch: jobSearchCopy(language, labels),
+    jobSearch: jobSearchCopy(language),
   };
 
   if (jobs.length === 0) {

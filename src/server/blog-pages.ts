@@ -44,7 +44,6 @@ async function seoBase() {
   return {
     boardName: boardContext.name,
     language: boardContext.language,
-    labels: boardContext.labels,
     origin,
   };
 }
@@ -101,7 +100,7 @@ export const getBlogIndexPage = createServerFn({ method: 'GET' })
           { rel: 'canonical', href: boardUrl(seo.origin, BOARD_PATHS.blog) },
         ],
       };
-      const c = breadcrumbsCopy(seo.language, seo.labels);
+      const c = breadcrumbsCopy(seo.language);
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
@@ -188,7 +187,7 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
         ],
       };
       const permalink = post.canonicalUrl ?? `${seo.origin}/blog/${post.slug}`;
-      const c = breadcrumbsCopy(seo.language, seo.labels);
+      const c = breadcrumbsCopy(seo.language);
       const jsonLd = asJsonObjects(
         [
           createBlogArticleJsonLd({
@@ -255,7 +254,7 @@ export const getBlogTagPage = createServerFn({ method: 'GET' })
           },
         ],
       };
-      const c = breadcrumbsCopy(seo.language, seo.labels);
+      const c = breadcrumbsCopy(seo.language);
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
@@ -323,7 +322,7 @@ export const getBlogAuthorPage = createServerFn({ method: 'GET' })
           },
         ],
       };
-      const c = breadcrumbsCopy(seo.language, seo.labels);
+      const c = breadcrumbsCopy(seo.language);
       const permalink = boardUrl(seo.origin, blogAuthorPath(author.slug));
       const jsonLd = asJsonObjects(
         [

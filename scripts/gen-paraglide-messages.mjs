@@ -1,55 +1,21 @@
-import { uiCopy } from '@cavuno/board/format';
-
 import { pseudoBidi, pseudoLocalize } from './pseudo-locale.mjs';
 
 /**
- * uiCopy → Paraglide messages generator.
+ * Paraglide messages maintenance.
  *
- * The SDK's `uiCopy` catalog is the single source of truth for chrome
- * copy. This emits `messages/{locale}.json` (inlang message-format) from
- * it, so translations are never hand-authored in two places — regenerate
- * whenever @cavuno/board bumps. Nested groups flatten to `group_key`;
- * the two function-valued keys become parameterized ICU messages by
- * calling them with a sentinel and substituting the placeholder.
+ * Chrome copy lives in `messages/{en,de,fr}.json` (application-owned).
+ * This script does NOT pull from `@cavuno/board` — the SDK no longer ships
+ * a `uiCopy` catalog. It regenerates the pseudo-locales (`en-XA`, `ar-XB`)
+ * from the current English source so coverage gates stay honest.
  *
  *   node scripts/gen-paraglide-messages.mjs
  */
 import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 
-const LOCALES = ['en', 'de', 'fr'];
+const SOURCE_LOCALES = ['en', 'de', 'fr'];
 
-const STARTER_COPY_OVERRIDES = {
-  en: {
-    companySearchBar_placeholderText: 'Company name or market…',
-    jobCard_aiRankedLabel: 'Relevance',
-    jobCard_sortNewestLabel: 'Date',
-  },
-  de: {
-    companySearchBar_placeholderText: 'Firmenname oder Markt…',
-    jobCard_aiRankedLabel: 'Relevanz',
-    jobCard_sortNewestLabel: 'Datum',
-  },
-  fr: {
-    companySearchBar_placeholderText: 'Nom de l’entreprise ou marché…',
-    jobCard_aiRankedLabel: 'Pertinence',
-    jobCard_sortNewestLabel: 'Date',
-  },
-};
-
-// The two function-valued catalog keys → (param name, sentinel that
-// round-trips through the formatter so we can recover the ICU template
-// per locale). experienceYears takes a number; posted takes an
-// already-formatted date string.
-const PARAM_KEYS = {
-  jobDetail_experienceYears: { name: 'years', sentinel: 987654 },
-  jobDetail_posted: { name: 'date', sentinel: 'SENTINEL' },
-};
-
-function toIcuTemplate(flatKey, fn) {
-  const spec = PARAM_KEYS[flatKey];
-  if (!spec) throw new Error(`Unmapped function key: ${flatKey}`);
-  const rendered = fn(spec.sentinel);
-  return rendered.replace(String(spec.sentinel), `{${spec.name}}`);
+function readMessages(locale) {
+  return JSON.parse(readFileSync(`messages/${locale}.json`, 'utf8'));
 }
 
 function writeMessages(locale, messages) {
@@ -58,60 +24,24 @@ function writeMessages(locale, messages) {
     `messages/${locale}.json`,
     JSON.stringify(messages, null, 2) + '\n',
   );
-  console.log(
-    `messages/${locale}.json — ${Object.keys(messages).length - 1} keys`,
-  );
+  const count = Object.keys(messages).filter((k) => !k.startsWith('$')).length;
+  console.log(`messages/${locale}.json — ${count} keys`);
 }
 
-/**
- * STARTER-LOCAL keys survive regeneration: the catalog keys are
- * overwritten from uiCopy, every other key in the existing file (the
- * burned-down surface copy, grill 2026-07-04: starter-local, never
- * SDK-catalog extensions) is carried over verbatim.
- */
-function existingMessages(locale) {
-  try {
-    return JSON.parse(readFileSync(`messages/${locale}.json`, 'utf8'));
-  } catch {
-    return {};
-  }
-}
-
+// Validate source locales parse and share a schema key.
 let enMessages;
-for (const locale of LOCALES) {
-  const catalog = uiCopy(locale);
-  const messages = {
-    $schema: 'https://inlang.com/schema/inlang-message-format',
-  };
-  const catalogKeys = new Set();
-  for (const group of Object.keys(catalog)) {
-    for (const key of Object.keys(catalog[group])) {
-      const flatKey = `${group}_${key}`;
-      catalogKeys.add(flatKey);
-      const value = catalog[group][key];
-      // Board `{{token}}` templates (copyrightPrefix, defaultDescription):
-      // Paraglide parses any `{…}` as an input, so `{{year}}` compiles to
-      // a broken `"{year"` input + stray `}`. Emit them as real ICU inputs
-      // (`{year}`); the copy seam feeds the tokens back in as values to
-      // reconstruct the verbatim `{{token}}` template string per locale.
-      messages[flatKey] =
-        typeof value === 'function'
-          ? toIcuTemplate(flatKey, value)
-          : value.replace(/\{\{(\w+)\}\}/g, '{$1}');
-    }
+for (const locale of SOURCE_LOCALES) {
+  const messages = readMessages(locale);
+  if (!messages.$schema) {
+    throw new Error(`messages/${locale}.json missing $schema`);
   }
-  for (const [key, value] of Object.entries(existingMessages(locale))) {
-    if (key.startsWith('$') || catalogKeys.has(key)) continue;
-    messages[key] = value;
-  }
-  Object.assign(messages, STARTER_COPY_OVERRIDES[locale]);
+  // Round-trip write keeps key order stable after hand-edits.
   writeMessages(locale, messages);
   if (locale === 'en') enMessages = messages;
 }
 
-// Pseudo-locales — derived from whatever the CURRENT en source is
-// (uiCopy today, builder-authored keys as they land), so the coverage
-// gates survive the catalog→coded copy migration for free.
+// Pseudo-locales — derived from the CURRENT en source so the coverage
+// gates survive catalog additions for free.
 //   en-XA — pseudo-accent: proves every string came through Paraglide.
 //   ar-XB — pseudo-bidi: same, plus it is the RTL locale the layout is
 //           verified against (dir="rtl", mirrored chrome).

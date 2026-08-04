@@ -78,8 +78,8 @@ function PostPage() {
   const { post, adjacent, related, seo } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const permalink = post.canonicalUrl ?? `${seo.origin}/blog/${post.slug}`;
-  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
-  const ariaLabel = resolveJobDetailBreadcrumbAriaLabel(seo.labels);
+  const crumbs = breadcrumbsCopy(seo.language);
+  const ariaLabel = resolveJobDetailBreadcrumbAriaLabel();
 
   return (
     <>

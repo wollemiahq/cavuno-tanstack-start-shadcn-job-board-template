@@ -1,4 +1,4 @@
-import { companyIntro } from '@cavuno/board/format';
+import { companyIntro } from '@/lib/company-intro';
 import { useLocation, useRouter } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
@@ -33,8 +33,7 @@ export function SelectedJobDetail({
         board.customFields,
         [],
         companyIntro(null, state.companyDescription),
-        board.language,
-        board.labels,
+        board.language
       )
     : undefined;
 
@@ -55,7 +54,6 @@ export function SelectedJobDetail({
       applicationUrl={state.job.applicationUrl}
       language={board.language}
       returnTo={returnTo}
-      labels={board.labels}
       nativeApplications={board.features.nativeApplications}
       viewer={user ? { emailVerified: user.emailVerified } : null}
       alreadyApplied={state.alreadyApplied}

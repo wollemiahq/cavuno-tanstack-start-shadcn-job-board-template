@@ -1,3 +1,4 @@
+import { themeTokens } from '../theme/resolved';
 import { isNotFound } from '@cavuno/board';
 /** Blog OG JSON payload — hosted-parity data route for /blog/og/:slug.json. */
 import { createFileRoute, notFound } from '@tanstack/react-router';
@@ -23,7 +24,7 @@ export const Route = createFileRoute('/blog/og/{$postSlug}.json')({
         return Response.json(
           {
             boardName: seo.manifest.name,
-            primaryColor: seo.manifest.themeColor,
+            primaryColor: themeTokens.light['--primary'],
             post: {
               title: post.title,
               slug: post.slug,

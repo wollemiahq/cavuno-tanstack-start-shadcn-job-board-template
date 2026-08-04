@@ -138,7 +138,7 @@ function CompanyJobsPage() {
     Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const copy = {
-    nav: navCopy(board.language, board.labels),
+    nav: navCopy(board.language),
   };
   const company = membership?.company;
   const companyName = company?.name ?? slug;

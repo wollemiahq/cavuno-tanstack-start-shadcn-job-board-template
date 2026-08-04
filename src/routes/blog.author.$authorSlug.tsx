@@ -116,8 +116,8 @@ function AuthorPage() {
   const location = useLocation();
   const navigate = useNavigate({ from: '/blog/author/$authorSlug' });
   const router = useRouter();
-  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
-  const ariaLabel = resolveJobDetailBreadcrumbAriaLabel(seo.labels);
+  const crumbs = breadcrumbsCopy(seo.language);
+  const ariaLabel = resolveJobDetailBreadcrumbAriaLabel();
 
   return (
     <>

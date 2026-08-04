@@ -8,21 +8,40 @@
  * universal client entry.
  *
  * Copy resolves from compiled Paraglide messages keyed by the runtime locale
- * (`getLocale()` — the URL
- * locale under the `/de/`-style chrome prefixes), overlaid with the
- * board's operator label overrides. The `language` parameter callers
- * thread is retained for the block prop contract but no longer selects
- * the catalog: `baseLocale === board.language` is a generation-time
- * invariant (project.inlang/settings.json is emitted per board), so the
- * unprefixed site renders the board language and prefixed locales follow
- * the URL.
+ * (`getLocale()` — the URL locale under the `/de/`-style chrome prefixes).
+ * Operator label overrides (`board.labels` / `BoardLabelOverrides`) were
+ * removed from the Board API in 4.0.0 — the catalog is the sole source.
+ * The `language` parameter callers thread is retained for the block prop
+ * contract but no longer selects the catalog: `baseLocale === board.language`
+ * is a generation-time invariant (project.inlang/settings.json is emitted
+ * per board), so the unprefixed site renders the board language and prefixed
+ * locales follow the URL.
  */
 import { m } from './paraglide/messages';
 
-import type { BoardLabelOverrides, UiCopy } from '@cavuno/board/format';
-
-export type BoardCopy = UiCopy;
-export type { BoardLabelOverrides };
+/**
+ * Nested chrome-copy object returned by `boardCopy`. Mirrors the former
+ * SDK `UiCopy` shape (groups are string maps; `jobDetail` also carries the
+ * two parameterized keys).
+ */
+export type BoardCopy = {
+  alerts: Record<string, string>;
+  apply: Record<string, string>;
+  blog: Record<string, string>;
+  breadcrumbs: Record<string, string>;
+  copyLink: Record<string, string>;
+  entity: Record<string, string>;
+  footer: Record<string, string>;
+  jobCard: Record<string, string>;
+  jobDetail: Record<string, string> & {
+    experienceYears: (years: number) => string;
+    posted: (date: string) => string;
+  };
+  jobSearch: Record<string, string>;
+  nav: Record<string, string>;
+  pagination: Record<string, string>;
+  salary: Record<string, string>;
+};
 
 type MessageFn = (inputs?: Record<string, unknown>) => string;
 
@@ -218,32 +237,7 @@ const TEMPLATE_KEYS: Record<string, string[]> = {
   footer_defaultDescription: ['board_name'],
 };
 
-/**
- * Catalog group → the stored config group its operator overrides live in.
- * Mirrors GROUP_OVERRIDE_SOURCE in @cavuno/board `format/ui-copy.ts` (not
- * exported there): the detail/apply/alerts/copy-link groups all read the
- * hosted `jobCardLabels` grab-bag — a fact of the hosted data model.
- */
-const GROUP_OVERRIDE_SOURCE: Record<string, keyof BoardLabelOverrides> = {
-  jobCard: 'jobCardLabels',
-  jobSearch: 'jobSearchLabels',
-  jobDetail: 'jobCardLabels',
-  apply: 'jobCardLabels',
-  alerts: 'jobCardLabels',
-  copyLink: 'jobCardLabels',
-  salary: 'salaryLabels',
-  nav: 'navLabels',
-  footer: 'footerLabels',
-  breadcrumbs: 'breadcrumbsLabels',
-  pagination: 'globalPaginationLabels',
-  blog: 'blogSharedLabels',
-  entity: 'entityLabels',
-};
-
-export function boardCopy(
-  _language: string | undefined,
-  labels?: BoardLabelOverrides,
-): BoardCopy {
+export function boardCopy(_language?: string | undefined): BoardCopy {
   const copy: Record<string, Record<string, unknown>> = {};
   for (const [flatKey, message] of UI_COPY_MESSAGES) {
     const split = flatKey.indexOf('_');
@@ -260,22 +254,6 @@ export function boardCopy(
             ),
           )
         : (message as MessageFn)();
-  }
-  if (labels) {
-    for (const [group, values] of Object.entries(copy)) {
-      const overrides = labels[GROUP_OVERRIDE_SOURCE[group]!];
-      if (!overrides) continue;
-      for (const [key, value] of Object.entries(values)) {
-        const override = overrides[key];
-        if (
-          typeof value === 'string' &&
-          typeof override === 'string' &&
-          override.trim() !== ''
-        ) {
-          values[key] = override;
-        }
-      }
-    }
   }
   return copy as unknown as BoardCopy;
 }

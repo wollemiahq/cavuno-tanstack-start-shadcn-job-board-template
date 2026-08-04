@@ -1,5 +1,5 @@
 import { isNotFound } from '@cavuno/board';
-import { companyIntro } from '@cavuno/board/format';
+import { companyIntro } from '@/lib/company-intro';
 /**
  * Job detail — hosted-parity URL (/companies/:companySlug/jobs/:jobSlug),
  * rendered by the @cavuno registry `job-detail` block:
@@ -134,8 +134,7 @@ function JobDetailPage() {
     // keeps the VM call intact without blocking first paint on the rail.
     [],
     companyIntro(null, company?.description ?? null),
-    board.language,
-    board.labels,
+    board.language
   );
 
   return (
@@ -148,7 +147,6 @@ function JobDetailPage() {
             applicationUrl={job.applicationUrl}
             language={board.language}
             returnTo={returnTo}
-            labels={board.labels}
             nativeApplications={board.features.nativeApplications}
             viewer={user ? { emailVerified: user.emailVerified } : null}
             alreadyApplied={alreadyApplied}
@@ -181,7 +179,6 @@ function JobDetailPage() {
               <CopyLinkButton
                 url={vm.canonicalUrl}
                 language={board.language}
-                labels={board.labels}
               />
             ) : (
               <span />
@@ -201,10 +198,9 @@ function JobDetailPage() {
                   </Text>
                   <JobList
                     jobs={similarRail.jobs.map((job) =>
-                      toJobCardVM(job, board.language, board.labels),
+                      toJobCardVM(job, board.language),
                     )}
                     language={board.language}
-                    labels={board.labels}
                     variant="compact"
                   />
                 </section>
@@ -218,7 +214,6 @@ function JobDetailPage() {
               filters={defaults.filters}
               context={defaults.context}
               language={board.language}
-              labels={board.labels}
               onSubscribe={async (input) => {
                 const result = await subscribeJobAlert({ data: input });
                 return { status: result.status };
@@ -228,11 +223,9 @@ function JobDetailPage() {
               // stored override with the starter's English as the floor
               // (catalog keys for the variants land with the authed slice).
               title={
-                board.labels.jobCardLabels?.jobAlertJobTitle ||
                 m.companyJobDetail_defaultAlertTitle()
               }
               description={
-                board.labels.jobCardLabels?.jobAlertJobDescription ||
                 m.companyJobDetail_defaultAlertDescription()
               }
             />

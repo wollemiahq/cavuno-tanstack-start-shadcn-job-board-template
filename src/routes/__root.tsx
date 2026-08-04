@@ -23,7 +23,7 @@ import { emitRoutesReport } from '../lib/routes-report';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getRootShellData } from '../server/root-shell';
-import { themeMeta } from '../theme/resolved';
+import { themeMeta, themeTokens } from '../theme/resolved';
 import { useCompanyMarketSuggestions } from './-use-company-market-suggestions';
 import '../styles.css';
 import { useKeywordSuggestions } from './-use-keyword-suggestions';
@@ -126,57 +126,31 @@ export const Route = createRootRoute({
   loader: () => getRootShellData(),
   head: ({ loaderData }) => {
     const board = loaderData?.board;
-    const seo = loaderData?.seo;
-    const icons = seo?.icons;
-    // Board-resolved favicons / app icons — only the configured variants.
-    const boardIconLinks = icons
-      ? [
-          ...(icons.svg
-            ? [{ rel: 'icon', type: 'image/svg+xml', href: icons.svg }]
-            : []),
-          ...(icons.ico ? [{ rel: 'icon', href: icons.ico }] : []),
-          ...(icons.icon192
-            ? [
-                {
-                  rel: 'icon',
-                  type: 'image/png',
-                  sizes: '192x192',
-                  href: icons.icon192,
-                },
-              ]
-            : []),
-          ...(icons.icon512
-            ? [
-                {
-                  rel: 'icon',
-                  type: 'image/png',
-                  sizes: '512x512',
-                  href: icons.icon512,
-                },
-              ]
-            : []),
-          ...(icons.appleTouch
-            ? [{ rel: 'apple-touch-icon', href: icons.appleTouch }]
-            : []),
-        ]
-      : [];
-    // When the board resolves no icon at all, fall back to the bundled
-    // Cavuno mark rather than the platform-default /favicon.ico alone.
-    const iconLinks =
-      boardIconLinks.length > 0
-        ? boardIconLinks
-        : [
-            { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-            { rel: 'icon', href: '/favicon.ico' },
-          ];
+    // 4.0.0 dropped board.seo().icons — starter-owned public assets.
+    const boardIconLinks = [
+      { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+      { rel: 'icon', href: '/favicon.ico' },
+      {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '192x192',
+        href: '/logo192.png',
+      },
+      {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '512x512',
+        href: '/logo512.png',
+      },
+      { rel: 'apple-touch-icon', href: '/logo192.png' },
+    ];
+    const iconLinks = boardIconLinks;
     return {
       meta: [
         { charSet: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { title: board?.name ?? 'Job board' },
-        ...(seo?.manifest.themeColor
-          ? [{ name: 'theme-color', content: seo.manifest.themeColor }]
-          : []),
+        { name: 'theme-color', content: themeTokens.light['--background'] },
       ],
       links: [
         ...(themeMeta.fontsImport
@@ -276,10 +250,10 @@ function RootLayout() {
   // family (21 messages × locales) into the unsplittable root for one string.
   // Operator overrides ride the same jobCardLabels.breadcrumbAriaLabel key
   // that jobDetailCopy resolves via resolveCopyGroup.
-  const breadcrumbAriaLabel = resolveJobDetailBreadcrumbAriaLabel(board.labels);
+  const breadcrumbAriaLabel = resolveJobDetailBreadcrumbAriaLabel();
   const shellBreadcrumb = resolveShellBreadcrumb({
     pathname: location.pathname,
-    labels: breadcrumbsCopy(board.language, board.labels),
+    labels: breadcrumbsCopy(board.language) as unknown as import("@/lib/shell-breadcrumb").ShellBreadcrumbLabels,
     // Authed surfaces get footer trails too — labels from the template
     // catalogs (the SDK's copy.breadcrumbs only knows public segments).
     privateLabels: {
@@ -401,7 +375,6 @@ function RootLayout() {
       logoUrl={board.logoUrl}
       user={user}
       language={board.language}
-      labels={board.labels}
       features={board.features}
       hasAccessGrant={hasAccessGrant}
       employerCompanies={employerCompanies}
@@ -483,7 +456,6 @@ function RootLayout() {
           boardName={board.name}
           logoUrl={board.logoUrl}
           language={board.language}
-          labels={board.labels}
           showCavunoBranding={board.showCavunoBranding}
           primaryDomain={board.primaryDomain}
           slug={board.slug}

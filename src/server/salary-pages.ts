@@ -31,6 +31,8 @@ import {
   skillSalaryJsonLd,
   titleSalaryJsonLd,
 } from '@cavuno/board/seo';
+
+import { composeSalaryFaqs } from '@/lib/salary-faq';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
@@ -74,13 +76,12 @@ async function seoBase() {
   return {
     boardName: boardContext.name,
     language: boardContext.language,
-    labels: boardContext.labels,
     origin,
   };
 }
 
 function crumbs(seo: Awaited<ReturnType<typeof seoBase>>) {
-  return breadcrumbsCopy(seo.language, seo.labels);
+  return breadcrumbsCopy(seo.language);
 }
 
 // ── Hub ─────────────────────────────────────────────────────────────────────
@@ -414,11 +415,12 @@ export const getTitleSalaryPage = createServerFn({ method: 'GET' })
           },
         ],
       };
-      const faqs = buildSalaryFaq(
+      const faqEntries = buildSalaryFaq(
         locale,
         salary.categoryName,
         salary.overallSalary,
       );
+      const faqs = composeSalaryFaqs(faqEntries)
       const jsonLd = asJsonObjects(
         [
           titleSalaryJsonLd(locale, salary),
@@ -495,11 +497,12 @@ export const getSkillSalaryPage = createServerFn({ method: 'GET' })
           },
         ],
       };
-      const faqs = buildSalaryFaq(
+      const faqEntries = buildSalaryFaq(
         locale,
         salary.skillName,
         salary.overallSalary,
       );
+      const faqs = composeSalaryFaqs(faqEntries)
       const jsonLd = asJsonObjects(
         [
           skillSalaryJsonLd(salary),
@@ -592,11 +595,12 @@ export const getLocationSalaryPage = createServerFn({ method: 'GET' })
           },
         ],
       };
-      const faqs = buildSalaryFaq(
+      const faqEntries = buildSalaryFaq(
         locale,
         salary.placeName,
         salary.overallSalary,
       );
+      const faqs = composeSalaryFaqs(faqEntries)
       const jsonLd = asJsonObjects(
         [
           locationSalaryJsonLd(salary),

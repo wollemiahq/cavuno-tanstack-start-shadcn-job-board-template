@@ -10,12 +10,8 @@
  * so restructuring a card is pure markup over this stable contract.
  */
 import {
-  cardLocationLabel,
-  fieldLabel,
   formatPublishedRelativeDate,
-  formatSalaryRange,
   fullJobToCard,
-  type BoardLabelOverrides,
 } from '@cavuno/board/format';
 import {
   jobDetailPath,
@@ -27,6 +23,9 @@ import { m } from '../paraglide/messages';
 
 import { jobCardCopy } from '@/copy-groups/job-card';
 import { deriveSummary } from '@/lib/derive-summary';
+import { enumLabel } from '@/lib/enum-labels';
+import { cardLocationLabel } from '@/lib/location-labels';
+import { formatJobSalary } from '@/lib/salary-display';
 import type { PublicJob, PublicJobCard } from '@cavuno/board';
 
 export interface JobCardTagVM {
@@ -76,11 +75,7 @@ export interface JobCardVM {
   tags: JobCardTagVM[];
 }
 
-export function toJobCardVM(
-  job: PublicJobCard,
-  language: string,
-  labels?: BoardLabelOverrides,
-): JobCardVM {
+export function toJobCardVM(job: PublicJobCard, language: string): JobCardVM {
   const company = job.company;
 
   // Every emitted slug resolves — the platform guarantees it (ADR-0099), so
@@ -97,7 +92,7 @@ export function toJobCardVM(
       href: path(term.slug),
     };
   };
-  const salaryLabel = formatSalaryRange(
+  const salaryLabel = formatJobSalary(
     language,
     job.salaryMin,
     job.salaryMax,
@@ -105,7 +100,7 @@ export function toJobCardVM(
     job.salaryCurrency,
   );
   const workplaceLabel = job.remoteOption
-    ? fieldLabel(language, job.remoteOption, labels)
+    ? enumLabel(job.remoteOption)
     : null;
   const placeLabel =
     job.remoteOption === 'remote' ? job.remoteLocationLabel : job.locationLabel;
@@ -116,9 +111,7 @@ export function toJobCardVM(
     .filter(Boolean)
     .join(' ');
   const compLine =
-    [salaryLabel, cardLocationLabel(language, job)]
-      .filter(Boolean)
-      .join(' · ') || null;
+    [salaryLabel, cardLocationLabel(job)].filter(Boolean).join(' · ') || null;
 
   return {
     id: job.id,
@@ -140,7 +133,7 @@ export function toJobCardVM(
     locationLabel,
     summary: deriveSummary(job.description),
     isFeatured: job.isFeatured,
-    featuredLabel: jobCardCopy(language, labels).featuredLabel,
+    featuredLabel: jobCardCopy(language).featuredLabel,
     postedAtLabel: formatPublishedRelativeDate(language, job.publishedAt),
     tags: [
       ...job.categories.map((c) => tagPill('category', c)),
@@ -160,7 +153,6 @@ export function toJobCardVM(
 export function toSavedJobCardVM(
   job: PublicJob,
   language: string,
-  labels?: BoardLabelOverrides,
 ): JobCardVM | null {
   try {
     const card = fullJobToCard(language, {
@@ -169,7 +161,7 @@ export function toSavedJobCardVM(
       categories: job.categories ?? [],
       skills: job.skills ?? [],
     });
-    return toJobCardVM(card, language, labels);
+    return toJobCardVM(card, language);
   } catch {
     return null;
   }

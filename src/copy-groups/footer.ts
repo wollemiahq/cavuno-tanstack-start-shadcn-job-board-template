@@ -3,8 +3,6 @@ import { m } from '../paraglide/messages';
 import type { BoardCopy } from '@/copy';
 import {
   resolveCopyGroup,
-  type BoardLabelOverrides,
-  type CopyOverrides,
   type MessageFn,
 } from '@/copy-groups/resolve-copy-group';
 
@@ -37,11 +35,10 @@ const messages = [
 
 export function footerCopy(
   _language: string | undefined,
-  labels?: BoardLabelOverrides,
 ): BoardCopy['footer'] {
   return resolveCopyGroup(
     messages,
-    labels?.footerLabels as CopyOverrides | undefined,
+    undefined,
     {},
     {
       copyrightPrefix: ['year', 'board_name'],

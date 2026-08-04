@@ -40,6 +40,7 @@ describe('pageTitle (format authority)', () => {
       origin: 'https://careers.acme.test',
       path: '/jobs/robotics',
       heading,
+      description: `Browse ${heading} on ${boardName}.`,
     }).meta.find((entry) => 'title' in entry);
 
     expect(sdkTitle).toEqual({ title: pageTitle([heading], boardName) });

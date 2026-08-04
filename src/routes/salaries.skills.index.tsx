@@ -36,7 +36,7 @@ export const Route = createFileRoute('/salaries/skills/')({
 
 function SalarySkillsIndex() {
   const { skills, seo } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
+  const crumbs = breadcrumbsCopy(seo.language);
   const locale = seo.language;
 
   const items: RailItem[] = skills.map((s) => ({
@@ -54,13 +54,12 @@ function SalarySkillsIndex() {
           { name: crumbs.salaries, href: BOARD_PATHS.salaries },
           { name: crumbs.skills },
         ],
-        seo.language,
-        seo.labels,
+        seo.language
       )}
       title={m.salaryHub_skillsHeading()}
     >
       {items.length > 0 ? (
-        <SalaryRail vm={toSalaryRailVM('', items, seo.language, seo.labels)} />
+        <SalaryRail vm={toSalaryRailVM('', items, seo.language)} />
       ) : (
         <SalaryEmptyState
           title={m.salaryHub_skillsEmptyTitle()}

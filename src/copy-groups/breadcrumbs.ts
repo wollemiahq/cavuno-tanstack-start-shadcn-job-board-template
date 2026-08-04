@@ -3,8 +3,6 @@ import { m } from '../paraglide/messages';
 import type { BoardCopy } from '@/copy';
 import {
   resolveCopyGroup,
-  type BoardLabelOverrides,
-  type CopyOverrides,
   type MessageFn,
 } from '@/copy-groups/resolve-copy-group';
 
@@ -29,10 +27,9 @@ const messages = [
 
 export function breadcrumbsCopy(
   _language: string | undefined,
-  labels?: BoardLabelOverrides,
 ): BoardCopy['breadcrumbs'] {
   return resolveCopyGroup(
     messages,
-    labels?.breadcrumbsLabels as CopyOverrides | undefined,
+    undefined,
   ) as unknown as BoardCopy['breadcrumbs'];
 }

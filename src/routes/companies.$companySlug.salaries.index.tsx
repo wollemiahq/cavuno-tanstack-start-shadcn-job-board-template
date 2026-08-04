@@ -103,8 +103,7 @@ function CompanySalaryPage() {
                 avgMax: salary.overallSalary.avgMax,
                 jobCount: salary.overallSalary.jobCount,
               },
-              board.language,
-              seo.labels,
+              board.language
             )}
           />
         ) : null}
@@ -117,8 +116,7 @@ function CompanySalaryPage() {
             <SenioritySalaryTable
               vm={toSeniorityTableVM(
                 salary.bySeniority,
-                board.language,
-                seo.labels,
+                board.language
               )}
             />
           </section>
@@ -128,27 +126,24 @@ function CompanySalaryPage() {
           vm={toSalaryRailVM(
             m.companySalaries_salariesByRoleLabel(),
             categoryItems,
-            seo.language,
-            seo.labels,
+            seo.language
           )}
         />
         <SalaryRail
           vm={toSalaryRailVM(
             m.companySalaries_topLocationsLabel(),
             locationItems,
-            seo.language,
-            seo.labels,
+            seo.language
           )}
         />
         <SalaryRail
           vm={toSalaryRailVM(
             m.companySalaries_otherCompaniesLabel(),
             competitorItems,
-            seo.language,
-            seo.labels,
+            seo.language
           )}
         />
-        <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
+        <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language)} />
       </div>
     </CompanySectionShell>
   );

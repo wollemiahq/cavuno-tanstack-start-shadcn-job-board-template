@@ -79,7 +79,7 @@ const rootApi = getRouteApi('__root__');
 
 function TitleLocationSalaryPage() {
   const { salary, seo } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
+  const crumbs = breadcrumbsCopy(seo.language);
   const { board } = rootApi.useLoaderData();
   const locale = seo.language;
   const cat = salary.categoryCanonicalSlug;
@@ -132,8 +132,7 @@ function TitleLocationSalaryPage() {
           { name: salary.categoryName, href: salaryTitlePath(cat) },
           { name: salary.placeName },
         ],
-        seo.language,
-        seo.labels,
+        seo.language
       )}
       title={heading}
     >
@@ -149,8 +148,7 @@ function TitleLocationSalaryPage() {
                   p25Min: salary.overallSalary.p25Min ?? undefined,
                   p75Max: salary.overallSalary.p75Max ?? undefined,
                 },
-                board.language,
-                seo.labels,
+                board.language
               )}
             />
           ) : null}
@@ -165,8 +163,7 @@ function TitleLocationSalaryPage() {
                     boardAvgMax: null,
                     diffPercent: null,
                   })),
-                  board.language,
-                  seo.labels,
+                  board.language
                 )}
               />
             </PageSection>
@@ -176,32 +173,28 @@ function TitleLocationSalaryPage() {
             vm={toSalaryRailVM(
               m.salaryDetail_citiesLabel(),
               toPlaceRail(salary.childLocations),
-              seo.language,
-              seo.labels,
+              seo.language
             )}
           />
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_otherLocations(),
               toPlaceRail(salary.otherLocations),
-              seo.language,
-              seo.labels,
+              seo.language
             )}
           />
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_topSkills(),
               skillItems,
-              seo.language,
-              seo.labels,
+              seo.language
             )}
           />
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_relatedTitles(),
               titleItems,
-              seo.language,
-              seo.labels,
+              seo.language
             )}
           />
         </>

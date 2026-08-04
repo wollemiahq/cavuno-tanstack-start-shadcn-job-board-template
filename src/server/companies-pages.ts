@@ -21,6 +21,8 @@ import {
   faqJsonLd,
   formatRange,
 } from '@cavuno/board/seo';
+
+import { composeSalaryFaqs } from '@/lib/salary-faq';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
@@ -52,13 +54,12 @@ async function seoBase() {
   return {
     boardName: boardContext.name,
     language: boardContext.language,
-    labels: boardContext.labels,
     origin,
   };
 }
 
 function crumbs(seo: Awaited<ReturnType<typeof seoBase>>) {
-  return breadcrumbsCopy(seo.language, seo.labels);
+  return breadcrumbsCopy(seo.language);
 }
 
 /** /companies/ index — list/search + markets + head + breadcrumb JSON-LD. */
@@ -434,11 +435,12 @@ export const getCompanySalariesPage = createServerFn({ method: 'GET' })
         ],
       };
       const c = crumbs(seo);
-      const faqs = buildSalaryFaq(
+      const faqEntries = buildSalaryFaq(
         locale,
         salary.companyName,
         salary.overallSalary,
       );
+      const faqs = composeSalaryFaqs(faqEntries)
       const jsonLd = asJsonObjects(
         [
           companySalaryJsonLd(locale, salary),
@@ -532,7 +534,8 @@ export const getCompanyCategorySalaryPage = createServerFn({ method: 'GET' })
         category: salary.categoryName,
         company: salary.companyName,
       });
-      const faqs = buildSalaryFaq(locale, label, salary.overallSalary);
+      const faqEntries = buildSalaryFaq(locale, label, salary.overallSalary);
+      const faqs = composeSalaryFaqs(faqEntries)
       const jsonLd = asJsonObjects(
         [
           companyCategorySalaryJsonLd(locale, salary),

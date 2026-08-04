@@ -29,7 +29,6 @@ async function seoBase() {
   return {
     boardName: boardContext.name,
     language: boardContext.language,
-    labels: boardContext.labels,
     origin,
   };
 }
@@ -57,7 +56,7 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
         ],
         links: [{ rel: 'canonical', href: `${seo.origin}/talent` }],
       };
-      const c = breadcrumbsCopy(seo.language, seo.labels);
+      const c = breadcrumbsCopy(seo.language);
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
@@ -124,7 +123,7 @@ export const getTalentProfilePage = createServerFn({ method: 'GET' })
       const displayName =
         profile.displayName ?? m.publicProfile_anonymousCandidateLabel();
       const canonical = `${seo.origin}/p/${profile.handle}`;
-      const c = breadcrumbsCopy(seo.language, seo.labels);
+      const c = breadcrumbsCopy(seo.language);
       const jsonLd = asJsonObjects(
         [
           {

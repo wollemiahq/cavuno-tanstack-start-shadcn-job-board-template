@@ -7,7 +7,7 @@ import { CustomFieldsGroup } from './custom-fields-group';
 
 import type { PublicBoard } from '@cavuno/board';
 
-type Definition = PublicBoard['customFields'][number];
+type Definition = PublicBoard['customFields']['job'][number];
 
 const definitions: Definition[] = [
   { key: 'team', label: 'Team', type: 'short_text', required: true },

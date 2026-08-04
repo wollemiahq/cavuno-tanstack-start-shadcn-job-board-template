@@ -62,8 +62,6 @@ const ALLOWLIST: Record<string, string> = {
     'Canvas scratch-context default (#000) before resolving a real token color.',
   'src/components/preview/preview-emails.tsx':
     'Captured email documents render on white regardless of the app theme.',
-  'src/routes/site[.]webmanifest.ts':
-    'PWA splash background_color metadata — not a rendered component surface.',
 };
 
 /** Recursively collect app-authored source, skipping shadcn-owned ui/. */

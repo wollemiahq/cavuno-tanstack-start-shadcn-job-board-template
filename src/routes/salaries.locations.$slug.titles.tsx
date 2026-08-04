@@ -57,7 +57,7 @@ export const Route = createFileRoute('/salaries/locations/$slug/titles')({
 
 function LocationTitlesPage() {
   const { data, seo } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language, seo.labels);
+  const crumbs = breadcrumbsCopy(seo.language);
   const locale = seo.language;
   const items: RailItem[] = data.titles.map((t) => ({
     name: t.name,
@@ -82,8 +82,7 @@ function LocationTitlesPage() {
           },
           { name: crumbs.titles },
         ],
-        seo.language,
-        seo.labels,
+        seo.language
       )}
       title={heading}
     >
@@ -92,8 +91,7 @@ function LocationTitlesPage() {
           vm={toSalaryRailVM(
             m.salaryDetail_jobTitlesLabel(),
             items,
-            seo.language,
-            seo.labels,
+            seo.language
           )}
         />
       ) : (

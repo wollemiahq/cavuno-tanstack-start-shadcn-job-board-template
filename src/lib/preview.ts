@@ -479,6 +479,7 @@ export function toPreviewBoardConfig(context: {
     candidates: boolean;
     employers: boolean;
     registrationWall: boolean;
+    talentDirectory?: 'off' | 'public' | 'employers_only';
     /**
      * Runtime flags `@cavuno/board@1.38.0` does not type yet (see
      * `src/board/board-feature-flags.ts`) — optional here, absent ⇒ ON.
@@ -491,7 +492,11 @@ export function toPreviewBoardConfig(context: {
 }): PreviewBoardConfig {
   return {
     jobAccessPaywallEnabled: context.features.candidatePaywall,
-    talentDirectoryVisibility: context.talentDirectoryVisibility ?? 'off',
+    talentDirectoryVisibility:
+      // 4.0.0: enum lives on features.talentDirectory ('off' is truthy!).
+      context.features.talentDirectory ??
+      context.talentDirectoryVisibility ??
+      'off',
     blogEnabled: context.features.blog,
     jobAlertsEnabled: context.features.jobAlerts,
     candidatesEnabled: context.features.candidates,

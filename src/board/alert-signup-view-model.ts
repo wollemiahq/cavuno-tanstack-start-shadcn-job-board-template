@@ -21,8 +21,6 @@ import { alertsCopy } from '@/copy-groups/alerts';
  * them directly from `@cavuno/board*` instead. Don't "fix" that to a
  * re-export — it's intentional.
  */
-import type { BoardLabelOverrides } from '@cavuno/board/format';
-
 export interface AlertSignupVM {
   sectionAriaLabel: string;
   /** Default heading; a placement can override it via the `title` prop. */
@@ -38,9 +36,8 @@ export interface AlertSignupVM {
 
 export function toAlertSignupVM(
   language: string,
-  labels?: BoardLabelOverrides,
 ): AlertSignupVM {
-  const copy = alertsCopy(language, labels);
+  const copy = alertsCopy(language);
   return {
     sectionAriaLabel: copy.sectionAriaLabel,
     defaultTitle: copy.jobAlertTitle,
