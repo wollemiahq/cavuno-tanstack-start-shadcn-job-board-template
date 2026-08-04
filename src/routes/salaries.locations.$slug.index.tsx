@@ -42,11 +42,18 @@ import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 type City = LocationSalaryDetail['childLocations'][number];
 
 const cityItem =
-  (locale: string) =>
+  (locale: string, currency: string | null | undefined) =>
   (x: City): RailItem => ({
     name: x.placeName,
     href: salaryLocationPath(x.placeSlug),
-    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(
+        locale,
+        x.avgSalaryMin,
+        x.avgSalaryMax,
+        // Child cities carry their own currency on the wire.
+        x.currency ?? currency,
+      ) ?? '',
     jobCount: x.jobCount,
   });
 
@@ -101,13 +108,25 @@ function LocationSalaryPage() {
   const categoryItems: RailItem[] = salary.topCategories.map((x) => ({
     name: x.categoryName,
     href: salaryTitleInLocationPath(x.categorySlug, salary.canonicalSlug),
-    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(
+        locale,
+        x.avgSalaryMin,
+        x.avgSalaryMax,
+        salary.currency,
+      ) ?? '',
     jobCount: x.jobCount,
   }));
   const skillItems: RailItem[] = salary.topSkills.map((x) => ({
     name: x.skillName,
     href: salarySkillInLocationPath(x.skillSlug, salary.canonicalSlug),
-    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(
+        locale,
+        x.avgSalaryMin,
+        x.avgSalaryMax,
+        salary.currency,
+      ) ?? '',
     jobCount: x.jobCount,
   }));
   const hasSalaryContent = Boolean(
@@ -130,7 +149,7 @@ function LocationSalaryPage() {
           { name: crumbs.locations, href: BOARD_PATHS.salaryLocations },
           ...hierarchyCrumbs,
         ],
-        seo.language
+        seo.language,
       )}
       title={heading}
     >
@@ -148,7 +167,8 @@ function LocationSalaryPage() {
                   p25Min: salary.overallSalary.p25Min,
                   p75Max: salary.overallSalary.p75Max,
                 },
-                board.language
+                board.language,
+                salary.currency,
               )}
             />
           ) : null}
@@ -157,8 +177,8 @@ function LocationSalaryPage() {
             <SalaryRail
               vm={toSalaryRailVM(
                 m.salaryDetail_citiesInPlaceLabel({ place: salary.placeName }),
-                salary.childLocations.map(cityItem(locale)),
-                seo.language
+                salary.childLocations.map(cityItem(locale, salary.currency)),
+                seo.language,
               )}
             />
           ) : null}
@@ -168,8 +188,8 @@ function LocationSalaryPage() {
               key={group.regionSlug}
               vm={toSalaryRailVM(
                 group.regionName,
-                group.cities.map(cityItem(locale)),
-                seo.language
+                group.cities.map(cityItem(locale, salary.currency)),
+                seo.language,
               )}
             />
           ))}
@@ -178,8 +198,8 @@ function LocationSalaryPage() {
             <SalaryRail
               vm={toSalaryRailVM(
                 m.salaryDetail_otherLocations(),
-                salary.siblingLocations.map(cityItem(locale)),
-                seo.language
+                salary.siblingLocations.map(cityItem(locale, salary.currency)),
+                seo.language,
               )}
             />
           ) : null}
@@ -217,9 +237,7 @@ function LocationSalaryPage() {
                 </a>
               }
             >
-              <SalaryRail
-                vm={toSalaryRailVM('', skillItems, seo.language)}
-              />
+              <SalaryRail vm={toSalaryRailVM('', skillItems, seo.language)} />
             </PageSection>
           ) : null}
           <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language)} />

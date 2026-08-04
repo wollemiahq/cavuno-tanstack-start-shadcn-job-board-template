@@ -34,9 +34,7 @@ export interface AlertSignupVM {
   messages: { submitted: string; error: string };
 }
 
-export function toAlertSignupVM(
-  language: string,
-): AlertSignupVM {
+export function toAlertSignupVM(language: string): AlertSignupVM {
   const copy = alertsCopy(language);
   return {
     sectionAriaLabel: copy.sectionAriaLabel,

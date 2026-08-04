@@ -62,20 +62,38 @@ function CompanySalaryPage() {
   const categoryItems: RailItem[] = salary.byCategory.map((x) => ({
     name: x.categoryName,
     href: companyCategorySalaryPath(salary.companySlug, x.categorySlug),
-    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(
+        locale,
+        x.avgSalaryMin,
+        x.avgSalaryMax,
+        salary.currency,
+      ) ?? '',
     jobCount: x.jobCount,
   }));
   const competitorItems: RailItem[] = salary.competitors.map((x) => ({
     name: x.companyName,
     href: companySalaryPath(x.companySlug),
-    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(
+        locale,
+        x.avgSalaryMin,
+        x.avgSalaryMax,
+        salary.currency,
+      ) ?? '',
     jobCount: x.jobCount,
     logoPath: x.logoPath,
   }));
   const locationItems: RailItem[] = salary.topLocations.map((x) => ({
     name: x.locationName,
     href: salaryLocationPath(x.placeSlug),
-    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(
+        locale,
+        x.avgSalaryMin,
+        x.avgSalaryMax,
+        salary.currency,
+      ) ?? '',
     jobCount: x.jobCount,
   }));
 
@@ -103,7 +121,8 @@ function CompanySalaryPage() {
                 avgMax: salary.overallSalary.avgMax,
                 jobCount: salary.overallSalary.jobCount,
               },
-              board.language
+              board.language,
+              salary.currency,
             )}
           />
         ) : null}
@@ -116,7 +135,8 @@ function CompanySalaryPage() {
             <SenioritySalaryTable
               vm={toSeniorityTableVM(
                 salary.bySeniority,
-                board.language
+                board.language,
+                salary.currency,
               )}
             />
           </section>
@@ -126,21 +146,21 @@ function CompanySalaryPage() {
           vm={toSalaryRailVM(
             m.companySalaries_salariesByRoleLabel(),
             categoryItems,
-            seo.language
+            seo.language,
           )}
         />
         <SalaryRail
           vm={toSalaryRailVM(
             m.companySalaries_topLocationsLabel(),
             locationItems,
-            seo.language
+            seo.language,
           )}
         />
         <SalaryRail
           vm={toSalaryRailVM(
             m.companySalaries_otherCompaniesLabel(),
             competitorItems,
-            seo.language
+            seo.language,
           )}
         />
         <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language)} />

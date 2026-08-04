@@ -65,7 +65,12 @@ function LocationTree({
           </a>
           <span className="text-muted-foreground text-sm tabular-nums">
             {' · '}
-            {formatSalaryRange(board.language, n.avgSalaryMin, n.avgSalaryMax)}
+            {formatSalaryRange(
+              board.language,
+              n.avgSalaryMin,
+              n.avgSalaryMax,
+              null,
+            ) ?? ''}
             {' · '}
             {n.jobCount === 1
               ? m.salaryHub_jobCountSingular({ count: n.jobCount })
@@ -96,7 +101,7 @@ function SalaryLocationsIndex() {
           { name: crumbs.salaries, href: BOARD_PATHS.salaries },
           { name: crumbs.locations },
         ],
-        seo.language
+        seo.language,
       )}
       title={m.salaryHub_locationsHeading()}
     >

@@ -59,10 +59,12 @@ const baseJob = {
   },
 } as unknown as PublicJob;
 
-const customFields = { job: [
-  { key: 'visa', label: 'Visa sponsorship', type: 'boolean' },
-  { key: 'team', label: 'Team', type: 'short_text' },
-] } as unknown as PublicBoard['customFields'];
+const customFields = {
+  job: [
+    { key: 'visa', label: 'Visa sponsorship', type: 'boolean' },
+    { key: 'team', label: 'Team', type: 'short_text' },
+  ],
+} as unknown as PublicBoard['customFields'];
 
 const similar = [
   {

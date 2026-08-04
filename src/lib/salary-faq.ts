@@ -4,8 +4,14 @@
  * `buildSalaryFaq` returns kinds + values only; the application owns the
  * sentences. Job-count wording uses `Intl.PluralRules` (real plural category)
  * to pick between One/Many Paraglide messages — not a `count === 1` check.
+ * Prefer raw figures + `formatSalaryStatRange(…, 'standard')` when the compact
+ * convenience range is null (Intl edge case).
  */
-import type { FaqItem, SalaryFaqEntry } from '@cavuno/board/seo';
+import {
+  formatSalaryStatRange,
+  type FaqItem,
+  type SalaryFaqEntry,
+} from '@cavuno/board/seo';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -21,11 +27,21 @@ function jobCountLabel(jobCount: number): string {
 export function composeSalaryFaqs(entries: SalaryFaqEntry[]): FaqItem[] {
   return entries.map((entry) => {
     if (entry.kind === 'average') {
+      const range =
+        formatSalaryStatRange(
+          getLocale(),
+          entry.avgMin,
+          entry.avgMax,
+          entry.currency,
+          'standard',
+        ) ??
+        entry.range ??
+        '';
       return {
         q: m.salaryFaq_averageQuestion({ label: entry.label }),
         a: m.salaryFaq_averageAnswer({
           label: entry.label,
-          range: entry.range,
+          range,
           jobCountLabel: jobCountLabel(entry.jobCount),
         }),
       };

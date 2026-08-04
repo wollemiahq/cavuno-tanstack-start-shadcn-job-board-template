@@ -15,8 +15,6 @@
  */
 import { jobsCategoryPath, jobsSkillPath } from '@cavuno/board/paths';
 import { listingHead, listingJsonLd } from '@cavuno/board/seo';
-
-import { listingMetaDescription } from '@/lib/listing-description';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
@@ -27,6 +25,10 @@ import { gatedRead } from './board-access';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { jobSearchCopy } from '@/copy-groups/job-search';
+import {
+  listingMetaDescription,
+  listingPageTitle,
+} from '@/lib/listing-description';
 import type {
   EmploymentType,
   JobSort,
@@ -119,15 +121,19 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
         'relatedSearches' in page ? page.relatedSearches : undefined;
       const heading = jobSearchCopy(seo.language).headingJobs;
       const head = listingHead({
-        ...seo,
+        title: listingPageTitle({
+          heading: heading,
+          boardName: seo.boardName,
+          language: seo.language,
+          count: page.count,
+        }),
+        origin: seo.origin,
+        path: '/jobs',
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
           count: page.count,
         }),
-        path: '/jobs',
-        heading,
-        count: page.count,
       });
       const crumbs = breadcrumbsCopy(seo.language);
       const jsonLd = asJsonObjects(
@@ -170,15 +176,19 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
         category: data.displayName,
       });
       const head = listingHead({
-        ...seo,
+        title: listingPageTitle({
+          heading: heading,
+          boardName: seo.boardName,
+          language: seo.language,
+          count: list.count,
+        }),
+        origin: seo.origin,
+        path: jobsCategoryPath(data.categorySlug),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
           count: list.count,
         }),
-        path: jobsCategoryPath(data.categorySlug),
-        heading,
-        count: list.count,
       });
       const crumbs = breadcrumbsCopy(seo.language);
       const jsonLd = asJsonObjects(
@@ -223,15 +233,19 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
       ]);
       const heading = m.skillPage_jobsHeading({ skill: data.displayName });
       const head = listingHead({
-        ...seo,
+        title: listingPageTitle({
+          heading: heading,
+          boardName: seo.boardName,
+          language: seo.language,
+          count: list.count,
+        }),
+        origin: seo.origin,
+        path: jobsSkillPath(data.skillSlug),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
           count: list.count,
         }),
-        path: jobsSkillPath(data.skillSlug),
-        heading,
-        count: list.count,
       });
       const crumbs = breadcrumbsCopy(seo.language);
       const jsonLd = asJsonObjects(
@@ -266,13 +280,17 @@ export const getJobsLocationsIndexPage = createServerFn({ method: 'GET' })
         seoBase(),
       ]);
       const head = listingHead({
-        ...seo,
+        title: listingPageTitle({
+          heading: m.jobsLocationsIndex_heading(),
+          boardName: seo.boardName,
+          language: seo.language,
+        }),
+        origin: seo.origin,
+        path: '/jobs/locations',
         description: listingMetaDescription({
           heading: m.jobsLocationsIndex_heading(),
           boardName: seo.boardName,
         }),
-        path: '/jobs/locations',
-        heading: m.jobsLocationsIndex_heading(),
       });
       const crumbs = breadcrumbsCopy(seo.language);
       const jsonLd = asJsonObjects(
@@ -331,15 +349,19 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         'relatedSearches' in list ? list.relatedSearches : undefined;
       const heading = m.locationPage_jobsHeading({ place: data.displayName });
       const head = listingHead({
-        ...seo,
+        title: listingPageTitle({
+          heading: heading,
+          boardName: seo.boardName,
+          language: seo.language,
+          count: list.count,
+        }),
+        origin: seo.origin,
+        path: `/jobs/locations/${data.locationSlug}`,
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
           count: list.count,
         }),
-        path: `/jobs/locations/${data.locationSlug}`,
-        heading,
-        count: list.count,
       });
       const crumbs = breadcrumbsCopy(seo.language);
       const jsonLd = asJsonObjects(
@@ -390,15 +412,19 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         place: data.placeDisplayName,
       });
       const head = listingHead({
-        ...seo,
+        title: listingPageTitle({
+          heading: heading,
+          boardName: seo.boardName,
+          language: seo.language,
+          count: list.count,
+        }),
+        origin: seo.origin,
+        path: `/jobs/locations/${data.locationSlug}/${data.categorySlug}`,
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
           count: list.count,
         }),
-        path: `/jobs/locations/${data.locationSlug}/${data.categorySlug}`,
-        heading,
-        count: list.count,
       });
       const crumbs = breadcrumbsCopy(seo.language);
       const jsonLd = asJsonObjects(
@@ -455,15 +481,19 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         place: data.placeDisplayName,
       });
       const head = listingHead({
-        ...seo,
+        title: listingPageTitle({
+          heading: heading,
+          boardName: seo.boardName,
+          language: seo.language,
+          count: list.count,
+        }),
+        origin: seo.origin,
+        path: `/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`,
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
           count: list.count,
         }),
-        path: `/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`,
-        heading,
-        count: list.count,
       });
       const crumbs = breadcrumbsCopy(seo.language);
       const jsonLd = asJsonObjects(

@@ -52,26 +52,34 @@ function SalariesHub() {
   const companyItems: RailItem[] = companies.slice(0, PREVIEW).map((x) => ({
     name: x.companyName,
     href: companySalaryPath(x.companySlug),
-    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax, x.currency) ??
+      '',
     jobCount: x.jobCount,
     logoPath: x.logoPath,
   }));
   const titleItems: RailItem[] = titles.slice(0, PREVIEW).map((x) => ({
     name: x.name,
     href: salaryTitlePath(x.slug),
-    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax, x.currency) ??
+      '',
     jobCount: x.jobCount,
   }));
   const skillItems: RailItem[] = skills.slice(0, PREVIEW).map((x) => ({
     name: x.name,
     href: salarySkillPath(x.slug),
-    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax, x.currency) ??
+      '',
     jobCount: x.jobCount,
   }));
   const locationItems: RailItem[] = locations.slice(0, PREVIEW).map((x) => ({
     name: x.placeName,
     href: salaryLocationPath(x.placeSlug),
-    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    // Location index items carry no currency — never invent one.
+    range:
+      formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax, null) ?? '',
     jobCount: x.jobCount,
   }));
   const hasSalaryData =
@@ -88,7 +96,7 @@ function SalariesHub() {
           { name: crumbs.home, href: BOARD_PATHS.home },
           { name: crumbs.salaries },
         ],
-        seo.language
+        seo.language,
       )}
       title={crumbs.salaries}
       description={m.salaryHub_subheading()}

@@ -88,7 +88,13 @@ function TitleLocationSalaryPage() {
     rows.map((x) => ({
       name: x.placeName,
       href: salaryTitleInLocationPath(cat, x.placeSlug),
-      range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+      range:
+        formatSalaryRange(
+          locale,
+          x.avgSalaryMin,
+          x.avgSalaryMax,
+          salary.currency,
+        ) ?? '',
       jobCount: x.jobCount,
     }));
 
@@ -97,7 +103,13 @@ function TitleLocationSalaryPage() {
   const skillItems: RailItem[] = salary.topSkills.map((x) => ({
     name: x.skillName,
     href: salarySkillInLocationPath(x.skillSlug, salary.locationCanonicalSlug),
-    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(
+        locale,
+        x.avgSalaryMin,
+        x.avgSalaryMax,
+        salary.currency,
+      ) ?? '',
     jobCount: x.jobCount,
   }));
   const titleItems: RailItem[] = salary.topTitles.map((x) => ({
@@ -106,7 +118,13 @@ function TitleLocationSalaryPage() {
       x.categorySlug,
       salary.locationCanonicalSlug,
     ),
-    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(
+        locale,
+        x.avgSalaryMin,
+        x.avgSalaryMax,
+        salary.currency,
+      ) ?? '',
     jobCount: x.jobCount,
   }));
   const hasSalaryContent = Boolean(
@@ -132,7 +150,7 @@ function TitleLocationSalaryPage() {
           { name: salary.categoryName, href: salaryTitlePath(cat) },
           { name: salary.placeName },
         ],
-        seo.language
+        seo.language,
       )}
       title={heading}
     >
@@ -148,7 +166,8 @@ function TitleLocationSalaryPage() {
                   p25Min: salary.overallSalary.p25Min ?? undefined,
                   p75Max: salary.overallSalary.p75Max ?? undefined,
                 },
-                board.language
+                board.language,
+                salary.currency,
               )}
             />
           ) : null}
@@ -163,7 +182,8 @@ function TitleLocationSalaryPage() {
                     boardAvgMax: null,
                     diffPercent: null,
                   })),
-                  board.language
+                  board.language,
+                  salary.currency,
                 )}
               />
             </PageSection>
@@ -173,28 +193,28 @@ function TitleLocationSalaryPage() {
             vm={toSalaryRailVM(
               m.salaryDetail_citiesLabel(),
               toPlaceRail(salary.childLocations),
-              seo.language
+              seo.language,
             )}
           />
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_otherLocations(),
               toPlaceRail(salary.otherLocations),
-              seo.language
+              seo.language,
             )}
           />
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_topSkills(),
               skillItems,
-              seo.language
+              seo.language,
             )}
           />
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_relatedTitles(),
               titleItems,
-              seo.language
+              seo.language,
             )}
           />
         </>

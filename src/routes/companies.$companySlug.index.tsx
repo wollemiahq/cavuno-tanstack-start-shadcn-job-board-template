@@ -150,7 +150,8 @@ function CompanyPage() {
           avgMax: salarySummary.overallSalary.avgMax,
           jobCount: salarySummary.overallSalary.jobCount,
         },
-        board.language
+        board.language,
+        salarySummary.currency,
       )
     : null;
   const salaryCategoryItems: RailItem[] = salarySummary.byCategory.map(
@@ -163,18 +164,20 @@ function CompanyPage() {
           categorySlug: category.categorySlug,
         },
       }).interpolatedPath,
-      range: formatSalaryRange(
-        seo.language,
-        category.avgSalaryMin,
-        category.avgSalaryMax,
-      ),
+      range:
+        formatSalaryRange(
+          seo.language,
+          category.avgSalaryMin,
+          category.avgSalaryMax,
+          salarySummary.currency,
+        ) ?? '',
       jobCount: category.jobCount,
     }),
   );
   const salaryCategoriesVM = toSalaryRailVM(
     undefined,
     salaryCategoryItems,
-    seo.language
+    seo.language,
   );
 
   const website = company.website

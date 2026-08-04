@@ -25,14 +25,12 @@ import {
   createBreadcrumbJsonLd,
   crossAxisSalaryJsonLd,
   faqJsonLd,
-  formatRange,
+  formatSalaryStatRange,
   itemListJsonLd,
   locationSalaryJsonLd,
   skillSalaryJsonLd,
   titleSalaryJsonLd,
 } from '@cavuno/board/seo';
-
-import { composeSalaryFaqs } from '@/lib/salary-faq';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
@@ -56,6 +54,7 @@ import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { composeSalaryFaqs } from '@/lib/salary-faq';
 
 /**
  * JSON-LD is schema.org-shaped nested objects. TanStack Start's server-fn
@@ -377,10 +376,11 @@ export const getTitleSalaryPage = createServerFn({ method: 'GET' })
       const locale = seo.language;
       const c = crumbs(seo);
       const range = salary.overallSalary
-        ? formatRange(
+        ? formatSalaryStatRange(
             locale,
             salary.overallSalary.avgMin,
             salary.overallSalary.avgMax,
+            salary.currency,
           )
         : null;
       const head = {
@@ -419,11 +419,12 @@ export const getTitleSalaryPage = createServerFn({ method: 'GET' })
         locale,
         salary.categoryName,
         salary.overallSalary,
+        salary.currency,
       );
-      const faqs = composeSalaryFaqs(faqEntries)
+      const faqs = composeSalaryFaqs(faqEntries);
       const jsonLd = asJsonObjects(
         [
-          titleSalaryJsonLd(locale, salary),
+          titleSalaryJsonLd(salary),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
             { label: c.home, href: seo.origin },
@@ -459,10 +460,11 @@ export const getSkillSalaryPage = createServerFn({ method: 'GET' })
       const locale = seo.language;
       const c = crumbs(seo);
       const range = salary.overallSalary
-        ? formatRange(
+        ? formatSalaryStatRange(
             locale,
             salary.overallSalary.avgMin,
             salary.overallSalary.avgMax,
+            salary.currency,
           )
         : null;
       const head = {
@@ -501,8 +503,9 @@ export const getSkillSalaryPage = createServerFn({ method: 'GET' })
         locale,
         salary.skillName,
         salary.overallSalary,
+        salary.currency,
       );
-      const faqs = composeSalaryFaqs(faqEntries)
+      const faqs = composeSalaryFaqs(faqEntries);
       const jsonLd = asJsonObjects(
         [
           skillSalaryJsonLd(salary),
@@ -558,10 +561,11 @@ export const getLocationSalaryPage = createServerFn({ method: 'GET' })
         ...hierarchy,
       ];
       const range = salary.overallSalary
-        ? formatRange(
+        ? formatSalaryStatRange(
             locale,
             salary.overallSalary.avgMin,
             salary.overallSalary.avgMax,
+            salary.currency,
           )
         : null;
       const head = {
@@ -599,11 +603,15 @@ export const getLocationSalaryPage = createServerFn({ method: 'GET' })
         locale,
         salary.placeName,
         salary.overallSalary,
+        salary.currency,
       );
-      const faqs = composeSalaryFaqs(faqEntries)
+      const faqs = composeSalaryFaqs(faqEntries);
       const jsonLd = asJsonObjects(
         [
-          locationSalaryJsonLd(salary),
+          locationSalaryJsonLd(salary, {
+            occupationUrl: ({ categorySlug }) =>
+              boardUrl(seo.origin, salaryTitlePath(categorySlug)),
+          }),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
             { label: c.home, href: seo.origin },
@@ -993,10 +1001,11 @@ export const getTitleLocationSalaryPage = createServerFn({ method: 'GET' })
       const locale = seo.language;
       const c = crumbs(seo);
       const range = salary.overallSalary
-        ? formatRange(
+        ? formatSalaryStatRange(
             locale,
             salary.overallSalary.avgMin,
             salary.overallSalary.avgMax,
+            salary.currency,
           )
         : null;
       const head = {
@@ -1047,7 +1056,7 @@ export const getTitleLocationSalaryPage = createServerFn({ method: 'GET' })
       };
       const jsonLd = asJsonObjects(
         [
-          crossAxisSalaryJsonLd(locale, {
+          crossAxisSalaryJsonLd({
             name: salary.categoryName,
             placeName: salary.placeName,
             countryCode: salary.countryCode,
@@ -1097,10 +1106,11 @@ export const getSkillLocationSalaryPage = createServerFn({ method: 'GET' })
       const locale = seo.language;
       const c = crumbs(seo);
       const range = salary.overallSalary
-        ? formatRange(
+        ? formatSalaryStatRange(
             locale,
             salary.overallSalary.avgMin,
             salary.overallSalary.avgMax,
+            salary.currency,
           )
         : null;
       const head = {
@@ -1151,7 +1161,7 @@ export const getSkillLocationSalaryPage = createServerFn({ method: 'GET' })
       };
       const jsonLd = asJsonObjects(
         [
-          crossAxisSalaryJsonLd(locale, {
+          crossAxisSalaryJsonLd({
             name: salary.skillName,
             placeName: salary.placeName,
             countryCode: salary.countryCode,

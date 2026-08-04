@@ -62,7 +62,8 @@ function LocationSkillsPage() {
   const items: RailItem[] = data.skills.map((s) => ({
     name: s.name,
     href: salarySkillInLocationPath(s.slug, data.canonicalSlug),
-    range: formatSalaryRange(locale, s.avgSalaryMin, s.avgSalaryMax),
+    range:
+      formatSalaryRange(locale, s.avgSalaryMin, s.avgSalaryMax, null) ?? '',
     jobCount: s.jobCount,
   }));
   const heading = m.salaryDetail_skillsInPlaceHeading({
@@ -82,17 +83,13 @@ function LocationSkillsPage() {
           },
           { name: crumbs.skills },
         ],
-        seo.language
+        seo.language,
       )}
       title={heading}
     >
       {items.length > 0 ? (
         <SalaryRail
-          vm={toSalaryRailVM(
-            m.salaryDetail_skillsLabel(),
-            items,
-            seo.language
-          )}
+          vm={toSalaryRailVM(m.salaryDetail_skillsLabel(), items, seo.language)}
         />
       ) : (
         <SalaryEmptyState

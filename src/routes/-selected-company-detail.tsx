@@ -19,6 +19,7 @@ export function SelectedCompanyDetail({
     (state.salarySummary.overallSalary !== null ||
       state.salarySummary.byCategory.length > 0),
   );
+  const currency = state.salarySummary?.currency;
   const categorySalary = state.salarySummary?.byCategory[0];
   const salaryOverall = state.salarySummary?.overallSalary
     ? toOverallSalaryVM(
@@ -28,6 +29,7 @@ export function SelectedCompanyDetail({
           jobCount: state.salarySummary.overallSalary.jobCount,
         },
         language,
+        currency,
       )
     : categorySalary
       ? {
@@ -38,6 +40,7 @@ export function SelectedCompanyDetail({
               jobCount: categorySalary.jobCount,
             },
             language,
+            currency,
           ),
           headlineLabel: categorySalary.categoryName,
         }

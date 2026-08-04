@@ -11,37 +11,24 @@
  *   before the amount with no space (ADR-0103).
  *
  * So both joins live here, in Paraglide, where a locale can reorder them.
- *
- * Until 4.0 is published, the installed pin may still return a bare string
- * (3.2.0) or the intermediate `{ text, bound }`. Accept all three so the
- * starter typechecks and tests cleanly against either. Remove the
- * compatibility branches once the pin moves to 4.0.0.
+ * Timeframe is the wire enum on the result; map it through the app catalog
+ * before joining. Missing currency → null (never invent USD).
  */
 import {
   formatSalaryRange as sdkFormatSalaryRange,
   type SalaryTimeframeInput,
-  type SalaryTimeframeOverrides,
 } from '@cavuno/board/format';
 
 import { m } from '../paraglide/messages';
-
-type SalaryRangeResult =
-  | string
-  | {
-      text: string;
-      timeframe?: string | null;
-      bound: 'range' | 'from' | 'upTo';
-    }
-  | null;
+import { salaryTimeframeLabel } from './enum-labels';
 
 /** Format a job salary range with bound chrome for open floors/ceilings. */
 export function formatJobSalary(
-  language: string | undefined,
+  language: string,
   min: number | null,
   max: number | null,
   timeframe: SalaryTimeframeInput,
   currency?: string | null,
-  timeframeOverrides?: SalaryTimeframeOverrides,
 ): string | null {
   const formatted = sdkFormatSalaryRange(
     language,
@@ -49,17 +36,19 @@ export function formatJobSalary(
     max,
     timeframe,
     currency,
-    timeframeOverrides,
-  ) as SalaryRangeResult;
+  );
   if (!formatted) return null;
-  if (typeof formatted === 'string') return formatted;
 
   // Timeframe first, then the bound chrome wraps the whole phrase — "From
-  // $90K / year", not "From $90K" / "year".
-  const amount = formatted.timeframe
+  // $90K / year", not "From $90K" / "year". Map the wire enum through the
+  // catalog; never paste `per_year` into the UI.
+  const unit = formatted.timeframe
+    ? salaryTimeframeLabel(formatted.timeframe)
+    : null;
+  const amount = unit
     ? m.jobSalary_perTimeframe({
         amount: formatted.text,
-        unit: formatted.timeframe,
+        unit,
       })
     : formatted.text;
 

@@ -94,7 +94,13 @@ function CompanyCategorySalaryPage() {
       x.companySlug,
       salary.categoryCanonicalSlug,
     ),
-    range: formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(
+        locale,
+        x.avgSalaryMin,
+        x.avgSalaryMax,
+        salary.currency,
+      ) ?? '',
     jobCount: x.jobCount,
     logoPath: x.logoPath,
   }));
@@ -125,7 +131,7 @@ function CompanyCategorySalaryPage() {
           },
           { name: salary.categoryName },
         ],
-        seo.language
+        seo.language,
       )}
       title={heading}
     >
@@ -139,7 +145,8 @@ function CompanyCategorySalaryPage() {
                   avgMax: salary.overallSalary.avgMax,
                   jobCount: salary.overallSalary.jobCount,
                 },
-                board.language
+                board.language,
+                salary.currency,
               )}
             />
           ) : null}
@@ -149,7 +156,8 @@ function CompanyCategorySalaryPage() {
               <SenioritySalaryTable
                 vm={toSeniorityTableVM(
                   salary.bySeniority,
-                  board.language
+                  board.language,
+                  salary.currency,
                 )}
               />
             </PageSection>
@@ -161,7 +169,7 @@ function CompanyCategorySalaryPage() {
                 category: salary.categoryName,
               }),
               competitorItems,
-              seo.language
+              seo.language,
             )}
           />
           <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language)} />

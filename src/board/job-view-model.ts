@@ -9,10 +9,7 @@
  * render from `JobCardVM` alone and import nothing from `@cavuno/board*` —
  * so restructuring a card is pure markup over this stable contract.
  */
-import {
-  formatPublishedRelativeDate,
-  fullJobToCard,
-} from '@cavuno/board/format';
+import { formatPublishedRelativeDate } from '@cavuno/board/format';
 import {
   jobDetailPath,
   jobsCategoryPath,
@@ -26,7 +23,7 @@ import { deriveSummary } from '@/lib/derive-summary';
 import { enumLabel } from '@/lib/enum-labels';
 import { cardLocationLabel } from '@/lib/location-labels';
 import { formatJobSalary } from '@/lib/salary-display';
-import type { PublicJob, PublicJobCard } from '@cavuno/board';
+import type { PublicJobCard } from '@cavuno/board';
 
 export interface JobCardTagVM {
   key: string;
@@ -99,9 +96,7 @@ export function toJobCardVM(job: PublicJobCard, language: string): JobCardVM {
     job.salaryTimeframe,
     job.salaryCurrency,
   );
-  const workplaceLabel = job.remoteOption
-    ? enumLabel(job.remoteOption)
-    : null;
+  const workplaceLabel = job.remoteOption ? enumLabel(job.remoteOption) : null;
   const placeLabel =
     job.remoteOption === 'remote' ? job.remoteLocationLabel : job.locationLabel;
   const locationLabel = [
@@ -143,25 +138,25 @@ export function toJobCardVM(job: PublicJobCard, language: string): JobCardVM {
 }
 
 /**
- * Card VM for a saved-jobs row. The saved-list embed is a slimmer projection
- * than the `PublicJob` type promises — the arrays the card pipeline
- * dereferences (`officeLocations`, `categories`, `skills`) can be absent on
- * the wire — so they are defaulted before the SDK card mapper runs. Returns
- * `null` when a row still cannot map, so one stale embed never fails the
- * whole saved-jobs page.
+ * Card VM for a saved-jobs row. `me/saved-jobs` embeds a `PublicJobCard`
+ * (same slim card as listings) — map with the same card view-model; do not
+ * convert a full job. Defensive defaults for arrays keep a partial embed from
+ * taking down the page. Returns `null` when a row cannot map at all.
  */
 export function toSavedJobCardVM(
-  job: PublicJob,
+  job: PublicJobCard | null | undefined,
   language: string,
 ): JobCardVM | null {
+  if (!job) return null;
   try {
-    const card = fullJobToCard(language, {
-      ...job,
-      officeLocations: job.officeLocations ?? [],
-      categories: job.categories ?? [],
-      skills: job.skills ?? [],
-    });
-    return toJobCardVM(card, language);
+    return toJobCardVM(
+      {
+        ...job,
+        categories: job.categories ?? [],
+        skills: job.skills ?? [],
+      },
+      language,
+    );
   } catch {
     return null;
   }

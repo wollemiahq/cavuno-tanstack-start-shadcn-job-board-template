@@ -42,7 +42,9 @@ function SalarySkillsIndex() {
   const items: RailItem[] = skills.map((s) => ({
     name: s.name,
     href: salarySkillPath(s.slug),
-    range: formatSalaryRange(locale, s.avgSalaryMin, s.avgSalaryMax),
+    range:
+      formatSalaryRange(locale, s.avgSalaryMin, s.avgSalaryMax, s.currency) ??
+      '',
     jobCount: s.jobCount,
   }));
 
@@ -54,7 +56,7 @@ function SalarySkillsIndex() {
           { name: crumbs.salaries, href: BOARD_PATHS.salaries },
           { name: crumbs.skills },
         ],
-        seo.language
+        seo.language,
       )}
       title={m.salaryHub_skillsHeading()}
     >

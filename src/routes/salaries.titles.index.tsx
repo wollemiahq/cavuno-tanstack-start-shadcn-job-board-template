@@ -42,7 +42,9 @@ function SalaryTitlesIndex() {
   const items: RailItem[] = titles.map((t) => ({
     name: t.name,
     href: salaryTitlePath(t.slug),
-    range: formatSalaryRange(locale, t.avgSalaryMin, t.avgSalaryMax),
+    range:
+      formatSalaryRange(locale, t.avgSalaryMin, t.avgSalaryMax, t.currency) ??
+      '',
     jobCount: t.jobCount,
   }));
 
@@ -54,7 +56,7 @@ function SalaryTitlesIndex() {
           { name: crumbs.salaries, href: BOARD_PATHS.salaries },
           { name: m.salaryHub_jobTitlesCrumbLabel() },
         ],
-        seo.language
+        seo.language,
       )}
       title={m.salaryHub_titlesHeading()}
     >

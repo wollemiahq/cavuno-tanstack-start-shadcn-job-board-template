@@ -884,9 +884,11 @@ export const getCompanySalarySummary = createServerFn({ method: 'GET' })
             0,
             COMPANY_SALARY_SUMMARY_CATEGORIES,
           ),
+          currency: salary.currency,
         };
       } catch (error) {
-        if (isNotFound(error)) return { overallSalary: null, byCategory: [] };
+        if (isNotFound(error))
+          return { overallSalary: null, byCategory: [], currency: null };
         throw error;
       }
     }),

@@ -1,28 +1,19 @@
 /**
  * Salary VIEW-MODEL — the Layer-1b seam for the salary block. These mappers
- * are the only place SDK formatters (`formatRange`,
- * `formatUsd`), taxonomy label resolution (`enumLabel`) and i18n copy
- * (the route-owned copy resolvers) touch the salary sections. Each maps raw
- * route data to a
- * plain, fully-resolved view-model.
+ * are the only place SDK formatters (`formatSalaryStat`,
+ * `formatSalaryStatRange`), taxonomy label resolution (`enumLabel`) and i18n
+ * copy (the route-owned copy resolvers) touch the salary sections. Each maps
+ * raw route data to a plain, fully-resolved view-model.
  *
  * The presentational sections (`OverallSalaryCard`, `SenioritySalaryTable`,
  * `SalaryRail`, `SalaryFaq`, `SalaryBreadcrumb`) render from these VMs alone
  * and import nothing from `@cavuno/board*` or `#/copy` — so restructuring a
  * salary page is pure markup over these stable contracts.
+ *
+ * Currency is required for any salary figure — missing currency yields null
+ * (never invent USD).
  */
-import {
-  formatSalaryStatRange as formatRange,
-  formatSalaryStatUsd as formatUsd,
-} from '@cavuno/board/format';
-import {
-  salaryCompanyCategoryTitleFrame,
-  salaryCompanyTitleFrame,
-  salaryEntityInPlaceTitleFrame,
-  salaryEntityTitleFrame,
-  salaryPlaceTitleFrame,
-} from '@/lib/salary-frames';
-import { enumLabel } from '@/lib/enum-labels';
+import { formatSalaryStat, formatSalaryStatRange } from '@cavuno/board/format';
 import {
   companySalaryPath,
   salaryLocationPath,
@@ -30,17 +21,28 @@ import {
   salaryTitlePath,
 } from '@cavuno/board/paths';
 
+import { enumLabel } from '@/lib/enum-labels';
+import {
+  salaryCompanyCategoryTitleFrame,
+  salaryCompanyTitleFrame,
+  salaryEntityInPlaceTitleFrame,
+  salaryEntityTitleFrame,
+  salaryPlaceTitleFrame,
+} from '@/lib/salary-frames';
+
 /**
  * Presentation re-export of the SDK range formatter. Route modules must not
  * import `@cavuno/board/seo` (head/meta lives in route-owned server pages);
  * components that need a formatted range for rails call this mapper helper.
+ * Currency comes from the salary read model — never hardcoded.
  */
 export function formatSalaryRange(
   language: string,
   min: number,
   max: number,
-): string {
-  return formatRange(language, min, max);
+  currency: string | null | undefined,
+): string | null {
+  return formatSalaryStatRange(language, min, max, currency);
 }
 
 import { entityCopy } from '@/copy-groups/entity';
@@ -104,8 +106,8 @@ export function salaryLocationSkillsPath(placeSlug: string): string {
 
 /**
  * Salary page `<title>` sentence frames — whole Paraglide ICU sentences
- * with named parameters. Numbers arrive pre-formatted (`formatRange`); the
- * frame supplies the words. The visible H1 stays a starter copy key — only
+ * with named parameters. Numbers arrive pre-formatted (`formatSalaryStatRange`);
+ * the frame supplies the words. The visible H1 stays a starter copy key — only
  * the metadata titles route through here.
  */
 export function salaryEntityTitle(
@@ -177,6 +179,7 @@ export interface OverallSalaryVM {
 export function toOverallSalaryVM(
   overall: OverallSalary,
   language: string,
+  currency: string | null | undefined,
 ): OverallSalaryVM {
   const entity = entityCopy(language);
   const copy = salaryCopy(language);
@@ -187,23 +190,32 @@ export function toOverallSalaryVM(
 
   const stats: SalaryStatVM[] = [];
   if (overall.p25Min !== undefined) {
-    stats.push({
-      label: copy.comparisonPercentile25Label,
-      value: formatUsd(language, overall.p25Min),
-    });
+    const value = formatSalaryStat(language, overall.p25Min, currency);
+    if (value !== null) {
+      stats.push({
+        label: copy.comparisonPercentile25Label,
+        value,
+      });
+    }
   }
   if (median !== null) {
-    stats.push({
-      label: copy.medianLabel,
-      value: formatUsd(language, median),
-      emphasis: true,
-    });
+    const value = formatSalaryStat(language, median, currency);
+    if (value !== null) {
+      stats.push({
+        label: copy.medianLabel,
+        value,
+        emphasis: true,
+      });
+    }
   }
   if (overall.p75Max !== undefined) {
-    stats.push({
-      label: copy.comparisonPercentile75Label,
-      value: formatUsd(language, overall.p75Max),
-    });
+    const value = formatSalaryStat(language, overall.p75Max, currency);
+    if (value !== null) {
+      stats.push({
+        label: copy.comparisonPercentile75Label,
+        value,
+      });
+    }
   }
   stats.push({
     label: copy.basedOnLabel,
@@ -212,7 +224,13 @@ export function toOverallSalaryVM(
 
   return {
     headlineLabel: copy.comparisonHeadlineAverage,
-    headlineValue: formatRange(language, overall.avgMin, overall.avgMax),
+    headlineValue:
+      formatSalaryStatRange(
+        language,
+        overall.avgMin,
+        overall.avgMax,
+        currency,
+      ) ?? '',
     perYearSuffix: copy.perYearSuffix,
     stats,
   };
@@ -244,6 +262,7 @@ export interface SeniorityTableVM {
 export function toSeniorityTableVM(
   rows: SeniorityRow[],
   language: string,
+  currency: string | null | undefined,
 ): SeniorityTableVM {
   const copy = salaryCopy(language);
   return {
@@ -255,13 +274,22 @@ export function toSeniorityTableVM(
     },
     rows: rows.map((r) => ({
       key: r.seniority,
-      level:
-        enumLabel(r.seniority) ??
-        r.seniority.replace(/[-_]/g, ' '),
-      avg: formatRange(language, r.avgSalaryMin, r.avgSalaryMax),
+      level: enumLabel(r.seniority) ?? r.seniority.replace(/[-_]/g, ' '),
+      avg:
+        formatSalaryStatRange(
+          language,
+          r.avgSalaryMin,
+          r.avgSalaryMax,
+          currency,
+        ) ?? '',
       baseline:
         r.boardAvgMin !== null && r.boardAvgMax !== null
-          ? formatRange(language, r.boardAvgMin, r.boardAvgMax)
+          ? (formatSalaryStatRange(
+              language,
+              r.boardAvgMin,
+              r.boardAvgMax,
+              currency,
+            ) ?? '—')
           : '—',
       diff:
         r.diffPercent !== null

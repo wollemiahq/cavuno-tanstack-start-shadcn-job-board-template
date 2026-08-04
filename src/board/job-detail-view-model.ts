@@ -159,10 +159,7 @@ export function toJobDetailVM(
   const education =
     job.educationRequirements.length > 0
       ? job.educationRequirements
-          .map(
-            (value) =>
-              enumLabel(value) ?? value.replace(/_/g, ' '),
-          )
+          .map((value) => enumLabel(value) ?? value.replace(/_/g, ' '))
           .join(', ')
       : null;
 
@@ -183,23 +180,38 @@ export function toJobDetailVM(
   if (experience)
     facts.push({ label: copy.experienceLabel, value: experience });
 
-  // 4.0.0 keys definitions by model (`customFields.job`); 3.2.0 is a flat array.
+  // 4.0.0 keys definitions by model (`customFields.job`).
   const customFieldDefinitions = Array.isArray(customFields)
     ? customFields
     : customFields.job;
   const customFieldVms: JobDetailCustomFieldVM[] = resolveCustomFieldDisplay(
+    language,
     customFieldDefinitions,
     job.customFieldValues,
-  ).map((entry) => ({
-    key: entry.key,
-    label: entry.label,
-    value:
-      entry.kind === 'boolean'
-        ? entry.value
-          ? copy.customFieldYesLabel
-          : copy.customFieldNoLabel
-        : entry.value,
-  }));
+  ).map((entry) => {
+    let value: string;
+    if (entry.kind === 'boolean') {
+      value = entry.value ? copy.customFieldYesLabel : copy.customFieldNoLabel;
+    } else if (entry.kind === 'number') {
+      try {
+        value = new Intl.NumberFormat(language).format(entry.value);
+      } catch {
+        value = String(entry.value);
+      }
+    } else if (entry.kind === 'multi_select') {
+      try {
+        value = new Intl.ListFormat(language, {
+          style: 'long',
+          type: 'conjunction',
+        }).format(entry.values);
+      } catch {
+        value = entry.values.join(', ');
+      }
+    } else {
+      value = entry.value;
+    }
+    return { key: entry.key, label: entry.label, value };
+  });
 
   const website = company?.website
     ? /^https?:\/\//i.test(company.website)
@@ -219,14 +231,13 @@ export function toJobDetailVM(
       }
     : null;
 
-  const salaryLabel =
-    formatJobSalary(
-      language,
-      job.salaryMin,
-      job.salaryMax,
-      job.salaryTimeframe,
-      job.salaryCurrency,
-    );
+  const salaryLabel = formatJobSalary(
+    language,
+    job.salaryMin,
+    job.salaryMax,
+    job.salaryTimeframe,
+    job.salaryCurrency,
+  );
   const published = formatPublishedRelativeDate(language, job.publishedAt);
   // Resolve remote work-permit ISO codes to country names the same way the
   // card mapper does (the SDK's card location label reads names the API
@@ -285,15 +296,11 @@ export function toJobDetailVM(
     companyAvatarName: company?.name ?? job.title,
     sector: job.categories[0]?.name ?? null,
     locationLabel: location,
-    workplaceLabel: job.remoteOption
-      ? enumLabel(job.remoteOption)
-      : null,
+    workplaceLabel: job.remoteOption ? enumLabel(job.remoteOption) : null,
     employmentTypeLabel: job.employmentType
       ? enumLabel(job.employmentType)
       : null,
-    seniorityLabel: job.seniority
-      ? enumLabel(job.seniority)
-      : null,
+    seniorityLabel: job.seniority ? enumLabel(job.seniority) : null,
     salaryLabel,
     publishedLabel: published ? copy.posted(published) : null,
     canonicalUrl: job.links?.public ?? null,

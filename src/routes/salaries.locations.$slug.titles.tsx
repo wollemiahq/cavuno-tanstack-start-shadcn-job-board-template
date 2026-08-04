@@ -62,7 +62,8 @@ function LocationTitlesPage() {
   const items: RailItem[] = data.titles.map((t) => ({
     name: t.name,
     href: salaryTitleInLocationPath(t.slug, data.canonicalSlug),
-    range: formatSalaryRange(locale, t.avgSalaryMin, t.avgSalaryMax),
+    range:
+      formatSalaryRange(locale, t.avgSalaryMin, t.avgSalaryMax, null) ?? '',
     jobCount: t.jobCount,
   }));
   const heading = m.salaryDetail_titlesInPlaceHeading({
@@ -82,7 +83,7 @@ function LocationTitlesPage() {
           },
           { name: crumbs.titles },
         ],
-        seo.language
+        seo.language,
       )}
       title={heading}
     >
@@ -91,7 +92,7 @@ function LocationTitlesPage() {
           vm={toSalaryRailVM(
             m.salaryDetail_jobTitlesLabel(),
             items,
-            seo.language
+            seo.language,
           )}
         />
       ) : (

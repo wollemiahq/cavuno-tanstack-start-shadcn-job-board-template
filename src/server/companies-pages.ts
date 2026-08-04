@@ -19,10 +19,8 @@ import {
   companySalaryJsonLd,
   createBreadcrumbJsonLd,
   faqJsonLd,
-  formatRange,
+  formatSalaryStatRange,
 } from '@cavuno/board/seo';
-
-import { composeSalaryFaqs } from '@/lib/salary-faq';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
@@ -39,6 +37,7 @@ import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { composeSalaryFaqs } from '@/lib/salary-faq';
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -400,10 +399,11 @@ export const getCompanySalariesPage = createServerFn({ method: 'GET' })
       ]);
       const locale = seo.language;
       const range = salary.overallSalary
-        ? formatRange(
+        ? formatSalaryStatRange(
             locale,
             salary.overallSalary.avgMin,
             salary.overallSalary.avgMax,
+            salary.currency,
           )
         : null;
       const head = {
@@ -439,11 +439,18 @@ export const getCompanySalariesPage = createServerFn({ method: 'GET' })
         locale,
         salary.companyName,
         salary.overallSalary,
+        salary.currency,
       );
-      const faqs = composeSalaryFaqs(faqEntries)
+      const faqs = composeSalaryFaqs(faqEntries);
       const jsonLd = asJsonObjects(
         [
-          companySalaryJsonLd(locale, salary),
+          companySalaryJsonLd(salary, {
+            occupationUrl: ({ categorySlug }) =>
+              boardUrl(
+                seo.origin,
+                companyCategorySalaryPath(salary.companySlug, categorySlug),
+              ),
+          }),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
             { label: c.home, href: seo.origin },
@@ -482,10 +489,11 @@ export const getCompanyCategorySalaryPage = createServerFn({ method: 'GET' })
       ]);
       const locale = seo.language;
       const range = salary.overallSalary
-        ? formatRange(
+        ? formatSalaryStatRange(
             locale,
             salary.overallSalary.avgMin,
             salary.overallSalary.avgMax,
+            salary.currency,
           )
         : null;
       const head = {
@@ -534,11 +542,16 @@ export const getCompanyCategorySalaryPage = createServerFn({ method: 'GET' })
         category: salary.categoryName,
         company: salary.companyName,
       });
-      const faqEntries = buildSalaryFaq(locale, label, salary.overallSalary);
-      const faqs = composeSalaryFaqs(faqEntries)
+      const faqEntries = buildSalaryFaq(
+        locale,
+        label,
+        salary.overallSalary,
+        salary.currency,
+      );
+      const faqs = composeSalaryFaqs(faqEntries);
       const jsonLd = asJsonObjects(
         [
-          companyCategorySalaryJsonLd(locale, salary),
+          companyCategorySalaryJsonLd(salary),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
             { label: c.home, href: seo.origin },

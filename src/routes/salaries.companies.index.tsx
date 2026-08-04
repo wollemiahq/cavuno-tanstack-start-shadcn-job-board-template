@@ -42,7 +42,9 @@ function SalaryCompaniesIndex() {
   const items: RailItem[] = companies.map((c) => ({
     name: c.companyName,
     href: companySalaryPath(c.companySlug),
-    range: formatSalaryRange(locale, c.avgSalaryMin, c.avgSalaryMax),
+    range:
+      formatSalaryRange(locale, c.avgSalaryMin, c.avgSalaryMax, c.currency) ??
+      '',
     jobCount: c.jobCount,
     logoPath: c.logoPath,
   }));
@@ -55,7 +57,7 @@ function SalaryCompaniesIndex() {
           { name: crumbs.salaries, href: BOARD_PATHS.salaries },
           { name: crumbs.companies },
         ],
-        seo.language
+        seo.language,
       )}
       title={m.salaryHub_companiesHeading()}
     >
