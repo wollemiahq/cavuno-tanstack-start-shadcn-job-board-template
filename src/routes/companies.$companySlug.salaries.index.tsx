@@ -125,7 +125,7 @@ const rootApi = getRouteApi('__root__');
 
 function CompanySalaryPage() {
   const { salary, company, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = boardCopy(seo.language).breadcrumbs;
   const { board } = rootApi.useLoaderData();
   const locale = seo.language;
 
@@ -197,7 +197,6 @@ function CompanySalaryPage() {
                 jobCount: salary.overallSalary.jobCount,
               },
               board.language,
-              seo.labels,
             )}
           />
         ) : null}
@@ -211,7 +210,6 @@ function CompanySalaryPage() {
               vm={toSeniorityTableVM(
                 salary.bySeniority,
                 board.language,
-                seo.labels,
               )}
             />
           </section>
@@ -222,7 +220,6 @@ function CompanySalaryPage() {
             m.companySalaries_salariesByRoleLabel(),
             categoryItems,
             seo.language,
-            seo.labels,
           )}
         />
         <SalaryRail
@@ -230,7 +227,6 @@ function CompanySalaryPage() {
             m.companySalaries_topLocationsLabel(),
             locationItems,
             seo.language,
-            seo.labels,
           )}
         />
         <SalaryRail
@@ -238,10 +234,9 @@ function CompanySalaryPage() {
             m.companySalaries_otherCompaniesLabel(),
             competitorItems,
             seo.language,
-            seo.labels,
           )}
         />
-        <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
+        <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language)} />
       </div>
     </CompanySectionShell>
   );

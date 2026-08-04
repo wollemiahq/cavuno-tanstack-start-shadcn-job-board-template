@@ -163,7 +163,7 @@ function AuthorPage() {
   const navigate = useNavigate({ from: '/blog/author/$authorSlug' });
   const router = useRouter();
   const permalink = boardUrl(seo.origin, blogAuthorPath(author.slug));
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = boardCopy(seo.language);
   const crumbs = copy.breadcrumbs;
   const jsonLd = [
     createAuthorProfileJsonLd({

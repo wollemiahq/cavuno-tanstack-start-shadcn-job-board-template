@@ -39,7 +39,6 @@ import { useSearchSelection } from '@/hooks/use-search-selection';
 import { listingPageHref } from '@/lib/pagination';
 import type { RelatedSearch } from '@cavuno/board';
 import type { ListingFilters } from '@cavuno/board/filters';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 type AdPlacement = {
   label: string;
@@ -94,7 +93,6 @@ export function JobSearchPage({
   pageSize,
   filters,
   language,
-  labels,
   heading,
   relatedSearches,
   onFiltersChange,
@@ -116,7 +114,6 @@ export function JobSearchPage({
   pageSize: number;
   filters: ListingFilters;
   language: string;
-  labels?: BoardLabelOverrides;
   heading?: string;
   relatedSearches?: RelatedSearch[];
   onFiltersChange: (next: ListingFilters) => void;
@@ -149,7 +146,6 @@ export function JobSearchPage({
       pageSize={pageSize}
       heading={heading}
       language={language}
-      labels={labels}
     />
   );
   return (
@@ -164,7 +160,6 @@ export function JobSearchPage({
               <JobsFilterControls
                 filters={filters}
                 language={language}
-                labels={labels}
                 onChange={onFiltersChange}
               />
             </div>
@@ -288,11 +283,11 @@ export function JobSearchPage({
 
                   {relatedChips.length > 0 ? (
                     <section
-                      aria-label={relatedSearchesTitle(labels)}
+                      aria-label={relatedSearchesTitle()}
                       className="border-border space-y-3 border-t pt-4"
                     >
                       <h2 className="text-sm font-semibold">
-                        {relatedSearchesTitle(labels)}
+                        {relatedSearchesTitle()}
                       </h2>
                       <div className="flex flex-wrap gap-1.5">
                         {relatedChips.map((chip) => (

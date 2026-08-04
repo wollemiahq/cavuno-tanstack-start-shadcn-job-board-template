@@ -147,7 +147,7 @@ const rootApi = getRouteApi('__root__');
 
 function CompanyCategorySalaryPage() {
   const { salary, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = boardCopy(seo.language).breadcrumbs;
   const { board } = rootApi.useLoaderData();
   const locale = seo.language;
   const label = m.companySalaries_categoryAtCompanyLabel({
@@ -215,7 +215,6 @@ function CompanyCategorySalaryPage() {
           { name: salary.categoryName },
         ],
         seo.language,
-        seo.labels,
       )}
       title={heading}
     >
@@ -231,7 +230,6 @@ function CompanyCategorySalaryPage() {
                   jobCount: salary.overallSalary.jobCount,
                 },
                 board.language,
-                seo.labels,
               )}
             />
           ) : null}
@@ -242,7 +240,6 @@ function CompanyCategorySalaryPage() {
                 vm={toSeniorityTableVM(
                   salary.bySeniority,
                   board.language,
-                  seo.labels,
                 )}
               />
             </PageSection>
@@ -255,10 +252,9 @@ function CompanyCategorySalaryPage() {
               }),
               competitorItems,
               seo.language,
-              seo.labels,
             )}
           />
-          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
+          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language)} />
         </>
       ) : (
         <SalaryEmptyState

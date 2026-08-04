@@ -64,7 +64,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
     ...actual,
     getRouteApi: () => ({
       useLoaderData: () => ({
-        board: { language: 'en-AU', labels: undefined },
+        board: { language: 'en-AU' },
       }),
     }),
     Link: ({

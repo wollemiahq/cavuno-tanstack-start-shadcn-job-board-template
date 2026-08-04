@@ -200,7 +200,7 @@ function EmbedJobsPage() {
           {jobs.map((job) => (
             <JobCard
               key={job.id}
-              vm={toJobCardVM(job, board.language, board.labels)}
+              vm={toJobCardVM(job, board.language)}
             />
           ))}
         </div>

@@ -299,10 +299,10 @@ function RootLayout() {
   const companyMarketSuggestions = useCompanyMarketSuggestions(
     headerSearch.scope === 'companies',
   );
-  const copy = boardCopy(board.language, board.labels);
+  const copy = boardCopy(board.language);
   const shellBreadcrumb = resolveShellBreadcrumb({
     pathname: location.pathname,
-    labels: copy.breadcrumbs,
+    labels: copy.breadcrumbs as unknown as import('@/lib/shell-breadcrumb').ShellBreadcrumbLabels,
     // Authed surfaces get footer trails too — labels from the template
     // catalogs (the SDK's copy.breadcrumbs only knows public segments).
     privateLabels: {
@@ -426,7 +426,6 @@ function RootLayout() {
       logoUrl={board.logoUrl}
       user={user}
       language={board.language}
-      labels={board.labels}
       features={board.features}
       hasAccessGrant={hasAccessGrant}
       employerCompanies={employerCompanies}
@@ -502,7 +501,6 @@ function RootLayout() {
             boardName={board.name}
             logoUrl={board.logoUrl}
             language={board.language}
-            labels={board.labels}
             showCavunoBranding={board.showCavunoBranding}
             primaryDomain={board.primaryDomain}
             slug={board.slug}

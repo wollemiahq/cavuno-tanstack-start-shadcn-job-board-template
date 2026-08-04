@@ -116,7 +116,7 @@ function MarketPage() {
   const { market, page, markets, seo } = Route.useLoaderData();
   const search = Route.useSearch();
   const params = Route.useParams();
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = boardCopy(seo.language);
   const crumbs = copy.breadcrumbs;
   const jsonLd = [
     createBreadcrumbJsonLd([

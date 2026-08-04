@@ -30,25 +30,6 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
     );
   });
 
-  it('applies operator label overrides over the messages', () => {
-    overwriteGetLocale(() => 'de');
-    const copy = boardCopy('en', {
-      jobCardLabels: { featuredLabel: 'Top Job' },
-    });
-    expect(copy.jobCard.featuredLabel).toBe('Top Job');
-    // Empty/whitespace overrides never blank a label.
-    expect(
-      boardCopy('en', { jobCardLabels: { featuredLabel: '  ' } }).jobCard
-        .featuredLabel,
-    ).toBe('Hervorgehoben');
-    // Overrides only apply to string keys — never clobber parameterized fns.
-    expect(
-      boardCopy('en', {
-        jobCardLabels: { experienceYears: 'X' },
-      }).jobDetail.experienceYears(2),
-    ).toBe('2+ Jahre');
-  });
-
   it('keeps every public UiCopy message in the statically tree-shakeable map', () => {
     const publicGroups = new Set([
       'alerts',
@@ -96,9 +77,8 @@ describe('the copy seam is the only catalog call site', () => {
     });
   }
 
-  it('no file imports uiCopy except src/copy.ts', () => {
+  it('no file imports the removed SDK uiCopy catalog', () => {
     const offenders = walk(SRC).filter((path) => {
-      if (path === join(SRC, 'copy.ts')) return false;
       const source = readFileSync(path, 'utf8');
       return /\buiCopy\b/.test(source) && /@cavuno\/board\/format/.test(source);
     });

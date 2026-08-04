@@ -10,13 +10,13 @@
  * so restructuring a card is pure markup over this stable contract.
  */
 import {
-  cardLocationLabel,
-  fieldLabel,
   formatPublishedRelativeDate,
   formatSalaryRange,
   fullJobToCard,
-  type BoardLabelOverrides,
 } from '@cavuno/board/format';
+
+import { enumLabel } from '@/lib/enum-labels';
+import { cardLocationLabel } from '@/lib/location-labels';
 import {
   jobDetailPath,
   jobsCategoryPath,
@@ -79,7 +79,6 @@ export interface JobCardVM {
 export function toJobCardVM(
   job: PublicJobCard,
   language: string,
-  labels?: BoardLabelOverrides,
 ): JobCardVM {
   const company = job.company;
 
@@ -105,7 +104,7 @@ export function toJobCardVM(
     job.salaryCurrency,
   );
   const workplaceLabel = job.remoteOption
-    ? fieldLabel(language, job.remoteOption, labels)
+    ? enumLabel(job.remoteOption)
     : null;
   const placeLabel =
     job.remoteOption === 'remote' ? job.remoteLocationLabel : job.locationLabel;
@@ -116,7 +115,7 @@ export function toJobCardVM(
     .filter(Boolean)
     .join(' ');
   const compLine =
-    [salaryLabel, cardLocationLabel(language, job)]
+    [salaryLabel, cardLocationLabel(job)]
       .filter(Boolean)
       .join(' · ') || null;
 
@@ -140,7 +139,7 @@ export function toJobCardVM(
     locationLabel,
     summary: deriveSummary(job.description),
     isFeatured: job.isFeatured,
-    featuredLabel: boardCopy(language, labels).jobCard.featuredLabel,
+    featuredLabel: boardCopy(language).jobCard.featuredLabel,
     postedAtLabel: formatPublishedRelativeDate(language, job.publishedAt),
     tags: [
       ...job.categories.map((c) => tagPill('category', c)),
@@ -160,7 +159,6 @@ export function toJobCardVM(
 export function toSavedJobCardVM(
   job: PublicJob,
   language: string,
-  labels?: BoardLabelOverrides,
 ): JobCardVM | null {
   try {
     const card = fullJobToCard(language, {
@@ -169,7 +167,7 @@ export function toSavedJobCardVM(
       categories: job.categories ?? [],
       skills: job.skills ?? [],
     });
-    return toJobCardVM(card, language, labels);
+    return toJobCardVM(card, language);
   } catch {
     return null;
   }

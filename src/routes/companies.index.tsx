@@ -83,7 +83,7 @@ export const Route = createFileRoute('/companies/')({
 function CompaniesPage() {
   const { page, markets, seo } = Route.useLoaderData();
   const search = Route.useSearch();
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = boardCopy(seo.language);
   const crumbs = copy.breadcrumbs;
   const jsonLd = [
     createBreadcrumbJsonLd([

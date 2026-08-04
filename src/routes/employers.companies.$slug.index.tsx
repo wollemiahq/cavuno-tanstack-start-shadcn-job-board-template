@@ -138,7 +138,7 @@ function CompanyJobsPage() {
   const { slug, membership, jobs, statsIndex, timeseries } =
     Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
-  const copy = boardCopy(board.language, board.labels);
+  const copy = boardCopy(board.language);
   const company = membership?.company;
   const companyName = company?.name ?? slug;
   // "Active" = live on the public board (published and not past expiry).

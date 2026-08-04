@@ -23,7 +23,6 @@ import { m } from '../../paraglide/messages';
 
 import {
   toApplyButtonVM,
-  type BoardLabelOverrides,
 } from '@/board/apply-view-model';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
@@ -37,7 +36,6 @@ export function ApplyButton({
   viewer,
   language,
   returnTo,
-  labels,
   onApply,
   alreadyApplied = false,
   applicationsHref = '/me/applications',
@@ -53,8 +51,6 @@ export function ApplyButton({
   language: string;
   /** Complete internal URL to restore after candidate authentication. */
   returnTo: string;
-  /** Operator label overrides from `board.context().labels`. */
-  labels?: BoardLabelOverrides;
   /**
    * Perform the native apply. Throw an error whose message contains
    * `EMAIL_UNVERIFIED` to route the candidate to the verify page (the
@@ -95,7 +91,6 @@ export function ApplyButton({
     viewer,
     applied: alreadyApplied || state === 'applied',
     language,
-    labels,
     nativeApplications,
   });
 

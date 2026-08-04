@@ -113,7 +113,7 @@ function LocationTree({
 
 function SalaryLocationsIndex() {
   const { locations, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = boardCopy(seo.language).breadcrumbs;
   const byParent = childrenByParent(locations);
   const hasLocations = (byParent.get(null) ?? []).length > 0;
 
@@ -143,7 +143,6 @@ function SalaryLocationsIndex() {
           { name: crumbs.locations },
         ],
         seo.language,
-        seo.labels,
       )}
       title={m.salaryHub_locationsHeading()}
     >

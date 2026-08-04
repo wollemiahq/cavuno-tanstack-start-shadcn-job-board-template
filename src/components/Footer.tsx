@@ -13,7 +13,6 @@ import { Container } from '@/components/layout/container';
 import { Badge } from '@/components/ui/badge';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { cn } from '@/lib/utils';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 /**
  * The board-context `footer` data group (hosted-footer parity slice) —
@@ -158,7 +157,6 @@ export default function Footer({
   boardName,
   logoUrl,
   language,
-  labels,
   showCavunoBranding,
   primaryDomain,
   slug,
@@ -174,7 +172,6 @@ export default function Footer({
   boardName: string;
   logoUrl: string | null;
   language: string;
-  labels?: BoardLabelOverrides;
   /**
    * Board-context flag (`board.context().showCavunoBranding`, default
    * true). Plan-gated server-side: lower-tier plans cannot set it false.
@@ -219,7 +216,7 @@ export default function Footer({
    */
   cookiePreferencesAction?: ReactNode;
 }) {
-  const copy = boardCopy(language, labels);
+  const copy = boardCopy(language);
 
   // ── For Candidates — operator-ordered system + custom links ──
   const navigationLinks = buildNavigationLinks({

@@ -128,7 +128,7 @@ function TagPage() {
   const location = useLocation();
   const navigate = useNavigate({ from: '/blog/tag/$tagSlug' });
   const router = useRouter();
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = boardCopy(seo.language);
   const crumbs = copy.breadcrumbs;
   const jsonLd = [
     createBreadcrumbJsonLd([

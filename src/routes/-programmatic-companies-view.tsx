@@ -46,7 +46,7 @@ export function ProgrammaticCompaniesView({
 }) {
   const navigate = useNavigate() as unknown as LooseNavigate;
   const { board } = rootApi.useLoaderData();
-  const copy = boardCopy(board.language, board.labels);
+  const copy = boardCopy(board.language);
   const marketOptions = includeSelectedCompanyMarket(markets, market);
   const selectedCompany = useSelectedCompany(
     page.data.some((company) => company.slug === search.selectedCompany)
@@ -105,7 +105,6 @@ export function ProgrammaticCompaniesView({
         <SelectedCompanyDetail
           state={selectedCompany}
           language={board.language}
-          labels={board.labels}
         />
       }
     />

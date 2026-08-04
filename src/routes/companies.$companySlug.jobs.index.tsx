@@ -173,7 +173,7 @@ function CompanyJobsPage() {
   const locationSuggestions = useLocationSuggestions(board.language);
   const navigate = Route.useNavigate();
   const currentHref = useLocation({ select: (location) => location.href });
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = boardCopy(seo.language);
   const crumbs = copy.breadcrumbs;
 
   const currentPage = search.page ?? 1;
@@ -235,10 +235,9 @@ function CompanyJobsPage() {
 
       <JobList
         jobs={page.data.map((job) =>
-          toJobCardVM(job, board.language, board.labels),
+          toJobCardVM(job, board.language),
         )}
         language={board.language}
-        labels={board.labels}
         variant="grid"
         compact
       />

@@ -129,7 +129,7 @@ function TalentProfilePage() {
   // the SAME matrix as the pane — no Board API call from the browser.
   const { user, board } = rootApi.useLoaderData();
   const location = useLocation();
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = boardCopy(seo.language);
   const vm = toTalentProfileVM(profile, seo.language, getTalentSearchLabels());
   const viewer: TalentDetailViewer =
     user === null

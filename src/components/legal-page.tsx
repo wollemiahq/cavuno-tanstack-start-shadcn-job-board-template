@@ -8,7 +8,6 @@ import { JsonLd } from '@/components/json-ld';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
 import type { PublicLegalPage } from '@cavuno/board';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 /**
  * Shared render for the legal/about surfaces. The starter owns the layout and
@@ -20,15 +19,13 @@ export function LegalPageView({
   origin,
   meta,
   language,
-  labels,
 }: {
   page: PublicLegalPage;
   origin: string;
   meta: LegalPageMeta;
   language: string;
-  labels?: BoardLabelOverrides;
 }) {
-  const crumbs = boardCopy(language, labels).breadcrumbs;
+  const crumbs = boardCopy(language).breadcrumbs;
   const url = `${origin}${meta.path}`;
   const jsonLd = [
     {

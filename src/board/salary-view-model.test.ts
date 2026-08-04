@@ -1,4 +1,4 @@
-import { fieldLabel } from '@cavuno/board/format';
+import { enumLabel } from '@/lib/enum-labels';
 import {
   companySalaryPath,
   salaryLocationPath,
@@ -126,7 +126,7 @@ describe('toSeniorityTableVM', () => {
 
   it('resolves the seniority key through the taxonomy label', () => {
     // Delegation-style: same SDK label call the mapper makes.
-    expect(vm.rows[0].level).toBe(fieldLabel('en', 'senior'));
+    expect(vm.rows[0].level).toBe(enumLabel('senior'));
   });
 
   it('renders a dash baseline when the board average is missing', () => {

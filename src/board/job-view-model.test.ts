@@ -1,8 +1,7 @@
-import {
-  cardLocationLabel,
-  fieldLabel,
-  formatSalaryRange,
-} from '@cavuno/board/format';
+import { formatSalaryRange } from '@cavuno/board/format';
+
+import { enumLabel } from '@/lib/enum-labels';
+import { cardLocationLabel } from '@/lib/location-labels';
 import { describe, expect, it } from 'vitest';
 
 import { toJobCardVM, toSavedJobCardVM } from './job-view-model';
@@ -58,7 +57,7 @@ describe('toJobCardVM', () => {
     );
     expect(vm.salaryLabel).toBe(expectedSalary);
     expect(vm.compLine).toBe(
-      [expectedSalary, cardLocationLabel('en', baseJob)].join(' · '),
+      [expectedSalary, cardLocationLabel(baseJob)].join(' · '),
     );
   });
 
@@ -71,7 +70,7 @@ describe('toJobCardVM', () => {
   });
 
   it('composes locationLabel from the place label and the SDK workplace label', () => {
-    expect(vm.locationLabel).toBe(`Worldwide (${fieldLabel('en', 'remote')})`);
+    expect(vm.locationLabel).toBe(`Worldwide (${enumLabel('remote')})`);
   });
 
   it('states when an on-site card is missing its physical location', () => {
@@ -86,7 +85,7 @@ describe('toJobCardVM', () => {
     );
 
     expect(missingLocation.locationLabel).toBe(
-      `Location not specified (${fieldLabel('en', 'on_site')})`,
+      `Location not specified (${enumLabel('on_site')})`,
     );
   });
 

@@ -130,7 +130,7 @@ function TalentDirectoryPage() {
   const search = Route.useSearch();
   const location = useLocation();
   const navigate = useNavigate({ from: '/talent/' });
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = boardCopy(seo.language);
   // Gate the detail-pane Message CTA by the viewer's role. A candidate cannot
   // cold-message another candidate; an employer's Message hands off to the
   // canonical profile (see resolveTalentDetailCta for the full matrix).

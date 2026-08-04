@@ -50,7 +50,6 @@ import { Route as TalentRoute } from './talent.index';
 const seo = {
   boardName: 'Acme Careers',
   language: 'en',
-  labels: undefined,
   origin: 'https://careers.acme.test',
 };
 

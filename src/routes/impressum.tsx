@@ -65,7 +65,6 @@ function ImpressumPage() {
       origin={seo.origin}
       meta={META}
       language={seo.language}
-      labels={seo.labels}
     />
   );
 }

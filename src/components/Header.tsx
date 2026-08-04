@@ -71,7 +71,6 @@ import type {
 import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { cn } from '@/lib/utils';
 import type { BoardUser, CompanyMembership } from '@cavuno/board';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 const navItemClassName =
   'relative flex min-w-16 flex-col items-center justify-center gap-0.5 border-b-2 border-transparent px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50';
@@ -376,7 +375,6 @@ export default function Header({
   logoUrl,
   user,
   language,
-  labels,
   features,
   hasAccessGrant = false,
   employerCompanies = null,
@@ -388,7 +386,6 @@ export default function Header({
   logoUrl: string | null;
   user: BoardUser | null;
   language: string;
-  labels?: BoardLabelOverrides;
   features: {
     candidates: boolean;
     employers: boolean;
@@ -409,7 +406,7 @@ export default function Header({
   };
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const copy = boardCopy(language, labels);
+  const copy = boardCopy(language);
   const talentDirectoryEnabled =
     features.talentDirectory || talentDirectoryVisibility === 'employers_only';
   const navLinks = [
@@ -439,10 +436,8 @@ export default function Header({
     },
   ] as const;
   const visibleNavLinks = navLinks.filter((item) => item.enabled);
-  const signInLabel =
-    labels?.jobCardLabels?.signInLabel || m.siteHeader_signInLabel();
-  const signUpLabel =
-    labels?.jobCardLabels?.signUpLabel || m.siteHeader_signUpLabel();
+  const signInLabel = m.siteHeader_signInLabel();
+  const signUpLabel = m.siteHeader_signUpLabel();
   const authEnabled = features.candidates || features.employers;
   const signUpHref = resolveSignupDestination(features);
   const postJob = features.publicJobSubmission ? (

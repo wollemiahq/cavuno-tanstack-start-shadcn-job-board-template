@@ -167,7 +167,7 @@ function CompanyPage() {
   const { company, jobs, similar, seo, salarySummary, hasSalaries } =
     Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = boardCopy(seo.language);
   const crumbs = copy.breadcrumbs;
 
   // Salary summary VMs condense the Salaries tab: the overall
@@ -181,7 +181,6 @@ function CompanyPage() {
           jobCount: salarySummary.overallSalary.jobCount,
         },
         board.language,
-        seo.labels,
       )
     : null;
   const salaryCategoryItems: RailItem[] = salarySummary.byCategory.map(
@@ -206,7 +205,6 @@ function CompanyPage() {
     undefined,
     salaryCategoryItems,
     seo.language,
-    seo.labels,
   );
 
   const canonical = `${seo.origin}/companies/${company.slug}`;
@@ -301,7 +299,7 @@ function CompanyPage() {
                 {previewJobs.map((job) => (
                   <JobCard
                     key={job.id}
-                    vm={toJobCardVM(job, board.language, board.labels)}
+                    vm={toJobCardVM(job, board.language)}
                     compact
                   />
                 ))}

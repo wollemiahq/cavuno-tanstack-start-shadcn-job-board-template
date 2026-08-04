@@ -81,7 +81,7 @@ export const Route = createFileRoute('/jobs/')({
       ? listingHead({
           ...loaderData.seo,
           path: '/jobs',
-          heading: boardCopy(loaderData.seo.language, loaderData.seo.labels)
+          heading: boardCopy(loaderData.seo.language)
             .jobSearch.headingJobs,
           count: loaderData.page.count,
         })
@@ -110,17 +110,17 @@ function JobsPage() {
           origin: seo.origin,
           breadcrumbs: [
             {
-              name: boardCopy(board.language, board.labels).breadcrumbs.home,
+              name: boardCopy(board.language).breadcrumbs.home,
               path: '/',
             },
-            { name: boardCopy(board.language, board.labels).breadcrumbs.jobs },
+            { name: boardCopy(board.language).breadcrumbs.jobs },
           ],
           jobs: page.data,
         })}
       />
       <JobSearchPage
         jobs={page.data.map((job) =>
-          toJobCardVM(job, board.language, board.labels),
+          toJobCardVM(job, board.language),
         )}
         count={page.count}
         gatedCount={page.gatedCount}
@@ -128,7 +128,6 @@ function JobsPage() {
         pageSize={JOBS_PAGE_SIZE}
         filters={search}
         language={board.language}
-        labels={board.labels}
         viewer={user ? { emailVerified: user.emailVerified } : null}
         onSaveJob={async (jobId) => {
           await saveJob({ data: { jobId } });
@@ -175,7 +174,6 @@ function JobsPage() {
       {board.features.jobAlerts ? (
         <JobAlertFloatingPrompt
           language={board.language}
-          labels={board.labels}
           defaults={jobAlertDefaultsFromSearch({
             keyword: search.q,
             source: 'board_home',

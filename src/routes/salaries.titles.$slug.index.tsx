@@ -136,7 +136,7 @@ const rootApi = getRouteApi('__root__');
 
 function TitleSalaryPage() {
   const { salary, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = boardCopy(seo.language).breadcrumbs;
   const { board } = rootApi.useLoaderData();
   const locale = seo.language;
 
@@ -211,7 +211,6 @@ function TitleSalaryPage() {
           { name: salary.categoryName },
         ],
         seo.language,
-        seo.labels,
       )}
       title={m.salaryDetail_titleHeading({ title: salary.categoryName })}
     >
@@ -229,7 +228,6 @@ function TitleSalaryPage() {
                   p75Max: salary.overallSalary.p75Max,
                 },
                 board.language,
-                seo.labels,
               )}
             />
           ) : null}
@@ -240,7 +238,6 @@ function TitleSalaryPage() {
                 vm={toSeniorityTableVM(
                   salary.bySeniority,
                   board.language,
-                  seo.labels,
                 )}
               />
             </PageSection>
@@ -251,7 +248,6 @@ function TitleSalaryPage() {
               m.salaryDetail_topCompanies(),
               companyItems,
               seo.language,
-              seo.labels,
             )}
           />
           {locationItems.length > 0 ? (
@@ -267,7 +263,7 @@ function TitleSalaryPage() {
               }
             >
               <SalaryRail
-                vm={toSalaryRailVM('', locationItems, seo.language, seo.labels)}
+                vm={toSalaryRailVM('', locationItems, seo.language)}
               />
             </PageSection>
           ) : null}
@@ -276,7 +272,6 @@ function TitleSalaryPage() {
               m.salaryDetail_topSkills(),
               skillItems,
               seo.language,
-              seo.labels,
             )}
           />
           <SalaryRail
@@ -284,10 +279,9 @@ function TitleSalaryPage() {
               m.salaryDetail_relatedTitles(),
               relatedItems,
               seo.language,
-              seo.labels,
             )}
           />
-          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
+          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language)} />
         </>
       ) : (
         <SalaryEmptyState title={m.salaryDetail_notFoundTitle()} />

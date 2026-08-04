@@ -97,7 +97,7 @@ export const Route = createFileRoute('/salaries/locations/$slug/')({
     // The visible shell trail can't derive the ancestor chain from the URL, so
     // this route injects its fully-resolved trail (Home › Salaries › Locations
     // › {ancestors…} › {place}). The shell renders it verbatim.
-    const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+    const crumbs = boardCopy(seo.language).breadcrumbs;
     const breadcrumbTrail = [
       { name: crumbs.home, href: BOARD_PATHS.home },
       { name: crumbs.salaries, href: BOARD_PATHS.salaries },
@@ -165,7 +165,7 @@ const rootApi = getRouteApi('__root__');
 
 function LocationSalaryPage() {
   const { salary, seo, hierarchy } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = boardCopy(seo.language).breadcrumbs;
   const { board } = rootApi.useLoaderData();
   const locale = seo.language;
 
@@ -234,7 +234,6 @@ function LocationSalaryPage() {
           ...hierarchyCrumbs,
         ],
         seo.language,
-        seo.labels,
       )}
       title={heading}
     >
@@ -254,7 +253,6 @@ function LocationSalaryPage() {
                   p75Max: salary.overallSalary.p75Max,
                 },
                 board.language,
-                seo.labels,
               )}
             />
           ) : null}
@@ -265,7 +263,6 @@ function LocationSalaryPage() {
                 m.salaryDetail_citiesInPlaceLabel({ place: salary.placeName }),
                 salary.childLocations.map(cityItem(locale)),
                 seo.language,
-                seo.labels,
               )}
             />
           ) : null}
@@ -277,7 +274,6 @@ function LocationSalaryPage() {
                 group.regionName,
                 group.cities.map(cityItem(locale)),
                 seo.language,
-                seo.labels,
               )}
             />
           ))}
@@ -288,7 +284,6 @@ function LocationSalaryPage() {
                 m.salaryDetail_otherLocations(),
                 salary.siblingLocations.map(cityItem(locale)),
                 seo.language,
-                seo.labels,
               )}
             />
           ) : null}
@@ -308,7 +303,7 @@ function LocationSalaryPage() {
               }
             >
               <SalaryRail
-                vm={toSalaryRailVM('', categoryItems, seo.language, seo.labels)}
+                vm={toSalaryRailVM('', categoryItems, seo.language)}
               />
             </PageSection>
           ) : null}
@@ -327,11 +322,11 @@ function LocationSalaryPage() {
               }
             >
               <SalaryRail
-                vm={toSalaryRailVM('', skillItems, seo.language, seo.labels)}
+                vm={toSalaryRailVM('', skillItems, seo.language)}
               />
             </PageSection>
           ) : null}
-          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
+          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language)} />
         </>
       ) : (
         <SalaryEmptyState

@@ -15,9 +15,7 @@
 import { resolveApplyAction } from '@cavuno/board';
 
 import { boardCopy } from '@/copy';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
 
-export type { BoardLabelOverrides };
 
 /** The resolved apply decision (discriminated on `kind`). */
 export type ApplyAction = ReturnType<typeof resolveApplyAction>;
@@ -43,7 +41,6 @@ export function toApplyButtonVM({
   viewer,
   applied,
   language,
-  labels,
   nativeApplications = true,
 }: {
   jobSlug: string | null;
@@ -52,7 +49,6 @@ export function toApplyButtonVM({
   /** `alreadyApplied` (server) OR the transient in-session applied state. */
   applied: boolean;
   language: string;
-  labels?: BoardLabelOverrides;
   /**
    * Board feature flag (default-on): `false` ⇒ external-applications-only.
    * The platform 422s a native apply, so a native-only job must NOT render a
@@ -62,7 +58,7 @@ export function toApplyButtonVM({
    */
   nativeApplications?: boolean;
 }): ApplyButtonVM {
-  const copy = boardCopy(language, labels).apply;
+  const copy = boardCopy(language).apply;
   const resolved = resolveApplyAction({
     jobSlug,
     applicationUrl,

@@ -12,11 +12,9 @@
  */
 import {
   countryOptions,
-  fieldLabel,
   formatPublishedRelativeDate,
   formatSalaryRange,
   resolveCustomFieldDisplay,
-  type BoardLabelOverrides,
 } from '@cavuno/board/format';
 import {
   companyPath,
@@ -24,9 +22,10 @@ import {
   jobsCategoryPath,
   jobsSkillPath,
 } from '@cavuno/board/paths';
-import { buildJobBreadcrumbs } from '@cavuno/board/seo';
 
 import { boardCopy } from '@/copy';
+import { enumLabel } from '@/lib/enum-labels';
+import { jobBreadcrumbItems } from '@/lib/job-breadcrumbs';
 import type { PublicBoard, PublicJob, PublicJobCard } from '@cavuno/board';
 
 export interface JobDetailChipVM {
@@ -118,9 +117,8 @@ export function toJobDetailVM(
   similar: PublicJobCard[],
   companyIntro: string | null,
   language: string,
-  labels?: BoardLabelOverrides,
 ): JobDetailVM {
-  const copy = boardCopy(language, labels).jobDetail;
+  const copy = boardCopy(language).jobDetail;
   const company = job.company;
 
   // Every emitted slug resolves — the platform guarantees it (ADR-0099), so
@@ -163,7 +161,7 @@ export function toJobDetailVM(
       ? job.educationRequirements
           .map(
             (value) =>
-              fieldLabel(language, value, labels) ?? value.replace(/_/g, ' '),
+              enumLabel(value) ?? value.replace(/_/g, ' '),
           )
           .join(', ')
       : null;
@@ -274,10 +272,7 @@ export function toJobDetailVM(
       : (offices[0] ?? placeHierarchyLabel);
 
   return {
-    breadcrumbs: buildJobBreadcrumbs(job, language, labels).map((crumb) => ({
-      name: crumb.name,
-      href: crumb.path,
-    })),
+    breadcrumbs: jobBreadcrumbItems(job),
     breadcrumbAriaLabel: copy.breadcrumbAriaLabel,
 
     title: job.title,
@@ -287,13 +282,13 @@ export function toJobDetailVM(
     sector: job.categories[0]?.name ?? null,
     locationLabel: location,
     workplaceLabel: job.remoteOption
-      ? fieldLabel(language, job.remoteOption, labels)
+      ? enumLabel(job.remoteOption)
       : null,
     employmentTypeLabel: job.employmentType
-      ? fieldLabel(language, job.employmentType, labels)
+      ? enumLabel(job.employmentType)
       : null,
     seniorityLabel: job.seniority
-      ? fieldLabel(language, job.seniority, labels)
+      ? enumLabel(job.seniority)
       : null,
     salaryLabel,
     publishedLabel: published ? copy.posted(published) : null,

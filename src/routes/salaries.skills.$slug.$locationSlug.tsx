@@ -138,7 +138,7 @@ const rootApi = getRouteApi('__root__');
 
 function SkillLocationSalaryPage() {
   const { salary, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = boardCopy(seo.language).breadcrumbs;
   const { board } = rootApi.useLoaderData();
   const c = salary.currency;
   const locale = seo.language;
@@ -220,7 +220,6 @@ function SkillLocationSalaryPage() {
           { name: salary.placeName },
         ],
         seo.language,
-        seo.labels,
       )}
       title={heading}
     >
@@ -238,7 +237,6 @@ function SkillLocationSalaryPage() {
                   p75Max: salary.overallSalary.p75Max ?? undefined,
                 },
                 board.language,
-                seo.labels,
               )}
             />
           ) : null}
@@ -254,7 +252,6 @@ function SkillLocationSalaryPage() {
                     diffPercent: null,
                   })),
                   board.language,
-                  seo.labels,
                 )}
               />
             </PageSection>
@@ -265,7 +262,6 @@ function SkillLocationSalaryPage() {
               m.salaryDetail_citiesLabel(),
               toPlaceRail(salary.childLocations),
               seo.language,
-              seo.labels,
             )}
           />
           <SalaryRail
@@ -273,7 +269,6 @@ function SkillLocationSalaryPage() {
               m.salaryDetail_otherLocations(),
               toPlaceRail(salary.otherLocations),
               seo.language,
-              seo.labels,
             )}
           />
           <SalaryRail
@@ -281,7 +276,6 @@ function SkillLocationSalaryPage() {
               m.salaryDetail_topSkills(),
               skillItems,
               seo.language,
-              seo.labels,
             )}
           />
           <SalaryRail
@@ -289,7 +283,6 @@ function SkillLocationSalaryPage() {
               m.salaryDetail_relatedTitles(),
               titleItems,
               seo.language,
-              seo.labels,
             )}
           />
         </>

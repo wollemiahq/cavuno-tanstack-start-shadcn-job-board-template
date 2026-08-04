@@ -112,7 +112,7 @@ function PlaceTree({ nodes }: { nodes: PlaceNode[] }) {
 function LocationsIndexPage() {
   const { places, seo } = Route.useLoaderData();
   const tree = buildHierarchy(places.data);
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = boardCopy(seo.language).breadcrumbs;
 
   return (
     <Page width="wide">

@@ -10,11 +10,9 @@
  */
 import { useMemo, useState } from 'react';
 
-import {
-  countryOptions,
-  fieldLabel,
-  getSalaryLexicon,
-} from '@cavuno/board/format';
+import { countryOptions } from '@cavuno/board/format';
+
+import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import { useRouter } from '@tanstack/react-router';
 
 import {
@@ -239,24 +237,23 @@ export function EmployerJobForm({
 
   const employmentItems = EMPLOYMENT_TYPES.map((value) => ({
     value,
-    label: fieldLabel(locale, value) ?? value,
+    label: enumLabel(value) ?? value,
   }));
   const remoteItems = REMOTE_OPTIONS.map((value) => ({
     value,
-    label: fieldLabel(locale, value) ?? value,
+    label: enumLabel(value) ?? value,
   }));
   const seniorityItems = SENIORITIES.map((value) => ({
     value,
-    label: fieldLabel(locale, value) ?? value,
+    label: enumLabel(value) ?? value,
   }));
   const currencyItems = salaryCurrencyOptions().map(({ value, label }) => ({
     value,
     label,
   }));
-  const timeframeWords = getSalaryLexicon(locale).timeframe;
   const timeframeItems = SALARY_TIMEFRAMES.map((value) => ({
     value,
-    label: timeframeWords[value],
+    label: salaryTimeframeLabel(value) ?? value,
   }));
 
   const [permitQuery, setPermitQuery] = useState('');

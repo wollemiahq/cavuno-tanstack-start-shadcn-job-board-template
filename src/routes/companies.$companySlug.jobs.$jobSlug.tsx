@@ -1,10 +1,5 @@
 import { isNotFound } from '@cavuno/board';
-import { companyIntro } from '@cavuno/board/format';
-import {
-  buildJobBreadcrumbs,
-  createJobPostingJsonLd,
-  listingJsonLd,
-} from '@cavuno/board/seo';
+import { createJobPostingJsonLd, listingJsonLd } from '@cavuno/board/seo';
 /**
  * Job detail — hosted-parity URL (/companies/:companySlug/jobs/:jobSlug),
  * rendered by the @cavuno registry `job-detail` block:
@@ -53,6 +48,8 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { companyIntro } from '@/lib/company-intro';
+import { jobBreadcrumbJsonLd } from '@/lib/job-breadcrumbs';
 import { headTitle } from '@/lib/page-title';
 import type { PublicJobCard } from '@cavuno/board';
 
@@ -172,14 +169,13 @@ function JobDetailPage() {
     [],
     companyIntro(null, company?.description ?? null),
     board.language,
-    board.labels,
   );
 
   const jsonLd = [
     createJobPostingJsonLd({ job, board, shareUrl: job.links.public ?? '' }),
     ...listingJsonLd({
       origin: seo.origin,
-      breadcrumbs: buildJobBreadcrumbs(job, board.language, board.labels),
+      breadcrumbs: jobBreadcrumbJsonLd(job),
     }),
   ].filter((entry): entry is Record<string, unknown> => entry !== null);
 
@@ -194,7 +190,6 @@ function JobDetailPage() {
             applicationUrl={job.applicationUrl}
             language={board.language}
             returnTo={returnTo}
-            labels={board.labels}
             nativeApplications={board.features.nativeApplications}
             viewer={user ? { emailVerified: user.emailVerified } : null}
             alreadyApplied={alreadyApplied}
@@ -227,7 +222,6 @@ function JobDetailPage() {
               <CopyLinkButton
                 url={vm.canonicalUrl}
                 language={board.language}
-                labels={board.labels}
               />
             ) : (
               <span />
@@ -247,10 +241,9 @@ function JobDetailPage() {
                   </Text>
                   <JobList
                     jobs={similarRail.jobs.map((job) =>
-                      toJobCardVM(job, board.language, board.labels),
+                      toJobCardVM(job, board.language),
                     )}
                     language={board.language}
-                    labels={board.labels}
                     variant="compact"
                   />
                 </section>
@@ -264,23 +257,12 @@ function JobDetailPage() {
               filters={defaults.filters}
               context={defaults.context}
               language={board.language}
-              labels={board.labels}
               onSubscribe={async (input) => {
                 const result = await subscribeJobAlert({ data: input });
                 return { status: result.status };
               }}
-              // Job-page alert variant — the hosted board stores these as
-              // jobCardLabels.jobAlertJob{Title,Description}; resolve the
-              // stored override with the starter's English as the floor
-              // (catalog keys for the variants land with the authed slice).
-              title={
-                board.labels.jobCardLabels?.jobAlertJobTitle ||
-                m.companyJobDetail_defaultAlertTitle()
-              }
-              description={
-                board.labels.jobCardLabels?.jobAlertJobDescription ||
-                m.companyJobDetail_defaultAlertDescription()
-              }
+              title={m.companyJobDetail_defaultAlertTitle()}
+              description={m.companyJobDetail_defaultAlertDescription()}
             />
           ) : null
         }

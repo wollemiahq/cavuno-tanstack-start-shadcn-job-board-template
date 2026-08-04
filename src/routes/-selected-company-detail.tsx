@@ -7,16 +7,13 @@ import { toJobCardVM } from '@/board/job-view-model';
 import { toOverallSalaryVM } from '@/board/salary-view-model';
 import { CompanySearchDetailState } from '@/components/board/company-search-detail-state';
 import { CompanySearchResultDetail } from '@/components/board/company-search-result-detail';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 export function SelectedCompanyDetail({
   state,
   language,
-  labels,
 }: {
   state: SelectedCompanyState;
   language: string;
-  labels?: BoardLabelOverrides;
 }) {
   const hasSalaries = Boolean(
     state.salarySummary &&
@@ -31,8 +28,7 @@ export function SelectedCompanyDetail({
           avgMax: state.salarySummary.overallSalary.avgMax,
           jobCount: state.salarySummary.overallSalary.jobCount,
         },
-        language,
-        labels,
+        language
       )
     : categorySalary
       ? {
@@ -42,8 +38,7 @@ export function SelectedCompanyDetail({
               avgMax: categorySalary.avgSalaryMax,
               jobCount: categorySalary.jobCount,
             },
-            language,
-            labels,
+            language
           ),
           headlineLabel: categorySalary.categoryName,
         }
@@ -53,7 +48,7 @@ export function SelectedCompanyDetail({
       vm={toCompanyDetailVM(state.company, getCompanySearchLabels())}
       jobPreviews={(state.jobs?.data ?? [])
         .slice(0, 4)
-        .map((job) => toJobCardVM(job, language, labels))}
+        .map((job) => toJobCardVM(job, language))}
       salaryOverall={salaryOverall}
       hasSalaries={hasSalaries}
       interactive={state.status === 'ready'}

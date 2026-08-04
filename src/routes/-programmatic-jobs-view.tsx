@@ -54,7 +54,7 @@ export function ProgrammaticJobsView({
   onSaveJob: (jobId: string) => Promise<void>;
 }) {
   const { board, user } = rootApi.useLoaderData();
-  const copy = boardCopy(board.language, board.labels);
+  const copy = boardCopy(board.language);
   const navigate = useNavigate() as unknown as LooseNavigate;
   const selectedJob = useSelectedJob(
     jobs.some((job) => job.slug === filters.selectedJob)
@@ -82,13 +82,12 @@ export function ProgrammaticJobsView({
         heading={heading}
         count={count}
         gatedCount={gatedCount}
-        jobs={jobs.map((job) => toJobCardVM(job, board.language, board.labels))}
+        jobs={jobs.map((job) => toJobCardVM(job, board.language))}
         page={page}
         pageSize={pageSize}
         relatedSearches={relatedSearches}
         filters={filters}
         language={board.language}
-        labels={board.labels}
         viewer={user ? { emailVerified: user.emailVerified } : null}
         onSaveJob={onSaveJob}
         onFiltersChange={(next) =>
@@ -132,7 +131,6 @@ export function ProgrammaticJobsView({
       {board.features.jobAlerts ? (
         <JobAlertFloatingPrompt
           language={board.language}
-          labels={board.labels}
           defaults={jobAlertDefaultsFromSearch({
             keyword: filters.q,
             locationSlug: location?.slug,

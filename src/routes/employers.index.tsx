@@ -230,7 +230,7 @@ function PlanGroup({ title, plans }: { title: string; plans: Plan[] }) {
 
 function EmployersPage() {
   const { plans, salesLed, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = boardCopy(seo.language).breadcrumbs;
   const jobPosting = plans.filter((plan) => plan.purpose === 'job_posting');
   const talentAccess = plans.filter((plan) => plan.purpose === 'talent_access');
   const jsonLd = [

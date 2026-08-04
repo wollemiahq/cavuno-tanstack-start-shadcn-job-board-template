@@ -57,7 +57,6 @@ const job = {
 
 const board = {
   language: 'en',
-  labels: undefined,
   customFields: [],
   features: { nativeApplications: true },
 } as unknown as Parameters<typeof SelectedJobDetail>[0]['board'];

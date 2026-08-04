@@ -2,11 +2,9 @@
 
 import { useMemo, useRef, useState } from 'react';
 
-import {
-  countryOptions,
-  fieldLabel,
-  getSalaryLexicon,
-} from '@cavuno/board/format';
+import { countryOptions } from '@cavuno/board/format';
+
+import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import { Check, ImagePlus } from 'lucide-react';
 
 import {
@@ -139,7 +137,7 @@ type PostJobFormState = {
 };
 
 export type PostJobFormProps = {
-  locale: Parameters<typeof fieldLabel>[0];
+  locale: string;
   plans: JobPostingPlan[];
   officeLocationSuggestions: LocationSuggestionState;
   /** Board-defined custom field definitions, in operator-config order. */
@@ -157,7 +155,7 @@ export type PostJobFormProps = {
 };
 
 function formatPrice(
-  locale: Parameters<typeof fieldLabel>[0],
+  locale: string,
   amount: number,
   currency: string,
 ) {
@@ -259,15 +257,15 @@ export function PostJobForm({
       : m.postJob_checkoutButtonLabel();
   const employmentItems = EMPLOYMENT_TYPES.map((value) => ({
     value,
-    label: fieldLabel(locale, value) ?? value,
+    label: enumLabel(value) ?? value,
   }));
   const remoteItems = REMOTE_OPTIONS.map((value) => ({
     value,
-    label: fieldLabel(locale, value) ?? value,
+    label: enumLabel(value) ?? value,
   }));
   const seniorityItems = SENIORITIES.map((value) => ({
     value,
-    label: fieldLabel(locale, value) ?? value,
+    label: enumLabel(value) ?? value,
   }));
   // The geographic-restriction option space: world regions and country
   // groups from the remote-permit taxonomy (absent when the taxonomy is
@@ -309,12 +307,11 @@ export function PostJobForm({
     value,
     label,
   }));
-  // The timeframe words are the SDK's, so the select reads the same language
-  // as the salary ranges it produces — no parallel copy to drift.
-  const timeframeWords = getSalaryLexicon(locale).timeframe;
+  // Form option captions — application-owned (formatSalaryRange owns the
+  // range display word via Intl inside the SDK).
   const timeframeItems = SALARY_TIMEFRAMES.map((value) => ({
     value,
-    label: timeframeWords[value],
+    label: salaryTimeframeLabel(value) ?? value,
   }));
 
   const companyInitials = companyName

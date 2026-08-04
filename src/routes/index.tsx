@@ -153,7 +153,7 @@ function HomePage() {
     talentCount,
   } = Route.useLoaderData();
   const { board, user } = rootApi.useLoaderData();
-  const copy = boardCopy(board.language, board.labels);
+  const copy = boardCopy(board.language);
 
   // ONE section-header eyebrow pattern: "{localized count} {noun}", resolved
   // here (never in the dumb landing) from the counts the list envelopes carry.
@@ -190,7 +190,7 @@ function HomePage() {
     m.home_postPlural(),
   );
   const jobs = page.data.map((job) =>
-    toJobCardVM(job, board.language, board.labels),
+    toJobCardVM(job, board.language),
   );
   const hiringCompanies = companies
     .filter((company) => company.publishedJobCount > 0)
@@ -239,7 +239,7 @@ function HomePage() {
         data={listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: boardCopy(board.language, board.labels).breadcrumbs.jobs },
+            { name: boardCopy(board.language).breadcrumbs.jobs },
           ],
           jobs: page.data,
         })}
@@ -266,7 +266,6 @@ function HomePage() {
       {board.features.jobAlerts ? (
         <JobAlertFloatingPrompt
           language={board.language}
-          labels={board.labels}
           defaults={jobAlertDefaultsFromSearch({ source: 'board_home' })}
         />
       ) : null}

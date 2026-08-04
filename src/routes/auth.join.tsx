@@ -96,7 +96,7 @@ function JoinPage() {
   const { boardName, seo } = Route.useLoaderData();
   const { returnTo } = Route.useSearch();
   const [role, setRole] = useState<'candidate' | 'employer'>('candidate');
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = boardCopy(seo.language).breadcrumbs;
   const jsonLd = [
     createBreadcrumbJsonLd([
       { label: crumbs.home, href: seo.origin },

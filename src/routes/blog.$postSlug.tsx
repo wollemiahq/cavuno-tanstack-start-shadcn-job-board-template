@@ -143,7 +143,7 @@ function PostPage() {
   const { post, adjacent, related, seo } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const permalink = post.canonicalUrl ?? `${seo.origin}/blog/${post.slug}`;
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = boardCopy(seo.language);
   const crumbs = copy.breadcrumbs;
   const jsonLd = [
     createBlogArticleJsonLd({

@@ -80,7 +80,6 @@ describe('home route — landing contracts', () => {
         seo: {
           boardName: 'Acme Careers',
           language: 'en',
-          labels: undefined,
           origin: 'https://careers.acme.test',
         },
       },

@@ -51,7 +51,7 @@ export const Route = createFileRoute('/salaries/locations/$slug/skills')({
     const seo = await getSeoBase();
     // Flat hosted shape: Home › Salaries › Locations › {Place}(linked) › Skills.
     // Injected so the place crumb shows its resolved name, not the raw slug.
-    const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+    const crumbs = boardCopy(seo.language).breadcrumbs;
     const breadcrumbTrail = [
       { name: crumbs.home, href: BOARD_PATHS.home },
       { name: crumbs.salaries, href: BOARD_PATHS.salaries },
@@ -101,7 +101,7 @@ export const Route = createFileRoute('/salaries/locations/$slug/skills')({
 
 function LocationSkillsPage() {
   const { data, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = boardCopy(seo.language).breadcrumbs;
   const locale = seo.language;
   const items: RailItem[] = data.skills.map((s) => ({
     name: s.name,
@@ -154,7 +154,6 @@ function LocationSkillsPage() {
           { name: crumbs.skills },
         ],
         seo.language,
-        seo.labels,
       )}
       title={heading}
     >
@@ -165,7 +164,6 @@ function LocationSkillsPage() {
             m.salaryDetail_skillsLabel(),
             items,
             seo.language,
-            seo.labels,
           )}
         />
       ) : (

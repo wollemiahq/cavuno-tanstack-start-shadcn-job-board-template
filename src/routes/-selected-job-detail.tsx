@@ -1,4 +1,3 @@
-import { companyIntro } from '@cavuno/board/format';
 import { useLocation, useRouter } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
@@ -12,6 +11,7 @@ import { ApplyButton } from '@/components/board/apply-button';
 import { JobSearchDetailState } from '@/components/board/job-search-detail-state';
 import { JobSearchResultDetail } from '@/components/board/job-search-result-detail';
 import { SaveJobButton } from '@/components/board/save-job-button';
+import { companyIntro } from '@/lib/company-intro';
 
 export function SelectedJobDetail({
   state,
@@ -34,7 +34,6 @@ export function SelectedJobDetail({
         [],
         companyIntro(null, state.companyDescription),
         board.language,
-        board.labels,
       )
     : undefined;
 
@@ -55,7 +54,6 @@ export function SelectedJobDetail({
       applicationUrl={state.job.applicationUrl}
       language={board.language}
       returnTo={returnTo}
-      labels={board.labels}
       nativeApplications={board.features.nativeApplications}
       viewer={user ? { emailVerified: user.emailVerified } : null}
       alreadyApplied={state.alreadyApplied}

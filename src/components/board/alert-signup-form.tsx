@@ -10,10 +10,10 @@
  * copy resolves through `toAlertSignupVM` (src/board/alert-signup-view-model.ts),
  * so the form makes no runtime SDK/copy call and can be restyled freely. The
  * only `@cavuno/board*` imports left are TYPE-ONLY — `JobAlertSubscribeInput`
- * / `BoardLabelOverrides` are the form's wire contract with the route (erased
- * at runtime), kept direct so the generated DESIGN.md stays precise for the
- * builder. Pass `title`/`description` to override per placement (e.g. the
- * hosted board's search-page vs job-page variants).
+ * is the form's wire contract with the route (erased at runtime), kept direct
+ * so the generated DESIGN.md stays precise for the builder. Pass
+ * `title`/`description` to override per placement (e.g. the hosted board's
+ * search-page vs job-page variants).
  *
  * Wiring: `onSubscribe` calls the Board API — client-side that is
  * `board.jobAlerts.subscribe(input)`; behind a server function/action,
@@ -45,7 +45,6 @@ import { InputGroup, InputGroupInput } from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import type { JobAlertSubscribeInput } from '@cavuno/board';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 type Status = 'idle' | 'pending' | 'submitted' | 'error';
 
@@ -54,7 +53,6 @@ export function AlertSignupForm({
   context,
   onSubscribe,
   language,
-  labels,
   title,
   description,
   surface = 'default',
@@ -67,8 +65,6 @@ export function AlertSignupForm({
   ) => Promise<{ status: 'submitted' }>;
   /** Board language (ISO code) from `board.context()`. */
   language: string;
-  /** Operator label overrides from `board.context().labels`. */
-  labels?: BoardLabelOverrides;
   title?: string;
   description?: string;
   /**
@@ -84,7 +80,7 @@ export function AlertSignupForm({
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<Status>('idle');
 
-  const vm = toAlertSignupVM(language, labels);
+  const vm = toAlertSignupVM(language);
 
   const message =
     status === 'submitted'

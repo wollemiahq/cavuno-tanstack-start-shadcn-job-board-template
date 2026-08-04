@@ -67,7 +67,7 @@ export const Route = createFileRoute('/salaries/companies/')({
 
 function SalaryCompaniesIndex() {
   const { companies, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const crumbs = boardCopy(seo.language).breadcrumbs;
   const locale = seo.language;
 
   const jsonLd = [
@@ -104,13 +104,12 @@ function SalaryCompaniesIndex() {
           { name: crumbs.companies },
         ],
         seo.language,
-        seo.labels,
       )}
       title={m.salaryHub_companiesHeading()}
     >
       <JsonLd data={jsonLd} />
       {items.length > 0 ? (
-        <SalaryRail vm={toSalaryRailVM('', items, seo.language, seo.labels)} />
+        <SalaryRail vm={toSalaryRailVM('', items, seo.language)} />
       ) : (
         <SalaryEmptyState
           title={m.salaryHub_companiesHeading()}

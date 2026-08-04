@@ -7,10 +7,10 @@ import {
   EMPLOYMENT_TYPES,
   REMOTE_OPTIONS,
   SENIORITIES,
-  seniorityLabels,
   type ListingFilters,
 } from '@cavuno/board/filters';
-import { fieldLabel, type BoardLabelOverrides } from '@cavuno/board/format';
+
+import { enumLabel, seniorityLabelMap } from '@/lib/enum-labels';
 import { ArrowUpDown } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
@@ -28,16 +28,14 @@ import {
 export function JobsFilterControls({
   filters,
   language,
-  labels,
   onChange,
 }: {
   filters: ListingFilters;
   language: string;
-  labels?: BoardLabelOverrides;
   onChange: (next: ListingFilters) => void;
 }) {
-  const copy = boardCopy(language, labels);
-  const seniorityLabel = seniorityLabels(language, labels);
+  const copy = boardCopy(language);
+  const seniorityLabel = seniorityLabelMap(SENIORITIES);
   const sortItems = [
     { value: 'relevance', label: copy.jobCard.aiRankedLabel },
     { value: 'newest', label: copy.jobCard.sortNewestLabel },
@@ -62,11 +60,11 @@ export function JobsFilterControls({
         options={{
           workplace: REMOTE_OPTIONS.map((option) => ({
             value: option,
-            label: fieldLabel(language, option, labels) ?? option,
+            label: enumLabel(option) ?? option,
           })),
           employmentType: EMPLOYMENT_TYPES.map((type) => ({
             value: type,
-            label: fieldLabel(language, type, labels) ?? type,
+            label: enumLabel(type) ?? type,
           })),
           seniority: SENIORITIES.map((seniority) => ({
             value: seniority,

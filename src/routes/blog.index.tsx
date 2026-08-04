@@ -85,7 +85,7 @@ function BlogPage() {
   const location = useLocation();
   const navigate = useNavigate({ from: '/blog/' });
   const router = useRouter();
-  const copy = boardCopy(seo.language, seo.labels);
+  const copy = boardCopy(seo.language);
   const crumbs = copy.breadcrumbs;
   const jsonLd = [
     createBreadcrumbJsonLd([
