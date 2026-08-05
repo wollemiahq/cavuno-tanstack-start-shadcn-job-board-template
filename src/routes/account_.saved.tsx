@@ -23,6 +23,7 @@ import {
 import { Bookmark, BookmarkCheck } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getSavedJobs, unsaveJob } from '../server/account';
 import { getSeoBase } from '../server/queries';
 import { SelectedJobDetail } from './-selected-job-detail';
@@ -104,7 +105,7 @@ function SavedJobsPage() {
 
   const rows = savedJobs.data.flatMap((saved) => {
     if (!saved.job) return [];
-    const vm = toSavedJobCardVM(saved.job, board.language);
+    const vm = toSavedJobCardVM(saved.job, getLocale());
     return vm ? [{ saved, vm }] : [];
   });
 

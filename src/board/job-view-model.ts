@@ -17,6 +17,7 @@ import {
 } from '@cavuno/board/paths';
 
 import { m } from '../paraglide/messages';
+import { isLocale } from '../paraglide/runtime';
 
 import { jobCardCopy } from '@/copy-groups/job-card';
 import { deriveSummary } from '@/lib/derive-summary';
@@ -96,17 +97,32 @@ export function toJobCardVM(job: PublicJobCard, language: string): JobCardVM {
     job.salaryTimeframe,
     job.salaryCurrency,
   );
-  const workplaceLabel = job.remoteOption ? enumLabel(job.remoteOption) : null;
+  const workplaceLabel = job.remoteOption
+    ? enumLabel(job.remoteOption, language)
+    : null;
+  const localeOpt = isLocale(language) ? { locale: language } : undefined;
+  // The card wire model pre-resolves `remoteLocationLabel` in the BOARD
+  // language, and for unrestricted remote jobs that is the chrome word
+  // "Worldwide" — a word, not a place name. Re-word it from the catalog so
+  // /de/ reads "Remote (weltweit)". Structural fix (a `remoteWorldwide`
+  // boolean on the card model) is a platform follow-up; until then this
+  // sentinel is stable for English-language boards.
+  const worldwideRemote =
+    job.remoteOption === 'remote' && job.remoteLocationLabel === 'Worldwide';
   const placeLabel =
     job.remoteOption === 'remote' ? job.remoteLocationLabel : job.locationLabel;
-  const locationLabel = [
-    placeLabel || m.jobDetail_locationNotSpecifiedLabel(),
-    workplaceLabel ? `(${workplaceLabel})` : null,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const locationLabel = worldwideRemote
+    ? m.label_locationRemoteWorldwide({}, localeOpt)
+    : [
+        placeLabel || m.jobDetail_locationNotSpecifiedLabel({}, localeOpt),
+        workplaceLabel ? `(${workplaceLabel})` : null,
+      ]
+        .filter(Boolean)
+        .join(' ');
   const compLine =
-    [salaryLabel, cardLocationLabel(job)].filter(Boolean).join(' · ') || null;
+    [salaryLabel, cardLocationLabel(job, language)]
+      .filter(Boolean)
+      .join(' · ') || null;
 
   return {
     id: job.id,

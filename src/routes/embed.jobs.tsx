@@ -9,9 +9,10 @@
  * frontend (the API is a data contract only); only the card data +
  * the branding flag come from the API.
  */
-import { createFileRoute, getRouteApi, Link } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { embedJobs, getBoardContext } from '../server/queries';
 
 import { toJobCardVM } from '@/board/job-view-model';
@@ -184,11 +185,8 @@ function buildEmbedCta(
   return null;
 }
 
-const rootApi = getRouteApi('__root__');
-
 function EmbedJobsPage() {
   const { page, showCavunoBranding } = Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
   const search = Route.useSearch();
   const jobs = page.data as PublicJobCard[];
   const pageSize = search.limit ?? 8;
@@ -199,7 +197,7 @@ function EmbedJobsPage() {
       {jobs.length > 0 ? (
         <div className="space-y-3" data-test="embed-jobs-list">
           {jobs.map((job) => (
-            <JobCard key={job.id} vm={toJobCardVM(job, board.language)} />
+            <JobCard key={job.id} vm={toJobCardVM(job, getLocale())} />
           ))}
         </div>
       ) : (

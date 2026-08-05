@@ -63,7 +63,9 @@ describe('toJobCardVM', () => {
   });
 
   it('composes locationLabel from the place label and the SDK workplace label', () => {
-    expect(vm.locationLabel).toBe(`Worldwide (${enumLabel('remote')})`);
+    // Worldwide remote cards use the catalog's own phrasing (same as the
+    // detail header), not a composition around the wire's English word.
+    expect(vm.locationLabel).toBe('Remote (worldwide)');
   });
 
   it('states when an on-site card is missing its physical location', () => {
@@ -149,5 +151,20 @@ describe('toSavedJobCardVM', () => {
 
   it('returns null instead of throwing when a row cannot map at all', () => {
     expect(toSavedJobCardVM(undefined, 'en')).toBeNull();
+  });
+});
+
+describe('worldwide remote card wording', () => {
+  it('re-words the wire "Worldwide" sentinel per viewer locale', () => {
+    const job = {
+      ...baseJob,
+      remoteOption: 'remote',
+      remoteLocationLabel: 'Worldwide',
+      locationLabel: 'Worldwide (Remote)',
+    } as never;
+    expect(toJobCardVM(job, 'de').locationLabel).toBe('Remote (weltweit)');
+    // Unified with the detail header's catalog phrasing (was the wire's
+    // 'Worldwide (Remote)').
+    expect(toJobCardVM(job, 'en').locationLabel).toBe('Remote (worldwide)');
   });
 });
