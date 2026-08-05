@@ -46,7 +46,7 @@ function HeaderSearchFieldsFallback({ fields }: { fields: 1 | 2 }) {
     <span
       key={index}
       aria-hidden="true"
-      className="border-border bg-input/50 h-9 min-w-0 flex-1 rounded-lg border"
+      className="border-border bg-input/50 h-9 min-w-0 flex-1 rounded-2xl border"
     />
   ));
 }
