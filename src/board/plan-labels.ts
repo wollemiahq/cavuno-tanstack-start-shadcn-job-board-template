@@ -32,10 +32,7 @@ function localeOpt(language?: string) {
 }
 
 /** Localized plan name; wire authoring name as fallback. */
-export function planName(
-  plan: { name: string },
-  language?: string,
-): string {
+export function planName(plan: { name: string }, language?: string): string {
   const entry = PLAN_LABELS[plan.name];
   return entry ? entry.name({}, localeOpt(language)) : plan.name;
 }
