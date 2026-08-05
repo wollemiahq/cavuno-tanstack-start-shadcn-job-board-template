@@ -357,6 +357,19 @@ try {
     await warmup.arrayBuffer();
   }
   const lighthouse = path.join(ROOT, 'node_modules', '.bin', 'lighthouse');
+  // The session's first Chrome launch pays one-time cold costs (binary and
+  // profile reads) that inflate every observed request by a few ms; simulated
+  // throttling multiplies that into ~400ms of LCP on whichever run goes
+  // first. Burn one discarded run so measured runs all see a warmed lab.
+  await runCommand(lighthouse, [
+    `${PROXY_ORIGIN}${routes[0].path}`,
+    '--quiet',
+    `--chrome-path=${browser}`,
+    '--chrome-flags=--headless --no-sandbox',
+    '--only-categories=performance',
+    '--output=json',
+    `--output-path=${path.join(REPORT_DIR, 'burn-in.json')}`,
+  ]);
   const results = [];
 
   for (const route of routes) {
