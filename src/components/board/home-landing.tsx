@@ -36,6 +36,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { localizePath } from '@/lib/localized-path';
 import type {
   PublicBlogPostSummary,
   TalentDirectoryEntry,
@@ -220,7 +221,11 @@ export function HomeLanding({
 }) {
   // Return here after the save flow's sign-in / verify-email detour (mirrors
   // the `/jobs` list, which reads the current href the same way).
-  const returnTo = useLocation({ select: (location) => location.href });
+  // The EXTERNAL localized URL — post-auth redirects must land back on
+  // /fr/emplois, not the delocalized router path.
+  const returnTo = useLocation({
+    select: (location) => localizePath(location.href),
+  });
   const latestJobs = jobs;
   const hiringCompanies = companies;
   const latestPosts = posts ?? [];

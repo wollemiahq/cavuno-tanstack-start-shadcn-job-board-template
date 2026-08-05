@@ -293,6 +293,7 @@
   "boardError_otpExpiredText": "Ce code a expiré. Demandez-en un nouveau.",
   "boardError_otpInvalidText": "Ce code est incorrect. Vérifiez-le et réessayez.",
   "boardError_rateLimitedText": "Trop de tentatives. Patientez un instant, puis réessayez.",
+  "boardError_registrationDisabledText": "Les inscriptions sont fermées sur ce site.",
   "boardError_unauthorizedText": "Connectez-vous d’abord.",
   "boardError_validationText": "Certains champs demandent votre attention. Vérifiez le formulaire et réessayez.",
   "breadcrumbJsonLd_forEmployersLabel": "Pour les employeurs",

@@ -294,3 +294,18 @@ describe('template-side custom-field localization', () => {
     expect(vm.value).toBe('Dragons');
   });
 });
+
+describe('two-locale contract', () => {
+  it('words follow the display locale while the reverse map keeps board language', () => {
+    const vm = toJobDetailVM(
+      baseJob as never,
+      customFields,
+      [],
+      null,
+      'en',
+      'de',
+    );
+    // Chrome words German (display locale)…
+    expect(vm.facts.some((f) => f.value.includes('Vereinigte'))).toBe(true);
+  });
+});

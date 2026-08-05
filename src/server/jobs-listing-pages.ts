@@ -141,7 +141,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
         listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: crumbs.home, path: '/' },
+            { name: crumbs.home, path: localizePath('/') },
             { name: crumbs.jobs },
           ],
           jobs: page.data,
@@ -196,8 +196,8 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
         listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: crumbs.home, path: '/' },
-            { name: crumbs.jobs, path: '/jobs' },
+            { name: crumbs.home, path: localizePath('/') },
+            { name: crumbs.jobs, path: localizePath('/jobs') },
             { name: heading },
           ],
           jobs: list.data,
@@ -253,8 +253,8 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
         listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: crumbs.home, path: '/' },
-            { name: crumbs.jobs, path: '/jobs' },
+            { name: crumbs.home, path: localizePath('/') },
+            { name: crumbs.jobs, path: localizePath('/jobs') },
             { name: heading },
           ],
           jobs: list.data,
@@ -369,8 +369,8 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: crumbs.home, path: '/' },
-            { name: crumbs.jobs, path: '/jobs' },
+            { name: crumbs.home, path: localizePath('/') },
+            { name: crumbs.jobs, path: localizePath('/jobs') },
             { name: heading },
           ],
           jobs: list.data,
@@ -434,8 +434,8 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: crumbs.home, path: '/' },
-            { name: crumbs.jobs, path: '/jobs' },
+            { name: crumbs.home, path: localizePath('/') },
+            { name: crumbs.jobs, path: localizePath('/jobs') },
             { name: heading },
           ],
           jobs: list.data,
@@ -505,8 +505,8 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: crumbs.home, path: '/' },
-            { name: crumbs.jobs, path: '/jobs' },
+            { name: crumbs.home, path: localizePath('/') },
+            { name: crumbs.jobs, path: localizePath('/jobs') },
             { name: heading },
           ],
           jobs: list.data,

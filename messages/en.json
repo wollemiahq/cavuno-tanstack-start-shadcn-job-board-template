@@ -293,6 +293,7 @@
   "boardError_otpExpiredText": "That code has expired. Request a new one.",
   "boardError_otpInvalidText": "That code isn’t right. Check it and try again.",
   "boardError_rateLimitedText": "Too many attempts. Wait a moment, then try again.",
+  "boardError_registrationDisabledText": "Sign-ups are closed on this board.",
   "boardError_unauthorizedText": "Sign in first.",
   "boardError_validationText": "Some fields need attention. Check the form and try again.",
   "breadcrumbJsonLd_forEmployersLabel": "For employers",

@@ -103,3 +103,14 @@ describe('public HTML cache policy', () => {
     expect(put).toHaveBeenCalledOnce();
   });
 });
+
+describe('localized section slugs stay cacheable', () => {
+  it('normalizes translated slugs to canonical sections', () => {
+    expect(isPublicDocumentPath('/fr/emplois')).toBe(true);
+    expect(isPublicDocumentPath('/fr/emplois/skills/react')).toBe(true);
+    expect(isPublicDocumentPath('/de/gehaelter')).toBe(true);
+    expect(isPublicDocumentPath('/de/unternehmen')).toBe(true);
+    expect(isPublicDocumentPath('/fr/entreprises')).toBe(true);
+    expect(isPublicDocumentPath('/de/talente')).toBe(true);
+  });
+});

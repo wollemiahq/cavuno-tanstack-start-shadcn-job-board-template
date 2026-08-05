@@ -9,10 +9,10 @@
  * frontend (the API is a data contract only); only the card data +
  * the branding flag come from the API.
  */
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { redirect, createFileRoute, Link } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import { getLocale } from '../paraglide/runtime';
+import { baseLocale, getLocale } from '../paraglide/runtime';
 import { embedJobs, getBoardContext } from '../server/queries';
 
 import { toJobCardVM } from '@/board/job-view-model';
@@ -66,6 +66,14 @@ interface EmbedSearch {
 }
 
 export const Route = createFileRoute('/embed/jobs')({
+  // The embed is a third-party iframe fragment with no locale identity —
+  // /fr/embed/jobs would leak the visiting operator's chrome locale into
+  // someone else's site. Canonical URL only.
+  beforeLoad: () => {
+    if (getLocale() !== baseLocale) {
+      throw redirect({ href: '/embed/jobs', replace: true });
+    }
+  },
   validateSearch: (search: Record<string, unknown>): EmbedSearch => ({
     // The hosted embed widget's keyword URL param is `query` (it maps to the
     // API's `q`); accept it so an existing `<iframe …?query=…>` is a faithful
