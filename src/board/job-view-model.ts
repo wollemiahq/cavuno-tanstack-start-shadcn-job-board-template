@@ -9,14 +9,7 @@
  * render from `JobCardVM` alone and import nothing from `@cavuno/board*` —
  * so restructuring a card is pure markup over this stable contract.
  */
-import {
-  cardLocationLabel,
-  fieldLabel,
-  formatPublishedRelativeDate,
-  formatSalaryRange,
-  fullJobToCard,
-  type BoardLabelOverrides,
-} from '@cavuno/board/format';
+import { formatPublishedRelativeDate } from '@cavuno/board/format';
 import {
   jobDetailPath,
   jobsCategoryPath,
@@ -24,10 +17,14 @@ import {
 } from '@cavuno/board/paths';
 
 import { m } from '../paraglide/messages';
+import { isLocale } from '../paraglide/runtime';
 
-import { boardCopy } from '@/copy';
+import { jobCardCopy } from '@/copy-groups/job-card';
 import { deriveSummary } from '@/lib/derive-summary';
-import type { PublicJob, PublicJobCard } from '@cavuno/board';
+import { enumLabel } from '@/lib/enum-labels';
+import { cardLocationLabel } from '@/lib/location-labels';
+import { formatJobSalary } from '@/lib/salary-display';
+import type { PublicJobCard } from '@cavuno/board';
 
 export interface JobCardTagVM {
   key: string;
@@ -76,11 +73,7 @@ export interface JobCardVM {
   tags: JobCardTagVM[];
 }
 
-export function toJobCardVM(
-  job: PublicJobCard,
-  language: string,
-  labels?: BoardLabelOverrides,
-): JobCardVM {
+export function toJobCardVM(job: PublicJobCard, language: string): JobCardVM {
   const company = job.company;
 
   // Every emitted slug resolves — the platform guarantees it (ADR-0099), so
@@ -97,7 +90,7 @@ export function toJobCardVM(
       href: path(term.slug),
     };
   };
-  const salaryLabel = formatSalaryRange(
+  const salaryLabel = formatJobSalary(
     language,
     job.salaryMin,
     job.salaryMax,
@@ -105,18 +98,29 @@ export function toJobCardVM(
     job.salaryCurrency,
   );
   const workplaceLabel = job.remoteOption
-    ? fieldLabel(language, job.remoteOption, labels)
+    ? enumLabel(job.remoteOption, language)
     : null;
+  const localeOpt = isLocale(language) ? { locale: language } : undefined;
+  // The card wire model pre-resolves `remoteLocationLabel` in the BOARD
+  // language, and for unrestricted remote jobs that is the chrome word
+  // "Worldwide" — a word, not a place name. Re-word it from the catalog so
+  // /de/ reads "Remote (weltweit)". Structural fix (a `remoteWorldwide`
+  // boolean on the card model) is a platform follow-up; until then this
+  // sentinel is stable for English-language boards.
+  const worldwideRemote =
+    job.remoteOption === 'remote' && job.remoteLocationLabel === 'Worldwide';
   const placeLabel =
     job.remoteOption === 'remote' ? job.remoteLocationLabel : job.locationLabel;
-  const locationLabel = [
-    placeLabel || m.jobDetail_locationNotSpecifiedLabel(),
-    workplaceLabel ? `(${workplaceLabel})` : null,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const locationLabel = worldwideRemote
+    ? m.label_locationRemoteWorldwide({}, localeOpt)
+    : [
+        placeLabel || m.jobDetail_locationNotSpecifiedLabel({}, localeOpt),
+        workplaceLabel ? `(${workplaceLabel})` : null,
+      ]
+        .filter(Boolean)
+        .join(' ');
   const compLine =
-    [salaryLabel, cardLocationLabel(language, job)]
+    [salaryLabel, cardLocationLabel(job, language)]
       .filter(Boolean)
       .join(' · ') || null;
 
@@ -140,7 +144,7 @@ export function toJobCardVM(
     locationLabel,
     summary: deriveSummary(job.description),
     isFeatured: job.isFeatured,
-    featuredLabel: boardCopy(language, labels).jobCard.featuredLabel,
+    featuredLabel: jobCardCopy().featuredLabel,
     postedAtLabel: formatPublishedRelativeDate(language, job.publishedAt),
     tags: [
       ...job.categories.map((c) => tagPill('category', c)),
@@ -150,26 +154,25 @@ export function toJobCardVM(
 }
 
 /**
- * Card VM for a saved-jobs row. The saved-list embed is a slimmer projection
- * than the `PublicJob` type promises — the arrays the card pipeline
- * dereferences (`officeLocations`, `categories`, `skills`) can be absent on
- * the wire — so they are defaulted before the SDK card mapper runs. Returns
- * `null` when a row still cannot map, so one stale embed never fails the
- * whole saved-jobs page.
+ * Card VM for a saved-jobs row. `me/saved-jobs` embeds a `PublicJobCard`
+ * (same slim card as listings) — map with the same card view-model; do not
+ * convert a full job. Defensive defaults for arrays keep a partial embed from
+ * taking down the page. Returns `null` when a row cannot map at all.
  */
 export function toSavedJobCardVM(
-  job: PublicJob,
+  job: PublicJobCard | null | undefined,
   language: string,
-  labels?: BoardLabelOverrides,
 ): JobCardVM | null {
+  if (!job) return null;
   try {
-    const card = fullJobToCard(language, {
-      ...job,
-      officeLocations: job.officeLocations ?? [],
-      categories: job.categories ?? [],
-      skills: job.skills ?? [],
-    });
-    return toJobCardVM(card, language, labels);
+    return toJobCardVM(
+      {
+        ...job,
+        categories: job.categories ?? [],
+        skills: job.skills ?? [],
+      },
+      language,
+    );
   } catch {
     return null;
   }

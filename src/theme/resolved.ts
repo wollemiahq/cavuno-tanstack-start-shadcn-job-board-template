@@ -4,7 +4,7 @@
  * (workers-og/Satori). The hash ties this module to its source; doctor
  * compares it against theme.css and the platform snapshot.
  */
-export const tokensHash = '87957b5f5b4751206fa98acd95140833b9da7dca81d150e303a3e26fb3ba0b83'
+export const tokensHash = '13dc150a42c1aedf661d4086ab809c9a09175dba64cc8d6db00fa232754df711'
 
 export const themeMeta: {
   mode: string | null

@@ -16,6 +16,7 @@ import {
 import { Send } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getApplications, withdrawApplication } from '../server/applications';
 import { getBoardContext, getSeoBase } from '../server/queries';
 
@@ -113,8 +114,7 @@ function ApplicationsPage() {
             description={m.meApplications_emptyText()}
             action={
               <Link
-                to="/jobs/$keyword"
-                params={{ keyword: 'all' }}
+                to="/jobs"
                 className={buttonVariants({ variant: 'outline' })}
               >
                 {m.meApplications_browseJobsLink()}
@@ -164,7 +164,7 @@ function ApplicationsPage() {
                       {m.meApplications_appliedOn({
                         date: new Date(
                           application.appliedAt,
-                        ).toLocaleDateString(),
+                        ).toLocaleDateString(getLocale()),
                       })}
                     </p>
                   </ItemContent>

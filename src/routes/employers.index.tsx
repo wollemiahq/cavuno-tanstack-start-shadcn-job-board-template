@@ -1,13 +1,12 @@
-import { boardCopy } from '#/copy';
-
-import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { Check } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
-import { getSeoBase, listPlans, listSalesLedPlans } from '../server/queries';
+import { getLocale } from '../paraglide/runtime';
+import { getEmployersPage } from '../server/marketing-pages';
 
-import { JsonLd } from '@/components/json-ld';
+import { planDescription, planName } from '@/board/plan-labels';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import {
   Page,
   PageContent,
@@ -31,48 +30,24 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 import type { Plan, SalesLedPlan } from '@cavuno/board';
 
 export const Route = createFileRoute('/employers/')({
-  loader: async () => {
-    const [plans, salesLed, seo] = await Promise.all([
-      listPlans({ data: {} }),
-      listSalesLedPlans(),
-      getSeoBase(),
-    ]);
-    return { plans: plans.data, salesLed: salesLed.data, seo };
-  },
+  loader: () => getEmployersPage(),
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData?.seo.boardName,
-                m.employerLanding_title(),
-              ),
-            },
-            {
-              name: 'description',
-              content: m.employerLanding_subtitle({
-                boardName: loaderData.seo.boardName,
-              }),
-            },
-          ],
-          links: [
-            { rel: 'canonical', href: `${loaderData.seo.origin}/employers` },
-          ],
-        }
-      : { meta: [{ title: headTitle(undefined, m.employerLanding_title()) }] },
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
+      : {},
   staticData: { ownsMain: true },
   component: EmployersPage,
 });
 
 function formatPrice(price: Plan['price']): string {
   if (!price) return m.employerLanding_freeLabel();
-  return new Intl.NumberFormat('en', {
+  // Chrome-locale figure inside chrome-locale sentences (same rule as the
+  // salary FAQ): the price agrees with the copy around it.
+  return new Intl.NumberFormat(getLocale(), {
     style: 'currency',
     currency: price.currency.toUpperCase(),
     maximumFractionDigits: 0,
@@ -146,9 +121,9 @@ function PlanCard({ plan }: { plan: Plan }) {
   return (
     <Card className={cn('h-full', plan.isRecommended && 'ring-primary ring-2')}>
       <CardHeader>
-        <CardTitle>{plan.name}</CardTitle>
-        {plan.description ? (
-          <CardDescription>{plan.description}</CardDescription>
+        <CardTitle>{planName(plan)}</CardTitle>
+        {planDescription(plan) ? (
+          <CardDescription>{planDescription(plan)}</CardDescription>
         ) : null}
         {plan.isRecommended ? (
           <CardAction>
@@ -192,9 +167,9 @@ function SalesLedCard({ plan }: { plan: SalesLedPlan }) {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>{plan.name}</CardTitle>
-        {plan.description ? (
-          <CardDescription>{plan.description}</CardDescription>
+        <CardTitle>{planName(plan)}</CardTitle>
+        {planDescription(plan) ? (
+          <CardDescription>{planDescription(plan)}</CardDescription>
         ) : null}
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-5">
@@ -230,15 +205,8 @@ function PlanGroup({ title, plans }: { title: string; plans: Plan[] }) {
 
 function EmployersPage() {
   const { plans, salesLed, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
   const jobPosting = plans.filter((plan) => plan.purpose === 'job_posting');
   const talentAccess = plans.filter((plan) => plan.purpose === 'talent_access');
-  const jsonLd = [
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      { label: m.breadcrumbJsonLd_forEmployersLabel() },
-    ]),
-  ].filter((entry): entry is Record<string, unknown> => entry !== null);
   const empty =
     jobPosting.length === 0 &&
     talentAccess.length === 0 &&
@@ -246,7 +214,6 @@ function EmployersPage() {
 
   return (
     <Page width="wide">
-      <JsonLd data={jsonLd} />
       <PageContent
         header={
           <PageHeader

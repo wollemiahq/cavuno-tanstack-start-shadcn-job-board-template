@@ -2,25 +2,18 @@ import { isNotFound } from '@cavuno/board';
 import { createFileRoute, notFound } from '@tanstack/react-router';
 
 import { LegalPageView } from '../components/legal-page';
-import { LEGAL_PAGES, legalMetaDescription } from '../lib/legal';
 import { m } from '../paraglide/messages';
-import { getLegalPage, getSeoBase } from '../server/queries';
+import { getLegalPageView } from '../server/legal-pages';
 
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageLayout } from '@/components/layout/page-layout';
-import { headTitle } from '@/lib/page-title';
-
-const META = LEGAL_PAGES['privacy-policy'];
 
 export const Route = createFileRoute('/privacy-policy')({
   // The shared page layout owns the full-width route geometry.
   staticData: { fullBleed: true, ownsMain: true },
   loader: async () => {
     try {
-      const [page, seo] = await Promise.all([
-        getLegalPage({ data: { type: 'privacy-policy' } }),
-        getSeoBase(),
-      ]);
-      return { page, seo };
+      return await getLegalPageView({ data: { type: 'privacy-policy' } });
     } catch (error) {
       if (isNotFound(error)) throw notFound();
       throw error;
@@ -28,23 +21,7 @@ export const Route = createFileRoute('/privacy-policy')({
   },
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData?.seo.boardName,
-                loaderData.page.title,
-              ),
-            },
-            {
-              name: 'description',
-              content: legalMetaDescription(loaderData.page.content),
-            },
-          ],
-          links: [
-            { rel: 'canonical', href: `${loaderData.seo.origin}${META.path}` },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: PrivacyPolicyPage,
   notFoundComponent: () => (
@@ -57,14 +34,6 @@ export const Route = createFileRoute('/privacy-policy')({
 });
 
 function PrivacyPolicyPage() {
-  const { page, seo } = Route.useLoaderData();
-  return (
-    <LegalPageView
-      page={page}
-      origin={seo.origin}
-      meta={META}
-      language={seo.language}
-      labels={seo.labels}
-    />
-  );
+  const { page } = Route.useLoaderData();
+  return <LegalPageView page={page} />;
 }

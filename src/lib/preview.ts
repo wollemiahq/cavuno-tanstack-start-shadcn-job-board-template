@@ -364,6 +364,8 @@ export interface PreviewEnumFlag {
 
 export type PreviewFeatureFlag = PreviewBooleanFlag | PreviewEnumFlag;
 
+// Move them into the toolbar layer (or Paraglide keys) when preview i18n is
+// prioritized — leave English here for now.
 export const PREVIEW_FEATURE_FLAGS: readonly PreviewFeatureFlag[] = [
   {
     key: 'jobAccessPaywallEnabled',
@@ -479,6 +481,7 @@ export function toPreviewBoardConfig(context: {
     candidates: boolean;
     employers: boolean;
     registrationWall: boolean;
+    talentDirectory?: 'off' | 'public' | 'employers_only';
     /**
      * Runtime flags `@cavuno/board@1.38.0` does not type yet (see
      * `src/board/board-feature-flags.ts`) — optional here, absent ⇒ ON.
@@ -491,7 +494,11 @@ export function toPreviewBoardConfig(context: {
 }): PreviewBoardConfig {
   return {
     jobAccessPaywallEnabled: context.features.candidatePaywall,
-    talentDirectoryVisibility: context.talentDirectoryVisibility ?? 'off',
+    talentDirectoryVisibility:
+      // 4.0.0: enum lives on features.talentDirectory ('off' is truthy!).
+      context.features.talentDirectory ??
+      context.talentDirectoryVisibility ??
+      'off',
     blogEnabled: context.features.blog,
     jobAlertsEnabled: context.features.jobAlerts,
     candidatesEnabled: context.features.candidates,
@@ -503,8 +510,12 @@ export function toPreviewBoardConfig(context: {
 }
 
 /**
- * v0 capability logic: capable iff the board context reports `sandbox: true`.
- * The reason is carried so the seam is future-proof (see `PreviewReason`).
+ * v0 capability logic: capable iff the board is a sandbox.
+ *
+ * Callers pass `sandbox: true` when the sandbox surface is reachable
+ * (`GET /sandbox/personas` succeeds). Public board context no longer
+ * carries a `sandbox` flag (SDK 2.0+). The reason field keeps the seam
+ * future-proof (see `PreviewReason`).
  */
 export function resolveCapability(context: {
   sandbox: boolean;

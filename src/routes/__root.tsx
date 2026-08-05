@@ -1,18 +1,18 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 
 /**
- * Root: loads the board context once (identity, theme, features) plus
- * the session user, injects the board theme as overrides of the shadcn
- * token block, and renders the shared chrome.
+ * Root: loads the board context once (identity, features) plus the
+ * session user, and renders the shared chrome. Presentation tokens and
+ * light/dark mode are repo-owned (`src/theme.css` → resolved module) —
+ * board context no longer carries a wire theme (SDK 3.x).
  */
-import { boardCopy } from '#/copy';
-
 import {
   HeadContent,
   Outlet,
   Scripts,
   createRootRoute,
   useNavigate,
+  useRouter,
   useRouterState,
 } from '@tanstack/react-router';
 
@@ -21,28 +21,19 @@ import Header from '../components/Header';
 import { localeDirection } from '../lib/locale-direction';
 import { toPreviewBoardConfig } from '../lib/preview';
 import { emitRoutesReport } from '../lib/routes-report';
-import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
-import { getSessionUser } from '../server/account';
-import { listCompanies } from '../server/employers';
-import { getAccessGrant } from '../server/paywall';
-import { getDataSourceFacts, getPreviewState } from '../server/preview';
-import {
-  getBoardContext,
-  getBoardSeo,
-  getEmployerOfferGate,
-} from '../server/queries';
-import appCss from '../styles.css?url';
-import { themeMeta } from '../theme/resolved';
-import { MessagesNavController } from './-messages-nav-controller';
+import { getRootShellData } from '../server/root-shell';
+import { themeMeta, themeTokens } from '../theme/resolved';
+import { useBlogSuggestions } from './-use-blog-suggestions';
 import { useCompanyMarketSuggestions } from './-use-company-market-suggestions';
+import '../styles.css';
 import { useKeywordSuggestions } from './-use-keyword-suggestions';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
+import { AlternateLinks } from '@/components/alternate-links';
 import { AnalyticsScripts } from '@/components/analytics-scripts';
 import { AppRouteErrorPage } from '@/components/app-route-error';
-import { AppRouterProvider } from '@/components/app-router-provider';
 import { ShellBreadcrumb } from '@/components/board/breadcrumb';
 import { themeModeScript } from '@/components/cavuno/board-theme';
 import {
@@ -59,7 +50,8 @@ import {
   SkipToContentLink,
 } from '@/components/shell-accessibility';
 import { DirectionProvider } from '@/components/ui/direction';
-import { Toaster } from '@/components/ui/sonner';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
 import {
   resolveHeaderRouteLabels,
   resolveHeaderSearchState,
@@ -76,6 +68,42 @@ const LazyMessagesDockController = lazy(() =>
     default: MessagesDockController,
   })),
 );
+
+const LazyMessagesNavController = lazy(() =>
+  import('./-messages-nav-controller').then(({ MessagesNavController }) => ({
+    default: MessagesNavController,
+  })),
+);
+
+const LazyToaster = lazy(() =>
+  import('@/components/ui/sonner').then(({ Toaster }) => ({
+    default: Toaster,
+  })),
+);
+
+function DeferredToaster() {
+  const [requested, setRequested] = useState(false);
+
+  useEffect(() => {
+    const request = () => setRequested(true);
+    window.addEventListener('pointerdown', request, {
+      once: true,
+      passive: true,
+      capture: true,
+    });
+    window.addEventListener('keydown', request, { once: true, capture: true });
+    return () => {
+      window.removeEventListener('pointerdown', request, { capture: true });
+      window.removeEventListener('keydown', request, { capture: true });
+    };
+  }, []);
+
+  return requested ? (
+    <Suspense fallback={null}>
+      <LazyToaster />
+    </Suspense>
+  ) : null;
+}
 
 const LazyPreviewToolbar = lazy(() =>
   import('@/components/preview/preview-toolbar').then(({ PreviewToolbar }) => ({
@@ -98,129 +126,41 @@ declare module '@tanstack/react-router' {
 }
 
 export const Route = createRootRoute({
-  loader: async () => {
-    const [board, user, seo, offerGate, employerCompanies, preview, hasGrant] =
-      await Promise.all([
-        getBoardContext(),
-        getSessionUser(),
-        getBoardSeo(),
-        getEmployerOfferGate(),
-        // Signed-in header menu: the viewer's company workspaces. Signed-out
-        // (or any failure) is simply "no companies".
-        listCompanies()
-          .then((memberships) => memberships.data)
-          .catch(() => null),
-        // Developer-preview capability + persona roster. The
-        // server-verified `sandbox: true` gate resolves false on every tenant
-        // board, so the toolbar never renders there. Fail closed on the
-        // persona RPC so a sandbox hiccup never faults the page — but dual-
-        // source basics (env + cookie, via getDataSourceFacts server fn) still
-        // flow through so the "Your board" escape hatch remains available when
-        // the demo cookie is set. Never import data-source.server from this
-        // route file — import-protection denies .server modules on the client.
-        getPreviewState().catch(async () => {
-          const facts = await getDataSourceFacts().catch(() => ({
-            demoConfigured: false,
-            demoBoardPrivate: false,
-            dataSource: 'board' as const,
-          }));
-          return {
-            capability: {
-              canPreview: false as const,
-              reason: 'not-sandbox' as const,
-            },
-            personas: [],
-            ...facts,
-          };
-        }),
-        // Candidate paywall: does the signed-in viewer hold an active grant?
-        // `getAccessGrant`'s requireSession middleware throws BEFORE any API
-        // call for anonymous visitors, so the `.catch` yields `false` at zero
-        // cost; a signed-in read is authed and therefore always no-store
-        // (read-cache policy). Runs in the fan-out, never a waterfall.
-        getAccessGrant()
-          .then((grant) => grant.hasAccess)
-          .catch(() => false),
-      ]);
-    return {
-      board,
-      user,
-      seo,
-      offerGate,
-      employerCompanies,
-      preview,
-      // Only surface the account "Subscription" entry to an entitled viewer,
-      // and only on a paywall board — non-subscribers reach the paywall via the
-      // gated-listing teaser instead. The AND keeps a signed-in viewer on a
-      // paywall-off board (whose grant read is discarded) from ever seeing it.
-      hasAccessGrant: resolveSubscriptionEntryVisible(
-        board.features.candidatePaywall,
-        hasGrant,
-      ),
-    };
-  },
+  loader: () => getRootShellData(),
   head: ({ loaderData }) => {
     const board = loaderData?.board;
-    const seo = loaderData?.seo;
-    const icons = seo?.icons;
-    // Board-resolved favicons / app icons — only the configured variants.
-    const boardIconLinks = icons
-      ? [
-          ...(icons.svg
-            ? [{ rel: 'icon', type: 'image/svg+xml', href: icons.svg }]
-            : []),
-          ...(icons.ico ? [{ rel: 'icon', href: icons.ico }] : []),
-          ...(icons.icon192
-            ? [
-                {
-                  rel: 'icon',
-                  type: 'image/png',
-                  sizes: '192x192',
-                  href: icons.icon192,
-                },
-              ]
-            : []),
-          ...(icons.icon512
-            ? [
-                {
-                  rel: 'icon',
-                  type: 'image/png',
-                  sizes: '512x512',
-                  href: icons.icon512,
-                },
-              ]
-            : []),
-          ...(icons.appleTouch
-            ? [{ rel: 'apple-touch-icon', href: icons.appleTouch }]
-            : []),
-        ]
-      : [];
-    // When the board resolves no icon at all, fall back to the bundled
-    // Cavuno mark rather than the platform-default /favicon.ico alone.
-    const iconLinks =
-      boardIconLinks.length > 0
-        ? boardIconLinks
-        : [
-            { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-            { rel: 'icon', href: '/favicon.ico' },
-          ];
+    // 4.0.0 dropped board.seo().icons — starter-owned public assets.
+    const boardIconLinks = [
+      { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+      { rel: 'icon', href: '/favicon.ico' },
+      {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '192x192',
+        href: '/logo192.png',
+      },
+      {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '512x512',
+        href: '/logo512.png',
+      },
+      { rel: 'apple-touch-icon', href: '/logo192.png' },
+    ];
+    const iconLinks = boardIconLinks;
     return {
       meta: [
         { charSet: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { title: board?.name ?? 'Job board' },
-        ...(seo?.manifest.themeColor
-          ? [{ name: 'theme-color', content: seo.manifest.themeColor }]
-          : []),
+        { title: board?.name ?? m.rootFallback_title() },
+        { name: 'theme-color', content: themeTokens.light['--background'] },
       ],
       links: [
-        { rel: 'stylesheet', href: appCss },
         ...(themeMeta.fontsImport
           ? [{ rel: 'stylesheet', href: themeMeta.fontsImport }]
           : []),
         ...iconLinks,
         { rel: 'manifest', href: '/site.webmanifest' },
-        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
       ],
     };
   },
@@ -237,8 +177,15 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
-  const { board, user, offerGate, employerCompanies, preview, hasAccessGrant } =
-    Route.useLoaderData();
+  const {
+    board,
+    user,
+    offerGate,
+    employerCompanies,
+    preview,
+    hasAccessGrant,
+    consentChoice,
+  } = Route.useLoaderData();
   const isEmbed = useRouterState({
     select: (s) => s.location.pathname.startsWith('/embed'),
   });
@@ -262,21 +209,20 @@ function RootLayout() {
     select: (state) => resolveShellBreadcrumbTrail(state.matches),
   });
   const navigate = useNavigate();
+  const router = useRouter();
 
   // Once after hydration, report path templates to the builder parent when
-  // this board is embedded in the preview iframe.
-  // Lazy-import routeTree so the root module does not statically cycle
-  // with routeTree.gen (which imports every route including this one).
+  // this board is embedded in the preview iframe. The tree comes off the
+  // live router instance — importing routeTree.gen here would cycle (it
+  // imports every route including this one), and a dynamic import of it is
+  // ineffective anyway since router.tsx holds it in the client entry.
   useEffect(() => {
-    void import('../routeTree.gen')
-      .then(({ routeTree }) => {
-        // Structural cast: SDK walker accepts id/path/fullPath/children only.
-        emitRoutesReport(routeTree as never);
-      })
-      .catch(() => {
-        // Fire-and-forget: never block render on a missing tree.
-      });
-  }, []);
+    // A normal public tab has no builder parent, so do not walk the route
+    // tree merely to let emitRoutesReport no-op.
+    if (window.parent === window) return;
+    // Structural cast: SDK walker accepts id/path/fullPath/children only.
+    emitRoutesReport(router.routeTree as never);
+  }, [router]);
   // Identity-aware default search scope: an approved employer hunts talent
   // (when the board's directory is visible to them); everyone else hunts
   // jobs. Section routes (companies/talent/blog) still override.
@@ -299,10 +245,16 @@ function RootLayout() {
   const companyMarketSuggestions = useCompanyMarketSuggestions(
     headerSearch.scope === 'companies',
   );
-  const copy = boardCopy(board.language, board.labels);
+  const blogSuggestions = useBlogSuggestions(headerSearch.scope === 'blog');
+  // Breadcrumb nav aria-label only — do not import the full jobDetail copy
+  // family (21 messages × locales) into the unsplittable root for one string.
+  // Operator overrides ride the same jobCardLabels.breadcrumbAriaLabel key
+  // that jobDetailCopy resolves via resolveCopyGroup.
+  const breadcrumbAriaLabel = resolveJobDetailBreadcrumbAriaLabel();
   const shellBreadcrumb = resolveShellBreadcrumb({
     pathname: location.pathname,
-    labels: copy.breadcrumbs,
+    labels:
+      breadcrumbsCopy() as unknown as import('@/lib/shell-breadcrumb').ShellBreadcrumbLabels,
     // Authed surfaces get footer trails too — labels from the template
     // catalogs (the SDK's copy.breadcrumbs only knows public segments).
     privateLabels: {
@@ -317,6 +269,11 @@ function RootLayout() {
       messages: m.messagesPage_title(),
       signIn: m.siteHeader_signInLabel(),
       signUp: m.siteHeader_signUpLabel(),
+      authJoin: m.authJoin_title(),
+      authForgotPassword: m.authForgotPassword_title(),
+      authResetPassword: m.authResetPassword_title(),
+      authMagicLink: m.authMagicLink_title(),
+      authVerifyEmail: m.authVerifyEmail_title(),
       postJob: m.siteHeader_postJobLabel(),
       companyProfile: m.accountShell_companyProfileNav(),
       employerDashboard: m.employerDashboard_title(),
@@ -355,6 +312,20 @@ function RootLayout() {
     }
 
     if (scope === 'blog') {
+      if (term?.type === 'post') {
+        void navigate({
+          to: '/blog/$postSlug',
+          params: { postSlug: term.slug },
+        });
+        return;
+      }
+      if (term?.type === 'tag') {
+        void navigate({
+          to: '/blog/tag/$tagSlug',
+          params: { tagSlug: term.slug },
+        });
+        return;
+      }
       void navigate({ to: '/blog', search: { q: query } });
       return;
     }
@@ -410,13 +381,11 @@ function RootLayout() {
   // hosted capabilities missing from the starter, not extra starter chrome).
   if (isEmbed) {
     return (
-      <AppRouterProvider>
-        <MainContentTarget>
-          <main className="p-4">
-            <Outlet />
-          </main>
-        </MainContentTarget>
-      </AppRouterProvider>
+      <MainContentTarget>
+        <main className="p-4">
+          <Outlet />
+        </main>
+      </MainContentTarget>
     );
   }
 
@@ -426,18 +395,22 @@ function RootLayout() {
       logoUrl={board.logoUrl}
       user={user}
       language={board.language}
-      labels={board.labels}
       features={board.features}
       hasAccessGrant={hasAccessGrant}
       employerCompanies={employerCompanies}
       talentDirectoryVisibility={board.talentDirectoryVisibility}
       messagesNav={
-        user && board.features.messaging ? <MessagesNavController /> : undefined
+        user && board.features.messaging ? (
+          <Suspense fallback={null}>
+            <LazyMessagesNavController />
+          </Suspense>
+        ) : undefined
       }
       search={{
         ...headerSearch,
         onSubmit: submitHeaderSearch,
         keywordSuggestions,
+        blogSuggestions,
         companyMarketSuggestions,
         locationSuggestions,
       }}
@@ -468,92 +441,92 @@ function RootLayout() {
   );
 
   return (
-    <AppRouterProvider>
+    <CookieConsentProvider
+      required={board.analytics.cookieConsentRequired}
+      initialChoice={consentChoice}
+    >
       {/* Consent state wraps the whole chrome: the banner (floating stack),
           the footer's "Cookie preferences" reopener, the job-alert prompt's
           yield, and the analytics gate all read the same choice. The embed
           iframe path above deliberately gets neither trackers nor banner. */}
-      <CookieConsentProvider required={board.analytics.cookieConsentRequired}>
-        <AnalyticsScripts analytics={board.analytics} />
-        <FloatingStackProvider>
-          <NavigationProgress />
-          {fillsViewport ? (
-            <div className="md:grid md:h-dvh md:grid-rows-[auto_minmax(0,1fr)]">
-              {header}
-              {routeContent}
-            </div>
-          ) : (
-            <>
-              {header}
-              {routeContent}
-            </>
-          )}
-          <Footer
-            breadcrumb={
-              shellBreadcrumb ? (
-                <ShellBreadcrumb
-                  items={shellBreadcrumb.items}
-                  ariaLabel={copy.jobDetail.breadcrumbAriaLabel}
-                />
-              ) : undefined
-            }
-            connected={shellBreadcrumb !== null}
-            flush={fillsViewport}
-            boardName={board.name}
-            logoUrl={board.logoUrl}
-            language={board.language}
-            labels={board.labels}
-            showCavunoBranding={board.showCavunoBranding}
-            primaryDomain={board.primaryDomain}
-            slug={board.slug}
-            features={board.features}
-            footer={board.footer}
-            talentDirectoryVisibility={board.talentDirectoryVisibility}
-            hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
-            cookiePreferencesAction={<CookiePreferencesFooterAction />}
-          />
-          <CookieConsentBanner />
-          {user &&
-          board.features.messaging &&
-          !location.pathname.startsWith('/messages') ? (
-            // Keyed by viewer: the dock holds polled inbox + open-thread state
-            // that must unmount wholesale when the signed-in identity changes
-            // (sign-out/in, persona switch) — never survive across viewers. The
-            // whole messaging surface is hidden when the board flag is off.
-            <Suspense fallback={null}>
-              <LazyMessagesDockController key={user.id} />
-            </Suspense>
-          ) : null}
-          {preview.capability.canPreview || preview.demoConfigured ? (
-            <Suspense fallback={null}>
-              <LazyPreviewToolbar
-                capability={preview.capability}
-                personas={preview.personas}
-                viewer={
-                  user
-                    ? {
-                        displayName: user.displayName,
-                        email: user.email,
-                        role: user.role,
-                      }
-                    : null
-                }
-                config={toPreviewBoardConfig(board)}
-                demoConfigured={preview.demoConfigured}
-                demoBoardPrivate={preview.demoBoardPrivate}
-                dataSource={preview.dataSource}
+      <AnalyticsScripts analytics={board.analytics} />
+      <FloatingStackProvider>
+        <NavigationProgress />
+        {fillsViewport ? (
+          <div className="md:grid md:h-dvh md:grid-rows-[auto_minmax(0,1fr)]">
+            {header}
+            {routeContent}
+          </div>
+        ) : (
+          <>
+            {header}
+            {routeContent}
+          </>
+        )}
+        <Footer
+          breadcrumb={
+            shellBreadcrumb ? (
+              <ShellBreadcrumb
+                items={shellBreadcrumb.items}
+                ariaLabel={breadcrumbAriaLabel}
               />
-            </Suspense>
-          ) : null}
-        </FloatingStackProvider>
-      </CookieConsentProvider>
-    </AppRouterProvider>
+            ) : undefined
+          }
+          connected={shellBreadcrumb !== null}
+          flush={fillsViewport}
+          boardName={board.name}
+          logoUrl={board.logoUrl}
+          language={board.language}
+          showCavunoBranding={board.showCavunoBranding}
+          primaryDomain={board.primaryDomain}
+          slug={board.slug}
+          features={board.features}
+          footer={board.footer}
+          talentDirectoryVisibility={board.talentDirectoryVisibility}
+          hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
+          cookiePreferencesAction={<CookiePreferencesFooterAction />}
+        />
+        <CookieConsentBanner />
+        {user &&
+        board.features.messaging &&
+        !location.pathname.startsWith('/messages') ? (
+          // Keyed by viewer: the dock holds polled inbox + open-thread state
+          // that must unmount wholesale when the signed-in identity changes
+          // (sign-out/in, persona switch) — never survive across viewers. The
+          // whole messaging surface is hidden when the board flag is off.
+          <Suspense fallback={null}>
+            <LazyMessagesDockController key={user.id} />
+          </Suspense>
+        ) : null}
+        {preview.capability.canPreview || preview.demoConfigured ? (
+          <Suspense fallback={null}>
+            <LazyPreviewToolbar
+              capability={preview.capability}
+              personas={preview.personas}
+              viewer={
+                user
+                  ? {
+                      displayName: user.displayName,
+                      email: user.email,
+                      role: user.role,
+                    }
+                  : null
+              }
+              config={toPreviewBoardConfig(board)}
+              demoConfigured={preview.demoConfigured}
+              demoBoardPrivate={preview.demoBoardPrivate}
+              dataSource={preview.dataSource}
+            />
+          </Suspense>
+        ) : null}
+      </FloatingStackProvider>
+    </CookieConsentProvider>
   );
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  // Theme mode is repo-canonical too (theme.css → resolved
-  // module), not the wire theme.
+  const { origin } = Route.useLoaderData();
+  // Theme mode is repo-canonical (theme.css → resolved module).
   const mode =
     themeMeta.mode === 'dark' || themeMeta.mode === 'light'
       ? themeMeta.mode
@@ -583,13 +556,17 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       >
         <head>
           {/* en-XA / ar-XB are the CI coverage pseudo-locales (never for
-            humans or crawlers): noindex them. Real prefixed chrome
-            locales stay indexable — their route canonicals already point
-            at the unprefixed base; hreflang is deliberately deferred until
-            content translates). */}
-          {(locale === 'en-XA' || locale === 'ar-XB') && (
+            humans or crawlers): noindex them. Compare as string[] so the
+            branch typechecks under the prod 3-locale Locale union and the
+            QA 5-locale build. */}
+          {(['en-XA', 'ar-XB'] as readonly string[]).includes(locale) && (
             <meta name="robots" content="noindex, nofollow" />
           )}
+          {/* Chrome now translates end to end, so the locale variants are
+            first-class: hreflang alternates here + localized
+            self-canonicals per page (selfUrl) make /de/ and /fr/
+            indexable instead of consolidating into the base locale. */}
+          <AlternateLinks origin={origin} />
           <HeadContent />
         </head>
         <body className="bg-background text-foreground flex min-h-screen flex-col font-sans antialiased">
@@ -597,7 +574,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <script dangerouslySetInnerHTML={{ __html: themeModeScript(mode) }} />
           <SkipToContentLink label={m.siteHeader_skipToContentLabel()} />
           {children}
-          <Toaster />
+          <DeferredToaster />
           <Scripts />
         </body>
       </html>

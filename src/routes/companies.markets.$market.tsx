@@ -1,24 +1,17 @@
-import { boardCopy } from '#/copy';
-
-import { BOARD_PATHS, boardUrl, companyMarketPath } from '@cavuno/board/paths';
-import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
+/**
+ * Company market page — head + breadcrumb JSON-LD in getCompaniesMarketPage.
+ */
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import {
-  getCompanyMarket,
-  getCompanyMarkets,
-  getSeoBase,
-  listCompanies,
-  searchCompanies,
-} from '../server/queries';
+import { getCompaniesMarketPage } from '../server/companies-pages';
+import { getCompanyMarket } from '../server/queries';
 
-import { JsonLd } from '@/components/json-ld';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import {
   companiesListingLoaderDeps,
   parseCompaniesSearch,
 } from '@/lib/companies-search';
-import { headTitle } from '@/lib/page-title';
 import { pageToOffset } from '@/lib/pagination';
 import { ProgrammaticCompaniesView } from '@/routes/-programmatic-companies-view';
 
@@ -39,60 +32,20 @@ export const Route = createFileRoute('/companies/markets/$market')({
       });
     }
 
-    const [page, markets, seo] = await Promise.all([
-      deps.query
-        ? searchCompanies({
-            data: {
-              query: deps.query,
-              marketSlug: params.market,
-              offset: pageToOffset(deps.page ?? 1, COMPANIES_PAGE_SIZE),
-              limit: COMPANIES_PAGE_SIZE,
-            },
-          })
-        : listCompanies({
-            data: {
-              marketSlug: params.market,
-              offset: pageToOffset(deps.page ?? 1, COMPANIES_PAGE_SIZE),
-              limit: COMPANIES_PAGE_SIZE,
-            },
-          }),
-      // Additive market filter: a failing markets read must not fault the
-      // market page.
-      getCompanyMarkets({ data: { limit: 24 } }).catch(() => null),
-      getSeoBase(),
-    ]);
-    return { market, page, markets: markets?.data ?? [], seo };
+    const page = await getCompaniesMarketPage({
+      data: {
+        marketSlug: params.market,
+        displayName: market.displayName,
+        query: deps.query,
+        offset: pageToOffset(deps.page ?? 1, COMPANIES_PAGE_SIZE),
+        limit: COMPANIES_PAGE_SIZE,
+      },
+    });
+    return { market, ...page };
   },
-  head: ({ loaderData, params }) =>
+  head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData.seo.boardName,
-                m.marketPage_metaTitle({
-                  market: loaderData.market.displayName,
-                }),
-              ),
-            },
-            {
-              name: 'description',
-              content: m.marketPage_metaDescription({
-                market: loaderData.market.displayName,
-                boardName: loaderData.seo.boardName,
-              }),
-            },
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              href: boardUrl(
-                loaderData.seo.origin,
-                companyMarketPath(params.market),
-              ),
-            },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: MarketPage,
   notFoundComponent: MarketNotFound,
@@ -113,26 +66,12 @@ function MarketNotFound() {
 }
 
 function MarketPage() {
-  const { market, page, markets, seo } = Route.useLoaderData();
+  const { market, page, markets } = Route.useLoaderData();
   const search = Route.useSearch();
   const params = Route.useParams();
-  const copy = boardCopy(seo.language, seo.labels);
-  const crumbs = copy.breadcrumbs;
-  const jsonLd = [
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      {
-        label: crumbs.companies,
-        href: boardUrl(seo.origin, BOARD_PATHS.companies),
-      },
-      { label: market.displayName },
-    ]),
-  ].filter((entry): entry is Record<string, unknown> => entry !== null);
 
   return (
     <>
-      <JsonLd data={jsonLd} />
-
       <ProgrammaticCompaniesView
         heading={market.displayName}
         page={page}

@@ -11,9 +11,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import { localizePath } from '@/lib/localized-path';
 import { shouldRenderPagination, totalPages } from '@/lib/pagination';
 
 type PaginationPage = number | 'start-ellipsis' | 'end-ellipsis';
+
+const paginationScrollTarget =
+  '[data-pagination-scroll-target], [data-slot="search-results-list"]';
 
 function visiblePages(page: number, total: number): PaginationPage[] {
   if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1);
@@ -62,8 +66,18 @@ export function ListingPagination({
   const navigate =
     (nextPage: number) => (event: React.MouseEvent<HTMLAnchorElement>) => {
       event.preventDefault();
-      if (nextPage !== page && nextPage >= 1 && nextPage <= total)
+      if (nextPage !== page && nextPage >= 1 && nextPage <= total) {
+        const list = event.currentTarget.closest<HTMLElement>(
+          paginationScrollTarget,
+        );
+
+        // Search results own their vertical scroll on desktop, while the
+        // document owns it on mobile. Reset both so every page starts at the
+        // beginning of the listing in either layout.
+        list?.scrollIntoView?.({ block: 'start' });
+        list?.scrollTo?.({ top: 0 });
         onPageChange(nextPage);
+      }
     };
 
   return (
@@ -74,7 +88,7 @@ export function ListingPagination({
       <PaginationContent className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
         <PaginationItem className="justify-self-start">
           <PaginationPrevious
-            href={hrefForPage(Math.max(1, page - 1))}
+            href={localizePath(hrefForPage(Math.max(1, page - 1)))}
             text={m.pagination_previousLabel()}
             aria-label={m.pagination_previousPageLabel()}
             aria-disabled={page === 1}
@@ -96,7 +110,7 @@ export function ListingPagination({
               <PaginationItem key={item}>
                 {typeof item === 'number' ? (
                   <PaginationLink
-                    href={hrefForPage(item)}
+                    href={localizePath(hrefForPage(item))}
                     isActive={item === page}
                     aria-label={`${m.pagination_ariaLabel()} ${item}`}
                     onClick={navigate(item)}
@@ -112,7 +126,7 @@ export function ListingPagination({
         </li>
         <PaginationItem className="justify-self-end">
           <PaginationNext
-            href={hrefForPage(Math.min(total, page + 1))}
+            href={localizePath(hrefForPage(Math.min(total, page + 1)))}
             text={m.pagination_nextLabel()}
             aria-label={m.pagination_nextPageLabel()}
             aria-disabled={page === total}

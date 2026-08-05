@@ -1,5 +1,7 @@
 import { safeRedirectPath } from '@cavuno/board/server';
 
+import { localizePath } from './localized-path';
+
 const DEFAULT_CANDIDATE_RETURN_TO = '/account';
 
 export function candidateReturnTo(value: unknown) {
@@ -42,6 +44,8 @@ export function candidateForgotPasswordHref(value: unknown) {
 }
 
 function candidateAuthHref(pathname: string, value: unknown) {
-  const search = new URLSearchParams({ returnTo: candidateReturnTo(value) });
-  return `${pathname}?${search}`;
+  const search = new URLSearchParams({
+    returnTo: localizePath(candidateReturnTo(value)),
+  });
+  return `${localizePath(pathname)}?${search}`;
 }

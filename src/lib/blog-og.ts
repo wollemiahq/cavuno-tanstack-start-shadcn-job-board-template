@@ -24,6 +24,8 @@ export function truncate(value: string, max: number): string {
 
 export interface BlogOgCard {
   boardName: string;
+  /** Localized "Blog" eyebrow word (board language), joined as "{board} · {blogLabel}". */
+  blogLabel: string;
   /** Board primary colour (hex), painted as the accent bar. */
   themeColor: string;
   title: string;
@@ -41,6 +43,7 @@ export function buildBlogOgHtml(card: BlogOgCard): string {
   const title = escapeHtml(truncate(card.title, 70));
   const excerpt = card.excerpt ? escapeHtml(truncate(card.excerpt, 140)) : null;
   const boardName = escapeHtml(card.boardName);
+  const blogLabel = escapeHtml(card.blogLabel);
   const authorName = card.authorName ? escapeHtml(card.authorName) : null;
   const dateLabel = card.dateLabel ? escapeHtml(card.dateLabel) : null;
   const avatar = card.authorAvatarUrl ? escapeHtml(card.authorAvatarUrl) : null;
@@ -60,7 +63,7 @@ export function buildBlogOgHtml(card: BlogOgCard): string {
       <div style="display:flex;width:1200px;height:14px;background:${themeColor};"></div>
       <div style="display:flex;flex-direction:column;justify-content:space-between;flex:1;padding:72px 80px;">
         <div style="display:flex;flex-direction:column;gap:28px;">
-          <div style="display:flex;font-size:28px;color:#6b7280;">${boardName} · Blog</div>
+          <div style="display:flex;font-size:28px;color:#6b7280;">${boardName} · ${blogLabel}</div>
           <div style="display:flex;font-size:64px;font-weight:600;color:#111827;line-height:1.1;">${title}</div>
           ${
             excerpt

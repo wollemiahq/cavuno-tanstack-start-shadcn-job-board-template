@@ -30,17 +30,20 @@ function setDesktop(matches: boolean) {
 function Harness({
   selectedJob,
   jobSlugs = ['first-job', 'second-job'],
+  page,
   onReplace = vi.fn(),
   onPush = vi.fn(),
 }: {
   selectedJob?: string;
   jobSlugs?: string[];
+  page?: number;
   onReplace?: (jobSlug: string) => void;
   onPush?: (jobSlug: string) => void;
 }) {
   const selection = useSearchSelection({
     selectedId: selectedJob,
     resultIds: jobSlugs,
+    page,
     onReplace,
     onPush,
   });
@@ -58,6 +61,7 @@ function Harness({
       <section
         ref={(node) => {
           selection.listRef.current = node;
+          if (node && !node.scrollTo) node.scrollTo = vi.fn();
         }}
         data-testid="results-list"
       >
@@ -207,6 +211,78 @@ describe('useSearchSelection', () => {
         />,
       );
       expect(scrollIntoView).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('page-change list scroll reset', () => {
+    // jsdom's Element.scrollTo is incomplete; pin the list's own method so the
+    // pagination reset is observable the same way arrival scroll uses
+    // scrollIntoView.
+    it('scrolls the list to its top when the page search param changes', () => {
+      setDesktop(true);
+      const { rerender } = render(
+        <Harness
+          selectedJob="first-job"
+          jobSlugs={['first-job', 'second-job']}
+          page={1}
+        />,
+      );
+      const list = screen.getByTestId('results-list');
+      const scrollTo = vi.fn();
+      list.scrollTo = scrollTo;
+
+      rerender(
+        <Harness
+          selectedJob="first-job"
+          jobSlugs={['first-job', 'second-job']}
+          page={2}
+        />,
+      );
+
+      expect(scrollTo).toHaveBeenCalledTimes(1);
+      expect(scrollTo).toHaveBeenCalledWith({ top: 0 });
+    });
+
+    it('does not reset list scroll when only the selected result changes', () => {
+      setDesktop(true);
+      const { rerender } = render(
+        <Harness
+          selectedJob="first-job"
+          jobSlugs={['first-job', 'second-job']}
+          page={1}
+        />,
+      );
+      const list = screen.getByTestId('results-list');
+      const scrollTo = vi.fn();
+      list.scrollTo = scrollTo;
+
+      rerender(
+        <Harness
+          selectedJob="second-job"
+          jobSlugs={['first-job', 'second-job']}
+          page={1}
+        />,
+      );
+
+      expect(scrollTo).not.toHaveBeenCalled();
+    });
+
+    it('does not scroll the list on the initial mount page', () => {
+      setDesktop(true);
+      render(
+        <Harness
+          selectedJob="first-job"
+          jobSlugs={['first-job', 'second-job']}
+          page={2}
+        />,
+      );
+      const list = screen.getByTestId('results-list');
+      const scrollTo = vi.fn();
+      list.scrollTo = scrollTo;
+
+      // Mount with page=2 must not yank the list — only a subsequent page
+      // change does. Re-render with the same page to flush effects.
+      expect(scrollTo).not.toHaveBeenCalled();
     });
   });
 });

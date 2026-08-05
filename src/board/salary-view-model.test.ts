@@ -1,11 +1,10 @@
-import { fieldLabel } from '@cavuno/board/format';
+import { formatSalaryStat, formatSalaryStatRange } from '@cavuno/board/format';
 import {
   companySalaryPath,
   salaryLocationPath,
   salarySkillPath,
   salaryTitlePath,
 } from '@cavuno/board/paths';
-import { formatRange, formatUsd } from '@cavuno/board/seo';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -29,6 +28,8 @@ import {
   type SeniorityRow,
 } from './salary-view-model';
 
+import { enumLabel } from '@/lib/enum-labels';
+
 /**
  * The salary mappers are Layer 1b — they own the derivations (median from
  * the median band, the p25/median/p75/based-on stat order + emphasis,
@@ -38,6 +39,7 @@ import {
  */
 describe('toOverallSalaryVM', () => {
   it('averages the median band and emphasises only the median stat, in p25→median→p75→basedOn order', () => {
+    const currency = 'USD';
     const vm = toOverallSalaryVM(
       {
         avgMin: 100000,
@@ -49,6 +51,7 @@ describe('toOverallSalaryVM', () => {
         p75Max: 150000,
       },
       'en',
+      currency,
     );
     expect(vm.stats.map((s) => s.emphasis ?? false)).toEqual([
       false,
@@ -59,8 +62,10 @@ describe('toOverallSalaryVM', () => {
     // Delegation-style: median = round((110000 + 130000) / 2) = 120000,
     // formatted by the SAME SDK helper the mapper delegates to — the
     // formatted shape is pinned once, by the SDK's goldens.
-    expect(vm.stats[1].value).toBe(formatUsd('en', 120000));
-    expect(vm.headlineValue).toBe(formatRange('en', 100000, 140000));
+    expect(vm.stats[1].value).toBe(formatSalaryStat('en', 120000, currency));
+    expect(vm.headlineValue).toBe(
+      formatSalaryStatRange('en', 100000, 140000, currency),
+    );
     expect(vm.stats.at(-1)?.value.startsWith('12 ')).toBe(true);
   });
 
@@ -68,6 +73,7 @@ describe('toOverallSalaryVM', () => {
     const vm = toOverallSalaryVM(
       { avgMin: 100000, avgMax: 140000, jobCount: 1 },
       'en',
+      'USD',
     );
     expect(vm.stats).toHaveLength(1);
     // singular job count copy when jobCount === 1
@@ -86,9 +92,33 @@ describe('toOverallSalaryVM', () => {
         p75Max: 150000,
       },
       'en',
+      'USD',
     );
     expect(vm.stats.some((s) => s.emphasis)).toBe(false);
     expect(vm.stats).toHaveLength(3); // p25, p75, based-on
+  });
+
+  it('emits no money figures when currency is missing (never invents USD)', () => {
+    const vm = toOverallSalaryVM(
+      {
+        avgMin: 100000,
+        avgMax: 140000,
+        jobCount: 12,
+        medianMin: 110000,
+        medianMax: 130000,
+        p25Min: 90000,
+        p75Max: 150000,
+      },
+      'en',
+      null,
+    );
+    expect(vm.headlineValue).toBe('');
+    // The timeframe suffix must not outlive the amount it qualifies — no
+    // bare "/ year" beside a blank figure.
+    expect(vm.perYearSuffix).toBe('');
+    // Only the non-money "based on N jobs" stat remains.
+    expect(vm.stats).toHaveLength(1);
+    expect(vm.stats[0].value.startsWith('12 ')).toBe(true);
   });
 });
 
@@ -122,11 +152,11 @@ describe('toSeniorityTableVM', () => {
       diffPercent: -8,
     },
   ];
-  const vm = toSeniorityTableVM(rows, 'en');
+  const vm = toSeniorityTableVM(rows, 'en', 'USD');
 
   it('resolves the seniority key through the taxonomy label', () => {
     // Delegation-style: same SDK label call the mapper makes.
-    expect(vm.rows[0].level).toBe(fieldLabel('en', 'senior'));
+    expect(vm.rows[0].level).toBe(enumLabel('senior'));
   });
 
   it('renders a dash baseline when the board average is missing', () => {
@@ -221,6 +251,21 @@ describe('salary path composers', () => {
     );
     expect(salaryLocationSkillsPath('london')).toBe(
       `${salaryLocationPath('london')}/skills`,
+    );
+  });
+
+  it('percent-encodes the appended segment like the SDK helpers do', () => {
+    // The SDK helpers encode their own segment; the composed second segment
+    // must get the same treatment or non-ASCII board-language slugs produce
+    // invalid canonical URLs (these composers feed rel=canonical).
+    expect(salaryTitleInLocationPath('führungskraft', 'zürich')).toBe(
+      '/salaries/titles/f%C3%BChrungskraft/z%C3%BCrich',
+    );
+    expect(companyCategorySalaryPath('acme', 'bürojobs')).toBe(
+      `${companySalaryPath('acme')}/b%C3%BCrojobs`,
+    );
+    expect(salarySkillInLocationPath('react', 'köln')).toBe(
+      `${salarySkillPath('react')}/k%C3%B6ln`,
     );
   });
 

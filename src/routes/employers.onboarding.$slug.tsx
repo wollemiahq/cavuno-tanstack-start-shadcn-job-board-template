@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router';
 
+import { boardErrorMessage } from '../lib/board-error-message';
 import {
   handleEmployerLoaderError,
   isReauthRetry,
@@ -128,7 +129,7 @@ function WorkEmailStep({
       });
       if (!result.ok) {
         setStatus('error');
-        setMessage(result.message);
+        setMessage(boardErrorMessage(result));
         return;
       }
       setStatus('idle');

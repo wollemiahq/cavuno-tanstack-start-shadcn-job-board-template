@@ -1,6 +1,3 @@
-import { boardCopy } from '#/copy';
-
-import { listingHead, listingJsonLd } from '@cavuno/board/seo';
 /**
  * Locations directory — `/jobs/locations/` (hosted parity:
  * `boards/[slug]/(main)/jobs/locations/page.tsx`). The API's `/places` returns
@@ -12,13 +9,17 @@ import { listingHead, listingJsonLd } from '@cavuno/board/seo';
  * The owned Page family supplies the single main landmark and content width;
  * shadcn Badge and Empty compositions present the nested directory without
  * changing its route, hierarchy, or SEO data contracts.
+ *
+ * Head + breadcrumb JSON-LD are computed in getJobsLocationsIndexPage so
+ * `@cavuno/board/seo` and breadcrumbsCopy stay out of the universal entry.
  */
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { MapPin } from 'lucide-react';
 
-import { JsonLd } from '../components/json-ld';
+import { jsonLdHeadScripts } from '../components/json-ld';
 import { m } from '../paraglide/messages';
-import { getSeoBase, listPlaces } from '../server/queries';
+import { getLocale } from '../paraglide/runtime';
+import { getJobsLocationsIndexPage } from '../server/jobs-listing-pages';
 
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { Badge } from '@/components/ui/badge';
@@ -33,17 +34,10 @@ import type { PublicPlace } from '@cavuno/board';
 
 export const Route = createFileRoute('/jobs/locations/')({
   staticData: { ownsMain: true },
-  loader: async () => {
-    const [places, seo] = await Promise.all([listPlaces(), getSeoBase()]);
-    return { places, seo };
-  },
+  loader: () => getJobsLocationsIndexPage(),
   head: ({ loaderData }) =>
     loaderData
-      ? listingHead({
-          ...loaderData.seo,
-          path: '/jobs/locations',
-          heading: m.jobsLocationsIndex_heading(),
-        })
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: LocationsIndexPage,
 });
@@ -96,7 +90,9 @@ function PlaceTree({ nodes }: { nodes: PlaceNode[] }) {
             ) : (
               <span className="text-muted-foreground">{node.place.name}</span>
             )}
-            <Badge variant="secondary">{node.place.jobCount}</Badge>
+            <Badge variant="secondary">
+              {node.place.jobCount.toLocaleString(getLocale())}
+            </Badge>
           </div>
           {node.children.length > 0 ? (
             <div className="border-border ms-4 mt-1 border-s ps-3">
@@ -110,21 +106,11 @@ function PlaceTree({ nodes }: { nodes: PlaceNode[] }) {
 }
 
 function LocationsIndexPage() {
-  const { places, seo } = Route.useLoaderData();
+  const { places } = Route.useLoaderData();
   const tree = buildHierarchy(places.data);
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
 
   return (
     <Page width="wide">
-      <JsonLd
-        data={listingJsonLd({
-          origin: seo.origin,
-          breadcrumbs: [
-            { name: crumbs.jobs, path: '/' },
-            { name: crumbs.locations },
-          ],
-        })}
-      />
       <PageContent
         header={<PageHeader title={m.jobsLocationsIndex_heading()} />}
       >

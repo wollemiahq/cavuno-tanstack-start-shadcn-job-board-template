@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 
 import { AuthCard, Field, FormError } from '../components/auth-form';
+import { boardErrorMessage } from '../lib/board-error-message';
 import {
   candidateForgotPasswordHref,
   candidateReturnTo,
@@ -99,7 +100,15 @@ function ResetPasswordPage() {
               await router.invalidate();
               setDone(true);
             } else {
-              setError(m.authResetPassword_expiredError());
+              // "Link expired" only for actual token failures — a weak
+              // password or rate limit deserves its own sentence, not a
+              // false claim that the link is dead.
+              setError(
+                result.code === 'board_auth_invalid_token' ||
+                  result.code === 'board_auth_token_expired'
+                  ? m.authResetPassword_expiredError()
+                  : boardErrorMessage(result),
+              );
             }
           } catch {
             setError(m.candidateAction_errorText());

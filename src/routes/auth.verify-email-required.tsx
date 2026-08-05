@@ -26,6 +26,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp';
+import { boardErrorMessage } from '@/lib/board-error-message';
 import { headTitle } from '@/lib/page-title';
 import type { Resume } from '@cavuno/board';
 
@@ -87,7 +88,7 @@ function VerifyEmailRequiredPage() {
         await router.invalidate();
         setStep('resume');
       } else {
-        setError(result.message);
+        setError(boardErrorMessage(result));
       }
     } catch {
       setError(m.candidateAction_errorText());
@@ -173,7 +174,7 @@ function VerifyEmailRequiredPage() {
             if (result.ok) {
               setResent(true);
             } else {
-              setError(result.message);
+              setError(boardErrorMessage(result));
             }
           } catch {
             setError(m.candidateAction_errorText());

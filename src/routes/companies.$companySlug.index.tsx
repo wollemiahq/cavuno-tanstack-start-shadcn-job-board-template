@@ -1,12 +1,7 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound } from '@cavuno/board';
 import { companySalaryPath } from '@cavuno/board/paths';
-import { createBreadcrumbJsonLd, formatRange } from '@cavuno/board/seo';
 import {
-  Await,
   createFileRoute,
-  getRouteApi,
   interpolatePath,
   Link,
   notFound,
@@ -14,16 +9,18 @@ import {
 import { ArrowRight, Building2 } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
+import { getCompanyProfileSeo } from '../server/companies-pages';
 import {
   getCompany,
   getCompanySalarySummary,
-  getSeoBase,
   getSimilarCompanies,
   listCompanyJobs,
 } from '../server/queries';
 
 import { toJobCardVM } from '@/board/job-view-model';
 import {
+  formatSalaryRange,
   toOverallSalaryVM,
   toSalaryRailVM,
   type RailItem,
@@ -32,7 +29,8 @@ import { CompanyCard } from '@/components/board/company-card';
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobCard } from '@/components/board/job-card';
 import { CompanySalarySummary } from '@/components/board/salary-sections';
-import { JsonLd } from '@/components/json-ld';
+import { DeferredContent } from '@/components/deferred-content';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
 import { Text } from '@/components/text';
@@ -45,7 +43,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/companies/$companySlug/')({
@@ -53,10 +50,9 @@ export const Route = createFileRoute('/companies/$companySlug/')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
     try {
-      const [company, jobs, seo, salarySummary] = await Promise.all([
+      const [company, jobs, salarySummary] = await Promise.all([
         getCompany({ data: { companySlug: params.companySlug } }),
         listCompanyJobs({ data: { companySlug: params.companySlug } }),
-        getSeoBase(),
         // Salary summary stays awaited: it is the Salaries tab gate
         // (`hasSalaries`), which renders in the above-the-fold section shell.
         getCompanySalarySummary({ data: { companySlug: params.companySlug } }),
@@ -69,19 +65,27 @@ export const Route = createFileRoute('/companies/$companySlug/')({
       })
         .then((r) => r.data)
         .catch(() => []);
-      // The salary summary IS the tab gate: the Salaries tab shows when there
-      // is real salary data (an overall aggregate or per-category rows), the
-      // same condition the salary route renders its empty state against.
       const hasSalaries =
         salarySummary.overallSalary !== null ||
         salarySummary.byCategory.length > 0;
+      const profileSeo = await getCompanyProfileSeo({
+        data: {
+          companyName: company.name,
+          companySlug: company.slug,
+          companyId: company.id,
+          description: company.description,
+          website: company.website,
+          logoUrl: company.logoUrl,
+          publicUrl: company.links.public,
+        },
+      });
       return {
         company,
         jobs,
         similar,
-        seo,
         salarySummary,
         hasSalaries,
+        ...profileSeo,
       };
     } catch (error) {
       if (isNotFound(error)) throw notFound();
@@ -90,39 +94,7 @@ export const Route = createFileRoute('/companies/$companySlug/')({
   },
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData?.seo.boardName,
-                loaderData.company.name,
-              ),
-            },
-            {
-              name: 'description',
-              content: loaderData.company.description
-                ? loaderData.company.description
-                    .replace(/<[^>]+>/g, ' ')
-                    .trim()
-                    .slice(0, 160)
-                : m.companyDetail_metaDescriptionFallback({
-                    name: loaderData.company.name,
-                    board: loaderData.seo.boardName,
-                  }),
-            },
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              // Prefer the API's canonical public URL (the cross-surface
-              // contract) — like job-detail — falling back to the composed
-              // board-relative path when the board sets no public link.
-              href:
-                loaderData.company.links.public ??
-                `${loaderData.seo.origin}/companies/${loaderData.company.slug}`,
-            },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: CompanyPage,
   notFoundComponent: () => (
@@ -139,13 +111,13 @@ export const Route = createFileRoute('/companies/$companySlug/')({
   ),
 });
 
-const rootApi = getRouteApi('__root__');
-
 /** Pre-resolve the pluralized "N open job(s)" label (shared across company cards). */
 function jobCountLabel(count: number) {
-  return count === 1
-    ? m.companyDetail_openJobsCountOne({ count })
-    : m.companyDetail_openJobsCountMany({ count });
+  const locale = getLocale();
+  const formatted = count.toLocaleString(locale);
+  return new Intl.PluralRules(locale).select(count) === 'one'
+    ? m.companyDetail_openJobsCountOne({ count: formatted })
+    : m.companyDetail_openJobsCountMany({ count: formatted });
 }
 
 /**
@@ -155,20 +127,19 @@ function jobCountLabel(count: number) {
  */
 function openJobsHeading(count: number) {
   if (count === 0) return m.companyDetail_openJobsHeading();
-  return count === 1
-    ? m.companyDetail_openJobsHeadingCountOne({ count })
-    : m.companyDetail_openJobsHeadingCountMany({ count });
+  const locale = getLocale();
+  const formatted = count.toLocaleString(locale);
+  return new Intl.PluralRules(locale).select(count) === 'one'
+    ? m.companyDetail_openJobsHeadingCountOne({ count: formatted })
+    : m.companyDetail_openJobsHeadingCountMany({ count: formatted });
 }
 
 /** How many jobs the profile previews before deferring to the /jobs subpage. */
 const JOBS_PREVIEW_COUNT = 6;
 
 function CompanyPage() {
-  const { company, jobs, similar, seo, salarySummary, hasSalaries } =
+  const { company, jobs, similar, salarySummary, hasSalaries } =
     Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
-  const copy = boardCopy(seo.language, seo.labels);
-  const crumbs = copy.breadcrumbs;
 
   // Salary summary VMs condense the Salaries tab: the overall
   // range + the top few category rows, built through the SAME mappers the
@@ -180,8 +151,8 @@ function CompanyPage() {
           avgMax: salarySummary.overallSalary.avgMax,
           jobCount: salarySummary.overallSalary.jobCount,
         },
-        board.language,
-        seo.labels,
+        getLocale(),
+        salarySummary.currency,
       )
     : null;
   const salaryCategoryItems: RailItem[] = salarySummary.byCategory.map(
@@ -194,55 +165,27 @@ function CompanyPage() {
           categorySlug: category.categorySlug,
         },
       }).interpolatedPath,
-      range: formatRange(
-        seo.language,
-        category.avgSalaryMin,
-        category.avgSalaryMax,
-      ),
+      range:
+        formatSalaryRange(
+          getLocale(),
+          category.avgSalaryMin,
+          category.avgSalaryMax,
+          salarySummary.currency,
+        ) ?? '',
       jobCount: category.jobCount,
     }),
   );
   const salaryCategoriesVM = toSalaryRailVM(
     undefined,
     salaryCategoryItems,
-    seo.language,
-    seo.labels,
+    getLocale(),
   );
 
-  const canonical = `${seo.origin}/companies/${company.slug}`;
   const website = company.website
     ? /^https?:\/\//i.test(company.website)
       ? company.website
       : `https://${company.website}`
     : null;
-  // ProfilePage + Organization + BreadcrumbList are starter-rendered
-  // from the API's company fields (mirrors the hosted company page's JSON-LD).
-  const jsonLd = [
-    {
-      '@context': 'https://schema.org',
-      '@type': 'ProfilePage',
-      url: canonical,
-      mainEntity: {
-        '@type': 'Organization',
-        '@id': `${canonical}#organization`,
-        name: company.name,
-        identifier: company.id,
-        ...(company.description
-          ? {
-              description: company.description.replace(/<[^>]+>/g, ' ').trim(),
-            }
-          : {}),
-        url: website ?? canonical,
-        ...(company.logoUrl ? { logo: company.logoUrl } : {}),
-        ...(website ? { sameAs: [website] } : {}),
-      },
-    },
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      { label: crumbs.companies, href: `${seo.origin}/companies` },
-      { label: company.name },
-    ]),
-  ].filter((e): e is Record<string, unknown> => e !== null);
 
   const previewJobs = jobs.data.slice(0, JOBS_PREVIEW_COUNT);
 
@@ -253,8 +196,6 @@ function CompanyPage() {
       jobCount={company.publishedJobCount}
       hasSalaries={hasSalaries}
     >
-      <JsonLd data={jsonLd} />
-
       <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
         {/* Main column — description prose and the jobs preview; both columns
             share row 1 so the rail sticks alongside. The company header + tabs
@@ -301,7 +242,7 @@ function CompanyPage() {
                 {previewJobs.map((job) => (
                   <JobCard
                     key={job.id}
-                    vm={toJobCardVM(job, board.language, board.labels)}
+                    vm={toJobCardVM(job, getLocale())}
                     compact
                   />
                 ))}
@@ -377,7 +318,7 @@ function CompanyPage() {
               (streamed via <Await>): the rail fills in when the search backend
               answers, and stays hidden while it resolves or if it degrades to
               empty. */}
-          <Await promise={similar} fallback={null}>
+          <DeferredContent promise={similar}>
             {(similarCompanies) =>
               similarCompanies.length > 0 ? (
                 <section
@@ -403,7 +344,7 @@ function CompanyPage() {
                 </section>
               ) : null
             }
-          </Await>
+          </DeferredContent>
         </aside>
       </div>
     </CompanySectionShell>

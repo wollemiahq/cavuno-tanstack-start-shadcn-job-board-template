@@ -1,0 +1,16 @@
+Optimize Performance skill
+
+This work includes adapted and summarized material from "Performance Hints"
+by Jeffrey Dean and Sanjay Ghemawat, published by the Abseil project:
+
+https://abseil.io/fast/hints.html
+
+The Abseil documentation repository is distributed under the Apache License,
+Version 2.0:
+
+https://github.com/abseil/abseil.github.io
+
+The adaptation reorganizes the source into an agent execution loop, adds
+conditional references and evaluation cases, generalizes selected examples,
+and labels the source cost table as historical guidance. Google, Abseil, and
+the original authors do not endorse this adaptation.

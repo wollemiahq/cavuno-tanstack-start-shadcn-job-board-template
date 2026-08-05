@@ -12,8 +12,6 @@ import { AlertSignupForm } from '@/components/board/alert-signup-form';
 import { useCookieConsent } from '@/components/cookie-consent';
 import { FloatingStackItem } from '@/components/floating-stack';
 import { Button } from '@/components/ui/button';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
-
 const SUPPRESS_KEY = 'cavuno:job-alert-prompt-dismissed-until';
 const SUPPRESS_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -26,11 +24,9 @@ const SUPPRESS_MS = 30 * 24 * 60 * 60 * 1000;
 export function JobAlertFloatingPrompt({
   defaults,
   language,
-  labels,
 }: {
   defaults: JobAlertDefaults;
   language: string;
-  labels?: BoardLabelOverrides;
 }) {
   const [visible, setVisible] = useState(false);
   // The cookie-consent banner takes over this bottom-corner slot until the
@@ -71,7 +67,6 @@ export function JobAlertFloatingPrompt({
           filters={defaults.filters}
           context={defaults.context}
           language={language}
-          labels={labels}
           onSubscribe={async (input) => {
             const result = await subscribeJobAlert({ data: input });
             return { status: result.status };
@@ -79,14 +74,8 @@ export function JobAlertFloatingPrompt({
           // Listing-page alert variant — stored as jobCardLabels.jobAlert
           // {Title,Description} on the hosted board; the starter's English
           // is the floor (catalog variant keys land with the authed slice).
-          title={
-            labels?.jobCardLabels?.jobAlertTitle ||
-            m.jobAlertFloatingPrompt_defaultTitle()
-          }
-          description={
-            labels?.jobCardLabels?.jobAlertDescription ||
-            m.jobAlertFloatingPrompt_defaultDescription()
-          }
+          title={m.jobAlertFloatingPrompt_defaultTitle()}
+          description={m.jobAlertFloatingPrompt_defaultDescription()}
         />
       </div>
     </FloatingStackItem>

@@ -28,6 +28,7 @@ describe('escapeHtml', () => {
 describe('buildBlogOgHtml', () => {
   const base = {
     boardName: 'Robotics Engineer Jobs',
+    blogLabel: 'Blog',
     themeColor: '#27272A',
     title: 'Why robotics hiring is booming',
     excerpt: 'A look at the market.',

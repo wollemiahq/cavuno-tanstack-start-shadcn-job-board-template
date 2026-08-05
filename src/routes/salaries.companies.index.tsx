@@ -1,18 +1,18 @@
-import { boardCopy } from '#/copy';
-
-import { BOARD_PATHS, boardUrl, companySalaryPath } from '@cavuno/board/paths';
-import {
-  createBreadcrumbJsonLd,
-  formatRange,
-  itemListJsonLd,
-} from '@cavuno/board/seo';
+/**
+ * Head meta + ItemList/Breadcrumb JSON-LD live in getSalaryCompaniesIndexPage
+ * so `@cavuno/board/seo` stays out of the universal client entry.
+ */
+import { BOARD_PATHS, companySalaryPath } from '@cavuno/board/paths';
 import { createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import { getSeoBase, listSalaryCompanies } from '../server/queries';
-import { SalaryPageLayout, SalaryPendingPage } from './-salary-page-layout';
+import { getLocale } from '../paraglide/runtime';
+import { getSalaryCompaniesIndexPage } from '../server/salary-pages';
+import { SalaryPageLayout } from './-salary-page-layout';
+import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
+  formatSalaryRange,
   toSalaryBreadcrumbVM,
   toSalaryRailVM,
 } from '@/board/salary-view-model';
@@ -21,76 +21,31 @@ import {
   SalaryRail,
   type RailItem,
 } from '@/components/board/salary-sections';
-import { JsonLd } from '@/components/json-ld';
-import { headTitle } from '@/lib/page-title';
+import { jsonLdHeadScripts } from '@/components/json-ld';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 
 export const Route = createFileRoute('/salaries/companies/')({
   staticData: { fullBleed: true, ownsMain: true },
-  loader: async () => {
-    const [companies, seo] = await Promise.all([
-      listSalaryCompanies(),
-      getSeoBase(),
-    ]);
-    return { companies: companies.data, seo };
-  },
+  loader: () => getSalaryCompaniesIndexPage(),
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData?.seo.boardName,
-                m.salaryHub_companiesMetaTitle(),
-              ),
-            },
-            {
-              name: 'description',
-              content: m.salaryHub_companiesMetaDescription({
-                boardName: loaderData.seo.boardName,
-              }),
-            },
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              href: boardUrl(
-                loaderData.seo.origin,
-                BOARD_PATHS.salaryCompanies,
-              ),
-            },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: SalaryCompaniesIndex,
   pendingComponent: SalaryPendingPage,
 });
 
 function SalaryCompaniesIndex() {
-  const { companies, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
-  const locale = seo.language;
-
-  const jsonLd = [
-    itemListJsonLd(
-      companies.map((c) => ({
-        name: c.companyName,
-        url: boardUrl(seo.origin, companySalaryPath(c.companySlug)),
-      })),
-    ),
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      {
-        label: crumbs.salaries,
-        href: boardUrl(seo.origin, BOARD_PATHS.salaries),
-      },
-      { label: crumbs.companies },
-    ]),
-  ].filter((e): e is Record<string, unknown> => e !== null);
+  const { companies } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
+  const locale = getLocale();
 
   const items: RailItem[] = companies.map((c) => ({
     name: c.companyName,
     href: companySalaryPath(c.companySlug),
-    range: formatRange(locale, c.avgSalaryMin, c.avgSalaryMax),
+    range:
+      formatSalaryRange(locale, c.avgSalaryMin, c.avgSalaryMax, c.currency) ??
+      '',
     jobCount: c.jobCount,
     logoPath: c.logoPath,
   }));
@@ -103,14 +58,12 @@ function SalaryCompaniesIndex() {
           { name: crumbs.salaries, href: BOARD_PATHS.salaries },
           { name: crumbs.companies },
         ],
-        seo.language,
-        seo.labels,
+        getLocale(),
       )}
       title={m.salaryHub_companiesHeading()}
     >
-      <JsonLd data={jsonLd} />
       {items.length > 0 ? (
-        <SalaryRail vm={toSalaryRailVM('', items, seo.language, seo.labels)} />
+        <SalaryRail vm={toSalaryRailVM('', items, getLocale())} />
       ) : (
         <SalaryEmptyState
           title={m.salaryHub_companiesHeading()}

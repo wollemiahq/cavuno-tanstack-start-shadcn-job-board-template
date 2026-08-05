@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 
-import { Link as AriaLink } from 'react-aria-components';
+import { Link } from '@tanstack/react-router';
 
 import { Box } from '@/components/layout/box';
 import {
@@ -35,7 +35,7 @@ export function ShellBreadcrumb({ items, ariaLabel }: BreadcrumbData) {
 
 /**
  * Breadcrumb — composed from the owned shadcn primitives: a `ChevronRight`
- * separator, trail links riding the router seam as `AriaLink` (client-side,
+ * separator, trail links riding the TanStack router seam (client-side,
  * locale-aware navigation), and the current page as `aria-current` text. Pure
  * markup over the same
  * `{ items, ariaLabel }` contract. It is never rendered directly by a route —
@@ -58,7 +58,7 @@ export function Breadcrumb({
             <BreadcrumbItem>
               {crumb.href ? (
                 <BreadcrumbLink
-                  render={<AriaLink href={crumb.href} />}
+                  render={<Link to={crumb.href} />}
                   className="outline-ring rounded-xs hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
                 >
                   {crumb.name}

@@ -1,9 +1,11 @@
-import { listingHead } from '@cavuno/board/seo';
 /**
  * Programmatic location + category page — `/jobs/locations/:location/:keyword`
  * (hosted parity: `…/jobs/locations/[location]/[keyword]/page.tsx`). Both the
  * place and the category must resolve; the API seeds the search with the
  * category's source name AND filters to the place's radius.
+ *
+ * Head meta is computed in getJobsLocationCategoryPage so `@cavuno/board/seo`
+ * stays out of the universal client entry.
  */
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
@@ -11,18 +13,13 @@ import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
 import { pageToOffset } from '../lib/pagination';
 import { m } from '../paraglide/messages';
 import { saveJob } from '../server/account';
-import {
-  getSeoBase,
-  listJobs,
-  resolveCategory,
-  resolvePlace,
-} from '../server/queries';
+import { getJobsLocationCategoryPage } from '../server/jobs-listing-pages';
+import { resolveCategory, resolvePlace } from '../server/queries';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
-import {
-  ProgrammaticJobsView,
-  PROGRAMMATIC_JOBS_PAGE_SIZE,
-} from '@/routes/-programmatic-jobs-view';
+import { jsonLdHeadScripts } from '@/components/json-ld';
+import { PROGRAMMATIC_JOBS_PAGE_SIZE } from '@/routes/-programmatic-jobs-constants';
+import { ProgrammaticJobsView } from '@/routes/-programmatic-jobs-view';
 
 export const Route = createFileRoute('/jobs/locations/$location/$keyword')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
@@ -44,44 +41,32 @@ export const Route = createFileRoute('/jobs/locations/$location/$keyword')({
         statusCode: 308,
       });
     }
-    const [list, seo] = await Promise.all([
-      listJobs({
-        data: {
-          location: params.location,
-          category: params.keyword,
-          remoteOption: deps.remoteOption ? [deps.remoteOption] : undefined,
-          employmentType: deps.employmentType
-            ? [deps.employmentType]
-            : undefined,
-          seniority: deps.seniority?.length ? deps.seniority : undefined,
-          sort: deps.sort,
-          offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
-          limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
-        },
-      }),
-      getSeoBase(),
-    ]);
-    const relatedSearches = list.relatedSearches;
-    return { place, category, list, seo, relatedSearches };
+    const page = await getJobsLocationCategoryPage({
+      data: {
+        locationSlug: params.location,
+        categorySlug: params.keyword,
+        placeDisplayName: place.displayName,
+        categoryDisplayName: category.displayName,
+        remoteOption: deps.remoteOption,
+        employmentType: deps.employmentType,
+        seniority: deps.seniority,
+        sort: deps.sort,
+        offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
+        limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
+      },
+    });
+    return { place, category, ...page };
   },
-  head: ({ loaderData, params }) =>
+  head: ({ loaderData }) =>
     loaderData
-      ? listingHead({
-          ...loaderData.seo,
-          path: `/jobs/locations/${params.location}/${params.keyword}`,
-          heading: m.locationCategoryPage_jobsHeading({
-            category: loaderData.category.displayName,
-            place: loaderData.place.displayName,
-          }),
-          count: loaderData.list.count,
-        })
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: LocationCategoryPage,
   notFoundComponent: () => <JobsNotFound />,
 });
 
 function LocationCategoryPage() {
-  const { place, category, list, seo, relatedSearches } = Route.useLoaderData();
+  const { place, category, list, relatedSearches } = Route.useLoaderData();
   const { location } = Route.useParams();
   const search = Route.useSearch();
   return (
@@ -96,7 +81,6 @@ function LocationCategoryPage() {
       page={search.page ?? 1}
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
       relatedSearches={relatedSearches}
-      origin={seo.origin}
       filters={search}
       onSaveJob={async (jobId) => {
         await saveJob({ data: { jobId } });

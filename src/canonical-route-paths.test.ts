@@ -19,12 +19,19 @@ describe('canonical board paths', () => {
     );
   });
 
-  it('builds location and skill metadata through the typed router path', () => {
-    const route = source('./routes/jobs.locations.$location.skills.$skill.tsx');
+  it('builds location and skill metadata through the route-owned server page path', () => {
+    // Head path is computed in jobs-listing-pages (not the route module) so
+    // `@cavuno/board/seo` stays out of the universal client entry. The
+    // canonical path must still be the fixed /jobs/locations/…/skills/…
+    // shape — never a loose template that drifts from the route tree.
+    const page = source('./server/jobs-listing-pages.ts');
 
-    expect(route).toContain('interpolatePath({');
-    expect(route).toContain("path: '/jobs/locations/$location/skills/$skill'");
-    expect(route).not.toContain(
+    expect(page).toContain(
+      // localizeHref wraps the canonical path so /de//fr/ variants
+      // self-canonicalize; the canonical (delocalized) template is unchanged.
+      '`/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`',
+    );
+    expect(page).not.toContain(
       'path: `/jobs/locations/${params.location}/skills/${params.skill}`',
     );
   });

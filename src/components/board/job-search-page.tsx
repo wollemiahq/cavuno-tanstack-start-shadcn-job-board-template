@@ -36,11 +36,10 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
+import { localizePath } from '@/lib/localized-path';
 import { listingPageHref } from '@/lib/pagination';
 import type { RelatedSearch } from '@cavuno/board';
 import type { ListingFilters } from '@cavuno/board/filters';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
-
 type AdPlacement = {
   label: string;
   content: React.ReactNode;
@@ -94,7 +93,6 @@ export function JobSearchPage({
   pageSize,
   filters,
   language,
-  labels,
   heading,
   relatedSearches,
   onFiltersChange,
@@ -116,7 +114,6 @@ export function JobSearchPage({
   pageSize: number;
   filters: ListingFilters;
   language: string;
-  labels?: BoardLabelOverrides;
   heading?: string;
   relatedSearches?: RelatedSearch[];
   onFiltersChange: (next: ListingFilters) => void;
@@ -130,7 +127,11 @@ export function JobSearchPage({
   viewer: { emailVerified: boolean } | null;
   onSaveJob: (jobId: string) => Promise<void>;
 }) {
-  const returnTo = useLocation({ select: (location) => location.href });
+  // The EXTERNAL localized URL — post-auth redirects must land back on
+  // /fr/emplois, not the delocalized router path.
+  const returnTo = useLocation({
+    select: (location) => localizePath(location.href),
+  });
   const jobVms = jobs;
   const selectableSlugs = jobVms.flatMap((vm) =>
     vm.jobSlug && vm.detailHref ? [vm.jobSlug] : [],
@@ -138,6 +139,7 @@ export function JobSearchPage({
   const selection = useSearchSelection({
     selectedId: selectedJob,
     resultIds: selectableSlugs,
+    page,
     onReplace: onSelectedJobReplace,
     onPush: onSelectedJobPush,
   });
@@ -149,7 +151,6 @@ export function JobSearchPage({
       pageSize={pageSize}
       heading={heading}
       language={language}
-      labels={labels}
     />
   );
   return (
@@ -164,7 +165,6 @@ export function JobSearchPage({
               <JobsFilterControls
                 filters={filters}
                 language={language}
-                labels={labels}
                 onChange={onFiltersChange}
               />
             </div>
@@ -266,7 +266,9 @@ export function JobSearchPage({
                       </AlertDescription>
                       <AlertAction className="static">
                         <a
-                          href={`/account/access?${new URLSearchParams({ returnTo }).toString()}`}
+                          href={localizePath(
+                            `/account/access?${new URLSearchParams({ returnTo }).toString()}`,
+                          )}
                           className={buttonVariants({ size: 'sm' })}
                         >
                           {m.jobSearch_unlockMoreLabel()}
@@ -288,18 +290,18 @@ export function JobSearchPage({
 
                   {relatedChips.length > 0 ? (
                     <section
-                      aria-label={relatedSearchesTitle(labels)}
+                      aria-label={relatedSearchesTitle()}
                       className="border-border space-y-3 border-t pt-4"
                     >
                       <h2 className="text-sm font-semibold">
-                        {relatedSearchesTitle(labels)}
+                        {relatedSearchesTitle()}
                       </h2>
                       <div className="flex flex-wrap gap-1.5">
                         {relatedChips.map((chip) => (
                           <Badge
                             key={chip.key}
                             variant="outline"
-                            render={<a href={chip.href} />}
+                            render={<a href={localizePath(chip.href)} />}
                           >
                             {chip.name}
                           </Badge>

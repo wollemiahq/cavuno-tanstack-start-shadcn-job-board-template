@@ -1,0 +1,147 @@
+{
+  "skill_name": "optimize-performance",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our API latency rose from 120 ms to 190 ms after yesterday's release. Diagnose the regression, but don't change anything yet.",
+      "expected_output": "Should respect the diagnosis-only boundary. Should define the latency contract and representative workload, compare the relevant revisions and environment, separate on-CPU from waiting time, and request or collect profiles and traces appropriate to the symptom. Should report ranked hypotheses containing observation, cause, mechanism, predicted scale, and falsifier. Should not edit code or claim a cause without evidence.",
+      "assertions": [
+        "Respects diagnosis-only scope and makes no changes",
+        "Defines metric, workload, environment, and baseline",
+        "Separates CPU time from waiting and critical-path latency",
+        "Uses revision comparison plus representative profiles or traces",
+        "Reports ranked falsifiable hypotheses",
+        "Labels missing evidence instead of inventing a cause"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "A CPU profile shows our request parser spending 34% of CPU allocating temporary token strings. Optimize it and prove the result.",
+      "expected_output": "Should run the full causal loop. Should state a performance contract, inspect allocation counts and ownership, and form a scale-bounded hypothesis. Should choose the smallest intervention that tests allocation or copying as the mechanism, preserve a clear general path and correctness, and compare the same optimized benchmark before and after. Should include a representative request-level check and report absolute values, relative change, variance or sample count, environment, secondary metrics, and caveats.",
+      "assertions": [
+        "Defines a performance contract and baseline",
+        "Connects allocation evidence to a falsifiable mechanism",
+        "Chooses a narrow intervention rather than unrelated rewrites",
+        "Validates correctness before trusting performance",
+        "Runs comparable before-and-after measurements",
+        "Checks request-level impact as well as the local mechanism",
+        "Reports absolute and relative results with confidence information"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "We're designing a reusable library API. Should callers submit records one at a time or in batches? There is no implementation or benchmark yet.",
+      "expected_output": "Should recognize a design-time reusable-library branch rather than demand an existing baseline. Should identify compatibility and complexity constraints, build a rough cost model for per-call validation, locking, allocation, dispatch, and batching latency, and propose representative prototypes. Should consider whether a bulk API enables a better algorithm or narrower result contract. Should prefer the faster clear design only when complexity remains negligible.",
+      "assertions": [
+        "Classifies the work as reusable library design",
+        "Makes API compatibility promises explicit",
+        "Builds a rough operation-count cost model",
+        "Considers batching latency and memory tradeoffs",
+        "Uses representative prototypes as the design comparison",
+        "Avoids treating absent runtime measurements as measured facts"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Our allocator microbenchmark is 40% faster. The allocator was 8% of request CPU before the change. Can we announce a 40% application speedup?",
+      "expected_output": "Should reject the 40% application claim. Should distinguish the confirmed local result from unmeasured system impact and estimate an upper-bound CPU opportunity of roughly 3.2% before interactions. Should require a representative application benchmark and check latency, retained memory, fragmentation, and contention. Should classify the result as local-only until the system result is measured.",
+      "assertions": [
+        "Distinguishes microbenchmark and application impact",
+        "Uses component share to estimate roughly 3.2% CPU opportunity",
+        "Treats the estimate as an upper bound rather than a result",
+        "Requires a representative application measurement",
+        "Checks allocator secondary metrics",
+        "Classifies the current evidence as local-only"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Estimate the latency of loading 30 one-megabyte images and generating thumbnails. We have no measurements for the target machine yet.",
+      "expected_output": "Should use the dated cost ladder only as historical order-of-magnitude intuition, state its assumptions, and separate total resource work from critical-path latency. Should compare serial and plausibly parallel storage designs, include thumbnail CPU as an unknown term, identify which assumptions can change the decision, and specify local measurements that supersede the table.",
+      "assertions": [
+        "Labels source costs as historical estimates rather than defaults",
+        "Calculates count multiplied by rough operation cost",
+        "Separates resource work from overlapped latency",
+        "Includes transform CPU and storage concurrency assumptions",
+        "Identifies the dominant uncertain terms",
+        "Specifies target-machine measurements that replace estimates"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "The CPU flame graph is flat: the largest leaf is only 2%, but the service still needs 15% more throughput. What should we do?",
+      "expected_output": "Should broaden the profile rather than choose an arbitrary leaf. Should inspect high-level multiplying loops, algorithms and data flow, over-general operations, allocation, locks, I/O, representation, and hardware counters. Should rank falsifiable structural hypotheses first. Should allow several small independent changes only with a stable benchmark and should verify their combined system result.",
+      "assertions": [
+        "Moves upward to multiplying loops and orchestration",
+        "Looks for structural and bulk-work opportunities",
+        "Collects non-CPU evidence where relevant",
+        "Ranks falsifiable hypotheses instead of listing random tips",
+        "Requires a stable benchmark before accumulating small wins",
+        "Verifies the combined representative result"
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "A C++ service spends 22% of CPU parsing Protocol Buffers and retains too much message memory. Propose and implement the safest improvement.",
+      "expected_output": "Should apply the general measurement loop and load the C++ and Protocol Buffers branch. Should measure parse, allocation, retained-memory, message-size, and access distributions before selecting a lever. Should consider plain in-memory representations, subset parsing, reuse or arenas, field encodings, map fields, and view-backed or cord-like storage only when the measured mechanism and lifetime constraints fit. Should treat schema changes as compatibility work and verify wire behavior, correctness, memory, and end-to-end impact.",
+      "assertions": [
+        "Uses both general measurement and the C++/Protocol Buffers branch",
+        "Measures CPU, allocation, retained memory, and access distributions",
+        "Selects a lever from evidence rather than applying every tip",
+        "Proves backing-storage lifetimes for view-based choices",
+        "Treats schema and wire changes as compatibility work",
+        "Validates correctness and representative system impact"
+      ],
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "Design a benchmark that can catch regressions in a hot cache lookup without becoming flaky in CI.",
+      "expected_output": "Should define the mechanism and representative lookup distribution, dataset, cache state, concurrency, and target metric. Should use a production-like build, consume outputs, keep unrelated setup outside timing, warm according to the scenario, and run enough interleaved or randomized samples to expose noise. Should record environment and commands, use absolute values and distributions, and add the regression benchmark only if it reliably detects the mechanism within the CI budget.",
+      "assertions": [
+        "Defines representative workload and cache state",
+        "Names the metric and expected mechanism",
+        "Uses an optimized production-like build",
+        "Protects against dead-code elimination and setup contamination",
+        "Accounts for warm-up, drift, variance, and outliers",
+        "Records reproducibility information",
+        "Applies a stability and test-budget gate before CI adoption"
+      ],
+      "files": []
+    },
+    {
+      "id": 9,
+      "prompt": "Our PostgreSQL query became ten times slower after the table reached 50 million rows. Optimize it.",
+      "expected_output": "Should pair the causal measurement loop with PostgreSQL-specific guidance. The database skill should choose query-plan, index, statistics, locking, and storage interventions; this skill should enforce the workload, baseline, hypothesis, comparable measurement, guardrails, and representative end-to-end verification. Should avoid substituting the historical machine-cost table for EXPLAIN evidence.",
+      "assertions": [
+        "Pairs with PostgreSQL-specific guidance",
+        "Uses query plans and database evidence for the intervention",
+        "Defines representative parameters and data scale",
+        "Preserves correctness and write or storage guardrails",
+        "Runs comparable query and end-to-end measurements",
+        "Does not use the generic cost ladder as database proof"
+      ],
+      "files": []
+    },
+    {
+      "id": 10,
+      "prompt": "Our global service has poor p99 latency because requests fan out to 80 shards across three regions. Help us redesign it.",
+      "expected_output": "Should pair with distributed-systems guidance. Should define the tail-latency contract and workload, model fan-out and critical-path dependencies, and collect per-hop traces, queueing, retries, and shard distributions. The domain guidance should own consistency, replication, placement, and failure-mode design; this skill should govern falsifiable hypotheses and representative verification. Should not treat single-binary implementation levers as a complete distributed redesign.",
+      "assertions": [
+        "Pairs with distributed-systems guidance",
+        "Models p99 fan-out and the critical path",
+        "Requests per-hop, queueing, retry, and shard evidence",
+        "Leaves consistency and placement design to domain guidance",
+        "Forms falsifiable hypotheses with predicted scale",
+        "Verifies representative tail latency and correctness"
+      ],
+      "files": []
+    }
+  ]
+}

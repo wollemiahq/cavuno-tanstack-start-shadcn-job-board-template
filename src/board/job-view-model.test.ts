@@ -1,13 +1,11 @@
-import {
-  cardLocationLabel,
-  fieldLabel,
-  formatSalaryRange,
-} from '@cavuno/board/format';
 import { describe, expect, it } from 'vitest';
 
 import { toJobCardVM, toSavedJobCardVM } from './job-view-model';
 
-import type { PublicJob, PublicJobCard } from '@cavuno/board';
+import { enumLabel } from '@/lib/enum-labels';
+import { cardLocationLabel } from '@/lib/location-labels';
+import { formatJobSalary } from '@/lib/salary-display';
+import type { PublicJobCard } from '@cavuno/board';
 
 /**
  * The card mapper is Layer 1b — it owns the derivations (compLine, honest
@@ -49,16 +47,10 @@ describe('toJobCardVM', () => {
   // an SDK formatting change (or an intentional presentation change)
   // breaks nothing here.
   it('delegates salary + compLine to the SDK formatters', () => {
-    const expectedSalary = formatSalaryRange(
-      'en',
-      100000,
-      140000,
-      'year',
-      'USD',
-    );
+    const expectedSalary = formatJobSalary('en', 100000, 140000, 'year', 'USD');
     expect(vm.salaryLabel).toBe(expectedSalary);
     expect(vm.compLine).toBe(
-      [expectedSalary, cardLocationLabel('en', baseJob)].join(' · '),
+      [expectedSalary, cardLocationLabel(baseJob)].join(' · '),
     );
   });
 
@@ -71,7 +63,9 @@ describe('toJobCardVM', () => {
   });
 
   it('composes locationLabel from the place label and the SDK workplace label', () => {
-    expect(vm.locationLabel).toBe(`Worldwide (${fieldLabel('en', 'remote')})`);
+    // Worldwide remote cards use the catalog's own phrasing (same as the
+    // detail header), not a composition around the wire's English word.
+    expect(vm.locationLabel).toBe('Remote (worldwide)');
   });
 
   it('states when an on-site card is missing its physical location', () => {
@@ -86,7 +80,7 @@ describe('toJobCardVM', () => {
     );
 
     expect(missingLocation.locationLabel).toBe(
-      `Location not specified (${fieldLabel('en', 'on_site')})`,
+      `Location not specified (${enumLabel('on_site')})`,
     );
   });
 
@@ -118,30 +112,34 @@ describe('toJobCardVM', () => {
 });
 
 describe('toSavedJobCardVM', () => {
-  // The saved-jobs list embeds a SLIMMER job projection than the PublicJob
-  // type promises: officeLocations / categories / skills can be absent on the
-  // wire. That shape crashed the SDK's fullJobToCard (`officeLocations[0]`)
-  // and took the whole /account/saved page down.
+  // me/saved-jobs embeds a PublicJobCard. Categories / skills can still be
+  // absent on a partial fixture — the mapper defaults them so one stale row
+  // never takes down /account/saved.
   const slimSavedJob = {
     id: 'job_2',
+    object: 'job_card',
     slug: 'staff-engineer',
     title: 'Staff Engineer',
     publishedAt: null,
     employmentType: 'full_time',
     remoteOption: 'remote',
     remoteWorldwide: true,
+    remoteLocationLabel: null,
+    locationLabel: null,
     salaryMin: null,
     salaryMax: null,
     salaryCurrency: null,
     salaryTimeframe: null,
     isFeatured: false,
     company: { slug: 'acme-co', name: 'Acme Co', logoUrl: null },
+    categories: undefined,
+    skills: undefined,
     links: {
       public: 'https://board.example/companies/acme-co/jobs/staff-engineer',
     },
-  } as unknown as PublicJob;
+  } as unknown as PublicJobCard;
 
-  it('maps the slim saved-list embed without the arrays the type promises', () => {
+  it('maps the slim saved-list card embed without requiring full-job fields', () => {
     const vm = toSavedJobCardVM(slimSavedJob, 'en');
 
     expect(vm).not.toBeNull();
@@ -152,8 +150,21 @@ describe('toSavedJobCardVM', () => {
   });
 
   it('returns null instead of throwing when a row cannot map at all', () => {
-    expect(
-      toSavedJobCardVM(undefined as unknown as PublicJob, 'en'),
-    ).toBeNull();
+    expect(toSavedJobCardVM(undefined, 'en')).toBeNull();
+  });
+});
+
+describe('worldwide remote card wording', () => {
+  it('re-words the wire "Worldwide" sentinel per viewer locale', () => {
+    const job = {
+      ...baseJob,
+      remoteOption: 'remote',
+      remoteLocationLabel: 'Worldwide',
+      locationLabel: 'Worldwide (Remote)',
+    } as never;
+    expect(toJobCardVM(job, 'de').locationLabel).toBe('Remote (weltweit)');
+    // Unified with the detail header's catalog phrasing (was the wire's
+    // 'Worldwide (Remote)').
+    expect(toJobCardVM(job, 'en').locationLabel).toBe('Remote (worldwide)');
   });
 });

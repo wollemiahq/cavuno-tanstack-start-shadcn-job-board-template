@@ -1,5 +1,4 @@
-import { isNotFound } from '@cavuno/board';
-import { formatSalaryRange, locationLabel } from '@cavuno/board/format';
+import { isBoardPasswordRequired, isNotFound } from '@cavuno/board';
 /**
  * Open Graph image — 1200×630 card for the job-detail page, the starter's
  * counterpart to the hosted `…/og` route (a `@takumi-rs` ImageResponse). The
@@ -14,6 +13,9 @@ import { ImageResponse } from 'workers-og';
 import { getBoard } from '../lib/board';
 import { loadOgFont } from '../lib/og-font';
 import { themeTokens } from '../theme/resolved';
+
+import { locationLabel } from '@/lib/location-labels';
+import { formatJobSalary } from '@/lib/salary-display';
 
 function escapeHtml(value: string): string {
   return value
@@ -33,7 +35,10 @@ export const Route = createFileRoute(
         try {
           job = await getBoard().jobs.retrieve(params.jobSlug);
         } catch (error) {
-          if (isNotFound(error)) throw notFound();
+          // A password-walled board's OG image is simply absent — 404, not
+          // an unhandled 500 (the SDK read throws before any card renders).
+          if (isNotFound(error) || isBoardPasswordRequired(error))
+            throw notFound();
           throw error;
         }
 
@@ -44,9 +49,9 @@ export const Route = createFileRoute(
 
         const title = job.title;
         const company = job.company?.name ?? '';
-        const location = locationLabel(language, job);
+        const location = locationLabel(job, language);
         const salary =
-          formatSalaryRange(
+          formatJobSalary(
             language,
             job.salaryMin,
             job.salaryMax,

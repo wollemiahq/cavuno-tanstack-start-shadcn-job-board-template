@@ -2,17 +2,16 @@
  * The document-`<title>` seam: every page title ends with the board name,
  * separated by a pipe — `Page | {boardName}`.
  *
- * The format is NOT invented here. The SDK's `listingHead`
- * (`@cavuno/board/seo`) already composes listing titles as
- * `${count} ${heading} | ${boardName}`, and that is the board's indexed,
- * cross-surface SEO contract. This module is the app-side twin for the
- * ~60 routes that don't go through `listingHead`, so the two agree by
- * construction; `page-title.test.ts` pins them together.
+ * Listing routes compose titles in app code (via `listingPageTitle`) and pass
+ * the finished string to `listingHead({ title })` — the SDK no longer joins
+ * count/heading/board. This module is the shared composition helper for the
+ * ~60 non-listing routes and for listing title composition, so both surfaces
+ * agree by construction; `page-title.test.ts` pins them together.
  *
  * Two rules follow from that split:
  *
- * 1. A route that calls `listingHead` already has its title composed —
- *    do NOT wrap it here, or the board name lands twice.
+ * 1. A route that calls `listingHead` must pass a fully composed `title` —
+ *    do NOT wrap the SDK result here, or the board name lands twice.
  * 2. Every other route composes with `headTitle(boardName, …parts)`,
  *    passing a board name its OWN loader resolved (`getSeoBase()` →
  *    `loaderData.seo.boardName`).
@@ -30,14 +29,16 @@
  * inferred: `/` rendered `Find your next role` with the suffix missing.
  *
  * So a title may only use data the route itself awaited. That is the same
- * rule `listingHead` already follows (`listingHead({ ...loaderData.seo })`),
+ * rule `listingHead` already follows (`listingHead({ title, …loaderData.seo })`),
  * which is why this seam takes an explicit `boardName` rather than reaching
  * for ambient state.
  */
+import { m } from '../paraglide/messages';
+import { isLocale } from '../paraglide/runtime';
 
 /**
- * Separator between a page's own title and the board name. Mirrors the
- * SDK's `listingHead`; locale-invariant there, so locale-invariant here.
+ * Separator between a page's own title and the board name. Locale-invariant
+ * house style for English-led boards; listing titles use the same token.
  */
 export const TITLE_SEPARATOR = ' | ';
 
@@ -105,4 +106,22 @@ export function headTitle(
   ...parts: ReadonlyArray<string | null | undefined>
 ): string {
   return pageTitle(parts, boardName);
+}
+
+/**
+ * Job-detail head title — "{title} at {company}" with the join word owned
+ * by the message catalog (bei/chez/…), resolved with the BOARD language
+ * when it is a chrome locale (job titles and company names are board
+ * content; the join must agree with them, not with the viewer's chrome).
+ */
+export function jobTitleAtCompany(
+  language: string,
+  title: string,
+  companyName: string | null | undefined,
+): string {
+  if (!companyName) return title;
+  return m.jobDetailHead_titleAtCompany(
+    { title, company: companyName },
+    isLocale(language) ? { locale: language } : undefined,
+  );
 }

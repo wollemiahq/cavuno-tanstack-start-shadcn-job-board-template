@@ -133,7 +133,11 @@ export function KeywordCombobox({
                 <span className="text-muted-foreground text-xs">
                   {term.type === 'skill'
                     ? m.jobDetail_skillsHeading()
-                    : m.jobDetail_categoriesHeading()}
+                    : term.type === 'post'
+                      ? m.searchSuggestion_postBadge()
+                      : term.type === 'tag'
+                        ? m.searchSuggestion_tagBadge()
+                        : m.jobDetail_categoriesHeading()}
                 </span>
               </ComboboxItem>
             )}

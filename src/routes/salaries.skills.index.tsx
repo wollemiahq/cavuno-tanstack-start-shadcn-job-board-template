@@ -1,18 +1,18 @@
-import { boardCopy } from '#/copy';
-
-import { BOARD_PATHS, boardUrl, salarySkillPath } from '@cavuno/board/paths';
-import {
-  createBreadcrumbJsonLd,
-  formatRange,
-  itemListJsonLd,
-} from '@cavuno/board/seo';
+/**
+ * Head meta + ItemList/Breadcrumb JSON-LD live in getSalarySkillsIndexPage
+ * so `@cavuno/board/seo` stays out of the universal client entry.
+ */
+import { BOARD_PATHS, salarySkillPath } from '@cavuno/board/paths';
 import { createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import { getSeoBase, listSalarySkills } from '../server/queries';
-import { SalaryPageLayout, SalaryPendingPage } from './-salary-page-layout';
+import { getLocale } from '../paraglide/runtime';
+import { getSalarySkillsIndexPage } from '../server/salary-pages';
+import { SalaryPageLayout } from './-salary-page-layout';
+import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
+  formatSalaryRange,
   toSalaryBreadcrumbVM,
   toSalaryRailVM,
 } from '@/board/salary-view-model';
@@ -21,70 +21,31 @@ import {
   SalaryRail,
   type RailItem,
 } from '@/components/board/salary-sections';
-import { JsonLd } from '@/components/json-ld';
-import { headTitle } from '@/lib/page-title';
+import { jsonLdHeadScripts } from '@/components/json-ld';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 
 export const Route = createFileRoute('/salaries/skills/')({
   staticData: { fullBleed: true, ownsMain: true },
-  loader: async () => {
-    const [skills, seo] = await Promise.all([listSalarySkills(), getSeoBase()]);
-    return { skills: skills.data, seo };
-  },
+  loader: () => getSalarySkillsIndexPage(),
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData?.seo.boardName,
-                m.salaryHub_skillsMetaTitle(),
-              ),
-            },
-            {
-              name: 'description',
-              content: m.salaryHub_skillsMetaDescription({
-                boardName: loaderData.seo.boardName,
-              }),
-            },
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              href: boardUrl(loaderData.seo.origin, BOARD_PATHS.salarySkills),
-            },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: SalarySkillsIndex,
   pendingComponent: SalaryPendingPage,
 });
 
 function SalarySkillsIndex() {
-  const { skills, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
-  const locale = seo.language;
-
-  const jsonLd = [
-    itemListJsonLd(
-      skills.map((s) => ({
-        name: s.name,
-        url: boardUrl(seo.origin, salarySkillPath(s.slug)),
-      })),
-    ),
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      {
-        label: crumbs.salaries,
-        href: boardUrl(seo.origin, BOARD_PATHS.salaries),
-      },
-      { label: crumbs.skills },
-    ]),
-  ].filter((e): e is Record<string, unknown> => e !== null);
+  const { skills } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
+  const locale = getLocale();
 
   const items: RailItem[] = skills.map((s) => ({
     name: s.name,
     href: salarySkillPath(s.slug),
-    range: formatRange(locale, s.avgSalaryMin, s.avgSalaryMax),
+    range:
+      formatSalaryRange(locale, s.avgSalaryMin, s.avgSalaryMax, s.currency) ??
+      '',
     jobCount: s.jobCount,
   }));
 
@@ -96,14 +57,12 @@ function SalarySkillsIndex() {
           { name: crumbs.salaries, href: BOARD_PATHS.salaries },
           { name: crumbs.skills },
         ],
-        seo.language,
-        seo.labels,
+        getLocale(),
       )}
       title={m.salaryHub_skillsHeading()}
     >
-      <JsonLd data={jsonLd} />
       {items.length > 0 ? (
-        <SalaryRail vm={toSalaryRailVM('', items, seo.language, seo.labels)} />
+        <SalaryRail vm={toSalaryRailVM('', items, getLocale())} />
       ) : (
         <SalaryEmptyState
           title={m.salaryHub_skillsEmptyTitle()}

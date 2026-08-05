@@ -1,8 +1,11 @@
 /** Blog RSS — hosted-parity feed at /blog/rss.xml. */
+import { blogPostPath } from '@cavuno/board/paths';
 import { createFileRoute } from '@tanstack/react-router';
 import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
+import { m } from '../paraglide/messages';
+import { baseLocale, getLocale, isLocale } from '../paraglide/runtime';
 
 import type { PublicBlogPostSummary } from '@cavuno/board';
 
@@ -33,7 +36,7 @@ function postUrl(post: PublicBlogPostSummary, origin: string): string {
     }
     if (canonical.startsWith('/')) return `${origin}${canonical}`;
   }
-  return `${origin}/blog/${post.slug}`;
+  return `${origin}${blogPostPath(post.slug)}`;
 }
 
 /** Description with the hosted fallback chain: excerpt → "title - authors" → title. */
@@ -48,11 +51,20 @@ export const Route = createFileRoute('/blog/rss.xml')({
     handlers: {
       GET: async () => {
         const origin = new URL(getRequest().url).origin;
+        // The feed exists at ONE address. A locale prefix on the URL
+        // (/de/blog/rss.xml) would serve a byte-identical duplicate whose
+        // self link lies about its own address — redirect to canonical.
+        if (getLocale() !== baseLocale) {
+          return Response.redirect(`${origin}/blog/rss.xml`, 308);
+        }
         const board = getBoard();
         const [context, posts] = await Promise.all([
           board.context(),
           board.blog.posts.list({ limit: 50 }),
         ]);
+        const locale = isLocale(context.language)
+          ? { locale: context.language }
+          : undefined;
 
         const latest = posts.data
           .map((p) => p.publishedAt)
@@ -86,9 +98,9 @@ export const Route = createFileRoute('/blog/rss.xml')({
           `<?xml version="1.0" encoding="UTF-8"?>` +
           `<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">` +
           `<channel>` +
-          `<title>${xmlEscape(`${context.name} Blog`)}</title>` +
+          `<title>${xmlEscape(m.rssBlog_channelTitle({ name: context.name }, locale))}</title>` +
           `<link>${xmlEscape(`${origin}/blog`)}</link>` +
-          `<description>${xmlEscape(`Latest posts from ${context.name}.`)}</description>` +
+          `<description>${xmlEscape(m.rssBlog_channelDescription({ name: context.name }, locale))}</description>` +
           `<lastBuildDate>${lastBuildDate}</lastBuildDate>` +
           `<atom:link href="${xmlEscape(`${origin}/blog/rss.xml`)}" rel="self" type="application/rss+xml" />` +
           items +

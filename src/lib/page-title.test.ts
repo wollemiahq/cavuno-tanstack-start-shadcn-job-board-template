@@ -2,10 +2,11 @@
  * The `<title>` seam (`Page | {boardName}`). These lock the WHY, not the
  * string concat:
  *
- *  - the app-side format must equal the SDK's `listingHead` format, because
- *    ~60 routes compose titles here while the 7 listing routes compose them
- *    in the SDK, and a board's indexed titles must not split into two house
- *    styles (the em-dash drift this seam replaced);
+ *  - the app-side format must equal what listing routes pass into
+ *    `listingHead({ title })`, because ~60 routes compose titles here while
+ *    the 7 listing routes compose them via `listingPageTitle` → same
+ *    `pageTitle` helper, and a board's indexed titles must not split into
+ *    two house styles;
  *  - the board name is an explicit argument, resolved by the route's OWN
  *    loader — see the module doc for why root-match data cannot be used;
  *  - an unresolvable board name degrades to a bare page title, because a
@@ -15,7 +16,13 @@
 import { listingHead } from '@cavuno/board/seo';
 import { describe, expect, it } from 'vitest';
 
-import { headTitle, pageTitle, TITLE_SEPARATOR } from './page-title';
+import { listingPageTitle } from './listing-description';
+import {
+  headTitle,
+  jobTitleAtCompany,
+  pageTitle,
+  TITLE_SEPARATOR,
+} from './page-title';
 
 describe('pageTitle (format authority)', () => {
   it('appends the board name after a pipe', () => {
@@ -30,22 +37,42 @@ describe('pageTitle (format authority)', () => {
     );
   });
 
-  it("agrees with the SDK's listingHead, so the two title surfaces cannot drift", () => {
-    // The 7 listing routes compose through the SDK and must NOT be wrapped by
-    // this module; that only stays safe while both emit the same shape.
+  it('agrees with listingHead when the app composes the title first', () => {
+    // listingHead is a passthrough for title — composition is application-owned.
     const heading = 'Robotics jobs in Berlin';
     const boardName = 'Acme Careers';
+    const title = pageTitle([heading], boardName);
     const sdkTitle = listingHead({
-      boardName,
+      title,
       origin: 'https://careers.acme.test',
       path: '/jobs/robotics',
-      heading,
+      description: `Browse ${heading} on ${boardName}.`,
     }).meta.find((entry) => 'title' in entry);
 
-    expect(sdkTitle).toEqual({ title: pageTitle([heading], boardName) });
+    expect(sdkTitle).toEqual({ title });
+    expect(title).toBe(
+      listingPageTitle({ heading, boardName, language: 'en' }),
+    );
   });
 
-  it('uses the same separator the SDK does', () => {
+  it('listingPageTitle prefixes a locale-formatted count before the heading', () => {
+    const title = listingPageTitle({
+      heading: 'Jobs',
+      boardName: 'Acme Careers',
+      language: 'en',
+      count: 1225,
+    });
+    expect(title).toBe('1,225 Jobs | Acme Careers');
+    const sdkTitle = listingHead({
+      title,
+      origin: 'https://careers.acme.test',
+      path: '/jobs',
+      description: 'Browse jobs.',
+    }).meta.find((entry) => 'title' in entry);
+    expect(sdkTitle).toEqual({ title });
+  });
+
+  it('uses the same separator the listing surface does', () => {
     expect(TITLE_SEPARATOR).toBe(' | ');
   });
 
@@ -95,5 +122,23 @@ describe('headTitle (the route-facing call)', () => {
   it('renders the page title alone when the loader had no board name', () => {
     // The `loaderData ? … : …` fallback branch every route carries.
     expect(headTitle(undefined, 'Sign in')).toBe('Sign in');
+  });
+});
+
+describe('jobTitleAtCompany', () => {
+  it('localizes the join word by board language', () => {
+    expect(jobTitleAtCompany('en', 'VP of Growth', 'Larksong Media')).toBe(
+      'VP of Growth at Larksong Media',
+    );
+    expect(jobTitleAtCompany('de', 'VP of Growth', 'Larksong Media')).toBe(
+      'VP of Growth bei Larksong Media',
+    );
+    expect(jobTitleAtCompany('fr', 'VP of Growth', 'Larksong Media')).toBe(
+      'VP of Growth chez Larksong Media',
+    );
+  });
+
+  it('returns the bare title when there is no company', () => {
+    expect(jobTitleAtCompany('en', 'VP of Growth', null)).toBe('VP of Growth');
   });
 });

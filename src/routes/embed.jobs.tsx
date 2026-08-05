@@ -9,9 +9,10 @@
  * frontend (the API is a data contract only); only the card data +
  * the branding flag come from the API.
  */
-import { createFileRoute, getRouteApi, Link } from '@tanstack/react-router';
+import { redirect, createFileRoute, Link } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { baseLocale, getLocale } from '../paraglide/runtime';
 import { embedJobs, getBoardContext } from '../server/queries';
 
 import { toJobCardVM } from '@/board/job-view-model';
@@ -65,6 +66,14 @@ interface EmbedSearch {
 }
 
 export const Route = createFileRoute('/embed/jobs')({
+  // The embed is a third-party iframe fragment with no locale identity —
+  // /fr/embed/jobs would leak the visiting operator's chrome locale into
+  // someone else's site. Canonical URL only.
+  beforeLoad: () => {
+    if (getLocale() !== baseLocale) {
+      throw redirect({ href: '/embed/jobs', replace: true });
+    }
+  },
   validateSearch: (search: Record<string, unknown>): EmbedSearch => ({
     // The hosted embed widget's keyword URL param is `query` (it maps to the
     // API's `q`); accept it so an existing `<iframe …?query=…>` is a faithful
@@ -171,6 +180,7 @@ function buildEmbedCta(
       label: m.embedJobs_seeAllMatchingJobsLabel(),
       search: {
         q: search.q,
+        location: search.location,
         remoteOption: search.remoteOption,
         employmentType: search.employmentType,
         seniority: search.seniority,
@@ -183,11 +193,8 @@ function buildEmbedCta(
   return null;
 }
 
-const rootApi = getRouteApi('__root__');
-
 function EmbedJobsPage() {
   const { page, showCavunoBranding } = Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
   const search = Route.useSearch();
   const jobs = page.data as PublicJobCard[];
   const pageSize = search.limit ?? 8;
@@ -198,10 +205,7 @@ function EmbedJobsPage() {
       {jobs.length > 0 ? (
         <div className="space-y-3" data-test="embed-jobs-list">
           {jobs.map((job) => (
-            <JobCard
-              key={job.id}
-              vm={toJobCardVM(job, board.language, board.labels)}
-            />
+            <JobCard key={job.id} vm={toJobCardVM(job, getLocale())} />
           ))}
         </div>
       ) : (

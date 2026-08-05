@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react';
 
-import { boardCopy } from '#/copy';
-
 import { Link } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
@@ -11,10 +9,10 @@ import { LanguageSwitcher } from '@/components/language-switcher';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { Badge } from '@/components/ui/badge';
+import { footerCopy } from '@/copy-groups/footer';
+import { navCopy } from '@/copy-groups/nav';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { cn } from '@/lib/utils';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
-
 /**
  * The board-context `footer` data group (hosted-footer parity slice) —
  * description, contact, website + social links, and the operator's nav
@@ -157,8 +155,6 @@ function CavunoMark() {
 export default function Footer({
   boardName,
   logoUrl,
-  language,
-  labels,
   showCavunoBranding,
   primaryDomain,
   slug,
@@ -174,7 +170,6 @@ export default function Footer({
   boardName: string;
   logoUrl: string | null;
   language: string;
-  labels?: BoardLabelOverrides;
   /**
    * Board-context flag (`board.context().showCavunoBranding`, default
    * true). Plan-gated server-side: lower-tier plans cannot set it false.
@@ -188,7 +183,7 @@ export default function Footer({
   slug: string;
   features: {
     blog: boolean;
-    talentDirectory: boolean;
+    talentDirectory: 'off' | 'public' | 'employers_only' | boolean;
     publicJobSubmission: boolean;
     impressum: boolean;
   };
@@ -219,7 +214,10 @@ export default function Footer({
    */
   cookiePreferencesAction?: ReactNode;
 }) {
-  const copy = boardCopy(language, labels);
+  const copy = {
+    footer: footerCopy(),
+    nav: navCopy(),
+  };
 
   // ── For Candidates — operator-ordered system + custom links ──
   const navigationLinks = buildNavigationLinks({
@@ -236,9 +234,15 @@ export default function Footer({
   });
 
   // ── For Companies ──
-  const talentLinked = talentDirectoryVisibility
-    ? talentDirectoryVisibility !== 'off'
-    : features.talentDirectory;
+  const talentMode =
+    talentDirectoryVisibility ??
+    (typeof features.talentDirectory === 'string'
+      ? features.talentDirectory
+      : features.talentDirectory
+        ? 'public'
+        : 'off');
+  // 'off' is a truthy string — compare explicitly, never coerce.
+  const talentLinked = talentMode !== 'off';
   const companyLinks: FooterLink[] = [
     ...(features.publicJobSubmission
       ? [{ href: '/post', label: copy.nav.post }]
@@ -392,9 +396,13 @@ export default function Footer({
             </FooterColumn>
           </div>
 
-          <div className="border-border mt-12 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-t pt-8">
+          {/* ms-auto (not justify-between) keeps the legal cluster
+              right-aligned even when long locales (de) wrap it onto its own
+              line — justify-between left-aligned the wrapped line, so the
+              footer looked like a different design per language. */}
+          <div className="border-border mt-12 flex flex-wrap items-center gap-x-6 gap-y-4 border-t pt-8">
             <span className="text-muted-foreground text-sm">{copyright}</span>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+            <div className="ms-auto flex flex-wrap items-center justify-end gap-x-6 gap-y-4">
               <nav className="flex flex-wrap gap-x-6 gap-y-3">
                 {legalLinks.map((link) => (
                   <Link

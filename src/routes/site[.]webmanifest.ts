@@ -1,42 +1,31 @@
 /**
- * site.webmanifest — the board-specific PWA manifest, assembled from the Board
- * API's SEO icons + manifest metadata (the API serves the data, the
- * starter builds the document). Mirrors the hosted board's /site.webmanifest.
+ * site.webmanifest — the board-specific PWA manifest.
+ *
+ * 4.0.0 dropped `icons` and `manifest.themeColor` from `board.seo()`; the
+ * starter owns icon paths (public assets) and theme color from the theme.
  */
 import { createFileRoute } from '@tanstack/react-router';
 
 import { getBoard } from '../lib/board';
+import { themeTokens } from '../theme/resolved';
 
 export const Route = createFileRoute('/site.webmanifest')({
   server: {
     handlers: {
       GET: async () => {
-        const { manifest, icons } = await getBoard().seo();
-        const manifestIcons = [
-          icons.icon192
-            ? { src: icons.icon192, sizes: '192x192', type: 'image/png' }
-            : null,
-          icons.icon512
-            ? { src: icons.icon512, sizes: '512x512', type: 'image/png' }
-            : null,
-          icons.iconMaskable512
-            ? {
-                src: icons.iconMaskable512,
-                sizes: '512x512',
-                type: 'image/png',
-                purpose: 'maskable',
-              }
-            : null,
-        ].filter(Boolean);
+        const { manifest } = await getBoard().seo();
 
         const doc = {
           name: manifest.name,
           short_name: manifest.name,
           start_url: '/',
           display: 'standalone',
-          background_color: '#ffffff',
-          theme_color: manifest.themeColor,
-          icons: manifestIcons,
+          background_color: themeTokens.light['--background'],
+          theme_color: themeTokens.light['--background'],
+          icons: [
+            { src: '/logo192.png', sizes: '192x192', type: 'image/png' },
+            { src: '/logo512.png', sizes: '512x512', type: 'image/png' },
+          ],
         };
 
         return new Response(JSON.stringify(doc), {

@@ -1,6 +1,5 @@
-import { fieldLabel } from '@cavuno/board/format';
-
 import { m } from '../paraglide/messages';
+import { enumLabel } from './enum-labels';
 
 import type { EmployerJob } from '@cavuno/board';
 
@@ -47,9 +46,9 @@ export function isEmployerJobExpired(
 }
 
 export function employerJobTypeLabel(
-  language: string,
+  _language: string,
   employmentType: EmployerJob['employmentType'],
 ) {
   if (!employmentType) return '—';
-  return fieldLabel(language, employmentType) ?? employmentType;
+  return enumLabel(employmentType) ?? employmentType;
 }

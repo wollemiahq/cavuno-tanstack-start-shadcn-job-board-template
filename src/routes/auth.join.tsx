@@ -1,8 +1,5 @@
 import { useState } from 'react';
 
-import { boardCopy } from '#/copy';
-
-import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import {
   Link,
   createFileRoute,
@@ -17,13 +14,13 @@ import {
 } from '../lib/candidate-return-to';
 import { resolveSignupDestination } from '../lib/signup-destination';
 import { m } from '../paraglide/messages';
-import { getBoardContext, getSeoBase } from '../server/queries';
+import { getAuthJoinSeo } from '../server/marketing-pages';
+import { getBoardContext } from '../server/queries';
 
-import { JsonLd } from '@/components/json-ld';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { AuthPageCard, RoleSelector } from '@/components/registration-page';
 import { buttonVariants } from '@/components/ui/button';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
-import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/auth/join')({
@@ -49,34 +46,22 @@ export const Route = createFileRoute('/auth/join')({
             : destination,
       });
     }
-    const seo = await getSeoBase();
-    return { boardName: board.name, seo };
+    const joinSeo = await getAuthJoinSeo();
+    return { boardName: board.name, ...joinSeo };
   },
   head: ({ loaderData, match }) =>
     loaderData
-      ? {
-          meta: [
-            { title: headTitle(loaderData?.seo.boardName, m.authJoin_title()) },
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              href: `${loaderData.seo.origin}/auth/join`,
-            },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {
           meta: [
             {
               // A board with signup disabled throws notFound() here, and the
               // head still runs — so without this the 404 would advertise a
               // join page that does not exist.
-              title: headTitle(
-                undefined,
+              title:
                 match.status === 'notFound'
                   ? m.notFound_heading()
                   : m.authJoin_title(),
-              ),
             },
           ],
         },
@@ -93,22 +78,14 @@ export const Route = createFileRoute('/auth/join')({
 });
 
 function JoinPage() {
-  const { boardName, seo } = Route.useLoaderData();
+  const { boardName } = Route.useLoaderData();
   const { returnTo } = Route.useSearch();
   const [role, setRole] = useState<'candidate' | 'employer'>('candidate');
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
-  const jsonLd = [
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      { label: m.breadcrumbJsonLd_joinLabel() },
-    ]),
-  ].filter((entry): entry is Record<string, unknown> => entry !== null);
   return (
     <AuthPageCard
       title={m.authJoin_heading({ boardName })}
       supportingText={m.authJoin_subheading()}
     >
-      <JsonLd data={jsonLd} />
       <RoleSelector
         value={role}
         onValueChange={setRole}

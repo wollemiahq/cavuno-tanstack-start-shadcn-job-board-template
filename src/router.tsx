@@ -1,6 +1,7 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router';
 
 import { NotFound } from './components/app-not-found';
+import { delocalizeSegments, localizeSegments } from './lib/localized-path';
 import { deLocalizeUrl, localizeUrl } from './paraglide/runtime';
 import { routeTree } from './routeTree.gen';
 
@@ -8,6 +9,12 @@ export function getRouter() {
   const router = createTanStackRouter({
     routeTree,
     scrollRestoration: true,
+    // Master–detail list panes (`SearchResultsList`) keep their own overflow
+    // scroll. Without this, TanStack copies the previous location's element
+    // scroll onto the next page and re-applies it after pagination — landing
+    // mid-list on page N. Selection-only navigations pass `resetScroll: false`
+    // and skip this path, so the list keeps its place when picking a result.
+    scrollToTopSelectors: ['[data-slot="search-results-list"]'],
     defaultPreload: 'intent',
     // Without this, navigation treats all route data as stale (`staleTime`
     // defaults to 0) and re-runs the loader on click even when the intent
@@ -27,8 +34,19 @@ export function getRouter() {
     // delocalized path (/de/jobs → /jobs), rendered hrefs re-localize for
     // the current locale. The base locale stays unprefixed.
     rewrite: {
-      input: ({ url }) => deLocalizeUrl(url),
-      output: ({ url }) => localizeUrl(url),
+      // Localized section slugs (/fr/emplois) translate to canonical
+      // segments before Paraglide strips the prefix, and back after it
+      // re-applies one — see src/lib/localized-path.ts.
+      input: ({ url }) => {
+        const incoming = new URL(url);
+        incoming.pathname = delocalizeSegments(incoming.pathname);
+        return deLocalizeUrl(incoming);
+      },
+      output: ({ url }) => {
+        const localized = new URL(localizeUrl(url));
+        localized.pathname = localizeSegments(localized.pathname);
+        return localized;
+      },
     },
   });
 

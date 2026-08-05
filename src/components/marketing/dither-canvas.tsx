@@ -1,10 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
-import { Dithering } from '@paper-design/shaders-react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 
 import { cn } from '@/lib/utils';
+
+const LazyDithering = lazy(() =>
+  import('@paper-design/shaders-react').then(({ Dithering }) => ({
+    default: Dithering,
+  })),
+);
 
 /**
  * The decorative hero dithering band — the real paper.design Dithering
@@ -33,6 +37,7 @@ export function DitherCanvas({ className }: { className?: string }) {
   // context and a resolved sRGB foreground colour.
   const [ink, setInk] = useState<string | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [idle, setIdle] = useState(false);
 
   useEffect(() => {
     // The shader needs WebGL2 — probe on a throwaway canvas and stay unmounted
@@ -80,25 +85,50 @@ export function DitherCanvas({ className }: { className?: string }) {
       attributeFilter: ['class', 'data-theme'],
     });
 
+    // This shader is decorative, so a passive page load keeps the static band
+    // and spends no bandwidth or main-thread time on WebGL. After the visitor
+    // first interacts, schedule the enhancement in idle time. This preserves
+    // the texture for an engaged visitor without competing with LCP or INP.
+    let idleId: number | undefined;
+    let requested = false;
+    const enhance = () => {
+      if (requested) return;
+      requested = true;
+      idleId = window.requestIdleCallback?.(() => setIdle(true), {
+        timeout: 1_500,
+      });
+      if (idleId === undefined) setIdle(true);
+    };
+    const interactionEvents = ['pointerdown', 'keydown', 'scroll'] as const;
+    for (const event of interactionEvents) {
+      window.addEventListener(event, enhance, { once: true, passive: true });
+    }
+
     return () => {
       motion.removeEventListener('change', onMotion);
       themeObserver.disconnect();
+      for (const event of interactionEvents) {
+        window.removeEventListener(event, enhance);
+      }
+      if (idleId !== undefined) window.cancelIdleCallback(idleId);
     };
   }, []);
 
-  if (!ink) return null;
+  if (!ink || !idle) return null;
 
   return (
-    <Dithering
-      aria-hidden
-      className={cn('pointer-events-none opacity-[0.12]', className)}
-      colorBack="rgba(0, 0, 0, 0)" // transparent — composite over the band bg
-      colorFront={ink}
-      shape="simplex"
-      type="8x8"
-      size={2}
-      scale={0.9}
-      speed={reducedMotion ? 0 : 0.6}
-    />
+    <Suspense fallback={null}>
+      <LazyDithering
+        aria-hidden
+        className={cn('pointer-events-none opacity-[0.12]', className)}
+        colorBack="rgba(0, 0, 0, 0)" // transparent — composite over the band bg
+        colorFront={ink}
+        shape="simplex"
+        type="8x8"
+        size={2}
+        scale={0.9}
+        speed={reducedMotion ? 0 : 0.6}
+      />
+    </Suspense>
   );
 }

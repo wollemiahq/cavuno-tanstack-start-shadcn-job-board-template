@@ -14,6 +14,7 @@ import { SearchResultDetailHeader } from '@/components/search-results/search-res
 import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { localizePath } from '@/lib/localized-path';
 
 function DefinitionList({
   rows,
@@ -55,7 +56,7 @@ function TaxonomySection({
           <Badge
             key={chip.key}
             variant="outline"
-            render={<a href={chip.href} />}
+            render={<a href={localizePath(chip.href)} />}
           >
             {chip.name}
           </Badge>
@@ -220,7 +221,7 @@ function ExpandedJobDetailHeader({
               <div className="flex min-w-0 items-center gap-1 truncate">
                 {vm.company ? (
                   <a
-                    href={vm.company.href}
+                    href={localizePath(vm.company.href)}
                     className="text-foreground truncate font-medium outline-none hover:underline focus-visible:underline"
                   >
                     {vm.companyName}
@@ -238,7 +239,7 @@ function ExpandedJobDetailHeader({
             <Text as="h2" variant="heading2" className="min-w-0">
               {vm.detailHref ? (
                 <a
-                  href={vm.detailHref}
+                  href={localizePath(vm.detailHref)}
                   className="outline-none hover:underline focus-visible:underline"
                 >
                   {vm.title}

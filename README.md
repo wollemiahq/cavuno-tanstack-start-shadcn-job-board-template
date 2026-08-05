@@ -274,6 +274,33 @@ The full local gate, including formatting, design-artifact drift, and the Board
 API conformance probe (`cavuno-board doctor`), is documented in
 [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/testing.md`](docs/testing.md).
 
+## Performance
+
+Core Web Vitals are held to budgets, not vibes. One command builds the
+production bundle, serves it the way a CDN would (Brotli, warmed anonymous
+HTML cache), and runs Lighthouse's default mobile lab — simulated Slow 4G,
+4× CPU throttle — across ten routes (home, listings, and a discovered
+job / company / salary / blog-post detail page):
+
+```sh
+pnpm run perf:lighthouse:check
+```
+
+The check fails unless every route meets, on every run:
+
+| Budget | Target |
+| --- | --- |
+| Performance score | ≥ 90 worst run, ≥ 95 median |
+| Largest Contentful Paint | ≤ 2.5 s |
+| Total Blocking Time | ≤ 150 ms |
+| Cumulative Layout Shift | ≤ 0.05 |
+
+In practice the routes land well inside these: LCP around two seconds in the
+mobile lab, with zero main-thread blocking and near-zero layout shift —
+`<head>` and JSON-LD are composed server-side, so the LCP content arrives in
+the HTML rather than behind a client fetch. Run it on your own fork; the
+numbers are only worth what you can reproduce.
+
 ---
 
 ## Contributing & license

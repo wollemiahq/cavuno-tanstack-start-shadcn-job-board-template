@@ -1,40 +1,23 @@
-import { boardCopy } from '#/copy';
-
+/**
+ * Head meta + Occupation/FAQ/Breadcrumb JSON-LD live in getLocationSalaryPage
+ * so `@cavuno/board/seo` stays out of the universal client entry.
+ */
 import { isNotFound, type LocationSalaryDetail } from '@cavuno/board';
-import { BOARD_PATHS, boardUrl, salaryLocationPath } from '@cavuno/board/paths';
-import {
-  buildSalaryFaq,
-  createBreadcrumbJsonLd,
-  faqJsonLd,
-  formatRange,
-  locationSalaryJsonLd,
-} from '@cavuno/board/seo';
-import {
-  createFileRoute,
-  getRouteApi,
-  notFound,
-  redirect,
-} from '@tanstack/react-router';
+import { BOARD_PATHS, salaryLocationPath } from '@cavuno/board/paths';
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import {
-  getLocationSalary,
-  getSeoBase,
-  listSalaryLocations,
-} from '../server/queries';
-import {
-  SalaryNotFoundPage,
-  SalaryPageLayout,
-  SalaryPendingPage,
-} from './-salary-page-layout';
+import { getLocale } from '../paraglide/runtime';
+import { getLocationSalaryPage } from '../server/salary-pages';
+import { SalaryNotFoundPage, SalaryPageLayout } from './-salary-page-layout';
+import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
+  formatSalaryRange,
   salaryLocationSkillsPath,
   salaryLocationTitlesPath,
-  salaryPlaceTitle,
   salarySkillInLocationPath,
   salaryTitleInLocationPath,
-  toLocationHierarchyCrumbs,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
@@ -47,112 +30,52 @@ import {
   SalaryRail,
   type RailItem,
 } from '@/components/board/salary-sections';
-import { JsonLd } from '@/components/json-ld';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
 import { buttonVariants } from '@/components/ui/button';
-import { headTitle } from '@/lib/page-title';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { localizePath } from '@/lib/localized-path';
 
 type City = LocationSalaryDetail['childLocations'][number];
 
 const cityItem =
-  (locale: string) =>
+  (locale: string, currency: string | null | undefined) =>
   (x: City): RailItem => ({
     name: x.placeName,
     href: salaryLocationPath(x.placeSlug),
-    range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(
+        locale,
+        x.avgSalaryMin,
+        x.avgSalaryMax,
+        // Child cities carry their own currency on the wire.
+        x.currency ?? currency,
+      ) ?? '',
     jobCount: x.jobCount,
   });
 
 export const Route = createFileRoute('/salaries/locations/$slug/')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
-    let salary;
+    let page;
     try {
-      salary = await getLocationSalary({ data: { slug: params.slug } });
+      page = await getLocationSalaryPage({ data: { slug: params.slug } });
     } catch (error) {
       if (isNotFound(error)) throw notFound();
       throw error;
     }
-    if (salary.canonicalSlug !== params.slug) {
+    if (page.salary.canonicalSlug !== params.slug) {
       throw redirect({
         to: '/salaries/locations/$slug',
-        params: { slug: salary.canonicalSlug },
+        params: { slug: page.salary.canonicalSlug },
         statusCode: 308,
       });
     }
-    // The flat place tree is the only public-SDK source of place ancestry —
-    // it rebuilds the country → region → city breadcrumb chain (the hosted
-    // board reads the same hierarchy from its internal places table).
-    const [seo, tree] = await Promise.all([
-      getSeoBase(),
-      // Breadcrumb enrichment only: on failure the trail degrades to the
-      // place itself instead of faulting a page whose own data loaded fine.
-      listSalaryLocations().catch(() => null),
-    ]);
-    const hierarchy = toLocationHierarchyCrumbs(
-      tree?.data ?? [],
-      salary.canonicalSlug,
-      salary.placeName,
-    );
-    // The visible shell trail can't derive the ancestor chain from the URL, so
-    // this route injects its fully-resolved trail (Home › Salaries › Locations
-    // › {ancestors…} › {place}). The shell renders it verbatim.
-    const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
-    const breadcrumbTrail = [
-      { name: crumbs.home, href: BOARD_PATHS.home },
-      { name: crumbs.salaries, href: BOARD_PATHS.salaries },
-      { name: crumbs.locations, href: BOARD_PATHS.salaryLocations },
-      ...hierarchy,
-    ];
-    return { salary, seo, hierarchy, breadcrumbTrail };
+    return page;
   },
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData.seo.boardName,
-                salaryPlaceTitle(
-                  loaderData.seo.language,
-                  loaderData.salary.placeName,
-                  loaderData.salary.overallSalary
-                    ? formatRange(
-                        loaderData.seo.language,
-                        loaderData.salary.overallSalary.avgMin,
-                        loaderData.salary.overallSalary.avgMax,
-                      )
-                    : null,
-                ),
-              ),
-            },
-            {
-              name: 'description',
-              content: loaderData.salary.overallSalary
-                ? m.salaryDetail_placeMetaDescriptionWithData({
-                    place: loaderData.salary.placeName,
-                    range: formatRange(
-                      loaderData.seo.language,
-                      loaderData.salary.overallSalary.avgMin,
-                      loaderData.salary.overallSalary.avgMax,
-                    ),
-                    jobCount: loaderData.salary.overallSalary.jobCount,
-                  })
-                : m.salaryDetail_placeMetaDescriptionEmpty({
-                    place: loaderData.salary.placeName,
-                  }),
-            },
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              href: boardUrl(
-                loaderData.seo.origin,
-                salaryLocationPath(loaderData.salary.canonicalSlug),
-              ),
-            },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: LocationSalaryPage,
   pendingComponent: SalaryPendingPage,
@@ -161,56 +84,43 @@ export const Route = createFileRoute('/salaries/locations/$slug/')({
   ),
 });
 
-const rootApi = getRouteApi('__root__');
-
 function LocationSalaryPage() {
-  const { salary, seo, hierarchy } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
-  const { board } = rootApi.useLoaderData();
-  const locale = seo.language;
+  const { salary, hierarchy, faqs } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
+  const locale = getLocale();
 
   // The place hierarchy is the breadcrumb tail (country → region → current),
-  // ancestors linked and the current place terminal — used by both the visible
-  // trail VM and the BreadcrumbList JSON-LD, mirroring the hosted board.
+  // ancestors linked and the current place terminal — used by the visible
+  // trail VM, mirroring the hosted board.
   const hierarchyCrumbs = hierarchy.map((c) => ({
     name: c.name,
     href: c.href,
   }));
-
-  const faqs = buildSalaryFaq(locale, salary.placeName, salary.overallSalary);
-  const jsonLd = [
-    locationSalaryJsonLd(salary),
-    faqJsonLd(faqs),
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      {
-        label: crumbs.salaries,
-        href: boardUrl(seo.origin, BOARD_PATHS.salaries),
-      },
-      {
-        label: crumbs.locations,
-        href: boardUrl(seo.origin, BOARD_PATHS.salaryLocations),
-      },
-      ...hierarchy.map((c) =>
-        c.href
-          ? { label: c.name, href: boardUrl(seo.origin, c.href) }
-          : { label: c.name },
-      ),
-    ]),
-  ].filter((e): e is Record<string, unknown> => e !== null);
 
   // Cross-axis: top titles/skills stay scoped to THIS place ("{Title} salaries
   // in {Place}"), matching the hosted board — not the bare title/skill pages.
   const categoryItems: RailItem[] = salary.topCategories.map((x) => ({
     name: x.categoryName,
     href: salaryTitleInLocationPath(x.categorySlug, salary.canonicalSlug),
-    range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(
+        locale,
+        x.avgSalaryMin,
+        x.avgSalaryMax,
+        salary.currency,
+      ) ?? '',
     jobCount: x.jobCount,
   }));
   const skillItems: RailItem[] = salary.topSkills.map((x) => ({
     name: x.skillName,
     href: salarySkillInLocationPath(x.skillSlug, salary.canonicalSlug),
-    range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(
+        locale,
+        x.avgSalaryMin,
+        x.avgSalaryMax,
+        salary.currency,
+      ) ?? '',
     jobCount: x.jobCount,
   }));
   const hasSalaryContent = Boolean(
@@ -233,12 +143,10 @@ function LocationSalaryPage() {
           { name: crumbs.locations, href: BOARD_PATHS.salaryLocations },
           ...hierarchyCrumbs,
         ],
-        seo.language,
-        seo.labels,
+        getLocale(),
       )}
       title={heading}
     >
-      <JsonLd data={jsonLd} />
       {hasSalaryContent ? (
         <>
           {salary.overallSalary ? (
@@ -253,8 +161,8 @@ function LocationSalaryPage() {
                   p25Min: salary.overallSalary.p25Min,
                   p75Max: salary.overallSalary.p75Max,
                 },
-                board.language,
-                seo.labels,
+                getLocale(),
+                salary.currency,
               )}
             />
           ) : null}
@@ -263,9 +171,8 @@ function LocationSalaryPage() {
             <SalaryRail
               vm={toSalaryRailVM(
                 m.salaryDetail_citiesInPlaceLabel({ place: salary.placeName }),
-                salary.childLocations.map(cityItem(locale)),
-                seo.language,
-                seo.labels,
+                salary.childLocations.map(cityItem(locale, salary.currency)),
+                getLocale(),
               )}
             />
           ) : null}
@@ -275,9 +182,8 @@ function LocationSalaryPage() {
               key={group.regionSlug}
               vm={toSalaryRailVM(
                 group.regionName,
-                group.cities.map(cityItem(locale)),
-                seo.language,
-                seo.labels,
+                group.cities.map(cityItem(locale, salary.currency)),
+                getLocale(),
               )}
             />
           ))}
@@ -286,9 +192,8 @@ function LocationSalaryPage() {
             <SalaryRail
               vm={toSalaryRailVM(
                 m.salaryDetail_otherLocations(),
-                salary.siblingLocations.map(cityItem(locale)),
-                seo.language,
-                seo.labels,
+                salary.siblingLocations.map(cityItem(locale, salary.currency)),
+                getLocale(),
               )}
             />
           ) : null}
@@ -298,7 +203,9 @@ function LocationSalaryPage() {
               title={m.salaryDetail_topTitles()}
               actions={
                 <a
-                  href={salaryLocationTitlesPath(salary.canonicalSlug)}
+                  href={localizePath(
+                    salaryLocationTitlesPath(salary.canonicalSlug),
+                  )}
                   className={buttonVariants({ variant: 'link', size: 'sm' })}
                 >
                   {m.salaryDetail_seeAllTitlesInPlaceLabel({
@@ -307,9 +214,7 @@ function LocationSalaryPage() {
                 </a>
               }
             >
-              <SalaryRail
-                vm={toSalaryRailVM('', categoryItems, seo.language, seo.labels)}
-              />
+              <SalaryRail vm={toSalaryRailVM('', categoryItems, getLocale())} />
             </PageSection>
           ) : null}
           {skillItems.length > 0 ? (
@@ -317,7 +222,9 @@ function LocationSalaryPage() {
               title={m.salaryDetail_topSkills()}
               actions={
                 <a
-                  href={salaryLocationSkillsPath(salary.canonicalSlug)}
+                  href={localizePath(
+                    salaryLocationSkillsPath(salary.canonicalSlug),
+                  )}
                   className={buttonVariants({ variant: 'link', size: 'sm' })}
                 >
                   {m.salaryDetail_seeAllSkillsInPlaceLabel({
@@ -326,12 +233,10 @@ function LocationSalaryPage() {
                 </a>
               }
             >
-              <SalaryRail
-                vm={toSalaryRailVM('', skillItems, seo.language, seo.labels)}
-              />
+              <SalaryRail vm={toSalaryRailVM('', skillItems, getLocale())} />
             </PageSection>
           ) : null}
-          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
+          <SalaryFaq vm={toSalaryFaqVM(faqs, getLocale())} />
         </>
       ) : (
         <SalaryEmptyState

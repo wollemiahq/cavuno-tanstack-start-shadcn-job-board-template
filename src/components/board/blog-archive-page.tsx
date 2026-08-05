@@ -19,6 +19,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { localizePath } from '@/lib/localized-path';
 import type { PublicBlogPostSummary } from '@cavuno/board';
 
 export interface BlogArchiveEmptyState {
@@ -98,7 +99,7 @@ export function BlogArchivePage({
               {empty.action ? (
                 <EmptyContent>
                   <a
-                    href={empty.action.href}
+                    href={localizePath(empty.action.href)}
                     className={buttonVariants({ variant: 'outline' })}
                   >
                     {empty.action.label}

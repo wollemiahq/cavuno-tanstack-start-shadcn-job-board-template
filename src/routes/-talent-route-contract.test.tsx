@@ -6,11 +6,10 @@ import { isNotFound as isRouteNotFound } from '@tanstack/react-router';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getSeoBase, getTalentProfile, listTalent, rootData } = vi.hoisted(
+const { getTalentIndexPage, getTalentProfilePage, rootData } = vi.hoisted(
   () => ({
-    getSeoBase: vi.fn(),
-    getTalentProfile: vi.fn(),
-    listTalent: vi.fn(),
+    getTalentIndexPage: vi.fn(),
+    getTalentProfilePage: vi.fn(),
     // The profile hero reads the viewer session from the root loader (via
     // getRouteApi('__root__')) and the current URL (useLocation), exactly like
     // the talent search pane. Mock that seam so the CTA gating can be exercised
@@ -24,10 +23,16 @@ const { getSeoBase, getTalentProfile, listTalent, rootData } = vi.hoisted(
   }),
 );
 
+vi.mock('../server/talent-pages', () => ({
+  getTalentIndexPage,
+  getTalentProfilePage,
+}));
+
+// Selected-talent pane hook still reads getTalentProfile from queries.
 vi.mock('../server/queries', () => ({
-  getSeoBase,
-  getTalentProfile,
-  listTalent,
+  getTalentProfile: vi.fn(),
+  getSeoBase: vi.fn(),
+  listTalent: vi.fn(),
 }));
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
@@ -87,12 +92,37 @@ function routeLoader(route: typeof TalentRoute | typeof ProfileRoute) {
 }
 
 beforeEach(() => {
-  getSeoBase.mockReset();
-  getSeoBase.mockResolvedValue(seo);
-  getTalentProfile.mockReset();
-  getTalentProfile.mockResolvedValue(profile);
-  listTalent.mockReset();
-  listTalent.mockResolvedValue({ data: [], hasMore: false, nextCursor: null });
+  getTalentIndexPage.mockReset();
+  getTalentIndexPage.mockResolvedValue({
+    seo,
+    page: { data: [], hasMore: false, nextCursor: null },
+    restricted: false,
+    head: {},
+    jsonLd: [],
+  });
+  getTalentProfilePage.mockReset();
+  getTalentProfilePage.mockResolvedValue({
+    profile,
+    seo,
+    head: {
+      meta: [
+        { title: 'Ada Lovelace | Acme Careers' },
+        { name: 'description', content: 'Robotics engineer' },
+      ],
+      links: [
+        {
+          rel: 'canonical',
+          href: 'https://careers.acme.test/p/ada-lovelace',
+        },
+      ],
+    },
+    jsonLd: [
+      {
+        '@type': 'ProfilePage',
+        mainEntity: { '@type': 'Person', name: 'Ada Lovelace' },
+      },
+    ],
+  });
   rootData.value = {
     user: null,
     board: { features: { messaging: true } },
@@ -104,6 +134,19 @@ function renderProfile() {
   vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
     profile,
     seo,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'ProfilePage',
+        url: 'https://careers.acme.test/p/ada-lovelace',
+        mainEntity: {
+          '@type': 'Person',
+          name: 'Ada Lovelace',
+          jobTitle: 'Robotics engineer',
+          knowsAbout: ['Robotics'],
+        },
+      },
+    ],
   } as never);
 
   const ProfileComponent = ProfileRoute.options.component;
@@ -129,7 +172,7 @@ describe('talent directory route — query and capability contracts', () => {
       },
     } as never);
 
-    expect(listTalent).toHaveBeenCalledWith({
+    expect(getTalentIndexPage).toHaveBeenCalledWith({
       data: {
         q: 'robotics engineer',
         skill: 'TypeScript',
@@ -140,7 +183,13 @@ describe('talent directory route — query and capability contracts', () => {
   });
 
   it('renders the restricted state for the employer-only directory code', async () => {
-    listTalent.mockResolvedValue({ status: 'restricted' });
+    getTalentIndexPage.mockResolvedValue({
+      seo,
+      page: null,
+      restricted: true,
+      head: {},
+      jsonLd: [],
+    });
 
     await expect(
       routeLoader(TalentRoute)({ deps: {} } as never),
@@ -181,7 +230,7 @@ describe('talent directory route — query and capability contracts', () => {
 
   it('does not disguise an unrelated forbidden response as an employer-only directory', async () => {
     const error = apiError(403, 'auth_forbidden');
-    listTalent.mockRejectedValue(error);
+    getTalentIndexPage.mockRejectedValue(error);
 
     await expect(routeLoader(TalentRoute)({ deps: {} } as never)).rejects.toBe(
       error,
@@ -189,7 +238,9 @@ describe('talent directory route — query and capability contracts', () => {
   });
 
   it('turns a disabled or missing directory into the route not-found outcome', async () => {
-    listTalent.mockRejectedValue(apiError(404, 'talent_directory_not_found'));
+    getTalentIndexPage.mockRejectedValue(
+      apiError(404, 'talent_directory_not_found'),
+    );
 
     let outcome: unknown;
     try {
@@ -208,7 +259,7 @@ describe('canonical talent profile route', () => {
       params: { handle: 'ada-lovelace' },
     } as never);
 
-    expect(getTalentProfile).toHaveBeenCalledWith({
+    expect(getTalentProfilePage).toHaveBeenCalledWith({
       data: { handle: 'ada-lovelace' },
     });
 
@@ -231,7 +282,7 @@ describe('canonical talent profile route', () => {
     });
   });
 
-  it('retains ProfilePage and Person structured data for the canonical profile', () => {
+  it('retains ProfilePage and Person structured data for the canonical profile', async () => {
     const { container } = renderProfile();
     // The profile opens on the shared entity hero band (avatar + name H1),
     // then drops into the profile article beneath it.
@@ -239,24 +290,31 @@ describe('canonical talent profile route', () => {
       screen.getByRole('heading', { level: 1, name: 'Ada Lovelace' }),
     ).toBeVisible();
     expect(container.querySelector('article')).toBeVisible();
-    const payloads = Array.from(
-      container.querySelectorAll<HTMLScriptElement>(
-        'script[type="application/ld+json"]',
-      ),
-      (script) =>
-        JSON.parse(script.textContent ?? 'null') as Record<string, unknown>,
-    );
+
+    // Structured data rides route head() `scripts` (React 19 streaming SSR
+    // can drop body-rendered <script> elements), so the contract is the head
+    // payload: the loader's jsonLd serialized as application/ld+json entries.
+    const loaderData = await routeLoader(ProfileRoute)({
+      params: { handle: 'ada-lovelace' },
+    } as never);
+    const head = ProfileRoute.options.head;
+    if (typeof head !== 'function') {
+      throw new Error('The public profile route does not define metadata');
+    }
+    const { scripts } = head({ loaderData } as never) as {
+      scripts?: Array<{ type: string; children: string }>;
+    };
+    const payloads = (scripts ?? [])
+      .filter((script) => script.type === 'application/ld+json')
+      .map((script) => JSON.parse(script.children) as Record<string, unknown>);
 
     expect(payloads).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           '@type': 'ProfilePage',
-          url: 'https://careers.acme.test/p/ada-lovelace',
           mainEntity: expect.objectContaining({
             '@type': 'Person',
             name: 'Ada Lovelace',
-            jobTitle: 'Robotics engineer',
-            knowsAbout: ['Robotics'],
           }),
         }),
       ]),

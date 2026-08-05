@@ -5,6 +5,7 @@ import { useLocation } from '@tanstack/react-router';
 import { Building2 } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
+import { getLocale } from '../../paraglide/runtime';
 
 import type { CompanyCardVM } from '@/board/company-view-model';
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
@@ -28,6 +29,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
+import { localizePath } from '@/lib/localized-path';
 import { listingPageHref } from '@/lib/pagination';
 
 type AdPlacement = {
@@ -75,22 +77,28 @@ export function CompanySearchPage({
   const selection = useSearchSelection({
     selectedId: selectedCompany,
     resultIds: companySlugs,
+    page,
     onReplace: onSelectedCompanyReplace,
     onPush: onSelectedCompanyPush,
   });
+  const locale = getLocale();
   const resultCountLabel =
-    count === 1
-      ? m.companySearch_resultsCountOne({ count })
-      : m.companySearch_resultsCountMany({ count });
+    new Intl.PluralRules(locale).select(count) === 'one'
+      ? m.companySearch_resultsCountOne({
+          count: count.toLocaleString(locale),
+        })
+      : m.companySearch_resultsCountMany({
+          count: count.toLocaleString(locale),
+        });
   // Both browse and free-text search are offset-paginated with a total `count`,
   // so the description line always renders the exact "Showing X–Y of N" range —
   // the same honest range as the jobs results header.
   const resultDescription =
     count > 0
       ? m.companySearch_resultsShowingRange({
-          from: (page - 1) * pageSize + 1,
-          to: Math.min(page * pageSize, count),
-          count,
+          from: ((page - 1) * pageSize + 1).toLocaleString(locale),
+          to: Math.min(page * pageSize, count).toLocaleString(locale),
+          count: count.toLocaleString(locale),
         })
       : null;
   const resultsBar = (
@@ -144,7 +152,10 @@ export function CompanySearchPage({
                     </EmptyHeader>
                     {hasActiveSearch ? (
                       <EmptyContent>
-                        <a href="/companies" className={buttonVariants()}>
+                        <a
+                          href={localizePath('/companies')}
+                          className={buttonVariants()}
+                        >
                           {m.jobSearch_resetFiltersAction()}
                         </a>
                       </EmptyContent>
@@ -217,7 +228,13 @@ export function CompanySearchPage({
                           <Badge
                             key={market.slug}
                             variant="outline"
-                            render={<a href={companyMarketPath(market.slug)} />}
+                            render={
+                              <a
+                                href={localizePath(
+                                  companyMarketPath(market.slug),
+                                )}
+                              />
+                            }
                           >
                             {market.name}
                           </Badge>

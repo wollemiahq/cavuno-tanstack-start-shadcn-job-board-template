@@ -9,6 +9,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import { localizePath } from '@/lib/localized-path';
 import { cn } from '@/lib/utils';
 
 /**
@@ -59,7 +60,7 @@ export function CursorPagination({
         </PaginationItem>
         <PaginationItem>
           <PaginationNext
-            href={nextHref}
+            href={nextHref.startsWith('/') ? localizePath(nextHref) : nextHref}
             text={m.pagination_nextLabel()}
             aria-label={m.pagination_nextPageLabel()}
             aria-disabled={!hasNext}

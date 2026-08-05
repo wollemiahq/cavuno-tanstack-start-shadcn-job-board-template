@@ -32,6 +32,16 @@ vi.mock('../server/queries', () => ({
   getSeoBase,
 }));
 
+// Page functions fold list+seo+head; redirects throw before they run, so
+// stubs only keep the module graph off cloudflare:workers in jsdom.
+vi.mock('../server/jobs-listing-pages', () => ({
+  getJobsCategoryPage: vi.fn(),
+  getJobsSkillPage: vi.fn(),
+  getJobsLocationPage: vi.fn(),
+  getJobsLocationCategoryPage: vi.fn(),
+  getJobsLocationSkillPage: vi.fn(),
+}));
+
 vi.mock('@/routes/-programmatic-jobs-view', () => ({
   PROGRAMMATIC_JOBS_PAGE_SIZE: 20,
   ProgrammaticJobsView: () => null,

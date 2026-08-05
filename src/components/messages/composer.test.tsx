@@ -35,7 +35,8 @@ describe('Composer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Message could not be sent.',
+      // errorMessage never echoes wire text — generic viewer-locale line.
+      'Something went wrong. Please try again.',
     );
     expect(screen.getByRole('alert')).toHaveAttribute(
       'data-slot',

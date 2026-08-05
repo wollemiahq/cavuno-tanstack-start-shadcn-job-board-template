@@ -37,7 +37,7 @@ export function LogoUpload({
           ref={inputRef}
           type="file"
           accept="image/jpeg,image/png,image/webp"
-          className="hidden"
+          className="sr-only"
           data-test="logo-file-input"
           onChange={async (event) => {
             const file = event.target.files?.[0];

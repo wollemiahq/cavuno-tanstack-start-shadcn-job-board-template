@@ -1,5 +1,3 @@
-import { boardCopy } from '#/copy';
-
 import { Search } from 'lucide-react';
 
 /**
@@ -21,19 +19,14 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
-
+import { jobSearchCopy } from '@/copy-groups/job-search';
 export function JobList({
   jobs,
-  language,
-  labels,
   variant = 'grid',
   compact = false,
 }: {
   jobs: JobCardVM[];
   language: string;
-  /** Operator label overrides from `board.context().labels`. */
-  labels?: BoardLabelOverrides;
   /**
    * `grid` — two-column tiles; `rows` — the single-column
    * listing rows; `compact` — a single-column stack of lean cards (no
@@ -47,7 +40,9 @@ export function JobList({
    */
   compact?: boolean;
 }) {
-  const copy = boardCopy(language, labels);
+  const copy = {
+    jobSearch: jobSearchCopy(),
+  };
 
   if (jobs.length === 0) {
     return (

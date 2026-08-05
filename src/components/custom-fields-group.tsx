@@ -1,5 +1,9 @@
 'use client';
 
+import {
+  customFieldLabel,
+  customFieldOptionLabel,
+} from '@/board/custom-field-labels';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
@@ -19,7 +23,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import type { PublicBoard } from '@cavuno/board';
 
-type CustomFieldDefinition = PublicBoard['customFields'][number];
+type CustomFieldDefinition = PublicBoard['customFields']['job'][number];
 
 export type CustomFieldValues = Record<
   string,
@@ -58,7 +62,9 @@ export function CustomFieldsGroup({
           case 'short_text':
             return (
               <Field key={definition.key}>
-                <FieldLabel htmlFor={id}>{definition.label}</FieldLabel>
+                <FieldLabel htmlFor={id}>
+                  {customFieldLabel(definition)}
+                </FieldLabel>
                 <Input
                   id={id}
                   required={definition.required}
@@ -70,7 +76,9 @@ export function CustomFieldsGroup({
           case 'long_text':
             return (
               <Field key={definition.key}>
-                <FieldLabel htmlFor={id}>{definition.label}</FieldLabel>
+                <FieldLabel htmlFor={id}>
+                  {customFieldLabel(definition)}
+                </FieldLabel>
                 <Textarea
                   id={id}
                   rows={3}
@@ -83,7 +91,9 @@ export function CustomFieldsGroup({
           case 'number':
             return (
               <Field key={definition.key}>
-                <FieldLabel htmlFor={id}>{definition.label}</FieldLabel>
+                <FieldLabel htmlFor={id}>
+                  {customFieldLabel(definition)}
+                </FieldLabel>
                 <Input
                   id={id}
                   type="number"
@@ -119,18 +129,20 @@ export function CustomFieldsGroup({
                       set(definition.key, checked === true)
                     }
                   />
-                  {definition.label}
+                  {customFieldLabel(definition)}
                 </FieldLabel>
               </Field>
             );
           case 'single_select':
             return (
               <Field key={definition.key}>
-                <FieldLabel htmlFor={id}>{definition.label}</FieldLabel>
+                <FieldLabel htmlFor={id}>
+                  {customFieldLabel(definition)}
+                </FieldLabel>
                 <Select
                   items={(definition.options ?? []).map((option) => ({
                     value: option.key,
-                    label: option.label,
+                    label: customFieldOptionLabel(definition.key, option),
                   }))}
                   required={definition.required}
                   value={typeof value === 'string' ? value : null}
@@ -144,7 +156,7 @@ export function CustomFieldsGroup({
                   <SelectContent>
                     {(definition.options ?? []).map((option) => (
                       <SelectItem key={option.key} value={option.key}>
-                        {option.label}
+                        {customFieldOptionLabel(definition.key, option)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -155,7 +167,9 @@ export function CustomFieldsGroup({
             const selected = Array.isArray(value) ? value : [];
             return (
               <FieldSet key={definition.key}>
-                <FieldLegend variant="label">{definition.label}</FieldLegend>
+                <FieldLegend variant="label">
+                  {customFieldLabel(definition)}
+                </FieldLegend>
                 <FieldGroup className="flex-row flex-wrap gap-4">
                   {(definition.options ?? []).map((option) => {
                     const optionId = `${id}-${option.key}`;
@@ -180,7 +194,7 @@ export function CustomFieldsGroup({
                           }
                         />
                         <FieldLabel htmlFor={optionId} className="font-normal">
-                          {option.label}
+                          {customFieldOptionLabel(definition.key, option)}
                         </FieldLabel>
                       </Field>
                     );

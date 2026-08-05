@@ -1,10 +1,7 @@
-import { boardCopy } from '#/copy';
-
 import { formatDate } from '@cavuno/board/format';
 import {
   Await,
   createFileRoute,
-  getRouteApi,
   Link,
   useRouter,
 } from '@tanstack/react-router';
@@ -22,6 +19,7 @@ import {
   isReauthRetry,
 } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import {
   deleteJob,
   getCompanyWorkspace,
@@ -76,14 +74,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { navCopy } from '@/copy-groups/nav';
+import { boardErrorMessage } from '@/lib/board-error-message';
 import { headTitle } from '@/lib/page-title';
 import type {
   EmployerJobStat,
   EmployerJobStatsPoint,
   EmployerJobSummary,
 } from '@cavuno/board';
-
-const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/employers/companies/$slug/')({
   loader: async ({ params, location }) => {
@@ -130,15 +128,21 @@ export const Route = createFileRoute('/employers/companies/$slug/')({
 
 function activeJobsSubtitle(count: number) {
   if (count === 0) return m.employerJobs_activeJobsZero();
-  if (count === 1) return m.employerJobs_activeJobsOne();
-  return m.employerJobs_activeJobsMany({ count });
+  const locale = getLocale();
+  if (new Intl.PluralRules(locale).select(count) === 'one') {
+    return m.employerJobs_activeJobsOne();
+  }
+  return m.employerJobs_activeJobsMany({
+    count: count.toLocaleString(locale),
+  });
 }
 
 function CompanyJobsPage() {
   const { slug, membership, jobs, statsIndex, timeseries } =
     Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
-  const copy = boardCopy(board.language, board.labels);
+  const copy = {
+    nav: navCopy(),
+  };
   const company = membership?.company;
   const companyName = company?.name ?? slug;
   // "Active" = live on the public board (published and not past expiry).
@@ -199,7 +203,7 @@ function CompanyJobsPage() {
               >
                 {(points) => (
                   <EmployerStatsChart
-                    vm={toEmployerStatsChartVM(points, board.language)}
+                    vm={toEmployerStatsChartVM(points, getLocale())}
                   />
                 )}
               </Await>
@@ -231,7 +235,7 @@ function CompanyJobsPage() {
                         key={job.id}
                         slug={slug}
                         job={job}
-                        language={board.language}
+                        language={getLocale()}
                         statsIndex={statsIndex}
                       />
                     ))}
@@ -328,7 +332,7 @@ function JobRow({
       if (result.ok) {
         await router.invalidate();
       } else {
-        toast.error(result.message ?? m.employerCompany_genericError());
+        toast.error(boardErrorMessage(result));
       }
     } catch {
       // A rejecting call (network drop, 5xx) must surface, not vanish.

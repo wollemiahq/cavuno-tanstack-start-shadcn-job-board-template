@@ -1,7 +1,8 @@
 /**
  * Apply-button VIEW-MODEL — the Layer-1b seam for the apply block.
  * `toApplyButtonVM` is the only place the apply decision ladder and i18n copy
- * (`boardCopy`) touch the button. It returns the resolved action + the
+ * (the route-owned copy resolver) touch the button. It returns the resolved
+ * action + the
  * labels the markup renders.
  *
  * Unlike the salary/job-card mappers this runs INSIDE the component on each
@@ -14,10 +15,7 @@
  */
 import { resolveApplyAction } from '@cavuno/board';
 
-import { boardCopy } from '@/copy';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
-
-export type { BoardLabelOverrides };
+import { applyCopy } from '@/copy-groups/apply';
 
 /** The resolved apply decision (discriminated on `kind`). */
 export type ApplyAction = ReturnType<typeof resolveApplyAction>;
@@ -42,8 +40,6 @@ export function toApplyButtonVM({
   applicationUrl,
   viewer,
   applied,
-  language,
-  labels,
   nativeApplications = true,
 }: {
   jobSlug: string | null;
@@ -52,7 +48,6 @@ export function toApplyButtonVM({
   /** `alreadyApplied` (server) OR the transient in-session applied state. */
   applied: boolean;
   language: string;
-  labels?: BoardLabelOverrides;
   /**
    * Board feature flag (default-on): `false` ⇒ external-applications-only.
    * The platform 422s a native apply, so a native-only job must NOT render a
@@ -62,7 +57,7 @@ export function toApplyButtonVM({
    */
   nativeApplications?: boolean;
 }): ApplyButtonVM {
-  const copy = boardCopy(language, labels).apply;
+  const copy = applyCopy();
   const resolved = resolveApplyAction({
     jobSlug,
     applicationUrl,

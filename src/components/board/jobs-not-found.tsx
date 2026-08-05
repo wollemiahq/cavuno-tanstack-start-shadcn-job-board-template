@@ -49,7 +49,6 @@ export function JobsNotFound() {
               <JobsFilterControls
                 filters={filters}
                 language={board.language}
-                labels={board.labels}
                 onChange={(next) =>
                   navigate({
                     to: '/jobs',

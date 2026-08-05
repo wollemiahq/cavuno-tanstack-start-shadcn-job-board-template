@@ -2,32 +2,25 @@
 
 import { useState } from 'react';
 
-import { boardCopy } from '#/copy';
-
 import { Copy, Link } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
-
+import { copyLinkCopy } from '@/copy-groups/copy-link';
 export function CopyLinkButton({
   url,
-  language,
-  labels,
   size = 'lg',
   className = 'w-full',
 }: {
   url: string;
   /** Board language (ISO code) from `board.context()`. */
   language: string;
-  /** Operator label overrides from `board.context().labels`. */
-  labels?: BoardLabelOverrides;
   /** Button size — `sm` for the compact hero utility placement. */
   size?: 'sm' | 'md' | 'lg';
   /** Override the default full-width layout (e.g. `w-fit` in the hero). */
   className?: string;
 }) {
   const [copied, setCopied] = useState(false);
-  const copy = boardCopy(language, labels).copyLink;
+  const copy = copyLinkCopy();
   const buttonSize = size === 'md' ? 'default' : size;
   return (
     <Button

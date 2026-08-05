@@ -1,4 +1,4 @@
-import { normalizeWebsiteUrl } from '@cavuno/board/seo';
+import { normalizeWebsiteUrl } from '@cavuno/board/format';
 
 import type { TalentDirectoryEntry, TalentProfile } from '@cavuno/board';
 
@@ -148,14 +148,10 @@ export function toTalentCardVM(
 }
 
 /**
- * PLATFORM FOLLOW-UP — talent entry logos. The public `TalentProfile`
- * serializer (`@cavuno/board` schema `TalentProfile`) exposes
- * `experiences[].companyUrl` and `education[].institutionUrl` but no logo
- * field (`companyLogoUrl` / `institutionLogoUrl`), unlike the company
- * serializer which does carry `logoUrl`. Until the API adds those fields the
- * mapper resolves them to `null` and the profile renders the initials
- * fallback. When the field lands, resolve it from `experience.companyLogoUrl`
- * / `education.institutionLogoUrl` here — no component change required.
+ * Talent entry logos come straight off the 4.0.0 `TalentProfile` serializer
+ * (`experiences[].companyLogoUrl` / `education[].institutionLogoUrl`,
+ * resolved server-side from the entry's URL); `null` means the company has
+ * no usable website and the profile renders the initials fallback.
  */
 export function toTalentProfileVM(
   profile: TalentProfile,
@@ -186,7 +182,7 @@ export function toTalentProfileVM(
       title: experience.title,
       companyName: experience.companyName,
       companyHref: normalizeWebsiteUrl(experience.companyUrl ?? ''),
-      companyLogoUrl: null,
+      companyLogoUrl: experience.companyLogoUrl,
       dateRangeLabel: formatMonthRange(
         experience.startDate,
         experience.endDate,
@@ -211,7 +207,7 @@ export function toTalentProfileVM(
       key: stableKey(education.institutionName, education.startDate),
       institutionName: education.institutionName,
       institutionHref: normalizeWebsiteUrl(education.institutionUrl ?? ''),
-      institutionLogoUrl: null,
+      institutionLogoUrl: education.institutionLogoUrl,
       qualificationLabel:
         [education.degree, education.fieldOfStudy].filter(Boolean).join(', ') ||
         null,

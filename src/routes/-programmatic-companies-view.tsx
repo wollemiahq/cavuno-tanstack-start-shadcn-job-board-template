@@ -1,15 +1,16 @@
-import { boardCopy } from '#/copy';
-
-import { getRouteApi, useNavigate } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 
 import { getCompanySearchLabels } from '@/board/company-search-labels';
 import { toCompanyCardVM } from '@/board/company-view-model';
 import { CompanySearchPage } from '@/components/board/company-search-page';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { jobDetailCopy } from '@/copy-groups/job-detail';
 import {
   includeSelectedCompanyMarket,
   type CompaniesSearch,
 } from '@/lib/companies-search';
 import { pageSearchValue } from '@/lib/pagination';
+import { getLocale } from '@/paraglide/runtime';
 import { SelectedCompanyDetail } from '@/routes/-selected-company-detail';
 import { useSelectedCompany } from '@/routes/-use-selected-company';
 import type { PublicCompany } from '@cavuno/board';
@@ -21,8 +22,6 @@ type LooseNavigate = (options: {
   replace?: boolean;
   resetScroll?: boolean;
 }) => void;
-
-const rootApi = getRouteApi('__root__');
 
 export type CompaniesPageData = {
   data: PublicCompany[];
@@ -45,8 +44,10 @@ export function ProgrammaticCompaniesView({
   search: CompaniesSearch;
 }) {
   const navigate = useNavigate() as unknown as LooseNavigate;
-  const { board } = rootApi.useLoaderData();
-  const copy = boardCopy(board.language, board.labels);
+  const copy = {
+    breadcrumbs: breadcrumbsCopy(),
+    jobDetail: jobDetailCopy(),
+  };
   const marketOptions = includeSelectedCompanyMarket(markets, market);
   const selectedCompany = useSelectedCompany(
     page.data.some((company) => company.slug === search.selectedCompany)
@@ -102,11 +103,7 @@ export function ProgrammaticCompaniesView({
         })
       }
       detail={
-        <SelectedCompanyDetail
-          state={selectedCompany}
-          language={board.language}
-          labels={board.labels}
-        />
+        <SelectedCompanyDetail state={selectedCompany} language={getLocale()} />
       }
     />
   );
