@@ -11,16 +11,34 @@
  *   before the amount with no space (ADR-0103).
  *
  * So both joins live here, in Paraglide, where a locale can reorder them.
- * Timeframe is the wire enum on the result; map it through the app catalog
+ * Timeframe is the wire enum on the result; map it to a display unit noun
  * before joining. Missing currency → null (never invent USD).
  */
 import {
   formatSalaryRange as sdkFormatSalaryRange,
   type SalaryTimeframeInput,
+  type SalaryTimeframeValue,
 } from '@cavuno/board/format';
 
 import { m } from '../paraglide/messages';
-import { salaryTimeframeLabel } from './enum-labels';
+
+/**
+ * Display unit nouns for the salary join — "$105K–$130K / year", "… pro
+ * Jahr", "… par an". Deliberately NOT the post-a-job form's option captions
+ * (`label_salaryTimeframe*`: "Yearly", "pro Jahr"): those are dropdown
+ * adjectives, and reusing them here rendered "/ Yearly" in English and
+ * doubled the preposition in German ("pro pro Jahr").
+ */
+const TIMEFRAME_UNITS: Record<
+  SalaryTimeframeValue,
+  (inputs: Record<string, never>, options: { locale?: string }) => string
+> = {
+  per_year: m.jobSalary_unitPerYear,
+  per_month: m.jobSalary_unitPerMonth,
+  per_week: m.jobSalary_unitPerWeek,
+  per_day: m.jobSalary_unitPerDay,
+  per_hour: m.jobSalary_unitPerHour,
+};
 
 /** Format a job salary range with bound chrome for open floors/ceilings. */
 export function formatJobSalary(
@@ -39,24 +57,23 @@ export function formatJobSalary(
   );
   if (!formatted) return null;
 
+  // The board language drives the join, not ambient request locale — this
+  // function formats board content and is also called from server loaders.
+  const locale = { locale: language };
   // Timeframe first, then the bound chrome wraps the whole phrase — "From
-  // $90K / year", not "From $90K" / "year". Map the wire enum through the
-  // catalog; never paste `per_year` into the UI.
+  // $90K / year", not "From $90K" / "year".
   const unit = formatted.timeframe
-    ? salaryTimeframeLabel(formatted.timeframe)
+    ? TIMEFRAME_UNITS[formatted.timeframe]({}, locale)
     : null;
   const amount = unit
-    ? m.jobSalary_perTimeframe({
-        amount: formatted.text,
-        unit,
-      })
+    ? m.jobSalary_perTimeframe({ amount: formatted.text, unit }, locale)
     : formatted.text;
 
   if (formatted.bound === 'from') {
-    return m.jobSalary_boundFrom({ amount });
+    return m.jobSalary_boundFrom({ amount }, locale);
   }
   if (formatted.bound === 'upTo') {
-    return m.jobSalary_boundUpTo({ amount });
+    return m.jobSalary_boundUpTo({ amount }, locale);
   }
   return amount;
 }
