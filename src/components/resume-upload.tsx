@@ -147,7 +147,7 @@ export function ResumeUpload({
         ref={inputRef}
         type="file"
         accept=".pdf,.doc,.docx,.odt,.rtf,.txt,application/pdf"
-        className="hidden"
+        className="sr-only"
         data-test="resume-file-input"
         onChange={async (event) => {
           const file = event.target.files?.[0];

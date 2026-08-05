@@ -243,7 +243,7 @@ describe('ThreadView', () => {
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Archive' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Network failed',
+      'Something went wrong. Please try again.',
     );
     expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
     expect(onArchive).toHaveBeenCalledOnce();

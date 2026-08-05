@@ -43,6 +43,13 @@ export interface ShellBreadcrumbPrivateLabels {
   messages: string;
   signIn: string;
   signUp: string;
+  /** Auth sub-pages beyond sign-in/up — without these the trail Title-Cases
+   * the URL segment into English ("Forgot Password") on every locale. */
+  authJoin: string;
+  authForgotPassword: string;
+  authResetPassword: string;
+  authMagicLink: string;
+  authVerifyEmail: string;
   postJob: string;
   companyProfile: string;
   employerDashboard: string;
@@ -296,12 +303,19 @@ export function resolveShellBreadcrumb({
   }
 
   if (section === 'auth') {
-    const name =
-      rest[0] === 'sign-in'
-        ? priv('signIn', 'sign-in')
-        : rest[0]?.endsWith('sign-up')
-          ? priv('signUp', 'sign-up')
-          : readableSegment(rest[0] ?? section);
+    const authSegmentLabels: Record<string, string | undefined> = {
+      'sign-in': priv('signIn', 'sign-in'),
+      join: priv('authJoin', 'join'),
+      'forgot-password': priv('authForgotPassword', 'forgot-password'),
+      'reset-password': priv('authResetPassword', 'reset-password'),
+      'magic-link': priv('authMagicLink', 'magic-link'),
+    };
+    const segment = rest[0] ?? section;
+    const name = segment.endsWith('sign-up')
+      ? priv('signUp', 'sign-up')
+      : segment.startsWith('verify-')
+        ? priv('authVerifyEmail', segment)
+        : (authSegmentLabels[segment] ?? readableSegment(segment));
     items.push({ name });
     return finish(items);
   }

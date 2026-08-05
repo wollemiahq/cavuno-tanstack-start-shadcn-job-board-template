@@ -187,6 +187,7 @@ export function PostJobForm({
   onCheckout,
 }: PostJobFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const autoFetched = useRef(new Set<string>());
   const [formState, setFormState] = useState<PostJobFormState>({
     status: { kind: 'idle' },
@@ -583,13 +584,27 @@ export function PostJobForm({
             <FieldLabel htmlFor="companyLogo">
               {m.postJob_logoLabel()}
             </FieldLabel>
-            <Input
+            <input
+              ref={logoInputRef}
               id="companyLogo"
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif"
+              className="sr-only"
               disabled={logoStatus.kind === 'working'}
               onChange={onLogoChange}
             />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-fit"
+              disabled={logoStatus.kind === 'working'}
+              onClick={() => logoInputRef.current?.click()}
+            >
+              {logoStatus.kind === 'working'
+                ? m.postJob_workingLabel()
+                : m.postJob_logoLabel()}
+            </Button>
             {logoStatus.kind === 'working' ? (
               <div className="text-muted-foreground flex items-center gap-2 text-sm">
                 <Spinner />

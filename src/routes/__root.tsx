@@ -22,7 +22,7 @@ import { localeDirection } from '../lib/locale-direction';
 import { toPreviewBoardConfig } from '../lib/preview';
 import { emitRoutesReport } from '../lib/routes-report';
 import { m } from '../paraglide/messages';
-import { getLocale } from '../paraglide/runtime';
+import { cookieMaxAge, cookieName, getLocale } from '../paraglide/runtime';
 import { getRootShellData } from '../server/root-shell';
 import { themeMeta, themeTokens } from '../theme/resolved';
 import { useBlogSuggestions } from './-use-blog-suggestions';
@@ -151,7 +151,7 @@ export const Route = createRootRoute({
       meta: [
         { charSet: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { title: board?.name ?? 'Job board' },
+        { title: board?.name ?? m.rootFallback_title() },
         { name: 'theme-color', content: themeTokens.light['--background'] },
       ],
       links: [
@@ -209,6 +209,16 @@ function RootLayout() {
   });
   const navigate = useNavigate();
   const router = useRouter();
+
+  // Persist the URL-resolved locale for unprefixed requests: server-fn RPC
+  // URLs (/_serverFn/*) carry no /de/ prefix, so without this cookie every
+  // client-side navigation resolves server-produced copy to the base locale
+  // while SSR of the same page localizes correctly. Locale changes are
+  // always full document loads (the switcher uses real anchors), so
+  // once-per-mount is enough.
+  useEffect(() => {
+    document.cookie = `${cookieName}=${getLocale()}; path=/; max-age=${cookieMaxAge}`;
+  }, []);
 
   // Once after hydration, report path templates to the builder parent when
   // this board is embedded in the preview iframe. The tree comes off the
@@ -269,6 +279,11 @@ function RootLayout() {
       messages: m.messagesPage_title(),
       signIn: m.siteHeader_signInLabel(),
       signUp: m.siteHeader_signUpLabel(),
+      authJoin: m.authJoin_title(),
+      authForgotPassword: m.authForgotPassword_title(),
+      authResetPassword: m.authResetPassword_title(),
+      authMagicLink: m.authMagicLink_title(),
+      authVerifyEmail: m.authVerifyEmail_title(),
       postJob: m.siteHeader_postJobLabel(),
       companyProfile: m.accountShell_companyProfileNav(),
       employerDashboard: m.employerDashboard_title(),

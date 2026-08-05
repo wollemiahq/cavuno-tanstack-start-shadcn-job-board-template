@@ -9,6 +9,7 @@ import {
 import { Users } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getTalentIndexPage } from '../server/talent-pages';
 import { RestrictedTalentDirectory } from './-restricted-talent-directory';
 
@@ -139,7 +140,7 @@ function TalentDirectoryPage() {
         count={page.count ?? page.data.length}
         page={search.page ?? 1}
         pageSize={TALENT_PAGE_SIZE}
-        language={seo.language}
+        language={getLocale()}
         onPageChange={(next) =>
           navigate({
             search: (previous) => ({
@@ -172,7 +173,7 @@ function TalentDirectoryPage() {
         detail={
           <SelectedTalentDetail
             state={selectedTalent}
-            locale={seo.language}
+            locale={getLocale()}
             viewer={viewer}
             signInHref={signInHref}
             messagingEnabled={board.features.messaging}

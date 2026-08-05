@@ -36,8 +36,8 @@ export function HomePage() {
     plural: string,
   ) =>
     typeof count === 'number' && count > 0
-      ? `${count.toLocaleString(board.language)} ${
-          new Intl.PluralRules(board.language).select(count) === 'one'
+      ? `${count.toLocaleString(getLocale())} ${
+          new Intl.PluralRules(getLocale()).select(count) === 'one'
             ? singular
             : plural
         }`
@@ -54,12 +54,13 @@ export function HomePage() {
       description: company.description,
       publishedJobCount: company.publishedJobCount,
       openJobsLabel:
-        company.publishedJobCount === 1
+        new Intl.PluralRules(getLocale()).select(company.publishedJobCount) ===
+        'one'
           ? m.companyDetail_openJobsCountOne({
-              count: company.publishedJobCount,
+              count: company.publishedJobCount.toLocaleString(getLocale()),
             })
           : m.companyDetail_openJobsCountMany({
-              count: company.publishedJobCount,
+              count: company.publishedJobCount.toLocaleString(getLocale()),
             }),
     }));
   const categoryCards = [...topCategories]
@@ -70,12 +71,12 @@ export function HomePage() {
       name: related.term,
       countLabel:
         related.count > 0
-          ? related.count === 1
+          ? new Intl.PluralRules(getLocale()).select(related.count) === 'one'
             ? m.jobSearch_resultsCountOne({
-                count: related.count.toLocaleString(board.language),
+                count: related.count.toLocaleString(getLocale()),
               })
             : m.jobSearch_resultsCountMany({
-                count: related.count.toLocaleString(board.language),
+                count: related.count.toLocaleString(getLocale()),
               })
           : null,
       href: jobsCategoryPath(related.slug),

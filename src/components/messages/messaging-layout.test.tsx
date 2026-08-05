@@ -19,7 +19,7 @@ describe('MessagingLayout', () => {
     const layout = screen.getByRole('region', { name: 'Messaging' });
     const list = screen.getByRole('navigation', { name: 'Conversations' });
     const conversation = screen.getByRole('region', {
-      name: 'Selected conversation',
+      name: 'Conversation',
     });
     expect(layout).toContainElement(list);
     expect(layout).toContainElement(conversation);

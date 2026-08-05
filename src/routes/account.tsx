@@ -8,12 +8,7 @@
  * /settings. The loader's server function enforces auth; the redirect
  * here is UX, not the security boundary.
  */
-import {
-  createFileRoute,
-  getRouteApi,
-  isRedirect,
-  redirect,
-} from '@tanstack/react-router';
+import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router';
 
 import { AvatarUpload } from '../components/avatar-upload';
 import { EducationSection } from '../components/education-section';
@@ -23,6 +18,7 @@ import { ProfileForm } from '../components/profile-form';
 import { ResumeImportDialog } from '../components/resume-import-dialog';
 import { SkillsSection } from '../components/skills-section';
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getAccount } from '../server/account';
 import { getSeoBase } from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
@@ -40,14 +36,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 
-const rootApi = getRouteApi('__root__');
-
 function AccountPage() {
   const { profile, experience, education, skills, languages, resume } =
     Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
-  const profileLocationSuggestions = useLocationSuggestions(board.language);
-  const experienceLocationSuggestions = useLocationSuggestions(board.language);
+  const profileLocationSuggestions = useLocationSuggestions(getLocale());
+  const experienceLocationSuggestions = useLocationSuggestions(getLocale());
 
   const checklist: ProfileChecklistItem[] = [
     {
@@ -133,11 +126,11 @@ function AccountPage() {
 
         <ExperienceSection
           items={experience.data}
-          language={board.language}
+          language={getLocale()}
           locationSuggestions={experienceLocationSuggestions}
         />
 
-        <EducationSection items={education.data} language={board.language} />
+        <EducationSection items={education.data} language={getLocale()} />
 
         <SkillsSection skills={skills.data.map((skill) => skill.name)} />
 

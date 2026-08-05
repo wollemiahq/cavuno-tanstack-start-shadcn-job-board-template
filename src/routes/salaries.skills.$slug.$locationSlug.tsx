@@ -4,14 +4,10 @@
  */
 import { isNotFound } from '@cavuno/board';
 import { BOARD_PATHS, salarySkillPath } from '@cavuno/board/paths';
-import {
-  createFileRoute,
-  getRouteApi,
-  notFound,
-  redirect,
-} from '@tanstack/react-router';
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getSkillLocationSalaryPage } from '../server/salary-pages';
 import { SalaryNotFoundPage, SalaryPageLayout } from './-salary-page-layout';
 import { SalaryPendingPage } from './-salary-pending-page';
@@ -74,13 +70,10 @@ export const Route = createFileRoute('/salaries/skills/$slug/$locationSlug')({
   ),
 });
 
-const rootApi = getRouteApi('__root__');
-
 function SkillLocationSalaryPage() {
   const { salary, seo } = Route.useLoaderData();
   const crumbs = breadcrumbsCopy(seo.language);
-  const { board } = rootApi.useLoaderData();
-  const locale = seo.language;
+  const locale = getLocale();
   const sk = salary.skillCanonicalSlug;
 
   const toPlaceRail = (rows: typeof salary.childLocations): RailItem[] =>
@@ -149,7 +142,7 @@ function SkillLocationSalaryPage() {
           { name: salary.skillName, href: salarySkillPath(sk) },
           { name: salary.placeName },
         ],
-        seo.language,
+        getLocale(),
       )}
       title={heading}
     >
@@ -165,7 +158,7 @@ function SkillLocationSalaryPage() {
                   p25Min: salary.overallSalary.p25Min ?? undefined,
                   p75Max: salary.overallSalary.p75Max ?? undefined,
                 },
-                board.language,
+                getLocale(),
                 salary.currency,
               )}
             />
@@ -181,7 +174,7 @@ function SkillLocationSalaryPage() {
                     boardAvgMax: null,
                     diffPercent: null,
                   })),
-                  board.language,
+                  getLocale(),
                   salary.currency,
                 )}
               />
@@ -192,28 +185,28 @@ function SkillLocationSalaryPage() {
             vm={toSalaryRailVM(
               m.salaryDetail_citiesLabel(),
               toPlaceRail(salary.childLocations),
-              seo.language,
+              getLocale(),
             )}
           />
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_otherLocations(),
               toPlaceRail(salary.otherLocations),
-              seo.language,
+              getLocale(),
             )}
           />
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_topSkills(),
               skillItems,
-              seo.language,
+              getLocale(),
             )}
           />
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_relatedTitles(),
               titleItems,
-              seo.language,
+              getLocale(),
             )}
           />
         </>

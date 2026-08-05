@@ -65,7 +65,7 @@ export function ProgrammaticJobsView({
         pageSize={pageSize}
         relatedSearches={relatedSearches}
         filters={filters}
-        language={board.language}
+        language={getLocale()}
         viewer={user ? { emailVerified: user.emailVerified } : null}
         onSaveJob={onSaveJob}
         onFiltersChange={(next) =>

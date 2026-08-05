@@ -12,12 +12,7 @@
  */
 import { useState } from 'react';
 
-import {
-  Await,
-  createFileRoute,
-  getRouteApi,
-  useRouter,
-} from '@tanstack/react-router';
+import { Await, createFileRoute, useRouter } from '@tanstack/react-router';
 import { ExternalLinkIcon } from 'lucide-react';
 
 import {
@@ -30,6 +25,7 @@ import {
   toSocialUrl,
 } from '../lib/post-form';
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import {
   getCompanyWorkspace,
   getEmployerCompany,
@@ -66,8 +62,6 @@ import {
 } from '@/components/ui/input-group';
 import { headTitle } from '@/lib/page-title';
 import type { EmployerProfileViewsPoint } from '@cavuno/board';
-
-const rootApi = getRouteApi('__root__');
 
 /**
  * A company's LinkedIn page always lives under `/company/`, so that segment is
@@ -132,7 +126,6 @@ function stripProtocol(url: string): string {
 
 function CompanyProfilePage() {
   const { workspace, company, employerCompany } = Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
   // Typed as possibly-undefined: the loader always supplies this on the happy
   // path, but component-level tests spy the loader data without it, so the
   // render guards on its presence rather than assuming the deferred promise.
@@ -181,7 +174,7 @@ function CompanyProfilePage() {
             >
               {({ total, points }) => (
                 <EmployerProfileViewsStat
-                  vm={toEmployerProfileViewsVM(total, points, board.language)}
+                  vm={toEmployerProfileViewsVM(total, points, getLocale())}
                 />
               )}
             </Await>

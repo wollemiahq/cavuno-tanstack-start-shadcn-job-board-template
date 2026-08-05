@@ -34,6 +34,7 @@ export function SelectedJobDetail({
         board.customFields,
         [],
         companyIntro(null, state.companyDescription),
+        board.language,
         getLocale(),
       )
     : undefined;

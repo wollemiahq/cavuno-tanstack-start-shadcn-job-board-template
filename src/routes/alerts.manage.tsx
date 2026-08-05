@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import {
   getSeoBase,
   deleteJobAlertPreference,
@@ -39,6 +40,7 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/components/ui/item';
+import { enumLabel } from '@/lib/enum-labels';
 import { headTitle } from '@/lib/page-title';
 import type { JobAlertManageState, JobAlertStoredFilters } from '@cavuno/board';
 
@@ -91,11 +93,21 @@ export const Route = createFileRoute('/alerts/manage')({
 function filtersSummary(filters: JobAlertStoredFilters): string {
   const parts = [
     ...(filters.jobFunctions ?? []),
-    ...(filters.remoteOptions ?? []).map((option) =>
-      option.replaceAll('_', ' '),
+    // Wire enums resolve through the catalog — never string-munged into
+    // pseudo-English ('on site') on a localized page.
+    ...(filters.remoteOptions ?? []).map(
+      (option) => enumLabel(option) ?? option.replaceAll('_', ' '),
     ),
   ];
-  return parts.length ? parts.join(', ') : m.alertsManage_allJobsText();
+  if (parts.length === 0) return m.alertsManage_allJobsText();
+  try {
+    return new Intl.ListFormat(getLocale(), {
+      style: 'long',
+      type: 'conjunction',
+    }).format(parts);
+  } catch {
+    return parts.join(', ');
+  }
 }
 
 function ManagePage() {

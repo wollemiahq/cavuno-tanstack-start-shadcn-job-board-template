@@ -4,14 +4,10 @@
  */
 import { isNotFound, type LocationSalaryDetail } from '@cavuno/board';
 import { BOARD_PATHS, salaryLocationPath } from '@cavuno/board/paths';
-import {
-  createFileRoute,
-  getRouteApi,
-  notFound,
-  redirect,
-} from '@tanstack/react-router';
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getLocationSalaryPage } from '../server/salary-pages';
 import { SalaryNotFoundPage, SalaryPageLayout } from './-salary-page-layout';
 import { SalaryPendingPage } from './-salary-pending-page';
@@ -87,13 +83,10 @@ export const Route = createFileRoute('/salaries/locations/$slug/')({
   ),
 });
 
-const rootApi = getRouteApi('__root__');
-
 function LocationSalaryPage() {
   const { salary, seo, hierarchy, faqs } = Route.useLoaderData();
   const crumbs = breadcrumbsCopy(seo.language);
-  const { board } = rootApi.useLoaderData();
-  const locale = seo.language;
+  const locale = getLocale();
 
   // The place hierarchy is the breadcrumb tail (country → region → current),
   // ancestors linked and the current place terminal — used by the visible
@@ -149,7 +142,7 @@ function LocationSalaryPage() {
           { name: crumbs.locations, href: BOARD_PATHS.salaryLocations },
           ...hierarchyCrumbs,
         ],
-        seo.language,
+        getLocale(),
       )}
       title={heading}
     >
@@ -167,7 +160,7 @@ function LocationSalaryPage() {
                   p25Min: salary.overallSalary.p25Min,
                   p75Max: salary.overallSalary.p75Max,
                 },
-                board.language,
+                getLocale(),
                 salary.currency,
               )}
             />
@@ -178,7 +171,7 @@ function LocationSalaryPage() {
               vm={toSalaryRailVM(
                 m.salaryDetail_citiesInPlaceLabel({ place: salary.placeName }),
                 salary.childLocations.map(cityItem(locale, salary.currency)),
-                seo.language,
+                getLocale(),
               )}
             />
           ) : null}
@@ -189,7 +182,7 @@ function LocationSalaryPage() {
               vm={toSalaryRailVM(
                 group.regionName,
                 group.cities.map(cityItem(locale, salary.currency)),
-                seo.language,
+                getLocale(),
               )}
             />
           ))}
@@ -199,7 +192,7 @@ function LocationSalaryPage() {
               vm={toSalaryRailVM(
                 m.salaryDetail_otherLocations(),
                 salary.siblingLocations.map(cityItem(locale, salary.currency)),
-                seo.language,
+                getLocale(),
               )}
             />
           ) : null}
@@ -218,9 +211,7 @@ function LocationSalaryPage() {
                 </a>
               }
             >
-              <SalaryRail
-                vm={toSalaryRailVM('', categoryItems, seo.language)}
-              />
+              <SalaryRail vm={toSalaryRailVM('', categoryItems, getLocale())} />
             </PageSection>
           ) : null}
           {skillItems.length > 0 ? (
@@ -237,10 +228,10 @@ function LocationSalaryPage() {
                 </a>
               }
             >
-              <SalaryRail vm={toSalaryRailVM('', skillItems, seo.language)} />
+              <SalaryRail vm={toSalaryRailVM('', skillItems, getLocale())} />
             </PageSection>
           ) : null}
-          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language)} />
+          <SalaryFaq vm={toSalaryFaqVM(faqs, getLocale())} />
         </>
       ) : (
         <SalaryEmptyState

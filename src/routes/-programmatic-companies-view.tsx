@@ -10,6 +10,7 @@ import {
   type CompaniesSearch,
 } from '@/lib/companies-search';
 import { pageSearchValue } from '@/lib/pagination';
+import { getLocale } from '@/paraglide/runtime';
 import { SelectedCompanyDetail } from '@/routes/-selected-company-detail';
 import { useSelectedCompany } from '@/routes/-use-selected-company';
 import type { PublicCompany } from '@cavuno/board';
@@ -105,10 +106,7 @@ export function ProgrammaticCompaniesView({
         })
       }
       detail={
-        <SelectedCompanyDetail
-          state={selectedCompany}
-          language={board.language}
-        />
+        <SelectedCompanyDetail state={selectedCompany} language={getLocale()} />
       }
     />
   );

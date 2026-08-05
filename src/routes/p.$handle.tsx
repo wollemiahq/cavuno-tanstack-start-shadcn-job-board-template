@@ -8,6 +8,7 @@ import {
 import { UserRoundX } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getTalentProfilePage } from '../server/talent-pages';
 
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
@@ -90,14 +91,14 @@ function TalentProfileNotFound() {
 }
 
 function TalentProfilePage() {
-  const { profile, seo } = Route.useLoaderData();
+  const { profile } = Route.useLoaderData();
   // The viewer session is read from the root loader (identity + board
   // features) exactly as the talent search pane does (talent.index →
   // -selected-talent-detail), so the profile hero's Message CTA is gated by
   // the SAME matrix as the pane — no Board API call from the browser.
   const { user, board } = rootApi.useLoaderData();
   const location = useLocation();
-  const vm = toTalentProfileVM(profile, seo.language, getTalentSearchLabels());
+  const vm = toTalentProfileVM(profile, getLocale(), getTalentSearchLabels());
   const viewer: TalentDetailViewer =
     user === null
       ? { kind: 'anonymous' }

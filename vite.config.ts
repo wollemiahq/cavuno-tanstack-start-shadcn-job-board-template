@@ -34,7 +34,13 @@ const config = defineConfig({
       // per message lets Vite discard route-owned translations instead of
       // retaining a whole locale catalog in the universal client entry.
       outputStructure: 'message-modules',
-      strategy: ['url', 'baseLocale'],
+      // 'cookie' between url and baseLocale: server-fn RPC requests hit
+      // unprefixed /_serverFn/* URLs, so with url-only strategy every
+      // client-side navigation resolved server-produced copy to English
+      // while SSR of the same page produced German. The cookie carries the
+      // viewer's locale across those unprefixed requests; the URL still
+      // wins whenever a prefix is present.
+      strategy: ['url', 'cookie', 'baseLocale'],
     }),
     devtools(),
     cloudflare({ viteEnvironment: { name: 'ssr' } }),

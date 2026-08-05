@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import { m } from '../../paraglide/messages';
+
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
@@ -8,8 +10,8 @@ export function MessagingLayout({
   list,
   conversation,
   mobilePane,
-  listLabel = 'Conversations',
-  conversationLabel = 'Selected conversation',
+  listLabel = m.messagesPage_conversationsAriaLabel(),
+  conversationLabel = m.messagesPage_conversationTitle(),
   className,
 }: {
   'aria-label': string;

@@ -2,7 +2,6 @@ import { isNotFound } from '@cavuno/board';
 import { companySalaryPath } from '@cavuno/board/paths';
 import {
   createFileRoute,
-  getRouteApi,
   interpolatePath,
   Link,
   notFound,
@@ -112,13 +111,13 @@ export const Route = createFileRoute('/companies/$companySlug/')({
   ),
 });
 
-const rootApi = getRouteApi('__root__');
-
 /** Pre-resolve the pluralized "N open job(s)" label (shared across company cards). */
 function jobCountLabel(count: number) {
-  return count === 1
-    ? m.companyDetail_openJobsCountOne({ count })
-    : m.companyDetail_openJobsCountMany({ count });
+  const locale = getLocale();
+  const formatted = count.toLocaleString(locale);
+  return new Intl.PluralRules(locale).select(count) === 'one'
+    ? m.companyDetail_openJobsCountOne({ count: formatted })
+    : m.companyDetail_openJobsCountMany({ count: formatted });
 }
 
 /**
@@ -128,18 +127,19 @@ function jobCountLabel(count: number) {
  */
 function openJobsHeading(count: number) {
   if (count === 0) return m.companyDetail_openJobsHeading();
-  return count === 1
-    ? m.companyDetail_openJobsHeadingCountOne({ count })
-    : m.companyDetail_openJobsHeadingCountMany({ count });
+  const locale = getLocale();
+  const formatted = count.toLocaleString(locale);
+  return new Intl.PluralRules(locale).select(count) === 'one'
+    ? m.companyDetail_openJobsHeadingCountOne({ count: formatted })
+    : m.companyDetail_openJobsHeadingCountMany({ count: formatted });
 }
 
 /** How many jobs the profile previews before deferring to the /jobs subpage. */
 const JOBS_PREVIEW_COUNT = 6;
 
 function CompanyPage() {
-  const { company, jobs, similar, seo, salarySummary, hasSalaries } =
+  const { company, jobs, similar, salarySummary, hasSalaries } =
     Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
 
   // Salary summary VMs condense the Salaries tab: the overall
   // range + the top few category rows, built through the SAME mappers the
@@ -151,7 +151,7 @@ function CompanyPage() {
           avgMax: salarySummary.overallSalary.avgMax,
           jobCount: salarySummary.overallSalary.jobCount,
         },
-        board.language,
+        getLocale(),
         salarySummary.currency,
       )
     : null;
@@ -167,7 +167,7 @@ function CompanyPage() {
       }).interpolatedPath,
       range:
         formatSalaryRange(
-          seo.language,
+          getLocale(),
           category.avgSalaryMin,
           category.avgSalaryMax,
           salarySummary.currency,
@@ -178,7 +178,7 @@ function CompanyPage() {
   const salaryCategoriesVM = toSalaryRailVM(
     undefined,
     salaryCategoryItems,
-    seo.language,
+    getLocale(),
   );
 
   const website = company.website

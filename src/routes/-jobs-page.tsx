@@ -36,7 +36,7 @@ export function JobsPage() {
         page={search.page ?? 1}
         pageSize={JOBS_PAGE_SIZE}
         filters={search}
-        language={board.language}
+        language={getLocale()}
         viewer={user ? { emailVerified: user.emailVerified } : null}
         onSaveJob={async (jobId) =>
           saveJob({ data: { jobId } }).then(() => undefined)

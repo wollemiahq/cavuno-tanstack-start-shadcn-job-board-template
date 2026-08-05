@@ -92,7 +92,7 @@ describe('messaging runtime failures', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Load more' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Network failed',
+      'Something went wrong. Please try again.',
     );
     expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
     expect(screen.getByRole('button', { name: 'Load more' })).toBeEnabled();
@@ -105,7 +105,7 @@ describe('messaging runtime failures', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Unblock' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Network failed',
+      'Something went wrong. Please try again.',
     );
     expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
     expect(screen.getByText('Hue Le')).toBeInTheDocument();
@@ -131,7 +131,7 @@ describe('messaging runtime failures', () => {
     );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Mark read failed',
+      'Something went wrong. Please try again.',
     );
   });
 });
