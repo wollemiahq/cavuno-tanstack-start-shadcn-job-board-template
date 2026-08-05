@@ -25,6 +25,7 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getRootShellData } from '../server/root-shell';
 import { themeMeta, themeTokens } from '../theme/resolved';
+import { useBlogSuggestions } from './-use-blog-suggestions';
 import { useCompanyMarketSuggestions } from './-use-company-market-suggestions';
 import '../styles.css';
 import { useKeywordSuggestions } from './-use-keyword-suggestions';
@@ -243,6 +244,7 @@ function RootLayout() {
   const companyMarketSuggestions = useCompanyMarketSuggestions(
     headerSearch.scope === 'companies',
   );
+  const blogSuggestions = useBlogSuggestions(headerSearch.scope === 'blog');
   // Breadcrumb nav aria-label only — do not import the full jobDetail copy
   // family (21 messages × locales) into the unsplittable root for one string.
   // Operator overrides ride the same jobCardLabels.breadcrumbAriaLabel key
@@ -305,6 +307,20 @@ function RootLayout() {
     }
 
     if (scope === 'blog') {
+      if (term?.type === 'post') {
+        void navigate({
+          to: '/blog/$postSlug',
+          params: { postSlug: term.slug },
+        });
+        return;
+      }
+      if (term?.type === 'tag') {
+        void navigate({
+          to: '/blog/tag/$tagSlug',
+          params: { tagSlug: term.slug },
+        });
+        return;
+      }
       void navigate({ to: '/blog', search: { q: query } });
       return;
     }
@@ -389,6 +405,7 @@ function RootLayout() {
         ...headerSearch,
         onSubmit: submitHeaderSearch,
         keywordSuggestions,
+        blogSuggestions,
         companyMarketSuggestions,
         locationSuggestions,
       }}

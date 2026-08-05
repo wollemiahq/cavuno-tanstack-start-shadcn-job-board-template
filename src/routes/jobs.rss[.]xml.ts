@@ -13,6 +13,8 @@ import { getRequest } from '@tanstack/react-start/server';
 import { getBoard } from '../lib/board';
 import { enumLabel } from '../lib/enum-labels';
 import { jobTitleAtCompany } from '../lib/page-title';
+import { m } from '../paraglide/messages';
+import { isLocale } from '../paraglide/runtime';
 
 function xmlEscape(value: string): string {
   return value
@@ -41,6 +43,10 @@ export const Route = createFileRoute('/jobs/rss.xml')({
           board.jobs.list({ fields: '+description', limit: 50 }),
         ]);
 
+        // Feed chrome follows the BOARD language (the feed is board content).
+        const locale = isLocale(context.language)
+          ? { locale: context.language }
+          : undefined;
         // Feed convention: latest first (the hosted feed orders by publishedAt desc).
         const jobs = [...list.data].sort(
           (a, b) =>
@@ -62,12 +68,13 @@ export const Route = createFileRoute('/jobs/rss.xml')({
               company.name,
             );
             const parts: string[] = [];
-            parts.push(`Company: ${company.name}`);
+            parts.push(m.rssJobs_companyLine({ name: company.name }, locale));
             if (job.employmentType) {
               // Same catalog as on-site labels — the feed must not invent its
               // own casing for the same enum ("Full Time" vs "Full time").
-              const typeLabel = enumLabel(job.employmentType);
-              if (typeLabel) parts.push(`Type: ${typeLabel}`);
+              const typeLabel = enumLabel(job.employmentType, context.language);
+              if (typeLabel)
+                parts.push(m.rssJobs_typeLine({ type: typeLabel }, locale));
             }
             if (job.description) parts.push(job.description);
             const description = sanitizeCdata(parts.join(' — '));
@@ -85,7 +92,7 @@ export const Route = createFileRoute('/jobs/rss.xml')({
           ? rssDate(jobs[0].publishedAt)
           : new Date(0).toUTCString();
 
-        const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n  <channel>\n    <title>${xmlEscape(`${context.name} — Jobs`)}</title>\n    <link>${xmlEscape(`${origin}/`)}</link>\n    <description>${xmlEscape(`Latest job listings from ${context.name}.`)}</description>\n    <lastBuildDate>${lastBuildDate}</lastBuildDate>\n    <atom:link href="${xmlEscape(`${origin}/jobs/rss.xml`)}" rel="self" type="application/rss+xml" />\n${items}\n  </channel>\n</rss>\n`;
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n  <channel>\n    <title>${xmlEscape(m.rssJobs_channelTitle({ name: context.name }, locale))}</title>\n    <link>${xmlEscape(`${origin}/`)}</link>\n    <description>${xmlEscape(m.rssJobs_channelDescription({ name: context.name }, locale))}</description>\n    <lastBuildDate>${lastBuildDate}</lastBuildDate>\n    <atom:link href="${xmlEscape(`${origin}/jobs/rss.xml`)}" rel="self" type="application/rss+xml" />\n${items}\n  </channel>\n</rss>\n`;
 
         return new Response(xml, {
           headers: {

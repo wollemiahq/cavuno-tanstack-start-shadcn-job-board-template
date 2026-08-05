@@ -6,7 +6,7 @@ export interface HeaderSearchLocation {
 }
 
 export interface HeaderSearchTerm {
-  type: 'category' | 'skill';
+  type: 'category' | 'skill' | 'post' | 'tag';
   slug: string;
   name: string;
 }

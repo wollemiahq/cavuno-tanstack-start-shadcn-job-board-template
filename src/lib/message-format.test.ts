@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { baseLocale, overwriteGetLocale } from '../paraglide/runtime';
 import {
   EDIT_WINDOW_MS,
   daySeparator,
@@ -43,5 +44,29 @@ describe('daySeparator', () => {
     expect(daySeparator(new Date(NOW - DAY).toISOString(), NOW)).toBe(
       'Yesterday',
     );
+  });
+});
+
+describe('locale-aware formatting', () => {
+  it('localizes compact durations instead of hardcoding English letters', () => {
+    overwriteGetLocale(() => 'de');
+    try {
+      const now = Date.now();
+      const fiveMinAgo = new Date(now - 5 * 60 * 1000).toISOString();
+      // German narrow minute unit is "Min.", never the English "m".
+      expect(relativeTime(fiveMinAgo, now)).toBe('5 Min.');
+    } finally {
+      overwriteGetLocale(() => baseLocale);
+    }
+  });
+
+  it('keeps the exact English compact forms', () => {
+    const now = Date.now();
+    const fiveMinAgo = new Date(now - 5 * 60 * 1000).toISOString();
+    const twoHoursAgo = new Date(now - 2 * 60 * 60 * 1000).toISOString();
+    const threeDaysAgo = new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString();
+    expect(relativeTime(fiveMinAgo, now)).toBe('5m');
+    expect(relativeTime(twoHoursAgo, now)).toBe('2h');
+    expect(relativeTime(threeDaysAgo, now)).toBe('3d');
   });
 });

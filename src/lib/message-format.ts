@@ -6,6 +6,20 @@
  *   - `EDIT_WINDOW_MS` — the 15-minute edit/unsend window.
  */
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
+
+/** Compact localized duration ("5m" / "5 Min." / "5min") via Intl units. */
+function narrowUnit(value: number, unit: 'minute' | 'hour' | 'day'): string {
+  try {
+    return new Intl.NumberFormat(getLocale(), {
+      style: 'unit',
+      unit,
+      unitDisplay: 'narrow',
+    }).format(value);
+  } catch {
+    return String(value);
+  }
+}
 
 export const EDIT_WINDOW_MS = 15 * 60 * 1000;
 
@@ -17,17 +31,17 @@ export function relativeTime(iso: string, now = Date.now()): string {
   const then = new Date(iso).getTime();
   const diff = now - then;
   if (diff < MINUTE) return m.messageFormat_now();
-  if (diff < HOUR) return `${Math.floor(diff / MINUTE)}m`;
-  if (diff < DAY) return `${Math.floor(diff / HOUR)}h`;
-  if (diff < 7 * DAY) return `${Math.floor(diff / DAY)}d`;
-  return new Date(iso).toLocaleDateString(undefined, {
+  if (diff < HOUR) return narrowUnit(Math.floor(diff / MINUTE), 'minute');
+  if (diff < DAY) return narrowUnit(Math.floor(diff / HOUR), 'hour');
+  if (diff < 7 * DAY) return narrowUnit(Math.floor(diff / DAY), 'day');
+  return new Date(iso).toLocaleDateString(getLocale(), {
     month: 'short',
     day: 'numeric',
   });
 }
 
 export function clockTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString(undefined, {
+  return new Date(iso).toLocaleTimeString(getLocale(), {
     hour: '2-digit',
     minute: '2-digit',
   });
@@ -50,9 +64,9 @@ export function daySeparator(iso: string, now = Date.now()): string {
     return m.messageFormat_yesterday();
 
   if (now - date.getTime() < 7 * DAY) {
-    return date.toLocaleDateString(undefined, { weekday: 'long' });
+    return date.toLocaleDateString(getLocale(), { weekday: 'long' });
   }
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(getLocale(), {
     weekday: 'short',
     day: 'numeric',
   });
