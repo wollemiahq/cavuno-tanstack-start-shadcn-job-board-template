@@ -21,6 +21,7 @@ import {
 } from '@cavuno/board/format';
 
 import { m } from '../paraglide/messages';
+import { isLocale } from '../paraglide/runtime';
 
 /**
  * Display unit nouns for the salary join — "$105K–$130K / year", "… pro
@@ -31,7 +32,7 @@ import { m } from '../paraglide/messages';
  */
 const TIMEFRAME_UNITS: Record<
   SalaryTimeframeValue,
-  (inputs: Record<string, never>, options: { locale?: string }) => string
+  typeof m.jobSalary_unitPerYear
 > = {
   per_year: m.jobSalary_unitPerYear,
   per_month: m.jobSalary_unitPerMonth,
@@ -57,9 +58,11 @@ export function formatJobSalary(
   );
   if (!formatted) return null;
 
-  // The board language drives the join, not ambient request locale — this
+  // The board language drives the join when it is a chrome locale — this
   // function formats board content and is also called from server loaders.
-  const locale = { locale: language };
+  // For board languages outside the chrome set, fall back to the ambient
+  // Paraglide locale (messages only exist for the chrome locales anyway).
+  const locale = isLocale(language) ? { locale: language } : undefined;
   // Timeframe first, then the bound chrome wraps the whole phrase — "From
   // $90K / year", not "From $90K" / "year".
   const unit = formatted.timeframe

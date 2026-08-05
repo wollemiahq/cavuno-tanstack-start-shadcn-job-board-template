@@ -22,11 +22,50 @@ import { getLocale, localizeHref } from '../paraglide/runtime';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+const loadMenu = () => import('./language-switcher-menu');
 const LazyLanguageSwitcherMenu = lazy(() =>
-  import('./language-switcher-menu').then(({ LanguageSwitcherMenu }) => ({
+  loadMenu().then(({ LanguageSwitcherMenu }) => ({
     default: LanguageSwitcherMenu,
   })),
 );
+
+/**
+ * The trigger pill, shared between the pre-menu button and the Suspense
+ * fallback so the switcher never blinks out while the menu chunk loads —
+ * the fallback is a pixel-identical (inert) twin of the button.
+ */
+function SwitcherPill({
+  label,
+  activeLabel,
+  className,
+  onClick,
+}: {
+  label: string;
+  activeLabel: string;
+  className?: string;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-busy={onClick ? undefined : 'true'}
+      className={cn(
+        buttonVariants({ variant: 'outline', size: 'sm' }),
+        'gap-2',
+        className,
+      )}
+      data-test="language-switcher"
+      onClick={onClick}
+      onPointerEnter={onClick ? () => void loadMenu() : undefined}
+      onFocus={onClick ? () => void loadMenu() : undefined}
+    >
+      <Globe className="text-muted-foreground" />
+      <span>{activeLabel}</span>
+      <ChevronDown className="text-muted-foreground" />
+    </button>
+  );
+}
 
 /**
  * The public chrome locales. `en-XA` (pseudo-accent) and `ar-XB`
@@ -84,7 +123,15 @@ export function LanguageSwitcher({ className }: { className?: string }) {
 
   if (menuRequested) {
     return (
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={
+          <SwitcherPill
+            label={label}
+            activeLabel={active.label}
+            className={className}
+          />
+        }
+      >
         <LazyLanguageSwitcherMenu
           options={options}
           activeLabel={active.label}
@@ -97,21 +144,12 @@ export function LanguageSwitcher({ className }: { className?: string }) {
 
   return (
     <>
-      <button
-        type="button"
-        aria-label={label}
-        className={cn(
-          buttonVariants({ variant: 'outline', size: 'sm' }),
-          'gap-2',
-          className,
-        )}
-        data-test="language-switcher"
+      <SwitcherPill
+        label={label}
+        activeLabel={active.label}
+        className={className}
         onClick={() => setMenuRequested(true)}
-      >
-        <Globe className="text-muted-foreground" />
-        <span>{active.label}</span>
-        <ChevronDown className="text-muted-foreground" />
-      </button>
+      />
       <div hidden aria-hidden="true">
         {options.map((option) => (
           <a
