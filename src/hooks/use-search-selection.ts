@@ -34,11 +34,19 @@ export interface SearchSelectionController {
 export function useSearchSelection({
   selectedId,
   resultIds,
+  page,
   onReplace,
   onPush,
 }: {
   selectedId?: string;
   resultIds: string[];
+  /**
+   * Listing page index. When it changes, the master list scroll container
+   * resets to the top so pagination (Next/Previous) never lands mid-list.
+   * Selection-only URL changes must omit a page change so the list keeps its
+   * place — the core master–detail interaction.
+   */
+  page?: number;
   onReplace: (resultId: string) => void;
   onPush: (resultId: string) => void;
 }): SearchSelectionController {
@@ -56,6 +64,9 @@ export function useSearchSelection({
       : resultIds[0]
     : undefined;
   const previousActiveId = useRef(activeId);
+  // Seeded with the mount page so the initial render never scrolls the list —
+  // only a subsequent page change does.
+  const previousPage = useRef(page);
 
   useEffect(() => {
     if (activeId && activeId !== selectedId) onReplace(activeId);
@@ -69,6 +80,22 @@ export function useSearchSelection({
       detailRef.current?.scrollTo({ top: 0 });
     }
   }, [activeId]);
+
+  // Pagination lands a fresh result window in the same overflow container that
+  // still holds the previous page's scrollTop. Reset the list on page change
+  // only — never on selection-only updates. useEffect (not layout) so this
+  // runs after TanStack's onRendered scroll-restoration useLayoutEffect, which
+  // would otherwise re-apply the prior location's element scroll.
+  useEffect(() => {
+    if (page === undefined || previousPage.current === page) return;
+    previousPage.current = page;
+    const list = listRef.current;
+    // `scrollTo` is incomplete in some non-browser runtimes (jsdom) — guard
+    // so the reset degrades to a no-op rather than throwing.
+    if (typeof list?.scrollTo === 'function') {
+      list.scrollTo({ top: 0 });
+    }
+  }, [page]);
 
   // On ARRIVAL with a URL-selected job (e.g. from a homepage card), bring its
   // row to the top of the list's own scroll container — ONCE, and only for the

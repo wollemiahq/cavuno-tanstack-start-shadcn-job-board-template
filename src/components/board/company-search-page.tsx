@@ -75,6 +75,7 @@ export function CompanySearchPage({
   const selection = useSearchSelection({
     selectedId: selectedCompany,
     resultIds: companySlugs,
+    page,
     onReplace: onSelectedCompanyReplace,
     onPush: onSelectedCompanyPush,
   });
