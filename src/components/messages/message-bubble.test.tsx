@@ -96,7 +96,9 @@ describe('MessageBubble', () => {
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Submit report' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Report failed');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Something went wrong. Please try again.',
+    );
     expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
     expect(onReport).toHaveBeenCalledWith('spam');
   });

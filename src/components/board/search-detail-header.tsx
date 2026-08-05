@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import { localizePath } from '@/lib/localized-path';
+
 /**
  * The condensed (sticky) detail header shared by ALL three master/detail
  * search surfaces — jobs, companies, and talent. It renders the entity mark,
@@ -47,7 +49,7 @@ export function SearchDetailHeader({
         <p className="truncate text-base font-semibold" dir="auto">
           {nameHref ? (
             <a
-              href={nameHref}
+              href={localizePath(nameHref)}
               className="outline-none hover:underline focus-visible:underline"
             >
               {name}

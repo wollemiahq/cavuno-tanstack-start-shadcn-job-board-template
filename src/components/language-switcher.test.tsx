@@ -21,7 +21,7 @@ import {
   waitFor,
   within,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { baseLocale, locales, overwriteGetLocale } from '../paraglide/runtime';
 import {
@@ -33,6 +33,14 @@ import {
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
+// Delay the lazy menu chunk by a real macrotask so tests can observe the
+// Suspense window — in bare jsdom the import resolves inside the click's
+// act() and the fallback would never be visible to assertions.
+vi.mock('./language-switcher-menu', async (importActual) => {
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  return importActual();
+});
 
 afterEach(() => {
   overwriteGetLocale(() => baseLocale);
@@ -79,7 +87,8 @@ describe('buildLocaleOptions preserves the current path', () => {
     // Base locale stays unprefixed; others gain their prefix — same path.
     expect(byLocale.en).toBe('/jobs?q=react');
     expect(byLocale.de).toBe('/de/jobs?q=react');
-    expect(byLocale.fr).toBe('/fr/jobs?q=react');
+    // fr localizes the section slug (localized-path.ts).
+    expect(byLocale.fr).toBe('/fr/emplois?q=react');
   });
 
   it('marks the active locale and nothing else', () => {
@@ -89,7 +98,9 @@ describe('buildLocaleOptions preserves the current path', () => {
     ]);
     // Switching away from /de/companies re-derives from the delocalized
     // path the router exposes, so every option targets the same route.
-    expect(options.find((o) => o.locale === 'de')?.href).toBe('/de/companies');
+    expect(options.find((o) => o.locale === 'de')?.href).toBe(
+      '/de/unternehmen',
+    );
     expect(options.find((o) => o.locale === 'en')?.href).toBe('/companies');
   });
 });
@@ -104,6 +115,25 @@ function renderAt(path: string) {
 }
 
 describe('LanguageSwitcher rendering', () => {
+  it('keeps the trigger visible while the menu chunk loads', async () => {
+    overwriteGetLocale(() => 'en');
+    renderAt('/jobs');
+    const trigger = await screen.findByRole('button', { name: 'Language' });
+
+    fireEvent.click(trigger);
+
+    // Immediately after the click the lazy menu import is still pending —
+    // the Suspense fallback must render an identical pill, never nothing.
+    // (Regression: a null fallback made the switcher blink out on first
+    // click until the chunk arrived.)
+    const pill = document.querySelector('[data-test="language-switcher"]');
+    expect(pill).not.toBeNull();
+    expect(pill).toHaveTextContent('English');
+
+    // Once the chunk lands, the real menu takes over (defaultOpen).
+    await waitFor(() => screen.getByRole('menu'));
+  });
+
   it('shows the active language on the trigger and the three options marked', async () => {
     overwriteGetLocale(() => 'de');
     renderAt('/jobs');

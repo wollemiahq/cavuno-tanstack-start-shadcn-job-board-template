@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { localizePath } from '@/lib/localized-path';
 
 export function JobAboutCompanyCard({
   company,
@@ -47,7 +48,7 @@ export function JobAboutCompanyCard({
       </CardContent>
       <CardFooter>
         <a
-          href={company.href}
+          href={localizePath(company.href)}
           className={buttonVariants({
             variant: 'outline',
             className: 'w-full',

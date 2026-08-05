@@ -40,7 +40,6 @@ export function toApplyButtonVM({
   applicationUrl,
   viewer,
   applied,
-  language,
   nativeApplications = true,
 }: {
   jobSlug: string | null;
@@ -58,7 +57,7 @@ export function toApplyButtonVM({
    */
   nativeApplications?: boolean;
 }): ApplyButtonVM {
-  const copy = applyCopy(language);
+  const copy = applyCopy();
   const resolved = resolveApplyAction({
     jobSlug,
     applicationUrl,

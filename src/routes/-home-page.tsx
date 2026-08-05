@@ -7,6 +7,7 @@ import { JobAlertFloatingPrompt } from '@/components/job-alert-floating-prompt';
 import { entityCopy } from '@/copy-groups/entity';
 import { jobAlertDefaultsFromSearch } from '@/lib/job-alert-defaults';
 import { m } from '@/paraglide/messages';
+import { getLocale } from '@/paraglide/runtime';
 import { saveJob } from '@/server/account';
 
 const routeApi = getRouteApi('/');
@@ -25,18 +26,24 @@ export function HomePage() {
   } = routeApi.useLoaderData();
   const { board, user } = rootApi.useLoaderData();
   const copy = {
-    entity: entityCopy(board.language),
+    entity: entityCopy(),
   };
+  // Plural category via Intl.PluralRules, never `count === 1` — the copy
+  // seam supplies One/Many forms and the locale decides which applies.
   const countEyebrow = (
     count: number | null | undefined,
     singular: string,
     plural: string,
   ) =>
     typeof count === 'number' && count > 0
-      ? `${count.toLocaleString(board.language)} ${count === 1 ? singular : plural}`
+      ? `${count.toLocaleString(getLocale())} ${
+          new Intl.PluralRules(getLocale()).select(count) === 'one'
+            ? singular
+            : plural
+        }`
       : undefined;
 
-  const jobs = page.data.map((job) => toJobCardVM(job, board.language));
+  const jobs = page.data.map((job) => toJobCardVM(job, getLocale()));
   const hiringCompanies = companies
     .filter((company) => company.publishedJobCount > 0)
     .map((company) => ({
@@ -47,12 +54,13 @@ export function HomePage() {
       description: company.description,
       publishedJobCount: company.publishedJobCount,
       openJobsLabel:
-        company.publishedJobCount === 1
+        new Intl.PluralRules(getLocale()).select(company.publishedJobCount) ===
+        'one'
           ? m.companyDetail_openJobsCountOne({
-              count: company.publishedJobCount,
+              count: company.publishedJobCount.toLocaleString(getLocale()),
             })
           : m.companyDetail_openJobsCountMany({
-              count: company.publishedJobCount,
+              count: company.publishedJobCount.toLocaleString(getLocale()),
             }),
     }));
   const categoryCards = [...topCategories]
@@ -63,12 +71,12 @@ export function HomePage() {
       name: related.term,
       countLabel:
         related.count > 0
-          ? related.count === 1
+          ? new Intl.PluralRules(getLocale()).select(related.count) === 'one'
             ? m.jobSearch_resultsCountOne({
-                count: related.count.toLocaleString(board.language),
+                count: related.count.toLocaleString(getLocale()),
               })
             : m.jobSearch_resultsCountMany({
-                count: related.count.toLocaleString(board.language),
+                count: related.count.toLocaleString(getLocale()),
               })
           : null,
       href: jobsCategoryPath(related.slug),

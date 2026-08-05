@@ -1,6 +1,7 @@
 import { useLocation, useRouter } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getSessionUser, saveJob } from '../server/account';
 import { applyToJob } from '../server/applications';
 import { getBoardContext } from '../server/queries';
@@ -34,6 +35,7 @@ export function SelectedJobDetail({
         [],
         companyIntro(null, state.companyDescription),
         board.language,
+        getLocale(),
       )
     : undefined;
 

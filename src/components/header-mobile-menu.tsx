@@ -1,18 +1,9 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useEffect } from 'react';
 
 import { Link } from '@tanstack/react-router';
-import { X } from 'lucide-react';
 
-import { Box } from '@/components/layout/box';
-import { Button } from '@/components/ui/button';
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetTitle,
-} from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 
 const mobileNavItemClassName =
@@ -20,85 +11,77 @@ const mobileNavItemClassName =
 
 type MobileNavDestination = '/jobs' | '/companies' | '/talent' | '/blog';
 
+/**
+ * Mobile nav disclosure — a plain non-modal panel pinned from the header's
+ * bottom edge to the viewport bottom. Deliberately NOT a Dialog/Sheet: the
+ * REAL header (with the single search input) stays visible and interactive
+ * above it, so there is no duplicated chrome, no focus trap hiding what the
+ * user is looking at, and no full-viewport overlay blurring the page.
+ */
 export function HeaderMobileMenu({
-  headerLeft,
-  accountActions,
   navLinks,
   showPostJob,
   navigationLabel,
-  closeLabel,
   postJobLabel,
+  topOffset,
   onOpenChange,
 }: {
-  headerLeft: ReactNode;
-  accountActions: ReactNode;
   navLinks: ReadonlyArray<{ to: MobileNavDestination; label: string }>;
   showPostJob: boolean;
   navigationLabel: string;
-  closeLabel: string;
   postJobLabel: string;
+  /** Viewport-Y of the header's bottom edge — the panel starts there. */
+  topOffset: number;
   onOpenChange: (open: boolean) => void;
 }) {
-  return (
-    <Sheet open onOpenChange={onOpenChange}>
-      <SheetContent
-        id="mobile-navigation-dialog"
-        side="top"
-        showCloseButton={false}
-        className="bg-background text-foreground inset-0 z-50 w-full gap-0 overflow-y-auto overscroll-contain rounded-none p-0 shadow-none data-[side=top]:inset-0 data-[side=top]:h-dvh data-[side=top]:max-w-none data-[side=top]:border-0 xl:hidden"
-      >
-        <SheetTitle className="sr-only">{navigationLabel}</SheetTitle>
-        <Box paddingX={{ base: '4', md: '8' }}>
-          <div className="grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3">
-            {headerLeft}
-            <div
-              data-slot="header-actions"
-              data-test="header-actions"
-              className="col-start-2 row-start-1 flex shrink-0 items-center gap-2 justify-self-end"
-            >
-              {accountActions}
-              <SheetClose
-                render={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-foreground"
-                    aria-label={closeLabel}
-                  />
-                }
-              >
-                <X aria-hidden="true" />
-              </SheetClose>
-            </div>
-          </div>
-        </Box>
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onOpenChange(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [onOpenChange]);
 
-        <nav
-          aria-label={navigationLabel}
-          className="border-border min-h-0 flex-1 overflow-y-auto border-t px-4 py-6"
-        >
-          {navLinks.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={cn(mobileNavItemClassName, 'hover:no-underline')}
-              onClick={() => onOpenChange(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
-          {showPostJob ? (
-            <Link
-              to="/post"
-              className={cn(mobileNavItemClassName, 'hover:no-underline')}
-              onClick={() => onOpenChange(false)}
-            >
-              {postJobLabel}
-            </Link>
-          ) : null}
-        </nav>
-      </SheetContent>
-    </Sheet>
+  // Lock page scroll behind the panel for its lifetime.
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
+
+  return (
+    <div
+      id="mobile-navigation-dialog"
+      role="dialog"
+      aria-label={navigationLabel}
+      style={{ top: topOffset }}
+      className="bg-background text-foreground fixed inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-contain xl:hidden"
+    >
+      {/* No border-t here — the header above already draws border-b, and
+          two hairlines a few px apart read as a glitch. */}
+      <nav aria-label={navigationLabel} className="px-4 py-6">
+        {navLinks.map((item) => (
+          <Link
+            key={item.to}
+            to={item.to}
+            className={cn(mobileNavItemClassName, 'hover:no-underline')}
+            onClick={() => onOpenChange(false)}
+          >
+            {item.label}
+          </Link>
+        ))}
+        {showPostJob ? (
+          <Link
+            to="/post"
+            className={cn(mobileNavItemClassName, 'hover:no-underline')}
+            onClick={() => onOpenChange(false)}
+          >
+            {postJobLabel}
+          </Link>
+        ) : null}
+      </nav>
+    </div>
   );
 }

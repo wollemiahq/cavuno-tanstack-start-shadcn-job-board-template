@@ -84,19 +84,19 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
       Record<string, unknown>
     >;
     const modular = {
-      alerts: alertsCopy('en'),
-      apply: applyCopy('en'),
-      blog: blogCopy('en'),
-      breadcrumbs: breadcrumbsCopy('en'),
-      copyLink: copyLinkCopy('en'),
-      entity: entityCopy('en'),
-      footer: footerCopy('en'),
-      jobCard: jobCardCopy('en'),
-      jobDetail: jobDetailCopy('en'),
-      jobSearch: jobSearchCopy('en'),
-      nav: navCopy('en'),
-      pagination: paginationCopy('en'),
-      salary: salaryCopy('en'),
+      alerts: alertsCopy(),
+      apply: applyCopy(),
+      blog: blogCopy(),
+      breadcrumbs: breadcrumbsCopy(),
+      copyLink: copyLinkCopy(),
+      entity: entityCopy(),
+      footer: footerCopy(),
+      jobCard: jobCardCopy(),
+      jobDetail: jobDetailCopy(),
+      jobSearch: jobSearchCopy(),
+      nav: navCopy(),
+      pagination: paginationCopy(),
+      salary: salaryCopy(),
     } as unknown as Record<string, Record<string, unknown>>;
 
     for (const [group, values] of Object.entries(canonical)) {
@@ -112,10 +112,10 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
       }
     }
 
-    expect(jobDetailCopy('en').experienceYears(5)).toBe(
+    expect(jobDetailCopy().experienceYears(5)).toBe(
       boardCopy('en').jobDetail.experienceYears(5),
     );
-    expect(jobDetailCopy('en').posted('today')).toBe(
+    expect(jobDetailCopy().posted('today')).toBe(
       boardCopy('en').jobDetail.posted('today'),
     );
   });

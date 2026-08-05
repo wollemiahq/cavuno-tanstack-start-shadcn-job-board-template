@@ -20,9 +20,7 @@ const messages = [
   ],
 ] as const;
 
-export function jobCardCopy(
-  _language: string | undefined,
-): BoardCopy['jobCard'] {
+export function jobCardCopy(): BoardCopy['jobCard'] {
   return resolveCopyGroup(
     messages,
     undefined,

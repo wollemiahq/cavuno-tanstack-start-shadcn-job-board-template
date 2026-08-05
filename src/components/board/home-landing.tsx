@@ -36,6 +36,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { localizePath } from '@/lib/localized-path';
 import type {
   PublicBlogPostSummary,
   TalentDirectoryEntry,
@@ -92,7 +93,7 @@ function CategoryBrowse({ categories }: { categories: HomeCategoryCard[] }) {
           >
             <CardContent className="flex flex-col gap-1">
               <a
-                href={category.href}
+                href={localizePath(category.href)}
                 className="focus-visible:ring-ring/50 text-foreground rounded-sm text-sm font-medium outline-none after:absolute after:inset-0 after:z-(--z-card-overlay) after:rounded-[inherit] hover:underline focus-visible:ring-2"
               >
                 {category.name}
@@ -220,7 +221,11 @@ export function HomeLanding({
 }) {
   // Return here after the save flow's sign-in / verify-email detour (mirrors
   // the `/jobs` list, which reads the current href the same way).
-  const returnTo = useLocation({ select: (location) => location.href });
+  // The EXTERNAL localized URL — post-auth redirects must land back on
+  // /fr/emplois, not the delocalized router path.
+  const returnTo = useLocation({
+    select: (location) => localizePath(location.href),
+  });
   const latestJobs = jobs;
   const hiringCompanies = companies;
   const latestPosts = posts ?? [];

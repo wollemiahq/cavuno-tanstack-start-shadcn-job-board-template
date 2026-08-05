@@ -2,7 +2,7 @@ import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
-import { LEGAL_CONTENT, resolveLegalEntity } from '../content/legal';
+import { resolveLegalContent, resolveLegalEntity } from '../content/legal';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { LEGAL_PAGES, type LegalPageViewModel } from '../lib/legal';
@@ -24,6 +24,7 @@ import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
  * in a Suspense segment that does not flush.
  */
 import type { LegalPageType } from '@/lib/legal';
+import { selfUrl } from '@/lib/self-url';
 
 /**
  * JSON-LD is schema.org-shaped nested objects. TanStack Start's server-fn
@@ -45,7 +46,7 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
     gatedRead(context, async () => {
       const board = getBoard();
       const meta = LEGAL_PAGES[data.type];
-      const content = LEGAL_CONTENT[data.type];
+      const content = resolveLegalContent(data.type);
       const boardContext = await board.context();
 
       const origin = new URL(getRequest().url).origin;
@@ -66,10 +67,10 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
             content: description,
           },
         ],
-        links: [{ rel: 'canonical', href: `${seo.origin}${meta.path}` }],
+        links: [{ rel: 'canonical', href: selfUrl(seo.origin, meta.path) }],
       };
 
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const url = `${origin}${meta.path}`;
       const jsonLd = asJsonObjects(
         [
@@ -81,7 +82,7 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
             url,
           },
           createBreadcrumbJsonLd([
-            { label: crumbs.home, href: origin },
+            { label: crumbs.home, href: selfUrl(origin, '/') },
             { label: crumbs[meta.breadcrumbKey] },
           ]),
         ].filter((entry) => entry !== null),

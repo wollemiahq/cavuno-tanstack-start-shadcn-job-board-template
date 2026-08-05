@@ -6,6 +6,7 @@ import { BOARD_PATHS, salarySkillPath } from '@cavuno/board/paths';
 import { createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getSalarySkillsIndexPage } from '../server/salary-pages';
 import { SalaryPageLayout } from './-salary-page-layout';
 import { SalaryPendingPage } from './-salary-pending-page';
@@ -35,9 +36,9 @@ export const Route = createFileRoute('/salaries/skills/')({
 });
 
 function SalarySkillsIndex() {
-  const { skills, seo } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language);
-  const locale = seo.language;
+  const { skills } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
+  const locale = getLocale();
 
   const items: RailItem[] = skills.map((s) => ({
     name: s.name,
@@ -56,12 +57,12 @@ function SalarySkillsIndex() {
           { name: crumbs.salaries, href: BOARD_PATHS.salaries },
           { name: crumbs.skills },
         ],
-        seo.language,
+        getLocale(),
       )}
       title={m.salaryHub_skillsHeading()}
     >
       {items.length > 0 ? (
-        <SalaryRail vm={toSalaryRailVM('', items, seo.language)} />
+        <SalaryRail vm={toSalaryRailVM('', items, getLocale())} />
       ) : (
         <SalaryEmptyState
           title={m.salaryHub_skillsEmptyTitle()}

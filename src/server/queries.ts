@@ -284,6 +284,35 @@ export const searchTaxonomySuggestions = createServerFn({ method: 'GET' })
     }),
   );
 
+/** Post/tag autocomplete for the blog search field (ADR-0102 suggest kinds). */
+export const searchBlogSuggestions = createServerFn({ method: 'GET' })
+  .validator((input: { q?: string; limit?: number }) => input)
+  .middleware([boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, async (h) => {
+      const result = await getBoard().search.suggest(
+        {
+          q: data.q,
+          limit: data.limit,
+          types: ['post', 'tag'],
+        },
+        { headers: h },
+      );
+      return {
+        data: result.items
+          .filter(
+            (item): item is Extract<typeof item, { type: 'post' | 'tag' }> =>
+              item.type === 'post' || item.type === 'tag',
+          )
+          .map((item) =>
+            item.type === 'post'
+              ? { type: 'post' as const, slug: item.slug, title: item.title }
+              : { type: 'tag' as const, slug: item.slug, name: item.name },
+          ),
+      };
+    }),
+  );
+
 // ── Job alerts (anonymous, double opt-in — public endpoints, no grant) ───────
 
 export const subscribeJobAlert = createServerFn({ method: 'POST' })

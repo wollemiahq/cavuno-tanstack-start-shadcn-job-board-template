@@ -16,6 +16,7 @@
 import { formatSalaryStat, formatSalaryStatRange } from '@cavuno/board/format';
 import {
   companySalaryPath,
+  encodePathSegment,
   salaryLocationPath,
   salarySkillPath,
   salaryTitlePath,
@@ -65,7 +66,7 @@ export function companyCategorySalaryPath(
   companySlug: string,
   categorySlug: string,
 ): string {
-  return `${companySalaryPath(companySlug)}/${categorySlug}`;
+  return `${companySalaryPath(companySlug)}/${encodePathSegment(categorySlug)}`;
 }
 
 /** Cross-axis: a job title's salary in one place. */
@@ -73,7 +74,7 @@ export function salaryTitleInLocationPath(
   titleSlug: string,
   placeSlug: string,
 ): string {
-  return `${salaryTitlePath(titleSlug)}/${placeSlug}`;
+  return `${salaryTitlePath(titleSlug)}/${encodePathSegment(placeSlug)}`;
 }
 
 /** Cross-axis: the "all locations" fan-out for a job title's salary. */
@@ -86,7 +87,7 @@ export function salarySkillInLocationPath(
   skillSlug: string,
   placeSlug: string,
 ): string {
-  return `${salarySkillPath(skillSlug)}/${placeSlug}`;
+  return `${salarySkillPath(skillSlug)}/${encodePathSegment(placeSlug)}`;
 }
 
 /** Cross-axis: the "all locations" fan-out for a skill's salary. */
@@ -181,8 +182,8 @@ export function toOverallSalaryVM(
   language: string,
   currency: string | null | undefined,
 ): OverallSalaryVM {
-  const entity = entityCopy(language);
-  const copy = salaryCopy(language);
+  const entity = entityCopy();
+  const copy = salaryCopy();
   const median =
     overall.medianMin !== undefined && overall.medianMax !== undefined
       ? Math.round((overall.medianMin + overall.medianMax) / 2)
@@ -219,19 +220,22 @@ export function toOverallSalaryVM(
   }
   stats.push({
     label: copy.basedOnLabel,
-    value: `${overall.jobCount} ${overall.jobCount === 1 ? entity.jobSingular : entity.jobPlural}`,
+    value: `${overall.jobCount.toLocaleString(language)} ${
+      new Intl.PluralRules(language).select(overall.jobCount) === 'one'
+        ? entity.jobSingular
+        : entity.jobPlural
+    }`,
   });
 
+  const headlineValue =
+    formatSalaryStatRange(language, overall.avgMin, overall.avgMax, currency) ??
+    '';
   return {
     headlineLabel: copy.comparisonHeadlineAverage,
-    headlineValue:
-      formatSalaryStatRange(
-        language,
-        overall.avgMin,
-        overall.avgMax,
-        currency,
-      ) ?? '',
-    perYearSuffix: copy.perYearSuffix,
+    headlineValue,
+    // No amount (e.g. currency null) → no money chrome: a bare "/ year"
+    // beside a blank figure is the suffix outliving the value it qualifies.
+    perYearSuffix: headlineValue ? copy.perYearSuffix : '',
     stats,
   };
 }
@@ -264,7 +268,7 @@ export function toSeniorityTableVM(
   language: string,
   currency: string | null | undefined,
 ): SeniorityTableVM {
-  const copy = salaryCopy(language);
+  const copy = salaryCopy();
   return {
     headers: {
       level: copy.seniorityTableHeaderLevel,
@@ -329,7 +333,7 @@ export function toSalaryRailVM(
   items: RailItem[],
   language: string,
 ): SalaryRailVM {
-  const copy = entityCopy(language);
+  const copy = entityCopy();
   return {
     title,
     items: items.map((item) => ({
@@ -337,7 +341,11 @@ export function toSalaryRailVM(
       href: item.href,
       range: item.range,
       logoPath: item.logoPath,
-      jobCountLabel: `${item.jobCount} ${item.jobCount === 1 ? copy.jobSingular : copy.jobPlural}`,
+      jobCountLabel: `${item.jobCount.toLocaleString(language)} ${
+        new Intl.PluralRules(language).select(item.jobCount) === 'one'
+          ? copy.jobSingular
+          : copy.jobPlural
+      }`,
     })),
   };
 }
@@ -349,10 +357,10 @@ export interface SalaryFaqVM {
 
 export function toSalaryFaqVM(
   items: { q: string; a: string }[],
-  language: string,
+  _language: string,
 ): SalaryFaqVM {
   return {
-    heading: salaryCopy(language).faqHeading,
+    heading: salaryCopy().faqHeading,
     items,
   };
 }
@@ -407,10 +415,10 @@ export interface SalaryBreadcrumbVM {
 
 export function toSalaryBreadcrumbVM(
   items: { name: string; href?: string }[],
-  language: string,
+  _language: string,
 ): SalaryBreadcrumbVM {
   return {
-    ariaLabel: jobDetailCopy(language).breadcrumbAriaLabel,
+    ariaLabel: jobDetailCopy().breadcrumbAriaLabel,
     items,
   };
 }

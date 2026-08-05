@@ -22,7 +22,6 @@ import {
 import { jobSearchCopy } from '@/copy-groups/job-search';
 export function JobList({
   jobs,
-  language,
   variant = 'grid',
   compact = false,
 }: {
@@ -42,7 +41,7 @@ export function JobList({
   compact?: boolean;
 }) {
   const copy = {
-    jobSearch: jobSearchCopy(language),
+    jobSearch: jobSearchCopy(),
   };
 
   if (jobs.length === 0) {

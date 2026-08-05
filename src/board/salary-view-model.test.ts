@@ -113,6 +113,9 @@ describe('toOverallSalaryVM', () => {
       null,
     );
     expect(vm.headlineValue).toBe('');
+    // The timeframe suffix must not outlive the amount it qualifies — no
+    // bare "/ year" beside a blank figure.
+    expect(vm.perYearSuffix).toBe('');
     // Only the non-money "based on N jobs" stat remains.
     expect(vm.stats).toHaveLength(1);
     expect(vm.stats[0].value.startsWith('12 ')).toBe(true);
@@ -248,6 +251,21 @@ describe('salary path composers', () => {
     );
     expect(salaryLocationSkillsPath('london')).toBe(
       `${salaryLocationPath('london')}/skills`,
+    );
+  });
+
+  it('percent-encodes the appended segment like the SDK helpers do', () => {
+    // The SDK helpers encode their own segment; the composed second segment
+    // must get the same treatment or non-ASCII board-language slugs produce
+    // invalid canonical URLs (these composers feed rel=canonical).
+    expect(salaryTitleInLocationPath('führungskraft', 'zürich')).toBe(
+      '/salaries/titles/f%C3%BChrungskraft/z%C3%BCrich',
+    );
+    expect(companyCategorySalaryPath('acme', 'bürojobs')).toBe(
+      `${companySalaryPath('acme')}/b%C3%BCrojobs`,
+    );
+    expect(salarySkillInLocationPath('react', 'köln')).toBe(
+      `${salarySkillPath('react')}/k%C3%B6ln`,
     );
   });
 

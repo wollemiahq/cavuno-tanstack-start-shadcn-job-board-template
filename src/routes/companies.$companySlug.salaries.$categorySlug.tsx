@@ -4,14 +4,10 @@ import {
   companyPath,
   companySalaryPath,
 } from '@cavuno/board/paths';
-import {
-  createFileRoute,
-  getRouteApi,
-  notFound,
-  redirect,
-} from '@tanstack/react-router';
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getCompanyCategorySalaryPage } from '../server/companies-pages';
 import { SalaryNotFoundPage, SalaryPageLayout } from './-salary-page-layout';
 import { SalaryPendingPage } from './-salary-pending-page';
@@ -79,14 +75,11 @@ export const Route = createFileRoute(
   ),
 });
 
-const rootApi = getRouteApi('__root__');
-
 function CompanyCategorySalaryPage() {
-  const { salary, seo, faqs } = Route.useLoaderData();
+  const { salary, faqs } = Route.useLoaderData();
   // UI breadcrumb trail — component-only copy family (rides the route chunk).
-  const crumbs = breadcrumbsCopy(seo.language);
-  const { board } = rootApi.useLoaderData();
-  const locale = seo.language;
+  const crumbs = breadcrumbsCopy();
+  const locale = getLocale();
 
   const competitorItems: RailItem[] = salary.competitors.map((x) => ({
     name: x.companyName,
@@ -131,7 +124,7 @@ function CompanyCategorySalaryPage() {
           },
           { name: salary.categoryName },
         ],
-        seo.language,
+        getLocale(),
       )}
       title={heading}
     >
@@ -145,7 +138,7 @@ function CompanyCategorySalaryPage() {
                   avgMax: salary.overallSalary.avgMax,
                   jobCount: salary.overallSalary.jobCount,
                 },
-                board.language,
+                getLocale(),
                 salary.currency,
               )}
             />
@@ -156,7 +149,7 @@ function CompanyCategorySalaryPage() {
               <SenioritySalaryTable
                 vm={toSeniorityTableVM(
                   salary.bySeniority,
-                  board.language,
+                  getLocale(),
                   salary.currency,
                 )}
               />
@@ -169,10 +162,10 @@ function CompanyCategorySalaryPage() {
                 category: salary.categoryName,
               }),
               competitorItems,
-              seo.language,
+              getLocale(),
             )}
           />
-          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language)} />
+          <SalaryFaq vm={toSalaryFaqVM(faqs, getLocale())} />
         </>
       ) : (
         <SalaryEmptyState

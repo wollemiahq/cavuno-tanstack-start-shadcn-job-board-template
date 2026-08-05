@@ -36,6 +36,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
+import { localizePath } from '@/lib/localized-path';
 import { listingPageHref } from '@/lib/pagination';
 import type { RelatedSearch } from '@cavuno/board';
 import type { ListingFilters } from '@cavuno/board/filters';
@@ -126,7 +127,11 @@ export function JobSearchPage({
   viewer: { emailVerified: boolean } | null;
   onSaveJob: (jobId: string) => Promise<void>;
 }) {
-  const returnTo = useLocation({ select: (location) => location.href });
+  // The EXTERNAL localized URL — post-auth redirects must land back on
+  // /fr/emplois, not the delocalized router path.
+  const returnTo = useLocation({
+    select: (location) => localizePath(location.href),
+  });
   const jobVms = jobs;
   const selectableSlugs = jobVms.flatMap((vm) =>
     vm.jobSlug && vm.detailHref ? [vm.jobSlug] : [],
@@ -134,6 +139,7 @@ export function JobSearchPage({
   const selection = useSearchSelection({
     selectedId: selectedJob,
     resultIds: selectableSlugs,
+    page,
     onReplace: onSelectedJobReplace,
     onPush: onSelectedJobPush,
   });
@@ -260,7 +266,9 @@ export function JobSearchPage({
                       </AlertDescription>
                       <AlertAction className="static">
                         <a
-                          href={`/account/access?${new URLSearchParams({ returnTo }).toString()}`}
+                          href={localizePath(
+                            `/account/access?${new URLSearchParams({ returnTo }).toString()}`,
+                          )}
                           className={buttonVariants({ size: 'sm' })}
                         >
                           {m.jobSearch_unlockMoreLabel()}
@@ -293,7 +301,7 @@ export function JobSearchPage({
                           <Badge
                             key={chip.key}
                             variant="outline"
-                            render={<a href={chip.href} />}
+                            render={<a href={localizePath(chip.href)} />}
                           >
                             {chip.name}
                           </Badge>

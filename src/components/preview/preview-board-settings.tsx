@@ -30,6 +30,61 @@ import {
 import { Switch } from '@/components/ui/switch';
 
 /**
+ * TODO(i18n) resolved: flag copy lives here, keyed by flag key, so the
+ * data table in preview.ts stays words-free. Unknown flags fall back to
+ * the table's English authoring strings.
+ */
+const FLAG_COPY: Record<
+  string,
+  { label: () => string; description: () => string }
+> = {
+  jobAccessPaywallEnabled: {
+    label: m.previewFlag_jobAccessPaywallEnabled_label,
+    description: m.previewFlag_jobAccessPaywallEnabled_description,
+  },
+  talentDirectoryVisibility: {
+    label: m.previewFlag_talentDirectoryVisibility_label,
+    description: m.previewFlag_talentDirectoryVisibility_description,
+  },
+  blogEnabled: {
+    label: m.previewFlag_blogEnabled_label,
+    description: m.previewFlag_blogEnabled_description,
+  },
+  jobAlertsEnabled: {
+    label: m.previewFlag_jobAlertsEnabled_label,
+    description: m.previewFlag_jobAlertsEnabled_description,
+  },
+  candidatesEnabled: {
+    label: m.previewFlag_candidatesEnabled_label,
+    description: m.previewFlag_candidatesEnabled_description,
+  },
+  employersEnabled: {
+    label: m.previewFlag_employersEnabled_label,
+    description: m.previewFlag_employersEnabled_description,
+  },
+  nativeApplicationsEnabled: {
+    label: m.previewFlag_nativeApplicationsEnabled_label,
+    description: m.previewFlag_nativeApplicationsEnabled_description,
+  },
+  applicantMessagingEnabled: {
+    label: m.previewFlag_applicantMessagingEnabled_label,
+    description: m.previewFlag_applicantMessagingEnabled_description,
+  },
+  registrationWallEnabled: {
+    label: m.previewFlag_registrationWallEnabled_label,
+    description: m.previewFlag_registrationWallEnabled_description,
+  },
+};
+
+function flagLabel(flag: { key: string; label: string }): string {
+  return FLAG_COPY[flag.key]?.label() ?? flag.label;
+}
+
+function flagDescription(flag: { key: string; description: string }): string {
+  return FLAG_COPY[flag.key]?.description() ?? flag.description;
+}
+
+/**
  * The "Board settings" surface — the sandbox analog of the dashboard's board
  * settings, split out of the persona menu into its own
  * focused sheet (progressive disclosure: the persona popover does ONE job, the
@@ -182,10 +237,10 @@ function FlagControl({
     <li className="flex items-start justify-between gap-3">
       <div className="flex flex-col">
         <label htmlFor={controlId} className="text-sm font-medium">
-          {flag.label}
+          {flagLabel(flag)}
         </label>
         <span className="text-muted-foreground text-xs">
-          {flag.description}
+          {flagDescription(flag)}
         </span>
         {gated && flag.kind === 'boolean' && flag.requiresNote ? (
           <span
@@ -202,7 +257,8 @@ function FlagControl({
           className="mt-0.5"
           checked={config[flag.key] === true}
           disabled={pending || gated}
-          aria-label={flag.label}
+          // Visible <label htmlFor> already names the control — avoid a
+          // duplicate accessible name from aria-label.
           onCheckedChange={(next) => onSet(flag.key, next)}
         />
       ) : (
@@ -212,7 +268,7 @@ function FlagControl({
           id={controlId}
           value={config[flag.key]}
           disabled={pending}
-          aria-label={flag.label}
+          // Visible <label htmlFor> already names the control.
           onChange={(event) =>
             onSet(flag.key, event.target.value as TalentDirectoryVisibility)
           }

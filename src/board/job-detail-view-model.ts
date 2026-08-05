@@ -22,6 +22,10 @@ import {
   jobsSkillPath,
 } from '@cavuno/board/paths';
 
+import {
+  customFieldLabel,
+  customFieldOptionLabel,
+} from '@/board/custom-field-labels';
 import { jobDetailCopy } from '@/copy-groups/job-detail';
 import { enumLabel } from '@/lib/enum-labels';
 import { jobBreadcrumbItems } from '@/lib/job-breadcrumbs';
@@ -117,8 +121,16 @@ export function toJobDetailVM(
   similar: PublicJobCard[],
   companyIntro: string | null,
   language: string,
+  /**
+   * Locale for everything the VIEWER reads — words, joins, dates, numbers.
+   * `language` stays the BOARD language and is only used to reverse-match
+   * strings the API pre-resolved in board language (country names →
+   * ISO codes); re-pointing that lookup at the chrome locale silently
+   * breaks it, which is why this is two arguments and not one.
+   */
+  displayLocale: string = language,
 ): JobDetailVM {
-  const copy = jobDetailCopy(language);
+  const copy = jobDetailCopy();
   const company = job.company;
 
   // Every emitted slug resolves — the platform guarantees it (ADR-0099), so
@@ -145,9 +157,57 @@ export function toJobDetailVM(
     )
     .filter(Boolean);
 
+  // Resolve wire values to words HERE, with the board displayLocale — the facts
+  // row must agree with the header, which already renders DisplayNames
+  // region names (a page showing "US, GB" in one row and "United States,
+  // United Kingdom" in another is the discard-the-input sin).
+  const factRegionNames = (() => {
+    try {
+      return new Intl.DisplayNames([displayLocale], { type: 'region' });
+    } catch {
+      return null;
+    }
+  })();
+  const regionName = (code: string) => {
+    try {
+      return factRegionNames?.of(code) ?? code;
+    } catch {
+      return code;
+    }
+  };
+  const listJoin = (values: string[]) => {
+    try {
+      return new Intl.ListFormat(displayLocale, {
+        style: 'long',
+        type: 'conjunction',
+      }).format(values);
+    } catch {
+      return values.join(', ');
+    }
+  };
   const permitCountries = job.remoteWorldwide
     ? [copy.worldwideLabel]
-    : job.remoteWorkPermitCountryCodes;
+    : job.remoteWorkPermitCountryCodes.map(regionName);
+  // Timezone windows: `all` → the worldwide word; country entries → region
+  // names; IANA zones keep their identifier with a localized ±N hr window
+  // (Intl unit formatting supplies the unit word).
+  const timezoneEntries = job.remoteTimezones.map((tz) => {
+    if (tz.type === 'all') return copy.worldwideLabel;
+    if (tz.type === 'country') return regionName(tz.value);
+    const zone = tz.value;
+    if (typeof tz.plusMinus === 'number' && tz.plusMinus > 0) {
+      try {
+        const window = new Intl.NumberFormat(displayLocale, {
+          style: 'unit',
+          unit: 'hour',
+        }).format(tz.plusMinus);
+        return `${zone} ±${window}`;
+      } catch {
+        return zone;
+      }
+    }
+    return zone;
+  });
 
   const experience =
     typeof job.experienceMonths === 'number'
@@ -158,9 +218,11 @@ export function toJobDetailVM(
 
   const education =
     job.educationRequirements.length > 0
-      ? job.educationRequirements
-          .map((value) => enumLabel(value) ?? value.replace(/_/g, ' '))
-          .join(', ')
+      ? listJoin(
+          job.educationRequirements.map(
+            (value) => enumLabel(value) ?? value.replace(/_/g, ' '),
+          ),
+        )
       : null;
 
   const facts: JobDetailFactVM[] = [];
@@ -169,12 +231,12 @@ export function toJobDetailVM(
   if (job.remoteOption === 'remote' && permitCountries.length > 0)
     facts.push({
       label: copy.workPermitsLabel,
-      value: permitCountries.join(', '),
+      value: listJoin(permitCountries),
     });
-  if (job.remoteTimezones.length > 0)
+  if (timezoneEntries.length > 0)
     facts.push({
       label: copy.timezonesLabel,
-      value: job.remoteTimezones.map((tz) => tz.value).join(', '),
+      value: listJoin(timezoneEntries),
     });
   if (education) facts.push({ label: copy.educationLabel, value: education });
   if (experience)
@@ -185,32 +247,57 @@ export function toJobDetailVM(
     ? customFields
     : customFields.job;
   const customFieldVms: JobDetailCustomFieldVM[] = resolveCustomFieldDisplay(
-    language,
+    displayLocale,
     customFieldDefinitions,
     job.customFieldValues,
   ).map((entry) => {
+    const definition = customFieldDefinitions.find((d) => d.key === entry.key);
+    // Select values arrive as SDK-resolved authoring labels; re-word them
+    // from the template map via the RAW stored option keys (the wire stores
+    // keys, never labels), falling back to the resolved label.
+    const rawValue = job.customFieldValues[entry.key];
+    const optionLabel = (resolved: string, raw: unknown) =>
+      typeof raw === 'string' && definition
+        ? customFieldOptionLabel(
+            definition.key,
+            { key: raw, label: resolved },
+            displayLocale,
+          )
+        : resolved;
     let value: string;
     if (entry.kind === 'boolean') {
       value = entry.value ? copy.customFieldYesLabel : copy.customFieldNoLabel;
     } else if (entry.kind === 'number') {
       try {
-        value = new Intl.NumberFormat(language).format(entry.value);
+        value = new Intl.NumberFormat(displayLocale).format(entry.value);
       } catch {
         value = String(entry.value);
       }
     } else if (entry.kind === 'multi_select') {
+      const raws = Array.isArray(rawValue) ? rawValue : [];
+      const labels = entry.values.map((resolved, index) =>
+        optionLabel(resolved, raws[index]),
+      );
       try {
-        value = new Intl.ListFormat(language, {
+        value = new Intl.ListFormat(displayLocale, {
           style: 'long',
           type: 'conjunction',
-        }).format(entry.values);
+        }).format(labels);
       } catch {
-        value = entry.values.join(', ');
+        value = labels.join(', ');
       }
+    } else if (definition?.type === 'single_select') {
+      value = optionLabel(entry.value, rawValue);
     } else {
       value = entry.value;
     }
-    return { key: entry.key, label: entry.label, value };
+    return {
+      key: entry.key,
+      label: definition
+        ? customFieldLabel(definition, displayLocale)
+        : entry.label,
+      value,
+    };
   });
 
   const website = company?.website
@@ -232,28 +319,22 @@ export function toJobDetailVM(
     : null;
 
   const salaryLabel = formatJobSalary(
-    language,
+    displayLocale,
     job.salaryMin,
     job.salaryMax,
     job.salaryTimeframe,
     job.salaryCurrency,
   );
-  const published = formatPublishedRelativeDate(language, job.publishedAt);
+  const published = formatPublishedRelativeDate(displayLocale, job.publishedAt);
   // Resolve remote work-permit ISO codes to country names the same way the
   // card mapper does (the SDK's card location label reads names the API
   // pre-resolved with `Intl.DisplayNames` region names) — so the detail
   // header no longer renders raw codes like "US, GB", and the two mappers
   // agree on the remote location.
-  const regionNames = (() => {
-    try {
-      return new Intl.DisplayNames([language], { type: 'region' });
-    } catch {
-      return null;
-    }
-  })();
+  const regionNames = factRegionNames;
   // Country display-name → ISO code, so a place-hierarchy country renders the
   // way the card's server label does ("United States" → "US", "United
-  // Kingdom" → "GB"). `countryOptions` is the SDK's canonical, board-language
+  // Kingdom" → "GB"). `countryOptions` is the SDK's canonical, board-displayLocale
   // country lexicon.
   const countryNameToCode = new Map(
     countryOptions(language).map((option) => [option.name, option.code]),
@@ -271,11 +352,13 @@ export function toJobDetailVM(
       .reverse()
       .join(', ') || null;
   // Remote permit ISO codes → country names (card-mapper parity).
-  const remoteScopeLabel =
-    job.remoteWorkPermitCountryCodes
-      .map((code) => regionNames?.of(code) ?? code)
-      .filter(Boolean)
-      .join(', ') || null;
+  const remoteScopeLabel = job.remoteWorkPermitCountryCodes.length
+    ? listJoin(
+        job.remoteWorkPermitCountryCodes
+          .map((code) => regionNames?.of(code) ?? code)
+          .filter(Boolean),
+      ) || null
+    : null;
   const location =
     job.remoteOption === 'remote'
       ? // A remote job's location is its scope: the constrained permit
@@ -327,7 +410,7 @@ export function toJobDetailVM(
         [
           s.company?.name,
           formatJobSalary(
-            language,
+            displayLocale,
             s.salaryMin,
             s.salaryMax,
             s.salaryTimeframe,

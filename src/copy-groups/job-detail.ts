@@ -57,9 +57,7 @@ const messages = [
   ['worldwideLabel', m.jobDetail_worldwideLabel as unknown as MessageFn],
 ] as const;
 
-export function jobDetailCopy(
-  _language: string | undefined,
-): BoardCopy['jobDetail'] {
+export function jobDetailCopy(): BoardCopy['jobDetail'] {
   return resolveCopyGroup(messages, undefined, {
     experienceYears: 'years',
     posted: 'date',

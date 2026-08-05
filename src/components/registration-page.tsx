@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { boardErrorMessage } from '@/lib/board-error-message';
 import { cn } from '@/lib/utils';
 
 export function AuthPageCard({
@@ -229,7 +230,7 @@ function RegistrationForm({
           onStatusChange(
             result.ok
               ? { state: 'success' }
-              : { state: 'error', message: result.message },
+              : { state: 'error', message: boardErrorMessage(result) },
           );
         } catch {
           onStatusChange({

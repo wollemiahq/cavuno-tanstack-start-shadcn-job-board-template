@@ -19,6 +19,7 @@ import { Clock, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 
 import { EmbeddedCheckout } from '../components/paywall/embedded-checkout';
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import {
   getAccessGrant,
   openBillingPortal,
@@ -67,7 +68,7 @@ function safeReturnTo(value: string | undefined): string | null {
 }
 
 function formatPrice(amountCents: number, currency: string) {
-  return new Intl.NumberFormat(undefined, {
+  return new Intl.NumberFormat(getLocale(), {
     style: 'currency',
     currency: currency.toUpperCase(),
   }).format(amountCents / 100);

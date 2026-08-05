@@ -1,5 +1,6 @@
 import { getRouteApi, useNavigate } from '@tanstack/react-router';
 
+import { getLocale } from '../paraglide/runtime';
 import { SelectedJobDetail } from './-selected-job-detail';
 import { useSelectedJob } from './-use-selected-job';
 
@@ -29,13 +30,13 @@ export function JobsPage() {
   return (
     <>
       <JobSearchPage
-        jobs={page.data.map((job) => toJobCardVM(job, board.language))}
+        jobs={page.data.map((job) => toJobCardVM(job, getLocale()))}
         count={page.count}
         gatedCount={page.gatedCount}
         page={search.page ?? 1}
         pageSize={JOBS_PAGE_SIZE}
         filters={search}
-        language={board.language}
+        language={getLocale()}
         viewer={user ? { emailVerified: user.emailVerified } : null}
         onSaveJob={async (jobId) =>
           saveJob({ data: { jobId } }).then(() => undefined)

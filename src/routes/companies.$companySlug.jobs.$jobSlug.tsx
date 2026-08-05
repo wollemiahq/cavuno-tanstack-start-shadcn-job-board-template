@@ -23,6 +23,7 @@ import { Search } from 'lucide-react';
 
 import { jobAlertDefaultsFromJob } from '../lib/job-alert-defaults';
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getSessionUser, saveJob } from '../server/account';
 import { applyToJob, myApplicationForJob } from '../server/applications';
 import { getJobDetailPage } from '../server/job-detail-page';
@@ -135,6 +136,7 @@ function JobDetailPage() {
     [],
     companyIntro(null, company?.description ?? null),
     board.language,
+    getLocale(),
   );
 
   return (
@@ -195,7 +197,7 @@ function JobDetailPage() {
                   </Text>
                   <JobList
                     jobs={similarRail.jobs.map((job) =>
-                      toJobCardVM(job, board.language),
+                      toJobCardVM(job, getLocale()),
                     )}
                     language={board.language}
                     variant="compact"

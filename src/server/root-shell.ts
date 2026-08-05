@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start';
-import { getRequestHeader } from '@tanstack/react-start/server';
+import { getRequest, getRequestHeader } from '@tanstack/react-start/server';
 
 import { parseCookieConsent } from '../lib/cookie-consent';
 import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
@@ -52,6 +52,9 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
       ]);
 
     return {
+      // This deployment's own origin — hreflang alternates and localized
+      // self-canonicals reference THIS site, not the hosted board.
+      origin: new URL(getRequest().url).origin,
       board,
       user,
       seo,

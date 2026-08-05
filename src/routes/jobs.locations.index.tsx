@@ -18,6 +18,7 @@ import { MapPin } from 'lucide-react';
 
 import { jsonLdHeadScripts } from '../components/json-ld';
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getJobsLocationsIndexPage } from '../server/jobs-listing-pages';
 
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
@@ -89,7 +90,9 @@ function PlaceTree({ nodes }: { nodes: PlaceNode[] }) {
             ) : (
               <span className="text-muted-foreground">{node.place.name}</span>
             )}
-            <Badge variant="secondary">{node.place.jobCount}</Badge>
+            <Badge variant="secondary">
+              {node.place.jobCount.toLocaleString(getLocale())}
+            </Badge>
           </div>
           {node.children.length > 0 ? (
             <div className="border-border ms-4 mt-1 border-s ps-3">

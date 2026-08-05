@@ -27,7 +27,9 @@ describe('canonical board paths', () => {
     const page = source('./server/jobs-listing-pages.ts');
 
     expect(page).toContain(
-      'path: `/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`',
+      // localizeHref wraps the canonical path so /de//fr/ variants
+      // self-canonicalize; the canonical (delocalized) template is unchanged.
+      '`/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`',
     );
     expect(page).not.toContain(
       'path: `/jobs/locations/${params.location}/skills/${params.skill}`',

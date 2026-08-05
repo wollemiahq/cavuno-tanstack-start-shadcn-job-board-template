@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, createFileRoute, useRouter } from '@tanstack/react-router';
 import { ChevronRight, Plus, Search, XIcon } from 'lucide-react';
 
+import { boardErrorMessage } from '../lib/board-error-message';
 import {
   handleEmployerLoaderError,
   isReauthRetry,
@@ -260,7 +261,7 @@ function ConnectCompany({ onBack }: { onBack?: () => void }) {
         setState((current) => ({
           ...current,
           results: [],
-          message: result.message,
+          message: boardErrorMessage(result),
           open: true,
         }));
       }
@@ -273,7 +274,7 @@ function ConnectCompany({ onBack }: { onBack?: () => void }) {
     try {
       const result = await claimCompany({ data: { slug } });
       if (!result.ok) {
-        updateState({ message: result.message });
+        updateState({ message: boardErrorMessage(result) });
         return;
       }
       await router.invalidate();
@@ -470,7 +471,7 @@ function CreateCompanyModal({
               });
               if (!result.ok) {
                 setStatus('error');
-                setMessage(result.message);
+                setMessage(boardErrorMessage(result));
                 return;
               }
               await router.invalidate();

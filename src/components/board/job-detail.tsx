@@ -38,6 +38,7 @@ import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { localizePath } from '@/lib/localized-path';
 
 function TaxonomySection({
   heading,
@@ -134,7 +135,7 @@ export function JobDetail({
                   />
                   {vm.company?.href && vm.companyName ? (
                     <a
-                      href={vm.company.href}
+                      href={localizePath(vm.company.href)}
                       className={buttonVariants({
                         variant: 'link',
                         size: 'sm',

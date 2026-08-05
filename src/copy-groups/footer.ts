@@ -33,7 +33,7 @@ const messages = [
   ['websiteLabel', m.footer_websiteLabel as unknown as MessageFn],
 ] as const;
 
-export function footerCopy(_language: string | undefined): BoardCopy['footer'] {
+export function footerCopy(): BoardCopy['footer'] {
   return resolveCopyGroup(
     messages,
     undefined,

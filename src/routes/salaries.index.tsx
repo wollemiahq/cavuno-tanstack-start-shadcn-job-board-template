@@ -12,6 +12,7 @@ import {
 import { createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getSalaryHubPage } from '../server/salary-pages';
 import { SalaryPageLayout } from './-salary-page-layout';
 import { SalaryPendingPage } from './-salary-pending-page';
@@ -45,9 +46,9 @@ export const Route = createFileRoute('/salaries/')({
 });
 
 function SalariesHub() {
-  const { companies, titles, skills, locations, seo } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language);
-  const locale = seo.language;
+  const { companies, titles, skills, locations } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
+  const locale = getLocale();
 
   const companyItems: RailItem[] = companies.slice(0, PREVIEW).map((x) => ({
     name: x.companyName,
@@ -96,7 +97,7 @@ function SalariesHub() {
           { name: crumbs.home, href: BOARD_PATHS.home },
           { name: crumbs.salaries },
         ],
-        seo.language,
+        getLocale(),
       )}
       title={crumbs.salaries}
       description={m.salaryHub_subheading()}
@@ -107,25 +108,21 @@ function SalariesHub() {
             title={crumbs.companies}
             seeAll={BOARD_PATHS.salaryCompanies}
             items={companyItems}
-            seo={seo}
           />
           <HubSection
             title={crumbs.titles}
             seeAll={BOARD_PATHS.salaryTitles}
             items={titleItems}
-            seo={seo}
           />
           <HubSection
             title={crumbs.skills}
             seeAll={BOARD_PATHS.salarySkills}
             items={skillItems}
-            seo={seo}
           />
           <HubSection
             title={crumbs.locations}
             seeAll={BOARD_PATHS.salaryLocations}
             items={locationItems}
-            seo={seo}
           />
         </>
       ) : (
@@ -142,12 +139,10 @@ function HubSection({
   title,
   seeAll,
   items,
-  seo,
 }: {
   title: string;
   seeAll: string;
   items: RailItem[];
-  seo: { language: string };
 }) {
   if (items.length === 0) return null;
   return (
@@ -162,7 +157,7 @@ function HubSection({
         </a>
       }
     >
-      <SalaryRail vm={toSalaryRailVM('', items, seo.language)} />
+      <SalaryRail vm={toSalaryRailVM('', items, getLocale())} />
     </PageSection>
   );
 }

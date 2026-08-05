@@ -38,6 +38,7 @@ import { gatedRead } from './board-access';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { composeSalaryFaqs } from '@/lib/salary-faq';
+import { selfUrl } from '@/lib/self-url';
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -55,10 +56,6 @@ async function seoBase() {
     language: boardContext.language,
     origin,
   };
-}
-
-function crumbs(seo: Awaited<ReturnType<typeof seoBase>>) {
-  return breadcrumbsCopy(seo.language);
 }
 
 /** /companies/ index — list/search + markets + head + breadcrumb JSON-LD. */
@@ -103,15 +100,15 @@ export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: boardUrl(seo.origin, BOARD_PATHS.companies),
+            href: selfUrl(seo.origin, BOARD_PATHS.companies),
           },
         ],
       };
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             { label: c.companies },
           ]),
         ].filter((entry) => entry !== null),
@@ -186,18 +183,18 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: boardUrl(seo.origin, companyMarketPath(data.marketSlug)),
+            href: selfUrl(seo.origin, companyMarketPath(data.marketSlug)),
           },
         ],
       };
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.companies,
-              href: boardUrl(seo.origin, BOARD_PATHS.companies),
+              href: selfUrl(seo.origin, BOARD_PATHS.companies),
             },
             { label: data.displayName },
           ]),
@@ -241,7 +238,7 @@ export const getCompanyProfileSeo = createServerFn({ method: 'GET' })
             board: seo.boardName,
           });
       const canonical =
-        data.publicUrl ?? `${seo.origin}/companies/${data.companySlug}`;
+        data.publicUrl ?? selfUrl(seo.origin, companyPath(data.companySlug));
       const head = {
         meta: [
           { title: headTitle(seo.boardName, data.companyName) },
@@ -254,7 +251,7 @@ export const getCompanyProfileSeo = createServerFn({ method: 'GET' })
           ? data.website
           : `https://${data.website}`
         : null;
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [
           {
@@ -279,7 +276,7 @@ export const getCompanyProfileSeo = createServerFn({ method: 'GET' })
             },
           },
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             { label: c.companies, href: `${seo.origin}/companies` },
             { label: data.companyName },
           ]),
@@ -363,19 +360,19 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: `${seo.origin}/companies/${data.companySlug}/jobs`,
+            href: `${selfUrl(seo.origin, companyPath(data.companySlug))}/jobs`,
           },
         ],
       };
       // Home → Companies → {Company} — entity trail only (tab row marks Jobs).
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.companies,
-              href: boardUrl(seo.origin, BOARD_PATHS.companies),
+              href: selfUrl(seo.origin, BOARD_PATHS.companies),
             },
             { label: data.companyName },
           ]),
@@ -430,11 +427,11 @@ export const getCompanySalariesPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: boardUrl(seo.origin, companySalaryPath(salary.companySlug)),
+            href: selfUrl(seo.origin, companySalaryPath(salary.companySlug)),
           },
         ],
       };
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const faqEntries = buildSalaryFaq(
         locale,
         salary.companyName,
@@ -453,14 +450,14 @@ export const getCompanySalariesPage = createServerFn({ method: 'GET' })
           }),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.companies,
-              href: boardUrl(seo.origin, BOARD_PATHS.companies),
+              href: selfUrl(seo.origin, BOARD_PATHS.companies),
             },
             {
               label: salary.companyName,
-              href: boardUrl(seo.origin, companyPath(salary.companySlug)),
+              href: selfUrl(seo.origin, companyPath(salary.companySlug)),
             },
             { label: c.salaries },
           ]),
@@ -527,7 +524,7 @@ export const getCompanyCategorySalaryPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: boardUrl(
+            href: selfUrl(
               seo.origin,
               companyCategorySalaryPath(
                 salary.companySlug,
@@ -537,7 +534,7 @@ export const getCompanyCategorySalaryPage = createServerFn({ method: 'GET' })
           },
         ],
       };
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const label = m.companySalaries_categoryAtCompanyLabel({
         category: salary.categoryName,
         company: salary.companyName,
@@ -554,18 +551,18 @@ export const getCompanyCategorySalaryPage = createServerFn({ method: 'GET' })
           companyCategorySalaryJsonLd(salary),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.companies,
-              href: boardUrl(seo.origin, BOARD_PATHS.companies),
+              href: selfUrl(seo.origin, BOARD_PATHS.companies),
             },
             {
               label: salary.companyName,
-              href: boardUrl(seo.origin, companyPath(salary.companySlug)),
+              href: selfUrl(seo.origin, companyPath(salary.companySlug)),
             },
             {
               label: c.salaries,
-              href: boardUrl(seo.origin, companySalaryPath(salary.companySlug)),
+              href: selfUrl(seo.origin, companySalaryPath(salary.companySlug)),
             },
             { label: salary.categoryName },
           ]),

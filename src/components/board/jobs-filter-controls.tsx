@@ -26,7 +26,6 @@ import { enumLabel, seniorityLabelMap } from '@/lib/enum-labels';
 
 export function JobsFilterControls({
   filters,
-  language,
   onChange,
 }: {
   filters: ListingFilters;
@@ -34,8 +33,8 @@ export function JobsFilterControls({
   onChange: (next: ListingFilters) => void;
 }) {
   const copy = {
-    jobCard: jobCardCopy(language),
-    jobSearch: jobSearchCopy(language),
+    jobCard: jobCardCopy(),
+    jobSearch: jobSearchCopy(),
   };
   const seniorityLabel = seniorityLabelMap(SENIORITIES);
   const sortItems = [

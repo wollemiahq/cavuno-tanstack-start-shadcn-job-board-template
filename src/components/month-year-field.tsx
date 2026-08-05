@@ -53,7 +53,7 @@ export function MonthYearField({
 }: {
   idPrefix: string;
   label: string;
-  /** BCP-47 locale for month names (the board language). */
+  /** BCP-47 locale for month names (viewer chrome locale via getLocale()). */
   language: string;
   /** Initial `YYYY-MM-01` (or empty). The field owns its state after mount. */
   defaultValue?: string;

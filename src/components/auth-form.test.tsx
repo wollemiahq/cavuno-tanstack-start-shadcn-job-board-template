@@ -144,6 +144,9 @@ describe('RegistrationPage', () => {
         successHref="/account"
         onSubmit={async () => ({
           ok: false,
+          // Wire message is English API text; the UI must resolve the CODE
+          // through the catalog and never echo the wire sentence.
+          code: 'board_auth_email_taken',
           message: 'Email is already registered',
         })}
       />,
@@ -161,7 +164,7 @@ describe('RegistrationPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Email is already registered',
+      'An account with that email already exists.',
     );
     expect(screen.getByLabelText('Email')).toHaveValue('alex@example.com');
   });

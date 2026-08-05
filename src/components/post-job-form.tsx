@@ -65,6 +65,7 @@ import type {
   SubmitJobResult,
 } from '../server/post';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
+import { planDescription, planName } from '@/board/plan-labels';
 import { planFeatureLines } from '@/board/plan-view-model';
 import {
   CustomFieldsGroup,
@@ -72,6 +73,7 @@ import {
 } from '@/components/custom-fields-group';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { PlaceTagsField } from '@/components/place-tags-field';
+import { boardErrorMessage } from '@/lib/board-error-message';
 import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import type {
   JobPostingPlan,
@@ -186,6 +188,7 @@ export function PostJobForm({
   onCheckout,
 }: PostJobFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const autoFetched = useRef(new Set<string>());
   const [formState, setFormState] = useState<PostJobFormState>({
     status: { kind: 'idle' },
@@ -333,7 +336,7 @@ export function PostJobForm({
         return;
       }
       updateFormState({
-        logoStatus: { kind: 'error', message: result.message },
+        logoStatus: { kind: 'error', message: boardErrorMessage(result) },
       });
     } catch {
       updateFormState({
@@ -450,7 +453,7 @@ export function PostJobForm({
 
       if (!result.ok) {
         updateFormState({
-          status: { kind: 'error', message: result.message },
+          status: { kind: 'error', message: boardErrorMessage(result) },
         });
         return;
       }
@@ -582,13 +585,27 @@ export function PostJobForm({
             <FieldLabel htmlFor="companyLogo">
               {m.postJob_logoLabel()}
             </FieldLabel>
-            <Input
+            <input
+              ref={logoInputRef}
               id="companyLogo"
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif"
+              className="sr-only"
               disabled={logoStatus.kind === 'working'}
               onChange={onLogoChange}
             />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-fit"
+              disabled={logoStatus.kind === 'working'}
+              onClick={() => logoInputRef.current?.click()}
+            >
+              {logoStatus.kind === 'working'
+                ? m.postJob_workingLabel()
+                : m.postJob_logoLabel()}
+            </Button>
             {logoStatus.kind === 'working' ? (
               <div className="text-muted-foreground flex items-center gap-2 text-sm">
                 <Spinner />
@@ -848,12 +865,12 @@ export function PostJobForm({
                   <RadioGroupItem
                     id={`plan-${plan.id}`}
                     value={plan.id}
-                    aria-label={plan.name}
+                    aria-label={planName(plan)}
                   />
                   <FieldContent>
                     <FieldTitle>
                       <span className="flex flex-wrap items-center gap-2">
-                        {plan.name}
+                        {planName(plan)}
                         {plan.isRecommended ? (
                           <Badge variant="secondary">
                             {m.postJob_recommendedLabel()}
@@ -861,8 +878,10 @@ export function PostJobForm({
                         ) : null}
                       </span>
                     </FieldTitle>
-                    {plan.description ? (
-                      <FieldDescription>{plan.description}</FieldDescription>
+                    {planDescription(plan) ? (
+                      <FieldDescription>
+                        {planDescription(plan)}
+                      </FieldDescription>
                     ) : null}
                     {features.length > 0 ? (
                       <ul className="text-muted-foreground mt-1 space-y-1 text-sm">

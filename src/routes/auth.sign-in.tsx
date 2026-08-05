@@ -26,6 +26,7 @@ import { getSeoBase } from '../server/queries';
 import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { boardErrorMessage } from '@/lib/board-error-message';
 import { headTitle } from '@/lib/page-title';
 import { cn } from '@/lib/utils';
 
@@ -73,7 +74,7 @@ function SignInPage() {
         window.location.assign(result.authorizeUrl);
         return;
       }
-      setError(result.message);
+      setError(boardErrorMessage(result));
     } catch {
       setError(m.candidateAction_errorText());
     } finally {
@@ -120,7 +121,7 @@ function SignInPage() {
                 const result = await requestMagicLink({
                   data: { email: sentTo, returnTo },
                 });
-                if (!result.ok) setError(result.message);
+                if (!result.ok) setError(boardErrorMessage(result));
               } catch {
                 setError(m.candidateAction_errorText());
               } finally {
@@ -212,7 +213,7 @@ function SignInPage() {
             } else if (result.ok) {
               setSentTo(email);
             } else {
-              setError(result.message);
+              setError(boardErrorMessage(result));
             }
           } catch {
             setError(m.candidateAction_errorText());

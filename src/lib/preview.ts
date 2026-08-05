@@ -364,6 +364,8 @@ export interface PreviewEnumFlag {
 
 export type PreviewFeatureFlag = PreviewBooleanFlag | PreviewEnumFlag;
 
+// Move them into the toolbar layer (or Paraglide keys) when preview i18n is
+// prioritized — leave English here for now.
 export const PREVIEW_FEATURE_FLAGS: readonly PreviewFeatureFlag[] = [
   {
     key: 'jobAccessPaywallEnabled',

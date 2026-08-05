@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { copyLinkCopy } from '@/copy-groups/copy-link';
 export function CopyLinkButton({
   url,
-  language,
   size = 'lg',
   className = 'w-full',
 }: {
@@ -21,7 +20,7 @@ export function CopyLinkButton({
   className?: string;
 }) {
   const [copied, setCopied] = useState(false);
-  const copy = copyLinkCopy(language);
+  const copy = copyLinkCopy();
   const buttonSize = size === 'md' ? 'default' : size;
   return (
     <Button

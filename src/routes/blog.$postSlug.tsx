@@ -1,12 +1,9 @@
 import { isNotFound } from '@cavuno/board';
-import {
-  createFileRoute,
-  getRouteApi,
-  notFound,
-  redirect,
-} from '@tanstack/react-router';
+import { blogPostPath } from '@cavuno/board/paths';
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogArticleContent } from '@/components/board/blog-article-content';
@@ -15,8 +12,6 @@ import { jsonLdHeadScripts } from '@/components/json-ld';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
 import { getBlogPostPage } from '@/server/blog-pages';
-
-const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/blog/$postSlug')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -76,9 +71,9 @@ function BlogPostNotFound() {
 
 function PostPage() {
   const { post, adjacent, related, seo } = Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
-  const permalink = post.canonicalUrl ?? `${seo.origin}/blog/${post.slug}`;
-  const crumbs = breadcrumbsCopy(seo.language);
+  const permalink =
+    post.canonicalUrl ?? `${seo.origin}${blogPostPath(post.slug)}`;
+  const crumbs = breadcrumbsCopy();
   const ariaLabel = resolveJobDetailBreadcrumbAriaLabel();
 
   return (
@@ -93,7 +88,7 @@ function PostPage() {
           ],
         }}
         post={post}
-        language={board.language}
+        language={getLocale()}
         permalink={permalink}
         adjacent={adjacent}
         related={related}

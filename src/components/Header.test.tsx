@@ -196,6 +196,11 @@ function renderHeader({
                 loading: false,
                 onQueryChange: vi.fn(),
               },
+              blogSuggestions: {
+                suggestions: [],
+                loading: false,
+                onQueryChange: vi.fn(),
+              },
               companyMarketSuggestions: {
                 suggestions: companyMarketSuggestions,
                 loading: false,
@@ -506,7 +511,7 @@ describe('Header — subscription entry gating', () => {
 });
 
 describe('Header — mobile navigation disclosure', () => {
-  it('opens a named modal and restores focus to the trigger on Escape', async () => {
+  it('opens a named non-modal panel and restores focus to the trigger on Escape', async () => {
     renderHeader();
 
     const toggle = await screen.findByRole('button', {
@@ -521,8 +526,10 @@ describe('Header — mobile navigation disclosure', () => {
     const dialog = await screen.findByRole('dialog', {
       name: m.siteHeader_primaryNavigationAriaLabel(),
     });
-    expect(toggle.closest('[aria-hidden="true"]')).not.toBeNull();
-    await waitFor(() => expect(document.activeElement).not.toBe(toggle));
+    // Non-modal by design: the panel opens BELOW the live header, so the
+    // header (toggle included) must stay accessible — never aria-hidden.
+    expect(toggle.closest('[aria-hidden="true"]')).toBeNull();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
 
     fireEvent.keyDown(document.activeElement ?? dialog, { key: 'Escape' });
 
@@ -536,7 +543,7 @@ describe('Header — mobile navigation disclosure', () => {
     expect(toggle).toHaveFocus();
   });
 
-  it('keeps mobile authentication beside the trigger while navigation fills the overlay', async () => {
+  it('opens a nav-only panel below the real header — no duplicated chrome', async () => {
     renderHeader();
 
     const toggle = await screen.findByRole('button', {
@@ -548,23 +555,26 @@ describe('Header — mobile navigation disclosure', () => {
       name: m.siteHeader_primaryNavigationAriaLabel(),
     });
 
-    const actions = mobileMenu.querySelector<HTMLElement>(
-      '[data-test="header-actions"]',
-    );
-    if (!actions) throw new Error('Expected header actions');
-    const signIn = within(actions).getByRole('link', {
-      name: m.siteHeader_signInLabel(),
-    });
-    const signUp = within(actions).getByRole('link', {
-      name: m.siteHeader_signUpLabel(),
-    });
-    expect(signIn).toHaveAttribute('href', '/auth/sign-in');
-    expect(signUp).toHaveAttribute('href', '/auth/join');
+    // The panel carries navigation only. The REAL header above it keeps the
+    // single search input and the auth actions — the old design re-rendered
+    // both inside the overlay, which swapped the user's typed query for an
+    // empty twin input.
     expect(
       within(mobileMenu).getByRole('link', {
         name: m.siteHeader_postJobLabel(),
       }),
     ).toHaveAttribute('href', '/post');
+    expect(mobileMenu.querySelector('form[role="search"]')).toBeNull();
+    expect(mobileMenu.querySelector('[data-test="header-actions"]')).toBeNull();
+
+    // Exactly one search form in the document while the menu is open.
+    expect(document.querySelectorAll('form[role="search"]')).toHaveLength(1);
+    const header = document.querySelector('header');
+    if (!header) throw new Error('Expected header');
+    const signIn = within(header).getByRole('link', {
+      name: m.siteHeader_signInLabel(),
+    });
+    expect(signIn).toHaveAttribute('href', '/auth/sign-in');
   });
 });
 

@@ -208,7 +208,6 @@
         "src/components/employer/applicant-pipeline-board.tsx",
         "src/components/experience-section.tsx",
         "src/components/header-account-menu.tsx",
-        "src/components/header-mobile-menu.tsx",
         "src/components/header-search-enhanced.tsx",
         "src/components/job-alert-floating-prompt.tsx",
         "src/components/language-switcher-menu.tsx",
@@ -681,7 +680,6 @@
         "src/components/education-section.tsx",
         "src/components/employer/applicant-pipeline-board.tsx",
         "src/components/experience-section.tsx",
-        "src/components/header-mobile-menu.tsx",
         "src/components/languages-section.tsx",
         "src/components/preview/preview-board-settings.tsx",
         "src/components/preview/preview-emails.tsx"

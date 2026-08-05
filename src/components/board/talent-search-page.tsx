@@ -78,6 +78,7 @@ export function TalentSearchPage({
   const selection = useSearchSelection({
     selectedId: selectedTalent,
     resultIds: selectableHandles,
+    page,
     onReplace: onSelectedTalentReplace,
     onPush: onSelectedTalentPush,
   });

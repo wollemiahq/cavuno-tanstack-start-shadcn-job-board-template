@@ -1,4 +1,5 @@
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 
 import type { JobPostingPlan } from '@cavuno/board';
 
@@ -17,10 +18,13 @@ export function planFeatureLines(
     ),
   );
   const lines: string[] = [];
+  const locale = getLocale();
 
   const duration = Number(byKey.get('jobs.duration_days'));
   if (Number.isFinite(duration) && duration > 0) {
-    lines.push(m.planFeature_liveDays({ days: duration }));
+    lines.push(
+      m.planFeature_liveDays({ days: duration.toLocaleString(locale) }),
+    );
   }
 
   const maxActiveRaw = byKey.get('jobs.max_active');
@@ -30,9 +34,11 @@ export function planFeatureLines(
     const maxActive = Number(maxActiveRaw);
     if (Number.isFinite(maxActive) && maxActive > 0) {
       lines.push(
-        maxActive === 1
+        new Intl.PluralRules(locale).select(maxActive) === 'one'
           ? m.planFeature_maxActiveOne()
-          : m.planFeature_maxActiveOther({ count: maxActive }),
+          : m.planFeature_maxActiveOther({
+              count: maxActive.toLocaleString(locale),
+            }),
       );
     }
   }
@@ -43,9 +49,11 @@ export function planFeatureLines(
     const slots = Number(byKey.get('jobs.featured_slots'));
     if (Number.isFinite(slots) && slots > 0) {
       lines.push(
-        slots === 1
+        new Intl.PluralRules(locale).select(slots) === 'one'
           ? m.planFeature_featuredOne()
-          : m.planFeature_featuredOther({ count: slots }),
+          : m.planFeature_featuredOther({
+              count: slots.toLocaleString(locale),
+            }),
       );
     }
   }

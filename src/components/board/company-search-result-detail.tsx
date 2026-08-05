@@ -14,6 +14,7 @@ import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { localizePath } from '@/lib/localized-path';
 
 function CompanyDetailActions({
   vm,
@@ -88,7 +89,7 @@ function ExpandedCompanyDetailHeader({
             <Text as="h2" variant="heading2" className="truncate" dir="auto">
               {interactive ? (
                 <a
-                  href={vm.detailHref}
+                  href={localizePath(vm.detailHref)}
                   className="outline-none hover:underline focus-visible:underline"
                 >
                   {vm.name}
@@ -267,7 +268,7 @@ export function CompanySearchResultDetail({
                   <Badge
                     key={market.key}
                     variant="outline"
-                    render={<a href={market.href} />}
+                    render={<a href={localizePath(market.href)} />}
                   >
                     {market.name}
                   </Badge>

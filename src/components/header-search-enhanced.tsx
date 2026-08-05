@@ -1,6 +1,6 @@
 'use client';
 
-import { lazy, Suspense, useRef, useState } from 'react';
+import { lazy, Suspense, useRef } from 'react';
 
 import { Search, X } from 'lucide-react';
 
@@ -25,6 +25,14 @@ const LazyHeaderSearchJobsFields = lazy(() =>
   ),
 );
 
+const LazyHeaderSearchBlogField = lazy(() =>
+  import('@/components/header-search-blog-field').then(
+    ({ HeaderSearchBlogField }) => ({
+      default: HeaderSearchBlogField,
+    }),
+  ),
+);
+
 const LazyHeaderSearchCompanyField = lazy(() =>
   import('@/components/header-search-company-field').then(
     ({ HeaderSearchCompanyField }) => ({
@@ -38,22 +46,37 @@ function HeaderSearchFieldsFallback({ fields }: { fields: 1 | 2 }) {
     <span
       key={index}
       aria-hidden="true"
-      className="border-border bg-input/50 h-9 min-w-0 flex-1 rounded-lg border"
+      // data-slot opts the placeholder into ButtonGroup's segmented-corner
+      // rules, so its shape matches the real field it stands in for (right
+      // edge flattened against the search button, not a free-floating pill).
+      data-slot="header-search-fallback"
+      className="border-border bg-input/50 h-9 min-w-0 flex-1 rounded-2xl border"
     />
   ));
 }
 
 export function HeaderSearchEnhanced({
   search,
+  fields,
   jobsPlaceholder,
   companiesPlaceholder,
   talentPlaceholder,
   blogPlaceholder,
 }: HeaderSearchProps) {
-  const [value, setValue] = useState(search.query);
-  const [location, setLocation] = useState(search.location);
-  const [term, setTerm] = useState(search.term);
-  const [market, setMarket] = useState(search.market);
+  // Field state lives in Header (`fields`), NOT here: the same search form
+  // renders twice while the mobile nav sheet is open (page header + sheet
+  // header), and two independent useState copies made the sheet's input
+  // appear as a fresh empty duplicate of the one the user just typed in.
+  const {
+    value,
+    setValue,
+    location,
+    setLocation,
+    term,
+    setTerm,
+    market,
+    setMarket,
+  } = fields;
   const keywordInputRef = useRef<HTMLInputElement>(null);
   const scopePlaceholders: Record<HeaderSearchScope, string> = {
     jobs: jobsPlaceholder,
@@ -102,6 +125,16 @@ export function HeaderSearchEnhanced({
               placeholder={scopePlaceholders.companies}
               onValueChange={setValue}
               onMarketChange={setMarket}
+            />
+          </Suspense>
+        ) : search.scope === 'blog' ? (
+          <Suspense fallback={<HeaderSearchFieldsFallback fields={1} />}>
+            <LazyHeaderSearchBlogField
+              search={search}
+              value={value}
+              placeholder={scopePlaceholders.blog}
+              onValueChange={setValue}
+              onTermChange={setTerm}
             />
           </Suspense>
         ) : (

@@ -20,6 +20,7 @@ import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
+import { localizePath } from '../lib/localized-path';
 import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
 
@@ -119,7 +120,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
       ]);
       const relatedSearches =
         'relatedSearches' in page ? page.relatedSearches : undefined;
-      const heading = jobSearchCopy(seo.language).headingJobs;
+      const heading = jobSearchCopy().headingJobs;
       const head = listingHead({
         title: listingPageTitle({
           heading: heading,
@@ -128,19 +129,19 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
           count: page.count,
         }),
         origin: seo.origin,
-        path: '/jobs',
+        path: localizePath('/jobs'),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
           count: page.count,
         }),
       });
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: crumbs.home, path: '/' },
+            { name: crumbs.home, path: localizePath('/') },
             { name: crumbs.jobs },
           ],
           jobs: page.data,
@@ -183,20 +184,20 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
         origin: seo.origin,
-        path: jobsCategoryPath(data.categorySlug),
+        path: localizePath(jobsCategoryPath(data.categorySlug)),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
           count: list.count,
         }),
       });
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: crumbs.home, path: '/' },
-            { name: crumbs.jobs, path: '/jobs' },
+            { name: crumbs.home, path: localizePath('/') },
+            { name: crumbs.jobs, path: localizePath('/jobs') },
             { name: heading },
           ],
           jobs: list.data,
@@ -240,20 +241,20 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
         origin: seo.origin,
-        path: jobsSkillPath(data.skillSlug),
+        path: localizePath(jobsSkillPath(data.skillSlug)),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
           count: list.count,
         }),
       });
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: crumbs.home, path: '/' },
-            { name: crumbs.jobs, path: '/jobs' },
+            { name: crumbs.home, path: localizePath('/') },
+            { name: crumbs.jobs, path: localizePath('/jobs') },
             { name: heading },
           ],
           jobs: list.data,
@@ -286,13 +287,13 @@ export const getJobsLocationsIndexPage = createServerFn({ method: 'GET' })
           language: seo.language,
         }),
         origin: seo.origin,
-        path: '/jobs/locations',
+        path: localizePath('/jobs/locations'),
         description: listingMetaDescription({
           heading: m.jobsLocationsIndex_heading(),
           boardName: seo.boardName,
         }),
       });
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
@@ -356,20 +357,20 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
         origin: seo.origin,
-        path: `/jobs/locations/${data.locationSlug}`,
+        path: localizePath(`/jobs/locations/${data.locationSlug}`),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
           count: list.count,
         }),
       });
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: crumbs.home, path: '/' },
-            { name: crumbs.jobs, path: '/jobs' },
+            { name: crumbs.home, path: localizePath('/') },
+            { name: crumbs.jobs, path: localizePath('/jobs') },
             { name: heading },
           ],
           jobs: list.data,
@@ -419,20 +420,22 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
         origin: seo.origin,
-        path: `/jobs/locations/${data.locationSlug}/${data.categorySlug}`,
+        path: localizePath(
+          `/jobs/locations/${data.locationSlug}/${data.categorySlug}`,
+        ),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
           count: list.count,
         }),
       });
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: crumbs.home, path: '/' },
-            { name: crumbs.jobs, path: '/jobs' },
+            { name: crumbs.home, path: localizePath('/') },
+            { name: crumbs.jobs, path: localizePath('/jobs') },
             { name: heading },
           ],
           jobs: list.data,
@@ -488,20 +491,22 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
         origin: seo.origin,
-        path: `/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`,
+        path: localizePath(
+          `/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`,
+        ),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
           count: list.count,
         }),
       });
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: crumbs.home, path: '/' },
-            { name: crumbs.jobs, path: '/jobs' },
+            { name: crumbs.home, path: localizePath('/') },
+            { name: crumbs.jobs, path: localizePath('/jobs') },
             { name: heading },
           ],
           jobs: list.data,

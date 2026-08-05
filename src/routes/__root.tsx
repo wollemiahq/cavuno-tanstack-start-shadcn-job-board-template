@@ -25,11 +25,13 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getRootShellData } from '../server/root-shell';
 import { themeMeta, themeTokens } from '../theme/resolved';
+import { useBlogSuggestions } from './-use-blog-suggestions';
 import { useCompanyMarketSuggestions } from './-use-company-market-suggestions';
 import '../styles.css';
 import { useKeywordSuggestions } from './-use-keyword-suggestions';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
+import { AlternateLinks } from '@/components/alternate-links';
 import { AnalyticsScripts } from '@/components/analytics-scripts';
 import { AppRouteErrorPage } from '@/components/app-route-error';
 import { ShellBreadcrumb } from '@/components/board/breadcrumb';
@@ -150,7 +152,7 @@ export const Route = createRootRoute({
       meta: [
         { charSet: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { title: board?.name ?? 'Job board' },
+        { title: board?.name ?? m.rootFallback_title() },
         { name: 'theme-color', content: themeTokens.light['--background'] },
       ],
       links: [
@@ -243,6 +245,7 @@ function RootLayout() {
   const companyMarketSuggestions = useCompanyMarketSuggestions(
     headerSearch.scope === 'companies',
   );
+  const blogSuggestions = useBlogSuggestions(headerSearch.scope === 'blog');
   // Breadcrumb nav aria-label only — do not import the full jobDetail copy
   // family (21 messages × locales) into the unsplittable root for one string.
   // Operator overrides ride the same jobCardLabels.breadcrumbAriaLabel key
@@ -250,9 +253,8 @@ function RootLayout() {
   const breadcrumbAriaLabel = resolveJobDetailBreadcrumbAriaLabel();
   const shellBreadcrumb = resolveShellBreadcrumb({
     pathname: location.pathname,
-    labels: breadcrumbsCopy(
-      board.language,
-    ) as unknown as import('@/lib/shell-breadcrumb').ShellBreadcrumbLabels,
+    labels:
+      breadcrumbsCopy() as unknown as import('@/lib/shell-breadcrumb').ShellBreadcrumbLabels,
     // Authed surfaces get footer trails too — labels from the template
     // catalogs (the SDK's copy.breadcrumbs only knows public segments).
     privateLabels: {
@@ -267,6 +269,11 @@ function RootLayout() {
       messages: m.messagesPage_title(),
       signIn: m.siteHeader_signInLabel(),
       signUp: m.siteHeader_signUpLabel(),
+      authJoin: m.authJoin_title(),
+      authForgotPassword: m.authForgotPassword_title(),
+      authResetPassword: m.authResetPassword_title(),
+      authMagicLink: m.authMagicLink_title(),
+      authVerifyEmail: m.authVerifyEmail_title(),
       postJob: m.siteHeader_postJobLabel(),
       companyProfile: m.accountShell_companyProfileNav(),
       employerDashboard: m.employerDashboard_title(),
@@ -305,6 +312,20 @@ function RootLayout() {
     }
 
     if (scope === 'blog') {
+      if (term?.type === 'post') {
+        void navigate({
+          to: '/blog/$postSlug',
+          params: { postSlug: term.slug },
+        });
+        return;
+      }
+      if (term?.type === 'tag') {
+        void navigate({
+          to: '/blog/tag/$tagSlug',
+          params: { tagSlug: term.slug },
+        });
+        return;
+      }
       void navigate({ to: '/blog', search: { q: query } });
       return;
     }
@@ -389,6 +410,7 @@ function RootLayout() {
         ...headerSearch,
         onSubmit: submitHeaderSearch,
         keywordSuggestions,
+        blogSuggestions,
         companyMarketSuggestions,
         locationSuggestions,
       }}
@@ -503,6 +525,7 @@ function RootLayout() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { origin } = Route.useLoaderData();
   // Theme mode is repo-canonical (theme.css → resolved module).
   const mode =
     themeMeta.mode === 'dark' || themeMeta.mode === 'light'
@@ -533,14 +556,17 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       >
         <head>
           {/* en-XA / ar-XB are the CI coverage pseudo-locales (never for
-            humans or crawlers): noindex them. Real prefixed chrome
-            locales stay indexable — their route canonicals already point
-            at the unprefixed base; hreflang is deliberately deferred until
-            content translates). Compare as string[] so the branch typechecks
-            under the prod 3-locale Locale union and the QA 5-locale build. */}
+            humans or crawlers): noindex them. Compare as string[] so the
+            branch typechecks under the prod 3-locale Locale union and the
+            QA 5-locale build. */}
           {(['en-XA', 'ar-XB'] as readonly string[]).includes(locale) && (
             <meta name="robots" content="noindex, nofollow" />
           )}
+          {/* Chrome now translates end to end, so the locale variants are
+            first-class: hreflang alternates here + localized
+            self-canonicals per page (selfUrl) make /de/ and /fr/
+            indexable instead of consolidating into the base locale. */}
+          <AlternateLinks origin={origin} />
           <HeadContent />
         </head>
         <body className="bg-background text-foreground flex min-h-screen flex-col font-sans antialiased">

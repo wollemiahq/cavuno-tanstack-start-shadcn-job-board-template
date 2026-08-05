@@ -7,7 +7,6 @@ import {
   toCreateJobPostingInput,
   type JobPostingFormInput,
 } from '../lib/post-form';
-import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
 
 import type { JobPostingResult } from '@cavuno/board';
@@ -26,7 +25,7 @@ export type SubmitJobInput = JobPostingFormInput;
 
 export type SubmitJobResult =
   | { ok: true; result: JobPostingResult }
-  | { ok: false; message: string };
+  | { ok: false; code: string; message: string };
 
 /**
  * Submit a job to the board. Maps the flat form into the SDK's CreateJobPostingInput
@@ -47,7 +46,7 @@ export const submitJobPosting = createServerFn({ method: 'POST' })
           return { ok: true, result };
         } catch (error) {
           if (isBoardApiError(error)) {
-            return { ok: false, message: error.message };
+            return { ok: false, code: error.code, message: error.message };
           }
           throw error;
         }
@@ -57,7 +56,7 @@ export const submitJobPosting = createServerFn({ method: 'POST' })
 /** A stored logo (its `publicUrl` becomes the submission's `logoUrl`), or a reason it failed. */
 export type LogoResult =
   | { ok: true; publicUrl: string }
-  | { ok: false; message: string };
+  | { ok: false; code: string; message: string };
 
 /**
  * Upload a logo file for the wizard. The browser posts the picked `File` as
@@ -73,7 +72,11 @@ export const uploadLogo = createServerFn({ method: 'POST' })
       gatedRead(context, async (h): Promise<LogoResult> => {
         const file = data.get('file');
         if (!(file instanceof File)) {
-          return { ok: false, message: m.postJob_chooseImageError() };
+          return {
+            ok: false,
+            code: 'invalid_file',
+            message: 'Choose an image file.',
+          };
         }
         try {
           const { publicUrl } = await getBoard().jobPosting.uploadLogo(file, {
@@ -82,7 +85,7 @@ export const uploadLogo = createServerFn({ method: 'POST' })
           return { ok: true, publicUrl };
         } catch (error) {
           if (isBoardApiError(error))
-            return { ok: false, message: error.message };
+            return { ok: false, code: error.code, message: error.message };
           throw error;
         }
       }),
@@ -106,13 +109,9 @@ export const fetchLogoByDomain = createServerFn({ method: 'POST' })
           return { ok: true, publicUrl };
         } catch (error) {
           if (isBoardApiError(error)) {
-            return {
-              ok: false,
-              message:
-                error.code === 'job_posting_logo_not_found'
-                  ? m.postJob_logoNotFoundError()
-                  : error.message,
-            };
+            // Wire code + wire message; the client resolves display copy
+            // from the code (boardErrorMessage maps logo codes too).
+            return { ok: false, code: error.code, message: error.message };
           }
           throw error;
         }

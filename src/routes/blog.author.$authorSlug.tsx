@@ -111,12 +111,12 @@ function AuthorLinks({
 }
 
 function AuthorPage() {
-  const { author, posts, seo } = Route.useLoaderData();
+  const { author, posts } = Route.useLoaderData();
   const search = Route.useSearch();
   const location = useLocation();
   const navigate = useNavigate({ from: '/blog/author/$authorSlug' });
   const router = useRouter();
-  const crumbs = breadcrumbsCopy(seo.language);
+  const crumbs = breadcrumbsCopy();
   const ariaLabel = resolveJobDetailBreadcrumbAriaLabel();
 
   return (

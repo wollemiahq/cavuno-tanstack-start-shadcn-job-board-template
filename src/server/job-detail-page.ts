@@ -10,13 +10,14 @@
  * Replaces the route's getJob + getSeoBase pair with a single RPC so client
  * navigation does not grow a second head-only round trip.
  */
+import { jobDetailPath } from '@cavuno/board/paths';
 import { createJobPostingJsonLd, listingJsonLd } from '@cavuno/board/seo';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
-import { headTitle } from '../lib/page-title';
+import { headTitle, jobTitleAtCompany } from '../lib/page-title';
 import { gatedRead } from './board-access';
 
 import { jobBreadcrumbJsonLd } from '@/lib/job-breadcrumbs';
@@ -51,9 +52,11 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
         origin,
       };
 
-      const title = job.company?.name
-        ? `${job.title} at ${job.company.name}`
-        : job.title;
+      const title = jobTitleAtCompany(
+        boardContext.language,
+        job.title,
+        job.company?.name,
+      );
       const description = job.description
         ? job.description
             .replace(/<[^>]+>/g, ' ')
@@ -66,7 +69,7 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
       const canonical = job.links.public;
       const ogImage =
         job.company?.slug && job.slug
-          ? `${origin}/companies/${job.company.slug}/jobs/${job.slug}/og`
+          ? `${origin}${jobDetailPath(job.company.slug, job.slug)}/og`
           : null;
 
       const head = {
@@ -90,14 +93,20 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
 
       const jsonLd = asJsonObjects(
         [
-          createJobPostingJsonLd({
-            job,
-            board: {
-              name: boardContext.name,
-              logoUrl: boardContext.logoUrl,
-            },
-            shareUrl: job.links.public ?? '',
-          }),
+          // links.public is null when the job lacks a company slug — then
+          // there is no canonical URL, and a JobPosting without a real url
+          // is a structured-data error. Omit the block, like canonical and
+          // og:url above.
+          job.links.public
+            ? createJobPostingJsonLd({
+                job,
+                board: {
+                  name: boardContext.name,
+                  logoUrl: boardContext.logoUrl,
+                },
+                shareUrl: job.links.public,
+              })
+            : null,
           ...listingJsonLd({
             origin,
             breadcrumbs: jobBreadcrumbJsonLd(job),

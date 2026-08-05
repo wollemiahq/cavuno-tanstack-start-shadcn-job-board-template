@@ -1,6 +1,6 @@
 import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
-import { LEGAL_CONTENT } from '@/content/legal';
+import { resolveLegalContent } from '@/content/legal';
 import type { LegalPageViewModel } from '@/lib/legal';
 
 /**
@@ -13,7 +13,7 @@ import type { LegalPageViewModel } from '@/lib/legal';
  * vs. pre-sanitized API portable HTML).
  */
 export function LegalPageView({ page }: { page: LegalPageViewModel }) {
-  const { Body } = LEGAL_CONTENT[page.type];
+  const { Body } = resolveLegalContent(page.type);
 
   return (
     // Keep the shared page geometry, but constrain
