@@ -1389,5 +1389,9 @@
   "ui_moreLabel": "⟦Ṁóŕé⟧",
   "ui_sidebarDescription": "⟦Ðíšþĺáýš ţĥé ɱóƀíĺé šíðéƀáŕ.⟧",
   "ui_sidebarTitle": "⟦Šíðéƀáŕ⟧",
-  "ui_sidebarToggleLabel": "⟦Ţóğğĺé šíðéƀáŕ⟧"
+  "ui_sidebarToggleLabel": "⟦Ţóğğĺé šíðéƀáŕ⟧",
+  "marketingConsent_signUpDisclosure": "⟦Éɱáíĺ ɱé ñéŵš, þŕóðúçţ úþðáţéš áñð óççášíóñáĺ óƒƒéŕš ƒŕóɱ ţĥíš ƀóáŕð.⟧",
+  "marketingConsent_settingsTitle": "⟦Ñéŵšĺéţţéŕ áñð úþðáţéš⟧",
+  "marketingConsent_settingsDescription": "⟦Éɱáíĺ ɱé ñéŵš, þŕóðúçţ úþðáţéš áñð óççášíóñáĺ óƒƒéŕš ƒŕóɱ ţĥíš ƀóáŕð.⟧",
+  "marketingConsent_privacyLinkLabel": "⟦Þŕíṽáçý Þóĺíçý⟧"
 }

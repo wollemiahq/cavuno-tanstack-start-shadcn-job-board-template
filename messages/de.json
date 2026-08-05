@@ -1389,5 +1389,9 @@
   "ui_moreLabel": "Mehr",
   "ui_sidebarDescription": "Zeigt die mobile Seitenleiste an.",
   "ui_sidebarTitle": "Seitenleiste",
-  "ui_sidebarToggleLabel": "Seitenleiste umschalten"
+  "ui_sidebarToggleLabel": "Seitenleiste umschalten",
+  "marketingConsent_signUpDisclosure": "Schickt mir Neuigkeiten, Produkt-Updates und gelegentliche Angebote dieses Boards per E-Mail.",
+  "marketingConsent_settingsTitle": "Newsletter und Updates",
+  "marketingConsent_settingsDescription": "Schickt mir Neuigkeiten, Produkt-Updates und gelegentliche Angebote dieses Boards per E-Mail.",
+  "marketingConsent_privacyLinkLabel": "Datenschutzerklärung"
 }

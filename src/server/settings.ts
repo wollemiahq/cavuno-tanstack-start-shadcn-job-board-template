@@ -16,6 +16,10 @@ import {
   type BoardAccessContext,
 } from '../lib/board-access-middleware';
 import {
+  MARKETING_CONSENT,
+  type MarketingConsentState,
+} from '../lib/marketing-consent';
+import {
   requireSessionMiddleware,
   type SessionContext,
 } from '../lib/session-middleware';
@@ -58,4 +62,33 @@ export const unsubscribeWithToken = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     await getBoard().me.notificationPreferences.unsubscribeWithToken(data);
     return { ok: true as const };
+  });
+
+// ─── Marketing consent ──────────────────────────────────────────────────────
+//
+// Raw-client calls because this template pins an SDK release predating
+// `board.me.marketingConsent` — swap to that namespace on the next bump.
+// Granting from here is safe only because the settings row renders this
+// app's disclosure copy beside the control (`marketingConsent_*` messages).
+
+export const getMarketingConsent = createServerFn({ method: 'GET' })
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ context }) => {
+    if (!MARKETING_CONSENT.notificationPreferences) return null;
+    return gatedRead(context, () =>
+      getBoard().client.fetch<MarketingConsentState | null>(
+        '/me/marketing-consent',
+        { headers: authedHeaders(context) },
+      ),
+    );
+  });
+
+export const setMarketingConsent = createServerFn({ method: 'POST' })
+  .validator((input: { granted: boolean }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(async ({ data, context }) => {
+    return getBoard().client.fetch<MarketingConsentState>(
+      `/me/marketing-consent/${data.granted ? 'grant' : 'withdraw'}`,
+      { method: 'POST', headers: authedHeaders(context) },
+    );
   });

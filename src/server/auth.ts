@@ -62,7 +62,13 @@ export const signIn = createServerFn({ method: 'POST' })
 
 export const signUp = createServerFn({ method: 'POST' })
   .validator(
-    (input: { email: string; password: string; displayName: string }) => input,
+    (input: {
+      email: string;
+      password: string;
+      displayName: string;
+      /** True only when the rendered marketing checkbox was ticked. */
+      marketingConsent?: boolean;
+    }) => input,
   )
   .handler(async ({ data }) => {
     try {
@@ -86,7 +92,13 @@ export const signUp = createServerFn({ method: 'POST' })
  */
 export const signUpEmployer = createServerFn({ method: 'POST' })
   .validator(
-    (input: { email: string; password: string; displayName: string }) => input,
+    (input: {
+      email: string;
+      password: string;
+      displayName: string;
+      /** True only when the rendered marketing checkbox was ticked. */
+      marketingConsent?: boolean;
+    }) => input,
   )
   .handler(async ({ data }) => {
     try {

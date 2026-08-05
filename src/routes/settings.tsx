@@ -15,10 +15,13 @@ import {
 } from '@tanstack/react-router';
 
 import { DangerZone } from '../components/danger-zone';
+import { MarketingConsentSettings } from '../components/marketing-consent-settings';
 import { NotificationSettings } from '../components/notification-settings';
+import { MARKETING_CONSENT } from '../lib/marketing-consent';
 import { m } from '../paraglide/messages';
 import { getSeoBase } from '../server/queries';
 import {
+  getMarketingConsent,
   getNotificationPreferences,
   unsubscribeWithToken,
 } from '../server/settings';
@@ -77,8 +80,16 @@ export const Route = createFileRoute('/settings')({
       }
     }
     try {
-      const preferences = await getNotificationPreferences();
-      return { mode: 'settings' as const, preferences: preferences.data, seo };
+      const [preferences, consent] = await Promise.all([
+        getNotificationPreferences(),
+        getMarketingConsent(),
+      ]);
+      return {
+        mode: 'settings' as const,
+        preferences: preferences.data,
+        consent,
+        seo,
+      };
     } catch (error) {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
@@ -164,13 +175,17 @@ function SettingsPage() {
 
   // Signed-in mode renders inside the candidate shell; the anonymous
   // unsubscribe-token branches above stay bare (no session, no sidebar).
-  return <SignedInSettings preferences={data.preferences} />;
+  return (
+    <SignedInSettings preferences={data.preferences} consent={data.consent} />
+  );
 }
 
 function SignedInSettings({
   preferences,
+  consent,
 }: {
   preferences: Parameters<typeof NotificationSettings>[0]['preferences'];
+  consent: Parameters<typeof MarketingConsentSettings>[0]['consent'];
 }) {
   return (
     <CandidateShell>
@@ -184,6 +199,9 @@ function SignedInSettings({
           </p>
         </header>
         <NotificationSettings preferences={preferences} />
+        {MARKETING_CONSENT.notificationPreferences ? (
+          <MarketingConsentSettings consent={consent} />
+        ) : null}
         <DangerZone />
       </div>
     </CandidateShell>

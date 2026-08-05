@@ -1389,5 +1389,9 @@
   "ui_moreLabel": "Plus",
   "ui_sidebarDescription": "Affiche la barre latérale mobile.",
   "ui_sidebarTitle": "Barre latérale",
-  "ui_sidebarToggleLabel": "Afficher ou masquer la barre latérale"
+  "ui_sidebarToggleLabel": "Afficher ou masquer la barre latérale",
+  "marketingConsent_signUpDisclosure": "Envoyez-moi des nouveautés, des mises à jour produit et des offres occasionnelles de ce site par e-mail.",
+  "marketingConsent_settingsTitle": "Newsletter et mises à jour",
+  "marketingConsent_settingsDescription": "Envoyez-moi des nouveautés, des mises à jour produit et des offres occasionnelles de ce site par e-mail.",
+  "marketingConsent_privacyLinkLabel": "Politique de confidentialité"
 }

@@ -1389,5 +1389,9 @@
   "ui_moreLabel": "More",
   "ui_sidebarDescription": "Displays the mobile sidebar.",
   "ui_sidebarTitle": "Sidebar",
-  "ui_sidebarToggleLabel": "Toggle sidebar"
+  "ui_sidebarToggleLabel": "Toggle sidebar",
+  "marketingConsent_signUpDisclosure": "Email me news, product updates and occasional offers from this board.",
+  "marketingConsent_settingsTitle": "Newsletter and updates",
+  "marketingConsent_settingsDescription": "Email me news, product updates and occasional offers from this board.",
+  "marketingConsent_privacyLinkLabel": "Privacy Policy"
 }

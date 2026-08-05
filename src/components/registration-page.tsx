@@ -6,6 +6,7 @@ import { m } from '../paraglide/messages';
 
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field as FormField,
   FieldContent,
@@ -141,6 +142,19 @@ type RegistrationCopy = {
 
 type RegistrationResult = { ok: true } | { ok: false; message: string };
 
+/**
+ * Copy for the optional marketing checkbox. The disclosure is THIS app's
+ * wording (see `marketingConsent_*` in `messages/*.json`) — the API records
+ * the decision, never the prose. When omitted, no checkbox renders and no
+ * consent can be recorded; unticked submits `marketingConsent: false`, which
+ * records nothing server-side.
+ */
+export type MarketingConsentCopy = {
+  disclosure: string;
+  privacyPolicyUrl?: string;
+  privacyLinkLabel?: string;
+};
+
 type RegistrationStatus =
   | { state: 'idle' }
   | { state: 'pending' }
@@ -154,6 +168,7 @@ export function RegistrationPage({
   successHref,
   onSubmit,
   footer,
+  marketingConsent,
 }: {
   title: string;
   supportingText: React.ReactNode;
@@ -163,8 +178,10 @@ export function RegistrationPage({
     displayName: string;
     email: string;
     password: string;
+    marketingConsent?: boolean;
   }) => Promise<RegistrationResult>;
   footer?: React.ReactNode;
+  marketingConsent?: MarketingConsentCopy;
 }) {
   const [status, setStatus] = useState<RegistrationStatus>({ state: 'idle' });
   const succeeded = status.state === 'success';
@@ -189,6 +206,7 @@ export function RegistrationPage({
             status={status}
             onSubmit={onSubmit}
             onStatusChange={setStatus}
+            marketingConsent={marketingConsent}
           />
           {footer}
         </>
@@ -202,6 +220,7 @@ function RegistrationForm({
   status,
   onSubmit,
   onStatusChange,
+  marketingConsent,
 }: {
   copy: RegistrationCopy;
   status: RegistrationStatus;
@@ -209,10 +228,13 @@ function RegistrationForm({
     displayName: string;
     email: string;
     password: string;
+    marketingConsent?: boolean;
   }) => Promise<RegistrationResult>;
   onStatusChange: (status: RegistrationStatus) => void;
+  marketingConsent?: MarketingConsentCopy;
 }) {
   const pending = status.state === 'pending';
+  const [consentChecked, setConsentChecked] = useState(false);
 
   return (
     <form
@@ -226,6 +248,8 @@ function RegistrationForm({
             displayName: String(form.get('displayName')),
             email: String(form.get('email')),
             password: String(form.get('password')),
+            // Only a rendered, affirmatively ticked checkbox sends the flag.
+            ...(marketingConsent ? { marketingConsent: consentChecked } : {}),
           });
           onStatusChange(
             result.ok
@@ -258,6 +282,37 @@ function RegistrationForm({
         autoComplete="new-password"
         minLength={8}
       />
+      {marketingConsent ? (
+        <FieldLabel
+          htmlFor="marketing-consent"
+          className="flex cursor-pointer items-start gap-3 font-normal"
+        >
+          <Checkbox
+            id="marketing-consent"
+            className="mt-0.5 shrink-0"
+            checked={consentChecked}
+            onCheckedChange={(checked) => setConsentChecked(checked === true)}
+            data-test="sign-up-marketing-consent"
+          />
+          <span className="text-muted-foreground text-sm leading-snug">
+            {marketingConsent.disclosure}
+            {marketingConsent.privacyPolicyUrl ? (
+              <>
+                {' '}
+                <a
+                  href={marketingConsent.privacyPolicyUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-foreground underline"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {marketingConsent.privacyLinkLabel}
+                </a>
+              </>
+            ) : null}
+          </span>
+        </FieldLabel>
+      ) : null}
       {status.state === 'error' ? (
         <FieldError>{status.message}</FieldError>
       ) : null}
