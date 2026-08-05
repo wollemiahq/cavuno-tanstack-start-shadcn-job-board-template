@@ -25,7 +25,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `badge` | Used (37) | `src/components/Footer.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+34 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
-| `button` | Used (88) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+85 more in the JSON ledger |
+| `button` | Used (87) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+84 more in the JSON ledger |
 | `button-group` | Used (2) | `src/components/board/alert-signup-form.tsx`<br>`src/components/header-search-enhanced.tsx` |
 | `calendar` | Available | Installed for adoption when the product needs this behavior. |
 | `card` | Used (33) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>`src/components/board/company-search-result-detail.tsx`<br>+30 more in the JSON ledger |
@@ -63,7 +63,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `scroll-area` | Available | Installed for adoption when the product needs this behavior. |
 | `select` | Used (10) | `src/components/board/jobs-filter-controls.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/custom-fields-group.tsx`<br>+7 more in the JSON ledger |
 | `separator` | Used (4) | `src/components/preview/preview-board-settings.tsx`<br>`src/components/preview/preview-emails.tsx`<br>`src/components/preview/preview-toolbar.tsx`<br>+1 more in the JSON ledger |
-| `sheet` | Used (9) | `src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/education-section.tsx`<br>+6 more in the JSON ledger |
+| `sheet` | Used (8) | `src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/education-section.tsx`<br>+5 more in the JSON ledger |
 | `sidebar` | Available | Installed for adoption when the product needs this behavior. |
 | `skeleton` | Used (7) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-result-detail.tsx`<br>`src/components/board/public-content-pending.tsx`<br>+4 more in the JSON ledger |
 | `slider` | Available | Installed for adoption when the product needs this behavior. |
