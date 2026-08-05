@@ -5,6 +5,7 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getEmployersPage } from '../server/marketing-pages';
 
+import { planDescription, planName } from '@/board/plan-labels';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import {
   Page,
@@ -120,9 +121,9 @@ function PlanCard({ plan }: { plan: Plan }) {
   return (
     <Card className={cn('h-full', plan.isRecommended && 'ring-primary ring-2')}>
       <CardHeader>
-        <CardTitle>{plan.name}</CardTitle>
-        {plan.description ? (
-          <CardDescription>{plan.description}</CardDescription>
+        <CardTitle>{planName(plan)}</CardTitle>
+        {planDescription(plan) ? (
+          <CardDescription>{planDescription(plan)}</CardDescription>
         ) : null}
         {plan.isRecommended ? (
           <CardAction>
@@ -166,9 +167,9 @@ function SalesLedCard({ plan }: { plan: SalesLedPlan }) {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>{plan.name}</CardTitle>
-        {plan.description ? (
-          <CardDescription>{plan.description}</CardDescription>
+        <CardTitle>{planName(plan)}</CardTitle>
+        {planDescription(plan) ? (
+          <CardDescription>{planDescription(plan)}</CardDescription>
         ) : null}
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-5">

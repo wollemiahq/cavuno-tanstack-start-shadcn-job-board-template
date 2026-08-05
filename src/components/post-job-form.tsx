@@ -65,6 +65,7 @@ import type {
   SubmitJobResult,
 } from '../server/post';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
+import { planDescription, planName } from '@/board/plan-labels';
 import { planFeatureLines } from '@/board/plan-view-model';
 import {
   CustomFieldsGroup,
@@ -848,12 +849,12 @@ export function PostJobForm({
                   <RadioGroupItem
                     id={`plan-${plan.id}`}
                     value={plan.id}
-                    aria-label={plan.name}
+                    aria-label={planName(plan)}
                   />
                   <FieldContent>
                     <FieldTitle>
                       <span className="flex flex-wrap items-center gap-2">
-                        {plan.name}
+                        {planName(plan)}
                         {plan.isRecommended ? (
                           <Badge variant="secondary">
                             {m.postJob_recommendedLabel()}
@@ -861,8 +862,10 @@ export function PostJobForm({
                         ) : null}
                       </span>
                     </FieldTitle>
-                    {plan.description ? (
-                      <FieldDescription>{plan.description}</FieldDescription>
+                    {planDescription(plan) ? (
+                      <FieldDescription>
+                        {planDescription(plan)}
+                      </FieldDescription>
                     ) : null}
                     {features.length > 0 ? (
                       <ul className="text-muted-foreground mt-1 space-y-1 text-sm">
