@@ -7,17 +7,37 @@ import {
   daySeparator,
   relativeTime,
 } from '../../lib/message-format';
+import { getLocale } from '../../paraglide/runtime';
 
 type DatePresentation = 'clock' | 'day' | 'relative';
 
 const subscribe = () => () => undefined;
 
 function serverFallback(iso: string, presentation: DatePresentation) {
+  // Pre-hydration frame: pin to UTC so server and first client paint agree
+  // regardless of host timezone — but FORMAT with Intl in the viewer's
+  // locale (the old frame hardcoded `HH:MM UTC` and ISO dates in English
+  // conventions).
   const date = new Date(iso);
-  if (presentation === 'clock') {
-    return `${date.toISOString().slice(11, 16)} UTC`;
+  try {
+    if (presentation === 'clock') {
+      return new Intl.DateTimeFormat(getLocale(), {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'UTC',
+        timeZoneName: 'short',
+      }).format(date);
+    }
+    return new Intl.DateTimeFormat(getLocale(), {
+      dateStyle: 'medium',
+      timeZone: 'UTC',
+    }).format(date);
+  } catch {
+    if (presentation === 'clock') {
+      return `${date.toISOString().slice(11, 16)} UTC`;
+    }
+    return date.toISOString().slice(0, 10);
   }
-  return date.toISOString().slice(0, 10);
 }
 
 export function useHydrated() {

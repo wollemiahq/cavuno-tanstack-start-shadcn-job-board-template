@@ -364,7 +364,6 @@ export interface PreviewEnumFlag {
 
 export type PreviewFeatureFlag = PreviewBooleanFlag | PreviewEnumFlag;
 
-// TODO(i18n): flag labels/descriptions are English developer-preview chrome.
 // Move them into the toolbar layer (or Paraglide keys) when preview i18n is
 // prioritized — leave English here for now.
 export const PREVIEW_FEATURE_FLAGS: readonly PreviewFeatureFlag[] = [
