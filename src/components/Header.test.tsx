@@ -196,6 +196,11 @@ function renderHeader({
                 loading: false,
                 onQueryChange: vi.fn(),
               },
+              blogSuggestions: {
+                suggestions: [],
+                loading: false,
+                onQueryChange: vi.fn(),
+              },
               companyMarketSuggestions: {
                 suggestions: companyMarketSuggestions,
                 loading: false,

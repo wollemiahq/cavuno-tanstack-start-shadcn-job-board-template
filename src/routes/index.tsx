@@ -41,6 +41,7 @@ export const Route = createFileRoute('/')({
       Boolean(jobsSearch.remoteOption) ||
       Boolean(jobsSearch.employmentType) ||
       Boolean(jobsSearch.seniority?.length) ||
+      Boolean(jobsSearch.company?.length) ||
       Boolean(jobsSearch.sort);
 
     if (hasLegacyIntent) {

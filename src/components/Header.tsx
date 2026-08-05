@@ -51,6 +51,7 @@ export interface HeaderSearchProps {
   search: HeaderSearchState & {
     onSubmit: (submission: HeaderSearchSubmission) => void;
     keywordSuggestions: KeywordSuggestionState;
+    blogSuggestions: KeywordSuggestionState;
     companyMarketSuggestions: CompanyMarketSuggestionState;
     locationSuggestions: LocationSuggestionState;
   };
@@ -95,6 +96,7 @@ export default function Header({
   search: HeaderSearchState & {
     onSubmit: (submission: HeaderSearchSubmission) => void;
     keywordSuggestions: KeywordSuggestionState;
+    blogSuggestions: KeywordSuggestionState;
     companyMarketSuggestions: CompanyMarketSuggestionState;
     locationSuggestions: LocationSuggestionState;
   };

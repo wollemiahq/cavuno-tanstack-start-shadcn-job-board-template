@@ -25,6 +25,14 @@ const LazyHeaderSearchJobsFields = lazy(() =>
   ),
 );
 
+const LazyHeaderSearchBlogField = lazy(() =>
+  import('@/components/header-search-blog-field').then(
+    ({ HeaderSearchBlogField }) => ({
+      default: HeaderSearchBlogField,
+    }),
+  ),
+);
+
 const LazyHeaderSearchCompanyField = lazy(() =>
   import('@/components/header-search-company-field').then(
     ({ HeaderSearchCompanyField }) => ({
@@ -102,6 +110,16 @@ export function HeaderSearchEnhanced({
               placeholder={scopePlaceholders.companies}
               onValueChange={setValue}
               onMarketChange={setMarket}
+            />
+          </Suspense>
+        ) : search.scope === 'blog' ? (
+          <Suspense fallback={<HeaderSearchFieldsFallback fields={1} />}>
+            <LazyHeaderSearchBlogField
+              search={search}
+              value={value}
+              placeholder={scopePlaceholders.blog}
+              onValueChange={setValue}
+              onTermChange={setTerm}
             />
           </Suspense>
         ) : (
