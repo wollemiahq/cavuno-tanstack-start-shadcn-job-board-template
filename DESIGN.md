@@ -327,14 +327,6 @@ Props:
 
 ### AppRouteErrorPage — `src/components/app-route-error.tsx`
 
-### AppRouterProvider — `src/components/app-router-provider.tsx`
-
-Keeps React Aria links on the TanStack Router and locale-aware URL seam.
-
-Props:
-
-- `children: ReactNode`
-
 ### AuthCard — `src/components/auth-form.tsx`
 
 Props:
@@ -384,7 +376,6 @@ Props:
 - `context?: { source?: string | undefined; jobId?: string | undefined; jobSlug?: string | undefined; } | undefined`
 - `description?: string | undefined`
 - `filters?: JobAlertFiltersInput | undefined`
-- `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `onSubscribe: (input: JobAlertSubscribeInput) => Promise<{ status: "submitted"; }>`
 - `surface?: "default" | "card" | undefined`
@@ -398,7 +389,6 @@ Props:
 - `applicationsHref?: string | undefined`
 - `applicationUrl: string | null`
 - `jobSlug: string | null`
-- `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `nativeApplications?: boolean | undefined`
 - `onApply: (jobSlug: string) => Promise<void>`
@@ -582,7 +572,6 @@ Props:
 Props:
 
 - `className?: string | undefined`
-- `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `size?: "sm" | "lg" | "md" | undefined`
 - `url: string`
@@ -669,7 +658,6 @@ Props:
 
 - `compact?: boolean | undefined`
 - `jobs: JobCardVM[]`
-- `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `variant?: "grid" | "rows" | "compact" | undefined`
 
@@ -699,7 +687,6 @@ Props:
 - `gatedCount?: number | undefined`
 - `heading?: string | undefined`
 - `jobs: JobCardVM[]`
-- `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `onFiltersChange: (next: ListingFilters) => void`
 - `onPageChange: (page: number) => void`
@@ -743,7 +730,6 @@ Props:
 Props:
 
 - `filters: ListingFilters`
-- `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `onChange: (next: ListingFilters) => void`
 
@@ -766,12 +752,13 @@ describes the failed search rather than exposing the missing taxonomy.
 
 ### JobsResultsBar — `src/components/board/jobs-results-bar.tsx`
 
+The honest result count and current page range directly above the cards.
+
 Props:
 
 - `className?: string | undefined`
 - `count?: number | undefined`
 - `heading?: string | undefined`
-- `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 - `page?: number | undefined`
 - `pageSize?: number | undefined`
@@ -1115,13 +1102,20 @@ choice is what gates the analytics scripts.
 
 Site-wide cookie-consent state for boards whose operator enabled
 "cookie consent required" (`board.analytics.cookieConsentRequired`).
-The choice persists in localStorage (mirroring the job-alert prompt's
-suppression storage) and resolves only after mount, so SSR and the first
-client render agree and the banner never flashes on hydration.
+
+The choice lives in a client-readable cookie so SSR can paint the banner
+when undecided (LCP on listing pages). `initialChoice` comes from the root
+loader reading that cookie; there is no hydration gate — SSR and the first
+client render agree on `bannerOpen`.
+
+Migration: on mount, if no cookie but localStorage still has a legacy
+choice, adopt it (set cookie + state). Returning visitors on the old
+storage may see a brief banner flash once; that is acceptable.
 
 Props:
 
 - `children: ReactNode`
+- `initialChoice?: CookieConsentChoice | null | undefined`
 - `required: boolean`
 
 ### CookiePreferencesFooterAction — `src/components/cookie-consent.tsx`
@@ -1352,6 +1346,16 @@ Props:
 - `postJobLabel: string`
 - `showPostJob: boolean`
 
+### HeaderSearchCompanyField — `src/components/header-search-company-field.tsx`
+
+Props:
+
+- `onMarketChange: (market: HeaderSearchMarket | null) => void`
+- `onValueChange: (value: string) => void`
+- `placeholder: string`
+- `search: HeaderSearchState & { onSubmit: (submission: HeaderSearchSubmission) => void; keywordSuggestions: KeywordSuggestionSt…`
+- `value: string`
+
 ### HeaderSearchEnhanced — `src/components/header-search-enhanced.tsx`
 
 Props:
@@ -1361,6 +1365,18 @@ Props:
 - `jobsPlaceholder: string`
 - `search: HeaderSearchState & { onSubmit: (submission: HeaderSearchSubmission) => void; keywordSuggestions: KeywordSuggestionSt…`
 - `talentPlaceholder: string`
+
+### HeaderSearchJobsFields — `src/components/header-search-jobs-fields.tsx`
+
+Props:
+
+- `location: HeaderSearchLocation | null`
+- `onLocationChange: (location: HeaderSearchLocation | null) => void`
+- `onTermChange: (term: HeaderSearchTerm | null) => void`
+- `onValueChange: (value: string) => void`
+- `placeholder: string`
+- `search: HeaderSearchState & { onSubmit: (submission: HeaderSearchSubmission) => void; keywordSuggestions: KeywordSuggestionSt…`
+- `value: string`
 
 ### JobAlertFloatingPrompt — `src/components/job-alert-floating-prompt.tsx`
 
@@ -1372,19 +1388,9 @@ suppression cookie).
 Props:
 
 - `defaults: JobAlertDefaults`
-- `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
 - `language: string`
 
 ### JsonLd — `src/components/json-ld.tsx`
-
-Renders JSON-LD structured data as `<script type="application/ld+json">` in
-the document. Rendered in the component body (not TanStack `head`, whose
-`scripts` don't emit inline JSON-LD here).
-
-The payload is API-derived (job titles, slugs, names), so every `<` is escaped
-to `<` before injection — the standard JSON-LD hardening that prevents a
-`</script>` in any string from breaking out of the tag (XSS). JSON-LD parsers
-read the `<` escape transparently.
 
 Props:
 
@@ -1448,16 +1454,16 @@ Props:
 ### LegalPageView — `src/components/legal-page.tsx`
 
 Shared render for the legal/about surfaces. The starter owns the layout and
-JSON-LD; the Board API serves the portable-HTML prose (+ impressum
-legal-entity facts).
+the prose (`src/content/legal/`). Head meta + JSON-LD are computed in
+`getLegalPageView` and emitted via route `head()` scripts — not here.
+
+Bodies are real React elements from the content module — not HTML strings —
+so this view never uses `dangerouslySetInnerHTML` (a security simplification
+vs. pre-sanitized API portable HTML).
 
 Props:
 
-- `labels?: Partial<Record<"jobCardLabels" | "navLabels" | "breadcrumbsLabels" | "footerLabels" | "entityLabels" | "jobSearchLabe…`
-- `language: string`
-- `meta: LegalPageMeta`
-- `origin: string`
-- `page: { object: "legal_page"; type: string; title: string; content: string; contentFormat: "html"; legalEntity: { legalName…`
+- `page: LegalPageViewModel`
 
 ### LocationCombobox — `src/components/location-combobox.tsx`
 
