@@ -8,6 +8,9 @@ export type LegalPageType =
   | 'cookie-policy'
   | 'impressum';
 
+/** Viewer chrome locales the legal scaffolds ship with. */
+export type LegalLocale = 'en' | 'de' | 'fr';
+
 /**
  * Application-owned legal/about page content.
  *

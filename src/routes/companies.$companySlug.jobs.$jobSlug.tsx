@@ -136,6 +136,7 @@ function JobDetailPage() {
     [],
     companyIntro(null, company?.description ?? null),
     board.language,
+    getLocale(),
   );
 
   return (

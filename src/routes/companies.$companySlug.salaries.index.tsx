@@ -1,8 +1,9 @@
 import { isNotFound } from '@cavuno/board';
 import { companySalaryPath, salaryLocationPath } from '@cavuno/board/paths';
-import { createFileRoute, getRouteApi, notFound } from '@tanstack/react-router';
+import { createFileRoute, notFound } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getCompanySalariesPage } from '../server/companies-pages';
 import { SalaryNotFoundPage } from './-salary-page-layout';
 
@@ -52,12 +53,9 @@ export const Route = createFileRoute('/companies/$companySlug/salaries/')({
   ),
 });
 
-const rootApi = getRouteApi('__root__');
-
 function CompanySalaryPage() {
-  const { salary, company, seo, faqs } = Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
-  const locale = seo.language;
+  const { salary, company, faqs } = Route.useLoaderData();
+  const locale = getLocale();
 
   const categoryItems: RailItem[] = salary.byCategory.map((x) => ({
     name: x.categoryName,
@@ -121,7 +119,7 @@ function CompanySalaryPage() {
                 avgMax: salary.overallSalary.avgMax,
                 jobCount: salary.overallSalary.jobCount,
               },
-              board.language,
+              getLocale(),
               salary.currency,
             )}
           />
@@ -135,7 +133,7 @@ function CompanySalaryPage() {
             <SenioritySalaryTable
               vm={toSeniorityTableVM(
                 salary.bySeniority,
-                board.language,
+                getLocale(),
                 salary.currency,
               )}
             />
@@ -146,24 +144,24 @@ function CompanySalaryPage() {
           vm={toSalaryRailVM(
             m.companySalaries_salariesByRoleLabel(),
             categoryItems,
-            seo.language,
+            getLocale(),
           )}
         />
         <SalaryRail
           vm={toSalaryRailVM(
             m.companySalaries_topLocationsLabel(),
             locationItems,
-            seo.language,
+            getLocale(),
           )}
         />
         <SalaryRail
           vm={toSalaryRailVM(
             m.companySalaries_otherCompaniesLabel(),
             competitorItems,
-            seo.language,
+            getLocale(),
           )}
         />
-        <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language)} />
+        <SalaryFaq vm={toSalaryFaqVM(faqs, getLocale())} />
       </div>
     </CompanySectionShell>
   );

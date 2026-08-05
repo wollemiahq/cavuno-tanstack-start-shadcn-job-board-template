@@ -10,13 +10,14 @@
  * The form itself lives in `EmployerJobForm`, shared with the per-job edit
  * page so the two never drift.
  */
-import { createFileRoute, getRouteApi } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 
 import {
   handleEmployerLoaderError,
   isReauthRetry,
 } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getCompanyWorkspace } from '../server/employers';
 import { getRemotePermits, getSeoBase } from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
@@ -25,8 +26,6 @@ import { EmployerJobForm } from '@/components/employer-job-form';
 import { Page, PageContent } from '@/components/layout/page';
 import { Text } from '@/components/text';
 import { headTitle } from '@/lib/page-title';
-
-const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/employers/companies/$slug/jobs/new')({
   loader: async ({ params, location }) => {
@@ -62,8 +61,7 @@ export const Route = createFileRoute('/employers/companies/$slug/jobs/new')({
 
 function NewJobPage() {
   const { workspace, remotePermits } = Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
-  const locale = board.language;
+  const locale = getLocale();
   const officeLocationSuggestions = useLocationSuggestions(locale);
 
   return (

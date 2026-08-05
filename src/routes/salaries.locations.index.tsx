@@ -4,9 +4,10 @@
  */
 import { type SalaryLocation } from '@cavuno/board';
 import { BOARD_PATHS, salaryLocationPath } from '@cavuno/board/paths';
-import { createFileRoute, getRouteApi } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getSalaryLocationsIndexPage } from '../server/salary-pages';
 import { SalaryPageLayout } from './-salary-page-layout';
 import { SalaryPendingPage } from './-salary-pending-page';
@@ -18,8 +19,6 @@ import {
 import { SalaryEmptyState } from '@/components/board/salary-sections';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
-
-const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/salaries/locations/')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -50,9 +49,9 @@ function LocationTree({
   parentSlug: string | null;
   byParent: Map<string | null, SalaryLocation[]>;
 }) {
-  const { board } = rootApi.useLoaderData();
   const nodes = byParent.get(parentSlug) ?? [];
   if (nodes.length === 0) return null;
+  const locale = getLocale();
   return (
     <ul className="space-y-1.5">
       {nodes.map((n) => (
@@ -65,16 +64,16 @@ function LocationTree({
           </a>
           <span className="text-muted-foreground text-sm tabular-nums">
             {' · '}
-            {formatSalaryRange(
-              board.language,
-              n.avgSalaryMin,
-              n.avgSalaryMax,
-              null,
-            ) ?? ''}
+            {formatSalaryRange(locale, n.avgSalaryMin, n.avgSalaryMax, null) ??
+              ''}
             {' · '}
-            {n.jobCount === 1
-              ? m.salaryHub_jobCountSingular({ count: n.jobCount })
-              : m.salaryHub_jobCountPlural({ count: n.jobCount })}
+            {new Intl.PluralRules(locale).select(n.jobCount) === 'one'
+              ? m.salaryHub_jobCountSingular({
+                  count: n.jobCount.toLocaleString(locale),
+                })
+              : m.salaryHub_jobCountPlural({
+                  count: n.jobCount.toLocaleString(locale),
+                })}
           </span>
           {byParent.has(n.placeSlug) ? (
             <div className="border-border ms-3 mt-1 border-s ps-3">
@@ -101,7 +100,7 @@ function SalaryLocationsIndex() {
           { name: crumbs.salaries, href: BOARD_PATHS.salaries },
           { name: crumbs.locations },
         ],
-        seo.language,
+        getLocale(),
       )}
       title={m.salaryHub_locationsHeading()}
     >

@@ -40,7 +40,7 @@ export function AvatarUpload({
           ref={inputRef}
           type="file"
           accept="image/jpeg,image/png,image/webp"
-          className="hidden"
+          className="sr-only"
           data-test="avatar-file-input"
           onChange={async (event) => {
             const file = event.target.files?.[0];

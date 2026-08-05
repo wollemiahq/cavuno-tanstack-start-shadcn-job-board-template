@@ -1,6 +1,7 @@
 'use client';
 
 import { m } from '../../paraglide/messages';
+import { getLocale } from '../../paraglide/runtime';
 
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { cn } from '@/lib/utils';
@@ -23,6 +24,9 @@ export function JobsResultsBar({
   language: string;
   className?: string;
 }) {
+  // Viewer chrome locale for number/plural formatting (prop kept for call-site
+  // compatibility; prefer getLocale() so a stale prop cannot drift).
+  const locale = language || getLocale();
   const showRange =
     typeof count === 'number' &&
     typeof page === 'number' &&
@@ -32,22 +36,22 @@ export function JobsResultsBar({
     typeof count === 'number'
       ? heading
         ? m.jobSearch_contextualResultsHeading({
-            count: count.toLocaleString(language),
+            count: count.toLocaleString(locale),
             heading,
           })
-        : count === 1
+        : new Intl.PluralRules(locale).select(count) === 'one'
           ? m.jobSearch_resultsCountOne({
-              count: count.toLocaleString(language),
+              count: count.toLocaleString(locale),
             })
           : m.jobSearch_resultsCountMany({
-              count: count.toLocaleString(language),
+              count: count.toLocaleString(locale),
             })
-      : (heading ?? jobSearchCopy(language).headingJobs);
+      : (heading ?? jobSearchCopy(locale).headingJobs);
   const rangeLabel = showRange
     ? m.jobSearch_resultsShowingRange({
-        from: ((page - 1) * pageSize + 1).toLocaleString(language),
-        to: Math.min(page * pageSize, count).toLocaleString(language),
-        count: count.toLocaleString(language),
+        from: ((page - 1) * pageSize + 1).toLocaleString(locale),
+        to: Math.min(page * pageSize, count).toLocaleString(locale),
+        count: count.toLocaleString(locale),
       })
     : null;
 

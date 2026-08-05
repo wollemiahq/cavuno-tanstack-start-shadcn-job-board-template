@@ -202,7 +202,8 @@ function FlagControl({
           className="mt-0.5"
           checked={config[flag.key] === true}
           disabled={pending || gated}
-          aria-label={flag.label}
+          // Visible <label htmlFor> already names the control — avoid a
+          // duplicate accessible name from aria-label.
           onCheckedChange={(next) => onSet(flag.key, next)}
         />
       ) : (
@@ -212,7 +213,7 @@ function FlagControl({
           id={controlId}
           value={config[flag.key]}
           disabled={pending}
-          aria-label={flag.label}
+          // Visible <label htmlFor> already names the control.
           onChange={(event) =>
             onSet(flag.key, event.target.value as TalentDirectoryVisibility)
           }

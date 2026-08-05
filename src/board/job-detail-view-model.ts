@@ -121,8 +121,16 @@ export function toJobDetailVM(
   similar: PublicJobCard[],
   companyIntro: string | null,
   language: string,
+  /**
+   * Locale for everything the VIEWER reads — words, joins, dates, numbers.
+   * `language` stays the BOARD language and is only used to reverse-match
+   * strings the API pre-resolved in board language (country names →
+   * ISO codes); re-pointing that lookup at the chrome locale silently
+   * breaks it, which is why this is two arguments and not one.
+   */
+  displayLocale: string = language,
 ): JobDetailVM {
-  const copy = jobDetailCopy(language);
+  const copy = jobDetailCopy(displayLocale);
   const company = job.company;
 
   // Every emitted slug resolves — the platform guarantees it (ADR-0099), so
@@ -149,13 +157,13 @@ export function toJobDetailVM(
     )
     .filter(Boolean);
 
-  // Resolve wire values to words HERE, with the board language — the facts
+  // Resolve wire values to words HERE, with the board displayLocale — the facts
   // row must agree with the header, which already renders DisplayNames
   // region names (a page showing "US, GB" in one row and "United States,
   // United Kingdom" in another is the discard-the-input sin).
   const factRegionNames = (() => {
     try {
-      return new Intl.DisplayNames([language], { type: 'region' });
+      return new Intl.DisplayNames([displayLocale], { type: 'region' });
     } catch {
       return null;
     }
@@ -169,7 +177,7 @@ export function toJobDetailVM(
   };
   const listJoin = (values: string[]) => {
     try {
-      return new Intl.ListFormat(language, {
+      return new Intl.ListFormat(displayLocale, {
         style: 'long',
         type: 'conjunction',
       }).format(values);
@@ -189,7 +197,7 @@ export function toJobDetailVM(
     const zone = tz.value;
     if (typeof tz.plusMinus === 'number' && tz.plusMinus > 0) {
       try {
-        const window = new Intl.NumberFormat(language, {
+        const window = new Intl.NumberFormat(displayLocale, {
           style: 'unit',
           unit: 'hour',
         }).format(tz.plusMinus);
@@ -239,7 +247,7 @@ export function toJobDetailVM(
     ? customFields
     : customFields.job;
   const customFieldVms: JobDetailCustomFieldVM[] = resolveCustomFieldDisplay(
-    language,
+    displayLocale,
     customFieldDefinitions,
     job.customFieldValues,
   ).map((entry) => {
@@ -253,7 +261,7 @@ export function toJobDetailVM(
         ? customFieldOptionLabel(
             definition.key,
             { key: raw, label: resolved },
-            language,
+            displayLocale,
           )
         : resolved;
     let value: string;
@@ -261,7 +269,7 @@ export function toJobDetailVM(
       value = entry.value ? copy.customFieldYesLabel : copy.customFieldNoLabel;
     } else if (entry.kind === 'number') {
       try {
-        value = new Intl.NumberFormat(language).format(entry.value);
+        value = new Intl.NumberFormat(displayLocale).format(entry.value);
       } catch {
         value = String(entry.value);
       }
@@ -271,7 +279,7 @@ export function toJobDetailVM(
         optionLabel(resolved, raws[index]),
       );
       try {
-        value = new Intl.ListFormat(language, {
+        value = new Intl.ListFormat(displayLocale, {
           style: 'long',
           type: 'conjunction',
         }).format(labels);
@@ -285,7 +293,9 @@ export function toJobDetailVM(
     }
     return {
       key: entry.key,
-      label: definition ? customFieldLabel(definition, language) : entry.label,
+      label: definition
+        ? customFieldLabel(definition, displayLocale)
+        : entry.label,
       value,
     };
   });
@@ -309,13 +319,13 @@ export function toJobDetailVM(
     : null;
 
   const salaryLabel = formatJobSalary(
-    language,
+    displayLocale,
     job.salaryMin,
     job.salaryMax,
     job.salaryTimeframe,
     job.salaryCurrency,
   );
-  const published = formatPublishedRelativeDate(language, job.publishedAt);
+  const published = formatPublishedRelativeDate(displayLocale, job.publishedAt);
   // Resolve remote work-permit ISO codes to country names the same way the
   // card mapper does (the SDK's card location label reads names the API
   // pre-resolved with `Intl.DisplayNames` region names) — so the detail
@@ -324,7 +334,7 @@ export function toJobDetailVM(
   const regionNames = factRegionNames;
   // Country display-name → ISO code, so a place-hierarchy country renders the
   // way the card's server label does ("United States" → "US", "United
-  // Kingdom" → "GB"). `countryOptions` is the SDK's canonical, board-language
+  // Kingdom" → "GB"). `countryOptions` is the SDK's canonical, board-displayLocale
   // country lexicon.
   const countryNameToCode = new Map(
     countryOptions(language).map((option) => [option.name, option.code]),
@@ -400,7 +410,7 @@ export function toJobDetailVM(
         [
           s.company?.name,
           formatJobSalary(
-            language,
+            displayLocale,
             s.salaryMin,
             s.salaryMax,
             s.salaryTimeframe,

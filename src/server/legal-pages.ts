@@ -2,7 +2,7 @@ import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
-import { LEGAL_CONTENT, resolveLegalEntity } from '../content/legal';
+import { resolveLegalContent, resolveLegalEntity } from '../content/legal';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { LEGAL_PAGES, type LegalPageViewModel } from '../lib/legal';
@@ -45,7 +45,7 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
     gatedRead(context, async () => {
       const board = getBoard();
       const meta = LEGAL_PAGES[data.type];
-      const content = LEGAL_CONTENT[data.type];
+      const content = resolveLegalContent(data.type);
       const boardContext = await board.context();
 
       const origin = new URL(getRequest().url).origin;

@@ -40,7 +40,7 @@
     "typecheck": "tsc --noEmit",
     "gen:messages": "node scripts/gen-paraglide-messages.mjs",
     "gen:shadcn": "node scripts/check-shadcn-components.mjs --write",
-    "gen:paraglide": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --output-structure message-modules --strategy url baseLocale",
+    "gen:paraglide": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --output-structure message-modules --strategy url cookie baseLocale",
     "pretest": "pnpm run gen:paraglide && pnpm run gen:theme",
     "pretypecheck": "pnpm run gen:paraglide",
     "gen:theme": "node scripts/gen-theme-resolved.mjs",

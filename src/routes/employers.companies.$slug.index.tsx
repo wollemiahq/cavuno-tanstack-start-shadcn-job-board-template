@@ -20,6 +20,7 @@ import {
   isReauthRetry,
 } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import {
   deleteJob,
   getCompanyWorkspace,
@@ -129,8 +130,13 @@ export const Route = createFileRoute('/employers/companies/$slug/')({
 
 function activeJobsSubtitle(count: number) {
   if (count === 0) return m.employerJobs_activeJobsZero();
-  if (count === 1) return m.employerJobs_activeJobsOne();
-  return m.employerJobs_activeJobsMany({ count });
+  const locale = getLocale();
+  if (new Intl.PluralRules(locale).select(count) === 'one') {
+    return m.employerJobs_activeJobsOne();
+  }
+  return m.employerJobs_activeJobsMany({
+    count: count.toLocaleString(locale),
+  });
 }
 
 function CompanyJobsPage() {
@@ -200,7 +206,7 @@ function CompanyJobsPage() {
               >
                 {(points) => (
                   <EmployerStatsChart
-                    vm={toEmployerStatsChartVM(points, board.language)}
+                    vm={toEmployerStatsChartVM(points, getLocale())}
                   />
                 )}
               </Await>
@@ -232,7 +238,7 @@ function CompanyJobsPage() {
                         key={job.id}
                         slug={slug}
                         job={job}
-                        language={board.language}
+                        language={getLocale()}
                         statsIndex={statsIndex}
                       />
                     ))}

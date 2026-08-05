@@ -1,9 +1,4 @@
-import {
-  createFileRoute,
-  getRouteApi,
-  notFound,
-  redirect,
-} from '@tanstack/react-router';
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { toPipelineBoardVM } from '../board/pipeline-view-model';
 import { ApplicantPipelineBoard } from '../components/employer/applicant-pipeline-board';
@@ -13,6 +8,7 @@ import {
   isReauthRetry,
 } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import {
   addApplicantNote,
   bulkRejectApplicants,
@@ -32,8 +28,6 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { headTitle } from '@/lib/page-title';
-
-const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute(
   '/employers/companies/$slug/jobs/$jobId/applicants',
@@ -83,8 +77,7 @@ export const Route = createFileRoute(
 function ApplicantsPage() {
   const { slug } = Route.useParams();
   const pipeline = Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
-  const boardVM = toPipelineBoardVM(pipeline, board.language);
+  const boardVM = toPipelineBoardVM(pipeline, getLocale());
   const hasStages = boardVM.stages.length > 0;
 
   return (

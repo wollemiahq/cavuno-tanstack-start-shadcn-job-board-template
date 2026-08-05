@@ -7,6 +7,7 @@ import { BOARD_PATHS, salaryLocationPath } from '@cavuno/board/paths';
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getLocationTitlesPage } from '../server/salary-pages';
 import { SalaryNotFoundPage, SalaryPageLayout } from './-salary-page-layout';
 import { SalaryPendingPage } from './-salary-pending-page';
@@ -58,7 +59,7 @@ export const Route = createFileRoute('/salaries/locations/$slug/titles')({
 function LocationTitlesPage() {
   const { data, seo } = Route.useLoaderData();
   const crumbs = breadcrumbsCopy(seo.language);
-  const locale = seo.language;
+  const locale = getLocale();
   const items: RailItem[] = data.titles.map((t) => ({
     name: t.name,
     href: salaryTitleInLocationPath(t.slug, data.canonicalSlug),
@@ -83,7 +84,7 @@ function LocationTitlesPage() {
           },
           { name: crumbs.titles },
         ],
-        seo.language,
+        getLocale(),
       )}
       title={heading}
     >
@@ -92,7 +93,7 @@ function LocationTitlesPage() {
           vm={toSalaryRailVM(
             m.salaryDetail_jobTitlesLabel(),
             items,
-            seo.language,
+            getLocale(),
           )}
         />
       ) : (

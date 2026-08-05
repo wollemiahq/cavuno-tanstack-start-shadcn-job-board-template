@@ -16,12 +16,7 @@ import { isNotFound } from '@cavuno/board';
  * a fresh query drops `?page=` (see CompanyJobsSearchBar), resetting to
  * page 1.
  */
-import {
-  createFileRoute,
-  getRouteApi,
-  notFound,
-  useLocation,
-} from '@tanstack/react-router';
+import { createFileRoute, notFound, useLocation } from '@tanstack/react-router';
 
 import { CompanyJobsSearchBar } from '../components/company-jobs-search-bar';
 import {
@@ -58,8 +53,6 @@ interface CompanyJobsSearch {
 }
 
 const COMPANY_JOBS_PAGE_SIZE = 20;
-
-const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/companies/$companySlug/jobs/')({
   // Full-bleed: the shared company-section shell owns the page container +
@@ -123,33 +116,33 @@ function CompanyJobsPage() {
   const { company, page, q, location, locationName, hasSalaries } =
     Route.useLoaderData();
   const search = Route.useSearch();
-  const { board } = rootApi.useLoaderData();
-  const locationSuggestions = useLocationSuggestions(board.language);
+  const locationSuggestions = useLocationSuggestions(getLocale());
   const navigate = Route.useNavigate();
   const currentHref = useLocation({ select: (loc) => loc.href });
 
   const currentPage = search.page ?? 1;
   const count = page.count ?? 0;
+  const locale = getLocale();
 
   // Honest "Showing X–Y of Z" / "N jobs" count, reusing the browse copy keys.
   const showRange = count > COMPANY_JOBS_PAGE_SIZE;
   const countLabel = showRange
     ? m.jobSearch_resultsShowingRange({
         from: ((currentPage - 1) * COMPANY_JOBS_PAGE_SIZE + 1).toLocaleString(
-          board.language,
+          locale,
         ),
         to: Math.min(
           currentPage * COMPANY_JOBS_PAGE_SIZE,
           count,
-        ).toLocaleString(board.language),
-        count: count.toLocaleString(board.language),
+        ).toLocaleString(locale),
+        count: count.toLocaleString(locale),
       })
-    : count === 1
+    : new Intl.PluralRules(locale).select(count) === 'one'
       ? m.jobSearch_resultsCountOne({
-          count: count.toLocaleString(board.language),
+          count: count.toLocaleString(locale),
         })
       : m.jobSearch_resultsCountMany({
-          count: count.toLocaleString(board.language),
+          count: count.toLocaleString(locale),
         });
 
   return (
@@ -175,7 +168,7 @@ function CompanyJobsPage() {
 
         <JobList
           jobs={page.data.map((job) => toJobCardVM(job, getLocale()))}
-          language={board.language}
+          language={getLocale()}
           variant="grid"
           compact
         />
