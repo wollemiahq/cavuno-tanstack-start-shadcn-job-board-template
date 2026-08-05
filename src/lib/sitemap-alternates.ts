@@ -14,6 +14,7 @@ import { xmlEscape } from '@cavuno/board/sitemap';
 
 import { locales } from '../paraglide/runtime';
 import { localizePath } from './localized-path';
+import { publicLocales } from './public-locales';
 
 import type { SitemapBucket, SitemapUrlEntry } from '@cavuno/board/sitemap';
 
@@ -30,7 +31,8 @@ export const LOCALIZED_BUCKETS: readonly SitemapBucket[] = [
 
 function alternateLinks(origin: string, path: string): string {
   let xml = '';
-  for (const locale of locales) {
+  // QA builds compile pseudo-locales into `locales`; never advertise them.
+  for (const locale of publicLocales(locales)) {
     const href = `${origin}${localizePath(path, { locale })}`;
     xml += `<xhtml:link rel="alternate" hreflang="${locale}" href="${xmlEscape(href)}"/>\n`;
   }

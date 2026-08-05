@@ -87,27 +87,33 @@ for (const route of ['/jobs', '/de/jobs', '/fr/jobs']) {
   }
 }
 
-// SEO invariants for real prefixed chrome locales:
-// /de/ pages canonicalize to the UNPREFIXED base (chrome-translated
-// duplicates), stay indexable, and never appear in the sitemap.
+// SEO invariants for real prefixed chrome locales (localized-SEO
+// posture): /de/ pages are FIRST-CLASS variants — self-canonical,
+// indexable, and declared via hreflang alternates. The sitemap INDEX
+// stays unprefixed (locale discovery happens via per-URL xhtml:link
+// alternates inside the buckets); PSEUDO-locales never appear anywhere.
 {
   const de = await (await fetch(new URL('/de/jobs', base).href)).text();
   const canonical = de.match(/<link[^>]+rel="canonical"[^>]+href="([^"]+)"/);
   const deIndexable = !/<meta[^>]+name="robots"[^>]+noindex/.test(de);
-  const canonicalUnprefixed = canonical ? !/\/de\//.test(canonical[1]) : false;
+  const selfCanonical = canonical ? /\/de\/jobs/.test(canonical[1]) : false;
+  const hasAlternates =
+    /hreflang="de"/i.test(de) && /hreflang="x-default"/i.test(de);
   const sitemap = await (
     await fetch(new URL('/sitemap.xml', base).href)
   ).text();
-  const sitemapClean = !/\/(de|fr|en-XA|ar-XB)\//.test(sitemap);
-  if (!canonicalUnprefixed || !deIndexable || !sitemapClean) {
+  const sitemapClean = !/\/(en-XA|ar-XB)\//.test(sitemap);
+  if (!selfCanonical || !deIndexable || !hasAlternates || !sitemapClean) {
     failed = true;
     console.error(
-      `FAIL seo-invariants — canonical-to-base=${canonicalUnprefixed} ` +
+      `FAIL seo-invariants — self-canonical=${selfCanonical} ` +
         `(${canonical?.[1] ?? 'MISSING'}), de-indexable=${deIndexable}, ` +
-        `sitemap-unprefixed=${sitemapClean}`,
+        `hreflang=${hasAlternates}, sitemap-no-pseudo=${sitemapClean}`,
     );
   } else {
-    console.log(`ok   seo-invariants — /de/ canonical→base, sitemap clean`);
+    console.log(
+      `ok   seo-invariants — /de/ self-canonical + hreflang, sitemap clean`,
+    );
   }
 }
 

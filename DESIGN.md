@@ -282,6 +282,12 @@ Props:
 - `alerts: { id: string; object: "alert"; label: string | null; frequency: "weekly"; isActive: boolean; filters: { jobFunctions:…`
 - `places: AlertPlaceOption[]`
 
+### AlternateLinks — `src/components/alternate-links.tsx`
+
+Props:
+
+- `origin: string`
+
 ### AnalyticsScripts — `src/components/analytics-scripts.tsx`
 
 Injects the board's configured trackers (GTM, GA4, Meta Pixel, LinkedIn
@@ -1335,16 +1341,33 @@ Props:
 
 ### HeaderMobileMenu — `src/components/header-mobile-menu.tsx`
 
+Mobile nav disclosure — a plain non-modal panel pinned from the header's
+bottom edge to the viewport bottom. Deliberately NOT a Dialog/Sheet: the
+REAL header (with the single search input) stays visible and interactive
+above it, so there is no duplicated chrome, no focus trap hiding what the
+user is looking at, and no full-viewport overlay blurring the page.
+
 Props:
 
-- `accountActions: ReactNode`
-- `closeLabel: string`
-- `headerLeft: ReactNode`
 - `navigationLabel: string`
 - `navLinks: readonly { to: MobileNavDestination; label: string; }[]`
 - `onOpenChange: (open: boolean) => void`
 - `postJobLabel: string`
 - `showPostJob: boolean`
+- `topOffset: number`
+
+### HeaderSearchBlogField — `src/components/header-search-blog-field.tsx`
+
+Blog-scope search field: post/tag typeahead over the unified suggest
+endpoint (ADR-0102), falling back to free-text search on submit.
+
+Props:
+
+- `onTermChange: (term: HeaderSearchTerm | null) => void`
+- `onValueChange: (value: string) => void`
+- `placeholder: string`
+- `search: HeaderSearchState & { onSubmit: (submission: HeaderSearchSubmission) => void; keywordSuggestions: KeywordSuggestionSt…`
+- `value: string`
 
 ### HeaderSearchCompanyField — `src/components/header-search-company-field.tsx`
 
@@ -1362,6 +1385,7 @@ Props:
 
 - `blogPlaceholder: string`
 - `companiesPlaceholder: string`
+- `fields: HeaderSearchFields`
 - `jobsPlaceholder: string`
 - `search: HeaderSearchState & { onSubmit: (submission: HeaderSearchSubmission) => void; keywordSuggestions: KeywordSuggestionSt…`
 - `talentPlaceholder: string`

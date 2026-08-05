@@ -22,6 +22,7 @@
 import { useRouterState } from '@tanstack/react-router';
 
 import { localizePath } from '../lib/localized-path';
+import { publicLocales } from '../lib/public-locales';
 import { getLocale, locales } from '../paraglide/runtime';
 
 const EXCLUDED_PREFIXES = ['/embed', '/password'];
@@ -66,9 +67,11 @@ export function AlternateLinks({ origin }: { origin: string }) {
   if (EXCLUDED_PREFIXES.some((prefix) => path.startsWith(prefix))) return null;
   if (externalCanonical) return null;
   const activeLocale = getLocale();
+  // QA builds compile pseudo-locales into `locales`; never advertise them.
+  const alternates = publicLocales(locales);
   return (
     <>
-      {locales.map((locale) => (
+      {alternates.map((locale) => (
         <link
           key={locale}
           rel="alternate"
@@ -81,7 +84,7 @@ export function AlternateLinks({ origin }: { origin: string }) {
         property="og:locale"
         content={OG_LOCALES[activeLocale] ?? activeLocale}
       />
-      {locales
+      {alternates
         .filter((locale) => locale !== activeLocale)
         .map((locale) => (
           <meta
