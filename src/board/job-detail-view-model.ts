@@ -145,9 +145,57 @@ export function toJobDetailVM(
     )
     .filter(Boolean);
 
+  // Resolve wire values to words HERE, with the board language — the facts
+  // row must agree with the header, which already renders DisplayNames
+  // region names (a page showing "US, GB" in one row and "United States,
+  // United Kingdom" in another is the discard-the-input sin).
+  const factRegionNames = (() => {
+    try {
+      return new Intl.DisplayNames([language], { type: 'region' });
+    } catch {
+      return null;
+    }
+  })();
+  const regionName = (code: string) => {
+    try {
+      return factRegionNames?.of(code) ?? code;
+    } catch {
+      return code;
+    }
+  };
+  const listJoin = (values: string[]) => {
+    try {
+      return new Intl.ListFormat(language, {
+        style: 'long',
+        type: 'conjunction',
+      }).format(values);
+    } catch {
+      return values.join(', ');
+    }
+  };
   const permitCountries = job.remoteWorldwide
     ? [copy.worldwideLabel]
-    : job.remoteWorkPermitCountryCodes;
+    : job.remoteWorkPermitCountryCodes.map(regionName);
+  // Timezone windows: `all` → the worldwide word; country entries → region
+  // names; IANA zones keep their identifier with a localized ±N hr window
+  // (Intl unit formatting supplies the unit word).
+  const timezoneEntries = job.remoteTimezones.map((tz) => {
+    if (tz.type === 'all') return copy.worldwideLabel;
+    if (tz.type === 'country') return regionName(tz.value);
+    const zone = tz.value;
+    if (typeof tz.plusMinus === 'number' && tz.plusMinus > 0) {
+      try {
+        const window = new Intl.NumberFormat(language, {
+          style: 'unit',
+          unit: 'hour',
+        }).format(tz.plusMinus);
+        return `${zone} ±${window}`;
+      } catch {
+        return zone;
+      }
+    }
+    return zone;
+  });
 
   const experience =
     typeof job.experienceMonths === 'number'
@@ -169,12 +217,12 @@ export function toJobDetailVM(
   if (job.remoteOption === 'remote' && permitCountries.length > 0)
     facts.push({
       label: copy.workPermitsLabel,
-      value: permitCountries.join(', '),
+      value: listJoin(permitCountries),
     });
-  if (job.remoteTimezones.length > 0)
+  if (timezoneEntries.length > 0)
     facts.push({
       label: copy.timezonesLabel,
-      value: job.remoteTimezones.map((tz) => tz.value).join(', '),
+      value: listJoin(timezoneEntries),
     });
   if (education) facts.push({ label: copy.educationLabel, value: education });
   if (experience)

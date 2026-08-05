@@ -93,14 +93,20 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
 
       const jsonLd = asJsonObjects(
         [
-          createJobPostingJsonLd({
-            job,
-            board: {
-              name: boardContext.name,
-              logoUrl: boardContext.logoUrl,
-            },
-            shareUrl: job.links.public ?? '',
-          }),
+          // links.public is null when the job lacks a company slug — then
+          // there is no canonical URL, and a JobPosting without a real url
+          // is a structured-data error. Omit the block, like canonical and
+          // og:url above.
+          job.links.public
+            ? createJobPostingJsonLd({
+                job,
+                board: {
+                  name: boardContext.name,
+                  logoUrl: boardContext.logoUrl,
+                },
+                shareUrl: job.links.public,
+              })
+            : null,
           ...listingJsonLd({
             origin,
             breadcrumbs: jobBreadcrumbJsonLd(job),

@@ -25,7 +25,10 @@ const baseJob = {
   remoteOption: 'remote',
   remoteWorldwide: false,
   remoteWorkPermitCountryCodes: ['US', 'GB'],
-  remoteTimezones: [{ value: 'UTC+0' }],
+  remoteTimezones: [
+    { type: 'timezone', value: 'Europe/Berlin', plusMinus: 3 },
+    { type: 'country', value: 'DE' },
+  ],
   remoteLocationLabel: null,
   locationLabel: 'Remote',
   placeHierarchy: [],
@@ -101,8 +104,13 @@ describe('toJobDetailVM', () => {
     const byLabel = Object.fromEntries(vm.facts.map((f) => [f.label, f.value]));
     // Office label falls back to city/region/country when displayName is null.
     expect(Object.values(byLabel)).toContain('Berlin, BE, DE');
-    expect(Object.values(byLabel)).toContain('US, GB');
-    expect(Object.values(byLabel)).toContain('UTC+0');
+    // Wire values resolve to words: ISO codes through Intl.DisplayNames,
+    // joined by Intl.ListFormat — never raw 'US, GB' on a display surface.
+    expect(Object.values(byLabel)).toContain(
+      'United States and United Kingdom',
+    );
+    // Timezone entries render their window and country entries their name.
+    expect(Object.values(byLabel)).toContain('Europe/Berlin ±3 hr and Germany');
     // 60 months → 5 years via copy.experienceYears — assert the experience
     // fact specifically, not a stray '5' anywhere in the facts.
     expect(byLabel[copy.experienceLabel]).toContain('5');

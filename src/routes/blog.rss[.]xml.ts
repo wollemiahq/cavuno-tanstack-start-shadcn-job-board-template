@@ -1,4 +1,5 @@
 /** Blog RSS — hosted-parity feed at /blog/rss.xml. */
+import { blogPostPath } from '@cavuno/board/paths';
 import { createFileRoute } from '@tanstack/react-router';
 import { getRequest } from '@tanstack/react-start/server';
 
@@ -33,7 +34,7 @@ function postUrl(post: PublicBlogPostSummary, origin: string): string {
     }
     if (canonical.startsWith('/')) return `${origin}${canonical}`;
   }
-  return `${origin}/blog/${post.slug}`;
+  return `${origin}${blogPostPath(post.slug)}`;
 }
 
 /** Description with the hosted fallback chain: excerpt → "title - authors" → title. */

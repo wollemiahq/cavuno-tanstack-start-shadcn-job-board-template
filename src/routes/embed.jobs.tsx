@@ -171,6 +171,7 @@ function buildEmbedCta(
       label: m.embedJobs_seeAllMatchingJobsLabel(),
       search: {
         q: search.q,
+        location: search.location,
         remoteOption: search.remoteOption,
         employmentType: search.employmentType,
         seniority: search.seniority,

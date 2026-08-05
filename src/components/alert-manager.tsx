@@ -6,6 +6,7 @@ import { useRouter } from '@tanstack/react-router';
 import { BellRing } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { createMyAlert, deleteMyAlert, updateMyAlert } from '../server/account';
 
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
@@ -379,7 +380,9 @@ export function AlertManager({
                     {alert.lastSentAt ? (
                       <p className="text-muted-foreground text-xs">
                         {m.alertManager_lastSentText({
-                          date: new Date(alert.lastSentAt).toLocaleDateString(),
+                          date: new Date(alert.lastSentAt).toLocaleDateString(
+                            getLocale(),
+                          ),
                         })}
                       </p>
                     ) : null}

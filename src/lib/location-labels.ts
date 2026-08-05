@@ -6,6 +6,7 @@
  * words come from the canonical enum vocabulary.
  */
 import { m } from '../paraglide/messages';
+import { isLocale } from '../paraglide/runtime';
 import { enumLabel } from './enum-labels';
 
 export interface LocationLabelJob {
@@ -30,7 +31,10 @@ export interface CardLocationLabelJob {
  * first office location's display name, remote/hybrid wrapping per
  * `remoteOption`.
  */
-export function locationLabel(job: LocationLabelJob): string {
+export function locationLabel(
+  job: LocationLabelJob,
+  language?: string,
+): string {
   const office = job.officeLocations[0];
   const place = office
     ? (office.displayName ??
@@ -38,15 +42,19 @@ export function locationLabel(job: LocationLabelJob): string {
         .filter(Boolean)
         .join(', '))
     : null;
+  // Callers outside a request's chrome context (the OG image renderer)
+  // pass the board language explicitly; everyone else keeps the ambient
+  // Paraglide locale.
+  const locale = isLocale(language) ? { locale: language } : undefined;
 
   if (job.remoteOption === 'remote') {
     return job.remoteWorldwide
-      ? m.label_locationRemoteWorldwide()
-      : (enumLabel('remote') ?? '');
+      ? m.label_locationRemoteWorldwide({}, locale)
+      : (enumLabel('remote', language) ?? '');
   }
-  if (!place) return enumLabel(job.remoteOption) ?? '';
+  if (!place) return enumLabel(job.remoteOption, language) ?? '';
   return job.remoteOption === 'hybrid'
-    ? m.label_locationHybrid({ place })
+    ? m.label_locationHybrid({ place }, locale)
     : place;
 }
 

@@ -1,4 +1,5 @@
 import { isNotFound } from '@cavuno/board';
+import { blogPostPath } from '@cavuno/board/paths';
 import {
   createFileRoute,
   getRouteApi,
@@ -77,7 +78,8 @@ function BlogPostNotFound() {
 function PostPage() {
   const { post, adjacent, related, seo } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
-  const permalink = post.canonicalUrl ?? `${seo.origin}/blog/${post.slug}`;
+  const permalink =
+    post.canonicalUrl ?? `${seo.origin}${blogPostPath(post.slug)}`;
   const crumbs = breadcrumbsCopy(seo.language);
   const ariaLabel = resolveJobDetailBreadcrumbAriaLabel();
 

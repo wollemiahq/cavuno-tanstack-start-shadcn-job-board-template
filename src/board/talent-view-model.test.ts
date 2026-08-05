@@ -76,8 +76,7 @@ const profile = {
       title: 'Analytical engineer',
       companyName: 'Analytical Engines',
       companyUrl: 'analytical.example',
-      // SDK 1.42+: TalentProfile experiences carry companyLogoUrl (null when unset).
-      companyLogoUrl: null,
+      companyLogoUrl: 'https://logos.example/acme.png',
       location: 'London, United Kingdom',
       employmentType: 'full_time',
       locationType: 'hybrid',
@@ -92,8 +91,7 @@ const profile = {
     {
       institutionName: 'University of London',
       institutionUrl: 'university.example',
-      // SDK 1.42+: TalentProfile education carries institutionLogoUrl.
-      institutionLogoUrl: null,
+      institutionLogoUrl: 'https://logos.example/mit.png',
       degree: 'Bachelor of Science',
       fieldOfStudy: 'Mathematics',
       grade: 'First class honours',
@@ -156,7 +154,7 @@ describe('talent view models', () => {
         // The public TalentProfile shape carries no company logo yet — the
         // mapper resolves it to null and the profile renders the initials
         // fallback (platform follow-up documented on toTalentProfileVM).
-        companyLogoUrl: null,
+        companyLogoUrl: 'https://logos.example/acme.png',
         dateRangeLabel: 'janv. 2022 – Aujourd’hui',
         location: 'London, United Kingdom',
         employmentTypeLabel: 'Full time',
@@ -171,7 +169,7 @@ describe('talent view models', () => {
         key: 'university-of-london-2018-09',
         institutionName: 'University of London',
         institutionHref: 'https://university.example',
-        institutionLogoUrl: null,
+        institutionLogoUrl: 'https://logos.example/mit.png',
         qualificationLabel: 'Bachelor of Science, Mathematics',
         grade: 'First class honours',
         activitiesAndSocieties: 'Analytical Society',
@@ -252,11 +250,15 @@ describe('talent view models', () => {
     ]);
   });
 
-  it('resolves company and institution logos to null until the API exposes them', () => {
+  it('passes the serializer-resolved company and institution logos through', () => {
     const vm = toTalentProfileVM(profile, 'fr', labels);
 
-    expect(vm.experiences[0]!.companyLogoUrl).toBeNull();
-    expect(vm.education[0]!.institutionLogoUrl).toBeNull();
+    expect(vm.experiences[0]!.companyLogoUrl).toBe(
+      'https://logos.example/acme.png',
+    );
+    expect(vm.education[0]!.institutionLogoUrl).toBe(
+      'https://logos.example/mit.png',
+    );
   });
 });
 
