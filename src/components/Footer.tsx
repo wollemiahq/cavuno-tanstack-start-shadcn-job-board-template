@@ -397,9 +397,13 @@ export default function Footer({
             </FooterColumn>
           </div>
 
-          <div className="border-border mt-12 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-t pt-8">
+          {/* ms-auto (not justify-between) keeps the legal cluster
+              right-aligned even when long locales (de) wrap it onto its own
+              line — justify-between left-aligned the wrapped line, so the
+              footer looked like a different design per language. */}
+          <div className="border-border mt-12 flex flex-wrap items-center gap-x-6 gap-y-4 border-t pt-8">
             <span className="text-muted-foreground text-sm">{copyright}</span>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+            <div className="ms-auto flex flex-wrap items-center justify-end gap-x-6 gap-y-4">
               <nav className="flex flex-wrap gap-x-6 gap-y-3">
                 {legalLinks.map((link) => (
                   <Link
