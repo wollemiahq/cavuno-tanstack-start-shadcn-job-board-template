@@ -43,7 +43,8 @@ export interface MarketingConsentState {
   status: 'granted' | 'withdrawn';
   source: string;
   reason: 'person_request' | 'operator_request' | 'account_deleted' | null;
-  grantedAt: number | null;
-  withdrawnAt: number | null;
+  /** ISO 8601, or null. */
+  grantedAt: string | null;
+  withdrawnAt: string | null;
   revision: number;
 }

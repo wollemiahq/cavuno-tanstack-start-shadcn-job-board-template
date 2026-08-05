@@ -160,8 +160,8 @@ describe('settings marketing consent row', () => {
           status: 'withdrawn',
           source: 'notification_preferences',
           reason: 'person_request',
-          grantedAt: 1,
-          withdrawnAt: 2,
+          grantedAt: '2026-08-01T00:00:00.000Z',
+          withdrawnAt: '2026-08-02T00:00:00.000Z',
           revision: 2,
         }}
       />,
@@ -192,7 +192,7 @@ describe('settings marketing consent row', () => {
           status: 'granted',
           source: 'candidate_sign_up',
           reason: null,
-          grantedAt: 1,
+          grantedAt: '2026-08-01T00:00:00.000Z',
           withdrawnAt: null,
           revision: 1,
         }}
