@@ -119,7 +119,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
       ]);
       const relatedSearches =
         'relatedSearches' in page ? page.relatedSearches : undefined;
-      const heading = jobSearchCopy(seo.language).headingJobs;
+      const heading = jobSearchCopy().headingJobs;
       const head = listingHead({
         title: listingPageTitle({
           heading: heading,
@@ -135,7 +135,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
           count: page.count,
         }),
       });
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
@@ -190,7 +190,7 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
       });
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
@@ -247,7 +247,7 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
       });
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
@@ -292,7 +292,7 @@ export const getJobsLocationsIndexPage = createServerFn({ method: 'GET' })
           boardName: seo.boardName,
         }),
       });
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
@@ -363,7 +363,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
       });
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
@@ -426,7 +426,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
       });
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
@@ -495,7 +495,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
       });
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,

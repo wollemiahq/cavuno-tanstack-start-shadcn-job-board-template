@@ -56,7 +56,7 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
         ],
         links: [{ rel: 'canonical', href: `${seo.origin}/talent` }],
       };
-      const c = breadcrumbsCopy(seo.language);
+      const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
@@ -123,7 +123,7 @@ export const getTalentProfilePage = createServerFn({ method: 'GET' })
       const displayName =
         profile.displayName ?? m.publicProfile_anonymousCandidateLabel();
       const canonical = `${seo.origin}/p/${profile.handle}`;
-      const c = breadcrumbsCopy(seo.language);
+      const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [
           {

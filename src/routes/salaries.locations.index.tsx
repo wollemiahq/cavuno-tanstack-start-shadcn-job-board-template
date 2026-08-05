@@ -87,8 +87,8 @@ function LocationTree({
 }
 
 function SalaryLocationsIndex() {
-  const { locations, seo } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language);
+  const { locations } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
   const byParent = childrenByParent(locations);
   const hasLocations = (byParent.get(null) ?? []).length > 0;
 

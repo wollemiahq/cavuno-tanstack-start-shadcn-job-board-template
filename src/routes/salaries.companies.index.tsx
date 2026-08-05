@@ -36,8 +36,8 @@ export const Route = createFileRoute('/salaries/companies/')({
 });
 
 function SalaryCompaniesIndex() {
-  const { companies, seo } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language);
+  const { companies } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
   const items: RailItem[] = companies.map((c) => ({

@@ -1,4 +1,4 @@
-import { getRouteApi, useNavigate } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 
 import { getCompanySearchLabels } from '@/board/company-search-labels';
 import { toCompanyCardVM } from '@/board/company-view-model';
@@ -23,8 +23,6 @@ type LooseNavigate = (options: {
   resetScroll?: boolean;
 }) => void;
 
-const rootApi = getRouteApi('__root__');
-
 export type CompaniesPageData = {
   data: PublicCompany[];
   count?: number;
@@ -46,10 +44,9 @@ export function ProgrammaticCompaniesView({
   search: CompaniesSearch;
 }) {
   const navigate = useNavigate() as unknown as LooseNavigate;
-  const { board } = rootApi.useLoaderData();
   const copy = {
-    breadcrumbs: breadcrumbsCopy(board.language),
-    jobDetail: jobDetailCopy(board.language),
+    breadcrumbs: breadcrumbsCopy(),
+    jobDetail: jobDetailCopy(),
   };
   const marketOptions = includeSelectedCompanyMarket(markets, market);
   const selectedCompany = useSelectedCompany(

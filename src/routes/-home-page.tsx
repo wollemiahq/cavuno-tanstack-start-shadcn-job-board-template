@@ -26,7 +26,7 @@ export function HomePage() {
   } = routeApi.useLoaderData();
   const { board, user } = rootApi.useLoaderData();
   const copy = {
-    entity: entityCopy(board.language),
+    entity: entityCopy(),
   };
   // Plural category via Intl.PluralRules, never `count === 1` — the copy
   // seam supplies One/Many forms and the locale decides which applies.

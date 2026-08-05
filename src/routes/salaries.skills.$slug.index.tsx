@@ -71,8 +71,8 @@ export const Route = createFileRoute('/salaries/skills/$slug/')({
 });
 
 function SkillSalaryPage() {
-  const { salary, seo, faqs } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language);
+  const { salary, faqs } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
   const companyItems: RailItem[] = salary.topCompanies.map((x) => ({

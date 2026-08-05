@@ -101,7 +101,7 @@ export const getBlogIndexPage = createServerFn({ method: 'GET' })
           { rel: 'canonical', href: boardUrl(seo.origin, BOARD_PATHS.blog) },
         ],
       };
-      const c = breadcrumbsCopy(seo.language);
+      const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
@@ -191,7 +191,7 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
       };
       const permalink =
         post.canonicalUrl ?? `${seo.origin}${blogPostPath(post.slug)}`;
-      const c = breadcrumbsCopy(seo.language);
+      const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [
           createBlogArticleJsonLd({
@@ -258,7 +258,7 @@ export const getBlogTagPage = createServerFn({ method: 'GET' })
           },
         ],
       };
-      const c = breadcrumbsCopy(seo.language);
+      const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
@@ -326,7 +326,7 @@ export const getBlogAuthorPage = createServerFn({ method: 'GET' })
           },
         ],
       };
-      const c = breadcrumbsCopy(seo.language);
+      const c = breadcrumbsCopy();
       const permalink = boardUrl(seo.origin, blogAuthorPath(author.slug));
       const jsonLd = asJsonObjects(
         [

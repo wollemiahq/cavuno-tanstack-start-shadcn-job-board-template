@@ -84,8 +84,8 @@ export const Route = createFileRoute('/salaries/locations/$slug/')({
 });
 
 function LocationSalaryPage() {
-  const { salary, seo, hierarchy, faqs } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language);
+  const { salary, hierarchy, faqs } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
   // The place hierarchy is the breadcrumb tail (country → region → current),

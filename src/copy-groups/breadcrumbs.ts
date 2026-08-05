@@ -25,9 +25,7 @@ const messages = [
   ['titles', m.breadcrumbs_titles as unknown as MessageFn],
 ] as const;
 
-export function breadcrumbsCopy(
-  _language: string | undefined,
-): BoardCopy['breadcrumbs'] {
+export function breadcrumbsCopy(): BoardCopy['breadcrumbs'] {
   return resolveCopyGroup(
     messages,
     undefined,

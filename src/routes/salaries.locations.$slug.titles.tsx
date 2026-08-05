@@ -57,8 +57,8 @@ export const Route = createFileRoute('/salaries/locations/$slug/titles')({
 });
 
 function LocationTitlesPage() {
-  const { data, seo } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language);
+  const { data } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
   const locale = getLocale();
   const items: RailItem[] = data.titles.map((t) => ({
     name: t.name,

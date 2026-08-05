@@ -36,8 +36,8 @@ export const Route = createFileRoute('/salaries/skills/')({
 });
 
 function SalarySkillsIndex() {
-  const { skills, seo } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language);
+  const { skills } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
   const items: RailItem[] = skills.map((s) => ({

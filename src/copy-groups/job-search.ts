@@ -87,9 +87,7 @@ const messages = [
   ],
 ] as const;
 
-export function jobSearchCopy(
-  _language: string | undefined,
-): BoardCopy['jobSearch'] {
+export function jobSearchCopy(): BoardCopy['jobSearch'] {
   return resolveCopyGroup(
     messages,
     undefined,

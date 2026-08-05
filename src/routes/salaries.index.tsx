@@ -46,8 +46,8 @@ export const Route = createFileRoute('/salaries/')({
 });
 
 function SalariesHub() {
-  const { companies, titles, skills, locations, seo } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language);
+  const { companies, titles, skills, locations } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
   const companyItems: RailItem[] = companies.slice(0, PREVIEW).map((x) => ({

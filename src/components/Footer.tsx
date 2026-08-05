@@ -155,7 +155,6 @@ function CavunoMark() {
 export default function Footer({
   boardName,
   logoUrl,
-  language,
   showCavunoBranding,
   primaryDomain,
   slug,
@@ -216,8 +215,8 @@ export default function Footer({
   cookiePreferencesAction?: ReactNode;
 }) {
   const copy = {
-    footer: footerCopy(language),
-    nav: navCopy(language),
+    footer: footerCopy(),
+    nav: navCopy(),
   };
 
   // ── For Candidates — operator-ordered system + custom links ──

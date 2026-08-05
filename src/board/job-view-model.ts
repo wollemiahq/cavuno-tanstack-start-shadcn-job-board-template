@@ -144,7 +144,7 @@ export function toJobCardVM(job: PublicJobCard, language: string): JobCardVM {
     locationLabel,
     summary: deriveSummary(job.description),
     isFeatured: job.isFeatured,
-    featuredLabel: jobCardCopy(language).featuredLabel,
+    featuredLabel: jobCardCopy().featuredLabel,
     postedAtLabel: formatPublishedRelativeDate(language, job.publishedAt),
     tags: [
       ...job.categories.map((c) => tagPill('category', c)),

@@ -12,9 +12,7 @@ const messages = [
   ['copyLinkLabel', m.copyLink_copyLinkLabel as unknown as MessageFn],
 ] as const;
 
-export function copyLinkCopy(
-  _language: string | undefined,
-): BoardCopy['copyLink'] {
+export function copyLinkCopy(): BoardCopy['copyLink'] {
   return resolveCopyGroup(
     messages,
     undefined,

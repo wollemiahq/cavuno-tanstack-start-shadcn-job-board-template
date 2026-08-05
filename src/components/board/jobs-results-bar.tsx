@@ -46,7 +46,7 @@ export function JobsResultsBar({
           : m.jobSearch_resultsCountMany({
               count: count.toLocaleString(locale),
             })
-      : (heading ?? jobSearchCopy(locale).headingJobs);
+      : (heading ?? jobSearchCopy().headingJobs);
   const rangeLabel = showRange
     ? m.jobSearch_resultsShowingRange({
         from: ((page - 1) * pageSize + 1).toLocaleString(locale),

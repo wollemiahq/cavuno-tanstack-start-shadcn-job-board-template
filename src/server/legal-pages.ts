@@ -69,7 +69,7 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
         links: [{ rel: 'canonical', href: `${seo.origin}${meta.path}` }],
       };
 
-      const crumbs = breadcrumbsCopy(seo.language);
+      const crumbs = breadcrumbsCopy();
       const url = `${origin}${meta.path}`;
       const jsonLd = asJsonObjects(
         [
