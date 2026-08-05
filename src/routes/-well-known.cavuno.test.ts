@@ -10,11 +10,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
  * createWellKnownHandler and routeEntriesFromTanStackRouteTree against this
  * board's canonical path structure.
  *
- * The route lazy-imports routeTree.gen at request time; we mock that module
- * with a tree that mirrors the starter's public roles so the test stays free
- * of the cloudflare:workers graph that full routeTree import would pull in.
- * A separate assertion pins the real routeTree's job-detail template via the
- * file-based enumerator (no full gen import).
+ * The route imports routeTree.gen statically (read only inside the deferred
+ * handler); we mock that module with a tree that mirrors the starter's public
+ * roles so the test stays free of the cloudflare:workers graph that the real
+ * routeTree import would pull in. A separate assertion pins the real
+ * routeTree's job-detail template via the file-based enumerator (no full gen
+ * import).
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -24,7 +25,7 @@ import { join, resolve } from 'node:path';
  * Paths match this starter's file routes (companies/$companySlug/jobs/$jobSlug,
  * alerts.manage, alerts.confirm).
  */
-const starterRoleTree = {
+const starterRoleTree = vi.hoisted(() => ({
   id: '__root__',
   children: [
     { id: '/', fullPath: '/' },
@@ -38,7 +39,7 @@ const starterRoleTree = {
     { id: '/companies/$companySlug', fullPath: '/companies/$companySlug' },
     { id: '/blog/$postSlug', fullPath: '/blog/$postSlug' },
   ],
-};
+}));
 
 vi.mock('../routeTree.gen', () => ({
   routeTree: starterRoleTree,
@@ -105,7 +106,7 @@ describe('/.well-known/cavuno.json mount', () => {
     expect(source).toContain("createFileRoute('/.well-known/cavuno.json')");
     expect(source).toContain('createWellKnownHandler');
     expect(source).toContain('routeEntriesFromTanStackRouteTree');
-    expect(source).toContain("import('../routeTree.gen')");
+    expect(source).toContain("import { routeTree } from '../routeTree.gen'");
   });
 
   it('real src/routes file tree compiles jobDetail to the canonical template', () => {
