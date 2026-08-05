@@ -37,12 +37,44 @@ export function planName(plan: { name: string }, language?: string): string {
   return entry ? entry.name({}, localeOpt(language)) : plan.name;
 }
 
-/** Localized plan description; wire authoring description as fallback. */
+interface PlanFacts {
+  name: string;
+  description?: string | null;
+  kind?: string;
+  featureSummary?: {
+    durationDays: number;
+    maxActiveJobs: number;
+    featuredSlots: number;
+  } | null;
+}
+
+/**
+ * Localized plan description, three tiers:
+ * 1. the name-keyed map (richest — carries operator nuance in translation);
+ * 2. composed from the wire's STRUCTURED facts (`featureSummary` —
+ *    durationDays/featuredSlots/maxActiveJobs), so any board's unmapped
+ *    plans still get a translated baseline;
+ * 3. the wire's freeform authoring description, board-language.
+ */
 export function planDescription(
-  plan: { name: string; description?: string | null },
+  plan: PlanFacts,
   language?: string,
 ): string | null {
   const entry = PLAN_LABELS[plan.name];
   if (entry) return entry.description({}, localeOpt(language));
+  const facts = plan.featureSummary;
+  if (facts && facts.durationDays > 0) {
+    const locale = localeOpt(language);
+    const listing =
+      facts.featuredSlots > 0
+        ? m.planComposed_featuredListing({ days: facts.durationDays }, locale)
+        : m.planComposed_standardListing({ days: facts.durationDays }, locale);
+    return facts.maxActiveJobs > 1
+      ? `${listing} — ${m.planComposed_maxActiveJobs(
+          { count: facts.maxActiveJobs },
+          locale,
+        )}`
+      : listing;
+  }
   return plan.description ?? null;
 }

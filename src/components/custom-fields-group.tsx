@@ -156,7 +156,7 @@ export function CustomFieldsGroup({
                   <SelectContent>
                     {(definition.options ?? []).map((option) => (
                       <SelectItem key={option.key} value={option.key}>
-                        {option.label}
+                        {customFieldOptionLabel(definition.key, option)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -194,7 +194,7 @@ export function CustomFieldsGroup({
                           }
                         />
                         <FieldLabel htmlFor={optionId} className="font-normal">
-                          {option.label}
+                          {customFieldOptionLabel(definition.key, option)}
                         </FieldLabel>
                       </Field>
                     );
