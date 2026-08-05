@@ -22,6 +22,10 @@ import {
   jobsSkillPath,
 } from '@cavuno/board/paths';
 
+import {
+  customFieldLabel,
+  customFieldOptionLabel,
+} from '@/board/custom-field-labels';
 import { jobDetailCopy } from '@/copy-groups/job-detail';
 import { enumLabel } from '@/lib/enum-labels';
 import { jobBreadcrumbItems } from '@/lib/job-breadcrumbs';
@@ -239,6 +243,19 @@ export function toJobDetailVM(
     customFieldDefinitions,
     job.customFieldValues,
   ).map((entry) => {
+    const definition = customFieldDefinitions.find((d) => d.key === entry.key);
+    // Select values arrive as SDK-resolved authoring labels; re-word them
+    // from the template map via the RAW stored option keys (the wire stores
+    // keys, never labels), falling back to the resolved label.
+    const rawValue = job.customFieldValues[entry.key];
+    const optionLabel = (resolved: string, raw: unknown) =>
+      typeof raw === 'string' && definition
+        ? customFieldOptionLabel(
+            definition.key,
+            { key: raw, label: resolved },
+            language,
+          )
+        : resolved;
     let value: string;
     if (entry.kind === 'boolean') {
       value = entry.value ? copy.customFieldYesLabel : copy.customFieldNoLabel;
@@ -249,18 +266,28 @@ export function toJobDetailVM(
         value = String(entry.value);
       }
     } else if (entry.kind === 'multi_select') {
+      const raws = Array.isArray(rawValue) ? rawValue : [];
+      const labels = entry.values.map((resolved, index) =>
+        optionLabel(resolved, raws[index]),
+      );
       try {
         value = new Intl.ListFormat(language, {
           style: 'long',
           type: 'conjunction',
-        }).format(entry.values);
+        }).format(labels);
       } catch {
-        value = entry.values.join(', ');
+        value = labels.join(', ');
       }
+    } else if (definition?.type === 'single_select') {
+      value = optionLabel(entry.value, rawValue);
     } else {
       value = entry.value;
     }
-    return { key: entry.key, label: entry.label, value };
+    return {
+      key: entry.key,
+      label: definition ? customFieldLabel(definition, language) : entry.label,
+      value,
+    };
   });
 
   const website = company?.website

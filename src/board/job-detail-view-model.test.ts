@@ -247,3 +247,50 @@ describe('toJobDetailVM', () => {
     expect(vm.descriptionHtml).toBe('<p>Build things.</p>');
   });
 });
+
+describe('template-side custom-field localization', () => {
+  const defs = {
+    job: [
+      {
+        key: 'visa_sponsorship',
+        label: 'Visa sponsorship',
+        type: 'single_select',
+        options: [
+          { key: 'yes', label: 'Yes' },
+          { key: 'no', label: 'No' },
+          { key: 'case_by_case', label: 'Case-by-case' },
+        ],
+      },
+    ],
+  } as unknown as PublicBoard['customFields'];
+  const job = {
+    ...baseJob,
+    customFieldValues: { visa_sponsorship: 'case_by_case' },
+  } as never;
+
+  it('re-words mapped fields and option keys per viewer locale', () => {
+    const de = toJobDetailVM(job, defs, [], null, 'de').customFields[0]!;
+    expect(de.label).toBe('Visum-Sponsoring');
+    expect(de.value).toBe('Im Einzelfall');
+  });
+
+  it('falls back to the wire authoring labels for unmapped fields', () => {
+    const unmapped = {
+      job: [
+        {
+          key: 'quest_preference',
+          label: 'Quest preference',
+          type: 'single_select',
+          options: [{ key: 'dragons', label: 'Dragons' }],
+        },
+      ],
+    } as unknown as PublicBoard['customFields'];
+    const j = {
+      ...baseJob,
+      customFieldValues: { quest_preference: 'dragons' },
+    } as never;
+    const vm = toJobDetailVM(j, unmapped, [], null, 'de').customFields[0]!;
+    expect(vm.label).toBe('Quest preference');
+    expect(vm.value).toBe('Dragons');
+  });
+});
