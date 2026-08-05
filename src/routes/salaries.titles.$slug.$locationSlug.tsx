@@ -72,8 +72,8 @@ export const Route = createFileRoute('/salaries/titles/$slug/$locationSlug')({
 });
 
 function TitleLocationSalaryPage() {
-  const { salary, seo } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language);
+  const { salary } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
   const locale = getLocale();
   const cat = salary.categoryCanonicalSlug;
 

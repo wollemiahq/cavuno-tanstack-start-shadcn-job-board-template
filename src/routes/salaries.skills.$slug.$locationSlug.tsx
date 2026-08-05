@@ -71,8 +71,8 @@ export const Route = createFileRoute('/salaries/skills/$slug/$locationSlug')({
 });
 
 function SkillLocationSalaryPage() {
-  const { salary, seo } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language);
+  const { salary } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
   const locale = getLocale();
   const sk = salary.skillCanonicalSlug;
 

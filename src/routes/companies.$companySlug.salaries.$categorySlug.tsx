@@ -76,9 +76,9 @@ export const Route = createFileRoute(
 });
 
 function CompanyCategorySalaryPage() {
-  const { salary, seo, faqs } = Route.useLoaderData();
+  const { salary, faqs } = Route.useLoaderData();
   // UI breadcrumb trail — component-only copy family (rides the route chunk).
-  const crumbs = breadcrumbsCopy(seo.language);
+  const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
   const competitorItems: RailItem[] = salary.competitors.map((x) => ({

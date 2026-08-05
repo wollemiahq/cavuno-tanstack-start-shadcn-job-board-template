@@ -57,10 +57,6 @@ async function seoBase() {
   };
 }
 
-function crumbs(seo: Awaited<ReturnType<typeof seoBase>>) {
-  return breadcrumbsCopy(seo.language);
-}
-
 /** /companies/ index — list/search + markets + head + breadcrumb JSON-LD. */
 export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
   .validator(
@@ -107,7 +103,7 @@ export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
           },
         ],
       };
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
@@ -190,7 +186,7 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
           },
         ],
       };
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
@@ -254,7 +250,7 @@ export const getCompanyProfileSeo = createServerFn({ method: 'GET' })
           ? data.website
           : `https://${data.website}`
         : null;
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [
           {
@@ -368,7 +364,7 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
         ],
       };
       // Home → Companies → {Company} — entity trail only (tab row marks Jobs).
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
@@ -434,7 +430,7 @@ export const getCompanySalariesPage = createServerFn({ method: 'GET' })
           },
         ],
       };
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const faqEntries = buildSalaryFaq(
         locale,
         salary.companyName,
@@ -537,7 +533,7 @@ export const getCompanyCategorySalaryPage = createServerFn({ method: 'GET' })
           },
         ],
       };
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const label = m.companySalaries_categoryAtCompanyLabel({
         category: salary.categoryName,
         company: salary.companyName,

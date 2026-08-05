@@ -4,7 +4,7 @@ export type { LegalPageType };
 
 export interface LegalPageMeta {
   path: string;
-  /** Key into `breadcrumbsCopy(...)` — resolves the label at render time. */
+  /** Key into `breadcrumbsCopy()` — resolves the label at render time. */
   breadcrumbKey:
     | 'about'
     | 'privacyPolicy'

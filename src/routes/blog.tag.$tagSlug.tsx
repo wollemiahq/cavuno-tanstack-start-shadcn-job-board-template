@@ -73,12 +73,12 @@ function BlogTagNotFound() {
 }
 
 function TagPage() {
-  const { tag, posts, tags, seo } = Route.useLoaderData();
+  const { tag, posts, tags } = Route.useLoaderData();
   const search = Route.useSearch();
   const location = useLocation();
   const navigate = useNavigate({ from: '/blog/tag/$tagSlug' });
   const router = useRouter();
-  const crumbs = breadcrumbsCopy(seo.language);
+  const crumbs = breadcrumbsCopy();
   const ariaLabel = resolveJobDetailBreadcrumbAriaLabel();
 
   return (

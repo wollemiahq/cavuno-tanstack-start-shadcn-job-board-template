@@ -130,7 +130,7 @@ export function toJobDetailVM(
    */
   displayLocale: string = language,
 ): JobDetailVM {
-  const copy = jobDetailCopy(displayLocale);
+  const copy = jobDetailCopy();
   const company = job.company;
 
   // Every emitted slug resolves — the platform guarantees it (ADR-0099), so

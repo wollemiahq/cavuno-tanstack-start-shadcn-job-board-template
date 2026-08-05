@@ -57,8 +57,8 @@ export const Route = createFileRoute('/salaries/skills/$slug/locations')({
 });
 
 function SkillLocationsPage() {
-  const { data, seo } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language);
+  const { data } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
   const locale = getLocale();
   const items: RailItem[] = data.locations.map((l) => ({
     name: l.placeName,

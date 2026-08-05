@@ -87,7 +87,6 @@ export default function Header({
   boardName,
   logoUrl,
   user,
-  language,
   features,
   hasAccessGrant = false,
   employerCompanies = null,
@@ -161,8 +160,8 @@ export default function Header({
   };
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const copy = {
-    jobSearch: jobSearchCopy(language),
-    nav: navCopy(language),
+    jobSearch: jobSearchCopy(),
+    nav: navCopy(),
   };
   const talentMode =
     talentDirectoryVisibility ??

@@ -15,6 +15,6 @@ const messages = [
   ['talent', m.nav_talent as unknown as MessageFn],
 ] as const;
 
-export function navCopy(_language: string | undefined): BoardCopy['nav'] {
+export function navCopy(): BoardCopy['nav'] {
   return resolveCopyGroup(messages, undefined) as unknown as BoardCopy['nav'];
 }

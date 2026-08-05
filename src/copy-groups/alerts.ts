@@ -24,7 +24,7 @@ const messages = [
   ['subscribingLabel', m.alerts_subscribingLabel as unknown as MessageFn],
 ] as const;
 
-export function alertsCopy(_language: string | undefined): BoardCopy['alerts'] {
+export function alertsCopy(): BoardCopy['alerts'] {
   return resolveCopyGroup(
     messages,
     undefined,

@@ -55,7 +55,7 @@ export const getEmployersPage = createServerFn({ method: 'GET' })
         ],
         links: [{ rel: 'canonical', href: `${seo.origin}/employers` }],
       };
-      const c = breadcrumbsCopy(seo.language);
+      const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
@@ -85,7 +85,7 @@ export const getAuthJoinSeo = createServerFn({ method: 'GET' }).handler(
       meta: [{ title: headTitle(seo.boardName, m.authJoin_title()) }],
       links: [{ rel: 'canonical', href: `${seo.origin}/auth/join` }],
     };
-    const c = breadcrumbsCopy(seo.language);
+    const c = breadcrumbsCopy();
     const jsonLd = asJsonObjects(
       [
         createBreadcrumbJsonLd([

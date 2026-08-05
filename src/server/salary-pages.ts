@@ -79,10 +79,6 @@ async function seoBase() {
   };
 }
 
-function crumbs(seo: Awaited<ReturnType<typeof seoBase>>) {
-  return breadcrumbsCopy(seo.language);
-}
-
 // ── Hub ─────────────────────────────────────────────────────────────────────
 
 /**
@@ -108,7 +104,7 @@ export const getSalaryHubPage = createServerFn({ method: 'GET' })
         board.salaries.locations.list({ locale }, { headers }),
         seoBase(),
       ]);
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const head = {
         meta: [
           {
@@ -163,7 +159,7 @@ export const getSalaryCompaniesIndexPage = createServerFn({ method: 'GET' })
         getBoard().salaries.companies.list({ headers }),
         seoBase(),
       ]);
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const head = {
         meta: [
           {
@@ -213,7 +209,7 @@ export const getSalaryTitlesIndexPage = createServerFn({ method: 'GET' })
         getBoard().salaries.titles.list({ locale: getLocale() }, { headers }),
         seoBase(),
       ]);
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const head = {
         meta: [
           {
@@ -263,7 +259,7 @@ export const getSalarySkillsIndexPage = createServerFn({ method: 'GET' })
         getBoard().salaries.skills.list({ locale: getLocale() }, { headers }),
         seoBase(),
       ]);
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const head = {
         meta: [
           {
@@ -316,7 +312,7 @@ export const getSalaryLocationsIndexPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const head = {
         meta: [
           {
@@ -374,7 +370,7 @@ export const getTitleSalaryPage = createServerFn({ method: 'GET' })
         seoBase(),
       ]);
       const locale = seo.language;
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const range = salary.overallSalary
         ? formatSalaryStatRange(
             locale,
@@ -458,7 +454,7 @@ export const getSkillSalaryPage = createServerFn({ method: 'GET' })
         seoBase(),
       ]);
       const locale = seo.language;
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const range = salary.overallSalary
         ? formatSalaryStatRange(
             locale,
@@ -548,7 +544,7 @@ export const getLocationSalaryPage = createServerFn({ method: 'GET' })
           .catch(() => null),
       ]);
       const locale = seo.language;
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const hierarchy = toLocationHierarchyCrumbs(
         tree?.data ?? [],
         salary.canonicalSlug,
@@ -650,7 +646,7 @@ export const getTitleLocationsPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const head = {
         meta: [
           {
@@ -734,7 +730,7 @@ export const getSkillLocationsPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const head = {
         meta: [
           {
@@ -818,7 +814,7 @@ export const getLocationTitlesPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       // Flat hosted shape: Home › Salaries › Locations › {Place}(linked) › Titles.
       const breadcrumbTrail = [
         { name: c.home, href: BOARD_PATHS.home },
@@ -907,7 +903,7 @@ export const getLocationSkillsPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const breadcrumbTrail = [
         { name: c.home, href: BOARD_PATHS.home },
         { name: c.salaries, href: BOARD_PATHS.salaries },
@@ -999,7 +995,7 @@ export const getTitleLocationSalaryPage = createServerFn({ method: 'GET' })
         seoBase(),
       ]);
       const locale = seo.language;
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const range = salary.overallSalary
         ? formatSalaryStatRange(
             locale,
@@ -1104,7 +1100,7 @@ export const getSkillLocationSalaryPage = createServerFn({ method: 'GET' })
         seoBase(),
       ]);
       const locale = seo.language;
-      const c = crumbs(seo);
+      const c = breadcrumbsCopy();
       const range = salary.overallSalary
         ? formatSalaryStatRange(
             locale,

@@ -14,9 +14,7 @@ const messages = [
   ['previousPageLabel', m.pagination_previousPageLabel as unknown as MessageFn],
 ] as const;
 
-export function paginationCopy(
-  _language: string | undefined,
-): BoardCopy['pagination'] {
+export function paginationCopy(): BoardCopy['pagination'] {
   return resolveCopyGroup(
     messages,
     undefined,

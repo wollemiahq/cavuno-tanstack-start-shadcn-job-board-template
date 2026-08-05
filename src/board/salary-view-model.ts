@@ -182,8 +182,8 @@ export function toOverallSalaryVM(
   language: string,
   currency: string | null | undefined,
 ): OverallSalaryVM {
-  const entity = entityCopy(language);
-  const copy = salaryCopy(language);
+  const entity = entityCopy();
+  const copy = salaryCopy();
   const median =
     overall.medianMin !== undefined && overall.medianMax !== undefined
       ? Math.round((overall.medianMin + overall.medianMax) / 2)
@@ -268,7 +268,7 @@ export function toSeniorityTableVM(
   language: string,
   currency: string | null | undefined,
 ): SeniorityTableVM {
-  const copy = salaryCopy(language);
+  const copy = salaryCopy();
   return {
     headers: {
       level: copy.seniorityTableHeaderLevel,
@@ -333,7 +333,7 @@ export function toSalaryRailVM(
   items: RailItem[],
   language: string,
 ): SalaryRailVM {
-  const copy = entityCopy(language);
+  const copy = entityCopy();
   return {
     title,
     items: items.map((item) => ({
@@ -357,10 +357,10 @@ export interface SalaryFaqVM {
 
 export function toSalaryFaqVM(
   items: { q: string; a: string }[],
-  language: string,
+  _language: string,
 ): SalaryFaqVM {
   return {
-    heading: salaryCopy(language).faqHeading,
+    heading: salaryCopy().faqHeading,
     items,
   };
 }
@@ -415,10 +415,10 @@ export interface SalaryBreadcrumbVM {
 
 export function toSalaryBreadcrumbVM(
   items: { name: string; href?: string }[],
-  language: string,
+  _language: string,
 ): SalaryBreadcrumbVM {
   return {
-    ariaLabel: jobDetailCopy(language).breadcrumbAriaLabel,
+    ariaLabel: jobDetailCopy().breadcrumbAriaLabel,
     items,
   };
 }

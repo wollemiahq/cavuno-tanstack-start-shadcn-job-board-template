@@ -36,8 +36,8 @@ export const Route = createFileRoute('/salaries/titles/')({
 });
 
 function SalaryTitlesIndex() {
-  const { titles, seo } = Route.useLoaderData();
-  const crumbs = breadcrumbsCopy(seo.language);
+  const { titles } = Route.useLoaderData();
+  const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
   const items: RailItem[] = titles.map((t) => ({

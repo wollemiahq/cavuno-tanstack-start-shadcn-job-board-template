@@ -12,7 +12,7 @@ afterEach(cleanup);
 describe('JobList empty collection', () => {
   it('keeps the empty result heading and recovery guidance in an owned Empty', () => {
     const copy = {
-      jobSearch: jobSearchCopy('en'),
+      jobSearch: jobSearchCopy(),
     };
     const { container } = render(<JobList jobs={[]} language="en" />);
 

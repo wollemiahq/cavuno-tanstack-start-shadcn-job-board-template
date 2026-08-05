@@ -73,7 +73,7 @@ function PostPage() {
   const { post, adjacent, related, seo } = Route.useLoaderData();
   const permalink =
     post.canonicalUrl ?? `${seo.origin}${blogPostPath(post.slug)}`;
-  const crumbs = breadcrumbsCopy(seo.language);
+  const crumbs = breadcrumbsCopy();
   const ariaLabel = resolveJobDetailBreadcrumbAriaLabel();
 
   return (

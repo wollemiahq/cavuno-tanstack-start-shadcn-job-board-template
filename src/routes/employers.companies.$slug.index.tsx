@@ -2,7 +2,6 @@ import { formatDate } from '@cavuno/board/format';
 import {
   Await,
   createFileRoute,
-  getRouteApi,
   Link,
   useRouter,
 } from '@tanstack/react-router';
@@ -84,8 +83,6 @@ import type {
   EmployerJobSummary,
 } from '@cavuno/board';
 
-const rootApi = getRouteApi('__root__');
-
 export const Route = createFileRoute('/employers/companies/$slug/')({
   loader: async ({ params, location }) => {
     try {
@@ -143,9 +140,8 @@ function activeJobsSubtitle(count: number) {
 function CompanyJobsPage() {
   const { slug, membership, jobs, statsIndex, timeseries } =
     Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
   const copy = {
-    nav: navCopy(board.language),
+    nav: navCopy(),
   };
   const company = membership?.company;
   const companyName = company?.name ?? slug;
