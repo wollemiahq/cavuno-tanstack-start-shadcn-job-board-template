@@ -1250,5 +1250,9 @@
   "previewToolbar_yourBoardHint": "Primärer Publishable-Key · Live-Tenant-Daten",
   "postJob_checkoutButtonLabel": "Weiter zur sicheren Kaufabwicklung",
   "accountAccess_redirectingText": "Du wirst dorthin zurückgebracht, wo du aufgehört hast …",
-  "languageSwitcher_label": "Sprache"
+  "languageSwitcher_label": "Sprache",
+  "marketingConsent_signUpDisclosure": "Schickt mir Neuigkeiten, Produkt-Updates und gelegentliche Angebote dieses Boards per E-Mail.",
+  "marketingConsent_settingsTitle": "Newsletter und Updates",
+  "marketingConsent_settingsDescription": "Schickt mir Neuigkeiten, Produkt-Updates und gelegentliche Angebote dieses Boards per E-Mail.",
+  "marketingConsent_privacyLinkLabel": "Datenschutzerklärung"
 }

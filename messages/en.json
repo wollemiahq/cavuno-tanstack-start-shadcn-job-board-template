@@ -1268,5 +1268,9 @@
   "previewToolbar_yourBoardHint": "Primary publishable key · live tenant data",
   "postJob_checkoutButtonLabel": "Proceed to secure checkout",
   "accountAccess_redirectingText": "Taking you back to where you left off…",
-  "languageSwitcher_label": "Language"
+  "languageSwitcher_label": "Language",
+  "marketingConsent_signUpDisclosure": "Email me news, product updates and occasional offers from this board.",
+  "marketingConsent_settingsTitle": "Newsletter and updates",
+  "marketingConsent_settingsDescription": "Email me news, product updates and occasional offers from this board.",
+  "marketingConsent_privacyLinkLabel": "Privacy Policy"
 }

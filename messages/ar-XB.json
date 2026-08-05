@@ -1268,5 +1268,9 @@
   "previewToolbar_yourBoardHint": "⁧⟦Þŕíɱáŕý þúƀĺíšĥáƀĺé ķéý · ĺíṽé ţéñáñţ ðáţá⟧⁩",
   "postJob_checkoutButtonLabel": "⁧⟦Þŕóçééð ţó šéçúŕé çĥéçķóúţ⟧⁩",
   "accountAccess_redirectingText": "⁧⟦Ţáķíñğ ýóú ƀáçķ ţó ŵĥéŕé ýóú ĺéƒţ óƒƒ…⟧⁩",
-  "languageSwitcher_label": "⁧⟦Ĺáñğúáğé⟧⁩"
+  "languageSwitcher_label": "⁧⟦Ĺáñğúáğé⟧⁩",
+  "marketingConsent_signUpDisclosure": "⁧⟦Éɱáíĺ ɱé ñéŵš, þŕóðúçţ úþðáţéš áñð óççášíóñáĺ óƒƒéŕš ƒŕóɱ ţĥíš ƀóáŕð.⟧⁩",
+  "marketingConsent_settingsTitle": "⁧⟦Ñéŵšĺéţţéŕ áñð úþðáţéš⟧⁩",
+  "marketingConsent_settingsDescription": "⁧⟦Éɱáíĺ ɱé ñéŵš, þŕóðúçţ úþðáţéš áñð óççášíóñáĺ óƒƒéŕš ƒŕóɱ ţĥíš ƀóáŕð.⟧⁩",
+  "marketingConsent_privacyLinkLabel": "⁧⟦Þŕíṽáçý Þóĺíçý⟧⁩"
 }

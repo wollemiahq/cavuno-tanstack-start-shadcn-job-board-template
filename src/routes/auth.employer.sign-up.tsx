@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-router';
 
 import { redirectIfAuthenticated } from '../lib/auth-guard';
+import { MARKETING_CONSENT } from '../lib/marketing-consent';
 import { m } from '../paraglide/messages';
 import { signUpEmployer } from '../server/auth';
 import { getBoardContext } from '../server/queries';
@@ -60,6 +61,19 @@ function EmployerSignUpPage() {
         successText: m.authEmployerSignUp_checkEmailBody(),
         successActionLabel: m.authEmployerSignUp_goToDashboardLabel(),
       }}
+      marketingConsent={
+        MARKETING_CONSENT.employerSignUp
+          ? {
+              disclosure: m.marketingConsent_signUpDisclosure(),
+              ...(MARKETING_CONSENT.privacyPolicyUrl
+                ? {
+                    privacyPolicyUrl: MARKETING_CONSENT.privacyPolicyUrl,
+                    privacyLinkLabel: m.marketingConsent_privacyLinkLabel(),
+                  }
+                : {}),
+            }
+          : undefined
+      }
       successHref="/employers/dashboard"
       onSubmit={async (values) => {
         const result = await signUpEmployer({ data: values });

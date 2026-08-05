@@ -1250,5 +1250,9 @@
   "previewToolbar_yourBoardHint": "Clé publicable primaire · données du tenant",
   "postJob_checkoutButtonLabel": "Procéder au paiement sécurisé",
   "accountAccess_redirectingText": "Retour là où vous en étiez…",
-  "languageSwitcher_label": "Langue"
+  "languageSwitcher_label": "Langue",
+  "marketingConsent_signUpDisclosure": "Envoyez-moi des nouveautés, des mises à jour produit et des offres occasionnelles de ce site par e-mail.",
+  "marketingConsent_settingsTitle": "Newsletter et mises à jour",
+  "marketingConsent_settingsDescription": "Envoyez-moi des nouveautés, des mises à jour produit et des offres occasionnelles de ce site par e-mail.",
+  "marketingConsent_privacyLinkLabel": "Politique de confidentialité"
 }

@@ -6,6 +6,7 @@ import {
   candidateSignInHref,
   candidateVerifyEmailHref,
 } from '../lib/candidate-return-to';
+import { MARKETING_CONSENT } from '../lib/marketing-consent';
 import { m } from '../paraglide/messages';
 import { signUp } from '../server/auth';
 import { getBoardContext } from '../server/queries';
@@ -56,6 +57,19 @@ function SignUpPage() {
         successText: m.authSignUp_checkEmailBody(),
         successActionLabel: m.authSignUp_goToAccountLabel(),
       }}
+      marketingConsent={
+        MARKETING_CONSENT.candidateSignUp
+          ? {
+              disclosure: m.marketingConsent_signUpDisclosure(),
+              ...(MARKETING_CONSENT.privacyPolicyUrl
+                ? {
+                    privacyPolicyUrl: MARKETING_CONSENT.privacyPolicyUrl,
+                    privacyLinkLabel: m.marketingConsent_privacyLinkLabel(),
+                  }
+                : {}),
+            }
+          : undefined
+      }
       successHref={candidateVerifyEmailHref(returnTo)}
       onSubmit={async (values) => {
         const result = await signUp({ data: values });

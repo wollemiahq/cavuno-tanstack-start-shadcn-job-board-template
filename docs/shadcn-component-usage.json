@@ -332,8 +332,10 @@
         "src/components/board/jobs-filter-toolbar.tsx",
         "src/components/custom-fields-group.tsx",
         "src/components/experience-section.tsx",
+        "src/components/marketing-consent-settings.tsx",
         "src/components/notification-settings.tsx",
         "src/components/profile-form.tsx",
+        "src/components/registration-page.tsx",
         "src/components/resume-upload.tsx"
       ]
     },
