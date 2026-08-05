@@ -294,10 +294,14 @@ describe('PostJobForm', () => {
   });
 
   it('uses owned shadcn loading and field feedback for the logo workflow', async () => {
-    let resolveUpload!: (value: { ok: false; message: string }) => void;
+    let resolveUpload!: (value: {
+      ok: false;
+      code: string;
+      message: string;
+    }) => void;
     const onLogoUpload = vi.fn(
       () =>
-        new Promise<{ ok: false; message: string }>((resolve) => {
+        new Promise<{ ok: false; code: string; message: string }>((resolve) => {
           resolveUpload = resolve;
         }),
     );
@@ -327,12 +331,18 @@ describe('PostJobForm', () => {
     expect(container.querySelector('[data-slot="spinner"]')).toBeVisible();
 
     await act(async () =>
-      resolveUpload({ ok: false, message: 'Logo upload failed' }),
+      resolveUpload({
+        ok: false,
+        code: 'unknown',
+        message: 'Logo upload failed',
+      }),
     );
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveAttribute('data-slot', 'field-error');
-    expect(alert).toHaveTextContent('Logo upload failed');
+    // Unknown code resolves to the generic viewer-locale line, never
+    // the wire sentence.
+    expect(alert).toHaveTextContent('Something went wrong. Please try again.');
   });
 
   it('never presents an inactive paid plan as free', () => {

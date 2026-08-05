@@ -76,6 +76,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { navCopy } from '@/copy-groups/nav';
+import { boardErrorMessage } from '@/lib/board-error-message';
 import { headTitle } from '@/lib/page-title';
 import type {
   EmployerJobStat,
@@ -335,7 +336,7 @@ function JobRow({
       if (result.ok) {
         await router.invalidate();
       } else {
-        toast.error(result.message ?? m.employerCompany_genericError());
+        toast.error(boardErrorMessage(result));
       }
     } catch {
       // A rejecting call (network drop, 5xx) must surface, not vanish.

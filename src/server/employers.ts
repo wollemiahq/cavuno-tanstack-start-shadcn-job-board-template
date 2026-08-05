@@ -38,18 +38,17 @@ import { gatedRead } from './board-access';
 
 export type ActionResult<T> =
   | { ok: true; data: T }
-  | { ok: false; message: string };
+  | { ok: false; code: string; message: string };
 
 async function run<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
   try {
     return { ok: true, data: await fn() };
   } catch (error) {
-    return {
-      ok: false,
-      message: isBoardApiError(error)
-        ? error.message
-        : 'Something went wrong. Please try again.',
-    };
+    // `message` is wire English — clients resolve display copy from `code`
+    // via boardErrorMessage and must not render the message directly.
+    return isBoardApiError(error)
+      ? { ok: false, code: error.code, message: error.message }
+      : { ok: false, code: 'unknown', message: 'Something went wrong.' };
   }
 }
 
