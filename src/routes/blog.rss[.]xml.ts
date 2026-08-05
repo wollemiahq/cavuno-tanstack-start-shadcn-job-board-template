@@ -5,7 +5,7 @@ import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
 import { m } from '../paraglide/messages';
-import { isLocale } from '../paraglide/runtime';
+import { baseLocale, getLocale, isLocale } from '../paraglide/runtime';
 
 import type { PublicBlogPostSummary } from '@cavuno/board';
 
@@ -51,6 +51,12 @@ export const Route = createFileRoute('/blog/rss.xml')({
     handlers: {
       GET: async () => {
         const origin = new URL(getRequest().url).origin;
+        // The feed exists at ONE address. A locale prefix on the URL
+        // (/de/blog/rss.xml) would serve a byte-identical duplicate whose
+        // self link lies about its own address — redirect to canonical.
+        if (getLocale() !== baseLocale) {
+          return Response.redirect(`${origin}/blog/rss.xml`, 308);
+        }
         const board = getBoard();
         const [context, posts] = await Promise.all([
           board.context(),

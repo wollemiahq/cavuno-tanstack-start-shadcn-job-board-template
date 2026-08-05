@@ -19,6 +19,7 @@ import {
 import { SalaryEmptyState } from '@/components/board/salary-sections';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { localizePath } from '@/lib/localized-path';
 
 export const Route = createFileRoute('/salaries/locations/')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -57,7 +58,7 @@ function LocationTree({
       {nodes.map((n) => (
         <li key={n.placeSlug}>
           <a
-            href={salaryLocationPath(n.placeSlug)}
+            href={localizePath(salaryLocationPath(n.placeSlug))}
             className="text-foreground outline-ring hover:text-foreground/80 rounded-xs font-medium transition-colors hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             {n.placeName}

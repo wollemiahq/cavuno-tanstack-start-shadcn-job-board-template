@@ -14,7 +14,7 @@ import { getBoard } from '../lib/board';
 import { enumLabel } from '../lib/enum-labels';
 import { jobTitleAtCompany } from '../lib/page-title';
 import { m } from '../paraglide/messages';
-import { isLocale } from '../paraglide/runtime';
+import { baseLocale, getLocale, isLocale } from '../paraglide/runtime';
 
 function xmlEscape(value: string): string {
   return value
@@ -37,6 +37,12 @@ export const Route = createFileRoute('/jobs/rss.xml')({
     handlers: {
       GET: async () => {
         const origin = new URL(getRequest().url).origin;
+        // The feed exists at ONE address. A locale prefix on the URL
+        // (/de/jobs/rss.xml) would serve a byte-identical duplicate whose
+        // self link lies about its own address — redirect to canonical.
+        if (getLocale() !== baseLocale) {
+          return Response.redirect(`${origin}/jobs/rss.xml`, 308);
+        }
         const board = getBoard();
         const [context, list] = await Promise.all([
           board.context(),

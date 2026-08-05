@@ -61,7 +61,7 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             { label: c.talent },
           ]),
         ].filter((e) => e !== null),
@@ -144,7 +144,7 @@ export const getTalentProfilePage = createServerFn({ method: 'GET' })
             },
           },
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             { label: c.talent, href: `${seo.origin}/talent` },
             { label: displayName },
           ]),

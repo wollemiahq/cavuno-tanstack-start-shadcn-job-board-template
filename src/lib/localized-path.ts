@@ -10,9 +10,9 @@
  * runtime.
  *
  * Only the SECTION segment translates; deeper segments stay canonical
- * (slugs are board content). Canonical segments under a prefix keep
- * working (/fr/jobs serves; its canonical + hreflang point at
- * /fr/emplois, which resolves the duplicate for crawlers).
+ * (slugs are board content). A canonical segment under a prefix
+ * (/fr/jobs) does not serve — the router rewrite round-trip 307s it to
+ * /fr/emplois (query preserved), so each variant has exactly one URL.
  */
 import { localizeHref } from '../paraglide/runtime';
 

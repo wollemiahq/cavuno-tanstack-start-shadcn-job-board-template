@@ -232,7 +232,7 @@ export function CompanySalarySummary({
           {title}
         </h2>
         <a
-          href={viewAllHref}
+          href={localizePath(viewAllHref)}
           className={cn(
             buttonVariants({ variant: 'ghost', size: 'sm' }),
             'no-underline',

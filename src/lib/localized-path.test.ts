@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { delocalizeSegments, localizePath } from './localized-path';
+import {
+  delocalizeSegments,
+  localizePath,
+  localizeSegments,
+} from './localized-path';
 
 describe('localized route slugs', () => {
   it('localizes the section segment per locale', () => {
@@ -29,6 +33,22 @@ describe('localized route slugs', () => {
     // Untranslated locales and unprefixed paths pass through.
     expect(delocalizeSegments('/jobs')).toBe('/jobs');
     expect(delocalizeSegments('/fr/blog/post-x')).toBe('/fr/blog/post-x');
+  });
+});
+
+describe('localizeSegments (router output rewrite)', () => {
+  it('translates the section of an already-prefixed pathname', () => {
+    expect(localizeSegments('/fr/jobs?q=react')).toBe('/fr/emplois?q=react');
+    expect(localizeSegments('/de/companies/acme')).toBe('/de/unternehmen/acme');
+  });
+
+  it('passes through unprefixed and untranslated paths', () => {
+    expect(localizeSegments('/jobs')).toBe('/jobs');
+    // de deliberately keeps the "jobs" anglicism.
+    expect(localizeSegments('/de/jobs/engineering')).toBe(
+      '/de/jobs/engineering',
+    );
+    expect(localizeSegments('/fr/blog/post-x')).toBe('/fr/blog/post-x');
   });
 });
 
