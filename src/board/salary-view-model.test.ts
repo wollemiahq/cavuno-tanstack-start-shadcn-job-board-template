@@ -251,6 +251,21 @@ describe('salary path composers', () => {
     );
   });
 
+  it('percent-encodes the appended segment like the SDK helpers do', () => {
+    // The SDK helpers encode their own segment; the composed second segment
+    // must get the same treatment or non-ASCII board-language slugs produce
+    // invalid canonical URLs (these composers feed rel=canonical).
+    expect(salaryTitleInLocationPath('führungskraft', 'zürich')).toBe(
+      '/salaries/titles/f%C3%BChrungskraft/z%C3%BCrich',
+    );
+    expect(companyCategorySalaryPath('acme', 'bürojobs')).toBe(
+      `${companySalaryPath('acme')}/b%C3%BCrojobs`,
+    );
+    expect(salarySkillInLocationPath('react', 'köln')).toBe(
+      `${salarySkillPath('react')}/k%C3%B6ln`,
+    );
+  });
+
   // The cross-axis-link regression these composers guard (formerly pinned by a
   // grep of each salary route's source): a salary detail's "top {axis}" rail
   // must land on the CROSS-AXIS "{Entity} salaries in {Place}" page — which the

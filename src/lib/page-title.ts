@@ -33,6 +33,8 @@
  * which is why this seam takes an explicit `boardName` rather than reaching
  * for ambient state.
  */
+import { m } from '../paraglide/messages';
+import { isLocale } from '../paraglide/runtime';
 
 /**
  * Separator between a page's own title and the board name. Locale-invariant
@@ -104,4 +106,22 @@ export function headTitle(
   ...parts: ReadonlyArray<string | null | undefined>
 ): string {
   return pageTitle(parts, boardName);
+}
+
+/**
+ * Job-detail head title — "{title} at {company}" with the join word owned
+ * by the message catalog (bei/chez/…), resolved with the BOARD language
+ * when it is a chrome locale (job titles and company names are board
+ * content; the join must agree with them, not with the viewer's chrome).
+ */
+export function jobTitleAtCompany(
+  language: string,
+  title: string,
+  companyName: string | null | undefined,
+): string {
+  if (!companyName) return title;
+  return m.jobDetailHead_titleAtCompany(
+    { title, company: companyName },
+    isLocale(language) ? { locale: language } : undefined,
+  );
 }

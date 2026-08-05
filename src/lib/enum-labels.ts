@@ -47,17 +47,21 @@ const TIMEFRAME_LABELS: Record<string, MessageFn> = {
   per_hour: m.label_salaryTimeframePerHour,
 };
 
+// TIMEFRAME_LABELS is deliberately NOT merged here: those are the post-job
+// form's option captions ("Yearly"), and routing them through the general
+// display resolver is exactly how "$105–130K / Yearly" shipped. Display
+// joins use the jobSalary_unitPer* nouns via formatJobSalary instead.
 const ALL_LABELS: Record<string, MessageFn> = {
   ...REMOTE_LABELS,
   ...EMPLOYMENT_LABELS,
   ...SENIORITY_LABELS,
-  ...TIMEFRAME_LABELS,
 };
 
 /**
  * Display label for a job wire enum value (`remoteOption`, `employmentType`,
- * `seniority`, form `salaryTimeframe`). Unknown values return `null` so
- * callers can fall back to the raw wire string or a placeholder.
+ * `seniority`). Unknown values return `null` so callers can fall back to the
+ * raw wire string or a placeholder. Salary timeframes are intentionally not
+ * resolvable here — use `salaryTimeframeLabel` (forms) or the salary join.
  */
 export function enumLabel(value: string | null | undefined): string | null {
   if (!value) return null;

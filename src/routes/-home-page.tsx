@@ -27,13 +27,19 @@ export function HomePage() {
   const copy = {
     entity: entityCopy(board.language),
   };
+  // Plural category via Intl.PluralRules, never `count === 1` — the copy
+  // seam supplies One/Many forms and the locale decides which applies.
   const countEyebrow = (
     count: number | null | undefined,
     singular: string,
     plural: string,
   ) =>
     typeof count === 'number' && count > 0
-      ? `${count.toLocaleString(board.language)} ${count === 1 ? singular : plural}`
+      ? `${count.toLocaleString(board.language)} ${
+          new Intl.PluralRules(board.language).select(count) === 'one'
+            ? singular
+            : plural
+        }`
       : undefined;
 
   const jobs = page.data.map((job) => toJobCardVM(job, board.language));
