@@ -31,6 +31,7 @@ import '../styles.css';
 import { useKeywordSuggestions } from './-use-keyword-suggestions';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
+import { AlternateLinks } from '@/components/alternate-links';
 import { AnalyticsScripts } from '@/components/analytics-scripts';
 import { AppRouteErrorPage } from '@/components/app-route-error';
 import { ShellBreadcrumb } from '@/components/board/breadcrumb';
@@ -534,6 +535,7 @@ function RootLayout() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { origin } = Route.useLoaderData();
   // Theme mode is repo-canonical (theme.css → resolved module).
   const mode =
     themeMeta.mode === 'dark' || themeMeta.mode === 'light'
@@ -564,14 +566,17 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       >
         <head>
           {/* en-XA / ar-XB are the CI coverage pseudo-locales (never for
-            humans or crawlers): noindex them. Real prefixed chrome
-            locales stay indexable — their route canonicals already point
-            at the unprefixed base; hreflang is deliberately deferred until
-            content translates). Compare as string[] so the branch typechecks
-            under the prod 3-locale Locale union and the QA 5-locale build. */}
+            humans or crawlers): noindex them. Compare as string[] so the
+            branch typechecks under the prod 3-locale Locale union and the
+            QA 5-locale build. */}
           {(['en-XA', 'ar-XB'] as readonly string[]).includes(locale) && (
             <meta name="robots" content="noindex, nofollow" />
           )}
+          {/* Chrome now translates end to end, so the locale variants are
+            first-class: hreflang alternates here + localized
+            self-canonicals per page (selfUrl) make /de/ and /fr/
+            indexable instead of consolidating into the base locale. */}
+          <AlternateLinks origin={origin} />
           <HeadContent />
         </head>
         <body className="bg-background text-foreground flex min-h-screen flex-col font-sans antialiased">

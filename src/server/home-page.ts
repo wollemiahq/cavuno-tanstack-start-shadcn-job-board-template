@@ -22,6 +22,7 @@ import { gatedRead } from './board-access';
 import { readTalentDirectory } from './talent-directory-read';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { selfUrl } from '@/lib/self-url';
 import type { RelatedSearch } from '@cavuno/board';
 
 /**
@@ -94,7 +95,7 @@ export const getHomePage = createServerFn({ method: 'GET' })
       // Preserve home head meta EXACTLY (title/description/canonical/og).
       const title = headTitle(seo.boardName, m.home_heroHeadline());
       const description = m.home_heroSupporting();
-      const canonical = `${seo.origin}/`;
+      const canonical = selfUrl(seo.origin, '/');
       const head = {
         meta: [
           { title },

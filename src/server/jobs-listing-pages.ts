@@ -21,6 +21,7 @@ import { getRequest } from '@tanstack/react-start/server';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { m } from '../paraglide/messages';
+import { localizeHref } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
@@ -128,7 +129,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
           count: page.count,
         }),
         origin: seo.origin,
-        path: '/jobs',
+        path: localizeHref('/jobs'),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
@@ -183,7 +184,7 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
         origin: seo.origin,
-        path: jobsCategoryPath(data.categorySlug),
+        path: localizeHref(jobsCategoryPath(data.categorySlug)),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
@@ -240,7 +241,7 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
         origin: seo.origin,
-        path: jobsSkillPath(data.skillSlug),
+        path: localizeHref(jobsSkillPath(data.skillSlug)),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
@@ -286,7 +287,7 @@ export const getJobsLocationsIndexPage = createServerFn({ method: 'GET' })
           language: seo.language,
         }),
         origin: seo.origin,
-        path: '/jobs/locations',
+        path: localizeHref('/jobs/locations'),
         description: listingMetaDescription({
           heading: m.jobsLocationsIndex_heading(),
           boardName: seo.boardName,
@@ -356,7 +357,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
         origin: seo.origin,
-        path: `/jobs/locations/${data.locationSlug}`,
+        path: localizeHref(`/jobs/locations/${data.locationSlug}`),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
@@ -419,7 +420,9 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
         origin: seo.origin,
-        path: `/jobs/locations/${data.locationSlug}/${data.categorySlug}`,
+        path: localizeHref(
+          `/jobs/locations/${data.locationSlug}/${data.categorySlug}`,
+        ),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
@@ -488,7 +491,9 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
         origin: seo.origin,
-        path: `/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`,
+        path: localizeHref(
+          `/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`,
+        ),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,

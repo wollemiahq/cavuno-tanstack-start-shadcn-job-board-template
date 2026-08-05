@@ -12,6 +12,7 @@ import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { selfUrl } from '@/lib/self-url';
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -53,7 +54,7 @@ export const getEmployersPage = createServerFn({ method: 'GET' })
             }),
           },
         ],
-        links: [{ rel: 'canonical', href: `${seo.origin}/employers` }],
+        links: [{ rel: 'canonical', href: selfUrl(seo.origin, '/employers') }],
       };
       const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
@@ -83,7 +84,7 @@ export const getAuthJoinSeo = createServerFn({ method: 'GET' }).handler(
     const seo = await seoBase();
     const head = {
       meta: [{ title: headTitle(seo.boardName, m.authJoin_title()) }],
-      links: [{ rel: 'canonical', href: `${seo.origin}/auth/join` }],
+      links: [{ rel: 'canonical', href: selfUrl(seo.origin, '/auth/join') }],
     };
     const c = breadcrumbsCopy();
     const jsonLd = asJsonObjects(

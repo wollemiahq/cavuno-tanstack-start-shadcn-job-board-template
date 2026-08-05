@@ -38,6 +38,7 @@ import { gatedRead } from './board-access';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { composeSalaryFaqs } from '@/lib/salary-faq';
+import { selfUrl } from '@/lib/self-url';
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -99,7 +100,7 @@ export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: boardUrl(seo.origin, BOARD_PATHS.companies),
+            href: selfUrl(seo.origin, BOARD_PATHS.companies),
           },
         ],
       };
@@ -182,7 +183,7 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: boardUrl(seo.origin, companyMarketPath(data.marketSlug)),
+            href: selfUrl(seo.origin, companyMarketPath(data.marketSlug)),
           },
         ],
       };
@@ -193,7 +194,7 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
             { label: c.home, href: seo.origin },
             {
               label: c.companies,
-              href: boardUrl(seo.origin, BOARD_PATHS.companies),
+              href: selfUrl(seo.origin, BOARD_PATHS.companies),
             },
             { label: data.displayName },
           ]),
@@ -237,7 +238,7 @@ export const getCompanyProfileSeo = createServerFn({ method: 'GET' })
             board: seo.boardName,
           });
       const canonical =
-        data.publicUrl ?? boardUrl(seo.origin, companyPath(data.companySlug));
+        data.publicUrl ?? selfUrl(seo.origin, companyPath(data.companySlug));
       const head = {
         meta: [
           { title: headTitle(seo.boardName, data.companyName) },
@@ -359,7 +360,7 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: `${boardUrl(seo.origin, companyPath(data.companySlug))}/jobs`,
+            href: `${selfUrl(seo.origin, companyPath(data.companySlug))}/jobs`,
           },
         ],
       };
@@ -371,7 +372,7 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
             { label: c.home, href: seo.origin },
             {
               label: c.companies,
-              href: boardUrl(seo.origin, BOARD_PATHS.companies),
+              href: selfUrl(seo.origin, BOARD_PATHS.companies),
             },
             { label: data.companyName },
           ]),
@@ -426,7 +427,7 @@ export const getCompanySalariesPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: boardUrl(seo.origin, companySalaryPath(salary.companySlug)),
+            href: selfUrl(seo.origin, companySalaryPath(salary.companySlug)),
           },
         ],
       };
@@ -452,11 +453,11 @@ export const getCompanySalariesPage = createServerFn({ method: 'GET' })
             { label: c.home, href: seo.origin },
             {
               label: c.companies,
-              href: boardUrl(seo.origin, BOARD_PATHS.companies),
+              href: selfUrl(seo.origin, BOARD_PATHS.companies),
             },
             {
               label: salary.companyName,
-              href: boardUrl(seo.origin, companyPath(salary.companySlug)),
+              href: selfUrl(seo.origin, companyPath(salary.companySlug)),
             },
             { label: c.salaries },
           ]),
@@ -523,7 +524,7 @@ export const getCompanyCategorySalaryPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: boardUrl(
+            href: selfUrl(
               seo.origin,
               companyCategorySalaryPath(
                 salary.companySlug,
@@ -553,15 +554,15 @@ export const getCompanyCategorySalaryPage = createServerFn({ method: 'GET' })
             { label: c.home, href: seo.origin },
             {
               label: c.companies,
-              href: boardUrl(seo.origin, BOARD_PATHS.companies),
+              href: selfUrl(seo.origin, BOARD_PATHS.companies),
             },
             {
               label: salary.companyName,
-              href: boardUrl(seo.origin, companyPath(salary.companySlug)),
+              href: selfUrl(seo.origin, companyPath(salary.companySlug)),
             },
             {
               label: c.salaries,
-              href: boardUrl(seo.origin, companySalaryPath(salary.companySlug)),
+              href: selfUrl(seo.origin, companySalaryPath(salary.companySlug)),
             },
             { label: salary.categoryName },
           ]),
