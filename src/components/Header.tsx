@@ -11,6 +11,7 @@ import {
   Building2,
   Menu,
   Users,
+  X,
 } from 'lucide-react';
 
 import { menuColorClasses } from '../lib/menu-color';
@@ -26,8 +27,11 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { navCopy } from '@/copy-groups/nav';
 import type {
+  HeaderSearchLocation,
+  HeaderSearchMarket,
   HeaderSearchState,
   HeaderSearchSubmission,
+  HeaderSearchTerm,
 } from '@/lib/header-search';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { cn } from '@/lib/utils';
@@ -47,6 +51,19 @@ const LazyMobileMenu = lazy(() =>
   })),
 );
 
+/** Shared, header-owned search field state — one copy even when the form
+ * renders twice (page header + open mobile-nav sheet). */
+export interface HeaderSearchFields {
+  value: string;
+  setValue: (value: string) => void;
+  location: HeaderSearchLocation | null;
+  setLocation: (location: HeaderSearchLocation | null) => void;
+  term: HeaderSearchTerm | null;
+  setTerm: (term: HeaderSearchTerm | null) => void;
+  market: HeaderSearchMarket | null;
+  setMarket: (market: HeaderSearchMarket | null) => void;
+}
+
 export interface HeaderSearchProps {
   search: HeaderSearchState & {
     onSubmit: (submission: HeaderSearchSubmission) => void;
@@ -55,6 +72,7 @@ export interface HeaderSearchProps {
     companyMarketSuggestions: CompanyMarketSuggestionState;
     locationSuggestions: LocationSuggestionState;
   };
+  fields: HeaderSearchFields;
   jobsPlaceholder: string;
   companiesPlaceholder: string;
   talentPlaceholder: string;
@@ -102,6 +120,45 @@ export default function Header({
   };
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuTop, setMenuTop] = useState(0);
+  // One copy of the search field state for BOTH renders of the form (the
+  // page header and the open mobile-nav sheet share it, so opening the menu
+  // never swaps the input for an empty twin).
+  const [searchValue, setSearchValue] = useState(search.query);
+  const [searchLocation, setSearchLocation] =
+    useState<HeaderSearchLocation | null>(search.location);
+  const [searchTerm, setSearchTerm] = useState<HeaderSearchTerm | null>(
+    search.term,
+  );
+  const [searchMarket, setSearchMarket] = useState<HeaderSearchMarket | null>(
+    search.market,
+  );
+  // Route changes used to remount the form via a key; with the state lifted
+  // here, resync it when the URL-derived search identity changes instead
+  // (React's adjust-state-during-render pattern).
+  const searchKey = `${search.scope}:${search.query}:${
+    search.location?.slug ?? ''
+  }:${search.term?.type ?? ''}:${search.term?.slug ?? ''}:${
+    search.market?.slug ?? ''
+  }`;
+  const [lastSearchKey, setLastSearchKey] = useState(searchKey);
+  if (lastSearchKey !== searchKey) {
+    setLastSearchKey(searchKey);
+    setSearchValue(search.query);
+    setSearchLocation(search.location);
+    setSearchTerm(search.term);
+    setSearchMarket(search.market);
+  }
+  const searchFields = {
+    value: searchValue,
+    setValue: setSearchValue,
+    location: searchLocation,
+    setLocation: setSearchLocation,
+    term: searchTerm,
+    setTerm: setSearchTerm,
+    market: searchMarket,
+    setMarket: setSearchMarket,
+  };
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const copy = {
     jobSearch: jobSearchCopy(language),
@@ -193,10 +250,8 @@ export default function Header({
 
       {search.visible ? (
         <HeaderSearch
-          key={`${search.scope}:${search.query}:${
-            search.location?.slug ?? ''
-          }:${search.term?.type ?? ''}:${search.term?.slug ?? ''}:${search.market?.slug ?? ''}`}
           search={search}
+          fields={searchFields}
           jobsPlaceholder={copy.jobSearch.keywordPlaceholder}
           companiesPlaceholder={m.companySearchBar_placeholderText()}
           talentPlaceholder={m.talentDirectory_searchPlaceholder()}
@@ -229,36 +284,6 @@ export default function Header({
         </Link>
       ) : null}
       {postJob}
-      {signUpHref ? (
-        <Link to={signUpHref} className={buttonVariants({ size: 'sm' })}>
-          {signUpLabel}
-        </Link>
-      ) : null}
-    </>
-  );
-  const mobileAccountActions = user ? (
-    <>
-      {messagesNav}
-      <Suspense fallback={null}>
-        <LazyAccountMenu
-          user={user}
-          hasAccessGrant={hasAccessGrant}
-          nativeApplications={features.nativeApplications}
-          employerCompanies={employerCompanies}
-        />
-      </Suspense>
-    </>
-  ) : (
-    <>
-      {authEnabled ? (
-        <Link
-          to="/auth/sign-in"
-          search={{ returnTo: undefined }}
-          className={buttonVariants({ variant: 'ghost', size: 'sm' })}
-        >
-          {signInLabel}
-        </Link>
-      ) : null}
       {signUpHref ? (
         <Link to={signUpHref} className={buttonVariants({ size: 'sm' })}>
           {signUpLabel}
@@ -315,13 +340,34 @@ export default function Header({
                 variant="ghost"
                 size="icon"
                 className="text-foreground xl:hidden"
-                aria-label={m.siteHeader_openNavMenuAriaLabel()}
+                aria-label={
+                  menuOpen
+                    ? m.siteHeader_closeNavMenuAriaLabel()
+                    : m.siteHeader_openNavMenuAriaLabel()
+                }
                 aria-haspopup="dialog"
                 aria-expanded={menuOpen}
                 aria-controls="mobile-navigation-dialog"
-                onClick={() => setMenuOpen(true)}
+                onClick={() => {
+                  if (menuOpen) {
+                    setMenuOpen(false);
+                    return;
+                  }
+                  // The nav panel starts at the header's bottom edge so the
+                  // REAL header — and its single search input — stays put.
+                  setMenuTop(
+                    menuButtonRef.current
+                      ?.closest('header')
+                      ?.getBoundingClientRect().bottom ?? 0,
+                  );
+                  setMenuOpen(true);
+                }}
               >
-                <Menu aria-hidden="true" />
+                {menuOpen ? (
+                  <X aria-hidden="true" />
+                ) : (
+                  <Menu aria-hidden="true" />
+                )}
               </Button>
             </div>
           </div>
@@ -330,13 +376,11 @@ export default function Header({
       {menuOpen ? (
         <Suspense fallback={null}>
           <LazyMobileMenu
-            headerLeft={headerLeft}
-            accountActions={mobileAccountActions}
             navLinks={visibleNavLinks}
             showPostJob={!user && features.publicJobSubmission}
             navigationLabel={m.siteHeader_primaryNavigationAriaLabel()}
-            closeLabel={m.siteHeader_closeNavMenuAriaLabel()}
             postJobLabel={m.siteHeader_postJobLabel()}
+            topOffset={menuTop}
             onOpenChange={(open) => {
               setMenuOpen(open);
               if (!open) {

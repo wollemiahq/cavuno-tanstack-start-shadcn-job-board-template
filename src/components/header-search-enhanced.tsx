@@ -1,6 +1,6 @@
 'use client';
 
-import { lazy, Suspense, useRef, useState } from 'react';
+import { lazy, Suspense, useRef } from 'react';
 
 import { Search, X } from 'lucide-react';
 
@@ -53,15 +53,26 @@ function HeaderSearchFieldsFallback({ fields }: { fields: 1 | 2 }) {
 
 export function HeaderSearchEnhanced({
   search,
+  fields,
   jobsPlaceholder,
   companiesPlaceholder,
   talentPlaceholder,
   blogPlaceholder,
 }: HeaderSearchProps) {
-  const [value, setValue] = useState(search.query);
-  const [location, setLocation] = useState(search.location);
-  const [term, setTerm] = useState(search.term);
-  const [market, setMarket] = useState(search.market);
+  // Field state lives in Header (`fields`), NOT here: the same search form
+  // renders twice while the mobile nav sheet is open (page header + sheet
+  // header), and two independent useState copies made the sheet's input
+  // appear as a fresh empty duplicate of the one the user just typed in.
+  const {
+    value,
+    setValue,
+    location,
+    setLocation,
+    term,
+    setTerm,
+    market,
+    setMarket,
+  } = fields;
   const keywordInputRef = useRef<HTMLInputElement>(null);
   const scopePlaceholders: Record<HeaderSearchScope, string> = {
     jobs: jobsPlaceholder,
