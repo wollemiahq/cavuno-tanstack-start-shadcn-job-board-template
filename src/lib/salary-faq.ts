@@ -23,7 +23,16 @@ function jobCountLabel(jobCount: number): string {
     : m.salaryFaq_jobCountMany({ jobCount });
 }
 
-/** Map SDK FAQ data entries to `{ q, a }` for `faqJsonLd` / the FAQ section. */
+/**
+ * Map SDK FAQ data entries to `{ q, a }` for `faqJsonLd` / the FAQ section.
+ *
+ * Locale note (deliberate): the numbers here format with `getLocale()` — the
+ * CHROME locale — because they sit inside chrome-locale Paraglide sentences,
+ * and a figure must agree with the sentence around it. The page headline
+ * formats the same figure with the BOARD language instead; on a board whose
+ * language differs from the viewer's chrome the two renderings differ by
+ * design (agreement within a sentence beats uniformity across the page).
+ */
 export function composeSalaryFaqs(entries: SalaryFaqEntry[]): FaqItem[] {
   return entries.map((entry) => {
     if (entry.kind === 'average') {

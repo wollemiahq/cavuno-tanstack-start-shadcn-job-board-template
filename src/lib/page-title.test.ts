@@ -17,7 +17,12 @@ import { listingHead } from '@cavuno/board/seo';
 import { describe, expect, it } from 'vitest';
 
 import { listingPageTitle } from './listing-description';
-import { headTitle, pageTitle, TITLE_SEPARATOR } from './page-title';
+import {
+  headTitle,
+  jobTitleAtCompany,
+  pageTitle,
+  TITLE_SEPARATOR,
+} from './page-title';
 
 describe('pageTitle (format authority)', () => {
   it('appends the board name after a pipe', () => {
@@ -117,5 +122,23 @@ describe('headTitle (the route-facing call)', () => {
   it('renders the page title alone when the loader had no board name', () => {
     // The `loaderData ? … : …` fallback branch every route carries.
     expect(headTitle(undefined, 'Sign in')).toBe('Sign in');
+  });
+});
+
+describe('jobTitleAtCompany', () => {
+  it('localizes the join word by board language', () => {
+    expect(jobTitleAtCompany('en', 'VP of Growth', 'Larksong Media')).toBe(
+      'VP of Growth at Larksong Media',
+    );
+    expect(jobTitleAtCompany('de', 'VP of Growth', 'Larksong Media')).toBe(
+      'VP of Growth bei Larksong Media',
+    );
+    expect(jobTitleAtCompany('fr', 'VP of Growth', 'Larksong Media')).toBe(
+      'VP of Growth chez Larksong Media',
+    );
+  });
+
+  it('returns the bare title when there is no company', () => {
+    expect(jobTitleAtCompany('en', 'VP of Growth', null)).toBe('VP of Growth');
   });
 });

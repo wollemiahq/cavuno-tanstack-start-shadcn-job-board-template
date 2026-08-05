@@ -11,6 +11,8 @@ import { createFileRoute } from '@tanstack/react-router';
 import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
+import { enumLabel } from '../lib/enum-labels';
+import { jobTitleAtCompany } from '../lib/page-title';
 
 function xmlEscape(value: string): string {
   return value
@@ -26,10 +28,6 @@ function sanitizeCdata(value: string): string {
 
 function rssDate(iso: string | null): string {
   return (iso ? new Date(iso) : new Date(0)).toUTCString();
-}
-
-function formatEmploymentType(type: string): string {
-  return type.replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export const Route = createFileRoute('/jobs/rss.xml')({
@@ -51,17 +49,26 @@ export const Route = createFileRoute('/jobs/rss.xml')({
         );
 
         const items = jobs
+          // 4.0.0 contract (listingJsonLd does the same): a job without a
+          // company has no detail URL — `/jobs/{slug}` is always a listing
+          // route. Drop such jobs from the feed rather than emit dead links.
+          .filter((job) => job.company)
           .map((job) => {
-            const url = job.company
-              ? `${origin}${jobDetailPath(job.company.slug, job.slug)}`
-              : `${origin}/jobs/${job.slug}`;
-            const title = job.company
-              ? `${job.title} at ${job.company.name}`
-              : job.title;
+            const company = job.company!;
+            const url = `${origin}${jobDetailPath(company.slug, job.slug)}`;
+            const title = jobTitleAtCompany(
+              context.language,
+              job.title,
+              company.name,
+            );
             const parts: string[] = [];
-            if (job.company) parts.push(`Company: ${job.company.name}`);
-            if (job.employmentType)
-              parts.push(`Type: ${formatEmploymentType(job.employmentType)}`);
+            parts.push(`Company: ${company.name}`);
+            if (job.employmentType) {
+              // Same catalog as on-site labels — the feed must not invent its
+              // own casing for the same enum ("Full Time" vs "Full time").
+              const typeLabel = enumLabel(job.employmentType);
+              if (typeLabel) parts.push(`Type: ${typeLabel}`);
+            }
             if (job.description) parts.push(job.description);
             const description = sanitizeCdata(parts.join(' — '));
             const categories = job.categories

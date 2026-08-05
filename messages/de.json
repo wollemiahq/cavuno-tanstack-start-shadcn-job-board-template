@@ -705,6 +705,7 @@
   "jobCard_relatedSearchesTitle": "Ähnliche Suchen",
   "jobCard_sortNewestLabel": "Datum",
   "jobCard_sortSalaryHighLabel": "Gehalt: absteigend",
+  "jobDetailHead_titleAtCompany": "{title} bei {company}",
   "jobDetail_aboutCompanyHeading": "Über das Unternehmen",
   "jobDetail_additionalDetailsHeading": "Weitere Details",
   "jobDetail_breadcrumbAriaLabel": "Seitenpfad",

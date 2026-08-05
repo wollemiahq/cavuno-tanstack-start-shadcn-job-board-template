@@ -705,6 +705,7 @@
   "jobCard_relatedSearchesTitle": "Recherches associées",
   "jobCard_sortNewestLabel": "Date",
   "jobCard_sortSalaryHighLabel": "Salaire : décroissant",
+  "jobDetailHead_titleAtCompany": "{title} chez {company}",
   "jobDetail_aboutCompanyHeading": "À propos de l’entreprise",
   "jobDetail_additionalDetailsHeading": "Informations complémentaires",
   "jobDetail_breadcrumbAriaLabel": "Fil d'Ariane",

@@ -16,6 +16,7 @@
 import { formatSalaryStat, formatSalaryStatRange } from '@cavuno/board/format';
 import {
   companySalaryPath,
+  encodePathSegment,
   salaryLocationPath,
   salarySkillPath,
   salaryTitlePath,
@@ -65,7 +66,7 @@ export function companyCategorySalaryPath(
   companySlug: string,
   categorySlug: string,
 ): string {
-  return `${companySalaryPath(companySlug)}/${categorySlug}`;
+  return `${companySalaryPath(companySlug)}/${encodePathSegment(categorySlug)}`;
 }
 
 /** Cross-axis: a job title's salary in one place. */
@@ -73,7 +74,7 @@ export function salaryTitleInLocationPath(
   titleSlug: string,
   placeSlug: string,
 ): string {
-  return `${salaryTitlePath(titleSlug)}/${placeSlug}`;
+  return `${salaryTitlePath(titleSlug)}/${encodePathSegment(placeSlug)}`;
 }
 
 /** Cross-axis: the "all locations" fan-out for a job title's salary. */
@@ -86,7 +87,7 @@ export function salarySkillInLocationPath(
   skillSlug: string,
   placeSlug: string,
 ): string {
-  return `${salarySkillPath(skillSlug)}/${placeSlug}`;
+  return `${salarySkillPath(skillSlug)}/${encodePathSegment(placeSlug)}`;
 }
 
 /** Cross-axis: the "all locations" fan-out for a skill's salary. */
@@ -219,7 +220,11 @@ export function toOverallSalaryVM(
   }
   stats.push({
     label: copy.basedOnLabel,
-    value: `${overall.jobCount} ${overall.jobCount === 1 ? entity.jobSingular : entity.jobPlural}`,
+    value: `${overall.jobCount.toLocaleString(language)} ${
+      new Intl.PluralRules(language).select(overall.jobCount) === 'one'
+        ? entity.jobSingular
+        : entity.jobPlural
+    }`,
   });
 
   return {
@@ -337,7 +342,11 @@ export function toSalaryRailVM(
       href: item.href,
       range: item.range,
       logoPath: item.logoPath,
-      jobCountLabel: `${item.jobCount} ${item.jobCount === 1 ? copy.jobSingular : copy.jobPlural}`,
+      jobCountLabel: `${item.jobCount.toLocaleString(language)} ${
+        new Intl.PluralRules(language).select(item.jobCount) === 'one'
+          ? copy.jobSingular
+          : copy.jobPlural
+      }`,
     })),
   };
 }

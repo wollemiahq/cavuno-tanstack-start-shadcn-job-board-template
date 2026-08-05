@@ -9,14 +9,13 @@ import { alertsCopy } from '@/copy-groups/alerts';
  * The `AlertSignupForm` presentation renders its copy from `AlertSignupVM`,
  * so it makes no runtime SDK/copy call — a redesign is pure markup and
  * can't drift the copy resolution. (The form's props still reference the
- * subscribe wire types `JobAlertSubscribeInput`/`BoardLabelOverrides`
+ * subscribe wire type `JobAlertSubscribeInput`
  * type-only — they are its API contract with the route, erased at runtime,
  * and kept precise so the generated DESIGN.md records what to pass.)
  *
  * NOTE: unlike `apply-view-model`, this VM deliberately does NOT re-export
  * those wire types for the component to import — routing these indexed/mapped
- * types (`JobAlertSubscribeInput['filters'|'context']`, the `Partial<Record>`
- * of `BoardLabelOverrides`) through a barrel makes the `gen:design` extractor
+ * types (`JobAlertSubscribeInput['filters'|'context']`) through a barrel makes the `gen:design` extractor
  * resolve them as `any`, degrading the builder's API spec. The form imports
  * them directly from `@cavuno/board*` instead. Don't "fix" that to a
  * re-export — it's intentional.
