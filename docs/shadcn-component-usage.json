@@ -330,6 +330,7 @@
       "productionReferences": [
         "src/components/alert-manager.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/board/marketing-consent-field.tsx",
         "src/components/custom-fields-group.tsx",
         "src/components/experience-section.tsx",
         "src/components/notification-settings.tsx",
@@ -459,6 +460,7 @@
         "src/components/auth-form.tsx",
         "src/components/board/alert-signup-form.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/board/marketing-consent-field.tsx",
         "src/components/custom-fields-group.tsx",
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",

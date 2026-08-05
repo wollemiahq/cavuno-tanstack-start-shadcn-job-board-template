@@ -26,6 +26,10 @@ import { useId, useState } from 'react';
 import { BellIcon } from 'lucide-react';
 
 import { toAlertSignupVM } from '@/board/alert-signup-view-model';
+import {
+  MarketingConsentField,
+  type MarketingConsentDeclaration,
+} from '@/components/board/marketing-consent-field';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import {
@@ -58,6 +62,7 @@ export function AlertSignupForm({
   title,
   description,
   surface = 'default',
+  marketingConsent,
 }: {
   filters?: JobAlertSubscribeInput['filters'];
   context?: JobAlertSubscribeInput['context'];
@@ -79,10 +84,24 @@ export function AlertSignupForm({
    * close button; `default` is the plain in-flow card.
    */
   surface?: 'default' | 'card';
+  /**
+   * Optional newsletter opt-in shown beneath the email field (MKT-05). Omit it,
+   * or pass a `null` declaration, and the form is unchanged.
+   *
+   * `declaration` comes from `flow.loadDeclaration()`; `onOptIn` should call
+   * `flow.submit({ email })`. Subscribing to job alerts and granting marketing
+   * permission are separate decisions with separate evidence, so they are two
+   * calls here rather than one flag on the subscribe payload.
+   */
+  marketingConsent?: {
+    declaration: MarketingConsentDeclaration | null;
+    onOptIn: (email: string) => Promise<unknown>;
+  };
 }) {
   const emailInputId = useId();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<Status>('idle');
+  const [consentChecked, setConsentChecked] = useState(false);
 
   const vm = toAlertSignupVM(language, labels);
 
@@ -120,8 +139,22 @@ export function AlertSignupForm({
                   filters,
                   context,
                 });
+
+                // Runs only after the alert subscription commits, and caught
+                // separately: the subscribe genuinely succeeded, so a failed
+                // newsletter opt-in must not flip this form to its error
+                // state. `onOptIn` owns reporting its own outcome.
+                if (marketingConsent?.declaration && consentChecked) {
+                  try {
+                    await marketingConsent.onOptIn(email);
+                  } catch {
+                    // Intentionally ignored here — see above.
+                  }
+                }
+
                 setStatus('submitted');
                 setEmail('');
+                setConsentChecked(false);
               } catch {
                 setStatus('error');
               }
@@ -168,6 +201,15 @@ export function AlertSignupForm({
                   {status === 'pending' ? vm.subscribingLabel : vm.buttonText}
                 </Button>
               </ButtonGroup>
+              {marketingConsent ? (
+                <MarketingConsentField
+                  declaration={marketingConsent.declaration}
+                  checked={consentChecked}
+                  onCheckedChange={setConsentChecked}
+                  disabled={status === 'pending'}
+                  className="mt-3"
+                />
+              ) : null}
               {message ? (
                 status === 'error' ? (
                   <FieldError>{message}</FieldError>
