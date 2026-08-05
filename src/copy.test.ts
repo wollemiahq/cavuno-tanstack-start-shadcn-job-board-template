@@ -43,7 +43,6 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
     );
   });
 
-
   it('keeps every public UiCopy message in the statically tree-shakeable map', () => {
     const publicGroups = new Set([
       'alerts',

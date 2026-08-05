@@ -1,4 +1,3 @@
-import { jobBreadcrumbJsonLd } from '@/lib/job-breadcrumbs';
 /**
  * One server boundary for the job-detail page's data and SEO payload.
  *
@@ -11,10 +10,7 @@ import { jobBreadcrumbJsonLd } from '@/lib/job-breadcrumbs';
  * Replaces the route's getJob + getSeoBase pair with a single RPC so client
  * navigation does not grow a second head-only round trip.
  */
-import {
-  createJobPostingJsonLd,
-  listingJsonLd,
-} from '@cavuno/board/seo';
+import { createJobPostingJsonLd, listingJsonLd } from '@cavuno/board/seo';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
@@ -22,6 +18,8 @@ import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { headTitle } from '../lib/page-title';
 import { gatedRead } from './board-access';
+
+import { jobBreadcrumbJsonLd } from '@/lib/job-breadcrumbs';
 
 /**
  * JSON-LD is schema.org-shaped nested objects. TanStack Start's server-fn

@@ -6,7 +6,6 @@
  * words come from the canonical enum vocabulary.
  */
 import { m } from '../paraglide/messages';
-
 import { enumLabel } from './enum-labels';
 
 export interface LocationLabelJob {

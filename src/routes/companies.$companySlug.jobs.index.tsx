@@ -173,9 +173,7 @@ function CompanyJobsPage() {
         <p className="text-foreground text-base font-semibold">{countLabel}</p>
 
         <JobList
-          jobs={page.data.map((job) =>
-            toJobCardVM(job, board.language),
-          )}
+          jobs={page.data.map((job) => toJobCardVM(job, board.language))}
           language={board.language}
           variant="grid"
           compact

@@ -28,11 +28,6 @@ const messages = [
   ],
 ] as const;
 
-export function applyCopy(
-  _language: string | undefined,
-): BoardCopy['apply'] {
-  return resolveCopyGroup(
-    messages,
-    undefined,
-  ) as unknown as BoardCopy['apply'];
+export function applyCopy(_language: string | undefined): BoardCopy['apply'] {
+  return resolveCopyGroup(messages, undefined) as unknown as BoardCopy['apply'];
 }

@@ -1,6 +1,5 @@
 'use client';
 
-import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 /**
  * The shared employer job form — used by both "Post a job" (create) and the
  * per-job "Edit job" page. It owns the role field set plus, when the job can be
@@ -52,6 +51,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import type {
   CreateEmployerJobBody,
   EmployerBillingOption,
@@ -250,7 +250,8 @@ export function EmployerJobForm({
     value,
     label,
   }));
-  const timeframeLabel = (value: string) => salaryTimeframeLabel(value) ?? value;
+  const timeframeLabel = (value: string) =>
+    salaryTimeframeLabel(value) ?? value;
   const timeframeItems = SALARY_TIMEFRAMES.map((value) => ({
     value,
     label: timeframeLabel(value),

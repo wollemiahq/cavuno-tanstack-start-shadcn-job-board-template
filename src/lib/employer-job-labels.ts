@@ -1,6 +1,5 @@
-import { enumLabel } from './enum-labels';
-
 import { m } from '../paraglide/messages';
+import { enumLabel } from './enum-labels';
 
 import type { EmployerJob } from '@cavuno/board';
 

@@ -36,9 +36,7 @@ export function HomePage() {
       ? `${count.toLocaleString(board.language)} ${count === 1 ? singular : plural}`
       : undefined;
 
-  const jobs = page.data.map((job) =>
-    toJobCardVM(job, board.language),
-  );
+  const jobs = page.data.map((job) => toJobCardVM(job, board.language));
   const hiringCompanies = companies
     .filter((company) => company.publishedJobCount > 0)
     .map((company) => ({

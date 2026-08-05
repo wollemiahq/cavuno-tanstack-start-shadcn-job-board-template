@@ -32,4 +32,3 @@ export function resolveCopyGroup(
 
   return copy;
 }
-

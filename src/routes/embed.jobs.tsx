@@ -198,10 +198,7 @@ function EmbedJobsPage() {
       {jobs.length > 0 ? (
         <div className="space-y-3" data-test="embed-jobs-list">
           {jobs.map((job) => (
-            <JobCard
-              key={job.id}
-              vm={toJobCardVM(job, board.language)}
-            />
+            <JobCard key={job.id} vm={toJobCardVM(job, board.language)} />
           ))}
         </div>
       ) : (

@@ -19,11 +19,6 @@ const messages = [
   ['tagFilterLabel', m.blog_tagFilterLabel as unknown as MessageFn],
 ] as const;
 
-export function blogCopy(
-  _language: string | undefined,
-): BoardCopy['blog'] {
-  return resolveCopyGroup(
-    messages,
-    undefined,
-  ) as unknown as BoardCopy['blog'];
+export function blogCopy(_language: string | undefined): BoardCopy['blog'] {
+  return resolveCopyGroup(messages, undefined) as unknown as BoardCopy['blog'];
 }

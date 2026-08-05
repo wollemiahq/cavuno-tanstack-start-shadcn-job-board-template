@@ -74,12 +74,8 @@ export function JobAlertFloatingPrompt({
           // Listing-page alert variant — stored as jobCardLabels.jobAlert
           // {Title,Description} on the hosted board; the starter's English
           // is the floor (catalog variant keys land with the authed slice).
-          title={
-            m.jobAlertFloatingPrompt_defaultTitle()
-          }
-          description={
-            m.jobAlertFloatingPrompt_defaultDescription()
-          }
+          title={m.jobAlertFloatingPrompt_defaultTitle()}
+          description={m.jobAlertFloatingPrompt_defaultDescription()}
         />
       </div>
     </FloatingStackItem>

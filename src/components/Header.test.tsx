@@ -70,12 +70,11 @@ type TalentDirectoryVisibility = 'off' | 'public' | 'employers_only' | null;
 function renderHeader({
   initialEntry = '/',
   features = allFeatures,
-  talentDirectoryVisibility =
-    typeof features.talentDirectory === 'string'
-      ? features.talentDirectory
-      : features.talentDirectory
-        ? 'public'
-        : 'off',
+  talentDirectoryVisibility = typeof features.talentDirectory === 'string'
+    ? features.talentDirectory
+    : features.talentDirectory
+      ? 'public'
+      : 'off',
   user = null,
   hasAccessGrant = false,
   locationSuggestions = [],

@@ -1,5 +1,4 @@
 import { isNotFound } from '@cavuno/board';
-import { companyIntro } from '@/lib/company-intro';
 /**
  * Job detail — hosted-parity URL (/companies/:companySlug/jobs/:jobSlug),
  * rendered by the @cavuno registry `job-detail` block:
@@ -51,6 +50,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { companyIntro } from '@/lib/company-intro';
 import type { PublicJobCard } from '@cavuno/board';
 
 export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
@@ -134,7 +134,7 @@ function JobDetailPage() {
     // keeps the VM call intact without blocking first paint on the rail.
     [],
     companyIntro(null, company?.description ?? null),
-    board.language
+    board.language,
   );
 
   return (
@@ -176,10 +176,7 @@ function JobDetailPage() {
             {/* Copy the job's canonical public URL (the API's links.public via
                 the VM) — works for everyone, no gating. */}
             {vm.canonicalUrl ? (
-              <CopyLinkButton
-                url={vm.canonicalUrl}
-                language={board.language}
-              />
+              <CopyLinkButton url={vm.canonicalUrl} language={board.language} />
             ) : (
               <span />
             )}
@@ -222,12 +219,8 @@ function JobDetailPage() {
               // jobCardLabels.jobAlertJob{Title,Description}; resolve the
               // stored override with the starter's English as the floor
               // (catalog keys for the variants land with the authed slice).
-              title={
-                m.companyJobDetail_defaultAlertTitle()
-              }
-              description={
-                m.companyJobDetail_defaultAlertDescription()
-              }
+              title={m.companyJobDetail_defaultAlertTitle()}
+              description={m.companyJobDetail_defaultAlertDescription()}
             />
           ) : null
         }

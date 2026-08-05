@@ -112,9 +112,7 @@ export const getHomePage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
-          breadcrumbs: [
-            { name: breadcrumbsCopy(seo.language).jobs },
-          ],
+          breadcrumbs: [{ name: breadcrumbsCopy(seo.language).jobs }],
           jobs: page.data,
         }),
       );

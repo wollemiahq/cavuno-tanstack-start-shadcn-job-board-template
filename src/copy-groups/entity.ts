@@ -13,9 +13,7 @@ const messages = [
   ['jobSingular', m.entity_jobSingular as unknown as MessageFn],
 ] as const;
 
-export function entityCopy(
-  _language: string | undefined,
-): BoardCopy['entity'] {
+export function entityCopy(_language: string | undefined): BoardCopy['entity'] {
   return resolveCopyGroup(
     messages,
     undefined,

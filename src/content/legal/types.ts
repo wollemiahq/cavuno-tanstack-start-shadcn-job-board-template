@@ -36,4 +36,3 @@ export type LegalEntityConfig = {
 
 /** Unset by default — impressum facts card stays hidden until filled in. */
 export const legalEntity: LegalEntityConfig = null;
-

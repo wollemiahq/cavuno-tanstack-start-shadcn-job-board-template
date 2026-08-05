@@ -60,12 +60,8 @@ const messages = [
 export function jobDetailCopy(
   _language: string | undefined,
 ): BoardCopy['jobDetail'] {
-  return resolveCopyGroup(
-    messages,
-    undefined,
-    {
-      experienceYears: 'years',
-      posted: 'date',
-    },
-  ) as unknown as BoardCopy['jobDetail'];
+  return resolveCopyGroup(messages, undefined, {
+    experienceYears: 'years',
+    posted: 'date',
+  }) as unknown as BoardCopy['jobDetail'];
 }

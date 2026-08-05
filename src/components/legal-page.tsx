@@ -1,7 +1,6 @@
-import { LEGAL_CONTENT } from '@/content/legal';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
-
+import { LEGAL_CONTENT } from '@/content/legal';
 import type { LegalPageViewModel } from '@/lib/legal';
 
 /**

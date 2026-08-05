@@ -38,9 +38,7 @@ const messages = [
   ],
 ] as const;
 
-export function salaryCopy(
-  _language: string | undefined,
-): BoardCopy['salary'] {
+export function salaryCopy(_language: string | undefined): BoardCopy['salary'] {
   return resolveCopyGroup(
     messages,
     undefined,

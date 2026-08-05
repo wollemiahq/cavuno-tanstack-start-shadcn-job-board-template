@@ -253,7 +253,9 @@ function RootLayout() {
   const breadcrumbAriaLabel = resolveJobDetailBreadcrumbAriaLabel();
   const shellBreadcrumb = resolveShellBreadcrumb({
     pathname: location.pathname,
-    labels: breadcrumbsCopy(board.language) as unknown as import("@/lib/shell-breadcrumb").ShellBreadcrumbLabels,
+    labels: breadcrumbsCopy(
+      board.language,
+    ) as unknown as import('@/lib/shell-breadcrumb').ShellBreadcrumbLabels,
     // Authed surfaces get footer trails too — labels from the template
     // catalogs (the SDK's copy.breadcrumbs only knows public segments).
     privateLabels: {

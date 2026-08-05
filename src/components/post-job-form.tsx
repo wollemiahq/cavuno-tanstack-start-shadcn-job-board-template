@@ -1,6 +1,5 @@
 'use client';
 
-import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import { useMemo, useRef, useState } from 'react';
 
 import { countryOptions } from '@cavuno/board/format';
@@ -73,6 +72,7 @@ import {
 } from '@/components/custom-fields-group';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { PlaceTagsField } from '@/components/place-tags-field';
+import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import type {
   JobPostingPlan,
   PublicBoard,
@@ -153,11 +153,7 @@ export type PostJobFormProps = {
   onCheckout: (url: string) => void;
 };
 
-function formatPrice(
-  locale: string,
-  amount: number,
-  currency: string,
-) {
+function formatPrice(locale: string, amount: number, currency: string) {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency.toUpperCase(),
@@ -308,7 +304,8 @@ export function PostJobForm({
   }));
   // The timeframe words are the SDK's, so the select reads the same language
   // as the salary ranges it produces — no parallel copy to drift.
-  const timeframeLabel = (value: string) => salaryTimeframeLabel(value) ?? value;
+  const timeframeLabel = (value: string) =>
+    salaryTimeframeLabel(value) ?? value;
   const timeframeItems = SALARY_TIMEFRAMES.map((value) => ({
     value,
     label: timeframeLabel(value),

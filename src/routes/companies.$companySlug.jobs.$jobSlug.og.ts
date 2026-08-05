@@ -1,6 +1,4 @@
 import { isNotFound } from '@cavuno/board';
-import { formatJobSalary } from '@/lib/salary-display';
-import { locationLabel } from '@/lib/location-labels';
 /**
  * Open Graph image — 1200×630 card for the job-detail page, the starter's
  * counterpart to the hosted `…/og` route (a `@takumi-rs` ImageResponse). The
@@ -15,6 +13,9 @@ import { ImageResponse } from 'workers-og';
 import { getBoard } from '../lib/board';
 import { loadOgFont } from '../lib/og-font';
 import { themeTokens } from '../theme/resolved';
+
+import { locationLabel } from '@/lib/location-labels';
+import { formatJobSalary } from '@/lib/salary-display';
 
 function escapeHtml(value: string): string {
   return value

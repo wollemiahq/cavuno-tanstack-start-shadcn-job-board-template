@@ -1,4 +1,3 @@
-import { companyIntro } from '@/lib/company-intro';
 import { useLocation, useRouter } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
@@ -12,6 +11,7 @@ import { ApplyButton } from '@/components/board/apply-button';
 import { JobSearchDetailState } from '@/components/board/job-search-detail-state';
 import { JobSearchResultDetail } from '@/components/board/job-search-result-detail';
 import { SaveJobButton } from '@/components/board/save-job-button';
+import { companyIntro } from '@/lib/company-intro';
 
 export function SelectedJobDetail({
   state,
@@ -33,7 +33,7 @@ export function SelectedJobDetail({
         board.customFields,
         [],
         companyIntro(null, state.companyDescription),
-        board.language
+        board.language,
       )
     : undefined;
 
