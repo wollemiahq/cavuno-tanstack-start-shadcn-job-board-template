@@ -46,6 +46,10 @@ function HeaderSearchFieldsFallback({ fields }: { fields: 1 | 2 }) {
     <span
       key={index}
       aria-hidden="true"
+      // data-slot opts the placeholder into ButtonGroup's segmented-corner
+      // rules, so its shape matches the real field it stands in for (right
+      // edge flattened against the search button, not a free-floating pill).
+      data-slot="header-search-fallback"
       className="border-border bg-input/50 h-9 min-w-0 flex-1 rounded-2xl border"
     />
   ));
