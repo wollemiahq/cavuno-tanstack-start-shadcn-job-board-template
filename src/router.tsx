@@ -1,6 +1,7 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router';
 
 import { NotFound } from './components/app-not-found';
+import { delocalizeSegments, localizeSegments } from './lib/localized-path';
 import { deLocalizeUrl, localizeUrl } from './paraglide/runtime';
 import { routeTree } from './routeTree.gen';
 
@@ -33,8 +34,19 @@ export function getRouter() {
     // delocalized path (/de/jobs → /jobs), rendered hrefs re-localize for
     // the current locale. The base locale stays unprefixed.
     rewrite: {
-      input: ({ url }) => deLocalizeUrl(url),
-      output: ({ url }) => localizeUrl(url),
+      // Localized section slugs (/fr/emplois) translate to canonical
+      // segments before Paraglide strips the prefix, and back after it
+      // re-applies one — see src/lib/localized-path.ts.
+      input: ({ url }) => {
+        const incoming = new URL(url);
+        incoming.pathname = delocalizeSegments(incoming.pathname);
+        return deLocalizeUrl(incoming);
+      },
+      output: ({ url }) => {
+        const localized = new URL(localizeUrl(url));
+        localized.pathname = localizeSegments(localized.pathname);
+        return localized;
+      },
     },
   });
 

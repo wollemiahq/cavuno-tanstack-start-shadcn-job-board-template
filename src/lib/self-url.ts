@@ -10,8 +10,8 @@
  * ambient request locale. NOT for job-detail canonicals — those point at
  * `links.public` (the hosted board is that content's SEO source of truth).
  */
-import { localizeHref } from '../paraglide/runtime';
+import { localizePath } from './localized-path';
 
 export function selfUrl(origin: string, path: string): string {
-  return `${origin}${localizeHref(path)}`;
+  return `${origin}${localizePath(path)}`;
 }
