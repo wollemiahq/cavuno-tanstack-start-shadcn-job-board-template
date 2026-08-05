@@ -65,9 +65,15 @@ export function formatJobSalary(
   const locale = isLocale(language) ? { locale: language } : undefined;
   // Timeframe first, then the bound chrome wraps the whole phrase — "From
   // $90K / year", not "From $90K" / "year".
-  const unit = formatted.timeframe
-    ? TIMEFRAME_UNITS[formatted.timeframe]({}, locale)
-    : null;
+  // Defensive lookup: the SDK types timeframe as the five wire values or
+  // null, but a stale compiled message catalog (dev HMR) once left the map
+  // values undefined and white-screened the page. Missing unit ⇒ render the
+  // amount without a unit, never throw.
+  const unitMessage = formatted.timeframe
+    ? TIMEFRAME_UNITS[formatted.timeframe]
+    : undefined;
+  const unit =
+    typeof unitMessage === 'function' ? unitMessage({}, locale) : null;
   const amount = unit
     ? m.jobSalary_perTimeframe({ amount: formatted.text, unit }, locale)
     : formatted.text;
