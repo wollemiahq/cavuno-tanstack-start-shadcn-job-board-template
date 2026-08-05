@@ -3,6 +3,8 @@ import * as React from 'react';
 import { Command as CommandPrimitive } from 'cmdk';
 import { SearchIcon, CheckIcon } from 'lucide-react';
 
+import { m } from '../../paraglide/messages';
+
 import {
   Dialog,
   DialogContent,
@@ -30,8 +32,8 @@ function Command({
 }
 
 function CommandDialog({
-  title = 'Command Palette',
-  description = 'Search for a command to run...',
+  title = m.commandDialog_title(),
+  description = m.commandDialog_searchPlaceholder(),
   children,
   className,
   showCloseButton = false,
