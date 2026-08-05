@@ -87,7 +87,8 @@ describe('buildLocaleOptions preserves the current path', () => {
     // Base locale stays unprefixed; others gain their prefix — same path.
     expect(byLocale.en).toBe('/jobs?q=react');
     expect(byLocale.de).toBe('/de/jobs?q=react');
-    expect(byLocale.fr).toBe('/fr/jobs?q=react');
+    // fr localizes the section slug (localized-path.ts).
+    expect(byLocale.fr).toBe('/fr/emplois?q=react');
   });
 
   it('marks the active locale and nothing else', () => {
@@ -97,7 +98,9 @@ describe('buildLocaleOptions preserves the current path', () => {
     ]);
     // Switching away from /de/companies re-derives from the delocalized
     // path the router exposes, so every option targets the same route.
-    expect(options.find((o) => o.locale === 'de')?.href).toBe('/de/companies');
+    expect(options.find((o) => o.locale === 'de')?.href).toBe(
+      '/de/unternehmen',
+    );
     expect(options.find((o) => o.locale === 'en')?.href).toBe('/companies');
   });
 });

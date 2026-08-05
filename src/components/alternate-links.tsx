@@ -11,7 +11,8 @@
  */
 import { useRouterState } from '@tanstack/react-router';
 
-import { locales, localizeHref } from '../paraglide/runtime';
+import { localizePath } from '../lib/localized-path';
+import { locales } from '../paraglide/runtime';
 
 const EXCLUDED_PREFIXES = ['/embed', '/password'];
 
@@ -28,7 +29,7 @@ export function AlternateLinks({ origin }: { origin: string }) {
           key={locale}
           rel="alternate"
           hrefLang={locale}
-          href={`${origin}${localizeHref(path, { locale })}`}
+          href={`${origin}${localizePath(path, { locale })}`}
         />
       ))}
       <link rel="alternate" hrefLang="x-default" href={`${origin}${path}`} />

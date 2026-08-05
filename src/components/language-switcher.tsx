@@ -16,8 +16,9 @@ import { lazy, Suspense, useState } from 'react';
 import { useRouterState } from '@tanstack/react-router';
 import { ChevronDown, Globe } from 'lucide-react';
 
+import { localizePath } from '../lib/localized-path';
 import { m } from '../paraglide/messages';
-import { getLocale, localizeHref } from '../paraglide/runtime';
+import { getLocale } from '../paraglide/runtime';
 
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -106,7 +107,7 @@ export function buildLocaleOptions(
   return PUBLIC_LOCALES.map((locale) => ({
     locale,
     label: LOCALE_ENDONYMS[locale],
-    href: localizeHref(href, { locale }),
+    href: localizePath(href, { locale }),
     active: locale === activeLocale,
   }));
 }
