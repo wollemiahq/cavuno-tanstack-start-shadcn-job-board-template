@@ -24,6 +24,7 @@ import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
  * in a Suspense segment that does not flush.
  */
 import type { LegalPageType } from '@/lib/legal';
+import { selfUrl } from '@/lib/self-url';
 
 /**
  * JSON-LD is schema.org-shaped nested objects. TanStack Start's server-fn
@@ -66,7 +67,7 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
             content: description,
           },
         ],
-        links: [{ rel: 'canonical', href: `${seo.origin}${meta.path}` }],
+        links: [{ rel: 'canonical', href: selfUrl(seo.origin, meta.path) }],
       };
 
       const crumbs = breadcrumbsCopy();

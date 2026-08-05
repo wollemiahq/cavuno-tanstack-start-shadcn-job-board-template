@@ -14,6 +14,7 @@ import { gatedRead } from './board-access';
 import { readTalentDirectory } from './talent-directory-read';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { selfUrl } from '@/lib/self-url';
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -54,7 +55,7 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
             }),
           },
         ],
-        links: [{ rel: 'canonical', href: `${seo.origin}/talent` }],
+        links: [{ rel: 'canonical', href: selfUrl(seo.origin, '/talent') }],
       };
       const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
@@ -116,13 +117,13 @@ export const getTalentProfilePage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: `${seo.origin}/p/${profile.handle}`,
+            href: selfUrl(seo.origin, `/p/${profile.handle}`),
           },
         ],
       };
       const displayName =
         profile.displayName ?? m.publicProfile_anonymousCandidateLabel();
-      const canonical = `${seo.origin}/p/${profile.handle}`;
+      const canonical = selfUrl(seo.origin, `/p/${profile.handle}`);
       const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [

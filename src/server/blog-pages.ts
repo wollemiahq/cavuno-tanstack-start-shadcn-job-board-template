@@ -8,7 +8,6 @@ import {
   blogAuthorPath,
   blogPostPath,
   blogTagPath,
-  boardUrl,
 } from '@cavuno/board/paths';
 import {
   createAuthorProfileJsonLd,
@@ -29,6 +28,7 @@ import { gatedRead } from './board-access';
 import { EMPTY_ADJACENT } from './queries';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { selfUrl } from '@/lib/self-url';
 import type { PublicBlogAdjacentPosts } from '@cavuno/board';
 
 type JsonPrimitive = string | number | boolean | null;
@@ -98,7 +98,7 @@ export const getBlogIndexPage = createServerFn({ method: 'GET' })
           },
         ],
         links: [
-          { rel: 'canonical', href: boardUrl(seo.origin, BOARD_PATHS.blog) },
+          { rel: 'canonical', href: selfUrl(seo.origin, BOARD_PATHS.blog) },
         ],
       };
       const c = breadcrumbsCopy();
@@ -185,7 +185,7 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
           {
             rel: 'canonical',
             href:
-              post.canonicalUrl ?? `${seo.origin}${blogPostPath(post.slug)}`,
+              post.canonicalUrl ?? selfUrl(seo.origin, blogPostPath(post.slug)),
           },
         ],
       };
@@ -254,7 +254,7 @@ export const getBlogTagPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: boardUrl(seo.origin, blogTagPath(tag.slug)),
+            href: selfUrl(seo.origin, blogTagPath(tag.slug)),
           },
         ],
       };
@@ -263,7 +263,7 @@ export const getBlogTagPage = createServerFn({ method: 'GET' })
         [
           createBreadcrumbJsonLd([
             { label: c.home, href: seo.origin },
-            { label: c.blog, href: boardUrl(seo.origin, BOARD_PATHS.blog) },
+            { label: c.blog, href: selfUrl(seo.origin, BOARD_PATHS.blog) },
             { label: tag.name },
           ]),
         ].filter((e) => e !== null),
@@ -322,12 +322,12 @@ export const getBlogAuthorPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: boardUrl(seo.origin, blogAuthorPath(author.slug)),
+            href: selfUrl(seo.origin, blogAuthorPath(author.slug)),
           },
         ],
       };
       const c = breadcrumbsCopy();
-      const permalink = boardUrl(seo.origin, blogAuthorPath(author.slug));
+      const permalink = selfUrl(seo.origin, blogAuthorPath(author.slug));
       const jsonLd = asJsonObjects(
         [
           createAuthorProfileJsonLd({
@@ -340,7 +340,7 @@ export const getBlogAuthorPage = createServerFn({ method: 'GET' })
           }),
           createBreadcrumbJsonLd([
             { label: c.home, href: seo.origin },
-            { label: c.blog, href: boardUrl(seo.origin, BOARD_PATHS.blog) },
+            { label: c.blog, href: selfUrl(seo.origin, BOARD_PATHS.blog) },
             { label: author.name },
           ]),
         ].filter((e) => e !== null),
