@@ -134,6 +134,7 @@ export function JobSearchPage({
   const selection = useSearchSelection({
     selectedId: selectedJob,
     resultIds: selectableSlugs,
+    page,
     onReplace: onSelectedJobReplace,
     onPush: onSelectedJobPush,
   });

@@ -8,6 +8,12 @@ export function getRouter() {
   const router = createTanStackRouter({
     routeTree,
     scrollRestoration: true,
+    // Master–detail list panes (`SearchResultsList`) keep their own overflow
+    // scroll. Without this, TanStack copies the previous location's element
+    // scroll onto the next page and re-applies it after pagination — landing
+    // mid-list on page N. Selection-only navigations pass `resetScroll: false`
+    // and skip this path, so the list keeps its place when picking a result.
+    scrollToTopSelectors: ['[data-slot="search-results-list"]'],
     defaultPreload: 'intent',
     // Without this, navigation treats all route data as stale (`staleTime`
     // defaults to 0) and re-runs the loader on click even when the intent
