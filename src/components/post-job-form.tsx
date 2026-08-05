@@ -73,6 +73,7 @@ import {
 } from '@/components/custom-fields-group';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { PlaceTagsField } from '@/components/place-tags-field';
+import { boardErrorMessage } from '@/lib/board-error-message';
 import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import type {
   JobPostingPlan,
@@ -335,7 +336,7 @@ export function PostJobForm({
         return;
       }
       updateFormState({
-        logoStatus: { kind: 'error', message: result.message },
+        logoStatus: { kind: 'error', message: boardErrorMessage(result) },
       });
     } catch {
       updateFormState({
@@ -452,7 +453,7 @@ export function PostJobForm({
 
       if (!result.ok) {
         updateFormState({
-          status: { kind: 'error', message: result.message },
+          status: { kind: 'error', message: boardErrorMessage(result) },
         });
         return;
       }

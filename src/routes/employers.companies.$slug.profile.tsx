@@ -60,6 +60,7 @@ import {
   InputGroupInput,
   InputGroupText,
 } from '@/components/ui/input-group';
+import { boardErrorMessage } from '@/lib/board-error-message';
 import { headTitle } from '@/lib/page-title';
 import type { EmployerProfileViewsPoint } from '@cavuno/board';
 
@@ -278,7 +279,7 @@ function ProfileEditorCard({
     });
     if (!result.ok) {
       setStatus('error');
-      setMessage(result.message);
+      setMessage(boardErrorMessage(result));
       return;
     }
     setStatus('idle');

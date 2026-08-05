@@ -16,6 +16,8 @@ const CODE_MESSAGES: Record<string, () => string> = {
   unauthorized: m.boardError_unauthorizedText,
   email_taken: m.boardError_emailTakenText,
   validation_error: m.boardError_validationText,
+  invalid_file: m.postJob_chooseImageError,
+  job_posting_logo_not_found: m.postJob_logoNotFoundError,
 };
 
 export function boardErrorMessage(result: {
