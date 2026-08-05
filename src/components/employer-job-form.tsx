@@ -10,11 +10,7 @@
  */
 import { useMemo, useState } from 'react';
 
-import {
-  countryOptions,
-  fieldLabel,
-  getSalaryLexicon,
-} from '@cavuno/board/format';
+import { countryOptions } from '@cavuno/board/format';
 import { useRouter } from '@tanstack/react-router';
 
 import {
@@ -55,6 +51,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import type {
   CreateEmployerJobBody,
   EmployerBillingOption,
@@ -239,24 +236,25 @@ export function EmployerJobForm({
 
   const employmentItems = EMPLOYMENT_TYPES.map((value) => ({
     value,
-    label: fieldLabel(locale, value) ?? value,
+    label: enumLabel(value) ?? value,
   }));
   const remoteItems = REMOTE_OPTIONS.map((value) => ({
     value,
-    label: fieldLabel(locale, value) ?? value,
+    label: enumLabel(value) ?? value,
   }));
   const seniorityItems = SENIORITIES.map((value) => ({
     value,
-    label: fieldLabel(locale, value) ?? value,
+    label: enumLabel(value) ?? value,
   }));
   const currencyItems = salaryCurrencyOptions().map(({ value, label }) => ({
     value,
     label,
   }));
-  const timeframeWords = getSalaryLexicon(locale).timeframe;
+  const timeframeLabel = (value: string) =>
+    salaryTimeframeLabel(value) ?? value;
   const timeframeItems = SALARY_TIMEFRAMES.map((value) => ({
     value,
-    label: timeframeWords[value],
+    label: timeframeLabel(value),
   }));
 
   const [permitQuery, setPermitQuery] = useState('');

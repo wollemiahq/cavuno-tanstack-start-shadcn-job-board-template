@@ -15,6 +15,9 @@ import { shouldRenderPagination, totalPages } from '@/lib/pagination';
 
 type PaginationPage = number | 'start-ellipsis' | 'end-ellipsis';
 
+const paginationScrollTarget =
+  '[data-pagination-scroll-target], [data-slot="search-results-list"]';
+
 function visiblePages(page: number, total: number): PaginationPage[] {
   if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1);
   if (page <= 4) return [1, 2, 3, 4, 5, 'end-ellipsis', total];
@@ -62,8 +65,18 @@ export function ListingPagination({
   const navigate =
     (nextPage: number) => (event: React.MouseEvent<HTMLAnchorElement>) => {
       event.preventDefault();
-      if (nextPage !== page && nextPage >= 1 && nextPage <= total)
+      if (nextPage !== page && nextPage >= 1 && nextPage <= total) {
+        const list = event.currentTarget.closest<HTMLElement>(
+          paginationScrollTarget,
+        );
+
+        // Search results own their vertical scroll on desktop, while the
+        // document owns it on mobile. Reset both so every page starts at the
+        // beginning of the listing in either layout.
+        list?.scrollIntoView?.({ block: 'start' });
+        list?.scrollTo?.({ top: 0 });
         onPageChange(nextPage);
+      }
     };
 
   return (

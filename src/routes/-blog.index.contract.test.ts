@@ -3,20 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const { getSeoBase, listBlogPosts, listBlogTags, searchBlogPosts } = vi.hoisted(
-  () => ({
-    getSeoBase: vi.fn(),
-    listBlogPosts: vi.fn(),
-    listBlogTags: vi.fn(),
-    searchBlogPosts: vi.fn(),
-  }),
-);
+const { getBlogIndexPage } = vi.hoisted(() => ({
+  getBlogIndexPage: vi.fn(),
+}));
 
-vi.mock('../server/queries', () => ({
-  getSeoBase,
-  listBlogPosts,
-  listBlogTags,
-  searchBlogPosts,
+vi.mock('../server/blog-pages', () => ({
+  getBlogIndexPage,
 }));
 
 import { Route as BlogRoute } from './blog.index';
@@ -38,26 +30,21 @@ function loader() {
 }
 
 beforeEach(() => {
-  getSeoBase.mockReset();
-  getSeoBase.mockResolvedValue({
-    boardName: 'Sandbox',
-    origin: 'https://board.example',
-    language: 'en',
-    labels: {},
-  });
-  listBlogPosts.mockReset();
-  listBlogPosts.mockResolvedValue({
-    data: [],
-    hasMore: true,
-    nextCursor: '3',
-  });
-  listBlogTags.mockReset();
-  listBlogTags.mockResolvedValue({ data: [] });
-  searchBlogPosts.mockReset();
-  searchBlogPosts.mockResolvedValue({
-    data: [],
-    hasMore: false,
-    nextCursor: null,
+  getBlogIndexPage.mockReset();
+  getBlogIndexPage.mockResolvedValue({
+    page: { data: [], hasMore: true, nextCursor: '3' },
+    tags: [],
+    seo: {
+      boardName: 'Sandbox',
+      origin: 'https://board.example',
+      language: 'en',
+      labels: {},
+    },
+    q: null,
+    head: {
+      links: [{ rel: 'canonical', href: 'https://board.example/blog' }],
+    },
+    jsonLd: [],
   });
 });
 
@@ -91,10 +78,9 @@ describe('blog index cursor pagination contract', () => {
   it('direct-loads the requested cursor page instead of page one', async () => {
     await loader()({ deps: { cursor: '2' } } as never);
 
-    expect(listBlogPosts).toHaveBeenCalledWith({
-      data: { cursor: '2', limit: 12 },
+    expect(getBlogIndexPage).toHaveBeenCalledWith({
+      data: { cursor: '2', q: undefined },
     });
-    expect(searchBlogPosts).not.toHaveBeenCalled();
   });
 
   it('canonicalises every cursor page to the bare archive root, never the cursor URL', () => {
@@ -114,6 +100,9 @@ describe('blog index cursor pagination contract', () => {
           labels: {},
         },
         q: null,
+        head: {
+          links: [{ rel: 'canonical', href: 'https://board.example/blog' }],
+        },
       },
     } as never) as { links?: Array<{ rel?: string; href?: string }> };
 

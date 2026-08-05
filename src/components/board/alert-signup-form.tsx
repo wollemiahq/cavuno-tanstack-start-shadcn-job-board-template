@@ -45,8 +45,6 @@ import { InputGroup, InputGroupInput } from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import type { JobAlertSubscribeInput } from '@cavuno/board';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
-
 type Status = 'idle' | 'pending' | 'submitted' | 'error';
 
 export function AlertSignupForm({
@@ -54,7 +52,6 @@ export function AlertSignupForm({
   context,
   onSubscribe,
   language,
-  labels,
   title,
   description,
   surface = 'default',
@@ -67,8 +64,6 @@ export function AlertSignupForm({
   ) => Promise<{ status: 'submitted' }>;
   /** Board language (ISO code) from `board.context()`. */
   language: string;
-  /** Operator label overrides from `board.context().labels`. */
-  labels?: BoardLabelOverrides;
   title?: string;
   description?: string;
   /**
@@ -84,7 +79,7 @@ export function AlertSignupForm({
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<Status>('idle');
 
-  const vm = toAlertSignupVM(language, labels);
+  const vm = toAlertSignupVM(language);
 
   const message =
     status === 'submitted'

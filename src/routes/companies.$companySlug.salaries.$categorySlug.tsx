@@ -1,19 +1,9 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound } from '@cavuno/board';
 import {
   BOARD_PATHS,
-  boardUrl,
   companyPath,
   companySalaryPath,
 } from '@cavuno/board/paths';
-import {
-  buildSalaryFaq,
-  companyCategorySalaryJsonLd,
-  createBreadcrumbJsonLd,
-  faqJsonLd,
-  formatRange,
-} from '@cavuno/board/seo';
 import {
   createFileRoute,
   getRouteApi,
@@ -22,16 +12,13 @@ import {
 } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import { getCompanyCategorySalary, getSeoBase } from '../server/queries';
-import {
-  SalaryNotFoundPage,
-  SalaryPageLayout,
-  SalaryPendingPage,
-} from './-salary-page-layout';
+import { getCompanyCategorySalaryPage } from '../server/companies-pages';
+import { SalaryNotFoundPage, SalaryPageLayout } from './-salary-page-layout';
+import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   companyCategorySalaryPath,
-  salaryCompanyCategoryTitle,
+  formatSalaryRange,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
@@ -46,18 +33,18 @@ import {
   SenioritySalaryTable,
   type RailItem,
 } from '@/components/board/salary-sections';
-import { JsonLd } from '@/components/json-ld';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
-import { headTitle } from '@/lib/page-title';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 
 export const Route = createFileRoute(
   '/companies/$companySlug/salaries/$categorySlug',
 )({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
-    let salary;
+    let page;
     try {
-      salary = await getCompanyCategorySalary({
+      page = await getCompanyCategorySalaryPage({
         data: {
           companySlug: params.companySlug,
           categorySlug: params.categorySlug,
@@ -69,72 +56,21 @@ export const Route = createFileRoute(
     }
     // The API returns the board-language canonical category slug as data; the
     // starter owns the 308 redirect. The company slug is never localized.
-    if (salary.categoryCanonicalSlug !== params.categorySlug) {
+    if (page.salary.categoryCanonicalSlug !== params.categorySlug) {
       throw redirect({
         to: '/companies/$companySlug/salaries/$categorySlug',
         params: {
           companySlug: params.companySlug,
-          categorySlug: salary.categoryCanonicalSlug,
+          categorySlug: page.salary.categoryCanonicalSlug,
         },
         statusCode: 308,
       });
     }
-    const seo = await getSeoBase();
-    return { salary, seo };
+    return page;
   },
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData.seo.boardName,
-                salaryCompanyCategoryTitle(
-                  loaderData.seo.language,
-                  loaderData.salary.companyName,
-                  loaderData.salary.categoryName,
-                  loaderData.salary.overallSalary
-                    ? formatRange(
-                        loaderData.seo.language,
-                        loaderData.salary.overallSalary.avgMin,
-                        loaderData.salary.overallSalary.avgMax,
-                      )
-                    : null,
-                ),
-              ),
-            },
-            {
-              name: 'description',
-              content: loaderData.salary.overallSalary
-                ? m.companySalaries_categoryMetaDescriptionWithData({
-                    category: loaderData.salary.categoryName,
-                    company: loaderData.salary.companyName,
-                    range: formatRange(
-                      loaderData.seo.language,
-                      loaderData.salary.overallSalary.avgMin,
-                      loaderData.salary.overallSalary.avgMax,
-                    ),
-                    jobCount: loaderData.salary.overallSalary.jobCount,
-                  })
-                : m.companySalaries_categoryMetaDescriptionEmpty({
-                    category: loaderData.salary.categoryName,
-                    company: loaderData.salary.companyName,
-                  }),
-            },
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              href: boardUrl(
-                loaderData.seo.origin,
-                companyCategorySalaryPath(
-                  loaderData.salary.companySlug,
-                  loaderData.salary.categoryCanonicalSlug,
-                ),
-              ),
-            },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: CompanyCategorySalaryPage,
   pendingComponent: SalaryPendingPage,
@@ -146,36 +82,11 @@ export const Route = createFileRoute(
 const rootApi = getRouteApi('__root__');
 
 function CompanyCategorySalaryPage() {
-  const { salary, seo } = Route.useLoaderData();
-  const crumbs = boardCopy(seo.language, seo.labels).breadcrumbs;
+  const { salary, seo, faqs } = Route.useLoaderData();
+  // UI breadcrumb trail — component-only copy family (rides the route chunk).
+  const crumbs = breadcrumbsCopy(seo.language);
   const { board } = rootApi.useLoaderData();
   const locale = seo.language;
-  const label = m.companySalaries_categoryAtCompanyLabel({
-    category: salary.categoryName,
-    company: salary.companyName,
-  });
-
-  const faqs = buildSalaryFaq(locale, label, salary.overallSalary);
-  const jsonLd = [
-    companyCategorySalaryJsonLd(locale, salary),
-    faqJsonLd(faqs),
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      {
-        label: crumbs.companies,
-        href: boardUrl(seo.origin, BOARD_PATHS.companies),
-      },
-      {
-        label: salary.companyName,
-        href: boardUrl(seo.origin, companyPath(salary.companySlug)),
-      },
-      {
-        label: crumbs.salaries,
-        href: boardUrl(seo.origin, companySalaryPath(salary.companySlug)),
-      },
-      { label: salary.categoryName },
-    ]),
-  ].filter((e): e is Record<string, unknown> => e !== null);
 
   const competitorItems: RailItem[] = salary.competitors.map((x) => ({
     name: x.companyName,
@@ -183,7 +94,13 @@ function CompanyCategorySalaryPage() {
       x.companySlug,
       salary.categoryCanonicalSlug,
     ),
-    range: formatRange(locale, x.avgSalaryMin, x.avgSalaryMax),
+    range:
+      formatSalaryRange(
+        locale,
+        x.avgSalaryMin,
+        x.avgSalaryMax,
+        salary.currency,
+      ) ?? '',
     jobCount: x.jobCount,
     logoPath: x.logoPath,
   }));
@@ -215,11 +132,9 @@ function CompanyCategorySalaryPage() {
           { name: salary.categoryName },
         ],
         seo.language,
-        seo.labels,
       )}
       title={heading}
     >
-      <JsonLd data={jsonLd} />
       {hasSalaryContent ? (
         <>
           {salary.overallSalary ? (
@@ -231,7 +146,7 @@ function CompanyCategorySalaryPage() {
                   jobCount: salary.overallSalary.jobCount,
                 },
                 board.language,
-                seo.labels,
+                salary.currency,
               )}
             />
           ) : null}
@@ -242,7 +157,7 @@ function CompanyCategorySalaryPage() {
                 vm={toSeniorityTableVM(
                   salary.bySeniority,
                   board.language,
-                  seo.labels,
+                  salary.currency,
                 )}
               />
             </PageSection>
@@ -255,10 +170,9 @@ function CompanyCategorySalaryPage() {
               }),
               competitorItems,
               seo.language,
-              seo.labels,
             )}
           />
-          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language, seo.labels)} />
+          <SalaryFaq vm={toSalaryFaqVM(faqs, seo.language)} />
         </>
       ) : (
         <SalaryEmptyState

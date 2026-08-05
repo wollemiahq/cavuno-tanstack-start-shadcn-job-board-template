@@ -1,7 +1,3 @@
-import { boardCopy } from '#/copy';
-
-import { BOARD_PATHS, boardUrl } from '@cavuno/board/paths';
-import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import {
   createFileRoute,
   useLocation,
@@ -15,16 +11,9 @@ import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogTagChips } from '@/components/board/blog-tag-chips';
 import { CursorPagination } from '@/components/board/cursor-pagination';
 import { PublicContentPending } from '@/components/board/public-content-pending';
-import { JsonLd } from '@/components/json-ld';
-import { BLOG_PAGE_SIZE } from '@/lib/blog';
-import { headTitle } from '@/lib/page-title';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
-import {
-  getSeoBase,
-  listBlogPosts,
-  listBlogTags,
-  searchBlogPosts,
-} from '@/server/queries';
+import { getBlogIndexPage } from '@/server/blog-pages';
 
 interface BlogSearch {
   cursor?: string;
@@ -41,62 +30,24 @@ export const Route = createFileRoute('/blog/')({
     q: typeof search.q === 'string' && search.q ? search.q : undefined,
   }),
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps }) => {
-    const [page, tags, seo] = await Promise.all([
-      deps.q
-        ? searchBlogPosts({ data: { query: deps.q, cursor: deps.cursor } })
-        : listBlogPosts({
-            data: { cursor: deps.cursor, limit: BLOG_PAGE_SIZE },
-          }),
-      // Additive tag chips: a failing tags read must not fault the archive.
-      listBlogTags({ data: {} }).catch(() => null),
-      getSeoBase(),
-    ]);
-    return { page, tags: tags?.data ?? [], seo, q: deps.q ?? null };
-  },
+  loader: async ({ deps }) =>
+    getBlogIndexPage({ data: { cursor: deps.cursor, q: deps.q } }),
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(loaderData?.seo.boardName, m.blogIndex_title()),
-            },
-            {
-              name: 'description',
-              content: m.blogIndex_metaDescription({
-                boardName: loaderData.seo.boardName,
-              }),
-            },
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              href: boardUrl(loaderData.seo.origin, BOARD_PATHS.blog),
-            },
-          ],
-        }
-      : { meta: [{ title: headTitle(undefined, m.blogIndex_title()) }] },
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
+      : {},
   component: BlogPage,
 });
 
 function BlogPage() {
-  const { page, tags, seo, q } = Route.useLoaderData();
+  const { page, tags, q } = Route.useLoaderData();
   const search = Route.useSearch();
   const location = useLocation();
   const navigate = useNavigate({ from: '/blog/' });
   const router = useRouter();
-  const copy = boardCopy(seo.language, seo.labels);
-  const crumbs = copy.breadcrumbs;
-  const jsonLd = [
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      { label: crumbs.blog },
-    ]),
-  ].filter((entry): entry is Record<string, unknown> => entry !== null);
 
   return (
     <>
-      <JsonLd data={jsonLd} />
       <BlogArchivePage
         title={m.blogIndex_title()}
         description={m.blogIndex_subtitleText()}

@@ -1,48 +1,19 @@
-import { boardCopy } from '#/copy';
-
-import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
-
-import { legalMetaDescription, type LegalPageMeta } from '../lib/legal';
-
-import { JsonLd } from '@/components/json-ld';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
-import type { PublicLegalPage } from '@cavuno/board';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
+import { LEGAL_CONTENT } from '@/content/legal';
+import type { LegalPageViewModel } from '@/lib/legal';
 
 /**
  * Shared render for the legal/about surfaces. The starter owns the layout and
- * JSON-LD; the Board API serves the portable-HTML prose (+ impressum
- * legal-entity facts).
+ * the prose (`src/content/legal/`). Head meta + JSON-LD are computed in
+ * `getLegalPageView` and emitted via route `head()` scripts — not here.
+ *
+ * Bodies are real React elements from the content module — not HTML strings —
+ * so this view never uses `dangerouslySetInnerHTML` (a security simplification
+ * vs. pre-sanitized API portable HTML).
  */
-export function LegalPageView({
-  page,
-  origin,
-  meta,
-  language,
-  labels,
-}: {
-  page: PublicLegalPage;
-  origin: string;
-  meta: LegalPageMeta;
-  language: string;
-  labels?: BoardLabelOverrides;
-}) {
-  const crumbs = boardCopy(language, labels).breadcrumbs;
-  const url = `${origin}${meta.path}`;
-  const jsonLd = [
-    {
-      '@context': 'https://schema.org',
-      '@type': meta.jsonLdType,
-      name: page.title,
-      description: legalMetaDescription(page.content),
-      url,
-    },
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: origin },
-      { label: crumbs[meta.breadcrumbKey] },
-    ]),
-  ].filter((e): e is Record<string, unknown> => e !== null);
+export function LegalPageView({ page }: { page: LegalPageViewModel }) {
+  const { Body } = LEGAL_CONTENT[page.type];
 
   return (
     // Keep the shared page geometry, but constrain
@@ -52,12 +23,11 @@ export function LegalPageView({
     // the capped column, so the prose fills the 48rem measure.
     <PageLayout>
       <div className="mx-auto w-full max-w-3xl">
-        {/* `dir` is pinned off `auto` on the wrapper on purpose: the JSON-LD
-            <script> below is a text-node descendant, so first-strong would
-            resolve against `{"@context":"https://…` rather than the prose.
-            Each real content field carries its own `dir="auto"` instead. */}
+        {/* `dir` is pinned off `auto` on the wrapper for a stable article
+            base direction; each real content field carries its own
+            `dir="auto"` instead so first-strong resolves against prose, not
+            surrounding chrome. */}
         <Prose as="article" dir={undefined}>
-          <JsonLd data={jsonLd} />
           <h1 dir="auto">{page.title}</h1>
           {page.legalEntity ? (
             <section className="not-typeset border-border mb-6 rounded-lg border p-4 text-sm">
@@ -76,13 +46,9 @@ export function LegalPageView({
               ) : null}
             </section>
           ) : null}
-          {page.content ? (
-            // Prose arrives pre-sanitized from the Board API (portable HTML).
-            <div
-              dir="auto"
-              dangerouslySetInnerHTML={{ __html: page.content }}
-            />
-          ) : null}
+          <div dir="auto">
+            <Body />
+          </div>
         </Prose>
       </div>
     </PageLayout>

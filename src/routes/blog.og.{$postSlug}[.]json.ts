@@ -3,6 +3,7 @@ import { isNotFound } from '@cavuno/board';
 import { createFileRoute, notFound } from '@tanstack/react-router';
 
 import { getBoard } from '../lib/board';
+import { themeTokens } from '../theme/resolved';
 
 const CACHE_CONTROL = 'public, max-age=600, stale-while-revalidate=3600';
 
@@ -23,7 +24,7 @@ export const Route = createFileRoute('/blog/og/{$postSlug}.json')({
         return Response.json(
           {
             boardName: seo.manifest.name,
-            primaryColor: seo.manifest.themeColor,
+            primaryColor: themeTokens.light['--primary'],
             post: {
               title: post.title,
               slug: post.slug,

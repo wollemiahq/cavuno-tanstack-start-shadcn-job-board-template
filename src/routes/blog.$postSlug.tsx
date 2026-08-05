@@ -1,10 +1,4 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound } from '@cavuno/board';
-import {
-  createBlogArticleJsonLd,
-  createBreadcrumbJsonLd,
-} from '@cavuno/board/seo';
 import {
   createFileRoute,
   getRouteApi,
@@ -17,16 +11,10 @@ import { m } from '../paraglide/messages';
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogArticleContent } from '@/components/board/blog-article-content';
 import { PublicContentPending } from '@/components/board/public-content-pending';
-import { JsonLd } from '@/components/json-ld';
-import { headTitle } from '@/lib/page-title';
-import { selectRelatedPosts } from '@/lib/related-posts';
-import {
-  EMPTY_ADJACENT,
-  getBlogPost,
-  getBlogPostAdjacent,
-  getSeoBase,
-  listBlogPosts,
-} from '@/server/queries';
+import { jsonLdHeadScripts } from '@/components/json-ld';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
+import { getBlogPostPage } from '@/server/blog-pages';
 
 const rootApi = getRouteApi('__root__');
 
@@ -36,14 +24,14 @@ export const Route = createFileRoute('/blog/$postSlug')({
     <PublicContentPending label={m.publicContent_loadingLabel()} />
   ),
   loader: async ({ params }) => {
-    let post;
+    let page;
     try {
-      post = await getBlogPost({ data: { postSlug: params.postSlug } });
+      page = await getBlogPostPage({ data: { postSlug: params.postSlug } });
     } catch (error) {
       if (isNotFound(error)) throw notFound();
       throw error;
     }
-
+    const { post } = page;
     const target =
       (post.redirected ? post.newSlug : null) ??
       (post.slug !== params.postSlug ? post.slug : null);
@@ -54,65 +42,12 @@ export const Route = createFileRoute('/blog/$postSlug')({
         statusCode: 308,
       });
     }
-
-    const firstTagSlug = post.tags[0]?.slug ?? null;
-    // Adjacent nav and related-post rails are optional: a failure must degrade
-    // to an article without rails, never a 500. SEO stays load-bearing.
-    const [adjacent, byTag, latest, seo] = await Promise.all([
-      getBlogPostAdjacent({ data: { postSlug: post.slug } }).catch(
-        () => EMPTY_ADJACENT,
-      ),
-      firstTagSlug
-        ? listBlogPosts({ data: { tagSlug: firstTagSlug, limit: 4 } }).catch(
-            () => null,
-          )
-        : Promise.resolve(null),
-      listBlogPosts({ data: { limit: 4 } }).catch(() => null),
-      getSeoBase(),
-    ]);
-
-    const related = selectRelatedPosts({
-      currentId: post.id,
-      byTag: byTag?.data ?? [],
-      latest: latest?.data ?? [],
-      limit: 3,
-    });
-
-    return { post, adjacent, related, seo };
+    return page;
   },
-  head: ({ loaderData }) => {
-    if (!loaderData) return {};
-    const { post, seo } = loaderData;
-    const ogImage = post.ogImageUrl ?? `${seo.origin}/blog/${post.slug}/og`;
-
-    return {
-      meta: [
-        {
-          title: headTitle(
-            loaderData?.seo.boardName,
-            post.seoTitle ?? post.title,
-          ),
-        },
-        ...((post.seoDescription ?? post.customExcerpt)
-          ? [
-              {
-                name: 'description',
-                content: (post.seoDescription ?? post.customExcerpt)!,
-              },
-            ]
-          : []),
-        { property: 'og:image', content: ogImage },
-        { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:image', content: ogImage },
-      ],
-      links: [
-        {
-          rel: 'canonical',
-          href: post.canonicalUrl ?? `${seo.origin}/blog/${post.slug}`,
-        },
-      ],
-    };
-  },
+  head: ({ loaderData }) =>
+    loaderData
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
+      : {},
   component: PostPage,
   notFoundComponent: BlogPostNotFound,
 });
@@ -143,28 +78,14 @@ function PostPage() {
   const { post, adjacent, related, seo } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const permalink = post.canonicalUrl ?? `${seo.origin}/blog/${post.slug}`;
-  const copy = boardCopy(seo.language, seo.labels);
-  const crumbs = copy.breadcrumbs;
-  const jsonLd = [
-    createBlogArticleJsonLd({
-      post,
-      boardName: seo.boardName,
-      permalink,
-      ogImageUrl: post.ogImageUrl ?? `${seo.origin}/blog/${post.slug}/og`,
-    }),
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      { label: crumbs.blog, href: `${seo.origin}/blog` },
-      { label: post.title },
-    ]),
-  ].filter((entry): entry is Record<string, unknown> => entry !== null);
+  const crumbs = breadcrumbsCopy(seo.language);
+  const ariaLabel = resolveJobDetailBreadcrumbAriaLabel();
 
   return (
     <>
-      <JsonLd data={jsonLd} />
       <BlogArticleContent
         breadcrumb={{
-          ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
+          ariaLabel,
           items: [
             { name: crumbs.home, href: '/' },
             { name: crumbs.blog, href: '/blog' },

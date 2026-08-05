@@ -17,5 +17,5 @@ export function profileMonthLabel(
   value: string | null,
 ): string {
   if (!value) return '';
-  return formatMonthYear(language, value);
+  return formatMonthYear(language, value) ?? '';
 }

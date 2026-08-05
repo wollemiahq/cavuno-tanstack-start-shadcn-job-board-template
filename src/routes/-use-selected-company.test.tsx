@@ -44,6 +44,7 @@ function salarySummary(slug: string) {
       jobCount: slug === 'first-company' ? 4 : 8,
     },
     byCategory: [],
+    currency: 'USD',
   };
 }
 

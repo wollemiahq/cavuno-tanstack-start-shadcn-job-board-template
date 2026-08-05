@@ -1,5 +1,5 @@
+import { normalizeWebsiteUrl } from '@cavuno/board/format';
 import { companyMarketPath, companyPath } from '@cavuno/board/paths';
-import { normalizeWebsiteUrl } from '@cavuno/board/seo';
 
 import { deriveSummary } from '@/lib/derive-summary';
 import type { PublicCompany, PublicCompanyDetail } from '@cavuno/board';

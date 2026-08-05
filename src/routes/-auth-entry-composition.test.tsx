@@ -9,6 +9,9 @@ vi.mock('../server/queries', () => ({
   getBoardContext: vi.fn<() => void>(),
   getSeoBase: vi.fn<() => void>(),
 }));
+vi.mock('../server/marketing-pages', () => ({
+  getAuthJoinSeo: vi.fn<() => void>(),
+}));
 // The already-authed guard on these entry pages reads the account layer.
 vi.mock('../server/account', () => ({ getSessionUser: vi.fn() }));
 

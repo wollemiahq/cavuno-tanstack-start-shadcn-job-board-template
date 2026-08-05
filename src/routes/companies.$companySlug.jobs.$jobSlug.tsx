@@ -1,10 +1,4 @@
 import { isNotFound } from '@cavuno/board';
-import { companyIntro } from '@cavuno/board/format';
-import {
-  buildJobBreadcrumbs,
-  createJobPostingJsonLd,
-  listingJsonLd,
-} from '@cavuno/board/seo';
 /**
  * Job detail — hosted-parity URL (/companies/:companySlug/jobs/:jobSlug),
  * rendered by the @cavuno registry `job-detail` block:
@@ -13,9 +7,12 @@ import {
  * plus the starter's own save-job control); the block owns the page
  * assembly. The similar-jobs rail degrades to empty on a search outage,
  * matching the hosted page (the rail is never fatal to the render).
+ *
+ * Head meta + JobPosting/breadcrumb JSON-LD are computed inside
+ * `getJobDetailPage` so `@cavuno/board/seo` stays off the universal client
+ * entry (same pattern as the salary hub's getSalaryHubPage).
  */
 import {
-  Await,
   createFileRoute,
   getRouteApi,
   notFound,
@@ -28,10 +25,9 @@ import { jobAlertDefaultsFromJob } from '../lib/job-alert-defaults';
 import { m } from '../paraglide/messages';
 import { getSessionUser, saveJob } from '../server/account';
 import { applyToJob, myApplicationForJob } from '../server/applications';
+import { getJobDetailPage } from '../server/job-detail-page';
 import {
   getCompany,
-  getJob,
-  getSeoBase,
   getSimilarJobs,
   subscribeJobAlert,
 } from '../server/queries';
@@ -44,7 +40,8 @@ import { CopyLinkButton } from '@/components/board/copy-link-button';
 import { JobDetail } from '@/components/board/job-detail';
 import { JobList } from '@/components/board/job-list';
 import { SaveJobButton } from '@/components/board/save-job-button';
-import { JsonLd } from '@/components/json-ld';
+import { DeferredContent } from '@/components/deferred-content';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Text } from '@/components/text';
 import {
@@ -53,7 +50,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { headTitle } from '@/lib/page-title';
+import { companyIntro } from '@/lib/company-intro';
 import type { PublicJobCard } from '@cavuno/board';
 
 export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
@@ -63,13 +60,14 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
       // `board` comes from the root loader (read via rootApi in the component):
       // this loader neither gates on it nor uses it in head(), so it is not
       // re-fetched here — that would be a duplicate board-context read.
-      const [job, user, company, seo] = await Promise.all([
-        getJob({ data: { jobSlug: params.jobSlug } }),
+      // getJobDetailPage returns job + seo + precomputed head/jsonLd so the
+      // route module never imports @cavuno/board/seo into the client graph.
+      const [page, user, company] = await Promise.all([
+        getJobDetailPage({ data: { jobSlug: params.jobSlug } }),
         getSessionUser(),
         getCompany({ data: { companySlug: params.companySlug } }).catch(
           () => null,
         ),
-        getSeoBase(),
       ]);
       // Similar-jobs is a below-the-fold, search-backed rail — defer it so a
       // slow (or failing) similar backend never blocks the job's first paint.
@@ -86,11 +84,13 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
       // Category/skill chips link directly: every slug the API emits
       // resolves (ADR-0099 platform guarantee) — no re-verification round trip.
       return {
-        job,
+        job: page.job,
         user,
         similar,
         company,
-        seo,
+        seo: page.seo,
+        head: page.head,
+        jsonLd: page.jsonLd,
         alreadyApplied: application !== null,
       };
     } catch (error) {
@@ -98,46 +98,10 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
       throw error;
     }
   },
-  head: ({ loaderData }) => {
-    if (!loaderData) return {};
-    const { job, seo } = loaderData;
-    const title = job.company?.name
-      ? `${job.title} at ${job.company.name}`
-      : job.title;
-    const description = job.description
-      ? job.description
-          .replace(/<[^>]+>/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim()
-          .slice(0, 160)
-      : title;
-    // Canonical points at the hosted board (the source of truth for SEO);
-    // og:image is the STARTER's own /og route (self-sufficient render).
-    const canonical = job.links.public;
-    const ogImage =
-      job.company?.slug && job.slug
-        ? `${seo.origin}/companies/${job.company.slug}/jobs/${job.slug}/og`
-        : null;
-
-    return {
-      meta: [
-        { title: headTitle(loaderData?.seo.boardName, title) },
-        { name: 'description', content: description },
-        { property: 'og:title', content: title },
-        { property: 'og:description', content: description },
-        { property: 'og:type', content: 'website' },
-        ...(canonical ? [{ property: 'og:url', content: canonical }] : []),
-        ...(ogImage
-          ? [
-              { property: 'og:image', content: ogImage },
-              { name: 'twitter:card', content: 'summary_large_image' },
-              { name: 'twitter:image', content: ogImage },
-            ]
-          : []),
-      ],
-      links: canonical ? [{ rel: 'canonical', href: canonical }] : [],
-    };
-  },
+  head: ({ loaderData }) =>
+    loaderData
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
+      : {},
   component: JobDetailPage,
   notFoundComponent: () => (
     <PageLayout>
@@ -156,8 +120,7 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
 const rootApi = getRouteApi('__root__');
 
 function JobDetailPage() {
-  const { job, user, similar, company, seo, alreadyApplied } =
-    Route.useLoaderData();
+  const { job, user, similar, company, alreadyApplied } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const defaults = jobAlertDefaultsFromJob(job);
   const router = useRouter();
@@ -172,20 +135,10 @@ function JobDetailPage() {
     [],
     companyIntro(null, company?.description ?? null),
     board.language,
-    board.labels,
   );
-
-  const jsonLd = [
-    createJobPostingJsonLd({ job, board, shareUrl: job.links.public ?? '' }),
-    ...listingJsonLd({
-      origin: seo.origin,
-      breadcrumbs: buildJobBreadcrumbs(job, board.language, board.labels),
-    }),
-  ].filter((entry): entry is Record<string, unknown> => entry !== null);
 
   return (
     <>
-      <JsonLd data={jsonLd} />
       <JobDetail
         vm={vm}
         applySlot={
@@ -194,7 +147,6 @@ function JobDetailPage() {
             applicationUrl={job.applicationUrl}
             language={board.language}
             returnTo={returnTo}
-            labels={board.labels}
             nativeApplications={board.features.nativeApplications}
             viewer={user ? { emailVerified: user.emailVerified } : null}
             alreadyApplied={alreadyApplied}
@@ -224,18 +176,14 @@ function JobDetailPage() {
             {/* Copy the job's canonical public URL (the API's links.public via
                 the VM) — works for everyone, no gating. */}
             {vm.canonicalUrl ? (
-              <CopyLinkButton
-                url={vm.canonicalUrl}
-                language={board.language}
-                labels={board.labels}
-              />
+              <CopyLinkButton url={vm.canonicalUrl} language={board.language} />
             ) : (
               <span />
             )}
           </>
         }
         similarSlot={
-          <Await promise={similar} fallback={null}>
+          <DeferredContent promise={similar}>
             {(similarRail) =>
               similarRail.jobs.length > 0 ? (
                 <section
@@ -247,16 +195,15 @@ function JobDetailPage() {
                   </Text>
                   <JobList
                     jobs={similarRail.jobs.map((job) =>
-                      toJobCardVM(job, board.language, board.labels),
+                      toJobCardVM(job, board.language),
                     )}
                     language={board.language}
-                    labels={board.labels}
                     variant="compact"
                   />
                 </section>
               ) : null
             }
-          </Await>
+          </DeferredContent>
         }
         alertSlot={
           board.features.jobAlerts ? (
@@ -264,7 +211,6 @@ function JobDetailPage() {
               filters={defaults.filters}
               context={defaults.context}
               language={board.language}
-              labels={board.labels}
               onSubscribe={async (input) => {
                 const result = await subscribeJobAlert({ data: input });
                 return { status: result.status };
@@ -273,14 +219,8 @@ function JobDetailPage() {
               // jobCardLabels.jobAlertJob{Title,Description}; resolve the
               // stored override with the starter's English as the floor
               // (catalog keys for the variants land with the authed slice).
-              title={
-                board.labels.jobCardLabels?.jobAlertJobTitle ||
-                m.companyJobDetail_defaultAlertTitle()
-              }
-              description={
-                board.labels.jobCardLabels?.jobAlertJobDescription ||
-                m.companyJobDetail_defaultAlertDescription()
-              }
+              title={m.companyJobDetail_defaultAlertTitle()}
+              description={m.companyJobDetail_defaultAlertDescription()}
             />
           ) : null
         }

@@ -94,12 +94,34 @@ jobs:
           PUBLIC_CAVUNO_API_URL: https://api.cavuno.com
           PUBLIC_CAVUNO_BOARD: pk_c2f66367a3abaa6bafd00fd3c2de3297
 
-      # Catalog-backed chrome must render
-      # pseudo-localized on /en-XA/ and /ar-XB/ — proves URL locale →
-      # middleware → seam → messages end to end. The static copy scan rejects
-      # hardcoded user-visible strings.
+      # Pseudo-locales (en-XA / ar-XB) are QA-only and are NOT in the default
+      # project.inlang/settings.json locales array, so the prod build above
+      # (and job 1 budgets) never ships them. Re-enable, rebuild, and re-serve
+      # only for the gate; restore settings afterward so the workspace stays
+      # clean if a later step fails.
+      # Catalog-backed chrome must render pseudo-localized on /en-XA/ and
+      # /ar-XB/ — proves URL locale → middleware → seam → messages end to end.
       # /ar-XB/ additionally pins the RTL contract: the document serves
-      # dir="rtl" there and dir="ltr" on every real locale, which is what
-      # makes a physical→logical utility migration verifiable.
+      # dir="rtl" there and dir="ltr" on every real locale.
       - name: Pseudo-locale gate
-        run: node scripts/pseudo-locale-gate.mjs http://localhost:4173
+        run: |
+          node scripts/pseudo-locale-enable.mjs
+          trap 'git checkout -- project.inlang/settings.json' EXIT
+          pnpm run build
+          # Restart preview with the pseudo-enabled build (same port as doctor).
+          if command -v lsof >/dev/null 2>&1; then
+            lsof -ti TCP:4173 -sTCP:LISTEN | xargs -r kill || true
+          else
+            fuser -k 4173/tcp || true
+          fi
+          sleep 1
+          pnpm exec vp preview --port 4173 &
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null http://localhost:4173/ && break
+            sleep 1
+            if [ "$i" -eq 30 ]; then
+              echo 'preview server never became ready for pseudo gate' >&2
+              exit 1
+            fi
+          done
+          node scripts/pseudo-locale-gate.mjs http://localhost:4173

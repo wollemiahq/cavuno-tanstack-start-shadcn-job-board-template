@@ -1,90 +1,53 @@
 'use client';
 
-import { useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useRef, useState, type ReactNode } from 'react';
 
-import { boardCopy } from '#/copy';
 import { MENU_COLOR } from '#/starter-config';
 
-import { Link, useRouter } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import {
   BookOpenText,
   BriefcaseBusiness,
   Building2,
   Menu,
-  Search,
   Users,
-  X,
 } from 'lucide-react';
 
-import { initialsOf } from '../lib/initials';
 import { menuColorClasses } from '../lib/menu-color';
 import { resolveSignupDestination } from '../lib/signup-destination';
 import { m } from '../paraglide/messages';
-import { signOut } from '../server/auth';
 
-import {
-  CompanySearchCombobox,
-  type CompanyMarketSuggestionState,
-} from '@/components/company-search-combobox';
-import {
-  KeywordCombobox,
-  type KeywordSuggestionState,
-} from '@/components/keyword-combobox';
+import type { CompanyMarketSuggestionState } from '@/components/company-search-combobox';
+import { HeaderSearchEnhanced } from '@/components/header-search-enhanced';
+import type { KeywordSuggestionState } from '@/components/keyword-combobox';
 import { Box } from '@/components/layout/box';
-import {
-  LocationCombobox,
-  type LocationSuggestionState,
-} from '@/components/location-combobox';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import type { LocationSuggestionState } from '@/components/location-combobox';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { ButtonGroup } from '@/components/ui/button-group';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from '@/components/ui/input-group';
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+import { jobSearchCopy } from '@/copy-groups/job-search';
+import { navCopy } from '@/copy-groups/nav';
 import type {
   HeaderSearchState,
   HeaderSearchSubmission,
-  HeaderSearchScope,
 } from '@/lib/header-search';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { cn } from '@/lib/utils';
 import type { BoardUser, CompanyMembership } from '@cavuno/board';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
-
 const navItemClassName =
   'relative flex min-w-16 flex-col items-center justify-center gap-0.5 border-b-2 border-transparent px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50';
-const mobileNavItemClassName =
-  'flex items-center rounded-xl px-4 py-3 text-lg font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50';
 
-function HeaderSearch({
-  search,
-  jobsPlaceholder,
-  companiesPlaceholder,
-  talentPlaceholder,
-  blogPlaceholder,
-}: {
+const LazyAccountMenu = lazy(() =>
+  import('./header-account-menu').then(({ HeaderAccountMenu }) => ({
+    default: HeaderAccountMenu,
+  })),
+);
+
+const LazyMobileMenu = lazy(() =>
+  import('./header-mobile-menu').then(({ HeaderMobileMenu }) => ({
+    default: HeaderMobileMenu,
+  })),
+);
+
+export interface HeaderSearchProps {
   search: HeaderSearchState & {
     onSubmit: (submission: HeaderSearchSubmission) => void;
     keywordSuggestions: KeywordSuggestionState;
@@ -95,280 +58,10 @@ function HeaderSearch({
   companiesPlaceholder: string;
   talentPlaceholder: string;
   blogPlaceholder: string;
-}) {
-  const [value, setValue] = useState(search.query);
-  const [location, setLocation] = useState(search.location);
-  const [term, setTerm] = useState(search.term);
-  const [market, setMarket] = useState(search.market);
-  const keywordInputRef = useRef<HTMLInputElement>(null);
-
-  const scopePlaceholders: Record<HeaderSearchScope, string> = {
-    jobs: jobsPlaceholder,
-    companies: companiesPlaceholder,
-    talent: talentPlaceholder,
-    blog: blogPlaceholder,
-  };
-
-  function submitSearch(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const query = value.trim() || undefined;
-
-    search.onSubmit({ scope: search.scope, query, location, term, market });
-  }
-
-  return (
-    <form
-      role="search"
-      data-search-scope={search.scope}
-      onSubmit={submitSearch}
-      className="col-span-2 row-start-2 w-full min-w-0 py-2 xl:col-auto xl:row-auto xl:flex-1 xl:py-0"
-    >
-      <ButtonGroup
-        aria-label={m.searchBar_searchAriaLabel()}
-        className="w-full min-w-0"
-      >
-        {search.scope === 'jobs' ? (
-          <KeywordCombobox
-            {...search.keywordSuggestions}
-            value={value}
-            placeholder={scopePlaceholders.jobs}
-            onValueChange={(nextValue) => {
-              setValue(nextValue);
-              setTerm(null);
-            }}
-            onSelect={(suggestion) => {
-              setValue(suggestion.name);
-              setTerm(suggestion);
-            }}
-            onClear={() => setTerm(null)}
-          />
-        ) : search.scope === 'companies' ? (
-          <CompanySearchCombobox
-            {...search.companyMarketSuggestions}
-            value={value}
-            placeholder={scopePlaceholders.companies}
-            onValueChange={(nextValue) => {
-              setValue(nextValue);
-              setMarket(null);
-            }}
-            onSelect={(suggestion) => {
-              setValue(suggestion.name);
-              setMarket(suggestion);
-              search.onSubmit({
-                scope: 'companies',
-                query: suggestion.name,
-                location: null,
-                term: null,
-                market: suggestion,
-              });
-            }}
-            onClear={() => setMarket(null)}
-          />
-        ) : (
-          <InputGroup className="border-border bg-input/50 h-9 min-w-0 flex-1">
-            <InputGroupInput
-              ref={keywordInputRef}
-              type="search"
-              value={value}
-              onChange={(event) => setValue(event.target.value)}
-              aria-label={m.searchBar_keywordAriaLabel()}
-              placeholder={scopePlaceholders[search.scope]}
-              className="min-w-0"
-            />
-            <InputGroupAddon>
-              <Search aria-hidden="true" />
-            </InputGroupAddon>
-            {value ? (
-              <InputGroupAddon align="inline-end">
-                <InputGroupButton
-                  type="button"
-                  size="icon-xs"
-                  aria-label={m.searchBar_clearAriaLabel()}
-                  onClick={() => {
-                    setValue('');
-                    keywordInputRef.current?.focus();
-                  }}
-                  className="text-muted-foreground"
-                >
-                  <X aria-hidden="true" />
-                </InputGroupButton>
-              </InputGroupAddon>
-            ) : null}
-          </InputGroup>
-        )}
-        {search.scope === 'jobs' ? (
-          <LocationCombobox
-            {...search.locationSuggestions}
-            value={location?.slug}
-            valueLabel={location?.name}
-            onSelect={setLocation}
-            onClear={() => setLocation(null)}
-            className="border-border bg-input/50 h-9 min-w-0 flex-1"
-          />
-        ) : null}
-        <Button
-          type="submit"
-          variant="outline"
-          size="icon-lg"
-          aria-label={m.searchBar_searchAriaLabel()}
-          className="size-9 shrink-0"
-        >
-          <Search aria-hidden="true" />
-        </Button>
-      </ButtonGroup>
-    </form>
-  );
 }
 
-/**
- * Signed-in identity menu — a Facebook-style avatar that opens the candidate's
- * account navigation and sign-out action. Sign-out mirrors `/account`:
- * end the session, invalidate the router cache, and return home.
- */
-function AccountMenu({
-  user,
-  hasAccessGrant,
-  nativeApplications,
-  employerCompanies,
-}: {
-  user: BoardUser;
-  /** true ⇒ the viewer holds an active access grant; shows "Subscription". */
-  hasAccessGrant: boolean;
-  /** false ⇒ the board is external-apply-only; hide the Applications entry. */
-  nativeApplications: boolean;
-  employerCompanies: CompanyMembership[] | null;
-}) {
-  const companyWorkspaces = (employerCompanies ?? []).filter(
-    (membership) =>
-      membership.status === 'approved' && membership.company.slug !== null,
-  );
-  const router = useRouter();
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            aria-label={m.siteHeader_accountLabel()}
-            data-test="account-menu"
-          />
-        }
-      >
-        <Avatar size="sm">
-          <AvatarFallback>
-            {initialsOf(user.displayName ?? user.email)}
-          </AvatarFallback>
-        </Avatar>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-48">
-        <DropdownMenuItem nativeButton={false} render={<Link to="/account" />}>
-          {m.accountShell_profileNav()}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          nativeButton={false}
-          render={<Link to="/account/saved" />}
-        >
-          {m.accountShell_savedJobsNav()}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          nativeButton={false}
-          render={<Link to="/me/alerts" />}
-        >
-          {m.accountShell_jobAlertsNav()}
-        </DropdownMenuItem>
-        {nativeApplications ? (
-          <DropdownMenuItem
-            nativeButton={false}
-            render={<Link to="/me/applications" />}
-          >
-            {m.accountShell_applicationsNav()}
-          </DropdownMenuItem>
-        ) : null}
-        {hasAccessGrant ? (
-          <DropdownMenuItem
-            nativeButton={false}
-            render={<Link to="/account/access" />}
-          >
-            {m.accountShell_subscriptionNav()}
-          </DropdownMenuItem>
-        ) : null}
-        <DropdownMenuItem nativeButton={false} render={<Link to="/settings" />}>
-          {m.accountShell_settingsNav()}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {/* Base UI requires GroupLabel inside a Group — an unwrapped label
-            throws MenuGroupContext-missing and crashes to the boundary. */}
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>
-            {m.employerOnboarding_yourCompaniesTitle()}
-          </DropdownMenuLabel>
-          {companyWorkspaces.map((membership) => (
-            <DropdownMenuSub key={membership.id}>
-              <DropdownMenuSubTrigger>
-                {membership.company.name}
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem
-                  nativeButton={false}
-                  render={
-                    <Link
-                      to="/employers/companies/$slug"
-                      params={{ slug: membership.company.slug! }}
-                    />
-                  }
-                >
-                  {m.accountShell_jobsNav()}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  nativeButton={false}
-                  render={
-                    <Link
-                      to="/employers/companies/$slug/profile"
-                      params={{ slug: membership.company.slug! }}
-                    />
-                  }
-                >
-                  {m.accountShell_companyProfileNav()}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  nativeButton={false}
-                  render={
-                    <Link
-                      to="/employers/companies/$slug/jobs/new"
-                      params={{ slug: membership.company.slug! }}
-                    />
-                  }
-                >
-                  {m.siteHeader_postJobLabel()}
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          ))}
-          <DropdownMenuItem
-            nativeButton={false}
-            render={<Link to="/employers/dashboard" search={{ add: true }} />}
-          >
-            {m.siteHeader_addNewCompanyLabel()}
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          data-test="account-menu-sign-out"
-          onClick={async () => {
-            await signOut();
-            await router.invalidate();
-            await router.navigate({ to: '/' });
-          }}
-        >
-          {m.accountHome_signOutLabel()}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+function HeaderSearch(props: HeaderSearchProps) {
+  return <HeaderSearchEnhanced {...props} />;
 }
 
 export default function Header({
@@ -376,7 +69,6 @@ export default function Header({
   logoUrl,
   user,
   language,
-  labels,
   features,
   hasAccessGrant = false,
   employerCompanies = null,
@@ -388,13 +80,12 @@ export default function Header({
   logoUrl: string | null;
   user: BoardUser | null;
   language: string;
-  labels?: BoardLabelOverrides;
   features: {
     candidates: boolean;
     employers: boolean;
     publicJobSubmission: boolean;
     blog: boolean;
-    talentDirectory: boolean;
+    talentDirectory: 'off' | 'public' | 'employers_only' | boolean;
     nativeApplications: boolean;
   };
   hasAccessGrant?: boolean;
@@ -409,9 +100,20 @@ export default function Header({
   };
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const copy = boardCopy(language, labels);
-  const talentDirectoryEnabled =
-    features.talentDirectory || talentDirectoryVisibility === 'employers_only';
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const copy = {
+    jobSearch: jobSearchCopy(language),
+    nav: navCopy(language),
+  };
+  const talentMode =
+    talentDirectoryVisibility ??
+    (typeof features.talentDirectory === 'string'
+      ? features.talentDirectory
+      : features.talentDirectory
+        ? 'public'
+        : 'off');
+  // 'off' is a truthy string — compare explicitly, never coerce.
+  const talentDirectoryEnabled = talentMode !== 'off';
   const navLinks = [
     {
       to: '/jobs',
@@ -439,10 +141,8 @@ export default function Header({
     },
   ] as const;
   const visibleNavLinks = navLinks.filter((item) => item.enabled);
-  const signInLabel =
-    labels?.jobCardLabels?.signInLabel || m.siteHeader_signInLabel();
-  const signUpLabel =
-    labels?.jobCardLabels?.signUpLabel || m.siteHeader_signUpLabel();
+  const signInLabel = m.siteHeader_signInLabel();
+  const signUpLabel = m.siteHeader_signUpLabel();
   const authEnabled = features.candidates || features.employers;
   const signUpHref = resolveSignupDestination(features);
   const postJob = features.publicJobSubmission ? (
@@ -491,7 +191,9 @@ export default function Header({
 
       {search.visible ? (
         <HeaderSearch
-          key={`${search.scope}:${search.query}:${search.location?.slug ?? ''}:${search.term?.type ?? ''}:${search.term?.slug ?? ''}:${search.market?.slug ?? ''}`}
+          key={`${search.scope}:${search.query}:${
+            search.location?.slug ?? ''
+          }:${search.term?.type ?? ''}:${search.term?.slug ?? ''}:${search.market?.slug ?? ''}`}
           search={search}
           jobsPlaceholder={copy.jobSearch.keywordPlaceholder}
           companiesPlaceholder={m.companySearchBar_placeholderText()}
@@ -504,12 +206,14 @@ export default function Header({
   const accountActions = user ? (
     <>
       {messagesNav}
-      <AccountMenu
-        user={user}
-        hasAccessGrant={hasAccessGrant}
-        nativeApplications={features.nativeApplications}
-        employerCompanies={employerCompanies}
-      />
+      <Suspense fallback={null}>
+        <LazyAccountMenu
+          user={user}
+          hasAccessGrant={hasAccessGrant}
+          nativeApplications={features.nativeApplications}
+          employerCompanies={employerCompanies}
+        />
+      </Suspense>
     </>
   ) : (
     <>
@@ -533,12 +237,14 @@ export default function Header({
   const mobileAccountActions = user ? (
     <>
       {messagesNav}
-      <AccountMenu
-        user={user}
-        hasAccessGrant={hasAccessGrant}
-        nativeApplications={features.nativeApplications}
-        employerCompanies={employerCompanies}
-      />
+      <Suspense fallback={null}>
+        <LazyAccountMenu
+          user={user}
+          hasAccessGrant={hasAccessGrant}
+          nativeApplications={features.nativeApplications}
+          employerCompanies={employerCompanies}
+        />
+      </Suspense>
     </>
   ) : (
     <>
@@ -560,7 +266,7 @@ export default function Header({
   );
 
   return (
-    <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+    <>
       <header
         data-menu-color={MENU_COLOR}
         className={cn(
@@ -601,83 +307,43 @@ export default function Header({
               className="col-start-2 row-start-1 flex shrink-0 items-center gap-2 justify-self-end xl:col-start-3"
             >
               {accountActions}
-              <SheetTrigger
-                render={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-foreground xl:hidden"
-                  />
-                }
+              <Button
+                ref={menuButtonRef}
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-foreground xl:hidden"
                 aria-label={m.siteHeader_openNavMenuAriaLabel()}
+                aria-haspopup="dialog"
+                aria-expanded={menuOpen}
+                aria-controls="mobile-navigation-dialog"
+                onClick={() => setMenuOpen(true)}
               >
                 <Menu aria-hidden="true" />
-              </SheetTrigger>
+              </Button>
             </div>
           </div>
         </Box>
       </header>
-
-      <SheetContent
-        side="top"
-        showCloseButton={false}
-        className="bg-background text-foreground inset-0 z-50 w-full gap-0 overflow-y-auto overscroll-contain rounded-none p-0 shadow-none data-[side=top]:inset-0 data-[side=top]:h-dvh data-[side=top]:max-w-none data-[side=top]:border-0 xl:hidden"
-      >
-        <SheetTitle className="sr-only">
-          {m.siteHeader_primaryNavigationAriaLabel()}
-        </SheetTitle>
-        <Box paddingX={{ base: '4', md: '8' }}>
-          <div className="grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3">
-            {headerLeft}
-            <div
-              data-slot="header-actions"
-              data-test="header-actions"
-              className="col-start-2 row-start-1 flex shrink-0 items-center gap-2 justify-self-end"
-            >
-              {mobileAccountActions}
-              <SheetClose
-                render={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-foreground"
-                    aria-label={m.siteHeader_closeNavMenuAriaLabel()}
-                  />
-                }
-              >
-                <X aria-hidden="true" />
-              </SheetClose>
-            </div>
-          </div>
-        </Box>
-
-        <nav
-          aria-label={m.siteHeader_primaryNavigationAriaLabel()}
-          className="border-border min-h-0 flex-1 overflow-y-auto border-t px-4 py-6"
-        >
-          {visibleNavLinks.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={cn(mobileNavItemClassName, 'hover:no-underline')}
-              onClick={() => setMenuOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
-          {!user && features.publicJobSubmission ? (
-            <Link
-              to="/post"
-              className={cn(mobileNavItemClassName, 'hover:no-underline')}
-              onClick={() => setMenuOpen(false)}
-            >
-              {m.siteHeader_postJobLabel()}
-            </Link>
-          ) : null}
-        </nav>
-      </SheetContent>
-    </Sheet>
+      {menuOpen ? (
+        <Suspense fallback={null}>
+          <LazyMobileMenu
+            headerLeft={headerLeft}
+            accountActions={mobileAccountActions}
+            navLinks={visibleNavLinks}
+            showPostJob={!user && features.publicJobSubmission}
+            navigationLabel={m.siteHeader_primaryNavigationAriaLabel()}
+            closeLabel={m.siteHeader_closeNavMenuAriaLabel()}
+            postJobLabel={m.siteHeader_postJobLabel()}
+            onOpenChange={(open) => {
+              setMenuOpen(open);
+              if (!open) {
+                queueMicrotask(() => menuButtonRef.current?.focus());
+              }
+            }}
+          />
+        </Suspense>
+      ) : null}
+    </>
   );
 }

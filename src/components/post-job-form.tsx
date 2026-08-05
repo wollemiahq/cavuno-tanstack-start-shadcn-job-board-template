@@ -2,11 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 
-import {
-  countryOptions,
-  fieldLabel,
-  getSalaryLexicon,
-} from '@cavuno/board/format';
+import { countryOptions } from '@cavuno/board/format';
 import { Check, ImagePlus } from 'lucide-react';
 
 import {
@@ -76,6 +72,7 @@ import {
 } from '@/components/custom-fields-group';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { PlaceTagsField } from '@/components/place-tags-field';
+import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import type {
   JobPostingPlan,
   PublicBoard,
@@ -139,11 +136,11 @@ type PostJobFormState = {
 };
 
 export type PostJobFormProps = {
-  locale: Parameters<typeof fieldLabel>[0];
+  locale: string;
   plans: JobPostingPlan[];
   officeLocationSuggestions: LocationSuggestionState;
   /** Board-defined custom field definitions, in operator-config order. */
-  customFields: PublicBoard['customFields'];
+  customFields: PublicBoard['customFields']['job'];
   /**
    * The remote-permit taxonomy (regions / country groups) for the
    * geographic-restriction scope; `null` degrades to worldwide/countries.
@@ -156,11 +153,7 @@ export type PostJobFormProps = {
   onCheckout: (url: string) => void;
 };
 
-function formatPrice(
-  locale: Parameters<typeof fieldLabel>[0],
-  amount: number,
-  currency: string,
-) {
+function formatPrice(locale: string, amount: number, currency: string) {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency.toUpperCase(),
@@ -259,15 +252,15 @@ export function PostJobForm({
       : m.postJob_checkoutButtonLabel();
   const employmentItems = EMPLOYMENT_TYPES.map((value) => ({
     value,
-    label: fieldLabel(locale, value) ?? value,
+    label: enumLabel(value) ?? value,
   }));
   const remoteItems = REMOTE_OPTIONS.map((value) => ({
     value,
-    label: fieldLabel(locale, value) ?? value,
+    label: enumLabel(value) ?? value,
   }));
   const seniorityItems = SENIORITIES.map((value) => ({
     value,
-    label: fieldLabel(locale, value) ?? value,
+    label: enumLabel(value) ?? value,
   }));
   // The geographic-restriction option space: world regions and country
   // groups from the remote-permit taxonomy (absent when the taxonomy is
@@ -311,10 +304,11 @@ export function PostJobForm({
   }));
   // The timeframe words are the SDK's, so the select reads the same language
   // as the salary ranges it produces — no parallel copy to drift.
-  const timeframeWords = getSalaryLexicon(locale).timeframe;
+  const timeframeLabel = (value: string) =>
+    salaryTimeframeLabel(value) ?? value;
   const timeframeItems = SALARY_TIMEFRAMES.map((value) => ({
     value,
-    label: timeframeWords[value],
+    label: timeframeLabel(value),
   }));
 
   const companyInitials = companyName

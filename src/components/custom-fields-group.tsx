@@ -19,7 +19,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import type { PublicBoard } from '@cavuno/board';
 
-type CustomFieldDefinition = PublicBoard['customFields'][number];
+type CustomFieldDefinition = PublicBoard['customFields']['job'][number];
 
 export type CustomFieldValues = Record<
   string,

@@ -2,10 +2,12 @@
 
 import '@testing-library/jest-dom/vitest';
 /**
- * Cookie-consent behavior: the banner opens only on consent-required
- * boards with no saved choice, accept/deny persist and close it, the
- * "Cookie preferences" reopener clears the choice and reopens it, and the
- * job-alert prompt yields the bottom-corner slot while the banner is open.
+ * Cookie-consent behavior: the banner opens when required and undecided
+ * without a hydration gate (SSR-safe initialChoice), accept/deny persist to
+ * cookie (+ legacy localStorage) and close it, the "Cookie preferences"
+ * reopener clears the choice and reopens it, legacy localStorage migrates
+ * when no cookie exists, and the job-alert prompt yields the bottom-corner
+ * slot while the banner is open.
  */
 import {
   RouterProvider,
@@ -33,11 +35,17 @@ import {
 } from './cookie-consent';
 import { JobAlertFloatingPrompt } from './job-alert-floating-prompt';
 
+import {
+  COOKIE_CONSENT_COOKIE,
+  serializeCookieConsent,
+} from '@/lib/cookie-consent';
+
 const STORAGE_KEY = 'cavuno:cookie-consent';
 
 afterEach(() => {
   cleanup();
   localStorage.clear();
+  document.cookie = `${COOKIE_CONSENT_COOKIE}=; Path=/; Max-Age=0`;
 });
 
 /**
@@ -58,9 +66,15 @@ function renderWithRouter(ui: () => ReactNode) {
 const bannerRegion = () =>
   screen.queryByRole('region', { name: m.cookieConsent_regionAriaLabel() });
 
-function Consent({ required = true }: { required?: boolean }) {
+function Consent({
+  required = true,
+  initialChoice = null,
+}: {
+  required?: boolean;
+  initialChoice?: 'accepted' | 'denied' | null;
+}) {
   return (
-    <CookieConsentProvider required={required}>
+    <CookieConsentProvider required={required} initialChoice={initialChoice}>
       <CookieConsentBanner />
       <CookiePreferencesFooterAction />
     </CookieConsentProvider>
@@ -68,6 +82,16 @@ function Consent({ required = true }: { required?: boolean }) {
 }
 
 describe('CookieConsentBanner', () => {
+  it('opens when required and undecided without waiting on a hydration gate', async () => {
+    renderWithRouter(() => <Consent />);
+
+    // findByRole waits for the memory router to settle; the provider itself
+    // does not gate on mount — bannerOpen is required && choice === null.
+    await screen.findByRole('region', {
+      name: m.cookieConsent_regionAriaLabel(),
+    });
+  });
+
   it('opens until accepted, then persists the choice and closes', async () => {
     renderWithRouter(() => <Consent />);
 
@@ -78,6 +102,7 @@ describe('CookieConsentBanner', () => {
       screen.getByRole('button', { name: m.cookieConsent_acceptLabel() }),
     );
 
+    expect(document.cookie).toContain(`${COOKIE_CONSENT_COOKIE}=accepted`);
     expect(localStorage.getItem(STORAGE_KEY)).toBe('accepted');
     expect(bannerRegion()).not.toBeInTheDocument();
   });
@@ -92,16 +117,14 @@ describe('CookieConsentBanner', () => {
       screen.getByRole('button', { name: m.cookieConsent_denyLabel() }),
     );
 
+    expect(document.cookie).toContain(`${COOKIE_CONSENT_COOKIE}=denied`);
     expect(localStorage.getItem(STORAGE_KEY)).toBe('denied');
     expect(bannerRegion()).not.toBeInTheDocument();
   });
 
-  it('stays closed when a choice is already saved', async () => {
-    localStorage.setItem(STORAGE_KEY, 'denied');
-    renderWithRouter(() => <Consent />);
+  it('stays closed when initialChoice is already saved (server cookie)', async () => {
+    renderWithRouter(() => <Consent initialChoice="denied" />);
 
-    // The saved choice surfaces the preferences reopener — once it is
-    // there, hydration has resolved and the banner's absence is meaningful.
     await screen.findByRole('button', {
       name: m.cookieConsent_preferencesLabel(),
     });
@@ -109,10 +132,9 @@ describe('CookieConsentBanner', () => {
   });
 
   it('never opens when the board does not require consent', async () => {
-    localStorage.setItem(STORAGE_KEY, 'accepted');
     renderWithRouter(() => (
       <>
-        <Consent required={false} />
+        <Consent required={false} initialChoice="accepted" />
         <p>page content</p>
       </>
     ));
@@ -125,12 +147,37 @@ describe('CookieConsentBanner', () => {
       }),
     ).not.toBeInTheDocument();
   });
+
+  it('migrates a legacy localStorage choice when no cookie is present', async () => {
+    localStorage.setItem(STORAGE_KEY, 'accepted');
+    renderWithRouter(() => <Consent />);
+
+    // Migration on mount adopts localStorage → cookie + state; preferences
+    // reopener surfaces once the choice is decided.
+    await screen.findByRole('button', {
+      name: m.cookieConsent_preferencesLabel(),
+    });
+    expect(bannerRegion()).not.toBeInTheDocument();
+    expect(document.cookie).toContain(`${COOKIE_CONSENT_COOKIE}=accepted`);
+  });
+
+  it('adopts the browser cookie when the document was a stale undecided render', async () => {
+    // Edge-cached/bfcache HTML can carry initialChoice=null even though the
+    // visitor already chose: the browser cookie wins over the stale render.
+    document.cookie = `${COOKIE_CONSENT_COOKIE}=denied; Path=/`;
+    renderWithRouter(() => <Consent />);
+
+    await screen.findByRole('button', {
+      name: m.cookieConsent_preferencesLabel(),
+    });
+    expect(bannerRegion()).not.toBeInTheDocument();
+  });
 });
 
 describe('CookiePreferencesFooterAction', () => {
   it('clears the saved choice and reopens the banner', async () => {
-    localStorage.setItem(STORAGE_KEY, 'accepted');
-    renderWithRouter(() => <Consent />);
+    document.cookie = serializeCookieConsent('accepted');
+    renderWithRouter(() => <Consent initialChoice="accepted" />);
 
     fireEvent.click(
       await screen.findByRole('button', {
@@ -142,7 +189,6 @@ describe('CookiePreferencesFooterAction', () => {
     await screen.findByRole('region', {
       name: m.cookieConsent_regionAriaLabel(),
     });
-    // Undecided again — the reopener hides until the next choice.
     expect(
       screen.queryByRole('button', {
         name: m.cookieConsent_preferencesLabel(),

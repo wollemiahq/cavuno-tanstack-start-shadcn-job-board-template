@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "optimize-performance": {
+      "source": "wollemiahq/skills",
+      "sourceType": "github",
+      "skillPath": "skills/optimize-performance/SKILL.md",
+      "computedHash": "4b5e58cad8ae7469e3d9e9fe3a79bb2f754d92d59d300dd8594b7323469e36a2"
+    }
+  }
+}

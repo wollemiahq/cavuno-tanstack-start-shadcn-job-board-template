@@ -19,6 +19,14 @@ vi.mock('../server/queries', () => ({
   listTalent: vi.fn(),
   getBoardContext: vi.fn(),
 }));
+vi.mock('../server/talent-pages', () => ({
+  getTalentIndexPage: vi.fn(),
+  getTalentProfilePage: vi.fn(),
+}));
+vi.mock('../server/marketing-pages', () => ({
+  getAuthJoinSeo: vi.fn(),
+  getEmployersPage: vi.fn(),
+}));
 // auth.join's already-authed guard imports the account server layer.
 vi.mock('../server/account', () => ({ getSessionUser: vi.fn() }));
 

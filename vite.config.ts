@@ -30,12 +30,38 @@ const config = defineConfig({
     paraglideVitePlugin({
       project: './project.inlang',
       outdir: './src/paraglide',
+      // Match TanStack's Start + Paraglide reference explicitly: one module
+      // per message lets Vite discard route-owned translations instead of
+      // retaining a whole locale catalog in the universal client entry.
+      outputStructure: 'message-modules',
       strategy: ['url', 'baseLocale'],
     }),
     devtools(),
     cloudflare({ viteEnvironment: { name: 'ssr' } }),
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({
+      router: {
+        codeSplittingOptions: {
+          // Private/application routes are not part of the public landing
+          // workload. Keep each route's loader beside its already-lazy UI so
+          // those server-function stubs do not inflate every public entry.
+          splitBehavior: ({ routeId }) =>
+            /^\/(?:account(?:_|\/|$)|alerts(?:\/|$)|auth(?:\/|$)|employers(?:\/|$)|me(?:\/|$)|messages(?:\/|$)|post(?:\/|$)|settings(?:\/|$))/.test(
+              routeId,
+            )
+              ? [['loader', 'component']]
+              : undefined,
+        },
+      },
+      server: {
+        build: {
+          // The root stylesheet is a manifest-managed side-effect import, so
+          // Start can place its critical route CSS in the SSR document and
+          // remove the render-blocking stylesheet round trip on first load.
+          inlineCss: true,
+        },
+      },
+    }),
     viteReact(),
   ],
 });

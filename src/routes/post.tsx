@@ -63,7 +63,7 @@ function PostJobPage() {
             locale={getLocale()}
             plans={plans.data}
             officeLocationSuggestions={officeLocationSuggestions}
-            customFields={board.customFields}
+            customFields={board.customFields.job}
             remotePermits={remotePermits?.data ?? null}
             initialPlanId={search.plan}
             onSubmit={(input) => submitJobPosting({ data: input })}

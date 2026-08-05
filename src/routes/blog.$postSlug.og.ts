@@ -42,7 +42,7 @@ export const Route = createFileRoute('/blog/$postSlug/og')({
           boardName: seo.manifest.name,
           // The accent comes from the repo's canonical theme
           // (resolved tokens), not the wire manifest — one theme source.
-          themeColor: themeTokens.light['--primary'] ?? seo.manifest.themeColor,
+          themeColor: themeTokens.light['--primary'],
           title: post.title,
           excerpt: post.customExcerpt,
           authorName: author?.name ?? null,

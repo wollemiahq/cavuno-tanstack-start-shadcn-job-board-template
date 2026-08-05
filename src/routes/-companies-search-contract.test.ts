@@ -3,26 +3,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const {
-  getCompanyMarket,
-  getCompanyMarkets,
-  getSeoBase,
-  listCompanies,
-  searchCompanies,
-} = vi.hoisted(() => ({
-  getCompanyMarket: vi.fn(),
-  getCompanyMarkets: vi.fn(),
-  getSeoBase: vi.fn(),
-  listCompanies: vi.fn(),
-  searchCompanies: vi.fn(),
-}));
+const { getCompanyMarket, getCompaniesIndexPage, getCompaniesMarketPage } =
+  vi.hoisted(() => ({
+    getCompanyMarket: vi.fn(),
+    getCompaniesIndexPage: vi.fn(),
+    getCompaniesMarketPage: vi.fn(),
+  }));
 
 vi.mock('../server/queries', () => ({
   getCompanyMarket,
-  getCompanyMarkets,
-  getSeoBase,
-  listCompanies,
-  searchCompanies,
+}));
+
+vi.mock('../server/companies-pages', () => ({
+  getCompaniesIndexPage,
+  getCompaniesMarketPage,
 }));
 
 import { Route as CompaniesRoute } from './companies.index';
@@ -66,17 +60,21 @@ beforeEach(() => {
     redirectTo: null,
     sourceSlug: 'venture-capital',
   });
-  getCompanyMarkets.mockReset();
-  getCompanyMarkets.mockResolvedValue({ data: [] });
-  getSeoBase.mockReset();
-  getSeoBase.mockResolvedValue({});
-  listCompanies.mockReset();
-  listCompanies.mockResolvedValue({ data: [], count: 0 });
-  searchCompanies.mockReset();
-  searchCompanies.mockResolvedValue({
-    data: [],
-    hasMore: false,
-    nextCursor: null,
+  getCompaniesIndexPage.mockReset();
+  getCompaniesIndexPage.mockResolvedValue({
+    page: { data: [], count: 0 },
+    markets: [],
+    seo: {},
+    head: {},
+    jsonLd: [],
+  });
+  getCompaniesMarketPage.mockReset();
+  getCompaniesMarketPage.mockResolvedValue({
+    page: { data: [], count: 0 },
+    markets: [],
+    seo: {},
+    head: {},
+    jsonLd: [],
   });
 });
 
@@ -117,8 +115,8 @@ describe('companies route — URL-backed master-detail search', () => {
 
     await loader(CompaniesRoute)({ deps: first } as never);
 
-    expect(listCompanies).toHaveBeenCalledWith({
-      data: { offset: 48, limit: 24 },
+    expect(getCompaniesIndexPage).toHaveBeenCalledWith({
+      data: { offset: 48, limit: 24, query: undefined },
     });
     expect(first).toEqual(second);
     expect(first).not.toHaveProperty('selectedCompany');
@@ -148,28 +146,27 @@ describe('company market route — scoped browse and search', () => {
       deps: { page: 3 },
     } as never);
 
-    expect(listCompanies).toHaveBeenCalledWith({
-      data: {
+    expect(getCompaniesMarketPage).toHaveBeenCalledWith({
+      data: expect.objectContaining({
         marketSlug: 'venture-capital',
         offset: 48,
         limit: 24,
-      },
+      }),
     });
 
-    listCompanies.mockClear();
+    getCompaniesMarketPage.mockClear();
     await load({
       params: { market: 'venture-capital' },
       deps: { query: 'acme', page: 2 },
     } as never);
 
-    expect(searchCompanies).toHaveBeenCalledWith({
-      data: {
-        query: 'acme',
+    expect(getCompaniesMarketPage).toHaveBeenCalledWith({
+      data: expect.objectContaining({
         marketSlug: 'venture-capital',
+        query: 'acme',
         offset: 24,
         limit: 24,
-      },
+      }),
     });
-    expect(listCompanies).not.toHaveBeenCalled();
   });
 });

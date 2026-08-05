@@ -1,0 +1,87 @@
+{
+  "skill_name": "optimize-performance",
+  "cases": [
+    {
+      "id": "invoke-regression",
+      "prompt": "This parser became 18% slower after commit abc123. Find the cause.",
+      "expectation": "invoke",
+      "reason": "A measured component-level regression is a primary trigger."
+    },
+    {
+      "id": "invoke-benchmark",
+      "prompt": "Design a trustworthy benchmark for this allocator hot path.",
+      "expectation": "invoke",
+      "reason": "Benchmark design and integrity are primary branches."
+    },
+    {
+      "id": "invoke-review",
+      "prompt": "Review this serialization loop for CPU, allocation, and code-size risks.",
+      "expectation": "invoke",
+      "reason": "Reviewing a performance-sensitive component is a primary branch."
+    },
+    {
+      "id": "invoke-design",
+      "prompt": "Before we publish this library API, compare the performance implications of one-at-a-time and bulk calls.",
+      "expectation": "invoke",
+      "reason": "Design-time library performance and compatibility are primary branches."
+    },
+    {
+      "id": "invoke-flat-profile",
+      "prompt": "pprof is flat but we still need 20% more throughput.",
+      "expectation": "invoke",
+      "reason": "Flat-profile diagnosis is a primary branch."
+    },
+    {
+      "id": "pair-postgres",
+      "prompt": "Why did this PostgreSQL query become ten times slower as the table grew?",
+      "expectation": "pair",
+      "primary_domain": "PostgreSQL",
+      "reason": "The causal loop is useful, while database guidance should choose query-specific evidence and interventions."
+    },
+    {
+      "id": "pair-browser",
+      "prompt": "A Chrome profile shows this React interaction spends 240 ms in layout and scripting. Reduce INP without changing rendering behavior.",
+      "expectation": "pair",
+      "primary_domain": "browser and framework performance",
+      "reason": "The skill should govern evidence and verification while browser and framework guidance owns metric-specific mechanisms."
+    },
+    {
+      "id": "pair-distributed",
+      "prompt": "Redesign our multi-region cache consistency protocol to reduce p99 latency.",
+      "expectation": "pair",
+      "primary_domain": "distributed systems",
+      "reason": "The performance loop applies, but consistency, replication, and failure semantics need distributed-systems guidance."
+    },
+    {
+      "id": "pair-ml-hardware",
+      "prompt": "Optimize this CUDA kernel for tensor-core occupancy.",
+      "expectation": "pair",
+      "primary_domain": "ML hardware and GPU kernels",
+      "reason": "Verification principles transfer, while hardware-specific profiling and interventions require specialist guidance."
+    },
+    {
+      "id": "do-not-invoke-cleanup",
+      "prompt": "Refactor this module to make the names clearer and reduce duplication.",
+      "expectation": "do_not_invoke",
+      "reason": "No performance objective, symptom, benchmark, or resource constraint is present."
+    },
+    {
+      "id": "do-not-invoke-feature",
+      "prompt": "Add CSV export to the billing page.",
+      "expectation": "do_not_invoke",
+      "reason": "Ordinary feature implementation is not a performance task."
+    },
+    {
+      "id": "do-not-invoke-ambiguous-slow",
+      "prompt": "The app feels slow and sometimes buttons do not work. Debug it.",
+      "expectation": "do_not_invoke",
+      "reason": "An ambiguous mixture of slowness and broken behavior should start with general diagnosis; this skill can join after a performance resource or metric is isolated."
+    },
+    {
+      "id": "do-not-invoke-cost",
+      "prompt": "Reduce our AWS bill by choosing a cheaper reserved-instance plan.",
+      "expectation": "do_not_invoke",
+      "reason": "Financial cloud optimization without a software resource-performance problem is outside scope."
+    }
+  ]
+}

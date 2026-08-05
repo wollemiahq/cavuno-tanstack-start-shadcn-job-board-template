@@ -1,33 +1,25 @@
-import { listingHead } from '@cavuno/board/seo';
 /**
  * Programmatic location + skill page — `/jobs/locations/:location/skills/:skill`
  * (hosted parity: `…/jobs/locations/[location]/skills/[skill]/page.tsx`). Both
  * the place and the skill must resolve; the API seeds the search with the
  * skill's source name AND filters to the place's radius.
+ *
+ * Head meta is computed in getJobsLocationSkillPage so `@cavuno/board/seo`
+ * stays out of the universal client entry.
  */
-import {
-  createFileRoute,
-  interpolatePath,
-  notFound,
-  redirect,
-} from '@tanstack/react-router';
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
 import { pageToOffset } from '../lib/pagination';
 import { m } from '../paraglide/messages';
 import { saveJob } from '../server/account';
-import {
-  getSeoBase,
-  listJobs,
-  resolvePlace,
-  resolveSkill,
-} from '../server/queries';
+import { getJobsLocationSkillPage } from '../server/jobs-listing-pages';
+import { resolvePlace, resolveSkill } from '../server/queries';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
-import {
-  ProgrammaticJobsView,
-  PROGRAMMATIC_JOBS_PAGE_SIZE,
-} from '@/routes/-programmatic-jobs-view';
+import { jsonLdHeadScripts } from '@/components/json-ld';
+import { PROGRAMMATIC_JOBS_PAGE_SIZE } from '@/routes/-programmatic-jobs-constants';
+import { ProgrammaticJobsView } from '@/routes/-programmatic-jobs-view';
 
 export const Route = createFileRoute('/jobs/locations/$location/skills/$skill')(
   {
@@ -50,43 +42,25 @@ export const Route = createFileRoute('/jobs/locations/$location/skills/$skill')(
           statusCode: 308,
         });
       }
-      const [list, seo] = await Promise.all([
-        listJobs({
-          data: {
-            location: params.location,
-            skill: params.skill,
-            remoteOption: deps.remoteOption ? [deps.remoteOption] : undefined,
-            employmentType: deps.employmentType
-              ? [deps.employmentType]
-              : undefined,
-            seniority: deps.seniority?.length ? deps.seniority : undefined,
-            sort: deps.sort,
-            offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
-            limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
-          },
-        }),
-        getSeoBase(),
-      ]);
-      const relatedSearches = list.relatedSearches;
-      return { place, skill, list, seo, relatedSearches };
+      const page = await getJobsLocationSkillPage({
+        data: {
+          locationSlug: params.location,
+          skillSlug: params.skill,
+          placeDisplayName: place.displayName,
+          skillDisplayName: skill.displayName,
+          remoteOption: deps.remoteOption,
+          employmentType: deps.employmentType,
+          seniority: deps.seniority,
+          sort: deps.sort,
+          offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
+          limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
+        },
+      });
+      return { place, skill, ...page };
     },
-    head: ({ loaderData, params }) =>
+    head: ({ loaderData }) =>
       loaderData
-        ? listingHead({
-            ...loaderData.seo,
-            path: interpolatePath({
-              path: '/jobs/locations/$location/skills/$skill',
-              params: {
-                location: params.location,
-                skill: params.skill,
-              },
-            }).interpolatedPath,
-            heading: m.locationSkillPage_jobsHeading({
-              skill: loaderData.skill.displayName,
-              place: loaderData.place.displayName,
-            }),
-            count: loaderData.list.count,
-          })
+        ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
         : {},
     component: LocationSkillPage,
     notFoundComponent: () => <JobsNotFound />,
@@ -94,7 +68,7 @@ export const Route = createFileRoute('/jobs/locations/$location/skills/$skill')(
 );
 
 function LocationSkillPage() {
-  const { place, skill, list, seo, relatedSearches } = Route.useLoaderData();
+  const { place, skill, list, relatedSearches } = Route.useLoaderData();
   const { location } = Route.useParams();
   const search = Route.useSearch();
   return (
@@ -109,7 +83,6 @@ function LocationSkillPage() {
       page={search.page ?? 1}
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
       relatedSearches={relatedSearches}
-      origin={seo.origin}
       filters={search}
       onSaveJob={async (jobId) => {
         await saveJob({ data: { jobId } });

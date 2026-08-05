@@ -1,5 +1,4 @@
 import { isNotFound } from '@cavuno/board';
-import { formatSalaryRange, locationLabel } from '@cavuno/board/format';
 /**
  * Open Graph image — 1200×630 card for the job-detail page, the starter's
  * counterpart to the hosted `…/og` route (a `@takumi-rs` ImageResponse). The
@@ -14,6 +13,9 @@ import { ImageResponse } from 'workers-og';
 import { getBoard } from '../lib/board';
 import { loadOgFont } from '../lib/og-font';
 import { themeTokens } from '../theme/resolved';
+
+import { locationLabel } from '@/lib/location-labels';
+import { formatJobSalary } from '@/lib/salary-display';
 
 function escapeHtml(value: string): string {
   return value
@@ -44,9 +46,9 @@ export const Route = createFileRoute(
 
         const title = job.title;
         const company = job.company?.name ?? '';
-        const location = locationLabel(language, job);
+        const location = locationLabel(job);
         const salary =
-          formatSalaryRange(
+          formatJobSalary(
             language,
             job.salaryMin,
             job.salaryMax,

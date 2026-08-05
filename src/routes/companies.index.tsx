@@ -1,23 +1,17 @@
-import { boardCopy } from '#/copy';
-
-import { BOARD_PATHS, boardUrl } from '@cavuno/board/paths';
-import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
+/**
+ * Companies index — head + breadcrumb JSON-LD computed in getCompaniesIndexPage
+ * so `@cavuno/board/seo` stays out of the universal client entry.
+ */
 import { createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import {
-  getCompanyMarkets,
-  getSeoBase,
-  listCompanies,
-  searchCompanies,
-} from '../server/queries';
+import { getCompaniesIndexPage } from '../server/companies-pages';
 
-import { JsonLd } from '@/components/json-ld';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import {
   companiesListingLoaderDeps,
   parseCompaniesSearch,
 } from '@/lib/companies-search';
-import { headTitle } from '@/lib/page-title';
 import { pageToOffset } from '@/lib/pagination';
 import { ProgrammaticCompaniesView } from '@/routes/-programmatic-companies-view';
 
@@ -27,75 +21,27 @@ export const Route = createFileRoute('/companies/')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseCompaniesSearch,
   loaderDeps: ({ search }) => companiesListingLoaderDeps(search),
-  loader: async ({ deps }) => {
-    const [page, markets, seo] = await Promise.all([
-      deps.query
-        ? searchCompanies({
-            data: {
-              query: deps.query,
-              offset: pageToOffset(deps.page ?? 1, COMPANIES_PAGE_SIZE),
-              limit: COMPANIES_PAGE_SIZE,
-            },
-          })
-        : listCompanies({
-            data: {
-              offset: pageToOffset(deps.page ?? 1, COMPANIES_PAGE_SIZE),
-              limit: COMPANIES_PAGE_SIZE,
-            },
-          }),
-      // Additive market filter: a failing markets read must not fault the
-      // companies index.
-      getCompanyMarkets({ data: { limit: 24 } }).catch(() => null),
-      getSeoBase(),
-    ]);
-    return { page, markets: markets?.data ?? [], seo };
-  },
+  loader: async ({ deps }) =>
+    getCompaniesIndexPage({
+      data: {
+        query: deps.query,
+        offset: pageToOffset(deps.page ?? 1, COMPANIES_PAGE_SIZE),
+        limit: COMPANIES_PAGE_SIZE,
+      },
+    }),
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              title: headTitle(
-                loaderData?.seo.boardName,
-                m.companiesIndex_metaTitle(),
-              ),
-            },
-            {
-              name: 'description',
-              content: m.companiesIndex_metaDescription({
-                boardName: loaderData.seo.boardName,
-              }),
-            },
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              href: boardUrl(loaderData.seo.origin, BOARD_PATHS.companies),
-            },
-          ],
-        }
-      : {
-          meta: [{ title: headTitle(undefined, m.companiesIndex_metaTitle()) }],
-        },
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
+      : {},
   component: CompaniesPage,
 });
 
 function CompaniesPage() {
-  const { page, markets, seo } = Route.useLoaderData();
+  const { page, markets } = Route.useLoaderData();
   const search = Route.useSearch();
-  const copy = boardCopy(seo.language, seo.labels);
-  const crumbs = copy.breadcrumbs;
-  const jsonLd = [
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      { label: crumbs.companies },
-    ]),
-  ].filter((entry): entry is Record<string, unknown> => entry !== null);
 
   return (
     <>
-      <JsonLd data={jsonLd} />
-
       <ProgrammaticCompaniesView
         heading={m.companiesIndex_metaTitle()}
         page={page}

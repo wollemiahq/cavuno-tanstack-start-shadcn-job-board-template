@@ -8,12 +8,19 @@ import '@testing-library/jest-dom/vitest';
  * through JSON.stringify/encodeURIComponent.
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AnalyticsScripts } from './analytics-scripts';
 import { CookieConsentProvider, useCookieConsent } from './cookie-consent';
 
 import type { BoardAnalyticsConfig } from './analytics-scripts';
+import { COOKIE_CONSENT_COOKIE } from '@/lib/cookie-consent';
+
+const { startWebVitalsReporting } = vi.hoisted(() => ({
+  startWebVitalsReporting: vi.fn(),
+}));
+
+vi.mock('@/lib/web-vitals', () => ({ startWebVitalsReporting }));
 
 const STORAGE_KEY = 'cavuno:cookie-consent';
 
@@ -33,7 +40,11 @@ const injectedKeys = () =>
 
 afterEach(() => {
   cleanup();
+  startWebVitalsReporting.mockClear();
   localStorage.clear();
+  // Consent now persists in a cookie too — clear it or an earlier test's
+  // accept leaks into the next provider mount via the cookie-adoption path.
+  document.cookie = `${COOKIE_CONSENT_COOKIE}=; Path=/; Max-Age=0`;
   for (const el of document.querySelectorAll(
     'script[id^="cavuno-analytics-"]',
   )) {
@@ -65,6 +76,7 @@ describe('AnalyticsScripts', () => {
     render(<AnalyticsScripts analytics={analytics} />);
 
     expect(injectedKeys()).toEqual([...VENDOR_KEYS]);
+    expect(startWebVitalsReporting).toHaveBeenCalledOnce();
     expect(
       document.getElementById('cavuno-analytics-ga4-loader'),
     ).toHaveAttribute(
@@ -178,5 +190,6 @@ describe('AnalyticsScripts', () => {
     );
 
     expect(injectedKeys()).toEqual([]);
+    expect(startWebVitalsReporting).not.toHaveBeenCalled();
   });
 });

@@ -7,6 +7,13 @@ import { cn } from '@/lib/utils';
 
 const FloatingStackContext = createContext<HTMLElement | null>(null);
 
+/** Shared corner-region styling — the provider's container AND the pre-portal
+ * SSR fallback must position identically, so a server-rendered widget (the
+ * cookie banner is the LCP element on listing pages) paints at its FINAL
+ * fixed position on first paint instead of jumping there after hydration. */
+const STACK_REGION_CLASS =
+  'pointer-events-none fixed end-4 bottom-0 z-(--z-floating-stack) flex flex-col items-end';
+
 /**
  * Shared bottom-right stacking region for floating widgets (the job-alert
  * prompt, the messaging dock, and any future corner widget). A single fixed
@@ -39,7 +46,7 @@ export function FloatingStackProvider({ children }: { children: ReactNode }) {
       <div
         ref={setContainer}
         data-slot="floating-stack"
-        className="pointer-events-none fixed end-4 bottom-0 z-(--z-floating-stack) flex flex-col items-end"
+        className={STACK_REGION_CLASS}
       />
     </FloatingStackContext.Provider>
   );
@@ -81,5 +88,18 @@ export function FloatingStackItem({
     </div>
   );
 
-  return container ? createPortal(item, container) : item;
+  // Before the container mounts (SSR + first client render), pin the item to
+  // the same fixed corner region the portal will use, so the first paint is
+  // already at the final position — the paint then counts at FCP instead of
+  // re-materializing (and re-scoring LCP) after hydration. With more than one
+  // pre-portal item they would overlap in the corner, but only one floating
+  // widget server-renders at a time (the banner suppresses the job-alert
+  // prompt; the messaging dock is authed/client-only).
+  return container ? (
+    createPortal(item, container)
+  ) : (
+    <div data-slot="floating-stack-ssr" className={STACK_REGION_CLASS}>
+      {item}
+    </div>
+  );
 }

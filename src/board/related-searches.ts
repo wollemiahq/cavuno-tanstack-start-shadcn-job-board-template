@@ -8,19 +8,14 @@ import { m } from '../paraglide/messages';
 
 import type { TaxonomyChip } from '@/components/board/taxonomy-tags';
 import type { RelatedSearch } from '@cavuno/board';
-import type { BoardLabelOverrides } from '@cavuno/board/format';
 
 /**
- * The jobs listing rail's "Related searches" heading — the operator override
- * (`jobCardLabels.relatedSearchesTitle`, the same field the hosted board reads)
- * when set, else the localized Paraglide default. Replaces the programmatic
- * view's old hardcoded English `"Related Searches"` fallback.
+ * The jobs listing rail's "Related searches" heading — the localized
+ * Paraglide default. Operator label overrides were removed from the Board
+ * API in 4.0.0.
  */
-export function relatedSearchesTitle(labels?: BoardLabelOverrides): string {
-  const override = labels?.jobCardLabels?.relatedSearchesTitle;
-  return override && override.trim() !== ''
-    ? override
-    : m.jobCard_relatedSearchesTitle();
+export function relatedSearchesTitle(): string {
+  return m.jobCard_relatedSearchesTitle();
 }
 
 /**

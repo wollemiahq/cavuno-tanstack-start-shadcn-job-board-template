@@ -12,12 +12,11 @@
  */
 import { useEffect, useRef, useState } from 'react';
 
-import { loadStripe, type StripeEmbeddedCheckout } from '@stripe/stripe-js';
-
 import { m } from '../../paraglide/messages';
 
 import { Spinner } from '@/components/ui/spinner';
 import type { AccessCheckoutSession } from '@cavuno/board';
+import type { StripeEmbeddedCheckout } from '@stripe/stripe-js';
 
 export function EmbeddedCheckout({
   kit,
@@ -35,6 +34,9 @@ export function EmbeddedCheckout({
     setLoading(true);
 
     void (async () => {
+      // Keep Stripe's loader out of the public app shell. Import it only after
+      // a buyer has reached checkout and a mount kit actually exists.
+      const { loadStripe } = await import('@stripe/stripe-js');
       const stripe = await loadStripe(kit.publishableKey, {
         stripeAccount: kit.stripeAccountId,
       });

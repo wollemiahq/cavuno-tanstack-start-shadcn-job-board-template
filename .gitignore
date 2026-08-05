@@ -12,6 +12,10 @@ dist-ssr
 __unconfig*
 todos.json
 
+# Local performance/build diagnostics and isolated pnpm cache
+.tmp/
+.pnpm-store/
+
 .dev.vars*
 !.dev.vars.example
 !.env.example

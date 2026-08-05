@@ -1,29 +1,53 @@
 /**
  * Salary VIEW-MODEL — the Layer-1b seam for the salary block. These mappers
- * are the only place SDK formatters (`formatRange`,
- * `formatUsd`), taxonomy label resolution (`fieldLabel`) and i18n copy
- * (`boardCopy`) touch the salary sections. Each maps raw route data to a
- * plain, fully-resolved view-model.
+ * are the only place SDK formatters (`formatSalaryStat`,
+ * `formatSalaryStatRange`), taxonomy label resolution (`enumLabel`) and i18n
+ * copy (the route-owned copy resolvers) touch the salary sections. Each maps
+ * raw route data to a plain, fully-resolved view-model.
  *
  * The presentational sections (`OverallSalaryCard`, `SenioritySalaryTable`,
  * `SalaryRail`, `SalaryFaq`, `SalaryBreadcrumb`) render from these VMs alone
  * and import nothing from `@cavuno/board*` or `#/copy` — so restructuring a
  * salary page is pure markup over these stable contracts.
+ *
+ * Currency is required for any salary figure — missing currency yields null
+ * (never invent USD).
  */
-import {
-  fieldLabel,
-  getSalaryLexicon,
-  type BoardLabelOverrides,
-} from '@cavuno/board/format';
+import { formatSalaryStat, formatSalaryStatRange } from '@cavuno/board/format';
 import {
   companySalaryPath,
   salaryLocationPath,
   salarySkillPath,
   salaryTitlePath,
 } from '@cavuno/board/paths';
-import { formatRange, formatUsd } from '@cavuno/board/seo';
 
-import { boardCopy } from '@/copy';
+import { enumLabel } from '@/lib/enum-labels';
+import {
+  salaryCompanyCategoryTitleFrame,
+  salaryCompanyTitleFrame,
+  salaryEntityInPlaceTitleFrame,
+  salaryEntityTitleFrame,
+  salaryPlaceTitleFrame,
+} from '@/lib/salary-frames';
+
+/**
+ * Presentation re-export of the SDK range formatter. Route modules must not
+ * import `@cavuno/board/seo` (head/meta lives in route-owned server pages);
+ * components that need a formatted range for rails call this mapper helper.
+ * Currency comes from the salary read model — never hardcoded.
+ */
+export function formatSalaryRange(
+  language: string,
+  min: number,
+  max: number,
+  currency: string | null | undefined,
+): string | null {
+  return formatSalaryStatRange(language, min, max, currency);
+}
+
+import { entityCopy } from '@/copy-groups/entity';
+import { jobDetailCopy } from '@/copy-groups/job-detail';
+import { salaryCopy } from '@/copy-groups/salary';
 
 /**
  * Salary URL composers — the Layer-1b seam for the salary hrefs the SDK's
@@ -81,72 +105,51 @@ export function salaryLocationSkillsPath(placeSlug: string): string {
 }
 
 /**
- * Salary page `<title>` sentence frames — the ONE seam onto the SDK's
- * board-language salary lexicon (`getSalaryLexicon(language).frames`), the same
- * builders the hosted board uses. A tenant frontend inherits the canonical
- * plural, board-localized "{Entity} Salaries (range)" phrasing instead of a
- * starter-local Paraglide duplicate (which drifted to a singular "salary").
- * Numbers arrive pre-formatted (`formatRange`); the frame supplies the words.
- * The visible H1 stays a starter copy key — the SDK has no range-less heading
- * frame — so only the metadata titles route through here.
+ * Salary page `<title>` sentence frames — whole Paraglide ICU sentences
+ * with named parameters. Numbers arrive pre-formatted (`formatSalaryStatRange`);
+ * the frame supplies the words. The visible H1 stays a starter copy key — only
+ * the metadata titles route through here.
  */
 export function salaryEntityTitle(
-  language: string,
+  _language: string,
   entity: string,
   range: string,
 ): string {
-  return getSalaryLexicon(language).frames.entitySalariesTitle({
-    entity,
-    range,
-  });
+  return salaryEntityTitleFrame(entity, range);
 }
 
 export function salaryEntityInPlaceTitle(
-  language: string,
+  _language: string,
   entity: string,
   place: string,
   range: string,
 ): string {
-  return getSalaryLexicon(language).frames.entitySalariesInPlaceTitle({
-    entity,
-    place,
-    range,
-  });
+  return salaryEntityInPlaceTitleFrame(entity, place, range);
 }
 
 export function salaryPlaceTitle(
-  language: string,
+  _language: string,
   place: string,
   range: string | null,
 ): string {
-  const { frames } = getSalaryLexicon(language);
-  return range
-    ? frames.salariesInPlaceTitle({ place, range })
-    : frames.salariesInPlaceTitleNoRange({ place });
+  return salaryPlaceTitleFrame(place, range);
 }
 
 export function salaryCompanyTitle(
-  language: string,
+  _language: string,
   company: string,
   range: string | null,
 ): string {
-  return getSalaryLexicon(language).frames.companySalariesTitle({
-    company,
-    range,
-  });
+  return salaryCompanyTitleFrame(company, range);
 }
 
 export function salaryCompanyCategoryTitle(
-  language: string,
+  _language: string,
   company: string,
   category: string,
   range: string | null,
 ): string {
-  return getSalaryLexicon(language).frames.companyCategorySalariesTitle({
-    company,
-    category,
-    range,
-  });
+  return salaryCompanyCategoryTitleFrame(company, category, range);
 }
 
 export interface OverallSalary {
@@ -176,9 +179,10 @@ export interface OverallSalaryVM {
 export function toOverallSalaryVM(
   overall: OverallSalary,
   language: string,
-  labels?: BoardLabelOverrides,
+  currency: string | null | undefined,
 ): OverallSalaryVM {
-  const copy = boardCopy(language, labels);
+  const entity = entityCopy(language);
+  const copy = salaryCopy(language);
   const median =
     overall.medianMin !== undefined && overall.medianMax !== undefined
       ? Math.round((overall.medianMin + overall.medianMax) / 2)
@@ -186,35 +190,48 @@ export function toOverallSalaryVM(
 
   const stats: SalaryStatVM[] = [];
   if (overall.p25Min !== undefined) {
-    stats.push({
-      label: copy.salary.comparisonPercentile25Label,
-      value: formatUsd(language, overall.p25Min),
-    });
+    const value = formatSalaryStat(language, overall.p25Min, currency);
+    if (value !== null) {
+      stats.push({
+        label: copy.comparisonPercentile25Label,
+        value,
+      });
+    }
   }
   if (median !== null) {
-    stats.push({
-      label: copy.salary.medianLabel,
-      value: formatUsd(language, median),
-      emphasis: true,
-    });
+    const value = formatSalaryStat(language, median, currency);
+    if (value !== null) {
+      stats.push({
+        label: copy.medianLabel,
+        value,
+        emphasis: true,
+      });
+    }
   }
   if (overall.p75Max !== undefined) {
-    stats.push({
-      label: copy.salary.comparisonPercentile75Label,
-      value: formatUsd(language, overall.p75Max),
-    });
+    const value = formatSalaryStat(language, overall.p75Max, currency);
+    if (value !== null) {
+      stats.push({
+        label: copy.comparisonPercentile75Label,
+        value,
+      });
+    }
   }
   stats.push({
-    label: copy.salary.basedOnLabel,
-    value: `${overall.jobCount} ${
-      overall.jobCount === 1 ? copy.entity.jobSingular : copy.entity.jobPlural
-    }`,
+    label: copy.basedOnLabel,
+    value: `${overall.jobCount} ${overall.jobCount === 1 ? entity.jobSingular : entity.jobPlural}`,
   });
 
   return {
-    headlineLabel: copy.salary.comparisonHeadlineAverage,
-    headlineValue: formatRange(language, overall.avgMin, overall.avgMax),
-    perYearSuffix: copy.salary.perYearSuffix,
+    headlineLabel: copy.comparisonHeadlineAverage,
+    headlineValue:
+      formatSalaryStatRange(
+        language,
+        overall.avgMin,
+        overall.avgMax,
+        currency,
+      ) ?? '',
+    perYearSuffix: copy.perYearSuffix,
     stats,
   };
 }
@@ -245,9 +262,9 @@ export interface SeniorityTableVM {
 export function toSeniorityTableVM(
   rows: SeniorityRow[],
   language: string,
-  labels?: BoardLabelOverrides,
+  currency: string | null | undefined,
 ): SeniorityTableVM {
-  const copy = boardCopy(language, labels).salary;
+  const copy = salaryCopy(language);
   return {
     headers: {
       level: copy.seniorityTableHeaderLevel,
@@ -257,13 +274,22 @@ export function toSeniorityTableVM(
     },
     rows: rows.map((r) => ({
       key: r.seniority,
-      level:
-        fieldLabel(language, r.seniority, labels) ??
-        r.seniority.replace(/[-_]/g, ' '),
-      avg: formatRange(language, r.avgSalaryMin, r.avgSalaryMax),
+      level: enumLabel(r.seniority) ?? r.seniority.replace(/[-_]/g, ' '),
+      avg:
+        formatSalaryStatRange(
+          language,
+          r.avgSalaryMin,
+          r.avgSalaryMax,
+          currency,
+        ) ?? '',
       baseline:
         r.boardAvgMin !== null && r.boardAvgMax !== null
-          ? formatRange(language, r.boardAvgMin, r.boardAvgMax)
+          ? (formatSalaryStatRange(
+              language,
+              r.boardAvgMin,
+              r.boardAvgMax,
+              currency,
+            ) ?? '—')
           : '—',
       diff:
         r.diffPercent !== null
@@ -302,9 +328,8 @@ export function toSalaryRailVM(
   title: string | undefined,
   items: RailItem[],
   language: string,
-  labels?: BoardLabelOverrides,
 ): SalaryRailVM {
-  const copy = boardCopy(language, labels).entity;
+  const copy = entityCopy(language);
   return {
     title,
     items: items.map((item) => ({
@@ -312,9 +337,7 @@ export function toSalaryRailVM(
       href: item.href,
       range: item.range,
       logoPath: item.logoPath,
-      jobCountLabel: `${item.jobCount} ${
-        item.jobCount === 1 ? copy.jobSingular : copy.jobPlural
-      }`,
+      jobCountLabel: `${item.jobCount} ${item.jobCount === 1 ? copy.jobSingular : copy.jobPlural}`,
     })),
   };
 }
@@ -327,10 +350,9 @@ export interface SalaryFaqVM {
 export function toSalaryFaqVM(
   items: { q: string; a: string }[],
   language: string,
-  labels?: BoardLabelOverrides,
 ): SalaryFaqVM {
   return {
-    heading: boardCopy(language, labels).salary.faqHeading,
+    heading: salaryCopy(language).faqHeading,
     items,
   };
 }
@@ -386,10 +408,9 @@ export interface SalaryBreadcrumbVM {
 export function toSalaryBreadcrumbVM(
   items: { name: string; href?: string }[],
   language: string,
-  labels?: BoardLabelOverrides,
 ): SalaryBreadcrumbVM {
   return {
-    ariaLabel: boardCopy(language, labels).jobDetail.breadcrumbAriaLabel,
+    ariaLabel: jobDetailCopy(language).breadcrumbAriaLabel,
     items,
   };
 }

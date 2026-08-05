@@ -1,17 +1,37 @@
-import type { LegalPageType } from '@cavuno/board';
-import type { BreadcrumbsCopy } from '@cavuno/board/format';
+import type { LegalPageType } from '@/content/legal/types';
+
+export type { LegalPageType };
 
 export interface LegalPageMeta {
   path: string;
-  /** Key into `boardCopy(...).breadcrumbs` — resolves the label at render time. */
-  breadcrumbKey: keyof BreadcrumbsCopy;
+  /** Key into `breadcrumbsCopy(...)` — resolves the label at render time. */
+  breadcrumbKey:
+    | 'about'
+    | 'privacyPolicy'
+    | 'termsOfService'
+    | 'cookiePolicy'
+    | 'impressum';
   jsonLdType: 'AboutPage' | 'WebPage';
 }
 
 /**
+ * Serializable page payload for LegalPageView. JSX bodies live in
+ * `src/content/legal/` and are resolved by `type` — React elements are not
+ * server-fn serializable.
+ */
+export type LegalPageViewModel = {
+  type: LegalPageType;
+  title: string;
+  legalEntity: {
+    legalName: string | null;
+    address: string | null;
+  } | null;
+};
+
+/**
  * Per-type metadata for the legal/about routes. Keyed by the SDK `LegalPageType`
- * (which is also the URL path), so each route file maps its URL straight to
- * `board.legal.retrieve(type)`.
+ * (which is also the URL path). Prose lives in `src/content/legal/`; this table
+ * only owns path, breadcrumb key, and JSON-LD `@type`.
  */
 export const LEGAL_PAGES: Record<LegalPageType, LegalPageMeta> = {
   about: { path: '/about', breadcrumbKey: 'about', jsonLdType: 'AboutPage' },
@@ -36,12 +56,3 @@ export const LEGAL_PAGES: Record<LegalPageType, LegalPageMeta> = {
     jsonLdType: 'WebPage',
   },
 };
-
-/** Strip the portable-HTML prose to a plain-text `<meta name="description">`. */
-export function legalMetaDescription(html: string): string {
-  return html
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 160);
-}

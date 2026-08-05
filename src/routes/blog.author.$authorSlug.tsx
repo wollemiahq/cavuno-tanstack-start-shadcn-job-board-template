@@ -1,11 +1,4 @@
-import { boardCopy } from '#/copy';
-
 import { isNotFound } from '@cavuno/board';
-import { BOARD_PATHS, blogAuthorPath, boardUrl } from '@cavuno/board/paths';
-import {
-  createAuthorProfileJsonLd,
-  createBreadcrumbJsonLd,
-} from '@cavuno/board/seo';
 import {
   createFileRoute,
   notFound,
@@ -19,13 +12,13 @@ import { m } from '../paraglide/messages';
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { CursorPagination } from '@/components/board/cursor-pagination';
 import { PublicContentPending } from '@/components/board/public-content-pending';
-import { JsonLd } from '@/components/json-ld';
+import { jsonLdHeadScripts } from '@/components/json-ld';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { BLOG_PAGE_SIZE } from '@/lib/blog';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
 import { initialsOf } from '@/lib/initials';
-import { headTitle } from '@/lib/page-title';
 import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
-import { getBlogAuthor, getSeoBase, listBlogPosts } from '@/server/queries';
+import { getBlogAuthorPage } from '@/server/blog-pages';
 
 interface BlogAuthorSearch {
   cursor?: string;
@@ -42,18 +35,9 @@ export const Route = createFileRoute('/blog/author/$authorSlug')({
   loaderDeps: ({ search }) => search,
   loader: async ({ params, deps }) => {
     try {
-      const [author, posts, seo] = await Promise.all([
-        getBlogAuthor({ data: { authorSlug: params.authorSlug } }),
-        listBlogPosts({
-          data: {
-            authorSlug: params.authorSlug,
-            cursor: deps.cursor,
-            limit: BLOG_PAGE_SIZE,
-          },
-        }),
-        getSeoBase(),
-      ]);
-      return { author, posts, seo };
+      return await getBlogAuthorPage({
+        data: { authorSlug: params.authorSlug, cursor: deps.cursor },
+      });
     } catch (error) {
       if (isNotFound(error)) throw notFound();
       throw error;
@@ -61,37 +45,7 @@ export const Route = createFileRoute('/blog/author/$authorSlug')({
   },
   head: ({ loaderData }) =>
     loaderData
-      ? {
-          meta: [
-            {
-              // `Author | Blog | Board` — the section segment reuses the
-              // breadcrumb's key, so renaming the section moves both.
-              title: headTitle(
-                loaderData.seo.boardName,
-                loaderData.author.name,
-                m.blogIndex_title(),
-              ),
-            },
-            {
-              name: 'description',
-              content:
-                loaderData.author.bio ??
-                m.blogAuthor_metaDescription({
-                  author: loaderData.author.name,
-                  boardName: loaderData.seo.boardName,
-                }),
-            },
-          ],
-          links: [
-            {
-              rel: 'canonical',
-              href: boardUrl(
-                loaderData.seo.origin,
-                blogAuthorPath(loaderData.author.slug),
-              ),
-            },
-          ],
-        }
+      ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: AuthorPage,
   notFoundComponent: BlogAuthorNotFound,
@@ -162,36 +116,14 @@ function AuthorPage() {
   const location = useLocation();
   const navigate = useNavigate({ from: '/blog/author/$authorSlug' });
   const router = useRouter();
-  const permalink = boardUrl(seo.origin, blogAuthorPath(author.slug));
-  const copy = boardCopy(seo.language, seo.labels);
-  const crumbs = copy.breadcrumbs;
-  const jsonLd = [
-    createAuthorProfileJsonLd({
-      author,
-      canonical: permalink,
-      description:
-        author.bio ??
-        m.blogAuthor_metaDescription({
-          author: author.name,
-          boardName: seo.boardName,
-        }),
-      origin: seo.origin,
-      posts: posts.data,
-      totalPosts: posts.count ?? posts.data.length,
-    }),
-    createBreadcrumbJsonLd([
-      { label: crumbs.home, href: seo.origin },
-      { label: crumbs.blog, href: boardUrl(seo.origin, BOARD_PATHS.blog) },
-      { label: author.name },
-    ]),
-  ].filter((entry): entry is Record<string, unknown> => entry !== null);
+  const crumbs = breadcrumbsCopy(seo.language);
+  const ariaLabel = resolveJobDetailBreadcrumbAriaLabel();
 
   return (
     <>
-      <JsonLd data={jsonLd} />
       <BlogArchivePage
         breadcrumb={{
-          ariaLabel: copy.jobDetail.breadcrumbAriaLabel,
+          ariaLabel,
           items: [
             { name: crumbs.home, href: '/' },
             { name: crumbs.blog, href: '/blog' },

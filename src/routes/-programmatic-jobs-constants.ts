@@ -1,0 +1,1 @@
+export const PROGRAMMATIC_JOBS_PAGE_SIZE = 20;

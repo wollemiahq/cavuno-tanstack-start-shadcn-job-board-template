@@ -25,20 +25,40 @@ const serverAssets = resolve(root, 'dist/server/assets');
 // route increment larger while reducing that route's total first load. Never
 // raise a budget merely to make CI green.
 const BUDGETS = {
-  shell: { raw: 1_100_000, gzip: 355_000 },
+  shell: { raw: 730_000, gzip: 220_000 },
   styles: { raw: 260_000, gzip: 40_000 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {
+    // The decorative home hero shader is idle-loaded, not initial-route work.
+    // Home head + ItemList JSON-LD live in getHomePage, so the ~5 KiB gzip
+    // seo client chunk no longer rides the `/` route increment. Rebaseline
+    // to measured post-move increment + small headroom.
+    '/': { raw: 48_000, gzip: 20_000 },
     // Rebaselined for the intentional RTL-aware Recharts axis support. Keep
     // the increase narrow: the measured route is ~800.6 kB raw.
-    '/employers/companies/$slug/profile': { raw: 805_000, gzip: 250_000 },
-    '/post': { raw: 550_000, gzip: 180_000 },
-    '/employers/companies/$slug/': { raw: 370_000, gzip: 115_000 },
+    '/employers/companies/$slug/profile': { raw: 820_000, gzip: 250_000 },
+    // @cavuno/board 3.2.0 splits its ESM entries, so the format helpers this
+    // form needs are charged here instead of riding the shared shell. Public
+    // routes all gained 2.2 KiB gzip; /post is the one surface that nets
+    // WORSE (+2.1 KiB total first load) from ~2 KiB of chunk-boundary
+    // duplication. Accepted deliberately: /post is an authenticated,
+    // low-traffic form, not an indexed surface, and the shell win applies to
+    // every public page. Measured 548.6 KiB raw / 178.4 KiB gzip.
+    '/post': { raw: 565_000, gzip: 183_000 },
+    // Shell→route reassignment after salary SEO left main (job-detail /
+    // resolve-copy-group no longer shell-shared). Total first load fell.
+    '/employers/companies/$slug/': { raw: 440_000, gzip: 135_000 },
+    // React Aria's drag-and-drop/grid runtime belongs only to this private
+    // workflow; it is intentionally charged here instead of every public URL.
+    // Same shell→route reassignment as the company index (narrow headroom).
     '/employers/companies/$slug/jobs/$jobId/applicants': {
-      raw: 330_000,
-      gzip: 90_000,
+      raw: 400_000,
+      gzip: 112_000,
     },
-    '/account': { raw: 120_000, gzip: 42_000 },
+    // Desktop-only enhanced search is lazy shell work. Removing the shared
+    // Base UI footer menu also made TanStack attribute more of the remaining
+    // dynamic graph here, though this route's total first load still fell.
+    '/account': { raw: 210_000, gzip: 72_000 },
   },
 };
 

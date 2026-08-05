@@ -1,20 +1,16 @@
 'use client';
 
-import { boardCopy } from '#/copy';
-
 import { m } from '../../paraglide/messages';
 
+import { jobSearchCopy } from '@/copy-groups/job-search';
 import { cn } from '@/lib/utils';
 /** The honest result count and current page range directly above the cards. */
-import type { BoardLabelOverrides } from '@cavuno/board/format';
-
 export function JobsResultsBar({
   count,
   page,
   pageSize,
   heading,
   language,
-  labels,
   className,
 }: {
   /** Total result count when the API returned one. */
@@ -25,8 +21,6 @@ export function JobsResultsBar({
   /** Route context, such as “Engineering jobs” or “Jobs in Sydney”. */
   heading?: string;
   language: string;
-  /** Operator label overrides from `board.context().labels`. */
-  labels?: BoardLabelOverrides;
   className?: string;
 }) {
   const showRange =
@@ -48,7 +42,7 @@ export function JobsResultsBar({
           : m.jobSearch_resultsCountMany({
               count: count.toLocaleString(language),
             })
-      : (heading ?? boardCopy(language, labels).jobSearch.headingJobs);
+      : (heading ?? jobSearchCopy(language).headingJobs);
   const rangeLabel = showRange
     ? m.jobSearch_resultsShowingRange({
         from: ((page - 1) * pageSize + 1).toLocaleString(language),

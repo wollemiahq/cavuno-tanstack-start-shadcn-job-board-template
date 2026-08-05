@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
-import { formatRange } from '@cavuno/board/seo';
+import { formatSalaryStatRange } from '@cavuno/board/format';
 import {
   RouterProvider,
   createMemoryHistory,
@@ -59,6 +59,7 @@ const jobs = {
 const salarySummary = {
   overallSalary: { avgMin: 180_000, avgMax: 240_000, jobCount: 12 },
   byCategory: [],
+  currency: 'USD',
 };
 
 afterEach(cleanup);
@@ -159,7 +160,9 @@ describe('SelectedCompanyDetail', () => {
     expect(screen.queryByRole('link', { name: 'Role 5' })).toBeNull();
     // Delegation-style: wire data runs the REAL mapper, so the expectation
     // calls the same SDK formatter instead of pinning its output shape.
-    expect(screen.getByText(formatRange('en', 180_000, 240_000))).toBeVisible();
+    expect(
+      screen.getByText(formatSalaryStatRange('en', 180_000, 240_000, 'USD')!),
+    ).toBeVisible();
     expect(screen.getByText('Based on 12 jobs')).toBeVisible();
   });
 
@@ -179,6 +182,7 @@ describe('SelectedCompanyDetail', () => {
             jobCount: 5,
           },
         ],
+        currency: 'USD',
       },
       retry: vi.fn(),
     });
@@ -188,7 +192,9 @@ describe('SelectedCompanyDetail', () => {
     ).toHaveLength(2);
     expect(screen.queryByRole('link', { name: 'View jobs' })).toBeNull();
     expect(screen.getByText('Engineering')).toBeVisible();
-    expect(screen.getByText(formatRange('en', 120_000, 160_000))).toBeVisible();
+    expect(
+      screen.getByText(formatSalaryStatRange('en', 120_000, 160_000, 'USD')!),
+    ).toBeVisible();
     expect(screen.getByText('Based on 5 jobs')).toBeVisible();
   });
 });
