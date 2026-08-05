@@ -64,11 +64,20 @@ export function locationLabel(
  * the slim card carries no `officeLocations`/`remoteWorldwide` — so those
  * wire fields are used directly.
  */
-export function cardLocationLabel(job: CardLocationLabelJob): string {
+export function cardLocationLabel(
+  job: CardLocationLabelJob,
+  language?: string,
+): string {
+  const locale = isLocale(language) ? { locale: language } : undefined;
   if (job.remoteOption === 'remote') {
+    // "Worldwide" is board-language chrome baked into the wire label — see
+    // toJobCardVM. Re-word via the catalog instead of echoing it.
+    if (job.remoteLocationLabel === 'Worldwide') {
+      return m.label_locationRemoteWorldwide({}, locale);
+    }
     return job.remoteLocationLabel
-      ? m.label_locationRemoteIn({ region: job.remoteLocationLabel })
-      : (enumLabel('remote') ?? '');
+      ? m.label_locationRemoteIn({ region: job.remoteLocationLabel }, locale)
+      : (enumLabel('remote', language) ?? '');
   }
   return job.locationLabel ?? enumLabel(job.remoteOption) ?? '';
 }

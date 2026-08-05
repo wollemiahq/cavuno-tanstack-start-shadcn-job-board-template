@@ -1,5 +1,7 @@
-import { Link, getRouteApi } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { ArrowUpRight } from 'lucide-react';
+
+import { getLocale } from '../paraglide/runtime';
 
 import { toBlogPostCardVM } from '@/board/blog-view-model';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,16 +11,13 @@ import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { initialsOf } from '@/lib/initials';
 import type { PublicBlogPostSummary } from '@cavuno/board';
 
-const rootApi = getRouteApi('__root__');
-
 /**
  * One crawlable blog summary. The card keeps post, tag, and every author as
  * real links so a compact archive never throws away the blog's discovery
  * graph. Long editorial labels wrap instead of being replaced by ellipses.
  */
 export function PostCard({ post }: { post: PublicBlogPostSummary }) {
-  const { board } = rootApi.useLoaderData();
-  const date = toBlogPostCardVM(post, board.language).publishedAtLabel;
+  const date = toBlogPostCardVM(post, getLocale()).publishedAtLabel;
   const eyebrow = post.tags[0] ?? null;
   const firstAuthor = post.authors[0] ?? null;
 

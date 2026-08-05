@@ -3,6 +3,7 @@ import { getRouteApi, useNavigate } from '@tanstack/react-router';
 import { JobAlertFloatingPrompt } from '../components/job-alert-floating-prompt';
 import { jobAlertDefaultsFromSearch } from '../lib/job-alert-defaults';
 import { pageSearchValue } from '../lib/pagination';
+import { getLocale } from '../paraglide/runtime';
 import { SelectedJobDetail } from './-selected-job-detail';
 import { useSelectedJob } from './-use-selected-job';
 
@@ -59,7 +60,7 @@ export function ProgrammaticJobsView({
         heading={heading}
         count={count}
         gatedCount={gatedCount}
-        jobs={jobs.map((job) => toJobCardVM(job, board.language))}
+        jobs={jobs.map((job) => toJobCardVM(job, getLocale()))}
         page={page}
         pageSize={pageSize}
         relatedSearches={relatedSearches}

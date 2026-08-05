@@ -10,6 +10,7 @@ import {
 import { ArrowRight, Building2 } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getCompanyProfileSeo } from '../server/companies-pages';
 import {
   getCompany,
@@ -241,7 +242,7 @@ function CompanyPage() {
                 {previewJobs.map((job) => (
                   <JobCard
                     key={job.id}
-                    vm={toJobCardVM(job, board.language)}
+                    vm={toJobCardVM(job, getLocale())}
                     compact
                   />
                 ))}

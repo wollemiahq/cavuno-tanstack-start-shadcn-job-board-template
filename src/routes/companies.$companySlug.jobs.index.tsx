@@ -31,6 +31,7 @@ import {
   parsePageParam,
 } from '../lib/pagination';
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getCompanyJobsPage } from '../server/companies-pages';
 import { getCompany } from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
@@ -173,7 +174,7 @@ function CompanyJobsPage() {
         <p className="text-foreground text-base font-semibold">{countLabel}</p>
 
         <JobList
-          jobs={page.data.map((job) => toJobCardVM(job, board.language))}
+          jobs={page.data.map((job) => toJobCardVM(job, getLocale()))}
           language={board.language}
           variant="grid"
           compact

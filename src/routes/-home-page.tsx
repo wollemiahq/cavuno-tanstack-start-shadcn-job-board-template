@@ -7,6 +7,7 @@ import { JobAlertFloatingPrompt } from '@/components/job-alert-floating-prompt';
 import { entityCopy } from '@/copy-groups/entity';
 import { jobAlertDefaultsFromSearch } from '@/lib/job-alert-defaults';
 import { m } from '@/paraglide/messages';
+import { getLocale } from '@/paraglide/runtime';
 import { saveJob } from '@/server/account';
 
 const routeApi = getRouteApi('/');
@@ -42,7 +43,7 @@ export function HomePage() {
         }`
       : undefined;
 
-  const jobs = page.data.map((job) => toJobCardVM(job, board.language));
+  const jobs = page.data.map((job) => toJobCardVM(job, getLocale()));
   const hiringCompanies = companies
     .filter((company) => company.publishedJobCount > 0)
     .map((company) => ({
