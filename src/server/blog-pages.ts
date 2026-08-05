@@ -6,6 +6,7 @@ import { isNotFound } from '@cavuno/board';
 import {
   BOARD_PATHS,
   blogAuthorPath,
+  blogPostPath,
   blogTagPath,
   boardUrl,
 } from '@cavuno/board/paths';
@@ -161,7 +162,8 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
         latest: latest?.data ?? [],
         limit: 3,
       });
-      const ogImage = post.ogImageUrl ?? `${seo.origin}/blog/${post.slug}/og`;
+      const ogImage =
+        post.ogImageUrl ?? `${seo.origin}${blogPostPath(post.slug)}/og`;
       const head = {
         meta: [
           {
@@ -182,11 +184,13 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: post.canonicalUrl ?? `${seo.origin}/blog/${post.slug}`,
+            href:
+              post.canonicalUrl ?? `${seo.origin}${blogPostPath(post.slug)}`,
           },
         ],
       };
-      const permalink = post.canonicalUrl ?? `${seo.origin}/blog/${post.slug}`;
+      const permalink =
+        post.canonicalUrl ?? `${seo.origin}${blogPostPath(post.slug)}`;
       const c = breadcrumbsCopy(seo.language);
       const jsonLd = asJsonObjects(
         [

@@ -2,6 +2,7 @@ import { Link, createFileRoute } from '@tanstack/react-router';
 import { Check } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { getEmployersPage } from '../server/marketing-pages';
 
 import { jsonLdHeadScripts } from '@/components/json-ld';
@@ -43,7 +44,9 @@ export const Route = createFileRoute('/employers/')({
 
 function formatPrice(price: Plan['price']): string {
   if (!price) return m.employerLanding_freeLabel();
-  return new Intl.NumberFormat('en', {
+  // Chrome-locale figure inside chrome-locale sentences (same rule as the
+  // salary FAQ): the price agrees with the copy around it.
+  return new Intl.NumberFormat(getLocale(), {
     style: 'currency',
     currency: price.currency.toUpperCase(),
     maximumFractionDigits: 0,

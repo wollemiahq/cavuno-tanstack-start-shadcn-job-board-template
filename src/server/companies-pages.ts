@@ -241,7 +241,7 @@ export const getCompanyProfileSeo = createServerFn({ method: 'GET' })
             board: seo.boardName,
           });
       const canonical =
-        data.publicUrl ?? `${seo.origin}/companies/${data.companySlug}`;
+        data.publicUrl ?? boardUrl(seo.origin, companyPath(data.companySlug));
       const head = {
         meta: [
           { title: headTitle(seo.boardName, data.companyName) },
@@ -363,7 +363,7 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: `${seo.origin}/companies/${data.companySlug}/jobs`,
+            href: `${boardUrl(seo.origin, companyPath(data.companySlug))}/jobs`,
           },
         ],
       };

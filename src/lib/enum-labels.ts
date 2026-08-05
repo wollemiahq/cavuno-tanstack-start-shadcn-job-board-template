@@ -5,12 +5,17 @@
  * salary-lexicon timeframes). Every enum value the board surfaces maps
  * through here to a Paraglide message so drift has one place to fix.
  *
- * Labels follow the visitor locale (`getLocale()` via Paraglide), not a
- * board-language argument — same model as the rest of the chrome catalog.
+ * Labels default to the visitor locale (`getLocale()` via Paraglide) like
+ * the rest of the chrome catalog; callers rendering outside a request's
+ * chrome context (the OG image renderer) pass the board language.
  */
 import { m } from '../paraglide/messages';
+import { isLocale } from '../paraglide/runtime';
 
-type MessageFn = () => string;
+type MessageFn = (
+  inputs?: Record<string, never>,
+  options?: { locale?: 'de' | 'en' | 'fr' },
+) => string;
 
 const REMOTE_LABELS: Record<string, MessageFn> = {
   on_site: m.label_remoteOnSite,
@@ -63,10 +68,14 @@ const ALL_LABELS: Record<string, MessageFn> = {
  * raw wire string or a placeholder. Salary timeframes are intentionally not
  * resolvable here — use `salaryTimeframeLabel` (forms) or the salary join.
  */
-export function enumLabel(value: string | null | undefined): string | null {
+export function enumLabel(
+  value: string | null | undefined,
+  language?: string,
+): string | null {
   if (!value) return null;
   const message = ALL_LABELS[value];
-  return message ? message() : null;
+  if (!message) return null;
+  return message({}, isLocale(language) ? { locale: language } : undefined);
 }
 
 /** Seniority → label map for filter multi-selects (full ladder). */

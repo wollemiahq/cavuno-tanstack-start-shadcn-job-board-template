@@ -227,16 +227,15 @@ export function toOverallSalaryVM(
     }`,
   });
 
+  const headlineValue =
+    formatSalaryStatRange(language, overall.avgMin, overall.avgMax, currency) ??
+    '';
   return {
     headlineLabel: copy.comparisonHeadlineAverage,
-    headlineValue:
-      formatSalaryStatRange(
-        language,
-        overall.avgMin,
-        overall.avgMax,
-        currency,
-      ) ?? '',
-    perYearSuffix: copy.perYearSuffix,
+    headlineValue,
+    // No amount (e.g. currency null) → no money chrome: a bare "/ year"
+    // beside a blank figure is the suffix outliving the value it qualifies.
+    perYearSuffix: headlineValue ? copy.perYearSuffix : '',
     stats,
   };
 }

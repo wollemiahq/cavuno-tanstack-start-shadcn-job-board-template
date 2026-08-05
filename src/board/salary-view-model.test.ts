@@ -113,6 +113,9 @@ describe('toOverallSalaryVM', () => {
       null,
     );
     expect(vm.headlineValue).toBe('');
+    // The timeframe suffix must not outlive the amount it qualifies — no
+    // bare "/ year" beside a blank figure.
+    expect(vm.perYearSuffix).toBe('');
     // Only the non-money "based on N jobs" stat remains.
     expect(vm.stats).toHaveLength(1);
     expect(vm.stats[0].value.startsWith('12 ')).toBe(true);

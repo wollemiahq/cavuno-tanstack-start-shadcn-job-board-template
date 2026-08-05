@@ -1,4 +1,4 @@
-import { isNotFound } from '@cavuno/board';
+import { isBoardPasswordRequired, isNotFound } from '@cavuno/board';
 /**
  * Open Graph image — 1200×630 card for the job-detail page, the starter's
  * counterpart to the hosted `…/og` route (a `@takumi-rs` ImageResponse). The
@@ -35,7 +35,10 @@ export const Route = createFileRoute(
         try {
           job = await getBoard().jobs.retrieve(params.jobSlug);
         } catch (error) {
-          if (isNotFound(error)) throw notFound();
+          // A password-walled board's OG image is simply absent — 404, not
+          // an unhandled 500 (the SDK read throws before any card renders).
+          if (isNotFound(error) || isBoardPasswordRequired(error))
+            throw notFound();
           throw error;
         }
 
@@ -46,7 +49,7 @@ export const Route = createFileRoute(
 
         const title = job.title;
         const company = job.company?.name ?? '';
-        const location = locationLabel(job);
+        const location = locationLabel(job, language);
         const salary =
           formatJobSalary(
             language,

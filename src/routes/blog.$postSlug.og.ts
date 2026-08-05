@@ -1,4 +1,4 @@
-import { isNotFound } from '@cavuno/board';
+import { isBoardPasswordRequired, isNotFound } from '@cavuno/board';
 import { formatDate } from '@cavuno/board/format';
 /**
  * Open Graph image — 1200×630 card for a blog post, the starter's counterpart
@@ -26,7 +26,8 @@ export const Route = createFileRoute('/blog/$postSlug/og')({
         try {
           post = await getBoard().blog.posts.retrieve(params.postSlug);
         } catch (error) {
-          if (isNotFound(error)) throw notFound();
+          if (isNotFound(error) || isBoardPasswordRequired(error))
+            throw notFound();
           throw error;
         }
 
