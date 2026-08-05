@@ -60,7 +60,7 @@ export const getEmployersPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             { label: m.breadcrumbJsonLd_forEmployersLabel() },
           ]),
         ].filter((e) => e !== null),
@@ -90,7 +90,7 @@ export const getAuthJoinSeo = createServerFn({ method: 'GET' }).handler(
     const jsonLd = asJsonObjects(
       [
         createBreadcrumbJsonLd([
-          { label: c.home, href: seo.origin },
+          { label: c.home, href: selfUrl(seo.origin, '/') },
           { label: m.breadcrumbJsonLd_joinLabel() },
         ]),
       ].filter((e) => e !== null),

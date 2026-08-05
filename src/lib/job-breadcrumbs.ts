@@ -1,6 +1,7 @@
 import { buildJobBreadcrumbs as sdkBuildJobBreadcrumbs } from '@cavuno/board/seo';
 
 import { m } from '../paraglide/messages';
+import { localizePath } from './localized-path';
 
 import type { PublicJob } from '@cavuno/board';
 /**
@@ -38,13 +39,17 @@ export function jobBreadcrumbItems(job: PublicJob): JobBreadcrumbItem[] {
   });
 }
 
-/** Shape expected by `listingJsonLd` breadcrumbs (name + optional path). */
+/** Shape expected by `listingJsonLd` breadcrumbs (name + optional path).
+ * Paths localize so the structured data agrees with the rendered page —
+ * a /fr/ page's BreadcrumbList must link the /fr/ cluster, not English. */
 export function jobBreadcrumbJsonLd(
   job: PublicJob,
 ): Array<{ name: string; path?: string }> {
   const crumbs = sdkBuildJobBreadcrumbs(job);
   return crumbs.map((crumb) => {
     const name = crumbName(crumb);
-    return crumb.path === undefined ? { name } : { name, path: crumb.path };
+    return crumb.path === undefined
+      ? { name }
+      : { name, path: localizePath(crumb.path) };
   });
 }

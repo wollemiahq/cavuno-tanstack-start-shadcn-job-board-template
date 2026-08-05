@@ -128,7 +128,7 @@ export const getSalaryHubPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             { label: c.salaries },
           ]),
         ].filter((entry) => entry !== null),
@@ -189,7 +189,7 @@ export const getSalaryCompaniesIndexPage = createServerFn({ method: 'GET' })
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -239,7 +239,7 @@ export const getSalaryTitlesIndexPage = createServerFn({ method: 'GET' })
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -289,7 +289,7 @@ export const getSalarySkillsIndexPage = createServerFn({ method: 'GET' })
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -342,7 +342,7 @@ export const getSalaryLocationsIndexPage = createServerFn({ method: 'GET' })
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -424,7 +424,7 @@ export const getTitleSalaryPage = createServerFn({ method: 'GET' })
           titleSalaryJsonLd(salary),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -508,7 +508,7 @@ export const getSkillSalaryPage = createServerFn({ method: 'GET' })
           skillSalaryJsonLd(salary),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -608,7 +608,7 @@ export const getLocationSalaryPage = createServerFn({ method: 'GET' })
           }),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -691,7 +691,7 @@ export const getTitleLocationsPage = createServerFn({ method: 'GET' })
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -775,7 +775,7 @@ export const getSkillLocationsPage = createServerFn({ method: 'GET' })
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -864,7 +864,7 @@ export const getLocationTitlesPage = createServerFn({ method: 'GET' })
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -952,7 +952,7 @@ export const getLocationSkillsPage = createServerFn({ method: 'GET' })
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -1059,7 +1059,7 @@ export const getTitleLocationSalaryPage = createServerFn({ method: 'GET' })
             currency: salary.currency,
           }),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -1164,7 +1164,7 @@ export const getSkillLocationSalaryPage = createServerFn({ method: 'GET' })
             currency: salary.currency,
           }),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),

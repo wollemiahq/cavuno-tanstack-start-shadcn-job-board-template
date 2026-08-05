@@ -34,6 +34,7 @@ import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
 import { buttonVariants } from '@/components/ui/button';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { localizePath } from '@/lib/localized-path';
 
 type City = LocationSalaryDetail['childLocations'][number];
 
@@ -202,7 +203,9 @@ function LocationSalaryPage() {
               title={m.salaryDetail_topTitles()}
               actions={
                 <a
-                  href={salaryLocationTitlesPath(salary.canonicalSlug)}
+                  href={localizePath(
+                    salaryLocationTitlesPath(salary.canonicalSlug),
+                  )}
                   className={buttonVariants({ variant: 'link', size: 'sm' })}
                 >
                   {m.salaryDetail_seeAllTitlesInPlaceLabel({
@@ -219,7 +222,9 @@ function LocationSalaryPage() {
               title={m.salaryDetail_topSkills()}
               actions={
                 <a
-                  href={salaryLocationSkillsPath(salary.canonicalSlug)}
+                  href={localizePath(
+                    salaryLocationSkillsPath(salary.canonicalSlug),
+                  )}
                   className={buttonVariants({ variant: 'link', size: 'sm' })}
                 >
                   {m.salaryDetail_seeAllSkillsInPlaceLabel({

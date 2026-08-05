@@ -33,6 +33,7 @@ import {
 } from '@/lib/article-toc';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { initialsOf } from '@/lib/initials';
+import { localizePath } from '@/lib/localized-path';
 import { cn } from '@/lib/utils';
 import type {
   PublicBlogAdjacentPosts,
@@ -332,7 +333,7 @@ export function BlogArticleContent({
                   </EmptyHeader>
                   <EmptyContent>
                     <a
-                      href={missingBody.action.href}
+                      href={localizePath(missingBody.action.href)}
                       className={buttonVariants({ variant: 'outline' })}
                     >
                       {missingBody.action.label}

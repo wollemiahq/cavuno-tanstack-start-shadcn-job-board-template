@@ -82,7 +82,7 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
             url,
           },
           createBreadcrumbJsonLd([
-            { label: crumbs.home, href: origin },
+            { label: crumbs.home, href: selfUrl(origin, '/') },
             { label: crumbs[meta.breadcrumbKey] },
           ]),
         ].filter((entry) => entry !== null),

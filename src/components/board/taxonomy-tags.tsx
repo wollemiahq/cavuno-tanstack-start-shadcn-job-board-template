@@ -1,6 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
+import { localizePath } from '@/lib/localized-path';
 import { cn } from '@/lib/utils';
 
 export interface TaxonomyChip {
@@ -33,7 +34,7 @@ export function TaxonomyTags({
       {chips.map((chip) => (
         <Badge
           key={chip.key}
-          render={<a href={chip.href} />}
+          render={<a href={localizePath(chip.href)} />}
           variant="outline"
           className={cn(chipSize[size], 'hover:no-underline')}
         >

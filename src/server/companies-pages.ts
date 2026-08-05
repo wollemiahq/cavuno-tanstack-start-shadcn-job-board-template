@@ -108,7 +108,7 @@ export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             { label: c.companies },
           ]),
         ].filter((entry) => entry !== null),
@@ -191,7 +191,7 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.companies,
               href: selfUrl(seo.origin, BOARD_PATHS.companies),
@@ -276,7 +276,7 @@ export const getCompanyProfileSeo = createServerFn({ method: 'GET' })
             },
           },
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             { label: c.companies, href: `${seo.origin}/companies` },
             { label: data.companyName },
           ]),
@@ -369,7 +369,7 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.companies,
               href: selfUrl(seo.origin, BOARD_PATHS.companies),
@@ -450,7 +450,7 @@ export const getCompanySalariesPage = createServerFn({ method: 'GET' })
           }),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.companies,
               href: selfUrl(seo.origin, BOARD_PATHS.companies),
@@ -551,7 +551,7 @@ export const getCompanyCategorySalaryPage = createServerFn({ method: 'GET' })
           companyCategorySalaryJsonLd(salary),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.companies,
               href: selfUrl(seo.origin, BOARD_PATHS.companies),

@@ -39,6 +39,7 @@ import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
 import { buttonVariants } from '@/components/ui/button';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { localizePath } from '@/lib/localized-path';
 
 export const Route = createFileRoute('/salaries/skills/$slug/')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -195,7 +196,9 @@ function SkillSalaryPage() {
               title={m.salaryDetail_topLocations()}
               actions={
                 <a
-                  href={salarySkillLocationsPath(salary.canonicalSlug)}
+                  href={localizePath(
+                    salarySkillLocationsPath(salary.canonicalSlug),
+                  )}
                   className={buttonVariants({ variant: 'link', size: 'sm' })}
                 >
                   {m.salaryDetail_seeAllLocationsLabel()}

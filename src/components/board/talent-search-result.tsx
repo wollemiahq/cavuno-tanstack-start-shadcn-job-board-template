@@ -5,6 +5,7 @@ import { SearchResultCard } from '@/components/search-results/search-results';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { initialsOf } from '@/lib/initials';
+import { localizePath } from '@/lib/localized-path';
 
 export function TalentSearchResult({
   vm,
@@ -64,7 +65,7 @@ export function TalentSearchResult({
     <SearchResultCard selected={selectable && selected} className="p-0">
       {vm.detailHref ? (
         <a
-          href={vm.detailHref}
+          href={localizePath(vm.detailHref)}
           aria-current={selected ? 'true' : undefined}
           onClick={onActivate}
           className="block rounded-[inherit] p-4 outline-none"

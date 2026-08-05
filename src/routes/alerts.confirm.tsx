@@ -57,11 +57,17 @@ export const Route = createFileRoute('/alerts/confirm')({
     // Started before the token branch so it overlaps the confirm call.
     const seoPromise = getSeoBase();
     if (!deps.token) return { status: 'not_found', seo: await seoPromise };
-    const [result, seo] = await Promise.all([
-      confirmJobAlert({ data: { token: deps.token } }),
-      seoPromise,
-    ]);
-    return { status: result.status, seo };
+    // A malformed/garbage token must render the not-found state, not 500 —
+    // this page is reached from email links, where mangled tokens happen.
+    try {
+      const [result, seo] = await Promise.all([
+        confirmJobAlert({ data: { token: deps.token } }),
+        seoPromise,
+      ]);
+      return { status: result.status, seo };
+    } catch {
+      return { status: 'not_found', seo: await seoPromise };
+    }
   },
   head: ({ loaderData }) => ({
     meta: [

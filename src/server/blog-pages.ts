@@ -105,7 +105,7 @@ export const getBlogIndexPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             { label: c.blog },
           ]),
         ].filter((e) => e !== null),
@@ -201,7 +201,7 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
             ogImageUrl: ogImage,
           }),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             { label: c.blog, href: `${seo.origin}/blog` },
             { label: post.title },
           ]),
@@ -262,7 +262,7 @@ export const getBlogTagPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             { label: c.blog, href: selfUrl(seo.origin, BOARD_PATHS.blog) },
             { label: tag.name },
           ]),
@@ -339,7 +339,7 @@ export const getBlogAuthorPage = createServerFn({ method: 'GET' })
             totalPosts: posts.count ?? posts.data.length,
           }),
           createBreadcrumbJsonLd([
-            { label: c.home, href: seo.origin },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             { label: c.blog, href: selfUrl(seo.origin, BOARD_PATHS.blog) },
             { label: author.name },
           ]),

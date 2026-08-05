@@ -266,7 +266,9 @@ export function JobSearchPage({
                       </AlertDescription>
                       <AlertAction className="static">
                         <a
-                          href={`/account/access?${new URLSearchParams({ returnTo }).toString()}`}
+                          href={localizePath(
+                            `/account/access?${new URLSearchParams({ returnTo }).toString()}`,
+                          )}
                           className={buttonVariants({ size: 'sm' })}
                         >
                           {m.jobSearch_unlockMoreLabel()}
