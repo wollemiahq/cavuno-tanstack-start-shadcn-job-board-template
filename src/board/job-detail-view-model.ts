@@ -206,9 +206,11 @@ export function toJobDetailVM(
 
   const education =
     job.educationRequirements.length > 0
-      ? job.educationRequirements
-          .map((value) => enumLabel(value) ?? value.replace(/_/g, ' '))
-          .join(', ')
+      ? listJoin(
+          job.educationRequirements.map(
+            (value) => enumLabel(value) ?? value.replace(/_/g, ' '),
+          ),
+        )
       : null;
 
   const facts: JobDetailFactVM[] = [];
@@ -292,13 +294,7 @@ export function toJobDetailVM(
   // pre-resolved with `Intl.DisplayNames` region names) — so the detail
   // header no longer renders raw codes like "US, GB", and the two mappers
   // agree on the remote location.
-  const regionNames = (() => {
-    try {
-      return new Intl.DisplayNames([language], { type: 'region' });
-    } catch {
-      return null;
-    }
-  })();
+  const regionNames = factRegionNames;
   // Country display-name → ISO code, so a place-hierarchy country renders the
   // way the card's server label does ("United States" → "US", "United
   // Kingdom" → "GB"). `countryOptions` is the SDK's canonical, board-language
@@ -319,11 +315,13 @@ export function toJobDetailVM(
       .reverse()
       .join(', ') || null;
   // Remote permit ISO codes → country names (card-mapper parity).
-  const remoteScopeLabel =
-    job.remoteWorkPermitCountryCodes
-      .map((code) => regionNames?.of(code) ?? code)
-      .filter(Boolean)
-      .join(', ') || null;
+  const remoteScopeLabel = job.remoteWorkPermitCountryCodes.length
+    ? listJoin(
+        job.remoteWorkPermitCountryCodes
+          .map((code) => regionNames?.of(code) ?? code)
+          .filter(Boolean),
+      ) || null
+    : null;
   const location =
     job.remoteOption === 'remote'
       ? // A remote job's location is its scope: the constrained permit

@@ -133,7 +133,7 @@ describe('toJobDetailVM', () => {
     expect(onSite.workplaceLabel).toBe('On-site');
     // Remote permit codes resolve to country names (card-mapper parity),
     // not the raw "US, GB".
-    expect(vm.locationLabel).toBe('United States, United Kingdom');
+    expect(vm.locationLabel).toBe('United States and United Kingdom');
     expect(vm.workplaceLabel).toBe('Remote');
 
     const hybrid = toJobDetailVM(
@@ -213,7 +213,7 @@ describe('toJobDetailVM', () => {
     );
 
     expect(remoteConstrained.locationLabel).toBe(
-      'United States, United Kingdom',
+      'United States and United Kingdom',
     );
   });
 
