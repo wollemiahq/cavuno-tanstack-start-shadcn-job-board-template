@@ -12,6 +12,7 @@ import {
   Scripts,
   createRootRoute,
   useNavigate,
+  useRouter,
   useRouterState,
 } from '@tanstack/react-router';
 
@@ -206,24 +207,20 @@ function RootLayout() {
     select: (state) => resolveShellBreadcrumbTrail(state.matches),
   });
   const navigate = useNavigate();
+  const router = useRouter();
 
   // Once after hydration, report path templates to the builder parent when
-  // this board is embedded in the preview iframe.
-  // Lazy-import routeTree so the root module does not statically cycle
-  // with routeTree.gen (which imports every route including this one).
+  // this board is embedded in the preview iframe. The tree comes off the
+  // live router instance — importing routeTree.gen here would cycle (it
+  // imports every route including this one), and a dynamic import of it is
+  // ineffective anyway since router.tsx holds it in the client entry.
   useEffect(() => {
-    // A normal public tab has no builder parent, so do not download or walk
-    // the generated route tree merely to let emitRoutesReport no-op.
+    // A normal public tab has no builder parent, so do not walk the route
+    // tree merely to let emitRoutesReport no-op.
     if (window.parent === window) return;
-    void import('../routeTree.gen')
-      .then(({ routeTree }) => {
-        // Structural cast: SDK walker accepts id/path/fullPath/children only.
-        emitRoutesReport(routeTree as never);
-      })
-      .catch(() => {
-        // Fire-and-forget: never block render on a missing tree.
-      });
-  }, []);
+    // Structural cast: SDK walker accepts id/path/fullPath/children only.
+    emitRoutesReport(router.routeTree as never);
+  }, [router]);
   // Identity-aware default search scope: an approved employer hunts talent
   // (when the board's directory is visible to them); everyone else hunts
   // jobs. Section routes (companies/talent/blog) still override.

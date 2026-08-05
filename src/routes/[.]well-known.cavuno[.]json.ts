@@ -6,9 +6,10 @@
  * Routes are enumerated from the generated TanStack route tree via the
  * SDK's structural walker. No cavunoPage markers exist in this app yet.
  *
- * routeTree is loaded lazily inside the request path so this route module
- * does not form a static circular import with `routeTree.gen.ts` (which
- * imports every route, including this one).
+ * The static import of `routeTree.gen.ts` (which imports every route,
+ * including this one) is an intentional module cycle: nothing here touches
+ * the binding at evaluation time — it is only read inside the deferred
+ * request handler, by which point the tree module is fully initialized.
  */
 import {
   createWellKnownHandler,
@@ -17,9 +18,10 @@ import {
 } from '@cavuno/board/well-known';
 import { createFileRoute } from '@tanstack/react-router';
 
+import { routeTree } from '../routeTree.gen';
+
 const wellKnownHandler = createWellKnownHandler({
   routes: async () => {
-    const { routeTree } = await import('../routeTree.gen');
     // routeTree is a live TanStack Route instance; the SDK walker is
     // structural (id/path/fullPath/children) and does not depend on
     // @tanstack types — cast through the documented shape.
