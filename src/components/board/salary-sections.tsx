@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { localizePath } from '@/lib/localized-path';
 import { cn } from '@/lib/utils';
 
 export type { RailItem } from '@/board/salary-view-model';
@@ -180,7 +181,7 @@ export function SalaryRail({ vm }: { vm: SalaryRailVM }) {
         {vm.items.map((item) => (
           <a
             key={item.href}
-            href={item.href}
+            href={localizePath(item.href)}
             className="group focus-visible:ring-ring/30 rounded-[min(var(--radius-4xl),24px)] outline-none focus-visible:ring-3"
           >
             <Card

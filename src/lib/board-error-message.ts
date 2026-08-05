@@ -7,17 +7,27 @@
  */
 import { m } from '../paraglide/messages';
 
-const CODE_MESSAGES: Record<string, () => string> = {
-  invalid_credentials: m.boardError_invalidCredentialsText,
+/**
+ * Keys are REAL BoardApiErrorCode values (BOARD_API_ERROR_CODES) plus the
+ * app-local codes this repo's server fns invent ('unauthorized',
+ * 'invalid_file', 'unknown'). The map-keys-are-real-codes contract is
+ * pinned by board-error-message.test.ts — guessed names silently rendered
+ * the generic line for every actual API failure once.
+ */
+export const CODE_MESSAGES: Record<string, () => string> = {
+  board_auth_invalid_credentials: m.boardError_invalidCredentialsText,
   board_password_invalid: m.boardError_invalidCredentialsText,
   rate_limited: m.boardError_rateLimitedText,
-  otp_invalid: m.boardError_otpInvalidText,
-  otp_expired: m.boardError_otpExpiredText,
-  unauthorized: m.boardError_unauthorizedText,
-  email_taken: m.boardError_emailTakenText,
-  validation_error: m.boardError_validationText,
-  invalid_file: m.postJob_chooseImageError,
+  board_auth_invalid_token: m.boardError_otpInvalidText,
+  board_auth_token_expired: m.boardError_otpExpiredText,
+  board_auth_email_taken: m.boardError_emailTakenText,
+  board_auth_registration_disabled: m.boardError_registrationDisabledText,
+  auth_unauthenticated: m.boardError_unauthorizedText,
+  validation_bad_request: m.boardError_validationText,
   job_posting_logo_not_found: m.postJob_logoNotFoundError,
+  // App-local codes (not from the SDK):
+  unauthorized: m.boardError_unauthorizedText,
+  invalid_file: m.postJob_chooseImageError,
 };
 
 export function boardErrorMessage(result: {

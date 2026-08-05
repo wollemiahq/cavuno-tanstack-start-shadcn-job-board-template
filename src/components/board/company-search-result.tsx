@@ -4,6 +4,7 @@ import type { CompanyCardVM } from '@/board/company-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
 import { SearchResultCard } from '@/components/search-results/search-results';
 import { Badge } from '@/components/ui/badge';
+import { localizePath } from '@/lib/localized-path';
 
 export function CompanySearchResult({
   vm,
@@ -17,7 +18,7 @@ export function CompanySearchResult({
   return (
     <SearchResultCard selected={selected} className="p-0">
       <a
-        href={vm.detailHref}
+        href={vm.detailHref ? localizePath(vm.detailHref) : undefined}
         aria-current={selected ? 'true' : undefined}
         onClick={onActivate}
         className="block rounded-[inherit] p-4 outline-none"

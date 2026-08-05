@@ -31,3 +31,23 @@ describe('localized route slugs', () => {
     expect(delocalizeSegments('/fr/blog/post-x')).toBe('/fr/blog/post-x');
   });
 });
+
+describe('edge shapes', () => {
+  it('preserves query and hash through both directions', () => {
+    expect(localizePath('/jobs?q=react&page=2#results', { locale: 'fr' })).toBe(
+      '/fr/emplois?q=react&page=2#results',
+    );
+    expect(delocalizeSegments('/fr/emplois?q=react#results')).toBe(
+      '/fr/jobs?q=react#results',
+    );
+  });
+
+  it('handles deep nested localized paths', () => {
+    expect(
+      delocalizeSegments('/fr/emplois/locations/berlin-germany/skills/react'),
+    ).toBe('/fr/jobs/locations/berlin-germany/skills/react');
+    expect(
+      localizePath('/companies/acme/jobs/vp-of-growth', { locale: 'de' }),
+    ).toBe('/de/unternehmen/acme/jobs/vp-of-growth');
+  });
+});

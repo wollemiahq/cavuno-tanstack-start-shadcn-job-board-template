@@ -293,6 +293,7 @@
   "boardError_otpExpiredText": "Dieser Code ist abgelaufen. Fordere einen neuen an.",
   "boardError_otpInvalidText": "Dieser Code stimmt nicht. Prüfe ihn und versuche es erneut.",
   "boardError_rateLimitedText": "Zu viele Versuche. Warte kurz und versuche es dann erneut.",
+  "boardError_registrationDisabledText": "Registrierungen sind auf diesem Board geschlossen.",
   "boardError_unauthorizedText": "Bitte melde dich zuerst an.",
   "boardError_validationText": "Einige Felder brauchen Aufmerksamkeit. Prüfe das Formular und versuche es erneut.",
   "breadcrumbJsonLd_forEmployersLabel": "Für Arbeitgeber",

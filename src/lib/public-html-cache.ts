@@ -1,3 +1,5 @@
+import { delocalizeSegments } from './localized-path';
+
 /**
  * Anonymous public-document caching policy.
  *
@@ -42,7 +44,14 @@ const EDGE_CACHE_CONTROL = 'public, max-age=60, stale-while-revalidate=300';
 type EdgeCacheStorage = { default?: Cache };
 
 function pathnameWithoutLocale(pathname: string): string {
-  const stripped = pathname.replace(/^\/[a-z]{2,3}(?:-[A-Z]{2})?(?=\/|$)/, '');
+  // Localized section slugs (/fr/emplois, /de/gehaelter) must normalize to
+  // their canonical sections BEFORE the locale prefix is stripped, or the
+  // whole translated-slug surface silently loses the edge cache.
+  const canonicalSections = delocalizeSegments(pathname);
+  const stripped = canonicalSections.replace(
+    /^\/[a-z]{2,3}(?:-[A-Z]{2})?(?=\/|$)/,
+    '',
+  );
   return stripped || '/';
 }
 

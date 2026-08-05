@@ -146,7 +146,7 @@ describe('RegistrationPage', () => {
           ok: false,
           // Wire message is English API text; the UI must resolve the CODE
           // through the catalog and never echo the wire sentence.
-          code: 'email_taken',
+          code: 'board_auth_email_taken',
           message: 'Email is already registered',
         })}
       />,

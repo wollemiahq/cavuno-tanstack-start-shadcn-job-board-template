@@ -293,6 +293,7 @@
   "boardError_otpExpiredText": "⁧⟦Ţĥáţ çóðé ĥáš éẋþíŕéð. Ŕéɋúéšţ á ñéŵ óñé.⟧⁩",
   "boardError_otpInvalidText": "⁧⟦Ţĥáţ çóðé íšñ’ţ ŕíğĥţ. Çĥéçķ íţ áñð ţŕý áğáíñ.⟧⁩",
   "boardError_rateLimitedText": "⁧⟦Ţóó ɱáñý áţţéɱþţš. Ŵáíţ á ɱóɱéñţ, ţĥéñ ţŕý áğáíñ.⟧⁩",
+  "boardError_registrationDisabledText": "⁧⟦Šíğñ-úþš áŕé çĺóšéð óñ ţĥíš ƀóáŕð.⟧⁩",
   "boardError_unauthorizedText": "⁧⟦Šíğñ íñ ƒíŕšţ.⟧⁩",
   "boardError_validationText": "⁧⟦Šóɱé ƒíéĺðš ñééð áţţéñţíóñ. Çĥéçķ ţĥé ƒóŕɱ áñð ţŕý áğáíñ.⟧⁩",
   "breadcrumbJsonLd_forEmployersLabel": "⁧⟦Ƒóŕ éɱþĺóýéŕš⟧⁩",

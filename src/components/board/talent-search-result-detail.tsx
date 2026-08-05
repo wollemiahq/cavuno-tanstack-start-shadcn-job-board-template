@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { initialsOf } from '@/lib/initials';
+import { localizePath } from '@/lib/localized-path';
 
 /** The talent mark — the shared Avatar primitive with an initials fallback. */
 function TalentMark({ vm }: { vm: TalentProfileVM }) {
@@ -75,7 +76,9 @@ function ExpandedTalentDetailHeader({
           vm={vm}
           headingAs="h2"
           size="lg"
-          nameHref={interactive ? vm.detailHref : null}
+          nameHref={
+            interactive && vm.detailHref ? localizePath(vm.detailHref) : null
+          }
         />
       </div>
       {hasActions ? (
@@ -100,7 +103,9 @@ function CompactTalentDetailHeader({
     <SearchDetailHeader
       mark={<TalentMark vm={vm} />}
       name={vm.displayName}
-      nameHref={interactive ? vm.detailHref : null}
+      nameHref={
+        interactive && vm.detailHref ? localizePath(vm.detailHref) : null
+      }
       subtitle={vm.headline}
       actions={<TalentDetailActions cta={cta} interactive={interactive} />}
     />
