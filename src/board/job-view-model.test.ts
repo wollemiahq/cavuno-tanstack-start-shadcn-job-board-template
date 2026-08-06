@@ -16,7 +16,8 @@ const baseJob = {
   id: 'job_1',
   slug: 'senior-engineer',
   title: 'Senior Engineer',
-  description: '<p>Build great things for the team.</p>',
+  // Server-derived card teaser (always on the wire after API 4.2).
+  summary: 'Build great things for the team.',
   publishedAt: null,
   employmentType: 'full_time',
   remoteOption: 'remote',
@@ -84,8 +85,20 @@ describe('toJobCardVM', () => {
     );
   });
 
-  it('derives an honest summary from the description', () => {
-    expect(vm.summary).toContain('Build great things');
+  it('uses the API card summary as the teaser', () => {
+    expect(vm.summary).toBe('Build great things for the team.');
+  });
+
+  it('falls back to deriving from description when summary is absent (pre-4.2)', () => {
+    const legacy = toJobCardVM(
+      {
+        ...baseJob,
+        summary: undefined,
+        description: '<p>Legacy description still works.</p>',
+      } as unknown as PublicJobCard,
+      'en',
+    );
+    expect(legacy.summary).toContain('Legacy description still works');
   });
 
   it('builds chip hrefs from the canonical path helpers (categories then skills)', () => {

@@ -4,6 +4,11 @@
  * invented copy about a real employer (direction-C stress fix S6).
  * Returns null when there is nothing honest to show (the line is
  * omitted). SSR-safe: plain string work, no DOM.
+ *
+ * Prefer `cardSummary` for list/card UIs: the Board API now ships a
+ * server-derived `summary` on card models (4.2+). This pure helper is
+ * the fallback for older responses and for surfaces that still have
+ * long-form HTML (detail pages, RSS opt-in).
  */
 
 const ENTITIES: Record<string, string> = {
@@ -34,4 +39,26 @@ export function deriveSummary(html: string | null | undefined): string | null {
   if (text.length <= 160) return text;
   const cut = text.slice(0, 150);
   return `${cut.slice(0, cut.lastIndexOf(' '))}…`;
+}
+
+/**
+ * Card teaser from a public card wire object. Prefer the API's
+ * `summary` when the field is present (including explicit `null`);
+ * only re-derive from long-form HTML when the field is absent (pre-4.2
+ * responses). Matches the platform contract: API cleans data, app
+ * decides how much of the string to show.
+ */
+export function cardSummary(source: {
+  summary?: string | null;
+  description?: string | null;
+  bio?: string | null;
+}): string | null {
+  // `undefined` = field absent (pre-4.2 wire) → fall back. Explicit `null`
+  // means the API decided there is nothing honest to show. Trim so
+  // whitespace-only values do not render as blank teaser lines.
+  if (source.summary !== undefined) {
+    const trimmed = source.summary?.trim() ?? '';
+    return trimmed.length > 0 ? trimmed : null;
+  }
+  return deriveSummary(source.description ?? source.bio);
 }

@@ -69,6 +69,8 @@ export function BlogArchivePage({
   ) : (
     title
   );
+  // First cover is the archive LCP candidate (PageSpeed: LCP request discovery).
+  const lcpPostId = posts.find((entry) => entry.coverUrl)?.id ?? null;
 
   return (
     <Page>
@@ -84,7 +86,11 @@ export function BlogArchivePage({
           {posts.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {posts.map((post) => (
-                <PostCard key={post.id} post={post} />
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  priority={post.id === lcpPostId}
+                />
               ))}
             </div>
           ) : (

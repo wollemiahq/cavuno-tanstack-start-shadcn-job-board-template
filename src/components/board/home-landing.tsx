@@ -47,8 +47,11 @@ export interface HomeCompanyCard {
   slug: string;
   name: string;
   logoUrl: string | null;
-  /** Long-form company description (pre-sanitized HTML) or null. */
-  description: string | null;
+  /**
+   * Card teaser from `CompanyPublic.summary` (authored or API-derived).
+   * Do not pass long-form description HTML here.
+   */
+  summary: string | null;
   publishedJobCount: number;
   /** Pre-resolved, pluralized "N open job(s)" label from the route. */
   openJobsLabel: string;
@@ -136,7 +139,7 @@ function HiringIndex({
               companySlug={company.slug}
               name={company.name}
               logoUrl={company.logoUrl}
-              description={company.description}
+              summary={company.summary}
               publishedJobCount={company.publishedJobCount}
               jobCountLabel={company.openJobsLabel}
             />
@@ -384,6 +387,8 @@ export function HomeLanding({
             <Grid as="ul" columns={{ base: 1, md: 2, lg: 3 }} gap="6">
               {latestPosts.map((post) => (
                 <li key={post.id}>
+                  {/* Home blog strip is below-fold — keep covers lazy so they
+                      do not compete with true LCP. Priority lives on /blog. */}
                   <PostCard post={post} />
                 </li>
               ))}

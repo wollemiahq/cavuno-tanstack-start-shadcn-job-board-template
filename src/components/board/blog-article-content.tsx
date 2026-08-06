@@ -116,7 +116,11 @@ function ArticleToc({
                 'focus-visible:ring-ring/30 -ms-px block border-s-2 py-1.5 ps-4 text-sm transition-colors outline-none focus-visible:ring-3',
                 activeId === heading.id
                   ? 'border-foreground text-foreground font-medium'
-                  : 'text-muted-foreground hover:text-foreground border-transparent',
+                  : // Avoid text-muted-foreground on the mobile panel's
+                    // bg-muted — that pairing fails WCAG AA (~3.x:1).
+                    // secondary-foreground is solid body ink and stays ≥4.5:1
+                    // on both muted and background surfaces.
+                    'text-secondary-foreground hover:text-foreground border-transparent',
               )}
             >
               {heading.text}

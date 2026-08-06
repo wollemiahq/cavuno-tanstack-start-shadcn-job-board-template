@@ -18,37 +18,36 @@ import {
  * hover like `JobCard`. The company mark falls
  * back to two-letter initials when there is no logo. The open-count Badge
  * is shown ONLY when the company has open roles (an empty company earns no
- *"0 open jobs" noise), and the description line is honestly omitted when
- * absent — the API sends it as (pre-sanitized) HTML, so it is flattened to
- * plain text and clamped rather than rendered as markup inside a card.
+ * "0 open jobs" noise), and the teaser line is honestly omitted when
+ * `summary` is null.
+ *
+ * Teaser source is the wire `summary` only. The Board API already applies
+ * authored-summary-or-derive-from-description; the card does not re-flatten
+ * long-form HTML.
  */
-
-/** Flatten the API's (pre-sanitized) description HTML to a trimmed text line. */
-function toPlainText(html: string) {
-  return html
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 
 export function CompanyCard({
   companySlug,
   name,
   logoUrl,
-  description,
+  summary,
   publishedJobCount,
   jobCountLabel,
 }: {
   companySlug: string;
   name: string;
   logoUrl: string | null;
-  /** Long-form company description (pre-sanitized HTML) or null. */
-  description: string | null;
+  /**
+   * Card teaser from the public company wire (`CompanyPublic.summary`).
+   * Already cleaned by the API: operator-authored one-liner when set,
+   * else a plain-text first-sentence of the description, or `null`.
+   */
+  summary: string | null;
   publishedJobCount: number;
-  /** Pre-resolved, pluralized"N open job(s)" label from the route. */
+  /** Pre-resolved, pluralized "N open job(s)" label from the route. */
   jobCountLabel: string;
 }) {
-  const descriptionText = description ? toPlainText(description) : '';
+  const descriptionText = summary?.trim() ?? '';
 
   return (
     <Card

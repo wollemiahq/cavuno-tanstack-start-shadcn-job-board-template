@@ -30,7 +30,7 @@ const baseProps: CardProps = {
   companySlug: 'acme',
   name: 'Acme',
   logoUrl: null,
-  description: null,
+  summary: null,
   publishedJobCount: 3,
   jobCountLabel: '3 open jobs',
 };
@@ -84,20 +84,18 @@ describe('CompanyCard honest-data invariants', () => {
     expect(screen.queryByText('0 open jobs')).toBeNull();
   });
 
-  it('omits the description line when the company has none', async () => {
-    renderCard({ ...baseProps, description: null });
+  it('omits the teaser line when summary is null', async () => {
+    renderCard({ ...baseProps, summary: null });
     await screen.findByRole('link', { name: 'Acme' });
     expect(screen.queryByText(/./, { selector: 'p' })).toBeNull();
   });
 
-  it('renders an HTML description as tag-stripped plain text', async () => {
+  it('renders the wire summary as the card teaser (API already cleaned it)', async () => {
     renderCard({
       ...baseProps,
-      description: '<p>We build <strong>rockets</strong> daily</p>',
+      summary: 'We build rockets daily',
     });
-    // The card never leaks markup — the strong tag is gone, the words stay.
     expect(await screen.findByText('We build rockets daily')).toBeTruthy();
-    expect(document.querySelector('strong')).toBeNull();
   });
 });
 

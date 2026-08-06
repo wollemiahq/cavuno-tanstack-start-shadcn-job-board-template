@@ -15,8 +15,19 @@ import type { PublicBlogPostSummary } from '@cavuno/board';
  * One crawlable blog summary. The card keeps post, tag, and every author as
  * real links so a compact archive never throws away the blog's discovery
  * graph. Long editorial labels wrap instead of being replaced by ellipses.
+ *
+ * `priority` — set on the likely LCP cover (first cover in the archive /
+ * home strip). Skips `loading="lazy"` and sets `fetchPriority="high"` so
+ * Lighthouse can discover the image from the initial HTML without waiting
+ * for lazy-load heuristics.
  */
-export function PostCard({ post }: { post: PublicBlogPostSummary }) {
+export function PostCard({
+  post,
+  priority = false,
+}: {
+  post: PublicBlogPostSummary;
+  priority?: boolean;
+}) {
   const date = toBlogPostCardVM(post, getLocale()).publishedAtLabel;
   const eyebrow = post.tags[0] ?? null;
   const firstAuthor = post.authors[0] ?? null;
@@ -36,7 +47,9 @@ export function PostCard({ post }: { post: PublicBlogPostSummary }) {
               width={1200}
               height={675}
               className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transform-none motion-reduce:transition-none"
-              loading="lazy"
+              loading={priority ? 'eager' : 'lazy'}
+              // React uses camelCase; serializes to fetchpriority in HTML.
+              fetchPriority={priority ? 'high' : undefined}
               onError={hideBrokenImage}
             />
           </Link>

@@ -21,6 +21,7 @@ const company = {
   slug: 'acme-research',
   website: 'acme.example',
   logoUrl: 'https://cdn.example/acme.svg',
+  summary: 'Research tools for ambitious engineering teams.',
   description: '<p>Research tools for ambitious engineering teams.</p>',
   jobCount: 3,
   publishedJobCount: 3,
@@ -42,14 +43,26 @@ describe('company view models', () => {
     });
   });
 
-  it('does not invent card copy when the description or job count is absent', () => {
+  it('does not invent card copy when the summary/description or job count is absent', () => {
     const vm = toCompanyCardVM(
-      { ...company, description: null, publishedJobCount: 0 },
+      { ...company, summary: null, description: null, publishedJobCount: 0 },
       labels,
     );
 
     expect(vm.descriptionText).toBeNull();
     expect(vm.openJobsLabel).toBeNull();
+  });
+
+  it('prefers API summary over deriving from description HTML', () => {
+    const vm = toCompanyCardVM(
+      {
+        ...company,
+        summary: 'Operator-authored one-liner.',
+        description: '<p>Long HTML that should not become the card line.</p>',
+      },
+      labels,
+    );
+    expect(vm.descriptionText).toBe('Operator-authored one-liner.');
   });
 
   it('maps detail-only markets, normalized website, and conditional action links', () => {

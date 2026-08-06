@@ -28,7 +28,6 @@ import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { localizePath } from '../lib/localized-path';
-import { shrinkCardDescriptions } from '../lib/shrink-card-descriptions';
 import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
 
@@ -154,14 +153,11 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
               undefined,
               { headers },
             )
-          : board.jobs.list(
-              { ...filters, fields: '+description' },
-              { headers },
-            ),
+          : // Card teaser is on `summary` — do not pull full HTML descriptions.
+            board.jobs.list(filters, { headers }),
         seoBase(),
       ]);
-      // Ship the rendered summary, not the whole description document.
-      const page = shrinkCardDescriptions(rawList);
+      const page = rawList;
       const relatedSearches =
         'relatedSearches' in page ? page.relatedSearches : undefined;
       const heading = jobSearchCopy().headingJobs;

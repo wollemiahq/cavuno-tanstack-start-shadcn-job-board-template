@@ -77,6 +77,7 @@ function renderHeader({
       : 'off',
   user = null,
   hasAccessGrant = false,
+  logoUrl = null,
   locationSuggestions = [],
   keywordSuggestions = [],
   companyMarketSuggestions = [],
@@ -87,6 +88,7 @@ function renderHeader({
   talentDirectoryVisibility?: TalentDirectoryVisibility;
   user?: React.ComponentProps<typeof Header>['user'];
   hasAccessGrant?: boolean;
+  logoUrl?: string | null;
   locationSuggestions?: Array<{
     id: string;
     slug: string;
@@ -173,7 +175,7 @@ function renderHeader({
         return (
           <Header
             boardName="Robotics Jobs"
-            logoUrl={null}
+            logoUrl={logoUrl}
             user={user}
             language="en"
             features={features}
@@ -622,6 +624,20 @@ describe('Header — pathname-scoped submit-only search', () => {
       primaryNavigation.compareDocumentPosition(actions) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it('home link keeps discernible text when the logo compresses the wordmark (logo + search)', async () => {
+    // Lighthouse "Links must have discernible text": with a logo and the
+    // search bar, the wordmark is clipped for layout — it must stay in the
+    // accessibility tree (sr-only), not display:none.
+    renderHeader({ logoUrl: 'https://cdn.example/logo.png' });
+
+    await screen.findByRole('search');
+    const home = screen.getByRole('link', { name: 'Robotics Jobs' });
+    expect(home).toHaveAttribute('href', '/');
+    // Logo is decorative; the board name is the accessible name.
+    expect(home.querySelector('img')).toHaveAttribute('alt', '');
+    expect(home.textContent).toContain('Robotics Jobs');
   });
 
   it('pairs keyword and location in one Jobs bar without leaking location into other scopes', async () => {

@@ -20,7 +20,7 @@ import { m } from '../paraglide/messages';
 import { isLocale } from '../paraglide/runtime';
 
 import { jobCardCopy } from '@/copy-groups/job-card';
-import { deriveSummary } from '@/lib/derive-summary';
+import { cardSummary } from '@/lib/derive-summary';
 import { enumLabel } from '@/lib/enum-labels';
 import {
   cardLocationLabel,
@@ -67,7 +67,7 @@ export interface JobCardVM {
   publishedAt: string | null;
   /** Physical/applicant geography followed by the workplace type. */
   locationLabel: string;
-  /** Honest one-line summary from the real description, or `null`. */
+  /** Honest one-line teaser from the API card `summary` (or derived), or `null`. */
   summary: string | null;
   isFeatured: boolean;
   featuredLabel: string;
@@ -147,7 +147,9 @@ export function toJobCardVM(job: PublicJobCard, language: string): JobCardVM {
     salaryTimeframe: job.salaryTimeframe ?? null,
     publishedAt: job.publishedAt ?? null,
     locationLabel,
-    summary: deriveSummary(job.description),
+    // Prefer server-derived `summary` (always on the card after 4.2); do not
+    // request `?fields=+description` just to re-derive here.
+    summary: cardSummary(job),
     isFeatured: job.isFeatured,
     featuredLabel: jobCardCopy().featuredLabel,
     postedAtLabel: formatPublishedRelativeDate(language, job.publishedAt),

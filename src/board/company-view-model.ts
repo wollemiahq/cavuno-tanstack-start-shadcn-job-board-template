@@ -1,7 +1,7 @@
 import { normalizeWebsiteUrl } from '@cavuno/board/format';
 import { companyMarketPath, companyPath } from '@cavuno/board/paths';
 
-import { deriveSummary } from '@/lib/derive-summary';
+import { cardSummary } from '@/lib/derive-summary';
 import type { PublicCompany, PublicCompanyDetail } from '@cavuno/board';
 
 export interface CompanySearchLabels {
@@ -60,7 +60,9 @@ export function toCompanyCardVM(
     name: company.name,
     logoUrl: company.logoUrl,
     avatarName: company.name,
-    descriptionText: deriveSummary(company.description),
+    // Prefer API `summary` on list/search cards (4.2+); fall back to deriving
+    // from long-form `description` for older responses.
+    descriptionText: cardSummary(company),
     detailHref: companyPath(company.slug),
     publishedJobCount: company.publishedJobCount,
     openJobsLabel:

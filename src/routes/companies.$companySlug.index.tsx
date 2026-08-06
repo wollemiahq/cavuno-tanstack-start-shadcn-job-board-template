@@ -312,7 +312,7 @@ function CompanyPage() {
                         companySlug={c.slug}
                         name={c.name}
                         logoUrl={c.logoUrl}
-                        description={c.description}
+                        summary={(c as { summary?: string | null }).summary ?? null}
                         publishedJobCount={c.publishedJobCount}
                         jobCountLabel={jobCountLabel(c.publishedJobCount)}
                       />

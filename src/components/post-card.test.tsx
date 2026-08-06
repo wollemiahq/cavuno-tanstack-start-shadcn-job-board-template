@@ -56,14 +56,14 @@ const post = {
 
 afterEach(cleanup);
 
-function renderCard() {
+function renderCard(priority = false) {
   const rootRoute = createRootRoute({
     loader: () => ({ board: { language: 'en' } }),
   });
   const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
-    component: () => <PostCard post={post} />,
+    component: () => <PostCard post={post} priority={priority} />,
   });
   const route = (path: string) =>
     createRoute({
@@ -111,5 +111,18 @@ describe('PostCard — crawlable blog discovery', () => {
     });
     expect(cover).toHaveAttribute('width', '1200');
     expect(cover).toHaveAttribute('height', '675');
+    // Default: below-fold cards stay lazy.
+    expect(cover).toHaveAttribute('loading', 'lazy');
+    expect(cover).not.toHaveAttribute('fetchpriority');
+  });
+
+  it('marks a priority cover as eager + high fetch priority for LCP', async () => {
+    renderCard(true);
+
+    const cover = await screen.findByRole('img', {
+      name: post.featureImageAlt!,
+    });
+    expect(cover).toHaveAttribute('loading', 'eager');
+    expect(cover).toHaveAttribute('fetchpriority', 'high');
   });
 });

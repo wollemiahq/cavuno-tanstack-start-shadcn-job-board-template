@@ -136,7 +136,7 @@ const company: LandingProps['companies'][number] = {
   slug: 'technova-labs',
   name: 'TechNova Labs',
   logoUrl: null,
-  description: '<p>We build robotics tooling for warehouses.</p>',
+  summary: 'We build robotics tooling for warehouses.',
   publishedJobCount: 3,
   openJobsLabel: '3 open jobs',
 };
@@ -147,7 +147,7 @@ const hiringCompanies: LandingProps['companies'] = [
     slug: 'fieldstone-robotics',
     name: 'Fieldstone Robotics',
     logoUrl: null,
-    description: '<p>Autonomous field robots for agriculture.</p>',
+    summary: 'Autonomous field robots for agriculture.',
     publishedJobCount: 3,
     openJobsLabel: '3 open jobs',
   },
@@ -156,7 +156,7 @@ const hiringCompanies: LandingProps['companies'] = [
     slug: 'brightpath-health',
     name: 'Brightpath Health',
     logoUrl: null,
-    description: null,
+    summary: null,
     publishedJobCount: 3,
     openJobsLabel: '3 open jobs',
   },
@@ -166,7 +166,7 @@ const hiringCompanies: LandingProps['companies'] = [
     slug: 'harborline-analytics',
     name: 'Harborline Analytics',
     logoUrl: null,
-    description: null,
+    summary: null,
     publishedJobCount: 3,
     openJobsLabel: '3 open jobs',
   },
@@ -388,14 +388,14 @@ describe('HomeLanding — hiring index', () => {
     expect(within(index).getAllByText('3 open jobs')).toHaveLength(4);
   });
 
-  it('renders the shared CompanyCard with the company description, not a slim pill', async () => {
+  it('renders the shared CompanyCard with the wire summary, not a slim pill', async () => {
     renderLanding(baseProps);
     const index = await screen.findByRole('region', {
       name: m.home_companiesHeading(),
     });
     // Shared owned Card surface (not a bespoke homepage pill).
     expect(index.querySelector('[data-slot="card"]')).not.toBeNull();
-    // The clamped company description (flattened from the API's HTML) is shown.
+    // Card teaser is the API summary (authored or server-derived).
     expect(
       within(index).getByText('Autonomous field robots for agriculture.'),
     ).toBeTruthy();

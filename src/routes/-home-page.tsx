@@ -51,7 +51,8 @@ export function HomePage() {
       slug: company.slug,
       name: company.name,
       logoUrl: company.logoUrl,
-      description: company.description,
+      // Wire `summary` is already authored-or-derived by the Board API.
+      summary: (company as { summary?: string | null }).summary ?? null,
       publishedJobCount: company.publishedJobCount,
       openJobsLabel:
         new Intl.PluralRules(getLocale()).select(company.publishedJobCount) ===

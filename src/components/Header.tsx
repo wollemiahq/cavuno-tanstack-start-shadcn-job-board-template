@@ -225,6 +225,8 @@ export default function Header({
         className="text-foreground focus-visible:ring-ring/50 col-start-1 row-start-1 flex shrink-0 items-center gap-2.5 rounded-xl text-base font-semibold outline-none hover:no-underline focus-visible:ring-2"
       >
         {logoUrl ? (
+          // Decorative when the board name is present (visually or as
+          // sr-only). Empty alt keeps the link name from doubling.
           <img
             src={logoUrl}
             alt=""
@@ -234,12 +236,17 @@ export default function Header({
             onError={hideBrokenImage}
           />
         ) : null}
+        {/*
+          On narrow viewports with a logo + search, the wordmark is clipped
+          for layout — use `sr-only` (not `hidden`) so the home link still
+          has discernible text for screen readers / Lighthouse.
+        */}
         <span
           className={cn(
             'max-w-48 truncate',
             search.visible &&
               logoUrl &&
-              'hidden sm:inline xl:hidden 2xl:inline',
+              'sr-only sm:not-sr-only sm:inline xl:sr-only 2xl:not-sr-only 2xl:inline',
           )}
           title={boardName}
         >
