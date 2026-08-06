@@ -23,6 +23,7 @@
     "#/*": "./src/*"
   },
   "scripts": {
+    "predev": "pnpm run gen:paraglide",
     "dev": "vp dev --port 3000",
     "build": "vp build",
     "check:bundle": "node scripts/check-bundle-budgets.mjs",

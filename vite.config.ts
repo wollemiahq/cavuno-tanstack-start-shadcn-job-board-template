@@ -27,6 +27,21 @@ const config = defineConfig({
     // Compile-time i18n: messages/{locale}.json → tree-shakeable
     // functions in src/paraglide (generated; gitignored). Messages are
     // generated from the SDK uiCopy catalog — `pnpm run gen:messages`.
+    //
+    // This plugin generating `src/paraglide` is NOT enough on its own for
+    // `dev`, which is why package.json carries a `predev`. `src/paraglide`
+    // is gitignored, so a fresh checkout starts without it; Vite's
+    // dependency SCAN then races this plugin's first compile and reports
+    // `@/paraglide/messages` and `@/paraglide/runtime` unresolved. Vite
+    // treats a failed scan as fatal for optimization — it skips dependency
+    // pre-bundling for the whole session — which leaves two copies of React
+    // in the SSR graph and every route 500s with "Invalid hook call" /
+    // "Cannot read properties of null (reading 'useMemo')" out of
+    // DirectionProvider. The symptom names React, not i18n, so it reads as
+    // a dependency problem and sends you to the wrong place entirely.
+    //
+    // `build` is unaffected: the scanner is a dev-only optimization, and
+    // the production build resolves through this plugin normally.
     paraglideVitePlugin({
       project: './project.inlang',
       outdir: './src/paraglide',
