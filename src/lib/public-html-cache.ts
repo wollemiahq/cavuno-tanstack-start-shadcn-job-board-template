@@ -106,28 +106,75 @@ export function withPublicHtmlCacheHeaders(
   });
 }
 
+/**
+ * Some runtimes REFUSE the default cache rather than omitting it.
+ *
+ * Workers for Platforms is the one that matters: a dispatched user Worker
+ * still has a `caches` global, but touching the default cache throws
+ *
+ *     Error: This Worker is not permitted to access the default cache.
+ *
+ * An `?.` guard only covers runtimes where `caches` is ABSENT, so under
+ * WFP that throw escaped the fetch handler and every cacheable public
+ * route answered a bare Cloudflare 1101 — while uncacheable ones
+ * (/post, /password, /embed/*) rendered perfectly, because they never
+ * reach this code. Local `vite preview`, CI, and any ordinary Worker all
+ * permit the cache, so nothing short of a real WFP deploy sees it.
+ *
+ * Latched: once refused, stop asking. The answer cannot change within an
+ * isolate, and re-throwing per request costs latency on exactly the pages
+ * this cache exists to make fast.
+ */
+let edgeCacheRefused = false;
+
 function defaultEdgeCache(): Cache | undefined {
-  return (globalThis as unknown as { caches?: EdgeCacheStorage }).caches
-    ?.default;
+  if (edgeCacheRefused) return undefined;
+  try {
+    return (globalThis as unknown as { caches?: EdgeCacheStorage }).caches
+      ?.default;
+  } catch {
+    edgeCacheRefused = true;
+    return undefined;
+  }
 }
 
-/** Cloudflare Cache API fast path; a no-op on other TanStack runtimes. */
+/**
+ * Cloudflare Cache API fast path; a no-op on runtimes that lack the
+ * default cache OR refuse it. Never throws: a cache miss and a cache
+ * that is not allowed must look identical to the caller.
+ */
 export async function readPublicHtmlCache(
   request: Request,
 ): Promise<Response | undefined> {
   if (!isAnonymousPublicDocumentRequest(request)) return undefined;
-  return (await defaultEdgeCache()?.match(request)) ?? undefined;
+  try {
+    return (await defaultEdgeCache()?.match(request)) ?? undefined;
+  } catch {
+    edgeCacheRefused = true;
+    return undefined;
+  }
 }
 
-export function writePublicHtmlCache(
+export async function writePublicHtmlCache(
   request: Request,
   response: Response,
-): Promise<void> | undefined {
+): Promise<void> {
   if (
     !isAnonymousPublicDocumentRequest(request) ||
     response.headers.get('cache-control') !== BROWSER_CACHE_CONTROL
   ) {
-    return undefined;
+    return;
   }
-  return defaultEdgeCache()?.put(request, response.clone());
+  try {
+    await defaultEdgeCache()?.put(request, response.clone());
+  } catch {
+    // Same posture as the read: a refused or failing cache must never
+    // turn a rendered page into an error.
+    edgeCacheRefused = true;
+  }
+}
+
+/** Test seam — the latch is module state and would leak across cases. */
+export function resetEdgeCacheRefusalForTest(): void {
+  edgeCacheRefused = false;
 }

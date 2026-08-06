@@ -63,11 +63,11 @@ export default {
       request,
       withBaselineSecurityHeaders(rendered),
     );
+    // Always a promise now, and one that never rejects — a cache the
+    // runtime refuses must not turn a rendered page into an error.
     const cacheWrite = writePublicHtmlCache(request, response);
-    if (cacheWrite) {
-      if (executionContext) executionContext.waitUntil(cacheWrite);
-      else void cacheWrite.catch(() => undefined);
-    }
+    if (executionContext) executionContext.waitUntil(cacheWrite);
+    else void cacheWrite;
     return response;
   },
 };
