@@ -334,6 +334,25 @@ export function EmployerJobForm({
     };
   }
 
+  /**
+   * Edit-only: both bounds deliberately emptied on a job that HAS a salary
+   * means "withdraw it" (4.1.0 PATCH null-clears — omitting would silently
+   * keep the old figures forever). One bound emptied is ambiguous and stays
+   * merge-patch. Lives outside `buildBody` so the CREATE body type never
+   * carries the null variant.
+   */
+  function salaryClear() {
+    if (mode.kind !== 'edit') return {};
+    if (form.salaryMin || form.salaryMax) return {};
+    if (job?.salaryMin == null && job?.salaryMax == null) return {};
+    return {
+      salaryMin: null,
+      salaryMax: null,
+      salaryCurrency: null,
+      salaryTimeframe: null,
+    };
+  }
+
   async function runCheckout(jobId: string) {
     const option = billingOptions.find(
       (candidate) => `option:${candidate.id}` === selectedBilling,
@@ -432,6 +451,7 @@ export function EmployerJobForm({
       // Edit.
       const body = {
         ...buildBody(),
+        ...salaryClear(),
         applicationUrl: applicationUrl ?? null,
       } satisfies UpdateEmployerJobBody;
       const result = await updateJob({ data: { slug, id: mode.jobId, body } });

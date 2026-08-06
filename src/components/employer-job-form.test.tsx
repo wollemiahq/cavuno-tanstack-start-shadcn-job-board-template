@@ -183,6 +183,65 @@ describe('EmployerJobForm', () => {
     );
   });
 
+  it('sends salary nulls when an edit clears both bounds (withdraw the salary)', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+
+    const { container } = render(
+      <EmployerJobForm
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'published' }}
+        job={draftJob as never}
+      />,
+    );
+
+    fireEvent.change(container.querySelector('#job-salary-min')!, {
+      target: { value: '' },
+    });
+    fireEvent.change(container.querySelector('#job-salary-max')!, {
+      target: { value: '' },
+    });
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    const body = mocks.updateJob.mock.calls[0]![0].data.body;
+    expect(body.salaryMin).toBeNull();
+    expect(body.salaryMax).toBeNull();
+    expect(body.salaryCurrency).toBeNull();
+    expect(body.salaryTimeframe).toBeNull();
+  });
+
+  it('omits salary when an edit leaves one bound filled (ambiguous, unchanged)', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+
+    const { container } = render(
+      <EmployerJobForm
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'published' }}
+        job={draftJob as never}
+      />,
+    );
+
+    fireEvent.change(container.querySelector('#job-salary-max')!, {
+      target: { value: '' },
+    });
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    const body = mocks.updateJob.mock.calls[0]![0].data.body;
+    expect('salaryMin' in body).toBe(false);
+    expect('salaryMax' in body).toBe(false);
+  });
+
   it('hides the plan picker when editing a published job', () => {
     render(
       <EmployerJobForm

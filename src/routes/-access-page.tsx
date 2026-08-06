@@ -67,6 +67,35 @@ function safeReturnTo(value: string | undefined): string | null {
   return pathname === RETURN_PATH ? null : safe;
 }
 
+/**
+ * Billing cadence beside the price, worded from THIS catalog. The wire
+ * `billingLabel` is an operator/platform display string in the board
+ * language — the structured `offerType` + `intervalUnit`/`intervalCount`
+ * fields carry the same fact, so /de/ can read "/Monat". Unknown interval
+ * shapes fall back to the wire label rather than guessing.
+ */
+function offerBillingLabel(offer: PaywallOffer): string {
+  if (offer.offerType === 'lifetime') return m.accessOffer_oneTime();
+  const count = offer.intervalCount ?? 1;
+  if (offer.intervalUnit === 'month') {
+    return count === 1
+      ? m.accessOffer_perMonth()
+      : m.accessOffer_everyMonths({ count });
+  }
+  if (offer.intervalUnit === 'year') {
+    return count === 1
+      ? m.accessOffer_perYear()
+      : m.accessOffer_everyYears({ count });
+  }
+  if (offer.intervalUnit === 'week' && count === 1) {
+    return m.accessOffer_perWeek();
+  }
+  if (offer.intervalUnit === 'day' && count === 1) {
+    return m.accessOffer_perDay();
+  }
+  return offer.billingLabel;
+}
+
 function formatPrice(amountCents: number, currency: string) {
   return new Intl.NumberFormat(getLocale(), {
     style: 'currency',
@@ -98,6 +127,7 @@ function PlanCard({
   onChoose: (offer: PaywallOffer) => void;
 }) {
   const popular = offer.isDefault;
+  const billing = offerBillingLabel(offer);
   return (
     <Card className={cn('flex flex-col', popular && 'ring-primary ring-2')}>
       <CardHeader>
@@ -111,9 +141,7 @@ function PlanCard({
           <span className="font-heading text-3xl font-semibold tracking-tight">
             {formatPrice(offer.amountCents, offer.currency)}
           </span>
-          <span className="text-muted-foreground text-sm">
-            {offer.billingLabel}
-          </span>
+          <span className="text-muted-foreground text-sm">{billing}</span>
         </p>
       </CardContent>
       <CardFooter>

@@ -1544,6 +1544,21 @@ Props:
 - `logoUrl: string | null`
 - `slug: string`
 
+### MarketingConsentSettings — `src/components/marketing-consent-settings.tsx`
+
+Marketing-consent row for /settings — grant AND withdraw, beside this
+app's own disclosure copy. Granting from a settings page is safe only
+because the wording renders right here; a bare toggle with no stated copy
+would not be consent.
+
+Consent defaults to OFF: `null` (never decided) and `withdrawn` both
+render unticked. This is deliberately unlike the notification channels
+above it, which default to subscribed.
+
+Props:
+
+- `consent: MarketingConsentState | null`
+
 ### DitherCanvas — `src/components/marketing/dither-canvas.tsx`
 
 The decorative hero dithering band — the real paper.design Dithering
@@ -1914,7 +1929,8 @@ Props:
 
 - `copy: RegistrationCopy`
 - `footer?: ReactNode`
-- `onSubmit: (values: { displayName: string; email: string; password: string; }) => Promise<RegistrationResult>`
+- `marketingConsent?: MarketingConsentCopy | undefined`
+- `onSubmit: (values: { displayName: string; email: string; password: string; marketingConsent?: boolean | undefined; }) => Promis…`
 - `successHref: string`
 - `supportingText: ReactNode`
 - `title: string`

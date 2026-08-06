@@ -1,5 +1,12 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
+  "accessOffer_everyMonths": "tous les {count} mois",
+  "accessOffer_everyYears": "tous les {count} ans",
+  "accessOffer_oneTime": "paiement unique",
+  "accessOffer_perDay": "/jour",
+  "accessOffer_perMonth": "/mois",
+  "accessOffer_perWeek": "/semaine",
+  "accessOffer_perYear": "/an",
   "accountAccess_activeBadge": "Actif",
   "accountAccess_activeBody": "Vous avez un accès complet à toutes les offres de ce site.",
   "accountAccess_backToPlansLabel": "← Retour aux formules",
@@ -886,6 +893,10 @@
   "marketPage_metaDescription": "Entreprises à {market} qui recrutent sur {boardName}.",
   "marketPage_metaTitle": "Entreprises à {market}",
   "marketPage_notFoundText": "Marché introuvable.",
+  "marketingConsent_privacyLinkLabel": "Politique de confidentialité",
+  "marketingConsent_settingsDescription": "Envoyez-moi des nouveautés, des mises à jour produit et des offres occasionnelles de ce site par e-mail.",
+  "marketingConsent_settingsTitle": "Newsletter et mises à jour",
+  "marketingConsent_signUpDisclosure": "Envoyez-moi des nouveautés, des mises à jour produit et des offres occasionnelles de ce site par e-mail.",
   "meAlerts_backToAccountLabel": "Retour au compte",
   "meAlerts_subtitleText": "Recevez un e-mail lorsque de nouvelles offres correspondantes sont publiées.",
   "meAlerts_title": "Alertes emploi",
@@ -1389,9 +1400,5 @@
   "ui_moreLabel": "Plus",
   "ui_sidebarDescription": "Affiche la barre latérale mobile.",
   "ui_sidebarTitle": "Barre latérale",
-  "ui_sidebarToggleLabel": "Afficher ou masquer la barre latérale",
-  "marketingConsent_signUpDisclosure": "Envoyez-moi des nouveautés, des mises à jour produit et des offres occasionnelles de ce site par e-mail.",
-  "marketingConsent_settingsTitle": "Newsletter et mises à jour",
-  "marketingConsent_settingsDescription": "Envoyez-moi des nouveautés, des mises à jour produit et des offres occasionnelles de ce site par e-mail.",
-  "marketingConsent_privacyLinkLabel": "Politique de confidentialité"
+  "ui_sidebarToggleLabel": "Afficher ou masquer la barre latérale"
 }

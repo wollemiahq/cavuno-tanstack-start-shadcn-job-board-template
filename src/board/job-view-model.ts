@@ -22,7 +22,11 @@ import { isLocale } from '../paraglide/runtime';
 import { jobCardCopy } from '@/copy-groups/job-card';
 import { deriveSummary } from '@/lib/derive-summary';
 import { enumLabel } from '@/lib/enum-labels';
-import { cardLocationLabel } from '@/lib/location-labels';
+import {
+  cardLocationLabel,
+  isWorldwideRemote,
+  localizedRemoteRegion,
+} from '@/lib/location-labels';
 import { formatJobSalary } from '@/lib/salary-display';
 import type { PublicJobCard } from '@cavuno/board';
 
@@ -107,10 +111,11 @@ export function toJobCardVM(job: PublicJobCard, language: string): JobCardVM {
   // /de/ reads "Remote (weltweit)". Structural fix (a `remoteWorldwide`
   // boolean on the card model) is a platform follow-up; until then this
   // sentinel is stable for English-language boards.
-  const worldwideRemote =
-    job.remoteOption === 'remote' && job.remoteLocationLabel === 'Worldwide';
+  const worldwideRemote = isWorldwideRemote(job);
   const placeLabel =
-    job.remoteOption === 'remote' ? job.remoteLocationLabel : job.locationLabel;
+    job.remoteOption === 'remote'
+      ? localizedRemoteRegion(job, language)
+      : job.locationLabel;
   const locationLabel = worldwideRemote
     ? m.label_locationRemoteWorldwide({}, localeOpt)
     : [
