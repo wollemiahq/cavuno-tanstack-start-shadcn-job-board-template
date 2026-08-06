@@ -4,6 +4,7 @@ import {
   isAnonymousPublicDocumentRequest,
   isPublicDocumentPath,
   readPublicHtmlCache,
+  resetEdgeCacheRefusalForTest,
   withPublicHtmlCacheHeaders,
   writePublicHtmlCache,
 } from './public-html-cache';
@@ -112,5 +113,79 @@ describe('localized section slugs stay cacheable', () => {
     expect(isPublicDocumentPath('/de/unternehmen')).toBe(true);
     expect(isPublicDocumentPath('/fr/entreprises')).toBe(true);
     expect(isPublicDocumentPath('/de/talente')).toBe(true);
+  });
+});
+
+/**
+ * Workers for Platforms is the runtime that actually serves published
+ * boards, and it REFUSES the default cache rather than omitting it:
+ * a dispatched Worker still has `caches`, but touching `.default` throws
+ * "This Worker is not permitted to access the default cache."
+ *
+ * An `?.` guard only covers an ABSENT `caches`, so this threw straight
+ * out of the fetch handler and every cacheable public route answered a
+ * bare Cloudflare 1101 — while /post, /password and /embed/* rendered
+ * fine, because they never reach this code. Local `vite preview`, CI and
+ * ordinary Workers all permit the cache, so nothing except a real WFP
+ * deploy can observe it. Hence these tests.
+ */
+describe('a runtime that REFUSES the default cache', () => {
+  function installRefusingCaches() {
+    resetEdgeCacheRefusalForTest();
+    Object.defineProperty(globalThis, 'caches', {
+      configurable: true,
+      value: {
+        get default(): never {
+          throw new Error(
+            'This Worker is not permitted to access the default cache.',
+          );
+        },
+      },
+    });
+  }
+
+  it('reads as a miss instead of throwing', async () => {
+    installRefusingCaches();
+    const request = new Request('https://board.example.com/');
+    await expect(readPublicHtmlCache(request)).resolves.toBeUndefined();
+  });
+
+  it('writes as a no-op instead of throwing', async () => {
+    installRefusingCaches();
+    const request = new Request('https://board.example.com/');
+    const response = new Response('<html></html>', {
+      headers: { 'cache-control': 'public, max-age=0, must-revalidate' },
+    });
+    await expect(
+      writePublicHtmlCache(request, response),
+    ).resolves.toBeUndefined();
+  });
+
+  it('stops re-asking once refused', async () => {
+    // The answer cannot change inside an isolate, and re-throwing per
+    // request costs latency on exactly the pages this cache speeds up.
+    installRefusingCaches();
+    let reads = 0;
+    Object.defineProperty(globalThis, 'caches', {
+      configurable: true,
+      get() {
+        reads += 1;
+        return {
+          get default(): never {
+            throw new Error(
+              'This Worker is not permitted to access the default cache.',
+            );
+          },
+        };
+      },
+    });
+
+    const request = new Request('https://board.example.com/');
+    await readPublicHtmlCache(request);
+    const afterFirst = reads;
+    await readPublicHtmlCache(request);
+
+    expect(afterFirst).toBeGreaterThan(0);
+    expect(reads).toBe(afterFirst);
   });
 });
