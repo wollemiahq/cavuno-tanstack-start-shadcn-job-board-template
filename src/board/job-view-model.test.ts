@@ -155,6 +155,51 @@ describe('toSavedJobCardVM', () => {
 });
 
 describe('worldwide remote card wording', () => {
+  it('trusts the structured remoteWorldwide boolean over the label string', () => {
+    // A non-English board bakes its own word into the label — the sentinel
+    // match can never catch it, the 4.1.0 boolean does.
+    const job = {
+      ...baseJob,
+      remoteOption: 'remote',
+      remoteWorldwide: true,
+      remoteLocationLabel: 'Weltweit',
+      locationLabel: 'Weltweit (Remote)',
+    } as never;
+    expect(toJobCardVM(job, 'en').locationLabel).toBe('Remote (worldwide)');
+    expect(toJobCardVM(job, 'de').locationLabel).toBe('Remote (weltweit)');
+  });
+
+  it('composes a localized region list from permit codes (constrained remote)', () => {
+    const job = {
+      ...baseJob,
+      remoteOption: 'remote',
+      remoteWorldwide: false,
+      remoteWorkPermitCountryCodes: ['US', 'GB'],
+      remoteLocationLabel: 'United States + 1 more',
+      locationLabel: 'United States + 1 more',
+    } as never;
+    // Intl.DisplayNames + ListFormat in the viewer locale, not the
+    // board-language wire label.
+    expect(toJobCardVM(job, 'de').locationLabel).toContain(
+      'Vereinigte Staaten',
+    );
+    expect(toJobCardVM(job, 'de').locationLabel).toContain(
+      'Vereinigtes Königreich',
+    );
+  });
+
+  it('falls back to the wire region label when the code list is long', () => {
+    const job = {
+      ...baseJob,
+      remoteOption: 'remote',
+      remoteWorldwide: false,
+      remoteWorkPermitCountryCodes: ['US', 'GB', 'DE', 'FR', 'ES'],
+      remoteLocationLabel: 'Europe',
+      locationLabel: 'Europe',
+    } as never;
+    expect(toJobCardVM(job, 'en').locationLabel).toContain('Europe');
+  });
+
   it('re-words the wire "Worldwide" sentinel per viewer locale', () => {
     const job = {
       ...baseJob,

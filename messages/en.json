@@ -1,5 +1,12 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
+  "accessOffer_everyMonths": "every {count} months",
+  "accessOffer_everyYears": "every {count} years",
+  "accessOffer_oneTime": "one-time payment",
+  "accessOffer_perDay": "/day",
+  "accessOffer_perMonth": "/month",
+  "accessOffer_perWeek": "/week",
+  "accessOffer_perYear": "/year",
   "accountAccess_activeBadge": "Active",
   "accountAccess_activeBody": "You have full access to every job on this board.",
   "accountAccess_backToPlansLabel": "← Back to plans",
@@ -886,6 +893,10 @@
   "marketPage_metaDescription": "Companies in {market} hiring on {boardName}.",
   "marketPage_metaTitle": "{market} companies",
   "marketPage_notFoundText": "Market not found.",
+  "marketingConsent_privacyLinkLabel": "Privacy Policy",
+  "marketingConsent_settingsDescription": "Email me news, product updates and occasional offers from this board.",
+  "marketingConsent_settingsTitle": "Newsletter and updates",
+  "marketingConsent_signUpDisclosure": "Email me news, product updates and occasional offers from this board.",
   "meAlerts_backToAccountLabel": "Back to account",
   "meAlerts_subtitleText": "Get emailed when new matching jobs are posted.",
   "meAlerts_title": "Job alerts",
@@ -1389,9 +1400,5 @@
   "ui_moreLabel": "More",
   "ui_sidebarDescription": "Displays the mobile sidebar.",
   "ui_sidebarTitle": "Sidebar",
-  "ui_sidebarToggleLabel": "Toggle sidebar",
-  "marketingConsent_signUpDisclosure": "Email me news, product updates and occasional offers from this board.",
-  "marketingConsent_settingsTitle": "Newsletter and updates",
-  "marketingConsent_settingsDescription": "Email me news, product updates and occasional offers from this board.",
-  "marketingConsent_privacyLinkLabel": "Privacy Policy"
+  "ui_sidebarToggleLabel": "Toggle sidebar"
 }

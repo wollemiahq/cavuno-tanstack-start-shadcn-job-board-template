@@ -1,5 +1,12 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
+  "accessOffer_everyMonths": "⟦éṽéŕý {count} ɱóñţĥš⟧",
+  "accessOffer_everyYears": "⟦éṽéŕý {count} ýéáŕš⟧",
+  "accessOffer_oneTime": "⟦óñé-ţíɱé þáýɱéñţ⟧",
+  "accessOffer_perDay": "⟦/ðáý⟧",
+  "accessOffer_perMonth": "⟦/ɱóñţĥ⟧",
+  "accessOffer_perWeek": "⟦/ŵééķ⟧",
+  "accessOffer_perYear": "⟦/ýéáŕ⟧",
   "accountAccess_activeBadge": "⟦Áçţíṽé⟧",
   "accountAccess_activeBody": "⟦Ýóú ĥáṽé ƒúĺĺ áççéšš ţó éṽéŕý ĵóƀ óñ ţĥíš ƀóáŕð.⟧",
   "accountAccess_backToPlansLabel": "⟦← Ɓáçķ ţó þĺáñš⟧",
@@ -886,6 +893,10 @@
   "marketPage_metaDescription": "⟦Çóɱþáñíéš íñ {market} ĥíŕíñğ óñ {boardName}.⟧",
   "marketPage_metaTitle": "⟦{market} çóɱþáñíéš⟧",
   "marketPage_notFoundText": "⟦Ṁáŕķéţ ñóţ ƒóúñð.⟧",
+  "marketingConsent_privacyLinkLabel": "⟦Þŕíṽáçý Þóĺíçý⟧",
+  "marketingConsent_settingsDescription": "⟦Éɱáíĺ ɱé ñéŵš, þŕóðúçţ úþðáţéš áñð óççášíóñáĺ óƒƒéŕš ƒŕóɱ ţĥíš ƀóáŕð.⟧",
+  "marketingConsent_settingsTitle": "⟦Ñéŵšĺéţţéŕ áñð úþðáţéš⟧",
+  "marketingConsent_signUpDisclosure": "⟦Éɱáíĺ ɱé ñéŵš, þŕóðúçţ úþðáţéš áñð óççášíóñáĺ óƒƒéŕš ƒŕóɱ ţĥíš ƀóáŕð.⟧",
   "meAlerts_backToAccountLabel": "⟦Ɓáçķ ţó áççóúñţ⟧",
   "meAlerts_subtitleText": "⟦Ğéţ éɱáíĺéð ŵĥéñ ñéŵ ɱáţçĥíñğ ĵóƀš áŕé þóšţéð.⟧",
   "meAlerts_title": "⟦Ĵóƀ áĺéŕţš⟧",
@@ -1389,9 +1400,5 @@
   "ui_moreLabel": "⟦Ṁóŕé⟧",
   "ui_sidebarDescription": "⟦Ðíšþĺáýš ţĥé ɱóƀíĺé šíðéƀáŕ.⟧",
   "ui_sidebarTitle": "⟦Šíðéƀáŕ⟧",
-  "ui_sidebarToggleLabel": "⟦Ţóğğĺé šíðéƀáŕ⟧",
-  "marketingConsent_signUpDisclosure": "⟦Éɱáíĺ ɱé ñéŵš, þŕóðúçţ úþðáţéš áñð óççášíóñáĺ óƒƒéŕš ƒŕóɱ ţĥíš ƀóáŕð.⟧",
-  "marketingConsent_settingsTitle": "⟦Ñéŵšĺéţţéŕ áñð úþðáţéš⟧",
-  "marketingConsent_settingsDescription": "⟦Éɱáíĺ ɱé ñéŵš, þŕóðúçţ úþðáţéš áñð óççášíóñáĺ óƒƒéŕš ƒŕóɱ ţĥíš ƀóáŕð.⟧",
-  "marketingConsent_privacyLinkLabel": "⟦Þŕíṽáçý Þóĺíçý⟧"
+  "ui_sidebarToggleLabel": "⟦Ţóğğĺé šíðéƀáŕ⟧"
 }

@@ -1,5 +1,12 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
+  "accessOffer_everyMonths": "alle {count} Monate",
+  "accessOffer_everyYears": "alle {count} Jahre",
+  "accessOffer_oneTime": "Einmalzahlung",
+  "accessOffer_perDay": "/Tag",
+  "accessOffer_perMonth": "/Monat",
+  "accessOffer_perWeek": "/Woche",
+  "accessOffer_perYear": "/Jahr",
   "accountAccess_activeBadge": "Aktiv",
   "accountAccess_activeBody": "Du hast vollen Zugriff auf alle Jobs auf diesem Jobboard.",
   "accountAccess_backToPlansLabel": "← Zurück zu den Paketen",
@@ -886,6 +893,10 @@
   "marketPage_metaDescription": "Unternehmen in {market}, die auf {boardName} einstellen.",
   "marketPage_metaTitle": "Unternehmen in {market}",
   "marketPage_notFoundText": "Markt nicht gefunden.",
+  "marketingConsent_privacyLinkLabel": "Datenschutzerklärung",
+  "marketingConsent_settingsDescription": "Schickt mir Neuigkeiten, Produkt-Updates und gelegentliche Angebote dieses Boards per E-Mail.",
+  "marketingConsent_settingsTitle": "Newsletter und Updates",
+  "marketingConsent_signUpDisclosure": "Schickt mir Neuigkeiten, Produkt-Updates und gelegentliche Angebote dieses Boards per E-Mail.",
   "meAlerts_backToAccountLabel": "Zurück zum Konto",
   "meAlerts_subtitleText": "Werde benachrichtigt, wenn neue passende Jobs veröffentlicht werden.",
   "meAlerts_title": "Job-Alerts",
@@ -1389,9 +1400,5 @@
   "ui_moreLabel": "Mehr",
   "ui_sidebarDescription": "Zeigt die mobile Seitenleiste an.",
   "ui_sidebarTitle": "Seitenleiste",
-  "ui_sidebarToggleLabel": "Seitenleiste umschalten",
-  "marketingConsent_signUpDisclosure": "Schickt mir Neuigkeiten, Produkt-Updates und gelegentliche Angebote dieses Boards per E-Mail.",
-  "marketingConsent_settingsTitle": "Newsletter und Updates",
-  "marketingConsent_settingsDescription": "Schickt mir Neuigkeiten, Produkt-Updates und gelegentliche Angebote dieses Boards per E-Mail.",
-  "marketingConsent_privacyLinkLabel": "Datenschutzerklärung"
+  "ui_sidebarToggleLabel": "Seitenleiste umschalten"
 }
