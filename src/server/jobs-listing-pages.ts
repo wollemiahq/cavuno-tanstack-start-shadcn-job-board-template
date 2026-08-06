@@ -66,6 +66,27 @@ async function resolveOrNull(
   }
 }
 
+/**
+ * Capture a rejection as a VALUE instead of letting it reject the batch.
+ *
+ * The listing endpoint 404s on an unknown category/skill slug. Now that the
+ * listing shares a `Promise.all` with its taxonomy resolve, an unrecognised
+ * slug used to reject the whole batch BEFORE the resolve's verdict could be
+ * read — turning a 404 page into a 500. Holding the outcome lets the resolve
+ * decide: unknown slug -> `not_found`, alias -> 308, and on a slug that
+ * really exists the listing's error is re-thrown unchanged, so a genuine
+ * backend failure is never masked as a missing page.
+ */
+type Settled<T> = { ok: true; value: T } | { ok: false; error: unknown };
+
+async function settled<T>(promise: Promise<T>): Promise<Settled<T>> {
+  try {
+    return { ok: true, value: await promise };
+  } catch (error) {
+    return { ok: false, error };
+  }
+}
+
 /** Shared listing filter slice used by every jobs listing page function. */
 export type JobsListingFiltersInput = {
   remoteOption?: RemoteOption;
@@ -189,13 +210,15 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
       // Category resolve used to be a separate `await` in the route loader,
       // serializing an extra upstream round trip (and an extra /_serverFn hop
       // on client-side navigation) in front of the listing + SEO batch.
-      const [category, list, seo] = await Promise.all([
+      const [category, listResult, seo] = await Promise.all([
         resolveOrNull(
           board.taxonomy.categories.resolve(data.categorySlug, { headers }),
         ),
-        board.jobs.list(
-          { ...filters, category: data.categorySlug },
-          { headers },
+        settled(
+          board.jobs.list(
+            { ...filters, category: data.categorySlug },
+            { headers },
+          ),
         ),
         seoBase(),
       ]);
@@ -203,6 +226,8 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
       if (category.redirectTo) {
         return { kind: 'redirect' as const, to: category.redirectTo };
       }
+      if (!listResult.ok) throw listResult.error;
+      const list = listResult.value;
       const heading = m.categoryPage_jobsHeading({
         category: category.displayName,
       });
@@ -259,17 +284,21 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
-      const [skill, list, seo] = await Promise.all([
+      const [skill, listResult, seo] = await Promise.all([
         resolveOrNull(
           board.taxonomy.skills.resolve(data.skillSlug, { headers }),
         ),
-        board.jobs.list({ ...filters, skill: data.skillSlug }, { headers }),
+        settled(
+          board.jobs.list({ ...filters, skill: data.skillSlug }, { headers }),
+        ),
         seoBase(),
       ]);
       if (!skill) return { kind: 'not_found' as const };
       if (skill.redirectTo) {
         return { kind: 'redirect' as const, to: skill.redirectTo };
       }
+      if (!listResult.ok) throw listResult.error;
+      const list = listResult.value;
       const heading = m.skillPage_jobsHeading({ skill: skill.displayName });
       const head = listingHead({
         title: listingPageTitle({
@@ -363,30 +392,34 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
-      const [place, list, seo] = await Promise.all([
+      const [place, listResult, seo] = await Promise.all([
         resolveOrNull(
           board.taxonomy.places.resolve(data.locationSlug, { headers }),
         ),
         data.q
-          ? board.jobs.search(
-              {
-                query: data.q,
-                filters: {
-                  location: data.locationSlug,
-                  remoteOption: filters.remoteOption,
-                  employmentType: filters.employmentType,
-                  seniority: filters.seniority,
-                },
-                sort: filters.sort,
-                offset: filters.offset,
-                limit: filters.limit,
-              } satisfies JobsSearchBody,
-              undefined,
-              { headers },
+          ? settled(
+              board.jobs.search(
+                {
+                  query: data.q,
+                  filters: {
+                    location: data.locationSlug,
+                    remoteOption: filters.remoteOption,
+                    employmentType: filters.employmentType,
+                    seniority: filters.seniority,
+                  },
+                  sort: filters.sort,
+                  offset: filters.offset,
+                  limit: filters.limit,
+                } satisfies JobsSearchBody,
+                undefined,
+                { headers },
+              ),
             )
-          : board.jobs.list(
-              { ...filters, location: data.locationSlug },
-              { headers },
+          : settled(
+              board.jobs.list(
+                { ...filters, location: data.locationSlug },
+                { headers },
+              ),
             ),
         seoBase(),
       ]);
@@ -394,6 +427,8 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       if (place.redirectTo) {
         return { kind: 'redirect' as const, to: place.redirectTo };
       }
+      if (!listResult.ok) throw listResult.error;
+      const list = listResult.value;
       const relatedSearches =
         'relatedSearches' in list ? list.relatedSearches : undefined;
       const heading = m.locationPage_jobsHeading({ place: place.displayName });
@@ -458,20 +493,22 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
-      const [place, category, list, seo] = await Promise.all([
+      const [place, category, listResult, seo] = await Promise.all([
         resolveOrNull(
           board.taxonomy.places.resolve(data.locationSlug, { headers }),
         ),
         resolveOrNull(
           board.taxonomy.categories.resolve(data.categorySlug, { headers }),
         ),
-        board.jobs.list(
-          {
-            ...filters,
-            location: data.locationSlug,
-            category: data.categorySlug,
-          },
-          { headers },
+        settled(
+          board.jobs.list(
+            {
+              ...filters,
+              location: data.locationSlug,
+              category: data.categorySlug,
+            },
+            { headers },
+          ),
         ),
         seoBase(),
       ]);
@@ -483,6 +520,8 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           keywordTo: category.redirectTo ?? data.categorySlug,
         };
       }
+      if (!listResult.ok) throw listResult.error;
+      const list = listResult.value;
       const heading = m.locationCategoryPage_jobsHeading({
         category: category.displayName,
         place: place.displayName,
@@ -547,20 +586,22 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       // Both resolves join the listing/SEO batch (see the sibling
       // location+category page). An alias slug still 308s — it just also
       // fetched a listing it discards, which is the rare path.
-      const [place, skill, list, seo] = await Promise.all([
+      const [place, skill, listResult, seo] = await Promise.all([
         resolveOrNull(
           board.taxonomy.places.resolve(data.locationSlug, { headers }),
         ),
         resolveOrNull(
           board.taxonomy.skills.resolve(data.skillSlug, { headers }),
         ),
-        board.jobs.list(
-          {
-            ...filters,
-            location: data.locationSlug,
-            skill: data.skillSlug,
-          },
-          { headers },
+        settled(
+          board.jobs.list(
+            {
+              ...filters,
+              location: data.locationSlug,
+              skill: data.skillSlug,
+            },
+            { headers },
+          ),
         ),
         seoBase(),
       ]);
@@ -572,6 +613,8 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           skillTo: skill.redirectTo ?? data.skillSlug,
         };
       }
+      if (!listResult.ok) throw listResult.error;
+      const list = listResult.value;
       const heading = m.locationSkillPage_jobsHeading({
         skill: skill.displayName,
         place: place.displayName,

@@ -49,17 +49,20 @@ export const Route = createFileRoute('/companies/$companySlug/')({
       // single parallel batch server-side (see getCompanyProfilePage). The
       // old shape awaited a three-read Promise.all and THEN an SEO call,
       // serializing a second wave just to build head tags.
-      const pageData = await getCompanyProfilePage({
-        data: { companySlug: params.companySlug },
-      });
-      // Similar companies is a below-the-fold, search-backed rail — defer it so
-      // a slow (or failing) similar backend never blocks the profile's first
-      // paint. Streamed in via <Await>; degrades to empty, never fatal.
+      // Similar companies is a below-the-fold, search-backed rail. It needs
+      // only the slug, so it is kicked off BEFORE the page batch is awaited —
+      // starting it after made it a second serial wave, and SSR renders the
+      // rail into the document, so "deferred" did not keep it off the
+      // first-byte path. Now it overlaps the four page reads instead.
+      // Degrades to empty, never fatal.
       const similar = getSimilarCompanies({
         data: { companySlug: params.companySlug, limit: 6 },
       })
         .then((r) => r.data)
         .catch(() => []);
+      const pageData = await getCompanyProfilePage({
+        data: { companySlug: params.companySlug },
+      });
       return { ...pageData, similar };
     } catch (error) {
       if (isNotFound(error)) throw notFound();

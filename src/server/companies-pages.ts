@@ -146,7 +146,13 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
       // Market resolve used to be a separate `await` in the route loader,
       // serializing an extra upstream round trip (and an extra /_serverFn hop
       // on client-side navigation) in front of the listing + markets + SEO batch.
-      const [market, page, markets, seo] = await Promise.all([
+      // The listing outcome is CAPTURED rather than awaited directly: the
+      // companies listing rejects (400/404) on an unknown market slug, so
+      // once it shares this batch with the resolve, an unrecognised slug
+      // would reject the batch before the resolve's verdict could be read —
+      // a 404 page turning into a 500. The resolve decides; on a market that
+      // really exists the listing error is re-thrown unchanged below.
+      const [market, pageResult, markets, seo] = await Promise.all([
         (async () => {
           try {
             return await board.companies.markets.resolve(data.marketSlug, {
@@ -157,25 +163,34 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
             throw error;
           }
         })(),
-        data.query
-          ? board.companies.search(
-              {
-                query: data.query,
-                marketSlug: data.marketSlug,
-                offset: data.offset,
-                limit: data.limit,
-              },
-              undefined,
-              { headers },
-            )
-          : board.companies.list(
-              {
-                marketSlug: data.marketSlug,
-                offset: data.offset,
-                limit: data.limit,
-              },
-              { headers },
-            ),
+        (async () => {
+          try {
+            return {
+              ok: true as const,
+              value: await (data.query
+                ? board.companies.search(
+                    {
+                      query: data.query,
+                      marketSlug: data.marketSlug,
+                      offset: data.offset,
+                      limit: data.limit,
+                    },
+                    undefined,
+                    { headers },
+                  )
+                : board.companies.list(
+                    {
+                      marketSlug: data.marketSlug,
+                      offset: data.offset,
+                      limit: data.limit,
+                    },
+                    { headers },
+                  )),
+            };
+          } catch (error) {
+            return { ok: false as const, error };
+          }
+        })(),
         board.companies.markets({ limit: 24 }, { headers }).catch(() => null),
         seoBase(),
       ]);
@@ -183,6 +198,8 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
       if (market.redirectTo) {
         return { kind: 'redirect' as const, to: market.redirectTo };
       }
+      if (!pageResult.ok) throw pageResult.error;
+      const page = pageResult.value;
       const head = {
         meta: [
           {

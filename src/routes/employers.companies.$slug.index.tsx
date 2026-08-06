@@ -86,15 +86,11 @@ import type {
 export const Route = createFileRoute('/employers/companies/$slug/')({
   loader: async ({ params, location }) => {
     try {
-      const [workspace, seo] = await Promise.all([
-        getCompanyWorkspace({ data: { slug: params.slug } }),
-        getSeoBase(),
-      ]);
-      // Reporting is non-critical: defer both stats reads so a slow or failing
-      // analytics backend never blocks the jobs table's first paint. They
-      // stream in via <Await>; each degrades to an empty result (the table
-      // renders with dashed stat cells, the chart shows its empty state) and is
-      // never fatal. The retrieve endpoint itself zero-fills on outage.
+      // Reporting is non-critical: both stats reads stream in via <Await> and
+      // degrade to empty (dashed stat cells, empty chart state); the retrieve
+      // endpoint zero-fills on outage. They need only the slug, so they start
+      // BEFORE the workspace batch is awaited — starting them after made them
+      // a second serial wave behind it.
       const statsIndex = getEmployerJobStats({ data: { slug: params.slug } })
         .then((result) => toEmployerJobStatsIndex(result.data))
         .catch(() => new Map<string, EmployerJobStat>());
@@ -103,6 +99,10 @@ export const Route = createFileRoute('/employers/companies/$slug/')({
       })
         .then((result) => result.data)
         .catch(() => [] as EmployerJobStatsPoint[]);
+      const [workspace, seo] = await Promise.all([
+        getCompanyWorkspace({ data: { slug: params.slug } }),
+        getSeoBase(),
+      ]);
       return { ...workspace, seo, statsIndex, timeseries };
     } catch (error) {
       return await handleEmployerLoaderError(

@@ -63,6 +63,15 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
       // re-fetched here — that would be a duplicate board-context read.
       // getJobDetailPage returns job + seo + precomputed head/jsonLd so the
       // route module never imports @cavuno/board/seo into the client graph.
+      // Similar-jobs is a below-the-fold, search-backed rail. It needs only
+      // the job slug, so it is kicked off BEFORE the batch below is awaited —
+      // starting it after made it a second serial wave, and SSR renders the
+      // rail into the document, so "deferred" did not keep it off the
+      // first-byte path. A search outage (503) hides it, never breaks the
+      // page (mirrors the hosted similar-jobs loader).
+      const similar = getSimilarJobs({ data: { jobSlug: params.jobSlug } })
+        .then((r) => ({ jobs: r.data }))
+        .catch(() => ({ jobs: [] as PublicJobCard[] }));
       const [page, user, company] = await Promise.all([
         getJobDetailPage({ data: { jobSlug: params.jobSlug } }),
         getSessionUser(),
@@ -70,13 +79,6 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
           () => null,
         ),
       ]);
-      // Similar-jobs is a below-the-fold, search-backed rail — defer it so a
-      // slow (or failing) similar backend never blocks the job's first paint.
-      // Streamed via <Await>; a search outage (503) hides it, never breaks the
-      // page (mirrors the hosted similar-jobs loader).
-      const similar = getSimilarJobs({ data: { jobSlug: params.jobSlug } })
-        .then((r) => ({ jobs: r.data }))
-        .catch(() => ({ jobs: [] as PublicJobCard[] }));
       const application = user?.emailVerified
         ? await myApplicationForJob({
             data: { jobSlug: params.jobSlug },
