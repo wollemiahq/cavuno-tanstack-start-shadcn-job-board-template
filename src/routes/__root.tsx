@@ -20,6 +20,7 @@ import Footer from '../components/Footer';
 import Header from '../components/Header';
 import { localeDirection } from '../lib/locale-direction';
 import { toPreviewBoardConfig } from '../lib/preview';
+import { requestOrigin } from '../lib/request-origin';
 import { emitRoutesReport } from '../lib/routes-report';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -126,6 +127,11 @@ declare module '@tanstack/react-router' {
 }
 
 export const Route = createRootRoute({
+  // Origin lives in CONTEXT, not loader data: the shell renders before
+  // loaders resolve, and it must not wait on getRootShellData's seven-call
+  // fan-out just to build hreflang hrefs. Zero I/O — it reads the request
+  // URL on the server and window.location on the client.
+  beforeLoad: () => ({ origin: requestOrigin() }),
   loader: () => getRootShellData(),
   head: ({ loaderData }) => {
     const board = loaderData?.board;
@@ -525,7 +531,7 @@ function RootLayout() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { origin } = Route.useLoaderData();
+  const { origin } = Route.useRouteContext();
   // Theme mode is repo-canonical (theme.css → resolved module).
   const mode =
     themeMeta.mode === 'dark' || themeMeta.mode === 'light'
