@@ -12,7 +12,13 @@
  * getSeoBase/listJobs/searchJobs stay exported from queries.ts for other
  * callers; these page functions fold getSeoBase into each listing read so
  * client navigation does not grow a head-only round trip.
+ *
+ * Taxonomy resolve (category / skill / place) is folded into the page
+ * functions below so loaders await ONE server fn instead of resolve-then-
+ * fetch. Discriminated `{ kind: 'not_found' | 'redirect' | 'ok' }` lets the
+ * route still throw notFound / 308 with the same targets as before.
  */
+import { isNotFound } from '@cavuno/board';
 import { jobsCategoryPath, jobsSkillPath } from '@cavuno/board/paths';
 import { listingHead, listingJsonLd } from '@cavuno/board/seo';
 import { createServerFn } from '@tanstack/react-start';
@@ -37,6 +43,7 @@ import type {
   JobsSearchBody,
   RemoteOption,
   Seniority,
+  TaxonomyResolution,
 } from '@cavuno/board';
 
 type JsonPrimitive = string | number | boolean | null;
@@ -45,6 +52,18 @@ type JsonObject = { [key: string]: JsonValue };
 
 function asJsonObjects(value: unknown): JsonObject[] {
   return JSON.parse(JSON.stringify(value)) as JsonObject[];
+}
+
+/** Same 404→null contract as `resolveOrNull` in queries.ts (kept private there). */
+async function resolveOrNull(
+  promise: Promise<TaxonomyResolution>,
+): Promise<TaxonomyResolution | null> {
+  try {
+    return await promise;
+  } catch (error) {
+    if (isNotFound(error)) return null;
+    throw error;
+  }
 }
 
 /** Shared listing filter slice used by every jobs listing page function. */
@@ -151,30 +170,41 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
     }),
   );
 
-/** /jobs/$keyword — category listing + head. Resolve stays in the route. */
+/**
+ * /jobs/$keyword — category resolve + listing + head in ONE server fn.
+ *
+ * Trade-off: resolve joins the same Promise.all as the listing query, so an
+ * alias slug that 308-redirects still fetches a listing that is then discarded.
+ * That path is rare; the common path saves a full serial round-trip wave.
+ */
 export const getJobsCategoryPage = createServerFn({ method: 'GET' })
   .validator(
-    (
-      input: JobsListingFiltersInput & {
-        categorySlug: string;
-        displayName: string;
-      },
-    ) => input,
+    (input: JobsListingFiltersInput & { categorySlug: string }) => input,
   )
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
-      const [list, seo] = await Promise.all([
+      // Category resolve used to be a separate `await` in the route loader,
+      // serializing an extra upstream round trip (and an extra /_serverFn hop
+      // on client-side navigation) in front of the listing + SEO batch.
+      const [category, list, seo] = await Promise.all([
+        resolveOrNull(
+          board.taxonomy.categories.resolve(data.categorySlug, { headers }),
+        ),
         board.jobs.list(
           { ...filters, category: data.categorySlug },
           { headers },
         ),
         seoBase(),
       ]);
+      if (!category) return { kind: 'not_found' as const };
+      if (category.redirectTo) {
+        return { kind: 'redirect' as const, to: category.redirectTo };
+      }
       const heading = m.categoryPage_jobsHeading({
-        category: data.displayName,
+        category: category.displayName,
       });
       const head = listingHead({
         title: listingPageTitle({
@@ -204,6 +234,8 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
         }),
       );
       return {
+        kind: 'ok' as const,
+        category,
         list,
         seo,
         relatedSearches: list.relatedSearches,
@@ -213,26 +245,32 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
     }),
   );
 
-/** /jobs/skills/$skill — skill listing + head. */
+/**
+ * /jobs/skills/$skill — skill resolve + listing + head in ONE server fn.
+ *
+ * Trade-off: resolve joins the same Promise.all as the listing query, so an
+ * alias slug that 308-redirects still fetches a listing that is then discarded.
+ * That path is rare; the common path saves a full serial round-trip wave.
+ */
 export const getJobsSkillPage = createServerFn({ method: 'GET' })
-  .validator(
-    (
-      input: JobsListingFiltersInput & {
-        skillSlug: string;
-        displayName: string;
-      },
-    ) => input,
-  )
+  .validator((input: JobsListingFiltersInput & { skillSlug: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
-      const [list, seo] = await Promise.all([
+      const [skill, list, seo] = await Promise.all([
+        resolveOrNull(
+          board.taxonomy.skills.resolve(data.skillSlug, { headers }),
+        ),
         board.jobs.list({ ...filters, skill: data.skillSlug }, { headers }),
         seoBase(),
       ]);
-      const heading = m.skillPage_jobsHeading({ skill: data.displayName });
+      if (!skill) return { kind: 'not_found' as const };
+      if (skill.redirectTo) {
+        return { kind: 'redirect' as const, to: skill.redirectTo };
+      }
+      const heading = m.skillPage_jobsHeading({ skill: skill.displayName });
       const head = listingHead({
         title: listingPageTitle({
           heading: heading,
@@ -261,6 +299,8 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
         }),
       );
       return {
+        kind: 'ok' as const,
+        skill,
         list,
         seo,
         relatedSearches: list.relatedSearches,
@@ -307,22 +347,26 @@ export const getJobsLocationsIndexPage = createServerFn({ method: 'GET' })
     }),
   );
 
-/** /jobs/locations/$location — place listing (list or search) + head. */
+/**
+ * /jobs/locations/$location — place resolve + listing + head in ONE server fn.
+ *
+ * Trade-off: resolve joins the same Promise.all as the listing query, so an
+ * alias slug that 308-redirects still fetches a listing that is then discarded.
+ * That path is rare; the common path saves a full serial round-trip wave.
+ */
 export const getJobsLocationPage = createServerFn({ method: 'GET' })
   .validator(
-    (
-      input: JobsListingFiltersInput & {
-        locationSlug: string;
-        displayName: string;
-      },
-    ) => input,
+    (input: JobsListingFiltersInput & { locationSlug: string }) => input,
   )
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
-      const [list, seo] = await Promise.all([
+      const [place, list, seo] = await Promise.all([
+        resolveOrNull(
+          board.taxonomy.places.resolve(data.locationSlug, { headers }),
+        ),
         data.q
           ? board.jobs.search(
               {
@@ -346,9 +390,13 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
             ),
         seoBase(),
       ]);
+      if (!place) return { kind: 'not_found' as const };
+      if (place.redirectTo) {
+        return { kind: 'redirect' as const, to: place.redirectTo };
+      }
       const relatedSearches =
         'relatedSearches' in list ? list.relatedSearches : undefined;
-      const heading = m.locationPage_jobsHeading({ place: data.displayName });
+      const heading = m.locationPage_jobsHeading({ place: place.displayName });
       const head = listingHead({
         title: listingPageTitle({
           heading: heading,
@@ -376,19 +424,32 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
           jobs: list.data,
         }),
       );
-      return { list, seo, relatedSearches, head, jsonLd };
+      return {
+        kind: 'ok' as const,
+        place,
+        list,
+        seo,
+        relatedSearches,
+        head,
+        jsonLd,
+      };
     }),
   );
 
-/** /jobs/locations/$location/$keyword — place + category listing + head. */
+/**
+ * /jobs/locations/$location/$keyword — place + category resolve + listing +
+ * head in ONE server fn.
+ *
+ * Trade-off: resolve joins the same Promise.all as the listing query, so an
+ * alias slug that 308-redirects still fetches a listing that is then discarded.
+ * That path is rare; the common path saves a full serial round-trip wave.
+ */
 export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
   .validator(
     (
       input: JobsListingFiltersInput & {
         locationSlug: string;
         categorySlug: string;
-        placeDisplayName: string;
-        categoryDisplayName: string;
       },
     ) => input,
   )
@@ -397,7 +458,13 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
-      const [list, seo] = await Promise.all([
+      const [place, category, list, seo] = await Promise.all([
+        resolveOrNull(
+          board.taxonomy.places.resolve(data.locationSlug, { headers }),
+        ),
+        resolveOrNull(
+          board.taxonomy.categories.resolve(data.categorySlug, { headers }),
+        ),
         board.jobs.list(
           {
             ...filters,
@@ -408,9 +475,17 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
+      if (!place || !category) return { kind: 'not_found' as const };
+      if (place.redirectTo || category.redirectTo) {
+        return {
+          kind: 'redirect' as const,
+          locationTo: place.redirectTo ?? data.locationSlug,
+          keywordTo: category.redirectTo ?? data.categorySlug,
+        };
+      }
       const heading = m.locationCategoryPage_jobsHeading({
-        category: data.categoryDisplayName,
-        place: data.placeDisplayName,
+        category: category.displayName,
+        place: place.displayName,
       });
       const head = listingHead({
         title: listingPageTitle({
@@ -442,6 +517,9 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         }),
       );
       return {
+        kind: 'ok' as const,
+        place,
+        category,
         list,
         seo,
         relatedSearches: list.relatedSearches,
@@ -458,8 +536,6 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       input: JobsListingFiltersInput & {
         locationSlug: string;
         skillSlug: string;
-        placeDisplayName: string;
-        skillDisplayName: string;
       },
     ) => input,
   )
@@ -468,7 +544,16 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
-      const [list, seo] = await Promise.all([
+      // Both resolves join the listing/SEO batch (see the sibling
+      // location+category page). An alias slug still 308s — it just also
+      // fetched a listing it discards, which is the rare path.
+      const [place, skill, list, seo] = await Promise.all([
+        resolveOrNull(
+          board.taxonomy.places.resolve(data.locationSlug, { headers }),
+        ),
+        resolveOrNull(
+          board.taxonomy.skills.resolve(data.skillSlug, { headers }),
+        ),
         board.jobs.list(
           {
             ...filters,
@@ -479,9 +564,17 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
+      if (!place || !skill) return { kind: 'not_found' as const };
+      if (place.redirectTo || skill.redirectTo) {
+        return {
+          kind: 'redirect' as const,
+          locationTo: place.redirectTo ?? data.locationSlug,
+          skillTo: skill.redirectTo ?? data.skillSlug,
+        };
+      }
       const heading = m.locationSkillPage_jobsHeading({
-        skill: data.skillDisplayName,
-        place: data.placeDisplayName,
+        skill: skill.displayName,
+        place: place.displayName,
       });
       const head = listingHead({
         title: listingPageTitle({
@@ -513,6 +606,9 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         }),
       );
       return {
+        kind: 'ok' as const,
+        place,
+        skill,
         list,
         seo,
         relatedSearches: list.relatedSearches,

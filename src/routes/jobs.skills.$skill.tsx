@@ -1,8 +1,8 @@
 /**
  * Programmatic skill page — `/jobs/skills/:skill` (hosted parity:
  * `boards/[slug]/(main)/jobs/skills/[skill]/page.tsx`). Same shape as the
- * category page, resolving the slug as a *skill*; the API seeds the search with
- * the skill's English source name server-side.
+ * category page: resolve + list + head run in ONE server fn; the API seeds
+ * the search with the skill's English source name server-side.
  *
  * Head meta is computed in getJobsSkillPage so `@cavuno/board/seo` stays out
  * of the universal client entry.
@@ -14,7 +14,6 @@ import { pageToOffset } from '../lib/pagination';
 import { m } from '../paraglide/messages';
 import { saveJob } from '../server/account';
 import { getJobsSkillPage } from '../server/jobs-listing-pages';
-import { resolveSkill } from '../server/queries';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
 import { jsonLdHeadScripts } from '@/components/json-ld';
@@ -26,19 +25,11 @@ export const Route = createFileRoute('/jobs/skills/$skill')({
   validateSearch: parseJobsSearch,
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
   loader: async ({ params, deps }) => {
-    const skill = await resolveSkill({ data: { slug: params.skill } });
-    if (!skill) throw notFound();
-    if (skill.redirectTo) {
-      throw redirect({
-        to: '/jobs/skills/$skill',
-        params: { skill: skill.redirectTo },
-        statusCode: 308,
-      });
-    }
-    const page = await getJobsSkillPage({
+    // ONE server fn: skill resolve joins the listing + SEO batch so we do
+    // not pay a serial resolve hop before the real page read.
+    const result = await getJobsSkillPage({
       data: {
         skillSlug: params.skill,
-        displayName: skill.displayName,
         remoteOption: deps.remoteOption,
         employmentType: deps.employmentType,
         seniority: deps.seniority,
@@ -47,7 +38,15 @@ export const Route = createFileRoute('/jobs/skills/$skill')({
         limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
       },
     });
-    return { skill, ...page };
+    if (result.kind === 'not_found') throw notFound();
+    if (result.kind === 'redirect') {
+      throw redirect({
+        to: '/jobs/skills/$skill',
+        params: { skill: result.to },
+        statusCode: 308,
+      });
+    }
+    return result;
   },
   head: ({ loaderData }) =>
     loaderData

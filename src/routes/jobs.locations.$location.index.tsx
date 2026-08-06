@@ -1,8 +1,8 @@
 /**
  * Programmatic location page — `/jobs/locations/:location` (hosted parity:
- * `boards/[slug]/(main)/jobs/locations/[location]/page.tsx`). Resolve the place
- * slug (404 / 308 like the taxonomy pages), then the API filters the listing to
- * a geo radius around that place (`location` param).
+ * `boards/[slug]/(main)/jobs/locations/[location]/page.tsx`). Place resolve +
+ * list + head run in ONE server fn (404 / 308 like the taxonomy pages); the
+ * API filters the listing to a geo radius around that place (`location` param).
  *
  * Head meta is computed in getJobsLocationPage so `@cavuno/board/seo` stays
  * out of the universal client entry.
@@ -14,7 +14,6 @@ import { pageToOffset } from '../lib/pagination';
 import { m } from '../paraglide/messages';
 import { saveJob } from '../server/account';
 import { getJobsLocationPage } from '../server/jobs-listing-pages';
-import { resolvePlace } from '../server/queries';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
 import { jsonLdHeadScripts } from '@/components/json-ld';
@@ -26,19 +25,11 @@ export const Route = createFileRoute('/jobs/locations/$location/')({
   validateSearch: parseJobsSearch,
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
   loader: async ({ params, deps }) => {
-    const place = await resolvePlace({ data: { slug: params.location } });
-    if (!place) throw notFound();
-    if (place.redirectTo) {
-      throw redirect({
-        to: '/jobs/locations/$location',
-        params: { location: place.redirectTo },
-        statusCode: 308,
-      });
-    }
-    const page = await getJobsLocationPage({
+    // ONE server fn: place resolve joins the listing + SEO batch so we do
+    // not pay a serial resolve hop before the real page read.
+    const result = await getJobsLocationPage({
       data: {
         locationSlug: params.location,
-        displayName: place.displayName,
         q: deps.q,
         remoteOption: deps.remoteOption,
         employmentType: deps.employmentType,
@@ -48,7 +39,15 @@ export const Route = createFileRoute('/jobs/locations/$location/')({
         limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
       },
     });
-    return { place, ...page };
+    if (result.kind === 'not_found') throw notFound();
+    if (result.kind === 'redirect') {
+      throw redirect({
+        to: '/jobs/locations/$location',
+        params: { location: result.to },
+        statusCode: 308,
+      });
+    }
+    return result;
   },
   head: ({ loaderData }) =>
     loaderData

@@ -10,13 +10,8 @@ import { ArrowRight, Building2 } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
-import { getCompanyProfileSeo } from '../server/companies-pages';
-import {
-  getCompany,
-  getCompanySalarySummary,
-  getSimilarCompanies,
-  listCompanyJobs,
-} from '../server/queries';
+import { getCompanyProfilePage } from '../server/companies-pages';
+import { getSimilarCompanies } from '../server/queries';
 
 import { toJobCardVM } from '@/board/job-view-model';
 import {
@@ -50,13 +45,13 @@ export const Route = createFileRoute('/companies/$companySlug/')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: async ({ params }) => {
     try {
-      const [company, jobs, salarySummary] = await Promise.all([
-        getCompany({ data: { companySlug: params.companySlug } }),
-        listCompanyJobs({ data: { companySlug: params.companySlug } }),
-        // Salary summary stays awaited: it is the Salaries tab gate
-        // (`hasSalaries`), which renders in the above-the-fold section shell.
-        getCompanySalarySummary({ data: { companySlug: params.companySlug } }),
-      ]);
+      // ONE server fn: company, jobs, salary gate and SEO base resolve in a
+      // single parallel batch server-side (see getCompanyProfilePage). The
+      // old shape awaited a three-read Promise.all and THEN an SEO call,
+      // serializing a second wave just to build head tags.
+      const pageData = await getCompanyProfilePage({
+        data: { companySlug: params.companySlug },
+      });
       // Similar companies is a below-the-fold, search-backed rail — defer it so
       // a slow (or failing) similar backend never blocks the profile's first
       // paint. Streamed in via <Await>; degrades to empty, never fatal.
@@ -65,28 +60,7 @@ export const Route = createFileRoute('/companies/$companySlug/')({
       })
         .then((r) => r.data)
         .catch(() => []);
-      const hasSalaries =
-        salarySummary.overallSalary !== null ||
-        salarySummary.byCategory.length > 0;
-      const profileSeo = await getCompanyProfileSeo({
-        data: {
-          companyName: company.name,
-          companySlug: company.slug,
-          companyId: company.id,
-          description: company.description,
-          website: company.website,
-          logoUrl: company.logoUrl,
-          publicUrl: company.links.public,
-        },
-      });
-      return {
-        company,
-        jobs,
-        similar,
-        salarySummary,
-        hasSalaries,
-        ...profileSeo,
-      };
+      return { ...pageData, similar };
     } catch (error) {
       if (isNotFound(error)) throw notFound();
       throw error;

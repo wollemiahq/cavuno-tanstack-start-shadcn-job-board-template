@@ -38,9 +38,11 @@ export const Route = createFileRoute('/messages')({
   loaderDeps: ({ search }) => ({ view: asView(search.view) }),
   loader: async ({ deps }) => {
     // Messaging feature off ⇒ the surface does not exist on this board.
-    const board = await getBoardContext();
+    // The gate read and the SEO base do not depend on each other, so they
+    // share one wave (the inbox read stays behind the gate — it is the call
+    // that 403s on a board without messaging).
+    const [board, seo] = await Promise.all([getBoardContext(), getSeoBase()]);
     if (!board.features.messaging) throw notFound();
-    const seo = await getSeoBase();
     try {
       if (deps.view === 'blocked') {
         return { view: 'blocked' as const, blocked: await getBlocked(), seo };

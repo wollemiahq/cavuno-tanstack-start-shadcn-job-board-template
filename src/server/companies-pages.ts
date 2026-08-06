@@ -124,14 +124,16 @@ export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
   );
 
 /**
- * /companies/markets/$market — market resolve stays in the route; this
- * function lists companies for an already-canonical market slug.
+ * /companies/markets/$market — market resolve + listing + head in ONE server fn.
+ *
+ * Trade-off: resolve joins the same Promise.all as the listing query, so an
+ * alias slug that 308-redirects still fetches a listing that is then discarded.
+ * That path is rare; the common path saves a full serial round-trip wave.
  */
 export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
   .validator(
     (input: {
       marketSlug: string;
-      displayName: string;
       query?: string;
       offset: number;
       limit: number;
@@ -141,7 +143,20 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
-      const [page, markets, seo] = await Promise.all([
+      // Market resolve used to be a separate `await` in the route loader,
+      // serializing an extra upstream round trip (and an extra /_serverFn hop
+      // on client-side navigation) in front of the listing + markets + SEO batch.
+      const [market, page, markets, seo] = await Promise.all([
+        (async () => {
+          try {
+            return await board.companies.markets.resolve(data.marketSlug, {
+              headers,
+            });
+          } catch (error) {
+            if (isNotFound(error)) return null;
+            throw error;
+          }
+        })(),
         data.query
           ? board.companies.search(
               {
@@ -164,18 +179,22 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
         board.companies.markets({ limit: 24 }, { headers }).catch(() => null),
         seoBase(),
       ]);
+      if (!market) return { kind: 'not_found' as const };
+      if (market.redirectTo) {
+        return { kind: 'redirect' as const, to: market.redirectTo };
+      }
       const head = {
         meta: [
           {
             title: headTitle(
               seo.boardName,
-              m.marketPage_metaTitle({ market: data.displayName }),
+              m.marketPage_metaTitle({ market: market.displayName }),
             ),
           },
           {
             name: 'description',
             content: m.marketPage_metaDescription({
-              market: data.displayName,
+              market: market.displayName,
               boardName: seo.boardName,
             }),
           },
@@ -196,11 +215,13 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
               label: c.companies,
               href: selfUrl(seo.origin, BOARD_PATHS.companies),
             },
-            { label: data.displayName },
+            { label: market.displayName },
           ]),
         ].filter((entry) => entry !== null),
       );
       return {
+        kind: 'ok' as const,
+        market,
         page,
         markets: markets?.data ?? [],
         seo,
@@ -211,45 +232,75 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
   );
 
 /** Company profile head + breadcrumb JSON-LD (data still loaded in route). */
-export const getCompanyProfileSeo = createServerFn({ method: 'GET' })
-  .validator(
-    (input: {
-      companyName: string;
-      companySlug: string;
-      companyId: string;
-      description: string | null;
-      website: string | null;
-      logoUrl: string | null;
-      publicUrl: string | null;
-    }) => input,
-  )
+/**
+ * /companies/$slug — the whole profile in ONE server fn.
+ *
+ * Company body, its jobs, the salary gate and the SEO base all resolve in a
+ * SINGLE parallel batch; head + JSON-LD are then assembled synchronously.
+ * This used to be a route-level `Promise.all` of three reads followed by a
+ * separate awaited SEO call, which serialized a second upstream wave (and a
+ * second /_serverFn hop on client-side navigation) purely to build head tags
+ * out of data already in hand.
+ */
+/** Categories shown in the profile's salary teaser (matches queries.ts). */
+const COMPANY_SALARY_SUMMARY_CATEGORIES = 5;
+
+export const getCompanyProfilePage = createServerFn({ method: 'GET' })
+  .validator((input: { companySlug: string }) => input)
   .middleware([boardAccessMiddleware])
-  .handler(({ data }) =>
-    // OPEN seo base only — company body already fetched by the route.
-    (async () => {
-      const seo = await seoBase();
-      const description = data.description
-        ? data.description
+  .handler(({ data, context }) =>
+    gatedRead(context, async (headers) => {
+      const board = getBoard();
+      const [company, jobs, salarySummary, seo] = await Promise.all([
+        board.companies.retrieve(data.companySlug, undefined, { headers }),
+        board.companies.listJobs(data.companySlug, {}, { headers }),
+        (async () => {
+          try {
+            const salary = await board.companies.salaries(data.companySlug, {
+              headers,
+            });
+            return {
+              overallSalary: salary.overallSalary,
+              byCategory: salary.byCategory.slice(
+                0,
+                COMPANY_SALARY_SUMMARY_CATEGORIES,
+              ),
+              currency: salary.currency,
+            };
+          } catch (error) {
+            if (isNotFound(error))
+              return { overallSalary: null, byCategory: [], currency: null };
+            throw error;
+          }
+        })(),
+        seoBase(),
+      ]);
+      // The Salaries tab gate renders in the above-the-fold section shell.
+      const hasSalaries =
+        salarySummary.overallSalary !== null ||
+        salarySummary.byCategory.length > 0;
+      const description = company.description
+        ? company.description
             .replace(/<[^>]+>/g, ' ')
             .trim()
             .slice(0, 160)
         : m.companyDetail_metaDescriptionFallback({
-            name: data.companyName,
+            name: company.name,
             board: seo.boardName,
           });
       const canonical =
-        data.publicUrl ?? selfUrl(seo.origin, companyPath(data.companySlug));
+        company.links.public ?? selfUrl(seo.origin, companyPath(company.slug));
       const head = {
         meta: [
-          { title: headTitle(seo.boardName, data.companyName) },
+          { title: headTitle(seo.boardName, company.name) },
           { name: 'description', content: description },
         ],
         links: [{ rel: 'canonical', href: canonical }],
       };
-      const website = data.website
-        ? /^https?:\/\//i.test(data.website)
-          ? data.website
-          : `https://${data.website}`
+      const website = company.website
+        ? /^https?:\/\//i.test(company.website)
+          ? company.website
+          : `https://${company.website}`
         : null;
       const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
@@ -261,29 +312,37 @@ export const getCompanyProfileSeo = createServerFn({ method: 'GET' })
             mainEntity: {
               '@type': 'Organization',
               '@id': `${canonical}#organization`,
-              name: data.companyName,
-              identifier: data.companyId,
-              ...(data.description
+              name: company.name,
+              identifier: company.id,
+              ...(company.description
                 ? {
-                    description: data.description
+                    description: company.description
                       .replace(/<[^>]+>/g, ' ')
                       .trim(),
                   }
                 : {}),
               url: website ?? canonical,
-              ...(data.logoUrl ? { logo: data.logoUrl } : {}),
+              ...(company.logoUrl ? { logo: company.logoUrl } : {}),
               ...(website ? { sameAs: [website] } : {}),
             },
           },
           createBreadcrumbJsonLd([
             { label: c.home, href: selfUrl(seo.origin, '/') },
             { label: c.companies, href: `${seo.origin}/companies` },
-            { label: data.companyName },
+            { label: company.name },
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { seo, head, jsonLd };
-    })(),
+      return {
+        company,
+        jobs,
+        salarySummary,
+        hasSalaries,
+        seo,
+        head,
+        jsonLd,
+      };
+    }),
   );
 
 /** /companies/$slug/jobs — list/search jobs + head + breadcrumb JSON-LD. */
@@ -291,7 +350,6 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
   .validator(
     (input: {
       companySlug: string;
-      companyName: string;
       q?: string;
       location?: string;
       offset: number;
@@ -302,7 +360,14 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
-      const [page, seo, hasSalaries] = await Promise.all([
+      // The company read joins the SAME parallel batch as the job page, the
+      // SEO base and the salary gate. It used to be a separate `await` in the
+      // route loader, which serialized an extra upstream round trip (and, on
+      // client-side navigation, an extra /_serverFn hop) in front of all of
+      // this — measured at ~2x the TTFB of a waterfall-free listing page.
+      // Mirrors `getCompanySalariesPage` below.
+      const [company, page, seo, hasSalaries] = await Promise.all([
+        board.companies.retrieve(data.companySlug, undefined, { headers }),
         data.q
           ? board.jobs.search(
               {
@@ -346,13 +411,13 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
           {
             title: headTitle(
               seo.boardName,
-              m.companyJobs_metaTitle({ company: data.companyName }),
+              m.companyJobs_metaTitle({ company: company.name }),
             ),
           },
           {
             name: 'description',
             content: m.companyJobs_metaDescription({
-              company: data.companyName,
+              company: company.name,
               boardName: seo.boardName,
             }),
           },
@@ -374,11 +439,11 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
               label: c.companies,
               href: selfUrl(seo.origin, BOARD_PATHS.companies),
             },
-            { label: data.companyName },
+            { label: company.name },
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { page, seo, hasSalaries, head, jsonLd };
+      return { company, page, seo, hasSalaries, head, jsonLd };
     }),
   );
 

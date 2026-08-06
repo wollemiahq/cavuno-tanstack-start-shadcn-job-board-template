@@ -14,6 +14,11 @@ const {
   listJobs,
   searchJobs,
   getSeoBase,
+  getJobsCategoryPage,
+  getJobsSkillPage,
+  getJobsLocationPage,
+  getJobsLocationCategoryPage,
+  getJobsLocationSkillPage,
 } = vi.hoisted(() => ({
   resolveCategory: vi.fn(),
   resolveSkill: vi.fn(),
@@ -21,6 +26,11 @@ const {
   listJobs: vi.fn(),
   searchJobs: vi.fn(),
   getSeoBase: vi.fn().mockResolvedValue({}),
+  getJobsCategoryPage: vi.fn(),
+  getJobsSkillPage: vi.fn(),
+  getJobsLocationPage: vi.fn(),
+  getJobsLocationCategoryPage: vi.fn(),
+  getJobsLocationSkillPage: vi.fn(),
 }));
 
 vi.mock('../server/queries', () => ({
@@ -32,14 +42,17 @@ vi.mock('../server/queries', () => ({
   getSeoBase,
 }));
 
-// Page functions fold list+seo+head; redirects throw before they run, so
-// stubs only keep the module graph off cloudflare:workers in jsdom.
+// The taxonomy resolve now runs INSIDE each page fn (one parallel batch
+// instead of a serial resolve hop), so the alias decision arrives as a
+// discriminated `{ kind: 'redirect' }` result rather than the loader
+// awaiting a resolver first. The contract under test is unchanged: the
+// loader must turn that into a PERMANENT 308.
 vi.mock('../server/jobs-listing-pages', () => ({
-  getJobsCategoryPage: vi.fn(),
-  getJobsSkillPage: vi.fn(),
-  getJobsLocationPage: vi.fn(),
-  getJobsLocationCategoryPage: vi.fn(),
-  getJobsLocationSkillPage: vi.fn(),
+  getJobsCategoryPage,
+  getJobsSkillPage,
+  getJobsLocationPage,
+  getJobsLocationCategoryPage,
+  getJobsLocationSkillPage,
 }));
 
 vi.mock('@/routes/-programmatic-jobs-view', () => ({
@@ -61,14 +74,8 @@ import { Route as LocationRoute } from './jobs.locations.$location.index';
 import { Route as LocationSkillRoute } from './jobs.locations.$location.skills.$skill';
 import { Route as SkillRoute } from './jobs.skills.$skill';
 
-// A taxonomy resolution whose inbound slug is an alias — `redirectTo` names the
-// canonical slug the loader must 308 to.
-const aliasResolution = (redirectTo: string) => ({
-  redirectTo,
-  displayName: 'Anything',
-  canonicalSlug: redirectTo,
-  sourceSlug: redirectTo,
-});
+/** A page result whose inbound slug is an alias — `to` names the canonical. */
+const aliasRedirect = (to: string) => ({ kind: 'redirect' as const, to });
 
 async function runLoader(loader: unknown, args: unknown): Promise<unknown> {
   if (typeof loader !== 'function') {
@@ -82,14 +89,16 @@ async function runLoader(loader: unknown, args: unknown): Promise<unknown> {
 }
 
 beforeEach(() => {
-  resolveCategory.mockReset();
-  resolveSkill.mockReset();
-  resolvePlace.mockReset();
+  getJobsCategoryPage.mockReset();
+  getJobsSkillPage.mockReset();
+  getJobsLocationPage.mockReset();
+  getJobsLocationCategoryPage.mockReset();
+  getJobsLocationSkillPage.mockReset();
 });
 
 describe('programmatic jobs routes — canonical-slug redirects are permanent (308)', () => {
   it('/jobs/$keyword 308s an alias category slug', async () => {
-    resolveCategory.mockResolvedValue(aliasResolution('engineering'));
+    getJobsCategoryPage.mockResolvedValue(aliasRedirect('engineering'));
     const result = await runLoader(KeywordRoute.options.loader, {
       params: { keyword: 'eng' },
       deps: {},
@@ -101,7 +110,7 @@ describe('programmatic jobs routes — canonical-slug redirects are permanent (3
   });
 
   it('/jobs/skills/$skill 308s an alias skill slug', async () => {
-    resolveSkill.mockResolvedValue(aliasResolution('react'));
+    getJobsSkillPage.mockResolvedValue(aliasRedirect('react'));
     const result = await runLoader(SkillRoute.options.loader, {
       params: { skill: 'reactjs' },
       deps: {},
@@ -113,7 +122,7 @@ describe('programmatic jobs routes — canonical-slug redirects are permanent (3
   });
 
   it('/jobs/locations/$location 308s an alias place slug', async () => {
-    resolvePlace.mockResolvedValue(aliasResolution('london'));
+    getJobsLocationPage.mockResolvedValue(aliasRedirect('london'));
     const result = await runLoader(LocationRoute.options.loader, {
       params: { location: 'ldn' },
       deps: {},
@@ -125,12 +134,10 @@ describe('programmatic jobs routes — canonical-slug redirects are permanent (3
   });
 
   it('/jobs/locations/$location/$keyword 308s when either slug is an alias', async () => {
-    resolvePlace.mockResolvedValue(aliasResolution('london'));
-    resolveCategory.mockResolvedValue({
-      redirectTo: null,
-      displayName: 'Engineering',
-      canonicalSlug: 'engineering',
-      sourceSlug: 'engineering',
+    getJobsLocationCategoryPage.mockResolvedValue({
+      kind: 'redirect' as const,
+      locationTo: 'london',
+      keywordTo: 'engineering',
     });
     const result = await runLoader(LocationKeywordRoute.options.loader, {
       params: { location: 'ldn', keyword: 'engineering' },
@@ -146,13 +153,11 @@ describe('programmatic jobs routes — canonical-slug redirects are permanent (3
   });
 
   it('/jobs/locations/$location/skills/$skill 308s when either slug is an alias', async () => {
-    resolvePlace.mockResolvedValue({
-      redirectTo: null,
-      displayName: 'London',
-      canonicalSlug: 'london',
-      sourceSlug: 'london',
+    getJobsLocationSkillPage.mockResolvedValue({
+      kind: 'redirect' as const,
+      locationTo: 'london',
+      skillTo: 'react',
     });
-    resolveSkill.mockResolvedValue(aliasResolution('react'));
     const result = await runLoader(LocationSkillRoute.options.loader, {
       params: { location: 'london', skill: 'reactjs' },
       deps: {},

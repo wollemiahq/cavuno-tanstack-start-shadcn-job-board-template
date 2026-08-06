@@ -28,7 +28,6 @@ import {
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getCompanyJobsPage } from '../server/companies-pages';
-import { getCompany } from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { toJobCardVM } from '@/board/job-view-model';
@@ -74,14 +73,14 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
   loaderDeps: ({ search }) => search,
   loader: async ({ params, deps }) => {
     try {
-      const company = await getCompany({
-        data: { companySlug: params.companySlug },
-      });
       const offset = pageToOffset(deps.page ?? 1, COMPANY_JOBS_PAGE_SIZE);
+      // ONE server fn: it fetches the company alongside the job page, the SEO
+      // base and the salary gate in a single parallel batch. Awaiting a
+      // separate `getCompany` here first put an extra serial round trip in
+      // front of all of them.
       const pageData = await getCompanyJobsPage({
         data: {
-          companySlug: company.slug,
-          companyName: company.name,
+          companySlug: params.companySlug,
           q: deps.q,
           location: deps.location,
           offset,
@@ -89,7 +88,6 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
         },
       });
       return {
-        company,
         ...pageData,
         q: deps.q ?? null,
         location: deps.location ?? null,

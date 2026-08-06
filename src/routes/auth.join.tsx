@@ -7,7 +7,7 @@ import {
   redirect,
 } from '@tanstack/react-router';
 
-import { redirectIfAuthenticated } from '../lib/auth-guard';
+import { redirectIfSignedIn, sessionUserOrNull } from '../lib/auth-guard';
 import {
   candidateReturnTo,
   candidateSignUpHref,
@@ -32,8 +32,16 @@ export const Route = createFileRoute('/auth/join')({
       : {},
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
-    await redirectIfAuthenticated(candidateReturnTo(deps.returnTo));
-    const board = await getBoardContext();
+    // One wave: the session probe, the board context and the join SEO are
+    // mutually independent. A board that gates or redirects away discards the
+    // SEO it fetched — rare, and cheaper than serializing three round trips
+    // on every visit to a signup entry page.
+    const [user, board, joinSeo] = await Promise.all([
+      sessionUserOrNull(),
+      getBoardContext(),
+      getAuthJoinSeo(),
+    ]);
+    redirectIfSignedIn(user, candidateReturnTo(deps.returnTo));
     const destination = resolveSignupDestination(board.features);
     if (destination === null) throw notFound();
     if (destination !== '/auth/join') {
@@ -46,7 +54,6 @@ export const Route = createFileRoute('/auth/join')({
             : destination,
       });
     }
-    const joinSeo = await getAuthJoinSeo();
     return { boardName: board.name, ...joinSeo };
   },
   head: ({ loaderData, match }) =>

@@ -34,11 +34,14 @@ export const Route = createFileRoute('/messages/$conversationId')({
       deps.view === 'archived' ? '?view=archived' : ''
     }`;
     try {
-      const [thread, inbox] = await Promise.all([
+      const [thread, inbox, seo] = await Promise.all([
         getThread({ data: { id: params.conversationId } }),
         getInbox({ data: { archived: deps.view === 'archived' } }),
+        // Was `seo: await getSeoBase()` in the return — a second serial wave
+        // hidden in an object literal.
+        getSeoBase(),
       ]);
-      return { ...thread, inbox, view: deps.view, seo: await getSeoBase() };
+      return { ...thread, inbox, view: deps.view, seo };
     } catch (error) {
       if (isRedirect(error)) throw error;
       if (String(error).includes('EMAIL_UNVERIFIED')) {

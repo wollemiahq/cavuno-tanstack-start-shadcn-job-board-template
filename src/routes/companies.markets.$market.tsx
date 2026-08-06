@@ -1,11 +1,11 @@
 /**
  * Company market page — head + breadcrumb JSON-LD in getCompaniesMarketPage.
+ * Market resolve + listing run in ONE server fn (no resolve-then-fetch waterfall).
  */
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getCompaniesMarketPage } from '../server/companies-pages';
-import { getCompanyMarket } from '../server/queries';
 
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import {
@@ -22,26 +22,25 @@ export const Route = createFileRoute('/companies/markets/$market')({
   validateSearch: parseCompaniesSearch,
   loaderDeps: ({ search }) => companiesListingLoaderDeps(search),
   loader: async ({ params, deps }) => {
-    const market = await getCompanyMarket({ data: { market: params.market } });
-    if (!market) throw notFound();
-    if (market.redirectTo) {
-      throw redirect({
-        to: '/companies/markets/$market',
-        params: { market: market.redirectTo },
-        statusCode: 308,
-      });
-    }
-
-    const page = await getCompaniesMarketPage({
+    // ONE server fn: market resolve joins the listing + markets rail + SEO
+    // batch so we do not pay a serial resolve hop before the real page read.
+    const result = await getCompaniesMarketPage({
       data: {
         marketSlug: params.market,
-        displayName: market.displayName,
         query: deps.query,
         offset: pageToOffset(deps.page ?? 1, COMPANIES_PAGE_SIZE),
         limit: COMPANIES_PAGE_SIZE,
       },
     });
-    return { market, ...page };
+    if (result.kind === 'not_found') throw notFound();
+    if (result.kind === 'redirect') {
+      throw redirect({
+        to: '/companies/markets/$market',
+        params: { market: result.to },
+        statusCode: 308,
+      });
+    }
+    return result;
   },
   head: ({ loaderData }) =>
     loaderData

@@ -45,11 +45,14 @@ export const Route = createFileRoute('/account_/access')({
   },
   loader: async () => {
     try {
-      const [grant, offers] = await Promise.all([
+      const [grant, offers, seo] = await Promise.all([
         getAccessGrant(),
         getPaywallOffers(),
+        // Was `seo: await getSeoBase()` in the return — a second serial wave
+        // hidden in an object literal.
+        getSeoBase(),
       ]);
-      return { grant, offers: offers.data, seo: await getSeoBase() };
+      return { grant, offers: offers.data, seo };
     } catch (error) {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);

@@ -5,7 +5,7 @@ import {
   useRouter,
 } from '@tanstack/react-router';
 
-import { redirectIfAuthenticated } from '../lib/auth-guard';
+import { redirectIfSignedIn, sessionUserOrNull } from '../lib/auth-guard';
 import { MARKETING_CONSENT } from '../lib/marketing-consent';
 import { m } from '../paraglide/messages';
 import { signUpEmployer } from '../server/auth';
@@ -18,8 +18,11 @@ import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/auth/employer/sign-up')({
   loader: async () => {
-    await redirectIfAuthenticated('/');
-    const board = await getBoardContext();
+    const [user, board] = await Promise.all([
+      sessionUserOrNull(),
+      getBoardContext(),
+    ]);
+    redirectIfSignedIn(user, '/');
     if (!board.features.employers) throw notFound();
     return { boardName: board.name };
   },

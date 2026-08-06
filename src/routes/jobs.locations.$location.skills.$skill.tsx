@@ -14,7 +14,6 @@ import { pageToOffset } from '../lib/pagination';
 import { m } from '../paraglide/messages';
 import { saveJob } from '../server/account';
 import { getJobsLocationSkillPage } from '../server/jobs-listing-pages';
-import { resolvePlace, resolveSkill } from '../server/queries';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
 import { jsonLdHeadScripts } from '@/components/json-ld';
@@ -27,27 +26,11 @@ export const Route = createFileRoute('/jobs/locations/$location/skills/$skill')(
     validateSearch: parseJobsSearch,
     loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
     loader: async ({ params, deps }) => {
-      const [place, skill] = await Promise.all([
-        resolvePlace({ data: { slug: params.location } }),
-        resolveSkill({ data: { slug: params.skill } }),
-      ]);
-      if (!place || !skill) throw notFound();
-      if (place.redirectTo || skill.redirectTo) {
-        throw redirect({
-          to: '/jobs/locations/$location/skills/$skill',
-          params: {
-            location: place.redirectTo ?? params.location,
-            skill: skill.redirectTo ?? params.skill,
-          },
-          statusCode: 308,
-        });
-      }
-      const page = await getJobsLocationSkillPage({
+      // ONE server fn: both resolves join the listing + SEO batch inside it.
+      const result = await getJobsLocationSkillPage({
         data: {
           locationSlug: params.location,
           skillSlug: params.skill,
-          placeDisplayName: place.displayName,
-          skillDisplayName: skill.displayName,
           remoteOption: deps.remoteOption,
           employmentType: deps.employmentType,
           seniority: deps.seniority,
@@ -56,7 +39,15 @@ export const Route = createFileRoute('/jobs/locations/$location/skills/$skill')(
           limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
         },
       });
-      return { place, skill, ...page };
+      if (result.kind === 'not_found') throw notFound();
+      if (result.kind === 'redirect') {
+        throw redirect({
+          to: '/jobs/locations/$location/skills/$skill',
+          params: { location: result.locationTo, skill: result.skillTo },
+          statusCode: 308,
+        });
+      }
+      return result;
     },
     head: ({ loaderData }) =>
       loaderData
