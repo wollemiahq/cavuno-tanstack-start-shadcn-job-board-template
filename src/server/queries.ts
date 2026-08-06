@@ -142,9 +142,9 @@ export const getSeoBase = createServerFn({ method: 'GET' }).handler(
 );
 
 /**
- * Board SEO infra (resolved favicon/app-icon URLs + web-manifest meta + the
- * canonical base) for the root <head>. The hosted board serves this publicly
- * even when password-protected.
+ * Board SEO infra tokens only (`adsTxt`, IndexNow, GSV, `canonicalBase`,
+ * `manifest.name`). Favicon / app-icon URLs are brand identity on
+ * `board.context()` (`logoUrl` + `icons`), not this endpoint.
  */
 export const getBoardSeo = createServerFn({ method: 'GET' }).handler(async () =>
   getBoard().seo(),

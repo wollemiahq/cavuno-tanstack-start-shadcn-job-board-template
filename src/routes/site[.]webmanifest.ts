@@ -1,31 +1,31 @@
 /**
- * site.webmanifest — the board-specific PWA manifest.
+ * site.webmanifest — board-specific PWA manifest.
  *
- * 4.0.0 dropped `icons` and `manifest.themeColor` from `board.seo()`; the
- * starter owns icon paths (public assets) and theme color from the theme.
+ * Name + icon URLs come from `board.context()` (brand identity). Theme color
+ * stays app-owned (theme tokens). Do not read icons from `board.seo()`.
  */
 import { createFileRoute } from '@tanstack/react-router';
 
-import { getBoard } from '../lib/board';
+import { readBoardContext } from '../lib/board-context-cache';
+import { boardManifestIcons } from '../lib/board-icons';
 import { themeTokens } from '../theme/resolved';
 
 export const Route = createFileRoute('/site.webmanifest')({
   server: {
     handlers: {
       GET: async () => {
-        const { manifest } = await getBoard().seo();
+        // Same per-isolate context cache as the root shell — no extra hop.
+        const board = await readBoardContext();
+        const name = board.name?.trim() || 'Board';
 
         const doc = {
-          name: manifest.name,
-          short_name: manifest.name,
+          name,
+          short_name: name,
           start_url: '/',
           display: 'standalone',
           background_color: themeTokens.light['--background'],
           theme_color: themeTokens.light['--background'],
-          icons: [
-            { src: '/logo192.png', sizes: '192x192', type: 'image/png' },
-            { src: '/logo512.png', sizes: '512x512', type: 'image/png' },
-          ],
+          icons: boardManifestIcons(board),
         };
 
         return new Response(JSON.stringify(doc), {

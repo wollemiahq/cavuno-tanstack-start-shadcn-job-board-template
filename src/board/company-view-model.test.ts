@@ -45,7 +45,12 @@ describe('company view models', () => {
 
   it('does not invent card copy when the summary/description or job count is absent', () => {
     const vm = toCompanyCardVM(
-      { ...company, summary: null, description: null, publishedJobCount: 0 },
+      {
+        ...company,
+        summary: null,
+        description: null,
+        publishedJobCount: 0,
+      } as PublicCompany,
       labels,
     );
 
@@ -59,7 +64,7 @@ describe('company view models', () => {
         ...company,
         summary: 'Operator-authored one-liner.',
         description: '<p>Long HTML that should not become the card line.</p>',
-      },
+      } as PublicCompany,
       labels,
     );
     expect(vm.descriptionText).toBe('Operator-authored one-liner.');

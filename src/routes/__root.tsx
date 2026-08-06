@@ -52,6 +52,7 @@ import {
 } from '@/components/shell-accessibility';
 import { DirectionProvider } from '@/components/ui/direction';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { boardHeadIconLinks } from '@/lib/board-icons';
 import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
 import {
   resolveHeaderRouteLabels,
@@ -135,25 +136,9 @@ export const Route = createRootRoute({
   loader: () => getRootShellData(),
   head: ({ loaderData }) => {
     const board = loaderData?.board;
-    // 4.0.0 dropped board.seo().icons — starter-owned public assets.
-    const boardIconLinks = [
-      { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-      { rel: 'icon', href: '/favicon.ico' },
-      {
-        rel: 'icon',
-        type: 'image/png',
-        sizes: '192x192',
-        href: '/logo192.png',
-      },
-      {
-        rel: 'icon',
-        type: 'image/png',
-        sizes: '512x512',
-        href: '/logo512.png',
-      },
-      { rel: 'apple-touch-icon', href: '/logo192.png' },
-    ];
-    const iconLinks = boardIconLinks;
+    // Brand icons from board.context() (`logoUrl` + `icons`), not board.seo().
+    // Empty / not-yet-generated packs fall back to starter public/ assets.
+    const iconLinks = boardHeadIconLinks(board);
     return {
       meta: [
         { charSet: 'utf-8' },
