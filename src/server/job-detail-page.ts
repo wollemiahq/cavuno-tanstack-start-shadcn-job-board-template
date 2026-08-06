@@ -17,6 +17,7 @@ import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
+import { readBoardContext } from '../lib/board-context-cache';
 import { headTitle, jobTitleAtCompany } from '../lib/page-title';
 import { gatedRead } from './board-access';
 
@@ -43,7 +44,7 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
       const board = getBoard();
       const [job, boardContext] = await Promise.all([
         board.jobs.retrieve(data.jobSlug, undefined, { headers }),
-        board.context(),
+        readBoardContext(),
       ]);
       const origin = new URL(getRequest().url).origin;
       const seo = {

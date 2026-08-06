@@ -48,6 +48,7 @@ import {
 } from '../board/salary-view-model';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
+import { readBoardContext } from '../lib/board-context-cache';
 import { headTitle } from '../lib/page-title';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -71,7 +72,7 @@ function asJsonObjects(value: unknown): JsonObject[] {
 }
 
 async function seoBase() {
-  const boardContext = await getBoard().context();
+  const boardContext = await readBoardContext();
   const origin = new URL(getRequest().url).origin;
   return {
     boardName: boardContext.name,

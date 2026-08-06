@@ -72,18 +72,26 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
       const similar = getSimilarJobs({ data: { jobSlug: params.jobSlug } })
         .then((r) => ({ jobs: r.data }))
         .catch(() => ({ jobs: [] as PublicJobCard[] }));
-      const [page, user, company] = await Promise.all([
+      // The application lookup is CHAINED off the session probe inside the
+      // batch rather than awaited after it: it needs only the job slug, and
+      // `user` is just a gate, so as a trailing `await` it was a third
+      // serial wave for every signed-in candidate. Anonymous visitors still
+      // pay nothing (the chain short-circuits to null).
+      const [page, session, company] = await Promise.all([
         getJobDetailPage({ data: { jobSlug: params.jobSlug } }),
-        getSessionUser(),
+        getSessionUser().then(async (user) => ({
+          user,
+          application: user?.emailVerified
+            ? await myApplicationForJob({
+                data: { jobSlug: params.jobSlug },
+              }).catch(() => null)
+            : null,
+        })),
         getCompany({ data: { companySlug: params.companySlug } }).catch(
           () => null,
         ),
       ]);
-      const application = user?.emailVerified
-        ? await myApplicationForJob({
-            data: { jobSlug: params.jobSlug },
-          }).catch(() => null)
-        : null;
+      const { user, application } = session;
       // Category/skill chips link directly: every slug the API emits
       // resolves (ADR-0099 platform guarantee) — no re-verification round trip.
       return {

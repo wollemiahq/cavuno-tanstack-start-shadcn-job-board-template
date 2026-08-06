@@ -20,6 +20,7 @@ import { getRequest } from '@tanstack/react-start/server';
 import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
+import { readBoardContext } from '../lib/board-context-cache';
 import { boardGlobalReadCache } from '../lib/read-cache';
 import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
@@ -52,7 +53,7 @@ import type {
 
 export const getBoardContext = createServerFn({ method: 'GET' }).handler(
   async () => {
-    const context = await getBoard().context();
+    const context = await readBoardContext();
     return {
       ...context,
       // Runtime feature flags are resolved to clean typed booleans here at
@@ -122,12 +123,14 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
  * SEO base for a listing page's `head` — the board name + language + the
  * request origin (for absolute `<link rel=canonical>` / `og:url`). A server fn
  * so `getRequest` resolves on both SSR and client navigation; the board
- * context is already cached by the SDK client. The language feeds the
+ * context read is memoized per isolate (src/lib/board-context-cache.ts) —
+ * the SDK client does NOT cache it, and this value is read again by the
+ * root shell on the same document. The language feeds the
  * board-language-required `@cavuno/board/seo` helpers.
  */
 export const getSeoBase = createServerFn({ method: 'GET' }).handler(
   async () => {
-    const board = await getBoard().context();
+    const board = await readBoardContext();
     return {
       boardName: board.name,
       language: board.language,

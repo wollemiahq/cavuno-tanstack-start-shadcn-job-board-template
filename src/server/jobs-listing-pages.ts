@@ -26,7 +26,9 @@ import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
+import { readBoardContext } from '../lib/board-context-cache';
 import { localizePath } from '../lib/localized-path';
+import { shrinkCardDescriptions } from '../lib/shrink-card-descriptions';
 import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
 
@@ -118,7 +120,7 @@ function listFilters(
 async function seoBase() {
   // Board context is an OPEN read (password wall does not gate it), matching
   // getSeoBase / getJobDetailPage.
-  const boardContext = await getBoard().context();
+  const boardContext = await readBoardContext();
   const origin = new URL(getRequest().url).origin;
   return {
     boardName: boardContext.name,
@@ -135,7 +137,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
-      const [page, seo] = await Promise.all([
+      const [rawList, seo] = await Promise.all([
         data.q
           ? board.jobs.search(
               {
@@ -158,6 +160,8 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
             ),
         seoBase(),
       ]);
+      // Ship the rendered summary, not the whole description document.
+      const page = shrinkCardDescriptions(rawList);
       const relatedSearches =
         'relatedSearches' in page ? page.relatedSearches : undefined;
       const heading = jobSearchCopy().headingJobs;

@@ -16,7 +16,9 @@ import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
+import { readBoardContext } from '../lib/board-context-cache';
 import { headTitle } from '../lib/page-title';
+import { shrinkCardDescriptions } from '../lib/shrink-card-descriptions';
 import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
 import { readTalentDirectory } from './talent-directory-read';
@@ -45,11 +47,11 @@ export const getHomePage = createServerFn({ method: 'GET' })
       const board = getBoard();
       // Board context is an OPEN read (password wall does not gate it),
       // matching getSeoBase / getJobDetailPage. Content reads use headers.
-      const boardContextP = board.context();
-      const jobsP = board.jobs.list(
-        { limit: 8, fields: '+description' },
-        { headers },
-      );
+      const boardContextP = readBoardContext();
+      const jobsP = board.jobs
+        .list({ limit: 8, fields: '+description' }, { headers })
+        // Ship the rendered summary, not the whole description document.
+        .then(shrinkCardDescriptions);
       // Additive companies strip — fail soft so a rejecting preview never
       // faults the whole landing.
       const companiesP = board.companies

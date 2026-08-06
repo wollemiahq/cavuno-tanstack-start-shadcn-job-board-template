@@ -43,12 +43,16 @@ export const Route = createFileRoute('/auth/verify-email-required')({
   // verified session. ResumeUpload's own invalidations refresh it the same
   // way, so an upload during the step updates the rendered file state.
   loader: async () => {
+    // Started once, before the try: the error path needs the SEO base too,
+    // and re-issuing it there made the failure case pay a second serial
+    // round trip (every sibling auth route already shares one promise).
+    const seoPromise = getSeoBase();
     try {
-      const [resume, seo] = await Promise.all([getResume(), getSeoBase()]);
+      const [resume, seo] = await Promise.all([getResume(), seoPromise]);
       return { resume, seo };
     } catch (error) {
       if (isRedirect(error)) throw error;
-      return { resume: null, seo: await getSeoBase() };
+      return { resume: null, seo: await seoPromise };
     }
   },
   head: ({ loaderData }) => ({

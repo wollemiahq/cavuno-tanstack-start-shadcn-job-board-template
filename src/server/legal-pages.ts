@@ -3,8 +3,8 @@ import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
 import { resolveLegalContent, resolveLegalEntity } from '../content/legal';
-import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
+import { readBoardContext } from '../lib/board-context-cache';
 import { LEGAL_PAGES, type LegalPageViewModel } from '../lib/legal';
 import { headTitle } from '../lib/page-title';
 import { gatedRead } from './board-access';
@@ -44,10 +44,9 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async () => {
-      const board = getBoard();
       const meta = LEGAL_PAGES[data.type];
       const content = resolveLegalContent(data.type);
-      const boardContext = await board.context();
+      const boardContext = await readBoardContext();
 
       const origin = new URL(getRequest().url).origin;
       const seo = {

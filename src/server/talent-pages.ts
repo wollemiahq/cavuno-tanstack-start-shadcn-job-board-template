@@ -42,6 +42,19 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
+      // The directory read does not depend on the SEO base, so it starts
+      // first and is awaited below — these used to be two serial waves.
+      const directory = readTalentDirectory(() =>
+        getBoard().talent.list(
+          {
+            offset: data.offset,
+            q: data.q,
+            skill: data.skill,
+            limit: data.limit,
+          },
+          { headers },
+        ),
+      );
       const seo = await seoBase();
       const head = {
         meta: [
@@ -68,17 +81,7 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
       );
 
       try {
-        const result = await readTalentDirectory(() =>
-          getBoard().talent.list(
-            {
-              offset: data.offset,
-              q: data.q,
-              skill: data.skill,
-              limit: data.limit,
-            },
-            { headers },
-          ),
-        );
+        const result = await directory;
         if (result.status === 'restricted') {
           return { seo, page: null, restricted: true as const, head, jsonLd };
         }

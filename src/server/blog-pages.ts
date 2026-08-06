@@ -21,6 +21,7 @@ import { getRequest } from '@tanstack/react-start/server';
 import { BLOG_PAGE_SIZE } from '../lib/blog';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
+import { readBoardContext } from '../lib/board-context-cache';
 import { headTitle } from '../lib/page-title';
 import { selectRelatedPosts } from '../lib/related-posts';
 import { m } from '../paraglide/messages';
@@ -40,7 +41,7 @@ function asJsonObjects(value: unknown): JsonObject[] {
 }
 
 async function seoBase() {
-  const boardContext = await getBoard().context();
+  const boardContext = await readBoardContext();
   const origin = new URL(getRequest().url).origin;
   return {
     boardName: boardContext.name,

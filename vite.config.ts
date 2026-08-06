@@ -75,9 +75,18 @@ const config = defineConfig({
       },
       server: {
         build: {
-          // The root stylesheet is a manifest-managed side-effect import, so
-          // Start can place its critical route CSS in the SSR document and
-          // remove the render-blocking stylesheet round trip on first load.
+          // Puts the stylesheet in the SSR document, removing the
+          // render-blocking round trip on first load — which is what keeps
+          // LCP inside budget on a cold visit.
+          //
+          // Be clear about the trade, because the name suggests otherwise:
+          // this inlines the WHOLE stylesheet, not a per-route critical
+          // subset (measured: 245KB raw / 36KB gzip, byte-identical on every
+          // route, ~58% of the raw HTML of /jobs). A multi-page visit
+          // re-sends it per document where an external file would be cached
+          // once. Deliberate: first paint is the budgeted metric here, and
+          // dist/client/assets/index-*.css is still emitted, so flipping
+          // this back is a one-line change if that trade ever inverts.
           inlineCss: true,
         },
       },
