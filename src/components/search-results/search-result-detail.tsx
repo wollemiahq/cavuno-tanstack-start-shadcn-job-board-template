@@ -66,6 +66,9 @@ export function SearchResultDetail({
 }: SearchResultDetailProps) {
   const [condensed, setCondensed] = useState(false);
   const detailRef = useRef<HTMLElement | null>(null);
+  /** True while a condensed-header rAF is queued (id alone is wrong if rAF is sync). */
+  const pendingFrameRef = useRef(false);
+  const frameIdRef = useRef<number | null>(null);
   const setDetailRef = useCallback(
     (node: HTMLElement | null) => {
       detailRef.current = node;
@@ -87,6 +90,8 @@ export function SearchResultDetail({
     setCondensed((current) => {
       if (!heroBoundary || detail.scrollTop <= 0) return false;
 
+      // offsetTop forces layout; at most once per animation frame via the
+      // scheduler below so scroll handlers do not thrash style→layout→style.
       const enterAt = heroBoundary.offsetTop;
       const exitBelow = Math.max(enterAt - COMPACT_HEADER_EXIT_BUFFER, 0);
 
@@ -94,9 +99,26 @@ export function SearchResultDetail({
     });
   }, []);
 
+  const scheduleUpdateCondensed = useCallback(() => {
+    if (pendingFrameRef.current) return;
+    pendingFrameRef.current = true;
+    frameIdRef.current = requestAnimationFrame(() => {
+      pendingFrameRef.current = false;
+      frameIdRef.current = null;
+      updateCondensed();
+    });
+  }, [updateCondensed]);
+
   useEffect(() => {
-    updateCondensed();
-  }, [children, updateCondensed]);
+    scheduleUpdateCondensed();
+    return () => {
+      if (frameIdRef.current != null) {
+        cancelAnimationFrame(frameIdRef.current);
+        frameIdRef.current = null;
+      }
+      pendingFrameRef.current = false;
+    };
+  }, [children, scheduleUpdateCondensed]);
 
   return (
     <section
@@ -108,7 +130,7 @@ export function SearchResultDetail({
       data-condensed={condensed}
       tabIndex={0}
       onScroll={(event) => {
-        updateCondensed();
+        scheduleUpdateCondensed();
         onScroll?.(event);
       }}
       className={cn(

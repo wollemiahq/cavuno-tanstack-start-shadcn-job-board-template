@@ -23,15 +23,12 @@ export function HeaderMobileMenu({
   showPostJob,
   navigationLabel,
   postJobLabel,
-  topOffset,
   onOpenChange,
 }: {
   navLinks: ReadonlyArray<{ to: MobileNavDestination; label: string }>;
   showPostJob: boolean;
   navigationLabel: string;
   postJobLabel: string;
-  /** Viewport-Y of the header's bottom edge — the panel starts there. */
-  topOffset: number;
   onOpenChange: (open: boolean) => void;
 }) {
   useEffect(() => {
@@ -56,8 +53,9 @@ export function HeaderMobileMenu({
       id="mobile-navigation-dialog"
       role="dialog"
       aria-label={navigationLabel}
-      style={{ top: topOffset }}
-      className="bg-background text-foreground fixed inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-contain xl:hidden"
+      // Pin under the sticky header (`min-h-16` / `top-16`) without measuring
+      // layout — avoids a forced reflow on every menu open.
+      className="bg-background text-foreground fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto overscroll-contain xl:hidden"
     >
       {/* No border-t here — the header above already draws border-b, and
           two hairlines a few px apart read as a glitch. */}

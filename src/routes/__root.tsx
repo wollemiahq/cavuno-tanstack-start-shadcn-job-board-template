@@ -16,7 +16,6 @@ import {
   useRouterState,
 } from '@tanstack/react-router';
 
-import Footer from '../components/Footer';
 import Header from '../components/Header';
 import { localeDirection } from '../lib/locale-direction';
 import { toPreviewBoardConfig } from '../lib/preview';
@@ -33,7 +32,6 @@ import { useKeywordSuggestions } from './-use-keyword-suggestions';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { AlternateLinks } from '@/components/alternate-links';
-import { AnalyticsScripts } from '@/components/analytics-scripts';
 import { AppRouteErrorPage } from '@/components/app-route-error';
 import { ShellBreadcrumb } from '@/components/board/breadcrumb';
 import { themeModeScript } from '@/components/cavuno/board-theme';
@@ -64,6 +62,16 @@ import {
   resolveShellBreadcrumbEntities,
   resolveShellBreadcrumbTrail,
 } from '@/lib/shell-breadcrumb';
+
+const LazyFooter = lazy(() =>
+  import('../components/Footer').then((mod) => ({ default: mod.default })),
+);
+
+const LazyAnalyticsScripts = lazy(() =>
+  import('@/components/analytics-scripts').then(({ AnalyticsScripts }) => ({
+    default: AnalyticsScripts,
+  })),
+);
 
 const LazyMessagesDockController = lazy(() =>
   import('./-messages-dock-controller').then(({ MessagesDockController }) => ({
@@ -440,7 +448,11 @@ function RootLayout() {
           the footer's "Cookie preferences" reopener, the job-alert prompt's
           yield, and the analytics gate all read the same choice. The embed
           iframe path above deliberately gets neither trackers nor banner. */}
-      <AnalyticsScripts analytics={board.analytics} />
+      {/* Analytics + footer are below-the-fold / post-consent — keep them out
+          of the initial public JS budget (PageSpeed unused-JS on index). */}
+      <Suspense fallback={null}>
+        <LazyAnalyticsScripts analytics={board.analytics} />
+      </Suspense>
       <FloatingStackProvider>
         <NavigationProgress />
         {fillsViewport ? (
@@ -454,29 +466,31 @@ function RootLayout() {
             {routeContent}
           </>
         )}
-        <Footer
-          breadcrumb={
-            shellBreadcrumb ? (
-              <ShellBreadcrumb
-                items={shellBreadcrumb.items}
-                ariaLabel={breadcrumbAriaLabel}
-              />
-            ) : undefined
-          }
-          connected={shellBreadcrumb !== null}
-          flush={fillsViewport}
-          boardName={board.name}
-          logoUrl={board.logoUrl}
-          language={board.language}
-          showCavunoBranding={board.showCavunoBranding}
-          primaryDomain={board.primaryDomain}
-          slug={board.slug}
-          features={board.features}
-          footer={board.footer}
-          talentDirectoryVisibility={board.talentDirectoryVisibility}
-          hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
-          cookiePreferencesAction={<CookiePreferencesFooterAction />}
-        />
+        <Suspense fallback={null}>
+          <LazyFooter
+            breadcrumb={
+              shellBreadcrumb ? (
+                <ShellBreadcrumb
+                  items={shellBreadcrumb.items}
+                  ariaLabel={breadcrumbAriaLabel}
+                />
+              ) : undefined
+            }
+            connected={shellBreadcrumb !== null}
+            flush={fillsViewport}
+            boardName={board.name}
+            logoUrl={board.logoUrl}
+            language={board.language}
+            showCavunoBranding={board.showCavunoBranding}
+            primaryDomain={board.primaryDomain}
+            slug={board.slug}
+            features={board.features}
+            footer={board.footer}
+            talentDirectoryVisibility={board.talentDirectoryVisibility}
+            hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
+            cookiePreferencesAction={<CookiePreferencesFooterAction />}
+          />
+        </Suspense>
         <CookieConsentBanner />
         {user &&
         board.features.messaging &&

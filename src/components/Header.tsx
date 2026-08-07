@@ -119,7 +119,6 @@ export default function Header({
   };
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [menuTop, setMenuTop] = useState(0);
   // One copy of the search field state for BOTH renders of the form (the
   // page header and the open mobile-nav sheet share it, so opening the menu
   // never swaps the input for an empty twin).
@@ -303,7 +302,10 @@ export default function Header({
       <header
         data-menu-color={MENU_COLOR}
         className={cn(
-          'border-border text-foreground border-b',
+          // Sticky keeps the real header (and its single search field) at the
+          // top while the mobile nav panel is open, so the panel can pin with
+          // CSS `top-16` (matches min-h-16) instead of getBoundingClientRect.
+          'border-border text-foreground sticky top-0 z-50 border-b',
           ...menuColorClasses(MENU_COLOR),
         )}
       >
@@ -354,20 +356,7 @@ export default function Header({
                 aria-haspopup="dialog"
                 aria-expanded={menuOpen}
                 aria-controls="mobile-navigation-dialog"
-                onClick={() => {
-                  if (menuOpen) {
-                    setMenuOpen(false);
-                    return;
-                  }
-                  // The nav panel starts at the header's bottom edge so the
-                  // REAL header — and its single search input — stays put.
-                  setMenuTop(
-                    menuButtonRef.current
-                      ?.closest('header')
-                      ?.getBoundingClientRect().bottom ?? 0,
-                  );
-                  setMenuOpen(true);
-                }}
+                onClick={() => setMenuOpen((open) => !open)}
               >
                 {menuOpen ? (
                   <X aria-hidden="true" />
@@ -386,7 +375,6 @@ export default function Header({
             showPostJob={!user && features.publicJobSubmission}
             navigationLabel={m.siteHeader_primaryNavigationAriaLabel()}
             postJobLabel={m.siteHeader_postJobLabel()}
-            topOffset={menuTop}
             onOpenChange={(open) => {
               setMenuOpen(open);
               if (!open) {

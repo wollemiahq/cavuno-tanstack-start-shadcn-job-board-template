@@ -7,7 +7,7 @@ import {
   screen,
   within,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   AdRail,
@@ -18,7 +18,19 @@ import {
   SearchResultsList,
 } from './search-results';
 
-afterEach(cleanup);
+// Condensed-header updates are rAF-scheduled; run them sync in tests.
+beforeEach(() => {
+  vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+    cb(0);
+    return 0;
+  });
+  vi.stubGlobal('cancelAnimationFrame', () => {});
+});
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 describe('Search results composition', () => {
   it('replaces the expanded hero with one compact header at its boundary', () => {
