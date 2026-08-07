@@ -48,41 +48,41 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
  * Session-dependent shell fields. Called once from the client after hydrate;
  * not on the public SSR critical path.
  */
-export const getRootSessionShellData = createServerFn({ method: 'GET' }).handler(
-  async () => {
-    const [user, employerCompanies, preview, hasGrant] = await Promise.all([
-      getSessionUser(),
-      listCompanies()
-        .then((memberships) => memberships.data)
-        .catch(() => null),
-      getPreviewState().catch(async () => {
-        const facts = await getDataSourceFacts().catch(() => ({
-          demoConfigured: false,
-          demoBoardPrivate: false,
-          dataSource: 'board' as const,
-        }));
-        return {
-          capability: {
-            canPreview: false as const,
-            reason: 'not-sandbox' as const,
-          },
-          personas: [],
-          ...facts,
-        };
-      }),
-      getAccessGrant()
-        .then((grant) => grant.hasAccess)
-        .catch(() => false),
-    ]);
+export const getRootSessionShellData = createServerFn({
+  method: 'GET',
+}).handler(async () => {
+  const [user, employerCompanies, preview, hasGrant] = await Promise.all([
+    getSessionUser(),
+    listCompanies()
+      .then((memberships) => memberships.data)
+      .catch(() => null),
+    getPreviewState().catch(async () => {
+      const facts = await getDataSourceFacts().catch(() => ({
+        demoConfigured: false,
+        demoBoardPrivate: false,
+        dataSource: 'board' as const,
+      }));
+      return {
+        capability: {
+          canPreview: false as const,
+          reason: 'not-sandbox' as const,
+        },
+        personas: [],
+        ...facts,
+      };
+    }),
+    getAccessGrant()
+      .then((grant) => grant.hasAccess)
+      .catch(() => false),
+  ]);
 
-    return {
-      user,
-      employerCompanies,
-      preview,
-      hasGrant,
-    };
-  },
-);
+  return {
+    user,
+    employerCompanies,
+    preview,
+    hasGrant,
+  };
+});
 
 /** Combine public board flags with the session grant bit. */
 export function resolveRootHasAccessGrant(
