@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { isNotFound } from '@cavuno/board';
 import {
   createFileRoute,
@@ -6,7 +8,6 @@ import {
   useNavigate,
   useRouter,
 } from '@tanstack/react-router';
-import type { ReactNode } from 'react';
 
 import { m } from '../paraglide/messages';
 
