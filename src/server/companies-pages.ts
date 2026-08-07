@@ -281,19 +281,22 @@ export const getCompanyProfilePage = createServerFn({ method: 'GET' })
         board.companies.listJobs(data.companySlug, {}, { headers }),
         seoBase(),
       ]);
-      // Tab gate is free on the company wire; full salary payload only loads
-      // when there is a sample (overview teaser needs the aggregates).
+      // Tab gate is free on the company wire; teaser uses the lightweight
+      // salaries/summary endpoint (overall + top categories only — no
+      // seniority/competitors/locations) when a sample exists.
       const salarySampleCount = companySalarySampleCount(company);
       const hasSalaries = salarySampleCount > 0;
       const salarySummary = hasSalaries
         ? await (async () => {
             try {
-              const salary = await board.companies.salaries(data.companySlug, {
-                headers,
-              });
+              const salary = await board.companies.salaries.summary(
+                data.companySlug,
+                { headers },
+              );
               return {
                 overallSalary: salary.overallSalary,
-                byCategory: salary.byCategory.slice(
+                // Keep the profile rail's existing `byCategory` shape.
+                byCategory: salary.topCategories.slice(
                   0,
                   COMPANY_SALARY_SUMMARY_CATEGORIES,
                 ),
