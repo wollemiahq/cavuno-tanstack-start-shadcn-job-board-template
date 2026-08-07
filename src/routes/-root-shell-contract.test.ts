@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 /**
  * `shellComponent` renders BEFORE loaders resolve — that is the whole
  * point of it, and why the document can flush on the first byte while
- * `getRootShellData`'s seven-call fan-out is still in flight.
+ * `getRootShellData`'s public fan-out is still in flight.
  *
  * So `Route.useLoaderData()` inside `RootDocument` is always `undefined`.
  * Dev tolerates it; a production build throws

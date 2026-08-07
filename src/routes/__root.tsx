@@ -1,10 +1,12 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 
 /**
- * Root: loads the board context once (identity, features) plus the
- * session user, and renders the shared chrome. Presentation tokens and
- * light/dark mode are repo-owned (`src/theme.css` → resolved module) —
- * board context no longer carries a wire theme (SDK 3.x).
+ * Root: loads the PUBLIC board shell once (identity, features, SEO, consent)
+ * and renders shared chrome. Session-dependent fields (user, employer
+ * memberships, paywall grant, preview toolbar) load client-side after paint
+ * via RootSessionProvider — hard-refresh may briefly show Sign-in chrome for
+ * signed-in users; soft navigations keep session in the root tree.
+ * Presentation tokens and light/dark mode are repo-owned (`src/theme.css`).
  */
 import {
   HeadContent,
@@ -44,6 +46,7 @@ import { FloatingStackProvider } from '@/components/floating-stack';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { NavigationProgress } from '@/components/navigation-progress';
+import { RootSessionProvider, useRootSession } from '@/components/root-session';
 import {
   MainContentTarget,
   SkipToContentLink,
@@ -137,10 +140,12 @@ declare module '@tanstack/react-router' {
 
 export const Route = createRootRoute({
   // Origin lives in CONTEXT, not loader data: the shell renders before
-  // loaders resolve, and it must not wait on getRootShellData's seven-call
-  // fan-out just to build hreflang hrefs. Zero I/O — it reads the request
-  // URL on the server and window.location on the client.
+  // loaders resolve, and it must not wait on getRootShellData just to build
+  // hreflang hrefs. Zero I/O — request URL on the server, window.location
+  // on the client.
   beforeLoad: () => ({ origin: requestOrigin() }),
+  // Public shell only (board + SEO + offer gate + consent). Session chrome
+  // is RootSessionProvider after paint — see getRootSessionShellData.
   loader: () => getRootShellData(),
   head: ({ loaderData }) => {
     const board = loaderData?.board;
@@ -176,18 +181,43 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
-  const {
-    board,
-    user,
-    offerGate,
-    employerCompanies,
-    preview,
-    hasAccessGrant,
-    consentChoice,
-  } = Route.useLoaderData();
+  const { board, offerGate, consentChoice } = Route.useLoaderData();
+
+  // Embed widget: no site chrome and no session island (third-party iframe).
   const isEmbed = useRouterState({
     select: (s) => s.location.pathname.startsWith('/embed'),
   });
+  if (isEmbed) {
+    return (
+      <MainContentTarget>
+        <main className="p-4">
+          <Outlet />
+        </main>
+      </MainContentTarget>
+    );
+  }
+
+  return (
+    <RootSessionProvider candidatePaywall={board.features.candidatePaywall}>
+      <RootChrome
+        board={board}
+        offerGate={offerGate}
+        consentChoice={consentChoice}
+      />
+    </RootSessionProvider>
+  );
+}
+
+function RootChrome({
+  board,
+  offerGate,
+  consentChoice,
+}: {
+  board: Awaited<ReturnType<typeof getRootShellData>>['board'];
+  offerGate: Awaited<ReturnType<typeof getRootShellData>>['offerGate'];
+  consentChoice: Awaited<ReturnType<typeof getRootShellData>>['consentChoice'];
+}) {
+  const { user, employerCompanies, hasAccessGrant, preview } = useRootSession();
   const isFullBleed = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fullBleed),
   });
@@ -371,21 +401,6 @@ function RootLayout() {
     }
 
     void navigate({ to: '/jobs', search: { q: query } });
-  }
-
-  // The embed widget is an iframe fragment dropped into a third-party site —
-  // render it bare, WITHOUT the site header/footer (parity with the hosted
-  // board's minimal `(embed)` route-group layout). A site nav inside the iframe
-  // is a parity break the `H ⊆ S` capability gate can't see (it only flags
-  // hosted capabilities missing from the starter, not extra starter chrome).
-  if (isEmbed) {
-    return (
-      <MainContentTarget>
-        <main className="p-4">
-          <Outlet />
-        </main>
-      </MainContentTarget>
-    );
   }
 
   const header = (

@@ -9,6 +9,7 @@ import { useSelectedJob } from './-use-selected-job';
 
 import { toJobCardVM } from '@/board/job-view-model';
 import { JobSearchPage } from '@/components/board/job-search-page';
+import { useRootSession } from '@/components/root-session';
 import type { JobsSearch } from '@/lib/jobs-search';
 import type { PublicJobCard, RelatedSearch } from '@cavuno/board';
 
@@ -46,7 +47,8 @@ export function ProgrammaticJobsView({
   /** Save-job mutation, threaded from the route (server fns stay route-owned). */
   onSaveJob: (jobId: string) => Promise<void>;
 }) {
-  const { board, user } = rootApi.useLoaderData();
+  const { board } = rootApi.useLoaderData();
+  const { user } = useRootSession();
   const navigate = useNavigate() as unknown as LooseNavigate;
   const selectedJob = useSelectedJob(
     jobs.some((job) => job.slug === filters.selectedJob)

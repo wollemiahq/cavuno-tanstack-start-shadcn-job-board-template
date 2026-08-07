@@ -37,6 +37,7 @@ import {
 } from '@/components/candidate-route-state';
 import { EmptyState } from '@/components/empty-state';
 import { Page } from '@/components/layout/page';
+import { useRootSession } from '@/components/root-session';
 import {
   SearchResultDetail,
   SearchResultsLayout,
@@ -98,7 +99,8 @@ export const Route = createFileRoute('/account_/saved')({
 function SavedJobsPage() {
   const savedJobs = Route.useLoaderData();
   const search = Route.useSearch();
-  const { board, user } = rootApi.useLoaderData();
+  const { board } = rootApi.useLoaderData();
+  const { user } = useRootSession();
   const navigate = useNavigate({ from: '/account/saved' });
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);

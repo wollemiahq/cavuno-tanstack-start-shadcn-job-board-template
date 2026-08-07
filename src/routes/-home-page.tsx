@@ -4,6 +4,7 @@ import { getRouteApi } from '@tanstack/react-router';
 import { toJobCardVM } from '@/board/job-view-model';
 import { HomeLanding } from '@/components/board/home-landing';
 import { JobAlertFloatingPrompt } from '@/components/job-alert-floating-prompt';
+import { useRootSession } from '@/components/root-session';
 import { entityCopy } from '@/copy-groups/entity';
 import { jobAlertDefaultsFromSearch } from '@/lib/job-alert-defaults';
 import { m } from '@/paraglide/messages';
@@ -24,7 +25,8 @@ export function HomePage() {
     talent,
     talentCount,
   } = routeApi.useLoaderData();
-  const { board, user } = rootApi.useLoaderData();
+  const { board } = rootApi.useLoaderData();
+  const { user } = useRootSession();
   const copy = {
     entity: entityCopy(),
   };

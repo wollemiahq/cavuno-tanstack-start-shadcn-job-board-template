@@ -7,6 +7,7 @@ import { useSelectedJob } from './-use-selected-job';
 import { toJobCardVM } from '@/board/job-view-model';
 import { JobSearchPage } from '@/components/board/job-search-page';
 import { JobAlertFloatingPrompt } from '@/components/job-alert-floating-prompt';
+import { useRootSession } from '@/components/root-session';
 import { jobAlertDefaultsFromSearch } from '@/lib/job-alert-defaults';
 import { pageSearchValue } from '@/lib/pagination';
 import { saveJob } from '@/server/account';
@@ -18,7 +19,8 @@ const rootApi = getRouteApi('__root__');
 export function JobsPage() {
   const { page, relatedSearches } = routeApi.useLoaderData();
   const search = routeApi.useSearch();
-  const { board, user } = rootApi.useLoaderData();
+  const { board } = rootApi.useLoaderData();
+  const { user } = useRootSession();
   const navigate = useNavigate({ from: '/jobs/' });
   const selectedJob = useSelectedJob(
     page.data.some((job) => job.slug === search.selectedJob)

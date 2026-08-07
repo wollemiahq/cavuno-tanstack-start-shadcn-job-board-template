@@ -22,6 +22,7 @@ import { TalentSearchPage } from '@/components/board/talent-search-page';
 import { EmptyState } from '@/components/empty-state';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
+import { useRootSession } from '@/components/root-session';
 import { buttonVariants } from '@/components/ui/button';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
 import { pageSearchValue, pageToOffset } from '@/lib/pagination';
@@ -96,7 +97,8 @@ function TalentDirectoryNotFound() {
 
 function TalentDirectoryPage() {
   const { seo, page, restricted } = Route.useLoaderData();
-  const { user, board } = rootApi.useLoaderData();
+  const { board } = rootApi.useLoaderData();
+  const { user } = useRootSession();
   const search = Route.useSearch();
   const location = useLocation();
   const navigate = useNavigate({ from: '/talent/' });

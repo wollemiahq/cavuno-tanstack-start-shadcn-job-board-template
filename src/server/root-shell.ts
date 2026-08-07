@@ -10,9 +10,13 @@ import { getDataSourceFacts, getPreviewState } from './preview';
 import { getBoardContext, getBoardSeo, getEmployerOfferGate } from './queries';
 
 /**
- * One root-shell RPC boundary keeps the unsplittable root route from importing
- * every account, employer, preview, paywall, and board-query entry point. The
- * independent reads still fan out on the server exactly as before.
+ * Public root shell only — board identity, SEO, footer gate, consent cookie.
+ *
+ * Session / employer / paywall / preview used to fan out here on EVERY request
+ * (including cold anonymous SEO hits). Those are not needed to paint public
+ * chrome: they resolve client-side via `getRootSessionShellData` after first
+ * paint (hard-refresh signed-in users may see a brief Sign-in → account swap;
+ * soft navs keep session state in the root tree).
  */
 export const getRootShellData = createServerFn({ method: 'GET' }).handler(
   async () => {
@@ -22,50 +26,68 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
       getRequestHeader('cookie') ?? null,
     );
 
-    const [board, user, seo, offerGate, employerCompanies, preview, hasGrant] =
-      await Promise.all([
-        getBoardContext(),
-        getSessionUser(),
-        getBoardSeo(),
-        getEmployerOfferGate(),
-        listCompanies()
-          .then((memberships) => memberships.data)
-          .catch(() => null),
-        getPreviewState().catch(async () => {
-          const facts = await getDataSourceFacts().catch(() => ({
-            demoConfigured: false,
-            demoBoardPrivate: false,
-            dataSource: 'board' as const,
-          }));
-          return {
-            capability: {
-              canPreview: false as const,
-              reason: 'not-sandbox' as const,
-            },
-            personas: [],
-            ...facts,
-          };
-        }),
-        getAccessGrant()
-          .then((grant) => grant.hasAccess)
-          .catch(() => false),
-      ]);
+    const [board, seo, offerGate] = await Promise.all([
+      getBoardContext(),
+      getBoardSeo(),
+      getEmployerOfferGate(),
+    ]);
 
     return {
       // This deployment's own origin — hreflang alternates and localized
       // self-canonicals reference THIS site, not the hosted board.
       origin: new URL(getRequest().url).origin,
       board,
-      user,
       seo,
       offerGate,
-      employerCompanies,
-      preview,
-      hasAccessGrant: resolveSubscriptionEntryVisible(
-        board.features.candidatePaywall,
-        hasGrant,
-      ),
       consentChoice,
     };
   },
 );
+
+/**
+ * Session-dependent shell fields. Called once from the client after hydrate;
+ * not on the public SSR critical path.
+ */
+export const getRootSessionShellData = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    const [user, employerCompanies, preview, hasGrant] = await Promise.all([
+      getSessionUser(),
+      listCompanies()
+        .then((memberships) => memberships.data)
+        .catch(() => null),
+      getPreviewState().catch(async () => {
+        const facts = await getDataSourceFacts().catch(() => ({
+          demoConfigured: false,
+          demoBoardPrivate: false,
+          dataSource: 'board' as const,
+        }));
+        return {
+          capability: {
+            canPreview: false as const,
+            reason: 'not-sandbox' as const,
+          },
+          personas: [],
+          ...facts,
+        };
+      }),
+      getAccessGrant()
+        .then((grant) => grant.hasAccess)
+        .catch(() => false),
+    ]);
+
+    return {
+      user,
+      employerCompanies,
+      preview,
+      hasGrant,
+    };
+  },
+);
+
+/** Combine public board flags with the session grant bit. */
+export function resolveRootHasAccessGrant(
+  candidatePaywall: boolean,
+  hasGrant: boolean,
+) {
+  return resolveSubscriptionEntryVisible(candidatePaywall, hasGrant);
+}

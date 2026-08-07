@@ -26,6 +26,7 @@ import { Container } from '@/components/layout/container';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { PageLayout } from '@/components/layout/page-layout';
 import { DitherCanvas } from '@/components/marketing/dither-canvas';
+import { useRootSession } from '@/components/root-session';
 import { buttonVariants } from '@/components/ui/button';
 import {
   Empty,
@@ -92,11 +93,10 @@ function TalentProfileNotFound() {
 
 function TalentProfilePage() {
   const { profile } = Route.useLoaderData();
-  // The viewer session is read from the root loader (identity + board
-  // features) exactly as the talent search pane does (talent.index →
-  // -selected-talent-detail), so the profile hero's Message CTA is gated by
-  // the SAME matrix as the pane — no Board API call from the browser.
-  const { user, board } = rootApi.useLoaderData();
+  // Viewer session comes from RootSessionProvider (client after paint);
+  // board features stay on the public root loader.
+  const { board } = rootApi.useLoaderData();
+  const { user } = useRootSession();
   const location = useLocation();
   const vm = toTalentProfileVM(profile, getLocale(), getTalentSearchLabels());
   const viewer: TalentDetailViewer =
