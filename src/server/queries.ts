@@ -890,14 +890,12 @@ export const getCompanySalaryPresence = createServerFn({ method: 'GET' })
 
 /**
  * Company salary summary — the condensed salary block for the
- * company Overview tab. Returns the company's overall salary range plus the
- * top few category rows, so the Overview can render a "Salaries" summary that
- * defers to the full Salaries tab. The Overview derives `hasSalaries` (the tab
- * gate) from this same payload, so it fetches salary data ONCE — it does NOT
- * also call `getCompanySalaryPresence` (that boolean-only gate stays for the
- * Jobs subpage, which needs the flag but not the data). Same endpoint + same
- * 404-is-no-data honesty as the presence gate; the byCategory rows are capped
- * to the summary's top N (the full list lives on the Salaries tab).
+ * company Overview tab. Hits the lightweight `salaries/summary` endpoint
+ * (overall + top categories + sampleCount) so the Overview does not pay for
+ * the full company-salary document. The Overview derives `hasSalaries` (the
+ * tab gate) from `company.salarySampleCount` when available; this payload
+ * still 404s-as-empty when there is no sample. Category rows are already
+ * top-N on the wire; we keep a local slice as a hard cap.
  */
 const COMPANY_SALARY_SUMMARY_CATEGORIES = 5;
 
@@ -907,12 +905,13 @@ export const getCompanySalarySummary = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, async (h) => {
       try {
-        const salary = await getBoard().companies.salaries(data.companySlug, {
-          headers: h,
-        });
+        const salary = await getBoard().companies.salaries.summary(
+          data.companySlug,
+          { headers: h },
+        );
         return {
           overallSalary: salary.overallSalary,
-          byCategory: salary.byCategory.slice(
+          byCategory: salary.topCategories.slice(
             0,
             COMPANY_SALARY_SUMMARY_CATEGORIES,
           ),

@@ -34,9 +34,9 @@ export type RootSessionValue = {
   user: BoardUser | null;
   employerCompanies: CompanyMembership[] | null;
   hasAccessGrant: boolean;
-  preview: typeof EMPTY_ROOT_PREVIEW | Awaited<
-    ReturnType<typeof getRootSessionShellData>
-  >['preview'];
+  preview:
+    | typeof EMPTY_ROOT_PREVIEW
+    | Awaited<ReturnType<typeof getRootSessionShellData>>['preview'];
   /** True after the first client session fetch settles (success or failure). */
   ready: boolean;
 };
