@@ -31,7 +31,8 @@ export interface BlogArchiveEmptyState {
 export interface BlogArchivePageProps {
   breadcrumb?: BreadcrumbData;
   title: string;
-  description?: string | null;
+  /** Bio, location + bio, or other archive intro under the title. */
+  description?: ReactNode;
   /**
    * Optional decorative mark that leads the h1 inline (e.g. an author
    * avatar), so the heading keeps the same baseline as the other archives
