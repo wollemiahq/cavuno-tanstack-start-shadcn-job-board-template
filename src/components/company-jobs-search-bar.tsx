@@ -1,16 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 
 import { useNavigate } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 
 import { ListingSearchBand } from '@/components/board/listing-search-band';
-import {
-  LocationCombobox,
-  type LocationSuggestionState,
-} from '@/components/location-combobox';
+import type { LocationSuggestionState } from '@/components/location-combobox';
+
+// Location combobox pulls places suggest + popover UI — keep it off the
+// company-jobs critical module graph until the field is needed.
+const LazyLocationCombobox = lazy(() =>
+  import('@/components/location-combobox').then(({ LocationCombobox }) => ({
+    default: LocationCombobox,
+  })),
+);
 
 /**
  * The company-jobs subpage search is a thin wrapper of the
@@ -70,22 +75,31 @@ export function CompanyJobsSearchBar({
       searchLabel={m.searchBar_searchLabel()}
       searchAriaLabel={m.searchBar_searchAriaLabel()}
       leadingSlot={
-        <LocationCombobox
-          {...locationSuggestions}
-          value={place?.slug}
-          valueLabel={place?.name}
-          onSelect={(next) => {
-            setPlace(next);
-            // A place is only ever a resolved suggestion, so apply it right
-            // away — same behaviour as the site header's location field.
-            submit(next);
-          }}
-          onClear={() => {
-            setPlace(null);
-            submit(null);
-          }}
-          className="border-border bg-input/50 h-9 min-w-0 lg:min-w-56 lg:flex-1"
-        />
+        <Suspense
+          fallback={
+            <span
+              aria-hidden="true"
+              className="border-border bg-input/50 h-9 min-w-0 rounded-md border lg:min-w-56 lg:flex-1"
+            />
+          }
+        >
+          <LazyLocationCombobox
+            {...locationSuggestions}
+            value={place?.slug}
+            valueLabel={place?.name}
+            onSelect={(next) => {
+              setPlace(next);
+              // A place is only ever a resolved suggestion, so apply it right
+              // away — same behaviour as the site header's location field.
+              submit(next);
+            }}
+            onClear={() => {
+              setPlace(null);
+              submit(null);
+            }}
+            className="border-border bg-input/50 h-9 min-w-0 lg:min-w-56 lg:flex-1"
+          />
+        </Suspense>
       }
     />
   );

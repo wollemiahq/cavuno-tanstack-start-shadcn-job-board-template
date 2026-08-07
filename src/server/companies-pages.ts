@@ -49,6 +49,13 @@ function asJsonObjects(value: unknown): JsonObject[] {
   return JSON.parse(JSON.stringify(value)) as JsonObject[];
 }
 
+/** Public company wire field; treat missing/undefined as 0 (pre-field APIs). */
+function companySalarySampleCount(company: unknown): number {
+  if (!company || typeof company !== 'object') return 0;
+  const n = (company as { salarySampleCount?: unknown }).salarySampleCount;
+  return typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : 0;
+}
+
 async function seoBase() {
   const boardContext = await readBoardContext();
   const origin = new URL(getRequest().url).origin;
@@ -269,34 +276,44 @@ export const getCompanyProfilePage = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
-      const [company, jobs, salarySummary, seo] = await Promise.all([
+      const [company, jobs, seo] = await Promise.all([
         board.companies.retrieve(data.companySlug, undefined, { headers }),
         board.companies.listJobs(data.companySlug, {}, { headers }),
-        (async () => {
-          try {
-            const salary = await board.companies.salaries(data.companySlug, {
-              headers,
-            });
-            return {
-              overallSalary: salary.overallSalary,
-              byCategory: salary.byCategory.slice(
-                0,
-                COMPANY_SALARY_SUMMARY_CATEGORIES,
-              ),
-              currency: salary.currency,
-            };
-          } catch (error) {
-            if (isNotFound(error))
-              return { overallSalary: null, byCategory: [], currency: null };
-            throw error;
-          }
-        })(),
         seoBase(),
       ]);
-      // The Salaries tab gate renders in the above-the-fold section shell.
-      const hasSalaries =
-        salarySummary.overallSalary !== null ||
-        salarySummary.byCategory.length > 0;
+      // Tab gate is free on the company wire; full salary payload only loads
+      // when there is a sample (overview teaser needs the aggregates).
+      const salarySampleCount = companySalarySampleCount(company);
+      const hasSalaries = salarySampleCount > 0;
+      const salarySummary = hasSalaries
+        ? await (async () => {
+            try {
+              const salary = await board.companies.salaries(data.companySlug, {
+                headers,
+              });
+              return {
+                overallSalary: salary.overallSalary,
+                byCategory: salary.byCategory.slice(
+                  0,
+                  COMPANY_SALARY_SUMMARY_CATEGORIES,
+                ),
+                currency: salary.currency,
+              };
+            } catch (error) {
+              if (isNotFound(error))
+                return {
+                  overallSalary: null,
+                  byCategory: [],
+                  currency: null as string | null,
+                };
+              throw error;
+            }
+          })()
+        : {
+            overallSalary: null,
+            byCategory: [] as never[],
+            currency: null as string | null,
+          };
       const description = company.description
         ? company.description
             .replace(/<[^>]+>/g, ' ')
@@ -378,13 +395,11 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
-      // The company read joins the SAME parallel batch as the job page, the
-      // SEO base and the salary gate. It used to be a separate `await` in the
-      // route loader, which serialized an extra upstream round trip (and, on
-      // client-side navigation, an extra /_serverFn hop) in front of all of
-      // this — measured at ~2x the TTFB of a waterfall-free listing page.
-      // Mirrors `getCompanySalariesPage` below.
-      const [company, page, seo, hasSalaries] = await Promise.all([
+      // Company + jobs + SEO in one wave. Salaries tab visibility uses
+      // `company.salarySampleCount` on the public company wire (not a full
+      // companies.salaries document) — that field is the job-count of the
+      // salary sample and is free with retrieve.
+      const [company, page, seo] = await Promise.all([
         board.companies.retrieve(data.companySlug, undefined, { headers }),
         data.q
           ? board.jobs.search(
@@ -410,20 +425,10 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
               { headers },
             ),
         seoBase(),
-        (async () => {
-          try {
-            const salary = await board.companies.salaries(data.companySlug, {
-              headers,
-            });
-            return (
-              salary.overallSalary !== null || salary.byCategory.length > 0
-            );
-          } catch (error) {
-            if (isNotFound(error)) return false;
-            throw error;
-          }
-        })(),
       ]);
+      // Prefer the dedicated sample count (API field). Fall back for older
+      // APIs: never pull the full salary document just to gate a tab.
+      const hasSalaries = companySalarySampleCount(company) > 0;
       const head = {
         meta: [
           {
