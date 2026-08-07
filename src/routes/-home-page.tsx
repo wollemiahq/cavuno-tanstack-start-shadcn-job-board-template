@@ -52,7 +52,7 @@ export function HomePage() {
       name: company.name,
       logoUrl: company.logoUrl,
       // Wire `summary` is already authored-or-derived by the Board API.
-      summary: (company as { summary?: string | null }).summary ?? null,
+      summary: company.summary,
       publishedJobCount: company.publishedJobCount,
       openJobsLabel:
         new Intl.PluralRules(getLocale()).select(company.publishedJobCount) ===

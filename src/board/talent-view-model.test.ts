@@ -42,6 +42,7 @@ const directoryEntry = {
   headline: 'Computing pioneer',
   location: 'London, United Kingdom',
   avatarUrl: 'https://cdn.example/ada.jpg',
+  summary: 'I translate ambitious ideas into working systems.',
   bio: 'I translate ambitious ideas into working systems.',
   jobSearchStatus: 'open_to_offers',
   skills: ['Mathematics', 'Analytical engines'],

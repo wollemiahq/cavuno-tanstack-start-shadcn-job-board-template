@@ -22,6 +22,7 @@ const candidate = {
   headline: 'Computing pioneer',
   location: 'London, United Kingdom',
   avatarUrl: null,
+  summary: null,
   bio: null,
   jobSearchStatus: 'open_to_offers',
   skills: ['Mathematics', 'Analytical engines'],

@@ -158,10 +158,13 @@ export function toTalentProfileVM(
   language: string,
   labels: TalentViewModelLabels,
 ): TalentProfileVM {
+  // Detail wire has full `bio` (no card `summary`); synthetic entry only
+  // feeds the shared card fields (handle/name/headline/…).
   const card = toTalentCardVM(
     {
       ...profile,
       object: 'talent_directory_entry',
+      summary: null,
       skills: profile.skills.map((skill) => skill.name),
       experiences: profile.experiences,
       education: profile.education,

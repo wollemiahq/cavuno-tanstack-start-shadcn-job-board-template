@@ -33,12 +33,13 @@ const candidate = {
   headline: 'Computing pioneer',
   location: 'London',
   avatarUrl: null,
+  summary: null,
   bio: null,
   jobSearchStatus: 'open_to_offers',
   skills: ['Mathematics'],
   experiences: [],
   education: [],
-} as TalentDirectoryEntry;
+} satisfies TalentDirectoryEntry;
 
 // The page now takes resolved `TalentCardVM[]`; the test maps the wire
 // fixture exactly as the route does.
@@ -205,12 +206,13 @@ const candidate2 = {
   headline: 'Compiler pioneer',
   location: 'New York',
   avatarUrl: null,
+  summary: null,
   bio: null,
   jobSearchStatus: 'open_to_offers',
   skills: ['COBOL'],
   experiences: [],
   education: [],
-} as TalentDirectoryEntry;
+} satisfies TalentDirectoryEntry;
 const candidateVm2 = toTalentCardVM(candidate2, getTalentSearchLabels());
 
 describe('TalentSearchPage — results description line', () => {
