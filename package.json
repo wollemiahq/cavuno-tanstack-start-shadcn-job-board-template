@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
-    "@cavuno/board": "4.3.0",
+    "@cavuno/board": "4.3.1",
     "@cloudflare/vite-plugin": "1.46.0",
     "@fontsource-variable/crimson-pro": "^5.3.0",
     "@fontsource-variable/dm-sans": "^5.3.0",

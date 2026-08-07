@@ -215,6 +215,11 @@ function PostMeta({
                 >
                   {author.name}
                 </Link>
+                {author.location?.trim() ? (
+                  <span className="text-muted-foreground text-sm">
+                    {author.location.trim()}
+                  </span>
+                ) : null}
                 {dateLine ? (
                   <span className="text-muted-foreground text-sm">
                     {dateLine}

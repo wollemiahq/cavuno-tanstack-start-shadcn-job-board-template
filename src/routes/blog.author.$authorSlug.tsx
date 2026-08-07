@@ -6,6 +6,7 @@ import {
   useNavigate,
   useRouter,
 } from '@tanstack/react-router';
+import type { ReactNode } from 'react';
 
 import { m } from '../paraglide/messages';
 
@@ -78,9 +79,13 @@ function AuthorLinks({
 }: {
   author: ReturnType<typeof Route.useLoaderData>['author'];
 }) {
+  // Order matches hosted author-hero: website → Facebook → X → LinkedIn → GitHub.
   const links = [
     author.websiteUrl
       ? { href: author.websiteUrl, label: m.blogPost_authorWebsiteLabel() }
+      : null,
+    author.facebookUrl
+      ? { href: author.facebookUrl, label: m.blogPost_authorFacebookLabel() }
       : null,
     author.twitterUrl
       ? { href: author.twitterUrl, label: m.blogPost_authorXLabel() }
@@ -110,6 +115,24 @@ function AuthorLinks({
   ) : null;
 }
 
+/** Location above bio when either is present (hosted author-hero). */
+function authorIntro(author: {
+  location?: string | null;
+  bio?: string | null;
+}): ReactNode {
+  const location = author.location?.trim() || null;
+  const bio = author.bio?.trim() || null;
+  if (!location && !bio) return null;
+  return (
+    <>
+      {location ? <span className="block">{location}</span> : null}
+      {bio ? (
+        <span className={location ? 'mt-1 block' : undefined}>{bio}</span>
+      ) : null}
+    </>
+  );
+}
+
 function AuthorPage() {
   const { author, posts } = Route.useLoaderData();
   const search = Route.useSearch();
@@ -131,7 +154,7 @@ function AuthorPage() {
           ],
         }}
         title={author.name}
-        description={author.bio}
+        description={authorIntro(author)}
         avatar={
           <Avatar aria-hidden size="lg" className="size-9">
             {author.avatarUrl ? (

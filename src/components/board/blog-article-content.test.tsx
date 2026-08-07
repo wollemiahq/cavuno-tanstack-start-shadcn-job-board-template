@@ -46,8 +46,10 @@ const post = {
       name: authorName,
       slug: 'avery-montgomery-smythe',
       bio: 'Documents the operating systems behind durable product teams.',
+      location: 'Sydney, Australia',
       avatarUrl: null,
       websiteUrl: 'https://avery.example',
+      facebookUrl: 'https://www.facebook.com/avery',
       twitterUrl: 'https://x.com/avery',
       linkedinUrl: 'https://www.linkedin.com/in/avery',
       githubUrl: 'https://github.com/avery',
@@ -146,10 +148,14 @@ describe('BlogArticleContent — complete article presentation', () => {
       '/blog/author/avery-montgomery-smythe',
     );
     expect(author).toHaveTextContent(authorName);
-    // The author's own social links belong to the author page, not each post —
-    // the byline here links through to that profile instead.
+    // Free-text location shows under the name when present; social URLs stay
+    // on the author profile page (not duplicated in every post byline).
+    expect(screen.getAllByText('Sydney, Australia').length).toBeGreaterThan(0);
     expect(
       container.querySelector('a[href="https://avery.example"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('a[href="https://www.facebook.com/avery"]'),
     ).toBeNull();
     expect(container.querySelector('a[href="https://x.com/avery"]')).toBeNull();
     expect(
