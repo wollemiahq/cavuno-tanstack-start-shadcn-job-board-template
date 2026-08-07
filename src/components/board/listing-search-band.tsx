@@ -72,7 +72,7 @@ export function ListingSearchBand({
             input's own reserved right padding (pr-10), so it never shifts the
             layout as it appears/disappears. */}
         <div className="lg:min-w-56 lg:flex-1">
-          <InputGroup>
+          <InputGroup className="border-border bg-input/50 h-9">
             <InputGroupAddon>
               <Search aria-hidden="true" />
             </InputGroupAddon>
