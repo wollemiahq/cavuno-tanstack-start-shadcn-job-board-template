@@ -74,7 +74,6 @@
     "@fontsource/fira-sans": "^5.3.0",
     "@fontsource/hind": "^5.3.0",
     "@fontsource/poppins": "^5.3.0",
-    "@hookform/resolvers": "^5.4.0",
     "@internationalized/date": "3.12.2",
     "@paper-design/shaders-react": "0.0.77",
     "@react-aria/utils": "3.34.1",
@@ -112,7 +111,6 @@
     "react-aria-components": "1.19.0",
     "react-day-picker": "^10.0.1",
     "react-dom": "19.2.7",
-    "react-hook-form": "^7.81.0",
     "react-resizable-panels": "^4.12.2",
     "react-stately": "3.48.0",
     "recharts": "3.8.0",
@@ -122,8 +120,7 @@
     "tailwindcss": "4.3.0",
     "tw-animate-css": "^1.4.0",
     "web-vitals": "^6.0.1",
-    "workers-og": "^0.0.27",
-    "zod": "^4.4.3"
+    "workers-og": "^0.0.27"
   },
   "devDependencies": {
     "@inlang/paraglide-js": "2.20.2",
