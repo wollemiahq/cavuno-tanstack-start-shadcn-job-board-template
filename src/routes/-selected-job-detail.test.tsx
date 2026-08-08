@@ -70,7 +70,7 @@ function renderSelectedJob(status: SelectedJobState['status']) {
   const state: SelectedJobState = {
     status,
     job,
-    companyDescription: null,
+    companySummary: null,
     alreadyApplied: false,
     retry: vi.fn(),
   };

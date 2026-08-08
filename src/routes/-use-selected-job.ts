@@ -8,7 +8,8 @@ import type { PublicJob } from '@cavuno/board';
 export type SelectedJobState = {
   status: 'idle' | 'loading' | 'ready' | 'error';
   job?: PublicJob;
-  companyDescription: string | null;
+  /** Platform company `summary` for the about-card intro (never HTML body). */
+  companySummary: string | null;
   alreadyApplied: boolean;
   error?: Error;
   retry: () => void;
@@ -17,10 +18,10 @@ export type SelectedJobState = {
 /**
  * Load the master–detail job pane for a URL-selected slug.
  *
- * When the listing already knows `companySlug` (every PublicJobCard does),
- * job + company + optional application state fan out in one parallel wave.
- * Without a known company, company is chained off the job payload (same
- * total work, one serial hop only when the list did not supply a slug).
+ * When the listing already knows `companySlug`, job + company + optional
+ * application state fan out in one parallel wave. Company is fetched only
+ * for `summary` (about intro); chrome uses `job.company`. Without a known
+ * slug, company is chained off the job payload.
  */
 export function useSelectedJob(
   jobSlug?: string,
@@ -30,16 +31,16 @@ export function useSelectedJob(
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<Omit<SelectedJobState, 'retry'>>({
     status: 'idle',
+    companySummary: null,
     alreadyApplied: false,
-    companyDescription: null,
   });
 
   useEffect(() => {
     if (!jobSlug) {
       setState({
         status: 'idle',
+        companySummary: null,
         alreadyApplied: false,
-        companyDescription: null,
       });
       return;
     }
@@ -48,8 +49,8 @@ export function useSelectedJob(
     setState((previous) => ({
       status: 'loading',
       job: previous.job,
+      companySummary: previous.companySummary,
       alreadyApplied: previous.alreadyApplied,
-      companyDescription: previous.companyDescription,
     }));
 
     const applicationP = includeApplicationState
@@ -72,8 +73,8 @@ export function useSelectedJob(
           setState({
             status: 'ready',
             job,
+            companySummary: company?.summary ?? null,
             alreadyApplied: application !== null,
-            companyDescription: company?.description ?? null,
           });
           return;
         }
@@ -92,16 +93,16 @@ export function useSelectedJob(
         setState({
           status: 'ready',
           job,
+          companySummary: company?.summary ?? null,
           alreadyApplied: application !== null,
-          companyDescription: company?.description ?? null,
         });
       } catch (cause: unknown) {
         if (cancelled) return;
         setState((previous) => ({
           status: 'error',
           job: previous.job,
+          companySummary: previous.companySummary,
           alreadyApplied: previous.alreadyApplied,
-          companyDescription: previous.companyDescription,
           error: cause instanceof Error ? cause : new Error(String(cause)),
         }));
       }

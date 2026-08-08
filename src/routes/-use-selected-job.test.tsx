@@ -117,14 +117,15 @@ describe('useSelectedJob', () => {
     expect(result.current.alreadyApplied).toBe(false);
   });
 
-  it('loads the attached company description for the about-company section', async () => {
+  it('loads company summary for the about-company intro (never description HTML)', async () => {
     getJob.mockResolvedValue({
       ...job('first-job'),
       company: { slug: 'acme' },
     });
     getCompany.mockResolvedValue({
       slug: 'acme',
-      description: '<p>Acme builds tools for modern product teams.</p>',
+      summary: 'Acme builds tools for modern product teams.',
+      description: '<p>Full HTML body that must not be used as intro.</p>',
     });
 
     const { result } = renderHook(() => useSelectedJob('first-job'));
@@ -133,14 +134,14 @@ describe('useSelectedJob', () => {
     expect(getCompany).toHaveBeenCalledWith({
       data: { companySlug: 'acme' },
     });
-    expect(result.current.companyDescription).toBe(
-      '<p>Acme builds tools for modern product teams.</p>',
+    expect(result.current.companySummary).toBe(
+      'Acme builds tools for modern product teams.',
     );
   });
 
   it('fans out job + company in parallel when the list already knows the company slug', async () => {
     const jobGate = deferred<ReturnType<typeof job>>();
-    const companyGate = deferred<{ slug: string; description: string }>();
+    const companyGate = deferred<{ slug: string; summary: string }>();
     getJob.mockReturnValueOnce(jobGate.promise);
     getCompany.mockReturnValueOnce(companyGate.promise);
 
@@ -148,7 +149,6 @@ describe('useSelectedJob', () => {
       useSelectedJob('first-job', false, 'acme'),
     );
 
-    // Both requests must start before either settles (no job→company hop).
     await waitFor(() => expect(getJob).toHaveBeenCalled());
     expect(getCompany).toHaveBeenCalledWith({
       data: { companySlug: 'acme' },
@@ -162,11 +162,11 @@ describe('useSelectedJob', () => {
       } as ReturnType<typeof job>);
       companyGate.resolve({
         slug: 'acme',
-        description: '<p>Parallel.</p>',
+        summary: 'Parallel summary.',
       });
     });
 
     await waitFor(() => expect(result.current.status).toBe('ready'));
-    expect(result.current.companyDescription).toBe('<p>Parallel.</p>');
+    expect(result.current.companySummary).toBe('Parallel summary.');
   });
 });
