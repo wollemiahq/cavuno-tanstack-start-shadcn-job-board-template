@@ -43,7 +43,7 @@ describe('company view models', () => {
     });
   });
 
-  it('does not invent card copy when the summary/description or job count is absent', () => {
+  it('does not invent card copy when the summary or job count is absent', () => {
     const vm = toCompanyCardVM(
       {
         ...company,

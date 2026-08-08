@@ -147,8 +147,7 @@ export function toJobCardVM(job: PublicJobCard, language: string): JobCardVM {
     salaryTimeframe: job.salaryTimeframe ?? null,
     publishedAt: job.publishedAt ?? null,
     locationLabel,
-    // Prefer server-derived `summary` (always on the card after 4.2); do not
-    // request `?fields=+description` just to re-derive here.
+    // Platform card teaser only — never re-derive from description HTML.
     summary: cardSummary(job),
     isFeatured: job.isFeatured,
     featuredLabel: jobCardCopy().featuredLabel,

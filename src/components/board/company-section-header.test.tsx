@@ -13,7 +13,7 @@
  *  - The Jobs tab carries the honest company job count as a Badge.
  *  - The Salaries tab renders ONLY when the company actually has salary
  *    data — a company without it earns no dead tab.
- *  - The header block (avatar + name + one-line description) is byte-for-byte
+ *  - The header block (avatar + name + one-line summary) is byte-for-byte
  *    identical whichever section is active, so the three surfaces read as ONE
  *    entity.
  *
@@ -50,7 +50,7 @@ const baseProps: ShellProps = {
     name: 'Anduril',
     slug: 'anduril',
     logoUrl: null,
-    description: '<p>Autonomous <strong>defense</strong> systems</p>',
+    summary: 'Autonomous defense systems',
   },
   activeSection: 'overview',
   jobCount: 54,
@@ -87,7 +87,7 @@ function renderShell(props: ShellProps) {
 const tabNav = () =>
   screen.getByRole('navigation', { name: 'Company sections' });
 describe('CompanySectionShell — trail locates the entity, tabs navigate within it', () => {
-  it('renders the company name as the H1 and the description as tag-stripped one-liner', async () => {
+  it('renders the company name as the H1 and the platform summary as the one-liner', async () => {
     renderShell(baseProps);
     const h1 = await screen.findByRole('heading', { level: 1 });
     expect(h1.textContent).toBe('Anduril');

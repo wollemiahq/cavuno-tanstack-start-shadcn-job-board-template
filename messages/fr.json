@@ -1401,5 +1401,10 @@
   "ui_moreLabel": "Plus",
   "ui_sidebarDescription": "Affiche la barre latérale mobile.",
   "ui_sidebarTitle": "Barre latérale",
-  "ui_sidebarToggleLabel": "Afficher ou masquer la barre latérale"
+  "ui_sidebarToggleLabel": "Afficher ou masquer la barre latérale",
+  "companyDetail_metaDescriptionWithSummary": "{summary} {count} postes ouverts sur {boardName}.",
+  "companyDetail_metaDescriptionWithCount": "{name} recrute sur {boardName}. {count} postes ouverts.",
+  "jobDetail_metaDescription": "{company} recrute un·e {title}. Postulez sur {boardName}.",
+  "jobDetail_metaDescriptionRemote": "{company} recrute un·e {title} en remote. Postulez sur {boardName}.",
+  "jobDetail_metaDescriptionNoCompany": "Recrutement : {title}. Postulez sur {boardName}."
 }

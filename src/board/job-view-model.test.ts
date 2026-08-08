@@ -89,7 +89,7 @@ describe('toJobCardVM', () => {
     expect(vm.summary).toBe('Build great things for the team.');
   });
 
-  it('falls back to deriving from description when summary is absent (pre-4.2)', () => {
+  it('does not re-derive a teaser from description HTML when summary is absent', () => {
     const legacy = toJobCardVM(
       {
         ...baseJob,
@@ -98,7 +98,7 @@ describe('toJobCardVM', () => {
       } as unknown as PublicJobCard,
       'en',
     );
-    expect(legacy.summary).toContain('Legacy description still works');
+    expect(legacy.summary).toBeNull();
   });
 
   it('builds chip hrefs from the canonical path helpers (categories then skills)', () => {

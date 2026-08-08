@@ -1401,5 +1401,10 @@
   "ui_moreLabel": "More",
   "ui_sidebarDescription": "Displays the mobile sidebar.",
   "ui_sidebarTitle": "Sidebar",
-  "ui_sidebarToggleLabel": "Toggle sidebar"
+  "ui_sidebarToggleLabel": "Toggle sidebar",
+  "companyDetail_metaDescriptionWithSummary": "{summary} {count} open roles on {boardName}.",
+  "companyDetail_metaDescriptionWithCount": "{name} is hiring on {boardName}. {count} open roles.",
+  "jobDetail_metaDescription": "{company} is hiring a {title}. Apply now on {boardName}.",
+  "jobDetail_metaDescriptionRemote": "{company} is hiring a remote {title}. Apply now on {boardName}.",
+  "jobDetail_metaDescriptionNoCompany": "Hiring a {title}. Apply now on {boardName}."
 }

@@ -19,6 +19,8 @@ import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { headTitle, jobTitleAtCompany } from '../lib/page-title';
+import { m } from '../paraglide/messages';
+import { isLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 
 import { jobBreadcrumbJsonLd } from '@/lib/job-breadcrumbs';
@@ -58,13 +60,37 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
         job.title,
         job.company?.name,
       );
-      const description = job.description
-        ? job.description
-            .replace(/<[^>]+>/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim()
-            .slice(0, 160)
-        : title;
+      // Meta/OG description is composed copy — not stripped job HTML.
+      // JobPosting JSON-LD still uses the full sanitized description below.
+      const localeOpt = isLocale(boardContext.language)
+        ? { locale: boardContext.language }
+        : undefined;
+      const companyName = job.company?.name?.trim() || null;
+      const description = companyName
+        ? job.remoteOption === 'remote'
+          ? m.jobDetail_metaDescriptionRemote(
+              {
+                company: companyName,
+                title: job.title,
+                boardName: boardContext.name,
+              },
+              localeOpt,
+            )
+          : m.jobDetail_metaDescription(
+              {
+                company: companyName,
+                title: job.title,
+                boardName: boardContext.name,
+              },
+              localeOpt,
+            )
+        : m.jobDetail_metaDescriptionNoCompany(
+            {
+              title: job.title,
+              boardName: boardContext.name,
+            },
+            localeOpt,
+          );
       // Canonical points at the hosted board (the source of truth for SEO);
       // og:image is the STARTER's own /og route (self-sufficient render).
       const canonical = job.links.public;
