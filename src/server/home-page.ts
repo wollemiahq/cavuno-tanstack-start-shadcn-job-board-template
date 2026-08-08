@@ -39,6 +39,10 @@ function asJsonObjects(value: unknown): JsonObject[] {
   return JSON.parse(JSON.stringify(value)) as JsonObject[];
 }
 
+/** Enough rows for the home job rail and for relatedSearches category facets. */
+const HOME_JOBS_LIST_LIMIT = 20;
+const HOME_JOB_RAIL_LIMIT = 8;
+
 export const getHomePage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
@@ -47,49 +51,56 @@ export const getHomePage = createServerFn({ method: 'GET' })
       // Board context is an OPEN read (password wall does not gate it),
       // matching getSeoBase / getJobDetailPage. Content reads use headers.
       const boardContextP = readBoardContext();
-      // Card teaser lives on `PublicJobCard.summary` — no `+description`.
-      const jobsP = board.jobs.list({ limit: 8 }, { headers });
+      // One jobs.list feeds both the 8-card rail and top-category facets
+      // (relatedSearches). A second list({ limit: 20 }) was pure over-fetch.
+      const jobsListP = board.jobs.list(
+        { limit: HOME_JOBS_LIST_LIMIT },
+        { headers },
+      );
       // Additive companies strip — fail soft so a rejecting preview never
       // faults the whole landing.
       const companiesP = board.companies
         .list({ limit: 6 }, { headers })
         .catch(() => null);
-      // Board-wide top categories by live job count — same full-page facet
-      // read as listTopJobCategories (limit: 1 yields no facets).
-      const topCategoriesP = board.jobs
-        .list({ limit: 20 }, { headers })
-        .then((envelope) =>
-          (envelope.relatedSearches ?? []).filter(
-            (related): related is RelatedSearch => related.type === 'category',
-          ),
-        )
-        .catch(() => [] as RelatedSearch[]);
+      // Blog/talent need feature flags from context, but must not wait for
+      // jobs/companies. Chain them off boardContextP so they start as soon as
+      // context resolves and overlap the rest of the fan-out.
+      const blogP = boardContextP.then((boardContext) =>
+        boardContext.features.blog
+          ? board.blog.posts.list({ limit: 3 }, { headers }).catch(() => null)
+          : null,
+      );
+      const talentP = boardContextP.then((boardContext) =>
+        boardContext.features.talentDirectory !== 'off'
+          ? readTalentDirectory(() =>
+              board.talent.list({ limit: 6 }, { headers }),
+            ).catch(() => null)
+          : null,
+      );
 
-      const boardContext = await boardContextP;
+      const [boardContext, jobsEnvelope, companies, blog, talent] =
+        await Promise.all([
+          boardContextP,
+          jobsListP,
+          companiesP,
+          blogP,
+          talentP,
+        ]);
+
+      const page = {
+        ...jobsEnvelope,
+        data: jobsEnvelope.data.slice(0, HOME_JOB_RAIL_LIMIT),
+      };
+      const topCategories = (jobsEnvelope.relatedSearches ?? []).filter(
+        (related): related is RelatedSearch => related.type === 'category',
+      );
+
       const origin = new URL(getRequest().url).origin;
       const seo = {
         boardName: boardContext.name,
         language: boardContext.language,
         origin,
       };
-
-      const [page, companies, topCategories, blog, talent] = await Promise.all([
-        jobsP,
-        companiesP,
-        topCategoriesP,
-        // Blog preview — only when the board runs a blog.
-        boardContext.features.blog
-          ? board.blog.posts.list({ limit: 3 }, { headers }).catch(() => null)
-          : Promise.resolve(null),
-        // Talent preview — only when the directory feature is on. The
-        // serialised restricted result omits the preview for anonymous home
-        // visitors.
-        boardContext.features.talentDirectory !== 'off'
-          ? readTalentDirectory(() =>
-              board.talent.list({ limit: 6 }, { headers }),
-            ).catch(() => null)
-          : Promise.resolve(null),
-      ]);
 
       // Preserve home head meta EXACTLY (title/description/canonical/og).
       const title = headTitle(seo.boardName, m.home_heroHeadline());

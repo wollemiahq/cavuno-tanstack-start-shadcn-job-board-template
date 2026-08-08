@@ -20,7 +20,10 @@ import { getRequest } from '@tanstack/react-start/server';
 import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
-import { readBoardContext } from '../lib/board-context-cache';
+import {
+  readBoardContext,
+  readEmployerOfferGate,
+} from '../lib/board-context-cache';
 import { boardGlobalReadCache } from '../lib/read-cache';
 import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
@@ -102,14 +105,19 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
   async () => {
     try {
       // Board-global, always-anonymous reads on the root loader's critical
-      // path — edge-cache them with the longer board-global TTL.
-      const [plans, salesLed] = await Promise.all([
-        getBoard().plans.list({}, boardGlobalReadCache()),
-        getBoard().plans.salesLed(boardGlobalReadCache()),
-      ]);
-      return {
-        hasEmployerOfferPage: plans.data.length > 0 || salesLed.data.length > 0,
-      };
+      // path — edge-cache them with the longer board-global TTL, and memo
+      // the boolean gate per isolate so soft root re-runs do not re-hit
+      // plans.list + salesLed.
+      return await readEmployerOfferGate(async () => {
+        const [plans, salesLed] = await Promise.all([
+          getBoard().plans.list({}, boardGlobalReadCache()),
+          getBoard().plans.salesLed(boardGlobalReadCache()),
+        ]);
+        return {
+          hasEmployerOfferPage:
+            plans.data.length > 0 || salesLed.data.length > 0,
+        };
+      });
     } catch {
       // Fail closed: this gate runs on the root loader for every route, so a
       // transient plan-read failure (or a password-gated board) must only

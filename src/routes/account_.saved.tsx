@@ -126,11 +126,16 @@ function SavedJobsPage() {
     onPush: (selectedJob) =>
       navigate({ search: () => ({ selectedJob }), resetScroll: false }),
   });
+  const selectedSlug = selectableSlugs.includes(search.selectedJob ?? '')
+    ? search.selectedJob
+    : undefined;
+  const selectedRow = selectedSlug
+    ? rows.find(({ vm }) => vm.jobSlug === selectedSlug)
+    : undefined;
   const selectedJobState = useSelectedJob(
-    selectableSlugs.includes(search.selectedJob ?? '')
-      ? search.selectedJob
-      : undefined,
+    selectedSlug,
     Boolean(user?.emailVerified),
+    selectedRow?.vm.companySlug ?? null,
   );
 
   const header = (

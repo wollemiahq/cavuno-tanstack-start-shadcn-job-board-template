@@ -59,3 +59,39 @@ export function resetBoardContextCache(source?: DataSource): void {
   if (source) cache.delete(source);
   else cache.clear();
 }
+
+/**
+ * Per-isolate memo for the footer/nav "has employer offer page" gate.
+ * Root shell reads this on every document; without a memo, soft navigations
+ * that re-run the root loader re-hit plans.list + salesLed even though the
+ * answer is board-global and stable for the same TTL window as context.
+ */
+const OFFER_GATE_TTL_MS = CONTEXT_TTL_MS;
+
+const offerGateCache = new Map<
+  DataSource,
+  { at: number; promise: Promise<{ hasEmployerOfferPage: boolean }> }
+>();
+
+export function readEmployerOfferGate(
+  load: () => Promise<{ hasEmployerOfferPage: boolean }>,
+): Promise<{ hasEmployerOfferPage: boolean }> {
+  const source = getDataSource();
+  const hit = offerGateCache.get(source);
+  const now = Date.now();
+  if (hit && now - hit.at < OFFER_GATE_TTL_MS) return hit.promise;
+
+  const promise = load().catch((error: unknown) => {
+    if (offerGateCache.get(source)?.promise === promise) {
+      offerGateCache.delete(source);
+    }
+    throw error;
+  });
+  offerGateCache.set(source, { at: now, promise });
+  return promise;
+}
+
+export function resetEmployerOfferGateCache(source?: DataSource): void {
+  if (source) offerGateCache.delete(source);
+  else offerGateCache.clear();
+}

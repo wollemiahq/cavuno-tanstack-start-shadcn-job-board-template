@@ -76,8 +76,8 @@ const registryCompositions = [
   },
   {
     name: 'data-table',
-    implementation: 'Table + @tanstack/react-table',
-    note: 'Documentation composition, not a standalone registry file.',
+    implementation: 'Table + listing composition',
+    note: 'Documentation composition, not a standalone registry file. Add @tanstack/react-table when a route needs it.',
   },
   {
     name: 'date-picker',
