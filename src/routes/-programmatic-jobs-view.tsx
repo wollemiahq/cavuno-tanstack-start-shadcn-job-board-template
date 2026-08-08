@@ -50,11 +50,16 @@ export function ProgrammaticJobsView({
   const { board } = rootApi.useLoaderData();
   const { user } = useRootSession();
   const navigate = useNavigate() as unknown as LooseNavigate;
+  const selectedSlug = jobs.some((job) => job.slug === filters.selectedJob)
+    ? filters.selectedJob
+    : undefined;
+  const selectedCard = selectedSlug
+    ? jobs.find((job) => job.slug === selectedSlug)
+    : undefined;
   const selectedJob = useSelectedJob(
-    jobs.some((job) => job.slug === filters.selectedJob)
-      ? filters.selectedJob
-      : undefined,
+    selectedSlug,
     Boolean(user?.emailVerified),
+    selectedCard?.company?.slug ?? null,
   );
   return (
     <>

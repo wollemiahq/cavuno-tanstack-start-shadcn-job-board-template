@@ -28,8 +28,12 @@ vi.mock('./read-cache', () => ({
   }),
 }));
 
-const { readBoardContext, resetBoardContextCache } =
-  await import('./board-context-cache');
+const {
+  readBoardContext,
+  readEmployerOfferGate,
+  resetBoardContextCache,
+  resetEmployerOfferGateCache,
+} = await import('./board-context-cache');
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -37,6 +41,7 @@ beforeEach(() => {
   contextSpy.mockImplementation(async () => ({ name: 'Sandbox' }));
   dataSource.current = 'primary';
   resetBoardContextCache();
+  resetEmployerOfferGateCache();
 });
 
 afterEach(() => {
@@ -87,5 +92,38 @@ describe('board context memo', () => {
     expect(contextSpy).toHaveBeenCalledWith({
       cf: { cacheTtl: 300, cacheEverything: true },
     });
+  });
+});
+
+describe('employer offer gate memo', () => {
+  it('collapses repeat root-shell gate reads into one load', async () => {
+    const load = vi
+      .fn()
+      .mockResolvedValue({ hasEmployerOfferPage: true });
+
+    await Promise.all([
+      readEmployerOfferGate(load),
+      readEmployerOfferGate(load),
+    ]);
+    await readEmployerOfferGate(load);
+
+    expect(load).toHaveBeenCalledTimes(1);
+    await expect(readEmployerOfferGate(load)).resolves.toEqual({
+      hasEmployerOfferPage: true,
+    });
+  });
+
+  it('keeps primary and demo data sources apart', async () => {
+    const load = vi.fn().mockImplementation(async () => ({
+      hasEmployerOfferPage: dataSource.current === 'demo',
+    }));
+
+    const primary = await readEmployerOfferGate(load);
+    dataSource.current = 'demo';
+    const demo = await readEmployerOfferGate(load);
+
+    expect(primary).toEqual({ hasEmployerOfferPage: false });
+    expect(demo).toEqual({ hasEmployerOfferPage: true });
+    expect(load).toHaveBeenCalledTimes(2);
   });
 });

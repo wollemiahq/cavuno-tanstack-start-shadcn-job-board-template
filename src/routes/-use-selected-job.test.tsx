@@ -137,4 +137,36 @@ describe('useSelectedJob', () => {
       '<p>Acme builds tools for modern product teams.</p>',
     );
   });
+
+  it('fans out job + company in parallel when the list already knows the company slug', async () => {
+    const jobGate = deferred<ReturnType<typeof job>>();
+    const companyGate = deferred<{ slug: string; description: string }>();
+    getJob.mockReturnValueOnce(jobGate.promise);
+    getCompany.mockReturnValueOnce(companyGate.promise);
+
+    const { result } = renderHook(() =>
+      useSelectedJob('first-job', false, 'acme'),
+    );
+
+    // Both requests must start before either settles (no job→company hop).
+    await waitFor(() => expect(getJob).toHaveBeenCalled());
+    expect(getCompany).toHaveBeenCalledWith({
+      data: { companySlug: 'acme' },
+    });
+    expect(result.current.status).toBe('loading');
+
+    await act(async () => {
+      jobGate.resolve({
+        ...job('first-job'),
+        company: { slug: 'acme' },
+      } as ReturnType<typeof job>);
+      companyGate.resolve({
+        slug: 'acme',
+        description: '<p>Parallel.</p>',
+      });
+    });
+
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+    expect(result.current.companyDescription).toBe('<p>Parallel.</p>');
+  });
 });

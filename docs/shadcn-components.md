@@ -84,7 +84,7 @@ Some entries in the public component documentation are compositions or successor
 | Entry | Starter implementation | Why there is no same-named file |
 | --- | --- | --- |
 | `form` | Field + native FormData | No form.tsx and no form library: owned Field primitives with native form submission. |
-| `data-table` | Table + @tanstack/react-table | Documentation composition, not a standalone registry file. |
+| `data-table` | Table + listing composition | Documentation composition, not a standalone registry file. Add @tanstack/react-table when a route needs it. |
 | `date-picker` | Calendar + Popover | Documentation composition, not a standalone registry file. |
 | `toast` | Sonner | The current component catalog directs new work to Sonner. |
 | `typography` | src/typeset.css | Project-wide typeset layer rather than a React component file. |

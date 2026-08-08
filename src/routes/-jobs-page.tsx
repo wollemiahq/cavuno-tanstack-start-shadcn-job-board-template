@@ -22,11 +22,16 @@ export function JobsPage() {
   const { board } = rootApi.useLoaderData();
   const { user } = useRootSession();
   const navigate = useNavigate({ from: '/jobs/' });
+  const selectedSlug = page.data.some((job) => job.slug === search.selectedJob)
+    ? search.selectedJob
+    : undefined;
+  const selectedCard = selectedSlug
+    ? page.data.find((job) => job.slug === selectedSlug)
+    : undefined;
   const selectedJob = useSelectedJob(
-    page.data.some((job) => job.slug === search.selectedJob)
-      ? search.selectedJob
-      : undefined,
+    selectedSlug,
     Boolean(user?.emailVerified),
+    selectedCard?.company?.slug ?? null,
   );
 
   return (
