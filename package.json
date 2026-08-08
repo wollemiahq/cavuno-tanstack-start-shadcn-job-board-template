@@ -120,6 +120,7 @@
     "@inlang/paraglide-js": "2.20.2",
     "@inlang/plugin-message-format": "4.4.0",
     "@tanstack/devtools-vite": "0.7.0",
+    "@tanstack/intent": "0.3.6",
     "@tanstack/react-devtools": "0.10.5",
     "@tanstack/react-router-devtools": "1.167.0",
     "@testing-library/dom": "10.4.1",
