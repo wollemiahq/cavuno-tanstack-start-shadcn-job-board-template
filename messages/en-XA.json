@@ -1401,5 +1401,10 @@
   "ui_moreLabel": "⟦Ṁóŕé⟧",
   "ui_sidebarDescription": "⟦Ðíšþĺáýš ţĥé ɱóƀíĺé šíðéƀáŕ.⟧",
   "ui_sidebarTitle": "⟦Šíðéƀáŕ⟧",
-  "ui_sidebarToggleLabel": "⟦Ţóğğĺé šíðéƀáŕ⟧"
+  "ui_sidebarToggleLabel": "⟦Ţóğğĺé šíðéƀáŕ⟧",
+  "companyDetail_metaDescriptionWithSummary": "⟦{summary} {count} óþéñ ŕóĺéš óñ {boardName}.⟧",
+  "companyDetail_metaDescriptionWithCount": "⟦{name} íš ĥíŕíñğ óñ {boardName}. {count} óþéñ ŕóĺéš.⟧",
+  "jobDetail_metaDescription": "⟦{company} íš ĥíŕíñğ á {title}. Áþþĺý ñóŵ óñ {boardName}.⟧",
+  "jobDetail_metaDescriptionRemote": "⟦{company} íš ĥíŕíñğ á ŕéɱóţé {title}. Áþþĺý ñóŵ óñ {boardName}.⟧",
+  "jobDetail_metaDescriptionNoCompany": "⟦Ĥíŕíñğ á {title}. Áþþĺý ñóŵ óñ {boardName}.⟧"
 }

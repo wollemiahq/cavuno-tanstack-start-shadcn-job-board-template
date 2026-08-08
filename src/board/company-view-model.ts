@@ -60,8 +60,7 @@ export function toCompanyCardVM(
     name: company.name,
     logoUrl: company.logoUrl,
     avatarName: company.name,
-    // Prefer API `summary` on list/search cards (4.2+); fall back to deriving
-    // from long-form `description` for older responses.
+    // Platform card teaser only — never re-derive from description HTML.
     descriptionText: cardSummary(company),
     detailHref: companyPath(company.slug),
     publishedJobCount: company.publishedJobCount,

@@ -1401,5 +1401,10 @@
   "ui_moreLabel": "Mehr",
   "ui_sidebarDescription": "Zeigt die mobile Seitenleiste an.",
   "ui_sidebarTitle": "Seitenleiste",
-  "ui_sidebarToggleLabel": "Seitenleiste umschalten"
+  "ui_sidebarToggleLabel": "Seitenleiste umschalten",
+  "companyDetail_metaDescriptionWithSummary": "{summary} {count} offene Stellen auf {boardName}.",
+  "companyDetail_metaDescriptionWithCount": "{name} stellt ein auf {boardName}. {count} offene Stellen.",
+  "jobDetail_metaDescription": "{company} sucht eine*n {title}. Jetzt bewerben auf {boardName}.",
+  "jobDetail_metaDescriptionRemote": "{company} sucht remote eine*n {title}. Jetzt bewerben auf {boardName}.",
+  "jobDetail_metaDescriptionNoCompany": "Stelle: {title}. Jetzt bewerben auf {boardName}."
 }

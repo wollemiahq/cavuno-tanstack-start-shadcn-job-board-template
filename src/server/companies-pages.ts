@@ -326,15 +326,26 @@ export const getCompanyProfilePage = createServerFn({ method: 'GET' })
         salarySummaryP,
       ]);
       const hasSalaries = companySalarySampleCount(company) > 0;
-      const description = company.description
-        ? company.description
-            .replace(/<[^>]+>/g, ' ')
-            .trim()
-            .slice(0, 160)
-        : m.companyDetail_metaDescriptionFallback({
-            name: company.name,
-            board: seo.boardName,
-          });
+      // Meta is summary + open-role count — never strip full HTML description.
+      const openCount = company.publishedJobCount ?? jobs.count ?? 0;
+      const countLabel = new Intl.NumberFormat(getLocale()).format(openCount);
+      const summary = company.summary?.trim() || null;
+      const description = summary
+        ? m.companyDetail_metaDescriptionWithSummary({
+            summary,
+            count: countLabel,
+            boardName: seo.boardName,
+          })
+        : openCount > 0
+          ? m.companyDetail_metaDescriptionWithCount({
+              name: company.name,
+              boardName: seo.boardName,
+              count: countLabel,
+            })
+          : m.companyDetail_metaDescriptionFallback({
+              name: company.name,
+              board: seo.boardName,
+            });
       const canonical =
         company.links.public ?? selfUrl(seo.origin, companyPath(company.slug));
       const head = {
@@ -350,6 +361,8 @@ export const getCompanyProfilePage = createServerFn({ method: 'GET' })
           : `https://${company.website}`
         : null;
       const c = breadcrumbsCopy();
+      // Organization JSON-LD uses plain-text summary (schema text field).
+      // Full HTML body stays on the page via Prose — not duplicated as stripped text.
       const jsonLd = asJsonObjects(
         [
           {
@@ -361,13 +374,7 @@ export const getCompanyProfilePage = createServerFn({ method: 'GET' })
               '@id': `${canonical}#organization`,
               name: company.name,
               identifier: company.id,
-              ...(company.description
-                ? {
-                    description: company.description
-                      .replace(/<[^>]+>/g, ' ')
-                      .trim(),
-                  }
-                : {}),
+              ...(summary ? { description: summary } : {}),
               url: website ?? canonical,
               ...(company.logoUrl ? { logo: company.logoUrl } : {}),
               ...(website ? { sameAs: [website] } : {}),

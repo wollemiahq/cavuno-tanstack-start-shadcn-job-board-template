@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
  * profile (`/companies/:slug`), the jobs subpage (`…/jobs`), and the salary
  * overview (`…/salaries`) — read as ONE entity by opening every one with THIS
  * byte-identical header, seated in a full-bleed gray band: the company mark +
- * name (H1) + one-line description, then a row of section tabs.
+ * name (H1) + one-line summary, then a row of section tabs.
  * The band is the same composition as the job-detail page (the shared
  * full-bleed header
  * slot, `bg-secondary` + `border-b`) so the two
@@ -28,14 +28,6 @@ import { cn } from '@/lib/utils';
  */
 
 export type CompanySection = 'overview' | 'jobs' | 'salaries';
-
-/** Flatten the API's (pre-sanitized) description HTML to a trimmed text line. */
-function toPlainText(html: string) {
-  return html
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 
 /**
  * Tab visual = the owned underline navigation treatment,
@@ -164,8 +156,8 @@ export function CompanySectionShell({
     name: string;
     slug: string;
     logoUrl: string | null;
-    /** Long-form company description (pre-sanitized HTML) or null. */
-    description: string | null;
+    /** Platform one-line teaser (`CompanyPublic.summary`), not HTML body. */
+    summary: string | null;
   };
   /** The active section, derived from the current route. */
   activeSection: CompanySection;
@@ -176,9 +168,7 @@ export function CompanySectionShell({
   /** The section content rendered below the tabs. */
   children: React.ReactNode;
 }) {
-  const descriptionText = company.description
-    ? toPlainText(company.description)
-    : '';
+  const summaryText = company.summary?.trim() ?? '';
 
   return (
     <PageLayout
@@ -217,12 +207,12 @@ export function CompanySectionShell({
                   >
                     {company.name}
                   </Text>
-                  {descriptionText ? (
+                  {summaryText ? (
                     <p
                       className="text-muted-foreground line-clamp-1 text-base"
                       dir="auto"
                     >
-                      {descriptionText}
+                      {summaryText}
                     </p>
                   ) : null}
                 </div>
