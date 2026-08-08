@@ -270,53 +270,62 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
 /** Categories shown in the profile's salary teaser (matches queries.ts). */
 const COMPANY_SALARY_SUMMARY_CATEGORIES = 5;
 
+const EMPTY_SALARY_SUMMARY = {
+  overallSalary: null as null,
+  byCategory: [] as never[],
+  currency: null as string | null,
+};
+
 export const getCompanyProfilePage = createServerFn({ method: 'GET' })
   .validator((input: { companySlug: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
-      const [company, jobs, seo] = await Promise.all([
-        board.companies.retrieve(data.companySlug, undefined, { headers }),
-        board.companies.listJobs(data.companySlug, {}, { headers }),
-        seoBase(),
-      ]);
+      // Kick company off first so salary can chain off it without waiting for
+      // jobs/seo. A post-await `salaries.summary` was a serial second wave.
+      const companyP = board.companies.retrieve(
+        data.companySlug,
+        undefined,
+        { headers },
+      );
+      const jobsP = board.companies.listJobs(
+        data.companySlug,
+        {},
+        { headers },
+      );
+      const seoP = seoBase();
       // Tab gate is free on the company wire; teaser uses the lightweight
-      // salaries/summary endpoint (overall + top categories only — no
-      // seniority/competitors/locations) when a sample exists.
-      const salarySampleCount = companySalarySampleCount(company);
-      const hasSalaries = salarySampleCount > 0;
-      const salarySummary = hasSalaries
-        ? await (async () => {
-            try {
-              const salary = await board.companies.salaries.summary(
-                data.companySlug,
-                { headers },
-              );
-              return {
-                overallSalary: salary.overallSalary,
-                // Keep the profile rail's existing `byCategory` shape.
-                byCategory: salary.topCategories.slice(
-                  0,
-                  COMPANY_SALARY_SUMMARY_CATEGORIES,
-                ),
-                currency: salary.currency,
-              };
-            } catch (error) {
-              if (isNotFound(error))
-                return {
-                  overallSalary: null,
-                  byCategory: [],
-                  currency: null as string | null,
-                };
-              throw error;
-            }
-          })()
-        : {
-            overallSalary: null,
-            byCategory: [] as never[],
-            currency: null as string | null,
+      // salaries/summary endpoint (overall + top categories only) when a
+      // sample exists. Chain off companyP so it overlaps remaining work.
+      const salarySummaryP = companyP.then(async (company) => {
+        if (companySalarySampleCount(company) <= 0) return EMPTY_SALARY_SUMMARY;
+        try {
+          const salary = await board.companies.salaries.summary(
+            data.companySlug,
+            { headers },
+          );
+          return {
+            overallSalary: salary.overallSalary,
+            byCategory: salary.topCategories.slice(
+              0,
+              COMPANY_SALARY_SUMMARY_CATEGORIES,
+            ),
+            currency: salary.currency,
           };
+        } catch (error) {
+          if (isNotFound(error)) return EMPTY_SALARY_SUMMARY;
+          throw error;
+        }
+      });
+
+      const [company, jobs, seo, salarySummary] = await Promise.all([
+        companyP,
+        jobsP,
+        seoP,
+        salarySummaryP,
+      ]);
+      const hasSalaries = companySalarySampleCount(company) > 0;
       const description = company.description
         ? company.description
             .replace(/<[^>]+>/g, ' ')
