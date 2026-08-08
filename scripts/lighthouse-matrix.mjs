@@ -230,9 +230,28 @@ async function discoverRoutes() {
         !route.startsWith('/blog/tag/') &&
         !route.startsWith('/blog/author/'),
     ).then((route) => ({ name: 'blog-post', path: route })),
+    // Talent profiles are not in the 8-bucket sitemap (only /talent index
+    // is). Discover a public /p/{handle} from the directory HTML.
+    firstTalentProfilePath().then((route) => ({
+      name: 'talent-detail',
+      path: route,
+    })),
   ]);
 
   return [...routes, ...discovered.filter((route) => route.path)];
+}
+
+/** First public talent profile path from the directory page, or null. */
+async function firstTalentProfilePath() {
+  try {
+    const response = await fetch(`${PROXY_ORIGIN}/talent`);
+    if (!response.ok) return null;
+    const html = await response.text();
+    const match = html.match(/href="(\/p\/[a-z0-9][a-z0-9-]*)"/i);
+    return match?.[1] ?? null;
+  } catch {
+    return null;
+  }
 }
 
 async function chromePath() {
