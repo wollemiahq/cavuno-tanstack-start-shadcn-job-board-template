@@ -1,63 +1,16 @@
 /**
- * Company-intro derivation for job detail pages — formerly
- * `@cavuno/board/format` `companyIntro`. Application-owned chrome words /
- * HTML→text shaping (ADR-0101).
+ * Company intro for job-detail about cards — platform `summary` only.
  *
- * A curated one-line `summary` wins when present; otherwise the first
- * sentence of the `description` HTML, stripped to plain text. `null` when
- * there's nothing usable.
+ * Formerly accepted HTML `description` and re-derived a teaser in-app. The
+ * Board API already publishes `CompanyPublic.summary` (operator text, or a
+ * server-derived first-sentence teaser from the long body). Prefer that and
+ * never strip company HTML on the main thread here.
  *
- * `<script>`/`<style>` blocks are removed BEFORE tag stripping — stripping
- * only the tags would leave their JS/CSS body text as candidate intro
- * copy. HTML entities are decoded so a company like `AT&amp;T` reads `AT&T`.
+ * Returns `null` when summary is missing/blank — the about card still renders
+ * name, logo, and profile link from `job.company`.
  */
 
-const NAMED_ENTITIES: Record<string, string> = {
-  amp: '&',
-  lt: '<',
-  gt: '>',
-  quot: '"',
-  apos: "'",
-  nbsp: ' ',
-};
-
-function decodeEntities(input: string): string {
-  return input.replace(/&(#\d+|#x[0-9a-f]+|[a-z]+);/gi, (match, body) => {
-    const token = String(body);
-    if (token[0] === '#') {
-      const code =
-        token[1] === 'x' || token[1] === 'X'
-          ? parseInt(token.slice(2), 16)
-          : parseInt(token.slice(1), 10);
-      if (!Number.isInteger(code) || code < 0 || code > 0x10ffff) return match;
-      return String.fromCodePoint(code);
-    }
-    return NAMED_ENTITIES[token.toLowerCase()] ?? match;
-  });
-}
-
-export function companyIntro(
-  summary: string | null,
-  description: string | null,
-): string | null {
-  const trimmedSummary = summary?.trim();
-  if (trimmedSummary) return trimmedSummary;
-
-  if (!description) return null;
-
-  const text = decodeEntities(
-    description
-      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-      .replace(/<br\s*\/?>/gi, ' ')
-      .replace(/<\/(p|div|li|h[1-6])>/gi, ' ')
-      .replace(/<[^>]*>/g, ''),
-  )
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  if (!text) return null;
-
-  const [first] = text.split(/(?<=[.!?])\s+/);
-  return first ?? text;
+export function companyIntro(summary: string | null | undefined): string | null {
+  const trimmed = summary?.trim();
+  return trimmed ? trimmed : null;
 }

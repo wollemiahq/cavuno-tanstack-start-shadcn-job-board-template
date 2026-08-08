@@ -77,6 +77,8 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
       // `user` is just a gate, so as a trailing `await` it was a third
       // serial wave for every signed-in candidate. Anonymous visitors still
       // pay nothing (the chain short-circuits to null).
+      // Company retrieve is only for `summary` (about-card intro). Name/logo/
+      // link come from job.company; never use company.description HTML here.
       const [page, session, company] = await Promise.all([
         getJobDetailPage({ data: { jobSlug: params.jobSlug } }),
         getSessionUser().then(async (user) => ({
@@ -98,7 +100,7 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
         job: page.job,
         user,
         similar,
-        company,
+        companySummary: company?.summary ?? null,
         seo: page.seo,
         head: page.head,
         jsonLd: page.jsonLd,
@@ -131,7 +133,8 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
 const rootApi = getRouteApi('__root__');
 
 function JobDetailPage() {
-  const { job, user, similar, company, alreadyApplied } = Route.useLoaderData();
+  const { job, user, similar, companySummary, alreadyApplied } =
+    Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const defaults = jobAlertDefaultsFromJob(job);
   const router = useRouter();
@@ -144,7 +147,7 @@ function JobDetailPage() {
     // below; `<JobDetail>` does not consume `vm.similar`, so an empty list here
     // keeps the VM call intact without blocking first paint on the rail.
     [],
-    companyIntro(null, company?.description ?? null),
+    companyIntro(companySummary),
     board.language,
     getLocale(),
   );
