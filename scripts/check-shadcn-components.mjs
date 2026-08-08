@@ -71,8 +71,8 @@ const registryComponents = [
 const registryCompositions = [
   {
     name: 'form',
-    implementation: 'Field + React Hook Form',
-    note: 'The CLI resolves dependencies but does not create form.tsx.',
+    implementation: 'Field + native FormData',
+    note: 'No form.tsx and no form library: owned Field primitives with native form submission.',
   },
   {
     name: 'data-table',

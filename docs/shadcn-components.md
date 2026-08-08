@@ -83,7 +83,7 @@ Some entries in the public component documentation are compositions or successor
 
 | Entry | Starter implementation | Why there is no same-named file |
 | --- | --- | --- |
-| `form` | Field + React Hook Form | The CLI resolves dependencies but does not create form.tsx. |
+| `form` | Field + native FormData | No form.tsx and no form library: owned Field primitives with native form submission. |
 | `data-table` | Table + @tanstack/react-table | Documentation composition, not a standalone registry file. |
 | `date-picker` | Calendar + Popover | Documentation composition, not a standalone registry file. |
 | `toast` | Sonner | The current component catalog directs new work to Sonner. |
