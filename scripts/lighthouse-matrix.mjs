@@ -201,54 +201,112 @@ async function firstSitemapPath(name, predicate) {
 }
 
 async function discoverRoutes() {
+  // Fixed indexes + static marketing/legal: always present on a public board.
   const routes = [
     { name: 'home', path: '/' },
     { name: 'jobs', path: '/jobs' },
     { name: 'companies', path: '/companies' },
     { name: 'salaries', path: '/salaries' },
+    { name: 'salaries-titles-index', path: '/salaries/titles' },
     { name: 'blog', path: '/blog' },
     { name: 'talent', path: '/talent' },
+    { name: 'about', path: '/about' },
+    { name: 'employers', path: '/employers' },
+    { name: 'privacy-policy', path: '/privacy-policy' },
   ];
 
-  const discovered = await Promise.all([
-    firstSitemapPath('jobs-details', () => true).then((route) => ({
-      name: 'job-detail',
-      path: route,
-    })),
+  const [
+    jobDetail,
+    companyDetail,
+    salaryDetail,
+    companySalaries,
+    blogPost,
+    talentDetail,
+    jobCategory,
+    jobSkill,
+    jobLocation,
+    companyMarket,
+    blogTag,
+    blogAuthor,
+  ] = await Promise.all([
+    firstSitemapPath('jobs-details', () => true),
     firstSitemapPath(
       'companies',
       (route) => route.split('/').filter(Boolean).length === 2,
-    ).then((route) => ({ name: 'company-detail', path: route })),
+    ),
+    // Prefer a nested salary page (title/skill/location), not the hub.
     firstSitemapPath(
       'salaries',
-      (route) => route.split('/').filter(Boolean).length >= 3,
-    ).then((route) => ({ name: 'salary-detail', path: route })),
+      (route) =>
+        route.split('/').filter(Boolean).length >= 3 &&
+        !/^\/companies\/[^/]+\/salaries$/.test(route),
+    ),
+    // Company salaries only when the company has salary data (else 404).
+    firstSitemapPath('salaries', (route) =>
+      /^\/companies\/[^/]+\/salaries$/.test(route),
+    ),
     firstSitemapPath(
       'blog',
       (route) =>
         route.split('/').filter(Boolean).length === 2 &&
         !route.startsWith('/blog/tag/') &&
         !route.startsWith('/blog/author/'),
-    ).then((route) => ({ name: 'blog-post', path: route })),
-    // Talent profiles are not in the 8-bucket sitemap (only /talent index
-    // is). Discover a public /p/{handle} from the directory HTML.
-    firstTalentProfilePath().then((route) => ({
-      name: 'talent-detail',
-      path: route,
-    })),
+    ),
+    // Talent profiles are not in the 8-bucket sitemap (only /talent index).
+    firstHrefFromPage('/talent', /href="(\/p\/[a-z0-9][a-z0-9-]*)"/i),
+    // Programmatic job SEO volume — one sample per axis.
+    firstSitemapPath('jobs-categories', (route) =>
+      /^\/jobs\/[^/]+$/.test(route),
+    ),
+    firstSitemapPath('jobs-skills', (route) =>
+      /^\/jobs\/skills\/[^/]+$/.test(route),
+    ),
+    firstSitemapPath(
+      'jobs-locations',
+      (route) =>
+        route.startsWith('/jobs/locations/') &&
+        route.split('/').filter(Boolean).length === 3,
+    ),
+    firstHrefFromPage(
+      '/companies',
+      /href="(\/companies\/markets\/[a-z0-9][a-z0-9-]*)"/i,
+    ),
+    firstHrefFromPage('/blog', /href="(\/blog\/tag\/[^"?#]+)"/i),
+    firstHrefFromPage('/blog', /href="(\/blog\/author\/[^"?#]+)"/i),
   ]);
+
+  const companyJobs =
+    companyDetail != null ? `${companyDetail.replace(/\/$/, '')}/jobs` : null;
+
+  const discovered = [
+    { name: 'job-detail', path: jobDetail },
+    { name: 'company-detail', path: companyDetail },
+    { name: 'company-jobs', path: companyJobs },
+    { name: 'company-salaries', path: companySalaries },
+    { name: 'salary-detail', path: salaryDetail },
+    { name: 'blog-post', path: blogPost },
+    { name: 'talent-detail', path: talentDetail },
+    { name: 'job-category', path: jobCategory },
+    { name: 'job-skill', path: jobSkill },
+    { name: 'job-location', path: jobLocation },
+    { name: 'company-market', path: companyMarket },
+    { name: 'blog-tag', path: blogTag },
+    { name: 'blog-author', path: blogAuthor },
+  ];
 
   return [...routes, ...discovered.filter((route) => route.path)];
 }
 
-/** First public talent profile path from the directory page, or null. */
-async function firstTalentProfilePath() {
+/** First matching internal href from a rendered HTML page, or null. */
+async function firstHrefFromPage(pagePath, pattern) {
   try {
-    const response = await fetch(`${PROXY_ORIGIN}/talent`);
+    const response = await fetch(`${PROXY_ORIGIN}${pagePath}`);
     if (!response.ok) return null;
     const html = await response.text();
-    const match = html.match(/href="(\/p\/[a-z0-9][a-z0-9-]*)"/i);
-    return match?.[1] ?? null;
+    const match = html.match(pattern);
+    if (!match?.[1]) return null;
+    // Decode common entities in hrefs from SSR HTML.
+    return match[1].replace(/&amp;/g, '&');
   } catch {
     return null;
   }
