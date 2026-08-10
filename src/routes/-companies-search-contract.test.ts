@@ -63,6 +63,7 @@ beforeEach(() => {
   getCompaniesIndexPage.mockReset();
   getCompaniesIndexPage.mockResolvedValue({
     page: { data: [], count: 0 },
+    searchUnavailable: false,
     markets: [],
     seo: {},
     head: {},
@@ -70,7 +71,9 @@ beforeEach(() => {
   });
   getCompaniesMarketPage.mockReset();
   getCompaniesMarketPage.mockResolvedValue({
+    kind: 'ok',
     page: { data: [], count: 0 },
+    searchUnavailable: false,
     markets: [],
     seo: {},
     head: {},
@@ -120,6 +123,21 @@ describe('companies route — URL-backed master-detail search', () => {
     });
     expect(first).toEqual(second);
     expect(first).not.toHaveProperty('selectedCompany');
+  });
+
+  it('preserves a serialized search outage for the route component', async () => {
+    getCompaniesIndexPage.mockResolvedValueOnce({
+      page: { data: [], count: 0 },
+      searchUnavailable: true,
+      markets: [],
+      seo: {},
+      head: {},
+      jsonLd: [],
+    });
+
+    await expect(
+      loader(CompaniesRoute)({ deps: { query: 'acme' } } as never),
+    ).resolves.toMatchObject({ searchUnavailable: true });
   });
 });
 

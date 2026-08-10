@@ -37,7 +37,7 @@ export const Route = createFileRoute('/companies/')({
 });
 
 function CompaniesPage() {
-  const { page, markets } = Route.useLoaderData();
+  const { page, markets, searchUnavailable } = Route.useLoaderData();
   const search = Route.useSearch();
 
   return (
@@ -48,6 +48,7 @@ function CompaniesPage() {
         pageSize={COMPANIES_PAGE_SIZE}
         markets={markets}
         search={search}
+        searchUnavailable={searchUnavailable}
       />
     </>
   );

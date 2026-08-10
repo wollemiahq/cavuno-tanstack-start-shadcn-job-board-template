@@ -65,7 +65,7 @@ function MarketNotFound() {
 }
 
 function MarketPage() {
-  const { market, page, markets } = Route.useLoaderData();
+  const { market, page, markets, searchUnavailable } = Route.useLoaderData();
   const search = Route.useSearch();
   const params = Route.useParams();
 
@@ -78,6 +78,7 @@ function MarketPage() {
         markets={markets}
         market={{ slug: params.market, name: market.displayName }}
         search={search}
+        searchUnavailable={searchUnavailable}
       />
     </>
   );
