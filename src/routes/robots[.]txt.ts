@@ -1,6 +1,6 @@
 /**
- * robots.txt — hosted-parity handler at /robots.txt. Byte-identical to the
- * hosted board: `User-Agent: *` + `Allow: /`, NO `Disallow` lines, and a
+ * robots.txt — hosted-parity handler at /robots.txt. `User-Agent: *` +
+ * `Allow: /`, listing-pagination `Disallow`s (same as hosted), and a
  * `Sitemap:` on the board's canonical base (board.seo().canonicalBase), not the
  * request origin.
  */
