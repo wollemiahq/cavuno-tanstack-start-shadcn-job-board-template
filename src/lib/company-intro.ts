@@ -10,7 +10,9 @@
  * name, logo, and profile link from `job.company`.
  */
 
-export function companyIntro(summary: string | null | undefined): string | null {
+export function companyIntro(
+  summary: string | null | undefined,
+): string | null {
   const trimmed = summary?.trim();
   return trimmed ? trimmed : null;
 }
