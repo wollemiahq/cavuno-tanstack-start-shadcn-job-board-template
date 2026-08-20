@@ -187,6 +187,7 @@
         "src/components/board/company-search-page.tsx",
         "src/components/board/company-search-result-detail.tsx",
         "src/components/board/copy-link-button.tsx",
+        "src/components/board/embed-jobs-header.tsx",
         "src/components/board/home-landing.tsx",
         "src/components/board/job-about-company-card.tsx",
         "src/components/board/job-detail.tsx",

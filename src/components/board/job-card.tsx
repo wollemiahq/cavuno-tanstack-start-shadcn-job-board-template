@@ -34,7 +34,13 @@ import { cn } from '@/lib/utils';
 const MAX_TAG_BADGES = 3;
 
 /** The SEO-load-bearing taxonomy chips — the collection Tag's visual as links. */
-function TagBadges({ vm }: { vm: JobCardVM }) {
+function TagBadges({
+  vm,
+  openInNewTab = false,
+}: {
+  vm: JobCardVM;
+  openInNewTab?: boolean;
+}) {
   if (vm.tags.length === 0) return null;
 
   // Taxonomy chips stay LINKS — the internal-linking spine into the
@@ -53,6 +59,7 @@ function TagBadges({ vm }: { vm: JobCardVM }) {
       }))}
       overflow={overflow}
       size="sm"
+      openInNewTab={openInNewTab}
     />
   );
 }
@@ -63,6 +70,7 @@ export function JobCard({
   layout = 'card',
   compact = false,
   linkTo = 'detail',
+  openInNewTab = false,
 }: {
   vm: JobCardVM;
   /** Optional trailing slot (e.g. a save/unsave control). */
@@ -84,11 +92,19 @@ export function JobCard({
    * route, never derived from this anchor.
    */
   linkTo?: 'detail' | 'workspace';
+  /**
+   * Embed widgets pass true so title + taxonomy chips leave the iframe
+   * instead of loading the board inside it.
+   */
+  openInNewTab?: boolean;
 }) {
   const linkClassName =
     // The `after` overlay stretches the title anchor over the whole card,
     // making the full surface clickable with a single accessible link.
     'text-foreground hover:text-primary focus-visible:ring-ring/50 rounded-sm outline-none transition-colors hover:no-underline focus-visible:ring-2 after:absolute after:inset-0';
+  const newTabProps = openInNewTab
+    ? { target: '_blank' as const, rel: 'noopener noreferrer' }
+    : {};
   const title =
     vm.companySlug && vm.jobSlug ? (
       linkTo === 'workspace' ? (
@@ -96,6 +112,7 @@ export function JobCard({
           to="/jobs"
           search={{ selectedJob: vm.jobSlug }}
           className={linkClassName}
+          {...newTabProps}
         >
           {vm.title}
         </Link>
@@ -104,6 +121,7 @@ export function JobCard({
           to="/companies/$companySlug/jobs/$jobSlug"
           params={{ companySlug: vm.companySlug, jobSlug: vm.jobSlug }}
           className={linkClassName}
+          {...newTabProps}
         >
           {vm.title}
         </Link>
@@ -168,7 +186,7 @@ export function JobCard({
                 </p>
               ) : null}
               <div className="mt-1.5">
-                <TagBadges vm={vm} />
+                <TagBadges vm={vm} openInNewTab={openInNewTab} />
               </div>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-2">
@@ -264,7 +282,7 @@ export function JobCard({
 
                 {vm.tags.length > 0 || vm.postedAtLabel || action ? (
                   <div className="mt-auto flex flex-col gap-3 pt-4">
-                    <TagBadges vm={vm} />
+                    <TagBadges vm={vm} openInNewTab={openInNewTab} />
                     {vm.postedAtLabel || action ? (
                       <div className="flex min-h-8 items-end justify-between gap-3">
                         {vm.postedAtLabel ? (

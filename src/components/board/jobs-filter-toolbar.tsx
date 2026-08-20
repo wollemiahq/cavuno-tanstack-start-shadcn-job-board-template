@@ -2,7 +2,7 @@
 
 import { useId, useState } from 'react';
 
-import { XIcon } from 'lucide-react';
+import { ListFilter, XIcon } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -69,6 +69,13 @@ export type JobsFilterToolbarProps = {
   value: JobsFilterValues;
   onApply: (value: JobsFilterValues) => void;
   onReset: () => void;
+  /**
+   * `toolbar` (default) — inline workplace/type selects plus an "All filters"
+   * sheet on desktop, one labelled button on mobile. `compact` — a single
+   * icon-only sheet trigger at every size, for tight one-line headers such as
+   * the embed widget, where the selects have no room to sit inline.
+   */
+  variant?: 'toolbar' | 'compact';
 };
 
 function FilterSelect({
@@ -129,6 +136,7 @@ export function JobsFilterToolbar({
   value,
   onApply,
   onReset,
+  variant = 'toolbar',
 }: JobsFilterToolbarProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   /** Retained while the sheet animates out so its title does not swap mid-exit. */
@@ -168,6 +176,120 @@ export function JobsFilterToolbar({
         : current.filter((value) => value !== seniority),
     });
   };
+
+  const sheet = (
+    <Sheet
+      open={sheetOpen}
+      onOpenChange={(open) => {
+        if (!open) closeSheet();
+      }}
+    >
+      <SheetContent side="right" showCloseButton={false}>
+        <SheetClose
+          render={
+            <Button
+              variant="ghost"
+              className="bg-secondary absolute end-4 top-4"
+              size="icon-sm"
+            />
+          }
+        >
+          <XIcon aria-hidden="true" />
+          <span className="sr-only">{labels.close}</span>
+        </SheetClose>
+        <SheetHeader>
+          <SheetTitle>
+            {sheetMode === 'desktop' ? labels.allFilters : labels.filters}
+          </SheetTitle>
+          <SheetDescription>{labels.sheetDescription}</SheetDescription>
+        </SheetHeader>
+
+        <FieldGroup className="flex flex-1 gap-6 overflow-y-auto px-6 py-2">
+          <FilterSelect
+            label={labels.workplace}
+            anyLabel={labels.anyWorkplace}
+            options={options.workplace}
+            value={draft.workplace}
+            onValueChange={(workplace) => setDraft({ ...draft, workplace })}
+            showLabel
+          />
+
+          <FilterSelect
+            label={labels.employmentType}
+            anyLabel={labels.anyEmploymentType}
+            options={options.employmentType}
+            value={draft.employmentType}
+            onValueChange={(employmentType) =>
+              setDraft({ ...draft, employmentType })
+            }
+            showLabel
+          />
+
+          <FieldSet className="gap-3">
+            <FieldLegend variant="label">{labels.seniority}</FieldLegend>
+            {options.seniority.map((option) => (
+              <Field
+                key={option.value}
+                orientation="horizontal"
+                className="min-h-8"
+              >
+                <Checkbox
+                  id={`seniority-${option.value}`}
+                  checked={draft.seniority?.includes(option.value) ?? false}
+                  onCheckedChange={(checked) =>
+                    setDraftSeniority(option.value, checked === true)
+                  }
+                />
+                <FieldLabel
+                  htmlFor={`seniority-${option.value}`}
+                  className="cursor-pointer font-normal"
+                >
+                  {option.label}
+                </FieldLabel>
+              </Field>
+            ))}
+          </FieldSet>
+        </FieldGroup>
+
+        <SheetFooter className="flex-row items-center border-t">
+          <Button type="button" variant="ghost" onClick={() => setDraft({})}>
+            {labels.reset}
+          </Button>
+          <Button type="button" className="flex-1" onClick={applyDraft}>
+            {labels.apply}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+
+  if (variant === 'compact') {
+    return (
+      <>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          aria-label={labels.allFilters}
+          aria-haspopup="dialog"
+          aria-expanded={sheetOpen}
+          onClick={() => openSheet('mobile')}
+          className="relative shrink-0"
+        >
+          <ListFilter aria-hidden="true" />
+          {activeCount > 0 && (
+            <Badge
+              variant="secondary"
+              className="absolute -end-1.5 -top-1.5 h-4 min-w-4 justify-center px-1 text-[10px]"
+            >
+              {activeCount}
+            </Badge>
+          )}
+        </Button>
+        {sheet}
+      </>
+    );
+  }
 
   return (
     <>
@@ -217,89 +339,7 @@ export function JobsFilterToolbar({
         {activeCount > 0 && <Badge variant="secondary">{activeCount}</Badge>}
       </Button>
 
-      <Sheet
-        open={sheetOpen}
-        onOpenChange={(open) => {
-          if (!open) closeSheet();
-        }}
-      >
-        <SheetContent side="right" showCloseButton={false}>
-          <SheetClose
-            render={
-              <Button
-                variant="ghost"
-                className="bg-secondary absolute end-4 top-4"
-                size="icon-sm"
-              />
-            }
-          >
-            <XIcon aria-hidden="true" />
-            <span className="sr-only">{labels.close}</span>
-          </SheetClose>
-          <SheetHeader>
-            <SheetTitle>
-              {sheetMode === 'desktop' ? labels.allFilters : labels.filters}
-            </SheetTitle>
-            <SheetDescription>{labels.sheetDescription}</SheetDescription>
-          </SheetHeader>
-
-          <FieldGroup className="flex flex-1 gap-6 overflow-y-auto px-6 py-2">
-            <FilterSelect
-              label={labels.workplace}
-              anyLabel={labels.anyWorkplace}
-              options={options.workplace}
-              value={draft.workplace}
-              onValueChange={(workplace) => setDraft({ ...draft, workplace })}
-              showLabel
-            />
-
-            <FilterSelect
-              label={labels.employmentType}
-              anyLabel={labels.anyEmploymentType}
-              options={options.employmentType}
-              value={draft.employmentType}
-              onValueChange={(employmentType) =>
-                setDraft({ ...draft, employmentType })
-              }
-              showLabel
-            />
-
-            <FieldSet className="gap-3">
-              <FieldLegend variant="label">{labels.seniority}</FieldLegend>
-              {options.seniority.map((option) => (
-                <Field
-                  key={option.value}
-                  orientation="horizontal"
-                  className="min-h-8"
-                >
-                  <Checkbox
-                    id={`seniority-${option.value}`}
-                    checked={draft.seniority?.includes(option.value) ?? false}
-                    onCheckedChange={(checked) =>
-                      setDraftSeniority(option.value, checked === true)
-                    }
-                  />
-                  <FieldLabel
-                    htmlFor={`seniority-${option.value}`}
-                    className="cursor-pointer font-normal"
-                  >
-                    {option.label}
-                  </FieldLabel>
-                </Field>
-              ))}
-            </FieldSet>
-          </FieldGroup>
-
-          <SheetFooter className="flex-row items-center border-t">
-            <Button type="button" variant="ghost" onClick={() => setDraft({})}>
-              {labels.reset}
-            </Button>
-            <Button type="button" className="flex-1" onClick={applyDraft}>
-              {labels.apply}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+      {sheet}
     </>
   );
 }

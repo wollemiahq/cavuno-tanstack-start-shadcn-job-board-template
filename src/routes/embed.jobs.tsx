@@ -16,6 +16,7 @@ import { baseLocale, getLocale } from '../paraglide/runtime';
 import { embedJobs, getBoardContext } from '../server/queries';
 
 import { toJobCardVM } from '@/board/job-view-model';
+import { EmbedJobsHeader } from '@/components/board/embed-jobs-header';
 import { JobCard } from '@/components/board/job-card';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
@@ -130,6 +131,7 @@ export const Route = createFileRoute('/embed/jobs')({
       page,
       showCavunoBranding: context.showCavunoBranding,
       boardName: context.name,
+      logoUrl: context.logoUrl ?? null,
     };
   },
   // The embed widget is a fragment meant to be iframed — never indexed (parity
@@ -193,19 +195,38 @@ function buildEmbedCta(
   return null;
 }
 
-function EmbedJobsPage() {
-  const { page, showCavunoBranding } = Route.useLoaderData();
-  const search = Route.useSearch();
-  const jobs = page.data as PublicJobCard[];
+export function EmbedJobsView({
+  page,
+  showCavunoBranding,
+  boardName,
+  logoUrl,
+  search,
+}: {
+  page: { data: PublicJobCard[]; count?: number };
+  showCavunoBranding: boolean;
+  boardName: string;
+  logoUrl: string | null;
+  search: EmbedSearch;
+}) {
+  const jobs = page.data;
   const pageSize = search.limit ?? 8;
   const cta = buildEmbedCta(search, pageSize, page.count);
 
   return (
     <section className="space-y-4" data-test="embed-jobs-widget">
+      <EmbedJobsHeader
+        boardName={boardName}
+        logoUrl={logoUrl}
+        locale={getLocale()}
+      />
       {jobs.length > 0 ? (
         <div className="space-y-3" data-test="embed-jobs-list">
           {jobs.map((job) => (
-            <JobCard key={job.id} vm={toJobCardVM(job, getLocale())} />
+            <JobCard
+              key={job.id}
+              vm={toJobCardVM(job, getLocale())}
+              openInNewTab
+            />
           ))}
         </div>
       ) : (
@@ -254,5 +275,20 @@ function EmbedJobsPage() {
         </div>
       ) : null}
     </section>
+  );
+}
+
+function EmbedJobsPage() {
+  const { page, showCavunoBranding, boardName, logoUrl } =
+    Route.useLoaderData();
+  const search = Route.useSearch();
+  return (
+    <EmbedJobsView
+      page={page as { data: PublicJobCard[]; count?: number }}
+      showCavunoBranding={showCavunoBranding}
+      boardName={boardName}
+      logoUrl={logoUrl}
+      search={search}
+    />
   );
 }

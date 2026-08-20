@@ -41,4 +41,26 @@ describe('TaxonomyTags', () => {
     const { container } = render(<TaxonomyTags chips={[]} />);
     expect(container.firstChild).toBeNull();
   });
+
+  it('opens chips in a new tab when openInNewTab is set', () => {
+    const { container } = render(<TaxonomyTags chips={chips} openInNewTab />);
+
+    const anchors = [...container.querySelectorAll('a')];
+    expect(anchors).toHaveLength(2);
+    for (const anchor of anchors) {
+      expect(anchor.getAttribute('target')).toBe('_blank');
+      expect(anchor.getAttribute('rel')).toBe('noopener noreferrer');
+    }
+  });
+
+  it('keeps chips in the same tab by default', () => {
+    const { container } = render(<TaxonomyTags chips={chips} />);
+
+    const anchors = [...container.querySelectorAll('a')];
+    expect(anchors.length).toBeGreaterThan(0);
+    for (const anchor of anchors) {
+      expect(anchor.getAttribute('target')).toBeNull();
+      expect(anchor.getAttribute('rel')).toBeNull();
+    }
+  });
 });
