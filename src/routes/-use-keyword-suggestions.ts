@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 
 import { searchTaxonomySuggestions } from '../server/queries';
 
-import { toKeywordSuggestionVM } from '@/board/keyword-suggestion';
+import {
+  dedupeKeywordSuggestions,
+  toKeywordSuggestionVM,
+} from '@/board/keyword-suggestion';
 import type { KeywordSuggestionState } from '@/components/keyword-combobox';
 
 const MIN_QUERY = 2;
@@ -32,7 +35,11 @@ export function useKeywordSuggestions(
       void searchTaxonomySuggestions({ data: { q, limit: 10 } })
         .then((response) => {
           if (!cancelled) {
-            setSuggestions(response.data.map(toKeywordSuggestionVM));
+            setSuggestions(
+              dedupeKeywordSuggestions(
+                response.data.map(toKeywordSuggestionVM),
+              ),
+            );
           }
         })
         .finally(() => {

@@ -428,6 +428,8 @@
   "companySearch_retryLabel": "Retry",
   "companySearch_searchLabel": "Search",
   "companySearch_selectedCompanyRegionLabel": "Selected company",
+  "companySearch_unavailableDescription": "We couldn’t load company results. Try again in a moment.",
+  "companySearch_unavailableTitle": "Company search is temporarily unavailable",
   "companySearch_viewCompanyLabel": "View company",
   "companySearch_viewJobsLabel": "View jobs",
   "companySearch_visitWebsiteLabel": "Visit website",

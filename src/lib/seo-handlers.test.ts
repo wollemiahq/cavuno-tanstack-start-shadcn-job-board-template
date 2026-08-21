@@ -7,11 +7,25 @@ import {
 } from './seo-handlers';
 
 describe('seo-handlers — byte-parity with the hosted board', () => {
-  it('robots.txt: User-Agent (capital), no Disallow, Sitemap on the canonical base', async () => {
+  it('robots.txt: User-Agent (capital), listing pagination Disallow, Sitemap on the canonical base', async () => {
     const res = robotsResponse({ canonicalBase: 'https://acme.cavuno.com' });
-    // Exactly the hosted body: `['User-Agent: *','Allow: /','',`Sitemap: …`,''].join('\n')`.
     expect(await res.text()).toBe(
-      'User-Agent: *\nAllow: /\n\nSitemap: https://acme.cavuno.com/sitemap.xml\n',
+      [
+        'User-Agent: *',
+        'Allow: /',
+        'Disallow: /jobs?page=',
+        'Disallow: /jobs*&page=',
+        'Disallow: /jobs/*?page=',
+        'Disallow: /companies?page=',
+        'Disallow: /companies*&page=',
+        'Disallow: /companies/*?page=',
+        'Disallow: /talent?page=',
+        'Disallow: /talent*&page=',
+        'Disallow: /talent/*?page=',
+        '',
+        'Sitemap: https://acme.cavuno.com/sitemap.xml',
+        '',
+      ].join('\n'),
     );
     expect(res.headers.get('content-type')).toBe('text/plain; charset=utf-8');
     expect(res.headers.get('cache-control')).toBe(

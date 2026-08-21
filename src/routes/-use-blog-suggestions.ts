@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 
 import { searchBlogSuggestions } from '../server/queries';
 
-import { toBlogSuggestionVM } from '@/board/keyword-suggestion';
+import {
+  sortBlogSuggestions,
+  toBlogSuggestionVM,
+} from '@/board/keyword-suggestion';
 import type { KeywordSuggestionState } from '@/components/keyword-combobox';
 
 const MIN_QUERY = 2;
@@ -30,7 +33,9 @@ export function useBlogSuggestions(enabled: boolean): KeywordSuggestionState {
       void searchBlogSuggestions({ data: { q, limit: 10 } })
         .then((response) => {
           if (!cancelled) {
-            setSuggestions(response.data.map(toBlogSuggestionVM));
+            setSuggestions(
+              sortBlogSuggestions(response.data.map(toBlogSuggestionVM)),
+            );
           }
         })
         .finally(() => {

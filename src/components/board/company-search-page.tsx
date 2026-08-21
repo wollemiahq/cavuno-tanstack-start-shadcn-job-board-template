@@ -45,6 +45,7 @@ export function CompanySearchPage({
   heading,
   breadcrumb,
   query,
+  searchUnavailable = false,
   markets,
   onPageChange,
   selectedCompany,
@@ -61,6 +62,7 @@ export function CompanySearchPage({
   heading?: string;
   breadcrumb?: BreadcrumbData;
   query?: string;
+  searchUnavailable?: boolean;
   markets: Array<{ slug: string; name: string }>;
   onPageChange: (page: number) => void;
   selectedCompany?: string;
@@ -135,22 +137,28 @@ export function CompanySearchPage({
               }
               list={
                 <div className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0">
-                  <div className="space-y-4">{resultsBar}</div>
+                  {searchUnavailable ? null : (
+                    <div className="space-y-4">{resultsBar}</div>
+                  )}
                   <Empty className="min-h-[calc(100dvh-16rem)] border-0">
                     <EmptyHeader>
                       <EmptyMedia variant="icon">
                         <Building2 aria-hidden="true" />
                       </EmptyMedia>
                       <EmptyTitle>
-                        {heading ?? m.companiesIndex_metaTitle()}
+                        {searchUnavailable
+                          ? m.companySearch_unavailableTitle()
+                          : (heading ?? m.companiesIndex_metaTitle())}
                       </EmptyTitle>
                       <EmptyDescription>
-                        {query
-                          ? m.companiesIndex_noMatchText({ query })
-                          : m.companiesIndex_emptyText()}
+                        {searchUnavailable
+                          ? m.companySearch_unavailableDescription()
+                          : query
+                            ? m.companiesIndex_noMatchText({ query })
+                            : m.companiesIndex_emptyText()}
                       </EmptyDescription>
                     </EmptyHeader>
-                    {hasActiveSearch ? (
+                    {hasActiveSearch && !searchUnavailable ? (
                       <EmptyContent>
                         <a
                           href={localizePath('/companies')}

@@ -10,13 +10,23 @@ const TEXT_PLAIN = 'text/plain; charset=utf-8';
 
 /**
  * `robots.txt`. The `Sitemap:` line uses the board's CANONICAL base (honours a
- * custom domain), NOT the request origin, and the body carries no `Disallow`
- * lines — matching the hosted handler exactly.
+ * custom domain), NOT the request origin. Listing `?page=` is disallowed the
+ * same way as hosted boards (Indeed's `&start=` pattern). Scoped to `/jobs`
+ * `/jobs`, `/companies`, and `/talent` so `/og?page=` stays crawlable.
  */
 export function robotsResponse(seo: Pick<BoardSeo, 'canonicalBase'>): Response {
   const body = [
     'User-Agent: *',
     'Allow: /',
+    'Disallow: /jobs?page=',
+    'Disallow: /jobs*&page=',
+    'Disallow: /jobs/*?page=',
+    'Disallow: /companies?page=',
+    'Disallow: /companies*&page=',
+    'Disallow: /companies/*?page=',
+    'Disallow: /talent?page=',
+    'Disallow: /talent*&page=',
+    'Disallow: /talent/*?page=',
     '',
     `Sitemap: ${seo.canonicalBase}/sitemap.xml`,
     '',

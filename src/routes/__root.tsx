@@ -61,6 +61,7 @@ import {
   resolveHeaderSearchState,
   type HeaderSearchSubmission,
 } from '@/lib/header-search';
+import { resolveJobsSearchTarget } from '@/lib/jobs-search-target';
 import {
   resolveShellBreadcrumb,
   resolveShellBreadcrumbEntities,
@@ -362,48 +363,13 @@ function RootChrome({
       return;
     }
 
-    if (selectedLocation && term?.type === 'skill') {
-      void navigate({
-        to: '/jobs/locations/$location/skills/$skill',
-        params: { location: selectedLocation.slug, skill: term.slug },
-      });
-      return;
-    }
-
-    if (selectedLocation && term?.type === 'category') {
-      void navigate({
-        to: '/jobs/locations/$location/$keyword',
-        params: { location: selectedLocation.slug, keyword: term.slug },
-      });
-      return;
-    }
-
-    if (term?.type === 'skill') {
-      void navigate({
-        to: '/jobs/skills/$skill',
-        params: { skill: term.slug },
-      });
-      return;
-    }
-
-    if (term?.type === 'category') {
-      void navigate({
-        to: '/jobs/$keyword',
-        params: { keyword: term.slug },
-      });
-      return;
-    }
-
-    if (selectedLocation) {
-      void navigate({
-        to: '/jobs/locations/$location',
-        params: { location: selectedLocation.slug },
-        search: { q: query },
-      });
-      return;
-    }
-
-    void navigate({ to: '/jobs', search: { q: query } });
+    void navigate(
+      resolveJobsSearchTarget({
+        query,
+        location: selectedLocation,
+        term,
+      }),
+    );
   }
 
   const header = (

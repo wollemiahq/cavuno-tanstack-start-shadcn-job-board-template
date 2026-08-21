@@ -205,6 +205,81 @@ describe('LocationCombobox — selection and clear write the URL semantics', () 
 
     expect(onClear).toHaveBeenCalledTimes(1);
   });
+
+  it('keeps the keystroke that invalidated the place, once the caller clears', () => {
+    // The real parent reacts to onClear by dropping its value, which used to
+    // bounce back through the sync effect and blank the field mid-word —
+    // swallowing the very keystroke that triggered it.
+    const { rerender } = render(
+      <LocationCombobox
+        {...locationSearchProps}
+        value="sydney"
+        valueLabel="Sydney"
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+
+    fireEvent.input(locationInput(), {
+      target: { value: 'Melb' },
+      inputType: 'insertText',
+    });
+
+    rerender(
+      <LocationCombobox
+        {...locationSearchProps}
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+
+    expect(locationInput().value).toBe('Melb');
+  });
+
+  it('still blanks on a later external clear, having swallowed only its own echo', () => {
+    const { rerender } = render(
+      <LocationCombobox
+        {...locationSearchProps}
+        value="sydney"
+        valueLabel="Sydney"
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+
+    fireEvent.input(locationInput(), {
+      target: { value: 'Melb' },
+      inputType: 'insertText',
+    });
+    rerender(
+      <LocationCombobox
+        {...locationSearchProps}
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+
+    // A place resolves again, then history navigates away from it.
+    rerender(
+      <LocationCombobox
+        {...locationSearchProps}
+        value="melbourne"
+        valueLabel="Melbourne"
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+    expect(locationInput().value).toBe('Melbourne');
+
+    rerender(
+      <LocationCombobox
+        {...locationSearchProps}
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+    expect(locationInput().value).toBe('');
+  });
 });
 
 describe('LocationCombobox — accessible autocomplete semantics', () => {

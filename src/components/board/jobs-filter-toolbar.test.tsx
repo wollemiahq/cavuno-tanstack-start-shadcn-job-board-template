@@ -174,4 +174,41 @@ describe('JobsFilterToolbar', () => {
         .getAttribute('aria-checked'),
     ).toBe('true');
   });
+
+  it('collapses to a single icon trigger in the compact variant', () => {
+    const onApply = vi.fn();
+
+    render(
+      <JobsFilterToolbar
+        labels={labels}
+        options={options}
+        value={{ workplace: 'remote', seniority: ['senior'] }}
+        onApply={onApply}
+        onReset={vi.fn()}
+        variant="compact"
+      />,
+    );
+
+    // No inline selects at any width — only the icon trigger, badged with the
+    // active count so a collapsed filter set is still legible.
+    expect(screen.queryByRole('combobox', { name: 'Workplace' })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: 'Type' })).toBeNull();
+    const trigger = screen.getByRole('button', { name: /All filters/ });
+    expect(trigger).toHaveTextContent('2');
+
+    // It still opens the same draft-then-Apply sheet.
+    fireEvent.click(trigger);
+    const sheet = screen.getByRole('dialog');
+    fireEvent.click(within(sheet).getByRole('combobox', { name: 'Workplace' }));
+    const hybrid = screen.getByRole('option', { name: 'Hybrid' });
+    fireEvent.pointerDown(hybrid, { pointerType: 'mouse' });
+    fireEvent.click(hybrid);
+    expect(onApply).not.toHaveBeenCalled();
+    fireEvent.click(
+      within(sheet).getByRole('button', { name: 'Apply filters' }),
+    );
+    expect(onApply).toHaveBeenCalledWith(
+      expect.objectContaining({ workplace: 'hybrid' }),
+    );
+  });
 });

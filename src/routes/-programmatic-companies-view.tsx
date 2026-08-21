@@ -35,6 +35,7 @@ export function ProgrammaticCompaniesView({
   markets,
   market,
   search,
+  searchUnavailable,
 }: {
   heading: string;
   page: CompaniesPageData;
@@ -42,6 +43,7 @@ export function ProgrammaticCompaniesView({
   markets: Array<{ slug: string; name: string }>;
   market?: { slug: string; name: string };
   search: CompaniesSearch;
+  searchUnavailable?: boolean;
 }) {
   const navigate = useNavigate() as unknown as LooseNavigate;
   const copy = {
@@ -78,6 +80,7 @@ export function ProgrammaticCompaniesView({
           : undefined
       }
       query={search.query}
+      searchUnavailable={searchUnavailable}
       markets={marketOptions}
       onPageChange={(nextPage) =>
         navigate({

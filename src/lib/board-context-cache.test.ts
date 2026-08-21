@@ -97,9 +97,7 @@ describe('board context memo', () => {
 
 describe('employer offer gate memo', () => {
   it('collapses repeat root-shell gate reads into one load', async () => {
-    const load = vi
-      .fn()
-      .mockResolvedValue({ hasEmployerOfferPage: true });
+    const load = vi.fn().mockResolvedValue({ hasEmployerOfferPage: true });
 
     await Promise.all([
       readEmployerOfferGate(load),

@@ -428,6 +428,8 @@
   "companySearch_retryLabel": "Réessayer",
   "companySearch_searchLabel": "Rechercher",
   "companySearch_selectedCompanyRegionLabel": "Entreprise sélectionnée",
+  "companySearch_unavailableDescription": "Nous n’avons pas pu charger les résultats des entreprises. Réessayez dans un instant.",
+  "companySearch_unavailableTitle": "La recherche d’entreprises est temporairement indisponible",
   "companySearch_viewCompanyLabel": "Voir l’entreprise",
   "companySearch_viewJobsLabel": "Voir les offres",
   "companySearch_visitWebsiteLabel": "Visiter le site web",

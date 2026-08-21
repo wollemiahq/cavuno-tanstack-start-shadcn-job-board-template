@@ -1,4 +1,4 @@
-import { isNotFound } from '@cavuno/board';
+import { isBoardApiError, isNotFound } from '@cavuno/board';
 /**
  * Route-family-owned server boundary for companies listing + profile pages.
  *
@@ -45,6 +45,10 @@ type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 type JsonObject = { [key: string]: JsonValue };
 
+function isCompanySearchUnavailable(error: unknown) {
+  return isBoardApiError(error) && error.code === 'search_unavailable';
+}
+
 function asJsonObjects(value: unknown): JsonObject[] {
   return JSON.parse(JSON.stringify(value)) as JsonObject[];
 }
@@ -75,21 +79,34 @@ export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
-      const [page, markets, seo] = await Promise.all([
-        data.query
-          ? board.companies.search(
-              {
-                query: data.query,
-                offset: data.offset,
-                limit: data.limit,
-              },
-              undefined,
-              { headers },
-            )
-          : board.companies.list(
-              { offset: data.offset, limit: data.limit },
-              { headers },
-            ),
+      const [pageResult, markets, seo] = await Promise.all([
+        (async () => {
+          try {
+            const page = data.query
+              ? await board.companies.search(
+                  {
+                    query: data.query,
+                    offset: data.offset,
+                    limit: data.limit,
+                  },
+                  undefined,
+                  { headers },
+                )
+              : await board.companies.list(
+                  { offset: data.offset, limit: data.limit },
+                  { headers },
+                );
+            return { page, searchUnavailable: false };
+          } catch (error) {
+            if (data.query && isCompanySearchUnavailable(error)) {
+              return {
+                page: { data: [], count: 0 },
+                searchUnavailable: true,
+              };
+            }
+            throw error;
+          }
+        })(),
         board.companies.markets({ limit: 24 }, { headers }).catch(() => null),
         seoBase(),
       ]);
@@ -122,7 +139,8 @@ export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
         ].filter((entry) => entry !== null),
       );
       return {
-        page,
+        page: pageResult.page,
+        searchUnavailable: pageResult.searchUnavailable,
         markets: markets?.data ?? [],
         seo,
         head,
@@ -206,8 +224,12 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
       if (market.redirectTo) {
         return { kind: 'redirect' as const, to: market.redirectTo };
       }
-      if (!pageResult.ok) throw pageResult.error;
-      const page = pageResult.value;
+      const searchUnavailable =
+        !pageResult.ok &&
+        Boolean(data.query) &&
+        isCompanySearchUnavailable(pageResult.error);
+      if (!pageResult.ok && !searchUnavailable) throw pageResult.error;
+      const page = pageResult.ok ? pageResult.value : { data: [], count: 0 };
       const head = {
         meta: [
           {
@@ -248,6 +270,7 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
         kind: 'ok' as const,
         market,
         page,
+        searchUnavailable,
         markets: markets?.data ?? [],
         seo,
         head,
@@ -284,16 +307,10 @@ export const getCompanyProfilePage = createServerFn({ method: 'GET' })
       const board = getBoard();
       // Kick company off first so salary can chain off it without waiting for
       // jobs/seo. A post-await `salaries.summary` was a serial second wave.
-      const companyP = board.companies.retrieve(
-        data.companySlug,
-        undefined,
-        { headers },
-      );
-      const jobsP = board.companies.listJobs(
-        data.companySlug,
-        {},
-        { headers },
-      );
+      const companyP = board.companies.retrieve(data.companySlug, undefined, {
+        headers,
+      });
+      const jobsP = board.companies.listJobs(data.companySlug, {}, { headers });
       const seoP = seoBase();
       // Tab gate is free on the company wire; teaser uses the lightweight
       // salaries/summary endpoint (overall + top categories only) when a

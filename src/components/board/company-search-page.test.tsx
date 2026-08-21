@@ -222,6 +222,40 @@ describe('CompanySearchPage — search results pattern', () => {
     ).toHaveTextContent('End creative');
     expect(screen.queryByText('Unused company detail')).toBeNull();
   });
+
+  it('shows a company-specific temporary-unavailable state without a zero-result count', async () => {
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => (
+        <CompanySearchPage
+          companies={[]}
+          count={0}
+          page={1}
+          pageSize={24}
+          query="acme"
+          searchUnavailable
+          markets={[]}
+          onPageChange={vi.fn()}
+          onSelectedCompanyReplace={vi.fn()}
+          onSelectedCompanyPush={vi.fn()}
+          detail={null}
+        />
+      ),
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    render(<RouterProvider router={router} />);
+
+    expect(
+      await screen.findByText('Company search is temporarily unavailable'),
+    ).toBeVisible();
+    expect(screen.queryByText('0 companies')).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Reset filters' })).toBeNull();
+  });
 });
 
 describe('CompanySearchPage — results description line', () => {

@@ -38,6 +38,39 @@ describe('useKeywordSuggestions', () => {
     });
   });
 
+  it('collapses a category and a skill sharing a name into one suggestion', async () => {
+    // Pins the WIRING, not just the helper: drop the dedupe call from the hook
+    // and the unit tests still pass while duplicate rows ship.
+    searchTaxonomySuggestions.mockResolvedValue({
+      data: [
+        {
+          type: 'skill',
+          canonicalSlug: 'robotics-engineering',
+          displayName: 'Robotics',
+        },
+        {
+          type: 'category',
+          canonicalSlug: 'robotics',
+          displayName: 'Robotics',
+        },
+      ],
+    });
+
+    const { result } = renderHook(() => useKeywordSuggestions(true));
+
+    act(() => result.current.onQueryChange('rob'));
+    await act(async () => vi.advanceTimersByTimeAsync(210));
+
+    expect(result.current.suggestions).toEqual([
+      {
+        id: 'category:robotics',
+        type: 'category',
+        slug: 'robotics',
+        name: 'Robotics',
+      },
+    ]);
+  });
+
   it('does not request job taxonomy suggestions in another search scope', async () => {
     const { result } = renderHook(() => useKeywordSuggestions(false));
 

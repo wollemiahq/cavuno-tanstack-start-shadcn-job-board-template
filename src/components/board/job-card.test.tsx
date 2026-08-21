@@ -119,37 +119,86 @@ describe('JobCard stress invariants', () => {
 });
 
 describe('JobCard title link (URL contract)', () => {
-  function renderInRouter(vm: JobCardVM) {
+  function renderInRouter(
+    vm: JobCardVM,
+    props: { openInNewTab?: boolean; linkTo?: 'detail' | 'workspace' } = {},
+  ) {
     const rootRoute = createRootRoute();
     const indexRoute = createRoute({
       getParentRoute: () => rootRoute,
       path: '/',
-      component: () => <JobCard vm={vm} />,
+      component: () => <JobCard vm={vm} {...props} />,
     });
     const jobRoute = createRoute({
       getParentRoute: () => rootRoute,
       path: '/companies/$companySlug/jobs/$jobSlug',
       component: () => <h1>Job detail</h1>,
     });
+    const jobsRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/jobs',
+      component: () => <h1>Jobs</h1>,
+    });
     const router = createRouter({
-      routeTree: rootRoute.addChildren([indexRoute, jobRoute]),
+      routeTree: rootRoute.addChildren([indexRoute, jobRoute, jobsRoute]),
       history: createMemoryHistory({ initialEntries: ['/'] }),
     });
     render(<RouterProvider router={router} />);
   }
 
+  const linkedVM: JobCardVM = {
+    ...baseVM,
+    companySlug: 'acme',
+    jobSlug: 'staff-platform-engineer',
+    detailHref: '/companies/acme/jobs/staff-platform-engineer',
+    tags: [tag('React')],
+  };
+
   it('links the title to the typed job-detail route when slugs are present', async () => {
-    renderInRouter({
-      ...baseVM,
-      companySlug: 'acme',
-      jobSlug: 'staff-platform-engineer',
-      detailHref: '/companies/acme/jobs/staff-platform-engineer',
-    });
+    renderInRouter(linkedVM);
     const link = await screen.findByRole('link', {
       name: 'Staff Platform Engineer',
     });
     expect(link.getAttribute('href')).toBe(
       '/companies/acme/jobs/staff-platform-engineer',
     );
+  });
+
+  it('opens the title and taxonomy chips in a new tab when openInNewTab is set', async () => {
+    renderInRouter(linkedVM, { openInNewTab: true });
+
+    const title = await screen.findByRole('link', {
+      name: 'Staff Platform Engineer',
+    });
+    expect(title.getAttribute('target')).toBe('_blank');
+    expect(title.getAttribute('rel')).toBe('noopener noreferrer');
+
+    const chip = screen.getByRole('link', { name: 'React' });
+    expect(chip.getAttribute('target')).toBe('_blank');
+    expect(chip.getAttribute('rel')).toBe('noopener noreferrer');
+  });
+
+  it('opens the workspace title link in a new tab when openInNewTab is set', async () => {
+    renderInRouter(linkedVM, { openInNewTab: true, linkTo: 'workspace' });
+
+    const title = await screen.findByRole('link', {
+      name: 'Staff Platform Engineer',
+    });
+    expect(title.getAttribute('target')).toBe('_blank');
+    expect(title.getAttribute('rel')).toBe('noopener noreferrer');
+  });
+
+  it('keeps title and taxonomy chips in the same tab by default', async () => {
+    renderInRouter(linkedVM);
+
+    const title = await screen.findByRole('link', {
+      name: 'Staff Platform Engineer',
+    });
+    expect(title.getAttribute('target')).toBeNull();
+    expect(title.getAttribute('rel')).toBeNull();
+
+    const chip = screen.getByRole('link', { name: 'React' });
+    expect(chip.getAttribute('target')).toBeNull();
+    expect(chip.getAttribute('rel')).toBeNull();
   });
 });
