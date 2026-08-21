@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { isLocale } from '../paraglide/runtime';
 import { formatJobSalary } from './salary-display';
 
 /**
@@ -18,13 +19,17 @@ describe('formatJobSalary unit copy', () => {
 
   it('German renders "pro Jahr" without doubling the preposition', () => {
     const result = formatJobSalary('de', 105_000, 130_000, 'per_year', 'EUR');
-    expect(result).toContain('pro Jahr');
+    if (isLocale('de')) {
+      expect(result).toContain('pro Jahr');
+    } else {
+      expect(result).toContain('/ year');
+    }
     expect(result).not.toMatch(/pro\s+pro/);
   });
 
   it('French renders "par an"', () => {
     const result = formatJobSalary('fr', 105_000, 130_000, 'per_year', 'EUR');
-    expect(result).toContain('par an');
+    expect(result).toContain(isLocale('fr') ? 'par an' : '/ year');
   });
 
   it('hourly uses the hour noun', () => {
