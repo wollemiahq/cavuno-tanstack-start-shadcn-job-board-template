@@ -16,12 +16,12 @@ import {
   boardAccessMiddleware,
   type BoardAccessContext,
 } from '../lib/board-access-middleware';
+import { persistAuthSession } from '../lib/data-source.server';
 import { MARKETING_CONSENT } from '../lib/marketing-consent';
 import {
   requireSessionMiddleware,
   type SessionContext,
 } from '../lib/session-middleware';
-import { persistAuthSession } from './auth-session.server';
 import { gatedRead } from './board-access';
 
 import type {

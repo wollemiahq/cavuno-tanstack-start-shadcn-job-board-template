@@ -1,5 +1,4 @@
-import { isBoardApiError, type BoardAuthSession } from '@cavuno/board';
-import { type BoardSession } from '@cavuno/board/server';
+import { isBoardApiError } from '@cavuno/board';
 /**
  * Auth server functions. The SDK never
  * stores tokens on the server; these functions move the bearer pair in
@@ -16,15 +15,11 @@ import { getBoard, getSessionRefresher } from '../lib/board';
 import {
   clearSessionForSource,
   getDataSource,
+  persistAuthSession,
   parseSessionForSource,
   serializeSessionForSource,
 } from '../lib/data-source.server';
 import { sessionMiddleware } from '../lib/session-middleware';
-import { persistAuthSession } from './auth-session.server';
-
-function storeSession(session: BoardAuthSession): BoardSession {
-  return persistAuthSession(session);
-}
 
 /** Map API failures to a form-friendly result instead of a 500. */
 function authError(error: unknown): {
@@ -43,7 +38,7 @@ export const signIn = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     try {
       const session = await getBoard().auth.login(data);
-      storeSession(session);
+      persistAuthSession(session);
       return { ok: true as const, boardUser: session.boardUser };
     } catch (error) {
       return authError(error);
@@ -67,7 +62,7 @@ export const signUp = createServerFn({ method: 'POST' })
         method: 'emailpass',
         ...data,
       });
-      storeSession(session);
+      persistAuthSession(session);
       return { ok: true as const, boardUser: session.boardUser };
     } catch (error) {
       return authError(error);
@@ -97,7 +92,7 @@ export const signUpEmployer = createServerFn({ method: 'POST' })
         method: 'emailpass',
         ...data,
       });
-      storeSession(session);
+      persistAuthSession(session);
       return { ok: true as const, boardUser: session.boardUser };
     } catch (error) {
       return authError(error);
@@ -262,7 +257,7 @@ export const consumeMagicLink = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     try {
       const session = await getBoard().auth.consumeMagicLink(data);
-      storeSession(session);
+      persistAuthSession(session);
       return { ok: true as const, boardUser: session.boardUser };
     } catch (error) {
       return authError(error);
@@ -291,7 +286,7 @@ export const exchangeOAuth = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     try {
       const session = await getBoard().auth.exchangeOAuth(data);
-      storeSession(session);
+      persistAuthSession(session);
       return { ok: true as const, boardUser: session.boardUser };
     } catch (error) {
       return authError(error);
