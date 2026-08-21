@@ -1,6 +1,8 @@
 import { isRedirect } from '@tanstack/react-router';
 import { describe, expect, it, vi } from 'vitest';
 
+vi.mock('cloudflare:workers', () => ({ env: {} }));
+
 import { m } from '../paraglide/messages';
 
 // The route module imports the Workers-backed home page boundary, and the
@@ -16,6 +18,15 @@ vi.mock('../server/queries', () => ({
 }));
 vi.mock('../server/account', () => ({
   saveJob: vi.fn(),
+  getSessionUser: vi.fn(),
+}));
+vi.mock('../server/auth', () => ({
+  confirmEmailChange: vi.fn(),
+  forgotPassword: vi.fn(),
+}));
+vi.mock('../server/settings', () => ({
+  getNotificationPreferences: vi.fn(),
+  getSettingsAccount: vi.fn(),
 }));
 
 import { Route } from './index';

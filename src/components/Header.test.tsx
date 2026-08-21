@@ -414,6 +414,7 @@ describe('Header — native-applications account gating', () => {
     email: 'ada@example.com',
     displayName: 'Ada Lovelace',
     emailVerified: true,
+    hasPassword: true,
   } as const;
 
   it('shows the Applications account entry when native applications are on', async () => {
@@ -462,6 +463,7 @@ describe('Header — subscription entry gating', () => {
     email: 'ada@example.com',
     displayName: 'Ada Lovelace',
     emailVerified: true,
+    hasPassword: true,
   } as const;
 
   it('shows the Subscription account entry when the viewer holds an active grant', async () => {

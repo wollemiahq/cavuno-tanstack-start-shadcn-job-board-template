@@ -137,7 +137,9 @@ describe('resolveShellBreadcrumb — authed surfaces (footer trails everywhere)'
     signUp: 'Sign up',
     postJob: 'Post a job',
     companyProfile: 'Company profile',
+    companyMembers: 'Team members',
     employerDashboard: 'Companies',
+    authConfirmEmailChange: 'Confirm your new email',
   };
   const resolve = (pathname: string, entities = {}) =>
     resolveShellBreadcrumb({ pathname, labels, privateLabels, entities });
@@ -174,6 +176,11 @@ describe('resolveShellBreadcrumb — authed surfaces (footer trails everywhere)'
       },
       { name: 'Post a job' },
     ]);
+    expect(
+      resolve('/employers/companies/cinder-oak-robotics/members', {
+        company: 'Cinder & Oak Robotics',
+      })?.items[2],
+    ).toEqual({ name: 'Team members' });
   });
 
   it('applicants pages prefer the job title', () => {

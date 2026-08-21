@@ -1,11 +1,14 @@
 import {
   isBoardApiError,
+  type AcceptCompanyMemberInviteBody,
   type ConfirmWorkEmailBody,
   type CreateCompanyBody,
+  type CreateCompanyMemberInviteBody,
   type CreateEmployerJobBody,
   type EmployerCheckoutBody,
   type EmployerCompanySearchQuery,
   type SendWorkEmailBody,
+  type UpdateCompanyMemberRoleBody,
   type UpdateEmployerCompanyBody,
   type UpdateEmployerJobBody,
 } from '@cavuno/board';
@@ -50,6 +53,13 @@ async function run<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
       ? { ok: false, code: error.code, message: error.message }
       : { ok: false, code: 'unknown', message: 'Something went wrong.' };
   }
+}
+
+function invitedEmailFromDetails(details: unknown): string | undefined {
+  if (typeof details !== 'object' || details === null) return undefined;
+  if (!('email' in details)) return undefined;
+  const email = (details as { email: unknown }).email;
+  return typeof email === 'string' && email.length > 0 ? email : undefined;
 }
 
 /** Bearer + board-access grant for one gated `/me/companies/*` call. */
@@ -142,6 +152,141 @@ export const updateCompany = createServerFn({ method: 'POST' })
       }),
     ),
   );
+
+export const deleteCompany = createServerFn({ method: 'POST' })
+  .validator((input: { slug: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard()
+        .me.companies.delete(data.slug, {
+          headers: authedHeaders(context),
+        })
+        .then(() => null),
+    ),
+  );
+
+export const listCompanyMembers = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, () =>
+      getBoard().me.companies.listMembers(data.slug, {
+        headers: authedHeaders(context),
+      }),
+    ),
+  );
+
+export const updateCompanyMemberRole = createServerFn({ method: 'POST' })
+  .validator(
+    (input: {
+      slug: string;
+      memberId: string;
+      body: UpdateCompanyMemberRoleBody;
+    }) => input,
+  )
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard()
+        .me.companies.updateMemberRole(data.slug, data.memberId, data.body, {
+          headers: authedHeaders(context),
+        })
+        .then(() => null),
+    ),
+  );
+
+export const removeCompanyMember = createServerFn({ method: 'POST' })
+  .validator((input: { slug: string; memberId: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard()
+        .me.companies.removeMember(data.slug, data.memberId, {
+          headers: authedHeaders(context),
+        })
+        .then(() => null),
+    ),
+  );
+
+export const leaveCompany = createServerFn({ method: 'POST' })
+  .validator((input: { slug: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard()
+        .me.companies.leave(data.slug, {
+          headers: authedHeaders(context),
+        })
+        .then(() => null),
+    ),
+  );
+
+export const listCompanyInvites = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, () =>
+      getBoard().me.companies.listInvites(data.slug, {
+        headers: authedHeaders(context),
+      }),
+    ),
+  );
+
+export const createCompanyInvite = createServerFn({ method: 'POST' })
+  .validator(
+    (input: { slug: string; body: CreateCompanyMemberInviteBody }) => input,
+  )
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard().me.companies.createInvite(data.slug, data.body, {
+        headers: authedHeaders(context),
+      }),
+    ),
+  );
+
+export const revokeCompanyInvite = createServerFn({ method: 'POST' })
+  .validator((input: { slug: string; inviteId: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard()
+        .me.companies.revokeInvite(data.slug, data.inviteId, {
+          headers: authedHeaders(context),
+        })
+        .then(() => null),
+    ),
+  );
+
+export const acceptCompanyInvite = createServerFn({ method: 'POST' })
+  .validator((input: AcceptCompanyMemberInviteBody) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(async ({ data, context }) => {
+    try {
+      return {
+        ok: true as const,
+        data: await getBoard().me.acceptInvite(data, {
+          headers: authedHeaders(context),
+        }),
+      };
+    } catch (error) {
+      if (isBoardApiError(error)) {
+        const email = invitedEmailFromDetails(error.details);
+        return {
+          ok: false as const,
+          code: error.code,
+          message: error.message,
+          ...(email ? { email } : {}),
+        };
+      }
+      return {
+        ok: false as const,
+        code: 'unknown',
+        message: 'Something went wrong.',
+      };
+    }
+  });
 
 /**
  * Company logo upload — the client posts FormData with a `slug` and a `logo`

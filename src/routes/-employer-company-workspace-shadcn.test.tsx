@@ -48,6 +48,16 @@ const mocks = vi.hoisted(() => ({
   unpublishJob: vi.fn(),
   updateCompany: vi.fn(),
   updateJob: vi.fn(),
+  deleteCompany: vi.fn(),
+  listCompanyMembers: vi.fn(),
+  listCompanyInvites: vi.fn(),
+  createCompanyInvite: vi.fn(),
+  revokeCompanyInvite: vi.fn(),
+  acceptCompanyInvite: vi.fn(),
+  updateCompanyMemberRole: vi.fn(),
+  removeCompanyMember: vi.fn(),
+  leaveCompany: vi.fn(),
+  getSessionUser: vi.fn(),
 }));
 
 vi.mock('sonner', () => ({
@@ -108,6 +118,19 @@ vi.mock('../server/employers', () => ({
   unpublishJob: mocks.unpublishJob,
   updateCompany: mocks.updateCompany,
   updateJob: mocks.updateJob,
+  deleteCompany: mocks.deleteCompany,
+  listCompanyMembers: mocks.listCompanyMembers,
+  listCompanyInvites: mocks.listCompanyInvites,
+  createCompanyInvite: mocks.createCompanyInvite,
+  revokeCompanyInvite: mocks.revokeCompanyInvite,
+  acceptCompanyInvite: mocks.acceptCompanyInvite,
+  updateCompanyMemberRole: mocks.updateCompanyMemberRole,
+  removeCompanyMember: mocks.removeCompanyMember,
+  leaveCompany: mocks.leaveCompany,
+}));
+
+vi.mock('../server/account', () => ({
+  getSessionUser: mocks.getSessionUser,
 }));
 
 vi.mock('../server/auth', () => ({ refreshSession: mocks.refreshSession }));
@@ -119,8 +142,10 @@ vi.mock('../server/queries', () => ({
 }));
 
 import { ApplicantPipelineBoard } from '../components/employer/applicant-pipeline-board';
+import { m } from '../paraglide/messages';
 import { Route as JobsRoute } from './employers.companies.$slug.index';
 import { Route as ApplicantsRoute } from './employers.companies.$slug.jobs.$jobId.applicants';
+import { Route as MembersRoute } from './employers.companies.$slug.members';
 import { Route as ProfileRoute } from './employers.companies.$slug.profile';
 
 import type { PipelineBoardVM } from '../board/pipeline-view-model';
@@ -258,12 +283,14 @@ beforeEach(() => {
   mocks.getBoardContext.mockResolvedValue({
     features: { nativeApplications: true, messaging: true },
   });
+  mocks.listCompanyInvites.mockResolvedValue({ data: [] });
 });
 
 describe('employer company workspace', () => {
   it('lets every shell-owning employer workspace route own the document main', () => {
     expect(JobsRoute.options.staticData).toMatchObject({ ownsMain: true });
     expect(ProfileRoute.options.staticData).toMatchObject({ ownsMain: true });
+    expect(MembersRoute.options.staticData).toMatchObject({ ownsMain: true });
     expect(ApplicantsRoute.options.staticData).toMatchObject({
       ownsMain: true,
     });
@@ -1116,5 +1143,491 @@ describe('employer company workspace', () => {
       resolveMove({ ok: true, data: null });
     });
     await waitFor(() => expect(mocks.invalidate).toHaveBeenCalled());
+  });
+
+  const memberAda = {
+    id: 'member-ada',
+    object: 'company_member' as const,
+    boardUserId: 'user-ada',
+    displayName: 'Ada Lovelace',
+    email: 'ada@northstar.example',
+    role: 'admin' as const,
+    approvedBy: 'owner_creation',
+    createdAt: '2026-01-01T00:00:00.000Z',
+  };
+  const memberGrace = {
+    id: 'member-grace',
+    object: 'company_member' as const,
+    boardUserId: 'user-grace',
+    displayName: 'Grace Hopper',
+    email: 'grace@northstar.example',
+    role: 'member' as const,
+    approvedBy: 'domain_match',
+    createdAt: '2026-02-01T00:00:00.000Z',
+  };
+
+  it('lets admins remove members and surfaces last_admin inline', async () => {
+    mocks.removeCompanyMember.mockResolvedValue({
+      ok: false,
+      code: 'last_admin',
+      message: 'last admin',
+    });
+    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
+      workspace: {
+        slug: 'northstar-labs',
+        membership: { role: 'admin', company },
+      },
+      members: {
+        data: [memberAda, { ...memberGrace, role: 'admin' as const }],
+      },
+      invites: { data: [] },
+      user: { id: 'user-ada' },
+      seo: { boardName: 'Acme Board' },
+      joined: false,
+    } as never);
+
+    const MembersPage = MembersRoute.options.component;
+    if (!MembersPage)
+      throw new Error('The members route must expose its component');
+    render(<MembersPage />);
+
+    expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+    expect(screen.getByText('grace@northstar.example')).toBeInTheDocument();
+    expect(screen.queryByText(m.employerMembers_joinedViaColumn())).toBeNull();
+    expect(
+      screen.queryByText(m.employerMembers_joinedViaDomainMatch()),
+    ).toBeNull();
+    expect(
+      screen.getAllByRole('combobox', {
+        name: m.employerMembers_roleColumn(),
+      }),
+    ).toHaveLength(2);
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerMembers_removeAriaLabel({ name: 'Grace Hopper' }),
+      }),
+    );
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerMembers_removeConfirmLabel(),
+      }),
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      m.employerMembers_lastAdminError(),
+    );
+    expect(mocks.removeCompanyMember).toHaveBeenCalledWith({
+      data: {
+        slug: 'northstar-labs',
+        memberId: 'member-grace',
+      },
+    });
+  });
+
+  it('lets members leave and surfaces last_admin in the leave dialog', async () => {
+    mocks.leaveCompany.mockResolvedValue({
+      ok: false,
+      code: 'last_admin',
+      message: 'last admin',
+    });
+    // Two admins: the viewer is not the sole admin, so the button is
+    // enabled and the inline error covers the race where the other
+    // admin was demoted after this page loaded.
+    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
+      workspace: {
+        slug: 'northstar-labs',
+        membership: { role: 'admin', company },
+      },
+      members: {
+        data: [memberAda, { ...memberGrace, role: 'admin' as const }],
+      },
+      invites: { data: [] },
+      user: { id: 'user-ada' },
+      seo: { boardName: 'Acme Board' },
+      joined: false,
+    } as never);
+
+    const MembersPage = MembersRoute.options.component;
+    if (!MembersPage)
+      throw new Error('The members route must expose its component');
+    render(<MembersPage />);
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerMembers_leaveAriaLabel({
+          company: company.name,
+        }),
+      }),
+    );
+    expect(
+      screen.getByText(
+        m.employerMembers_leaveDialogTitle({ company: company.name }),
+      ),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerMembers_leaveConfirmLabel(),
+      }),
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      m.employerMembers_leaveLastAdminError(),
+    );
+    expect(mocks.leaveCompany).toHaveBeenCalledWith({
+      data: { slug: 'northstar-labs' },
+    });
+  });
+
+  it('disables leave with a tooltip reason for the sole admin', () => {
+    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
+      workspace: {
+        slug: 'northstar-labs',
+        membership: { role: 'admin', company },
+      },
+      members: { data: [memberAda, memberGrace] },
+      invites: { data: [] },
+      user: { id: 'user-ada' },
+      seo: { boardName: 'Acme Board' },
+      joined: false,
+    } as never);
+
+    const MembersPage = MembersRoute.options.component;
+    if (!MembersPage)
+      throw new Error('The members route must expose its component');
+    render(<MembersPage />);
+
+    expect(
+      screen.getByRole('button', {
+        name: m.employerMembers_leaveAriaLabel({ company: company.name }),
+      }),
+    ).toBeDisabled();
+  });
+
+  it('renders member roles read-only for non-admins', () => {
+    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
+      workspace: {
+        slug: 'northstar-labs',
+        membership: { role: 'member', company },
+      },
+      members: { data: [memberAda, memberGrace] },
+      invites: { data: [] },
+      user: { id: 'user-grace' },
+      seo: { boardName: 'Acme Board' },
+      joined: false,
+    } as never);
+
+    const MembersPage = MembersRoute.options.component;
+    if (!MembersPage)
+      throw new Error('The members route must expose its component');
+    render(<MembersPage />);
+
+    expect(
+      screen.queryByRole('combobox', {
+        name: m.employerMembers_roleColumn(),
+      }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole('button', {
+        name: m.employerMembers_removeAriaLabel({ name: 'Ada Lovelace' }),
+      }),
+    ).toBeNull();
+    expect(screen.getByText(m.employerMembers_roleAdmin())).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: m.employerMembers_inviteLabel() }),
+    ).toBeNull();
+    expect(
+      screen.getByRole('button', {
+        name: m.employerMembers_leaveAriaLabel({
+          company: company.name,
+        }),
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('matches the jobs-page header: company heading, plural subtitle, admin invite CTA', () => {
+    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
+      workspace: {
+        slug: 'northstar-labs',
+        membership: { role: 'admin', company },
+      },
+      members: { data: [memberAda, memberGrace] },
+      invites: { data: [] },
+      user: { id: 'user-ada' },
+      seo: { boardName: 'Acme Board' },
+      joined: false,
+    } as never);
+
+    const MembersPage = MembersRoute.options.component;
+    if (!MembersPage)
+      throw new Error('The members route must expose its component');
+    render(<MembersPage />);
+
+    expect(
+      screen.getByRole('heading', {
+        name: m.employerMembers_companyHeading({ company: company.name }),
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(m.employerMembers_countMany({ count: '2' })),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: m.employerMembers_inviteLabel() }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: m.employerMembers_leaveAriaLabel({
+          company: company.name,
+        }),
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('opens the invite dialog, surfaces already_member inline, and sends an invite', async () => {
+    mocks.createCompanyInvite
+      .mockResolvedValueOnce({
+        ok: false,
+        code: 'already_member',
+        message: 'already a member',
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        data: {
+          id: 'inv-1',
+          object: 'company_member_invite',
+          email: 'pat@northstar.example',
+          createdAt: '2026-03-01T00:00:00.000Z',
+          expiresAt: '2026-03-08T00:00:00.000Z',
+        },
+      });
+    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
+      workspace: {
+        slug: 'northstar-labs',
+        membership: { role: 'admin', company },
+      },
+      members: { data: [memberAda] },
+      invites: { data: [] },
+      user: { id: 'user-ada' },
+      seo: { boardName: 'Acme Board' },
+      joined: false,
+    } as never);
+
+    const MembersPage = MembersRoute.options.component;
+    if (!MembersPage)
+      throw new Error('The members route must expose its component');
+    render(<MembersPage />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.employerMembers_inviteLabel() }),
+    );
+    const dialog = await screen.findByRole('dialog', {
+      name: m.employerMembers_inviteDialogTitle(),
+    });
+    expect(dialog).toHaveAccessibleDescription(
+      m.employerMembers_inviteDialogDescription(),
+    );
+
+    fireEvent.change(
+      screen.getByLabelText(m.employerMembers_inviteEmailLabel()),
+      {
+        target: { value: 'ada@northstar.example' },
+      },
+    );
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerMembers_inviteSubmitLabel(),
+      }),
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      m.employerMembers_alreadyMemberError(),
+    );
+
+    fireEvent.change(
+      screen.getByLabelText(m.employerMembers_inviteEmailLabel()),
+      {
+        target: { value: 'pat@northstar.example' },
+      },
+    );
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerMembers_inviteSubmitLabel(),
+      }),
+    );
+
+    await waitFor(() =>
+      expect(mocks.createCompanyInvite).toHaveBeenCalledWith({
+        data: {
+          slug: 'northstar-labs',
+          body: { email: 'pat@northstar.example' },
+        },
+      }),
+    );
+    await waitFor(() => expect(mocks.invalidate).toHaveBeenCalled());
+    expect(mocks.toastSuccess).toHaveBeenCalledWith(
+      m.employerMembers_inviteSentToast(),
+    );
+  });
+
+  it('shows pending invites to members and lets admins revoke', async () => {
+    const pendingInvite = {
+      id: 'inv-1',
+      object: 'company_member_invite' as const,
+      email: 'pat@northstar.example',
+      createdAt: '2026-03-01T00:00:00.000Z',
+      expiresAt: '2026-03-08T00:00:00.000Z',
+    };
+    mocks.revokeCompanyInvite.mockResolvedValue({ ok: true, data: null });
+    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
+      workspace: {
+        slug: 'northstar-labs',
+        membership: { role: 'member', company },
+      },
+      members: { data: [memberAda, memberGrace] },
+      invites: { data: [pendingInvite] },
+      user: { id: 'user-grace' },
+      seo: { boardName: 'Acme Board' },
+      joined: false,
+    } as never);
+
+    const MembersPage = MembersRoute.options.component;
+    if (!MembersPage)
+      throw new Error('The members route must expose its component');
+    const { unmount } = render(<MembersPage />);
+
+    expect(screen.getByText('pat@northstar.example')).toBeInTheDocument();
+    expect(
+      screen.getByText(m.employerMembers_invitedColumn()),
+    ).toBeInTheDocument();
+    // The expiry lives in a tooltip on the Invited badge now, not a
+    // footer note.
+    expect(
+      screen.queryByText(m.employerMembers_pendingDescription()),
+    ).toBeNull();
+    expect(screen.queryByText(m.employerMembers_pendingHeading())).toBeNull();
+    expect(
+      screen.queryByRole('button', {
+        name: m.employerMembers_revokeAriaLabel({
+          email: 'pat@northstar.example',
+        }),
+      }),
+    ).toBeNull();
+    unmount();
+
+    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
+      workspace: {
+        slug: 'northstar-labs',
+        membership: { role: 'admin', company },
+      },
+      members: { data: [memberAda, memberGrace] },
+      invites: { data: [pendingInvite] },
+      user: { id: 'user-ada' },
+      seo: { boardName: 'Acme Board' },
+      joined: false,
+    } as never);
+    render(<MembersPage />);
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerMembers_revokeAriaLabel({
+          email: 'pat@northstar.example',
+        }),
+      }),
+    );
+    await waitFor(() =>
+      expect(mocks.revokeCompanyInvite).toHaveBeenCalledWith({
+        data: { slug: 'northstar-labs', inviteId: 'inv-1' },
+      }),
+    );
+  });
+
+  it('does not render a Joined via column for invite or unknown provenance', () => {
+    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
+      workspace: {
+        slug: 'northstar-labs',
+        membership: { role: 'admin', company },
+      },
+      members: {
+        data: [
+          { ...memberGrace, approvedBy: 'invite' },
+          { ...memberAda, approvedBy: null },
+        ],
+      },
+      invites: { data: [] },
+      user: { id: 'user-ada' },
+      seo: { boardName: 'Acme Board' },
+      joined: false,
+    } as never);
+
+    const MembersPage = MembersRoute.options.component;
+    if (!MembersPage)
+      throw new Error('The members route must expose its component');
+    render(<MembersPage />);
+
+    expect(screen.queryByText(m.employerMembers_joinedViaColumn())).toBeNull();
+    expect(screen.queryByText(m.employerMembers_joinedViaInvite())).toBeNull();
+    expect(screen.queryByText(m.employerMembers_joinedViaUnknown())).toBeNull();
+    expect(screen.queryByText('Unknown')).toBeNull();
+  });
+
+  it('disables company delete for non-admins and deletes after typed confirmation', async () => {
+    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
+      workspace: {
+        slug: 'northstar-labs',
+        membership: { role: 'member', company },
+        jobs: { data: [] },
+      },
+      company,
+      employerCompany,
+      members: { data: [memberAda] },
+    } as never);
+
+    const ProfilePage = ProfileRoute.options.component;
+    if (!ProfilePage)
+      throw new Error('The profile route must expose its component');
+    const { unmount } = render(<ProfilePage />);
+
+    expect(
+      screen.getByRole('button', { name: m.employerDelete_submitLabel() }),
+    ).toBeDisabled();
+    expect(
+      screen.getByText(m.employerDelete_notAdminText()),
+    ).toBeInTheDocument();
+    unmount();
+
+    mocks.deleteCompany.mockResolvedValue({ ok: true, data: null });
+    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
+      workspace: {
+        slug: 'northstar-labs',
+        membership: { role: 'admin', company },
+        jobs: { data: [] },
+      },
+      company,
+      employerCompany,
+      members: { data: [memberAda] },
+    } as never);
+    render(<ProfilePage />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.employerDelete_submitLabel() }),
+    );
+    fireEvent.change(
+      screen.getByLabelText(
+        m.dangerZone_confirmLabel({ word: m.dangerZone_confirmWord() }),
+      ),
+      { target: { value: m.dangerZone_confirmWord() } },
+    );
+    const confirmButtons = screen.getAllByRole('button', {
+      name: m.employerDelete_confirmButton(),
+    });
+    fireEvent.click(confirmButtons[confirmButtons.length - 1]!);
+
+    await waitFor(() =>
+      expect(mocks.deleteCompany).toHaveBeenCalledWith({
+        data: { slug: 'northstar-labs' },
+      }),
+    );
+    expect(mocks.navigate).toHaveBeenCalledWith({
+      to: '/employers/dashboard',
+    });
   });
 });

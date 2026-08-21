@@ -21,7 +21,8 @@ import {
 } from '../lib/data-source.server';
 import { sessionMiddleware } from '../lib/session-middleware';
 
-function storeSession(session: BoardAuthSession): BoardSession {
+/** Persist a returned bearer pair into the active data-source cookie. */
+export function persistAuthSession(session: BoardAuthSession): BoardSession {
   const next: BoardSession = {
     accessToken: session.accessToken,
     refreshToken: session.refreshToken,
@@ -34,6 +35,10 @@ function storeSession(session: BoardAuthSession): BoardSession {
     serializeSessionForSource(next, getDataSource()),
   );
   return next;
+}
+
+function storeSession(session: BoardAuthSession): BoardSession {
+  return persistAuthSession(session);
 }
 
 /** Map API failures to a form-friendly result instead of a 500. */
@@ -238,6 +243,18 @@ export const resetPassword = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     try {
       await getBoard().auth.resetPassword(data);
+      return { ok: true as const };
+    } catch (error) {
+      return authError(error);
+    }
+  });
+
+/** Confirm an email-change token from the verification email. No session. */
+export const confirmEmailChange = createServerFn({ method: 'POST' })
+  .validator((input: { token: string }) => input)
+  .handler(async ({ data }) => {
+    try {
+      await getBoard().me.confirmEmailChange(data);
       return { ok: true as const };
     } catch (error) {
       return authError(error);

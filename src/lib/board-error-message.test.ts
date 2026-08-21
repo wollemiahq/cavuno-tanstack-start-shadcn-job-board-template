@@ -39,6 +39,17 @@ describe('board error code map', () => {
       'job_posting_logo_lookup_unavailable',
       'validation_payload_too_large',
       'auth_forbidden',
+      'invalid_current_password',
+      'same_email',
+      'email_taken',
+      'invalid_token',
+      'last_admin',
+      'not_company_admin',
+      'company_deletion_disabled',
+      'already_member',
+      'already_invited',
+      'invalid_email',
+      'candidate_role',
     ];
     const unmapped = reachable.filter((code) => !(code in CODE_MESSAGES));
     expect(unmapped).toEqual([]);

@@ -17,12 +17,15 @@ import {
 import { DangerZone } from '../components/danger-zone';
 import { MarketingConsentSettings } from '../components/marketing-consent-settings';
 import { NotificationSettings } from '../components/notification-settings';
+import { SettingsEmailCard } from '../components/settings-email-card';
+import { SettingsPasswordCard } from '../components/settings-password-card';
 import { MARKETING_CONSENT } from '../lib/marketing-consent';
 import { m } from '../paraglide/messages';
 import { getSeoBase } from '../server/queries';
 import {
   getMarketingConsent,
   getNotificationPreferences,
+  getSettingsAccount,
   unsubscribeWithToken,
 } from '../server/settings';
 
@@ -80,14 +83,16 @@ export const Route = createFileRoute('/settings')({
       }
     }
     try {
-      const [preferences, consent] = await Promise.all([
+      const [preferences, consent, account] = await Promise.all([
         getNotificationPreferences(),
         getMarketingConsent(),
+        getSettingsAccount(),
       ]);
       return {
         mode: 'settings' as const,
         preferences: preferences.data,
         consent,
+        account,
         seo,
       };
     } catch (error) {
@@ -176,16 +181,26 @@ function SettingsPage() {
   // Signed-in mode renders inside the candidate shell; the anonymous
   // unsubscribe-token branches above stay bare (no session, no sidebar).
   return (
-    <SignedInSettings preferences={data.preferences} consent={data.consent} />
+    <SignedInSettings
+      preferences={data.preferences}
+      consent={data.consent}
+      account={data.account}
+    />
   );
+}
+
+function accountHasPassword(account: { hasPassword?: unknown }): boolean {
+  return account.hasPassword === true;
 }
 
 function SignedInSettings({
   preferences,
   consent,
+  account,
 }: {
   preferences: Parameters<typeof NotificationSettings>[0]['preferences'];
   consent: Parameters<typeof MarketingConsentSettings>[0]['consent'];
+  account: { email: string; hasPassword?: unknown };
 }) {
   return (
     <CandidateShell>
@@ -194,14 +209,21 @@ function SignedInSettings({
           <Text as="h1" variant="heading1">
             {m.settings_title()}
           </Text>
-          <p className="text-muted-foreground text-sm">
-            {m.settings_emailNotificationsText()}
-          </p>
         </header>
-        <NotificationSettings preferences={preferences} />
-        {MARKETING_CONSENT.notificationPreferences ? (
-          <MarketingConsentSettings consent={consent} />
-        ) : null}
+        <section className="space-y-3">
+          <h2 className="font-heading text-base font-medium">
+            {m.settings_emailNotificationsText()}
+          </h2>
+          <NotificationSettings preferences={preferences} />
+          {MARKETING_CONSENT.notificationPreferences ? (
+            <MarketingConsentSettings consent={consent} />
+          ) : null}
+        </section>
+        <SettingsEmailCard currentEmail={account.email} />
+        <SettingsPasswordCard
+          hasPassword={accountHasPassword(account)}
+          email={account.email}
+        />
         <DangerZone />
       </div>
     </CandidateShell>
