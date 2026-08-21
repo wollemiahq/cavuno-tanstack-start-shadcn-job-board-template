@@ -30,9 +30,10 @@ export const LOCALIZED_BUCKETS: readonly SitemapBucket[] = [
 ];
 
 function alternateLinks(origin: string, path: string): string {
+  const published = publicLocales(locales);
+  if (published.length < 2) return '';
   let xml = '';
-  // QA builds compile pseudo-locales into `locales`; never advertise them.
-  for (const locale of publicLocales(locales)) {
+  for (const locale of published) {
     const href = `${origin}${localizePath(path, { locale })}`;
     xml += `<xhtml:link rel="alternate" hreflang="${locale}" href="${xmlEscape(href)}"/>\n`;
   }

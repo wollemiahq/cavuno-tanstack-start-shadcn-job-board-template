@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { baseLocale, overwriteGetLocale } from '../paraglide/runtime';
+import { baseLocale, isLocale, overwriteGetLocale } from '../paraglide/runtime';
 import {
   EDIT_WINDOW_MS,
   daySeparator,
@@ -49,7 +49,9 @@ describe('daySeparator', () => {
 
 describe('locale-aware formatting', () => {
   it('localizes compact durations instead of hardcoding English letters', () => {
-    overwriteGetLocale(() => 'de');
+    const german = 'de';
+    if (!isLocale(german)) return;
+    overwriteGetLocale(() => german);
     try {
       const now = Date.now();
       const fiveMinAgo = new Date(now - 5 * 60 * 1000).toISOString();

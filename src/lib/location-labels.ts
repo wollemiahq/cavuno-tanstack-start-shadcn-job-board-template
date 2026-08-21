@@ -53,7 +53,9 @@ export function localizedRemoteRegion(
 ): string | null {
   const codes = job.remoteWorkPermitCountryCodes ?? [];
   if (codes.length >= 1 && codes.length <= 3) {
-    const tag = isLocale(language) ? language : undefined;
+    // Board language drives Intl even when that language is not a compiled
+    // chrome locale (English-only default). Paraglide catalogs are separate.
+    const tag = language && language.length > 0 ? language : undefined;
     try {
       const displayNames = new Intl.DisplayNames(tag ? [tag] : undefined, {
         type: 'region',

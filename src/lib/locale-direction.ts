@@ -8,10 +8,11 @@
  * must therefore be declared server-side on the first byte — deriving it
  * client-side would mirror the page after paint.
  *
- * The board's own chrome locales (en/de/fr) are all LTR; `ar-XB` is the
- * pseudo-bidi CI locale (scripts/pseudo-locale.mjs) that exists purely so
- * the mirrored layout is provable in CI without shipping a real Arabic
- * catalog. Adding a real RTL chrome locale is a one-line change here.
+ * Shipped chrome locales are LTR today (English by default; de/fr when
+ * enabled). `ar-XB` is the pseudo-bidi CI locale
+ * (scripts/pseudo-locale.mjs) that exists purely so the mirrored layout
+ * is provable in CI without shipping a real Arabic catalog. Adding a
+ * real RTL chrome locale is a one-line change here.
  */
 
 /** Locale roots that are written right-to-left (CLDR script direction). */

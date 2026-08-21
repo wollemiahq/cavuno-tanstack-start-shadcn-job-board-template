@@ -4,6 +4,9 @@
  * unaffected — jobs, companies, and blog stay in the board's single
  * language while labels, nav, and headings follow the chosen locale.
  *
+ * Hidden while only one public locale is compiled (the default: English).
+ * Enabling a second locale (`pnpm locale:add de`) makes this appear.
+ *
  * Each option is a real anchor to the localized version of the CURRENT
  * path (`localizeHref(href, { locale })`), so a switch is a full document
  * load: `paraglideMiddleware` resolves the locale server-side, `getLocale()`
@@ -17,8 +20,9 @@ import { useRouterState } from '@tanstack/react-router';
 import { ChevronDown, Globe } from 'lucide-react';
 
 import { localizePath } from '../lib/localized-path';
+import { publicLocales } from '../lib/public-locales';
 import { m } from '../paraglide/messages';
-import { getLocale } from '../paraglide/runtime';
+import { getLocale, locales } from '../paraglide/runtime';
 
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -69,26 +73,32 @@ function SwitcherPill({
 }
 
 /**
- * The public chrome locales. `en-XA` (pseudo-accent) and `ar-XB`
- * (pseudo-bidi/RTL) are the CI pseudo-locales (QA/coverage only) and are
- * deliberately excluded from the human-facing switcher.
- */
-export const PUBLIC_LOCALES = ['en', 'de', 'fr'] as const;
-export type PublicLocale = (typeof PUBLIC_LOCALES)[number];
-
-/**
  * Endonyms — each language named in its own tongue (i18n convention).
  * These are proper nouns, identical in every locale, so they live in code
  * rather than the per-locale message catalogs (and never translate).
+ * Unknown locales fall back to the BCP-47 tag.
  */
-export const LOCALE_ENDONYMS: Record<PublicLocale, string> = {
+export const LOCALE_ENDONYMS: Record<string, string> = {
   en: 'English',
   de: 'Deutsch',
   fr: 'Français',
+  es: 'Español',
+  it: 'Italiano',
+  nl: 'Nederlands',
+  pt: 'Português',
+  pl: 'Polski',
 };
 
+export function localeEndonym(locale: string): string {
+  return LOCALE_ENDONYMS[locale] ?? locale;
+}
+
+export function publicChromeLocales(): string[] {
+  return publicLocales(locales);
+}
+
 export interface LocaleOption {
-  locale: PublicLocale;
+  locale: string;
   label: string;
   /** The current path re-localized to this option's locale. */
   href: string;
@@ -98,27 +108,30 @@ export interface LocaleOption {
 /**
  * Pure: given the active locale and the current (delocalized) href, build
  * the switcher options. Kept separate from the component so the
- * path-preserving contract is unit-testable without a DOM.
+ * path-preserving contract is unit-testable without a DOM — pass
+ * `localeCodes` to exercise extra locales without compiling them.
  */
 export function buildLocaleOptions(
   activeLocale: string,
   href: string,
+  localeCodes: readonly string[] = publicChromeLocales(),
 ): LocaleOption[] {
-  return PUBLIC_LOCALES.map((locale) => ({
+  return localeCodes.map((locale) => ({
     locale,
-    label: LOCALE_ENDONYMS[locale],
+    label: localeEndonym(locale),
     href: localizePath(href, { locale }),
     active: locale === activeLocale,
   }));
 }
 
-export function LanguageSwitcher({ className }: { className?: string }) {
+export function LanguageSwitcherPanel({
+  options,
+  className,
+}: {
+  options: LocaleOption[];
+  className?: string;
+}) {
   const [menuRequested, setMenuRequested] = useState(false);
-  // The router sees the delocalized href (rewrite.input); localizeHref
-  // re-prefixes it per option. Preserves pathname + search + hash.
-  const href = useRouterState({ select: (state) => state.location.href });
-  const activeLocale = getLocale();
-  const options = buildLocaleOptions(activeLocale, href);
   const active = options.find((option) => option.active) ?? options[0]!;
   const label = m.languageSwitcher_label();
 
@@ -165,4 +178,13 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       </div>
     </>
   );
+}
+
+export function LanguageSwitcher({ className }: { className?: string }) {
+  // The router sees the delocalized href (rewrite.input); localizeHref
+  // re-prefixes it per option. Preserves pathname + search + hash.
+  const href = useRouterState({ select: (state) => state.location.href });
+  const options = buildLocaleOptions(getLocale(), href);
+  if (options.length < 2) return null;
+  return <LanguageSwitcherPanel options={options} className={className} />;
 }

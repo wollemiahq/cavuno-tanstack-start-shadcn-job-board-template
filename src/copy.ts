@@ -8,7 +8,8 @@
  * universal client entry.
  *
  * Copy resolves from compiled Paraglide messages keyed by the runtime locale
- * (`getLocale()` — the URL locale under the `/de/`-style chrome prefixes).
+ * (`getLocale()` — the URL locale; extra chrome prefixes like `/de/`
+ * only exist after those locales are compiled).
  * Operator label overrides (`board.labels` / `BoardLabelOverrides`) were
  * removed from the Board API in 4.0.0 — the catalog is the sole source.
  * The `language` parameter callers thread is retained for the block prop

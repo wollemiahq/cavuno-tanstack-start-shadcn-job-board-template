@@ -3,16 +3,28 @@ import { pseudoBidi, pseudoLocalize } from './pseudo-locale.mjs';
 /**
  * Paraglide messages maintenance.
  *
- * Chrome copy lives in `messages/{en,de,fr}.json` (application-owned).
+ * Chrome copy lives in `messages/{locale}.json` (application-owned).
+ * Production compiles whatever `project.inlang/settings.json` lists
+ * (default: English only). Extra catalogs (de/fr) stay on disk dormant
+ * so `pnpm locale:add` can enable them without starting from a blank file.
  * This script does NOT pull from `@cavuno/board` — the SDK no longer ships
  * a `uiCopy` catalog. It regenerates the pseudo-locales (`en-XA`, `ar-XB`)
  * from the current English source so coverage gates stay honest.
  *
  *   node scripts/gen-paraglide-messages.mjs
  */
-import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 
-const SOURCE_LOCALES = ['en', 'de', 'fr'];
+const PSEUDO_LOCALES = new Set(['en-XA', 'ar-XB']);
+
+const SOURCE_LOCALES = readdirSync('messages')
+  .filter((name) => name.endsWith('.json'))
+  .map((name) => name.slice(0, -'.json'.length))
+  .filter((locale) => !PSEUDO_LOCALES.has(locale))
+  .sort();
+if (!SOURCE_LOCALES.includes('en')) {
+  throw new Error('messages/en.json is required');
+}
 
 function readMessages(locale) {
   return JSON.parse(readFileSync(`messages/${locale}.json`, 'utf8'));

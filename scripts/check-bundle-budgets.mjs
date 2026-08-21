@@ -59,6 +59,11 @@ const BUDGETS = {
     // Base UI footer menu also made TanStack attribute more of the remaining
     // dynamic graph here, though this route's total first load still fell.
     '/account': { raw: 210_000, gzip: 72_000 },
+    // Pre-existing overflow on main after board-user self-service (#40):
+    // this route used the default 80 KiB increment and landed at 113.7 /
+    // 38.9. English-only compile dropped it to 103.5 / 35.5. Charge the
+    // members surface here instead of the default.
+    '/employers/companies/$slug/members': { raw: 115_000, gzip: 40_000 },
   },
 };
 

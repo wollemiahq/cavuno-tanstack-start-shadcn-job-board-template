@@ -10,11 +10,11 @@
  * chrome context (the OG image renderer) pass the board language.
  */
 import { m } from '../paraglide/messages';
-import { isLocale } from '../paraglide/runtime';
+import { isLocale, type Locale } from '../paraglide/runtime';
 
 type MessageFn = (
   inputs?: Record<string, never>,
-  options?: { locale?: 'de' | 'en' | 'fr' },
+  options?: { locale?: Locale },
 ) => string;
 
 const REMOTE_LABELS: Record<string, MessageFn> = {

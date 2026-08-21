@@ -68,18 +68,23 @@ export function AlternateLinks({ origin }: { origin: string }) {
   if (externalCanonical) return null;
   const activeLocale = getLocale();
   // QA builds compile pseudo-locales into `locales`; never advertise them.
+  // English-only (the default) has no alternate language versions to declare.
   const alternates = publicLocales(locales);
   return (
     <>
-      {alternates.map((locale) => (
-        <link
-          key={locale}
-          rel="alternate"
-          hrefLang={locale}
-          href={`${origin}${localizePath(path, { locale })}`}
-        />
-      ))}
-      <link rel="alternate" hrefLang="x-default" href={`${origin}${path}`} />
+      {alternates.length >= 2
+        ? alternates.map((locale) => (
+            <link
+              key={locale}
+              rel="alternate"
+              hrefLang={locale}
+              href={`${origin}${localizePath(path, { locale })}`}
+            />
+          ))
+        : null}
+      {alternates.length >= 2 ? (
+        <link rel="alternate" hrefLang="x-default" href={`${origin}${path}`} />
+      ) : null}
       <meta
         property="og:locale"
         content={OG_LOCALES[activeLocale] ?? activeLocale}

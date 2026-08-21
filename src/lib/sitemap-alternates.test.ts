@@ -8,18 +8,11 @@ import {
 const ORIGIN = 'https://board.example';
 
 describe('sitemap locale alternates', () => {
-  it('emits xhtml:link alternates with translated slugs per URL', () => {
+  it('skips hreflang when only one public locale is compiled', () => {
     const xml = renderUrlsetWithAlternates([`${ORIGIN}/jobs`], ORIGIN);
     expect(xml).toContain('xmlns:xhtml="http://www.w3.org/1999/xhtml"');
-    expect(xml).toContain(
-      `<xhtml:link rel="alternate" hreflang="fr" href="${ORIGIN}/fr/emplois"/>`,
-    );
-    expect(xml).toContain(
-      `<xhtml:link rel="alternate" hreflang="de" href="${ORIGIN}/de/jobs"/>`,
-    );
-    expect(xml).toContain(
-      `<xhtml:link rel="alternate" hreflang="x-default" href="${ORIGIN}/jobs"/>`,
-    );
+    expect(xml).not.toContain('hreflang=');
+    expect(xml).toContain(`<loc>${ORIGIN}/jobs</loc>`);
   });
 
   it('keeps lastModified and passes foreign-origin URLs through plain', () => {
@@ -31,7 +24,7 @@ describe('sitemap locale alternates', () => {
       ORIGIN,
     );
     expect(xml).toContain('<lastmod>2026-08-05</lastmod>');
-    expect(xml).toContain(`href="${ORIGIN}/de/gehaelter"`);
+    expect(xml).not.toContain('hreflang=');
     // A URL outside the origin gets no alternates block.
     expect(xml).not.toContain('elsewhere.example/de');
   });

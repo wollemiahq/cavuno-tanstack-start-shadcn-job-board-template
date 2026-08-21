@@ -100,6 +100,7 @@ describe('pseudoBidi', () => {
 describe('localeDirection', () => {
   it('maps the shipped chrome locales to ltr', () => {
     for (const locale of ['en', 'de', 'fr', 'en-XA']) {
+      // de/fr stay LTR so enabling them later does not surprise layout.
       expect(localeDirection(locale), locale).toBe('ltr');
     }
   });

@@ -16,6 +16,7 @@
 import { listingHead } from '@cavuno/board/seo';
 import { describe, expect, it } from 'vitest';
 
+import { isLocale } from '../paraglide/runtime';
 import { listingPageTitle } from './listing-description';
 import {
   headTitle,
@@ -131,10 +132,14 @@ describe('jobTitleAtCompany', () => {
       'VP of Growth at Larksong Media',
     );
     expect(jobTitleAtCompany('de', 'VP of Growth', 'Larksong Media')).toBe(
-      'VP of Growth bei Larksong Media',
+      isLocale('de')
+        ? 'VP of Growth bei Larksong Media'
+        : 'VP of Growth at Larksong Media',
     );
     expect(jobTitleAtCompany('fr', 'VP of Growth', 'Larksong Media')).toBe(
-      'VP of Growth chez Larksong Media',
+      isLocale('fr')
+        ? 'VP of Growth chez Larksong Media'
+        : 'VP of Growth at Larksong Media',
     );
   });
 

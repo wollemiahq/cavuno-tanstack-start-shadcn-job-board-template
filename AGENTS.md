@@ -77,7 +77,8 @@ operation, not a code edit for you to make.
 - `src/routes/*.tsx` — page composition (markup, layout, copy). Keep
   loaders/server-function calls intact.
 - `messages/**` — UI copy catalogs (Paraglide). Run
-  `pnpm run gen:messages` after edits.
+  `pnpm run gen:messages` after edits. Default compile is English only;
+  `pnpm locale:add de` enables a dormant catalog (never `en-XA`/`ar-XB`).
 
 ## Outside the surface — change only with explicit reason
 

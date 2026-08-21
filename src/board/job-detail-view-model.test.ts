@@ -268,10 +268,10 @@ describe('template-side custom-field localization', () => {
     customFieldValues: { visa_sponsorship: 'case_by_case' },
   } as never;
 
-  it('re-words mapped fields and option keys per viewer locale', () => {
-    const de = toJobDetailVM(job, defs, [], null, 'de').customFields[0]!;
-    expect(de.label).toBe('Visum-Sponsoring');
-    expect(de.value).toBe('Im Einzelfall');
+  it('re-words mapped fields and option keys from the chrome catalog', () => {
+    const field = toJobDetailVM(job, defs, [], null, 'en').customFields[0]!;
+    expect(field.label).toBe('Visa sponsorship');
+    expect(field.value).toBe('Case-by-case');
   });
 
   it('falls back to the wire authoring labels for unmapped fields', () => {

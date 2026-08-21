@@ -75,8 +75,24 @@ for (const { locale, dir } of PSEUDO_LOCALES) {
 
 // Direction contract for the real, human-facing locales: every shipped
 // chrome locale is LTR today, and the unprefixed board language must
-// never inherit the pseudo-bidi locale's direction.
-for (const route of ['/jobs', '/de/jobs', '/fr/jobs']) {
+// never inherit the pseudo-bidi locale's direction. Extra prefixes
+// (`/de/jobs`) are only asserted when those locales are compiled.
+const settings = JSON.parse(
+  readFileSync('project.inlang/settings.json', 'utf8'),
+);
+const compiledPublic = (
+  Array.isArray(settings.locales) ? settings.locales : []
+).filter(
+  (locale) =>
+    typeof locale === 'string' && locale !== 'en-XA' && locale !== 'ar-XB',
+);
+const ltrRoutes = [
+  '/jobs',
+  ...compiledPublic
+    .filter((locale) => locale !== (settings.baseLocale ?? 'en'))
+    .map((locale) => `/${locale}/jobs`),
+];
+for (const route of ltrRoutes) {
   const html = await (await fetch(new URL(route, base).href)).text();
   const served = htmlDir(html);
   if (served !== 'ltr') {
@@ -87,32 +103,51 @@ for (const route of ['/jobs', '/de/jobs', '/fr/jobs']) {
   }
 }
 
-// SEO invariants for real prefixed chrome locales (localized-SEO
-// posture): /de/ pages are FIRST-CLASS variants — self-canonical,
-// indexable, and declared via hreflang alternates. The sitemap INDEX
-// stays unprefixed (locale discovery happens via per-URL xhtml:link
-// alternates inside the buckets); PSEUDO-locales never appear anywhere.
+// Sitemap must never list CI pseudo-locales. Extra compiled chrome
+// locales (when present) are first-class variants: self-canonical,
+// indexable, hreflang. Default English-only skips those prefix checks.
 {
-  const de = await (await fetch(new URL('/de/jobs', base).href)).text();
-  const canonical = de.match(/<link[^>]+rel="canonical"[^>]+href="([^"]+)"/);
-  const deIndexable = !/<meta[^>]+name="robots"[^>]+noindex/.test(de);
-  const selfCanonical = canonical ? /\/de\/jobs/.test(canonical[1]) : false;
-  const hasAlternates =
-    /hreflang="de"/i.test(de) && /hreflang="x-default"/i.test(de);
+  const extra = compiledPublic.filter(
+    (locale) => locale !== (settings.baseLocale ?? 'en'),
+  );
   const sitemap = await (
     await fetch(new URL('/sitemap.xml', base).href)
   ).text();
   const sitemapClean = !/\/(en-XA|ar-XB)\//.test(sitemap);
-  if (!selfCanonical || !deIndexable || !hasAlternates || !sitemapClean) {
-    failed = true;
-    console.error(
-      `FAIL seo-invariants — self-canonical=${selfCanonical} ` +
-        `(${canonical?.[1] ?? 'MISSING'}), de-indexable=${deIndexable}, ` +
-        `hreflang=${hasAlternates}, sitemap-no-pseudo=${sitemapClean}`,
+  let extrasOk = true;
+  for (const locale of extra) {
+    const page = await (
+      await fetch(new URL(`/${locale}/jobs`, base).href)
+    ).text();
+    const canonical = page.match(
+      /<link[^>]+rel="canonical"[^>]+href="([^"]+)"/,
     );
+    const indexable = !/<meta[^>]+name="robots"[^>]+noindex/.test(page);
+    const selfCanonical = canonical
+      ? new RegExp(`/${locale}/jobs`).test(canonical[1])
+      : false;
+    const hasAlternates =
+      new RegExp(`hreflang="${locale}"`, 'i').test(page) &&
+      /hreflang="x-default"/i.test(page);
+    if (!selfCanonical || !indexable || !hasAlternates) {
+      extrasOk = false;
+      console.error(
+        `FAIL seo-invariants /${locale}/ — self-canonical=${selfCanonical} ` +
+          `(${canonical?.[1] ?? 'MISSING'}), indexable=${indexable}, ` +
+          `hreflang=${hasAlternates}`,
+      );
+    }
+  }
+  if (!sitemapClean || !extrasOk) {
+    failed = true;
+    if (!sitemapClean) {
+      console.error('FAIL seo-invariants — sitemap lists a pseudo-locale path');
+    }
   } else {
     console.log(
-      `ok   seo-invariants — /de/ self-canonical + hreflang, sitemap clean`,
+      extra.length === 0
+        ? 'ok   seo-invariants — sitemap clean (English-only)'
+        : 'ok   seo-invariants — extra chrome self-canonical + hreflang, sitemap clean',
     );
   }
 }
