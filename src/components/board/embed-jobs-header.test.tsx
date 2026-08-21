@@ -54,6 +54,8 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   };
 });
 
+import { parseListingFilters } from '@cavuno/board/filters';
+
 import { EmbedJobsHeader } from './embed-jobs-header';
 
 import { m } from '@/paraglide/messages';
@@ -156,6 +158,52 @@ describe('EmbedJobsHeader', () => {
     expect(href).toContain('q=nurse');
     expect(href).toContain('remoteOption=remote');
     expect(href).toContain('employmentType=full_time');
+  });
+
+  it('searches on Enter, without a form that could reload the iframe', () => {
+    renderHeader({ q: 'nurse' });
+
+    // No <form>: a native submit fires before hydration and would reload the
+    // widget with the operator's params gone.
+    expect(document.querySelector('form')).toBeNull();
+
+    const clicked = vi.fn();
+    searchLink().addEventListener('click', clicked);
+    fireEvent.keyDown(
+      screen.getByRole('combobox', { name: m.searchBar_keywordAriaLabel() }),
+      { key: 'Enter' },
+    );
+
+    expect(clicked).toHaveBeenCalledOnce();
+  });
+
+  it('seeds only filters the destination can actually honour', () => {
+    // `volunteer` filters the embed's own list but is not in the listing
+    // filter vocabulary, so /jobs drops it. Seeding it would light the badge
+    // over a Search that opens the unfiltered board.
+    renderHeader({ employmentType: 'volunteer' });
+
+    expect(
+      screen.getByRole('button', {
+        name: new RegExp(m.jobSearch_allFiltersLabel()),
+      }),
+    ).not.toHaveTextContent('1');
+    expect(searchLink().getAttribute('href')).toBe('/jobs');
+  });
+
+  it('survives the destination filter parser', () => {
+    renderHeader({ remoteOption: 'remote', employmentType: 'contract' });
+
+    const query = Object.fromEntries(
+      new URLSearchParams(searchLink().getAttribute('href')?.split('?')[1]),
+    );
+
+    // The destination re-parses; a value that does not round-trip here is a
+    // filter the visitor was shown but never got.
+    expect(parseListingFilters(query)).toMatchObject({
+      remoteOption: 'remote',
+      employmentType: 'contract',
+    });
   });
 
   it('routes a picked taxonomy term to its programmatic page', () => {

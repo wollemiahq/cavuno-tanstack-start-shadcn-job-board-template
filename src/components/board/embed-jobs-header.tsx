@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import {
   EMPLOYMENT_TYPES,
@@ -91,11 +91,21 @@ export function EmbedJobsHeader({
   );
   const [filters, setFilters] = useState<JobsSearchFilters>({
     remoteOption: initialSearch.remoteOption,
-    employmentType: initialSearch.employmentType,
+    // `volunteer` and `other` are wire values the embed's own list can filter
+    // on, but they are NOT in the listing filter vocabulary, so the /jobs
+    // destination drops them. Staging one would light the badge and populate
+    // no Type option, over a Search that opens the unfiltered board — the
+    // exact thing this header promises not to do.
+    employmentType: EMPLOYMENT_TYPES.includes(
+      initialSearch.employmentType as (typeof EMPLOYMENT_TYPES)[number],
+    )
+      ? initialSearch.employmentType
+      : undefined,
     seniority: initialSearch.seniority,
   });
   const copy = { jobSearch: jobSearchCopy() };
   const seniorityLabel = seniorityLabelMap(SENIORITIES);
+  const searchRef = useRef<HTMLAnchorElement>(null);
 
   // Pure function of staged state, so the Search control can be a real anchor
   // with an href rather than a click handler.
@@ -110,6 +120,16 @@ export function EmbedJobsHeader({
     <div
       data-test="embed-jobs-header"
       role="search"
+      // Enter searches, as it does in any two-field search widget. This is NOT
+      // a <form>: a form's native submit fires before hydration and would
+      // reload the iframe with the operator's params dropped. The combobox
+      // stops the event itself when a suggestion is highlighted, so Enter
+      // still picks a suggestion first and only searches on free text.
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' || event.defaultPrevented) return;
+        event.preventDefault();
+        searchRef.current?.click();
+      }}
       className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4"
     >
       <Link
@@ -221,6 +241,7 @@ export function EmbedJobsHeader({
 
           <Link
             {...target}
+            ref={searchRef}
             target="_blank"
             rel="noopener"
             aria-label={m.searchBar_searchAriaLabel()}
