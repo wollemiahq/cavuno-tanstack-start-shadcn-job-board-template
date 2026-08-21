@@ -4,13 +4,14 @@
  * admin role/remove/revoke controls, last_admin inline. Header matches
  * the sibling Jobs page.
  */
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { PlusIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { CompanyMembersTable } from '../components/employer/company-members-table';
+import { InviteMemberDialog } from '../components/employer/invite-member-dialog';
 import {
   handleEmployerLoaderError,
   isReauthRetry,
@@ -29,18 +30,6 @@ import { Page, PageContent } from '@/components/layout/page';
 import { Text } from '@/components/text';
 import { Button } from '@/components/ui/button';
 import { headTitle } from '@/lib/page-title';
-
-/**
- * The invite dialog drags in the Base UI dialog graph, which is pure
- * behind-a-button work — it pushed this route past its bundle budget while
- * nobody had opened it. Lazy like the other dialog/combobox surfaces; it only
- * mounts once an admin actually opens it.
- */
-const LazyInviteMemberDialog = lazy(() =>
-  import('../components/employer/invite-member-dialog').then(
-    ({ InviteMemberDialog }) => ({ default: InviteMemberDialog }),
-  ),
-);
 
 function isJoinedFlag(search: unknown): boolean {
   const value = (search as Record<string, unknown> | undefined)?.joined;
@@ -149,14 +138,12 @@ function CompanyMembersPage() {
             isAdmin={isAdmin}
             currentUserId={user?.id ?? ''}
           />
-          {isAdmin && inviteOpen ? (
-            <Suspense fallback={null}>
-              <LazyInviteMemberDialog
-                slug={workspace.slug}
-                open={inviteOpen}
-                onOpenChange={setInviteOpen}
-              />
-            </Suspense>
+          {isAdmin ? (
+            <InviteMemberDialog
+              slug={workspace.slug}
+              open={inviteOpen}
+              onOpenChange={setInviteOpen}
+            />
           ) : null}
         </div>
       </PageContent>
