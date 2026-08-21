@@ -48,10 +48,12 @@ describe('KeywordCombobox', () => {
         ?.getAttribute('data-chips'),
     ).toBe('true');
     // Category-vs-skill is an internal taxonomy split; the jobs scope shows
-    // the term ALONE. Asserting the whole row rather than the absence of two
-    // particular words, so a badge re-added with any other text still fails.
-    const option = screen.getByRole('option', { name: /Robotics/ });
-    expect(option.textContent).toBe('Robotics');
+    // the term ALONE. Asserting each row's WHOLE content rather than the
+    // absence of two particular words, so a badge re-added with any other
+    // text fails — and BOTH kinds, or half the rule has no gate.
+    for (const { name } of suggestions) {
+      expect(screen.getByRole('option', { name }).textContent).toBe(name);
+    }
   });
 
   it('keeps free text editable and reports a picked canonical term', () => {
@@ -111,8 +113,14 @@ describe('KeywordCombobox', () => {
     fireEvent.focus(screen.getByRole('combobox', { name: /keyword/i }));
 
     // Posts and tags are genuinely different things in one list, so each row
-    // keeps its kind badge — unlike the jobs scope above.
-    expect(screen.getByText(m.searchSuggestion_postBadge())).toBeTruthy();
-    expect(screen.getByText(m.searchSuggestion_tagBadge())).toBeTruthy();
+    // keeps its kind badge — unlike the jobs scope above. Asserted per ROW:
+    // checking both strings exist somewhere passes even when the two are
+    // swapped, which mislabels every suggestion.
+    expect(
+      screen.getByRole('option', { name: /Release notes/ }).textContent,
+    ).toBe(`Release notes${m.searchSuggestion_postBadge()}`);
+    expect(screen.getByRole('option', { name: /Releases/ }).textContent).toBe(
+      `Releases${m.searchSuggestion_tagBadge()}`,
+    );
   });
 });
