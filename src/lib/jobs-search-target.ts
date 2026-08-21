@@ -18,8 +18,13 @@ export interface ResolveJobsSearchTargetInput {
 
 /**
  * Jobs-scope destination for header search and the embed Search button.
- * All `/jobs…` listing routes share `parseJobsSearch`, so staged filters
- * always have a place on the target's `search` — never dropped.
+ *
+ * Every `/jobs…` listing route parses its search with `parseListingFilters`,
+ * so a filter only survives the trip if it is in that FILTER vocabulary —
+ * which is narrower than the wire vocabulary for `employmentType`
+ * (`volunteer` and `other` exist on the wire and are dropped here). Callers
+ * are responsible for not staging a filter the destination cannot honour;
+ * this function forwards what it is given.
  */
 export type JobsSearchTarget =
   | {

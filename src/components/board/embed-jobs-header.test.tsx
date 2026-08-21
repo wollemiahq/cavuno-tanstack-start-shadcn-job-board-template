@@ -2,7 +2,13 @@
 import '@testing-library/jest-dom/vitest';
 import type { ReactNode } from 'react';
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  createEvent,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 /**
@@ -175,6 +181,66 @@ describe('EmbedJobsHeader', () => {
     );
 
     expect(clicked).toHaveBeenCalledOnce();
+  });
+
+  it('leaves Enter alone on every control that is not a search field', () => {
+    renderHeader({ q: 'nurse' });
+
+    const clicked = vi.fn();
+    searchLink().addEventListener('click', clicked);
+
+    // These all activate on Enter by DEFAULT — they never call
+    // preventDefault — so a container listener that only checks
+    // `defaultPrevented` cancels them and searches instead, leaving each one
+    // keyboard-dead.
+    for (const control of [
+      screen.getByRole('link', { name: 'Acme Board' }),
+      screen.getByRole('button', {
+        name: new RegExp(m.jobSearch_allFiltersLabel()),
+      }),
+    ]) {
+      const event = createEvent.keyDown(control, { key: 'Enter' });
+      fireEvent(control, event);
+      expect(event.defaultPrevented).toBe(false);
+    }
+
+    expect(clicked).not.toHaveBeenCalled();
+  });
+
+  it('leaves Enter alone while the combobox is selecting a suggestion', () => {
+    renderHeader();
+
+    const clicked = vi.fn();
+    searchLink().addEventListener('click', clicked);
+
+    const keyword = screen.getByRole('combobox', {
+      name: m.searchBar_keywordAriaLabel(),
+    });
+    // Base UI marks Enter handled when it commits a highlighted suggestion.
+    // Pins the invariant the handler leans on, so a library upgrade that
+    // stopped doing it could not both select AND search in silence.
+    const event = createEvent.keyDown(keyword, { key: 'Enter' });
+    event.preventDefault();
+    fireEvent(keyword, event);
+
+    expect(clicked).not.toHaveBeenCalled();
+  });
+
+  it('leaves Enter alone mid-IME-composition and on key repeat', () => {
+    renderHeader({ q: 'nurse' });
+
+    const clicked = vi.fn();
+    searchLink().addEventListener('click', clicked);
+    const keyword = screen.getByRole('combobox', {
+      name: m.searchBar_keywordAriaLabel(),
+    });
+
+    // Enter commits an IME candidate; it is not a search.
+    fireEvent.keyDown(keyword, { key: 'Enter', isComposing: true });
+    // A held key would otherwise open a tab per repeat.
+    fireEvent.keyDown(keyword, { key: 'Enter', repeat: true });
+
+    expect(clicked).not.toHaveBeenCalled();
   });
 
   it('seeds only filters the destination can actually honour', () => {

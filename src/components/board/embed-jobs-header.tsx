@@ -120,13 +120,38 @@ export function EmbedJobsHeader({
     <div
       data-test="embed-jobs-header"
       role="search"
-      // Enter searches, as it does in any two-field search widget. This is NOT
-      // a <form>: a form's native submit fires before hydration and would
-      // reload the iframe with the operator's params dropped. The combobox
-      // stops the event itself when a suggestion is highlighted, so Enter
-      // still picks a suggestion first and only searches on free text.
+      // Enter searches, as it does in any two-field search widget — but ONLY
+      // from the two text inputs. This listener sits on the container so both
+      // are covered, which also puts it in the bubble path of every button and
+      // link in the header (and, through the React tree, the portalled filter
+      // Sheet); without the role check it cancelled their activation and
+      // searched instead, leaving them keyboard-dead.
+      //
+      // It is deliberately NOT a <form>: a native submit fires before
+      // hydration and would reload the iframe with the operator's params
+      // dropped.
       onKeyDown={(event) => {
-        if (event.key !== 'Enter' || event.defaultPrevented) return;
+        if (event.key !== 'Enter') return;
+        // Buttons and links activate on Enter by DEFAULT — they never call
+        // preventDefault — so `defaultPrevented` cannot tell them apart. Only
+        // the comboboxes may search.
+        if (
+          !(event.target instanceof HTMLElement) ||
+          event.target.getAttribute('role') !== 'combobox'
+        ) {
+          return;
+        }
+        // The combobox marks Enter handled when it is selecting a highlighted
+        // suggestion; an IME is mid-composition when Enter commits a
+        // candidate; and a held key repeats.
+        if (
+          event.defaultPrevented ||
+          event.repeat ||
+          event.nativeEvent.isComposing
+        ) {
+          return;
+        }
+
         event.preventDefault();
         searchRef.current?.click();
       }}

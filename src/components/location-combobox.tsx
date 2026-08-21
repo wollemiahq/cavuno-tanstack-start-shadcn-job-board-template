@@ -31,6 +31,12 @@ interface LocationComboboxProps extends LocationSuggestionState {
   /** Display name for the active slug when known (e.g. a /jobs/locations page). */
   valueLabel?: string;
   onSelect: (place: { slug: string; name: string }) => void;
+  /**
+   * Drop the resolved place. The caller MUST clear `value`/`valueLabel` in
+   * response — this component treats the resulting `value → undefined` as the
+   * echo of its own request and leaves the visitor's text alone. A caller that
+   * ignores it will later swallow one genuine external clear.
+   */
   onClear: () => void;
   className?: string;
   inputClassName?: string;
@@ -63,6 +69,12 @@ export function LocationCombobox({
    * Set when THIS component asks the caller to drop its resolved place,
    * because the visitor edited the label. The resulting `value → undefined`
    * is then our own echo, not news, and must not overwrite what they typed.
+   *
+   * This relies on the `onClear` contract: a caller that never drops `value`
+   * leaves the flag armed, and the next genuine external clear is swallowed.
+   * The two are indistinguishable from in here — "value went away after I
+   * asked for it" is all the component ever sees — so the contract is stated
+   * on the prop rather than guessed at.
    */
   const invalidatedRef = useRef(false);
 
