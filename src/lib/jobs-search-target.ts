@@ -78,7 +78,7 @@ function withFilters<T extends object>(
 /**
  * Resolve the jobs listing (or programmatic jobs page) a keyword / location /
  * taxonomy term should open. The site header `navigate()`s this object; the
- * embed header `buildLocation()`s it and `window.open`s the href so the iframe
+ * embed header spreads it onto a `Link` with `target="_blank"`, so the iframe
  * never navigates.
  */
 export function resolveJobsSearchTarget({

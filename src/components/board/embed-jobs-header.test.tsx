@@ -189,16 +189,35 @@ describe('EmbedJobsHeader', () => {
     const clicked = vi.fn();
     searchLink().addEventListener('click', clicked);
 
-    // These all activate on Enter by DEFAULT — they never call
-    // preventDefault — so a container listener that only checks
-    // `defaultPrevented` cancels them and searches instead, leaving each one
-    // keyboard-dead.
-    for (const control of [
-      screen.getByRole('link', { name: 'Acme Board' }),
+    // Grabbed before the Sheet opens: it is modal, so the rest of the header
+    // leaves the accessible tree once it is up.
+    const identityLink = screen.getByRole('link', { name: 'Acme Board' });
+
+    // Open the filter Sheet, so its contents are in the sweep. It portals to
+    // the body but is still a React child of the container, so its Enter
+    // events bubble to the same listener.
+    fireEvent.click(
       screen.getByRole('button', {
         name: new RegExp(m.jobSearch_allFiltersLabel()),
       }),
-    ]) {
+    );
+
+    // Everything focusable except the two text fields. Note the Workplace and
+    // Type triggers are `<button role="combobox">`, so a role check alone does
+    // NOT exclude them — they belong in this list, not the searching one.
+    const controls = [
+      identityLink,
+      ...Array.from(
+        document.querySelectorAll<HTMLElement>('button, [role="option"]'),
+      ),
+    ];
+    expect(
+      controls.filter((c) => c.getAttribute('role') === 'combobox').length,
+    ).toBeGreaterThan(0);
+
+    for (const control of controls) {
+      // These activate on Enter by DEFAULT — they never call preventDefault —
+      // so cancelling it here leaves each one keyboard-dead.
       const event = createEvent.keyDown(control, { key: 'Enter' });
       fireEvent(control, event);
       expect(event.defaultPrevented).toBe(false);

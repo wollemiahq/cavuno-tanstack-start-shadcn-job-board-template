@@ -132,11 +132,14 @@ export function EmbedJobsHeader({
       // dropped.
       onKeyDown={(event) => {
         if (event.key !== 'Enter') return;
-        // Buttons and links activate on Enter by DEFAULT — they never call
-        // preventDefault — so `defaultPrevented` cannot tell them apart. Only
-        // the comboboxes may search.
+        // Only the two TEXT FIELDS may search. Buttons and links activate on
+        // Enter by DEFAULT — they never call preventDefault — so
+        // `defaultPrevented` cannot tell them apart, and `role="combobox"`
+        // alone does not either: Base UI renders a Select trigger as
+        // `<button role="combobox">`, which is what the Workplace and Type
+        // selects inside the filter Sheet are.
         if (
-          !(event.target instanceof HTMLElement) ||
+          !(event.target instanceof HTMLInputElement) ||
           event.target.getAttribute('role') !== 'combobox'
         ) {
           return;
