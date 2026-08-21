@@ -1530,6 +1530,13 @@ Props:
 
 - `className?: string | undefined`
 
+### LanguageSwitcherPanel — `src/components/language-switcher.tsx`
+
+Props:
+
+- `className?: string | undefined`
+- `options: LocaleOption[]`
+
 ### LanguagesSection — `src/components/languages-section.tsx`
 
 Languages — name + proficiency entries over the whole-set replace
