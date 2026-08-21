@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { Await, createFileRoute, useRouter } from '@tanstack/react-router';
 import { ExternalLinkIcon } from 'lucide-react';
 
+import { CompanyDeleteDangerZone } from '../components/employer/company-delete-danger-zone';
 import {
   handleEmployerLoaderError,
   isReauthRetry,
@@ -31,6 +32,7 @@ import {
   getEmployerCompany,
   getEmployerProfileStats,
   getEmployerProfileStatsTimeseries,
+  listCompanyMembers,
   updateCompany,
 } from '../server/employers';
 import { getSeoBase, getCompany } from '../server/queries';
@@ -76,12 +78,16 @@ const LINKEDIN_COMPANY_DOMAINS = [LINKEDIN_COMPANY_DOMAIN, 'linkedin.com'];
 export const Route = createFileRoute('/employers/companies/$slug/profile')({
   loader: async ({ params, location }) => {
     try {
-      const [workspace, company, employerCompany, seo] = await Promise.all([
-        getCompanyWorkspace({ data: { slug: params.slug } }),
-        getCompany({ data: { companySlug: params.slug } }),
-        getEmployerCompany({ data: { slug: params.slug } }),
-        getSeoBase(),
-      ]);
+      const [workspace, company, employerCompany, members, seo] =
+        await Promise.all([
+          getCompanyWorkspace({ data: { slug: params.slug } }),
+          getCompany({ data: { companySlug: params.slug } }),
+          getEmployerCompany({ data: { slug: params.slug } }),
+          listCompanyMembers({ data: { slug: params.slug } }).catch(() => ({
+            data: [],
+          })),
+          getSeoBase(),
+        ]);
       // Reporting is non-critical: defer both profile-views reads so a slow or
       // failing analytics backend never blocks the profile form's first paint.
       // They stream in together via a single <Await>-able promise (stable across
@@ -96,7 +102,14 @@ export const Route = createFileRoute('/employers/companies/$slug/profile')({
           .then((result) => result.data)
           .catch(() => [] as EmployerProfileViewsPoint[]),
       ]).then(([total, points]) => ({ total, points }));
-      return { workspace, company, employerCompany, seo, profileViews };
+      return {
+        workspace,
+        company,
+        employerCompany,
+        members,
+        seo,
+        profileViews,
+      };
     } catch (error) {
       return await handleEmployerLoaderError(
         error,
@@ -126,7 +139,8 @@ function stripProtocol(url: string): string {
 }
 
 function CompanyProfilePage() {
-  const { workspace, company, employerCompany } = Route.useLoaderData();
+  const { workspace, company, employerCompany, members } =
+    Route.useLoaderData();
   // Typed as possibly-undefined: the loader always supplies this on the happy
   // path, but component-level tests spy the loader data without it, so the
   // render guards on its presence rather than assuming the deferred promise.
@@ -182,6 +196,13 @@ function CompanyProfilePage() {
           ) : null}
 
           <ProfileEditorCard slug={workspace.slug} company={employerCompany} />
+
+          <CompanyDeleteDangerZone
+            slug={workspace.slug}
+            companyName={employerCompany.name}
+            isAdmin={workspace.membership?.role === 'admin'}
+            otherApprovedMembers={Math.max(0, (members?.data.length ?? 0) - 1)}
+          />
 
           {company.markets.length > 0 ? (
             <Card size="sm">

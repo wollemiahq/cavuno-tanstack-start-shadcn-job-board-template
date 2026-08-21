@@ -62,8 +62,16 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
     const catalog = JSON.parse(
       readFileSync(join(import.meta.dirname, '../messages/en.json'), 'utf8'),
     ) as Record<string, string>;
+    // Route-owned meta descriptions share the jobDetail_ prefix but are
+    // not SDK UiCopy (dropped from @cavuno/board 4.4.1's public map).
+    const appOwnedPublicKeys = new Set([
+      'jobDetail_metaDescription',
+      'jobDetail_metaDescriptionNoCompany',
+      'jobDetail_metaDescriptionRemote',
+    ]);
     const expected = Object.keys(catalog)
       .filter((key) => publicGroups.has(key.slice(0, key.indexOf('_'))))
+      .filter((key) => !appOwnedPublicKeys.has(key))
       .sort();
     const copy = boardCopy('en') as unknown as Record<
       string,

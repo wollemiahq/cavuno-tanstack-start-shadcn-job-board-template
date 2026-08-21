@@ -8,6 +8,7 @@
  * authorization and its endpoint is ungated, so it takes no session or grant
  * (mirrors the hosted one-click unsubscribe).
  */
+import { isBoardApiError } from '@cavuno/board';
 import { createServerFn } from '@tanstack/react-start';
 
 import { getBoard } from '../lib/board';
@@ -20,6 +21,7 @@ import {
   requireSessionMiddleware,
   type SessionContext,
 } from '../lib/session-middleware';
+import { persistAuthSession } from './auth';
 import { gatedRead } from './board-access';
 
 import type {
@@ -85,4 +87,64 @@ export const setMarketingConsent = createServerFn({ method: 'POST' })
     const consent = getBoard().me.marketingConsent;
     const options = { headers: authedHeaders(context) };
     return data.granted ? consent.grant(options) : consent.withdraw(options);
+  });
+
+/** The signed-in board user for /settings (email + hasPassword). */
+export const getSettingsAccount = createServerFn({ method: 'GET' })
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ context }) =>
+    gatedRead(context, () =>
+      getBoard().me.retrieve(undefined, {
+        headers: authedHeaders(context),
+      }),
+    ),
+  );
+
+function actionError(error: unknown): {
+  ok: false;
+  code: string;
+  message: string;
+} {
+  if (isBoardApiError(error)) {
+    return { ok: false, code: error.code, message: error.message };
+  }
+  throw error;
+}
+
+export const requestEmailChange = createServerFn({ method: 'POST' })
+  .validator((input: { email: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(async ({ data, context }) => {
+    try {
+      await getBoard().me.requestEmailChange(data, {
+        headers: authedHeaders(context),
+      });
+      return { ok: true as const };
+    } catch (error) {
+      return actionError(error);
+    }
+  });
+
+/** Set-password for passwordless accounts — existing forgot-password email. */
+export const requestSetPassword = createServerFn({ method: 'POST' })
+  .validator((input: { email: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(async ({ data }) => {
+    await getBoard().auth.forgotPassword(data);
+    return { ok: true as const };
+  });
+
+export const updatePassword = createServerFn({ method: 'POST' })
+  .validator((input: { currentPassword: string; newPassword: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(async ({ data, context }) => {
+    try {
+      const session = await getBoard().me.updatePassword(data, {
+        headers: authedHeaders(context),
+      });
+      persistAuthSession(session);
+      return { ok: true as const };
+    } catch (error) {
+      return actionError(error);
+    }
   });

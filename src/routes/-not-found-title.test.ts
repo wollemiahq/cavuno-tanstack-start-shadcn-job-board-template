@@ -12,6 +12,8 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
+vi.mock('cloudflare:workers', () => ({ env: {} }));
+
 // These routes reach the server layer, which imports `cloudflare:workers`.
 // The heads under test never call it — only the module graph needs it gone.
 vi.mock('../server/queries', () => ({
@@ -29,6 +31,16 @@ vi.mock('../server/marketing-pages', () => ({
 }));
 // auth.join's already-authed guard imports the account server layer.
 vi.mock('../server/account', () => ({ getSessionUser: vi.fn() }));
+vi.mock('../server/auth', () => ({
+  confirmEmailChange: vi.fn(),
+  forgotPassword: vi.fn(),
+}));
+vi.mock('../server/employers', () => ({
+  getCompanyWorkspace: vi.fn(),
+  listCompanyMembers: vi.fn(),
+  listCompanyInvites: vi.fn(),
+  acceptCompanyInvite: vi.fn(),
+}));
 
 import { m } from '../paraglide/messages';
 import { Route as JoinRoute } from './auth.join';

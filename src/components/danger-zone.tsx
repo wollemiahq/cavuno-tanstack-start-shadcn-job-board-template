@@ -22,8 +22,8 @@ import {
 import { Button } from '@/components/ui/button';
 import {
   Card,
-  CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -59,7 +59,7 @@ export function DangerZone() {
         </CardTitle>
         <CardDescription>{m.dangerZone_warningText()}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardFooter className="justify-end border-t">
         <AlertDialog
           open={open}
           onOpenChange={(nextOpen) => {
@@ -121,7 +121,7 @@ export function DangerZone() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 }

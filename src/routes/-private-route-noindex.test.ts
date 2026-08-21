@@ -10,6 +10,8 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
+vi.mock('cloudflare:workers', () => ({ env: {} }));
+
 // These route modules reach the server layer, which imports
 // `cloudflare:workers`. The heads under test never call it — only the module
 // graph needs it stubbed away.
@@ -20,7 +22,12 @@ vi.mock('../server/queries', () => ({
 vi.mock('../server/account', () => ({ getAccount: vi.fn() }));
 vi.mock('../server/settings', () => ({
   getNotificationPreferences: vi.fn(),
+  getMarketingConsent: vi.fn(),
+  getSettingsAccount: vi.fn(),
   unsubscribeWithToken: vi.fn(),
+  requestEmailChange: vi.fn(),
+  updatePassword: vi.fn(),
+  requestSetPassword: vi.fn(),
 }));
 vi.mock('../server/applications', () => ({
   getApplications: vi.fn(),
@@ -30,6 +37,8 @@ vi.mock('../server/auth', () => ({
   getOAuthAuthorizationUrl: vi.fn(),
   requestMagicLink: vi.fn(),
   signIn: vi.fn(),
+  forgotPassword: vi.fn(),
+  confirmEmailChange: vi.fn(),
 }));
 vi.mock('@/server/messaging', () => ({
   getBlocked: vi.fn(),
@@ -39,6 +48,7 @@ vi.mock('../lib/auth-guard', () => ({ redirectIfAuthenticated: vi.fn() }));
 
 import { Route as AccountRoute } from './account';
 import { Route as SavedRoute } from './account_.saved';
+import { Route as ConfirmEmailChangeRoute } from './auth.confirm-email-change';
 import { Route as SignInRoute } from './auth.sign-in';
 import { Route as AlertsRoute } from './me.alerts';
 import { Route as ApplicationsRoute } from './me.applications';
@@ -66,6 +76,7 @@ describe('private / transactional routes are noindex (robots.txt stays permissiv
     ['/messages', MessagesRoute],
     ['/settings', SettingsRoute],
     ['/auth/sign-in', SignInRoute],
+    ['/auth/confirm-email-change', ConfirmEmailChangeRoute],
   ])('%s emits noindex regardless of loader data', (_path, route) => {
     expect(robotsOf(route.options.head)).toBe('noindex');
   });

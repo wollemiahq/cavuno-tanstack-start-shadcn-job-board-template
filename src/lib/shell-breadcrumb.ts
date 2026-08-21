@@ -52,7 +52,9 @@ export interface ShellBreadcrumbPrivateLabels {
   authVerifyEmail: string;
   postJob: string;
   companyProfile: string;
+  companyMembers: string;
   employerDashboard: string;
+  authConfirmEmailChange: string;
 }
 
 interface RouteMatch {
@@ -309,6 +311,10 @@ export function resolveShellBreadcrumb({
       'forgot-password': priv('authForgotPassword', 'forgot-password'),
       'reset-password': priv('authResetPassword', 'reset-password'),
       'magic-link': priv('authMagicLink', 'magic-link'),
+      'confirm-email-change': priv(
+        'authConfirmEmailChange',
+        'confirm-email-change',
+      ),
     };
     const segment = rest[0] ?? section;
     const name = segment.endsWith('sign-up')
@@ -375,6 +381,8 @@ export function resolveShellBreadcrumb({
       });
       if (rest[2] === 'profile') {
         items.push({ name: priv('companyProfile', 'profile') });
+      } else if (rest[2] === 'members') {
+        items.push({ name: priv('companyMembers', 'members') });
       } else if (rest[2] === 'jobs' && rest[3] === 'new') {
         items.push({ name: priv('postJob', 'new') });
       } else if (rest[2] === 'jobs' && rest[4] === 'applicants') {

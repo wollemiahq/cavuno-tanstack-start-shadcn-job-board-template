@@ -306,7 +306,9 @@ function RootChrome({
       authVerifyEmail: m.authVerifyEmail_title(),
       postJob: m.siteHeader_postJobLabel(),
       companyProfile: m.accountShell_companyProfileNav(),
+      companyMembers: m.accountShell_membersNav(),
       employerDashboard: m.employerDashboard_title(),
+      authConfirmEmailChange: m.authConfirmEmailChange_title(),
     },
     entities: {
       ...breadcrumbEntities,

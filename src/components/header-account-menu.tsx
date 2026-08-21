@@ -139,6 +139,17 @@ export function HeaderAccountMenu({
                 >
                   {m.siteHeader_postJobLabel()}
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  nativeButton={false}
+                  render={
+                    <Link
+                      to="/employers/companies/$slug/members"
+                      params={{ slug: membership.company.slug! }}
+                    />
+                  }
+                >
+                  {m.accountShell_membersNav()}
+                </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
           ))}
