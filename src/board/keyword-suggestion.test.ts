@@ -102,10 +102,11 @@ describe('dedupeKeywordSuggestions', () => {
   });
 
   it('collapses a category and a skill sharing a name, keeping the category', () => {
-    // Without this the dropdown shows two identical "Robotics" rows that lead
-    // to /jobs/robotics and /jobs/skills/robotics respectively.
+    // The slugs DIFFER on purpose: dedupe keys on the display name, because
+    // the name is what the visitor sees and cannot tell apart. Same-slug
+    // fixtures would pass against a slug-keyed implementation too.
     const deduped = dedupeKeywordSuggestions([
-      skill('robotics', 'Robotics'),
+      skill('robotics-engineering', 'Robotics'),
       category('robotics', 'Robotics'),
     ]);
 
@@ -125,10 +126,12 @@ describe('dedupeKeywordSuggestions', () => {
   it('matches names case- and whitespace-insensitively', () => {
     const deduped = dedupeKeywordSuggestions([
       category('robotics', ' Robotics '),
-      skill('robotics', 'robotics'),
+      skill('robotics-engineering', 'robotics'),
     ]);
 
-    expect(deduped).toHaveLength(1);
+    // Asserts the survivor, not just the count — a last-wins variant would
+    // keep the skill and still leave one row.
+    expect(deduped.map((s) => s.id)).toEqual(['category:robotics']);
   });
 
   it('leaves distinct names alone and does not mutate the input', () => {
@@ -139,6 +142,6 @@ describe('dedupeKeywordSuggestions', () => {
     const deduped = dedupeKeywordSuggestions(input);
 
     expect(deduped).toHaveLength(2);
-    expect(input).toHaveLength(2);
+    expect(input.map((s) => s.id)).toEqual(['category:robotics', 'skill:ros']);
   });
 });
