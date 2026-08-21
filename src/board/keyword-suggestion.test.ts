@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { sortBlogSuggestions, toBlogSuggestionVM } from './keyword-suggestion';
+import {
+  dedupeKeywordSuggestions,
+  sortBlogSuggestions,
+  toBlogSuggestionVM,
+} from './keyword-suggestion';
 
 describe('toBlogSuggestionVM', () => {
   it('maps a post suggestion to its title and slug', () => {
@@ -80,5 +84,61 @@ describe('sortBlogSuggestions', () => {
     const input = [tag('releases'), post('release-notes')];
     sortBlogSuggestions(input);
     expect(input.map((s) => s.type)).toEqual(['tag', 'post']);
+  });
+});
+
+describe('dedupeKeywordSuggestions', () => {
+  const category = (slug: string, name: string) => ({
+    id: `category:${slug}`,
+    type: 'category' as const,
+    slug,
+    name,
+  });
+  const skill = (slug: string, name: string) => ({
+    id: `skill:${slug}`,
+    type: 'skill' as const,
+    slug,
+    name,
+  });
+
+  it('collapses a category and a skill sharing a name, keeping the category', () => {
+    // Without this the dropdown shows two identical "Robotics" rows that lead
+    // to /jobs/robotics and /jobs/skills/robotics respectively.
+    const deduped = dedupeKeywordSuggestions([
+      skill('robotics', 'Robotics'),
+      category('robotics', 'Robotics'),
+    ]);
+
+    expect(deduped.map((s) => s.id)).toEqual(['category:robotics']);
+  });
+
+  it('keeps the losing row position when the category arrives second', () => {
+    const deduped = dedupeKeywordSuggestions([
+      skill('robotics', 'Robotics'),
+      category('welding', 'Welding'),
+      category('robotics', 'Robotics'),
+    ]);
+
+    expect(deduped.map((s) => s.name)).toEqual(['Robotics', 'Welding']);
+  });
+
+  it('matches names case- and whitespace-insensitively', () => {
+    const deduped = dedupeKeywordSuggestions([
+      category('robotics', ' Robotics '),
+      skill('robotics', 'robotics'),
+    ]);
+
+    expect(deduped).toHaveLength(1);
+  });
+
+  it('leaves distinct names alone and does not mutate the input', () => {
+    const input = [
+      category('robotics', 'Robotics'),
+      skill('ros', 'Robot Operating System'),
+    ];
+    const deduped = dedupeKeywordSuggestions(input);
+
+    expect(deduped).toHaveLength(2);
+    expect(input).toHaveLength(2);
   });
 });
