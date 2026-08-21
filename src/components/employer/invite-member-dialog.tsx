@@ -23,7 +23,8 @@ import { boardErrorMessage } from '@/lib/board-error-message';
 
 function inviteErrorMessage(code: string): string {
   if (code === 'already_member') return m.employerMembers_alreadyMemberError();
-  if (code === 'already_invited') return m.employerMembers_alreadyInvitedError();
+  if (code === 'already_invited')
+    return m.employerMembers_alreadyInvitedError();
   if (code === 'invalid_email') return m.employerMembers_invalidEmailError();
   return boardErrorMessage({ code });
 }
