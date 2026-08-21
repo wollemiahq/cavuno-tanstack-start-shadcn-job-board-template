@@ -104,6 +104,19 @@ personas.
 
 > Requires **pnpm 11** (pinned in `package.json`) and Node 24 (matches CI).
 
+> **Known dev-only papercut:** if the very first request to a freshly booted
+> `pnpm dev` is `/embed/jobs`, it answers 500 ("Something went wrong") and then
+> works on every request after. Refresh once. Any other route hit first also
+> avoids it. This is upstream — Vite's on-demand SSR module evaluation hands
+> `createSsrRpc` a not-yet-callable `getServerFnById`, so the root shell's
+> `getBoardContext()` throws before the page renders
+> ([TanStack/router#6451](https://github.com/TanStack/router/issues/6451),
+> [#7459](https://github.com/TanStack/router/issues/7459)). `/embed/jobs` is the
+> only route that trips it, because it is the only one whose loader calls
+> `getBoardContext()` concurrently with the root shell's own call. **Production
+> is unaffected** — Rollup resolves the chain statically at build time, so
+> `pnpm build && pnpm preview` serves it 200 on a cold first hit.
+
 **The workflow:** build and style your board against the sandbox — it's
 populated, safe to write to, and resets nightly — then go live by swapping one
 value, `CAVUNO_BOARD`, for your own board's `pk_…` publishable key (`.dev.vars`
