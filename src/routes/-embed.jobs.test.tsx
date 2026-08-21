@@ -10,8 +10,19 @@ vi.mock('../server/queries', () => ({
 }));
 
 vi.mock('@/components/board/embed-jobs-header', () => ({
-  EmbedJobsHeader: ({ boardName }: { boardName: string }) => (
-    <div data-test="embed-jobs-header">{boardName}</div>
+  EmbedJobsHeader: ({
+    boardName,
+    initialSearch,
+  }: {
+    boardName: string;
+    initialSearch: Record<string, unknown>;
+  }) => (
+    <div
+      data-test="embed-jobs-header"
+      data-initial-search={JSON.stringify(initialSearch)}
+    >
+      {boardName}
+    </div>
   ),
 }));
 
@@ -56,7 +67,7 @@ afterEach(cleanup);
 const job = { id: 'job-1' } as PublicJobCard;
 
 describe('embed jobs view', () => {
-  it('renders the header above results and opens job cards in a new tab', () => {
+  it('renders the header above results and opens job cards in a new tab', async () => {
     render(
       <EmbedJobsView
         page={{ data: [job], count: 1 }}
@@ -67,10 +78,7 @@ describe('embed jobs view', () => {
       />,
     );
 
-    expect(screen.getByText('Acme Board')).toBeTruthy();
-    expect(
-      document.querySelector('[data-test="embed-jobs-header"]'),
-    ).not.toBeNull();
+    expect(await screen.findByText('Acme Board')).toBeTruthy();
     expect(
       document.querySelector('[data-test="embed-jobs-list"]'),
     ).not.toBeNull();
@@ -79,7 +87,7 @@ describe('embed jobs view', () => {
     ).not.toBeNull();
   });
 
-  it('renders the header above the empty state', () => {
+  it('renders the header above the empty state', async () => {
     render(
       <EmbedJobsView
         page={{ data: [], count: 0 }}
@@ -90,10 +98,32 @@ describe('embed jobs view', () => {
       />,
     );
 
-    expect(
-      document.querySelector('[data-test="embed-jobs-header"]'),
-    ).not.toBeNull();
+    expect(await screen.findByText('Acme Board')).toBeTruthy();
     expect(screen.getByText(m.embedJobs_noJobsMatchText())).toBeTruthy();
     expect(document.querySelector('[data-test="embed-jobs-list"]')).toBeNull();
+  });
+
+  it("hands the widget's own params to the header", async () => {
+    render(
+      <EmbedJobsView
+        page={{ data: [job], count: 40 }}
+        showCavunoBranding={false}
+        boardName="Acme Board"
+        logoUrl={null}
+        search={{ q: 'nurse', location: 'london', remoteOption: 'remote' }}
+      />,
+    );
+
+    // Without this the header renders empty controls over a filtered list and
+    // its Search opens the unfiltered board.
+    await screen.findByText('Acme Board');
+    const header = document.querySelector('[data-test="embed-jobs-header"]');
+    expect(
+      JSON.parse(header?.getAttribute('data-initial-search') ?? '{}'),
+    ).toMatchObject({
+      q: 'nurse',
+      location: 'london',
+      remoteOption: 'remote',
+    });
   });
 });

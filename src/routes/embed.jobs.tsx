@@ -1,3 +1,5 @@
+import { lazy, Suspense } from 'react';
+
 /**
  * Embeddable jobs widget — the headless equivalent of the hosted board's
  * `/embed/jobs`. A compact, **noindex** card list a board owner drops into a
@@ -14,9 +16,10 @@ import { redirect, createFileRoute, Link } from '@tanstack/react-router';
 import { m } from '../paraglide/messages';
 import { baseLocale, getLocale } from '../paraglide/runtime';
 import { embedJobs, getBoardContext } from '../server/queries';
+import { useKeywordSuggestions } from './-use-keyword-suggestions';
+import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { toJobCardVM } from '@/board/job-view-model';
-import { EmbedJobsHeader } from '@/components/board/embed-jobs-header';
 import { JobCard } from '@/components/board/job-card';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
@@ -34,6 +37,19 @@ import type {
   RemoteOption,
   Seniority,
 } from '@cavuno/board';
+
+/**
+ * The header drags in the combobox + sheet + select graph. Static-importing it
+ * hoisted all of that into the always-loaded shell chunk and blew the bundle
+ * budget for every page on the board — so it is lazy, the same way
+ * `header-search-enhanced` and `company-jobs-search-bar` treat these widgets.
+ * The reserved height keeps the card list from jumping when it lands.
+ */
+const LazyEmbedJobsHeader = lazy(() =>
+  import('@/components/board/embed-jobs-header').then(
+    ({ EmbedJobsHeader }) => ({ default: EmbedJobsHeader }),
+  ),
+);
 
 const REMOTE_OPTIONS: readonly RemoteOption[] = ['on_site', 'hybrid', 'remote'];
 const EMPLOYMENT_TYPES: readonly EmploymentType[] = [
@@ -211,14 +227,29 @@ export function EmbedJobsView({
   const jobs = page.data;
   const pageSize = search.limit ?? 8;
   const cta = buildEmbedCta(search, pageSize, page.count);
+  // The route owns the suggestion controllers and passes them down, so the
+  // header stays a props-only component (AGENTS.md: components never fetch) —
+  // the same split `__root.tsx` and the company-jobs subpage already use.
+  const keywordSuggestions = useKeywordSuggestions(true);
+  const locationSuggestions = useLocationSuggestions(getLocale());
 
   return (
     <section className="space-y-4" data-test="embed-jobs-widget">
-      <EmbedJobsHeader
-        boardName={boardName}
-        logoUrl={logoUrl}
-        locale={getLocale()}
-      />
+      <Suspense fallback={<div className="mb-6 h-9" />}>
+        <LazyEmbedJobsHeader
+          boardName={boardName}
+          logoUrl={logoUrl}
+          initialSearch={{
+            q: search.q,
+            location: search.location,
+            remoteOption: search.remoteOption,
+            employmentType: search.employmentType,
+            seniority: search.seniority ? [search.seniority] : undefined,
+          }}
+          keywordSuggestions={keywordSuggestions}
+          locationSuggestions={locationSuggestions}
+        />
+      </Suspense>
       {jobs.length > 0 ? (
         <div className="space-y-3" data-test="embed-jobs-list">
           {jobs.map((job) => (

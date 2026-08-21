@@ -3,89 +3,56 @@ import '@testing-library/jest-dom/vitest';
 import type { ReactNode } from 'react';
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const { buildLocation } = vi.hoisted(() => ({
-  buildLocation: vi.fn(
-    (dest: {
-      to: string;
-      params?: Record<string, string>;
-      search?: Record<string, unknown>;
-    }) => {
-      let path = dest.to;
-      for (const [key, value] of Object.entries(dest.params ?? {})) {
-        path = path.replace(`$${key}`, value);
-      }
-      const params = new URLSearchParams();
-      for (const [key, value] of Object.entries(dest.search ?? {})) {
-        if (value == null || value === '') continue;
-        if (Array.isArray(value)) {
-          for (const item of value) params.append(key, String(item));
-        } else {
-          params.set(key, String(value));
-        }
-      }
-      const query = params.toString();
-      return { href: query ? `${path}?${query}` : path };
-    },
-  ),
-}));
-
+/**
+ * The Search control is an anchor, so these tests read its `href` rather than
+ * spying on `window.open`. The stand-in `Link` renders the same `to`/`params`/
+ * `search` a real one would resolve, which is what lets a test assert the
+ * destination the visitor would actually land on.
+ */
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual =
     await importOriginal<typeof import('@tanstack/react-router')>();
   return {
     ...actual,
-    useRouter: () => ({ buildLocation }),
     Link: ({
       to,
+      params,
+      search,
       children,
       ...props
     }: {
       to: string;
+      params?: Record<string, string>;
+      search?: Record<string, unknown>;
       children: ReactNode;
       target?: string;
       rel?: string;
       className?: string;
-    }) => (
-      <a href={typeof to === 'string' ? to : '/'} {...props}>
-        {children}
-      </a>
-    ),
+      'aria-label'?: string;
+    }) => {
+      let path = to;
+      for (const [key, value] of Object.entries(params ?? {})) {
+        path = path.replace(`$${key}`, value);
+      }
+      const query = new URLSearchParams();
+      for (const [key, value] of Object.entries(search ?? {})) {
+        if (value == null || value === '') continue;
+        query.set(
+          key,
+          Array.isArray(value) ? JSON.stringify(value) : `${value}`,
+        );
+      }
+      const qs = query.toString();
+      return (
+        <a href={qs ? `${path}?${qs}` : path} {...props}>
+          {children}
+        </a>
+      );
+    },
   };
 });
-
-vi.mock('@/routes/-use-keyword-suggestions', () => ({
-  useKeywordSuggestions: () => ({
-    suggestions: [
-      {
-        id: 'skill:react',
-        type: 'skill',
-        slug: 'react',
-        name: 'React',
-      },
-    ],
-    loading: false,
-    onQueryChange: () => {},
-  }),
-}));
-
-vi.mock('@/routes/-use-location-suggestions', () => ({
-  useLocationSuggestions: () => ({
-    suggestions: [
-      {
-        id: 'p1',
-        slug: 'london',
-        name: 'London',
-        contextLabel: 'United Kingdom',
-        countryCode: 'GB',
-        regionCode: null,
-      },
-    ],
-    loading: false,
-    onQueryChange: () => {},
-  }),
-}));
 
 import { EmbedJobsHeader } from './embed-jobs-header';
 
@@ -95,23 +62,48 @@ afterEach(() => {
   cleanup();
 });
 
-function renderHeader() {
+const keywordSuggestions = {
+  suggestions: [
+    { id: 'skill:react', type: 'skill' as const, slug: 'react', name: 'React' },
+  ],
+  loading: false,
+  onQueryChange: () => {},
+};
+
+const locationSuggestions = {
+  suggestions: [
+    {
+      id: 'p1',
+      slug: 'london',
+      name: 'London',
+      contextLabel: 'United Kingdom',
+      countryCode: 'GB',
+      regionCode: null,
+    },
+  ],
+  loading: false,
+  onQueryChange: () => {},
+};
+
+function renderHeader(
+  initialSearch: Parameters<typeof EmbedJobsHeader>[0]['initialSearch'] = {},
+) {
   return render(
-    <EmbedJobsHeader boardName="Acme Board" logoUrl={null} locale="en" />,
+    <EmbedJobsHeader
+      boardName="Acme Board"
+      logoUrl={null}
+      initialSearch={initialSearch}
+      keywordSuggestions={keywordSuggestions}
+      locationSuggestions={locationSuggestions}
+    />,
   );
 }
 
+const searchLink = () =>
+  screen.getByRole('link', { name: m.searchBar_searchAriaLabel() });
+
 describe('EmbedJobsHeader', () => {
-  beforeEach(() => {
-    buildLocation.mockClear();
-    vi.spyOn(window, 'open').mockReturnValue(null);
-  });
-
-  afterEach(() => {
-    vi.mocked(window.open).mockRestore();
-  });
-
-  it('renders the board name, keyword field, location field, filters control, and Search button', () => {
+  it('renders the board name, keyword field, location field, filters control, and Search', () => {
     renderHeader();
 
     expect(screen.getByRole('link', { name: 'Acme Board' })).toBeTruthy();
@@ -124,26 +116,68 @@ describe('EmbedJobsHeader', () => {
       }),
     ).toBeTruthy();
     expect(
-      screen.getByRole('button', { name: m.jobSearch_allFiltersLabel() }),
+      screen.getByRole('button', {
+        name: new RegExp(m.jobSearch_allFiltersLabel()),
+      }),
     ).toBeTruthy();
-    expect(
-      screen.getByRole('button', { name: m.searchBar_searchAriaLabel() }),
-    ).toBeTruthy();
+    expect(searchLink()).toBeTruthy();
   });
 
-  it('stages keyword, location, and filter changes until Search opens a tab', () => {
+  it('opens Search in a new tab, never in the iframe', () => {
     renderHeader();
-    const open = vi.mocked(window.open);
+
+    expect(searchLink()).toHaveAttribute('target', '_blank');
+    // `noopener` without `noreferrer`: the board keeps the /embed/jobs
+    // referrer for attribution on this control.
+    expect(searchLink()).toHaveAttribute('rel', 'noopener');
+  });
+
+  it("seeds from the widget's own params so Search keeps the operator's scope", () => {
+    renderHeader({
+      q: 'nurse',
+      location: 'london',
+      remoteOption: 'remote',
+      employmentType: 'full_time',
+    });
+
+    expect(
+      screen.getByRole('combobox', { name: m.searchBar_keywordAriaLabel() }),
+    ).toHaveValue('nurse');
+    // The filter badge has to agree with the list beneath it, or the widget
+    // shows an unfiltered-looking header over filtered results.
+    expect(
+      screen.getByRole('button', {
+        name: new RegExp(m.jobSearch_allFiltersLabel()),
+      }),
+    ).toHaveTextContent('2');
+
+    const href = searchLink().getAttribute('href') ?? '';
+    expect(href).toContain('/jobs/locations/london');
+    expect(href).toContain('q=nurse');
+    expect(href).toContain('remoteOption=remote');
+    expect(href).toContain('employmentType=full_time');
+  });
+
+  it('routes a picked taxonomy term to its programmatic page', () => {
+    renderHeader();
 
     const keyword = screen.getByRole('combobox', {
       name: m.searchBar_keywordAriaLabel(),
     });
+    fireEvent.focus(keyword);
     fireEvent.input(keyword, {
-      target: { value: 'react' },
+      target: { value: 'rea' },
       inputType: 'insertText',
     });
-    fireEvent.keyDown(keyword, { key: 'Escape' });
-    expect(open).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('option', { name: /React/ }));
+
+    // A skill must land on /jobs/skills/$skill, not a free-text /jobs?q=react —
+    // the whole point of resolving the term rather than passing the string on.
+    expect(searchLink()).toHaveAttribute('href', '/jobs/skills/react');
+  });
+
+  it('stages a location pick and a filter change without leaving the frame', () => {
+    renderHeader();
 
     const location = screen.getByRole('combobox', {
       name: m.locationCombobox_locationAriaLabel(),
@@ -154,13 +188,11 @@ describe('EmbedJobsHeader', () => {
       inputType: 'insertText',
     });
     fireEvent.click(screen.getByRole('option', { name: /London/ }));
-    fireEvent.keyDown(location, { key: 'Escape' });
-    expect(open).not.toHaveBeenCalled();
 
-    // Filters live behind the compact icon trigger — open the sheet, pick
-    // Remote, apply. None of it may launch a tab.
     fireEvent.click(
-      screen.getByRole('button', { name: m.jobSearch_allFiltersLabel() }),
+      screen.getByRole('button', {
+        name: new RegExp(m.jobSearch_allFiltersLabel()),
+      }),
     );
     fireEvent.click(
       screen.getByRole('combobox', {
@@ -173,17 +205,9 @@ describe('EmbedJobsHeader', () => {
     fireEvent.click(
       screen.getByRole('button', { name: m.jobSearch_applyFiltersLabel() }),
     );
-    expect(open).not.toHaveBeenCalled();
 
-    fireEvent.click(
-      screen.getByRole('button', { name: m.searchBar_searchAriaLabel() }),
-    );
-
-    expect(open).toHaveBeenCalledOnce();
-    expect(open).toHaveBeenCalledWith(expect.any(String), '_blank', 'noopener');
-    const href = String(open.mock.calls[0]?.[0]);
-    expect(href).toContain('react');
-    expect(href).toContain('london');
-    expect(href).toContain('remote');
+    const href = searchLink().getAttribute('href') ?? '';
+    expect(href).toContain('/jobs/locations/london');
+    expect(href).toContain('remoteOption=remote');
   });
 });

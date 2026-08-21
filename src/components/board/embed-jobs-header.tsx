@@ -8,15 +8,21 @@ import {
   SENIORITIES,
   type ListingFilters,
 } from '@cavuno/board/filters';
-import { Link, useRouter } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { Search } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
 import { JobsFilterToolbar } from '@/components/board/jobs-filter-toolbar';
-import { KeywordCombobox } from '@/components/keyword-combobox';
-import { LocationCombobox } from '@/components/location-combobox';
-import { Button } from '@/components/ui/button';
+import {
+  KeywordCombobox,
+  type KeywordSuggestionState,
+} from '@/components/keyword-combobox';
+import {
+  LocationCombobox,
+  type LocationSuggestionState,
+} from '@/components/location-combobox';
+import { buttonVariants } from '@/components/ui/button';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { enumLabel, seniorityLabelMap } from '@/lib/enum-labels';
 import type {
@@ -24,9 +30,11 @@ import type {
   HeaderSearchTerm,
 } from '@/lib/header-search';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
-import { resolveJobsSearchTarget } from '@/lib/jobs-search-target';
-import { useKeywordSuggestions } from '@/routes/-use-keyword-suggestions';
-import { useLocationSuggestions } from '@/routes/-use-location-suggestions';
+import {
+  resolveJobsSearchTarget,
+  type JobsSearchFilters,
+} from '@/lib/jobs-search-target';
+import { cn } from '@/lib/utils';
 
 /**
  * Embed widget chrome: board identity, then keyword + location + filters +
@@ -36,52 +44,72 @@ import { useLocationSuggestions } from '@/routes/-use-location-suggestions';
  * chrome). Filters collapse to a single icon trigger for the same reason.
  *
  * Search is staged, never live: typing, picking a suggestion and changing a
- * filter only set local state; ONLY the explicit Search button acts, and it
- * opens a new tab rather than navigating the iframe (hosted ADR-0051).
- * `noopener` but deliberately not `noreferrer`, so the opened board keeps the
- * `/embed/jobs` referrer for attribution.
+ * filter only set local state; ONLY the explicit Search control acts. It is a
+ * `Link` with `target="_blank"`, not a `window.open` — an anchor opens a real
+ * tab, survives popup blockers, and gives the control a middle-clickable href,
+ * where a feature-string `window.open` forces popup-window semantics. Either
+ * way the iframe itself never navigates (hosted ADR-0051).
+ *
+ * The controls seed from the widget's OWN query params, so an operator who
+ * scopes the iframe (`?query=nurse&remoteOption=remote`) gets a header that
+ * agrees with the list beneath it, and a Search that keeps that scope instead
+ * of silently opening the unfiltered board.
+ *
+ * `noopener` without `noreferrer` HERE, so the board keeps the `/embed/jobs`
+ * referrer for attribution on this control and the identity link. The job
+ * cards below use `noreferrer` (hosted parity) and do not.
  */
 export function EmbedJobsHeader({
   boardName,
   logoUrl,
-  locale,
+  initialSearch,
+  keywordSuggestions,
+  locationSuggestions,
 }: {
   boardName: string;
   logoUrl: string | null;
-  locale: string;
+  /**
+   * The widget's own query params. `location` is a place SLUG (the API's geo
+   * filter is keyed by slug), and the embed URL carries no companion display
+   * name, so the field shows the slug until the visitor picks a suggestion —
+   * the same limitation `CompanyJobsSearchBar` documents.
+   */
+  initialSearch: {
+    q?: string;
+    location?: string;
+  } & JobsSearchFilters;
+  /** Route-owned suggestion controllers (`useKeywordSuggestions` / `useLocationSuggestions`). */
+  keywordSuggestions: KeywordSuggestionState;
+  locationSuggestions: LocationSuggestionState;
 }) {
-  const router = useRouter();
-  const keywordSuggestions = useKeywordSuggestions(true);
-  const locationSuggestions = useLocationSuggestions(locale);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialSearch.q ?? '');
   const [term, setTerm] = useState<HeaderSearchTerm | null>(null);
-  const [location, setLocation] = useState<HeaderSearchLocation | null>(null);
-  const [filters, setFilters] = useState<{
-    remoteOption?: ListingFilters['remoteOption'];
-    employmentType?: ListingFilters['employmentType'];
-    seniority?: ListingFilters['seniority'];
-  }>({});
+  const [location, setLocation] = useState<HeaderSearchLocation | null>(
+    initialSearch.location
+      ? { slug: initialSearch.location, name: initialSearch.location }
+      : null,
+  );
+  const [filters, setFilters] = useState<JobsSearchFilters>({
+    remoteOption: initialSearch.remoteOption,
+    employmentType: initialSearch.employmentType,
+    seniority: initialSearch.seniority,
+  });
   const copy = { jobSearch: jobSearchCopy() };
   const seniorityLabel = seniorityLabelMap(SENIORITIES);
 
-  const launch = () => {
-    const target = resolveJobsSearchTarget({
-      query: query.trim() || undefined,
-      location,
-      term,
-      filters,
-    });
-    window.open(router.buildLocation(target).href, '_blank', 'noopener');
-  };
+  // Pure function of staged state, so the Search control can be a real anchor
+  // with an href rather than a click handler.
+  const target = resolveJobsSearchTarget({
+    query: query.trim() || undefined,
+    location,
+    term,
+    filters,
+  });
 
   return (
-    <form
+    <div
       data-test="embed-jobs-header"
       role="search"
-      onSubmit={(event) => {
-        event.preventDefault();
-        launch();
-      }}
       className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4"
     >
       <Link
@@ -191,17 +219,21 @@ export function EmbedJobsHeader({
             onReset={() => setFilters({})}
           />
 
-          <Button
-            type="submit"
-            size="lg"
+          <Link
+            {...target}
+            target="_blank"
+            rel="noopener"
             aria-label={m.searchBar_searchAriaLabel()}
-            className="flex-1 justify-center sm:flex-none"
+            className={cn(
+              buttonVariants({ size: 'lg' }),
+              'flex-1 justify-center no-underline sm:flex-none',
+            )}
           >
             <Search aria-hidden="true" />
             {m.searchBar_searchLabel()}
-          </Button>
+          </Link>
         </div>
       </div>
-    </form>
+    </div>
   );
 }

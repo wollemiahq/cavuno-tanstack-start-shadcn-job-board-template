@@ -409,7 +409,7 @@ Props:
 
 - `avatar?: ReactNode`
 - `breadcrumb?: BreadcrumbData | undefined`
-- `description?: string | null | undefined`
+- `description?: ReactNode`
 - `empty: BlogArchiveEmptyState`
 - `filters?: ReactNode`
 - `pagination?: ReactNode`
@@ -505,14 +505,30 @@ Props:
 
 ### CompanyCard — `src/components/board/company-card.tsx`
 
+One company as an owned shadcn card row. Pure markup: the
+companies index, the market-scoped browse, and the similar-companies
+rail all share this row, so the surface reads as one system (mirrors
+how every list surface shares `JobCard`).
+
+The owned Card supplies the shared radius, ring, and shadow, lifting on
+hover like `JobCard`. The company mark falls
+back to two-letter initials when there is no logo. The open-count Badge
+is shown ONLY when the company has open roles (an empty company earns no
+"0 open jobs" noise), and the teaser line is honestly omitted when
+`summary` is null.
+
+Teaser source is the wire `summary` only. The Board API already applies
+authored-summary-or-derive-from-description; the card does not re-flatten
+long-form HTML.
+
 Props:
 
 - `companySlug: string`
-- `description: string | null`
 - `jobCountLabel: string`
 - `logoUrl: string | null`
 - `name: string`
 - `publishedJobCount: number`
+- `summary: string | null`
 
 ### CompanySearchDetailState — `src/components/board/company-search-detail-state.tsx`
 
@@ -542,6 +558,7 @@ Props:
 - `page: number`
 - `pageSize: number`
 - `query?: string | undefined`
+- `searchUnavailable?: boolean | undefined`
 - `selectedCompany?: string | undefined`
 - `startAd?: AdPlacement | undefined`
 
@@ -569,7 +586,7 @@ Props:
 
 - `activeSection: CompanySection`
 - `children: ReactNode`
-- `company: { name: string; slug: string; logoUrl: string | null; description: string | null; }`
+- `company: { name: string; slug: string; logoUrl: string | null; summary: string | null; }`
 - `hasSalaries: boolean`
 - `jobCount: number`
 
@@ -603,6 +620,38 @@ Props:
 - `nextHref?: string | undefined`
 - `onNext?: (() => void) | undefined`
 - `onPrevious?: (() => void) | undefined`
+
+### EmbedJobsHeader — `src/components/board/embed-jobs-header.tsx`
+
+Embed widget chrome: board identity, then keyword + location + filters +
+Search on ONE line (the hosted widget's shape — a bare row, not the
+`ListingSearchBand` panel the full-page listings sit in; the embed is a
+fragment inside somebody else's page and cannot afford a second row of
+chrome). Filters collapse to a single icon trigger for the same reason.
+
+Search is staged, never live: typing, picking a suggestion and changing a
+filter only set local state; ONLY the explicit Search control acts. It is a
+`Link` with `target="_blank"`, not a `window.open` — an anchor opens a real
+tab, survives popup blockers, and gives the control a middle-clickable href,
+where a feature-string `window.open` forces popup-window semantics. Either
+way the iframe itself never navigates (hosted ADR-0051).
+
+The controls seed from the widget's OWN query params, so an operator who
+scopes the iframe (`?query=nurse&remoteOption=remote`) gets a header that
+agrees with the list beneath it, and a Search that keeps that scope instead
+of silently opening the unfiltered board.
+
+`noopener` without `noreferrer` HERE, so the board keeps the `/embed/jobs`
+referrer for attribution on this control and the identity link. The job
+cards below use `noreferrer` (hosted parity) and do not.
+
+Props:
+
+- `boardName: string`
+- `initialSearch: { q?: string | undefined; location?: string | undefined; } & JobsSearchFilters`
+- `keywordSuggestions: KeywordSuggestionState`
+- `locationSuggestions: LocationSuggestionState`
+- `logoUrl: string | null`
 
 ### HomeLanding — `src/components/board/home-landing.tsx`
 
@@ -642,6 +691,7 @@ Props:
 - `compact?: boolean | undefined`
 - `layout?: "card" | "row" | undefined`
 - `linkTo?: "detail" | "workspace" | undefined`
+- `openInNewTab?: boolean | undefined`
 - `vm: JobCardVM`
 
 ### JobDetail — `src/components/board/job-detail.tsx`
@@ -748,6 +798,7 @@ Props:
 - `onReset: () => void`
 - `options: { workplace: JobsFilterOption[]; employmentType: JobsFilterOption[]; seniority: JobsFilterOption[]; }`
 - `value: JobsFilterValues`
+- `variant?: "compact" | "toolbar" | undefined`
 
 ### JobsNotFound — `src/components/board/jobs-not-found.tsx`
 
@@ -994,6 +1045,7 @@ Props:
 
 - `chips: TaxonomyChip[]`
 - `className?: string | undefined`
+- `openInNewTab?: boolean | undefined`
 - `overflow?: number | undefined`
 - `size?: "sm" | "lg" | "md" | undefined`
 
@@ -1354,7 +1406,6 @@ Props:
 - `onOpenChange: (open: boolean) => void`
 - `postJobLabel: string`
 - `showPostJob: boolean`
-- `topOffset: number`
 
 ### HeaderSearchBlogField — `src/components/header-search-blog-field.tsx`
 
@@ -1775,9 +1826,15 @@ One crawlable blog summary. The card keeps post, tag, and every author as
 real links so a compact archive never throws away the blog's discovery
 graph. Long editorial labels wrap instead of being replaced by ellipses.
 
+`priority` — set on the likely LCP cover (first cover in the archive /
+home strip). Skips `loading="lazy"` and sets `fetchPriority="high"` so
+Lighthouse can discover the image from the initial HTML without waiting
+for lazy-load heuristics.
+
 Props:
 
 - `post: { id: string; object: "public_blog_post"; title: string; slug: string; featured: boolean; coverUrl: string | null; fe…`
+- `priority?: boolean | undefined`
 
 ### PostJobForm — `src/components/post-job-form.tsx`
 
@@ -1972,6 +2029,18 @@ Props:
 - `maxCharacters?: number | undefined`
 - `onChange: (html: string) => void`
 - `value: string`
+
+### RootSessionProvider — `src/components/root-session.tsx`
+
+Loads signed-in chrome (user, employer memberships, paywall grant, preview
+toolbar) after first paint. Public SSR never waits on these.
+
+Props:
+
+- `candidatePaywall: boolean`
+- `children: ReactNode`
+
+### RouterDevtools — `src/components/router-devtools.tsx`
 
 ### AdRail — `src/components/search-results/ad-rail.tsx`
 

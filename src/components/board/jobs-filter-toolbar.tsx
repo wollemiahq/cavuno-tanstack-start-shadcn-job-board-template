@@ -266,21 +266,27 @@ export function JobsFilterToolbar({
   if (variant === 'compact') {
     return (
       <>
+        {/* The label is `sr-only` content rather than `aria-label`, because
+            aria-label would REPLACE the accessible name and hide the active
+            count from screen readers — leaving filters staged with nothing
+            announced. As content, both are read: "All filters, 2". The default
+            variant's buttons already work this way. `openSheet('desktop')`
+            keeps the dialog title matching this trigger's name. */}
         <Button
           type="button"
           variant="outline"
           size="icon"
-          aria-label={labels.allFilters}
           aria-haspopup="dialog"
           aria-expanded={sheetOpen}
-          onClick={() => openSheet('mobile')}
+          onClick={() => openSheet('desktop')}
           className="relative shrink-0"
         >
           <ListFilter aria-hidden="true" />
+          <span className="sr-only">{labels.allFilters}</span>
           {activeCount > 0 && (
             <Badge
               variant="secondary"
-              className="absolute -end-1.5 -top-1.5 h-4 min-w-4 justify-center px-1 text-[10px]"
+              className="absolute -end-1.5 -top-1.5 h-4 min-w-4 justify-center px-1 text-xs"
             >
               {activeCount}
             </Badge>

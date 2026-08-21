@@ -193,7 +193,7 @@ describe('JobsFilterToolbar', () => {
     // active count so a collapsed filter set is still legible.
     expect(screen.queryByRole('combobox', { name: 'Workplace' })).toBeNull();
     expect(screen.queryByRole('combobox', { name: 'Type' })).toBeNull();
-    const trigger = screen.getByRole('button', { name: 'All filters' });
+    const trigger = screen.getByRole('button', { name: /All filters/ });
     expect(trigger).toHaveTextContent('2');
 
     // It still opens the same draft-then-Apply sheet.
