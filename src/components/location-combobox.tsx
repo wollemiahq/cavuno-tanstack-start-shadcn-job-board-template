@@ -59,9 +59,31 @@ export function LocationCombobox({
   const [open, setOpen] = useState(false);
   const anchorRef = useComboboxAnchor();
   const inputRef = useRef<HTMLInputElement>(null);
+  /**
+   * Set when THIS component asks the caller to drop its resolved place,
+   * because the visitor edited the label. The resulting `value → undefined`
+   * is then our own echo, not news, and must not overwrite what they typed.
+   */
+  const invalidatedRef = useRef(false);
 
   useEffect(() => {
-    setText(valueLabel ?? value ?? '');
+    const resolved = valueLabel ?? value;
+
+    if (resolved) {
+      invalidatedRef.current = false;
+      setText(resolved);
+      return;
+    }
+
+    // Cleared. Blank the field only when the clear came from OUTSIDE — a
+    // history navigation or a programmatic reset, which are real news about
+    // what the field should say. Swallow our own echo exactly once.
+    if (invalidatedRef.current) {
+      invalidatedRef.current = false;
+      return;
+    }
+
+    setText('');
   }, [value, valueLabel]);
 
   const clear = () => {
@@ -90,7 +112,10 @@ export function LocationCombobox({
         if (details.reason !== 'input-change') return;
 
         onQueryChange(nextText);
-        if (value && nextText !== (valueLabel ?? value)) onClear();
+        if (value && nextText !== (valueLabel ?? value)) {
+          invalidatedRef.current = true;
+          onClear();
+        }
         setOpen(Boolean(nextText.trim()));
       }}
       onValueChange={(place) => {
