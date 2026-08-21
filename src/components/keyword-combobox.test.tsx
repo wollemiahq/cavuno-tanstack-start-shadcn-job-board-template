@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { KeywordCombobox } from './keyword-combobox';
 
+import { m } from '@/paraglide/messages';
+
 afterEach(cleanup);
 
 const suggestions = [
@@ -48,8 +50,8 @@ describe('KeywordCombobox', () => {
     expect(screen.getByRole('option', { name: /Robotics/ })).toBeTruthy();
     // Category-vs-skill is an internal taxonomy split; the jobs scope shows
     // the term alone rather than badging every row with it.
-    expect(screen.queryByText('Skills')).toBeNull();
-    expect(screen.queryByText('Categories')).toBeNull();
+    expect(screen.queryByText(m.jobDetail_skillsHeading())).toBeNull();
+    expect(screen.queryByText(m.jobDetail_categoriesHeading())).toBeNull();
   });
 
   it('keeps free text editable and reports a picked canonical term', () => {
@@ -110,7 +112,7 @@ describe('KeywordCombobox', () => {
 
     // Posts and tags are genuinely different things in one list, so each row
     // keeps its kind badge — unlike the jobs scope above.
-    expect(screen.getByText('Post')).toBeTruthy();
-    expect(screen.getByText('Tag')).toBeTruthy();
+    expect(screen.getByText(m.searchSuggestion_postBadge())).toBeTruthy();
+    expect(screen.getByText(m.searchSuggestion_tagBadge())).toBeTruthy();
   });
 });
