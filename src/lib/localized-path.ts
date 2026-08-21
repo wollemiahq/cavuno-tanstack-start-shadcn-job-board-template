@@ -13,8 +13,11 @@
  * (slugs are board content). A canonical segment under a prefix
  * (/fr/jobs) does not serve — the router rewrite round-trip 307s it to
  * /fr/emplois (query preserved), so each variant has exactly one URL.
+ *
+ * Slug maps for de/fr stay here even while those locales are dormant
+ * (not in project.inlang/settings.json). Enabling one is `pnpm locale:add`.
  */
-import { localizeHref } from '../paraglide/runtime';
+import { isLocale, localizeHref } from '../paraglide/runtime';
 
 const SECTION_TRANSLATIONS: Record<string, Record<string, string>> = {
   fr: {
@@ -31,6 +34,9 @@ const SECTION_TRANSLATIONS: Record<string, Record<string, string>> = {
   },
 };
 
+const TRANSLATED_PREFIX = Object.keys(SECTION_TRANSLATIONS).join('|');
+const PREFIXED_SECTION = new RegExp(`^/(${TRANSLATED_PREFIX})/([^/?#]+)(.*)$`);
+
 const LOCALIZED_TO_CANONICAL: Record<
   string,
   Record<string, string>
@@ -46,13 +52,40 @@ const LOCALIZED_TO_CANONICAL: Record<
   ]),
 );
 
+function splitPath(path: string): {
+  pathname: string;
+  search: string;
+  hash: string;
+} {
+  const hashIndex = path.indexOf('#');
+  const hash = hashIndex >= 0 ? path.slice(hashIndex) : '';
+  const noHash = hashIndex >= 0 ? path.slice(0, hashIndex) : path;
+  const qIndex = noHash.indexOf('?');
+  const search = qIndex >= 0 ? noHash.slice(qIndex) : '';
+  const pathname = qIndex >= 0 ? noHash.slice(0, qIndex) : noHash;
+  return { pathname, search, hash };
+}
+
+/** Prefix a path for a locale that is not (yet) in the compiled runtime. */
+function prefixUncompiled(path: string, locale: string): string {
+  const { pathname, search, hash } = splitPath(path);
+  const prefixed = pathname === '/' ? `/${locale}` : `/${locale}${pathname}`;
+  return `${prefixed}${search}${hash}`;
+}
+
+function prefixHref(path: string, locale: string | undefined): string {
+  if (locale === undefined) return localizeHref(path);
+  if (isLocale(locale)) return localizeHref(path, { locale });
+  return prefixUncompiled(path, locale);
+}
+
 /** Locale-prefixed AND slug-localized href for a canonical path. */
 export function localizePath(
   path: string,
-  options?: { locale?: 'en' | 'de' | 'fr' },
+  options?: { locale?: string },
 ): string {
-  const prefixed = localizeHref(path, options);
-  const match = prefixed.match(/^\/(de|fr)\/([^/?#]+)(.*)$/);
+  const prefixed = prefixHref(path, options?.locale);
+  const match = prefixed.match(PREFIXED_SECTION);
   if (!match) return prefixed;
   const [, locale, section, rest] = match;
   const localized = SECTION_TRANSLATIONS[locale!]?.[section!];
@@ -62,7 +95,7 @@ export function localizePath(
 /** Forward segment translation for an ALREADY locale-prefixed pathname
  * (the router's output rewrite localizes first, then translates). */
 export function localizeSegments(pathname: string): string {
-  const match = pathname.match(/^\/(de|fr)\/([^/?#]+)(.*)$/);
+  const match = pathname.match(PREFIXED_SECTION);
   if (!match) return pathname;
   const [, locale, section, rest] = match;
   const localized = SECTION_TRANSLATIONS[locale!]?.[section!];
@@ -72,7 +105,7 @@ export function localizeSegments(pathname: string): string {
 /** Inverse: rewrite a localized section segment back to its canonical name
  * (keeps the locale prefix — Paraglide's deLocalizeUrl strips that). */
 export function delocalizeSegments(pathname: string): string {
-  const match = pathname.match(/^\/(de|fr)\/([^/?#]+)(.*)$/);
+  const match = pathname.match(PREFIXED_SECTION);
   if (!match) return pathname;
   const [, locale, section, rest] = match;
   const canonical = LOCALIZED_TO_CANONICAL[locale!]?.[section!];

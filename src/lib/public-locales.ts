@@ -1,16 +1,25 @@
 /**
- * The human-facing chrome locales. `en-XA` (pseudo-accent) and `ar-XB`
- * (pseudo-bidi) are QA-only compile-ins (scripts/pseudo-locale-enable.mjs)
- * and must never be advertised on SEO surfaces (hreflang alternates,
- * sitemap) or offered in the language switcher — even in a QA build.
- * Filter the Paraglide `locales` array through this list wherever the
- * output is crawlable or human-facing.
+ * Human-facing chrome locales vs CI pseudo-locales.
+ *
+ * Production compiles whatever `project.inlang/settings.json` lists.
+ * Default is English only. Extra catalogs (`messages/de.json`,
+ * `messages/fr.json`, …) stay in the repo dormant — `pnpm locale:add de`
+ * adds the locale to settings, and the switcher / hreflang tags appear
+ * once more than one public locale is compiled.
+ *
+ * `en-XA` (pseudo-accent) and `ar-XB` (pseudo-bidi/RTL) exist only for
+ * the CI coverage gate and must never ship as public chrome locales.
  */
-export const PUBLIC_LOCALES = ['en', 'de', 'fr'] as const;
-export type PublicLocale = (typeof PUBLIC_LOCALES)[number];
 
-export function publicLocales(locales: readonly string[]): PublicLocale[] {
-  return locales.filter((locale): locale is PublicLocale =>
-    (PUBLIC_LOCALES as readonly string[]).includes(locale),
-  );
+export const PSEUDO_LOCALES = ['en-XA', 'ar-XB'] as const;
+
+const PSEUDO_LOCALE_SET = new Set<string>(PSEUDO_LOCALES);
+
+export function isPseudoLocale(locale: string): boolean {
+  return PSEUDO_LOCALE_SET.has(locale);
+}
+
+/** Compiled locales minus the CI pseudo-locales. */
+export function publicLocales(all: readonly string[]): string[] {
+  return all.filter((locale) => !isPseudoLocale(locale));
 }

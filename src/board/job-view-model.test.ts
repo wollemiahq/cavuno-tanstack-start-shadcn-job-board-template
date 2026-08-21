@@ -179,7 +179,8 @@ describe('worldwide remote card wording', () => {
       locationLabel: 'Weltweit (Remote)',
     } as never;
     expect(toJobCardVM(job, 'en').locationLabel).toBe('Remote (worldwide)');
-    expect(toJobCardVM(job, 'de').locationLabel).toBe('Remote (weltweit)');
+    // Chrome catalog follows compiled locales; dormant de stays English.
+    expect(toJobCardVM(job, 'de').locationLabel).toBe('Remote (worldwide)');
   });
 
   it('composes a localized region list from permit codes (constrained remote)', () => {
@@ -220,7 +221,7 @@ describe('worldwide remote card wording', () => {
       remoteLocationLabel: 'Worldwide',
       locationLabel: 'Worldwide (Remote)',
     } as never;
-    expect(toJobCardVM(job, 'de').locationLabel).toBe('Remote (weltweit)');
+    expect(toJobCardVM(job, 'de').locationLabel).toBe('Remote (worldwide)');
     // Unified with the detail header's catalog phrasing (was the wire's
     // 'Worldwide (Remote)').
     expect(toJobCardVM(job, 'en').locationLabel).toBe('Remote (worldwide)');

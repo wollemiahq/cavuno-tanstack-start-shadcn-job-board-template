@@ -191,8 +191,8 @@ Feeds, metadata, redirects, and other machine endpoints ship alongside them:
 | OpenGraph assets | `/companies/:companySlug/jobs/:jobSlug/og`, `/blog/:postSlug/og`, `/blog/og/:postSlug.json` |
 | Platform and integration endpoints | `/.well-known/cavuno.json`, `/site.webmanifest`, `/ads.txt`, `/go/*` |
 
-The same supported surfaces are available under locale prefixes such as `/de`
-and `/fr`; the default locale stays unprefixed.
+The same supported surfaces stay unprefixed by default (English). Extra
+chrome locales (`/de/…`, `/fr/…`) are opt-in — `pnpm locale:add de`.
 
 Cross-cutting capabilities that ship on top of those routes:
 
@@ -203,13 +203,14 @@ Cross-cutting capabilities that ship on top of those routes:
 - **Real-data discipline** — the design handles messy data by construction:
   long titles clamp, absent salaries are omitted (never an empty label), skill
   tags cap at `3 + N`, missing logos fall back to initials.
-- **i18n built in, with a live switcher** — path-prefixed locales (`/de/…`,
-  `/fr/…`) powered by [Paraglide JS](https://paraglidejs.com): compile-time
-  catalogs (`en`/`de`/`fr` + a pseudo-locale for QA), SSR-resolved on Workers
-  so there's no flash of the wrong language, and a footer language switcher
-  wired out of the box. Deliberately chrome-only: the UI localizes while board
-  content (jobs, companies) stays in the board's own language, matching the
-  platform's single-language board model.
+- **i18n ready, English by default** — [Paraglide JS](https://paraglidejs.com)
+  compile-time catalogs, SSR-resolved on Workers. Production ships English
+  only (no language switcher, no `/de/` or `/fr/` routes). German and French
+  catalogs are in the repo dormant; `pnpm locale:add de` enables a locale,
+  compiles Paraglide, and the footer switcher appears. Deliberately
+  chrome-only: the UI localizes while board content (jobs, companies) stays
+  in the board's own language, matching the platform's single-language
+  board model.
 - **Dark mode** keyed to a single `.dark` class, and **accessibility** from
   Base UI semantics and the owned components' explicit ARIA contracts.
 

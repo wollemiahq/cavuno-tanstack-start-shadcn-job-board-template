@@ -77,7 +77,12 @@ operation, not a code edit for you to make.
 - `src/routes/*.tsx` — page composition (markup, layout, copy). Keep
   loaders/server-function calls intact.
 - `messages/**` — UI copy catalogs (Paraglide). Run
-  `pnpm run gen:messages` after edits.
+  `pnpm run gen:messages` after edits. Chrome locales default to
+  English only (`project.inlang/settings.json` `locales: ["en"]`).
+  German and French catalogs stay in `messages/` dormant — enable with
+  `pnpm locale:add de` (then `pnpm gen:messages && pnpm gen:paraglide`).
+  The footer switcher and hreflang tags appear once more than one public
+  locale is compiled. Never add `en-XA` / `ar-XB` to production locales.
 
 ## Outside the surface — change only with explicit reason
 

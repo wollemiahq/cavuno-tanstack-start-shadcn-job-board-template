@@ -25,22 +25,16 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
   });
 
   it('resolves the runtime locale even when callers pass the board language', () => {
-    // Callers thread board.language (a board-level constant); under a
-    // /de/ chrome locale the seam must follow the URL, or prefixed routes
-    // would render the base language. baseLocale === board.language is a
-    // generation-time invariant, so the param is redundant by design.
-    overwriteGetLocale(() => 'de');
-    expect(boardCopy('en').jobCard.featuredLabel).toBe('Hervorgehoben');
-    overwriteGetLocale(() => baseLocale);
+    // Callers thread board.language (a board-level constant); the seam
+    // follows getLocale() (the URL locale), not that argument. Extra
+    // chrome locales pick this up automatically once compiled.
     expect(boardCopy('de').jobCard.featuredLabel).toBe('Featured');
+    expect(boardCopy('fr').jobCard.featuredLabel).toBe('Featured');
   });
 
   it('keeps parameterized keys callable with their positional signature', () => {
-    overwriteGetLocale(() => 'de');
-    expect(boardCopy('en').jobDetail.experienceYears(5)).toBe('5+ Jahre');
-    expect(boardCopy('en').jobDetail.posted('heute')).toBe(
-      'Veröffentlicht heute',
-    );
+    expect(boardCopy('en').jobDetail.experienceYears(5)).toBe('5+ years');
+    expect(boardCopy('en').jobDetail.posted('today')).toBe('Posted today');
   });
 
   it('keeps every public UiCopy message in the statically tree-shakeable map', () => {

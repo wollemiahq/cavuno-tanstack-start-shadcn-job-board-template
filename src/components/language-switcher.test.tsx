@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
+import type { ReactElement } from 'react';
+
 /**
- * Chrome language switcher. The switcher flips only the
- * Paraglide UI locale via the URL prefix; board content stays in the
- * board's single language. These tests pin the locale-resolution
- * contract, the three public options (never the en-XA pseudo-locale),
- * the current-locale marker, and that switching preserves the route path.
+ * Chrome language switcher. Hidden while only English is compiled.
+ * Enabling a second locale (`pnpm locale:add de`) makes it appear.
+ * These tests pin the locale-resolution contract, that extra locales
+ * never include the en-XA pseudo-locale, path preservation, and that
+ * the trigger stays visible while the lazy menu chunk loads.
  */
 import {
   RouterProvider,
@@ -23,12 +25,14 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { publicLocales } from '../lib/public-locales';
 import { baseLocale, locales, overwriteGetLocale } from '../paraglide/runtime';
 import {
   LOCALE_ENDONYMS,
-  PUBLIC_LOCALES,
-  buildLocaleOptions,
   LanguageSwitcher,
+  LanguageSwitcherPanel,
+  buildLocaleOptions,
+  publicChromeLocales,
 } from './language-switcher';
 
 import { readFileSync } from 'node:fs';
@@ -49,12 +53,6 @@ afterEach(() => {
 
 describe('locale-resolution contract', () => {
   it('resolves the locale from the URL, base locale unprefixed', () => {
-    // SSR correctness on Workers hinges on the URL strategy: the switcher's
-    // full-nav anchors only render the right chrome if the middleware reads
-    // the locale from the path. The paraglide vite plugin is the source of
-    // truth for the request-time strategy (the CLI-compiled runtime carries
-    // a different default). `baseLocale` (=== board language) serves
-    // unprefixed.
     const viteConfig = readFileSync(
       join(import.meta.dirname, '..', '..', 'vite.config.ts'),
       'utf8',
@@ -63,41 +61,35 @@ describe('locale-resolution contract', () => {
     expect(baseLocale).toBe('en');
   });
 
-  it('offers exactly en/de/fr — never the en-XA QA pseudo-locale', () => {
-    expect([...PUBLIC_LOCALES]).toEqual(['en', 'de', 'fr']);
-    // Prod Paraglide runtime ships only the public chrome locales.
-    // en-XA / ar-XB compile in only under the QA enable script + rebuild.
-    expect([...locales]).toEqual(['en', 'de', 'fr']);
-    expect([...PUBLIC_LOCALES]).not.toContain('en-XA');
+  it('production compiles English only — never the en-XA QA pseudo-locale', () => {
+    expect([...locales]).toEqual(['en']);
+    expect(publicChromeLocales()).toEqual(['en']);
+    expect(publicLocales([...locales])).not.toContain('en-XA');
   });
 
-  it('labels each language in its own tongue (endonyms)', () => {
-    expect(LOCALE_ENDONYMS).toEqual({
-      en: 'English',
-      de: 'Deutsch',
-      fr: 'Français',
-    });
+  it('labels known languages in their own tongue (endonyms)', () => {
+    expect(LOCALE_ENDONYMS.en).toBe('English');
+    expect(LOCALE_ENDONYMS.de).toBe('Deutsch');
+    expect(LOCALE_ENDONYMS.fr).toBe('Français');
   });
 });
 
 describe('buildLocaleOptions preserves the current path', () => {
+  const extra = ['en', 'de', 'fr'] as const;
+
   it('re-localizes the active path per option, keeping the query', () => {
-    const options = buildLocaleOptions('en', '/jobs?q=react');
+    const options = buildLocaleOptions('en', '/jobs?q=react', extra);
     const byLocale = Object.fromEntries(options.map((o) => [o.locale, o.href]));
-    // Base locale stays unprefixed; others gain their prefix — same path.
     expect(byLocale.en).toBe('/jobs?q=react');
     expect(byLocale.de).toBe('/de/jobs?q=react');
-    // fr localizes the section slug (localized-path.ts).
     expect(byLocale.fr).toBe('/fr/emplois?q=react');
   });
 
   it('marks the active locale and nothing else', () => {
-    const options = buildLocaleOptions('de', '/companies');
+    const options = buildLocaleOptions('de', '/companies', extra);
     expect(options.filter((o) => o.active).map((o) => o.locale)).toEqual([
       'de',
     ]);
-    // Switching away from /de/companies re-derives from the delocalized
-    // path the router exposes, so every option targets the same route.
     expect(options.find((o) => o.locale === 'de')?.href).toBe(
       '/de/unternehmen',
     );
@@ -105,8 +97,8 @@ describe('buildLocaleOptions preserves the current path', () => {
   });
 });
 
-function renderAt(path: string) {
-  const rootRoute = createRootRoute({ component: () => <LanguageSwitcher /> });
+function renderAt(path: string, ui: ReactElement = <LanguageSwitcher />) {
+  const rootRoute = createRootRoute({ component: () => ui });
   const router = createRouter({
     routeTree: rootRoute,
     history: createMemoryHistory({ initialEntries: [path] }),
@@ -115,30 +107,35 @@ function renderAt(path: string) {
 }
 
 describe('LanguageSwitcher rendering', () => {
-  it('keeps the trigger visible while the menu chunk loads', async () => {
+  it('renders nothing when only one public locale is compiled', async () => {
     overwriteGetLocale(() => 'en');
     renderAt('/jobs');
+    expect(screen.queryByRole('button', { name: 'Language' })).toBeNull();
+    expect(
+      document.querySelector('[data-test="language-switcher"]'),
+    ).toBeNull();
+  });
+
+  it('keeps the trigger visible while the menu chunk loads', async () => {
+    overwriteGetLocale(() => 'en');
+    const options = buildLocaleOptions('en', '/jobs', ['en', 'de', 'fr']);
+    renderAt('/jobs', <LanguageSwitcherPanel options={options} />);
     const trigger = await screen.findByRole('button', { name: 'Language' });
 
     fireEvent.click(trigger);
 
-    // Immediately after the click the lazy menu import is still pending —
-    // the Suspense fallback must render an identical pill, never nothing.
-    // (Regression: a null fallback made the switcher blink out on first
-    // click until the chunk arrived.)
     const pill = document.querySelector('[data-test="language-switcher"]');
     expect(pill).not.toBeNull();
     expect(pill).toHaveTextContent('English');
 
-    // Once the chunk lands, the real menu takes over (defaultOpen).
     await waitFor(() => screen.getByRole('menu'));
   });
 
-  it('shows the active language on the trigger and the three options marked', async () => {
-    overwriteGetLocale(() => 'de');
-    renderAt('/jobs');
-    const trigger = await screen.findByRole('button', { name: 'Sprache' });
-    // Trigger reflects the current locale + carries the localized aria-label.
+  it('shows the active language on the trigger and the extra options marked', async () => {
+    overwriteGetLocale(() => 'en');
+    const options = buildLocaleOptions('de', '/jobs', ['en', 'de', 'fr']);
+    renderAt('/jobs', <LanguageSwitcherPanel options={options} />);
+    const trigger = await screen.findByRole('button', { name: 'Language' });
     expect(trigger).toHaveTextContent('Deutsch');
 
     fireEvent.click(trigger);
@@ -147,13 +144,11 @@ describe('LanguageSwitcher rendering', () => {
     for (const label of ['English', 'Deutsch', 'Français']) {
       expect(within(menu).getByText(label)).toBeInTheDocument();
     }
-    // Current locale indicated via aria-current on its item's anchor.
     const current = within(menu)
       .getByText('Deutsch')
       .closest('[aria-current="true"]');
     expect(current).not.toBeNull();
     expect(current).toHaveAttribute('href', '/de/jobs');
-    // The switch-to-English option preserves the path, unprefixed.
     expect(within(menu).getByText('English').closest('a')).toHaveAttribute(
       'href',
       '/jobs',

@@ -7,11 +7,11 @@
  * back to the wire copy, so nothing can break — it just un-localizes.
  */
 import { m } from '../paraglide/messages';
-import { isLocale } from '../paraglide/runtime';
+import { isLocale, type Locale } from '../paraglide/runtime';
 
 type MessageFn = (
   inputs?: Record<string, never>,
-  options?: { locale?: 'de' | 'en' | 'fr' },
+  options?: { locale?: Locale },
 ) => string;
 
 const PLAN_LABELS: Record<string, { name: MessageFn; description: MessageFn }> =
