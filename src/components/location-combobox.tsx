@@ -31,6 +31,12 @@ interface LocationComboboxProps extends LocationSuggestionState {
   /** Display name for the active slug when known (e.g. a /jobs/locations page). */
   valueLabel?: string;
   onSelect: (place: { slug: string; name: string }) => void;
+  /**
+   * Drop the resolved place. The caller MUST clear `value`/`valueLabel` in
+   * response — this component treats the resulting `value → undefined` as the
+   * echo of its own request and leaves the visitor's text alone. A caller that
+   * ignores it will later swallow one genuine external clear.
+   */
   onClear: () => void;
   className?: string;
   inputClassName?: string;
@@ -59,9 +65,37 @@ export function LocationCombobox({
   const [open, setOpen] = useState(false);
   const anchorRef = useComboboxAnchor();
   const inputRef = useRef<HTMLInputElement>(null);
+  /**
+   * Set when THIS component asks the caller to drop its resolved place,
+   * because the visitor edited the label. The resulting `value → undefined`
+   * is then our own echo, not news, and must not overwrite what they typed.
+   *
+   * This relies on the `onClear` contract: a caller that never drops `value`
+   * leaves the flag armed, and the next genuine external clear is swallowed.
+   * The two are indistinguishable from in here — "value went away after I
+   * asked for it" is all the component ever sees — so the contract is stated
+   * on the prop rather than guessed at.
+   */
+  const invalidatedRef = useRef(false);
 
   useEffect(() => {
-    setText(valueLabel ?? value ?? '');
+    const resolved = valueLabel ?? value;
+
+    if (resolved) {
+      invalidatedRef.current = false;
+      setText(resolved);
+      return;
+    }
+
+    // Cleared. Blank the field only when the clear came from OUTSIDE — a
+    // history navigation or a programmatic reset, which are real news about
+    // what the field should say. Swallow our own echo exactly once.
+    if (invalidatedRef.current) {
+      invalidatedRef.current = false;
+      return;
+    }
+
+    setText('');
   }, [value, valueLabel]);
 
   const clear = () => {
@@ -90,7 +124,10 @@ export function LocationCombobox({
         if (details.reason !== 'input-change') return;
 
         onQueryChange(nextText);
-        if (value && nextText !== (valueLabel ?? value)) onClear();
+        if (value && nextText !== (valueLabel ?? value)) {
+          invalidatedRef.current = true;
+          onClear();
+        }
         setOpen(Boolean(nextText.trim()));
       }}
       onValueChange={(place) => {
