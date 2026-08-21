@@ -20,22 +20,7 @@ import {
   serializeSessionForSource,
 } from '../lib/data-source.server';
 import { sessionMiddleware } from '../lib/session-middleware';
-
-/** Persist a returned bearer pair into the active data-source cookie. */
-export function persistAuthSession(session: BoardAuthSession): BoardSession {
-  const next: BoardSession = {
-    accessToken: session.accessToken,
-    refreshToken: session.refreshToken,
-    expiresAt: session.expiresAt,
-  };
-  // Write into the active data source's cookie only — never clobber the
-  // other source's session when dual-source is on.
-  setResponseHeader(
-    'Set-Cookie',
-    serializeSessionForSource(next, getDataSource()),
-  );
-  return next;
-}
+import { persistAuthSession } from './auth-session.server';
 
 function storeSession(session: BoardAuthSession): BoardSession {
   return persistAuthSession(session);

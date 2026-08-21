@@ -21,7 +21,7 @@ import {
   requireSessionMiddleware,
   type SessionContext,
 } from '../lib/session-middleware';
-import { persistAuthSession } from './auth';
+import { persistAuthSession } from './auth-session.server';
 import { gatedRead } from './board-access';
 
 import type {

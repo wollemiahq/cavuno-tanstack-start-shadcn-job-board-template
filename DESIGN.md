@@ -1261,6 +1261,26 @@ Props:
 - `jobId: string`
 - `slug: string`
 
+### CompanyDeleteDangerZone — `src/components/employer/company-delete-danger-zone.tsx`
+
+Props:
+
+- `companyName: string`
+- `isAdmin: boolean`
+- `otherApprovedMembers: number`
+- `slug: string`
+
+### CompanyMembersTable — `src/components/employer/company-members-table.tsx`
+
+Props:
+
+- `companyName: string`
+- `currentUserId: string`
+- `invites: { id: string; object: "company_member_invite"; email: string; createdAt: string; expiresAt: string; }[]`
+- `isAdmin: boolean`
+- `members: { id: string; object: "company_member"; boardUserId: string; displayName: string | null; email: string; role: "admin"…`
+- `slug: string`
+
 ### EmployerProfileViewsStat — `src/components/employer/employer-profile-views-stat.tsx`
 
 Compact profile-views stat for the company-profile page header — the
@@ -1297,6 +1317,14 @@ Props:
 Deferred-load fallback for {@link EmployerStatsChart} — the same card at the
 chart's height with a spinner, so the table above paints first and the chart
 area reserves its space instead of shifting layout when the data streams in.
+
+### InviteMemberDialog — `src/components/employer/invite-member-dialog.tsx`
+
+Props:
+
+- `onOpenChange: (open: boolean) => void`
+- `open: boolean`
+- `slug: string`
 
 ### EmptyState — `src/components/empty-state.tsx`
 
@@ -2097,6 +2125,22 @@ Props:
 - `children: ReactNode`
 - `label: string`
 - `scrollRestorationId?: string | undefined`
+
+### SettingsEmailCard — `src/components/settings-email-card.tsx`
+
+Props:
+
+- `currentEmail: string`
+
+### SettingsPasswordCard — `src/components/settings-password-card.tsx`
+
+Password card — change-password when `hasPassword`, otherwise the
+set-password path that reuses `board.auth.forgotPassword`.
+
+Props:
+
+- `email: string`
+- `hasPassword: boolean`
 
 ### MainContentTarget — `src/components/shell-accessibility.tsx`
 

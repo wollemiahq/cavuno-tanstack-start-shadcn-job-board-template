@@ -24,11 +24,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { FieldError } from '@/components/ui/field';
@@ -47,6 +42,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import type { CompanyMember, CompanyMemberInvite } from '@cavuno/board';
 
@@ -358,9 +358,7 @@ export function CompanyMembersTable({
                     <TableCell>
                       <Tooltip>
                         <TooltipTrigger
-                          render={
-                            <span className="inline-flex" tabIndex={0} />
-                          }
+                          render={<span className="inline-flex" tabIndex={0} />}
                         >
                           <Badge variant="secondary">
                             {m.employerMembers_invitedColumn()}

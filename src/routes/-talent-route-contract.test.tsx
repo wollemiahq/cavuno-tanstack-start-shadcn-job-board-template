@@ -35,6 +35,19 @@ vi.mock('../server/queries', () => ({
   listTalent: vi.fn(),
 }));
 
+// The viewer comes from the root SESSION context, not the root loader — the
+// route reads `board` from `getRouteApi('__root__')` but `user` from
+// `useRootSession()`. Both seams have to be stubbed or every viewer resolves
+// anonymous and the gating assertions below silently test nothing.
+vi.mock('@/components/root-session', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@/components/root-session')>();
+  return {
+    ...actual,
+    useRootSession: () => ({ user: rootData.value.user }),
+  };
+});
+
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual =
     await importOriginal<typeof import('@tanstack/react-router')>();

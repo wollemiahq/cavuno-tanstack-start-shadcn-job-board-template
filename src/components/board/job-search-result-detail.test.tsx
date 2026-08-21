@@ -7,6 +7,7 @@ import {
   render,
   screen,
   within,
+  waitFor,
 } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -233,7 +234,7 @@ describe('JobSearchResultDetail', () => {
     }
   });
 
-  it('replaces the expanded hero once its boundary leaves the detail viewport', () => {
+  it('replaces the expanded hero once its boundary leaves the detail viewport', async () => {
     const { container } = render(
       <SearchResultDetail label="Selected job">
         <JobSearchResultDetail
@@ -262,6 +263,16 @@ describe('JobSearchResultDetail', () => {
       writable: true,
     });
     fireEvent.scroll(detail);
+
+    // The condensed swap is batched into a requestAnimationFrame so scroll
+    // handlers do not thrash style→layout→style, so it is NOT applied by the
+    // time fireEvent returns. Wait for the frame rather than asserting into
+    // the gap.
+    await waitFor(() =>
+      expect(
+        container.querySelector("[data-slot='search-detail-header']"),
+      ).not.toBeNull(),
+    );
 
     const compact = container.querySelector(
       '[data-slot="search-detail-header"]',
