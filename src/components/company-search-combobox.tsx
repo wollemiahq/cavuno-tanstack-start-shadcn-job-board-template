@@ -133,10 +133,9 @@ export function CompanySearchCombobox({
           <ComboboxList>
             {(market: CompanyMarketSuggestion) => (
               <ComboboxItem key={market.slug} value={market}>
+                {/* No kind badge: every row in this list is a market, so the
+                    label repeated the obvious on every line. */}
                 <span className="min-w-0 flex-1 truncate">{market.name}</span>
-                <span className="text-muted-foreground text-xs">
-                  {m.companySearch_marketLabel()}
-                </span>
               </ComboboxItem>
             )}
           </ComboboxList>

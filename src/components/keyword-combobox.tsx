@@ -130,15 +130,18 @@ export function KeywordCombobox({
             {(term: KeywordSuggestionVM) => (
               <ComboboxItem key={term.id} value={term}>
                 <span className="min-w-0 flex-1 truncate">{term.name}</span>
-                <span className="text-muted-foreground text-xs">
-                  {term.type === 'skill'
-                    ? m.jobDetail_skillsHeading()
-                    : term.type === 'post'
+                {/* Only the blog scope earns a kind badge, because posts and
+                    tags are genuinely different things sitting in one list.
+                    The jobs scope drops it: category-vs-skill is an internal
+                    taxonomy distinction that means nothing to a visitor, and
+                    labelling every row with it was noise. */}
+                {term.type === 'post' || term.type === 'tag' ? (
+                  <span className="text-muted-foreground text-xs">
+                    {term.type === 'post'
                       ? m.searchSuggestion_postBadge()
-                      : term.type === 'tag'
-                        ? m.searchSuggestion_tagBadge()
-                        : m.jobDetail_categoriesHeading()}
-                </span>
+                      : m.searchSuggestion_tagBadge()}
+                  </span>
+                ) : null}
               </ComboboxItem>
             )}
           </ComboboxList>
