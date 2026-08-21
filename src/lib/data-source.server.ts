@@ -1,3 +1,10 @@
+/**
+ * Server-side dual data-source helpers — env + request cookie + session
+ * and grant cookie codecs. Import only from server code (server functions,
+ * middleware, board.ts). The browser-safe preference cookie helpers live in
+ * `data-source.ts`.
+ */
+
 import { type BoardAuthSession } from '@cavuno/board';
 import {
   clearGrantCookie,
@@ -8,14 +15,10 @@ import {
   serializeSessionCookie,
   type BoardSession,
 } from '@cavuno/board/server';
-/**
- * Server-side dual data-source helpers — env + request cookie + session
- * and grant cookie codecs. Import only from server code (server functions,
- * middleware, board.ts). The browser-safe preference cookie helpers live in
- * `data-source.ts`.
- */
-import { setResponseHeader } from '@tanstack/react-start/server';
-import { getRequestHeader } from '@tanstack/react-start/server';
+import {
+  getRequestHeader,
+  setResponseHeader,
+} from '@tanstack/react-start/server';
 
 import { resolveDataSource, type DataSource } from './data-source';
 import { getServerEnv } from './env';
