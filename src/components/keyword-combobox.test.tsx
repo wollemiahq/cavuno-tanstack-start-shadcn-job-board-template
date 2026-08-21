@@ -47,11 +47,11 @@ describe('KeywordCombobox', () => {
         .querySelector('[data-slot="combobox-content"]')
         ?.getAttribute('data-chips'),
     ).toBe('true');
-    expect(screen.getByRole('option', { name: /Robotics/ })).toBeTruthy();
     // Category-vs-skill is an internal taxonomy split; the jobs scope shows
-    // the term alone rather than badging every row with it.
-    expect(screen.queryByText(m.jobDetail_skillsHeading())).toBeNull();
-    expect(screen.queryByText(m.jobDetail_categoriesHeading())).toBeNull();
+    // the term ALONE. Asserting the whole row rather than the absence of two
+    // particular words, so a badge re-added with any other text still fails.
+    const option = screen.getByRole('option', { name: /Robotics/ });
+    expect(option.textContent).toBe('Robotics');
   });
 
   it('keeps free text editable and reports a picked canonical term', () => {
