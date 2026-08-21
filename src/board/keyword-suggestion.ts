@@ -39,3 +39,19 @@ export function toBlogSuggestionVM(
     name: (item.type === 'post' ? item.title : item.name) ?? item.slug,
   };
 }
+
+/**
+ * Posts first, then tags, each keeping the API's own relevance order within
+ * its group. A visitor typing into the blog search is nearly always after an
+ * article; a tag is a way to browse toward one. Ranking posts above tags puts
+ * the thing they came for in the rows they actually look at.
+ */
+export function sortBlogSuggestions(
+  suggestions: readonly KeywordSuggestionVM[],
+): KeywordSuggestionVM[] {
+  const rank = (suggestion: KeywordSuggestionVM) =>
+    suggestion.type === 'post' ? 0 : 1;
+
+  // Array#sort is stable, so relevance order survives inside each group.
+  return [...suggestions].sort((a, b) => rank(a) - rank(b));
+}
