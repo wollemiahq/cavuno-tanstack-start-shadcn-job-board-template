@@ -212,6 +212,50 @@ export function SalaryRail({ vm }: { vm: SalaryRailVM }) {
   );
 }
 
+/**
+ * Compact taxonomy directory for salary title/category and skill axes.
+ *
+ * Taxonomy entries are labels, not identities, so one shared list container
+ * is more honest (and cheaper to render) than an avatar card per row.
+ */
+export function SalaryDirectoryList({ vm }: { vm: SalaryRailVM }) {
+  if (vm.items.length === 0) return null;
+
+  return (
+    <section className="flex flex-col gap-4">
+      {vm.title ? (
+        <h2 className="font-heading text-lg font-medium tracking-tight">
+          {vm.title}
+        </h2>
+      ) : null}
+      <Card className="gap-0 overflow-hidden py-0">
+        <CardContent className="p-0">
+          <ul className="divide-border divide-y">
+            {vm.items.map((item) => (
+              <li key={item.href}>
+                <a
+                  href={localizePath(item.href)}
+                  className="focus-visible:ring-ring/30 hover:bg-muted/50 grid gap-1 px-4 py-3 outline-none focus-visible:ring-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-6"
+                >
+                  <span className="text-sm font-medium break-words">
+                    {item.name}
+                  </span>
+                  <span className="text-sm font-medium tabular-nums">
+                    {item.range}
+                  </span>
+                  <span className="text-muted-foreground text-sm tabular-nums sm:min-w-24 sm:text-end">
+                    {item.jobCountLabel}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+    </section>
+  );
+}
+
 export function CompanySalarySummary({
   title,
   overall,

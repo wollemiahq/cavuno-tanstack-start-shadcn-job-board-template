@@ -205,12 +205,19 @@ export const getSalaryCompaniesIndexPage = createServerFn({ method: 'GET' })
 
 export const getSalaryTitlesIndexPage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
-  .handler(({ context }) =>
+  .validator((input: { page: number; pageSize: number }) => ({
+    page: Math.max(1, Math.trunc(input.page)),
+    pageSize: Math.max(1, Math.min(100, Math.trunc(input.pageSize))),
+  }))
+  .handler(({ context, data }) =>
     gatedRead(context, async (headers) => {
       const [titles, seo] = await Promise.all([
         getBoard().salaries.titles.list({ locale: getLocale() }, { headers }),
         seoBase(),
       ]);
+      const count = titles.data.length;
+      const offset = (data.page - 1) * data.pageSize;
+      const pageTitles = titles.data.slice(offset, offset + data.pageSize);
       const c = breadcrumbsCopy();
       const head = {
         meta: [
@@ -234,7 +241,7 @@ export const getSalaryTitlesIndexPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
-            titles.data.map((t) => ({
+            pageTitles.map((t) => ({
               name: t.name,
               url: selfUrl(seo.origin, salaryTitlePath(t.slug)),
             })),
@@ -249,18 +256,33 @@ export const getSalaryTitlesIndexPage = createServerFn({ method: 'GET' })
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { titles: titles.data, seo, head, jsonLd };
+      return {
+        titles: pageTitles,
+        count,
+        page: data.page,
+        pageSize: data.pageSize,
+        seo,
+        head,
+        jsonLd,
+      };
     }),
   );
 
 export const getSalarySkillsIndexPage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
-  .handler(({ context }) =>
+  .validator((input: { page: number; pageSize: number }) => ({
+    page: Math.max(1, Math.trunc(input.page)),
+    pageSize: Math.max(1, Math.min(100, Math.trunc(input.pageSize))),
+  }))
+  .handler(({ context, data }) =>
     gatedRead(context, async (headers) => {
       const [skills, seo] = await Promise.all([
         getBoard().salaries.skills.list({ locale: getLocale() }, { headers }),
         seoBase(),
       ]);
+      const count = skills.data.length;
+      const offset = (data.page - 1) * data.pageSize;
+      const pageSkills = skills.data.slice(offset, offset + data.pageSize);
       const c = breadcrumbsCopy();
       const head = {
         meta: [
@@ -284,7 +306,7 @@ export const getSalarySkillsIndexPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
-            skills.data.map((s) => ({
+            pageSkills.map((s) => ({
               name: s.name,
               url: selfUrl(seo.origin, salarySkillPath(s.slug)),
             })),
@@ -299,7 +321,15 @@ export const getSalarySkillsIndexPage = createServerFn({ method: 'GET' })
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { skills: skills.data, seo, head, jsonLd };
+      return {
+        skills: pageSkills,
+        count,
+        page: data.page,
+        pageSize: data.pageSize,
+        seo,
+        head,
+        jsonLd,
+      };
     }),
   );
 

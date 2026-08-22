@@ -1,5 +1,6 @@
 import {
   createFileRoute,
+  notFound,
   useLocation,
   useNavigate,
   useRouter,
@@ -30,14 +31,44 @@ export const Route = createFileRoute('/blog/')({
     q: typeof search.q === 'string' && search.q ? search.q : undefined,
   }),
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps }) =>
-    getBlogIndexPage({ data: { cursor: deps.cursor, q: deps.q } }),
+  loader: async ({ deps }) => {
+    const result = await getBlogIndexPage({
+      data: { cursor: deps.cursor, q: deps.q },
+    });
+    if (
+      deps.cursor &&
+      (result.page.data.length === 0 || result.cursorPageIsFirstPage)
+    ) {
+      throw notFound({ data: { kind: 'pagination' } });
+    }
+    return result;
+  },
   head: ({ loaderData }) =>
     loaderData
       ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
       : {},
   component: BlogPage,
+  notFoundComponent: BlogPaginationNotFound,
 });
+
+function BlogPaginationNotFound() {
+  const search = Route.useSearch();
+
+  return (
+    <BlogArchivePage
+      title={m.blogIndex_title()}
+      description={m.blogIndex_subtitleText()}
+      posts={[]}
+      empty={{
+        title: m.blogIndex_emptyTitle(),
+        description: search.q
+          ? m.blogIndex_noMatchText({ query: search.q })
+          : m.blogIndex_emptyText(),
+        action: { label: m.blogIndex_browseAllLabel(), href: '/blog' },
+      }}
+    />
+  );
+}
 
 function BlogPage() {
   const { page, tags, q } = Route.useLoaderData();

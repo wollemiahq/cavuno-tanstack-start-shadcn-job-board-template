@@ -28,6 +28,10 @@ vi.mock('../server/talent-pages', () => ({
   getTalentProfilePage,
 }));
 
+vi.mock('@/components/board/talent-search-page', () => ({
+  TalentSearchPage: () => null,
+}));
+
 // Selected-talent pane hook still reads getTalentProfile from queries.
 vi.mock('../server/queries', () => ({
   getTalentProfile: vi.fn(),
@@ -108,7 +112,7 @@ beforeEach(() => {
   getTalentIndexPage.mockReset();
   getTalentIndexPage.mockResolvedValue({
     seo,
-    page: { data: [], hasMore: false, nextCursor: null },
+    page: { data: [], count: 100, hasMore: false, nextCursor: null },
     restricted: false,
     head: {},
     jsonLd: [],
@@ -193,6 +197,35 @@ describe('talent directory route — query and capability contracts', () => {
         limit: 24,
       },
     });
+  });
+
+  it('404s a later page beyond the result count but keeps an empty first page valid', async () => {
+    getTalentIndexPage.mockResolvedValue({
+      seo,
+      page: { data: [], count: 24, hasMore: false, nextCursor: null },
+      restricted: false,
+      head: {},
+      jsonLd: [],
+    });
+
+    let outcome: unknown;
+    try {
+      await routeLoader(TalentRoute)({ deps: { page: 2 } } as never);
+    } catch (error) {
+      outcome = error;
+    }
+    expect(isRouteNotFound(outcome)).toBe(true);
+
+    getTalentIndexPage.mockResolvedValue({
+      seo,
+      page: { data: [], count: 0, hasMore: false, nextCursor: null },
+      restricted: false,
+      head: {},
+      jsonLd: [],
+    });
+    await expect(
+      routeLoader(TalentRoute)({ deps: {} } as never),
+    ).resolves.toMatchObject({ page: { count: 0 } });
   });
 
   it('renders the restricted state for the employer-only directory code', async () => {

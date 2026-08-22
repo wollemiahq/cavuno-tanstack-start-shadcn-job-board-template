@@ -3,6 +3,7 @@ import {
   createFileRoute,
   getRouteApi,
   notFound,
+  type NotFoundRouteProps,
   useLocation,
   useNavigate,
 } from '@tanstack/react-router';
@@ -25,7 +26,12 @@ import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { useRootSession } from '@/components/root-session';
 import { buttonVariants } from '@/components/ui/button';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
-import { pageSearchValue, pageToOffset } from '@/lib/pagination';
+import {
+  exceedsOffsetPaginationWindow,
+  isOutOfBoundsOffsetPage,
+  pageSearchValue,
+  pageToOffset,
+} from '@/lib/pagination';
 import {
   parseTalentSearch,
   talentListingLoaderDeps,
@@ -42,10 +48,16 @@ export const Route = createFileRoute('/talent/')({
   validateSearch: parseTalentSearch,
   loaderDeps: ({ search }) => talentListingLoaderDeps(search),
   loader: async ({ deps }) => {
+    const page = deps.page ?? 1;
+    const offset = pageToOffset(page, TALENT_PAGE_SIZE);
+    if (exceedsOffsetPaginationWindow(offset, TALENT_PAGE_SIZE)) {
+      throw notFound({ data: { kind: 'pagination' } });
+    }
+    let result;
     try {
-      return await getTalentIndexPage({
+      result = await getTalentIndexPage({
         data: {
-          offset: pageToOffset(deps.page ?? 1, TALENT_PAGE_SIZE),
+          offset,
           q: deps.q,
           skill: deps.skill,
           limit: TALENT_PAGE_SIZE,
@@ -55,6 +67,18 @@ export const Route = createFileRoute('/talent/')({
       if (isNotFound(error)) throw notFound();
       throw error;
     }
+    if (
+      result.page &&
+      isOutOfBoundsOffsetPage({
+        page,
+        offset,
+        count: result.page.count,
+        resultCount: result.page.data.length,
+      })
+    ) {
+      throw notFound({ data: { kind: 'pagination' } });
+    }
+    return result;
   },
   head: ({ loaderData, match }) =>
     loaderData
@@ -76,7 +100,15 @@ export const Route = createFileRoute('/talent/')({
   notFoundComponent: TalentDirectoryNotFound,
 });
 
-function TalentDirectoryNotFound() {
+function TalentDirectoryNotFound({ data }: NotFoundRouteProps) {
+  if (
+    typeof data === 'object' &&
+    data !== null &&
+    (data as { kind?: unknown }).kind === 'pagination'
+  ) {
+    return <TalentPaginationNotFound />;
+  }
+
   return (
     <Page width="wide">
       <PageContent header={<PageHeader title={m.talentDirectory_title()} />}>
@@ -95,6 +127,27 @@ function TalentDirectoryNotFound() {
   );
 }
 
+function TalentPaginationNotFound() {
+  const search = Route.useSearch();
+
+  return (
+    <TalentSearchPage
+      candidates={[]}
+      q={search.q}
+      skill={search.skill}
+      count={0}
+      page={search.page ?? 1}
+      pageSize={TALENT_PAGE_SIZE}
+      language={getLocale()}
+      onPageChange={() => undefined}
+      selectedTalent={undefined}
+      onSelectedTalentReplace={() => undefined}
+      onSelectedTalentPush={() => undefined}
+      detail={null}
+    />
+  );
+}
+
 function TalentDirectoryPage() {
   const { seo, page, restricted } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
@@ -109,13 +162,13 @@ function TalentDirectoryPage() {
     user === null
       ? { kind: 'anonymous' }
       : user.role === 'employer'
-        ? { kind: 'employer', hasTalentAccess: true }
-        : { kind: 'candidate' };
+      ? { kind: 'employer', hasTalentAccess: true }
+      : { kind: 'candidate' };
   const signInHref = candidateSignInHref(location.href);
   const selectedTalent = useSelectedTalent(
     page?.data.some((candidate) => candidate.handle === search.selectedTalent)
       ? search.selectedTalent
-      : undefined,
+      : undefined
   );
 
   if (restricted) {
@@ -135,7 +188,7 @@ function TalentDirectoryPage() {
     <>
       <TalentSearchPage
         candidates={page.data.map((candidate) =>
-          toTalentCardVM(candidate, getTalentSearchLabels()),
+          toTalentCardVM(candidate, getTalentSearchLabels())
         )}
         q={search.q}
         skill={search.skill}

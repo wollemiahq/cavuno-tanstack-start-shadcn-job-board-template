@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   OverallSalaryCard,
+  SalaryDirectoryList,
   SalaryEmptyState,
   SalaryFaq,
   SalaryRail,
@@ -135,6 +136,21 @@ describe('salary sections', () => {
     expect(screen.getByText(rail.items[1].range)).toBeVisible();
     expect(screen.getByText('3 jobs')).toBeVisible();
     expect(screen.getByText('AR')).toBeVisible();
+  });
+
+  it('renders taxonomy entries as compact linked rows without identity imagery', () => {
+    render(<SalaryDirectoryList vm={rail} />);
+
+    const list = screen.getByRole('list');
+    const links = within(list).getAllByRole('link');
+
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/companies/acme-robotics/salaries',
+      '/companies/long-range-labs/salaries',
+    ]);
+    expect(within(list).getByText(rail.items[0].range)).toBeVisible();
+    expect(within(list).getByText('7 jobs')).toBeVisible();
+    expect(within(list).queryByRole('img')).not.toBeInTheDocument();
   });
 
   it('renders FAQs as semantic question-answer pairs', () => {

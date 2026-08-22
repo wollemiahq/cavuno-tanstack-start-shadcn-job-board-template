@@ -3,7 +3,12 @@
  * so `@cavuno/board/seo` stays out of the universal client entry.
  */
 import { BOARD_PATHS, salaryTitlePath } from '@cavuno/board/paths';
-import { createFileRoute } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  redirect,
+  useLocation,
+  useNavigate,
+} from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -16,17 +21,50 @@ import {
   toSalaryBreadcrumbVM,
   toSalaryRailVM,
 } from '@/board/salary-view-model';
+import { ListingPagination } from '@/components/board/listing-pagination';
 import {
+  SalaryDirectoryList,
   SalaryEmptyState,
-  SalaryRail,
   type RailItem,
 } from '@/components/board/salary-sections';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import {
+  listingPageHref,
+  pageSearchValue,
+  parsePageParam,
+  totalPages,
+} from '@/lib/pagination';
+
+interface SalaryTitlesSearch {
+  page?: number;
+}
+
+export const SALARY_TITLES_PAGE_SIZE = 50;
 
 export const Route = createFileRoute('/salaries/titles/')({
   staticData: { fullBleed: true, ownsMain: true },
-  loader: () => getSalaryTitlesIndexPage(),
+  validateSearch: (search: Record<string, unknown>): SalaryTitlesSearch => ({
+    page: pageSearchValue(parsePageParam(search.page)),
+  }),
+  loaderDeps: ({ search }) => search,
+  loader: async ({ deps }) => {
+    const requestedPage = deps.page ?? 1;
+    const pageData = await getSalaryTitlesIndexPage({
+      data: { page: requestedPage, pageSize: SALARY_TITLES_PAGE_SIZE },
+    });
+    const lastPage = Math.max(1, totalPages(pageData.count, pageData.pageSize));
+
+    if (requestedPage > lastPage) {
+      throw redirect({
+        to: '/salaries/titles',
+        search: { page: pageSearchValue(lastPage) },
+        replace: true,
+      });
+    }
+
+    return pageData;
+  },
   head: ({ loaderData }) =>
     loaderData
       ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
@@ -36,9 +74,11 @@ export const Route = createFileRoute('/salaries/titles/')({
 });
 
 function SalaryTitlesIndex() {
-  const { titles } = Route.useLoaderData();
+  const { titles, count, page, pageSize } = Route.useLoaderData();
   const crumbs = breadcrumbsCopy();
   const locale = getLocale();
+  const location = useLocation();
+  const navigate = useNavigate({ from: '/salaries/titles/' });
 
   const items: RailItem[] = titles.map((t) => ({
     name: t.name,
@@ -61,8 +101,24 @@ function SalaryTitlesIndex() {
       )}
       title={m.salaryHub_titlesHeading()}
     >
-      {items.length > 0 ? (
-        <SalaryRail vm={toSalaryRailVM('', items, getLocale())} />
+      {count > 0 ? (
+        <div data-pagination-scroll-target className="space-y-8">
+          <SalaryDirectoryList vm={toSalaryRailVM('', items, getLocale())} />
+          <ListingPagination
+            page={page}
+            count={count}
+            pageSize={pageSize}
+            hrefForPage={(nextPage) => listingPageHref(location.href, nextPage)}
+            onPageChange={(nextPage) =>
+              navigate({
+                search: (previous) => ({
+                  ...previous,
+                  page: pageSearchValue(nextPage),
+                }),
+              })
+            }
+          />
+        </div>
       ) : (
         <SalaryEmptyState
           title={m.salaryHub_titlesEmptyTitle()}
