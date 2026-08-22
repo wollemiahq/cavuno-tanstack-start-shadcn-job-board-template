@@ -35,6 +35,7 @@ export interface ShellBreadcrumbPrivateLabels {
   account: string;
   profile: string;
   savedJobs: string;
+  recommendedJobs: string;
   jobAlerts: string;
   applications: string;
   applicants: string;
@@ -345,6 +346,16 @@ export function resolveShellBreadcrumb({
     } else if (rest[0]) {
       items.push({ name: readableSegment(rest[0]) });
     }
+    return finish(items);
+  }
+
+  if (section === 'matches') {
+    items.push({ name: priv('recommendedJobs', 'matches') });
+    return finish(items);
+  }
+
+  if (section === 'saved-jobs') {
+    items.push({ name: priv('savedJobs', 'saved-jobs') });
     return finish(items);
   }
 

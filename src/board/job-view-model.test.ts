@@ -127,7 +127,7 @@ describe('toJobCardVM', () => {
 describe('toSavedJobCardVM', () => {
   // me/saved-jobs embeds a PublicJobCard. Categories / skills can still be
   // absent on a partial fixture — the mapper defaults them so one stale row
-  // never takes down /account/saved.
+  // never takes down /saved-jobs.
   const slimSavedJob = {
     id: 'job_2',
     object: 'job_card',

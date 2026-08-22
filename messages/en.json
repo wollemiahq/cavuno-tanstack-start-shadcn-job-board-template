@@ -1246,7 +1246,7 @@
   "publicProfile_presentLabel": "Present",
   "publicProfile_profileFallbackLabel": "Profile",
   "publicProfile_skillsHeading": "Skills",
-  "resumeImport_description": "We'll use it to fill in your profile fields.",
+  "resumeImport_description": "Uploading a resume completes your profile. We use that profile to match you with relevant jobs.",
   "resumeImport_title": "Import resume",
   "resumeImport_triggerLabel": "Import resume",
   "resumeUpload_deleteLabel": "Delete",
@@ -1522,5 +1522,13 @@
   "ui_moreLabel": "More",
   "ui_sidebarDescription": "Displays the mobile sidebar.",
   "ui_sidebarTitle": "Sidebar",
-  "ui_sidebarToggleLabel": "Toggle sidebar"
+  "ui_sidebarToggleLabel": "Toggle sidebar",
+  "accountRecommended_countOneText": "1 job matches your profile and preferences.",
+  "accountRecommended_countOtherText": "{count} jobs match your profile and preferences.",
+  "accountRecommended_heading": "{name}'s matches",
+  "accountRecommended_headingFallback": "Your matches",
+  "accountRecommended_needsProfileTitle": "Upload your resume",
+  "accountRecommended_noneNowText": "We do not have matches for you at the moment. Browse open roles instead.",
+  "accountRecommended_noneNowTitle": "No matches right now",
+  "accountShell_recommendedJobsNav": "Job matches"
 }

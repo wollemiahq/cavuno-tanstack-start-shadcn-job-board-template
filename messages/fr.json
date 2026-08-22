@@ -1246,7 +1246,7 @@
   "publicProfile_presentLabel": "Aujourd'hui",
   "publicProfile_profileFallbackLabel": "Profil",
   "publicProfile_skillsHeading": "Compétences",
-  "resumeImport_description": "Nous l’utiliserons pour remplir votre profil.",
+  "resumeImport_description": "Télécharger un CV complète votre profil. Nous utilisons ce profil pour vous mettre en correspondance avec des offres pertinentes.",
   "resumeImport_title": "Importer un CV",
   "resumeImport_triggerLabel": "Importer un CV",
   "resumeUpload_deleteLabel": "Supprimer",
@@ -1522,5 +1522,13 @@
   "ui_moreLabel": "Plus",
   "ui_sidebarDescription": "Affiche la barre latérale mobile.",
   "ui_sidebarTitle": "Barre latérale",
-  "ui_sidebarToggleLabel": "Afficher ou masquer la barre latérale"
+  "ui_sidebarToggleLabel": "Afficher ou masquer la barre latérale",
+  "accountRecommended_countOneText": "1 offre correspond à votre profil et à vos préférences.",
+  "accountRecommended_countOtherText": "{count} offres correspondent à votre profil et à vos préférences.",
+  "accountRecommended_heading": "Correspondances de {name}",
+  "accountRecommended_headingFallback": "Vos correspondances",
+  "accountRecommended_needsProfileTitle": "Téléchargez votre CV",
+  "accountRecommended_noneNowText": "Nous n’avons pas de correspondances pour vous pour le moment. Parcourez les offres ouvertes.",
+  "accountRecommended_noneNowTitle": "Aucune correspondance pour le moment",
+  "accountShell_recommendedJobsNav": "Correspondances"
 }

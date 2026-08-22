@@ -127,6 +127,7 @@ describe('resolveShellBreadcrumb — authed surfaces (footer trails everywhere)'
     account: 'Account',
     profile: 'Profile',
     savedJobs: 'Saved jobs',
+    recommendedJobs: 'Job matches',
     jobAlerts: 'Job alerts',
     applications: 'Applications',
     applicants: 'Applicants',
@@ -160,6 +161,14 @@ describe('resolveShellBreadcrumb — authed surfaces (footer trails everywhere)'
       { name: 'Home', href: '/' },
       { name: 'Account', href: '/account' },
       { name: 'Subscription' },
+    ]);
+    expect(resolve('/saved-jobs')?.items).toEqual([
+      { name: 'Home', href: '/' },
+      { name: 'Saved jobs' },
+    ]);
+    expect(resolve('/matches')?.items).toEqual([
+      { name: 'Home', href: '/' },
+      { name: 'Job matches' },
     ]);
   });
 

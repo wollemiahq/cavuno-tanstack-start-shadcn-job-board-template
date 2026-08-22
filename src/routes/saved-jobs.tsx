@@ -1,14 +1,12 @@
 /**
- * Saved jobs — a standalone candidate account page, styled like the jobs
- * search surface: saved jobs list on the left, the selected job's full detail
- * on the right (fetched fresh by slug — the saved-list embed is a slimmer
- * projection than the `PublicJob` type promises and cannot feed the detail
- * pane; see the array defaults below for the card side of the same problem).
+ * Saved jobs — same public URL as hosted boards (`/saved-jobs`).
+ * File is a root route so it is not nested under `/account`.
  *
- * Routing note: the file is `account_.saved` (trailing underscore) so
- * `/account/saved` is NOT nested under the `/account` leaf route. `/account`
- * renders the profile page and has no `<Outlet/>`, so nesting here meant
- * navigating to `/account/saved` rendered nothing — the page "did nothing".
+ * Styled like the jobs search surface: saved jobs list on the left, the
+ * selected job's full detail on the right (fetched fresh by slug — the
+ * saved-list embed is a slimmer projection than the `PublicJob` type
+ * promises and cannot feed the detail pane; see the array defaults below
+ * for the card side of the same problem).
  */
 import { useState } from 'react';
 
@@ -52,7 +50,7 @@ import { headTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
 
-export const Route = createFileRoute('/account_/saved')({
+export const Route = createFileRoute('/saved-jobs')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: (search: Record<string, unknown>): { selectedJob?: string } =>
     typeof search.selectedJob === 'string' && search.selectedJob
@@ -70,13 +68,13 @@ export const Route = createFileRoute('/account_/saved')({
       if (authFailure === 'email-unverified') {
         throw redirect({
           to: '/auth/verify-email-required',
-          search: { returnTo: '/account/saved' },
+          search: { returnTo: '/saved-jobs' },
         });
       }
       if (authFailure === 'unauthenticated') {
         throw redirect({
           to: '/auth/sign-in',
-          search: { returnTo: '/account/saved' },
+          search: { returnTo: '/saved-jobs' },
         });
       }
       throw error;
@@ -101,7 +99,7 @@ function SavedJobsPage() {
   const search = Route.useSearch();
   const { board } = rootApi.useLoaderData();
   const { user } = useRootSession();
-  const navigate = useNavigate({ from: '/account/saved' });
+  const navigate = useNavigate({ from: '/saved-jobs' });
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
 

@@ -23,14 +23,20 @@ import type { Resume } from '@cavuno/board';
  * keep-on-file) lives in a dialog instead of a page section — mirroring the
  * hosted board's resume upload modal.
  */
-export function ResumeImportDialog({ resume }: { resume: Resume }) {
+export function ResumeImportDialog({
+  resume,
+  triggerLabel,
+}: {
+  resume: Resume;
+  triggerLabel?: string;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button variant="outline" />}>
         <Upload aria-hidden data-icon="inline-start" />
-        {m.resumeImport_triggerLabel()}
+        {triggerLabel ?? m.resumeImport_triggerLabel()}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

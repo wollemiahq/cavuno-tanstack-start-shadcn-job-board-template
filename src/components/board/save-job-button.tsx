@@ -115,7 +115,7 @@ export function SaveJobButton({
   if (state === 'saved') {
     return (
       <a
-        href="/account/saved"
+        href="/saved-jobs"
         data-presentation={presentation}
         className={cn(
           buttonVariants({
