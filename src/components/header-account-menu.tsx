@@ -66,7 +66,13 @@ export function HeaderAccountMenu({
         </DropdownMenuItem>
         <DropdownMenuItem
           nativeButton={false}
-          render={<Link to="/account/saved" />}
+          render={<Link to="/matches" />}
+        >
+          {m.accountShell_recommendedJobsNav()}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          nativeButton={false}
+          render={<Link to="/saved-jobs" />}
         >
           {m.accountShell_savedJobsNav()}
         </DropdownMenuItem>

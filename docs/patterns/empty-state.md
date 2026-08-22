@@ -2,7 +2,7 @@
 name: Empty state
 purpose: The zero-results / not-found treatment — a featured icon, title, and description, kept inside the page chrome.
 primitives: [EmptyState, Empty, JobsNotFound, SalaryEmptyState]
-usedBy: [src/components/empty-state.tsx, src/components/alert-manager.tsx, src/routes/me.applications.tsx, src/routes/account_.saved.tsx, src/routes/employers.companies.$slug.index.tsx, src/components/board/home-landing.tsx, src/components/board/jobs-not-found.tsx, src/components/board/salary-sections.tsx, src/components/board/company-search-page.tsx, src/components/board/talent-search-page.tsx, src/routes/talent.index.tsx, src/routes/p.$handle.tsx, src/routes/companies.markets.$market.tsx, src/routes/blog.index.tsx, src/routes/jobs.locations.index.tsx]
+usedBy: [src/components/empty-state.tsx, src/components/alert-manager.tsx, src/routes/me.applications.tsx, src/routes/saved-jobs.tsx, src/routes/employers.companies.$slug.index.tsx, src/components/board/home-landing.tsx, src/components/board/jobs-not-found.tsx, src/components/board/salary-sections.tsx, src/components/board/company-search-page.tsx, src/components/board/talent-search-page.tsx, src/routes/talent.index.tsx, src/routes/p.$handle.tsx, src/routes/companies.markets.$market.tsx, src/routes/blog.index.tsx, src/routes/jobs.locations.index.tsx]
 ---
 
 ## Purpose

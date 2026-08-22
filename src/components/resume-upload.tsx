@@ -82,6 +82,11 @@ export function ResumeUpload({
       ) : (
         parseStatusBadge
       )}
+      {variant === 'section' && !resume.hasResumeOnFile ? (
+        <p className="text-muted-foreground text-sm">
+          {m.resumeImport_description()}
+        </p>
+      ) : null}
 
       {resume.parseStatus === 'parsing' ? (
         <p className="text-muted-foreground text-sm" role="status">

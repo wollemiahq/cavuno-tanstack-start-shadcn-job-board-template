@@ -180,7 +180,7 @@ Feeds, metadata, redirects, and other machine endpoints ship alongside them:
 | Talent directory and profiles | `/talent`, `/p/:handle` |
 | Blog, tags, and authors | `/blog`, `/blog/:postSlug`, `/blog/tag/:tagSlug`, `/blog/author/:authorSlug` |
 | Candidate and employer authentication | `/auth/sign-in`, `/auth/sign-up`, `/auth/employer/sign-up`, `/auth/join`, `/auth/magic-link`, `/auth/oauth-complete`, `/auth/forgot-password`, `/auth/reset-password`, `/auth/verify-email`, `/auth/verify-email-required`, `/auth/verify-work-email` |
-| Candidate profile, applications, saved jobs, and settings | `/account`, `/account/saved`, `/account/access`, `/me/applications`, `/settings` |
+| Candidate profile, applications, saved jobs, and settings | `/account`, `/matches`, `/saved-jobs`, `/account/access`, `/me/applications`, `/settings` |
 | Candidate alerts and messaging | `/me/alerts`, `/alerts/confirm`, `/alerts/manage`, `/messages`, `/messages/:conversationId` |
 | Employer entry and onboarding | `/employers`, `/employers/dashboard`, `/employers/onboarding/:slug` |
 | Employer company workspace (jobs + stats chart, **applicant pipeline kanban**, company profile) | `/employers/companies/:slug`, `/employers/companies/:slug/jobs/new`, `/employers/companies/:slug/jobs/:jobId/edit`, `/employers/companies/:slug/jobs/:jobId/applicants`, `/employers/companies/:slug/profile` |

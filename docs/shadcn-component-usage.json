@@ -242,7 +242,6 @@
         "src/routes/-access-page.tsx",
         "src/routes/-messages-dock-controller.tsx",
         "src/routes/-restricted-talent-directory.tsx",
-        "src/routes/account_.saved.tsx",
         "src/routes/alerts.manage.tsx",
         "src/routes/auth.confirm-email-change.tsx",
         "src/routes/auth.employer.sign-up.tsx",
@@ -264,6 +263,7 @@
         "src/routes/employers.index.tsx",
         "src/routes/employers.invites.accept.tsx",
         "src/routes/employers.onboarding.$slug.tsx",
+        "src/routes/matches.tsx",
         "src/routes/me.applications.tsx",
         "src/routes/p.$handle.tsx",
         "src/routes/password.tsx",
@@ -271,6 +271,7 @@
         "src/routes/salaries.locations.$slug.index.tsx",
         "src/routes/salaries.skills.$slug.index.tsx",
         "src/routes/salaries.titles.$slug.index.tsx",
+        "src/routes/saved-jobs.tsx",
         "src/routes/settings.tsx",
         "src/routes/talent.index.tsx"
       ]

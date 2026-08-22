@@ -292,6 +292,7 @@ function RootChrome({
       account: m.accountHome_title(),
       profile: m.accountShell_profileNav(),
       savedJobs: m.accountShell_savedJobsNav(),
+      recommendedJobs: m.accountShell_recommendedJobsNav(),
       jobAlerts: m.accountShell_jobAlertsNav(),
       applications: m.accountShell_applicationsNav(),
       applicants: m.employerApplicants_title(),

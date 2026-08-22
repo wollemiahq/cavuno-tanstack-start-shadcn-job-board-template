@@ -96,7 +96,7 @@ export const getAccount = createServerFn({ method: 'GET' })
   );
 
 /**
- * Saved jobs only — the `/account/saved` page's loader. Kept lean on purpose:
+ * Saved jobs only — the `/saved-jobs` page's loader. Kept lean on purpose:
  * `getAccount` fans out to seven parallel `/me/*` calls where any single
  * rejection would fail the whole route, so the saved page fetches just the one
  * slice it renders. Filters out saved rows whose job has since been
@@ -116,6 +116,33 @@ export const getSavedJobs = createServerFn({ method: 'GET' })
       return {
         ...savedJobs,
         data: savedJobs.data.filter((saved) => saved.job != null),
+      };
+    }),
+  );
+
+/**
+ * Job matches — `/matches`. Profile skills + resume
+ * parseStatus ride along so the empty state can CTA without a hint
+ * field on the list.
+ */
+export const getRecommendedJobs = createServerFn({ method: 'GET' })
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ context }) =>
+    gatedRead(context, async () => {
+      const headers = authedHeaders(context);
+      await requireVerifiedBoardUser(headers);
+      const board = getBoard();
+      const [recommended, skills, resume] = await Promise.all([
+        board.me.recommendedJobs.list({ limit: 20 }, { headers }),
+        board.me.profile.listSkills({ headers }),
+        board.me.resume.retrieve({ headers }),
+      ]);
+      return {
+        ...recommended,
+        data: recommended.data.filter((item) => item.job != null),
+        skillCount: skills.data.length,
+        parseStatus: resume.parseStatus,
+        resume,
       };
     }),
   );

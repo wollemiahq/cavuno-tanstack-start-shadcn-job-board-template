@@ -1246,7 +1246,7 @@
   "publicProfile_presentLabel": "Heute",
   "publicProfile_profileFallbackLabel": "Profil",
   "publicProfile_skillsHeading": "Fähigkeiten",
-  "resumeImport_description": "Wir nutzen ihn, um deine Profilfelder auszufüllen.",
+  "resumeImport_description": "Einen Lebenslauf hochzuladen vervollständigt dein Profil. Wir nutzen dieses Profil, um dich mit relevanten Jobs zusammenzubringen.",
   "resumeImport_title": "Lebenslauf importieren",
   "resumeImport_triggerLabel": "Lebenslauf importieren",
   "resumeUpload_deleteLabel": "Löschen",
@@ -1522,5 +1522,13 @@
   "ui_moreLabel": "Mehr",
   "ui_sidebarDescription": "Zeigt die mobile Seitenleiste an.",
   "ui_sidebarTitle": "Seitenleiste",
-  "ui_sidebarToggleLabel": "Seitenleiste umschalten"
+  "ui_sidebarToggleLabel": "Seitenleiste umschalten",
+  "accountRecommended_countOneText": "1 Job passt zu deinem Profil und deinen Präferenzen.",
+  "accountRecommended_countOtherText": "{count} Jobs passen zu deinem Profil und deinen Präferenzen.",
+  "accountRecommended_heading": "Matches von {name}",
+  "accountRecommended_headingFallback": "Deine Matches",
+  "accountRecommended_needsProfileTitle": "Lade deinen Lebenslauf hoch",
+  "accountRecommended_noneNowText": "Wir haben im Moment keine Matches für dich. Sieh dir offene Stellen an.",
+  "accountRecommended_noneNowTitle": "Gerade keine Matches",
+  "accountShell_recommendedJobsNav": "Job-Matches"
 }

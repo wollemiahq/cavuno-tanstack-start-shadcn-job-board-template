@@ -47,7 +47,8 @@ vi.mock('@/server/messaging', () => ({
 vi.mock('../lib/auth-guard', () => ({ redirectIfAuthenticated: vi.fn() }));
 
 import { Route as AccountRoute } from './account';
-import { Route as SavedRoute } from './account_.saved';
+import { Route as MatchesRoute } from './matches';
+import { Route as SavedRoute } from './saved-jobs';
 import { Route as ConfirmEmailChangeRoute } from './auth.confirm-email-change';
 import { Route as SignInRoute } from './auth.sign-in';
 import { Route as AlertsRoute } from './me.alerts';
@@ -70,7 +71,8 @@ function robotsOf(head: unknown): string | undefined {
 describe('private / transactional routes are noindex (robots.txt stays permissive)', () => {
   it.each([
     ['/account', AccountRoute],
-    ['/account/saved', SavedRoute],
+    ['/matches', MatchesRoute],
+    ['/saved-jobs', SavedRoute],
     ['/me/applications', ApplicationsRoute],
     ['/me/alerts', AlertsRoute],
     ['/messages', MessagesRoute],

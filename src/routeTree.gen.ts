@@ -13,11 +13,13 @@ import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SiteDotwebmanifestRouteImport } from './routes/site[.]webmanifest'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SavedJobsRouteImport } from './routes/saved-jobs'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PostRouteImport } from './routes/post'
 import { Route as PasswordRouteImport } from './routes/password'
 import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as MatchesRouteImport } from './routes/matches'
 import { Route as IndexnowKeyDottxtRouteImport } from './routes/indexnow-key[.]txt'
 import { Route as ImpressumRouteImport } from './routes/impressum'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
@@ -57,7 +59,6 @@ import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-pas
 import { Route as AuthConfirmEmailChangeRouteImport } from './routes/auth.confirm-email-change'
 import { Route as AlertsManageRouteImport } from './routes/alerts.manage'
 import { Route as AlertsConfirmRouteImport } from './routes/alerts.confirm'
-import { Route as AccountSavedRouteImport } from './routes/account_.saved'
 import { Route as AccountAccessRouteImport } from './routes/account_.access'
 import { Route as DotwellKnownCavunoDotjsonRouteImport } from './routes/[.]well-known.cavuno[.]json'
 import { Route as SalariesTitlesIndexRouteImport } from './routes/salaries.titles.index'
@@ -119,6 +120,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SavedJobsRoute = SavedJobsRouteImport.update({
+  id: '/saved-jobs',
+  path: '/saved-jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
@@ -142,6 +148,11 @@ const PasswordRoute = PasswordRouteImport.update({
 const MessagesRoute = MessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MatchesRoute = MatchesRouteImport.update({
+  id: '/matches',
+  path: '/matches',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexnowKeyDottxtRoute = IndexnowKeyDottxtRouteImport.update({
@@ -337,11 +348,6 @@ const AlertsManageRoute = AlertsManageRouteImport.update({
 const AlertsConfirmRoute = AlertsConfirmRouteImport.update({
   id: '/alerts/confirm',
   path: '/alerts/confirm',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AccountSavedRoute = AccountSavedRouteImport.update({
-  id: '/account_/saved',
-  path: '/account/saved',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountAccessRoute = AccountAccessRouteImport.update({
@@ -578,18 +584,19 @@ export interface FileRoutesByFullPath {
   '/cookie-policy': typeof CookiePolicyRoute
   '/impressum': typeof ImpressumRoute
   '/indexnow-key.txt': typeof IndexnowKeyDottxtRoute
+  '/matches': typeof MatchesRoute
   '/messages': typeof MessagesRouteWithChildren
   '/password': typeof PasswordRoute
   '/post': typeof PostRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/saved-jobs': typeof SavedJobsRoute
   '/settings': typeof SettingsRoute
   '/site.webmanifest': typeof SiteDotwebmanifestRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
   '/account/access': typeof AccountAccessRoute
-  '/account/saved': typeof AccountSavedRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
   '/alerts/manage': typeof AlertsManageRoute
   '/auth/confirm-email-change': typeof AuthConfirmEmailChangeRoute
@@ -669,18 +676,19 @@ export interface FileRoutesByTo {
   '/cookie-policy': typeof CookiePolicyRoute
   '/impressum': typeof ImpressumRoute
   '/indexnow-key.txt': typeof IndexnowKeyDottxtRoute
+  '/matches': typeof MatchesRoute
   '/messages': typeof MessagesRouteWithChildren
   '/password': typeof PasswordRoute
   '/post': typeof PostRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/saved-jobs': typeof SavedJobsRoute
   '/settings': typeof SettingsRoute
   '/site.webmanifest': typeof SiteDotwebmanifestRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
   '/account/access': typeof AccountAccessRoute
-  '/account/saved': typeof AccountSavedRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
   '/alerts/manage': typeof AlertsManageRoute
   '/auth/confirm-email-change': typeof AuthConfirmEmailChangeRoute
@@ -761,18 +769,19 @@ export interface FileRoutesById {
   '/cookie-policy': typeof CookiePolicyRoute
   '/impressum': typeof ImpressumRoute
   '/indexnow-key.txt': typeof IndexnowKeyDottxtRoute
+  '/matches': typeof MatchesRoute
   '/messages': typeof MessagesRouteWithChildren
   '/password': typeof PasswordRoute
   '/post': typeof PostRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/saved-jobs': typeof SavedJobsRoute
   '/settings': typeof SettingsRoute
   '/site.webmanifest': typeof SiteDotwebmanifestRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
   '/account_/access': typeof AccountAccessRoute
-  '/account_/saved': typeof AccountSavedRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
   '/alerts/manage': typeof AlertsManageRoute
   '/auth/confirm-email-change': typeof AuthConfirmEmailChangeRoute
@@ -854,18 +863,19 @@ export interface FileRouteTypes {
     | '/cookie-policy'
     | '/impressum'
     | '/indexnow-key.txt'
+    | '/matches'
     | '/messages'
     | '/password'
     | '/post'
     | '/privacy-policy'
     | '/robots.txt'
+    | '/saved-jobs'
     | '/settings'
     | '/site.webmanifest'
     | '/sitemap.xml'
     | '/terms-of-service'
     | '/.well-known/cavuno.json'
     | '/account/access'
-    | '/account/saved'
     | '/alerts/confirm'
     | '/alerts/manage'
     | '/auth/confirm-email-change'
@@ -945,18 +955,19 @@ export interface FileRouteTypes {
     | '/cookie-policy'
     | '/impressum'
     | '/indexnow-key.txt'
+    | '/matches'
     | '/messages'
     | '/password'
     | '/post'
     | '/privacy-policy'
     | '/robots.txt'
+    | '/saved-jobs'
     | '/settings'
     | '/site.webmanifest'
     | '/sitemap.xml'
     | '/terms-of-service'
     | '/.well-known/cavuno.json'
     | '/account/access'
-    | '/account/saved'
     | '/alerts/confirm'
     | '/alerts/manage'
     | '/auth/confirm-email-change'
@@ -1036,18 +1047,19 @@ export interface FileRouteTypes {
     | '/cookie-policy'
     | '/impressum'
     | '/indexnow-key.txt'
+    | '/matches'
     | '/messages'
     | '/password'
     | '/post'
     | '/privacy-policy'
     | '/robots.txt'
+    | '/saved-jobs'
     | '/settings'
     | '/site.webmanifest'
     | '/sitemap.xml'
     | '/terms-of-service'
     | '/.well-known/cavuno.json'
     | '/account_/access'
-    | '/account_/saved'
     | '/alerts/confirm'
     | '/alerts/manage'
     | '/auth/confirm-email-change'
@@ -1128,18 +1140,19 @@ export interface RootRouteChildren {
   CookiePolicyRoute: typeof CookiePolicyRoute
   ImpressumRoute: typeof ImpressumRoute
   IndexnowKeyDottxtRoute: typeof IndexnowKeyDottxtRoute
+  MatchesRoute: typeof MatchesRoute
   MessagesRoute: typeof MessagesRouteWithChildren
   PasswordRoute: typeof PasswordRoute
   PostRoute: typeof PostRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SavedJobsRoute: typeof SavedJobsRoute
   SettingsRoute: typeof SettingsRoute
   SiteDotwebmanifestRoute: typeof SiteDotwebmanifestRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   DotwellKnownCavunoDotjsonRoute: typeof DotwellKnownCavunoDotjsonRoute
   AccountAccessRoute: typeof AccountAccessRoute
-  AccountSavedRoute: typeof AccountSavedRoute
   AlertsConfirmRoute: typeof AlertsConfirmRoute
   AlertsManageRoute: typeof AlertsManageRoute
   AuthConfirmEmailChangeRoute: typeof AuthConfirmEmailChangeRoute
@@ -1238,6 +1251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/saved-jobs': {
+      id: '/saved-jobs'
+      path: '/saved-jobs'
+      fullPath: '/saved-jobs'
+      preLoaderRoute: typeof SavedJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/robots.txt': {
       id: '/robots.txt'
       path: '/robots.txt'
@@ -1271,6 +1291,13 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/messages'
       preLoaderRoute: typeof MessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/matches': {
+      id: '/matches'
+      path: '/matches'
+      fullPath: '/matches'
+      preLoaderRoute: typeof MatchesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/indexnow-key.txt': {
@@ -1544,13 +1571,6 @@ declare module '@tanstack/react-router' {
       path: '/alerts/confirm'
       fullPath: '/alerts/confirm'
       preLoaderRoute: typeof AlertsConfirmRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/account_/saved': {
-      id: '/account_/saved'
-      path: '/account/saved'
-      fullPath: '/account/saved'
-      preLoaderRoute: typeof AccountSavedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account_/access': {
@@ -1884,18 +1904,19 @@ const rootRouteChildren: RootRouteChildren = {
   CookiePolicyRoute: CookiePolicyRoute,
   ImpressumRoute: ImpressumRoute,
   IndexnowKeyDottxtRoute: IndexnowKeyDottxtRoute,
+  MatchesRoute: MatchesRoute,
   MessagesRoute: MessagesRouteWithChildren,
   PasswordRoute: PasswordRoute,
   PostRoute: PostRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  SavedJobsRoute: SavedJobsRoute,
   SettingsRoute: SettingsRoute,
   SiteDotwebmanifestRoute: SiteDotwebmanifestRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   DotwellKnownCavunoDotjsonRoute: DotwellKnownCavunoDotjsonRoute,
   AccountAccessRoute: AccountAccessRoute,
-  AccountSavedRoute: AccountSavedRoute,
   AlertsConfirmRoute: AlertsConfirmRoute,
   AlertsManageRoute: AlertsManageRoute,
   AuthConfirmEmailChangeRoute: AuthConfirmEmailChangeRoute,

@@ -431,6 +431,23 @@ describe('Header — native-applications account gating', () => {
     ).toBeTruthy();
   });
 
+  it('lists recommended jobs above saved jobs', async () => {
+    renderHeader({ user: signedInUser });
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.siteHeader_accountLabel() }),
+    );
+
+    const recommended = await screen.findByRole('menuitem', {
+      name: m.accountShell_recommendedJobsNav(),
+    });
+    expect(recommended).toHaveAttribute('href', '/matches');
+    const saved = await screen.findByRole('menuitem', {
+      name: m.accountShell_savedJobsNav(),
+    });
+    expect(saved).toHaveAttribute('href', '/saved-jobs');
+  });
+
   it('hides the Applications account entry when native applications are off', async () => {
     renderHeader({
       user: signedInUser,

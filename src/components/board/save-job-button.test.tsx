@@ -87,7 +87,7 @@ describe('SaveJobButton candidate continuation', () => {
     await waitFor(() => {
       expect(screen.getByRole('link', { name: 'Saved' })).toHaveAttribute(
         'href',
-        '/account/saved',
+        '/saved-jobs',
       );
     });
   });
@@ -116,7 +116,7 @@ describe('SaveJobButton candidate continuation', () => {
     await waitFor(() => {
       expect(screen.getByRole('link', { name: 'Job saved' })).toHaveAttribute(
         'href',
-        '/account/saved',
+        '/saved-jobs',
       );
     });
     expect(onSave).toHaveBeenCalledWith('job-1');

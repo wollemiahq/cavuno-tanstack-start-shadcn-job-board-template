@@ -3,8 +3,8 @@
  * "Candidate — Sidebar"): profile + avatar + experience + education +
  * skills + languages, each an owned Card section, with a
  * profile-completeness rail (progress + checklist) on the right and the
- * resume import dialog as the page-header action. Saved jobs moved to
- * /account/saved; notification settings and account deletion live at
+ * resume import dialog as the page-header action. Saved jobs live at
+ * /saved-jobs; notification settings and account deletion live at
  * /settings. The loader's server function enforces auth; the redirect
  * here is UX, not the security boundary.
  */

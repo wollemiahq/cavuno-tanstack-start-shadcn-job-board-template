@@ -1246,7 +1246,7 @@
   "publicProfile_presentLabel": "⁧⟦Þŕéšéñţ⟧⁩",
   "publicProfile_profileFallbackLabel": "⁧⟦Þŕóƒíĺé⟧⁩",
   "publicProfile_skillsHeading": "⁧⟦Šķíĺĺš⟧⁩",
-  "resumeImport_description": "⁧⟦Ŵé'ĺĺ úšé íţ ţó ƒíĺĺ íñ ýóúŕ þŕóƒíĺé ƒíéĺðš.⟧⁩",
+  "resumeImport_description": "⁧⟦Úþĺóáðíñğ á ŕéšúɱé çóɱþĺéţéš ýóúŕ þŕóƒíĺé. Ŵé úšé ţĥáţ þŕóƒíĺé ţó ɱáţçĥ ýóú ŵíţĥ ŕéĺéṽáñţ ĵóƀš.⟧⁩",
   "resumeImport_title": "⁧⟦Íɱþóŕţ ŕéšúɱé⟧⁩",
   "resumeImport_triggerLabel": "⁧⟦Íɱþóŕţ ŕéšúɱé⟧⁩",
   "resumeUpload_deleteLabel": "⁧⟦Ðéĺéţé⟧⁩",
@@ -1522,5 +1522,13 @@
   "ui_moreLabel": "⁧⟦Ṁóŕé⟧⁩",
   "ui_sidebarDescription": "⁧⟦Ðíšþĺáýš ţĥé ɱóƀíĺé šíðéƀáŕ.⟧⁩",
   "ui_sidebarTitle": "⁧⟦Šíðéƀáŕ⟧⁩",
-  "ui_sidebarToggleLabel": "⁧⟦Ţóğğĺé šíðéƀáŕ⟧⁩"
+  "ui_sidebarToggleLabel": "⁧⟦Ţóğğĺé šíðéƀáŕ⟧⁩",
+  "accountRecommended_countOneText": "⁧⟦1 ĵóƀ ɱáţçĥéš ýóúŕ þŕóƒíĺé áñð þŕéƒéŕéñçéš.⟧⁩",
+  "accountRecommended_countOtherText": "⁧⟦{count} ĵóƀš ɱáţçĥ ýóúŕ þŕóƒíĺé áñð þŕéƒéŕéñçéš.⟧⁩",
+  "accountRecommended_heading": "⁧⟦{name}'š ɱáţçĥéš⟧⁩",
+  "accountRecommended_headingFallback": "⁧⟦Ýóúŕ ɱáţçĥéš⟧⁩",
+  "accountRecommended_needsProfileTitle": "⁧⟦Úþĺóáð ýóúŕ ŕéšúɱé⟧⁩",
+  "accountRecommended_noneNowText": "⁧⟦Ŵé ðó ñóţ ĥáṽé ɱáţçĥéš ƒóŕ ýóú áţ ţĥé ɱóɱéñţ. Ɓŕóŵšé óþéñ ŕóĺéš íñšţéáð.⟧⁩",
+  "accountRecommended_noneNowTitle": "⁧⟦Ñó ɱáţçĥéš ŕíğĥţ ñóŵ⟧⁩",
+  "accountShell_recommendedJobsNav": "⁧⟦Ĵóƀ ɱáţçĥéš⟧⁩"
 }
