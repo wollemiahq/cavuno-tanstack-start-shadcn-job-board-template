@@ -31,6 +31,8 @@ const mocks = vi.hoisted(() => ({
   verifyOtpCode:
     vi.fn<(input: { data: { code: string } }) => Promise<AuthResult>>(),
   getResume: vi.fn<() => Promise<Resume>>(),
+  updateNotificationPreference: vi.fn(),
+  toastActionError: vi.fn(),
 }));
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
@@ -54,6 +56,14 @@ vi.mock('../server/account', () => ({
   getResume: mocks.getResume,
   uploadResume: vi.fn(),
   deleteResume: vi.fn(),
+}));
+
+vi.mock('../server/settings', () => ({
+  updateNotificationPreference: mocks.updateNotificationPreference,
+}));
+
+vi.mock('@/lib/action-toast', () => ({
+  toastActionError: mocks.toastActionError,
 }));
 
 import { isRedirect, redirect } from '@tanstack/react-router';
@@ -252,6 +262,20 @@ describe('/auth/verify-email-required resume offer step', () => {
     // Offering the step must not navigate away on its own.
     expect(mocks.navigate).not.toHaveBeenCalled();
 
+    const recommendations = screen.getByRole('checkbox', {
+      name: m.notificationSettings_recommendedJobEmailsTitle(),
+    });
+    expect(recommendations).not.toBeChecked();
+    fireEvent.click(recommendations);
+    await waitFor(() => {
+      expect(mocks.updateNotificationPreference).toHaveBeenCalledWith({
+        data: {
+          channel: 'recommendedJobEmails',
+          subscribed: true,
+        },
+      });
+    });
+
     fireEvent.click(
       screen.getByRole('button', {
         name: m.authVerifyEmailRequired_resumeSkipLabel(),
@@ -280,6 +304,25 @@ describe('/auth/verify-email-required resume offer step', () => {
     expect(
       screen.queryByText(m.authVerifyEmailRequired_resumeTitle()),
     ).toBeNull();
+  });
+
+  it('keeps the onboarding opt-in unchecked when the immediate save fails', async () => {
+    mocks.verifyOtpCode.mockResolvedValue({ ok: true });
+    mocks.updateNotificationPreference.mockRejectedValue(
+      new Error('network unavailable'),
+    );
+    const { container } = renderVerifyPage({ resume: emptyResume });
+    fireEvent.change(container.querySelector('input[name="code"]')!, {
+      target: { value: '123456' },
+    });
+    const checkbox = await screen.findByRole('checkbox', {
+      name: m.notificationSettings_recommendedJobEmailsTitle(),
+    });
+    fireEvent.click(checkbox);
+    await waitFor(() => {
+      expect(mocks.toastActionError).toHaveBeenCalled();
+    });
+    expect(checkbox).not.toBeChecked();
   });
 });
 

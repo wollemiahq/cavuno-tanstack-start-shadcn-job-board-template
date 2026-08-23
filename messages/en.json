@@ -1067,6 +1067,8 @@
   "notificationSettings_applicationEmailsTitle": "Application updates",
   "notificationSettings_messageEmailsDescription": "Email me when an employer sends me a message.",
   "notificationSettings_messageEmailsTitle": "Messages",
+  "notificationSettings_recommendedJobEmailsDescription": "A weekly email with your top matches. Unsubscribe any time.",
+  "notificationSettings_recommendedJobEmailsTitle": "Email me jobs that match my profile",
   "pagination_ariaLabel": "Pagination",
   "pagination_nextLabel": "Next",
   "pagination_nextPageLabel": "Next page",

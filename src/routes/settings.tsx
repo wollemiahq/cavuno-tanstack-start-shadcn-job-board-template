@@ -41,7 +41,7 @@ import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
 import { headTitle } from '@/lib/page-title';
 
-type Channel = 'messageEmails' | 'applicationEmails';
+type Channel = 'messageEmails' | 'applicationEmails' | 'recommendedJobEmails';
 
 type Search = {
   token?: string;
@@ -50,7 +50,9 @@ type Search = {
 };
 
 function asChannel(value: unknown): Channel | undefined {
-  return value === 'messageEmails' || value === 'applicationEmails'
+  return value === 'messageEmails' ||
+    value === 'applicationEmails' ||
+    value === 'recommendedJobEmails'
     ? value
     : undefined;
 }
@@ -125,6 +127,7 @@ export const Route = createFileRoute('/settings')({
 const CHANNEL_NAMES: Record<Channel, () => string> = {
   messageEmails: m.settings_channelMessage,
   applicationEmails: m.settings_channelApplicationUpdate,
+  recommendedJobEmails: m.notificationSettings_recommendedJobEmailsTitle,
 };
 
 function SettingsPage() {

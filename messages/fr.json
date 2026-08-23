@@ -1067,6 +1067,8 @@
   "notificationSettings_applicationEmailsTitle": "Mises à jour des candidatures",
   "notificationSettings_messageEmailsDescription": "M’envoyer un e-mail lorsqu’un employeur m’envoie un message.",
   "notificationSettings_messageEmailsTitle": "Messages",
+  "notificationSettings_recommendedJobEmailsDescription": "Un e-mail hebdomadaire avec vos meilleures offres. Désabonnez-vous à tout moment.",
+  "notificationSettings_recommendedJobEmailsTitle": "M’envoyer les offres correspondant à mon profil",
   "pagination_ariaLabel": "Pagination",
   "pagination_nextLabel": "Suivant",
   "pagination_nextPageLabel": "Page suivante",
