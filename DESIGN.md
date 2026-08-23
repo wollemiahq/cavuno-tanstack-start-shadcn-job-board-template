@@ -394,10 +394,12 @@ Props:
 - `alreadyApplied?: boolean | undefined`
 - `applicationsHref?: string | undefined`
 - `applicationUrl: string | null`
+- `applyAction?: PublicApplyAction | null | undefined`
 - `jobSlug: string | null`
 - `language: string`
 - `nativeApplications?: boolean | undefined`
-- `onApply: (jobSlug: string) => Promise<void>`
+- `onApply: (jobSlug: string, approvalReceipt?: string | undefined) => Promise<void>`
+- `onPrepareApply: (jobSlug: string) => Promise<unknown>`
 - `returnTo: string`
 - `viewer: { emailVerified: boolean; } | null`
 
@@ -1995,6 +1997,7 @@ is part of the same patch (the SDK hides the two-mutation split).
 
 Props:
 
+- `language: string`
 - `locationSuggestions: LocationSuggestionState`
 - `profile: { id: string; object: "candidate_profile"; displayName: string | null; bio: string | null; avatarUrl: string | null; …`
 
