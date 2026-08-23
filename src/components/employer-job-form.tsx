@@ -166,15 +166,15 @@ function initialForm(
   const applicationTarget = job.applicationUrl
     ? job.applicationUrl.replace(/^mailto:/i, '')
     : '';
+  const seniority =
+    SENIORITIES.find((value) => value === job.seniority) ?? null;
 
   return {
     title: job.title,
     employmentType: (EMPLOYMENT_TYPES.find(
       (value) => value === job.employmentType,
     ) ?? 'full_time') as (typeof EMPLOYMENT_TYPES)[number],
-    seniority: (SENIORITIES.find((value) => value === job.seniority) ?? null) as
-      | (typeof SENIORITIES)[number]
-      | null,
+    seniority,
     remoteOption: (REMOTE_OPTIONS.find((value) => value === job.remoteOption) ??
       'hybrid') as (typeof REMOTE_OPTIONS)[number],
     officeLocations,
