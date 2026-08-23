@@ -214,7 +214,7 @@ describe('ApplyButton native approval flow', () => {
     expect(onApply).not.toHaveBeenCalled();
   });
 
-  it('keeps malformed gateway responses on the generic localized error', async () => {
+  it('degrades to ordinary native Apply for a malformed trusted gateway response', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ object: 'unexpected' }), { status: 200 }),
     );
@@ -239,9 +239,9 @@ describe('ApplyButton native approval flow', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: /apply/i }));
 
-    expect((await screen.findByRole('alert')).textContent).toContain(
-      m.apply_applicationSubmitError(),
-    );
-    expect(onApply).not.toHaveBeenCalled();
+    await waitFor(() => expect(onApply).toHaveBeenCalledWith('australia-role'));
+    expect(
+      await screen.findByRole('link', { name: /view applications/i }),
+    ).not.toBeNull();
   });
 });
