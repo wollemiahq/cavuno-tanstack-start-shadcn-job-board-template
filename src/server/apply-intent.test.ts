@@ -172,10 +172,7 @@ describe('board-local Apply intent seam', () => {
     },
   ])('rejects a non-canonical or expired gateway intent', (intent) => {
     expect(() =>
-      gatewayRedirect(
-        { object: 'apply_intent', ...intent },
-        null,
-      ),
+      gatewayRedirect({ object: 'apply_intent', ...intent }, null),
     ).toThrow();
   });
 
