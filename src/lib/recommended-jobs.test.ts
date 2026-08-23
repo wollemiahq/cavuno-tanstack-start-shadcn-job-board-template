@@ -4,9 +4,9 @@ import { recommendedJobsEmptyKind } from './recommended-jobs';
 
 describe('recommendedJobsEmptyKind', () => {
   it('asks for a resume when there are no skills', () => {
-    expect(
-      recommendedJobsEmptyKind({ skillCount: 0, parseStatus: null }),
-    ).toBe('needs-profile');
+    expect(recommendedJobsEmptyKind({ skillCount: 0, parseStatus: null })).toBe(
+      'needs-profile',
+    );
     expect(
       recommendedJobsEmptyKind({ skillCount: 0, parseStatus: 'parsed' }),
     ).toBe('needs-profile');

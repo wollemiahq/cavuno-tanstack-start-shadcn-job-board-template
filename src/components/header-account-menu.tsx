@@ -64,10 +64,7 @@ export function HeaderAccountMenu({
         <DropdownMenuItem nativeButton={false} render={<Link to="/account" />}>
           {m.accountShell_profileNav()}
         </DropdownMenuItem>
-        <DropdownMenuItem
-          nativeButton={false}
-          render={<Link to="/matches" />}
-        >
+        <DropdownMenuItem nativeButton={false} render={<Link to="/matches" />}>
           {m.accountShell_recommendedJobsNav()}
         </DropdownMenuItem>
         <DropdownMenuItem
