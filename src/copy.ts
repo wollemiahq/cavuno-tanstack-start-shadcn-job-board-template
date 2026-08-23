@@ -65,6 +65,7 @@ const UI_COPY_MESSAGES = [
   ['alerts_submitAriaLabel', m.alerts_submitAriaLabel],
   ['alerts_subscribingLabel', m.alerts_subscribingLabel],
   ['apply_applicationSubmitError', m.apply_applicationSubmitError],
+  ['apply_locationNotEligibleError', m.apply_locationNotEligibleError],
   ['apply_appliedViewApplicationsLabel', m.apply_appliedViewApplicationsLabel],
   ['apply_applyButtonText', m.apply_applyButtonText],
   ['apply_applyOnEmployerSiteLabel', m.apply_applyOnEmployerSiteLabel],

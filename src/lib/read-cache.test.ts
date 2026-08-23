@@ -76,6 +76,14 @@ describe('applyReadCache — the anonymous/authed edge-cache split', () => {
     expect(init(r).cf).toBeUndefined();
   });
 
+  it('bypasses the shared cache when the starter capability changes the body shape', () => {
+    const r = applyReadCache(
+      req('GET', { 'x-cavuno-board-capabilities': 'apply-gateway-v1' }),
+    );
+    expect(init(r).cache).toBe('no-store');
+    expect(init(r).cf).toBeUndefined();
+  });
+
   it('treats the identity headers case-insensitively (Headers normalizes)', () => {
     const bearer = applyReadCache(req('GET', { Authorization: 'Bearer x' }));
     expect(init(bearer).cache).toBe('no-store');

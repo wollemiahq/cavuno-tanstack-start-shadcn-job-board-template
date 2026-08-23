@@ -53,7 +53,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `menubar` | Available | Installed for adoption when the product needs this behavior. |
 | `message` | Used (1) | `src/components/messages/message-bubble.tsx` |
 | `message-scroller` | Used (1) | `src/components/messages/thread-view.tsx` |
-| `native-select` | Used (1) | `src/components/preview/preview-board-settings.tsx` |
+| `native-select` | Used (2) | `src/components/preview/preview-board-settings.tsx`<br>`src/components/profile-form.tsx` |
 | `navigation-menu` | Available | Installed for adoption when the product needs this behavior. |
 | `pagination` | Used (2) | `src/components/board/cursor-pagination.tsx`<br>`src/components/board/listing-pagination.tsx` |
 | `popover` | Used (2) | `src/components/preview/preview-toolbar.tsx`<br>`src/components/rich-text-editor.tsx` |

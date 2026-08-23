@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { countryOptions } from '@cavuno/board/format';
 import { useRouter } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
@@ -20,6 +21,10 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -35,6 +40,8 @@ type FormState = {
   handle: string;
   headline: string;
   location: string;
+  /** ISO 3166-1 alpha-2 country selected explicitly by the candidate. */
+  countryCode: string | null;
   bio: string;
   profileVisibility: CandidateProfile['profileVisibility'];
   jobSearchStatus: CandidateProfile['jobSearchStatus'];
@@ -42,12 +49,17 @@ type FormState = {
   openToRelocate: boolean;
 };
 
-function toForm(profile: CandidateProfile): FormState {
+type CandidateProfileWithCountry = CandidateProfile & {
+  countryCode?: string | null;
+};
+
+function toForm(profile: CandidateProfileWithCountry): FormState {
   return {
     displayName: profile.displayName ?? '',
     handle: profile.handle ?? '',
     headline: profile.headline ?? '',
     location: profile.location ?? '',
+    countryCode: profile.countryCode ?? null,
     bio: profile.bio ?? '',
     profileVisibility: profile.profileVisibility,
     jobSearchStatus: profile.jobSearchStatus,
@@ -68,9 +80,11 @@ type HandleState = { checking: boolean; available: boolean | null };
 export function ProfileForm({
   profile,
   locationSuggestions,
+  language,
 }: {
   profile: CandidateProfile;
   locationSuggestions: LocationSuggestionState;
+  language: string;
 }) {
   const visibilityLabels: Record<
     CandidateProfile['profileVisibility'],
@@ -98,6 +112,7 @@ export function ProfileForm({
 
   const router = useRouter();
   const [form, setForm] = useState<FormState>(() => toForm(profile));
+  const countries = countryOptions(language);
   const [status, setStatus] = useState<Status>('idle');
   const [handleState, setHandleState] = useState<HandleState>({
     checking: false,
@@ -126,6 +141,10 @@ export function ProfileForm({
               bio: form.bio.trim(),
               headline: form.headline.trim(),
               location: form.location.trim(),
+              // This is deliberately independent of the free-text location:
+              // no locale parsing or backfill can turn an ambiguous historic
+              // location into an eligibility decision.
+              countryCode: form.countryCode,
               ...(handle ? { handle } : {}),
               profileVisibility: form.profileVisibility,
               jobSearchStatus: form.jobSearchStatus,
@@ -220,6 +239,31 @@ export function ProfileForm({
               onValueChange={(location) => set('location', location)}
               {...locationSuggestions}
             />
+          </Field>
+          <Field className="gap-1.5">
+            <FieldLabel htmlFor="profile-country">
+              {m.profileForm_countryLabel()}
+            </FieldLabel>
+            <NativeSelect
+              id="profile-country"
+              className="w-full"
+              value={form.countryCode ?? ''}
+              onChange={(event) =>
+                set('countryCode', event.target.value || null)
+              }
+            >
+              <NativeSelectOption value="">
+                {m.profileForm_countryNotSpecified()}
+              </NativeSelectOption>
+              {countries.map((country) => (
+                <NativeSelectOption key={country.code} value={country.code}>
+                  {country.name}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+            <FieldDescription>
+              {m.profileForm_countryDescription()}
+            </FieldDescription>
           </Field>
         </div>
 

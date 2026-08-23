@@ -3,7 +3,7 @@ import { useLocation, useRouter } from '@tanstack/react-router';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getSessionUser, saveJob } from '../server/account';
-import { applyToJob } from '../server/applications';
+import { applyToJob, prepareApplyToJob } from '../server/applications';
 import { getBoardContext } from '../server/queries';
 
 import type { SelectedJobState } from './-use-selected-job';
@@ -54,13 +54,25 @@ export function SelectedJobDetail({
     <ApplyButton
       jobSlug={state.job.slug}
       applicationUrl={state.job.applicationUrl}
+      applyAction={
+        (
+          state.job as typeof state.job & {
+            applyAction?:
+              | 'native'
+              | 'gateway_native'
+              | 'external_direct'
+              | 'gateway_external';
+          }
+        ).applyAction
+      }
       language={board.language}
       returnTo={returnTo}
       nativeApplications={board.features.nativeApplications}
       viewer={user ? { emailVerified: user.emailVerified } : null}
       alreadyApplied={state.alreadyApplied}
-      onApply={async (jobSlug) => {
-        await applyToJob({ data: { jobSlug } });
+      onPrepareApply={(jobSlug) => prepareApplyToJob({ data: { jobSlug } })}
+      onApply={async (jobSlug, approvalReceipt) => {
+        await applyToJob({ data: { jobSlug, approvalReceipt } });
       }}
     />
   ) : undefined;

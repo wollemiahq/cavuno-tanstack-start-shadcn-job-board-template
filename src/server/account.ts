@@ -28,6 +28,11 @@ import type {
   UpdateExperienceBody,
 } from '@cavuno/board';
 
+/** Additive profile field until the starter's pinned SDK publishes it. */
+type UpdateCandidateProfileWithCountryBody = UpdateCandidateProfileBody & {
+  countryCode?: string | null;
+};
+
 /** Bearer + board-access grant for one gated `/me/*` call. */
 function authedHeaders(
   context: SessionContext & BoardAccessContext,
@@ -148,12 +153,19 @@ export const getRecommendedJobs = createServerFn({ method: 'GET' })
   );
 
 export const updateProfile = createServerFn({ method: 'POST' })
-  .validator((input: UpdateCandidateProfileBody) => input)
+  .validator((input: UpdateCandidateProfileWithCountryBody) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
     const headers = authedHeaders(context);
     await requireVerifiedBoardUser(headers);
-    return getBoard().me.profile.update(data, undefined, { headers });
+    // The field is already part of Cavuno's additive HTTP contract. The
+    // current starter SDK predates its generated type, so keep the one narrow
+    // compatibility cast at the server boundary rather than dropping it.
+    return getBoard().me.profile.update(
+      data as UpdateCandidateProfileBody,
+      undefined,
+      { headers },
+    );
   });
 
 /** Live handle-availability check for the profile form. */

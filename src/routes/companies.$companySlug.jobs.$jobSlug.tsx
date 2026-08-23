@@ -25,7 +25,11 @@ import { jobAlertDefaultsFromJob } from '../lib/job-alert-defaults';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getSessionUser, saveJob } from '../server/account';
-import { applyToJob, myApplicationForJob } from '../server/applications';
+import {
+  applyToJob,
+  myApplicationForJob,
+  prepareApplyToJob,
+} from '../server/applications';
 import { getJobDetailPage } from '../server/job-detail-page';
 import {
   getCompany,
@@ -160,13 +164,27 @@ function JobDetailPage() {
           <ApplyButton
             jobSlug={job.slug}
             applicationUrl={job.applicationUrl}
+            applyAction={
+              (
+                job as typeof job & {
+                  applyAction?:
+                    | 'native'
+                    | 'gateway_native'
+                    | 'external_direct'
+                    | 'gateway_external';
+                }
+              ).applyAction
+            }
             language={board.language}
             returnTo={returnTo}
             nativeApplications={board.features.nativeApplications}
             viewer={user ? { emailVerified: user.emailVerified } : null}
             alreadyApplied={alreadyApplied}
-            onApply={async (jobSlug) => {
-              await applyToJob({ data: { jobSlug } });
+            onPrepareApply={(jobSlug) =>
+              prepareApplyToJob({ data: { jobSlug } })
+            }
+            onApply={async (jobSlug, approvalReceipt) => {
+              await applyToJob({ data: { jobSlug, approvalReceipt } });
             }}
           />
         }

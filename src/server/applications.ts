@@ -12,6 +12,11 @@ import {
  * `/account` dashboard.
  */
 import { createServerFn } from '@tanstack/react-start';
+import {
+  getRequestHeader,
+  setCookie,
+  setResponseHeader,
+} from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
 import {
@@ -23,6 +28,11 @@ import {
   type SessionContext,
 } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
+import {
+  ensureApplySession,
+  prepareNativeApply,
+  submitNativeApply,
+} from './native-apply';
 
 /** Bearer + board-access grant for one gated `/me/*` or authed apply call. */
 function authedHeaders(
@@ -102,14 +112,52 @@ export const myApplicationForJob = createServerFn({ method: 'GET' })
     }),
   );
 
-/** Native apply — creates (or returns the existing) application for a job. */
-export const applyToJob = createServerFn({ method: 'POST' })
-  .validator((input: { jobSlug: string; body?: ApplyBody }) => input)
+function nativeApplySessionKey(): string {
+  return ensureApplySession(
+    getRequestHeader('cookie') ?? null,
+    (name, value, options) => setCookie(name, value, options),
+  );
+}
+
+/**
+ * Stable native-Apply preparation seam. Every current starter calls this
+ * before applying; Cavuno decides whether the browser must obtain a user-edge
+ * approval receipt or can continue directly.
+ */
+export const prepareApplyToJob = createServerFn({ method: 'POST' })
+  .validator((input: { jobSlug: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
     const headers = authedHeaders(context);
     await requireVerifiedBoardUser(headers);
-    return getBoard().jobs.apply(data.jobSlug, data.body, { headers });
+    setResponseHeader('cache-control', 'no-store');
+    return prepareNativeApply(
+      getBoard().client,
+      data.jobSlug,
+      nativeApplySessionKey(),
+      headers,
+    );
+  });
+
+/** Native apply — creates (or returns the existing) application for a job. */
+export const applyToJob = createServerFn({ method: 'POST' })
+  .validator(
+    (input: { jobSlug: string; body?: ApplyBody; approvalReceipt?: string }) =>
+      input,
+  )
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(async ({ data, context }) => {
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    setResponseHeader('cache-control', 'no-store');
+    return submitNativeApply(
+      getBoard().client,
+      data.jobSlug,
+      data.body,
+      data.approvalReceipt,
+      nativeApplySessionKey(),
+      headers,
+    );
   });
 
 /** Attach a resume file to an application — client posts FormData (`resume`). */

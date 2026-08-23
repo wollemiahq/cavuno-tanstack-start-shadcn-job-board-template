@@ -120,6 +120,7 @@ function AccountPage() {
             <ProfileForm
               profile={profile}
               locationSuggestions={profileLocationSuggestions}
+              language={getLocale()}
             />
           </CardContent>
         </Card>

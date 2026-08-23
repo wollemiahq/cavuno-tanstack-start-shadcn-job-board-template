@@ -30,6 +30,39 @@ describe('toApplyButtonVM — decision ladder', () => {
     });
   });
 
+  it('keeps a server-declared gateway external job out of the SDK native ladder', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      applicationUrl: null,
+      applyAction: 'gateway_external',
+      viewer: null,
+    });
+    expect(vm.action).toEqual({
+      kind: 'gateway-external',
+      jobSlug: 'senior-eng',
+    });
+  });
+
+  it('honours a server-declared native action even if a stale URL is present', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      applicationUrl: 'https://stale.example/apply',
+      applyAction: 'native',
+      viewer: { emailVerified: true },
+    });
+    expect(vm.action).toEqual({ kind: 'native', jobSlug: 'senior-eng' });
+  });
+
+  it('keeps a gateway-native job on the authenticated native ladder', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      applicationUrl: 'https://stale.example/apply',
+      applyAction: 'gateway_native',
+      viewer: { emailVerified: true },
+    });
+    expect(vm.action).toEqual({ kind: 'native', jobSlug: 'senior-eng' });
+  });
+
   it('sends an anonymous visitor on a native job to sign-in', () => {
     const vm = toApplyButtonVM({ ...base, viewer: null });
     expect(vm.action.kind).toBe('sign-in');
