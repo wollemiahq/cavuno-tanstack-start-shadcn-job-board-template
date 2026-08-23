@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
-  NativeApplyApprovalError,
+  parseApplyApprovalPlan,
   runNativeApply,
   type ApplyApprovalPlan,
 } from './native-apply';
@@ -29,6 +29,18 @@ function receiptResponse(
 }
 
 describe('native Apply approval seam', () => {
+  it('accepts a local approval URL for development smoke', () => {
+    expect(
+      parseApplyApprovalPlan({
+        ...requiredPlan,
+        approvalUrl: 'http://localhost:3000/r/aar_abcdefghijklmnopqrstuvwxyz',
+      }),
+    ).toMatchObject({
+      kind: 'approval_required',
+      approvalUrl: 'http://localhost:3000/r/aar_abcdefghijklmnopqrstuvwxyz',
+    });
+  });
+
   it('prepares, obtains a user-edge receipt, then submits in order', async () => {
     const order: string[] = [];
     const prepare = vi.fn(async () => {
@@ -119,6 +131,10 @@ describe('native Apply approval seam', () => {
     {
       name: 'gateway 5xx',
       fetchGateway: async () => new Response(null, { status: 503 }),
+    },
+    {
+      name: 'expired or missing edge row',
+      fetchGateway: async () => new Response(null, { status: 404 }),
     },
   ])('degrades to direct native apply on $name', async ({ fetchGateway }) => {
     const submit = vi.fn(async () => 'applied');
@@ -225,21 +241,24 @@ describe('native Apply approval seam', () => {
         expiresAt: 'tomorrow',
       },
     ],
-  ])('rejects a malformed receipt: %s', async (_name, body) => {
-    const submit = vi.fn();
-    await expect(
-      runNativeApply({
-        jobSlug: 'role',
-        prepare: async () => requiredPlan,
-        submit,
-        fetchGateway: async () => receiptResponse(body),
-      }),
-    ).rejects.toBeInstanceOf(NativeApplyApprovalError);
-    expect(submit).not.toHaveBeenCalled();
-  });
+  ])(
+    'degrades direct on a malformed trusted receipt: %s',
+    async (_name, body) => {
+      const submit = vi.fn(async () => 'applied');
+      await expect(
+        runNativeApply({
+          jobSlug: 'role',
+          prepare: async () => requiredPlan,
+          submit,
+          fetchGateway: async () => receiptResponse(body),
+        }),
+      ).resolves.toBe('applied');
+      expect(submit).toHaveBeenCalledWith('role');
+    },
+  );
 
-  it('rejects an already-expired receipt instead of submitting it', async () => {
-    const submit = vi.fn();
+  it('degrades direct on an already-expired trusted receipt', async () => {
+    const submit = vi.fn(async () => 'applied');
     await expect(
       runNativeApply({
         jobSlug: 'role',
@@ -252,7 +271,7 @@ describe('native Apply approval seam', () => {
             expiresAt: '2000-01-01T00:00:00.000Z',
           }),
       }),
-    ).rejects.toMatchObject({ reason: 'malformed_receipt' });
-    expect(submit).not.toHaveBeenCalled();
+    ).resolves.toBe('applied');
+    expect(submit).toHaveBeenCalledWith('role');
   });
 });

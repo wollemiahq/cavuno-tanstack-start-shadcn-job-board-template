@@ -137,6 +137,21 @@ describe('board-local Apply intent seam', () => {
     expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
   });
 
+  it('accepts a local gateway URL for development smoke', () => {
+    const response = gatewayRedirect(
+      {
+        id: 'intent_12345678901234567890',
+        object: 'apply_intent',
+        gatewayUrl: 'http://localhost:3000/a/intent_12345678901234567890',
+        expiresAt: '2099-08-23T00:00:00.000Z',
+      },
+      null,
+    );
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3000/a/intent_12345678901234567890',
+    );
+  });
+
   it('refuses a malformed gateway URL rather than becoming an open redirect', () => {
     expect(() =>
       gatewayRedirect(

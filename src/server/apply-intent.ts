@@ -5,6 +5,7 @@
  */
 import { isSafeApplicationUrl, type BoardClient } from '@cavuno/board';
 
+import { isTrustedApplyGatewayUrl } from '@/lib/apply-gateway-url';
 import { withApplyGatewayCapability } from '@/lib/board';
 
 export const APPLY_SESSION_COOKIE = '__Host-cavuno_apply_session';
@@ -118,16 +119,7 @@ export function gatewayRedirect(
   const gateway = new URL(intent.gatewayUrl);
   // The API owns the opaque token, but the starter still refuses to turn into
   // a generic redirector if an upstream response is ever malformed.
-  if (
-    gateway.protocol !== 'https:' ||
-    gateway.hostname !== 'apply.cavuno.com' ||
-    gateway.port !== '' ||
-    gateway.username !== '' ||
-    gateway.password !== '' ||
-    gateway.search !== '' ||
-    gateway.hash !== '' ||
-    gateway.pathname !== `/a/${intent.id}`
-  ) {
+  if (!isTrustedApplyGatewayUrl(gateway, 'a', intent.id)) {
     throw new Error('Invalid Apply gateway URL');
   }
 

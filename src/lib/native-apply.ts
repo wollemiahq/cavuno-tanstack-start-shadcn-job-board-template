@@ -1,3 +1,5 @@
+import { isTrustedApplyGatewayUrl } from './apply-gateway-url';
+
 /**
  * Browser-side native Apply orchestration.
  *
@@ -61,15 +63,7 @@ function trustedApprovalUrl(value: unknown): value is string {
       ? url.pathname.slice('/r/'.length)
       : '';
     return (
-      url.protocol === 'https:' &&
-      url.hostname === 'apply.cavuno.com' &&
-      url.port === '' &&
-      url.username === '' &&
-      url.password === '' &&
-      url.search === '' &&
-      url.hash === '' &&
-      url.pathname === `/r/${opaque}` &&
-      OPAQUE_TOKEN_RE.test(opaque)
+      OPAQUE_TOKEN_RE.test(opaque) && isTrustedApplyGatewayUrl(url, 'r', opaque)
     );
   } catch {
     return false;
@@ -165,6 +159,9 @@ export async function runNativeApply<Result>({
   }
 
   if (response.status >= 500) return submit(jobSlug);
+  // A missing/expired edge row is unavailable infrastructure, not a country
+  // denial. The final Board API still performs the profile/job check.
+  if (response.status === 404) return submit(jobSlug);
   if (response.status >= 400) {
     throw new NativeApplyApprovalError('denied');
   }
@@ -174,8 +171,15 @@ export async function runNativeApply<Result>({
   try {
     rawReceipt = await response.json();
   } catch {
-    throw new NativeApplyApprovalError('malformed_receipt');
+    return submit(jobSlug);
   }
-  const receipt = parseApplyApprovalReceipt(rawReceipt);
+  let receipt: ApplyApprovalReceipt;
+  try {
+    receipt = parseApplyApprovalReceipt(rawReceipt);
+  } catch {
+    // A trusted gateway protocol mismatch is also an availability failure for
+    // ordinary jobs; omit the receipt and let Cavuno's final decision degrade.
+    return submit(jobSlug);
+  }
   return submit(jobSlug, receipt.id);
 }
