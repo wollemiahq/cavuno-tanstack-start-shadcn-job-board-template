@@ -132,7 +132,7 @@ export const prepareApplyToJob = createServerFn({ method: 'POST' })
     await requireVerifiedBoardUser(headers);
     setResponseHeader('cache-control', 'no-store');
     return prepareNativeApply(
-      getBoard().client,
+      getBoard(),
       data.jobSlug,
       nativeApplySessionKey(),
       headers,
@@ -151,7 +151,7 @@ export const applyToJob = createServerFn({ method: 'POST' })
     await requireVerifiedBoardUser(headers);
     setResponseHeader('cache-control', 'no-store');
     return submitNativeApply(
-      getBoard().client,
+      getBoard(),
       data.jobSlug,
       data.body,
       data.approvalReceipt,

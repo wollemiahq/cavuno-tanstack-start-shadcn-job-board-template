@@ -1,5 +1,10 @@
 import { isTrustedApplyGatewayUrl } from './apply-gateway-url';
 
+import type {
+  ApplyApprovalPlan as BoardApplyApprovalPlan,
+  ApplyApprovalReceipt as BoardApplyApprovalReceipt,
+} from '@cavuno/board';
+
 /**
  * Browser-side native Apply orchestration.
  *
@@ -8,23 +13,8 @@ import { isTrustedApplyGatewayUrl } from './apply-gateway-url';
  * changing this starter again. Country and IP never enter this interface.
  */
 
-export type ApplyApprovalPlan =
-  | {
-      object: 'apply_approval_plan';
-      kind: 'not_required';
-    }
-  | {
-      object: 'apply_approval_plan';
-      kind: 'approval_required';
-      approvalUrl: string;
-      expiresAt: string;
-    };
-
-export interface ApplyApprovalReceipt {
-  object: 'apply_approval_receipt';
-  id: string;
-  expiresAt: string;
-}
+export type ApplyApprovalPlan = BoardApplyApprovalPlan;
+export type ApplyApprovalReceipt = BoardApplyApprovalReceipt;
 
 export type NativeApplyApprovalFailure =
   | 'denied'

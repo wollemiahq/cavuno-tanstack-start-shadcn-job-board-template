@@ -7,13 +7,27 @@ import {
 } from './native-apply';
 
 function fakeClient() {
+  const prepareApplyApproval = vi.fn(
+    async (
+      _jobSlug: string,
+      _body: unknown,
+      _options: unknown,
+    ): Promise<unknown> => ({
+      object: 'apply_approval_plan',
+      kind: 'not_required',
+    }),
+  );
+  const apply = vi.fn(
+    async (
+      _jobSlug: string,
+      _body: unknown,
+      _options: unknown,
+    ): Promise<unknown> => ({}),
+  );
   return {
-    fetch: vi.fn(
-      async (_path: string, _options: unknown): Promise<unknown> => ({
-        object: 'apply_approval_plan',
-        kind: 'not_required',
-      }),
-    ),
+    board: { jobs: { prepareApplyApproval, apply } } as never,
+    prepareApplyApproval,
+    apply,
   };
 }
 
@@ -21,25 +35,24 @@ describe('authenticated native Apply server boundary', () => {
   it('prepares with only the server-owned session key', async () => {
     const client = fakeClient();
     await prepareNativeApply(
-      client,
+      client.board,
       'senior engineer/au',
       'server_owned_apply_session_key',
       { authorization: 'Bearer candidate', 'x-board-access': 'grant' },
     );
 
-    expect(client.fetch).toHaveBeenCalledWith(
-      '/jobs/senior%20engineer%2Fau/apply-approvals',
+    expect(client.prepareApplyApproval).toHaveBeenCalledWith(
+      'senior engineer/au',
+      { sessionKey: 'server_owned_apply_session_key' },
       {
-        method: 'POST',
         headers: {
           authorization: 'Bearer candidate',
           'x-board-access': 'grant',
           'x-cavuno-board-capabilities': 'apply-gateway-v1',
         },
-        body: { sessionKey: 'server_owned_apply_session_key' },
       },
     );
-    const request = client.fetch.mock.calls[0]?.[1];
+    const request = client.prepareApplyApproval.mock.calls[0];
     expect(JSON.stringify(request)).not.toMatch(
       /country|connecting-ip|forwarded/i,
     );
@@ -48,7 +61,7 @@ describe('authenticated native Apply server boundary', () => {
   it('binds a bounded receipt to the same server-owned key on submit', async () => {
     const client = fakeClient();
     await submitNativeApply(
-      client,
+      client.board,
       'senior-engineer',
       { coverNote: 'Hello' },
       'aar_receipt_abcdefghijklmnopqrstuvwxyz',
@@ -56,24 +69,26 @@ describe('authenticated native Apply server boundary', () => {
       { authorization: 'Bearer candidate' },
     );
 
-    expect(client.fetch).toHaveBeenCalledWith('/jobs/senior-engineer/apply', {
-      method: 'POST',
-      headers: {
-        authorization: 'Bearer candidate',
-        'x-cavuno-board-capabilities': 'apply-gateway-v1',
-      },
-      body: {
+    expect(client.apply).toHaveBeenCalledWith(
+      'senior-engineer',
+      {
         coverNote: 'Hello',
         approvalReceipt: 'aar_receipt_abcdefghijklmnopqrstuvwxyz',
         approvalSessionKey: 'server_owned_apply_session_key',
       },
-    });
+      {
+        headers: {
+          authorization: 'Bearer candidate',
+          'x-cavuno-board-capabilities': 'apply-gateway-v1',
+        },
+      },
+    );
   });
 
   it('never forwards client-supplied country, IP, or approval session fields', async () => {
     const client = fakeClient();
     await submitNativeApply(
-      client,
+      client.board,
       'senior-engineer',
       {
         name: 'Candidate',
@@ -86,14 +101,12 @@ describe('authenticated native Apply server boundary', () => {
       { authorization: 'Bearer candidate' },
     );
 
-    expect(client.fetch.mock.calls[0]?.[1]).toMatchObject({
-      body: {
-        name: 'Candidate',
-        approvalReceipt: 'aar_receipt_abcdefghijklmnopqrstuvwxyz',
-        approvalSessionKey: 'server_owned_apply_session_key',
-      },
+    expect(client.apply.mock.calls[0]?.[1]).toMatchObject({
+      name: 'Candidate',
+      approvalReceipt: 'aar_receipt_abcdefghijklmnopqrstuvwxyz',
+      approvalSessionKey: 'server_owned_apply_session_key',
     });
-    expect(JSON.stringify(client.fetch.mock.calls[0]?.[1])).not.toMatch(
+    expect(JSON.stringify(client.apply.mock.calls[0]?.[1])).not.toMatch(
       /203\.0\.113\.1|country|browser_forged_key/,
     );
   });
@@ -101,7 +114,7 @@ describe('authenticated native Apply server boundary', () => {
   it('submits the legacy native body when approval is not required', async () => {
     const client = fakeClient();
     await submitNativeApply(
-      client,
+      client.board,
       'ordinary-role',
       undefined,
       undefined,
@@ -109,14 +122,16 @@ describe('authenticated native Apply server boundary', () => {
       { authorization: 'Bearer candidate' },
     );
 
-    expect(client.fetch).toHaveBeenCalledWith('/jobs/ordinary-role/apply', {
-      method: 'POST',
-      headers: {
-        authorization: 'Bearer candidate',
-        'x-cavuno-board-capabilities': 'apply-gateway-v1',
+    expect(client.apply).toHaveBeenCalledWith(
+      'ordinary-role',
+      {},
+      {
+        headers: {
+          authorization: 'Bearer candidate',
+          'x-cavuno-board-capabilities': 'apply-gateway-v1',
+        },
       },
-      body: {},
-    });
+    );
   });
 
   it('appends a new host-only Apply cookie without replacing session rotation', () => {

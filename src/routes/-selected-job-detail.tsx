@@ -54,17 +54,7 @@ export function SelectedJobDetail({
     <ApplyButton
       jobSlug={state.job.slug}
       applicationUrl={state.job.applicationUrl}
-      applyAction={
-        (
-          state.job as typeof state.job & {
-            applyAction?:
-              | 'native'
-              | 'gateway_native'
-              | 'external_direct'
-              | 'gateway_external';
-          }
-        ).applyAction
-      }
+      applyAction={state.job.applyAction}
       language={board.language}
       returnTo={returnTo}
       nativeApplications={board.features.nativeApplications}

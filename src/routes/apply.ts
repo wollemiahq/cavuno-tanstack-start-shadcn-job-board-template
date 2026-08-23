@@ -85,7 +85,7 @@ export const Route = createFileRoute('/apply')({
         const board = getBoard();
         try {
           const intent = await createApplyIntent(
-            board.client,
+            board,
             jobSlug,
             applySession.sessionKey,
             headers,
@@ -95,15 +95,11 @@ export const Route = createFileRoute('/apply')({
           // `all_jobs` ordinary external applies are intentionally fail-open
           // on intent infrastructure failure. Re-read the trusted job; never
           // use a browser URL and never release a Sponsored destination.
-          let job: {
-            isSponsored?: boolean | null;
-            applicationUrl: string | null;
-            applyAction?: string | null;
-          };
+          let job;
           try {
-            job = (await board.jobs.retrieve(jobSlug, undefined, {
+            job = await board.jobs.retrieve(jobSlug, undefined, {
               headers: withApplyGatewayCapability(headers),
-            })) as typeof job;
+            });
           } catch {
             return withApplyCookies(applyErrorResponse(503), cookies);
           }
