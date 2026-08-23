@@ -1,9 +1,3 @@
-/**
- * Job matches — same public URL as hosted boards (`/matches`).
- * File is a root route so it is not nested under `/account`.
- */
-import { Briefcase, Upload } from 'lucide-react';
-
 import {
   createFileRoute,
   getRouteApi,
@@ -12,10 +6,15 @@ import {
   useNavigate,
   useRouter,
 } from '@tanstack/react-router';
+/**
+ * Job matches — same public URL as hosted boards (`/matches`).
+ * File is a root route so it is not nested under `/account`.
+ */
+import { Briefcase, Upload } from 'lucide-react';
 
+import { ResumeImportDialog } from '../components/resume-import-dialog';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
-import { ResumeImportDialog } from '../components/resume-import-dialog';
 import { getRecommendedJobs, saveJob } from '../server/account';
 import { getSeoBase } from '../server/queries';
 import { SelectedJobDetail } from './-selected-job-detail';

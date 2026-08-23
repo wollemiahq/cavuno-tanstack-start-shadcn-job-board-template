@@ -172,8 +172,9 @@ function initialForm(
     employmentType: (EMPLOYMENT_TYPES.find(
       (value) => value === job.employmentType,
     ) ?? 'full_time') as (typeof EMPLOYMENT_TYPES)[number],
-    seniority: (SENIORITIES.find((value) => value === job.seniority) ??
-      null) as (typeof SENIORITIES)[number] | null,
+    seniority: (SENIORITIES.find((value) => value === job.seniority) ?? null) as
+      | (typeof SENIORITIES)[number]
+      | null,
     remoteOption: (REMOTE_OPTIONS.find((value) => value === job.remoteOption) ??
       'hybrid') as (typeof REMOTE_OPTIONS)[number],
     officeLocations,
