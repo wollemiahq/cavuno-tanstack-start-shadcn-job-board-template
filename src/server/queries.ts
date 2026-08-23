@@ -19,6 +19,7 @@ import { getRequest } from '@tanstack/react-start/server';
 
 import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
 import { getBoard } from '../lib/board';
+import { withApplyGatewayCapability } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import {
   readBoardContext,
@@ -225,7 +226,9 @@ export const getJob = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, (h) =>
-      getBoard().jobs.retrieve(data.jobSlug, undefined, { headers: h }),
+      getBoard().jobs.retrieve(data.jobSlug, undefined, {
+        headers: withApplyGatewayCapability(h),
+      }),
     ),
   );
 

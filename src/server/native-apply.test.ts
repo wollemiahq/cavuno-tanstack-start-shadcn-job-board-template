@@ -34,6 +34,7 @@ describe('authenticated native Apply server boundary', () => {
         headers: {
           authorization: 'Bearer candidate',
           'x-board-access': 'grant',
+          'x-cavuno-board-capabilities': 'apply-gateway-v1',
         },
         body: { sessionKey: 'server_owned_apply_session_key' },
       },
@@ -57,7 +58,10 @@ describe('authenticated native Apply server boundary', () => {
 
     expect(client.fetch).toHaveBeenCalledWith('/jobs/senior-engineer/apply', {
       method: 'POST',
-      headers: { authorization: 'Bearer candidate' },
+      headers: {
+        authorization: 'Bearer candidate',
+        'x-cavuno-board-capabilities': 'apply-gateway-v1',
+      },
       body: {
         coverNote: 'Hello',
         approvalReceipt: 'aar_receipt_abcdefghijklmnopqrstuvwxyz',
@@ -107,7 +111,10 @@ describe('authenticated native Apply server boundary', () => {
 
     expect(client.fetch).toHaveBeenCalledWith('/jobs/ordinary-role/apply', {
       method: 'POST',
-      headers: { authorization: 'Bearer candidate' },
+      headers: {
+        authorization: 'Bearer candidate',
+        'x-cavuno-board-capabilities': 'apply-gateway-v1',
+      },
       body: {},
     });
   });

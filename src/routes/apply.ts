@@ -9,7 +9,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { applyCopy } from '@/copy-groups/apply';
-import { authHeaders, getBoard, getSessionRefresherFor } from '@/lib/board';
+import {
+  authHeaders,
+  getBoard,
+  getSessionRefresherFor,
+  withApplyGatewayCapability,
+} from '@/lib/board';
 import {
   clearSessionForSource,
   getDataSource,
@@ -97,7 +102,7 @@ export const Route = createFileRoute('/apply')({
           };
           try {
             job = (await board.jobs.retrieve(jobSlug, undefined, {
-              headers,
+              headers: withApplyGatewayCapability(headers),
             })) as typeof job;
           } catch {
             return withApplyCookies(applyErrorResponse(503), cookies);

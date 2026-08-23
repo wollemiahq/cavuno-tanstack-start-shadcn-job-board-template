@@ -5,6 +5,8 @@
  */
 import { isSafeApplicationUrl, type BoardClient } from '@cavuno/board';
 
+import { withApplyGatewayCapability } from '@/lib/board';
+
 export const APPLY_SESSION_COOKIE = '__Host-cavuno_apply_session';
 
 const SESSION_KEY_RE = /^[A-Za-z0-9_-]{20,200}$/;
@@ -93,7 +95,7 @@ export async function createApplyIntent(
     `/jobs/${encodeURIComponent(jobSlug)}/apply-intents`,
     {
       method: 'POST',
-      headers,
+      headers: withApplyGatewayCapability(headers),
       body: { sessionKey },
     },
   );

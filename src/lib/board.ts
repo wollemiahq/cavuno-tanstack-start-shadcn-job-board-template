@@ -28,6 +28,8 @@ import type { DataSource } from './data-source';
 
 let primaryClient: BoardSdk | null = null;
 let demoClient: BoardSdk | null = null;
+const APPLY_GATEWAY_CAPABILITY_HEADER = 'x-cavuno-board-capabilities';
+const APPLY_GATEWAY_CAPABILITY = 'apply-gateway-v1';
 
 function createClient(board: string): BoardSdk {
   const { apiUrl } = getServerEnv();
@@ -39,14 +41,18 @@ function createClient(board: string): BoardSdk {
   return createBoardClient({
     baseUrl: apiUrl,
     board,
-    // This is deployment capability, not viewer identity. Cavuno requires it
-    // on the controlled Apply seams; sending it globally keeps the stable
-    // starter boundary simple without changing public-read cacheability.
-    globalHeaders: {
-      'x-cavuno-board-capabilities': 'apply-gateway-v1',
-    },
     onRequest: applyReadCache,
   });
+}
+
+/** Advertise the upgraded Apply contract only at its controlled seams. */
+export function withApplyGatewayCapability(
+  headers: Record<string, string> = {},
+): Record<string, string> {
+  return {
+    ...headers,
+    [APPLY_GATEWAY_CAPABILITY_HEADER]: APPLY_GATEWAY_CAPABILITY,
+  };
 }
 
 /** Primary (operator) board client — real tenant data. */

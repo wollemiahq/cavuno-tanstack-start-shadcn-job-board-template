@@ -1,5 +1,6 @@
 import { APPLY_SESSION_COOKIE, applySessionKey } from './apply-intent';
 
+import { withApplyGatewayCapability } from '@/lib/board';
 import type { ApplyApprovalPlan } from '@/lib/native-apply';
 import type { Application, ApplyBody } from '@cavuno/board';
 
@@ -60,7 +61,7 @@ export function prepareNativeApply(
 ): Promise<ApplyApprovalPlan> {
   return client.fetch(`/jobs/${encodeURIComponent(jobSlug)}/apply-approvals`, {
     method: 'POST',
-    headers,
+    headers: withApplyGatewayCapability(headers),
     body: { sessionKey },
   }) as Promise<ApplyApprovalPlan>;
 }
@@ -91,7 +92,7 @@ export function submitNativeApply(
   }
   return client.fetch(`/jobs/${encodeURIComponent(jobSlug)}/apply`, {
     method: 'POST',
-    headers,
+    headers: withApplyGatewayCapability(headers),
     body: {
       ...safeApplyBody(body),
       ...(approvalReceipt

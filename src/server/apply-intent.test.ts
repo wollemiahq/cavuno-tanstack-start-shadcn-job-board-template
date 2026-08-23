@@ -110,7 +110,10 @@ describe('board-local Apply intent seam', () => {
       '/jobs/senior%20engineer%2Fau/apply-intents',
       {
         method: 'POST',
-        headers: { authorization: 'Bearer trusted' },
+        headers: {
+          authorization: 'Bearer trusted',
+          'x-cavuno-board-capabilities': 'apply-gateway-v1',
+        },
         body: { sessionKey: 'S'.repeat(32) },
       },
     );
