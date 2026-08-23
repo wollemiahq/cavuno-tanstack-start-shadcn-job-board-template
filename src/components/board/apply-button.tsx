@@ -21,19 +21,25 @@ import { useState } from 'react';
 
 import { m } from '../../paraglide/messages';
 
-import { toApplyButtonVM } from '@/board/apply-view-model';
+import {
+  toApplyButtonVM,
+  type PublicApplyAction,
+} from '@/board/apply-view-model';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
   candidateSignInHref,
   candidateVerifyEmailHref,
 } from '@/lib/candidate-return-to';
+import { NativeApplyApprovalError, runNativeApply } from '@/lib/native-apply';
 
 export function ApplyButton({
   jobSlug,
   applicationUrl,
+  applyAction,
   viewer,
   language,
   returnTo,
+  onPrepareApply,
   onApply,
   alreadyApplied = false,
   applicationsHref = '/me/applications',
@@ -43,6 +49,8 @@ export function ApplyButton({
   jobSlug: string | null;
   /** The employer's external application URL, when the job carries one. */
   applicationUrl: string | null;
+  /** Cavuno's server-supplied Apply contract (absent for pre-gateway data). */
+  applyAction?: PublicApplyAction | null;
   /** Session state: null = anonymous. */
   viewer: { emailVerified: boolean } | null;
   /** Board language (ISO code) from `board.context()`. */
@@ -54,7 +62,10 @@ export function ApplyButton({
    * `EMAIL_UNVERIFIED` to route the candidate to the verify page (the
    * Board API error code for a stale verification state).
    */
-  onApply: (jobSlug: string) => Promise<void>;
+  /** Ask Cavuno whether this native Apply needs a browser-edge receipt. */
+  onPrepareApply: (jobSlug: string) => Promise<unknown>;
+  /** Submit natively; a receipt id is present only when preparation required it. */
+  onApply: (jobSlug: string, approvalReceipt?: string) => Promise<void>;
   /**
    * Seed the "already applied" state from server data — pass the loader's
    * prior-application status (e.g. `board.jobs.myApplication(jobSlug)`) so
@@ -74,9 +85,9 @@ export function ApplyButton({
   // prop (server data). Reset the transient state when the job changes —
   // a component instance reused across client-side navigation (same tree
   // position, new `jobSlug`) must not carry Job A's "applied" onto Job B.
-  const [state, setState] = useState<'idle' | 'applying' | 'applied' | 'error'>(
-    'idle',
-  );
+  const [state, setState] = useState<
+    'idle' | 'applying' | 'applied' | 'error' | 'location-denied'
+  >('idle');
   const [trackedJob, setTrackedJob] = useState(jobSlug);
   if (jobSlug !== trackedJob) {
     setTrackedJob(jobSlug);
@@ -86,6 +97,7 @@ export function ApplyButton({
   const { action, copy } = toApplyButtonVM({
     jobSlug,
     applicationUrl,
+    applyAction,
     viewer,
     applied: alreadyApplied || state === 'applied',
     language,
@@ -107,6 +119,24 @@ export function ApplyButton({
               longer applyOnEmployerSiteLabel is dropped from the CTA. */}
           {m.applyButton_applyLabel()}
         </a>
+      );
+    case 'gateway-external':
+      // No gateway or provider URL is emitted into the page. The POST target
+      // is this board's own stable route; its 303 then makes the browser
+      // contact the Cavuno user-edge gateway directly.
+      return (
+        <form
+          method="post"
+          action="/apply"
+          onSubmit={() => setState('applying')}
+        >
+          <input type="hidden" name="jobSlug" value={action.jobSlug} />
+          <Button type="submit" size="lg" disabled={state === 'applying'}>
+            {state === 'applying'
+              ? copy.applyingLabel
+              : m.applyButton_applyLabel()}
+          </Button>
+        </form>
       );
     case 'sign-in':
       return (
@@ -144,7 +174,11 @@ export function ApplyButton({
             onClick={async () => {
               setState('applying');
               try {
-                await onApply(action.jobSlug);
+                await runNativeApply({
+                  jobSlug: action.jobSlug,
+                  prepare: onPrepareApply,
+                  submit: onApply,
+                });
                 setState('applied');
               } catch (error) {
                 // A stale verification state routes to the verify page;
@@ -154,7 +188,12 @@ export function ApplyButton({
                   window.location.assign(candidateVerifyEmailHref(returnTo));
                   return;
                 }
-                setState('error');
+                setState(
+                  error instanceof NativeApplyApprovalError &&
+                    error.reason === 'denied'
+                    ? 'location-denied'
+                    : 'error',
+                );
               }
             }}
           >
@@ -165,6 +204,10 @@ export function ApplyButton({
           {state === 'error' ? (
             <p role="alert" className="text-destructive text-sm">
               {copy.applicationSubmitError}
+            </p>
+          ) : state === 'location-denied' ? (
+            <p role="alert" className="text-destructive text-sm">
+              {copy.locationNotEligibleError}
             </p>
           ) : null}
         </div>

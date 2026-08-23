@@ -20,6 +20,21 @@ import { applyCopy } from '@/copy-groups/apply';
 /** The resolved apply decision (discriminated on `kind`). */
 export type ApplyAction = ReturnType<typeof resolveApplyAction>;
 
+/**
+ * Cavuno's additive public-job Apply contract. Keep this local until the
+ * starter's pinned SDK version ships the generated DTO; it is data returned
+ * only by the server-side Board client, never browser input.
+ */
+export type PublicApplyAction =
+  | 'native'
+  | 'gateway_native'
+  | 'external_direct'
+  | 'gateway_external';
+
+export type ResolvedApplyAction =
+  | ApplyAction
+  | { kind: 'gateway-external'; jobSlug: string };
+
 export interface ApplyCopyVM {
   applyOnEmployerSiteLabel: string;
   signInToApplyLabel: string;
@@ -28,22 +43,26 @@ export interface ApplyCopyVM {
   applyingLabel: string;
   applyButtonText: string;
   applicationSubmitError: string;
+  locationNotEligibleError: string;
 }
 
 export interface ApplyButtonVM {
-  action: ApplyAction;
+  action: ResolvedApplyAction;
   copy: ApplyCopyVM;
 }
 
 export function toApplyButtonVM({
   jobSlug,
   applicationUrl,
+  applyAction,
   viewer,
   applied,
   nativeApplications = true,
 }: {
   jobSlug: string | null;
   applicationUrl: string | null;
+  /** Server-supplied contract; absent keeps the pre-gateway behavior. */
+  applyAction?: PublicApplyAction | null;
   viewer: { emailVerified: boolean } | null;
   /** `alreadyApplied` (server) OR the transient in-session applied state. */
   applied: boolean;
@@ -58,13 +77,52 @@ export function toApplyButtonVM({
   nativeApplications?: boolean;
 }): ApplyButtonVM {
   const copy = applyCopy();
+  if (applyAction === 'gateway_external') {
+    return {
+      // A gateway job without a slug is malformed; fail closed rather than
+      // falling into the legacy URL/native ladder.
+      action: jobSlug
+        ? { kind: 'gateway-external', jobSlug }
+        : { kind: 'none' },
+      copy: {
+        applyOnEmployerSiteLabel: copy.applyOnEmployerSiteLabel,
+        signInToApplyLabel: copy.signInToApplyLabel,
+        verifyEmailToApplyLabel: copy.verifyEmailToApplyLabel,
+        appliedViewApplicationsLabel: copy.appliedViewApplicationsLabel,
+        applyingLabel: copy.applyingLabel,
+        applyButtonText: copy.applyButtonText,
+        applicationSubmitError: copy.applicationSubmitError,
+        locationNotEligibleError: copy.locationNotEligibleError,
+      },
+    };
+  }
+  if (applyAction === 'external_direct' && !applicationUrl) {
+    return {
+      action: { kind: 'none' },
+      copy: {
+        applyOnEmployerSiteLabel: copy.applyOnEmployerSiteLabel,
+        signInToApplyLabel: copy.signInToApplyLabel,
+        verifyEmailToApplyLabel: copy.verifyEmailToApplyLabel,
+        appliedViewApplicationsLabel: copy.appliedViewApplicationsLabel,
+        applyingLabel: copy.applyingLabel,
+        applyButtonText: copy.applyButtonText,
+        applicationSubmitError: copy.applicationSubmitError,
+        locationNotEligibleError: copy.locationNotEligibleError,
+      },
+    };
+  }
   const resolved = resolveApplyAction({
     jobSlug,
-    applicationUrl,
+    // A server-declared native job must not fall through to an old/redacted
+    // URL. `gateway_external` is handled above; absent preserves old SDKs.
+    applicationUrl:
+      applyAction === 'native' || applyAction === 'gateway_native'
+        ? null
+        : applicationUrl,
     viewer,
     applied,
   });
-  const action: ApplyAction =
+  const action: ResolvedApplyAction =
     !nativeApplications && resolved.kind !== 'external'
       ? { kind: 'none' }
       : resolved;
@@ -78,6 +136,7 @@ export function toApplyButtonVM({
       applyingLabel: copy.applyingLabel,
       applyButtonText: copy.applyButtonText,
       applicationSubmitError: copy.applicationSubmitError,
+      locationNotEligibleError: copy.locationNotEligibleError,
     },
   };
 }

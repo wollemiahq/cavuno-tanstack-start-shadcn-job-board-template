@@ -624,7 +624,8 @@
       "name": "native-select",
       "status": "used",
       "productionReferences": [
-        "src/components/preview/preview-board-settings.tsx"
+        "src/components/preview/preview-board-settings.tsx",
+        "src/components/profile-form.tsx"
       ]
     },
     {

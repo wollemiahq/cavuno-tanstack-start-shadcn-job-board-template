@@ -17,7 +17,10 @@ vi.mock('../server/account', () => ({
   getSessionUser: vi.fn(),
   saveJob: vi.fn(),
 }));
-vi.mock('../server/applications', () => ({ applyToJob: vi.fn() }));
+vi.mock('../server/applications', () => ({
+  applyToJob: vi.fn(),
+  prepareApplyToJob: vi.fn(),
+}));
 vi.mock('../server/queries', () => ({ getBoardContext: vi.fn() }));
 
 import { SelectedJobDetail } from './-selected-job-detail';

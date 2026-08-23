@@ -39,6 +39,12 @@ function createClient(board: string): BoardSdk {
   return createBoardClient({
     baseUrl: apiUrl,
     board,
+    // This is deployment capability, not viewer identity. Cavuno requires it
+    // on the controlled Apply seams; sending it globally keeps the stable
+    // starter boundary simple without changing public-read cacheability.
+    globalHeaders: {
+      'x-cavuno-board-capabilities': 'apply-gateway-v1',
+    },
     onRequest: applyReadCache,
   });
 }

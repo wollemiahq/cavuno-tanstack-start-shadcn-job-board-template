@@ -2,14 +2,17 @@
  * Edge-cache policy for Board API reads (Cloudflare Workers).
  *
  * The anonymous/authed split is a SECURITY invariant: a request carrying an
- * `Authorization` bearer or an `X-Board-Access` grant sees a per-viewer
- * response (candidate-paywall gating, board-password content) that must NEVER
- * be served from a shared cache. The Cloudflare edge cache is keyed by URL, not
+ * `Authorization` bearer or an `X-Board-Access` grant sees a response that
+ * must NEVER be served from a shared cache. The versioned Apply capability is
+ * deployment metadata, not viewer identity, and public job data is deliberately
+ * country-invariant, so it does not disable caching. The Cloudflare edge cache
+ * is keyed by URL, not
  * by request header, and the anonymous and authed views of a listing share one
  * URL — so this hook does two things, together, and they are load-bearing as a
  * pair:
  *
- *   1. Only anonymous GETs (no bearer, no grant) opt into `cf.cacheEverything`,
+ *   1. Only anonymous legacy GETs (no bearer, no grant, no capability) opt
+ *      into `cf.cacheEverything`,
  *      so only the genuinely public "shared-cacheable" view is ever written to
  *      the edge cache.
  *   2. Every authed/grant read AND every mutation is pinned to
@@ -51,15 +54,19 @@ export function boardGlobalReadCache(): {
 /**
  * The client `onRequest` hook: attach the edge-cache directive that matches the
  * request's identity. Anonymous GETs become edge-cacheable; anything carrying a
- * bearer or grant, and every mutation, bypasses the cache entirely.
+ * bearer or grant, and every mutation, bypasses the cache
+ * entirely. Apply metadata is additive and identical for capable and legacy
+ * reads; the capability is enforced only on the state-changing Apply seams.
  */
 export function applyReadCache(req: BoardRequest): BoardRequest {
   const init = req.init as WorkersRequestInit;
   const method = (init.method ?? 'GET').toUpperCase();
   const headers = init.headers as Headers;
-  const authed = headers.has('authorization') || headers.has('x-board-access');
+  const viewerSpecific =
+    headers.has('authorization') ||
+    headers.has('x-board-access');
 
-  if (method === 'GET' && !authed) {
+  if (method === 'GET' && !viewerSpecific) {
     // Respect an explicit board-global TTL a call site already tagged;
     // otherwise apply the default short content TTL.
     if (!init.cf?.cacheEverything) {

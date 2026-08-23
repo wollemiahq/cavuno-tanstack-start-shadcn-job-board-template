@@ -12,6 +12,10 @@ const messages = [
     m.apply_applicationSubmitError as unknown as MessageFn,
   ],
   [
+    'locationNotEligibleError',
+    m.apply_locationNotEligibleError as unknown as MessageFn,
+  ],
+  [
     'appliedViewApplicationsLabel',
     m.apply_appliedViewApplicationsLabel as unknown as MessageFn,
   ],
