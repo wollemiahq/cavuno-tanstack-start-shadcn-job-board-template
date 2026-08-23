@@ -47,13 +47,13 @@ vi.mock('@/server/messaging', () => ({
 vi.mock('../lib/auth-guard', () => ({ redirectIfAuthenticated: vi.fn() }));
 
 import { Route as AccountRoute } from './account';
-import { Route as MatchesRoute } from './matches';
-import { Route as SavedRoute } from './saved-jobs';
 import { Route as ConfirmEmailChangeRoute } from './auth.confirm-email-change';
 import { Route as SignInRoute } from './auth.sign-in';
+import { Route as MatchesRoute } from './matches';
 import { Route as AlertsRoute } from './me.alerts';
 import { Route as ApplicationsRoute } from './me.applications';
 import { Route as MessagesRoute } from './messages';
+import { Route as SavedRoute } from './saved-jobs';
 import { Route as SettingsRoute } from './settings';
 
 /** Extract the robots directive a route's head emits with no loader data. */

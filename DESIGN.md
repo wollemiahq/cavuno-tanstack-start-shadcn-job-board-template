@@ -1822,7 +1822,7 @@ PUTs immediately and refreshes.
 
 Props:
 
-- `preferences: { object: "notification_preference"; channel: "messageEmails" | "applicationEmails"; subscribed: boolean; updatedAt: …`
+- `preferences: StarterNotificationPreference[]`
 
 ### EmbeddedCheckout — `src/components/paywall/embedded-checkout.tsx`
 
@@ -2048,6 +2048,7 @@ hosted board's resume upload modal.
 Props:
 
 - `resume: { object: "resume"; parseStatus: "parsing" | "parsed" | "failed" | null; parseFailureReason: string | null; parsedAt:…`
+- `triggerLabel?: string | undefined`
 
 ### ResumeUpload — `src/components/resume-upload.tsx`
 
