@@ -17,15 +17,18 @@ import { m } from '../paraglide/messages';
 import { getResume } from '../server/account';
 import { resendOtp, verifyOtpCode } from '../server/auth';
 import { getSeoBase } from '../server/queries';
+import { updateNotificationPreference } from '../server/settings';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldLabel } from '@/components/ui/field';
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp';
+import { toastActionError } from '@/lib/action-toast';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import { headTitle } from '@/lib/page-title';
 import type { Resume } from '@cavuno/board';
@@ -203,6 +206,8 @@ function ResumeOfferStep({
   returnTo: string;
 }) {
   const router = useRouter();
+  const [recommendationEmails, setRecommendationEmails] = useState(false);
+  const [recommendationPending, setRecommendationPending] = useState(false);
   // Decided once on entry: the offer is only for the empty first-run state.
   // A candidate whose resume is already on file (or whose resume state failed
   // to load) continues straight to the destination; uploading DURING the step
@@ -223,6 +228,41 @@ function ResumeOfferStep({
       supportingText={m.authVerifyEmailRequired_resumeIntroText()}
     >
       {resume ? <ResumeUpload resume={resume} /> : null}
+      <div
+        className="border-border flex items-start gap-3 rounded-lg border p-4"
+        data-test="recommendation-email-opt-in"
+      >
+        <Checkbox
+          className="mt-0.5 shrink-0"
+          checked={recommendationEmails}
+          disabled={recommendationPending}
+          aria-label={m.notificationSettings_recommendedJobEmailsTitle()}
+          onCheckedChange={async (checked) => {
+            setRecommendationPending(true);
+            try {
+              await updateNotificationPreference({
+                data: {
+                  channel: 'recommendedJobEmails',
+                  subscribed: checked,
+                },
+              });
+              setRecommendationEmails(checked);
+            } catch {
+              void toastActionError();
+            } finally {
+              setRecommendationPending(false);
+            }
+          }}
+        />
+        <span>
+          <span className="block font-medium">
+            {m.notificationSettings_recommendedJobEmailsTitle()}
+          </span>
+          <span className="text-muted-foreground block text-sm">
+            {m.notificationSettings_recommendedJobEmailsDescription()}
+          </span>
+        </span>
+      </div>
       <Button
         type="button"
         variant={resume?.hasResumeOnFile ? 'default' : 'outline'}

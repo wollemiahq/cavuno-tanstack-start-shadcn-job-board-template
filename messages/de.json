@@ -1067,6 +1067,8 @@
   "notificationSettings_applicationEmailsTitle": "Bewerbungsupdates",
   "notificationSettings_messageEmailsDescription": "Sende mir eine E-Mail, wenn mir ein Arbeitgeber eine Nachricht sendet.",
   "notificationSettings_messageEmailsTitle": "Nachrichten",
+  "notificationSettings_recommendedJobEmailsDescription": "Eine wöchentliche E-Mail mit deinen besten Treffern. Jederzeit abbestellbar.",
+  "notificationSettings_recommendedJobEmailsTitle": "Jobs per E-Mail, die zu meinem Profil passen",
   "pagination_ariaLabel": "Seitennummerierung",
   "pagination_nextLabel": "Weiter",
   "pagination_nextPageLabel": "Nächste Seite",

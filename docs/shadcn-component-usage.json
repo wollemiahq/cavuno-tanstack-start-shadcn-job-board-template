@@ -357,7 +357,8 @@
         "src/components/notification-settings.tsx",
         "src/components/profile-form.tsx",
         "src/components/registration-page.tsx",
-        "src/components/resume-upload.tsx"
+        "src/components/resume-upload.tsx",
+        "src/routes/auth.verify-email-required.tsx"
       ]
     },
     {

@@ -7,12 +7,17 @@ import { useRouter } from '@tanstack/react-router';
 import { m } from '../paraglide/messages';
 import { updateNotificationPreference } from '../server/settings';
 
+import type { StarterNotificationChannel } from '../server/settings';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import type { NotificationPreference } from '@cavuno/board';
 
+type StarterNotificationPreference = Omit<NotificationPreference, 'channel'> & {
+  channel: StarterNotificationChannel;
+};
+
 const CHANNEL_LABELS: Record<
-  NotificationPreference['channel'],
+  StarterNotificationChannel,
   { title: () => string; description: () => string }
 > = {
   messageEmails: {
@@ -22,6 +27,10 @@ const CHANNEL_LABELS: Record<
   applicationEmails: {
     title: m.notificationSettings_applicationEmailsTitle,
     description: m.notificationSettings_applicationEmailsDescription,
+  },
+  recommendedJobEmails: {
+    title: m.notificationSettings_recommendedJobEmailsTitle,
+    description: m.notificationSettings_recommendedJobEmailsDescription,
   },
 };
 
@@ -33,7 +42,7 @@ const CHANNEL_LABELS: Record<
 export function NotificationSettings({
   preferences,
 }: {
-  preferences: NotificationPreference[];
+  preferences: StarterNotificationPreference[];
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);

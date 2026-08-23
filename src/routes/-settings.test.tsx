@@ -17,16 +17,19 @@ const mocks = vi.hoisted(() => ({
   requestEmailChange: vi.fn(),
   updatePassword: vi.fn(),
   requestSetPassword: vi.fn(),
+  updateNotificationPreference: vi.fn(),
+  unsubscribeWithToken: vi.fn(),
 }));
 
 vi.mock('../server/settings', () => ({
   getNotificationPreferences: vi.fn(),
   getMarketingConsent: vi.fn(),
   getSettingsAccount: vi.fn(),
-  unsubscribeWithToken: vi.fn(),
+  unsubscribeWithToken: mocks.unsubscribeWithToken,
   requestEmailChange: mocks.requestEmailChange,
   updatePassword: mocks.updatePassword,
   requestSetPassword: mocks.requestSetPassword,
+  updateNotificationPreference: mocks.updateNotificationPreference,
 }));
 
 vi.mock('../server/account', () => ({
@@ -73,7 +76,7 @@ function renderSettings(
   overrides: {
     hasPassword?: boolean;
     preferences?: {
-      channel: 'messageEmails' | 'applicationEmails';
+      channel: 'messageEmails' | 'applicationEmails' | 'recommendedJobEmails';
       subscribed: boolean;
     }[];
   } = {},
@@ -83,6 +86,7 @@ function renderSettings(
     preferences: overrides.preferences ?? [
       { channel: 'messageEmails', subscribed: true },
       { channel: 'applicationEmails', subscribed: true },
+      { channel: 'recommendedJobEmails', subscribed: false },
     ],
     consent: null,
     account: { ...account, hasPassword: overrides.hasPassword ?? true },
@@ -94,6 +98,31 @@ function renderSettings(
 }
 
 describe('settings unsubscribe recovery', () => {
+  it('accepts a signed recommendation-email unsubscribe before auth', async () => {
+    mocks.unsubscribeWithToken.mockResolvedValue({ ok: true });
+    const loader = Route.options.loader;
+    if (typeof loader !== 'function') throw new Error('Expected loader');
+    await expect(
+      loader({
+        deps: {
+          token: 'signed-token',
+          boardUserId: 'candidate-1',
+          channel: 'recommendedJobEmails',
+        },
+      } as never),
+    ).resolves.toMatchObject({
+      mode: 'unsubscribed',
+      channel: 'recommendedJobEmails',
+    });
+    expect(mocks.unsubscribeWithToken).toHaveBeenCalledWith({
+      data: {
+        token: 'signed-token',
+        boardUserId: 'candidate-1',
+        channel: 'recommendedJobEmails',
+      },
+    });
+  });
+
   it('returns an expired-link recipient to settings after sign in', () => {
     vi.spyOn(Route, 'useLoaderData').mockReturnValue({
       mode: 'unsubscribe-failed',
@@ -145,6 +174,33 @@ describe('signed-in settings account cards', () => {
     expect(
       screen.queryByRole('heading', { name: 'Sign-in and security' }),
     ).toBeNull();
+  });
+
+  it('shows the candidate-controlled recommendation email preference', () => {
+    renderSettings();
+    expect(
+      screen.getByRole('checkbox', {
+        name: m.notificationSettings_recommendedJobEmailsTitle(),
+      }),
+    ).not.toBeChecked();
+  });
+
+  it('persists the recommendation preference immediately from settings', async () => {
+    mocks.updateNotificationPreference.mockResolvedValue({});
+    renderSettings();
+    fireEvent.click(
+      screen.getByRole('checkbox', {
+        name: m.notificationSettings_recommendedJobEmailsTitle(),
+      }),
+    );
+    await waitFor(() => {
+      expect(mocks.updateNotificationPreference).toHaveBeenCalledWith({
+        data: {
+          channel: 'recommendedJobEmails',
+          subscribed: true,
+        },
+      });
+    });
   });
 
   it('requests an email change and swaps to the pending notice', async () => {

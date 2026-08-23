@@ -29,6 +29,22 @@ import type {
   UpdateNotificationPreferenceBody,
 } from '@cavuno/board';
 
+export type StarterNotificationChannel =
+  | UpdateNotificationPreferenceBody['channel']
+  | 'recommendedJobEmails';
+
+export interface StarterUpdateNotificationPreferenceBody {
+  channel: StarterNotificationChannel;
+  subscribed: boolean;
+}
+
+export interface StarterUnsubscribeBody extends Omit<
+  UnsubscribeBody,
+  'channel'
+> {
+  channel: StarterNotificationChannel;
+}
+
 /** Bearer + board-access grant for one gated `/me/*` call. */
 function authedHeaders(
   context: SessionContext & BoardAccessContext,
@@ -47,19 +63,26 @@ export const getNotificationPreferences = createServerFn({ method: 'GET' })
   );
 
 export const updateNotificationPreference = createServerFn({ method: 'POST' })
-  .validator((input: UpdateNotificationPreferenceBody) => input)
+  .validator((input: StarterUpdateNotificationPreferenceBody) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
-    return getBoard().me.notificationPreferences.update(data, {
-      headers: authedHeaders(context),
-    });
+    // Runtime API support lands with this starter change. Keep the narrow cast
+    // only at the installed 4.6 SDK boundary until the next SDK release.
+    return getBoard().me.notificationPreferences.update(
+      data as UpdateNotificationPreferenceBody,
+      {
+        headers: authedHeaders(context),
+      },
+    );
   });
 
 /** Email-link one-click unsubscribe — the token is the authorization. */
 export const unsubscribeWithToken = createServerFn({ method: 'POST' })
-  .validator((input: UnsubscribeBody) => input)
+  .validator((input: StarterUnsubscribeBody) => input)
   .handler(async ({ data }) => {
-    await getBoard().me.notificationPreferences.unsubscribeWithToken(data);
+    await getBoard().me.notificationPreferences.unsubscribeWithToken(
+      data as UnsubscribeBody,
+    );
     return { ok: true as const };
   });
 
