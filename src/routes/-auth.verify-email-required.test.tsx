@@ -478,12 +478,18 @@ describe('/auth/verify-email-required resume offer step', () => {
     });
     fireEvent.click(checkbox);
     expect(checkbox).toBeChecked();
+    const skipButton = screen.getByRole('button', {
+      name: m.authVerifyEmailRequired_resumeSkipLabel(),
+    });
+    const wasDisabledWhilePending = skipButton.hasAttribute('disabled');
 
     rejectPreference();
     await waitFor(() => {
       expect(mocks.toastActionError).toHaveBeenCalled();
     });
+    expect(wasDisabledWhilePending).toBe(true);
     expect(checkbox).not.toBeChecked();
+    expect(skipButton).toBeEnabled();
   });
 });
 

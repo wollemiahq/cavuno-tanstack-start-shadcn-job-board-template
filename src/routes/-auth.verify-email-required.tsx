@@ -374,6 +374,7 @@ function ResumeOfferStep({
         size="lg"
         className="w-full"
         data-test="resume-step-continue"
+        disabled={recommendationPending}
         onClick={() => {
           if (!resume?.hasResumeOnFile) {
             document.cookie = serializeResumeOnboardingDismissal(userId);
