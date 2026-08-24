@@ -64,29 +64,40 @@ const blogRead = async <T>(read: () => Promise<T>): Promise<T> => {
   }
 };
 
+function samePostPage(
+  first: { data: Array<{ id: string }> },
+  second: { data: Array<{ id: string }> }
+): boolean {
+  return (
+    first.data.length === second.data.length &&
+    first.data.every((post, index) => post.id === second.data[index]?.id)
+  );
+}
+
 export const getBlogIndexPage = createServerFn({ method: 'GET' })
   .validator((input: { cursor?: string; q?: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
-      const [page, tags, seo] = await Promise.all([
+      const readPage = (cursor?: string) =>
         data.q
           ? blogRead(() =>
-              board.blog.search(
-                { query: data.q!, cursor: data.cursor },
-                undefined,
-                { headers },
-              ),
+              board.blog.search({ query: data.q!, cursor }, undefined, {
+                headers,
+              })
             )
           : blogRead(() =>
               board.blog.posts.list(
-                { cursor: data.cursor, limit: BLOG_PAGE_SIZE },
-                { headers },
-              ),
-            ),
+                { cursor, limit: BLOG_PAGE_SIZE },
+                { headers }
+              )
+            );
+      const [page, firstPage, tags, seo] = await Promise.all([
+        readPage(data.cursor),
+        data.cursor ? readPage() : Promise.resolve(null),
         blogRead(() => board.blog.tags.list(undefined, { headers })).catch(
-          () => null,
+          () => null
         ),
         seoBase(),
       ]);
@@ -109,17 +120,22 @@ export const getBlogIndexPage = createServerFn({ method: 'GET' })
             { label: c.home, href: selfUrl(seo.origin, '/') },
             { label: c.blog },
           ]),
-        ].filter((e) => e !== null),
+        ].filter((e) => e !== null)
       );
       return {
         page,
+        // Some APIs treat an unrecognised cursor as page one. Comparing the
+        // returned IDs lets the route turn that soft-404 into a real 404.
+        cursorPageIsFirstPage: Boolean(
+          data.cursor && firstPage && samePostPage(page, firstPage)
+        ),
         tags: tags?.data ?? [],
         seo,
         q: data.q ?? null,
         head,
         jsonLd,
       };
-    }),
+    })
   );
 
 export const getBlogPostPage = createServerFn({ method: 'GET' })
@@ -129,31 +145,31 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const post = await blogRead(() =>
-        board.blog.posts.retrieve(data.postSlug, undefined, { headers }),
+        board.blog.posts.retrieve(data.postSlug, undefined, { headers })
       );
       const firstTagSlug = post.tags[0]?.slug ?? null;
       const [adjacent, byTag, latest, seo]: [
         PublicBlogAdjacentPosts,
         Awaited<ReturnType<typeof board.blog.posts.list>> | null,
         Awaited<ReturnType<typeof board.blog.posts.list>> | null,
-        Awaited<ReturnType<typeof seoBase>>,
+        Awaited<ReturnType<typeof seoBase>>
       ] = await Promise.all([
         blogRead(() => board.blog.posts.adjacent(post.slug, { headers })).catch(
           (error) => {
             if (isNotFound(error)) return EMPTY_ADJACENT;
             throw error;
-          },
+          }
         ),
         firstTagSlug
           ? blogRead(() =>
               board.blog.posts.list(
                 { tagSlug: firstTagSlug, limit: 4 },
-                { headers },
-              ),
+                { headers }
+              )
             ).catch(() => null)
           : Promise.resolve(null),
         blogRead(() => board.blog.posts.list({ limit: 4 }, { headers })).catch(
-          () => null,
+          () => null
         ),
         seoBase(),
       ]);
@@ -170,7 +186,7 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
           {
             title: headTitle(seo.boardName, post.seoTitle ?? post.title),
           },
-          ...((post.seoDescription ?? post.customExcerpt)
+          ...(post.seoDescription ?? post.customExcerpt
             ? [
                 {
                   name: 'description',
@@ -206,10 +222,10 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
             { label: c.blog, href: `${seo.origin}/blog` },
             { label: post.title },
           ]),
-        ].filter((e) => e !== null),
+        ].filter((e) => e !== null)
       );
       return { post, adjacent, related, seo, head, jsonLd };
-    }),
+    })
   );
 
 export const getBlogTagPage = createServerFn({ method: 'GET' })
@@ -220,7 +236,7 @@ export const getBlogTagPage = createServerFn({ method: 'GET' })
       const board = getBoard();
       const [tag, posts, tags, seo] = await Promise.all([
         blogRead(() =>
-          board.blog.tags.retrieve(data.tagSlug, undefined, { headers }),
+          board.blog.tags.retrieve(data.tagSlug, undefined, { headers })
         ),
         blogRead(() =>
           board.blog.posts.list(
@@ -229,11 +245,11 @@ export const getBlogTagPage = createServerFn({ method: 'GET' })
               cursor: data.cursor,
               limit: BLOG_PAGE_SIZE,
             },
-            { headers },
-          ),
+            { headers }
+          )
         ),
         blogRead(() => board.blog.tags.list(undefined, { headers })).catch(
-          () => null,
+          () => null
         ),
         seoBase(),
       ]);
@@ -267,7 +283,7 @@ export const getBlogTagPage = createServerFn({ method: 'GET' })
             { label: c.blog, href: selfUrl(seo.origin, BOARD_PATHS.blog) },
             { label: tag.name },
           ]),
-        ].filter((e) => e !== null),
+        ].filter((e) => e !== null)
       );
       return {
         tag,
@@ -277,7 +293,7 @@ export const getBlogTagPage = createServerFn({ method: 'GET' })
         head,
         jsonLd,
       };
-    }),
+    })
   );
 
 export const getBlogAuthorPage = createServerFn({ method: 'GET' })
@@ -290,7 +306,7 @@ export const getBlogAuthorPage = createServerFn({ method: 'GET' })
         blogRead(() =>
           board.blog.authors.retrieve(data.authorSlug, undefined, {
             headers,
-          }),
+          })
         ),
         blogRead(() =>
           board.blog.posts.list(
@@ -299,8 +315,8 @@ export const getBlogAuthorPage = createServerFn({ method: 'GET' })
               cursor: data.cursor,
               limit: BLOG_PAGE_SIZE,
             },
-            { headers },
-          ),
+            { headers }
+          )
         ),
         seoBase(),
       ]);
@@ -344,8 +360,8 @@ export const getBlogAuthorPage = createServerFn({ method: 'GET' })
             { label: c.blog, href: selfUrl(seo.origin, BOARD_PATHS.blog) },
             { label: author.name },
           ]),
-        ].filter((e) => e !== null),
+        ].filter((e) => e !== null)
       );
       return { author, posts, seo, head, jsonLd };
-    }),
+    })
   );

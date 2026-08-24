@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { isNotFound } from '@tanstack/react-router';
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -32,7 +33,12 @@ function loader() {
 beforeEach(() => {
   getBlogIndexPage.mockReset();
   getBlogIndexPage.mockResolvedValue({
-    page: { data: [], hasMore: true, nextCursor: '3' },
+    page: {
+      data: [{ id: 'page-two-post' }],
+      hasMore: true,
+      nextCursor: '3',
+    },
+    cursorPageIsFirstPage: false,
     tags: [],
     seo: {
       boardName: 'Sandbox',
@@ -52,7 +58,7 @@ describe('blog index presentation contract', () => {
   it('does not append the job-alert acquisition band to the editorial archive', () => {
     const source = readFileSync(
       resolve(process.cwd(), 'src/routes/blog.index.tsx'),
-      'utf8',
+      'utf8'
     );
 
     expect(source).not.toContain('AlertsBand');
@@ -83,6 +89,54 @@ describe('blog index cursor pagination contract', () => {
     });
   });
 
+  it('404s an empty or page-one-reset cursor response', async () => {
+    getBlogIndexPage.mockResolvedValue({
+      page: { data: [], hasMore: false, nextCursor: null },
+      cursorPageIsFirstPage: false,
+      tags: [],
+      seo: {},
+      q: null,
+      head: {},
+      jsonLd: [],
+    });
+    await expect(
+      loader()({ deps: { cursor: 'expired' } } as never)
+    ).rejects.toSatisfy(isNotFound);
+
+    getBlogIndexPage.mockResolvedValue({
+      page: {
+        data: [{ id: 'first-page-post' }],
+        hasMore: false,
+        nextCursor: null,
+      },
+      cursorPageIsFirstPage: true,
+      tags: [],
+      seo: {},
+      q: null,
+      head: {},
+      jsonLd: [],
+    });
+    await expect(
+      loader()({ deps: { cursor: 'invalid' } } as never)
+    ).rejects.toSatisfy(isNotFound);
+  });
+
+  it('keeps an empty first page as a valid archive', async () => {
+    getBlogIndexPage.mockResolvedValue({
+      page: { data: [], hasMore: false, nextCursor: null },
+      cursorPageIsFirstPage: false,
+      tags: [],
+      seo: {},
+      q: null,
+      head: {},
+      jsonLd: [],
+    });
+
+    await expect(loader()({ deps: {} } as never)).resolves.toMatchObject({
+      page: { data: [] },
+    });
+  });
+
   it('canonicalises every cursor page to the bare archive root, never the cursor URL', () => {
     const head = BlogRoute.options.head;
     if (typeof head !== 'function') {
@@ -107,7 +161,7 @@ describe('blog index cursor pagination contract', () => {
     } as never) as { links?: Array<{ rel?: string; href?: string }> };
 
     const canonical = descriptor.links?.find(
-      (link) => link.rel === 'canonical',
+      (link) => link.rel === 'canonical'
     );
 
     expect(canonical?.href).toBe('https://board.example/blog');

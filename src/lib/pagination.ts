@@ -14,6 +14,9 @@ import {
   defaultStringifySearch,
 } from '@tanstack/react-router';
 
+/** Maximum `offset + limit` accepted by the Board API's offset listings. */
+export const OFFSET_PAGINATION_WINDOW = 10_000;
+
 /**
  * Coerce a raw `?cursor=` search value to an opaque cursor string.
  *
@@ -46,7 +49,7 @@ export function pageSearchValue(page: number): number | undefined {
 export function listingPageHref(
   currentHref: string,
   page: number,
-  transientParams: string[] = [],
+  transientParams: string[] = []
 ): string {
   const url = new URL(currentHref, 'https://board.local');
 
@@ -77,7 +80,7 @@ export function listingPageHref(
 export function cursorPageHref(
   currentHref: string,
   cursor: string,
-  transientParams: string[] = [],
+  transientParams: string[] = []
 ): string {
   const url = new URL(currentHref, 'https://board.local');
   const search = defaultParseSearch(url.search) as Record<string, unknown>;
@@ -95,6 +98,33 @@ export function pageToOffset(page: number, pageSize: number): number {
   return (page - 1) * pageSize;
 }
 
+/** Avoid asking the API for a window it will reject before reading results. */
+export function exceedsOffsetPaginationWindow(
+  offset: number,
+  limit: number
+): boolean {
+  return offset + limit > OFFSET_PAGINATION_WINDOW;
+}
+
+/**
+ * Whether a successfully loaded numbered page is beyond the result set.
+ * Page one is a real listing/search surface even when it currently has no rows.
+ */
+export function isOutOfBoundsOffsetPage({
+  page,
+  offset,
+  count,
+  resultCount,
+}: {
+  page: number;
+  offset: number;
+  count?: number;
+  resultCount: number;
+}): boolean {
+  if (page <= 1) return false;
+  return typeof count === 'number' ? offset >= count : resultCount === 0;
+}
+
 /** Number of pages a result `count` spans at this page size. */
 export function totalPages(count: number, pageSize: number): number {
   return Math.ceil(count / pageSize);
@@ -103,7 +133,7 @@ export function totalPages(count: number, pageSize: number): number {
 /** Whether the pagination nav should render — only once a second page exists. */
 export function shouldRenderPagination(
   count: number,
-  pageSize: number,
+  pageSize: number
 ): boolean {
   return totalPages(count, pageSize) > 1;
 }

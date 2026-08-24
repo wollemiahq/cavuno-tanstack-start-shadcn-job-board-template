@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { isNotFound } from '@tanstack/react-router';
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -62,7 +63,7 @@ beforeEach(() => {
   });
   getCompaniesIndexPage.mockReset();
   getCompaniesIndexPage.mockResolvedValue({
-    page: { data: [], count: 0 },
+    page: { data: [], count: 100 },
     searchUnavailable: false,
     markets: [],
     seo: {},
@@ -138,6 +139,33 @@ describe('companies route — URL-backed master-detail search', () => {
     await expect(
       loader(CompaniesRoute)({ deps: { query: 'acme' } } as never),
     ).resolves.toMatchObject({ searchUnavailable: true });
+  });
+
+  it('404s a later page beyond the result count but keeps an empty first page valid', async () => {
+    getCompaniesIndexPage.mockResolvedValue({
+      page: { data: [], count: 24 },
+      searchUnavailable: false,
+      markets: [],
+      seo: {},
+      head: {},
+      jsonLd: [],
+    });
+
+    await expect(
+      loader(CompaniesRoute)({ deps: { page: 2 } } as never),
+    ).rejects.toSatisfy(isNotFound);
+
+    getCompaniesIndexPage.mockResolvedValue({
+      page: { data: [], count: 0 },
+      searchUnavailable: false,
+      markets: [],
+      seo: {},
+      head: {},
+      jsonLd: [],
+    });
+    await expect(
+      loader(CompaniesRoute)({ deps: {} } as never),
+    ).resolves.toMatchObject({ page: { count: 0 } });
   });
 });
 

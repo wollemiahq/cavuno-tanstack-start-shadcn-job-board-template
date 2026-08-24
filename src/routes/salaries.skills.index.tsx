@@ -17,8 +17,8 @@ import {
   toSalaryRailVM,
 } from '@/board/salary-view-model';
 import {
+  SalaryDirectoryList,
   SalaryEmptyState,
-  SalaryRail,
   type RailItem,
 } from '@/components/board/salary-sections';
 import { jsonLdHeadScripts } from '@/components/json-ld';
@@ -62,7 +62,7 @@ function SalarySkillsIndex() {
       title={m.salaryHub_skillsHeading()}
     >
       {items.length > 0 ? (
-        <SalaryRail vm={toSalaryRailVM('', items, getLocale())} />
+        <SalaryDirectoryList vm={toSalaryRailVM('', items, getLocale())} />
       ) : (
         <SalaryEmptyState
           title={m.salaryHub_skillsEmptyTitle()}

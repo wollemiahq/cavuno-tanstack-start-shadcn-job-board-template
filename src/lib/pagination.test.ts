@@ -14,6 +14,8 @@ import { describe, expect, it } from 'vitest';
 import {
   cursorPageHref,
   cursorSearchValue,
+  exceedsOffsetPaginationWindow,
+  isOutOfBoundsOffsetPage,
   listingPageHref,
   pageSearchValue,
   pageToOffset,
@@ -27,13 +29,13 @@ describe('listingPageHref (crawlable pagination URLs)', () => {
     expect(
       listingPageHref('/jobs?q=robotics&selectedJob=old&page=2', 3, [
         'selectedJob',
-      ]),
+      ])
     ).toBe('/jobs?q=robotics&page=3');
   });
 
   it('keeps page one canonical by removing the page parameter', () => {
     expect(listingPageHref('/companies?market=robotics&page=2', 1)).toBe(
-      '/companies?market=robotics',
+      '/companies?market=robotics'
     );
   });
 });
@@ -41,10 +43,10 @@ describe('listingPageHref (crawlable pagination URLs)', () => {
 describe('cursorPageHref (crawlable next-cursor URLs for cursor-only listings)', () => {
   it('sets the opaque cursor and drops the numbered page param', () => {
     expect(cursorPageHref('/blog?cursor=old', 'opaque:page:2')).toBe(
-      '/blog?cursor=opaque%3Apage%3A2',
+      '/blog?cursor=opaque%3Apage%3A2'
     );
     expect(cursorPageHref('/talent?page=3', 'next')).toBe(
-      '/talent?cursor=next',
+      '/talent?cursor=next'
     );
   });
 
@@ -52,7 +54,7 @@ describe('cursorPageHref (crawlable next-cursor URLs for cursor-only listings)',
     expect(
       cursorPageHref('/talent?q=react&selectedTalent=old&cursor=a', 'b', [
         'selectedTalent',
-      ]),
+      ])
     ).toBe('/talent?q=react&cursor=b');
   });
 
@@ -71,10 +73,10 @@ describe('cursorPageHref (crawlable next-cursor URLs for cursor-only listings)',
     for (const cursor of ['2', 'opaque:page:2', 'kn7abc', '1.5']) {
       const href = cursorPageHref('/blog', cursor);
       const parsed = defaultParseSearch(
-        new URL(href, 'https://b.local').search,
+        new URL(href, 'https://b.local').search
       );
       expect(cursorSearchValue((parsed as { cursor?: unknown }).cursor)).toBe(
-        cursor,
+        cursor
       );
     }
   });
@@ -165,6 +167,50 @@ describe('pageToOffset (1-based page ⇒ 0-based API offset)', () => {
   it('maps later pages by the page size', () => {
     expect(pageToOffset(2, 20)).toBe(20);
     expect(pageToOffset(3, 24)).toBe(48);
+  });
+});
+
+describe('offset pagination bounds', () => {
+  it('guards windows the API rejects before making the request', () => {
+    expect(exceedsOffsetPaginationWindow(9_980, 20)).toBe(false);
+    expect(exceedsOffsetPaginationWindow(10_000, 20)).toBe(true);
+    expect(exceedsOffsetPaginationWindow(9_984, 24)).toBe(true);
+  });
+
+  it('keeps an empty first page valid but rejects empty later pages', () => {
+    expect(
+      isOutOfBoundsOffsetPage({
+        page: 1,
+        offset: 0,
+        count: 0,
+        resultCount: 0,
+      })
+    ).toBe(false);
+    expect(
+      isOutOfBoundsOffsetPage({
+        page: 2,
+        offset: 20,
+        count: 20,
+        resultCount: 0,
+      })
+    ).toBe(true);
+  });
+
+  it('falls back to the returned row count when an envelope omits count', () => {
+    expect(
+      isOutOfBoundsOffsetPage({
+        page: 2,
+        offset: 24,
+        resultCount: 0,
+      })
+    ).toBe(true);
+    expect(
+      isOutOfBoundsOffsetPage({
+        page: 2,
+        offset: 24,
+        resultCount: 1,
+      })
+    ).toBe(false);
   });
 });
 
