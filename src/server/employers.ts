@@ -29,15 +29,10 @@ import {
 import { createServerFn } from '@tanstack/react-start';
 
 import { getBoard } from '../lib/board';
-import {
-  boardAccessMiddleware,
-  type BoardAccessContext,
-} from '../lib/board-access-middleware';
-import {
-  requireSessionMiddleware,
-  type SessionContext,
-} from '../lib/session-middleware';
+import { type BoardAccessContext } from '../lib/board-access-middleware';
+import { type SessionContext } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
+import { verifiedBoardUserMiddleware } from './me-verification';
 
 export type ActionResult<T> =
   | { ok: true; data: T }
@@ -73,7 +68,7 @@ function authedHeaders(
 
 /** Every company the signed-in board user manages or has claimed. */
 export const listCompanies = createServerFn({ method: 'GET' })
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ context }) =>
     gatedRead(context, () =>
       getBoard().me.companies.list({ headers: authedHeaders(context) }),
@@ -82,7 +77,7 @@ export const listCompanies = createServerFn({ method: 'GET' })
 
 export const searchCompanies = createServerFn({ method: 'GET' })
   .validator((input: EmployerCompanySearchQuery) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard().me.companies.search(data, { headers: authedHeaders(context) }),
@@ -91,7 +86,7 @@ export const searchCompanies = createServerFn({ method: 'GET' })
 
 export const createCompany = createServerFn({ method: 'POST' })
   .validator((input: CreateCompanyBody) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard().me.companies.create(data, { headers: authedHeaders(context) }),
@@ -100,7 +95,7 @@ export const createCompany = createServerFn({ method: 'POST' })
 
 export const claimCompany = createServerFn({ method: 'POST' })
   .validator((input: { slug: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard().me.companies.claim(data.slug, {
@@ -111,7 +106,7 @@ export const claimCompany = createServerFn({ method: 'POST' })
 
 export const cancelClaim = createServerFn({ method: 'POST' })
   .validator((input: { slug: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard()
@@ -131,7 +126,7 @@ export const cancelClaim = createServerFn({ method: 'POST' })
  */
 export const getEmployerCompany = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, () =>
       getBoard().me.companies.retrieve(data.slug, {
@@ -144,7 +139,7 @@ export const updateCompany = createServerFn({ method: 'POST' })
   .validator(
     (input: { slug: string; body: UpdateEmployerCompanyBody }) => input,
   )
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard().me.companies.update(data.slug, data.body, {
@@ -155,7 +150,7 @@ export const updateCompany = createServerFn({ method: 'POST' })
 
 export const deleteCompany = createServerFn({ method: 'POST' })
   .validator((input: { slug: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard()
@@ -168,7 +163,7 @@ export const deleteCompany = createServerFn({ method: 'POST' })
 
 export const listCompanyMembers = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, () =>
       getBoard().me.companies.listMembers(data.slug, {
@@ -185,7 +180,7 @@ export const updateCompanyMemberRole = createServerFn({ method: 'POST' })
       body: UpdateCompanyMemberRoleBody;
     }) => input,
   )
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard()
@@ -198,7 +193,7 @@ export const updateCompanyMemberRole = createServerFn({ method: 'POST' })
 
 export const removeCompanyMember = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; memberId: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard()
@@ -211,7 +206,7 @@ export const removeCompanyMember = createServerFn({ method: 'POST' })
 
 export const leaveCompany = createServerFn({ method: 'POST' })
   .validator((input: { slug: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard()
@@ -224,7 +219,7 @@ export const leaveCompany = createServerFn({ method: 'POST' })
 
 export const listCompanyInvites = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, () =>
       getBoard().me.companies.listInvites(data.slug, {
@@ -237,7 +232,7 @@ export const createCompanyInvite = createServerFn({ method: 'POST' })
   .validator(
     (input: { slug: string; body: CreateCompanyMemberInviteBody }) => input,
   )
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard().me.companies.createInvite(data.slug, data.body, {
@@ -248,7 +243,7 @@ export const createCompanyInvite = createServerFn({ method: 'POST' })
 
 export const revokeCompanyInvite = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; inviteId: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard()
@@ -261,7 +256,7 @@ export const revokeCompanyInvite = createServerFn({ method: 'POST' })
 
 export const acceptCompanyInvite = createServerFn({ method: 'POST' })
   .validator((input: AcceptCompanyMemberInviteBody) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(async ({ data, context }) => {
     try {
       return {
@@ -309,7 +304,7 @@ export const uploadCompanyLogo = createServerFn({ method: 'POST' })
     }
     return { slug, file };
   })
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     getBoard().me.companies.uploadLogo(data.slug, data.file, {
       headers: authedHeaders(context),
@@ -318,7 +313,7 @@ export const uploadCompanyLogo = createServerFn({ method: 'POST' })
 
 export const sendWorkEmail = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; body: SendWorkEmailBody }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard().me.companies.workEmail.verify(data.slug, data.body, {
@@ -347,7 +342,7 @@ export const confirmWorkEmail = createServerFn({ method: 'POST' })
  * billing options. */
 export const getCompanyWorkspace = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async () => {
       const headers = authedHeaders(context);
@@ -373,7 +368,7 @@ export const getCompanyWorkspace = createServerFn({ method: 'GET' })
 /** One job's full detail (edit-form prefill). Gated read like the workspace. */
 export const getJob = createServerFn({ method: 'GET' })
   .validator((input: { slug: string; id: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, () =>
       getBoard().me.companies.jobs.retrieve(data.slug, data.id, {
@@ -384,7 +379,7 @@ export const getJob = createServerFn({ method: 'GET' })
 
 export const createJob = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; body: CreateEmployerJobBody }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard().me.companies.jobs.create(data.slug, data.body, {
@@ -397,7 +392,7 @@ export const updateJob = createServerFn({ method: 'POST' })
   .validator(
     (input: { slug: string; id: string; body: UpdateEmployerJobBody }) => input,
   )
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard().me.companies.jobs.update(data.slug, data.id, data.body, {
@@ -408,7 +403,7 @@ export const updateJob = createServerFn({ method: 'POST' })
 
 export const deleteJob = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; id: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard()
@@ -421,7 +416,7 @@ export const deleteJob = createServerFn({ method: 'POST' })
 
 export const publishJob = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; id: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard().me.companies.jobs.publish(data.slug, data.id, {
@@ -432,7 +427,7 @@ export const publishJob = createServerFn({ method: 'POST' })
 
 export const unpublishJob = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; id: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard().me.companies.jobs.unpublish(data.slug, data.id, {
@@ -447,7 +442,7 @@ export const checkoutJob = createServerFn({ method: 'POST' })
   .validator(
     (input: { slug: string; id: string; body: EmployerCheckoutBody }) => input,
   )
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard().me.companies.jobs.checkout(data.slug, data.id, data.body, {
@@ -467,7 +462,7 @@ export const checkoutJob = createServerFn({ method: 'POST' })
  */
 export const getEmployerJobStats = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, () =>
       getBoard().me.companies.jobStats.retrieve(data.slug, {
@@ -483,7 +478,7 @@ export const getEmployerJobStats = createServerFn({ method: 'GET' })
  */
 export const getEmployerJobStatsTimeseries = createServerFn({ method: 'GET' })
   .validator((input: { slug: string; since?: string; until?: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, () =>
       getBoard().me.companies.jobStats.timeseries(
@@ -506,7 +501,7 @@ export const getEmployerJobStatsTimeseries = createServerFn({ method: 'GET' })
  */
 export const getEmployerProfileStats = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, () =>
       getBoard().me.companies.profileStats.retrieve(data.slug, {
@@ -524,7 +519,7 @@ export const getEmployerProfileStatsTimeseries = createServerFn({
   method: 'GET',
 })
   .validator((input: { slug: string; since?: string; until?: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, () =>
       getBoard().me.companies.profileStats.timeseries(
@@ -540,7 +535,7 @@ export const getEmployerProfileStatsTimeseries = createServerFn({
 /** One job's pipeline (job header + stage rail + applicants with timelines). */
 export const getPipeline = createServerFn({ method: 'GET' })
   .validator((input: { slug: string; job: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, () =>
       getBoard().me.companies.applicants.list(
@@ -555,7 +550,7 @@ export const moveApplicant = createServerFn({ method: 'POST' })
   .validator(
     (input: { slug: string; applicationId: string; stageId: string }) => input,
   )
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard()
@@ -571,7 +566,7 @@ export const moveApplicant = createServerFn({ method: 'POST' })
 
 export const bulkRejectApplicants = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; applicationIds: string[] }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard()
@@ -588,7 +583,7 @@ export const addApplicantNote = createServerFn({ method: 'POST' })
   .validator(
     (input: { slug: string; applicationId: string; body: string }) => input,
   )
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard()
@@ -604,7 +599,7 @@ export const addApplicantNote = createServerFn({ method: 'POST' })
 
 export const createStage = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; jobId: string; label: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard()
@@ -619,7 +614,7 @@ export const createStage = createServerFn({ method: 'POST' })
 
 export const renameStage = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; stageId: string; label: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard()
@@ -635,7 +630,7 @@ export const renameStage = createServerFn({ method: 'POST' })
 
 export const removeStage = createServerFn({ method: 'POST' })
   .validator((input: { slug: string; stageId: string }) => input)
-  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
       getBoard()

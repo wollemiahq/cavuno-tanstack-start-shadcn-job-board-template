@@ -98,6 +98,7 @@ import {
   cancelClaim,
   listCompanies,
   searchCompanies,
+  sendWorkEmail,
 } from '../server/employers';
 import { Route as DashboardRoute } from './employers.dashboard';
 import { Route as EmployersRoute } from './employers.index';
@@ -177,6 +178,27 @@ describe('employer entry surfaces', () => {
       throw new Error('The employer dashboard needs a loader');
 
     await expect(loader({} as never)).rejects.toThrow('UPSTREAM_TIMEOUT');
+  });
+
+  it('sends an unverified employer back through verification for the dashboard', async () => {
+    vi.mocked(listCompanies).mockRejectedValue(new Error('EMAIL_UNVERIFIED'));
+    const loader = DashboardRoute.options.loader;
+    if (typeof loader !== 'function')
+      throw new Error('The employer dashboard needs a loader');
+
+    let result: unknown;
+    try {
+      await loader({} as never);
+    } catch (error) {
+      result = error;
+    }
+
+    expect(isRedirect(result)).toBe(true);
+    if (!isRedirect(result)) return;
+    expect(result.options).toMatchObject({
+      to: '/auth/verify-email-required',
+      search: { returnTo: '/employers/dashboard' },
+    });
   });
 
   it('preserves the pending company path across employer sign-in', async () => {
@@ -405,6 +427,56 @@ describe('employer entry surfaces', () => {
     expect(screen.getByText(/request to join Acme Ventures/i)).toBeVisible();
     // The step's single escape hatch withdraws the claim (no Back link).
     expect(screen.getByRole('button', { name: 'Cancel claim' })).toBeEnabled();
+  });
+
+  it('resets work-email state when navigating between onboarding companies', () => {
+    let loaderData = {
+      membership: {
+        ...membership,
+        status: 'pending_work_email' as const,
+        workEmail: 'owner@acme.test',
+        workEmailVerifiedAt: null,
+      },
+    };
+    let params = { slug: 'acme-ventures' };
+    vi.spyOn(OnboardingRoute, 'useLoaderData').mockImplementation(
+      () => loaderData,
+    );
+    vi.spyOn(OnboardingRoute, 'useParams').mockImplementation(() => params);
+    const OnboardingPage = OnboardingRoute.options.component;
+    if (!OnboardingPage)
+      throw new Error('The employer onboarding route needs a component');
+
+    const { rerender } = render(<OnboardingPage />);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Use a different email' }),
+    );
+    expect(screen.getByLabelText('Work email')).toHaveValue('owner@acme.test');
+
+    loaderData = {
+      membership: {
+        ...membership,
+        id: 'membership-beta',
+        status: 'pending_work_email',
+        workEmail: 'hiring@beta.test',
+        workEmailVerifiedAt: null,
+        company: {
+          ...membership.company,
+          id: 'company-beta',
+          name: 'Beta Labs',
+          slug: 'beta-labs',
+        },
+      },
+    };
+    params = { slug: 'beta-labs' };
+    rerender(<OnboardingPage />);
+
+    expect(screen.getByText(/hiring@beta\.test/)).toBeVisible();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Use a different email' }),
+    );
+    expect(screen.getByLabelText('Work email')).toHaveValue('hiring@beta.test');
+    expect(sendWorkEmail).not.toHaveBeenCalled();
   });
 
   it('keeps a failed cancellation visible without leaving onboarding', async () => {

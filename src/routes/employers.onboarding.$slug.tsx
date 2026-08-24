@@ -78,7 +78,11 @@ function OnboardingPage() {
           </CardHeader>
           <CardContent className="space-y-8 text-center">
             {membership.status === 'pending_work_email' ? (
-              <WorkEmailStep slug={slug} membership={membership} />
+              <WorkEmailStep
+                key={`${membership.id}:${slug}`}
+                slug={slug}
+                membership={membership}
+              />
             ) : membership.status === 'awaiting_admin' ? (
               <div className="space-y-5">
                 <StepHeading
