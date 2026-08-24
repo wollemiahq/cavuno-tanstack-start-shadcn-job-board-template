@@ -48,10 +48,16 @@ function formatBytes(bytes: number): string {
 export function ResumeUpload({
   resume,
   variant = 'section',
+  showKeepOnFile = true,
 }: {
   resume: Resume;
   /** `embedded` drops the section heading — the host surface provides it. */
   variant?: 'section' | 'embedded';
+  /**
+   * First-run onboarding hides this so the only checkbox is matching emails,
+   * matching hosted. The file is still kept (`keepResumeOnFile: true`).
+   */
+  showKeepOnFile?: boolean;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -160,7 +166,10 @@ export function ResumeUpload({
           setStatus('uploading');
           const formData = new FormData();
           formData.append('resume', file);
-          formData.append('keepResumeOnFile', String(keepOnFile));
+          formData.append(
+            'keepResumeOnFile',
+            String(showKeepOnFile ? keepOnFile : true),
+          );
           try {
             await uploadResume({ data: formData });
             await router.invalidate();
@@ -194,18 +203,20 @@ export function ResumeUpload({
           {m.resumeUpload_formatsText()}
         </span>
       </button>
-      <div className="space-y-1">
-        <Label className="w-fit cursor-pointer">
-          <Checkbox
-            checked={keepOnFile}
-            onCheckedChange={(checked) => setKeepOnFile(checked === true)}
-          />
-          {m.resumeUpload_keepCopyLabel()}
-        </Label>
-        <p className="text-muted-foreground text-xs">
-          {m.resumeUpload_keepCopyHint()}
-        </p>
-      </div>
+      {showKeepOnFile ? (
+        <div className="space-y-1">
+          <Label className="w-fit cursor-pointer">
+            <Checkbox
+              checked={keepOnFile}
+              onCheckedChange={(checked) => setKeepOnFile(checked === true)}
+            />
+            {m.resumeUpload_keepCopyLabel()}
+          </Label>
+          <p className="text-muted-foreground text-xs">
+            {m.resumeUpload_keepCopyHint()}
+          </p>
+        </div>
+      ) : null}
       {status === 'upload-error' ? (
         <p className="text-destructive text-xs" role="alert">
           {m.resumeUpload_uploadError()}

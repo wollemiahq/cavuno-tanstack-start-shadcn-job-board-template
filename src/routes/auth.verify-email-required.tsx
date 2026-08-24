@@ -280,7 +280,13 @@ function ResumeOfferStep({
       title={m.authVerifyEmailRequired_resumeTitle()}
       supportingText={m.authVerifyEmailRequired_resumeIntroText()}
     >
-      {resume ? <ResumeUpload resume={resume} /> : null}
+      {resume ? (
+        <ResumeUpload
+          resume={resume}
+          variant="embedded"
+          showKeepOnFile={false}
+        />
+      ) : null}
       <div
         className="border-border flex items-start gap-3 rounded-lg border p-4"
         data-test="recommendation-email-opt-in"

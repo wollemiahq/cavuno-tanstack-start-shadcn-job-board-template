@@ -350,6 +350,11 @@ describe('/auth/verify-email-required resume offer step', () => {
     // Offering the step must not navigate away on its own.
     expect(mocks.navigate).not.toHaveBeenCalled();
 
+    expect(
+      screen.queryByRole('checkbox', {
+        name: m.resumeUpload_keepCopyLabel(),
+      }),
+    ).toBeNull();
     const recommendations = screen.getByRole('checkbox', {
       name: m.authVerifyEmailRequired_recommendedJobEmailsLabel(),
     });
