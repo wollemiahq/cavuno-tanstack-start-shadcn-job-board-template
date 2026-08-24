@@ -201,7 +201,9 @@ export function JobDetail({
             <Card size="sm" className="gap-0 py-0">
               <CardContent className="flex flex-col gap-3 p-4">
                 {applySlot ? (
-                  <div className="flex flex-col gap-2">{applySlot}</div>
+                  <div className="flex w-full flex-col gap-2 [&_a]:w-full [&_button]:w-full [&_form]:w-full">
+                    {applySlot}
+                  </div>
                 ) : null}
                 {secondaryActions ? (
                   <div className="grid grid-cols-2 gap-2">
