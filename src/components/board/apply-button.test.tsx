@@ -11,14 +11,19 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { m } from '../../paraglide/messages';
 import { ApplyButton } from './apply-button';
 
-const { requestGatewayApply } = vi.hoisted(() => ({
+const { navigateToExternalApply, requestGatewayApply } = vi.hoisted(() => ({
+  navigateToExternalApply: vi.fn(),
   requestGatewayApply: vi.fn(),
 }));
 
-vi.mock('@/lib/gateway-apply', () => ({ requestGatewayApply }));
+vi.mock('@/lib/gateway-apply', () => ({
+  navigateToExternalApply,
+  requestGatewayApply,
+}));
 
 afterEach(() => {
   cleanup();
+  navigateToExternalApply.mockReset();
   requestGatewayApply.mockReset();
   vi.restoreAllMocks();
 });
@@ -162,6 +167,30 @@ describe('ApplyButton gateway external jobs', () => {
     );
     expect(screen.getByRole('link').getAttribute('href')).toBe(
       'https://jobs.example/apply/ordinary',
+    );
+  });
+
+  it('uses no-referrer navigation after the canonical gateway allows Apply', async () => {
+    requestGatewayApply.mockResolvedValue({
+      kind: 'redirect',
+      redirectUrl: 'https://employer.example/apply/42',
+    });
+    render(
+      <ApplyButton
+        {...base}
+        jobSlug="sponsored-role"
+        applicationUrl={null}
+        applyAction="gateway_external"
+        viewer={null}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+
+    await waitFor(() =>
+      expect(navigateToExternalApply).toHaveBeenCalledWith(
+        'https://employer.example/apply/42',
+      ),
     );
   });
 });

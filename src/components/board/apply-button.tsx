@@ -151,14 +151,14 @@ export function ApplyButton({
               const form = event.currentTarget;
               setState('applying');
               try {
-                const { requestGatewayApply } =
+                const { navigateToExternalApply, requestGatewayApply } =
                   await import('@/lib/gateway-apply');
                 const result = await requestGatewayApply(form);
                 if (result.kind === 'location-denied') {
                   setState('location-denied');
                   return;
                 }
-                window.location.assign(result.redirectUrl);
+                navigateToExternalApply(result.redirectUrl);
               } catch {
                 setState('error');
               }

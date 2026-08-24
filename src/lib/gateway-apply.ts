@@ -6,6 +6,26 @@ export type GatewayApplyResult =
   | { kind: 'location-denied' }
   | { kind: 'redirect'; redirectUrl: string };
 
+/** Navigate without disclosing the board URL to the external employer. */
+export function navigateToExternalApply(
+  redirectUrl: string,
+  activate: (link: HTMLAnchorElement) => void = (link) => link.click(),
+): void {
+  if (!safeExternalUrl(redirectUrl)) throw new Error('Invalid Apply URL');
+  const link = document.createElement('a');
+  link.href = redirectUrl;
+  link.target = '_self';
+  link.rel = 'noreferrer';
+  link.referrerPolicy = 'no-referrer';
+  link.hidden = true;
+  document.body.appendChild(link);
+  try {
+    activate(link);
+  } finally {
+    link.remove();
+  }
+}
+
 /**
  * Complete the board-local, click-time handoff for a gateway Apply.
  *

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 
-import { requestGatewayApply } from './gateway-apply';
+import { navigateToExternalApply, requestGatewayApply } from './gateway-apply';
 
 function applyForm() {
   const form = document.createElement('form');
@@ -82,5 +82,22 @@ describe('requestGatewayApply', () => {
       },
     );
     expect(fetchApply).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('navigateToExternalApply', () => {
+  it('activates an HTTPS destination without sending the board referrer', () => {
+    const activate = vi.fn((link: HTMLAnchorElement) => {
+      expect(link.isConnected).toBe(true);
+      expect(link.href).toBe('https://employer.example/apply/42');
+      expect(link.target).toBe('_self');
+      expect(link.rel).toContain('noreferrer');
+      expect(link.referrerPolicy).toBe('no-referrer');
+    });
+
+    navigateToExternalApply('https://employer.example/apply/42', activate);
+
+    expect(activate).toHaveBeenCalledOnce();
+    expect(document.querySelector('a[href*="employer.example"]')).toBeNull();
   });
 });
