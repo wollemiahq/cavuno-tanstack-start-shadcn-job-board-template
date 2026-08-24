@@ -14,7 +14,7 @@
  * hrefs (not client-only handlers) keep the alternates crawlable and let
  * each carry an `hrefLang` hint. The base locale is served unprefixed.
  */
-import { lazy, Suspense, useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState, type ComponentType } from 'react';
 
 import { useRouterState } from '@tanstack/react-router';
 import { ChevronDown, Globe } from 'lucide-react';
@@ -24,10 +24,16 @@ import { publicLocales } from '../lib/public-locales';
 import { m } from '../paraglide/messages';
 import { getLocale, locales } from '../paraglide/runtime';
 
+import type { LanguageSwitcherMenuProps } from './language-switcher-menu';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-const loadMenu = () => import('./language-switcher-menu');
+type LanguageSwitcherMenuLoader = () => Promise<{
+  LanguageSwitcherMenu: ComponentType<LanguageSwitcherMenuProps>;
+}>;
+
+const loadMenu: LanguageSwitcherMenuLoader = () =>
+  import('./language-switcher-menu');
 
 /**
  * The trigger pill, shared between the pre-menu button and the Suspense
@@ -126,7 +132,7 @@ export function LanguageSwitcherPanel({
 }: {
   options: LocaleOption[];
   className?: string;
-  menuLoader?: typeof loadMenu;
+  menuLoader?: LanguageSwitcherMenuLoader;
 }) {
   const [menuRequested, setMenuRequested] = useState(false);
   const LazyLanguageSwitcherMenu = useMemo(

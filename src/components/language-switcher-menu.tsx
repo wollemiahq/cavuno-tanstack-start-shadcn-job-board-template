@@ -12,17 +12,19 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
+export interface LanguageSwitcherMenuProps {
+  options: LocaleOption[];
+  activeLabel: string;
+  label: string;
+  className?: string;
+}
+
 export function LanguageSwitcherMenu({
   options,
   activeLabel,
   label,
   className,
-}: {
-  options: LocaleOption[];
-  activeLabel: string;
-  label: string;
-  className?: string;
-}) {
+}: LanguageSwitcherMenuProps) {
   return (
     <DropdownMenu defaultOpen>
       <DropdownMenuTrigger
