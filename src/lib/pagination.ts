@@ -14,6 +14,31 @@ import {
   defaultStringifySearch,
 } from '@tanstack/react-router';
 
+export type UrlSearchValue =
+  | string
+  | string[]
+  | number
+  | boolean
+  | null
+  | undefined;
+export type UrlSearchInput = Record<string, UrlSearchValue>;
+
+function valueTag<T>(value: T): string {
+  return Object.prototype.toString.call(value);
+}
+
+export function searchString<T>(value: T): string | undefined {
+  if (valueTag(value) !== '[object String]') return undefined;
+  const text = String(value);
+  return text ? text : undefined;
+}
+
+export function searchNumber<T>(value: T): number | undefined {
+  if (valueTag(value) !== '[object Number]') return undefined;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
+}
+
 /**
  * Coerce a raw `?cursor=` search value to an opaque cursor string.
  *
@@ -25,15 +50,17 @@ import {
  * crawlers and new-tab opens. Coerce any finite scalar to its string form so
  * a numeric-looking cursor survives instead of being silently stripped.
  */
-export function cursorSearchValue(raw: unknown): string | undefined {
-  if (typeof raw === 'string') return raw.trim() || undefined;
-  if (typeof raw === 'number' && Number.isFinite(raw)) return String(raw);
+export function cursorSearchValue<T>(raw: T): string | undefined {
+  const tag = valueTag(raw);
+  if (tag === '[object String]') return String(raw).trim() || undefined;
+  if (tag === '[object Number]' && Number.isFinite(Number(raw)))
+    return String(raw);
   return undefined;
 }
 
 /** Coerce a raw `?page=` search value to a valid 1-based page number. */
-export function parsePageParam(raw: unknown): number {
-  const value = typeof raw === 'number' ? raw : Number(raw);
+export function parsePageParam<T>(raw: T): number {
+  const value = Number(raw);
   return Number.isInteger(value) && value >= 1 ? value : 1;
 }
 
@@ -80,7 +107,9 @@ export function cursorPageHref(
   transientParams: string[] = [],
 ): string {
   const url = new URL(currentHref, 'https://board.local');
-  const search = defaultParseSearch(url.search) as Record<string, unknown>;
+  // SAFETY: TanStack's default search codec only yields URL-serializable
+  // scalar values for this route-owned pagination map.
+  const search = defaultParseSearch(url.search) as UrlSearchInput;
 
   for (const param of transientParams) delete search[param];
 

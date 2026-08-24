@@ -234,11 +234,13 @@ export default function Footer({
   });
 
   // ── For Companies ──
+  const configuredTalentDirectory = features.talentDirectory;
   const talentMode =
     talentDirectoryVisibility ??
-    (typeof features.talentDirectory === 'string'
-      ? features.talentDirectory
-      : features.talentDirectory
+    (configuredTalentDirectory === 'public' ||
+    configuredTalentDirectory === 'employers_only'
+      ? configuredTalentDirectory
+      : configuredTalentDirectory
         ? 'public'
         : 'off');
   // 'off' is a truthy string — compare explicitly, never coerce.

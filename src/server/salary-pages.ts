@@ -67,7 +67,9 @@ type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 type JsonObject = { [key: string]: JsonValue };
 
-function asJsonObjects(value: unknown): JsonObject[] {
+function asJsonObjects<T>(value: T): JsonObject[] {
+  // SAFETY: Structured data is composed from literal schema.org objects and
+  // SDK SEO builders, then JSON round-tripped to erase readonly helper types.
   return JSON.parse(JSON.stringify(value)) as JsonObject[];
 }
 

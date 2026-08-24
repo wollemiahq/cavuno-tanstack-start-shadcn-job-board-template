@@ -3,19 +3,29 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../server/queries', () => ({ getSeoBase: vi.fn() }));
-
-const mocks = vi.hoisted(() => ({
+const mocks = {
+  getSeoBase: vi.fn().mockResolvedValue({
+    boardName: 'Acme Board',
+    language: 'en',
+    origin: 'https://board.example',
+  }),
   verifyEmail: vi.fn(),
   getSessionUser: vi.fn(),
-}));
+};
 
-vi.mock('../server/auth', () => ({ verifyEmail: mocks.verifyEmail }));
-vi.mock('../server/account', () => ({
-  getSessionUserStrict: mocks.getSessionUser,
-}));
-
+import { loadVerifyEmail, VerifyEmailView } from './-auth.verify-email';
 import { Route } from './auth.verify-email';
+
+function verifyEmailLoader(token: string, returnTo: string) {
+  return loadVerifyEmail(
+    { token, returnTo },
+    {
+      getSeoBase: mocks.getSeoBase,
+      getSessionUserStrict: mocks.getSessionUser,
+      verifyEmail: mocks.verifyEmail,
+    },
+  );
+}
 
 afterEach(() => {
   cleanup();
@@ -26,8 +36,23 @@ afterEach(() => {
 describe('/auth/verify-email search contract', () => {
   it('validates a supplied candidate destination with the token', () => {
     const validate = Route.options.validateSearch;
-    if (typeof validate !== 'function') {
+    if (!validate) {
       throw new Error('The email verification route must validate search');
+    }
+    if ('parse' in validate) {
+      expect(
+        validate.parse({
+          token: 'one-time-token',
+          returnTo: '/jobs?q=design&selectedJob=product-designer',
+        }),
+      ).toEqual({
+        token: 'one-time-token',
+        returnTo: '/jobs?q=design&selectedJob=product-designer',
+      });
+      return;
+    }
+    if ('~standard' in validate) {
+      throw new Error('The email verification route uses an unexpected schema');
     }
 
     expect(
@@ -43,19 +68,7 @@ describe('/auth/verify-email search contract', () => {
 
   it('offers the validated destination after successful verification', () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
-    vi.spyOn(Route, 'useSearch').mockReturnValue({
-      token: 'one-time-token',
-      returnTo,
-    });
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
-      status: 'verified',
-      returnTo,
-    });
-    const VerifyEmailPage = Route.options.component;
-    if (!VerifyEmailPage)
-      throw new Error('The verification route needs a component');
-
-    render(<VerifyEmailPage />);
+    render(<VerifyEmailView status="verified" returnTo={returnTo} />);
 
     expect(
       screen.getByRole('link', { name: 'Go to my account' }),
@@ -75,18 +88,8 @@ describe('/auth/verify-email search contract', () => {
         role: 'employer',
         emailVerified: true,
       });
-    const loader = Route.options.loader;
-    if (typeof loader !== 'function') {
-      throw new Error('The email verification route must have a loader');
-    }
-
     await expect(
-      loader({
-        deps: {
-          token: 'one-time-token',
-          returnTo: '/jobs?q=design',
-        },
-      } as never),
+      verifyEmailLoader('one-time-token', '/jobs?q=design'),
     ).resolves.toMatchObject({
       status: 'verified',
       returnTo: '/employers/dashboard',
@@ -96,18 +99,8 @@ describe('/auth/verify-email search contract', () => {
   it('keeps the safe candidate fallback for anonymous verification', async () => {
     mocks.verifyEmail.mockResolvedValue({ ok: true });
     mocks.getSessionUser.mockResolvedValue(null);
-    const loader = Route.options.loader;
-    if (typeof loader !== 'function') {
-      throw new Error('The email verification route must have a loader');
-    }
-
     await expect(
-      loader({
-        deps: {
-          token: 'one-time-token',
-          returnTo: 'https://attacker.example/phish',
-        },
-      } as never),
+      verifyEmailLoader('one-time-token', 'https://attacker.example/phish'),
     ).resolves.toMatchObject({
       status: 'verified',
       returnTo: '/account',
@@ -121,18 +114,8 @@ describe('/auth/verify-email search contract', () => {
       role: 'employer',
       emailVerified: true,
     });
-    const loader = Route.options.loader;
-    if (typeof loader !== 'function') {
-      throw new Error('The email verification route must have a loader');
-    }
-
     await expect(
-      loader({
-        deps: {
-          token: 'candidate-token',
-          returnTo: '/account',
-        },
-      } as never),
+      verifyEmailLoader('candidate-token', '/account'),
     ).resolves.toMatchObject({
       status: 'verified',
       returnTo: '/account',
@@ -142,18 +125,8 @@ describe('/auth/verify-email search contract', () => {
 
   it('does not consume a one-time token when the session profile is unavailable', async () => {
     mocks.getSessionUser.mockRejectedValue(new Error('profile unavailable'));
-    const loader = Route.options.loader;
-    if (typeof loader !== 'function') {
-      throw new Error('The email verification route must have a loader');
-    }
-
     await expect(
-      loader({
-        deps: {
-          token: 'one-time-token',
-          returnTo: '/account',
-        },
-      } as never),
+      verifyEmailLoader('one-time-token', '/account'),
     ).rejects.toThrow('profile unavailable');
     expect(mocks.verifyEmail).not.toHaveBeenCalled();
   });

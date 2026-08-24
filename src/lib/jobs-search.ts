@@ -3,7 +3,12 @@ import {
   type ListingFilters,
 } from '@cavuno/board/filters';
 
-import { pageSearchValue, parsePageParam } from '@/lib/pagination';
+import {
+  pageSearchValue,
+  parsePageParam,
+  searchString,
+  type UrlSearchInput,
+} from '@/lib/pagination';
 
 export interface JobsSearch extends ListingFilters {
   /** 1-based page; page 1 drops from the URL. */
@@ -12,15 +17,12 @@ export interface JobsSearch extends ListingFilters {
   selectedJob?: string;
 }
 
-export function parseJobsSearch(search: Record<string, unknown>): JobsSearch {
+export function parseJobsSearch(search: UrlSearchInput): JobsSearch {
   const listingSearch = {
     ...search,
-    q: typeof search.q === 'string' ? search.q : search.query,
+    q: searchString(search.q) ?? search.query,
   };
-  const selectedJob =
-    typeof search.selectedJob === 'string' && search.selectedJob.trim()
-      ? search.selectedJob.trim()
-      : undefined;
+  const selectedJob = searchString(search.selectedJob)?.trim() || undefined;
 
   return {
     ...parseListingFilters(listingSearch),

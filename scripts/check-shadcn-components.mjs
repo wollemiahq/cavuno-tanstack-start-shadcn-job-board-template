@@ -173,7 +173,7 @@ function validateConfiguration() {
     );
   }
   if (
-    typeof config.iconLibrary !== 'string' ||
+    Object.prototype.toString.call(config.iconLibrary) !== '[object String]' ||
     config.iconLibrary.length === 0
   ) {
     throw new Error('components.json must declare one iconLibrary.');

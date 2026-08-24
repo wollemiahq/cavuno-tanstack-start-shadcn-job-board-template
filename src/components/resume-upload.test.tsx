@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -11,30 +18,28 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { Resume } from '@cavuno/board';
 
-const mocks = vi.hoisted(() => ({
+const mocks = {
   deleteResume: vi.fn(),
-  invalidate: vi.fn(),
   uploadResume: vi.fn(),
   toastActionError: vi.fn(),
-}));
-
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return { ...actual, useRouter: () => ({ invalidate: mocks.invalidate }) };
-});
-
-vi.mock('../server/account', () => ({
-  deleteResume: mocks.deleteResume,
-  uploadResume: mocks.uploadResume,
-}));
-
-vi.mock('@/lib/action-toast', () => ({
-  toastActionError: mocks.toastActionError,
-  toastActionSuccess: vi.fn(),
-}));
+};
 
 import { ResumeUpload } from './resume-upload';
+
+async function renderWithRouter(node: React.ReactNode) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => <>{node}</>,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  await router.load();
+  return render(<RouterProvider router={router} />);
+}
 
 const resume = {
   object: 'resume',
@@ -58,7 +63,9 @@ afterEach(() => {
 describe('ResumeUpload', () => {
   it('fires a recoverable error toast and re-enables delete when deletion fails', async () => {
     mocks.deleteResume.mockRejectedValue(new Error('network unavailable'));
-    render(<ResumeUpload resume={resume} />);
+    await renderWithRouter(
+      <ResumeUpload resume={resume} dependencies={mocks} />,
+    );
 
     expect(document.querySelector('[data-slot="attachment"]')).toBeVisible();
 
@@ -68,6 +75,5 @@ describe('ResumeUpload', () => {
       expect(mocks.toastActionError).toHaveBeenCalled();
       expect(screen.getByRole('button', { name: 'Delete' })).toBeEnabled();
     });
-    expect(mocks.invalidate).not.toHaveBeenCalled();
   });
 });

@@ -14,7 +14,7 @@
  * hrefs (not client-only handlers) keep the alternates crawlable and let
  * each carry an `hrefLang` hint. The base locale is served unprefixed.
  */
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 
 import { useRouterState } from '@tanstack/react-router';
 import { ChevronDown, Globe } from 'lucide-react';
@@ -28,11 +28,6 @@ import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const loadMenu = () => import('./language-switcher-menu');
-const LazyLanguageSwitcherMenu = lazy(() =>
-  loadMenu().then(({ LanguageSwitcherMenu }) => ({
-    default: LanguageSwitcherMenu,
-  })),
-);
 
 /**
  * The trigger pill, shared between the pre-menu button and the Suspense
@@ -78,19 +73,19 @@ function SwitcherPill({
  * rather than the per-locale message catalogs (and never translate).
  * Unknown locales fall back to the BCP-47 tag.
  */
-export const LOCALE_ENDONYMS: Record<string, string> = {
-  en: 'English',
-  de: 'Deutsch',
-  fr: 'Français',
-  es: 'Español',
-  it: 'Italiano',
-  nl: 'Nederlands',
-  pt: 'Português',
-  pl: 'Polski',
-};
+export const LOCALE_ENDONYMS = new Map([
+  ['en', 'English'],
+  ['de', 'Deutsch'],
+  ['fr', 'Français'],
+  ['es', 'Español'],
+  ['it', 'Italiano'],
+  ['nl', 'Nederlands'],
+  ['pt', 'Português'],
+  ['pl', 'Polski'],
+]);
 
 export function localeEndonym(locale: string): string {
-  return LOCALE_ENDONYMS[locale] ?? locale;
+  return LOCALE_ENDONYMS.get(locale) ?? locale;
 }
 
 export function publicChromeLocales(): string[] {
@@ -127,11 +122,22 @@ export function buildLocaleOptions(
 export function LanguageSwitcherPanel({
   options,
   className,
+  menuLoader = loadMenu,
 }: {
   options: LocaleOption[];
   className?: string;
+  menuLoader?: typeof loadMenu;
 }) {
   const [menuRequested, setMenuRequested] = useState(false);
+  const LazyLanguageSwitcherMenu = useMemo(
+    () =>
+      lazy(() =>
+        menuLoader().then(({ LanguageSwitcherMenu }) => ({
+          default: LanguageSwitcherMenu,
+        })),
+      ),
+    [menuLoader],
+  );
   const active = options.find((option) => option.active) ?? options[0]!;
   const label = m.languageSwitcher_label();
 

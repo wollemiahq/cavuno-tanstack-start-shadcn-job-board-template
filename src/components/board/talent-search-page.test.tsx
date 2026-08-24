@@ -283,9 +283,13 @@ describe('TalentSearchPage — results description line', () => {
 describe('TalentSearchPage — arrival scroll', () => {
   // jsdom ships no scrollIntoView; the hook guards on its presence, so provide
   // a spy to observe the arrival alignment.
-  const scrollIntoView = vi.fn();
+  const scrolledResultIds: Array<string | null> = [];
+  const scrollIntoView = vi.fn(function (this: Element) {
+    scrolledResultIds.push(this.getAttribute('data-result-id'));
+  });
   beforeEach(() => {
     scrollIntoView.mockClear();
+    scrolledResultIds.length = 0;
     Element.prototype.scrollIntoView = scrollIntoView;
   });
 
@@ -336,8 +340,7 @@ describe('TalentSearchPage — arrival scroll', () => {
     await screen.findByRole('main');
     expect(scrollIntoView).toHaveBeenCalledTimes(1);
     expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
-    const target = scrollIntoView.mock.instances[0] as HTMLElement;
-    expect(target.getAttribute('data-result-id')).toBe('ada-lovelace');
+    expect(scrolledResultIds).toEqual(['ada-lovelace']);
   });
 
   it('does not scroll a manual selection made after arrival', async () => {

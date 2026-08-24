@@ -1,12 +1,8 @@
-import {
-  createFileRoute,
-  isRedirect,
-  notFound,
-  redirect,
-} from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { MessageSquare } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
+import { createMessagesLoader } from './-messages';
 import { MessagesSidebarController } from './-messages-runtime';
 
 import type { MessagesView } from './-messages-controller';
@@ -20,51 +16,20 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { headTitle } from '@/lib/page-title';
-import { getBlocked, getInbox } from '@/server/messaging';
-import { getBoardContext, getSeoBase } from '@/server/queries';
+import type { UrlSearchInput, UrlSearchValue } from '@/lib/pagination';
 
-function asView(value: unknown): MessagesView {
+function asView(value: UrlSearchValue): MessagesView {
   return value === 'archived' || value === 'blocked' ? value : 'inbox';
 }
 
 export const Route = createFileRoute('/messages')({
   staticData: { ownsMain: true },
-  validateSearch: (
-    search: Record<string, unknown>,
-  ): { view?: MessagesView } => {
+  validateSearch: (search: UrlSearchInput): { view?: MessagesView } => {
     const view = asView(search.view);
     return view === 'inbox' ? {} : { view };
   },
   loaderDeps: ({ search }) => ({ view: asView(search.view) }),
-  loader: async ({ deps }) => {
-    // Messaging feature off ⇒ the surface does not exist on this board.
-    // The gate read and the SEO base do not depend on each other, so they
-    // share one wave (the inbox read stays behind the gate — it is the call
-    // that 403s on a board without messaging).
-    const [board, seo] = await Promise.all([getBoardContext(), getSeoBase()]);
-    if (!board.features.messaging) throw notFound();
-    try {
-      if (deps.view === 'blocked') {
-        return { view: 'blocked' as const, blocked: await getBlocked(), seo };
-      }
-      return {
-        view: deps.view,
-        inbox: await getInbox({ data: { archived: deps.view === 'archived' } }),
-        seo,
-      };
-    } catch (error) {
-      if (isRedirect(error)) throw error;
-      const returnTo =
-        deps.view === 'inbox' ? '/messages' : `/messages?view=${deps.view}`;
-      if (String(error).includes('EMAIL_UNVERIFIED')) {
-        throw redirect({
-          to: '/auth/verify-email-required',
-          search: { returnTo },
-        });
-      }
-      throw redirect({ to: '/auth/sign-in', search: { returnTo } });
-    }
-  },
+  loader: createMessagesLoader(),
   head: ({ loaderData }) => ({
     meta: [
       { title: headTitle(loaderData?.seo.boardName, m.messagesPage_title()) },

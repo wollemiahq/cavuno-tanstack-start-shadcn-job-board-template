@@ -36,9 +36,7 @@ type UpdateCandidateProfileWithCountryBody = UpdateCandidateProfileBody & {
 };
 
 /** Bearer + board-access grant for one gated `/me/*` call. */
-function authedHeaders(
-  context: SessionContext & BoardAccessContext,
-): Record<string, string> {
+function authedHeaders(context: SessionContext & BoardAccessContext) {
   return { ...context.authHeaders, ...context.boardAccessHeaders };
 }
 
@@ -170,6 +168,8 @@ export const updateProfile = createServerFn({ method: 'POST' })
     // The field is already part of Cavuno's additive HTTP contract. The
     // current starter SDK predates its generated type, so keep the one narrow
     // compatibility cast at the server boundary rather than dropping it.
+    // SAFETY: `data` was accepted as UpdateCandidateProfileWithCountryBody,
+    // which is UpdateCandidateProfileBody plus an additive countryCode field.
     return getBoard().me.profile.update(
       data as UpdateCandidateProfileBody,
       undefined,

@@ -18,6 +18,7 @@ import { getHomePage } from '../server/home-page';
 import { HomePage } from './-home-page';
 
 import { jsonLdHeadScripts } from '@/components/json-ld';
+import { searchString, type UrlSearchInput } from '@/lib/pagination';
 
 interface JobsSearch extends ListingFilters {
   cursor?: string;
@@ -26,12 +27,9 @@ interface JobsSearch extends ListingFilters {
 export const Route = createFileRoute('/')({
   // Full-bleed: the landing owns its distinct hero and page containers.
   staticData: { fullBleed: true, ownsMain: true },
-  validateSearch: (search: Record<string, unknown>): JobsSearch => ({
+  validateSearch: (search: UrlSearchInput): JobsSearch => ({
     ...parseListingFilters(search),
-    cursor:
-      typeof search.cursor === 'string' && search.cursor
-        ? search.cursor
-        : undefined,
+    cursor: searchString(search.cursor),
   }),
   beforeLoad: ({ search }) => {
     const { cursor, ...jobsSearch } = search;

@@ -19,7 +19,8 @@ export function useVisiblePoll(callback: () => void, intervalMs = 4000) {
 
     const tick = () => {
       if (stopped) return;
-      if (typeof document === 'undefined' || !document.hidden) {
+      const visibleDocument = globalThis.document;
+      if (!visibleDocument || !visibleDocument.hidden) {
         savedCallback.current();
       }
       timer = setTimeout(tick, intervalMs);

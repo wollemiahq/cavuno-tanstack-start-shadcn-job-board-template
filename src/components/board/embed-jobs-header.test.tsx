@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import type { ReactNode } from 'react';
-
+import { parseListingFilters } from '@cavuno/board/filters';
+import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+} from '@tanstack/react-router';
 import {
   cleanup,
   createEvent,
@@ -10,57 +15,6 @@ import {
   screen,
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-
-/**
- * The Search control is an anchor, so these tests read its `href` rather than
- * spying on `window.open`. The stand-in `Link` renders the same `to`/`params`/
- * `search` a real one would resolve, which is what lets a test assert the
- * destination the visitor would actually land on.
- */
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    Link: ({
-      to,
-      params,
-      search,
-      children,
-      ...props
-    }: {
-      to: string;
-      params?: Record<string, string>;
-      search?: Record<string, unknown>;
-      children: ReactNode;
-      target?: string;
-      rel?: string;
-      className?: string;
-      'aria-label'?: string;
-    }) => {
-      let path = to;
-      for (const [key, value] of Object.entries(params ?? {})) {
-        path = path.replace(`$${key}`, value);
-      }
-      const query = new URLSearchParams();
-      for (const [key, value] of Object.entries(search ?? {})) {
-        if (value == null || value === '') continue;
-        query.set(
-          key,
-          Array.isArray(value) ? JSON.stringify(value) : `${value}`,
-        );
-      }
-      const qs = query.toString();
-      return (
-        <a href={qs ? `${path}?${qs}` : path} {...props}>
-          {children}
-        </a>
-      );
-    },
-  };
-});
-
-import { parseListingFilters } from '@cavuno/board/filters';
 
 import { EmbedJobsHeader } from './embed-jobs-header';
 
@@ -93,26 +47,34 @@ const locationSuggestions = {
   onQueryChange: () => {},
 };
 
-function renderHeader(
+async function renderHeader(
   initialSearch: Parameters<typeof EmbedJobsHeader>[0]['initialSearch'] = {},
 ) {
-  return render(
-    <EmbedJobsHeader
-      boardName="Acme Board"
-      logoUrl={null}
-      initialSearch={initialSearch}
-      keywordSuggestions={keywordSuggestions}
-      locationSuggestions={locationSuggestions}
-    />,
-  );
+  const rootRoute = createRootRoute({
+    component: () => (
+      <EmbedJobsHeader
+        boardName="Acme Board"
+        logoUrl={null}
+        initialSearch={initialSearch}
+        keywordSuggestions={keywordSuggestions}
+        locationSuggestions={locationSuggestions}
+      />
+    ),
+  });
+  const router = createRouter({
+    routeTree: rootRoute,
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  await router.load();
+  return render(<RouterProvider router={router} />);
 }
 
 const searchLink = () =>
   screen.getByRole('link', { name: m.searchBar_searchAriaLabel() });
 
 describe('EmbedJobsHeader', () => {
-  it('renders the board name, keyword field, location field, filters control, and Search', () => {
-    renderHeader();
+  it('renders the board name, keyword field, location field, filters control, and Search', async () => {
+    await renderHeader();
 
     expect(screen.getByRole('link', { name: 'Acme Board' })).toBeTruthy();
     expect(
@@ -131,8 +93,8 @@ describe('EmbedJobsHeader', () => {
     expect(searchLink()).toBeTruthy();
   });
 
-  it('opens Search in a new tab, never in the iframe', () => {
-    renderHeader();
+  it('opens Search in a new tab, never in the iframe', async () => {
+    await renderHeader();
 
     expect(searchLink()).toHaveAttribute('target', '_blank');
     // `noopener` without `noreferrer`: the board keeps the /embed/jobs
@@ -140,8 +102,8 @@ describe('EmbedJobsHeader', () => {
     expect(searchLink()).toHaveAttribute('rel', 'noopener');
   });
 
-  it("seeds from the widget's own params so Search keeps the operator's scope", () => {
-    renderHeader({
+  it("seeds from the widget's own params so Search keeps the operator's scope", async () => {
+    await renderHeader({
       q: 'nurse',
       location: 'london',
       remoteOption: 'remote',
@@ -166,8 +128,8 @@ describe('EmbedJobsHeader', () => {
     expect(href).toContain('employmentType=full_time');
   });
 
-  it('searches on Enter, without a form that could reload the iframe', () => {
-    renderHeader({ q: 'nurse' });
+  it('searches on Enter, without a form that could reload the iframe', async () => {
+    await renderHeader({ q: 'nurse' });
 
     // No <form>: a native submit fires before hydration and would reload the
     // widget with the operator's params gone.
@@ -183,8 +145,8 @@ describe('EmbedJobsHeader', () => {
     expect(clicked).toHaveBeenCalledOnce();
   });
 
-  it('leaves Enter alone on every control that is not a search field', () => {
-    renderHeader({ q: 'nurse' });
+  it('leaves Enter alone on every control that is not a search field', async () => {
+    await renderHeader({ q: 'nurse' });
 
     const clicked = vi.fn();
     searchLink().addEventListener('click', clicked);
@@ -226,8 +188,8 @@ describe('EmbedJobsHeader', () => {
     expect(clicked).not.toHaveBeenCalled();
   });
 
-  it('leaves Enter alone while the combobox is selecting a suggestion', () => {
-    renderHeader();
+  it('leaves Enter alone while the combobox is selecting a suggestion', async () => {
+    await renderHeader();
 
     const clicked = vi.fn();
     searchLink().addEventListener('click', clicked);
@@ -245,8 +207,8 @@ describe('EmbedJobsHeader', () => {
     expect(clicked).not.toHaveBeenCalled();
   });
 
-  it('leaves Enter alone mid-IME-composition and on key repeat', () => {
-    renderHeader({ q: 'nurse' });
+  it('leaves Enter alone mid-IME-composition and on key repeat', async () => {
+    await renderHeader({ q: 'nurse' });
 
     const clicked = vi.fn();
     searchLink().addEventListener('click', clicked);
@@ -262,11 +224,11 @@ describe('EmbedJobsHeader', () => {
     expect(clicked).not.toHaveBeenCalled();
   });
 
-  it('seeds only filters the destination can actually honour', () => {
+  it('seeds only filters the destination can actually honour', async () => {
     // `volunteer` filters the embed's own list but is not in the listing
     // filter vocabulary, so /jobs drops it. Seeding it would light the badge
     // over a Search that opens the unfiltered board.
-    renderHeader({ employmentType: 'volunteer' });
+    await renderHeader({ employmentType: 'volunteer' });
 
     expect(
       screen.getByRole('button', {
@@ -276,8 +238,8 @@ describe('EmbedJobsHeader', () => {
     expect(searchLink().getAttribute('href')).toBe('/jobs');
   });
 
-  it('survives the destination filter parser', () => {
-    renderHeader({ remoteOption: 'remote', employmentType: 'contract' });
+  it('survives the destination filter parser', async () => {
+    await renderHeader({ remoteOption: 'remote', employmentType: 'contract' });
 
     const query = Object.fromEntries(
       new URLSearchParams(searchLink().getAttribute('href')?.split('?')[1]),
@@ -291,8 +253,8 @@ describe('EmbedJobsHeader', () => {
     });
   });
 
-  it('routes a picked taxonomy term to its programmatic page', () => {
-    renderHeader();
+  it('routes a picked taxonomy term to its programmatic page', async () => {
+    await renderHeader();
 
     const keyword = screen.getByRole('combobox', {
       name: m.searchBar_keywordAriaLabel(),
@@ -309,8 +271,8 @@ describe('EmbedJobsHeader', () => {
     expect(searchLink()).toHaveAttribute('href', '/jobs/skills/react');
   });
 
-  it('stages a location pick and a filter change without leaving the frame', () => {
-    renderHeader();
+  it('stages a location pick and a filter change without leaving the frame', async () => {
+    await renderHeader();
 
     const location = screen.getByRole('combobox', {
       name: m.locationCombobox_locationAriaLabel(),

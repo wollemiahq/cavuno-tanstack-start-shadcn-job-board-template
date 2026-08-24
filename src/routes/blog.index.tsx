@@ -6,32 +6,31 @@ import {
 } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { createBlogIndexLoader, type BlogSearch } from './-blog-index-loader';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogTagChips } from '@/components/board/blog-tag-chips';
 import { CursorPagination } from '@/components/board/cursor-pagination';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { jsonLdHeadScripts } from '@/components/json-ld';
-import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
-import { getBlogIndexPage } from '@/server/blog-pages';
-
-interface BlogSearch {
-  cursor?: string;
-  q?: string;
-}
+import {
+  cursorPageHref,
+  cursorSearchValue,
+  searchString,
+  type UrlSearchInput,
+} from '@/lib/pagination';
 
 export const Route = createFileRoute('/blog/')({
   staticData: { fullBleed: true, ownsMain: true },
   pendingComponent: () => (
     <PublicContentPending label={m.publicContent_loadingLabel()} />
   ),
-  validateSearch: (search: Record<string, unknown>): BlogSearch => ({
+  validateSearch: (search: UrlSearchInput): BlogSearch => ({
     cursor: cursorSearchValue(search.cursor),
-    q: typeof search.q === 'string' && search.q ? search.q : undefined,
+    q: searchString(search.q),
   }),
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps }) =>
-    getBlogIndexPage({ data: { cursor: deps.cursor, q: deps.q } }),
+  loader: createBlogIndexLoader(),
   head: ({ loaderData }) =>
     loaderData
       ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }

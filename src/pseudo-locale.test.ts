@@ -11,6 +11,18 @@ import { localeDirection } from './lib/locale-direction';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+function readStringCatalog(path: string): Map<string, string> {
+  const parsed = JSON.parse(readFileSync(path, 'utf8'));
+  const catalog = new Map<string, string>();
+  for (const [key, value] of Object.entries(parsed)) {
+    if (Object.prototype.toString.call(value) !== '[object String]') {
+      throw new Error(`Expected ${key} in ${path} to be a string`);
+    }
+    catalog.set(key, String(value));
+  }
+  return catalog;
+}
+
 /**
  * en-XA pseudo-locale. Derived mechanically from
  * the en messages: letters get accented, the whole string is wrapped in
@@ -36,19 +48,16 @@ describe('pseudoLocalize', () => {
 
   it('the committed messages/en-XA.json covers every en key, bracketed', () => {
     const root = join(import.meta.dirname, '..');
-    const en = JSON.parse(
-      readFileSync(join(root, 'messages/en.json'), 'utf8'),
-    ) as Record<string, string>;
-    const xa = JSON.parse(
-      readFileSync(join(root, 'messages/en-XA.json'), 'utf8'),
-    ) as Record<string, string>;
-    for (const key of Object.keys(en)) {
+    const en = readStringCatalog(join(root, 'messages/en.json'));
+    const xa = readStringCatalog(join(root, 'messages/en-XA.json'));
+    for (const [key, english] of en) {
       if (key.startsWith('$')) continue;
-      expect(xa[key], `missing en-XA for ${key}`).toBeDefined();
-      expect(xa[key]!.includes('⟦'), `${key} not pseudo-localized`).toBe(true);
+      const pseudo = xa.get(key);
+      expect(pseudo, `missing en-XA for ${key}`).toBeDefined();
+      expect(pseudo?.includes('⟦'), `${key} not pseudo-localized`).toBe(true);
       // Stale-derivation guard: regenerating from the current en must
       // reproduce the committed value (npm run gen:messages).
-      expect(xa[key]).toBe(pseudoLocalize(en[key]!));
+      expect(pseudo).toBe(pseudoLocalize(english));
     }
   });
 });
@@ -78,16 +87,12 @@ describe('pseudoBidi', () => {
 
   it('the committed messages/ar-XB.json covers every en key', () => {
     const root = join(import.meta.dirname, '..');
-    const en = JSON.parse(
-      readFileSync(join(root, 'messages/en.json'), 'utf8'),
-    ) as Record<string, string>;
-    const xb = JSON.parse(
-      readFileSync(join(root, 'messages/ar-XB.json'), 'utf8'),
-    ) as Record<string, string>;
-    for (const key of Object.keys(en)) {
+    const en = readStringCatalog(join(root, 'messages/en.json'));
+    const xb = readStringCatalog(join(root, 'messages/ar-XB.json'));
+    for (const [key, english] of en) {
       if (key.startsWith('$')) continue;
-      expect(xb[key], `missing ar-XB for ${key}`).toBeDefined();
-      expect(xb[key]).toBe(pseudoBidi(en[key]!));
+      expect(xb.get(key), `missing ar-XB for ${key}`).toBeDefined();
+      expect(xb.get(key)).toBe(pseudoBidi(english));
     }
   });
 });

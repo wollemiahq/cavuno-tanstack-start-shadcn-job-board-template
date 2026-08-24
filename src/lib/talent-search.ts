@@ -1,4 +1,10 @@
-import { pageSearchValue, parsePageParam } from '@/lib/pagination';
+import {
+  pageSearchValue,
+  parsePageParam,
+  searchString,
+  type UrlSearchInput,
+  type UrlSearchValue,
+} from '@/lib/pagination';
 
 export interface TalentSearch {
   /** 1-based page used by directory pagination; page 1 drops from the URL. */
@@ -13,14 +19,11 @@ export interface TalentSearch {
 
 export type TalentListingSearch = Omit<TalentSearch, 'selectedTalent'>;
 
-function stringSearchValue(value: unknown) {
-  if (typeof value !== 'string') return undefined;
-  return value.trim() || undefined;
+function stringSearchValue(value: UrlSearchValue) {
+  return searchString(value)?.trim() || undefined;
 }
 
-export function parseTalentSearch(
-  search: Record<string, unknown>,
-): TalentSearch {
+export function parseTalentSearch(search: UrlSearchInput): TalentSearch {
   return {
     q: stringSearchValue(search.q),
     skill: stringSearchValue(search.skill),

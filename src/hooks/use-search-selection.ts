@@ -92,7 +92,7 @@ export function useSearchSelection({
     const list = listRef.current;
     // `scrollTo` is incomplete in some non-browser runtimes (jsdom) — guard
     // so the reset degrades to a no-op rather than throwing.
-    if (typeof list?.scrollTo === 'function') {
+    if (list?.scrollTo instanceof Function) {
       list.scrollTo({ top: 0 });
     }
   }, [page]);
@@ -119,7 +119,7 @@ export function useSearchSelection({
       : undefined;
     // `scrollIntoView` is absent in some non-browser runtimes (jsdom) — guard
     // so the arrival alignment degrades to a no-op rather than throwing.
-    if (typeof row?.scrollIntoView === 'function') {
+    if (row?.scrollIntoView instanceof Function) {
       row.scrollIntoView({ block: 'start' });
     }
   }, [isDesktop, selectedId, resultIds]);

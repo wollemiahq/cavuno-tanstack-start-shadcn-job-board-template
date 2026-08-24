@@ -50,9 +50,12 @@ const BUDGETS = {
     '/employers/companies/$slug/': { raw: 440_000, gzip: 135_000 },
     // React Aria's drag-and-drop/grid runtime belongs only to this private
     // workflow; it is intentionally charged here instead of every public URL.
-    // Same shell→route reassignment as the company index (narrow headroom).
+    // Removing the leaked messaging/auth graph from the shell also reassigns
+    // 32.6 KiB of shared Base UI code to this route. The route's own chunk is
+    // 0.3 KiB smaller than the prior baseline; this narrow raw-only increase
+    // records the corrected ownership rather than accepting route growth.
     '/employers/companies/$slug/jobs/$jobId/applicants': {
-      raw: 400_000,
+      raw: 410_000,
       gzip: 112_000,
     },
     // Desktop-only enhanced search is lazy shell work. Removing the shared

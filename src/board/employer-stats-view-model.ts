@@ -68,7 +68,7 @@ export function toEmployerJobStatCellsVM(
     applyClicks: stat.applyClicks.toLocaleString(language),
     applications: applicationsNotApplicable
       ? STAT_PLACEHOLDER
-      : (stat.applications as number).toLocaleString(language),
+      : Number(stat.applications).toLocaleString(language),
     applicationsNotApplicable,
   };
 }

@@ -2,13 +2,14 @@
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { searchBlogSuggestions } = vi.hoisted(() => ({
-  searchBlogSuggestions: vi.fn(),
-}));
+import {
+  useBlogSuggestions,
+  type BlogSuggestionDependencies,
+} from './-use-blog-suggestions';
 
-vi.mock('../server/queries', () => ({ searchBlogSuggestions }));
-
-import { useBlogSuggestions } from './-use-blog-suggestions';
+const searchBlogSuggestions =
+  vi.fn<BlogSuggestionDependencies['searchBlogSuggestions']>();
+const dependencies: BlogSuggestionDependencies = { searchBlogSuggestions };
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -33,7 +34,7 @@ describe('useBlogSuggestions', () => {
       ],
     });
 
-    const { result } = renderHook(() => useBlogSuggestions(true));
+    const { result } = renderHook(() => useBlogSuggestions(true, dependencies));
 
     act(() => result.current.onQueryChange('rel'));
     await act(async () => vi.advanceTimersByTimeAsync(210));
@@ -45,7 +46,9 @@ describe('useBlogSuggestions', () => {
   });
 
   it('does not request blog suggestions in another search scope', async () => {
-    const { result } = renderHook(() => useBlogSuggestions(false));
+    const { result } = renderHook(() =>
+      useBlogSuggestions(false, dependencies),
+    );
 
     act(() => result.current.onQueryChange('release'));
     await act(async () => vi.advanceTimersByTimeAsync(500));

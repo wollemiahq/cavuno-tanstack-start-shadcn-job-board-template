@@ -14,18 +14,28 @@ type MessageFn = (
   options?: { locale?: Locale },
 ) => string;
 
-const PLAN_LABELS: Record<string, { name: MessageFn; description: MessageFn }> =
-  {
-    Free: { name: m.plan_free_name, description: m.plan_free_description },
-    'Featured listing': {
+interface PlanLabelEntry {
+  name: MessageFn;
+  description: MessageFn;
+}
+
+const PLAN_LABELS = new Map<string, PlanLabelEntry>([
+  ['Free', { name: m.plan_free_name, description: m.plan_free_description }],
+  [
+    'Featured listing',
+    {
       name: m.plan_featuredListing_name,
       description: m.plan_featuredListing_description,
     },
-    'Talent access — monthly': {
+  ],
+  [
+    'Talent access — monthly',
+    {
       name: m.plan_talentAccessMonthly_name,
       description: m.plan_talentAccessMonthly_description,
     },
-  };
+  ],
+]);
 
 function localeOpt(language?: string) {
   return isLocale(language) ? { locale: language } : undefined;
@@ -33,7 +43,7 @@ function localeOpt(language?: string) {
 
 /** Localized plan name; wire authoring name as fallback. */
 export function planName(plan: { name: string }, language?: string): string {
-  const entry = PLAN_LABELS[plan.name];
+  const entry = PLAN_LABELS.get(plan.name);
   return entry ? entry.name({}, localeOpt(language)) : plan.name;
 }
 
@@ -60,7 +70,7 @@ export function planDescription(
   plan: PlanFacts,
   language?: string,
 ): string | null {
-  const entry = PLAN_LABELS[plan.name];
+  const entry = PLAN_LABELS.get(plan.name);
   if (entry) return entry.description({}, localeOpt(language));
   const facts = plan.featureSummary;
   if (facts && facts.durationDays > 0) {

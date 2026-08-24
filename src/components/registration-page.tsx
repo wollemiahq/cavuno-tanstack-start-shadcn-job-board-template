@@ -141,6 +141,12 @@ type RegistrationCopy = {
 };
 
 type RegistrationResult = { ok: true } | { ok: false; message: string };
+type RegistrationSubmitValues = {
+  displayName: string;
+  email: string;
+  password: string;
+  marketingConsent?: boolean;
+};
 
 /**
  * Copy for the optional marketing checkbox. The disclosure is THIS app's
@@ -174,12 +180,7 @@ export function RegistrationPage({
   supportingText: React.ReactNode;
   copy: RegistrationCopy;
   successHref: string;
-  onSubmit: (values: {
-    displayName: string;
-    email: string;
-    password: string;
-    marketingConsent?: boolean;
-  }) => Promise<RegistrationResult>;
+  onSubmit: (values: RegistrationSubmitValues) => Promise<RegistrationResult>;
   footer?: React.ReactNode;
   marketingConsent?: MarketingConsentCopy;
 }) {
@@ -224,12 +225,7 @@ function RegistrationForm({
 }: {
   copy: RegistrationCopy;
   status: RegistrationStatus;
-  onSubmit: (values: {
-    displayName: string;
-    email: string;
-    password: string;
-    marketingConsent?: boolean;
-  }) => Promise<RegistrationResult>;
+  onSubmit: (values: RegistrationSubmitValues) => Promise<RegistrationResult>;
   onStatusChange: (status: RegistrationStatus) => void;
   marketingConsent?: MarketingConsentCopy;
 }) {
@@ -244,13 +240,15 @@ function RegistrationForm({
         onStatusChange({ state: 'pending' });
         const form = new FormData(event.currentTarget);
         try {
-          const result = await onSubmit({
+          const values: RegistrationSubmitValues = {
             displayName: String(form.get('displayName')),
             email: String(form.get('email')),
             password: String(form.get('password')),
-            // Only a rendered, affirmatively ticked checkbox sends the flag.
-            ...(marketingConsent ? { marketingConsent: consentChecked } : {}),
-          });
+          };
+          if (marketingConsent) {
+            values.marketingConsent = consentChecked;
+          }
+          const result = await onSubmit(values);
           onStatusChange(
             result.ok
               ? { state: 'success' }

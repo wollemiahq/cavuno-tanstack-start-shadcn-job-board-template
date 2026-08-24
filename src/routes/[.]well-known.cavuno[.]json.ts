@@ -1,3 +1,8 @@
+import { createFileRoute } from '@tanstack/react-router';
+
+import { routeTree } from '../routeTree.gen';
+import { createWellKnownRouteHandler } from './-well-known-handler';
+
 /**
  * `/.well-known/cavuno.json` route-contract manifest. Serves the compiled
  * ManifestV1 so the platform (and digests/emails) can resolve board path
@@ -11,25 +16,13 @@
  * the binding at evaluation time — it is only read inside the deferred
  * request handler, by which point the tree module is fully initialized.
  */
-import {
-  createWellKnownHandler,
-  routeEntriesFromTanStackRouteTree,
-  type TanStackRouteNode,
-} from '@cavuno/board/well-known';
-import { createFileRoute } from '@tanstack/react-router';
+import type { TanStackRouteNode } from '@cavuno/board/well-known';
 
-import { routeTree } from '../routeTree.gen';
-
-const wellKnownHandler = createWellKnownHandler({
-  routes: async () => {
-    // routeTree is a live TanStack Route instance; the SDK walker is
-    // structural (id/path/fullPath/children) and does not depend on
-    // @tanstack types — cast through the documented shape.
-    return routeEntriesFromTanStackRouteTree(
-      routeTree as unknown as TanStackRouteNode,
-    );
-  },
-});
+// SAFETY: TanStack's generated route tree satisfies the SDK's structural
+// route-node contract; the assertion bridges their independently named types.
+const wellKnownHandler = createWellKnownRouteHandler(
+  () => routeTree as TanStackRouteNode,
+);
 
 export const Route = createFileRoute('/.well-known/cavuno.json')({
   server: {

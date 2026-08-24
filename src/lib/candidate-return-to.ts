@@ -1,12 +1,13 @@
 import { safeRedirectPath } from '@cavuno/board/server';
 
 import { localizePath } from './localized-path';
+import { searchString } from './pagination';
 
 const DEFAULT_CANDIDATE_RETURN_TO = '/account';
 
-export function candidateReturnTo(value: unknown) {
+export function candidateReturnTo<T>(value: T) {
   const returnTo = safeRedirectPath(
-    typeof value === 'string' ? value : undefined,
+    searchString(value),
     DEFAULT_CANDIDATE_RETURN_TO,
   );
 
@@ -18,15 +19,15 @@ export function candidateReturnTo(value: unknown) {
   return returnTo;
 }
 
-export function candidateSignInHref(value: unknown) {
+export function candidateSignInHref<T>(value: T) {
   return candidateAuthHref('/auth/sign-in', value);
 }
 
-export function candidateVerifyEmailHref(value: unknown) {
+export function candidateVerifyEmailHref<T>(value: T) {
   return candidateAuthHref('/auth/verify-email-required', value);
 }
 
-export function candidateSignUpHref(value: unknown) {
+export function candidateSignUpHref<T>(value: T) {
   return candidateAuthHref('/auth/sign-up', value);
 }
 
@@ -35,15 +36,15 @@ export function candidateSignUpHref(value: unknown) {
  * unknown — `/auth/join` resolves it via `resolveSignupDestination`, skipping
  * the chooser when the board only enables one role.
  */
-export function candidateJoinHref(value: unknown) {
+export function candidateJoinHref<T>(value: T) {
   return candidateAuthHref('/auth/join', value);
 }
 
-export function candidateForgotPasswordHref(value: unknown) {
+export function candidateForgotPasswordHref<T>(value: T) {
   return candidateAuthHref('/auth/forgot-password', value);
 }
 
-function candidateAuthHref(pathname: string, value: unknown) {
+function candidateAuthHref<T>(pathname: string, value: T) {
   const search = new URLSearchParams({
     returnTo: localizePath(candidateReturnTo(value)),
   });

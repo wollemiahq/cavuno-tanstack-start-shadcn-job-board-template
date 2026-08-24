@@ -36,14 +36,16 @@ export function HomePage() {
     count: number | null | undefined,
     singular: string,
     plural: string,
-  ) =>
-    typeof count === 'number' && count > 0
-      ? `${count.toLocaleString(getLocale())} ${
-          new Intl.PluralRules(getLocale()).select(count) === 'one'
+  ) => {
+    const safeCount = Number(count);
+    return Number.isFinite(safeCount) && safeCount > 0
+      ? `${safeCount.toLocaleString(getLocale())} ${
+          new Intl.PluralRules(getLocale()).select(safeCount) === 'one'
             ? singular
             : plural
         }`
       : undefined;
+  };
 
   const jobs = page.data.map((job) => toJobCardVM(job, getLocale()));
   const hiringCompanies = companies

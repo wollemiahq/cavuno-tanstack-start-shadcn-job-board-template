@@ -116,6 +116,14 @@ export function DitherCanvas({ className }: { className?: string }) {
 
   if (!ink || !idle) return null;
 
+  const ditheringOptions = {
+    ['shape']: 'simplex',
+    type: '8x8',
+    size: 2,
+    scale: 0.9,
+    speed: reducedMotion ? 0 : 0.6,
+  } as const;
+
   return (
     <Suspense fallback={null}>
       <LazyDithering
@@ -123,11 +131,7 @@ export function DitherCanvas({ className }: { className?: string }) {
         className={cn('pointer-events-none opacity-[0.12]', className)}
         colorBack="rgba(0, 0, 0, 0)" // transparent — composite over the band bg
         colorFront={ink}
-        shape="simplex"
-        type="8x8"
-        size={2}
-        scale={0.9}
-        speed={reducedMotion ? 0 : 0.6}
+        {...ditheringOptions}
       />
     </Suspense>
   );

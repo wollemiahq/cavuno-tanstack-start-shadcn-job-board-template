@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { useRouter } from '@tanstack/react-router';
 import {
   Check,
   ChevronsUpDown,
@@ -28,10 +29,12 @@ import {
 import { m } from '../../paraglide/messages';
 import {
   exitPreview,
+  listSandboxEmails,
   reseedSandbox,
   switchPersona,
+  updateSandboxFlags,
 } from '../../server/preview';
-import { PreviewBoardSettingsSheet } from './preview-board-settings';
+import { PreviewBoardSettingsSheetView } from './preview-board-settings';
 import { PreviewEmailsSheet } from './preview-emails';
 
 import {
@@ -54,6 +57,34 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
+
+export interface PreviewToolbarDependencies {
+  switchPersona: (
+    input: Parameters<typeof switchPersona>[0],
+  ) => ReturnType<typeof switchPersona>;
+  reseedSandbox: () => ReturnType<typeof reseedSandbox>;
+  exitPreview: () => ReturnType<typeof exitPreview>;
+  listSandboxEmails: (
+    input: Parameters<typeof listSandboxEmails>[0],
+  ) => ReturnType<typeof listSandboxEmails>;
+  updateSandboxFlags: (
+    input: Parameters<typeof updateSandboxFlags>[0],
+  ) => ReturnType<typeof updateSandboxFlags>;
+  invalidate: () => Promise<void>;
+}
+
+export interface PreviewToolbarProps {
+  capability: PreviewCapability;
+  personas: PreviewPersona[];
+  viewer: PreviewViewer | null;
+  config: PreviewBoardConfig;
+  /** Builder injected `CAVUNO_DEMO_BOARD`. */
+  demoConfigured?: boolean;
+  /** `CAVUNO_DEMO_BOARD_PRIVATE=1` — private shadow allows reseed/settings. */
+  demoBoardPrivate?: boolean;
+  /** Effective data source for this request. */
+  dataSource?: DataSource;
+}
 
 /**
  * The developer-preview toolbar for the sandbox preview state
@@ -85,7 +116,7 @@ import { cn } from '@/lib/utils';
  * bottom-4`) — "must not collide with the app's own chrome" wins over the
  * nominal bottom-right ask.
  */
-export function PreviewToolbar({
+export function PreviewToolbarView({
   capability,
   personas,
   viewer,
@@ -93,18 +124,8 @@ export function PreviewToolbar({
   demoConfigured = false,
   demoBoardPrivate = false,
   dataSource = 'board',
-}: {
-  capability: PreviewCapability;
-  personas: PreviewPersona[];
-  viewer: PreviewViewer | null;
-  config: PreviewBoardConfig;
-  /** Builder injected `CAVUNO_DEMO_BOARD`. */
-  demoConfigured?: boolean;
-  /** `CAVUNO_DEMO_BOARD_PRIVATE=1` — private shadow allows reseed/settings. */
-  demoBoardPrivate?: boolean;
-  /** Effective data source for this request. */
-  dataSource?: DataSource;
-}) {
+  dependencies,
+}: PreviewToolbarProps & { dependencies: PreviewToolbarDependencies }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
   const [boardSettingsOpen, setBoardSettingsOpen] = useState(false);
@@ -152,7 +173,9 @@ export function PreviewToolbar({
     setStalePersona(null);
     setSwitching(persona.id);
     try {
-      const result = await switchPersona({ data: { personaId: persona.id } });
+      const result = await dependencies.switchPersona({
+        data: { personaId: persona.id },
+      });
       if (result.ok) {
         // R1: only flip the data-source cookie AFTER a successful switch so a
         // failed RPC never leaves the browser on demo data with board chrome.
@@ -177,7 +200,7 @@ export function PreviewToolbar({
   async function onReseed() {
     setReseeding(true);
     try {
-      await reseedSandbox();
+      await dependencies.reseedSandbox();
       // Reseed purges and recreates the personas — the CURRENT session's
       // board user is among the purged, so the viewer's own session is now
       // stale by construction. Reload lands on the honest signed-out state.
@@ -190,7 +213,7 @@ export function PreviewToolbar({
   async function onExit() {
     setExiting(true);
     try {
-      await exitPreview();
+      await dependencies.exitPreview();
       // Dual-source: exit clears the persona session but leaves the
       // data-source cookie alone (stays in demo mode).
       window.location.reload();
@@ -381,14 +404,20 @@ export function PreviewToolbar({
       {/* Secondary surfaces — siblings of the menu, so they persist after it
           closes and closing them returns to nothing. */}
       {showBoardControls ? (
-        <PreviewBoardSettingsSheet
+        <PreviewBoardSettingsSheetView
           config={config}
           open={boardSettingsOpen}
           onOpenChange={setBoardSettingsOpen}
+          updateFlags={dependencies.updateSandboxFlags}
+          invalidate={dependencies.invalidate}
         />
       ) : null}
 
-      <PreviewEmailsSheet open={emailsOpen} onOpenChange={setEmailsOpen} />
+      <PreviewEmailsSheet
+        open={emailsOpen}
+        onOpenChange={setEmailsOpen}
+        loadEmails={dependencies.listSandboxEmails}
+      />
 
       {showBoardControls ? (
         <AlertDialog open={reseedOpen} onOpenChange={setReseedOpen}>
@@ -414,6 +443,23 @@ export function PreviewToolbar({
         </AlertDialog>
       ) : null}
     </div>
+  );
+}
+
+export function PreviewToolbar(props: PreviewToolbarProps) {
+  const router = useRouter();
+  return (
+    <PreviewToolbarView
+      {...props}
+      dependencies={{
+        switchPersona,
+        reseedSandbox,
+        exitPreview,
+        listSandboxEmails,
+        updateSandboxFlags,
+        invalidate: () => router.invalidate(),
+      }}
+    />
   );
 }
 

@@ -3,36 +3,78 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getCompany, getCompanySalarySummary, listCompanyJobs } = vi.hoisted(
-  () => ({
-    getCompany: vi.fn(),
-    getCompanySalarySummary: vi.fn(),
-    listCompanyJobs: vi.fn(),
-  }),
-);
+import {
+  useSelectedCompany,
+  type SelectedCompanyDependencies,
+} from './-use-selected-company';
 
-vi.mock('../server/queries', () => ({
+import type { PublicCompanyDetail, PublicJobCard } from '@cavuno/board';
+
+const getCompany = vi.fn<SelectedCompanyDependencies['getCompany']>();
+const getCompanySalarySummary =
+  vi.fn<SelectedCompanyDependencies['getCompanySalarySummary']>();
+const listCompanyJobs = vi.fn<SelectedCompanyDependencies['listCompanyJobs']>();
+const dependencies: SelectedCompanyDependencies = {
   getCompany,
   getCompanySalarySummary,
   listCompanyJobs,
-}));
+};
 
-import { useSelectedCompany } from './-use-selected-company';
+type SelectedCompanyProps = { slug: string | undefined };
 
-function company(slug: string) {
+function company(slug: string): PublicCompanyDetail {
   return {
     id: `id-${slug}`,
+    object: 'public_company',
     slug,
     name: slug,
+    logoUrl: null,
+    website: null,
+    description: null,
+    summary: null,
+    jobCount: 1,
+    publishedJobCount: 1,
+    salarySampleCount: 1,
     markets: [],
+    links: { public: `https://jobs.example/companies/${slug}` },
   };
 }
 
 function jobs(slug: string) {
+  const job: PublicJobCard = {
+    id: `job-${slug}`,
+    object: 'job_card',
+    slug: `job-${slug}`,
+    title: `${slug} job`,
+    description: null,
+    publishedAt: null,
+    employmentType: null,
+    remoteOption: null,
+    remoteLocationLabel: null,
+    remoteWorldwide: false,
+    remoteWorkPermitCountryCodes: [],
+    locationLabel: null,
+    salaryMin: null,
+    salaryMax: null,
+    salaryCurrency: null,
+    salaryTimeframe: null,
+    isFeatured: false,
+    isSponsored: false,
+    summary: null,
+    company: { slug, name: slug, logoUrl: null },
+    categories: [],
+    skills: [],
+    links: {
+      public: `https://jobs.example/companies/${slug}/jobs/job-${slug}`,
+    },
+  };
   return {
-    data: [{ id: `job-${slug}`, slug: `job-${slug}`, title: `${slug} job` }],
+    object: 'list' as const,
+    url: `/v1/companies/${slug}/jobs`,
+    data: [job],
     hasMore: false,
     nextCursor: null,
+    count: 1,
   };
 }
 
@@ -50,7 +92,9 @@ function salarySummary(slug: string) {
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
-  let reject!: (reason?: unknown) => void;
+  let reject: (reason?: Error) => void = () => {
+    throw new Error('Deferred rejection was not initialized');
+  };
   const promise = new Promise<T>((nextResolve, nextReject) => {
     resolve = nextResolve;
     reject = nextReject;
@@ -79,10 +123,12 @@ describe('useSelectedCompany', () => {
       salarySummary('second-company'),
     );
 
+    const initialProps: SelectedCompanyProps = { slug: 'first-company' };
     const { result, rerender } = renderHook(
-      ({ slug }) => useSelectedCompany(slug),
+      ({ slug }: { slug: string | undefined }) =>
+        useSelectedCompany(slug, dependencies),
       {
-        initialProps: { slug: 'first-company' as string | undefined },
+        initialProps,
       },
     );
 
@@ -117,7 +163,9 @@ describe('useSelectedCompany', () => {
     listCompanyJobs.mockResolvedValue(jobs('first-company'));
     getCompanySalarySummary.mockResolvedValue(salarySummary('first-company'));
 
-    const { result } = renderHook(() => useSelectedCompany('first-company'));
+    const { result } = renderHook(() =>
+      useSelectedCompany('first-company', dependencies),
+    );
 
     await waitFor(() => expect(result.current.status).toBe('error'));
     expect(result.current.error?.message).toBe('Temporary outage');
@@ -136,10 +184,13 @@ describe('useSelectedCompany', () => {
       salarySummary('first-company'),
     );
 
+    const initialProps: SelectedCompanyProps = { slug: 'first-company' };
+
     const { result, rerender } = renderHook(
-      ({ slug }) => useSelectedCompany(slug),
+      ({ slug }: { slug: string | undefined }) =>
+        useSelectedCompany(slug, dependencies),
       {
-        initialProps: { slug: 'first-company' as string | undefined },
+        initialProps,
       },
     );
 

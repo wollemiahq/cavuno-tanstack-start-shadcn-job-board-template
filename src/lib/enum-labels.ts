@@ -17,50 +17,50 @@ type MessageFn = (
   options?: { locale?: Locale },
 ) => string;
 
-const REMOTE_LABELS: Record<string, MessageFn> = {
-  on_site: m.label_remoteOnSite,
-  hybrid: m.label_remoteHybrid,
-  remote: m.label_remoteRemote,
-};
+const REMOTE_LABELS = new Map<string, MessageFn>([
+  ['on_site', m.label_remoteOnSite],
+  ['hybrid', m.label_remoteHybrid],
+  ['remote', m.label_remoteRemote],
+]);
 
-const EMPLOYMENT_LABELS: Record<string, MessageFn> = {
-  full_time: m.label_employmentFullTime,
-  part_time: m.label_employmentPartTime,
-  contract: m.label_employmentContract,
-  internship: m.label_employmentInternship,
-  temporary: m.label_employmentTemporary,
-  volunteer: m.label_employmentVolunteer,
-  other: m.label_employmentOther,
-};
+const EMPLOYMENT_LABELS = new Map<string, MessageFn>([
+  ['full_time', m.label_employmentFullTime],
+  ['part_time', m.label_employmentPartTime],
+  ['contract', m.label_employmentContract],
+  ['internship', m.label_employmentInternship],
+  ['temporary', m.label_employmentTemporary],
+  ['volunteer', m.label_employmentVolunteer],
+  ['other', m.label_employmentOther],
+]);
 
-const SENIORITY_LABELS: Record<string, MessageFn> = {
-  entry_level: m.label_seniorityEntryLevel,
-  associate: m.label_seniorityAssociate,
-  mid_level: m.label_seniorityMidLevel,
-  senior: m.label_senioritySenior,
-  lead: m.label_seniorityLead,
-  principal: m.label_seniorityPrincipal,
-  director: m.label_seniorityDirector,
-  executive: m.label_seniorityExecutive,
-};
+const SENIORITY_LABELS = new Map<string, MessageFn>([
+  ['entry_level', m.label_seniorityEntryLevel],
+  ['associate', m.label_seniorityAssociate],
+  ['mid_level', m.label_seniorityMidLevel],
+  ['senior', m.label_senioritySenior],
+  ['lead', m.label_seniorityLead],
+  ['principal', m.label_seniorityPrincipal],
+  ['director', m.label_seniorityDirector],
+  ['executive', m.label_seniorityExecutive],
+]);
 
-const TIMEFRAME_LABELS: Record<string, MessageFn> = {
-  per_year: m.label_salaryTimeframePerYear,
-  per_month: m.label_salaryTimeframePerMonth,
-  per_week: m.label_salaryTimeframePerWeek,
-  per_day: m.label_salaryTimeframePerDay,
-  per_hour: m.label_salaryTimeframePerHour,
-};
+const TIMEFRAME_LABELS = new Map<string, MessageFn>([
+  ['per_year', m.label_salaryTimeframePerYear],
+  ['per_month', m.label_salaryTimeframePerMonth],
+  ['per_week', m.label_salaryTimeframePerWeek],
+  ['per_day', m.label_salaryTimeframePerDay],
+  ['per_hour', m.label_salaryTimeframePerHour],
+]);
 
 // TIMEFRAME_LABELS is deliberately NOT merged here: those are the post-job
 // form's option captions ("Yearly"), and routing them through the general
 // display resolver is exactly how "$105–130K / Yearly" shipped. Display
 // joins use the jobSalary_unitPer* nouns via formatJobSalary instead.
-const ALL_LABELS: Record<string, MessageFn> = {
+const ALL_LABELS = new Map<string, MessageFn>([
   ...REMOTE_LABELS,
   ...EMPLOYMENT_LABELS,
   ...SENIORITY_LABELS,
-};
+]);
 
 /**
  * Display label for a job wire enum value (`remoteOption`, `employmentType`,
@@ -73,7 +73,7 @@ export function enumLabel(
   language?: string,
 ): string | null {
   if (!value) return null;
-  const message = ALL_LABELS[value];
+  const message = ALL_LABELS.get(value);
   if (!message) return null;
   return message({}, isLocale(language) ? { locale: language } : undefined);
 }
@@ -92,6 +92,6 @@ export function salaryTimeframeLabel(
   value: string | null | undefined,
 ): string | null {
   if (!value) return null;
-  const message = TIMEFRAME_LABELS[value];
+  const message = TIMEFRAME_LABELS.get(value);
   return message ? message() : null;
 }

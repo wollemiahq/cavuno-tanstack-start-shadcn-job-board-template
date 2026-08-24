@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
+import type { ReactNode } from 'react';
+
 /**
  * Cookie-consent behavior: the banner opens when required and undecided
  * without a hydration gate (SSR-safe initialChoice), accept/deny persist to
@@ -19,21 +21,13 @@ import {
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-// The job-alert prompt imports the subscribe server fn, whose real module
-// chain reaches the Workers-only environment — stub the boundary in jsdom.
-vi.mock('../server/queries', () => ({
-  subscribeJobAlert: vi.fn(),
-}));
-
-import type { ReactNode } from 'react';
-
 import { m } from '../paraglide/messages';
 import {
   CookieConsentBanner,
   CookieConsentProvider,
   CookiePreferencesFooterAction,
 } from './cookie-consent';
-import { JobAlertFloatingPrompt } from './job-alert-floating-prompt';
+import { JobAlertFloatingPromptView } from './job-alert-floating-prompt-view';
 
 import {
   COOKIE_CONSENT_COOKIE,
@@ -201,9 +195,10 @@ describe('floating-stack slot handover', () => {
   it('hides the job-alert prompt while the banner is open, restores it after a choice', async () => {
     renderWithRouter(() => (
       <CookieConsentProvider required>
-        <JobAlertFloatingPrompt
+        <JobAlertFloatingPromptView
           defaults={{ filters: {}, context: { source: 'jobs_list' } }}
           language="en"
+          subscribe={vi.fn()}
         />
         <CookieConsentBanner />
       </CookieConsentProvider>

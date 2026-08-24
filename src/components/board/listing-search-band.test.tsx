@@ -45,10 +45,12 @@ describe('ListingSearchBand', () => {
     const onSubmit = vi.fn<() => void>();
     render(<SearchHarness onSubmit={onSubmit} />);
 
-    const input = screen.getByRole('searchbox', {
+    const input = screen.getByRole<HTMLInputElement>('searchbox', {
       name: 'Job keywords',
-    }) as HTMLInputElement;
-    fireEvent.submit(input.form!);
+    });
+    if (!input.form)
+      throw new Error('Expected the search input to have a form');
+    fireEvent.submit(input.form);
 
     expect(onSubmit).toHaveBeenCalledOnce();
   });

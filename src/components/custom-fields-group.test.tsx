@@ -27,7 +27,7 @@ const definitions: Definition[] = [
     type: 'boolean',
     required: false,
   },
-] as Definition[];
+];
 
 afterEach(cleanup);
 

@@ -35,9 +35,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { searchString } from '@/lib/pagination';
 import type { Message as BoardMessage } from '@cavuno/board';
 
 type Reason = 'spam' | 'harassment' | 'misrepresentation' | 'other';
+type MessageActionResult = { readonly ok?: boolean } | void;
 
 const REASONS: { value: Reason; label: () => string }[] = [
   { value: 'spam', label: m.messageBubble_reasonSpam },
@@ -48,6 +50,10 @@ const REASONS: { value: Reason; label: () => string }[] = [
   },
   { value: 'other', label: m.messageBubble_reasonOther },
 ];
+
+function reportReason(value: string | null | undefined): Reason | undefined {
+  return REASONS.find((reason) => reason.value === value)?.value;
+}
 
 export function MessageBubble({
   message,
@@ -64,9 +70,9 @@ export function MessageBubble({
   showSeen: boolean;
   onChanged: () => void;
   onReported: () => void;
-  onEdit: (body: string) => Promise<unknown>;
-  onUnsend: () => Promise<unknown>;
-  onReport: (reason: Reason) => Promise<unknown>;
+  onEdit: (body: string) => Promise<MessageActionResult>;
+  onUnsend: () => Promise<MessageActionResult>;
+  onReport: (reason: Reason) => Promise<MessageActionResult>;
 }) {
   const [mode, setMode] = useState<'view' | 'edit' | 'report'>('view');
   const [draft, setDraft] = useState(message.body);
@@ -79,7 +85,10 @@ export function MessageBubble({
   const canReport = !own && !deleted;
   const alignment = own ? 'end' : 'start';
 
-  const run = async (fn: () => Promise<unknown>, after: () => void) => {
+  const run = async (
+    fn: () => Promise<MessageActionResult>,
+    after: () => void,
+  ) => {
     setBusy(true);
     setError(null);
     try {
@@ -236,7 +245,10 @@ export function MessageBubble({
             <CardContent className="space-y-2 px-3">
               <Select
                 value={reason}
-                onValueChange={(value) => setReason(value as Reason)}
+                onValueChange={(value) => {
+                  const next = reportReason(searchString(value));
+                  if (next) setReason(next);
+                }}
               >
                 <SelectTrigger
                   size="sm"

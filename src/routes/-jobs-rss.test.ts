@@ -1,70 +1,73 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({
-  context: vi.fn(),
-  listJobs: vi.fn(),
-}));
+import {
+  createJobsRssHandler,
+  type JobsRssBoard,
+  type JobsRssDependencies,
+} from './-jobs-rss-handler';
 
-vi.mock('@tanstack/react-start/server', () => ({
+import type { PublicJobCard } from '@cavuno/board';
+
+const context = vi.fn<JobsRssBoard['context']>();
+const listJobs = vi.fn<JobsRssBoard['jobs']['list']>();
+const dependencies: JobsRssDependencies = {
   getRequest: () => new Request('https://board.example/jobs/rss.xml'),
-}));
+  getBoard: () => ({ context, jobs: { list: listJobs } }),
+};
+const getRssResponse = createJobsRssHandler(dependencies);
 
-vi.mock('../lib/board', () => ({
-  getBoard: () => ({
-    context: mocks.context,
-    jobs: { list: mocks.listJobs },
-  }),
-}));
-
-import { Route } from './jobs.rss[.]xml';
-
-type GetHandler = () => Promise<Response> | Response;
-
-function getHandler(): GetHandler {
-  const handlers = Route.options.server?.handlers as
-    | { GET?: GetHandler }
-    | GetHandler
-    | undefined;
-  const get =
-    typeof handlers === 'function'
-      ? undefined
-      : handlers && typeof handlers === 'object'
-        ? handlers.GET
-        : undefined;
-  if (typeof get !== 'function') {
-    throw new Error('expected /jobs/rss.xml to export a GET server handler');
-  }
-  return get;
+async function getRss(): Promise<Response> {
+  return getRssResponse();
 }
 
-const olderJob = {
+const olderJob: PublicJobCard = {
   id: 'older',
+  object: 'job_card',
   slug: 'older-role',
   title: 'Design & Research',
   description: '<p>Build durable systems.</p>',
   publishedAt: '2026-06-01T00:00:00.000Z',
   employmentType: 'full_time',
-  company: { slug: 'acme', name: 'Acme & Co' },
-  categories: [{ name: 'Design & UX' }],
+  remoteOption: null,
+  remoteLocationLabel: null,
+  remoteWorldwide: false,
+  remoteWorkPermitCountryCodes: [],
+  locationLabel: null,
+  salaryMin: null,
+  salaryMax: null,
+  salaryCurrency: null,
+  salaryTimeframe: null,
+  isFeatured: false,
+  isSponsored: false,
+  summary: null,
+  company: { slug: 'acme', name: 'Acme & Co', logoUrl: null },
+  categories: [{ slug: 'design', name: 'Design & UX' }],
+  skills: [],
+  links: {
+    public: 'https://board.example/companies/acme/jobs/older-role',
+  },
 };
 
-const newerJob = {
+const newerJob: PublicJobCard = {
   ...olderJob,
   id: 'newer',
   slug: 'newer-role',
   title: 'Newer role',
   description: '<p>Keep ]]> inside the description.</p>',
   publishedAt: '2026-07-01T00:00:00.000Z',
+  links: {
+    public: 'https://board.example/companies/acme/jobs/newer-role',
+  },
 };
 
 describe('/jobs/rss.xml', () => {
   beforeEach(() => {
-    mocks.context.mockResolvedValue({ name: 'Example Jobs' });
-    mocks.listJobs.mockResolvedValue({ data: [olderJob, newerJob] });
+    context.mockResolvedValue({ name: 'Example Jobs', language: 'en' });
+    listJobs.mockResolvedValue({ data: [olderJob, newerJob] });
   });
 
   it('serves newest-first RSS with canonical job links and cache headers', async () => {
-    const response = await getHandler()();
+    const response = await getRss();
     const xml = await response.text();
 
     expect(response.headers.get('content-type')).toBe(
@@ -73,7 +76,7 @@ describe('/jobs/rss.xml', () => {
     expect(response.headers.get('cache-control')).toBe(
       'public, max-age=60, stale-while-revalidate=300',
     );
-    expect(mocks.listJobs).toHaveBeenCalledWith({
+    expect(listJobs).toHaveBeenCalledWith({
       fields: '+description',
       limit: 50,
     });
@@ -87,7 +90,7 @@ describe('/jobs/rss.xml', () => {
   });
 
   it('keeps API-authored descriptions inside their CDATA section', async () => {
-    const xml = await (await getHandler()()).text();
+    const xml = await (await getRss()).text();
 
     expect(xml).toContain('Keep ]]&gt; inside the description.');
     expect(xml).not.toContain('Keep ]]> inside the description.');

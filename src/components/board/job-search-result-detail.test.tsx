@@ -105,7 +105,7 @@ describe('JobSearchResultDetail', () => {
       '/companies/acme/jobs/product-designer',
     );
     expect(titleLink).not.toHaveAttribute('target');
-    const primaryActions = document.querySelector(
+    const primaryActions = document.querySelector<HTMLElement>(
       "[data-slot='job-detail-primary-actions']",
     );
     expect(primaryActions).toContainElement(
@@ -120,15 +120,13 @@ describe('JobSearchResultDetail', () => {
     expect(
       document.querySelector('[data-slot="detail-hero-boundary"]'),
     ).toBeInTheDocument();
+    if (!primaryActions)
+      throw new Error('Expected the primary job actions to render');
     expect(
-      within(primaryActions as HTMLElement).getByTestId(
-        'job-detail-apply-action',
-      ),
+      within(primaryActions).getByTestId('job-detail-apply-action'),
     ).toContainElement(screen.getByRole('button', { name: 'Apply' }));
     expect(
-      within(primaryActions as HTMLElement).getByTestId(
-        'job-detail-save-action',
-      ),
+      within(primaryActions).getByTestId('job-detail-save-action'),
     ).toContainElement(screen.getByRole('button', { name: 'Save' }));
     expect(screen.getAllByText('Product designer')).toHaveLength(1);
     expect(screen.getAllByText('Acme').length).toBeGreaterThanOrEqual(2);
@@ -274,13 +272,14 @@ describe('JobSearchResultDetail', () => {
       ).not.toBeNull(),
     );
 
-    const compact = container.querySelector(
+    const compact = container.querySelector<HTMLElement>(
       '[data-slot="search-detail-header"]',
     );
     expect(compact).toBeInTheDocument();
+    if (!compact) throw new Error('Expected the compact detail header');
     expect(expanded).toHaveAttribute('aria-hidden', 'true');
     // The condensed header's name links to the job's own detail page.
-    const compactName = within(compact as HTMLElement).getByRole('link', {
+    const compactName = within(compact).getByRole('link', {
       name: 'Product designer',
     });
     expect(compactName).toHaveAttribute(
@@ -288,10 +287,8 @@ describe('JobSearchResultDetail', () => {
       '/companies/acme/jobs/product-designer',
     );
     expect(
-      within(compact as HTMLElement).getByRole('button', { name: 'Apply' }),
+      within(compact).getByRole('button', { name: 'Apply' }),
     ).toBeVisible();
-    expect(
-      within(compact as HTMLElement).getByRole('button', { name: 'Save' }),
-    ).toBeVisible();
+    expect(within(compact).getByRole('button', { name: 'Save' })).toBeVisible();
   });
 });

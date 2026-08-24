@@ -2,11 +2,7 @@
 
 import { useState } from 'react';
 
-import { useRouter } from '@tanstack/react-router';
-import { toast } from 'sonner';
-
 import { m } from '../../paraglide/messages';
-import { createCompanyInvite } from '../../server/employers';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +17,19 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { boardErrorMessage } from '@/lib/board-error-message';
 
+export type InviteMemberDialogActions = {
+  createCompanyInvite: (
+    ...args: Parameters<
+      typeof import('../../server/employers').createCompanyInvite
+    >
+  ) => Promise<
+    | { ok: true; data?: object | null }
+    | { ok: false; code: string; message: string }
+  >;
+  invalidate: () => Promise<void>;
+  toastSuccess: (message: string) => void;
+};
+
 function inviteErrorMessage(code: string): string {
   if (code === 'already_member') return m.employerMembers_alreadyMemberError();
   if (code === 'already_invited')
@@ -33,12 +42,13 @@ export function InviteMemberDialog({
   slug,
   open,
   onOpenChange,
+  actions,
 }: {
   slug: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  actions: InviteMemberDialogActions;
 }) {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'saving'>('idle');
   const [email, setEmail] = useState('');
@@ -67,16 +77,16 @@ export function InviteMemberDialog({
             }
             setStatus('saving');
             try {
-              const result = await createCompanyInvite({
+              const result = await actions.createCompanyInvite({
                 data: { slug, body: { email: nextEmail } },
               });
               if (!result.ok) {
                 setError(inviteErrorMessage(result.code));
                 return;
               }
-              toast.success(m.employerMembers_inviteSentToast());
+              actions.toastSuccess(m.employerMembers_inviteSentToast());
               close(false);
-              await router.invalidate();
+              await actions.invalidate();
             } catch {
               setError(m.employerMembers_updateError());
             } finally {

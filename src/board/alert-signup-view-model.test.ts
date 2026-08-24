@@ -21,7 +21,7 @@ describe('toAlertSignupVM', () => {
       vm.subscribingLabel,
       vm.buttonText,
     ]) {
-      expect(typeof value).toBe('string');
+      expect(value).toBeTypeOf('string');
       expect(value.length).toBeGreaterThan(0);
     }
   });

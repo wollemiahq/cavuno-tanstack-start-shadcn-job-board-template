@@ -1,32 +1,34 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
-vi.mock('../server/queries', () => ({ getSeoBase: vi.fn() }));
-
-vi.mock('../server/auth', () => ({
-  consumeMagicLink: vi.fn(),
-  exchangeOAuth: vi.fn(),
-}));
-
+import { MagicLinkView } from './-auth.magic-link';
+import {
+  OAuthCompleteView,
+  Route as OAuthCompleteRoute,
+} from './-auth.oauth-complete';
 import { Route as MagicLinkRoute } from './auth.magic-link';
-import { Route as OAuthCompleteRoute } from './auth.oauth-complete';
+
+import type { UrlSearchInput } from '../lib/pagination';
 
 afterEach(() => {
   cleanup();
-  vi.restoreAllMocks();
 });
 
 function validateSearch(
   route: typeof MagicLinkRoute | typeof OAuthCompleteRoute,
-  search: Record<string, unknown>,
+  search: UrlSearchInput,
 ) {
   const validate = route.options.validateSearch;
-  if (typeof validate !== 'function') {
+  if (!validate) {
     throw new Error(
       'The auth callback route must validate its search parameters',
     );
+  }
+  if ('parse' in validate) return validate.parse(search);
+  if ('~standard' in validate) {
+    throw new Error('The auth callback route uses an unexpected async schema');
   }
   return validate(search);
 }
@@ -52,18 +54,13 @@ describe('auth callback continuation', () => {
     ['oauth-complete', OAuthCompleteRoute],
   ] as const)('keeps returnTo on the %s recovery link', (_name, route) => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
-    vi.spyOn(route, 'useLoaderData').mockReturnValue({
-      status: 'invalid',
-    } as never);
-    vi.spyOn(route, 'useSearch').mockReturnValue({
-      token: 'one-time-token',
-      returnTo,
-    });
-    const Component = route.options.component;
-    if (!Component)
-      throw new Error('The auth callback route needs a component');
-
-    render(<Component />);
+    render(
+      route === MagicLinkRoute ? (
+        <MagicLinkView status="invalid" returnTo={returnTo} />
+      ) : (
+        <OAuthCompleteView status="invalid" returnTo={returnTo} />
+      ),
+    );
 
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
       'href',

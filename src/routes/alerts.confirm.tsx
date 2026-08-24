@@ -10,6 +10,7 @@ import { getSeoBase, confirmJobAlert } from '../server/queries';
 
 import { Page, PageContent } from '@/components/layout/page';
 import { headTitle } from '@/lib/page-title';
+import { searchString, type UrlSearchInput } from '@/lib/pagination';
 
 type ConfirmStatus =
   | 'confirmed'
@@ -17,10 +18,13 @@ type ConfirmStatus =
   | 'expired'
   | 'not_found';
 
-const COPY: Record<
+type ConfirmCopy = Record<
   ConfirmStatus,
   { heading: () => string; body: () => string }
-> = {
+>;
+type ConfirmSearch = { token?: string };
+
+const COPY = {
   confirmed: {
     heading: m.alertsConfirm_confirmedHeading,
     body: m.alertsConfirm_confirmedBody,
@@ -37,15 +41,12 @@ const COPY: Record<
     heading: m.alertsConfirm_notFoundHeading,
     body: m.alertsConfirm_notFoundBody,
   },
-};
+} satisfies ConfirmCopy;
 
 export const Route = createFileRoute('/alerts/confirm')({
   staticData: { ownsMain: true },
-  validateSearch: (search: Record<string, unknown>): { token?: string } => ({
-    token:
-      typeof search.token === 'string' && search.token
-        ? search.token
-        : undefined,
+  validateSearch: (search: UrlSearchInput): ConfirmSearch => ({
+    token: searchString(search.token),
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({

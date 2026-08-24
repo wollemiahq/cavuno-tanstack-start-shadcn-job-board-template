@@ -9,7 +9,7 @@ import {
   includeSelectedCompanyMarket,
   type CompaniesSearch,
 } from '@/lib/companies-search';
-import { pageSearchValue } from '@/lib/pagination';
+import { pageSearchValue, type UrlSearchInput } from '@/lib/pagination';
 import { getLocale } from '@/paraglide/runtime';
 import { SelectedCompanyDetail } from '@/routes/-selected-company-detail';
 import { useSelectedCompany } from '@/routes/-use-selected-company';
@@ -18,7 +18,7 @@ import type { PublicCompany } from '@cavuno/board';
 type LooseNavigate = (options: {
   to?: string;
   params?: Record<string, string>;
-  search?: (previous: Record<string, unknown>) => Record<string, unknown>;
+  search?: (previous: UrlSearchInput) => UrlSearchInput;
   replace?: boolean;
   resetScroll?: boolean;
 }) => void;
@@ -45,7 +45,10 @@ export function ProgrammaticCompaniesView({
   search: CompaniesSearch;
   searchUnavailable?: boolean;
 }) {
-  const navigate = useNavigate() as unknown as LooseNavigate;
+  const routeNavigate = useNavigate();
+  // SAFETY: This component only uses stable search-object updates supported by
+  // TanStack navigate; route-specific typing is erased at this shared view seam.
+  const navigate = routeNavigate as LooseNavigate;
   const copy = {
     breadcrumbs: breadcrumbsCopy(),
     jobDetail: jobDetailCopy(),

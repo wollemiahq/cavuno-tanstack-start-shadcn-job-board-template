@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
 
 /**
  * Embeddable jobs widget — the headless equivalent of the hosted board's
@@ -30,6 +30,11 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { headTitle } from '@/lib/page-title';
+import {
+  searchNumber,
+  searchString,
+  type UrlSearchInput,
+} from '@/lib/pagination';
 import { cn } from '@/lib/utils';
 import type {
   EmploymentType,
@@ -82,6 +87,21 @@ interface EmbedSearch {
   cursor?: string;
 }
 
+function embedRemoteOption(value: UrlSearchInput[string]) {
+  const option = searchString(value);
+  return REMOTE_OPTIONS.find((candidate) => candidate === option);
+}
+
+function embedEmploymentType(value: UrlSearchInput[string]) {
+  const type = searchString(value);
+  return EMPLOYMENT_TYPES.find((candidate) => candidate === type);
+}
+
+function embedSeniority(value: UrlSearchInput[string]) {
+  const seniority = searchString(value);
+  return SENIORITIES.find((candidate) => candidate === seniority);
+}
+
 export const Route = createFileRoute('/embed/jobs')({
   // The embed is a third-party iframe fragment with no locale identity —
   // /fr/embed/jobs would leak the visiting operator's chrome locale into
@@ -91,39 +111,17 @@ export const Route = createFileRoute('/embed/jobs')({
       throw redirect({ href: '/embed/jobs', replace: true });
     }
   },
-  validateSearch: (search: Record<string, unknown>): EmbedSearch => ({
+  validateSearch: (search: UrlSearchInput): EmbedSearch => ({
     // The hosted embed widget's keyword URL param is `query` (it maps to the
     // API's `q`); accept it so an existing `<iframe …?query=…>` is a faithful
     // drop-in, falling back to the starter's own `q`.
-    q:
-      typeof search.query === 'string' && search.query
-        ? search.query
-        : typeof search.q === 'string' && search.q
-          ? search.q
-          : undefined,
-    remoteOption: REMOTE_OPTIONS.includes(search.remoteOption as RemoteOption)
-      ? (search.remoteOption as RemoteOption)
-      : undefined,
-    employmentType: EMPLOYMENT_TYPES.includes(
-      search.employmentType as EmploymentType,
-    )
-      ? (search.employmentType as EmploymentType)
-      : undefined,
-    seniority: SENIORITIES.includes(search.seniority as Seniority)
-      ? (search.seniority as Seniority)
-      : undefined,
-    location:
-      typeof search.location === 'string' && search.location
-        ? search.location
-        : undefined,
-    limit:
-      typeof search.limit === 'number' && Number.isFinite(search.limit)
-        ? search.limit
-        : undefined,
-    cursor:
-      typeof search.cursor === 'string' && search.cursor
-        ? search.cursor
-        : undefined,
+    q: searchString(search.query) ?? searchString(search.q),
+    remoteOption: embedRemoteOption(search.remoteOption),
+    employmentType: embedEmploymentType(search.employmentType),
+    seniority: embedSeniority(search.seniority),
+    location: searchString(search.location),
+    limit: searchNumber(search.limit),
+    cursor: searchString(search.cursor),
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
@@ -183,7 +181,7 @@ function buildEmbedCta(
   search: EmbedSearch,
   pageSize: number,
   total: number | undefined,
-): { label: string; search: Record<string, unknown> } | null {
+): { label: string; search: UrlSearchInput } | null {
   const hasFilters = Boolean(
     search.q ||
     search.location ||
@@ -191,7 +189,8 @@ function buildEmbedCta(
     search.remoteOption ||
     search.seniority,
   );
-  const hasMoreThanShown = typeof total === 'number' && total > pageSize;
+  const count = total ?? Number.NaN;
+  const hasMoreThanShown = Number.isFinite(count) && count > pageSize;
 
   if (hasFilters && hasMoreThanShown) {
     return {
@@ -217,12 +216,14 @@ export function EmbedJobsView({
   boardName,
   logoUrl,
   search,
+  dependencies = embedJobsViewDependencies,
 }: {
   page: { data: PublicJobCard[]; count?: number };
   showCavunoBranding: boolean;
   boardName: string;
   logoUrl: string | null;
   search: EmbedSearch;
+  dependencies?: EmbedJobsViewDependencies;
 }) {
   const jobs = page.data;
   const pageSize = search.limit ?? 8;
@@ -230,34 +231,33 @@ export function EmbedJobsView({
   // The route owns the suggestion controllers and passes them down, so the
   // header stays a props-only component (AGENTS.md: components never fetch) —
   // the same split `__root.tsx` and the company-jobs subpage already use.
-  const keywordSuggestions = useKeywordSuggestions(true);
-  const locationSuggestions = useLocationSuggestions(getLocale());
+  const locale = dependencies.getLocale();
+  const keywordSuggestions = dependencies.useKeywordSuggestions(true);
+  const locationSuggestions = dependencies.useLocationSuggestions(locale);
 
   return (
     <section className="space-y-4" data-test="embed-jobs-widget">
       <Suspense fallback={<div className="mb-6 h-9" />}>
-        <LazyEmbedJobsHeader
-          boardName={boardName}
-          logoUrl={logoUrl}
-          initialSearch={{
+        {dependencies.renderHeader({
+          boardName,
+          logoUrl,
+          initialSearch: {
             q: search.q,
             location: search.location,
             remoteOption: search.remoteOption,
             employmentType: search.employmentType,
             seniority: search.seniority ? [search.seniority] : undefined,
-          }}
-          keywordSuggestions={keywordSuggestions}
-          locationSuggestions={locationSuggestions}
-        />
+          },
+          keywordSuggestions,
+          locationSuggestions,
+        })}
       </Suspense>
       {jobs.length > 0 ? (
         <div className="space-y-3" data-test="embed-jobs-list">
           {jobs.map((job) => (
-            <JobCard
-              key={job.id}
-              vm={toJobCardVM(job, getLocale())}
-              openInNewTab
-            />
+            <div key={job.id} className="contents">
+              {dependencies.renderJobCard({ job, locale, openInNewTab: true })}
+            </div>
           ))}
         </div>
       ) : (
@@ -290,24 +290,64 @@ export function EmbedJobsView({
             <span />
           )}
 
-          {cta ? (
-            <Link
-              to="/"
-              search={cta.search}
-              target="_blank"
-              className={cn(
-                buttonVariants({ variant: 'outline', size: 'sm' }),
-                'no-underline',
-              )}
-            >
-              {cta.label}
-            </Link>
-          ) : null}
+          {cta ? dependencies.renderCtaLink(cta) : null}
         </div>
       ) : null}
     </section>
   );
 }
+
+type EmbedJobsHeaderInput = {
+  boardName: string;
+  logoUrl: string | null;
+  initialSearch: {
+    q?: string;
+    location?: string;
+    remoteOption?: RemoteOption;
+    employmentType?: EmploymentType;
+    seniority?: Seniority[];
+  };
+  keywordSuggestions: ReturnType<typeof useKeywordSuggestions>;
+  locationSuggestions: ReturnType<typeof useLocationSuggestions>;
+};
+
+export type EmbedJobsViewDependencies = {
+  getLocale: typeof getLocale;
+  renderCtaLink: (
+    cta: NonNullable<ReturnType<typeof buildEmbedCta>>,
+  ) => ReactNode;
+  renderHeader: (input: EmbedJobsHeaderInput) => ReactNode;
+  renderJobCard: (input: {
+    job: PublicJobCard;
+    locale: string;
+    openInNewTab: boolean;
+  }) => ReactNode;
+  useKeywordSuggestions: typeof useKeywordSuggestions;
+  useLocationSuggestions: typeof useLocationSuggestions;
+};
+
+export const embedJobsViewDependencies: EmbedJobsViewDependencies = {
+  getLocale,
+  renderCtaLink: (cta) => (
+    <Link
+      to="/"
+      search={cta.search}
+      target="_blank"
+      className={cn(
+        buttonVariants({ variant: 'outline', size: 'sm' }),
+        'no-underline',
+      )}
+    >
+      {cta.label}
+    </Link>
+  ),
+  renderHeader: (input) => <LazyEmbedJobsHeader {...input} />,
+  renderJobCard: ({ job, locale, openInNewTab }) => (
+    <JobCard vm={toJobCardVM(job, locale)} openInNewTab={openInNewTab} />
+  ),
+  useKeywordSuggestions,
+  useLocationSuggestions,
+};
 
 function EmbedJobsPage() {
   const { page, showCavunoBranding, boardName, logoUrl } =
@@ -315,6 +355,8 @@ function EmbedJobsPage() {
   const search = Route.useSearch();
   return (
     <EmbedJobsView
+      // SAFETY: `embedJobs` returns the public list endpoint payload used by
+      // this view; the view reads only `data` cards and optional `count`.
       page={page as { data: PublicJobCard[]; count?: number }}
       showCavunoBranding={showCavunoBranding}
       boardName={boardName}

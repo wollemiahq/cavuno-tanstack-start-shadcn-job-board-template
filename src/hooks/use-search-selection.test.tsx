@@ -150,9 +150,13 @@ describe('useSearchSelection', () => {
   describe('arrival scroll (URL-selected job aligns to list top)', () => {
     // jsdom ships no scrollIntoView; the hook guards on its presence, so
     // provide a spy to observe the arrival alignment.
-    const scrollIntoView = vi.fn();
+    const scrolledResultIds: Array<string | null> = [];
+    const scrollIntoView = vi.fn(function (this: Element) {
+      scrolledResultIds.push(this.getAttribute('data-result-id'));
+    });
     beforeEach(() => {
       scrollIntoView.mockClear();
+      scrolledResultIds.length = 0;
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
@@ -167,8 +171,7 @@ describe('useSearchSelection', () => {
 
       expect(scrollIntoView).toHaveBeenCalledTimes(1);
       expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
-      const target = scrollIntoView.mock.instances[0] as HTMLElement;
-      expect(target.getAttribute('data-result-id')).toBe('second-job');
+      expect(scrolledResultIds).toEqual(['second-job']);
     });
 
     it('does not scroll a later in-page selection made after arrival', () => {

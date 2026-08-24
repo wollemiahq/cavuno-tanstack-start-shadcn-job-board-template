@@ -40,8 +40,7 @@ afterEach(() => {
   cleanup();
 });
 
-const locationInput = () =>
-  screen.getByLabelText('location') as HTMLInputElement;
+const locationInput = () => screen.getByLabelText<HTMLInputElement>('location');
 
 const type = (value: string) => {
   const input = locationInput();

@@ -1,78 +1,32 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
-import type { ReactNode } from 'react';
-
+import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  isNotFound as isRouteNotFound,
+} from '@tanstack/react-router';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  ApplicationsPageView,
+  createApplicationsLoader,
+  type ApplicationsRouteDependencies,
+} from './-me.applications';
+
 import type { Application } from '@cavuno/board';
 
-const mocks = vi.hoisted(() => ({
-  invalidate: vi.fn<() => void>(),
-}));
-
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    getRouteApi: () => ({
-      useLoaderData: () => ({
-        board: { features: { candidatePaywall: false } },
-        user: { displayName: 'Candidate', email: 'candidate@example.com' },
-      }),
-    }),
-    Link: ({
-      to,
-      params,
-      children,
-      ...props
-    }: {
-      to: string;
-      params?: Record<string, string>;
-      children: ReactNode;
-      className?: string;
-    }) => (
-      <a
-        href={Object.entries(params ?? {}).reduce(
-          (href, [key, value]) => href.replace(`$${key}`, value),
-          to,
-        )}
-        {...props}
-      >
-        {children}
-      </a>
-    ),
-    useRouter: () => ({ invalidate: mocks.invalidate }),
-  };
-});
-
-const queryMocks = vi.hoisted(() => ({
-  getSeoBase: vi.fn(),
-  getBoardContext: vi.fn(),
-}));
-const applicationMocks = vi.hoisted(() => ({
+const dependencies: ApplicationsRouteDependencies = {
   getApplications: vi.fn(),
+  getBoardContext: vi.fn(),
+  getSeoBase: vi.fn(),
   withdrawApplication: vi.fn(),
-}));
-
-// The route threads getSeoBase + getBoardContext through its loader (page
-// title + the native-applications gate); both resolve cloudflare:workers, so
-// stub the seam for jsdom.
-vi.mock('../server/queries', () => ({
-  getSeoBase: queryMocks.getSeoBase,
-  getBoardContext: queryMocks.getBoardContext,
-}));
-
-vi.mock('../server/applications', () => ({
-  getApplications: applicationMocks.getApplications,
-  withdrawApplication: applicationMocks.withdrawApplication,
-}));
-
-import { isNotFound as isRouteNotFound } from '@tanstack/react-router';
-
-import { Route } from './me.applications';
+};
+const invalidate = vi.fn<() => Promise<void>>();
 
 const application = {
   id: 'application-1',
@@ -101,73 +55,73 @@ const applicationsEnvelope = {
   data: [application],
   hasMore: false,
   nextCursor: null,
-} as const;
+};
 
 beforeEach(() => {
-  queryMocks.getSeoBase.mockResolvedValue({ boardName: 'Acme Board' });
-  queryMocks.getBoardContext.mockResolvedValue({
-    features: { nativeApplications: true, messaging: true },
+  vi.mocked(dependencies.getSeoBase).mockResolvedValue({
+    boardName: 'Acme Board',
   });
-  applicationMocks.getApplications.mockResolvedValue(applicationsEnvelope);
+  vi.mocked(dependencies.getBoardContext).mockResolvedValue({
+    features: { nativeApplications: true },
+  });
+  vi.mocked(dependencies.getApplications).mockResolvedValue(
+    applicationsEnvelope,
+  );
 });
 
 afterEach(() => {
   cleanup();
-  vi.restoreAllMocks();
   vi.clearAllMocks();
 });
 
 describe('candidate applications — native-applications gate', () => {
   it('loads the applications when native applications are on', async () => {
-    const loader = Route.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('The applications route needs a loader');
-
-    const data = await loader({} as never);
+    const data = await createApplicationsLoader(dependencies)();
 
     expect(data).toMatchObject({ data: [application] });
-    expect(applicationMocks.getApplications).toHaveBeenCalledOnce();
+    expect(dependencies.getApplications).toHaveBeenCalledOnce();
   });
 
   it('treats the route as not-found when native applications are off', async () => {
-    queryMocks.getBoardContext.mockResolvedValue({
-      features: { nativeApplications: false, messaging: true },
+    vi.mocked(dependencies.getBoardContext).mockResolvedValue({
+      features: { nativeApplications: false },
     });
-    const loader = Route.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('The applications route needs a loader');
-
     let outcome: unknown;
     try {
-      await loader({} as never);
+      await createApplicationsLoader(dependencies)();
     } catch (error) {
       outcome = error;
     }
 
     expect(isRouteNotFound(outcome)).toBe(true);
     // The 422-prone applications read is never attempted.
-    expect(applicationMocks.getApplications).not.toHaveBeenCalled();
+    expect(dependencies.getApplications).not.toHaveBeenCalled();
   });
 });
 
 describe('candidate applications', () => {
-  it('uses the owned Item composition for each submitted application', () => {
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
-      object: 'list',
-      url: '/v1/me/applications',
-      data: [application],
-      hasMore: false,
-      nextCursor: null,
+  it('uses the owned Item composition for each submitted application', async () => {
+    const rootRoute = createRootRoute();
+    const pageRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => (
+        <ApplicationsPageView
+          applications={applicationsEnvelope}
+          invalidate={invalidate}
+          dependencies={dependencies}
+        />
+      ),
     });
-    const ApplicationsPage = Route.options.component;
-    if (!ApplicationsPage)
-      throw new Error('The applications route needs a component');
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([pageRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    render(<RouterProvider router={router} />);
 
-    render(<ApplicationsPage />);
-
-    const item = screen
-      .getByRole('link', { name: 'Senior Engineer' })
-      .closest('[data-slot="item"]');
+    const item = (
+      await screen.findByRole('link', { name: 'Senior Engineer' })
+    ).closest('[data-slot="item"]');
     expect(item).not.toBeNull();
     expect(item?.querySelector('[data-slot="item-content"]')).not.toBeNull();
     expect(item?.querySelector('[data-slot="item-actions"]')).not.toBeNull();

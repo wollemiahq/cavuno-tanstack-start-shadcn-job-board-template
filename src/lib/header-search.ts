@@ -1,3 +1,9 @@
+import {
+  searchString,
+  type UrlSearchInput,
+  type UrlSearchValue,
+} from './pagination';
+
 export type HeaderSearchScope = 'jobs' | 'companies' | 'talent' | 'blog';
 
 export interface HeaderSearchLocation {
@@ -34,7 +40,18 @@ export interface HeaderSearchSubmission {
 }
 
 interface HeaderRouteMatch {
-  loaderData?: unknown;
+  loaderData?: object | null;
+}
+
+interface HeaderLoaderEntity {
+  displayName?: UrlSearchValue;
+}
+
+interface HeaderLoaderData {
+  place?: HeaderLoaderEntity | null;
+  category?: HeaderLoaderEntity | null;
+  skill?: HeaderLoaderEntity | null;
+  market?: HeaderLoaderEntity | null;
 }
 
 export interface HeaderRouteLabels {
@@ -80,16 +97,35 @@ function scopeFromPathname(
   return fallback;
 }
 
-function stringSearchValue(value: unknown) {
-  return typeof value === 'string' ? value : '';
+function stringSearchValue(value: UrlSearchValue) {
+  return searchString(value) ?? '';
 }
 
-function displayName(value: unknown) {
-  if (!value || typeof value !== 'object' || !('displayName' in value)) {
+function routeData<T>(value: T): HeaderLoaderData | null {
+  if (value === null || value === undefined || Object(value) !== value) {
+    return null;
+  }
+  // SAFETY: Header label extraction only reads optional loader entity slots
+  // and each visible label is decoded through searchString before use.
+  return value as HeaderLoaderData;
+}
+
+function routeEntity<T>(value: T): HeaderLoaderEntity | null {
+  if (value === null || value === undefined || Object(value) !== value) {
+    return null;
+  }
+  // SAFETY: Header label entities use the same route-loader boundary as
+  // routeData and only expose the optional displayName field.
+  return value as HeaderLoaderEntity;
+}
+
+function displayName<T>(value: T) {
+  const data = routeEntity(value);
+  if (!data) {
     return undefined;
   }
 
-  return typeof value.displayName === 'string' ? value.displayName : undefined;
+  return searchString(data.displayName);
 }
 
 /** Preserve API-resolved route labels for the shared header controls. */
@@ -98,13 +134,13 @@ export function resolveHeaderRouteLabels(
 ): HeaderRouteLabels {
   for (const match of [...matches].reverse()) {
     const data = match.loaderData;
-    if (!data || typeof data !== 'object') continue;
+    const row = routeData(data);
+    if (!row) continue;
 
-    const location = 'place' in data ? displayName(data.place) : undefined;
-    const category =
-      'category' in data ? displayName(data.category) : undefined;
-    const skill = 'skill' in data ? displayName(data.skill) : undefined;
-    const market = 'market' in data ? displayName(data.market) : undefined;
+    const location = displayName(row.place);
+    const category = displayName(row.category);
+    const skill = displayName(row.skill);
+    const market = displayName(row.market);
 
     if (location || category || skill || market) {
       return { location, query: category ?? skill ?? market };
@@ -165,7 +201,7 @@ function termFromPathname(
 /** Resolve router state before it crosses into the presentational header. */
 export function resolveHeaderSearchState(
   pathname: string,
-  search: Record<string, unknown>,
+  search: UrlSearchInput,
   resolvedLocationLabel?: string,
   resolvedQueryLabel?: string,
   // What the viewer is most likely hunting when the route itself doesn't

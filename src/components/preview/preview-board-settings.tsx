@@ -34,54 +34,81 @@ import { Switch } from '@/components/ui/switch';
  * data table in preview.ts stays words-free. Unknown flags fall back to
  * the table's English authoring strings.
  */
-const FLAG_COPY: Record<
+const FLAG_COPY = new Map<
   string,
   { label: () => string; description: () => string }
-> = {
-  jobAccessPaywallEnabled: {
-    label: m.previewFlag_jobAccessPaywallEnabled_label,
-    description: m.previewFlag_jobAccessPaywallEnabled_description,
-  },
-  talentDirectoryVisibility: {
-    label: m.previewFlag_talentDirectoryVisibility_label,
-    description: m.previewFlag_talentDirectoryVisibility_description,
-  },
-  blogEnabled: {
-    label: m.previewFlag_blogEnabled_label,
-    description: m.previewFlag_blogEnabled_description,
-  },
-  jobAlertsEnabled: {
-    label: m.previewFlag_jobAlertsEnabled_label,
-    description: m.previewFlag_jobAlertsEnabled_description,
-  },
-  candidatesEnabled: {
-    label: m.previewFlag_candidatesEnabled_label,
-    description: m.previewFlag_candidatesEnabled_description,
-  },
-  employersEnabled: {
-    label: m.previewFlag_employersEnabled_label,
-    description: m.previewFlag_employersEnabled_description,
-  },
-  nativeApplicationsEnabled: {
-    label: m.previewFlag_nativeApplicationsEnabled_label,
-    description: m.previewFlag_nativeApplicationsEnabled_description,
-  },
-  applicantMessagingEnabled: {
-    label: m.previewFlag_applicantMessagingEnabled_label,
-    description: m.previewFlag_applicantMessagingEnabled_description,
-  },
-  registrationWallEnabled: {
-    label: m.previewFlag_registrationWallEnabled_label,
-    description: m.previewFlag_registrationWallEnabled_description,
-  },
-};
+>([
+  [
+    'jobAccessPaywallEnabled',
+    {
+      label: m.previewFlag_jobAccessPaywallEnabled_label,
+      description: m.previewFlag_jobAccessPaywallEnabled_description,
+    },
+  ],
+  [
+    'talentDirectoryVisibility',
+    {
+      label: m.previewFlag_talentDirectoryVisibility_label,
+      description: m.previewFlag_talentDirectoryVisibility_description,
+    },
+  ],
+  [
+    'blogEnabled',
+    {
+      label: m.previewFlag_blogEnabled_label,
+      description: m.previewFlag_blogEnabled_description,
+    },
+  ],
+  [
+    'jobAlertsEnabled',
+    {
+      label: m.previewFlag_jobAlertsEnabled_label,
+      description: m.previewFlag_jobAlertsEnabled_description,
+    },
+  ],
+  [
+    'candidatesEnabled',
+    {
+      label: m.previewFlag_candidatesEnabled_label,
+      description: m.previewFlag_candidatesEnabled_description,
+    },
+  ],
+  [
+    'employersEnabled',
+    {
+      label: m.previewFlag_employersEnabled_label,
+      description: m.previewFlag_employersEnabled_description,
+    },
+  ],
+  [
+    'nativeApplicationsEnabled',
+    {
+      label: m.previewFlag_nativeApplicationsEnabled_label,
+      description: m.previewFlag_nativeApplicationsEnabled_description,
+    },
+  ],
+  [
+    'applicantMessagingEnabled',
+    {
+      label: m.previewFlag_applicantMessagingEnabled_label,
+      description: m.previewFlag_applicantMessagingEnabled_description,
+    },
+  ],
+  [
+    'registrationWallEnabled',
+    {
+      label: m.previewFlag_registrationWallEnabled_label,
+      description: m.previewFlag_registrationWallEnabled_description,
+    },
+  ],
+]);
 
 function flagLabel(flag: { key: string; label: string }): string {
-  return FLAG_COPY[flag.key]?.label() ?? flag.label;
+  return FLAG_COPY.get(flag.key)?.label() ?? flag.label;
 }
 
 function flagDescription(flag: { key: string; description: string }): string {
-  return FLAG_COPY[flag.key]?.description() ?? flag.description;
+  return FLAG_COPY.get(flag.key)?.description() ?? flag.description;
 }
 
 /**
@@ -98,16 +125,21 @@ function flagDescription(flag: { key: string; description: string }): string {
  * refetch round-trips, and a rejected PATCH surfaces the banner and does NOT
  * invalidate, so the control reverts to the real `config` prop.
  */
-export function PreviewBoardSettingsSheet({
+export function PreviewBoardSettingsSheetView({
   config,
   open,
   onOpenChange,
+  updateFlags,
+  invalidate,
 }: {
   config: PreviewBoardConfig;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  updateFlags: (
+    input: Parameters<typeof updateSandboxFlags>[0],
+  ) => ReturnType<typeof updateSandboxFlags>;
+  invalidate: () => Promise<void>;
 }) {
-  const router = useRouter();
   const [pendingFlag, setPendingFlag] = useState<string | null>(null);
   const [flagError, setFlagError] = useState(false);
   // Optimistic overlay for the board-setting controls: the control adopts the
@@ -127,18 +159,18 @@ export function PreviewBoardSettingsSheet({
    * value the user just picked. Wrapped so a 4xx never unhandled-rejects.
    */
   async function onSetFlag(
-    key: string,
+    key: keyof PreviewBoardConfig,
     next: boolean | TalentDirectoryVisibility,
   ) {
     setFlagError(false);
     setPendingFlag(key);
     setOptimisticConfig((current) => ({ ...current, [key]: next }));
     try {
-      const result = await updateSandboxFlags({
+      const result = await updateFlags({
         data: { config: { [key]: next } },
       });
       if (result.ok) {
-        await router.invalidate();
+        await invalidate();
       } else {
         setFlagError(true);
       }
@@ -148,7 +180,7 @@ export function PreviewBoardSettingsSheet({
       // Settle: server truth (fresh `config` after invalidate) or revert.
       setOptimisticConfig((current) => {
         const rest = { ...current };
-        delete rest[key as keyof PreviewBoardConfig];
+        delete rest[key];
         return rest;
       });
       setPendingFlag(null);
@@ -198,6 +230,27 @@ export function PreviewBoardSettingsSheet({
   );
 }
 
+export function PreviewBoardSettingsSheet({
+  config,
+  open,
+  onOpenChange,
+}: {
+  config: PreviewBoardConfig;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const router = useRouter();
+  return (
+    <PreviewBoardSettingsSheetView
+      config={config}
+      open={open}
+      onOpenChange={onOpenChange}
+      updateFlags={updateSandboxFlags}
+      invalidate={() => router.invalidate()}
+    />
+  );
+}
+
 /** Tri-state talent-directory option label, from the message catalog. */
 function visibilityLabel(value: TalentDirectoryVisibility): string {
   switch (value) {
@@ -225,7 +278,10 @@ function FlagControl({
   flag: PreviewFeatureFlag;
   config: PreviewBoardConfig;
   pending: boolean;
-  onSet: (key: string, next: boolean | TalentDirectoryVisibility) => void;
+  onSet: (
+    key: keyof PreviewBoardConfig,
+    next: boolean | TalentDirectoryVisibility,
+  ) => void;
 }) {
   const controlId = `preview-flag-${flag.key}`;
   // Dependency gating (mirrors the dashboard): a capability whose parent
@@ -270,6 +326,8 @@ function FlagControl({
           disabled={pending}
           // Visible <label htmlFor> already names the control.
           onChange={(event) =>
+            // SAFETY: NativeSelect options are exactly flag.options, which are
+            // ordered TalentDirectoryVisibility enum values.
             onSet(flag.key, event.target.value as TalentDirectoryVisibility)
           }
         >

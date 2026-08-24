@@ -17,7 +17,22 @@ export type SelectedCompanyState = {
   retry: () => void;
 };
 
-export function useSelectedCompany(companySlug?: string): SelectedCompanyState {
+export type SelectedCompanyDependencies = {
+  getCompany: typeof getCompany;
+  getCompanySalarySummary: typeof getCompanySalarySummary;
+  listCompanyJobs: typeof listCompanyJobs;
+};
+
+const selectedCompanyDependencies: SelectedCompanyDependencies = {
+  getCompany,
+  getCompanySalarySummary,
+  listCompanyJobs,
+};
+
+export function useSelectedCompany(
+  companySlug?: string,
+  dependencies: SelectedCompanyDependencies = selectedCompanyDependencies,
+): SelectedCompanyState {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<Omit<SelectedCompanyState, 'retry'>>({
     status: 'idle',
@@ -38,9 +53,9 @@ export function useSelectedCompany(companySlug?: string): SelectedCompanyState {
     }));
 
     void Promise.all([
-      getCompany({ data: { companySlug } }),
-      listCompanyJobs({ data: { companySlug, limit: 4 } }),
-      getCompanySalarySummary({ data: { companySlug } }),
+      dependencies.getCompany({ data: { companySlug } }),
+      dependencies.listCompanyJobs({ data: { companySlug, limit: 4 } }),
+      dependencies.getCompanySalarySummary({ data: { companySlug } }),
     ])
       .then(([company, jobs, salarySummary]) => {
         if (!cancelled) {
@@ -61,7 +76,7 @@ export function useSelectedCompany(companySlug?: string): SelectedCompanyState {
     return () => {
       cancelled = true;
     };
-  }, [attempt, companySlug]);
+  }, [attempt, companySlug, dependencies]);
 
   const retry = useCallback(() => setAttempt((value) => value + 1), []);
 

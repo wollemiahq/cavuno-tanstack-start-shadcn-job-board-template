@@ -1,6 +1,8 @@
 import type { ElementType } from 'react';
 
 import type { TalentProfileVM } from '@/board/talent-view-model';
+
+type TalentProfileHeading = ElementType;
 // A logo-or-initials brand chip; reused here for education institutions.
 import { CompanyAvatar } from '@/components/board/company-avatar';
 import { Text } from '@/components/text';
@@ -122,7 +124,7 @@ export function TalentProfileContent({
   showName?: boolean;
   showHeader?: boolean;
 }) {
-  const SectionHeading = (headingAs === 'h1' ? 'h2' : 'h3') as ElementType;
+  const SectionHeading: TalentProfileHeading = headingAs === 'h1' ? 'h2' : 'h3';
 
   return (
     <div className="space-y-8">

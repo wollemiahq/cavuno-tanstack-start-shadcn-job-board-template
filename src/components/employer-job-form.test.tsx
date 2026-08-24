@@ -2,6 +2,13 @@
 
 import '@testing-library/jest-dom/vitest';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -10,49 +17,37 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({
+import type { EmployerJob, JobPostingPlan } from '@cavuno/board';
+
+const mocks = {
   createJob: vi.fn(),
   updateJob: vi.fn(),
   checkoutJob: vi.fn(),
   invalidate: vi.fn(),
   navigate: vi.fn(),
-}));
+};
 
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    useRouter: () => ({
-      invalidate: mocks.invalidate,
-      navigate: mocks.navigate,
-    }),
-    // The form's cancel action is a router Link; the real component
-    // resolves the router internally (not via the mocked useRouter
-    // export), so a bare render warns "useRouter must be used inside a
-    // <RouterProvider>". These tests exercise form behaviour, not
-    // navigation — a plain anchor keeps them router-free.
-    Link: ({
-      children,
-      className,
-    }: {
-      children: React.ReactNode;
-      className?: string;
-    }) => (
-      <a href="#cancel" className={className}>
-        {children}
-      </a>
-    ),
-  };
-});
+import {
+  EmployerJobForm,
+  type EmployerJobFormDependencies,
+} from './employer-job-form';
 
-vi.mock('../server/employers', () => ({
-  createJob: mocks.createJob,
-  updateJob: mocks.updateJob,
-  checkoutJob: mocks.checkoutJob,
-}));
+const dependencies = mocks satisfies EmployerJobFormDependencies;
 
-import { EmployerJobForm } from './employer-job-form';
+async function renderWithRouter(node: React.ReactNode) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => <>{node}</>,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  await router.load();
+  return render(<RouterProvider router={router} />);
+}
 
 const suggestions = {
   suggestions: [],
@@ -60,17 +55,24 @@ const suggestions = {
   onQueryChange: () => {},
 };
 
-const plan = {
+const plan: JobPostingPlan = {
   object: 'job_posting_plan',
   id: 'plan-growth',
   name: 'Growth',
   description: null,
   kind: 'subscription',
+  billingInterval: 'month',
+  purpose: 'job_posting',
   isRecommended: false,
+  displayOrder: 1,
+  invoiceOnly: false,
+  publishTiming: 'on_payment',
+  netTermsDays: null,
   prices: [{ isActive: true, currency: 'usd', amountCents: 9900 }],
-} as never;
+  features: [],
+};
 
-const draftJob = {
+const draftJob: EmployerJob = {
   id: 'job-1',
   object: 'employer_job',
   title: 'Senior Product Designer',
@@ -104,8 +106,19 @@ const draftJob = {
   experienceInPlaceOfEducation: null,
   inOfficePeriod: null,
   inOfficeFrequency: null,
-  company: {},
-  officeLocations: [{ displayName: 'Berlin, Germany' }],
+  company: null,
+  officeLocations: [
+    {
+      displayName: 'Berlin, Germany',
+      city: 'Berlin',
+      locality: null,
+      region: 'Berlin',
+      regionCode: 'BE',
+      country: 'Germany',
+      countryCode: 'DE',
+      postalCode: null,
+    },
+  ],
 };
 
 afterEach(() => {
@@ -119,9 +132,10 @@ beforeEach(() => {
 });
 
 describe('EmployerJobForm', () => {
-  it('prefills the role fields from an existing job in edit mode', () => {
-    render(
+  it('prefills the role fields from an existing job in edit mode', async () => {
+    await renderWithRouter(
       <EmployerJobForm
+        dependencies={dependencies}
         slug="acme"
         locale="en-AU"
         remotePermits={null}
@@ -129,7 +143,7 @@ describe('EmployerJobForm', () => {
         billingOptions={[]}
         officeLocationSuggestions={suggestions}
         mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
-        job={draftJob as never}
+        job={draftJob}
       />,
     );
 
@@ -153,8 +167,9 @@ describe('EmployerJobForm', () => {
       data: { status: 'published', checkoutUrl: null },
     });
 
-    const { container } = render(
+    const { container } = await renderWithRouter(
       <EmployerJobForm
+        dependencies={dependencies}
         slug="acme"
         locale="en-AU"
         remotePermits={null}
@@ -162,7 +177,7 @@ describe('EmployerJobForm', () => {
         billingOptions={[]}
         officeLocationSuggestions={suggestions}
         mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
-        job={draftJob as never}
+        job={draftJob}
       />,
     );
 
@@ -186,8 +201,9 @@ describe('EmployerJobForm', () => {
   it('sends salary nulls when an edit clears both bounds (withdraw the salary)', async () => {
     mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
 
-    const { container } = render(
+    const { container } = await renderWithRouter(
       <EmployerJobForm
+        dependencies={dependencies}
         slug="acme"
         locale="en-AU"
         remotePermits={null}
@@ -195,7 +211,7 @@ describe('EmployerJobForm', () => {
         billingOptions={[]}
         officeLocationSuggestions={suggestions}
         mode={{ kind: 'edit', jobId: 'job-1', status: 'published' }}
-        job={draftJob as never}
+        job={draftJob}
       />,
     );
 
@@ -218,8 +234,9 @@ describe('EmployerJobForm', () => {
   it('omits salary when an edit leaves one bound filled (ambiguous, unchanged)', async () => {
     mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
 
-    const { container } = render(
+    const { container } = await renderWithRouter(
       <EmployerJobForm
+        dependencies={dependencies}
         slug="acme"
         locale="en-AU"
         remotePermits={null}
@@ -227,7 +244,7 @@ describe('EmployerJobForm', () => {
         billingOptions={[]}
         officeLocationSuggestions={suggestions}
         mode={{ kind: 'edit', jobId: 'job-1', status: 'published' }}
-        job={draftJob as never}
+        job={draftJob}
       />,
     );
 
@@ -242,9 +259,10 @@ describe('EmployerJobForm', () => {
     expect('salaryMax' in body).toBe(false);
   });
 
-  it('hides the plan picker when editing a published job', () => {
-    render(
+  it('hides the plan picker when editing a published job', async () => {
+    await renderWithRouter(
       <EmployerJobForm
+        dependencies={dependencies}
         slug="acme"
         locale="en-AU"
         remotePermits={null}
@@ -252,7 +270,7 @@ describe('EmployerJobForm', () => {
         billingOptions={[]}
         officeLocationSuggestions={suggestions}
         mode={{ kind: 'edit', jobId: 'job-1', status: 'published' }}
-        job={{ ...draftJob, status: 'published' } as never}
+        job={{ ...draftJob, status: 'published' }}
       />,
     );
 
@@ -262,8 +280,9 @@ describe('EmployerJobForm', () => {
   });
 
   it('requires a billing choice before a create can publish', async () => {
-    const { container } = render(
+    const { container } = await renderWithRouter(
       <EmployerJobForm
+        dependencies={dependencies}
         slug="acme"
         locale="en-AU"
         remotePermits={null}

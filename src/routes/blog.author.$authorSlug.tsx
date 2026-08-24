@@ -19,7 +19,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
 import { initialsOf } from '@/lib/initials';
-import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
+import {
+  cursorPageHref,
+  cursorSearchValue,
+  type UrlSearchInput,
+} from '@/lib/pagination';
 import { getBlogAuthorPage } from '@/server/blog-pages';
 
 interface BlogAuthorSearch {
@@ -31,7 +35,7 @@ export const Route = createFileRoute('/blog/author/$authorSlug')({
   pendingComponent: () => (
     <PublicContentPending label={m.publicContent_loadingLabel()} />
   ),
-  validateSearch: (search: Record<string, unknown>): BlogAuthorSearch => ({
+  validateSearch: (search: UrlSearchInput): BlogAuthorSearch => ({
     cursor: cursorSearchValue(search.cursor),
   }),
   loaderDeps: ({ search }) => search,

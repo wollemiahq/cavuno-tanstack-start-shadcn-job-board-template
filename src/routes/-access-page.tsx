@@ -47,7 +47,11 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { toastActionError } from '@/lib/action-toast';
 import { cn } from '@/lib/utils';
-import type { AccessCheckoutSession, PaywallOffer } from '@cavuno/board';
+import type {
+  AccessCheckoutSession,
+  AccessGrant,
+  PaywallOffer,
+} from '@cavuno/board';
 
 /** The paywall page's own path — the return-to fallback and the loader's redirect target. */
 export const RETURN_PATH = '/account/access';
@@ -164,7 +168,53 @@ export function AccessPage() {
   const { grant, offers } = routeApi.useLoaderData();
   const { session_id, returnTo: returnToRaw } = routeApi.useSearch();
   const router = useRouter();
+  return (
+    <AccessPageView
+      grant={grant}
+      offers={offers}
+      sessionId={session_id}
+      returnToRaw={returnToRaw}
+      getAccessGrantAction={getAccessGrant}
+      openBillingPortalAction={openBillingPortal}
+      startCheckoutAction={startCheckout}
+      invalidate={async () => {
+        await router.invalidate();
+      }}
+      navigate={async (href) => {
+        await router.navigate({ href });
+      }}
+      reportActionError={toastActionError}
+    />
+  );
+}
 
+export function AccessPageView({
+  grant,
+  offers,
+  sessionId,
+  returnToRaw,
+  getAccessGrantAction,
+  openBillingPortalAction,
+  startCheckoutAction,
+  invalidate,
+  navigate,
+  reportActionError,
+}: {
+  grant: AccessGrant;
+  offers: PaywallOffer[];
+  sessionId?: string;
+  returnToRaw?: string;
+  getAccessGrantAction: () => Promise<AccessGrant>;
+  openBillingPortalAction: (input: {
+    data: { returnPath: string };
+  }) => Promise<{ url: string }>;
+  startCheckoutAction: (input: {
+    data: { offerKey: string; returnPath: string };
+  }) => Promise<AccessCheckoutSession>;
+  invalidate: () => Promise<void>;
+  navigate: (href: string) => Promise<void>;
+  reportActionError: () => void;
+}) {
   // Where the buyer was browsing when they hit the paywall (sanitized). It
   // rides the URL from the "Unlock more roles" teaser through the whole flow.
   const returnTo = safeReturnTo(returnToRaw);
@@ -176,7 +226,7 @@ export function AccessPage() {
   // Returning from Stripe with a session id means a checkout just completed —
   // poll the grant until the webhook has recorded it.
   const [polling, setPolling] = useState(
-    Boolean(session_id) && !grant.hasAccess,
+    Boolean(sessionId) && !grant.hasAccess,
   );
 
   const hasAccess = grant.hasAccess || confirmed;
@@ -185,12 +235,12 @@ export function AccessPage() {
   // session id) with a captured return path means we bounce the buyer back to
   // where they were rather than parking them on this page.
   const redirecting =
-    returnTo !== null && hasAccess && (confirmed || Boolean(session_id));
+    returnTo !== null && hasAccess && (confirmed || Boolean(sessionId));
 
   useEffect(() => {
     if (!redirecting || returnTo === null) return;
-    void router.navigate({ href: returnTo }).catch(() => toastActionError());
-  }, [redirecting, returnTo, router]);
+    void navigate(returnTo).catch(() => reportActionError());
+  }, [navigate, redirecting, reportActionError, returnTo]);
 
   useEffect(() => {
     if (!polling || hasAccess) return;
@@ -203,19 +253,19 @@ export function AccessPage() {
       attempts += 1;
       let next;
       try {
-        next = await getAccessGrant();
+        next = await getAccessGrantAction();
       } catch {
         if (stop) return;
         setPolling(false);
         setExhausted(true);
-        void toastActionError();
+        reportActionError();
         return;
       }
       if (stop) return;
       if (next.hasAccess) {
         setConfirmed(true);
         setPolling(false);
-        void router.invalidate().catch(() => toastActionError());
+        void invalidate().catch(() => reportActionError());
       } else if (attempts < 30) {
         timerId = window.setTimeout(tick, 2000);
       } else {
@@ -228,7 +278,7 @@ export function AccessPage() {
       stop = true;
       window.clearTimeout(timerId);
     };
-  }, [polling, hasAccess, router]);
+  }, [getAccessGrantAction, hasAccess, invalidate, polling, reportActionError]);
 
   // A stable reference so mounting the embedded checkout doesn't re-run its
   // effect (and destroy/remount the live Stripe iframe) on every render.
@@ -239,12 +289,12 @@ export function AccessPage() {
   async function buy(offer: PaywallOffer) {
     setBusy(offer.offerKey);
     try {
-      const mountKit = await startCheckout({
+      const mountKit = await startCheckoutAction({
         data: { offerKey: offer.offerKey, returnPath: RETURN_PATH },
       });
       setKit(mountKit);
     } catch {
-      void toastActionError();
+      reportActionError();
     } finally {
       setBusy(null);
     }
@@ -253,12 +303,12 @@ export function AccessPage() {
   async function manage() {
     setBusy('portal');
     try {
-      const { url } = await openBillingPortal({
+      const { url } = await openBillingPortalAction({
         data: { returnPath: RETURN_PATH },
       });
       window.location.href = url;
     } catch {
-      void toastActionError();
+      reportActionError();
     } finally {
       setBusy(null);
     }
@@ -405,9 +455,9 @@ export function AccessPage() {
               <Button
                 onClick={async () => {
                   try {
-                    await router.invalidate();
+                    await invalidate();
                   } catch {
-                    void toastActionError();
+                    reportActionError();
                   }
                 }}
               >

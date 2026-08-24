@@ -1,82 +1,97 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-
-const { getCompanyMarket, getCompaniesIndexPage, getCompaniesMarketPage } =
-  vi.hoisted(() => ({
-    getCompanyMarket: vi.fn(),
-    getCompaniesIndexPage: vi.fn(),
-    getCompaniesMarketPage: vi.fn(),
-  }));
-
-vi.mock('../server/queries', () => ({
-  getCompanyMarket,
-}));
-
-vi.mock('../server/companies-pages', () => ({
-  getCompaniesIndexPage,
-  getCompaniesMarketPage,
-}));
-
+import { createCompaniesIndexLoader } from './-companies-index-loader';
+import { createCompaniesMarketLoader } from './-companies-market-loader';
 import { Route as CompaniesRoute } from './companies.index';
 import { Route as MarketRoute } from './companies.markets.$market';
 
+import type { UrlSearchInput } from '../lib/pagination';
+import type * as CompaniesPages from '../server/companies-pages';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+const getCompaniesIndexPage =
+  vi.fn<typeof CompaniesPages.getCompaniesIndexPage>();
+const getCompaniesMarketPage =
+  vi.fn<typeof CompaniesPages.getCompaniesMarketPage>();
+const loadCompanies = createCompaniesIndexLoader(getCompaniesIndexPage);
+const loadMarket = createCompaniesMarketLoader(getCompaniesMarketPage);
+
+const seo = {
+  boardName: 'Example Jobs',
+  language: 'en',
+  origin: 'https://example.com',
+};
+const head = { meta: [], links: [] };
+
 function validateSearch(
   route: typeof CompaniesRoute | typeof MarketRoute,
-  search: Record<string, unknown>,
+  search: UrlSearchInput,
 ) {
   const validate = route.options.validateSearch;
-  if (typeof validate !== 'function') {
+  if (!validate) {
     throw new Error('The companies route does not define search validation');
+  }
+  if ('parse' in validate) return validate.parse(search);
+  if ('~standard' in validate) {
+    throw new Error('The companies route uses an unexpected async schema');
   }
   return validate(search);
 }
 
-function loaderDeps(
-  route: typeof CompaniesRoute | typeof MarketRoute,
-  search: Record<string, unknown>,
-) {
-  const project = route.options.loaderDeps;
-  if (typeof project !== 'function') {
+function companiesLoaderDeps(search: ReturnType<typeof validateSearch>) {
+  const project = CompaniesRoute.options.loaderDeps;
+  if (!project) {
     throw new Error('The companies route does not define loader dependencies');
   }
-  return project({ search } as never);
+  return project({ search });
 }
 
-function loader(route: typeof CompaniesRoute | typeof MarketRoute) {
-  const load = route.options.loader;
-  if (typeof load !== 'function') {
-    throw new Error('The companies route does not define a callable loader');
-  }
-  return load;
+function companiesLoaderContext(deps: { query?: string; page?: number }) {
+  return { deps };
+}
+
+function marketLoaderContext(deps: { query?: string; page?: number }) {
+  return {
+    params: { market: 'venture-capital' },
+    deps,
+  };
 }
 
 beforeEach(() => {
-  getCompanyMarket.mockReset();
-  getCompanyMarket.mockResolvedValue({
-    canonicalSlug: 'venture-capital',
-    displayName: 'Venture Capital',
-    redirectTo: null,
-    sourceSlug: 'venture-capital',
-  });
   getCompaniesIndexPage.mockReset();
   getCompaniesIndexPage.mockResolvedValue({
     page: { data: [], count: 0 },
     searchUnavailable: false,
     markets: [],
-    seo: {},
-    head: {},
+    seo,
+    head,
     jsonLd: [],
   });
   getCompaniesMarketPage.mockReset();
   getCompaniesMarketPage.mockResolvedValue({
     kind: 'ok',
-    page: { data: [], count: 0 },
+    market: {
+      object: 'taxonomy_resolution',
+      type: 'market',
+      sourceSlug: 'venture-capital',
+      canonicalSlug: 'venture-capital',
+      displayName: 'Venture capital',
+      redirectTo: null,
+      geo: null,
+    },
+    page: {
+      object: 'list',
+      url: '/v1/companies',
+      data: [],
+      hasMore: false,
+      nextCursor: null,
+      count: 0,
+    },
     searchUnavailable: false,
     markets: [],
-    seo: {},
-    head: {},
+    seo,
+    head,
     jsonLd: [],
   });
 });
@@ -107,16 +122,16 @@ describe('companies route — URL-backed master-detail search', () => {
   });
 
   it('keeps canonical browse pagination while pane selection stays out of loader deps', async () => {
-    const first = loaderDeps(CompaniesRoute, {
+    const first = companiesLoaderDeps({
       page: 3,
       selectedCompany: 'first-company',
     });
-    const second = loaderDeps(CompaniesRoute, {
+    const second = companiesLoaderDeps({
       page: 3,
       selectedCompany: 'second-company',
     });
 
-    await loader(CompaniesRoute)({ deps: first } as never);
+    await loadCompanies(companiesLoaderContext(first));
 
     expect(getCompaniesIndexPage).toHaveBeenCalledWith({
       data: { offset: 48, limit: 24, query: undefined },
@@ -130,13 +145,13 @@ describe('companies route — URL-backed master-detail search', () => {
       page: { data: [], count: 0 },
       searchUnavailable: true,
       markets: [],
-      seo: {},
-      head: {},
+      seo,
+      head,
       jsonLd: [],
     });
 
     await expect(
-      loader(CompaniesRoute)({ deps: { query: 'acme' } } as never),
+      loadCompanies(companiesLoaderContext({ query: 'acme' })),
     ).resolves.toMatchObject({ searchUnavailable: true });
   });
 });
@@ -157,12 +172,7 @@ describe('company market route — scoped browse and search', () => {
   });
 
   it('offset-paginates both browse and search, sending query plus market on search', async () => {
-    const load = loader(MarketRoute);
-
-    await load({
-      params: { market: 'venture-capital' },
-      deps: { page: 3 },
-    } as never);
+    await loadMarket(marketLoaderContext({ page: 3 }));
 
     expect(getCompaniesMarketPage).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -173,10 +183,7 @@ describe('company market route — scoped browse and search', () => {
     });
 
     getCompaniesMarketPage.mockClear();
-    await load({
-      params: { market: 'venture-capital' },
-      deps: { query: 'acme', page: 2 },
-    } as never);
+    await loadMarket(marketLoaderContext({ query: 'acme', page: 2 }));
 
     expect(getCompaniesMarketPage).toHaveBeenCalledWith({
       data: expect.objectContaining({

@@ -24,10 +24,7 @@ export type {
  *
  * Edit the per-locale scaffolds in the sibling modules — plain TSX, in place.
  */
-export const LEGAL_CONTENT: Record<
-  LegalLocale,
-  Record<LegalPageType, LegalPageContent>
-> = {
+export const LEGAL_CONTENT = {
   en: {
     about: aboutContent.en,
     'privacy-policy': privacyPolicyContent.en,
@@ -49,17 +46,21 @@ export const LEGAL_CONTENT: Record<
     'cookie-policy': cookiePolicyContent.fr,
     impressum: impressumContent.fr,
   },
-};
+} satisfies Record<LegalLocale, Record<LegalPageType, LegalPageContent>>;
 
-const LEGAL_LOCALES = new Set<string>(['en', 'de', 'fr']);
+const LEGAL_LOCALES = [
+  'en',
+  'de',
+  'fr',
+] as const satisfies readonly LegalLocale[];
+
+function resolveLegalLocale(locale: string): LegalLocale {
+  return LEGAL_LOCALES.find((candidate) => candidate === locale) ?? 'en';
+}
 
 /** Resolve legal page content for the current chrome locale (en fallback). */
 export function resolveLegalContent(type: LegalPageType): LegalPageContent {
-  const locale = getLocale();
-  const table = LEGAL_LOCALES.has(locale)
-    ? LEGAL_CONTENT[locale as LegalLocale]
-    : LEGAL_CONTENT.en;
-  return table[type] ?? LEGAL_CONTENT.en[type];
+  return LEGAL_CONTENT[resolveLegalLocale(getLocale())][type];
 }
 
 /**

@@ -29,6 +29,7 @@ import {
 import { jobDetailCopy } from '@/copy-groups/job-detail';
 import { enumLabel } from '@/lib/enum-labels';
 import { jobBreadcrumbItems } from '@/lib/job-breadcrumbs';
+import { searchString } from '@/lib/pagination';
 import { formatJobSalary } from '@/lib/salary-display';
 import type { PublicBoard, PublicJob, PublicJobCard } from '@cavuno/board';
 
@@ -195,12 +196,12 @@ export function toJobDetailVM(
     if (tz.type === 'all') return copy.worldwideLabel;
     if (tz.type === 'country') return regionName(tz.value);
     const zone = tz.value;
-    if (typeof tz.plusMinus === 'number' && tz.plusMinus > 0) {
+    if (Number.isFinite(tz.plusMinus) && Number(tz.plusMinus) > 0) {
       try {
         const window = new Intl.NumberFormat(displayLocale, {
           style: 'unit',
           unit: 'hour',
-        }).format(tz.plusMinus);
+        }).format(Number(tz.plusMinus));
         return `${zone} ±${window}`;
       } catch {
         return zone;
@@ -209,12 +210,11 @@ export function toJobDetailVM(
     return zone;
   });
 
-  const experience =
-    typeof job.experienceMonths === 'number'
-      ? job.experienceMonths === 0
-        ? copy.noExperienceRequiredLabel
-        : copy.experienceYears(Math.round(job.experienceMonths / 12))
-      : null;
+  const experience = Number.isFinite(job.experienceMonths)
+    ? job.experienceMonths === 0
+      ? copy.noExperienceRequiredLabel
+      : copy.experienceYears(Math.round(Number(job.experienceMonths) / 12))
+    : null;
 
   const education =
     job.educationRequirements.length > 0
@@ -256,14 +256,16 @@ export function toJobDetailVM(
     // from the template map via the RAW stored option keys (the wire stores
     // keys, never labels), falling back to the resolved label.
     const rawValue = job.customFieldValues[entry.key];
-    const optionLabel = (resolved: string, raw: unknown) =>
-      typeof raw === 'string' && definition
+    const optionLabel = <T>(resolved: string, raw: T) => {
+      const key = searchString(raw);
+      return key && definition
         ? customFieldOptionLabel(
             definition.key,
-            { key: raw, label: resolved },
+            { key, label: resolved },
             displayLocale,
           )
         : resolved;
+    };
     let value: string;
     if (entry.kind === 'boolean') {
       value = entry.value ? copy.customFieldYesLabel : copy.customFieldNoLabel;

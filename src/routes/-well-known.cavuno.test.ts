@@ -1,9 +1,10 @@
 import {
   compileManifest,
   enumerateRouteEntries,
+  validateManifest,
 } from '@cavuno/board/route-contract';
 import { routeEntriesFromTanStackRouteTree } from '@cavuno/board/well-known';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 /**
  * Mount contract for `/.well-known/cavuno.json`. Pins the starter wiring of
@@ -25,7 +26,7 @@ import { join, resolve } from 'node:path';
  * Paths match this starter's file routes (companies/$companySlug/jobs/$jobSlug,
  * alerts.manage, alerts.confirm).
  */
-const starterRoleTree = vi.hoisted(() => ({
+const starterRoleTree = {
   id: '__root__',
   children: [
     { id: '/', fullPath: '/' },
@@ -39,54 +40,38 @@ const starterRoleTree = vi.hoisted(() => ({
     { id: '/companies/$companySlug', fullPath: '/companies/$companySlug' },
     { id: '/blog/$postSlug', fullPath: '/blog/$postSlug' },
   ],
-}));
+};
 
-vi.mock('../routeTree.gen', () => ({
-  routeTree: starterRoleTree,
-}));
+import { createWellKnownRouteHandler } from './-well-known-handler';
 
-import { Route } from './[.]well-known.cavuno[.]json';
-
-type GetHandler = (ctx: { request: Request }) => Promise<Response> | Response;
-
-function getHandler(): GetHandler {
-  const handlers = Route.options.server?.handlers as
-    | { GET?: GetHandler }
-    | GetHandler
-    | undefined;
-  const get =
-    typeof handlers === 'function'
-      ? undefined
-      : handlers && typeof handlers === 'object'
-        ? handlers.GET
-        : undefined;
-  if (typeof get !== 'function') {
-    throw new Error(
-      'expected /.well-known/cavuno.json to export a GET server handler',
-    );
+async function getWellKnown(request: Request): Promise<Response> {
+  const result = await createWellKnownRouteHandler(() => starterRoleTree)(
+    request,
+  );
+  if (!(result instanceof Response)) {
+    throw new Error('The well-known GET handler must return a response');
   }
-  return get;
+  return result;
 }
 
 describe('/.well-known/cavuno.json mount', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it('serves ManifestV1 with cache headers and starter canonical roles', async () => {
     const request = new Request(
       'https://board.example.com/.well-known/cavuno.json',
     );
-    const res = await getHandler()({ request } as never);
+    const res = await getWellKnown(request);
 
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toBe('application/json');
     expect(res.headers.get('cache-control')).toBe('public, max-age=300');
 
-    const body = (await res.json()) as {
-      version: number;
-      roles: Record<string, string>;
-    };
+    const parsed = validateManifest(await res.json());
+    if (!parsed.ok) {
+      throw new Error(
+        `Invalid well-known manifest: ${JSON.stringify(parsed.errors)}`,
+      );
+    }
+    const body = parsed.manifest;
     expect(body.version).toBe(1);
     expect(body.roles.jobDetail).toBe('/companies/:companySlug/jobs/:jobSlug');
     expect(body.roles.alertsManage).toBe('/alerts/manage');
@@ -103,9 +88,14 @@ describe('/.well-known/cavuno.json mount', () => {
       resolve(process.cwd(), 'src/routes/[.]well-known.cavuno[.]json.ts'),
       'utf8',
     );
+    const handlerSource = readFileSync(
+      resolve(process.cwd(), 'src/routes/-well-known-handler.ts'),
+      'utf8',
+    );
     expect(source).toContain("createFileRoute('/.well-known/cavuno.json')");
-    expect(source).toContain('createWellKnownHandler');
-    expect(source).toContain('routeEntriesFromTanStackRouteTree');
+    expect(source).toContain('createWellKnownRouteHandler');
+    expect(handlerSource).toContain('createWellKnownHandler');
+    expect(handlerSource).toContain('routeEntriesFromTanStackRouteTree');
     expect(source).toContain("import { routeTree } from '../routeTree.gen'");
   });
 

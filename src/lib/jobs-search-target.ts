@@ -59,13 +59,11 @@ export type JobsSearchTarget =
 
 function compactFilters(filters?: JobsSearchFilters): JobsSearchFilters {
   if (!filters) return {};
-  return {
-    ...(filters.remoteOption ? { remoteOption: filters.remoteOption } : {}),
-    ...(filters.employmentType
-      ? { employmentType: filters.employmentType }
-      : {}),
-    ...(filters.seniority?.length ? { seniority: filters.seniority } : {}),
-  };
+  const compact: JobsSearchFilters = {};
+  if (filters.remoteOption) compact.remoteOption = filters.remoteOption;
+  if (filters.employmentType) compact.employmentType = filters.employmentType;
+  if (filters.seniority?.length) compact.seniority = filters.seniority;
+  return compact;
 }
 
 function withFilters<T extends object>(

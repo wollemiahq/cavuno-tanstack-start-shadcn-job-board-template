@@ -33,19 +33,14 @@ describe('design system boundary', () => {
   it('keeps the replaceable primitive seam in the local UI directory', () => {
     const components = JSON.parse(
       readFileSync(resolve(root, 'components.json'), 'utf8'),
-    ) as {
-      style: string;
-      iconLibrary: string;
-      aliases: { ui: string };
-      tailwind: { css: string };
-    };
+    );
 
     expect(components).toMatchObject({
       style: 'base-rhea',
       aliases: { ui: '@/components/ui' },
       tailwind: { css: 'src/theme.css' },
     });
-    expect(typeof components.iconLibrary).toBe('string');
+    expect(components.iconLibrary).toBeTypeOf('string');
     expect(components.iconLibrary.length).toBeGreaterThan(0);
   });
 });

@@ -22,6 +22,11 @@ import {
   totalPages,
 } from './pagination';
 
+function parsedCursor(search: string): string | number | undefined {
+  const parsed: { cursor?: string | number } = defaultParseSearch(search);
+  return parsed.cursor;
+}
+
 describe('listingPageHref (crawlable pagination URLs)', () => {
   it('preserves filters while replacing transient selection state', () => {
     expect(
@@ -70,12 +75,8 @@ describe('cursorPageHref (crawlable next-cursor URLs for cursor-only listings)',
     // crawler or new-tab open lands on the cursor page instead of page one.
     for (const cursor of ['2', 'opaque:page:2', 'kn7abc', '1.5']) {
       const href = cursorPageHref('/blog', cursor);
-      const parsed = defaultParseSearch(
-        new URL(href, 'https://b.local').search,
-      );
-      expect(cursorSearchValue((parsed as { cursor?: unknown }).cursor)).toBe(
-        cursor,
-      );
+      const parsed = parsedCursor(new URL(href, 'https://b.local').search);
+      expect(cursorSearchValue(parsed)).toBe(cursor);
     }
   });
 });
@@ -103,8 +104,7 @@ describe('cursorSearchValue (opaque-cursor coercion)', () => {
   it('round-trips a numeric cursor through the router codec without loss', () => {
     // Emit the way `cursorPageHref` does, then read it the way the route does.
     const href = defaultStringifySearch({ cursor: '2' });
-    const parsed = defaultParseSearch(href) as { cursor?: unknown };
-    expect(cursorSearchValue(parsed.cursor)).toBe('2');
+    expect(cursorSearchValue(parsedCursor(href))).toBe('2');
   });
 });
 

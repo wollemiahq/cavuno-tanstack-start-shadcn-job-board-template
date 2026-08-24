@@ -46,7 +46,7 @@ export type BoxProps<Element extends LayoutElement = 'div'> = LayoutProps<
   BoxOwnProps
 >;
 
-const backgroundClasses: Record<BoxBackground, string> = {
+const backgroundClasses = {
   transparent: '',
   background: 'bg-background text-foreground',
   card: 'bg-card text-card-foreground',
@@ -54,9 +54,9 @@ const backgroundClasses: Record<BoxBackground, string> = {
   accent: 'bg-accent text-accent-foreground',
   primary: 'bg-primary text-primary-foreground',
   secondary: 'bg-secondary text-secondary-foreground',
-};
+} satisfies Record<BoxBackground, string>;
 
-const borderClasses: Record<BoxBorder, string> = {
+const borderClasses = {
   none: '',
   all: 'border',
   top: 'border-t',
@@ -65,9 +65,9 @@ const borderClasses: Record<BoxBorder, string> = {
   left: 'border-l',
   x: 'border-x',
   y: 'border-y',
-};
+} satisfies Record<BoxBorder, string>;
 
-const radiusClasses: Record<BoxRadius, string> = {
+const radiusClasses = {
   none: 'rounded-none',
   sm: 'rounded-sm',
   md: 'rounded-md',
@@ -75,7 +75,7 @@ const radiusClasses: Record<BoxRadius, string> = {
   xl: 'rounded-xl',
   '2xl': 'rounded-2xl',
   full: 'rounded-full',
-};
+} satisfies Record<BoxRadius, string>;
 
 const paddingClass =
   'p-(--layout-padding-base) sm:p-(--layout-padding-sm) md:p-(--layout-padding-md) lg:p-(--layout-padding-lg) xl:p-(--layout-padding-xl) 2xl:p-(--layout-padding-2xl)';
@@ -100,16 +100,26 @@ export function Box<Element extends LayoutElement = 'div'>({
   radius = 'none',
   ...props
 }: BoxProps<Element>) {
+  // SAFETY: `as` is constrained to LayoutElement; React accepts that finite
+  // intrinsic element set as an ElementType for polymorphic rendering.
   const Component = (as ?? 'div') as ElementType;
-  const layoutStyle = {
-    ...responsiveTokenStyle('layout-padding', padding, spaceValues),
-    ...(paddingX
-      ? responsiveTokenStyle('layout-padding-x', paddingX, spaceValues)
-      : {}),
-    ...(paddingY
-      ? responsiveTokenStyle('layout-padding-y', paddingY, spaceValues)
-      : {}),
-  };
+  const layoutStyle = responsiveTokenStyle(
+    'layout-padding',
+    padding,
+    spaceValues,
+  );
+  if (paddingX) {
+    Object.assign(
+      layoutStyle,
+      responsiveTokenStyle('layout-padding-x', paddingX, spaceValues),
+    );
+  }
+  if (paddingY) {
+    Object.assign(
+      layoutStyle,
+      responsiveTokenStyle('layout-padding-y', paddingY, spaceValues),
+    );
+  }
 
   return (
     <Component

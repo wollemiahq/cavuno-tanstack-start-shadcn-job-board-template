@@ -106,22 +106,25 @@ export function ListingPagination({
             {(compact
               ? compactVisiblePages(page, total)
               : visiblePages(page, total)
-            ).map((item) => (
-              <PaginationItem key={item}>
-                {typeof item === 'number' ? (
-                  <PaginationLink
-                    href={localizePath(hrefForPage(item))}
-                    isActive={item === page}
-                    aria-label={`${m.pagination_ariaLabel()} ${item}`}
-                    onClick={navigate(item)}
-                  >
-                    {item}
-                  </PaginationLink>
-                ) : (
-                  <PaginationEllipsis />
-                )}
-              </PaginationItem>
-            ))}
+            ).map((item) => {
+              const pageItem = Number.isInteger(item) ? Number(item) : null;
+              return (
+                <PaginationItem key={item}>
+                  {pageItem !== null ? (
+                    <PaginationLink
+                      href={localizePath(hrefForPage(pageItem))}
+                      isActive={pageItem === page}
+                      aria-label={`${m.pagination_ariaLabel()} ${pageItem}`}
+                      onClick={navigate(pageItem)}
+                    >
+                      {pageItem}
+                    </PaginationLink>
+                  ) : (
+                    <PaginationEllipsis />
+                  )}
+                </PaginationItem>
+              );
+            })}
           </ul>
         </li>
         <PaginationItem className="justify-self-end">

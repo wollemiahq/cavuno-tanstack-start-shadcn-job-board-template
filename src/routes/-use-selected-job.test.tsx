@@ -3,24 +3,125 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getCompany, getJob, myApplicationForJob } = vi.hoisted(() => ({
-  getCompany: vi.fn(),
-  getJob: vi.fn(),
-  myApplicationForJob: vi.fn(),
-}));
+import {
+  useSelectedJob,
+  type SelectedJobDependencies,
+} from './-use-selected-job';
 
-vi.mock('../server/queries', () => ({ getCompany, getJob }));
-vi.mock('../server/applications', () => ({ myApplicationForJob }));
+import type {
+  Application,
+  PublicCompanyDetail,
+  PublicJob,
+} from '@cavuno/board';
 
-import { useSelectedJob } from './-use-selected-job';
+const getCompany = vi.fn<SelectedJobDependencies['getCompany']>();
+const getJob = vi.fn<SelectedJobDependencies['getJob']>();
+const myApplicationForJob =
+  vi.fn<SelectedJobDependencies['myApplicationForJob']>();
+const dependencies: SelectedJobDependencies = {
+  getCompany,
+  getJob,
+  myApplicationForJob,
+};
 
-function job(slug: string) {
-  return { id: `id-${slug}`, slug, title: slug };
+function job(slug: string): PublicJob {
+  return {
+    id: `id-${slug}`,
+    object: 'public_job',
+    slug,
+    title: slug,
+    status: 'published',
+    companyId: 'company-1',
+    description: null,
+    applicationUrl: null,
+    company: {
+      id: 'company-1',
+      slug: null,
+      name: null,
+      logoUrl: null,
+      website: null,
+    },
+    officeLocations: [],
+    placeHierarchy: [],
+    categories: [],
+    skills: [],
+    remoteOption: null,
+    remoteWorldwide: false,
+    remoteWorkPermitCountryCodes: [],
+    remoteWorkPermitSubdivisionCodes: [],
+    remotePermits: [],
+    remoteAllowedTzOffsets: [],
+    remoteSponsorship: 'unknown',
+    remoteTimezones: [],
+    educationRequirements: [],
+    experienceMonths: null,
+    experienceInPlaceOfEducation: null,
+    inOfficePeriod: null,
+    inOfficeFrequency: null,
+    customFieldValues: {},
+    salaryMin: null,
+    salaryMax: null,
+    salaryCurrency: null,
+    salaryTimeframe: null,
+    isFeatured: false,
+    isSponsored: false,
+    applyAction: 'external_direct',
+    seniority: null,
+    employmentType: null,
+    publishedAt: null,
+    expiresAt: null,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    links: { public: `https://jobs.example/companies/acme/jobs/${slug}` },
+  };
 }
+
+function company(summary: string): PublicCompanyDetail {
+  return {
+    id: 'company-1',
+    object: 'public_company',
+    slug: 'acme',
+    name: 'Acme',
+    logoUrl: null,
+    website: null,
+    description: '<p>Full HTML body that must not be used as intro.</p>',
+    summary,
+    jobCount: 1,
+    publishedJobCount: 1,
+    salarySampleCount: 0,
+    markets: [],
+    links: { public: 'https://jobs.example/companies/acme' },
+  };
+}
+
+const application: Application = {
+  id: 'application-1',
+  object: 'application',
+  status: 'applied',
+  appliedAt: '2026-07-14T00:00:00.000Z',
+  updatedAt: '2026-07-14T00:00:00.000Z',
+  coverNote: null,
+  candidateName: null,
+  candidateEmail: null,
+  candidateLocation: null,
+  candidateHeadline: null,
+  resumeFilename: null,
+  job: null,
+};
+
+const jobCompany: NonNullable<PublicJob['company']> = {
+  id: 'company-1',
+  slug: 'acme',
+  name: 'Acme',
+  logoUrl: null,
+  website: null,
+};
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
-  let reject!: (reason?: unknown) => void;
+  let reject: (reason?: Error) => void = () => {
+    throw new Error('Deferred rejection was not initialized');
+  };
   const promise = new Promise<T>((nextResolve, nextReject) => {
     resolve = nextResolve;
     reject = nextReject;
@@ -42,9 +143,10 @@ describe('useSelectedJob', () => {
     getJob.mockReturnValueOnce(nextJob.promise);
 
     const { result, rerender } = renderHook(
-      ({ slug }) => useSelectedJob(slug),
+      ({ slug }: { slug: string | undefined }) =>
+        useSelectedJob(slug, false, undefined, dependencies),
       {
-        initialProps: { slug: 'first-job' as string | undefined },
+        initialProps: { slug: 'first-job' },
       },
     );
 
@@ -65,7 +167,9 @@ describe('useSelectedJob', () => {
       .mockRejectedValueOnce(new Error('Temporary outage'))
       .mockResolvedValueOnce(job('first-job'));
 
-    const { result } = renderHook(() => useSelectedJob('first-job'));
+    const { result } = renderHook(() =>
+      useSelectedJob('first-job', false, undefined, dependencies),
+    );
 
     await waitFor(() => expect(result.current.status).toBe('error'));
     act(() => result.current.retry());
@@ -75,7 +179,9 @@ describe('useSelectedJob', () => {
   });
 
   it('does not fetch when mobile has no pane selection', () => {
-    const { result } = renderHook(() => useSelectedJob(undefined));
+    const { result } = renderHook(() =>
+      useSelectedJob(undefined, false, undefined, dependencies),
+    );
 
     expect(result.current.status).toBe('idle');
     expect(getJob).not.toHaveBeenCalled();
@@ -83,9 +189,11 @@ describe('useSelectedJob', () => {
 
   it("seeds a verified returning candidate's existing application", async () => {
     getJob.mockResolvedValue(job('first-job'));
-    myApplicationForJob.mockResolvedValue({ id: 'application-1' });
+    myApplicationForJob.mockResolvedValue(application);
 
-    const { result } = renderHook(() => useSelectedJob('first-job', true));
+    const { result } = renderHook(() =>
+      useSelectedJob('first-job', true, undefined, dependencies),
+    );
 
     await waitFor(() => expect(result.current.status).toBe('ready'));
     expect(myApplicationForJob).toHaveBeenCalledWith({
@@ -100,7 +208,9 @@ describe('useSelectedJob', () => {
       new Error('Private state unavailable'),
     );
 
-    const { result } = renderHook(() => useSelectedJob('first-job', true));
+    const { result } = renderHook(() =>
+      useSelectedJob('first-job', true, undefined, dependencies),
+    );
 
     await waitFor(() => expect(result.current.status).toBe('ready'));
     expect(result.current.job?.slug).toBe('first-job');
@@ -110,7 +220,9 @@ describe('useSelectedJob', () => {
   it('does not request private application state for anonymous or unverified viewers', async () => {
     getJob.mockResolvedValue(job('first-job'));
 
-    const { result } = renderHook(() => useSelectedJob('first-job', false));
+    const { result } = renderHook(() =>
+      useSelectedJob('first-job', false, undefined, dependencies),
+    );
 
     await waitFor(() => expect(result.current.status).toBe('ready'));
     expect(myApplicationForJob).not.toHaveBeenCalled();
@@ -120,15 +232,15 @@ describe('useSelectedJob', () => {
   it('loads company summary for the about-company intro (never description HTML)', async () => {
     getJob.mockResolvedValue({
       ...job('first-job'),
-      company: { slug: 'acme' },
+      company: jobCompany,
     });
-    getCompany.mockResolvedValue({
-      slug: 'acme',
-      summary: 'Acme builds tools for modern product teams.',
-      description: '<p>Full HTML body that must not be used as intro.</p>',
-    });
+    getCompany.mockResolvedValue(
+      company('Acme builds tools for modern product teams.'),
+    );
 
-    const { result } = renderHook(() => useSelectedJob('first-job'));
+    const { result } = renderHook(() =>
+      useSelectedJob('first-job', false, undefined, dependencies),
+    );
 
     await waitFor(() => expect(result.current.status).toBe('ready'));
     expect(getCompany).toHaveBeenCalledWith({
@@ -140,13 +252,17 @@ describe('useSelectedJob', () => {
   });
 
   it('fans out job + company in parallel when the list already knows the company slug', async () => {
-    const jobGate = deferred<ReturnType<typeof job>>();
-    const companyGate = deferred<{ slug: string; summary: string }>();
+    const selectedJob = {
+      ...job('first-job'),
+      company: jobCompany,
+    };
+    const jobGate = deferred<typeof selectedJob>();
+    const companyGate = deferred<PublicCompanyDetail>();
     getJob.mockReturnValueOnce(jobGate.promise);
     getCompany.mockReturnValueOnce(companyGate.promise);
 
     const { result } = renderHook(() =>
-      useSelectedJob('first-job', false, 'acme'),
+      useSelectedJob('first-job', false, 'acme', dependencies),
     );
 
     await waitFor(() => expect(getJob).toHaveBeenCalled());
@@ -156,14 +272,8 @@ describe('useSelectedJob', () => {
     expect(result.current.status).toBe('loading');
 
     await act(async () => {
-      jobGate.resolve({
-        ...job('first-job'),
-        company: { slug: 'acme' },
-      } as ReturnType<typeof job>);
-      companyGate.resolve({
-        slug: 'acme',
-        summary: 'Parallel summary.',
-      });
+      jobGate.resolve(selectedJob);
+      companyGate.resolve(company('Parallel summary.'));
     });
 
     await waitFor(() => expect(result.current.status).toBe('ready'));

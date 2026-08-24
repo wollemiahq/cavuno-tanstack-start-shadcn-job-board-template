@@ -32,6 +32,10 @@ export const READ_CACHE_TTL = {
   boardGlobal: 300,
 } as const;
 
+type BoardGlobalCacheOptions = {
+  cf: { cacheTtl: number; cacheEverything: true };
+};
+
 /** Workers augments `RequestInit` with a `cf` object; the SDK passes it through. */
 type WorkersRequestInit = RequestInit & {
   cf?: { cacheTtl?: number; cacheEverything?: boolean };
@@ -42,9 +46,7 @@ type WorkersRequestInit = RequestInit & {
  * longer TTL (e.g. the employer offer gate). References the named constant so
  * the number stays in one place.
  */
-export function boardGlobalReadCache(): {
-  cf: { cacheTtl: number; cacheEverything: true };
-} {
+export function boardGlobalReadCache(): BoardGlobalCacheOptions {
   return {
     cf: { cacheTtl: READ_CACHE_TTL.boardGlobal, cacheEverything: true },
   };
@@ -59,8 +61,12 @@ export function boardGlobalReadCache(): {
  * edge entry with legacy readers.
  */
 export function applyReadCache(req: BoardRequest): BoardRequest {
+  // SAFETY: BoardRequest.init is the fetch init object handed to the SDK hook;
+  // WorkersRequestInit adds Cloudflare's `cf` cache controls used below.
   const init = req.init as WorkersRequestInit;
   const method = (init.method ?? 'GET').toUpperCase();
+  // SAFETY: The SDK passes a Headers instance into this request hook; header
+  // presence is the cache-safety boundary for viewer-specific reads.
   const headers = init.headers as Headers;
   const viewerSpecific =
     headers.has('authorization') ||

@@ -10,6 +10,7 @@ import { serializeDataSourceCookie } from '../lib/data-source';
 import { m } from '../paraglide/messages';
 import { getDataSourceFacts } from '../server/preview';
 
+import type { PreviewDataSourceFacts } from '../server/preview';
 import { Page } from '@/components/layout/page';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
@@ -92,7 +93,14 @@ export function AppRouteError({
   );
 }
 
-export function AppRouteErrorPage({ error, reset }: ErrorComponentProps) {
+export function AppRouteErrorPage({
+  error,
+  reset,
+  loadDataSourceFacts = getDataSourceFacts,
+}: ErrorComponentProps & {
+  /** Injectable environment probe for isolated boundary tests. */
+  loadDataSourceFacts?: () => Promise<PreviewDataSourceFacts>;
+}) {
   // The one distinction worth surfacing: rate limiting is transient and
   // waiting actually fixes it, so "try again in a moment" would mislead.
   // Server-function errors cross the wire as plain Errors, so the SDK guard
@@ -106,7 +114,7 @@ export function AppRouteErrorPage({ error, reset }: ErrorComponentProps) {
   const [stuckOnDemo, setStuckOnDemo] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    getDataSourceFacts()
+    loadDataSourceFacts()
       .then((facts) => {
         if (!cancelled && facts.demoConfigured && facts.dataSource === 'demo') {
           setStuckOnDemo(true);
@@ -118,7 +126,7 @@ export function AppRouteErrorPage({ error, reset }: ErrorComponentProps) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadDataSourceFacts]);
 
   function onSwitchToYourBoard() {
     document.cookie = serializeDataSourceCookie('board');

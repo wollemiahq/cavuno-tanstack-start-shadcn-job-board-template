@@ -55,6 +55,9 @@ import type {
 
 // ── OPEN reads (allowlisted-open on the hosted board, even when protected) ──
 
+const EMPTY_NAVIGATION_ORDER: string[] = [];
+const EMPTY_CUSTOM_LINKS: BoardContextFooter['customLinks'] = [];
+
 export const getBoardContext = createServerFn({ method: 'GET' }).handler(
   async () => {
     const context = await readBoardContext();
@@ -76,8 +79,8 @@ export const getBoardContext = createServerFn({ method: 'GET' }).handler(
         xUrl: context.contact?.xUrl ?? null,
         facebookUrl: context.contact?.facebookUrl ?? null,
         linkedinUrl: context.contact?.linkedinUrl ?? null,
-        navigationOrder: [] as string[],
-        customLinks: [] as Array<{ id: string; label: string; url: string }>,
+        navigationOrder: EMPTY_NAVIGATION_ORDER,
+        customLinks: EMPTY_CUSTOM_LINKS,
       } satisfies BoardContextFooter,
       // 4.0.0: talent directory is features.talentDirectory enum ('off' is truthy!).
       talentDirectoryVisibility: context.features.talentDirectory,
@@ -525,10 +528,18 @@ export const getCompanyMarket = createServerFn({ method: 'GET' })
  * the route-level 404 rather than surfacing a 500. Thrown notFound()
  * serializes across the server-fn boundary to the loader.
  */
-const isBlogDisabled = (error: unknown): boolean =>
-  typeof error === 'object' &&
-  error !== null &&
-  (error as { code?: unknown }).code === 'blog_disabled';
+type BoardErrorLike = {
+  code?: string;
+};
+
+function isBlogDisabled<T>(error: T): boolean {
+  if (error === null || error === undefined || Object(error) !== error) {
+    return false;
+  }
+  // SAFETY: Caught Board API errors may expose a string `code`; this guard
+  // only reads that optional field and treats all other shapes as non-blog errors.
+  return (error as BoardErrorLike).code === 'blog_disabled';
+}
 
 const blogRead = async <T>(read: () => Promise<T>): Promise<T> => {
   try {

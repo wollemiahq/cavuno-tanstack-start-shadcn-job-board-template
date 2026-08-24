@@ -22,11 +22,13 @@ import {
 import { sessionMiddleware } from '../lib/session-middleware';
 
 /** Map API failures to a form-friendly result instead of a 500. */
-function authError(error: unknown): {
+type AuthActionError = {
   ok: false;
   code: string;
   message: string;
-} {
+};
+
+function authError<T>(error: T): AuthActionError {
   if (isBoardApiError(error)) {
     return { ok: false, code: error.code, message: error.message };
   }

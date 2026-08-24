@@ -30,20 +30,28 @@ export interface ServerEnv {
   demoBoardPrivate: boolean;
 }
 
+type WorkerEnvBindings = {
+  CAVUNO_API_URL?: string;
+  CAVUNO_BOARD?: string;
+  CAVUNO_DEMO_BOARD?: string;
+  CAVUNO_DEMO_BOARD_PRIVATE?: string;
+};
+
 export function getServerEnv(): ServerEnv {
-  const raw = env as Record<string, unknown>;
+  // SAFETY: Cloudflare Worker text vars are string bindings; this helper owns
+  // validation for the Cavuno vars before returning the ServerEnv contract.
+  const raw = env as WorkerEnvBindings;
   const apiUrl = raw.CAVUNO_API_URL;
   const board = raw.CAVUNO_BOARD;
-  if (typeof apiUrl !== 'string' || apiUrl.length === 0) {
+  if (!apiUrl) {
     throw new Error('CAVUNO_API_URL is not set (wrangler vars / .dev.vars)');
   }
-  if (typeof board !== 'string' || board.length === 0) {
+  if (!board) {
     throw new Error('CAVUNO_BOARD is not set (wrangler vars / .dev.vars)');
   }
 
   const demoRaw = raw.CAVUNO_DEMO_BOARD;
-  const demoBoard =
-    typeof demoRaw === 'string' && demoRaw.length > 0 ? demoRaw : undefined;
+  const demoBoard = demoRaw ? demoRaw : undefined;
 
   // Only the exact string "1" enables private-shadow affordances.
   const demoBoardPrivate = raw.CAVUNO_DEMO_BOARD_PRIVATE === '1';

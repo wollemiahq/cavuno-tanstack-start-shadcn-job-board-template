@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -11,47 +18,29 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { CandidateProfile } from '@cavuno/board';
 
-const mocks = vi.hoisted(() => ({
+const mocks = {
   checkHandle: vi.fn(),
-  invalidate: vi.fn(),
   updateProfile: vi.fn(),
-}));
-
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return { ...actual, useRouter: () => ({ invalidate: mocks.invalidate }) };
-});
-
-vi.mock('../server/account', () => ({
-  checkHandle: mocks.checkHandle,
-  updateProfile: mocks.updateProfile,
-}));
-
-vi.mock('../lib/action-toast', () => ({
   toastActionError: vi.fn(),
   toastActionSuccess: vi.fn(),
-}));
-
-vi.mock('./location-suggest-field', () => ({
-  LocationSuggestField: ({
-    id,
-    value,
-    onValueChange,
-  }: {
-    id: string;
-    value: string;
-    onValueChange: (next: string) => void;
-  }) => (
-    <input
-      id={id}
-      value={value}
-      onChange={(event) => onValueChange(event.target.value)}
-    />
-  ),
-}));
+};
 
 import { ProfileForm } from './profile-form';
+
+async function renderWithRouter(node: React.ReactNode) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => <>{node}</>,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  await router.load();
+  return render(<RouterProvider router={router} />);
+}
 
 const profile = {
   id: 'profile_1',
@@ -77,10 +66,11 @@ afterEach(() => {
 describe('ProfileForm country', () => {
   it('submits only the explicitly selected ISO country code, independently of free-text location', async () => {
     mocks.updateProfile.mockResolvedValue(undefined);
-    render(
+    await renderWithRouter(
       <ProfileForm
         profile={profile}
         language="en"
+        dependencies={mocks}
         locationSuggestions={{
           suggestions: [],
           loading: false,

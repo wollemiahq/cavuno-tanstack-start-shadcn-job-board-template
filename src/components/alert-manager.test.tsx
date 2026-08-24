@@ -9,35 +9,19 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { AlertManagerDependencies } from './alert-manager';
 import type { Alert } from '@cavuno/board';
 
-const mocks = vi.hoisted(() => ({
-  createMyAlert: vi.fn<() => unknown>(),
-  deleteMyAlert: vi.fn<() => unknown>(),
-  invalidate: vi.fn<() => unknown>(),
-  updateMyAlert: vi.fn<() => unknown>(),
-  toastActionSuccess: vi.fn<() => unknown>(),
-  toastActionError: vi.fn<() => unknown>(),
-}));
+const mocks = {
+  createMyAlert: vi.fn<AlertManagerDependencies['createAlert']>(),
+  deleteMyAlert: vi.fn<AlertManagerDependencies['deleteAlert']>(),
+  invalidate: vi.fn<AlertManagerDependencies['invalidate']>(),
+  updateMyAlert: vi.fn<AlertManagerDependencies['updateAlert']>(),
+  toastActionSuccess: vi.fn(),
+  toastActionError: vi.fn(),
+};
 
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return { ...actual, useRouter: () => ({ invalidate: mocks.invalidate }) };
-});
-
-vi.mock('../server/account', () => ({
-  createMyAlert: mocks.createMyAlert,
-  deleteMyAlert: mocks.deleteMyAlert,
-  updateMyAlert: mocks.updateMyAlert,
-}));
-
-vi.mock('@/lib/action-toast', () => ({
-  toastActionSuccess: mocks.toastActionSuccess,
-  toastActionError: mocks.toastActionError,
-}));
-
-import { AlertManager } from './alert-manager';
+import { AlertManagerView } from './alert-manager';
 
 const alert = {
   id: 'alert-1',
@@ -65,11 +49,29 @@ const secondAlert = {
 
 const berlin = { id: 'place-berlin', slug: 'berlin', name: 'Berlin' };
 
+interface RenderManagerOptions {
+  alerts?: Alert[];
+  places?: Array<{ id: string; slug: string | null; name: string }>;
+}
+
 function renderManager({
-  alerts = [] as Alert[],
-  places = [] as { id: string; slug: string | null; name: string }[],
-} = {}) {
-  return render(<AlertManager alerts={alerts} places={places} />);
+  alerts = [],
+  places = [],
+}: RenderManagerOptions = {}) {
+  return render(
+    <AlertManagerView
+      alerts={alerts}
+      places={places}
+      dependencies={{
+        createAlert: mocks.createMyAlert,
+        deleteAlert: mocks.deleteMyAlert,
+        updateAlert: mocks.updateMyAlert,
+        invalidate: mocks.invalidate,
+        notifySuccess: mocks.toastActionSuccess,
+        notifyError: mocks.toastActionError,
+      }}
+    />,
+  );
 }
 
 afterEach(() => {
@@ -130,7 +132,7 @@ describe('AlertManager', () => {
   });
 
   it('creates weekly alerts with every workplace type ticked by default', async () => {
-    mocks.createMyAlert.mockResolvedValue(undefined);
+    mocks.createMyAlert.mockResolvedValue(alert);
     renderManager();
 
     fireEvent.click(screen.getByRole('button', { name: 'New alert' }));
@@ -147,7 +149,7 @@ describe('AlertManager', () => {
   });
 
   it('narrows workplace types and ties the alert to picked locations', async () => {
-    mocks.createMyAlert.mockResolvedValue(undefined);
+    mocks.createMyAlert.mockResolvedValue(alert);
     renderManager({ places: [berlin] });
 
     fireEvent.click(screen.getByRole('button', { name: 'New alert' }));

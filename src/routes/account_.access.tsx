@@ -22,6 +22,9 @@ import {
 } from '@/components/candidate-route-state';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
+import { searchString, type UrlSearchInput } from '@/lib/pagination';
+
+type AccessSearch = { session_id?: string; returnTo?: string };
 
 export const Route = createFileRoute('/account_/access')({
   staticData: { ownsMain: true },
@@ -31,16 +34,12 @@ export const Route = createFileRoute('/account_/access')({
   // `<Link to="/account/access">` (the header avatar menu) needs no search
   // prop and renders without a trailing `?`. `returnTo` is kept raw here and
   // sanitized with `safeRedirectPath` at the point of navigation.
-  validateSearch: (
-    search: Record<string, unknown>,
-  ): { session_id?: string; returnTo?: string } => {
-    const out: { session_id?: string; returnTo?: string } = {};
-    if (typeof search.session_id === 'string' && search.session_id) {
-      out.session_id = search.session_id;
-    }
-    if (typeof search.returnTo === 'string' && search.returnTo) {
-      out.returnTo = search.returnTo;
-    }
+  validateSearch: (search: UrlSearchInput): AccessSearch => {
+    const out: AccessSearch = {};
+    const sessionId = searchString(search.session_id);
+    const returnTo = searchString(search.returnTo);
+    if (sessionId) out.session_id = sessionId;
+    if (returnTo) out.returnTo = returnTo;
     return out;
   },
   loader: async () => {

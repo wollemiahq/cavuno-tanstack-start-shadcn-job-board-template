@@ -3,25 +3,27 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({
+import type { UpdateMarketingConsent } from './marketing-consent-settings';
+
+const updatedConsent = {
+  id: 'marketingConsent_1',
+  object: 'marketing_consent',
+  status: 'granted',
+  source: 'notification_preferences',
+  reason: null,
+  grantedAt: '2026-08-01T00:00:00.000Z',
+  withdrawnAt: null,
+  revision: 1,
+} satisfies Awaited<ReturnType<UpdateMarketingConsent>>;
+
+const mocks = {
   invalidate: vi.fn(),
-  setMarketingConsent: vi.fn().mockResolvedValue({}),
-}));
+  setMarketingConsent: vi
+    .fn<UpdateMarketingConsent>()
+    .mockResolvedValue(updatedConsent),
+};
 
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    useRouter: () => ({ invalidate: mocks.invalidate }),
-  };
-});
-
-vi.mock('../server/settings', () => ({
-  setMarketingConsent: mocks.setMarketingConsent,
-}));
-
-import { MarketingConsentSettings } from './marketing-consent-settings';
+import { MarketingConsentSettingsView } from './marketing-consent-settings';
 import { RegistrationPage } from './registration-page';
 
 afterEach(() => {
@@ -145,26 +147,34 @@ describe('sign-up marketing checkbox', () => {
 });
 
 describe('settings marketing consent row', () => {
+  const settings = (
+    consent: Parameters<typeof MarketingConsentSettingsView>[0]['consent'],
+  ) => (
+    <MarketingConsentSettingsView
+      consent={consent}
+      updateConsent={mocks.setMarketingConsent}
+      invalidate={mocks.invalidate}
+    />
+  );
+
   it('renders unticked for null (never decided) and withdrawn alike', () => {
-    const { unmount } = render(<MarketingConsentSettings consent={null} />);
+    const { unmount } = render(settings(null));
     expect(
       document.querySelector('[data-test="marketing-consent-toggle"]'),
     ).toHaveAttribute('aria-checked', 'false');
     unmount();
 
     render(
-      <MarketingConsentSettings
-        consent={{
-          id: 'boardUsers_1',
-          object: 'marketing_consent',
-          status: 'withdrawn',
-          source: 'notification_preferences',
-          reason: 'person_request',
-          grantedAt: '2026-08-01T00:00:00.000Z',
-          withdrawnAt: '2026-08-02T00:00:00.000Z',
-          revision: 2,
-        }}
-      />,
+      settings({
+        id: 'boardUsers_1',
+        object: 'marketing_consent',
+        status: 'withdrawn',
+        source: 'notification_preferences',
+        reason: 'person_request',
+        grantedAt: '2026-08-01T00:00:00.000Z',
+        withdrawnAt: '2026-08-02T00:00:00.000Z',
+        revision: 2,
+      }),
     );
     expect(
       document.querySelector('[data-test="marketing-consent-toggle"]'),
@@ -172,7 +182,7 @@ describe('settings marketing consent row', () => {
   });
 
   it('grants on tick and withdraws on untick', async () => {
-    const { unmount } = render(<MarketingConsentSettings consent={null} />);
+    const { unmount } = render(settings(null));
     fireEvent.click(
       document.querySelector('[data-test="marketing-consent-toggle"]')!,
     );
@@ -185,18 +195,16 @@ describe('settings marketing consent row', () => {
     mocks.setMarketingConsent.mockClear();
 
     render(
-      <MarketingConsentSettings
-        consent={{
-          id: 'boardUsers_1',
-          object: 'marketing_consent',
-          status: 'granted',
-          source: 'candidate_sign_up',
-          reason: null,
-          grantedAt: '2026-08-01T00:00:00.000Z',
-          withdrawnAt: null,
-          revision: 1,
-        }}
-      />,
+      settings({
+        id: 'boardUsers_1',
+        object: 'marketing_consent',
+        status: 'granted',
+        source: 'candidate_sign_up',
+        reason: null,
+        grantedAt: '2026-08-01T00:00:00.000Z',
+        withdrawnAt: null,
+        revision: 1,
+      }),
     );
     const toggle = document.querySelector(
       '[data-test="marketing-consent-toggle"]',

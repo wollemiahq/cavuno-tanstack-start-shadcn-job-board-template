@@ -9,30 +9,43 @@ import {
 } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { MessagesDockController } from './-messages-dock-controller';
-
 import {
+  MessagesDockController,
+  type MessagesDockDependencies,
+} from './-messages-dock-controller';
+
+import type { Conversation, ConversationDetail, Message } from '@cavuno/board';
+
+const archiveConversation =
+  vi.fn<MessagesDockDependencies['archiveConversation']>();
+const blockUser = vi.fn<MessagesDockDependencies['blockUser']>();
+const editMessage = vi.fn<MessagesDockDependencies['editMessage']>();
+const getInbox = vi.fn<MessagesDockDependencies['getInbox']>();
+const getThread = vi.fn<MessagesDockDependencies['getThread']>();
+const getUnreadCount = vi.fn<MessagesDockDependencies['getUnreadCount']>();
+const markRead = vi.fn<MessagesDockDependencies['markRead']>();
+const reportMessage = vi.fn<MessagesDockDependencies['reportMessage']>();
+const sendReply = vi.fn<MessagesDockDependencies['sendReply']>();
+const unarchiveConversation =
+  vi.fn<MessagesDockDependencies['unarchiveConversation']>();
+const unblockUser = vi.fn<MessagesDockDependencies['unblockUser']>();
+const unsendMessage = vi.fn<MessagesDockDependencies['unsendMessage']>();
+const useVisiblePoll = vi.fn<MessagesDockDependencies['useVisiblePoll']>();
+const dependencies: MessagesDockDependencies = {
+  archiveConversation,
+  blockUser,
+  editMessage,
   getInbox,
   getThread,
   getUnreadCount,
   markRead,
-} from '@/server/messaging';
-import type { Conversation, ConversationDetail, Message } from '@cavuno/board';
-
-vi.mock('@/server/messaging', () => ({
-  archiveConversation: vi.fn(),
-  blockUser: vi.fn(),
-  editMessage: vi.fn(),
-  getInbox: vi.fn(),
-  getThread: vi.fn(),
-  getUnreadCount: vi.fn(),
-  markRead: vi.fn(),
-  reportMessage: vi.fn(),
-  sendReply: vi.fn(),
-  unarchiveConversation: vi.fn(),
-  unblockUser: vi.fn(),
-  unsendMessage: vi.fn(),
-}));
+  reportMessage,
+  sendReply,
+  unarchiveConversation,
+  unblockUser,
+  unsendMessage,
+  useVisiblePoll,
+};
 
 const conversation: Conversation = {
   id: 'conversation-1',
@@ -76,18 +89,18 @@ describe('MessagesDockController', () => {
   beforeEach(() => {
     cleanup();
     vi.resetAllMocks();
-    vi.mocked(markRead).mockResolvedValue({
+    markRead.mockResolvedValue({
       object: 'read_receipt',
       markedAt: '2026-07-14T05:00:00.000Z',
     });
   });
 
   it('opens the inbox at the right and a selected conversation in the adjacent window', async () => {
-    vi.mocked(getUnreadCount).mockResolvedValue({
+    getUnreadCount.mockResolvedValue({
       object: 'unread_count',
       count: 2,
     });
-    vi.mocked(getInbox).mockResolvedValue({
+    getInbox.mockResolvedValue({
       conversations: {
         object: 'list',
         url: '/v1/me/conversations',
@@ -96,7 +109,7 @@ describe('MessagesDockController', () => {
         nextCursor: null,
       },
     });
-    vi.mocked(getThread).mockResolvedValue({
+    getThread.mockResolvedValue({
       conversation: detail,
       messages: {
         object: 'list',
@@ -108,7 +121,7 @@ describe('MessagesDockController', () => {
       blockStatus: { object: 'block_status', blocked: false },
     });
 
-    render(<MessagesDockController />);
+    render(<MessagesDockController dependencies={dependencies} />);
 
     const launcher = await screen.findByRole('button', {
       name: 'Open messaging, 2 unread',
@@ -129,10 +142,10 @@ describe('MessagesDockController', () => {
   });
 
   it('replaces a failed initial inbox load with an honest retry state', async () => {
-    vi.mocked(getUnreadCount).mockRejectedValue(new Error('Network failed'));
-    vi.mocked(getInbox).mockRejectedValue(new Error('Network failed'));
+    getUnreadCount.mockRejectedValue(new Error('Network failed'));
+    getInbox.mockRejectedValue(new Error('Network failed'));
 
-    render(<MessagesDockController />);
+    render(<MessagesDockController dependencies={dependencies} />);
 
     fireEvent.click(
       screen.getByRole('button', { name: 'Open messaging, 0 unread' }),
@@ -142,11 +155,11 @@ describe('MessagesDockController', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'empty');
 
-    vi.mocked(getUnreadCount).mockResolvedValue({
+    getUnreadCount.mockResolvedValue({
       object: 'unread_count',
       count: 1,
     });
-    vi.mocked(getInbox).mockResolvedValue({
+    getInbox.mockResolvedValue({
       conversations: {
         object: 'list',
         url: '/v1/me/conversations',
@@ -163,11 +176,11 @@ describe('MessagesDockController', () => {
   });
 
   it('replaces a failed conversation load with an honest retry state', async () => {
-    vi.mocked(getUnreadCount).mockResolvedValue({
+    getUnreadCount.mockResolvedValue({
       object: 'unread_count',
       count: 1,
     });
-    vi.mocked(getInbox).mockResolvedValue({
+    getInbox.mockResolvedValue({
       conversations: {
         object: 'list',
         url: '/v1/me/conversations',
@@ -176,9 +189,9 @@ describe('MessagesDockController', () => {
         nextCursor: null,
       },
     });
-    vi.mocked(getThread).mockRejectedValue(new Error('Network failed'));
+    getThread.mockRejectedValue(new Error('Network failed'));
 
-    render(<MessagesDockController />);
+    render(<MessagesDockController dependencies={dependencies} />);
 
     fireEvent.click(
       await screen.findByRole('button', {
@@ -191,7 +204,7 @@ describe('MessagesDockController', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'empty');
 
-    vi.mocked(getThread).mockResolvedValue({
+    getThread.mockResolvedValue({
       conversation: detail,
       messages: {
         object: 'list',

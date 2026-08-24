@@ -5,48 +5,35 @@
  * `data-source.ts`.
  */
 
-import { type BoardAuthSession } from '@cavuno/board';
-import {
-  clearGrantCookie,
-  clearSessionCookie,
-  parseGrantCookie,
-  parseSessionCookie,
-  serializeGrantCookie,
-  serializeSessionCookie,
-  type BoardSession,
-} from '@cavuno/board/server';
 import {
   getRequestHeader,
   setResponseHeader,
 } from '@tanstack/react-start/server';
 
-import { resolveDataSource, type DataSource } from './data-source';
+import { createDataSourceRuntime } from './data-source-runtime';
 import { getServerEnv } from './env';
 
+const runtime = createDataSourceRuntime({
+  getServerEnv,
+  getRequestHeader,
+  setResponseHeader,
+});
+
 /** True when the builder (or operator) injected a demo tenant key. */
-export function isDemoBoardConfigured(): boolean {
-  return typeof getServerEnv().demoBoard === 'string';
-}
+export const isDemoBoardConfigured = runtime.isDemoBoardConfigured;
 
 /**
  * True when the demo tenant is a private per-board shadow
  * (`CAVUNO_DEMO_BOARD_PRIVATE=1`). Shared public fixtures hide reseed +
  * board-settings toggles to avoid contention.
  */
-export function isDemoBoardPrivate(): boolean {
-  return getServerEnv().demoBoardPrivate === true;
-}
+export const isDemoBoardPrivate = runtime.isDemoBoardPrivate;
 
 /**
  * Server-side helper: read the request cookie and resolve the active source.
  * Returns `board` when no demo key is configured, regardless of cookie value.
  */
-export function getDataSource(): DataSource {
-  return resolveDataSource(
-    getRequestHeader('cookie') ?? null,
-    isDemoBoardConfigured(),
-  );
-}
+export const getDataSource = runtime.getDataSource;
 
 /**
  * Session-cookie scope for a data source. Primary stays unscoped so the
@@ -55,62 +42,23 @@ export function getDataSource(): DataSource {
  * board-scoped via the SDK multi-board codec so a demo token never lands in
  * the primary cookie.
  */
-export function sessionCookieOptionsFor(source: DataSource): {
-  board?: string;
-} {
-  if (source === 'demo') {
-    const demoBoard = getServerEnv().demoBoard;
-    if (demoBoard) return { board: demoBoard };
-  }
-  return {};
-}
+export const sessionCookieOptionsFor = runtime.sessionCookieOptionsFor;
 
 /**
  * Which session cookie persona switch / preview auth writes. Always `demo`
  * when a demo key is configured (personas live on the demo tenant); otherwise
  * `board` (legacy sandbox-on-primary).
  */
-export function previewSessionSource(): DataSource {
-  return isDemoBoardConfigured() ? 'demo' : 'board';
-}
-
-export function serializeSessionForSource(
-  session: BoardSession,
-  source: DataSource,
-): string {
-  return serializeSessionCookie(session, sessionCookieOptionsFor(source));
-}
-
-export function parseSessionForSource(
-  cookieHeader: string | null,
-  source: DataSource,
-): BoardSession | null {
-  return parseSessionCookie(cookieHeader, sessionCookieOptionsFor(source));
-}
-
-export function clearSessionForSource(source: DataSource): string {
-  return clearSessionCookie(sessionCookieOptionsFor(source));
-}
+export const previewSessionSource = runtime.previewSessionSource;
+export const serializeSessionForSource = runtime.serializeSessionForSource;
+export const parseSessionForSource = runtime.parseSessionForSource;
+export const clearSessionForSource = runtime.clearSessionForSource;
 
 // ── Board-password grant cookies (same per-source scope as sessions) ────────
 
-export function serializeGrantForSource(
-  token: string,
-  source: DataSource,
-): string {
-  return serializeGrantCookie(token, sessionCookieOptionsFor(source));
-}
-
-export function parseGrantForSource(
-  cookieHeader: string | null,
-  source: DataSource,
-): string | null {
-  return parseGrantCookie(cookieHeader, sessionCookieOptionsFor(source));
-}
-
-export function clearGrantForSource(source: DataSource): string {
-  return clearGrantCookie(sessionCookieOptionsFor(source));
-}
+export const serializeGrantForSource = runtime.serializeGrantForSource;
+export const parseGrantForSource = runtime.parseGrantForSource;
+export const clearGrantForSource = runtime.clearGrantForSource;
 
 /**
  * Persist a returned bearer pair into the ACTIVE data source's cookie — never
@@ -122,15 +70,4 @@ export function clearGrantForSource(source: DataSource): string {
  * function, so import-protection failed the build. Every caller uses it inside
  * a handler, so the import is stripped and the client stays clean.
  */
-export function persistAuthSession(session: BoardAuthSession): BoardSession {
-  const next: BoardSession = {
-    accessToken: session.accessToken,
-    refreshToken: session.refreshToken,
-    expiresAt: session.expiresAt,
-  };
-  setResponseHeader(
-    'Set-Cookie',
-    serializeSessionForSource(next, getDataSource()),
-  );
-  return next;
-}
+export const persistAuthSession = runtime.persistAuthSession;

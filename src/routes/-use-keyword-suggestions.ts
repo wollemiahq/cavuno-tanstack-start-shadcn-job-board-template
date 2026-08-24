@@ -11,9 +11,22 @@ import type { KeywordSuggestionState } from '@/components/keyword-combobox';
 const MIN_QUERY = 2;
 const DEBOUNCE_MS = 200;
 
+export type KeywordSuggestionDependencies = {
+  searchTaxonomySuggestions: (input: {
+    data: { q: string; limit: number };
+  }) => Promise<{
+    data: Awaited<ReturnType<typeof searchTaxonomySuggestions>>['data'];
+  }>;
+};
+
+const keywordSuggestionDependencies: KeywordSuggestionDependencies = {
+  searchTaxonomySuggestions,
+};
+
 /** Route-owned controller for the Jobs category/skill autocomplete. */
 export function useKeywordSuggestions(
   enabled: boolean,
+  dependencies: KeywordSuggestionDependencies = keywordSuggestionDependencies,
 ): KeywordSuggestionState {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<
@@ -32,7 +45,8 @@ export function useKeywordSuggestions(
     let cancelled = false;
     setLoading(true);
     const timer = setTimeout(() => {
-      void searchTaxonomySuggestions({ data: { q, limit: 10 } })
+      void dependencies
+        .searchTaxonomySuggestions({ data: { q, limit: 10 } })
         .then((response) => {
           if (!cancelled) {
             setSuggestions(
@@ -51,7 +65,7 @@ export function useKeywordSuggestions(
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [enabled, query]);
+  }, [dependencies, enabled, query]);
 
   return { suggestions, loading, onQueryChange: setQuery };
 }

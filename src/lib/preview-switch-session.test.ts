@@ -1,5 +1,7 @@
 import { sessionCookieName, type BoardSession } from '@cavuno/board/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import { createDataSourceRuntime } from './data-source-runtime';
 
 /**
  * T6 — switchPersona stores the session under the demo cookie name when a
@@ -9,33 +11,29 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
  * cookie identity is under test here).
  */
 
-const envState = vi.hoisted(() => ({
+interface EnvState {
+  apiUrl: string;
+  board: string;
+  demoBoard: string | undefined;
+  demoBoardPrivate: boolean;
+}
+
+const envState: EnvState = {
   apiUrl: 'https://api.example.test',
   board: 'pk_primary',
-  demoBoard: undefined as string | undefined,
+  demoBoard: undefined,
   demoBoardPrivate: false,
-}));
+};
 
-vi.mock('cloudflare:workers', () => ({ env: {} }));
-
-vi.mock('./env', () => ({
-  getServerEnv: () => ({
-    apiUrl: envState.apiUrl,
-    board: envState.board,
-    demoBoard: envState.demoBoard,
-    demoBoardPrivate: envState.demoBoardPrivate,
-  }),
-}));
-
-vi.mock('@tanstack/react-start/server', () => ({
-  getRequestHeader: () => null,
-}));
-
-import {
+const {
   previewSessionSource,
   serializeSessionForSource,
   sessionCookieOptionsFor,
-} from './data-source.server';
+} = createDataSourceRuntime({
+  getServerEnv: () => envState,
+  getRequestHeader: () => null,
+  setResponseHeader: () => {},
+});
 
 beforeEach(() => {
   envState.demoBoard = undefined;

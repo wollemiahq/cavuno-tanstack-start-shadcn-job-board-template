@@ -46,7 +46,7 @@ type TextElement =
 type BodySize = 'xs' | 'sm' | 'base' | 'lg';
 
 /** The `text-*` size + `font-*` weight + default `text-*` color per role. */
-const VARIANT_CLASSES: Record<Variant, string> = {
+const VARIANT_CLASSES = {
   display: 'text-4xl font-semibold text-foreground md:text-5xl',
   heading1: 'text-3xl font-semibold text-foreground',
   heading2: 'text-2xl font-semibold text-foreground',
@@ -55,14 +55,14 @@ const VARIANT_CLASSES: Record<Variant, string> = {
   body: 'text-base text-foreground',
   secondary: 'text-base text-muted-foreground',
   error: 'text-sm text-destructive',
-};
+} satisfies Record<Variant, string>;
 
-const BODY_SIZE_CLASSES: Record<BodySize, string> = {
+const BODY_SIZE_CLASSES = {
   xs: 'text-xs',
   sm: 'text-sm',
   base: 'text-base',
   lg: 'text-lg',
-};
+} satisfies Record<BodySize, string>;
 
 const BODY_VARIANTS = new Set<Variant>(['body', 'secondary', 'error']);
 
@@ -112,6 +112,8 @@ export function Text({
   children,
   ...rest
 }: TextProps) {
+  // SAFETY: `as` is constrained to TextElement; React accepts that finite
+  // intrinsic element set as an ElementType for this polymorphic primitive.
   const Tag = (as ?? 'p') as ElementType;
   const isBody = BODY_VARIANTS.has(variant);
 

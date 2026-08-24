@@ -120,6 +120,7 @@
   "devDependencies": {
     "@inlang/paraglide-js": "2.20.2",
     "@inlang/plugin-message-format": "4.4.0",
+    "@oxlint/plugins": "1.79.0",
     "@tanstack/devtools-vite": "0.7.0",
     "@tanstack/intent": "0.3.6",
     "@tanstack/react-devtools": "0.10.5",
@@ -133,6 +134,7 @@
     "@vitejs/plugin-react": "6.0.2",
     "jsdom": "28.1.0",
     "lighthouse": "13.0.1",
+    "oxlint": "1.79.0",
     "typescript": "7.0.2",
     "typescript-6": "npm:@typescript/typescript6@6.0.2",
     "vite": "8.1.3",

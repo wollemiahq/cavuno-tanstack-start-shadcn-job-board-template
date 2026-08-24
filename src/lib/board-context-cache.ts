@@ -22,6 +22,7 @@
  * request retries instead of pinning a failure for the whole TTL.
  */
 import { getBoard } from './board';
+import { createBoardContextCache } from './board-context-cache-core';
 import { getDataSource } from './data-source.server';
 import { boardGlobalReadCache } from './read-cache';
 
@@ -32,32 +33,20 @@ type BoardContext = Awaited<ReturnType<ReturnType<typeof getBoard>['context']>>;
 /** Shorter than the 300s edge TTL, so an isolate is never the stalest layer. */
 const CONTEXT_TTL_MS = 30_000;
 
-const cache = new Map<
-  DataSource,
-  { at: number; promise: Promise<BoardContext> }
->();
+const cache = createBoardContextCache<BoardContext>(
+  {
+    getBoardContext: () => getBoard().context(boardGlobalReadCache()),
+    getDataSource,
+    now: Date.now,
+  },
+  CONTEXT_TTL_MS,
+);
 
-export function readBoardContext(): Promise<BoardContext> {
-  const source = getDataSource();
-  const hit = cache.get(source);
-  const now = Date.now();
-  if (hit && now - hit.at < CONTEXT_TTL_MS) return hit.promise;
-
-  const promise = getBoard()
-    .context(boardGlobalReadCache())
-    .catch((error: unknown) => {
-      // Do not let one failure poison the whole TTL window.
-      if (cache.get(source)?.promise === promise) cache.delete(source);
-      throw error;
-    });
-  cache.set(source, { at: now, promise });
-  return promise;
-}
+export const readBoardContext = cache.readBoardContext;
 
 /** Test seam: drop everything held for the current or all data sources. */
 export function resetBoardContextCache(source?: DataSource): void {
-  if (source) cache.delete(source);
-  else cache.clear();
+  cache.resetBoardContextCache(source);
 }
 
 /**
@@ -66,32 +55,12 @@ export function resetBoardContextCache(source?: DataSource): void {
  * that re-run the root loader re-hit plans.list + salesLed even though the
  * answer is board-global and stable for the same TTL window as context.
  */
-const OFFER_GATE_TTL_MS = CONTEXT_TTL_MS;
-
-const offerGateCache = new Map<
-  DataSource,
-  { at: number; promise: Promise<{ hasEmployerOfferPage: boolean }> }
->();
-
 export function readEmployerOfferGate(
   load: () => Promise<{ hasEmployerOfferPage: boolean }>,
 ): Promise<{ hasEmployerOfferPage: boolean }> {
-  const source = getDataSource();
-  const hit = offerGateCache.get(source);
-  const now = Date.now();
-  if (hit && now - hit.at < OFFER_GATE_TTL_MS) return hit.promise;
-
-  const promise = load().catch((error: unknown) => {
-    if (offerGateCache.get(source)?.promise === promise) {
-      offerGateCache.delete(source);
-    }
-    throw error;
-  });
-  offerGateCache.set(source, { at: now, promise });
-  return promise;
+  return cache.readEmployerOfferGate(load);
 }
 
 export function resetEmployerOfferGateCache(source?: DataSource): void {
-  if (source) offerGateCache.delete(source);
-  else offerGateCache.clear();
+  cache.resetEmployerOfferGateCache(source);
 }

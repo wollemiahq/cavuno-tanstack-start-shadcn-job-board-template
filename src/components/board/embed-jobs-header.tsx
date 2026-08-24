@@ -96,6 +96,8 @@ export function EmbedJobsHeader({
     // destination drops them. Staging one would light the badge and populate
     // no Type option, over a Search that opens the unfiltered board — the
     // exact thing this header promises not to do.
+    // SAFETY: The include check proves the embed query's raw employment type
+    // is one of the public listing filter members before staging it.
     employmentType: EMPLOYMENT_TYPES.includes(
       initialSearch.employmentType as (typeof EMPLOYMENT_TYPES)[number],
     )
@@ -256,14 +258,18 @@ export function EmbedJobsHeader({
               employmentType: filters.employmentType,
               seniority: filters.seniority,
             }}
-            onApply={(value) =>
-              setFilters({
+            onApply={(value) => {
+              const nextFilters: JobsSearchFilters = {
+                // SAFETY: JobsFilterToolbar options are built from REMOTE_OPTIONS.
                 remoteOption: value.workplace as ListingFilters['remoteOption'],
+                // SAFETY: JobsFilterToolbar options are built from EMPLOYMENT_TYPES.
                 employmentType:
                   value.employmentType as ListingFilters['employmentType'],
+                // SAFETY: JobsFilterToolbar seniority options are built from SENIORITIES.
                 seniority: value.seniority as ListingFilters['seniority'],
-              })
-            }
+              };
+              setFilters(nextFilters);
+            }}
             onReset={() => setFilters({})}
           />
 

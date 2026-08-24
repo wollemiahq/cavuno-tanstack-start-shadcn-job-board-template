@@ -18,6 +18,7 @@ import {
   resolveCapability,
   type PreviewEmail,
   type RawPreviewPersona,
+  type SandboxConfigPatch,
   unmetFlagRequirements,
 } from './preview';
 
@@ -87,7 +88,7 @@ describe('projectPersona', () => {
 
 describe('pickWhitelistedConfig', () => {
   it('keeps whitelisted board-config keys and drops everything else', () => {
-    const result = pickWhitelistedConfig({
+    const untrustedConfig = {
       jobAccessPaywallEnabled: true,
       blogEnabled: false,
       talentDirectoryVisibility: 'employers_only',
@@ -96,7 +97,13 @@ describe('pickWhitelistedConfig', () => {
       sandboxBoard: true,
       isTestBoard: true,
       passwordProtectionEnabled: true, // removed from the platform whitelist
-    });
+    } satisfies SandboxConfigPatch & {
+      candidatePaywall: boolean;
+      sandboxBoard: boolean;
+      isTestBoard: boolean;
+      passwordProtectionEnabled: boolean;
+    };
+    const result = pickWhitelistedConfig(untrustedConfig);
     expect(result).toEqual({
       jobAccessPaywallEnabled: true,
       blogEnabled: false,
@@ -105,7 +112,11 @@ describe('pickWhitelistedConfig', () => {
   });
 
   it('returns an empty object when nothing is whitelisted', () => {
-    expect(pickWhitelistedConfig({ candidatePaywall: true })).toEqual({});
+    const untrustedConfig = {
+      candidatePaywall: true,
+      jobAccessPaywallEnabled: undefined,
+    } satisfies { candidatePaywall: boolean } & SandboxConfigPatch;
+    expect(pickWhitelistedConfig(untrustedConfig)).toEqual({});
   });
 
   it('every whitelisted config key round-trips with its value intact', () => {
@@ -138,9 +149,7 @@ describe('sandbox config whitelist ⇄ platform contract', () => {
 
   it('every UI flag key is a platform whitelist key with a matching value type', () => {
     for (const flag of PREVIEW_FEATURE_FLAGS) {
-      const platformType = (
-        PLATFORM_SANDBOX_CONFIG_WHITELIST as Record<string, string>
-      )[flag.key];
+      const platformType = PLATFORM_SANDBOX_CONFIG_WHITELIST[flag.key];
       expect(platformType, `unknown config key: ${flag.key}`).toBeDefined();
       // The control kind maps 1:1 onto the platform value type.
       const expectedKind = platformType === 'enum' ? 'enum' : 'boolean';
@@ -150,8 +159,9 @@ describe('sandbox config whitelist ⇄ platform contract', () => {
 
   it('surfaces every whitelist key as a control except the documented omissions', () => {
     const surfaced = PREVIEW_FEATURE_FLAGS.map((flag) => flag.key).sort();
+    const omitted = new Set<string>(UI_OMITTED_KEYS);
     const expected = Object.keys(PLATFORM_SANDBOX_CONFIG_WHITELIST)
-      .filter((key) => !UI_OMITTED_KEYS.includes(key as never))
+      .filter((key) => !omitted.has(key))
       .sort();
     expect(surfaced).toEqual(expected);
   });

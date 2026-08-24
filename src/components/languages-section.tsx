@@ -45,6 +45,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { toastActionError } from '@/lib/action-toast';
+import { searchString } from '@/lib/pagination';
 
 type Language = { name: string; proficiency: string };
 
@@ -105,6 +106,8 @@ export function LanguagesSection({ languages }: { languages: Language[] }) {
   };
 
   const open = (index: number | null) => {
+    // SAFETY: `open` is only called with indexes from `languages.map`; null is
+    // the explicit "new language" sentinel.
     setDraft(
       index === null ? { name: '', proficiency: '' } : { ...languages[index]! },
     );
@@ -156,7 +159,7 @@ export function LanguagesSection({ languages }: { languages: Language[] }) {
               onValueChange={(proficiency) =>
                 setDraft((prev) => ({
                   ...prev,
-                  proficiency: (proficiency as string | null) ?? '',
+                  proficiency: searchString(proficiency) ?? '',
                 }))
               }
             >

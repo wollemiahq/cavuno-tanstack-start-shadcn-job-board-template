@@ -14,7 +14,7 @@ import { m } from '../paraglide/messages';
  * pinned by board-error-message.test.ts — guessed names silently rendered
  * the generic line for every actual API failure once.
  */
-export const CODE_MESSAGES: Record<string, () => string> = {
+export const CODE_MESSAGES = {
   board_auth_invalid_credentials: m.boardError_invalidCredentialsText,
   board_password_invalid: m.boardError_invalidCredentialsText,
   rate_limited: m.boardError_rateLimitedText,
@@ -56,10 +56,19 @@ export const CODE_MESSAGES: Record<string, () => string> = {
   invalid_file: m.postJob_chooseImageError,
 };
 
+function codeMessage(code: string): (() => string) | undefined {
+  if (!Object.prototype.hasOwnProperty.call(CODE_MESSAGES, code)) {
+    return undefined;
+  }
+  // SAFETY: The hasOwnProperty check proves code is one of the exported
+  // CODE_MESSAGES keys before indexing the inferred object.
+  return CODE_MESSAGES[code as keyof typeof CODE_MESSAGES];
+}
+
 export function boardErrorMessage(result: {
   code?: string | null;
   message?: string | null;
 }): string {
-  const resolve = result.code ? CODE_MESSAGES[result.code] : undefined;
+  const resolve = result.code ? codeMessage(result.code) : undefined;
   return resolve ? resolve() : m.boardError_genericText();
 }

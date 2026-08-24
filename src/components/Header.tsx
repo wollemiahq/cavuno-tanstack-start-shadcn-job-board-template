@@ -162,11 +162,13 @@ export default function Header({
     jobSearch: jobSearchCopy(),
     nav: navCopy(),
   };
+  const configuredTalentDirectory = features.talentDirectory;
   const talentMode =
     talentDirectoryVisibility ??
-    (typeof features.talentDirectory === 'string'
-      ? features.talentDirectory
-      : features.talentDirectory
+    (configuredTalentDirectory === 'public' ||
+    configuredTalentDirectory === 'employers_only'
+      ? configuredTalentDirectory
+      : configuredTalentDirectory
         ? 'public'
         : 'off');
   // 'off' is a truthy string — compare explicitly, never coerce.
@@ -282,7 +284,7 @@ export default function Header({
       {authEnabled ? (
         <Link
           to="/auth/sign-in"
-          search={{ returnTo: undefined }}
+          search={{ returnTo: '/account' }}
           className={buttonVariants({ variant: 'ghost', size: 'sm' })}
         >
           {signInLabel}

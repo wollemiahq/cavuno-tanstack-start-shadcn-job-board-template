@@ -16,7 +16,11 @@ import { PublicContentPending } from '@/components/board/public-content-pending'
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
-import { cursorPageHref, cursorSearchValue } from '@/lib/pagination';
+import {
+  cursorPageHref,
+  cursorSearchValue,
+  type UrlSearchInput,
+} from '@/lib/pagination';
 import { getBlogTagPage } from '@/server/blog-pages';
 
 interface BlogTagSearch {
@@ -28,7 +32,7 @@ export const Route = createFileRoute('/blog/tag/$tagSlug')({
   pendingComponent: () => (
     <PublicContentPending label={m.publicContent_loadingLabel()} />
   ),
-  validateSearch: (search: Record<string, unknown>): BlogTagSearch => ({
+  validateSearch: (search: UrlSearchInput): BlogTagSearch => ({
     cursor: cursorSearchValue(search.cursor),
   }),
   loaderDeps: ({ search }) => search,

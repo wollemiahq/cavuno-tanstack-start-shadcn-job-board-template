@@ -6,31 +6,27 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BlockedController,
   InboxController,
+  messagesRuntimeDependencies,
   ThreadController,
+  type MessagesRuntimeDependencies,
 } from './-messages-runtime';
 
-import { getInbox, markRead, unblockUser } from '@/server/messaging';
 import type {
   BlockedUser,
   Conversation,
   ConversationDetail,
 } from '@cavuno/board';
 
-vi.mock('@/lib/use-visible-poll', () => ({ useVisiblePoll: vi.fn() }));
-
-vi.mock('@/server/messaging', () => ({
-  archiveConversation: vi.fn(),
-  blockUser: vi.fn(),
-  editMessage: vi.fn(),
-  getInbox: vi.fn(),
-  getThread: vi.fn(),
-  markRead: vi.fn(),
-  reportMessage: vi.fn(),
-  sendReply: vi.fn(),
-  unarchiveConversation: vi.fn(),
-  unblockUser: vi.fn(),
-  unsendMessage: vi.fn(),
-}));
+const getInbox = vi.fn<MessagesRuntimeDependencies['getInbox']>();
+const markRead = vi.fn<MessagesRuntimeDependencies['markRead']>();
+const unblockUser = vi.fn<MessagesRuntimeDependencies['unblockUser']>();
+const dependencies: MessagesRuntimeDependencies = {
+  ...messagesRuntimeDependencies,
+  getInbox,
+  markRead,
+  unblockUser,
+  useVisiblePoll: vi.fn(),
+};
 
 const conversation: Conversation = {
   id: 'conversation-1',
@@ -73,7 +69,7 @@ describe('messaging runtime failures', () => {
   });
 
   it('announces a failed inbox pagination request and leaves Load more available', async () => {
-    vi.mocked(getInbox).mockRejectedValue(new Error('Network failed'));
+    getInbox.mockRejectedValue(new Error('Network failed'));
 
     render(
       <InboxController
@@ -86,6 +82,7 @@ describe('messaging runtime failures', () => {
         }}
         archived={false}
         onSelect={vi.fn()}
+        dependencies={dependencies}
       />,
     );
 
@@ -99,9 +96,11 @@ describe('messaging runtime failures', () => {
   });
 
   it('announces a failed unblock without removing the blocked user', async () => {
-    vi.mocked(unblockUser).mockRejectedValue(new Error('Network failed'));
+    unblockUser.mockRejectedValue(new Error('Network failed'));
 
-    render(<BlockedController initial={[blockedUser]} />);
+    render(
+      <BlockedController initial={[blockedUser]} dependencies={dependencies} />,
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Unblock' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
@@ -113,7 +112,7 @@ describe('messaging runtime failures', () => {
   });
 
   it('announces when a conversation could not be marked as read', async () => {
-    vi.mocked(markRead).mockRejectedValue(new Error('Mark read failed'));
+    markRead.mockRejectedValue(new Error('Mark read failed'));
 
     render(
       <ThreadController
@@ -127,6 +126,7 @@ describe('messaging runtime failures', () => {
         }}
         initialBlockStatus={{ object: 'block_status', blocked: false }}
         onExit={vi.fn()}
+        dependencies={dependencies}
       />,
     );
 

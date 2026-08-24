@@ -11,19 +11,10 @@ import {
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-// SelectedJobDetail imports these server modules (used only inside apply/save
-// callbacks); stub them so the pane can render without the server env.
-vi.mock('../server/account', () => ({
-  getSessionUser: vi.fn(),
-  saveJob: vi.fn(),
-}));
-vi.mock('../server/applications', () => ({
-  applyToJob: vi.fn(),
-  prepareApplyToJob: vi.fn(),
-}));
-vi.mock('../server/queries', () => ({ getBoardContext: vi.fn() }));
-
-import { SelectedJobDetail } from './-selected-job-detail';
+import {
+  SelectedJobDetail,
+  type SelectedJobDetailDependencies,
+} from './-selected-job-detail';
 
 import type { SelectedJobState } from './-use-selected-job';
 import { m } from '@/paraglide/messages';
@@ -34,9 +25,17 @@ const job = {
   object: 'public_job',
   slug: 'previous-job',
   title: 'Previous job',
+  status: 'published',
+  companyId: 'company-1',
   description: '<p>Previous description.</p>',
   applicationUrl: 'https://apply.example/previous-job',
-  company: { slug: 'acme', name: 'Acme', logoUrl: null, website: null },
+  company: {
+    id: 'company-1',
+    slug: 'acme',
+    name: 'Acme',
+    logoUrl: null,
+    website: null,
+  },
   officeLocations: [],
   placeHierarchy: [],
   categories: [],
@@ -44,30 +43,107 @@ const job = {
   remoteOption: 'remote',
   remoteWorldwide: true,
   remoteWorkPermitCountryCodes: [],
+  remoteWorkPermitSubdivisionCodes: [],
+  remotePermits: [],
+  remoteAllowedTzOffsets: [],
+  remoteSponsorship: 'unknown',
   remoteTimezones: [],
   educationRequirements: [],
   experienceMonths: null,
+  experienceInPlaceOfEducation: null,
+  inOfficePeriod: null,
+  inOfficeFrequency: null,
   customFieldValues: {},
   salaryMin: null,
   salaryMax: null,
   salaryCurrency: null,
   salaryTimeframe: null,
+  isFeatured: false,
+  isSponsored: false,
+  applyAction: 'external_direct',
   seniority: null,
   employmentType: null,
   publishedAt: null,
+  expiresAt: null,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
   links: { public: 'https://jobs.example/companies/acme/jobs/previous-job' },
-} as unknown as PublicJob;
+} satisfies PublicJob;
 
 const board = {
+  object: 'public_board',
+  id: 'board-1',
+  slug: 'acme-jobs',
+  name: 'Acme Jobs',
   language: 'en',
-  labels: undefined,
+  logoUrl: null,
+  icons: {
+    ico: null,
+    svg: null,
+    appleTouch: null,
+    icon192: null,
+    icon512: null,
+    iconMaskable512: null,
+  },
+  primaryDomain: 'jobs.example',
+  showCavunoBranding: false,
   customFields: { job: [] },
-  features: { nativeApplications: true },
-} as unknown as Parameters<typeof SelectedJobDetail>[0]['board'];
+  features: {
+    jobAlerts: true,
+    candidates: true,
+    employers: true,
+    blog: true,
+    talentDirectory: 'public',
+    registrationWall: false,
+    passwordProtected: false,
+    publicJobSubmission: false,
+    candidatePaywall: false,
+    impressum: false,
+    nativeApplications: true,
+    messaging: true,
+  },
+  analytics: {
+    ga4MeasurementId: null,
+    gtmId: null,
+    metaPixelId: null,
+    linkedInPartnerId: null,
+    cookieConsentRequired: false,
+  },
+  contact: {
+    email: null,
+    websiteUrl: null,
+    xUrl: null,
+    facebookUrl: null,
+    linkedinUrl: null,
+  },
+  footer: {
+    description: null,
+    contactEmail: null,
+    websiteUrl: null,
+    xUrl: null,
+    facebookUrl: null,
+    linkedinUrl: null,
+    navigationOrder: [],
+    customLinks: [],
+  },
+  talentDirectoryVisibility: 'public',
+} satisfies Parameters<typeof SelectedJobDetail>[0]['board'];
 
-const user = { emailVerified: true } as unknown as Parameters<
-  typeof SelectedJobDetail
->[0]['user'];
+const user = {
+  id: 'user-1',
+  object: 'board_user',
+  email: 'candidate@example.com',
+  displayName: 'Candidate',
+  role: 'candidate',
+  emailVerified: true,
+  hasPassword: true,
+} satisfies NonNullable<Parameters<typeof SelectedJobDetail>[0]['user']>;
+
+const dependencies: SelectedJobDetailDependencies = {
+  applyToJob: vi.fn(),
+  prepareApplyToJob: vi.fn(),
+  saveJob: vi.fn(),
+};
 
 function renderSelectedJob(status: SelectedJobState['status']) {
   const state: SelectedJobState = {
@@ -82,7 +158,12 @@ function renderSelectedJob(status: SelectedJobState['status']) {
     getParentRoute: () => rootRoute,
     path: '/',
     component: () => (
-      <SelectedJobDetail state={state} board={board} user={user} />
+      <SelectedJobDetail
+        state={state}
+        board={board}
+        user={user}
+        dependencies={dependencies}
+      />
     ),
   });
   const router = createRouter({

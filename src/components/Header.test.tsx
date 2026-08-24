@@ -27,33 +27,22 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
-import { m } from '../paraglide/messages';
-
-// Header imports the signed-in Messages link even for this anonymous public
-// shell suite. Stub its Board API boundary so jsdom never resolves the
-// Cloudflare Workers environment module.
-vi.mock('../server/messaging', () => ({ getUnreadCount: vi.fn() }));
-// Header calls signOut from the avatar menu; the real module chain reaches
-// the Workers-only `cloudflare:workers` import, so it must be mocked in jsdom.
-vi.mock('../server/auth', () => ({
-  signOut: vi.fn(async () => ({ ok: true })),
-}));
-vi.mock('../server/queries', () => ({
-  searchPlaces: vi.fn().mockResolvedValue({ data: [] }),
-}));
-
 import {
   resolveHeaderSearchState,
   type HeaderSearchSubmission,
 } from '../lib/header-search';
+import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
+import { m } from '../paraglide/messages';
 import Header from './Header';
 
 afterEach(cleanup);
 
-type HeaderFeatures = React.ComponentProps<typeof Header>['features'] & {
+type HeaderFeatures = Omit<
+  React.ComponentProps<typeof Header>['features'],
+  'talentDirectory'
+> & {
   blog: boolean;
-  talentDirectory: 'off' | 'public' | 'employers_only' | boolean;
+  talentDirectory: boolean;
 };
 
 const allFeatures: HeaderFeatures = {
@@ -70,11 +59,7 @@ type TalentDirectoryVisibility = 'off' | 'public' | 'employers_only' | null;
 function renderHeader({
   initialEntry = '/',
   features = allFeatures,
-  talentDirectoryVisibility = typeof features.talentDirectory === 'string'
-    ? features.talentDirectory
-    : features.talentDirectory
-      ? 'public'
-      : 'off',
+  talentDirectoryVisibility = features.talentDirectory ? 'public' : 'off',
   user = null,
   hasAccessGrant = false,
   logoUrl = null,
@@ -241,6 +226,12 @@ function renderHeader({
   return router;
 }
 
+function submitContainingForm(control: HTMLElement) {
+  const form = control.closest('form');
+  if (!form) throw new Error('Expected the search control to belong to a form');
+  fireEvent.submit(form);
+}
+
 describe('Header — feature-gated public collections', () => {
   it('omits Blog and Talent when those board features are disabled', async () => {
     renderHeader({
@@ -354,7 +345,7 @@ describe('Header — role and public-posting gates', () => {
         screen
           .getByRole('link', { name: m.siteHeader_signInLabel() })
           .getAttribute('href'),
-      ).toBe('/auth/sign-in');
+      ).toBe('/auth/sign-in?returnTo=%2Faccount');
     },
   );
 
@@ -595,7 +586,7 @@ describe('Header — mobile navigation disclosure', () => {
     const signIn = within(header).getByRole('link', {
       name: m.siteHeader_signInLabel(),
     });
-    expect(signIn).toHaveAttribute('href', '/auth/sign-in');
+    expect(signIn).toHaveAttribute('href', '/auth/sign-in?returnTo=%2Faccount');
   });
 });
 
@@ -709,7 +700,7 @@ describe('Header — pathname-scoped submit-only search', () => {
     fireEvent.click(screen.getByRole('option', { name: /Robotics/ }));
 
     expect(router.state.location.href).toBe('/jobs');
-    fireEvent.submit(keyword.closest('form') as HTMLFormElement);
+    submitContainingForm(keyword);
     await waitFor(() =>
       expect(router.state.location.href).toBe('/jobs/skills/robotics'),
     );
@@ -718,9 +709,7 @@ describe('Header — pathname-scoped submit-only search', () => {
   it('gives the keyword field the same inline clear affordance as location', async () => {
     renderHeader({ initialEntry: '/jobs?q=robotics' });
 
-    const keyword = (await screen.findByLabelText(
-      /keyword/i,
-    )) as HTMLInputElement;
+    const keyword = await screen.findByLabelText<HTMLInputElement>(/keyword/i);
     fireEvent.click(screen.getByRole('button', { name: /clear search/i }));
 
     expect(keyword.value).toBe('');
@@ -731,16 +720,14 @@ describe('Header — pathname-scoped submit-only search', () => {
     const router = renderHeader({
       initialEntry: '/jobs/locations/sydney?q=engineer',
     });
-    const keyword = (await screen.findByLabelText(
-      /keyword/i,
-    )) as HTMLInputElement;
-    const location = screen.getByRole('combobox', {
+    const keyword = await screen.findByLabelText<HTMLInputElement>(/keyword/i);
+    const location = screen.getByRole<HTMLInputElement>('combobox', {
       name: /location/i,
-    }) as HTMLInputElement;
+    });
 
     expect(location.value).toBe('Sydney');
     fireEvent.change(keyword, { target: { value: 'robotics' } });
-    fireEvent.submit(keyword.closest('form') as HTMLFormElement);
+    submitContainingForm(keyword);
 
     await waitFor(() =>
       expect(router.state.location.href).toBe(
@@ -792,11 +779,9 @@ describe('Header — pathname-scoped submit-only search', () => {
         (await screen.findByLabelText(/keyword/i)).getAttribute('value'),
       ).toBe(expectedKeyword);
       expect(
-        (
-          screen.getByRole('combobox', {
-            name: /location/i,
-          }) as HTMLInputElement
-        ).value,
+        screen.getByRole<HTMLInputElement>('combobox', {
+          name: /location/i,
+        }).value,
       ).toBe(expectedLocation);
     },
   );
@@ -813,9 +798,7 @@ describe('Header — pathname-scoped submit-only search', () => {
         },
       ],
     });
-    const keyword = (await screen.findByLabelText(
-      /keyword/i,
-    )) as HTMLInputElement;
+    const keyword = await screen.findByLabelText<HTMLInputElement>(/keyword/i);
     const location = screen.getByRole('combobox', { name: /location/i });
 
     fireEvent.change(keyword, { target: { value: 'robotics' } });
@@ -824,7 +807,7 @@ describe('Header — pathname-scoped submit-only search', () => {
       inputType: 'insertText',
     });
     fireEvent.click(screen.getByRole('option', { name: /Sydney/ }));
-    fireEvent.submit(keyword.closest('form') as HTMLFormElement);
+    submitContainingForm(keyword);
 
     await waitFor(() =>
       expect(router.state.location.href).toBe(
@@ -873,16 +856,15 @@ describe('Header — pathname-scoped submit-only search', () => {
     'derives the $name search destination from the pathname and navigates only on submit',
     async ({ initialEntry, initialValue, nextValue, expectedHref }) => {
       const router = renderHeader({ initialEntry });
-      const searchbox = (await screen.findByLabelText(
-        /keyword/i,
-      )) as HTMLInputElement;
+      const searchbox =
+        await screen.findByLabelText<HTMLInputElement>(/keyword/i);
 
       expect(searchbox.value).toBe(initialValue);
 
       fireEvent.change(searchbox, { target: { value: nextValue } });
       expect(router.state.location.href).toBe(initialEntry);
 
-      fireEvent.submit(searchbox.closest('form') as HTMLFormElement);
+      submitContainingForm(searchbox);
       await waitFor(() =>
         expect(router.state.location.href).toBe(expectedHref),
       );
@@ -891,14 +873,13 @@ describe('Header — pathname-scoped submit-only search', () => {
 
   it('uses Jobs search from the landing page and hands the query to /jobs', async () => {
     const router = renderHeader({ initialEntry: '/' });
-    const searchbox = (await screen.findByLabelText(
-      /keyword/i,
-    )) as HTMLInputElement;
+    const searchbox =
+      await screen.findByLabelText<HTMLInputElement>(/keyword/i);
 
     fireEvent.change(searchbox, { target: { value: 'systems' } });
     expect(router.state.location.href).toBe('/');
 
-    fireEvent.submit(searchbox.closest('form') as HTMLFormElement);
+    submitContainingForm(searchbox);
     await waitFor(() =>
       expect(router.state.location.href).toBe('/jobs?q=systems'),
     );

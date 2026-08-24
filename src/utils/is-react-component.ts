@@ -10,7 +10,7 @@ type ReactComponent = React.FC<any> | React.ComponentClass<any, any>;
 export const isFunctionComponent = (
   component: any,
 ): component is React.FC<any> => {
-  return typeof component === 'function';
+  return component instanceof Function;
 };
 
 /**
@@ -20,7 +20,7 @@ export const isClassComponent = (
   component: any,
 ): component is React.ComponentClass<any, any> => {
   return (
-    typeof component === 'function' &&
+    component instanceof Function &&
     component.prototype &&
     (!!component.prototype.isReactComponent || !!component.prototype.render)
   );
@@ -33,8 +33,7 @@ export const isForwardRefComponent = (
   component: any,
 ): component is React.ForwardRefExoticComponent<any> => {
   return (
-    typeof component === 'object' &&
-    component !== null &&
+    Object(component) === component &&
     component.$$typeof.toString() === 'Symbol(react.forward_ref)'
   );
 };

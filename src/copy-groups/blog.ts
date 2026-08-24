@@ -1,24 +1,16 @@
 import { m } from '../paraglide/messages';
 
-import type { BoardCopy } from '@/copy';
-import {
-  resolveCopyGroup,
-  type MessageFn,
-} from '@/copy-groups/resolve-copy-group';
-
-const messages = [
-  ['bylineLabel', m.blog_bylineLabel as unknown as MessageFn],
-  ['clearButtonLabel', m.blog_clearButtonLabel as unknown as MessageFn],
-  ['emptyDescription', m.blog_emptyDescription as unknown as MessageFn],
-  ['emptyResetLabel', m.blog_emptyResetLabel as unknown as MessageFn],
-  ['emptyTitle', m.blog_emptyTitle as unknown as MessageFn],
-  ['readingTimeLabel', m.blog_readingTimeLabel as unknown as MessageFn],
-  ['searchLabel', m.blog_searchLabel as unknown as MessageFn],
-  ['searchPlaceholder', m.blog_searchPlaceholder as unknown as MessageFn],
-  ['tagFilterAllLabel', m.blog_tagFilterAllLabel as unknown as MessageFn],
-  ['tagFilterLabel', m.blog_tagFilterLabel as unknown as MessageFn],
-] as const;
-
-export function blogCopy(): BoardCopy['blog'] {
-  return resolveCopyGroup(messages, undefined) as unknown as BoardCopy['blog'];
+export function blogCopy() {
+  return {
+    bylineLabel: m.blog_bylineLabel(),
+    clearButtonLabel: m.blog_clearButtonLabel(),
+    emptyDescription: m.blog_emptyDescription(),
+    emptyResetLabel: m.blog_emptyResetLabel(),
+    emptyTitle: m.blog_emptyTitle(),
+    readingTimeLabel: m.blog_readingTimeLabel(),
+    searchLabel: m.blog_searchLabel(),
+    searchPlaceholder: m.blog_searchPlaceholder(),
+    tagFilterAllLabel: m.blog_tagFilterAllLabel(),
+    tagFilterLabel: m.blog_tagFilterLabel(),
+  };
 }

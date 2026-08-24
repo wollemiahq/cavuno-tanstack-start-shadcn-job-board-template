@@ -47,11 +47,16 @@ import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import type { Alert, AlertBody } from '@cavuno/board';
 
 const REMOTE_OPTIONS = ['on_site', 'hybrid', 'remote'] as const;
-const REMOTE_LABEL: Record<string, () => string> = {
-  on_site: m.alertManager_remoteOnSite,
-  hybrid: m.alertManager_remoteHybrid,
-  remote: m.alertManager_remoteRemote,
-};
+
+const REMOTE_LABEL = new Map([
+  ['on_site', m.alertManager_remoteOnSite],
+  ['hybrid', m.alertManager_remoteHybrid],
+  ['remote', m.alertManager_remoteRemote],
+]);
+
+function remoteOptionLabel(option: string): string {
+  return REMOTE_LABEL.get(option)?.() ?? option;
+}
 
 /** One board place from the directory (the alert filter option space). */
 export type AlertPlaceOption = {
@@ -76,26 +81,24 @@ function toBody(form: FormState, initial: Alert | null): AlertBody {
     .map((value) => value.trim())
     .filter(Boolean);
   const filters = initial?.filters;
-  return {
-    ...(form.label.trim() ? { label: form.label.trim() } : {}),
+  const body: AlertBody = {
     frequency: 'weekly',
-    ...(jobFunctions.length ? { jobFunctions } : {}),
-    ...(form.remoteOptions.length ? { remoteOptions: form.remoteOptions } : {}),
-    ...(form.places.length
-      ? { placeIds: form.places.map((place) => place.id) }
-      : {}),
-    // `update` is a whole-object PUT — round-trip the filters this simplified
-    // UI doesn't edit (seniority / salary) so editing the visible fields
-    // doesn't silently wipe them.
-    ...(filters?.seniorityLevels.length
-      ? { seniorityLevels: filters.seniorityLevels }
-      : {}),
-    ...(filters?.salaryMin != null ? { salaryMin: filters.salaryMin } : {}),
-    ...(filters?.salaryMax != null ? { salaryMax: filters.salaryMax } : {}),
-    ...(filters?.salaryCurrency != null
-      ? { salaryCurrency: filters.salaryCurrency }
-      : {}),
   };
+  const label = form.label.trim();
+  if (label) body.label = label;
+  if (jobFunctions.length) body.jobFunctions = jobFunctions;
+  if (form.remoteOptions.length) body.remoteOptions = form.remoteOptions;
+  if (form.places.length) body.placeIds = form.places.map((place) => place.id);
+  // `update` is a whole-object PUT — round-trip the filters this simplified
+  // UI doesn't edit (seniority / salary) so editing the visible fields
+  // doesn't silently wipe them.
+  if (filters?.seniorityLevels.length)
+    body.seniorityLevels = filters.seniorityLevels;
+  if (filters?.salaryMin != null) body.salaryMin = filters.salaryMin;
+  if (filters?.salaryMax != null) body.salaryMax = filters.salaryMax;
+  if (filters?.salaryCurrency != null)
+    body.salaryCurrency = filters.salaryCurrency;
+  return body;
 }
 
 function fromAlert(alert: Alert | null, placeNames: PlaceNameMap): FormState {
@@ -119,6 +122,7 @@ function AlertForm({
   submitLabel,
   onSubmit,
   onCancel,
+  onError,
 }: {
   initial: Alert | null;
   placeNames: PlaceNameMap;
@@ -126,6 +130,7 @@ function AlertForm({
   submitLabel: string;
   onSubmit: (body: AlertBody) => Promise<void>;
   onCancel?: () => void;
+  onError: () => void;
 }) {
   const id = useId();
   const [form, setForm] = useState<FormState>(() =>
@@ -172,7 +177,7 @@ function AlertForm({
           setStatus('idle');
         } catch {
           setStatus('error');
-          void toastActionError();
+          onError();
         }
       }}
     >
@@ -234,7 +239,7 @@ function AlertForm({
                     }
                   />
                   <FieldLabel htmlFor={optionId} className="font-normal">
-                    {REMOTE_LABEL[option]()}
+                    {REMOTE_LABEL.get(option)?.() ?? option}
                   </FieldLabel>
                 </Field>
               );
@@ -300,18 +305,34 @@ function AlertForm({
   );
 }
 
-export function AlertManager({
+export interface AlertManagerDependencies {
+  createAlert: (
+    input: Parameters<typeof createMyAlert>[0],
+  ) => ReturnType<typeof createMyAlert>;
+  deleteAlert: (
+    input: Parameters<typeof deleteMyAlert>[0],
+  ) => ReturnType<typeof deleteMyAlert>;
+  updateAlert: (
+    input: Parameters<typeof updateMyAlert>[0],
+  ) => ReturnType<typeof updateMyAlert>;
+  invalidate: () => Promise<void>;
+  notifySuccess: () => void;
+  notifyError: () => void;
+}
+
+export function AlertManagerView({
   alerts,
   places,
+  dependencies,
 }: {
   alerts: Alert[];
   places: AlertPlaceOption[];
+  dependencies: AlertManagerDependencies;
 }) {
   const placeNames: PlaceNameMap = useMemo(
     () => Object.fromEntries(places.map((place) => [place.id, place.name])),
     [places],
   );
-  const router = useRouter();
   const [editing, setEditing] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -327,7 +348,7 @@ export function AlertManager({
     if (alert.filters.remoteOptions.length) {
       parts.push(
         alert.filters.remoteOptions
-          .map((option) => REMOTE_LABEL[option]?.() ?? option)
+          .map((option) => remoteOptionLabel(option))
           .join(', '),
       );
     }
@@ -403,11 +424,13 @@ export function AlertManager({
                       onClick={async () => {
                         setPendingDeleteId(alert.id);
                         try {
-                          await deleteMyAlert({ data: { id: alert.id } });
-                          await router.invalidate();
-                          void toastActionSuccess();
+                          await dependencies.deleteAlert({
+                            data: { id: alert.id },
+                          });
+                          await dependencies.invalidate();
+                          dependencies.notifySuccess();
                         } catch {
-                          void toastActionError();
+                          dependencies.notifyError();
                         } finally {
                           setPendingDeleteId(null);
                         }
@@ -436,11 +459,12 @@ export function AlertManager({
             places={places}
             submitLabel={m.alertManager_createAlertLabel()}
             onCancel={() => setCreating(false)}
+            onError={dependencies.notifyError}
             onSubmit={async (body) => {
-              await createMyAlert({ data: body });
+              await dependencies.createAlert({ data: body });
               setCreating(false);
-              await router.invalidate();
-              void toastActionSuccess();
+              await dependencies.invalidate();
+              dependencies.notifySuccess();
             }}
           />
         </DialogContent>
@@ -465,11 +489,14 @@ export function AlertManager({
                 places={places}
                 submitLabel={m.alertManager_saveChangesLabel()}
                 onCancel={() => setEditing(null)}
+                onError={dependencies.notifyError}
                 onSubmit={async (body) => {
-                  await updateMyAlert({ data: { id: editingAlert.id, body } });
+                  await dependencies.updateAlert({
+                    data: { id: editingAlert.id, body },
+                  });
                   setEditing(null);
-                  await router.invalidate();
-                  void toastActionSuccess();
+                  await dependencies.invalidate();
+                  dependencies.notifySuccess();
                 }}
               />
             ) : null}
@@ -477,5 +504,29 @@ export function AlertManager({
         </SheetContent>
       </Sheet>
     </div>
+  );
+}
+
+export function AlertManager({
+  alerts,
+  places,
+}: {
+  alerts: Alert[];
+  places: AlertPlaceOption[];
+}) {
+  const router = useRouter();
+  return (
+    <AlertManagerView
+      alerts={alerts}
+      places={places}
+      dependencies={{
+        createAlert: createMyAlert,
+        deleteAlert: deleteMyAlert,
+        updateAlert: updateMyAlert,
+        invalidate: () => router.invalidate(),
+        notifySuccess: () => void toastActionSuccess(),
+        notifyError: () => void toastActionError(),
+      }}
+    />
   );
 }

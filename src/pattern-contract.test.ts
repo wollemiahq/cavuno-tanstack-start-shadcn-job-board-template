@@ -45,7 +45,7 @@ function tsxFiles(dir: string): string[] {
   return out;
 }
 
-const patterns = patternDocFiles(root) as { slug: string; file: string }[];
+const patterns = patternDocFiles(root);
 
 describe('pattern docs (docs/patterns/)', () => {
   it('there is at least one pattern page besides the template and index', () => {
@@ -64,8 +64,16 @@ describe('pattern docs (docs/patterns/)', () => {
     const doc = parsePatternDoc(md);
 
     it('carries the required frontmatter keys, non-empty', () => {
+      const frontmatter = new Map(
+        Object.entries({
+          name: doc.name,
+          purpose: doc.purpose,
+          primitives: doc.primitives,
+          usedBy: doc.usedBy,
+        }),
+      );
       for (const key of PATTERN_FRONTMATTER_KEYS) {
-        const value = doc[key as keyof typeof doc];
+        const value = frontmatter.get(key);
         const present = Array.isArray(value)
           ? value.length > 0
           : Boolean(value);

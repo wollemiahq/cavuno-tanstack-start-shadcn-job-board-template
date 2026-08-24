@@ -30,7 +30,11 @@ import {
   candidateSignInHref,
   candidateVerifyEmailHref,
 } from '@/lib/candidate-return-to';
-import { NativeApplyApprovalError, runNativeApply } from '@/lib/native-apply';
+import {
+  NativeApplyApprovalError,
+  runNativeApply,
+  type NativeApplyPrepareResult,
+} from '@/lib/native-apply';
 
 export function ApplyButton({
   jobSlug,
@@ -63,7 +67,7 @@ export function ApplyButton({
    * Board API error code for a stale verification state).
    */
   /** Ask Cavuno whether this native Apply needs a browser-edge receipt. */
-  onPrepareApply: (jobSlug: string) => Promise<unknown>;
+  onPrepareApply: (jobSlug: string) => Promise<NativeApplyPrepareResult>;
   /** Submit natively; a receipt id is present only when preparation required it. */
   onApply: (jobSlug: string, approvalReceipt?: string) => Promise<void>;
   /**

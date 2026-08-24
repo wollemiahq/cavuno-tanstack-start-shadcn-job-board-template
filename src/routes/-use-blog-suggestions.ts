@@ -11,8 +11,23 @@ import type { KeywordSuggestionState } from '@/components/keyword-combobox';
 const MIN_QUERY = 2;
 const DEBOUNCE_MS = 200;
 
+export type BlogSuggestionDependencies = {
+  searchBlogSuggestions: (input: {
+    data: { q: string; limit: number };
+  }) => Promise<{
+    data: Awaited<ReturnType<typeof searchBlogSuggestions>>['data'];
+  }>;
+};
+
+const blogSuggestionDependencies: BlogSuggestionDependencies = {
+  searchBlogSuggestions,
+};
+
 /** Route-owned controller for the blog post/tag autocomplete (ADR-0102). */
-export function useBlogSuggestions(enabled: boolean): KeywordSuggestionState {
+export function useBlogSuggestions(
+  enabled: boolean,
+  dependencies: BlogSuggestionDependencies = blogSuggestionDependencies,
+): KeywordSuggestionState {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<
     KeywordSuggestionState['suggestions']
@@ -30,7 +45,8 @@ export function useBlogSuggestions(enabled: boolean): KeywordSuggestionState {
     let cancelled = false;
     setLoading(true);
     const timer = setTimeout(() => {
-      void searchBlogSuggestions({ data: { q, limit: 10 } })
+      void dependencies
+        .searchBlogSuggestions({ data: { q, limit: 10 } })
         .then((response) => {
           if (!cancelled) {
             setSuggestions(
@@ -47,7 +63,7 @@ export function useBlogSuggestions(enabled: boolean): KeywordSuggestionState {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [enabled, query]);
+  }, [dependencies, enabled, query]);
 
   return { suggestions, loading, onQueryChange: setQuery };
 }

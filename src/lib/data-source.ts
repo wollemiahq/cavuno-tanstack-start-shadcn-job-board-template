@@ -16,7 +16,11 @@ export type DataSource = 'board' | 'demo';
 
 export const DATA_SOURCE_COOKIE = 'cavuno_data_source';
 
-const DATA_SOURCE_SET = new Set<string>(['board', 'demo']);
+const DATA_SOURCE_CHOICES = ['board', 'demo'] as const;
+
+function dataSourceChoice(value: string): DataSource | null {
+  return DATA_SOURCE_CHOICES.find((choice) => choice === value) ?? null;
+}
 
 /** Parse the data-source preference from a Cookie header. Null if absent/invalid. */
 export function parseDataSourceCookie(
@@ -29,7 +33,7 @@ export function parseDataSourceCookie(
     .find((part) => part.startsWith(`${DATA_SOURCE_COOKIE}=`));
   if (!pair) return null;
   const value = pair.slice(DATA_SOURCE_COOKIE.length + 1);
-  return DATA_SOURCE_SET.has(value) ? (value as DataSource) : null;
+  return dataSourceChoice(value);
 }
 
 /**

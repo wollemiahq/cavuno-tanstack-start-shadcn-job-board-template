@@ -36,9 +36,7 @@ beforeEach(() => {
   // The band's decorative DitherCanvas asks for a 2D context; jsdom has none,
   // so stub it to null — the canvas degrades to a transparent no-op, exactly
   // its production fallback path.
-  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
-    null as never,
-  );
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
 });
 
 afterEach(cleanup);

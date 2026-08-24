@@ -19,6 +19,8 @@ export function Bleed<Element extends LayoutElement = 'div'>({
   as,
   ...props
 }: BleedProps<Element>) {
+  // SAFETY: `as` is constrained to LayoutElement; React accepts that finite
+  // intrinsic element set as an ElementType for polymorphic rendering.
   const Component = (as ?? 'div') as ElementType;
 
   return <Component {...props} data-slot="bleed" data-layout="bleed" />;

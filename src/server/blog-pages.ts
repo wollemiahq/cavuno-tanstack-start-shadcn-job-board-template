@@ -36,7 +36,9 @@ type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 type JsonObject = { [key: string]: JsonValue };
 
-function asJsonObjects(value: unknown): JsonObject[] {
+function asJsonObjects<T>(value: T): JsonObject[] {
+  // SAFETY: Structured data is composed from literal schema.org objects and
+  // SDK SEO builders, then JSON round-tripped to erase readonly helper types.
   return JSON.parse(JSON.stringify(value)) as JsonObject[];
 }
 
@@ -50,10 +52,18 @@ async function seoBase() {
   };
 }
 
-const isBlogDisabled = (error: unknown): boolean =>
-  typeof error === 'object' &&
-  error !== null &&
-  (error as { code?: unknown }).code === 'blog_disabled';
+type BoardErrorLike = {
+  code?: string;
+};
+
+function isBlogDisabled<T>(error: T): boolean {
+  if (error === null || error === undefined || Object(error) !== error) {
+    return false;
+  }
+  // SAFETY: Caught Board API errors may expose a string `code`; this guard
+  // only reads that optional field and treats all other shapes as non-blog errors.
+  return (error as BoardErrorLike).code === 'blog_disabled';
+}
 
 const blogRead = async <T>(read: () => Promise<T>): Promise<T> => {
   try {

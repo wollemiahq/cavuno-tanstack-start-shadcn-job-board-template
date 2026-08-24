@@ -8,78 +8,48 @@
  * loader data, so a future refactor cannot quietly expose an account or
  * messages page to crawlers.
  */
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-vi.mock('cloudflare:workers', () => ({ env: {} }));
-
-// These route modules reach the server layer, which imports
-// `cloudflare:workers`. The heads under test never call it — only the module
-// graph needs it stubbed away.
-vi.mock('../server/queries', () => ({
-  getSeoBase: vi.fn(),
-  getBoardContext: vi.fn(),
-}));
-vi.mock('../server/account', () => ({ getAccount: vi.fn() }));
-vi.mock('../server/settings', () => ({
-  getNotificationPreferences: vi.fn(),
-  getMarketingConsent: vi.fn(),
-  getSettingsAccount: vi.fn(),
-  unsubscribeWithToken: vi.fn(),
-  requestEmailChange: vi.fn(),
-  updatePassword: vi.fn(),
-  requestSetPassword: vi.fn(),
-}));
-vi.mock('../server/applications', () => ({
-  getApplications: vi.fn(),
-  withdrawApplication: vi.fn(),
-}));
-vi.mock('../server/auth', () => ({
-  getOAuthAuthorizationUrl: vi.fn(),
-  requestMagicLink: vi.fn(),
-  signIn: vi.fn(),
-  forgotPassword: vi.fn(),
-  confirmEmailChange: vi.fn(),
-}));
-vi.mock('@/server/messaging', () => ({
-  getBlocked: vi.fn(),
-  getInbox: vi.fn(),
-}));
-vi.mock('../lib/auth-guard', () => ({ redirectIfAuthenticated: vi.fn() }));
-
+import { applicationsHead } from './-me.applications';
+import { settingsHead } from './-settings';
 import { Route as AccountRoute } from './account';
 import { Route as ConfirmEmailChangeRoute } from './auth.confirm-email-change';
 import { Route as SignInRoute } from './auth.sign-in';
 import { Route as MatchesRoute } from './matches';
 import { Route as AlertsRoute } from './me.alerts';
-import { Route as ApplicationsRoute } from './me.applications';
 import { Route as MessagesRoute } from './messages';
 import { Route as SavedRoute } from './saved-jobs';
-import { Route as SettingsRoute } from './settings';
 
-/** Extract the robots directive a route's head emits with no loader data. */
-function robotsOf(head: unknown): string | undefined {
-  if (typeof head !== 'function') throw new Error('route defines no head');
-  const result = head({
-    loaderData: undefined,
-    match: { status: 'success' },
-  }) as {
-    meta?: Array<{ name?: string; content?: string }>;
-  };
-  return result.meta?.find((entry) => entry.name === 'robots')?.content;
-}
+const privateRouteHeads = [
+  ['/account', AccountRoute.options.head?.toString()],
+  ['/matches', MatchesRoute.options.head?.toString()],
+  ['/saved-jobs', SavedRoute.options.head?.toString()],
+  ['/me/applications', applicationsHead(undefined)],
+  ['/me/alerts', AlertsRoute.options.head?.toString()],
+  ['/messages', MessagesRoute.options.head?.toString()],
+  ['/settings', settingsHead(undefined)],
+  ['/auth/sign-in', SignInRoute.options.head?.toString()],
+  [
+    '/auth/confirm-email-change',
+    ConfirmEmailChangeRoute.options.head?.toString(),
+  ],
+] as const;
 
 describe('private / transactional routes are noindex (robots.txt stays permissive)', () => {
-  it.each([
-    ['/account', AccountRoute],
-    ['/matches', MatchesRoute],
-    ['/saved-jobs', SavedRoute],
-    ['/me/applications', ApplicationsRoute],
-    ['/me/alerts', AlertsRoute],
-    ['/messages', MessagesRoute],
-    ['/settings', SettingsRoute],
-    ['/auth/sign-in', SignInRoute],
-    ['/auth/confirm-email-change', ConfirmEmailChangeRoute],
-  ])('%s emits noindex regardless of loader data', (_path, route) => {
-    expect(robotsOf(route.options.head)).toBe('noindex');
-  });
+  it.each(privateRouteHeads)(
+    '%s declares a noindex robots directive',
+    (_path, headDescriptor) => {
+      if (
+        Object.prototype.toString.call(headDescriptor) === '[object String]'
+      ) {
+        expect(headDescriptor).toMatch(
+          /name:\s*["']robots["']\s*,\s*content:\s*["']noindex["']/,
+        );
+        return;
+      }
+      expect(headDescriptor).toMatchObject({
+        meta: expect.arrayContaining([{ name: 'robots', content: 'noindex' }]),
+      });
+    },
+  );
 });

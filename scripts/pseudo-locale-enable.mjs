@@ -16,7 +16,11 @@ const settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
 
 const production = (
   Array.isArray(settings.locales) ? settings.locales : []
-).filter((locale) => typeof locale === 'string' && !PSEUDO.includes(locale));
+).filter(
+  (locale) =>
+    Object.prototype.toString.call(locale) === '[object String]' &&
+    !PSEUDO.includes(locale),
+);
 if (!production.includes(settings.baseLocale ?? 'en')) {
   production.unshift(settings.baseLocale ?? 'en');
 }

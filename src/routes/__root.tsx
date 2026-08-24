@@ -62,10 +62,12 @@ import {
   type HeaderSearchSubmission,
 } from '@/lib/header-search';
 import { resolveJobsSearchTarget } from '@/lib/jobs-search-target';
+import type { UrlSearchInput } from '@/lib/pagination';
 import {
   resolveShellBreadcrumb,
   resolveShellBreadcrumbEntities,
   resolveShellBreadcrumbTrail,
+  type ShellBreadcrumbLabels,
 } from '@/lib/shell-breadcrumb';
 
 const LazyFooter = lazy(() =>
@@ -95,6 +97,7 @@ const LazyToaster = lazy(() =>
     default: Toaster,
   })),
 );
+const PSEUDO_LOCALES = new Set(['en-XA', 'ar-XB']);
 
 function DeferredToaster() {
   const [requested, setRequested] = useState(false);
@@ -251,7 +254,8 @@ function RootChrome({
     // A normal public tab has no builder parent, so do not walk the route
     // tree merely to let emitRoutesReport no-op.
     if (window.parent === window) return;
-    // Structural cast: SDK walker accepts id/path/fullPath/children only.
+    // SAFETY: emitRoutesReport reads the router tree structurally
+    // (id/path/fullPath/children), all of which TanStack routeTree provides.
     emitRoutesReport(router.routeTree as never);
   }, [router]);
   // Identity-aware default search scope: an approved employer hunts talent
@@ -262,7 +266,9 @@ function RootChrome({
   );
   const headerSearch = resolveHeaderSearchState(
     location.pathname,
-    location.search as Record<string, unknown>,
+    // SAFETY: TanStack route search values are URL-serializable scalars here;
+    // resolveHeaderSearchState only reads known string/boolean-style keys.
+    location.search as UrlSearchInput,
     resolvedHeaderLabels.location,
     resolvedHeaderLabels.query,
     isApprovedEmployer && board.talentDirectoryVisibility !== 'off'
@@ -282,10 +288,10 @@ function RootChrome({
   // Operator overrides ride the same jobCardLabels.breadcrumbAriaLabel key
   // that jobDetailCopy resolves via resolveCopyGroup.
   const breadcrumbAriaLabel = resolveJobDetailBreadcrumbAriaLabel();
+  const breadcrumbLabels: ShellBreadcrumbLabels = breadcrumbsCopy();
   const shellBreadcrumb = resolveShellBreadcrumb({
     pathname: location.pathname,
-    labels:
-      breadcrumbsCopy() as unknown as import('@/lib/shell-breadcrumb').ShellBreadcrumbLabels,
+    labels: breadcrumbLabels,
     // Authed surfaces get footer trails too — labels from the template
     // catalogs (the SDK's copy.breadcrumbs only knows public segments).
     privateLabels: {
@@ -549,7 +555,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             humans or crawlers): noindex them. Compare as string[] so the
             branch typechecks under the prod 3-locale Locale union and the
             QA 5-locale build. */}
-          {(['en-XA', 'ar-XB'] as readonly string[]).includes(locale) && (
+          {PSEUDO_LOCALES.has(locale) && (
             <meta name="robots" content="noindex, nofollow" />
           )}
           {/* Chrome now translates end to end, so the locale variants are

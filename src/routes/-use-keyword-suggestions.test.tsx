@@ -2,13 +2,16 @@
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { searchTaxonomySuggestions } = vi.hoisted(() => ({
-  searchTaxonomySuggestions: vi.fn(),
-}));
+import {
+  useKeywordSuggestions,
+  type KeywordSuggestionDependencies,
+} from './-use-keyword-suggestions';
 
-vi.mock('../server/queries', () => ({ searchTaxonomySuggestions }));
-
-import { useKeywordSuggestions } from './-use-keyword-suggestions';
+const searchTaxonomySuggestions =
+  vi.fn<KeywordSuggestionDependencies['searchTaxonomySuggestions']>();
+const dependencies: KeywordSuggestionDependencies = {
+  searchTaxonomySuggestions,
+};
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -24,7 +27,9 @@ afterEach(() => {
 
 describe('useKeywordSuggestions', () => {
   it('debounces meaningful job queries through the Board taxonomy API', async () => {
-    const { result } = renderHook(() => useKeywordSuggestions(true));
+    const { result } = renderHook(() =>
+      useKeywordSuggestions(true, dependencies),
+    );
 
     act(() => result.current.onQueryChange('r'));
     await act(async () => vi.advanceTimersByTimeAsync(500));
@@ -44,19 +49,27 @@ describe('useKeywordSuggestions', () => {
     searchTaxonomySuggestions.mockResolvedValue({
       data: [
         {
+          object: 'taxonomy_term',
+          id: 'skill-robotics-engineering',
           type: 'skill',
+          sourceSlug: 'robotics-engineering',
           canonicalSlug: 'robotics-engineering',
           displayName: 'Robotics',
         },
         {
+          object: 'taxonomy_term',
+          id: 'category-robotics',
           type: 'category',
+          sourceSlug: 'robotics',
           canonicalSlug: 'robotics',
           displayName: 'Robotics',
         },
       ],
     });
 
-    const { result } = renderHook(() => useKeywordSuggestions(true));
+    const { result } = renderHook(() =>
+      useKeywordSuggestions(true, dependencies),
+    );
 
     act(() => result.current.onQueryChange('rob'));
     await act(async () => vi.advanceTimersByTimeAsync(210));
@@ -72,7 +85,9 @@ describe('useKeywordSuggestions', () => {
   });
 
   it('does not request job taxonomy suggestions in another search scope', async () => {
-    const { result } = renderHook(() => useKeywordSuggestions(false));
+    const { result } = renderHook(() =>
+      useKeywordSuggestions(false, dependencies),
+    );
 
     act(() => result.current.onQueryChange('robotics'));
     await act(async () => vi.advanceTimersByTimeAsync(500));

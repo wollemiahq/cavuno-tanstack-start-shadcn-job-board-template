@@ -14,6 +14,10 @@ import { setMarketingConsent } from '../server/settings';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 
+export type UpdateMarketingConsent = (
+  input: Parameters<typeof setMarketingConsent>[0],
+) => ReturnType<typeof setMarketingConsent>;
+
 /**
  * Marketing-consent row for /settings — grant AND withdraw, beside this
  * app's own disclosure copy. Granting from a settings page is safe only
@@ -24,12 +28,15 @@ import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
  * render unticked. This is deliberately unlike the notification channels
  * above it, which default to subscribed.
  */
-export function MarketingConsentSettings({
+export function MarketingConsentSettingsView({
   consent,
+  updateConsent,
+  invalidate,
 }: {
   consent: MarketingConsentState | null;
+  updateConsent: UpdateMarketingConsent;
+  invalidate: () => Promise<void>;
 }) {
-  const router = useRouter();
   const [pending, setPending] = useState(false);
   const granted = consent?.status === 'granted';
 
@@ -68,10 +75,10 @@ export function MarketingConsentSettings({
             onCheckedChange={async (isSelected) => {
               setPending(true);
               try {
-                await setMarketingConsent({
+                await updateConsent({
                   data: { granted: isSelected === true },
                 });
-                await router.invalidate();
+                await invalidate();
                 void toastActionSuccess();
               } catch {
                 void toastActionError();
@@ -83,5 +90,20 @@ export function MarketingConsentSettings({
         </li>
       </ul>
     </div>
+  );
+}
+
+export function MarketingConsentSettings({
+  consent,
+}: {
+  consent: MarketingConsentState | null;
+}) {
+  const router = useRouter();
+  return (
+    <MarketingConsentSettingsView
+      consent={consent}
+      updateConsent={setMarketingConsent}
+      invalidate={() => router.invalidate()}
+    />
   );
 }

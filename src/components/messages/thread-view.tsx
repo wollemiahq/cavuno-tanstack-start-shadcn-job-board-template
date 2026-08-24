@@ -39,6 +39,7 @@ import {
 } from '@/components/ui/message-scroller';
 
 type ReportReason = 'spam' | 'harassment' | 'misrepresentation' | 'other';
+type MessageActionResult = { readonly ok?: boolean } | void;
 
 function sameDay(first: string, second: string, local: boolean) {
   const firstDate = new Date(first);
@@ -83,16 +84,19 @@ export function ThreadView({
   companyHref?: string;
   onBack?: () => void;
   onClose?: () => void;
-  onArchive: () => Promise<unknown>;
-  onUnarchive: () => Promise<unknown>;
-  onBlock: () => Promise<unknown>;
-  onUnblock: () => Promise<unknown>;
-  onEditMessage: (messageId: string, body: string) => Promise<unknown>;
-  onUnsendMessage: (messageId: string) => Promise<unknown>;
+  onArchive: () => Promise<MessageActionResult>;
+  onUnarchive: () => Promise<MessageActionResult>;
+  onBlock: () => Promise<MessageActionResult>;
+  onUnblock: () => Promise<MessageActionResult>;
+  onEditMessage: (
+    messageId: string,
+    body: string,
+  ) => Promise<MessageActionResult>;
+  onUnsendMessage: (messageId: string) => Promise<MessageActionResult>;
   onReportMessage: (
     messageId: string,
     reason: ReportReason,
-  ) => Promise<unknown>;
+  ) => Promise<MessageActionResult>;
   onSend: (body: string) => Promise<void>;
   onRefresh: () => void;
   onReported: () => void;
@@ -127,7 +131,9 @@ export function ThreadView({
       ? m.threadView_coldRuleHintText({ name: counterparty.displayName })
       : null;
 
-  const runConversationAction = async (action: () => Promise<unknown>) => {
+  const runConversationAction = async (
+    action: () => Promise<MessageActionResult>,
+  ) => {
     if (actionBusy) return;
     setActionBusy(true);
     setActionError(null);

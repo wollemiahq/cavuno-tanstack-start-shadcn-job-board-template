@@ -23,7 +23,7 @@ import {
   waitFor,
   within,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { publicLocales } from '../lib/public-locales';
 import { baseLocale, locales, overwriteGetLocale } from '../paraglide/runtime';
@@ -38,13 +38,12 @@ import {
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-// Delay the lazy menu chunk by a real macrotask so tests can observe the
-// Suspense window — in bare jsdom the import resolves inside the click's
-// act() and the fallback would never be visible to assertions.
-vi.mock('./language-switcher-menu', async (importActual) => {
+// Delay the real lazy chunk by a macrotask so the Suspense fallback remains
+// observable without replacing the module under test.
+const delayedMenuLoader = async () => {
   await new Promise((resolve) => setTimeout(resolve, 50));
-  return importActual();
-});
+  return import('./language-switcher-menu');
+};
 
 afterEach(() => {
   overwriteGetLocale(() => baseLocale);
@@ -68,9 +67,9 @@ describe('locale-resolution contract', () => {
   });
 
   it('labels known languages in their own tongue (endonyms)', () => {
-    expect(LOCALE_ENDONYMS.en).toBe('English');
-    expect(LOCALE_ENDONYMS.de).toBe('Deutsch');
-    expect(LOCALE_ENDONYMS.fr).toBe('Français');
+    expect(LOCALE_ENDONYMS.get('en')).toBe('English');
+    expect(LOCALE_ENDONYMS.get('de')).toBe('Deutsch');
+    expect(LOCALE_ENDONYMS.get('fr')).toBe('Français');
   });
 });
 
@@ -119,7 +118,13 @@ describe('LanguageSwitcher rendering', () => {
   it('keeps the trigger visible while the menu chunk loads', async () => {
     overwriteGetLocale(() => 'en');
     const options = buildLocaleOptions('en', '/jobs', ['en', 'de', 'fr']);
-    renderAt('/jobs', <LanguageSwitcherPanel options={options} />);
+    renderAt(
+      '/jobs',
+      <LanguageSwitcherPanel
+        options={options}
+        menuLoader={delayedMenuLoader}
+      />,
+    );
     const trigger = await screen.findByRole('button', { name: 'Language' });
 
     fireEvent.click(trigger);

@@ -1,35 +1,33 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
+import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    Link: ({
-      to,
-      children,
-      ...props
-    }: {
-      to: string;
-      children?: React.ReactNode;
-    }) => (
-      <a href={to} {...props}>
-        {children}
-      </a>
-    ),
-  };
-});
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { NotFound } from './app-not-found';
 
 afterEach(cleanup);
 
 describe('NotFound', () => {
-  it('keeps one page heading and a client-side recovery link inside shadcn Empty', () => {
-    const { container } = render(<NotFound />);
+  it('keeps one page heading and a client-side recovery link inside shadcn Empty', async () => {
+    const rootRoute = createRootRoute();
+    const route = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: NotFound,
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([route]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    await router.load();
+    const { container } = render(<RouterProvider router={router} />);
 
     expect(screen.getAllByRole('heading')).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();

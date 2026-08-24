@@ -14,73 +14,117 @@ const copy = jobDetailCopy();
  * derivations so a refactor of the presentational layer can never silently
  * change the data the page renders.
  */
-const baseJob = {
-  id: 'job_1',
-  slug: 'senior-engineer',
-  title: 'Senior Engineer',
-  description: '<p>Build things.</p>',
-  publishedAt: null,
-  employmentType: 'full_time',
-  seniority: 'senior',
-  remoteOption: 'remote',
-  remoteWorldwide: false,
-  remoteWorkPermitCountryCodes: ['US', 'GB'],
-  remoteTimezones: [
-    { type: 'timezone', value: 'Europe/Berlin', plusMinus: 3 },
-    { type: 'country', value: 'DE' },
-  ],
-  remoteLocationLabel: null,
-  locationLabel: 'Remote',
-  placeHierarchy: [],
-  salaryMin: 100000,
-  salaryMax: 140000,
-  salaryCurrency: 'USD',
-  salaryTimeframe: 'year',
-  experienceMonths: 60,
-  educationRequirements: ['bachelors_degree'],
-  officeLocations: [
-    {
-      displayName: null,
-      city: 'Berlin',
-      locality: null,
-      region: 'BE',
-      country: 'DE',
+function createJob(overrides: Partial<PublicJob> = {}): PublicJob {
+  return {
+    id: 'job_1',
+    object: 'public_job',
+    slug: 'senior-engineer',
+    title: 'Senior Engineer',
+    status: 'published',
+    companyId: 'company_1',
+    description: '<p>Build things.</p>',
+    publishedAt: null,
+    expiresAt: null,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    employmentType: 'full_time',
+    seniority: 'senior',
+    remoteOption: 'remote',
+    remotePermits: [],
+    remoteWorldwide: false,
+    remoteWorkPermitCountryCodes: ['US', 'GB'],
+    remoteWorkPermitSubdivisionCodes: [],
+    remoteTimezones: [
+      { type: 'timezone', value: 'Europe/Berlin', plusMinus: 3 },
+      { type: 'country', value: 'DE' },
+    ],
+    remoteAllowedTzOffsets: [],
+    remoteSponsorship: 'unknown',
+    placeHierarchy: [],
+    salaryMin: 100000,
+    salaryMax: 140000,
+    salaryCurrency: 'USD',
+    salaryTimeframe: 'per_year',
+    isFeatured: false,
+    isSponsored: false,
+    applicationUrl: null,
+    applyAction: 'native',
+    experienceMonths: 60,
+    experienceInPlaceOfEducation: null,
+    educationRequirements: ['bachelor_degree'],
+    inOfficePeriod: null,
+    inOfficeFrequency: null,
+    officeLocations: [
+      {
+        displayName: null,
+        city: 'Berlin',
+        locality: null,
+        region: 'BE',
+        regionCode: 'BE',
+        country: 'DE',
+        countryCode: 'DE',
+        postalCode: null,
+      },
+    ],
+    categories: [{ slug: 'engineering', name: 'Engineering' }],
+    skills: [{ slug: 'react', name: 'React' }],
+    customFieldValues: { visa: true, team: 'Platform' },
+    company: {
+      id: 'company_1',
+      slug: 'acme-co',
+      name: 'Acme Co',
+      logoUrl: 'https://logo.example/acme.png',
+      website: 'acme.example',
     },
-  ],
-  categories: [{ slug: 'engineering', name: 'Engineering' }],
-  skills: [{ slug: 'react', name: 'React' }],
-  customFieldValues: { visa: true, team: 'Platform' },
-  company: {
-    slug: 'acme-co',
-    name: 'Acme Co',
-    logoUrl: 'https://logo.example/acme.png',
-    website: 'acme.example',
-    description: 'We build.',
-  },
-  links: {
-    public: 'https://board.example/companies/acme-co/jobs/senior-engineer',
-  },
-} as unknown as PublicJob;
+    links: {
+      public: 'https://board.example/companies/acme-co/jobs/senior-engineer',
+    },
+    ...overrides,
+  };
+}
+
+const baseJob = createJob();
 
 const customFields = {
   job: [
-    { key: 'visa', label: 'Visa sponsorship', type: 'boolean' },
-    { key: 'team', label: 'Team', type: 'short_text' },
+    {
+      key: 'visa',
+      label: 'Visa sponsorship',
+      type: 'boolean',
+      required: false,
+    },
+    { key: 'team', label: 'Team', type: 'short_text', required: false },
   ],
-} as unknown as PublicBoard['customFields'];
+} satisfies PublicBoard['customFields'];
 
-const similar = [
+const similar: PublicJobCard[] = [
   {
     id: 'job_2',
+    object: 'job_card',
     slug: 'staff-engineer',
     title: 'Staff Engineer',
     company: { slug: 'beta-co', name: 'Beta Co', logoUrl: null },
+    publishedAt: null,
+    employmentType: 'full_time',
+    remoteOption: 'remote',
+    remoteLocationLabel: 'Worldwide',
+    remoteWorldwide: true,
+    remoteWorkPermitCountryCodes: [],
+    locationLabel: 'Remote',
     salaryMin: 150000,
     salaryMax: 200000,
     salaryCurrency: 'USD',
     salaryTimeframe: 'year',
+    isFeatured: false,
+    isSponsored: false,
+    summary: null,
+    categories: [],
+    skills: [],
+    links: {
+      public: 'https://board.example/companies/beta-co/jobs/staff-engineer',
+    },
   },
-] as unknown as PublicJobCard[];
+];
 
 describe('toJobDetailVM', () => {
   const vm = toJobDetailVM(baseJob, customFields, similar, 'Acme intro.', 'en');
@@ -118,11 +162,10 @@ describe('toJobDetailVM', () => {
 
   it('keeps physical location separate from workplace type', () => {
     const onSite = toJobDetailVM(
-      {
-        ...baseJob,
+      createJob({
         remoteOption: 'on_site',
         officeLocations: [],
-      } as unknown as PublicJob,
+      }),
       customFields,
       [],
       null,
@@ -137,10 +180,9 @@ describe('toJobDetailVM', () => {
     expect(vm.workplaceLabel).toBe('Remote');
 
     const hybrid = toJobDetailVM(
-      {
-        ...baseJob,
+      createJob({
         remoteOption: 'hybrid',
-      } as unknown as PublicJob,
+      }),
       customFields,
       [],
       null,
@@ -157,8 +199,7 @@ describe('toJobDetailVM', () => {
     // too, not "Location not specified". placeHierarchy is broad→narrow and
     // the country resolves to its ISO code, like the card's server label.
     const onSite = toJobDetailVM(
-      {
-        ...baseJob,
+      createJob({
         remoteOption: 'on_site',
         officeLocations: [],
         placeHierarchy: [
@@ -166,7 +207,7 @@ describe('toJobDetailVM', () => {
           { slug: 'texas-united-states', name: 'Texas' },
           { slug: 'austin-tx-united-states', name: 'Austin' },
         ],
-      } as unknown as PublicJob,
+      }),
       customFields,
       [],
       null,
@@ -181,14 +222,13 @@ describe('toJobDetailVM', () => {
     // A remote job with no worldwide flag AND no permit countries is
     // unconstrained → its scope is Worldwide (the card shows "Worldwide").
     const remoteWorldwide = toJobDetailVM(
-      {
-        ...baseJob,
+      createJob({
         remoteOption: 'remote',
         remoteWorldwide: null,
         remoteWorkPermitCountryCodes: [],
         officeLocations: [],
         placeHierarchy: [],
-      } as unknown as PublicJob,
+      }),
       customFields,
       [],
       null,
@@ -200,12 +240,11 @@ describe('toJobDetailVM', () => {
 
   it('lists the constrained countries for a permit-scoped remote job', () => {
     const remoteConstrained = toJobDetailVM(
-      {
-        ...baseJob,
+      createJob({
         remoteOption: 'remote',
         remoteWorldwide: false,
         remoteWorkPermitCountryCodes: ['US', 'GB'],
-      } as unknown as PublicJob,
+      }),
       customFields,
       [],
       null,
@@ -255,6 +294,7 @@ describe('template-side custom-field localization', () => {
         key: 'visa_sponsorship',
         label: 'Visa sponsorship',
         type: 'single_select',
+        required: false,
         options: [
           { key: 'yes', label: 'Yes' },
           { key: 'no', label: 'No' },
@@ -262,11 +302,10 @@ describe('template-side custom-field localization', () => {
         ],
       },
     ],
-  } as unknown as PublicBoard['customFields'];
-  const job = {
-    ...baseJob,
+  } satisfies PublicBoard['customFields'];
+  const job = createJob({
     customFieldValues: { visa_sponsorship: 'case_by_case' },
-  } as never;
+  });
 
   it('re-words mapped fields and option keys from the chrome catalog', () => {
     const field = toJobDetailVM(job, defs, [], null, 'en').customFields[0]!;
@@ -281,14 +320,14 @@ describe('template-side custom-field localization', () => {
           key: 'quest_preference',
           label: 'Quest preference',
           type: 'single_select',
+          required: false,
           options: [{ key: 'dragons', label: 'Dragons' }],
         },
       ],
-    } as unknown as PublicBoard['customFields'];
-    const j = {
-      ...baseJob,
+    } satisfies PublicBoard['customFields'];
+    const j = createJob({
       customFieldValues: { quest_preference: 'dragons' },
-    } as never;
+    });
     const vm = toJobDetailVM(j, unmapped, [], null, 'de').customFields[0]!;
     expect(vm.label).toBe('Quest preference');
     expect(vm.value).toBe('Dragons');
@@ -297,14 +336,7 @@ describe('template-side custom-field localization', () => {
 
 describe('two-locale contract', () => {
   it('words follow the display locale while the reverse map keeps board language', () => {
-    const vm = toJobDetailVM(
-      baseJob as never,
-      customFields,
-      [],
-      null,
-      'en',
-      'de',
-    );
+    const vm = toJobDetailVM(baseJob, customFields, [], null, 'en', 'de');
     // Chrome words German (display locale)…
     expect(vm.facts.some((f) => f.value.includes('Vereinigte'))).toBe(true);
   });

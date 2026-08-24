@@ -49,13 +49,24 @@
     "*.mdoc",
     "dist",
     "build",
+    ".agent/**",
     ".agents",
+    ".claude/**",
+    ".codex/**",
+    ".continue/**",
+    ".cursor/**",
+    ".gemini/**",
+    ".opencode/**",
+    ".pi/**",
+    ".roo/**",
+    ".windsurf/**",
     ".next",
     "next-env.d.ts",
     "pnpm-lock.yaml",
     "playwright-report",
     "docs/shadcn-component-usage.json",
     "src/routeTree.gen.ts",
-    "src/theme/resolved.ts"
+    "src/theme/resolved.ts",
+    "tools/oxlint/anti-slop/**"
   ]
 }

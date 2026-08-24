@@ -58,15 +58,15 @@ describe('Text — role-named variant → shadcn typeset mapping', () => {
     // produce the same size so a <Text as="h2" variant="heading2"> and a
     // prose <h2> are visually identical. This is the whole "one authoring
     // path" contract — if these drift, prose and Text diverge.
-    const proseTokens = {
-      heading1: 'text-3xl',
-      heading2: 'text-2xl',
-      heading3: 'text-xl',
-      heading4: 'text-lg',
-    } as const;
-    for (const [variant, token] of Object.entries(proseTokens)) {
+    const proseTokens = [
+      { variant: 'heading1', token: 'text-3xl' },
+      { variant: 'heading2', token: 'text-2xl' },
+      { variant: 'heading3', token: 'text-xl' },
+      { variant: 'heading4', token: 'text-lg' },
+    ] as const;
+    for (const { variant, token } of proseTokens) {
       render(
-        <Text variant={variant as keyof typeof proseTokens} as="h2">
+        <Text variant={variant} as="h2">
           prose-{variant}
         </Text>,
       );

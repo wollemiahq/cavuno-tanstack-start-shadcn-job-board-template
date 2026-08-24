@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import { createBoardClientRegistry } from './board-client-registry';
 
 /**
  * Dual-source board clients (DMO-01 / CAV-531): one lazily-created
@@ -7,72 +9,60 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
  * client when a demo key is configured (personas live on the demo tenant).
  */
 
-const envState = vi.hoisted(() => ({
+interface EnvState {
+  apiUrl: string;
+  board: string;
+  demoBoard: string | undefined;
+  demoBoardPrivate: boolean;
+}
+
+interface DataSourceState {
+  source: 'board' | 'demo';
+}
+
+const envState: EnvState = {
   apiUrl: 'https://api.example.test',
   board: 'pk_primary',
-  demoBoard: undefined as string | undefined,
+  demoBoard: undefined,
   demoBoardPrivate: false,
-}));
+};
 
-const dataSourceState = vi.hoisted(() => ({
-  source: 'board' as 'board' | 'demo',
-}));
+const dataSourceState: DataSourceState = {
+  source: 'board',
+};
 
-const created = vi.hoisted(() => ({
-  clients: [] as Array<{ board: string }>,
-  refreshers: [] as Array<{ board: string }>,
-}));
+interface TestClient {
+  board: string;
+  kind: 'sdk';
+}
 
-vi.mock('cloudflare:workers', () => ({ env: {} }));
+interface TestRefresher {
+  board: string;
+  kind: 'refresher';
+}
 
-vi.mock('@tanstack/react-start/server', () => ({
-  getRequestHeader: () => null,
-  setResponseHeader: () => {},
-}));
-
-vi.mock('./env', () => ({
-  getServerEnv: () => ({
-    apiUrl: envState.apiUrl,
-    board: envState.board,
-    demoBoard: envState.demoBoard,
-    demoBoardPrivate: envState.demoBoardPrivate,
-  }),
-}));
-
-vi.mock('./data-source.server', async () => {
-  const actual = await vi.importActual<typeof import('./data-source.server')>(
-    './data-source.server',
-  );
-  return {
-    ...actual,
-    getDataSource: () => dataSourceState.source,
-    isDemoBoardConfigured: () => typeof envState.demoBoard === 'string',
-    isDemoBoardPrivate: () => envState.demoBoardPrivate,
-  };
-});
-
-vi.mock('./read-cache', () => ({
-  applyReadCache: vi.fn(),
-}));
-
-vi.mock('@cavuno/board', () => ({
-  createBoardClient: (opts: { board: string }) => {
-    const client = { board: opts.board, __kind: 'sdk' as const };
-    created.clients.push(client);
+const clients: TestClient[] = [];
+const refreshers: TestRefresher[] = [];
+const registry = createBoardClientRegistry({
+  createClient: ({ board }): TestClient => {
+    const client: TestClient = { board, kind: 'sdk' };
+    clients.push(client);
     return client;
   },
-}));
-
-vi.mock('@cavuno/board/server', () => ({
-  createSessionRefresher: (client: { board: string }) => {
-    const refresher = { board: client.board, __kind: 'refresher' as const };
-    created.refreshers.push(refresher);
+  createRefresher: (client): TestRefresher => {
+    const refresher: TestRefresher = {
+      board: client.board,
+      kind: 'refresher',
+    };
+    refreshers.push(refresher);
     return refresher;
   },
-}));
+  getDataSource: () => dataSourceState.source,
+  getServerEnv: () => envState,
+  onRequest: () => {},
+});
 
-import {
-  __resetBoardClientsForTests,
+const {
   getActiveBoard,
   getActiveSessionRefresher,
   getDemoBoard,
@@ -80,20 +70,16 @@ import {
   getPreviewBoard,
   getPrimaryBoard,
   getPrimarySessionRefresher,
-} from './board';
-
-/** Resolve the board key our mock attached to a client instance. */
-function boardKey(client: unknown): string | undefined {
-  return created.clients.find((c) => c === client)?.board;
-}
+  reset,
+} = registry;
 
 beforeEach(() => {
   envState.demoBoard = undefined;
   envState.demoBoardPrivate = false;
   dataSourceState.source = 'board';
-  created.clients.length = 0;
-  created.refreshers.length = 0;
-  __resetBoardClientsForTests();
+  clients.length = 0;
+  refreshers.length = 0;
+  reset();
 });
 
 describe('getActiveBoard (T1 + T2)', () => {
@@ -104,7 +90,7 @@ describe('getActiveBoard (T1 + T2)', () => {
     const active = getActiveBoard();
     expect(active).toBe(getPrimaryBoard());
     expect(getDemoBoard()).toBeNull();
-    expect(created.clients.map((c) => c.board)).toEqual(['pk_primary']);
+    expect(clients.map((client) => client.board)).toEqual(['pk_primary']);
   });
 
   it('T2: demo key + cookie demo ⇒ demo client; board/absent ⇒ primary', () => {
@@ -114,11 +100,11 @@ describe('getActiveBoard (T1 + T2)', () => {
     const demoActive = getActiveBoard();
     expect(demoActive).toBe(getDemoBoard());
     expect(demoActive).not.toBe(getPrimaryBoard());
-    expect(boardKey(demoActive)).toBe('pk_demo');
+    expect(demoActive.board).toBe('pk_demo');
 
     dataSourceState.source = 'board';
     expect(getActiveBoard()).toBe(getPrimaryBoard());
-    expect(boardKey(getActiveBoard())).toBe('pk_primary');
+    expect(getActiveBoard().board).toBe('pk_primary');
   });
 
   it('each data source has its own session refresher singleton', () => {
@@ -142,7 +128,7 @@ describe('getPreviewBoard (T4 + T6 client target)', () => {
     dataSourceState.source = 'board'; // UI on "Your board" — preview still demo
     const preview = getPreviewBoard();
     expect(preview).toBe(getDemoBoard());
-    expect(boardKey(preview)).toBe('pk_demo');
+    expect(preview.board).toBe('pk_demo');
   });
 
   it('falls back to primary when no demo key (legacy sandbox-on-primary)', () => {
@@ -155,6 +141,6 @@ describe('getPreviewBoard (T4 + T6 client target)', () => {
     envState.demoBoard = 'pk_demo';
     dataSourceState.source = 'board';
     expect(getPreviewBoard()).toBe(getDemoBoard());
-    expect(boardKey(getPreviewBoard())).toBe('pk_demo');
+    expect(getPreviewBoard().board).toBe('pk_demo');
   });
 });

@@ -3,9 +3,13 @@ import { isRedirect, redirect } from '@tanstack/react-router';
 
 import { refreshSession } from '../server/auth';
 
+import type { UrlSearchInput } from './pagination';
+
+export type RefreshSession = () => Promise<{ ok: boolean }>;
+
 /** Whether the loader is already the one-shot retry after a session refresh. */
-export function isReauthRetry(location?: { search?: unknown }): boolean {
-  const search = (location?.search ?? {}) as Record<string, unknown>;
+export function isReauthRetry(location?: { search?: UrlSearchInput }): boolean {
+  const search = location?.search ?? {};
   return search.reauth === '1' || search.reauth === 1 || search.reauth === true;
 }
 
@@ -19,8 +23,23 @@ export function isReauthRetry(location?: { search?: unknown }): boolean {
  * genuinely-dead session can't loop). Only a failed refresh — or an
  * already-retried load — falls through to `/auth/sign-in`.
  */
-export async function handleEmployerLoaderError(
-  error: unknown,
+export async function handleEmployerLoaderError<T>(
+  error: T,
+  returnTo: string,
+  options?: { retried?: boolean },
+): Promise<never> {
+  return handleEmployerLoaderErrorUsing(
+    refreshSession,
+    error,
+    returnTo,
+    options,
+  );
+}
+
+/** Dependency-explicit policy for callers that need an isolated refresh seam. */
+export async function handleEmployerLoaderErrorUsing<T>(
+  refresh: RefreshSession,
+  error: T,
   returnTo: string,
   options?: { retried?: boolean },
 ): Promise<never> {
@@ -40,7 +59,7 @@ export async function handleEmployerLoaderError(
     if (!options?.retried) {
       let refreshed = false;
       try {
-        refreshed = (await refreshSession()).ok;
+        refreshed = (await refresh()).ok;
       } catch {
         refreshed = false;
       }

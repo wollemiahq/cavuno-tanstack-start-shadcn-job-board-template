@@ -109,12 +109,11 @@ export function buildSyncPayload(parsed, hash) {
     colors[key] = value;
   }
   if (!parsed.meta.fontSans) throw new Error('theme.css is missing fontSans');
-  return {
+  const payload = {
     tokensHash: hash,
     colors,
     fontSans: parsed.meta.fontSans,
-    ...(parsed.meta.fontHeading
-      ? { fontHeading: parsed.meta.fontHeading }
-      : {}),
+    fontHeading: parsed.meta.fontHeading || undefined,
   };
+  return payload;
 }

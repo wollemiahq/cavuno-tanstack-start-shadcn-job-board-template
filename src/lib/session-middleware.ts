@@ -1,4 +1,3 @@
-import { isExpiringSoon } from '@cavuno/board/server';
 /**
  * Session middleware for authenticated server functions.
  *
@@ -34,6 +33,12 @@ import {
 
 import type { DataSource } from './data-source';
 import type { BoardSession } from '@cavuno/board/server';
+export {
+  decideSession,
+  type SessionRefresh,
+  type SessionResolution,
+} from './session-decision';
+import { decideSession } from './session-decision';
 
 export interface SessionContext {
   session: BoardSession | null;
@@ -41,21 +46,6 @@ export interface SessionContext {
   authHeaders: Record<string, string>;
   /** Data source whose session this context carries. */
   dataSource: DataSource;
-}
-
-/** The single-use rotation call the decision drives; `null` on a 401. */
-export type SessionRefresh = (
-  session: BoardSession,
-) => Promise<BoardSession | null>;
-
-/**
- * The resolved session plus the cookie side-effect the adapter must perform.
- * `null` cookie → leave the request cookie untouched; `'clear'` → emit the
- * clearing Set-Cookie; `'rotate'` → persist `session` back.
- */
-export interface SessionResolution {
-  session: BoardSession | null;
-  setCookie: 'clear' | 'rotate' | null;
 }
 
 /**
@@ -73,32 +63,6 @@ export interface SessionResolution {
  * refresher returns null only on a 401 and rethrows the rest) — the pre-SDK
  * middleware's behavior: never loop, never surface the error to the caller.
  */
-export async function decideSession(
-  session: BoardSession | null,
-  now: number,
-  refresh: SessionRefresh,
-): Promise<SessionResolution> {
-  if (!session) return { session: null, setCookie: null };
-
-  if (!isExpiringSoon(session, now)) {
-    return { session, setCookie: null };
-  }
-
-  let next: BoardSession | null;
-  try {
-    next = await refresh(session);
-  } catch {
-    next = null;
-  }
-
-  if (!next) {
-    // Burned single-use token (parallel refresh won) or revoked session.
-    return { session: null, setCookie: 'clear' };
-  }
-
-  return { session: next, setCookie: 'rotate' };
-}
-
 /** Thin request/response adapter around the pure {@link decideSession}. */
 async function resolveSession(): Promise<SessionContext> {
   const dataSource = getDataSource();

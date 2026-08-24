@@ -35,10 +35,10 @@ import {
   submitNativeApply,
 } from './native-apply';
 
+import { searchString } from '@/lib/pagination';
+
 /** Bearer + board-access grant for one gated `/me/*` or authed apply call. */
-function authedHeaders(
-  context: SessionContext & BoardAccessContext,
-): Record<string, string> {
+function authedHeaders(context: SessionContext & BoardAccessContext) {
   return { ...context.authHeaders, ...context.boardAccessHeaders };
 }
 
@@ -159,8 +159,8 @@ export const uploadApplicationResume = createServerFn({ method: 'POST' })
     if (!(data instanceof FormData)) {
       throw new Error('Expected FormData');
     }
-    const jobSlug = data.get('jobSlug');
-    if (typeof jobSlug !== 'string' || !jobSlug) {
+    const jobSlug = searchString(data.get('jobSlug'));
+    if (!jobSlug) {
       throw new Error('Expected a jobSlug');
     }
     const file = data.get('resume');

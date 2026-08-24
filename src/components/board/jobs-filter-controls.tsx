@@ -23,6 +23,7 @@ import {
 import { jobCardCopy } from '@/copy-groups/job-card';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { enumLabel, seniorityLabelMap } from '@/lib/enum-labels';
+import { searchString } from '@/lib/pagination';
 
 export function JobsFilterControls({
   filters,
@@ -77,15 +78,19 @@ export function JobsFilterControls({
           employmentType: filters.employmentType,
           seniority: filters.seniority,
         }}
-        onApply={(value) =>
-          onChange({
+        onApply={(value) => {
+          const nextFilters: ListingFilters = {
             ...filters,
+            // SAFETY: JobsFilterToolbar options are built from REMOTE_OPTIONS.
             remoteOption: value.workplace as ListingFilters['remoteOption'],
+            // SAFETY: JobsFilterToolbar options are built from EMPLOYMENT_TYPES.
             employmentType:
               value.employmentType as ListingFilters['employmentType'],
+            // SAFETY: JobsFilterToolbar seniority options are built from SENIORITIES.
             seniority: value.seniority as ListingFilters['seniority'],
-          })
-        }
+          };
+          onChange(nextFilters);
+        }}
         onReset={() =>
           onChange({
             ...filters,
@@ -99,7 +104,11 @@ export function JobsFilterControls({
         items={sortItems}
         value={filters.sort ?? DEFAULT_SORT}
         onValueChange={(sort) =>
-          onChange({ ...filters, sort: sort as ListingFilters['sort'] })
+          onChange({
+            ...filters,
+            // SAFETY: Sort select items are built from the listing sort enum.
+            sort: searchString(sort) as ListingFilters['sort'],
+          })
         }
       >
         <SelectTrigger

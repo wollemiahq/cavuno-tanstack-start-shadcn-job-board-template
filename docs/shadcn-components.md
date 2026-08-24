@@ -25,7 +25,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `badge` | Used (38) | `src/components/Footer.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+35 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
-| `button` | Used (97) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+94 more in the JSON ledger |
+| `button` | Used (98) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+95 more in the JSON ledger |
 | `button-group` | Used (2) | `src/components/board/alert-signup-form.tsx`<br>`src/components/header-search-enhanced.tsx` |
 | `calendar` | Available | Installed for adoption when the product needs this behavior. |
 | `card` | Used (37) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>`src/components/board/company-search-result-detail.tsx`<br>+34 more in the JSON ledger |
@@ -45,7 +45,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `hover-card` | Available | Installed for adoption when the product needs this behavior. |
 | `input` | Used (21) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/custom-fields-group.tsx`<br>+18 more in the JSON ledger |
 | `input-group` | Used (13) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/listing-search-band.tsx`<br>`src/components/company-search-combobox.tsx`<br>+10 more in the JSON ledger |
-| `input-otp` | Used (1) | `src/routes/auth.verify-email-required.tsx` |
+| `input-otp` | Used (1) | `src/routes/-auth.verify-email-required.tsx` |
 | `item` | Used (8) | `src/components/alert-manager.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+5 more in the JSON ledger |
 | `kbd` | Available | Installed for adoption when the product needs this behavior. |
 | `label` | Used (3) | `src/components/employer-job-form.tsx`<br>`src/components/experience-section.tsx`<br>`src/components/resume-upload.tsx` |
@@ -70,7 +70,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `sonner` | Used (1) | `src/routes/__root.tsx` |
 | `spinner` | Used (15) | `src/components/board/alert-signup-form.tsx`<br>`src/components/company-search-combobox.tsx`<br>`src/components/employer/employer-profile-views-stat.tsx`<br>+12 more in the JSON ledger |
 | `switch` | Used (1) | `src/components/preview/preview-board-settings.tsx` |
-| `table` | Used (3) | `src/components/board/salary-sections.tsx`<br>`src/components/employer/company-members-table.tsx`<br>`src/routes/employers.companies.$slug.index.tsx` |
+| `table` | Used (3) | `src/components/board/salary-sections.tsx`<br>`src/components/employer/company-members-table.tsx`<br>`src/routes/-employers.company-jobs.tsx` |
 | `tabs` | Available | Installed for adoption when the product needs this behavior. |
 | `textarea` | Used (6) | `src/components/custom-fields-group.tsx`<br>`src/components/education-section.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>+3 more in the JSON ledger |
 | `toggle` | Used (1) | `src/components/rich-text-editor.tsx` |

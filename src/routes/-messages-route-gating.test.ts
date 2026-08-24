@@ -11,41 +11,120 @@ import {
 } from '@tanstack/react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const queryMocks = vi.hoisted(() => ({
-  getBoardContext: vi.fn(),
-  getSeoBase: vi.fn(),
-}));
-const messagingMocks = vi.hoisted(() => ({
-  getInbox: vi.fn(),
-  getBlocked: vi.fn(),
-  getThread: vi.fn(),
-}));
+import {
+  createMessagesLoader,
+  type MessagesLoaderDependencies,
+} from './-messages';
+import {
+  createConversationLoader,
+  type ConversationLoaderDependencies,
+} from './-messages.$conversationId';
 
-vi.mock('@/server/queries', () => ({
-  getBoardContext: queryMocks.getBoardContext,
-  getSeoBase: queryMocks.getSeoBase,
-}));
-vi.mock('@/server/messaging', () => ({
-  getInbox: messagingMocks.getInbox,
-  getBlocked: messagingMocks.getBlocked,
-  getThread: messagingMocks.getThread,
-}));
+const getBoardContext = vi.fn<MessagesLoaderDependencies['getBoardContext']>();
+const getSeoBase = vi.fn<MessagesLoaderDependencies['getSeoBase']>();
+const getInbox = vi.fn<MessagesLoaderDependencies['getInbox']>();
+const getBlocked = vi.fn<MessagesLoaderDependencies['getBlocked']>();
+const getThread = vi.fn<ConversationLoaderDependencies['getThread']>();
 
-import { Route as MessagesRoute } from './messages';
-import { Route as ConversationRoute } from './messages.$conversationId';
+const messagesDependencies: MessagesLoaderDependencies = {
+  getBoardContext,
+  getSeoBase,
+  getInbox,
+  getBlocked,
+};
+const conversationDependencies: ConversationLoaderDependencies = {
+  getBoardContext,
+  getSeoBase,
+  getInbox,
+  getThread,
+};
 
-const inbox = { conversations: { object: 'list', data: [] } };
+function messagesLoaderContext(view: 'inbox' | 'archived') {
+  const pathname = '/messages';
+  return {
+    abortController: new AbortController(),
+    preload: false,
+    params: {},
+    deps: { view },
+    context: { origin: 'https://board.example' },
+    location: {
+      href: view === 'inbox' ? pathname : `${pathname}?view=${view}`,
+      pathname,
+      search: { view },
+      searchStr: view === 'inbox' ? '' : `?view=${view}`,
+      state: { __TSR_index: 0 },
+      hash: '',
+      publicHref: pathname,
+      external: false,
+    },
+    navigate: vi.fn(),
+    parentMatchPromise: new Promise<never>(() => undefined),
+    cause: 'enter' as const,
+  };
+}
+
+function conversationLoaderContext(view: 'inbox' | 'archived') {
+  const pathname = '/messages/c1';
+  return {
+    ...messagesLoaderContext(view),
+    params: { conversationId: 'c1' },
+    location: {
+      ...messagesLoaderContext(view).location,
+      href: view === 'inbox' ? pathname : `${pathname}?view=${view}`,
+      pathname,
+      publicHref: pathname,
+    },
+  };
+}
+
+const inbox = {
+  conversations: {
+    object: 'list' as const,
+    url: '/v1/me/conversations',
+    data: [],
+    hasMore: false,
+    nextCursor: null,
+  },
+};
 
 beforeEach(() => {
-  queryMocks.getSeoBase.mockResolvedValue({ boardName: 'Acme Board' });
-  queryMocks.getBoardContext.mockResolvedValue({
-    features: { nativeApplications: true, messaging: true },
+  getSeoBase.mockResolvedValue({ boardName: 'Acme Board' });
+  getBoardContext.mockResolvedValue({ features: { messaging: true } });
+  getInbox.mockResolvedValue(inbox);
+  getBlocked.mockResolvedValue({
+    object: 'list',
+    url: '/v1/me/blocks',
+    data: [],
+    hasMore: false,
+    nextCursor: null,
   });
-  messagingMocks.getInbox.mockResolvedValue(inbox);
-  messagingMocks.getBlocked.mockResolvedValue({ data: [] });
-  messagingMocks.getThread.mockResolvedValue({
-    conversation: { id: 'c1', counterparty: { companySlug: null } },
-    messages: { object: 'list', data: [] },
+  getThread.mockResolvedValue({
+    conversation: {
+      id: 'c1',
+      object: 'conversation',
+      lastMessageAt: '2026-07-14T05:00:00.000Z',
+      lastMessageSnippet: 'Latest reply',
+      lastMessageAuthorBoardUserId: 'candidate-1',
+      archivedAt: null,
+      hasUnread: false,
+      counterparty: {
+        boardUserId: 'candidate-1',
+        displayName: 'Candidate',
+        avatarUrl: null,
+        companyName: null,
+        handle: 'candidate',
+        companySlug: null,
+      },
+      viewerRole: 'employer',
+      viewerLastReadMessageId: null,
+    },
+    messages: {
+      object: 'list',
+      url: '/v1/me/conversations/c1/messages',
+      data: [],
+      hasMore: false,
+      nextCursor: null,
+    },
     blockStatus: { object: 'block_status', blocked: false },
   });
 });
@@ -56,85 +135,66 @@ afterEach(() => {
 
 describe('messages inbox route — messaging feature gate', () => {
   it('loads the inbox when messaging is on', async () => {
-    const loader = MessagesRoute.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('The messages route needs a loader');
-
-    const data = await loader({ deps: { view: 'inbox' } } as never);
+    const data = await createMessagesLoader(messagesDependencies)(
+      messagesLoaderContext('inbox'),
+    );
 
     expect(data).toMatchObject({ view: 'inbox' });
-    expect(messagingMocks.getInbox).toHaveBeenCalledOnce();
+    expect(getInbox).toHaveBeenCalledOnce();
   });
 
   it('is not-found when messaging is off, and never reads the inbox', async () => {
-    queryMocks.getBoardContext.mockResolvedValue({
-      features: { nativeApplications: true, messaging: false },
+    getBoardContext.mockResolvedValue({
+      features: { messaging: false },
     });
-    const loader = MessagesRoute.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('The messages route needs a loader');
-
     let outcome: unknown;
     try {
-      await loader({ deps: { view: 'inbox' } } as never);
+      await createMessagesLoader(messagesDependencies)(
+        messagesLoaderContext('inbox'),
+      );
     } catch (error) {
       outcome = error;
     }
 
     expect(isRouteNotFound(outcome)).toBe(true);
-    expect(messagingMocks.getInbox).not.toHaveBeenCalled();
+    expect(getInbox).not.toHaveBeenCalled();
   });
 });
 
 describe('messages thread route — messaging feature gate', () => {
   it('loads the thread when messaging is on', async () => {
-    const loader = ConversationRoute.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('The thread route needs a loader');
-
-    const data = await loader({
-      params: { conversationId: 'c1' },
-      deps: { view: 'inbox' },
-    } as never);
+    const data = await createConversationLoader(conversationDependencies)(
+      conversationLoaderContext('inbox'),
+    );
 
     expect(data).toMatchObject({ view: 'inbox' });
-    expect(messagingMocks.getThread).toHaveBeenCalledOnce();
+    expect(getThread).toHaveBeenCalledOnce();
   });
 
   it('is not-found when messaging is off, and never reads the thread', async () => {
-    queryMocks.getBoardContext.mockResolvedValue({
-      features: { nativeApplications: true, messaging: false },
+    getBoardContext.mockResolvedValue({
+      features: { messaging: false },
     });
-    const loader = ConversationRoute.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('The thread route needs a loader');
-
     let outcome: unknown;
     try {
-      await loader({
-        params: { conversationId: 'c1' },
-        deps: { view: 'inbox' },
-      } as never);
+      await createConversationLoader(conversationDependencies)(
+        conversationLoaderContext('inbox'),
+      );
     } catch (error) {
       outcome = error;
     }
 
     expect(isRouteNotFound(outcome)).toBe(true);
-    expect(messagingMocks.getThread).not.toHaveBeenCalled();
+    expect(getThread).not.toHaveBeenCalled();
   });
 
   it('returns unauthenticated thread visitors to the exact thread after sign-in', async () => {
-    messagingMocks.getThread.mockRejectedValue(new Error('UNAUTHENTICATED'));
-    const loader = ConversationRoute.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('The thread route needs a loader');
-
+    getThread.mockRejectedValue(new Error('UNAUTHENTICATED'));
     let outcome: unknown;
     try {
-      await loader({
-        params: { conversationId: 'c1' },
-        deps: { view: 'archived' },
-      } as never);
+      await createConversationLoader(conversationDependencies)(
+        conversationLoaderContext('archived'),
+      );
     } catch (error) {
       outcome = error;
     }
@@ -148,17 +208,12 @@ describe('messages thread route — messaging feature gate', () => {
   });
 
   it('keeps the messages fallback for non-authentication thread failures', async () => {
-    messagingMocks.getThread.mockRejectedValue(new Error('upstream timeout'));
-    const loader = ConversationRoute.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('The thread route needs a loader');
-
+    getThread.mockRejectedValue(new Error('upstream timeout'));
     let outcome: unknown;
     try {
-      await loader({
-        params: { conversationId: 'c1' },
-        deps: { view: 'archived' },
-      } as never);
+      await createConversationLoader(conversationDependencies)(
+        conversationLoaderContext('archived'),
+      );
     } catch (error) {
       outcome = error;
     }

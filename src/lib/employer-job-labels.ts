@@ -3,16 +3,18 @@ import { enumLabel } from './enum-labels';
 
 import type { EmployerJob } from '@cavuno/board';
 
-const statusLabels: Record<EmployerJob['status'], () => string> = {
+const statusLabels = {
   draft: m.employerJob_statusDraft,
   published: m.employerJob_statusPublished,
   expired: m.employerJob_statusExpired,
   archived: m.employerJob_statusArchived,
-};
+} satisfies Record<EmployerJob['status'], () => string>;
 
 export function employerJobStatusLabel(status: string) {
   if (!(status in statusLabels))
     throw new Error(`Unknown employer job status: ${status}`);
+  // SAFETY: The `status in statusLabels` guard proves this dynamic status is a
+  // supported EmployerJob status before indexing the label map.
   return statusLabels[status as EmployerJob['status']]();
 }
 

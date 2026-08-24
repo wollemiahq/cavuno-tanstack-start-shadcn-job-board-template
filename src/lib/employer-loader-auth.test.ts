@@ -2,21 +2,26 @@ import { isRedirect, redirect } from '@tanstack/react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  handleEmployerLoaderError,
+  handleEmployerLoaderErrorUsing,
   isReauthRetry,
+  type RefreshSession,
 } from './employer-loader-auth';
 
-// The refresh attempt is a server function; mock it so the loader-error
-// policy can be exercised as pure logic (unauthorized → refresh → redirect).
-const { mockRefreshSession } = vi.hoisted(() => ({
-  mockRefreshSession: vi.fn(),
-}));
-vi.mock('../server/auth', () => ({ refreshSession: mockRefreshSession }));
+const mockRefreshSession = vi.fn<RefreshSession>();
 
 /** Run the policy and capture whatever it throws (it always throws). */
-async function thrownBy(...args: Parameters<typeof handleEmployerLoaderError>) {
+async function thrownBy<ErrorValue>(
+  error: ErrorValue,
+  returnTo: string,
+  options?: { retried?: boolean },
+) {
   try {
-    await handleEmployerLoaderError(...args);
+    await handleEmployerLoaderErrorUsing(
+      mockRefreshSession,
+      error,
+      returnTo,
+      options,
+    );
   } catch (error) {
     return error;
   }
@@ -29,13 +34,13 @@ afterEach(() => {
 
 describe('handleEmployerLoaderError', () => {
   it('sends an unverified employer through verification with returnTo', async () => {
-    const error = (await thrownBy(
+    const error = await thrownBy(
       new Error('EMAIL_UNVERIFIED'),
       '/employers/companies/acme/profile',
-    )) as { options: { to?: string; search?: unknown } };
+    );
 
     expect(mockRefreshSession).not.toHaveBeenCalled();
-    expect(isRedirect(error)).toBe(true);
+    if (!isRedirect(error)) throw new Error('Expected a verification redirect');
     expect(error.options.to).toBe('/auth/verify-email-required');
     expect(error.options.search).toEqual({
       returnTo: '/employers/companies/acme/profile',
@@ -45,23 +50,24 @@ describe('handleEmployerLoaderError', () => {
   it('on unauthorized: refreshes once and, on success, retries with ?reauth=1', async () => {
     mockRefreshSession.mockResolvedValue({ ok: true });
 
-    const error = (await thrownBy(
+    const error = await thrownBy(
       new Error('UNAUTHENTICATED'),
       '/employers/dashboard',
-    )) as { options: { href?: string } };
+    );
 
     expect(mockRefreshSession).toHaveBeenCalledTimes(1);
-    expect(isRedirect(error)).toBe(true);
+    if (!isRedirect(error)) throw new Error('Expected a retry redirect');
     expect(error.options.href).toBe('/employers/dashboard?reauth=1');
   });
 
   it('appends the reauth marker with & when returnTo already has a query', async () => {
     mockRefreshSession.mockResolvedValue({ ok: true });
 
-    const error = (await thrownBy(
+    const error = await thrownBy(
       new Error('UNAUTHENTICATED'),
       '/employers/companies/acme/jobs?tab=open',
-    )) as { options: { href?: string } };
+    );
+    if (!isRedirect(error)) throw new Error('Expected a retry redirect');
 
     expect(error.options.href).toBe(
       '/employers/companies/acme/jobs?tab=open&reauth=1',
@@ -71,25 +77,26 @@ describe('handleEmployerLoaderError', () => {
   it('on unauthorized with a failed refresh: falls through to sign-in with returnTo', async () => {
     mockRefreshSession.mockResolvedValue({ ok: false });
 
-    const error = (await thrownBy(
+    const error = await thrownBy(
       new Error('UNAUTHENTICATED'),
       '/employers/dashboard',
-    )) as { options: { to?: string; search?: unknown } };
+    );
 
     expect(mockRefreshSession).toHaveBeenCalledTimes(1);
-    expect(isRedirect(error)).toBe(true);
+    if (!isRedirect(error)) throw new Error('Expected a sign-in redirect');
     expect(error.options.to).toBe('/auth/sign-in');
     expect(error.options.search).toEqual({ returnTo: '/employers/dashboard' });
   });
 
   it('when already retried (reauth=1): skips refresh and goes straight to sign-in', async () => {
-    const error = (await thrownBy(
+    const error = await thrownBy(
       new Error('UNAUTHENTICATED'),
       '/employers/dashboard',
       { retried: true },
-    )) as { options: { to?: string; search?: unknown } };
+    );
 
     expect(mockRefreshSession).not.toHaveBeenCalled();
+    if (!isRedirect(error)) throw new Error('Expected a sign-in redirect');
     expect(error.options.to).toBe('/auth/sign-in');
     expect(error.options.search).toEqual({ returnTo: '/employers/dashboard' });
   });
@@ -97,12 +104,13 @@ describe('handleEmployerLoaderError', () => {
   it('treats a throwing refresh as a failed refresh (sign-in fallthrough)', async () => {
     mockRefreshSession.mockRejectedValue(new Error('network down'));
 
-    const error = (await thrownBy(
+    const error = await thrownBy(
       new Error('UNAUTHENTICATED'),
       '/employers/dashboard',
-    )) as { options: { to?: string } };
+    );
 
     expect(mockRefreshSession).toHaveBeenCalledTimes(1);
+    if (!isRedirect(error)) throw new Error('Expected a sign-in redirect');
     expect(error.options.to).toBe('/auth/sign-in');
   });
 

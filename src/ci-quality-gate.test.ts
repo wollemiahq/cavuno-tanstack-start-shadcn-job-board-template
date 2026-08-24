@@ -37,35 +37,34 @@ describe('CI quality gate', () => {
   });
 
   it('owns the formatter contract and generated ignores', () => {
-    const config = JSON.parse(
+    const config: unknown = JSON.parse(
       readFileSync(resolve(process.cwd(), '.oxfmtrc.json'), 'utf8'),
-    ) as {
-      ignorePatterns?: string[];
-      printWidth?: number;
-      singleQuote?: boolean;
-      sortImports?: {
-        customGroups?: Array<{ elementNamePattern?: string[] }>;
-        newlinesBetween?: boolean;
-      };
-    };
-    const packageJson = JSON.parse(
+    );
+    const packageJson: unknown = JSON.parse(
       readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'),
-    ) as { scripts?: Record<string, string> };
+    );
 
-    expect(config.printWidth).toBe(80);
-    expect(config.singleQuote).toBe(true);
-    expect(config.sortImports?.newlinesBetween).toBe(true);
-    expect(
-      config.sortImports?.customGroups?.flatMap(
-        ({ elementNamePattern }) => elementNamePattern ?? [],
-      ),
-    ).toContain('#/**');
-    expect(config.ignorePatterns).toEqual(
-      expect.arrayContaining(['src/routeTree.gen.ts', 'src/theme/resolved.ts']),
-    );
-    expect(packageJson.scripts?.check).toBe(
-      'vp fmt -c .oxfmtrc.json --check && vp check --no-fmt',
-    );
+    expect(config).toMatchObject({
+      printWidth: 80,
+      singleQuote: true,
+      sortImports: {
+        newlinesBetween: true,
+        customGroups: expect.arrayContaining([
+          expect.objectContaining({
+            elementNamePattern: expect.arrayContaining(['#/**']),
+          }),
+        ]),
+      },
+      ignorePatterns: expect.arrayContaining([
+        'src/routeTree.gen.ts',
+        'src/theme/resolved.ts',
+      ]),
+    });
+    expect(packageJson).toMatchObject({
+      scripts: {
+        check: 'vp fmt -c .oxfmtrc.json --check && vp check --no-fmt',
+      },
+    });
   });
   it('never re-verifies emitted taxonomy slugs — the API guarantees they resolve (ADR-0099)', () => {
     // The per-slug resolve fan-out this guards against once cost a real board

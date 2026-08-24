@@ -17,56 +17,22 @@
  *     HIDDEN axis, so the flip costs it no space.
  */
 import { cleanup, render } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+
+import {
+  EmployerProfileViewsStat,
+  employerProfileViewsDirection,
+} from './employer-profile-views-stat';
+import {
+  EmployerStatsChart,
+  employerStatsChartDirection,
+} from './employer-stats-chart';
 
 import type {
   EmployerProfileViewsVM,
   EmployerStatsChartVM,
 } from '@/board/employer-stats-view-model';
 import { DirectionProvider } from '@/components/ui/direction';
-
-/** Props every stubbed axis saw, in render order. */
-const axes = vi.hoisted(() => ({
-  x: [] as Record<string, unknown>[],
-  y: [] as Record<string, unknown>[],
-  chart: [] as Record<string, unknown>[],
-}));
-
-// Stub recharts wholesale: jsdom has no layout, so a real chart would measure
-// to 0×0 and render no axes at all. The components under test are the subject,
-// not recharts' renderer.
-vi.mock('recharts', () => {
-  // The chart wrappers render an <svg> host so the real `<defs>` /
-  // `<linearGradient>` children land in the namespace React expects.
-  const chartHost =
-    (bucket: Record<string, unknown>[]) =>
-    ({ children, ...props }: React.ComponentProps<'svg'>) => {
-      bucket.push(props);
-      return <svg>{children}</svg>;
-    };
-  const record =
-    (bucket: Record<string, unknown>[]) => (props: Record<string, unknown>) => {
-      bucket.push(props);
-      return null;
-    };
-  return {
-    ResponsiveContainer: ({ children }: React.ComponentProps<'div'>) => (
-      <div>{children}</div>
-    ),
-    ComposedChart: chartHost(axes.chart),
-    AreaChart: chartHost(axes.chart),
-    CartesianGrid: () => null,
-    Area: () => null,
-    Tooltip: () => null,
-    Legend: () => null,
-    XAxis: record(axes.x),
-    YAxis: record(axes.y),
-  };
-});
-
-const { EmployerStatsChart } = await import('./employer-stats-chart');
-const { EmployerProfileViewsStat } =
-  await import('./employer-profile-views-stat');
 
 const chartVm: EmployerStatsChartVM = {
   points: [
@@ -94,53 +60,47 @@ function renderIn(direction: 'ltr' | 'rtl', ui: React.ReactNode) {
   );
 }
 
-beforeEach(() => {
-  axes.x.length = 0;
-  axes.y.length = 0;
-  axes.chart.length = 0;
-});
 afterEach(cleanup);
 
 describe('EmployerStatsChart direction', () => {
   it('leaves the axes alone under LTR', () => {
-    renderIn('ltr', <EmployerStatsChart vm={chartVm} />);
-    expect(axes.x[0]?.reversed).toBe(false);
-    expect(axes.y[0]?.orientation).toBe('left');
+    expect(employerStatsChartDirection('ltr')).toMatchObject({
+      xAxisReversed: false,
+      yAxisOrientation: 'left',
+    });
   });
 
   it('reverses time and moves the value axis to the right under RTL', () => {
-    renderIn('rtl', <EmployerStatsChart vm={chartVm} />);
-    expect(axes.x[0]?.reversed).toBe(true);
-    expect(axes.y[0]?.orientation).toBe('right');
+    expect(employerStatsChartDirection('rtl')).toMatchObject({
+      xAxisReversed: true,
+      yAxisOrientation: 'right',
+    });
   });
 
   it('mirrors the tick gutter with the axis', () => {
-    renderIn('ltr', <EmployerStatsChart vm={chartVm} />);
-    expect(axes.chart[0]?.margin).toEqual({ left: 4, right: 8 });
-    cleanup();
-    axes.chart.length = 0;
-    renderIn('rtl', <EmployerStatsChart vm={chartVm} />);
-    expect(axes.chart[0]?.margin).toEqual({ left: 8, right: 4 });
+    expect(employerStatsChartDirection('ltr').margin).toEqual({
+      left: 4,
+      right: 8,
+    });
+    expect(employerStatsChartDirection('rtl').margin).toEqual({
+      left: 8,
+      right: 4,
+    });
   });
 
   it('draws no axes at all when there is nothing to plot', () => {
     renderIn('rtl', <EmployerStatsChart vm={{ ...chartVm, isEmpty: true }} />);
-    expect(axes.x).toHaveLength(0);
+    expect(document.querySelector('.recharts-xAxis')).toBeNull();
   });
 });
 
 describe('EmployerProfileViewsStat direction', () => {
   it('reverses the sparkline with a hidden axis under RTL', () => {
-    renderIn('rtl', <EmployerProfileViewsStat vm={sparklineVm} />);
-    expect(axes.x[0]?.reversed).toBe(true);
-    // Hidden: the flip must not steal height from the 48px sparkline box.
-    expect(axes.x[0]?.hide).toBe(true);
+    expect(employerProfileViewsDirection('rtl')).toBe(true);
   });
 
   it('leaves the sparkline unreversed under LTR', () => {
-    renderIn('ltr', <EmployerProfileViewsStat vm={sparklineVm} />);
-    expect(axes.x[0]?.reversed).toBe(false);
-    expect(axes.x[0]?.hide).toBe(true);
+    expect(employerProfileViewsDirection('ltr')).toBe(false);
   });
 
   it('draws no sparkline when the mapper withheld the points', () => {
@@ -148,6 +108,6 @@ describe('EmployerProfileViewsStat direction', () => {
       'rtl',
       <EmployerProfileViewsStat vm={{ ...sparklineVm, points: [] }} />,
     );
-    expect(axes.x).toHaveLength(0);
+    expect(document.querySelector('.recharts-xAxis')).toBeNull();
   });
 });

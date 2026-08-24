@@ -32,9 +32,7 @@ import type {
 } from '@cavuno/board';
 
 /** Bearer + board-access grant for one gated `/me/*` call. */
-function authedHeaders(
-  context: SessionContext & BoardAccessContext,
-): Record<string, string> {
+function authedHeaders(context: SessionContext & BoardAccessContext) {
   return { ...context.authHeaders, ...context.boardAccessHeaders };
 }
 

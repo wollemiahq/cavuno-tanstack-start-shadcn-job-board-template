@@ -11,9 +11,20 @@ import type { LocationSuggestionState } from '@/components/location-combobox';
 const MIN_QUERY = 2;
 const DEBOUNCE_MS = 200;
 
+export type LocationSuggestionDependencies = {
+  searchPlaces: (input: {
+    data: { q: string; limit: number };
+  }) => Promise<{ data: Awaited<ReturnType<typeof searchPlaces>>['data'] }>;
+};
+
+const locationSuggestionDependencies: LocationSuggestionDependencies = {
+  searchPlaces,
+};
+
 /** Route-owned controller for the presentational location combobox. */
 export function useLocationSuggestions(
   locale: string,
+  dependencies: LocationSuggestionDependencies = locationSuggestionDependencies,
 ): LocationSuggestionState {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<LocationSuggestionVM[]>([]);
@@ -30,7 +41,8 @@ export function useLocationSuggestions(
     let cancelled = false;
     setLoading(true);
     const timer = setTimeout(() => {
-      void searchPlaces({ data: { q, limit: 10 } })
+      void dependencies
+        .searchPlaces({ data: { q, limit: 10 } })
         .then((response) => {
           if (!cancelled) {
             setSuggestions(
@@ -50,7 +62,7 @@ export function useLocationSuggestions(
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [locale, query]);
+  }, [dependencies, locale, query]);
 
   return { suggestions, loading, onQueryChange: setQuery };
 }

@@ -1,4 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import {
+  DATA_SOURCE_COOKIE,
+  parseDataSourceCookie,
+  resolveDataSource,
+  serializeDataSourceCookie,
+} from './data-source';
+import { createDataSourceRuntime } from './data-source-runtime';
 
 /**
  * Dual-source selection (DMO-01 / CAV-531): the data-source cookie picks
@@ -7,47 +15,39 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
  * regardless of cookie value (byte-compat with pre-dual-source deploys).
  */
 
-const envState = vi.hoisted(() => ({
+interface EnvState {
+  apiUrl: string;
+  board: string;
+  demoBoard: string | undefined;
+  demoBoardPrivate: boolean;
+}
+
+interface RequestState {
+  cookie: string | null;
+}
+
+const envState: EnvState = {
   apiUrl: 'https://api.example.test',
   board: 'pk_primary',
-  demoBoard: undefined as string | undefined,
+  demoBoard: undefined,
   demoBoardPrivate: false,
-}));
+};
 
-const requestState = vi.hoisted(() => ({
-  cookie: null as string | null,
-}));
+const requestState: RequestState = {
+  cookie: null,
+};
 
-vi.mock('cloudflare:workers', () => ({
-  env: {},
-}));
-
-vi.mock('./env', () => ({
-  getServerEnv: () => ({
-    apiUrl: envState.apiUrl,
-    board: envState.board,
-    demoBoard: envState.demoBoard,
-    demoBoardPrivate: envState.demoBoardPrivate,
-  }),
-}));
-
-vi.mock('@tanstack/react-start/server', () => ({
-  getRequestHeader: (name: string) =>
-    name.toLowerCase() === 'cookie' ? requestState.cookie : null,
-}));
-
-import {
-  DATA_SOURCE_COOKIE,
-  parseDataSourceCookie,
-  resolveDataSource,
-  serializeDataSourceCookie,
-} from './data-source';
-import {
+const {
   getDataSource,
   isDemoBoardConfigured,
   isDemoBoardPrivate,
   sessionCookieOptionsFor,
-} from './data-source.server';
+} = createDataSourceRuntime({
+  getServerEnv: () => envState,
+  getRequestHeader: (name) =>
+    name.toLowerCase() === 'cookie' ? requestState.cookie : null,
+  setResponseHeader: () => {},
+});
 
 beforeEach(() => {
   envState.demoBoard = undefined;

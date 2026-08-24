@@ -130,8 +130,9 @@ let edgeCacheRefused = false;
 function defaultEdgeCache(): Cache | undefined {
   if (edgeCacheRefused) return undefined;
   try {
-    return (globalThis as unknown as { caches?: EdgeCacheStorage }).caches
-      ?.default;
+    // SAFETY: Cloudflare Workers expose `globalThis.caches.default`; optional
+    // access preserves non-Worker environments where the binding is absent.
+    return (globalThis as { caches?: EdgeCacheStorage }).caches?.default;
   } catch {
     edgeCacheRefused = true;
     return undefined;

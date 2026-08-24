@@ -19,8 +19,11 @@ const DONE_FADE_MS = 400;
 
 type Phase = 'idle' | 'loading' | 'done';
 
-export function NavigationProgress() {
-  const isLoading = useRouterState({ select: (s) => s.isLoading });
+export function NavigationProgressIndicator({
+  isLoading,
+}: {
+  isLoading: boolean;
+}) {
   const [phase, setPhase] = useState<Phase>('idle');
 
   useEffect(() => {
@@ -57,4 +60,9 @@ export function NavigationProgress() {
       />
     </div>
   );
+}
+
+export function NavigationProgress() {
+  const isLoading = useRouterState({ select: (state) => state.isLoading });
+  return <NavigationProgressIndicator isLoading={isLoading} />;
 }

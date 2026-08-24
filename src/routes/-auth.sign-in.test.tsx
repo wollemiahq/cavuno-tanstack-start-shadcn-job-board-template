@@ -9,38 +9,18 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../server/queries', () => ({ getSeoBase: vi.fn() }));
-// The loader's already-authed guard reads the session; default to signed-out.
-vi.mock('../server/account', () => ({
-  getSessionUser: vi.fn().mockResolvedValue(null),
-}));
+import type { UrlSearchInput } from '../lib/pagination';
 
-const mocks = vi.hoisted(() => ({
+const mocks = {
+  assignLocation: vi.fn(),
   getOAuthAuthorizationUrl: vi.fn(),
   invalidate: vi.fn(),
   navigate: vi.fn(),
   requestMagicLink: vi.fn(),
   signIn: vi.fn(),
-}));
+};
 
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    useRouter: () => ({
-      invalidate: mocks.invalidate,
-      navigate: mocks.navigate,
-    }),
-  };
-});
-
-vi.mock('../server/auth', () => ({
-  getOAuthAuthorizationUrl: mocks.getOAuthAuthorizationUrl,
-  requestMagicLink: mocks.requestMagicLink,
-  signIn: mocks.signIn,
-}));
-
+import { SignInView } from './-auth.sign-in';
 import { Route } from './auth.sign-in';
 
 afterEach(() => {
@@ -49,12 +29,30 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-function validateSearch(search: Record<string, unknown>) {
+function validateSearch(search: UrlSearchInput) {
   const validate = Route.options.validateSearch;
-  if (typeof validate !== 'function') {
+  if (!validate) {
     throw new Error('The sign-in route must validate its search parameters');
   }
+  if ('parse' in validate) return validate.parse(search);
+  if ('~standard' in validate) {
+    throw new Error('The sign-in route uses an unexpected async schema');
+  }
   return validate(search);
+}
+
+function renderSignIn(returnTo: string) {
+  return render(
+    <SignInView
+      returnTo={returnTo}
+      signInAction={mocks.signIn}
+      requestMagicLinkAction={mocks.requestMagicLink}
+      getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
+      invalidate={mocks.invalidate}
+      navigate={mocks.navigate}
+      assignLocation={mocks.assignLocation}
+    />,
+  );
 }
 
 describe('/auth/sign-in search contract', () => {
@@ -71,12 +69,8 @@ describe('/auth/sign-in search contract', () => {
   it('returns a password sign-in to the validated destination', async () => {
     const returnTo =
       '/companies/acme/jobs/platform-engineer?source=search#apply';
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo });
     mocks.signIn.mockResolvedValue({ ok: true });
-    const SignInPage = Route.options.component;
-    if (!SignInPage) throw new Error('The sign-in route needs a component');
-
-    const { container } = render(<SignInPage />);
+    const { container } = renderSignIn(returnTo);
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
     });
@@ -87,17 +81,13 @@ describe('/auth/sign-in search contract', () => {
 
     await waitFor(() => {
       expect(mocks.invalidate).toHaveBeenCalledOnce();
-      expect(mocks.navigate).toHaveBeenCalledWith({ href: returnTo });
+      expect(mocks.navigate).toHaveBeenCalledWith(returnTo);
     });
   });
 
   it('recovers when password sign-in rejects unexpectedly', async () => {
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo: '/account' });
     mocks.signIn.mockRejectedValue(new Error('network unavailable'));
-    const SignInPage = Route.options.component;
-    if (!SignInPage) throw new Error('The sign-in route needs a component');
-
-    const { container } = render(<SignInPage />);
+    const { container } = renderSignIn('/account');
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
     });
@@ -114,12 +104,8 @@ describe('/auth/sign-in search contract', () => {
 
   it('includes the validated destination in a requested magic link', async () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo });
     mocks.requestMagicLink.mockResolvedValue({ ok: true });
-    const SignInPage = Route.options.component;
-    if (!SignInPage) throw new Error('The sign-in route needs a component');
-
-    const { container } = render(<SignInPage />);
+    const { container } = renderSignIn(returnTo);
     fireEvent.click(screen.getByRole('radio', { name: 'Magic link' }));
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
@@ -137,15 +123,11 @@ describe('/auth/sign-in search contract', () => {
 
   it('includes the validated destination in an OAuth request', async () => {
     const returnTo = '/companies/acme/jobs/platform-engineer?source=search';
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo });
     mocks.getOAuthAuthorizationUrl.mockResolvedValue({
       ok: false,
       message: 'OAuth unavailable in this test',
     });
-    const SignInPage = Route.options.component;
-    if (!SignInPage) throw new Error('The sign-in route needs a component');
-
-    render(<SignInPage />);
+    renderSignIn(returnTo);
     fireEvent.click(
       screen.getByRole('button', { name: 'Continue with Google' }),
     );
@@ -158,14 +140,10 @@ describe('/auth/sign-in search contract', () => {
   });
 
   it('recovers when an OAuth request rejects unexpectedly', async () => {
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo: '/account' });
     mocks.getOAuthAuthorizationUrl.mockRejectedValue(
       new Error('network unavailable'),
     );
-    const SignInPage = Route.options.component;
-    if (!SignInPage) throw new Error('The sign-in route needs a component');
-
-    render(<SignInPage />);
+    renderSignIn('/account');
     fireEvent.click(
       screen.getByRole('button', { name: 'Continue with Google' }),
     );
@@ -180,11 +158,7 @@ describe('/auth/sign-in search contract', () => {
 
   it('keeps the destination on secondary auth links', () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo });
-    const SignInPage = Route.options.component;
-    if (!SignInPage) throw new Error('The sign-in route needs a component');
-
-    render(<SignInPage />);
+    renderSignIn(returnTo);
 
     expect(
       screen.getByRole('link', { name: 'Forgot password?' }),
@@ -202,11 +176,7 @@ describe('/auth/sign-in search contract', () => {
   });
 
   it('uses native radio controls for keyboard-correct sign-in method selection', () => {
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo: '/account' });
-    const SignInPage = Route.options.component;
-    if (!SignInPage) throw new Error('The sign-in route needs a component');
-
-    const { container } = render(<SignInPage />);
+    const { container } = renderSignIn('/account');
     const password = screen.getByRole('radio', { name: 'Password' });
     const magic = screen.getByRole('radio', { name: 'Magic link' });
     const nativeRadios = container.querySelectorAll('input[type="radio"]');

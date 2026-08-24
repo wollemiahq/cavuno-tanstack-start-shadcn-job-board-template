@@ -1,27 +1,20 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 
 import { redirectIfSignedIn, sessionUserOrNull } from '../lib/auth-guard';
-import {
-  candidateReturnTo,
-  candidateSignInHref,
-  candidateVerifyEmailHref,
-} from '../lib/candidate-return-to';
-import { MARKETING_CONSENT } from '../lib/marketing-consent';
+import { candidateReturnTo } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { signUp } from '../server/auth';
 import { getBoardContext } from '../server/queries';
+import { SignUpView } from './-auth.sign-up';
 
-import { RegistrationPage } from '@/components/registration-page';
-import { buttonVariants } from '@/components/ui/button';
 import { headTitle } from '@/lib/page-title';
+import { searchString, type UrlSearchInput } from '@/lib/pagination';
 
 export const Route = createFileRoute('/auth/sign-up')({
-  validateSearch: (search: Record<string, unknown>) => ({
-    returnTo:
-      typeof search.returnTo === 'string' && search.returnTo
-        ? candidateReturnTo(search.returnTo)
-        : undefined,
-  }),
+  validateSearch: (search: UrlSearchInput): { returnTo?: string } =>
+    searchString(search.returnTo)
+      ? { returnTo: candidateReturnTo(search.returnTo) }
+      : {},
   loaderDeps: ({ search }) => ({ returnTo: search.returnTo }),
   loader: async ({ deps }) => {
     const [user, board] = await Promise.all([
@@ -45,51 +38,14 @@ function SignUpPage() {
   const { boardName } = Route.useLoaderData();
   const search = Route.useSearch();
   const returnTo = candidateReturnTo(search.returnTo);
-
   return (
-    <RegistrationPage
-      title={m.authSignUp_title()}
-      supportingText={m.authSignUp_supportingText({ boardName })}
-      copy={{
-        nameLabel: m.authSignUp_nameLabel(),
-        emailLabel: m.authSignUp_emailLabel(),
-        passwordLabel: m.authSignUp_passwordLabel(),
-        submitLabel: m.authSignUp_submitLabel(),
-        pendingLabel: m.authSignUp_creatingAccountLabel(),
-        successTitle: m.authSignUp_checkEmailTitle(),
-        successText: m.authSignUp_checkEmailBody(),
-        successActionLabel: m.authSignUp_goToAccountLabel(),
+    <SignUpView
+      boardName={boardName}
+      returnTo={returnTo}
+      signUpAction={signUp}
+      invalidate={async () => {
+        await router.invalidate();
       }}
-      marketingConsent={
-        MARKETING_CONSENT.candidateSignUp
-          ? {
-              disclosure: m.marketingConsent_signUpDisclosure(),
-              ...(MARKETING_CONSENT.privacyPolicyUrl
-                ? {
-                    privacyPolicyUrl: MARKETING_CONSENT.privacyPolicyUrl,
-                    privacyLinkLabel: m.marketingConsent_privacyLinkLabel(),
-                  }
-                : {}),
-            }
-          : undefined
-      }
-      successHref={candidateVerifyEmailHref(returnTo)}
-      onSubmit={async (values) => {
-        const result = await signUp({ data: values });
-        if (result.ok) await router.invalidate();
-        return result;
-      }}
-      footer={
-        <p className="text-muted-foreground text-center text-sm">
-          {m.authSignUp_alreadyHaveAccountText()}{' '}
-          <a
-            href={candidateSignInHref(returnTo)}
-            className={buttonVariants({ variant: 'link', size: 'sm' })}
-          >
-            {m.authSignUp_signInLink()}
-          </a>
-        </p>
-      }
     />
   );
 }

@@ -31,7 +31,7 @@ const PENDING_STORAGE_KEY = 'settingsEmailPendingChange';
  * current email matches (the change was confirmed) or on explicit reset.
  */
 function readPendingEmail(currentEmail: string): string | null {
-  if (typeof window === 'undefined') return null;
+  if (!globalThis.window) return null;
   try {
     const stored = window.sessionStorage.getItem(PENDING_STORAGE_KEY);
     if (!stored) return null;
@@ -45,7 +45,15 @@ function readPendingEmail(currentEmail: string): string | null {
   }
 }
 
-export function SettingsEmailCard({ currentEmail }: { currentEmail: string }) {
+export function SettingsEmailCard({
+  currentEmail,
+  requestChange = requestEmailChange,
+}: {
+  currentEmail: string;
+  requestChange?: (options: {
+    data: { email: string };
+  }) => ReturnType<typeof requestEmailChange>;
+}) {
   const [pendingEmail, setPendingEmailState] = useState<string | null>(() =>
     readPendingEmail(currentEmail),
   );
@@ -102,7 +110,7 @@ export function SettingsEmailCard({ currentEmail }: { currentEmail: string }) {
           }
           setStatus('saving');
           try {
-            const result = await requestEmailChange({ data: { email } });
+            const result = await requestChange({ data: { email } });
             if (result.ok) {
               setPendingEmail(email);
               return;

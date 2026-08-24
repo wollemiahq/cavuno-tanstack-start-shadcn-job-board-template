@@ -6,6 +6,22 @@ import { join, relative } from 'node:path';
 
 const root = join(import.meta.dirname, '..');
 
+function readStringField(json: string, field: string): string | null {
+  const parsed = JSON.parse(json);
+  const value = parsed[field];
+  return Object.prototype.toString.call(value) === '[object String]'
+    ? String(value)
+    : null;
+}
+
+function readDependencyNames(json: string): Set<string> {
+  const parsed = JSON.parse(json);
+  return new Set([
+    ...Object.keys(parsed.dependencies ?? {}),
+    ...Object.keys(parsed.devDependencies ?? {}),
+  ]);
+}
+
 /**
  * Candidate icon packages come from the shadcn CLI's own catalog
  * (`shadcn/icons`), not a list we maintain — so a library the CLI learns to
@@ -15,9 +31,7 @@ const root = join(import.meta.dirname, '..');
  */
 const ICON_PACKAGES = new Map<string, string>([
   ...Object.entries(iconLibraries).flatMap(([library, meta]) =>
-    ((meta as { packages?: readonly string[] }).packages ?? []).map(
-      (pkg) => [pkg, library] as [string, string],
-    ),
+    (meta.packages ?? []).map<[string, string]>((pkg) => [pkg, library]),
   ),
   ['@radix-ui/react-icons', 'radix'],
 ]);
@@ -85,29 +99,28 @@ describe('icon set contract', () => {
 
   it('matches the library components.json declares', () => {
     const [inUse] = [...iconLibrariesInUse().keys()];
-    const config = JSON.parse(
+    const iconLibrary = readStringField(
       readFileSync(join(root, 'components.json'), 'utf8'),
-    ) as { iconLibrary: string };
+      'iconLibrary',
+    );
 
     // Whichever library is actually imported must be the one the CLI config
     // names, so a later `shadcn add` resolves icons against the real set.
     // `shadcn migrate icons` does NOT write this field when it is given a
     // path or glob, which is exactly how a whole-repo migration runs it.
-    expect(config.iconLibrary).toBe(inUse);
+    expect(iconLibrary).toBe(inUse);
   });
 
   it('declares only the icon package it actually uses', () => {
     const [inUse] = [...iconLibrariesInUse().keys()];
-    const pkg = JSON.parse(
+    const declared = readDependencyNames(
       readFileSync(join(root, 'package.json'), 'utf8'),
-    ) as {
-      dependencies?: Record<string, string>;
-      devDependencies?: Record<string, string>;
-    };
-    const declared = { ...pkg.dependencies, ...pkg.devDependencies };
+    );
 
     const stale = [...ICON_PACKAGES]
-      .filter(([pkgName, library]) => library !== inUse && pkgName in declared)
+      .filter(
+        ([pkgName, library]) => library !== inUse && declared.has(pkgName),
+      )
       .map(([pkgName]) => pkgName);
 
     expect(

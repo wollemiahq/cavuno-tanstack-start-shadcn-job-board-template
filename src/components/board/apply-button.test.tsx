@@ -108,10 +108,11 @@ describe('ApplyButton gateway external jobs', () => {
         viewer={null}
       />,
     );
-    const form = container.querySelector('form')!;
+    const form = container.querySelector('form');
+    if (!form) throw new Error('Expected the apply control to render a form');
     fireEvent.submit(form);
     expect(
-      (screen.getByRole('button', { name: /applying/i }) as HTMLButtonElement)
+      screen.getByRole<HTMLButtonElement>('button', { name: /applying/i })
         .disabled,
     ).toBe(true);
   });

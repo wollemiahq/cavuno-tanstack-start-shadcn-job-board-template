@@ -1,4 +1,5 @@
 import { isTrustedApplyGatewayUrl } from './apply-gateway-url';
+import { searchString } from './pagination';
 
 import type {
   ApplyApprovalPlan as BoardApplyApprovalPlan,
@@ -15,6 +16,22 @@ import type {
 
 export type ApplyApprovalPlan = BoardApplyApprovalPlan;
 export type ApplyApprovalReceipt = BoardApplyApprovalReceipt;
+type ApplyApprovalPlanWire = {
+  object?: string;
+  kind?: string;
+  approvalUrl?: string;
+  expiresAt?: string;
+};
+type ApplyApprovalReceiptWire = {
+  object?: string;
+  id?: string;
+  expiresAt?: string;
+};
+export type NativeApplyPrepareResult =
+  | ApplyApprovalPlan
+  | ApplyApprovalPlanWire
+  | null
+  | undefined;
 
 export type NativeApplyApprovalFailure =
   | 'denied'
@@ -34,37 +51,58 @@ export class NativeApplyApprovalError extends Error {
 const OPAQUE_TOKEN_RE = /^[A-Za-z0-9_-]{20,300}$/;
 const ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 
-function validTimestamp(value: unknown): value is string {
-  const timestamp = typeof value === 'string' ? Date.parse(value) : Number.NaN;
-  return (
-    typeof value === 'string' &&
-    value.length <= 64 &&
-    ISO_TIMESTAMP_RE.test(value) &&
+function validTimestamp<T>(value: T): string | undefined {
+  const text = searchString(value);
+  const timestamp = text ? Date.parse(text) : Number.NaN;
+  return text !== undefined &&
+    text.length <= 64 &&
+    ISO_TIMESTAMP_RE.test(text) &&
     Number.isFinite(timestamp) &&
     timestamp > Date.now()
-  );
+    ? text
+    : undefined;
 }
 
-function trustedApprovalUrl(value: unknown): value is string {
-  if (typeof value !== 'string' || value.length > 500) return false;
+function trustedApprovalUrl<T>(value: T): string | undefined {
+  const text = searchString(value);
+  if (!text || text.length > 500) return undefined;
   try {
-    const url = new URL(value);
+    const url = new URL(text);
     const opaque = url.pathname.startsWith('/r/')
       ? url.pathname.slice('/r/'.length)
       : '';
-    return (
-      OPAQUE_TOKEN_RE.test(opaque) && isTrustedApplyGatewayUrl(url, 'r', opaque)
-    );
+    return OPAQUE_TOKEN_RE.test(opaque) &&
+      isTrustedApplyGatewayUrl(url, 'r', opaque)
+      ? text
+      : undefined;
   } catch {
-    return false;
+    return undefined;
   }
 }
 
-export function parseApplyApprovalPlan(value: unknown): ApplyApprovalPlan {
-  if (!value || typeof value !== 'object') {
+function planWire<T>(value: T): ApplyApprovalPlanWire | null {
+  if (value === null || value === undefined || Object(value) !== value) {
+    return null;
+  }
+  // SAFETY: The parser only reads optional scalar protocol fields after this
+  // object boundary check and validates each field before constructing a plan.
+  return value as ApplyApprovalPlanWire;
+}
+
+function receiptWire<T>(value: T): ApplyApprovalReceiptWire | null {
+  if (value === null || value === undefined || Object(value) !== value) {
+    return null;
+  }
+  // SAFETY: The parser only reads optional scalar protocol fields after this
+  // object boundary check and validates each field before constructing a receipt.
+  return value as ApplyApprovalReceiptWire;
+}
+
+export function parseApplyApprovalPlan<T>(value: T): ApplyApprovalPlan {
+  const plan = planWire(value);
+  if (!plan) {
     throw new NativeApplyApprovalError('malformed_plan');
   }
-  const plan = value as Record<string, unknown>;
   if (
     plan.object !== 'apply_approval_plan' ||
     (plan.kind !== 'not_required' && plan.kind !== 'approval_required')
@@ -74,39 +112,38 @@ export function parseApplyApprovalPlan(value: unknown): ApplyApprovalPlan {
   if (plan.kind === 'not_required') {
     return { object: 'apply_approval_plan', kind: 'not_required' };
   }
-  if (
-    !trustedApprovalUrl(plan.approvalUrl) ||
-    !validTimestamp(plan.expiresAt)
-  ) {
+  const approvalUrl = trustedApprovalUrl(plan.approvalUrl);
+  const expiresAt = validTimestamp(plan.expiresAt);
+  if (!approvalUrl || !expiresAt) {
     throw new NativeApplyApprovalError('malformed_plan');
   }
   return {
     object: 'apply_approval_plan',
     kind: 'approval_required',
-    approvalUrl: plan.approvalUrl,
-    expiresAt: plan.expiresAt,
+    approvalUrl,
+    expiresAt,
   };
 }
 
-export function parseApplyApprovalReceipt(
-  value: unknown,
-): ApplyApprovalReceipt {
-  if (!value || typeof value !== 'object') {
+export function parseApplyApprovalReceipt<T>(value: T): ApplyApprovalReceipt {
+  const receipt = receiptWire(value);
+  if (!receipt) {
     throw new NativeApplyApprovalError('malformed_receipt');
   }
-  const receipt = value as Record<string, unknown>;
+  const id = searchString(receipt.id);
+  const expiresAt = validTimestamp(receipt.expiresAt);
   if (
     receipt.object !== 'apply_approval_receipt' ||
-    typeof receipt.id !== 'string' ||
-    !OPAQUE_TOKEN_RE.test(receipt.id) ||
-    !validTimestamp(receipt.expiresAt)
+    !id ||
+    !OPAQUE_TOKEN_RE.test(id) ||
+    !expiresAt
   ) {
     throw new NativeApplyApprovalError('malformed_receipt');
   }
   return {
     object: 'apply_approval_receipt',
-    id: receipt.id,
-    expiresAt: receipt.expiresAt,
+    id,
+    expiresAt,
   };
 }
 
@@ -117,11 +154,11 @@ export async function runNativeApply<Result>({
   fetchGateway = (url, init) => fetch(url, init),
 }: {
   jobSlug: string;
-  prepare: (jobSlug: string) => Promise<unknown>;
+  prepare: (jobSlug: string) => Promise<NativeApplyPrepareResult>;
   submit: (jobSlug: string, approvalReceipt?: string) => Promise<Result>;
   fetchGateway?: (url: string, init?: RequestInit) => Promise<Response>;
 }): Promise<Result> {
-  let rawPlan: unknown;
+  let rawPlan: NativeApplyPrepareResult;
   try {
     rawPlan = await prepare(jobSlug);
   } catch {

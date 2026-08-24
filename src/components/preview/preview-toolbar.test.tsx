@@ -16,31 +16,18 @@ import type {
   PreviewPersona,
   PreviewViewer,
 } from '../../lib/preview';
+import type { PreviewToolbarDependencies } from './preview-toolbar';
 
-const mocks = vi.hoisted(() => ({
-  switchPersona: vi.fn<() => unknown>(),
-  updateSandboxFlags: vi.fn<() => unknown>(),
-  reseedSandbox: vi.fn<() => unknown>(),
-  exitPreview: vi.fn<() => unknown>(),
-  listSandboxEmails: vi.fn<() => unknown>(),
-  invalidate: vi.fn<() => unknown>(),
-}));
+const mocks = {
+  switchPersona: vi.fn<PreviewToolbarDependencies['switchPersona']>(),
+  updateSandboxFlags: vi.fn<PreviewToolbarDependencies['updateSandboxFlags']>(),
+  reseedSandbox: vi.fn<PreviewToolbarDependencies['reseedSandbox']>(),
+  exitPreview: vi.fn<PreviewToolbarDependencies['exitPreview']>(),
+  listSandboxEmails: vi.fn<PreviewToolbarDependencies['listSandboxEmails']>(),
+  invalidate: vi.fn<PreviewToolbarDependencies['invalidate']>(),
+};
 
-// The persona menu and the board-settings sheet both consume `useRouter`
-// (the flag optimistic path invalidates on success); one mock covers both.
-vi.mock('@tanstack/react-router', () => ({
-  useRouter: () => ({ invalidate: mocks.invalidate }),
-}));
-
-vi.mock('../../server/preview', () => ({
-  switchPersona: mocks.switchPersona,
-  updateSandboxFlags: mocks.updateSandboxFlags,
-  reseedSandbox: mocks.reseedSandbox,
-  exitPreview: mocks.exitPreview,
-  listSandboxEmails: mocks.listSandboxEmails,
-}));
-
-import { PreviewToolbar } from './preview-toolbar';
+import { PreviewToolbarView } from './preview-toolbar';
 
 const capable: PreviewCapability = { canPreview: true, reason: 'sandbox' };
 
@@ -77,15 +64,23 @@ const config: PreviewBoardConfig = {
   registrationWallEnabled: false,
 };
 
+interface RenderToolbarOptions {
+  capability?: PreviewCapability;
+  viewer?: PreviewViewer | null;
+  demoConfigured?: boolean;
+  demoBoardPrivate?: boolean;
+  dataSource?: 'board' | 'demo';
+}
+
 function renderToolbar({
   capability = capable,
-  viewer = null as PreviewViewer | null,
+  viewer = null,
   demoConfigured = false,
   demoBoardPrivate = false,
-  dataSource = 'board' as 'board' | 'demo',
-} = {}) {
+  dataSource = 'board',
+}: RenderToolbarOptions = {}) {
   return render(
-    <PreviewToolbar
+    <PreviewToolbarView
       capability={capability}
       personas={personas}
       viewer={viewer}
@@ -93,6 +88,14 @@ function renderToolbar({
       demoConfigured={demoConfigured}
       demoBoardPrivate={demoBoardPrivate}
       dataSource={dataSource}
+      dependencies={{
+        switchPersona: mocks.switchPersona,
+        updateSandboxFlags: mocks.updateSandboxFlags,
+        reseedSandbox: mocks.reseedSandbox,
+        exitPreview: mocks.exitPreview,
+        listSandboxEmails: mocks.listSandboxEmails,
+        invalidate: mocks.invalidate,
+      }}
     />,
   );
 }
@@ -107,6 +110,14 @@ function openMenu() {
 function openBoardSettings() {
   openMenu();
   fireEvent.click(screen.getByRole('button', { name: 'Board settings' }));
+}
+
+function getPreviewActions() {
+  const actions = document.querySelector<HTMLElement>(
+    '[data-test="preview-actions"]',
+  );
+  if (!actions) throw new Error('Expected the preview actions to be visible');
+  return actions;
 }
 
 // jsdom cannot navigate; the toolbar full-reloads after identity-changing
@@ -235,9 +246,7 @@ describe('PreviewToolbar', () => {
 
     // The primary surface does ONE job (switch persona) plus a footer action
     // row; the flag controls have moved out to their own surface.
-    const actions = document.querySelector(
-      '[data-test="preview-actions"]',
-    ) as HTMLElement;
+    const actions = getPreviewActions();
     expect(
       within(actions).getByRole('button', { name: 'Board settings' }),
     ).toBeInTheDocument();
@@ -263,10 +272,10 @@ describe('PreviewToolbar', () => {
     openBoardSettings();
 
     // The focused surface carries its own title + the whitelisted controls.
-    const panel = document.querySelector(
+    const panel = document.querySelector<HTMLElement>(
       '[data-test="preview-board-settings-panel"]',
-    ) as HTMLElement;
-    expect(panel).not.toBeNull();
+    );
+    if (!panel) throw new Error('Expected the board settings panel to open');
     expect(
       within(panel).getByRole('switch', { name: 'Candidate paywall' }),
     ).toBeInTheDocument();
@@ -380,9 +389,7 @@ describe('PreviewToolbar dual-source switcher (T5)', () => {
       dataSource: 'demo',
     });
     openMenu();
-    const actions = document.querySelector(
-      '[data-test="preview-actions"]',
-    ) as HTMLElement;
+    const actions = getPreviewActions();
     expect(
       within(actions).queryByRole('button', { name: 'Board settings' }),
     ).toBeNull();
@@ -404,9 +411,7 @@ describe('PreviewToolbar dual-source switcher (T5)', () => {
       dataSource: 'board',
     });
     openMenu();
-    let actions = document.querySelector(
-      '[data-test="preview-actions"]',
-    ) as HTMLElement;
+    let actions = getPreviewActions();
     expect(
       within(actions).queryByRole('button', { name: 'Board settings' }),
     ).toBeNull();
@@ -421,9 +426,7 @@ describe('PreviewToolbar dual-source switcher (T5)', () => {
       dataSource: 'demo',
     });
     openMenu();
-    actions = document.querySelector(
-      '[data-test="preview-actions"]',
-    ) as HTMLElement;
+    actions = getPreviewActions();
     expect(
       within(actions).getByRole('button', { name: 'Board settings' }),
     ).toBeInTheDocument();

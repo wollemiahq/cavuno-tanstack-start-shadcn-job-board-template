@@ -1,3 +1,4 @@
+import { createBoardClient } from '@cavuno/board';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -10,6 +11,8 @@ import {
   ordinaryFallbackRedirect,
   withApplyCookies,
 } from './apply-intent';
+
+import type { ApplyIntent } from '@cavuno/board';
 
 describe('board-local Apply intent seam', () => {
   it('accepts exactly one job slug from the posted form', async () => {
@@ -94,18 +97,23 @@ describe('board-local Apply intent seam', () => {
   });
 
   it('calls the versioned intent endpoint with only the server-owned session key', async () => {
-    const create = vi.fn().mockResolvedValue({
+    const intent = {
       id: 'intent_1234567890',
       object: 'apply_intent',
       gatewayUrl: 'https://apply.cavuno.com/a/intent_1234567890',
       expiresAt: '2026-08-23T00:00:00.000Z',
+    } satisfies ApplyIntent;
+    const board = createBoardClient({
+      baseUrl: 'https://api.example.test',
+      board: 'pk_apply_intent_test',
+      auth: { storage: 'nostore' },
     });
-    await createApplyIntent(
-      { jobs: { createApplyIntent: create } } as never,
-      'senior engineer/au',
-      'S'.repeat(32),
-      { authorization: 'Bearer trusted' },
-    );
+    const create = vi
+      .spyOn(board.jobs, 'createApplyIntent')
+      .mockResolvedValue(intent);
+    await createApplyIntent(board, 'senior engineer/au', 'S'.repeat(32), {
+      authorization: 'Bearer trusted',
+    });
     expect(create).toHaveBeenCalledWith(
       'senior engineer/au',
       { sessionKey: 'S'.repeat(32) },

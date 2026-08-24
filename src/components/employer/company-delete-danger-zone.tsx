@@ -2,10 +2,7 @@
 
 import { useState } from 'react';
 
-import { useRouter } from '@tanstack/react-router';
-
 import { m } from '../../paraglide/messages';
-import { deleteCompany } from '../../server/employers';
 
 import {
   AlertDialog,
@@ -28,7 +25,17 @@ import {
 } from '@/components/ui/card';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { toastActionSuccess } from '@/lib/action-toast';
+
+export type CompanyDeleteActions = {
+  deleteCompany: (
+    ...args: Parameters<typeof import('../../server/employers').deleteCompany>
+  ) => Promise<
+    { ok: true; data?: null } | { ok: false; code: string; message: string }
+  >;
+  invalidate: () => Promise<void>;
+  navigateToDashboard: () => Promise<void>;
+  toastSuccess: (message: string) => void;
+};
 
 const CONFIRM_WORD = () => m.dangerZone_confirmWord();
 
@@ -37,13 +44,14 @@ export function CompanyDeleteDangerZone({
   companyName,
   isAdmin,
   otherApprovedMembers,
+  actions,
 }: {
   slug: string;
   companyName: string;
   isAdmin: boolean;
   otherApprovedMembers: number;
+  actions: CompanyDeleteActions;
 }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState('');
   const [status, setStatus] = useState<'idle' | 'deleting' | 'error'>('idle');
@@ -143,7 +151,9 @@ export function CompanyDeleteDangerZone({
                 onClick={async () => {
                   setStatus('deleting');
                   try {
-                    const result = await deleteCompany({ data: { slug } });
+                    const result = await actions.deleteCompany({
+                      data: { slug },
+                    });
                     if (!result.ok) {
                       if (result.code === 'company_deletion_disabled') {
                         setDisabledReason('company_deletion_disabled');
@@ -159,11 +169,11 @@ export function CompanyDeleteDangerZone({
                       setStatus('error');
                       return;
                     }
-                    void toastActionSuccess(
+                    actions.toastSuccess(
                       m.employerDelete_deletedToast({ company: companyName }),
                     );
-                    await router.invalidate();
-                    await router.navigate({ to: '/employers/dashboard' });
+                    await actions.invalidate();
+                    await actions.navigateToDashboard();
                     setOpen(false);
                   } catch {
                     setStatus('error');

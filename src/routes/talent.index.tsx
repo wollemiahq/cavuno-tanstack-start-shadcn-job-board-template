@@ -1,8 +1,6 @@
-import { isNotFound } from '@cavuno/board';
 import {
   createFileRoute,
   getRouteApi,
-  notFound,
   useLocation,
   useNavigate,
 } from '@tanstack/react-router';
@@ -10,8 +8,11 @@ import { Users } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
-import { getTalentIndexPage } from '../server/talent-pages';
 import { RestrictedTalentDirectory } from './-restricted-talent-directory';
+import {
+  createTalentDirectoryLoader,
+  TALENT_PAGE_SIZE,
+} from './-talent-loaders';
 
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import {
@@ -25,7 +26,7 @@ import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { useRootSession } from '@/components/root-session';
 import { buttonVariants } from '@/components/ui/button';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
-import { pageSearchValue, pageToOffset } from '@/lib/pagination';
+import { pageSearchValue } from '@/lib/pagination';
 import {
   parseTalentSearch,
   talentListingLoaderDeps,
@@ -33,29 +34,12 @@ import {
 import { SelectedTalentDetail } from '@/routes/-selected-talent-detail';
 import { useSelectedTalent } from '@/routes/-use-selected-talent';
 
-const TALENT_PAGE_SIZE = 24;
-
 const rootApi = getRouteApi('__root__');
-
 export const Route = createFileRoute('/talent/')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseTalentSearch,
   loaderDeps: ({ search }) => talentListingLoaderDeps(search),
-  loader: async ({ deps }) => {
-    try {
-      return await getTalentIndexPage({
-        data: {
-          offset: pageToOffset(deps.page ?? 1, TALENT_PAGE_SIZE),
-          q: deps.q,
-          skill: deps.skill,
-          limit: TALENT_PAGE_SIZE,
-        },
-      });
-    } catch (error) {
-      if (isNotFound(error)) throw notFound();
-      throw error;
-    }
-  },
+  loader: createTalentDirectoryLoader(),
   head: ({ loaderData, match }) =>
     loaderData
       ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }

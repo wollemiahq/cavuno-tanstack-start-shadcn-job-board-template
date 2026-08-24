@@ -9,26 +9,34 @@ import { resolveRuntimeFeatureFlags } from './board-feature-flags';
  * platform's enforcement. These pin that boundary defaulting so no surface
  * mis-reads an unset flag as "off".
  */
-// The published SDK type has no native/messaging keys, so the fixtures cast
-// through unknown to model both a pre-#968 and a post-#968 deployment body.
-const features = (extra: Record<string, unknown>) =>
-  ({
+type RuntimeFeatureInput = Parameters<typeof resolveRuntimeFeatureFlags>[0];
+
+function features(
+  extra: Partial<RuntimeFeatureInput> = {},
+): RuntimeFeatureInput {
+  return {
     jobAlerts: true,
     candidates: true,
     employers: true,
     blog: true,
-    talentDirectory: true,
+    talentDirectory: 'public',
     registrationWall: false,
     passwordProtected: false,
     publicJobSubmission: true,
     candidatePaywall: false,
     impressum: false,
+    nativeApplications: true,
+    messaging: true,
     ...extra,
-  }) as unknown as Parameters<typeof resolveRuntimeFeatureFlags>[0];
+  };
+}
 
 describe('resolveRuntimeFeatureFlags', () => {
   it('defaults both flags to ON when absent (older API deployment)', () => {
-    expect(resolveRuntimeFeatureFlags(features({}))).toEqual({
+    const legacyFeatures = features();
+    Reflect.deleteProperty(legacyFeatures, 'nativeApplications');
+    Reflect.deleteProperty(legacyFeatures, 'messaging');
+    expect(resolveRuntimeFeatureFlags(legacyFeatures)).toEqual({
       nativeApplications: true,
       messaging: true,
     });

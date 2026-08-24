@@ -143,7 +143,7 @@ describe('toApplyButtonVM — copy', () => {
   it('resolves every label the markup renders', () => {
     const vm = toApplyButtonVM({ ...base, viewer: { emailVerified: true } });
     for (const label of Object.values(vm.copy)) {
-      expect(typeof label).toBe('string');
+      expect(label).toBeTypeOf('string');
       expect(label.length).toBeGreaterThan(0);
     }
   });

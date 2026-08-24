@@ -20,9 +20,9 @@ describe('shadcn design system foundation', () => {
         prefix: '',
       },
     });
-    expect(typeof config.iconLibrary).toBe('string');
+    expect(config.iconLibrary).toBeTypeOf('string');
     expect(config.iconLibrary.length).toBeGreaterThan(0);
-    expect(typeof config.tailwind.baseColor).toBe('string');
+    expect(config.tailwind.baseColor).toBeTypeOf('string');
     expect(config.tailwind.baseColor.length).toBeGreaterThan(0);
   });
 

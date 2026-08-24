@@ -2,39 +2,49 @@
 import '@testing-library/jest-dom/vitest';
 import { useState } from 'react';
 
+import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
 /**
  * Auth routes submit native forms through FormData. Fields must therefore
  * render real inputs with the expected name, type, autocomplete, required,
  * and current-value semantics.
  */
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    Link: ({
-      to,
-      children,
-      ...props
-    }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { to: string }) => (
-      <a href={to} {...props}>
-        {children}
-      </a>
-    ),
-  };
-});
+import {
+  cleanup,
+  fireEvent,
+  render as renderUi,
+  screen,
+} from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { AuthCard, AuthDivider, Field, FormError } from './auth-form';
 import { RegistrationPage, RoleSelector } from './registration-page';
 
+async function render(node: React.ReactNode) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => <>{node}</>,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  await router.load();
+  return renderUi(<RouterProvider router={router} />);
+}
+
 afterEach(cleanup);
 
 describe('Field renders a native, form-participating input', () => {
-  it('carries name/type/autoComplete and a native required attribute', () => {
-    const { container } = render(
+  it('carries name/type/autoComplete and a native required attribute', async () => {
+    const { container } = await render(
       <Field
         label="Email address"
         name="email"
@@ -60,8 +70,8 @@ describe('Field renders a native, form-participating input', () => {
     expect(screen.getByText('Email address')).toBeTruthy();
   });
 
-  it('forwards minLength for the password rules', () => {
-    const { container } = render(
+  it('forwards minLength for the password rules', async () => {
+    const { container } = await render(
       <Field label="Password" name="password" type="password" minLength={8} />,
     );
     const input = container.querySelector<HTMLInputElement>(
@@ -70,9 +80,9 @@ describe('Field renders a native, form-participating input', () => {
     expect(input!.minLength).toBe(8);
   });
 
-  it('a plain form reads the typed value through FormData (submit contract)', () => {
+  it('a plain form reads the typed value through FormData (submit contract)', async () => {
     const seen: Record<string, string> = {};
-    const { container } = render(
+    const { container } = await render(
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -94,8 +104,8 @@ describe('Field renders a native, form-participating input', () => {
 });
 
 describe('AuthCard + FormError chrome', () => {
-  it('renders the card title as a heading', () => {
-    render(
+  it('renders the card title as a heading', async () => {
+    await render(
       <AuthCard title="Sign in">
         <p>body</p>
       </AuthCard>,
@@ -103,8 +113,8 @@ describe('AuthCard + FormError chrome', () => {
     expect(screen.getByRole('heading', { name: 'Sign in' })).toBeTruthy();
   });
 
-  it('FormError shows a message only when one is present', () => {
-    const { rerender, container } = render(<FormError message={null} />);
+  it('FormError shows a message only when one is present', async () => {
+    const { rerender, container } = await render(<FormError message={null} />);
     expect(container.textContent).toBe('');
     rerender(<FormError message="Invalid credentials" />);
     expect(screen.getByRole('alert')).toHaveTextContent('Invalid credentials');
@@ -114,8 +124,8 @@ describe('AuthCard + FormError chrome', () => {
     );
   });
 
-  it('uses the form separator anatomy for the auth divider', () => {
-    const { container } = render(<AuthDivider label="Or" />);
+  it('uses the form separator anatomy for the auth divider', async () => {
+    const { container } = await render(<AuthDivider label="Or" />);
 
     expect(
       container.querySelector('[data-slot="field-separator"]'),
@@ -136,7 +146,7 @@ describe('RegistrationPage', () => {
   };
 
   it('reports a registration error without losing the submitted values', async () => {
-    render(
+    await render(
       <RegistrationPage
         title="Create your account"
         supportingText="Join the board."
@@ -170,7 +180,7 @@ describe('RegistrationPage', () => {
   });
 
   it('recovers when the registration request rejects unexpectedly', async () => {
-    render(
+    await render(
       <RegistrationPage
         title="Create your account"
         supportingText="Join the board."
@@ -202,7 +212,7 @@ describe('RegistrationPage', () => {
   });
 
   it('replaces the initial heading with one announced success heading', async () => {
-    render(
+    await render(
       <RegistrationPage
         title="Create your account"
         supportingText="Join the board."
@@ -235,7 +245,7 @@ describe('RegistrationPage', () => {
   });
 
   it('keeps the pending Base UI submit in the tab order', async () => {
-    render(
+    await render(
       <RegistrationPage
         title="Create your account"
         supportingText="Join the board."
@@ -266,7 +276,7 @@ describe('RegistrationPage', () => {
 });
 
 describe('RoleSelector', () => {
-  it('moves selection between the candidate and employer choices', () => {
+  it('moves selection between the candidate and employer choices', async () => {
     function Harness() {
       const [value, setValue] = useState<'candidate' | 'employer'>('candidate');
       return (
@@ -282,7 +292,7 @@ describe('RoleSelector', () => {
       );
     }
 
-    render(<Harness />);
+    await render(<Harness />);
     const candidate = screen.getByRole('radio', {
       name: /I'm looking for a job/,
     });

@@ -36,6 +36,8 @@ export interface RuntimeBoardFeatureFlags {
 export function resolveRuntimeFeatureFlags(
   features: BoardContextFeatures,
 ): RuntimeBoardFeatureFlags {
+  // SAFETY: Runtime feature flags are additive wire fields that may be absent
+  // from the pinned SDK type; absent values default to true below.
   const parity = features as BoardContextFeatures & {
     nativeApplications?: boolean;
     messaging?: boolean;

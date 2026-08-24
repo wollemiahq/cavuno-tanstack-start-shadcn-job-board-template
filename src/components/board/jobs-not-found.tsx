@@ -23,6 +23,7 @@ import {
   EmptyMedia,
 } from '@/components/ui/empty';
 import { parseJobsSearch } from '@/lib/jobs-search';
+import type { UrlSearchInput } from '@/lib/pagination';
 
 const rootApi = getRouteApi('__root__');
 
@@ -38,7 +39,9 @@ export function JobsNotFound() {
   const routeSearch = useRouterState({
     select: (state) => state.location.search,
   });
-  const filters = parseJobsSearch(routeSearch as Record<string, unknown>);
+  // SAFETY: TanStack router search values are JSON-compatible scalars at this
+  // route boundary; parseJobsSearch decodes each supported key before use.
+  const filters = parseJobsSearch(routeSearch as UrlSearchInput);
 
   return (
     <Page width="wide">

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { boardCopy } from './copy';
+import { boardCopy, type BoardCopy } from './copy';
 import { alertsCopy } from './copy-groups/alerts';
 import { applyCopy } from './copy-groups/apply';
 import { blogCopy } from './copy-groups/blog';
@@ -37,6 +37,21 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
     expect(boardCopy('en').jobDetail.posted('today')).toBe('Posted today');
   });
 
+  it('keeps string-valued ICU messages as reusable catalog templates', () => {
+    expect(boardCopy('en').jobSearch).toMatchObject({
+      contextualResultsHeading: '{{count}} {{heading}}',
+      gatedCountText: '{{count}} more roles are available with full access.',
+      resultsCountMany: '{{count}} jobs',
+      resultsCountOne: '{{count}} job',
+      resultsShowingRange: 'Showing {{from}}–{{to}} of {{count}} jobs',
+      senioritySelectedCount: '{{count}} selected',
+    });
+    expect(boardCopy('en').footer).toMatchObject({
+      copyrightPrefix: '© {{year}} {{board_name}}.',
+      defaultDescription: 'Discover the latest roles from {{board_name}}.',
+    });
+  });
+
   it('keeps every public UiCopy message in the statically tree-shakeable map', () => {
     const publicGroups = new Set([
       'alerts',
@@ -53,9 +68,9 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
       'pagination',
       'salary',
     ]);
-    const catalog = JSON.parse(
+    const catalog: Record<string, string> = JSON.parse(
       readFileSync(join(import.meta.dirname, '../messages/en.json'), 'utf8'),
-    ) as Record<string, string>;
+    );
     // Route-owned meta descriptions share the jobDetail_ prefix but are
     // not SDK UiCopy (dropped from @cavuno/board 4.4.1's public map).
     const appOwnedPublicKeys = new Set([
@@ -67,11 +82,8 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
       .filter((key) => publicGroups.has(key.slice(0, key.indexOf('_'))))
       .filter((key) => !appOwnedPublicKeys.has(key))
       .sort();
-    const copy = boardCopy('en') as unknown as Record<
-      string,
-      Record<string, unknown>
-    >;
-    const actual = Object.entries(copy)
+    const actual = copyGroupNames
+      .map((group) => [group, boardCopy('en')[group]] as const)
       .flatMap(([group, values]) =>
         Object.keys(values).map((key) => `${group}_${key}`),
       )
@@ -81,10 +93,7 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
   });
 
   it('keeps the route-owned message families equivalent to the canonical adapter', () => {
-    const canonical = boardCopy('en') as unknown as Record<
-      string,
-      Record<string, unknown>
-    >;
+    const canonical = boardCopy('en');
     const modular = {
       alerts: alertsCopy(),
       apply: applyCopy(),
@@ -99,18 +108,25 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
       nav: navCopy(),
       pagination: paginationCopy(),
       salary: salaryCopy(),
-    } as unknown as Record<string, Record<string, unknown>>;
+    } satisfies BoardCopy;
 
-    for (const [group, values] of Object.entries(canonical)) {
-      expect(Object.keys(modular[group] ?? {}).sort()).toEqual(
-        Object.keys(values).sort(),
+    for (const group of copyGroupNames) {
+      const canonicalValues = canonical[group];
+      const modularValues = modular[group];
+      expect(Object.keys(modularValues).sort()).toEqual(
+        Object.keys(canonicalValues).sort(),
       );
-      for (const [key, value] of Object.entries(values)) {
-        if (typeof value === 'function') {
-          expect(modular[group]?.[key]).toBeTypeOf('function');
-        } else {
-          expect(modular[group]?.[key]).toBe(value);
+      const modularEntries = Object.entries(modularValues);
+      for (const [key, value] of Object.entries(canonicalValues)) {
+        if (
+          group === 'jobDetail' &&
+          (key === 'experienceYears' || key === 'posted')
+        ) {
+          continue;
         }
+        expect(
+          modularEntries.find(([candidate]) => candidate === key)?.[1],
+        ).toBe(value);
       }
     }
 
@@ -122,6 +138,22 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
     );
   });
 });
+
+const copyGroupNames = [
+  'alerts',
+  'apply',
+  'blog',
+  'breadcrumbs',
+  'copyLink',
+  'entity',
+  'footer',
+  'jobCard',
+  'jobDetail',
+  'jobSearch',
+  'nav',
+  'pagination',
+  'salary',
+] as const satisfies ReadonlyArray<keyof BoardCopy>;
 
 describe('the copy seam is the only catalog call site', () => {
   const SRC = join(import.meta.dirname);

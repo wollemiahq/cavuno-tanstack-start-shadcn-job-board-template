@@ -29,11 +29,11 @@ import type { Resume } from '@cavuno/board';
  * `board.me.resume.{upload,retrieve,delete}`. Upload returns `parsing`; the
  * worker fills in parsed profile fields asynchronously.
  */
-const PARSE_STATUS_LABEL: Record<string, () => string> = {
+const PARSE_STATUS_LABEL = {
   parsing: m.resumeUpload_parseStatusParsing,
   parsed: m.resumeUpload_parseStatusParsed,
   failed: m.resumeUpload_parseStatusFailed,
-};
+} satisfies Record<string, () => string>;
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return m.resumeUpload_fileSizeB({ value: bytes });
@@ -45,13 +45,29 @@ function formatBytes(bytes: number): string {
   });
 }
 
+export interface ResumeUploadDependencies {
+  deleteResume: () => ReturnType<typeof deleteResume>;
+  uploadResume: (
+    input: Parameters<typeof uploadResume>[0],
+  ) => ReturnType<typeof uploadResume>;
+  toastActionError: () => void | Promise<void>;
+}
+
+const resumeUploadDependencies: ResumeUploadDependencies = {
+  deleteResume,
+  uploadResume,
+  toastActionError,
+};
+
 export function ResumeUpload({
   resume,
   variant = 'section',
+  dependencies = resumeUploadDependencies,
 }: {
   resume: Resume;
   /** `embedded` drops the section heading — the host surface provides it. */
   variant?: 'section' | 'embedded';
+  dependencies?: ResumeUploadDependencies;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -133,12 +149,12 @@ export function ResumeUpload({
               onClick={async () => {
                 setStatus('deleting');
                 try {
-                  await deleteResume();
+                  await dependencies.deleteResume();
                   await router.invalidate();
                   setStatus('idle');
                 } catch {
                   setStatus('idle');
-                  void toastActionError();
+                  void dependencies.toastActionError();
                 }
               }}
             >
@@ -162,7 +178,7 @@ export function ResumeUpload({
           formData.append('resume', file);
           formData.append('keepResumeOnFile', String(keepOnFile));
           try {
-            await uploadResume({ data: formData });
+            await dependencies.uploadResume({ data: formData });
             await router.invalidate();
             setStatus('idle');
           } catch {
