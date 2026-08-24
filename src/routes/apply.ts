@@ -2,9 +2,9 @@
  * POST-only real-Apply handoff for the current TanStack starter.
  *
  * It intentionally has no GET handler and never accepts a destination or
- * country from the browser. The browser only receives a 303 after Cavuno has
- * created an opaque intent; the next request therefore reaches the user-edge
- * gateway directly instead of using this server's IP address.
+ * country from the browser. Enhanced clients receive the opaque gateway URL;
+ * plain forms receive a 303. Either way, the candidate's browser reaches the
+ * user-edge gateway directly so Cavuno never evaluates this server's IP.
  */
 import { createFileRoute } from '@tanstack/react-router';
 
@@ -25,11 +25,15 @@ import {
 import { decideSession } from '@/lib/session-middleware';
 import {
   applyJobSlug,
+  applyJsonGateway,
+  applyJsonRedirect,
   applySessionKey,
   createApplyIntent,
+  gatewayLocation,
   gatewayRedirect,
   isSameOriginApplyRequest,
   ordinaryFallbackRedirect,
+  wantsApplyJson,
   withApplyCookies,
 } from '@/server/apply-intent';
 
@@ -48,6 +52,7 @@ export const Route = createFileRoute('/apply')({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const wantsJson = wantsApplyJson(request);
         if (!isSameOriginApplyRequest(request)) {
           return applyErrorResponse(400);
         }
@@ -90,6 +95,12 @@ export const Route = createFileRoute('/apply')({
             applySession.sessionKey,
             headers,
           );
+          if (wantsJson) {
+            return withApplyCookies(
+              applyJsonGateway(gatewayLocation(intent)),
+              cookies,
+            );
+          }
           return withApplyCookies(gatewayRedirect(intent, null), cookies);
         } catch {
           // `all_jobs` ordinary external applies are intentionally fail-open
@@ -108,7 +119,15 @@ export const Route = createFileRoute('/apply')({
             applicationUrl: job.applicationUrl,
             applyAction: job.applyAction,
           });
-          if (fallback) return withApplyCookies(fallback, cookies);
+          if (fallback) {
+            if (wantsJson) {
+              const location = fallback.headers.get('location');
+              if (location) {
+                return withApplyCookies(applyJsonRedirect(location), cookies);
+              }
+            }
+            return withApplyCookies(fallback, cookies);
+          }
           return withApplyCookies(applyErrorResponse(503), cookies);
         }
       },

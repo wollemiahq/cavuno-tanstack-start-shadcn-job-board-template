@@ -403,6 +403,15 @@ Props:
 - `returnTo: string`
 - `viewer: { emailVerified: boolean; } | null`
 
+### ApplyLocationDialog — `src/components/board/apply-location-dialog.tsx`
+
+Props:
+
+- `description: string`
+- `onClose: () => void`
+- `open: boolean`
+- `title: string`
+
 ### BlogArchivePage — `src/components/board/blog-archive-page.tsx`
 
 Shared Page-family presentation for the blog, tag, and author archives.
