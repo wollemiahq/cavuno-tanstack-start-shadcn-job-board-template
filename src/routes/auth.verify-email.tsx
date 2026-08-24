@@ -11,7 +11,7 @@ import {
   candidateSignInHref,
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
-import { getSessionUser } from '../server/account';
+import { getSessionUserStrict } from '../server/account';
 import { verifyEmail } from '../server/auth';
 import { getSeoBase } from '../server/queries';
 
@@ -42,7 +42,7 @@ export const Route = createFileRoute('/auth/verify-email')({
     // to use only if this exact user transitions from unverified to verified;
     // an unrelated or already-verified browser session must not choose where
     // the token's subject continues.
-    const sessionBefore = await getSessionUser();
+    const sessionBefore = await getSessionUserStrict();
     const [result, seo] = await Promise.all([
       verifyEmail({ data: { token: deps.token } }),
       seoPromise,
@@ -51,7 +51,7 @@ export const Route = createFileRoute('/auth/verify-email')({
       return { status: 'invalid' as const, returnTo: deps.returnTo, seo };
     const sessionAfter =
       sessionBefore && !sessionBefore.emailVerified
-        ? await getSessionUser()
+        ? await getSessionUserStrict()
         : null;
     const verifiedSameSession =
       sessionAfter !== null &&

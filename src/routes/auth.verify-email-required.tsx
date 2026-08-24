@@ -19,7 +19,7 @@ import { AuthCard, FormError } from '../components/auth-form';
 import { ResumeUpload } from '../components/resume-upload';
 import { candidateReturnTo } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
-import { getResume, getSessionUser } from '../server/account';
+import { getResume, getSessionUserStrict } from '../server/account';
 import { resendOtp, verifyOtpCode } from '../server/auth';
 import { getSeoBase } from '../server/queries';
 import { updateNotificationPreference } from '../server/settings';
@@ -58,7 +58,7 @@ export const Route = createFileRoute('/auth/verify-email-required')({
     // and re-issuing it there made the failure case pay a second serial
     // round trip (every sibling auth route already shares one promise).
     const seoPromise = getSeoBase();
-    const user = await getSessionUser();
+    const user = await getSessionUserStrict();
     const returnTo = candidateReturnTo(context?.deps?.returnTo);
     if (!user) {
       throw redirect({

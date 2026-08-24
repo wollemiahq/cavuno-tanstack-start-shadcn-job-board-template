@@ -26,13 +26,18 @@ import {
  * the API's message (slug taken, payment required, stage limit, …) reaches the
  * form — the grant simply rides along (established by the page load).
  */
-import { createServerFn } from '@tanstack/react-start';
+import { createMiddleware, createServerFn } from '@tanstack/react-start';
 
 import { getBoard } from '../lib/board';
-import { type BoardAccessContext } from '../lib/board-access-middleware';
-import { type SessionContext } from '../lib/session-middleware';
+import {
+  boardAccessMiddleware,
+  type BoardAccessContext,
+} from '../lib/board-access-middleware';
+import {
+  requireSessionMiddleware,
+  type SessionContext,
+} from '../lib/session-middleware';
 import { gatedRead } from './board-access';
-import { verifiedBoardUserMiddleware } from './me-verification';
 
 export type ActionResult<T> =
   | { ok: true; data: T }
@@ -63,6 +68,17 @@ function authedHeaders(
 ): Record<string, string> {
   return { ...context.authHeaders, ...context.boardAccessHeaders };
 }
+
+/** Primary-email gate for every authenticated employer workspace operation. */
+const verifiedBoardUserMiddleware = createMiddleware({ type: 'function' })
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .server(async ({ next, context }) => {
+    const me = await getBoard().me.retrieve(undefined, {
+      headers: authedHeaders(context),
+    });
+    if (!me.emailVerified) throw new Error('EMAIL_UNVERIFIED');
+    return next({ context });
+  });
 
 // ── Companies & claims ──────────────────────────────────────────────────────
 

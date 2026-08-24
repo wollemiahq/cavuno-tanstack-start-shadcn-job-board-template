@@ -57,6 +57,20 @@ export const getSessionUser = createServerFn({ method: 'GET' })
     }
   });
 
+/**
+ * Authoritative session probe for auth state machines. Unlike the shell probe
+ * above, transport/API failures bubble so a one-time token is not consumed
+ * after mistaking an unavailable profile for a signed-out visitor.
+ */
+export const getSessionUserStrict = createServerFn({ method: 'GET' })
+  .middleware([sessionMiddleware, boardAccessMiddleware])
+  .handler(({ context }) => {
+    if (!context.session) return null;
+    return getBoard().me.retrieve(undefined, {
+      headers: authedHeaders(context),
+    });
+  });
+
 /** Everything the `/account` page renders, fetched in parallel. */
 export const getAccount = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])

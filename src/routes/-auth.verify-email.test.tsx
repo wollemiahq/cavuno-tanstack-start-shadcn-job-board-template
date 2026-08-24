@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('../server/auth', () => ({ verifyEmail: mocks.verifyEmail }));
 vi.mock('../server/account', () => ({
-  getSessionUser: mocks.getSessionUser,
+  getSessionUserStrict: mocks.getSessionUser,
 }));
 
 import { Route } from './auth.verify-email';
@@ -138,5 +138,23 @@ describe('/auth/verify-email search contract', () => {
       returnTo: '/account',
     });
     expect(mocks.getSessionUser).toHaveBeenCalledOnce();
+  });
+
+  it('does not consume a one-time token when the session profile is unavailable', async () => {
+    mocks.getSessionUser.mockRejectedValue(new Error('profile unavailable'));
+    const loader = Route.options.loader;
+    if (typeof loader !== 'function') {
+      throw new Error('The email verification route must have a loader');
+    }
+
+    await expect(
+      loader({
+        deps: {
+          token: 'one-time-token',
+          returnTo: '/account',
+        },
+      } as never),
+    ).rejects.toThrow('profile unavailable');
+    expect(mocks.verifyEmail).not.toHaveBeenCalled();
   });
 });

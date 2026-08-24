@@ -55,7 +55,7 @@ vi.mock('../server/auth', () => ({
 }));
 
 vi.mock('../server/account', () => ({
-  getSessionUser: mocks.getSessionUser,
+  getSessionUserStrict: mocks.getSessionUser,
   getResume: mocks.getResume,
   uploadResume: vi.fn(),
   deleteResume: vi.fn(),
@@ -444,6 +444,13 @@ describe('/auth/verify-email-required resume loader', () => {
     expect(result.options.search).toEqual({
       returnTo: '/account',
     });
+  });
+
+  it('surfaces a failed session probe instead of treating it as signed out', async () => {
+    mocks.getSessionUser.mockRejectedValue(new Error('profile unavailable'));
+
+    await expect(routeLoader()()).rejects.toThrow('profile unavailable');
+    expect(mocks.getResume).not.toHaveBeenCalled();
   });
 
   it('loads the resume state for the post-verify step', async () => {
