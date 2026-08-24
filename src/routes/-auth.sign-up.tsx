@@ -15,6 +15,7 @@ export function SignUpView({
   boardName,
   returnTo,
   signUpAction,
+  getOAuthAuthorizationUrlAction,
   invalidate,
 }: {
   boardName: string;
@@ -27,6 +28,14 @@ export function SignUpView({
       marketingConsent?: boolean;
     };
   }) => Promise<{ ok: true } | { ok: false; message: string }>;
+  getOAuthAuthorizationUrlAction: (input: {
+    data: {
+      provider: 'google' | 'linkedin';
+      returnTo: string;
+    };
+  }) => Promise<
+    { ok: true; authorizeUrl: string } | { ok: false; message: string }
+  >;
   invalidate: () => Promise<void>;
 }) {
   const marketingConsent: MarketingConsentCopy | undefined =
@@ -59,6 +68,9 @@ export function SignUpView({
         if (result.ok) await invalidate();
         return result;
       }}
+      onOAuthStart={(provider) =>
+        getOAuthAuthorizationUrlAction({ data: { provider, returnTo } })
+      }
       footer={
         <p className="text-muted-foreground text-center text-sm">
           {m.authSignUp_alreadyHaveAccountText()}{' '}

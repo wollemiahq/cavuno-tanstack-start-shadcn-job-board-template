@@ -3,7 +3,7 @@ import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { redirectIfSignedIn, sessionUserOrNull } from '../lib/auth-guard';
 import { candidateReturnTo } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
-import { signUp } from '../server/auth';
+import { getOAuthAuthorizationUrl, signUp } from '../server/auth';
 import { getBoardContext } from '../server/queries';
 import { SignUpView } from './-auth.sign-up';
 
@@ -43,6 +43,7 @@ function SignUpPage() {
       boardName={boardName}
       returnTo={returnTo}
       signUpAction={signUp}
+      getOAuthAuthorizationUrlAction={getOAuthAuthorizationUrl}
       invalidate={async () => {
         await router.invalidate();
       }}

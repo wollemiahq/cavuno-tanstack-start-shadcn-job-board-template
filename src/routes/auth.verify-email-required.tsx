@@ -39,13 +39,16 @@ export const Route = createFileRoute('/auth/verify-email-required')({
 function VerifyEmailRequiredPage() {
   const router = useRouter();
   const search = Route.useSearch();
-  const { emailVerified, role, resume } = Route.useLoaderData();
+  const { emailVerified, role, resume, resumeOnboardingDismissed, userId } =
+    Route.useLoaderData();
   const returnTo = candidateReturnTo(search.returnTo);
   return (
     <VerifyEmailRequiredView
       emailVerified={emailVerified}
       role={role}
       resume={resume}
+      resumeOnboardingDismissed={resumeOnboardingDismissed}
+      userId={userId}
       returnTo={returnTo}
       verifyOtpCodeAction={verifyOtpCode}
       resendOtpAction={resendOtp}
@@ -60,7 +63,11 @@ function VerifyEmailRequiredPage() {
       }}
       reportActionError={toastActionError}
       renderResumeUpload={(currentResume) => (
-        <ResumeUpload resume={currentResume} />
+        <ResumeUpload
+          resume={currentResume}
+          variant="embedded"
+          showKeepOnFile={false}
+        />
       )}
     />
   );

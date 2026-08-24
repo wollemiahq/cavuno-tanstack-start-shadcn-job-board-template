@@ -20,12 +20,13 @@ import type {
 const getInbox = vi.fn<MessagesRuntimeDependencies['getInbox']>();
 const markRead = vi.fn<MessagesRuntimeDependencies['markRead']>();
 const unblockUser = vi.fn<MessagesRuntimeDependencies['unblockUser']>();
+const useVisiblePoll = vi.fn<MessagesRuntimeDependencies['useVisiblePoll']>();
 const dependencies: MessagesRuntimeDependencies = {
   ...messagesRuntimeDependencies,
   getInbox,
   markRead,
   unblockUser,
-  useVisiblePoll: vi.fn(),
+  useVisiblePoll,
 };
 
 const conversation: Conversation = {
@@ -133,5 +134,55 @@ describe('messaging runtime failures', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Something went wrong. Please try again.',
     );
+  });
+
+  it('keeps an open inbox and thread comfortably inside the API call budget', () => {
+    markRead.mockResolvedValue({
+      object: 'read_receipt',
+      markedAt: '2026-07-14T05:00:00.000Z',
+    });
+
+    render(
+      <InboxController
+        initial={{
+          object: 'list',
+          url: '/v1/me/conversations',
+          data: [conversation],
+          hasMore: false,
+          nextCursor: null,
+        }}
+        archived={false}
+        onSelect={vi.fn()}
+        dependencies={dependencies}
+      />,
+    );
+    render(
+      <ThreadController
+        initialConversation={detail}
+        initialMessages={{
+          object: 'list',
+          url: `/v1/me/conversations/${conversation.id}/messages`,
+          data: [],
+          hasMore: false,
+          nextCursor: null,
+        }}
+        initialBlockStatus={{ object: 'block_status', blocked: false }}
+        onExit={vi.fn()}
+        dependencies={dependencies}
+      />,
+    );
+
+    const [inboxPoll, threadPoll] = useVisiblePoll.mock.calls.map(
+      (call) => call[1] ?? 4_000,
+    );
+    const unreadCallsPerMinute = 8;
+    const inboxCallsPerMinute = (60_000 / inboxPoll) * 2;
+    const threadCallsPerMinute = (60_000 / threadPoll) * 4;
+
+    // Leave at least 60% of the per-board-user 100/minute allowance for
+    // initial loads, read receipts, replies, and ordinary navigation.
+    expect(
+      unreadCallsPerMinute + inboxCallsPerMinute + threadCallsPerMinute,
+    ).toBeLessThanOrEqual(40);
   });
 });

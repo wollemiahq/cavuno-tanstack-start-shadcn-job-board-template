@@ -3,7 +3,9 @@ import { useState } from 'react';
 import { BriefcaseBusiness } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
+import { AuthDivider } from './auth-form';
 
+import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -147,6 +149,9 @@ type RegistrationSubmitValues = {
   password: string;
   marketingConsent?: boolean;
 };
+type OAuthRegistrationResult =
+  | { ok: true; authorizeUrl: string }
+  | { ok: false; message: string };
 
 /**
  * Copy for the optional marketing checkbox. The disclosure is THIS app's
@@ -175,6 +180,7 @@ export function RegistrationPage({
   onSubmit,
   footer,
   marketingConsent,
+  onOAuthStart,
 }: {
   title: string;
   supportingText: React.ReactNode;
@@ -183,6 +189,9 @@ export function RegistrationPage({
   onSubmit: (values: RegistrationSubmitValues) => Promise<RegistrationResult>;
   footer?: React.ReactNode;
   marketingConsent?: MarketingConsentCopy;
+  onOAuthStart?: (
+    provider: 'google' | 'linkedin',
+  ) => Promise<OAuthRegistrationResult>;
 }) {
   const [status, setStatus] = useState<RegistrationStatus>({ state: 'idle' });
   const succeeded = status.state === 'success';
@@ -209,10 +218,80 @@ export function RegistrationPage({
             onStatusChange={setStatus}
             marketingConsent={marketingConsent}
           />
+          {onOAuthStart ? (
+            <>
+              <AuthDivider label={m.authOrDividerLabel()} />
+              <div className="flex flex-col gap-3">
+                <OAuthButton
+                  provider="google"
+                  pending={status.state === 'pending'}
+                  onStart={onOAuthStart}
+                  onStatusChange={setStatus}
+                />
+                <OAuthButton
+                  provider="linkedin"
+                  pending={status.state === 'pending'}
+                  onStart={onOAuthStart}
+                  onStatusChange={setStatus}
+                />
+              </div>
+            </>
+          ) : null}
           {footer}
         </>
       )}
     </AuthPageCard>
+  );
+}
+
+function OAuthButton({
+  provider,
+  pending,
+  onStart,
+  onStatusChange,
+}: {
+  provider: 'google' | 'linkedin';
+  pending: boolean;
+  onStart: (
+    provider: 'google' | 'linkedin',
+  ) => Promise<OAuthRegistrationResult>;
+  onStatusChange: (status: RegistrationStatus) => void;
+}) {
+  const label =
+    provider === 'google'
+      ? m.authSignIn_continueWithGoogleLabel()
+      : m.authSignIn_continueWithLinkedinLabel();
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="lg"
+      className="w-full"
+      disabled={pending}
+      onClick={async () => {
+        onStatusChange({ state: 'pending' });
+        try {
+          const result = await onStart(provider);
+          if (result.ok) {
+            window.location.assign(result.authorizeUrl);
+            return;
+          }
+          onStatusChange({
+            state: 'error',
+            message: boardErrorMessage(result),
+          });
+        } catch {
+          onStatusChange({
+            state: 'error',
+            message: m.candidateAction_errorText(),
+          });
+        }
+      }}
+    >
+      {provider === 'google' ? <GoogleIcon /> : <LinkedInIcon />}
+      {label}
+    </Button>
   );
 }
 

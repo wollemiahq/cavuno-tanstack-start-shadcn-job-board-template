@@ -3,12 +3,15 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   APPLY_SESSION_COOKIE,
+  applyJsonGateway,
+  applyJsonRedirect,
   applyJobSlug,
   applySessionKey,
   createApplyIntent,
   gatewayRedirect,
   isSameOriginApplyRequest,
   ordinaryFallbackRedirect,
+  wantsApplyJson,
   withApplyCookies,
 } from './apply-intent';
 
@@ -124,6 +127,24 @@ describe('board-local Apply intent seam', () => {
         },
       },
     );
+  });
+
+  it('provides a small no-store JSON contract for click-time navigation', async () => {
+    expect(
+      wantsApplyJson(
+        new Request('https://board.example/apply', {
+          headers: { accept: 'application/json' },
+        }),
+      ),
+    ).toBe(true);
+    const gateway = applyJsonGateway('https://apply.cavuno.com/a/token');
+    expect(await gateway.json()).toEqual({
+      gatewayUrl: 'https://apply.cavuno.com/a/token',
+    });
+    const redirect = applyJsonRedirect('https://employer.example/apply');
+    expect(await redirect.json()).toEqual({
+      redirectUrl: 'https://employer.example/apply',
+    });
   });
 
   it('turns a successful 201 intent into a temporary, non-indexable 303', () => {

@@ -26,6 +26,8 @@ interface VerificationViewState {
   emailVerified: boolean;
   role: 'candidate' | 'employer';
   resume: Resume | null;
+  resumeOnboardingDismissed: boolean;
+  userId: string;
 }
 
 const mocks = {
@@ -39,9 +41,17 @@ const mocks = {
   resendOtp: vi.fn<() => Promise<AuthResult>>(),
   verifyOtpCode:
     vi.fn<(input: { data: { code: string } }) => Promise<AuthResult>>(),
-  getSessionUser:
-    vi.fn<() => Promise<{ emailVerified: boolean; role?: string } | null>>(),
+  getSessionUser: vi.fn<
+    () => Promise<{
+      id: string;
+      emailVerified: boolean;
+      role?: string;
+    } | null>
+  >(),
   getResume: vi.fn<() => Promise<Resume>>(),
+  getResumeOnboardingDismissal: vi
+    .fn<() => Promise<string[]>>()
+    .mockResolvedValue([]),
   updateNotificationPreference: vi.fn(),
   toastActionError: vi.fn(),
 };
@@ -105,17 +115,23 @@ function renderVerifyPage({
   emailVerified = false,
   role = 'candidate',
   resume = null,
+  resumeOnboardingDismissed = false,
+  userId = 'candidate-1',
 }: {
   returnTo?: string;
   emailVerified?: boolean;
   role?: 'candidate' | 'employer';
   resume?: Resume | null;
+  resumeOnboardingDismissed?: boolean;
+  userId?: string;
 } = {}) {
   return render(
     <VerifyEmailRequiredView
       emailVerified={emailVerified}
       role={role}
       resume={resume}
+      resumeOnboardingDismissed={resumeOnboardingDismissed}
+      userId={userId}
       returnTo={returnTo}
       verifyOtpCodeAction={mocks.verifyOtpCode}
       resendOtpAction={mocks.resendOtp}
@@ -284,12 +300,32 @@ describe('/auth/verify-email-required resume offer step', () => {
     expect(mocks.verifyOtpCode).not.toHaveBeenCalled();
   });
 
+  it('continues immediately on refresh after the candidate previously skipped the resume offer', async () => {
+    const returnTo = '/account';
+
+    renderVerifyPage({
+      returnTo,
+      emailVerified: true,
+      resume: emptyResume,
+      resumeOnboardingDismissed: true,
+    });
+
+    await waitFor(() => {
+      expect(mocks.navigate).toHaveBeenCalledWith(returnTo);
+    });
+    expect(
+      screen.queryByText(m.authVerifyEmailRequired_resumeTitle()),
+    ).toBeNull();
+  });
+
   it('reconciles a revoked OTP when the email was already verified elsewhere', async () => {
     const returnTo = '/jobs?q=design';
     let loaderData: VerificationViewState = {
       emailVerified: false,
       role: 'candidate',
       resume: null,
+      resumeOnboardingDismissed: false,
+      userId: 'candidate-1',
     };
     mocks.verifyOtpCode.mockResolvedValue({
       ok: false,
@@ -312,12 +348,16 @@ describe('/auth/verify-email-required resume offer step', () => {
       emailVerified: true,
       role: 'candidate',
       resume: emptyResume,
+      resumeOnboardingDismissed: false,
+      userId: 'candidate-1',
     };
     rerender(
       <VerifyEmailRequiredView
         emailVerified={loaderData.emailVerified}
         role={loaderData.role}
         resume={loaderData.resume}
+        resumeOnboardingDismissed={loaderData.resumeOnboardingDismissed}
+        userId={loaderData.userId}
         returnTo={returnTo}
         verifyOtpCodeAction={mocks.verifyOtpCode}
         resendOtpAction={mocks.resendOtp}
@@ -367,8 +407,13 @@ describe('/auth/verify-email-required resume offer step', () => {
     // Offering the step must not navigate away on its own.
     expect(mocks.navigate).not.toHaveBeenCalled();
 
+    expect(
+      screen.queryByRole('checkbox', {
+        name: m.resumeUpload_keepCopyLabel(),
+      }),
+    ).toBeNull();
     const recommendations = screen.getByRole('checkbox', {
-      name: m.notificationSettings_recommendedJobEmailsTitle(),
+      name: m.authVerifyEmailRequired_recommendedJobEmailsLabel(),
     });
     expect(recommendations).not.toBeChecked();
     fireEvent.click(recommendations);
@@ -389,6 +434,9 @@ describe('/auth/verify-email-required resume offer step', () => {
     await waitFor(() => {
       expect(mocks.navigate).toHaveBeenCalledWith(returnTo);
     });
+    expect(document.cookie).toContain(
+      'cavuno_resume_onboarding_completed_candidate-1=1',
+    );
   });
 
   it('skips the offer when a resume is already on file', async () => {
@@ -421,7 +469,7 @@ describe('/auth/verify-email-required resume offer step', () => {
       target: { value: '123456' },
     });
     const checkbox = await screen.findByRole('checkbox', {
-      name: m.notificationSettings_recommendedJobEmailsTitle(),
+      name: m.authVerifyEmailRequired_recommendedJobEmailsLabel(),
     });
     fireEvent.click(checkbox);
     await waitFor(() => {
@@ -437,6 +485,7 @@ describe('/auth/verify-email-required resume loader', () => {
       { returnTo: '/account' },
       {
         getResume: mocks.getResume,
+        getResumeOnboardingDismissal: mocks.getResumeOnboardingDismissal,
         getSeoBase: mocks.getSeoBase,
         getSessionUserStrict: mocks.getSessionUser,
       },
@@ -471,19 +520,23 @@ describe('/auth/verify-email-required resume loader', () => {
 
   it('loads the resume state for the post-verify step', async () => {
     mocks.getSessionUser.mockResolvedValue({
+      id: 'candidate-1',
       emailVerified: true,
       role: 'candidate',
     });
+    mocks.getResumeOnboardingDismissal.mockResolvedValue(['candidate-1']);
     mocks.getResume.mockResolvedValue(emptyResume);
     await expect(runVerificationGate()).resolves.toMatchObject({
       emailVerified: true,
       role: 'candidate',
       resume: emptyResume,
+      resumeOnboardingDismissed: true,
     });
   });
 
   it('degrades to no resume state while the candidate is unverified', async () => {
     mocks.getSessionUser.mockResolvedValue({
+      id: 'candidate-1',
       emailVerified: false,
       role: 'candidate',
     });
@@ -497,6 +550,7 @@ describe('/auth/verify-email-required resume loader', () => {
 
   it('does not load candidate resume state for an unverified employer', async () => {
     mocks.getSessionUser.mockResolvedValue({
+      id: 'employer-1',
       emailVerified: false,
       role: 'employer',
     });
@@ -511,6 +565,7 @@ describe('/auth/verify-email-required resume loader', () => {
 
   it('re-throws board-access redirects instead of swallowing them', async () => {
     mocks.getSessionUser.mockResolvedValue({
+      id: 'candidate-1',
       emailVerified: false,
       role: 'candidate',
     });

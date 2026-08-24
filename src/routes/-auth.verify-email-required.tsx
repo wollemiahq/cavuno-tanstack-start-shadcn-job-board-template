@@ -12,8 +12,13 @@ import { isRedirect, redirect } from '@tanstack/react-router';
 
 import { AuthCard, FormError } from '../components/auth-form';
 import { candidateReturnTo } from '../lib/candidate-return-to';
+import { serializeResumeOnboardingDismissal } from '../lib/resume-onboarding';
 import { m } from '../paraglide/messages';
-import { getResume, getSessionUserStrict } from '../server/account';
+import {
+  getResume,
+  getResumeOnboardingDismissal,
+  getSessionUserStrict,
+} from '../server/account';
 import { getSeoBase } from '../server/queries';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -32,16 +37,23 @@ export async function loadVerificationGate(
   deps: { returnTo: string },
   actions: {
     getResume: () => Promise<Resume>;
+    getResumeOnboardingDismissal: () => Promise<string[]>;
     getSeoBase: () => Promise<{
       boardName: string;
       language: string;
       origin: string;
     }>;
     getSessionUserStrict: () => Promise<{
+      id: string;
       emailVerified: boolean;
       role?: string;
     } | null>;
-  } = { getResume, getSeoBase, getSessionUserStrict },
+  } = {
+    getResume,
+    getResumeOnboardingDismissal,
+    getSeoBase,
+    getSessionUserStrict,
+  },
 ) {
   // Started once, before the try: the error path needs the SEO base too,
   // and re-issuing it there made the failure case pay a second serial
@@ -65,15 +77,23 @@ export async function loadVerificationGate(
       emailVerified: user.emailVerified,
       role,
       resume: null,
+      resumeOnboardingDismissed: false,
+      userId: user.id,
       seo: await seoPromise,
     };
   }
   try {
-    const [resume, seo] = await Promise.all([actions.getResume(), seoPromise]);
+    const [resume, dismissedFor, seo] = await Promise.all([
+      actions.getResume(),
+      actions.getResumeOnboardingDismissal().catch((): string[] => []),
+      seoPromise,
+    ]);
     return {
       emailVerified: user.emailVerified,
       role,
       resume: user.emailVerified ? resume : null,
+      resumeOnboardingDismissed: dismissedFor.includes(user.id),
+      userId: user.id,
       seo,
     };
   } catch (error) {
@@ -82,6 +102,8 @@ export async function loadVerificationGate(
       emailVerified: user.emailVerified,
       role,
       resume: null,
+      resumeOnboardingDismissed: false,
+      userId: user.id,
       seo: await seoPromise,
     };
   }
@@ -91,6 +113,8 @@ export function VerifyEmailRequiredView({
   emailVerified,
   role,
   resume,
+  resumeOnboardingDismissed,
+  userId,
   returnTo,
   verifyOtpCodeAction,
   resendOtpAction,
@@ -103,6 +127,8 @@ export function VerifyEmailRequiredView({
   emailVerified: boolean;
   role: 'candidate' | 'employer';
   resume: Resume | null;
+  resumeOnboardingDismissed: boolean;
+  userId: string;
   returnTo: string;
   verifyOtpCodeAction: (input: {
     data: { code: string };
@@ -165,6 +191,8 @@ export function VerifyEmailRequiredView({
       <ResumeOfferStep
         resume={resume}
         returnTo={returnTo}
+        dismissed={resumeOnboardingDismissed}
+        userId={userId}
         updateNotificationPreferenceAction={updateNotificationPreferenceAction}
         navigate={navigate}
         reportActionError={reportActionError}
@@ -266,6 +294,8 @@ export function VerifyEmailRequiredView({
 function ResumeOfferStep({
   resume,
   returnTo,
+  dismissed,
+  userId,
   updateNotificationPreferenceAction,
   navigate,
   reportActionError,
@@ -273,6 +303,8 @@ function ResumeOfferStep({
 }: {
   resume: Resume | null;
   returnTo: string;
+  dismissed: boolean;
+  userId: string;
   updateNotificationPreferenceAction: (input: {
     data: { channel: 'recommendedJobEmails'; subscribed: boolean };
   }) => Promise<void>;
@@ -287,7 +319,7 @@ function ResumeOfferStep({
   // to load) continues straight to the destination; uploading DURING the step
   // updates `resume` without re-triggering this.
   const [offerUpload] = useState(
-    () => resume !== null && !resume.hasResumeOnFile,
+    () => resume !== null && !resume.hasResumeOnFile && !dismissed,
   );
 
   useEffect(() => {
@@ -310,7 +342,7 @@ function ResumeOfferStep({
           className="mt-0.5 shrink-0"
           checked={recommendationEmails}
           disabled={recommendationPending}
-          aria-label={m.notificationSettings_recommendedJobEmailsTitle()}
+          aria-label={m.authVerifyEmailRequired_recommendedJobEmailsLabel()}
           onCheckedChange={async (checked) => {
             setRecommendationPending(true);
             try {
@@ -328,13 +360,8 @@ function ResumeOfferStep({
             }
           }}
         />
-        <span>
-          <span className="block font-medium">
-            {m.notificationSettings_recommendedJobEmailsTitle()}
-          </span>
-          <span className="text-muted-foreground block text-sm">
-            {m.notificationSettings_recommendedJobEmailsDescription()}
-          </span>
+        <span className="block font-medium">
+          {m.authVerifyEmailRequired_recommendedJobEmailsLabel()}
         </span>
       </div>
       <Button
@@ -343,7 +370,12 @@ function ResumeOfferStep({
         size="lg"
         className="w-full"
         data-test="resume-step-continue"
-        onClick={() => void navigate(returnTo)}
+        onClick={() => {
+          if (!resume?.hasResumeOnFile) {
+            document.cookie = serializeResumeOnboardingDismissal(userId);
+          }
+          void navigate(returnTo);
+        }}
       >
         {resume?.hasResumeOnFile
           ? m.authVerifyEmailRequired_resumeContinueLabel()

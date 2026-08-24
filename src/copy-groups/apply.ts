@@ -4,6 +4,7 @@ export function applyCopy() {
   return {
     applicationSubmitError: m.apply_applicationSubmitError(),
     locationNotEligibleError: m.apply_locationNotEligibleError(),
+    locationUnavailableTitle: m.apply_locationUnavailableTitle(),
     appliedViewApplicationsLabel: m.apply_appliedViewApplicationsLabel(),
     applyButtonText: m.apply_applyButtonText(),
     applyOnEmployerSiteLabel: m.apply_applyOnEmployerSiteLabel(),

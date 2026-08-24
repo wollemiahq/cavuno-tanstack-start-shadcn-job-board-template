@@ -75,6 +75,7 @@ export const messagesRuntimeDependencies: MessagesRuntimeDependencies = {
   unsendMessage,
   useVisiblePoll,
 };
+const MESSAGING_POLL_INTERVAL_MS = 15_000;
 
 export function InboxController({
   initial,
@@ -97,15 +98,17 @@ export function InboxController({
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  dependencies.useVisiblePoll(() => {
-    void dependencies
-      .getInbox({ data: { archived } })
-      .then(({ conversations: page }) => {
-        setConversations((current) => mergeConversations(current, page.data));
-        setLoadError(null);
-      })
-      .catch((error) => setLoadError(errorMessage(error)));
-  });
+  dependencies.useVisiblePoll(
+    () =>
+      dependencies
+        .getInbox({ data: { archived } })
+        .then(({ conversations: page }) => {
+          setConversations((current) => mergeConversations(current, page.data));
+          setLoadError(null);
+        })
+        .catch((error) => setLoadError(errorMessage(error))),
+    MESSAGING_POLL_INTERVAL_MS,
+  );
 
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const visibleConversations = normalizedQuery
@@ -359,9 +362,10 @@ export function ThreadController({
     }
   };
 
-  dependencies.useVisiblePoll(() => {
-    void refresh().catch(() => {});
-  });
+  dependencies.useVisiblePoll(
+    () => refresh().catch(() => {}),
+    MESSAGING_POLL_INTERVAL_MS,
+  );
 
   useEffect(() => {
     void dependencies

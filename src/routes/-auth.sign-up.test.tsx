@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = {
+  getOAuthAuthorizationUrl: vi.fn(),
   invalidate: vi.fn(),
   signUp: vi.fn(),
 };
@@ -44,6 +45,38 @@ describe('/auth/sign-up search contract', () => {
     });
   });
 
+  it('offers the same Google and LinkedIn account entry points as sign-in', async () => {
+    const returnTo = '/jobs?q=design';
+    mocks.getOAuthAuthorizationUrl.mockResolvedValue({
+      ok: false,
+      message: 'OAuth unavailable in this test',
+    });
+    render(
+      <SignUpView
+        boardName="Cavuno Jobs"
+        returnTo={returnTo}
+        signUpAction={mocks.signUp}
+        getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
+        invalidate={mocks.invalidate}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Continue with Google' }),
+    );
+    await screen.findByRole('alert');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Continue with LinkedIn' }),
+    );
+
+    expect(mocks.getOAuthAuthorizationUrl).toHaveBeenNthCalledWith(1, {
+      data: { provider: 'google', returnTo },
+    });
+    expect(mocks.getOAuthAuthorizationUrl).toHaveBeenNthCalledWith(2, {
+      data: { provider: 'linkedin', returnTo },
+    });
+  });
+
   it('keeps the destination in the post-registration verification action', async () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
     mocks.signUp.mockResolvedValue({ ok: true });
@@ -52,6 +85,7 @@ describe('/auth/sign-up search contract', () => {
         boardName="Cavuno Jobs"
         returnTo={returnTo}
         signUpAction={mocks.signUp}
+        getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
         invalidate={mocks.invalidate}
       />,
     );

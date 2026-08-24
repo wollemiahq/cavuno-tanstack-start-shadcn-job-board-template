@@ -18,7 +18,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | --- | --- | --- |
 | `accordion` | Available | Installed for adoption when the product needs this behavior. |
 | `alert` | Used (14) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-detail-state.tsx`<br>`src/components/board/job-search-page.tsx`<br>+11 more in the JSON ledger |
-| `alert-dialog` | Used (5) | `src/components/danger-zone.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>`src/components/employer/company-delete-danger-zone.tsx`<br>+2 more in the JSON ledger |
+| `alert-dialog` | Used (6) | `src/components/board/apply-location-dialog.tsx`<br>`src/components/danger-zone.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>+3 more in the JSON ledger |
 | `aspect-ratio` | Available | Installed for adoption when the product needs this behavior. |
 | `attachment` | Used (1) | `src/components/resume-upload.tsx` |
 | `avatar` | Used (14) | `src/components/account-shell.tsx`<br>`src/components/avatar-upload.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+11 more in the JSON ledger |

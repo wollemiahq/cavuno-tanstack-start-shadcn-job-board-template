@@ -9,10 +9,21 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { m } from '../../paraglide/messages';
-import { ApplyButton } from './apply-button';
+import { ApplyButton, type ApplyButtonDependencies } from './apply-button';
+
+const navigateToExternalApply = vi.fn();
+const requestGatewayApply = vi.fn();
+const dependencies: ApplyButtonDependencies = {
+  loadGatewayApply: async () => ({
+    navigateToExternalApply,
+    requestGatewayApply,
+  }),
+};
 
 afterEach(() => {
   cleanup();
+  navigateToExternalApply.mockReset();
+  requestGatewayApply.mockReset();
   vi.restoreAllMocks();
 });
 
@@ -24,6 +35,7 @@ const base = {
     kind: 'not_required' as const,
   })),
   onApply: vi.fn(async () => {}),
+  dependencies,
 };
 
 const futureExpiry = () => new Date(Date.now() + 60_000).toISOString();
@@ -99,6 +111,7 @@ describe('ApplyButton gateway external jobs', () => {
   });
 
   it('disables the gateway Apply control after a submit to avoid a double click', () => {
+    requestGatewayApply.mockImplementation(() => new Promise(() => {}));
     const { container } = render(
       <ApplyButton
         {...base}
@@ -117,6 +130,34 @@ describe('ApplyButton gateway external jobs', () => {
     ).toBe(true);
   });
 
+  it('shows a lazy location dialog when the canonical gateway returns the location code', async () => {
+    requestGatewayApply.mockResolvedValue({ kind: 'location-denied' });
+    render(
+      <ApplyButton
+        {...base}
+        jobSlug="sponsored-role"
+        applicationUrl={null}
+        applyAction="gateway_external"
+        viewer={null}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+
+    expect(
+      await screen.findByRole('alertdialog', undefined, { timeout: 10_000 }),
+    ).not.toBeNull();
+    expect(
+      screen.getByRole('heading', {
+        name: m.apply_locationUnavailableTitle(),
+      }),
+    ).not.toBeNull();
+    expect(screen.getByText(m.apply_locationNotEligibleError())).not.toBeNull();
+    expect(requestGatewayApply).toHaveBeenCalledWith(
+      expect.any(HTMLFormElement),
+    );
+  });
+
   it('keeps an ordinary direct external application as an employer link', () => {
     render(
       <ApplyButton
@@ -129,6 +170,30 @@ describe('ApplyButton gateway external jobs', () => {
     );
     expect(screen.getByRole('link').getAttribute('href')).toBe(
       'https://jobs.example/apply/ordinary',
+    );
+  });
+
+  it('uses no-referrer navigation after the canonical gateway allows Apply', async () => {
+    requestGatewayApply.mockResolvedValue({
+      kind: 'redirect',
+      redirectUrl: 'https://employer.example/apply/42',
+    });
+    render(
+      <ApplyButton
+        {...base}
+        jobSlug="sponsored-role"
+        applicationUrl={null}
+        applyAction="gateway_external"
+        viewer={null}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+
+    await waitFor(() =>
+      expect(navigateToExternalApply).toHaveBeenCalledWith(
+        'https://employer.example/apply/42',
+      ),
     );
   });
 });
@@ -184,7 +249,7 @@ describe('ApplyButton native approval flow', () => {
     ).not.toBeNull();
   });
 
-  it('shows the localized location denial and does not apply after an explicit gateway 4xx', async () => {
+  it('shows the localized location dialog and does not apply after an explicit gateway 4xx', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(null, { status: 403 }),
     );
@@ -209,9 +274,8 @@ describe('ApplyButton native approval flow', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: /apply/i }));
 
-    expect((await screen.findByRole('alert')).textContent).toContain(
-      m.apply_locationNotEligibleError(),
-    );
+    expect(await screen.findByRole('alertdialog')).not.toBeNull();
+    expect(screen.getByText(m.apply_locationNotEligibleError())).not.toBeNull();
     expect(onApply).not.toHaveBeenCalled();
   });
 

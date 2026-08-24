@@ -100,6 +100,36 @@ export async function createApplyIntent(
   );
 }
 
+export function wantsApplyJson(request: Request): boolean {
+  return request.headers.get('accept')?.includes('application/json') === true;
+}
+
+export function applyJsonRedirect(location: string): Response {
+  return Response.json(
+    { redirectUrl: location },
+    {
+      headers: {
+        'cache-control': 'no-store',
+        'referrer-policy': 'strict-origin',
+        'x-robots-tag': 'noindex, nofollow',
+      },
+    },
+  );
+}
+
+export function applyJsonGateway(location: string): Response {
+  return Response.json(
+    { gatewayUrl: location },
+    {
+      headers: {
+        'cache-control': 'no-store',
+        'referrer-policy': 'strict-origin',
+        'x-robots-tag': 'noindex, nofollow',
+      },
+    },
+  );
+}
+
 export function gatewayRedirect(
   intent: ApplyIntent,
   setCookie: string | null,
@@ -129,6 +159,13 @@ export function gatewayRedirect(
   });
   if (setCookie) headers.set('set-cookie', setCookie);
   return new Response(null, { status: 303, headers });
+}
+
+export function gatewayLocation(intent: ApplyIntent): string {
+  const response = gatewayRedirect(intent, null);
+  const location = response.headers.get('location');
+  if (!location) throw new Error('Invalid Apply gateway URL');
+  return location;
 }
 
 /** Append every cookie side-effect; a session rotation and duplicate key can

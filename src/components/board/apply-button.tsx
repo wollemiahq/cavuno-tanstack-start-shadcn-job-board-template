@@ -17,7 +17,7 @@
  * The auth/verify/applications paths are plain hrefs — point them at
  * your app's routes and swap `<a>` for your router's Link if desired.
  */
-import { useState } from 'react';
+import { lazy, Suspense, useState, type FormEvent } from 'react';
 
 import { m } from '../../paraglide/messages';
 
@@ -36,6 +36,25 @@ import {
   type NativeApplyPrepareResult,
 } from '@/lib/native-apply';
 
+const ApplyLocationDialog = lazy(() =>
+  import('./apply-location-dialog').then((module) => ({
+    default: module.ApplyLocationDialog,
+  })),
+);
+
+export type ApplyButtonDependencies = {
+  loadGatewayApply: () => Promise<
+    Pick<
+      typeof import('@/lib/gateway-apply'),
+      'navigateToExternalApply' | 'requestGatewayApply'
+    >
+  >;
+};
+
+const applyButtonDependencies: ApplyButtonDependencies = {
+  loadGatewayApply: () => import('@/lib/gateway-apply'),
+};
+
 export function ApplyButton({
   jobSlug,
   applicationUrl,
@@ -48,6 +67,7 @@ export function ApplyButton({
   alreadyApplied = false,
   applicationsHref = '/me/applications',
   nativeApplications = true,
+  dependencies = applyButtonDependencies,
 }: {
   /** Null when the job has no native-apply support (external-only). */
   jobSlug: string | null;
@@ -83,6 +103,7 @@ export function ApplyButton({
    * than a dead-end apply form (the platform 422s the native apply).
    */
   nativeApplications?: boolean;
+  dependencies?: ApplyButtonDependencies;
 }) {
   // Only the transient in-session interaction lives in state; the
   // returning-visitor "applied" truth comes from the `alreadyApplied`
@@ -107,6 +128,17 @@ export function ApplyButton({
     language,
     nativeApplications,
   });
+  const locationDialog =
+    state === 'location-denied' ? (
+      <Suspense fallback={null}>
+        <ApplyLocationDialog
+          open
+          title={copy.locationUnavailableTitle}
+          description={copy.locationNotEligibleError}
+          onClose={() => setState('idle')}
+        />
+      </Suspense>
+    ) : null;
 
   switch (action.kind) {
     case 'none':
@@ -126,21 +158,45 @@ export function ApplyButton({
       );
     case 'gateway-external':
       // No gateway or provider URL is emitted into the page. The POST target
-      // is this board's own stable route; its 303 then makes the browser
-      // contact the Cavuno user-edge gateway directly.
+      // is this board's own stable route; on click the browser asks Cavuno's
+      // user-edge gateway for the canonical decision directly.
       return (
-        <form
-          method="post"
-          action="/apply"
-          onSubmit={() => setState('applying')}
-        >
-          <input type="hidden" name="jobSlug" value={action.jobSlug} />
-          <Button type="submit" size="lg" disabled={state === 'applying'}>
-            {state === 'applying'
-              ? copy.applyingLabel
-              : m.applyButton_applyLabel()}
-          </Button>
-        </form>
+        <div className="flex flex-col gap-1">
+          <form
+            method="post"
+            action="/apply"
+            onSubmit={async (event: FormEvent<HTMLFormElement>) => {
+              event.preventDefault();
+              const form = event.currentTarget;
+              setState('applying');
+              try {
+                const { navigateToExternalApply, requestGatewayApply } =
+                  await dependencies.loadGatewayApply();
+                const result = await requestGatewayApply(form);
+                if (result.kind === 'location-denied') {
+                  setState('location-denied');
+                  return;
+                }
+                navigateToExternalApply(result.redirectUrl);
+              } catch {
+                setState('error');
+              }
+            }}
+          >
+            <input type="hidden" name="jobSlug" value={action.jobSlug} />
+            <Button type="submit" size="lg" disabled={state === 'applying'}>
+              {state === 'applying'
+                ? copy.applyingLabel
+                : m.applyButton_applyLabel()}
+            </Button>
+          </form>
+          {state === 'error' ? (
+            <p role="alert" className="text-destructive text-sm">
+              {copy.applicationSubmitError}
+            </p>
+          ) : null}
+          {locationDialog}
+        </div>
       );
     case 'sign-in':
       return (
@@ -209,11 +265,8 @@ export function ApplyButton({
             <p role="alert" className="text-destructive text-sm">
               {copy.applicationSubmitError}
             </p>
-          ) : state === 'location-denied' ? (
-            <p role="alert" className="text-destructive text-sm">
-              {copy.locationNotEligibleError}
-            </p>
           ) : null}
+          {locationDialog}
         </div>
       );
   }

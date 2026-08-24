@@ -9,34 +9,76 @@ import { useEffect, useRef } from 'react';
  * the tab is hidden to avoid background churn, and fires an immediate refresh
  * when the tab becomes visible again so a returning user isn't stale.
  */
-export function useVisiblePoll(callback: () => void, intervalMs = 4000) {
+export function useVisiblePoll(
+  callback: () => void | Promise<void>,
+  intervalMs = 4000,
+  enabled = true,
+  immediate = false,
+) {
   const savedCallback = useRef(callback);
   savedCallback.current = callback;
 
   useEffect(() => {
+    if (!enabled) return;
+    const visibleDocument = globalThis.document;
+    if (!visibleDocument) return;
+
     let timer: ReturnType<typeof setTimeout> | undefined;
     let stopped = false;
+    let inFlight = false;
+    let refreshAfterFlight = false;
 
-    const tick = () => {
+    const schedule = () => {
       if (stopped) return;
-      const visibleDocument = globalThis.document;
-      if (!visibleDocument || !visibleDocument.hidden) {
-        savedCallback.current();
+      timer = setTimeout(() => {
+        timer = undefined;
+        void run();
+      }, intervalMs);
+    };
+
+    const run = async () => {
+      if (stopped || inFlight) return;
+      if (visibleDocument.hidden) {
+        schedule();
+        return;
       }
-      timer = setTimeout(tick, intervalMs);
+      inFlight = true;
+      try {
+        await savedCallback.current();
+      } catch {
+        // Polling callers own visible error state; one rejection must not stop
+        // later refreshes.
+      } finally {
+        inFlight = false;
+        if (refreshAfterFlight && !visibleDocument.hidden) {
+          refreshAfterFlight = false;
+          void run();
+        } else {
+          refreshAfterFlight = false;
+          schedule();
+        }
+      }
     };
 
     const onVisibility = () => {
-      if (!document.hidden) savedCallback.current();
+      if (visibleDocument.hidden) return;
+      if (inFlight) {
+        refreshAfterFlight = true;
+        return;
+      }
+      if (timer) clearTimeout(timer);
+      timer = undefined;
+      void run();
     };
 
-    timer = setTimeout(tick, intervalMs);
-    document.addEventListener('visibilitychange', onVisibility);
+    if (immediate) void run();
+    else schedule();
+    visibleDocument.addEventListener('visibilitychange', onVisibility);
 
     return () => {
       stopped = true;
       if (timer) clearTimeout(timer);
-      document.removeEventListener('visibilitychange', onVisibility);
+      visibleDocument.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [intervalMs]);
+  }, [enabled, immediate, intervalMs]);
 }

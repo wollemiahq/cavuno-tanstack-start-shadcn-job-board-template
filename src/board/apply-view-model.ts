@@ -44,6 +44,7 @@ export interface ApplyCopyVM {
   applyButtonText: string;
   applicationSubmitError: string;
   locationNotEligibleError: string;
+  locationUnavailableTitle: string;
 }
 
 export interface ApplyButtonVM {
@@ -93,6 +94,7 @@ export function toApplyButtonVM({
         applyButtonText: copy.applyButtonText,
         applicationSubmitError: copy.applicationSubmitError,
         locationNotEligibleError: copy.locationNotEligibleError,
+        locationUnavailableTitle: copy.locationUnavailableTitle,
       },
     };
   }
@@ -108,6 +110,7 @@ export function toApplyButtonVM({
         applyButtonText: copy.applyButtonText,
         applicationSubmitError: copy.applicationSubmitError,
         locationNotEligibleError: copy.locationNotEligibleError,
+        locationUnavailableTitle: copy.locationUnavailableTitle,
       },
     };
   }
@@ -137,6 +140,7 @@ export function toApplyButtonVM({
       applyButtonText: copy.applyButtonText,
       applicationSubmitError: copy.applicationSubmitError,
       locationNotEligibleError: copy.locationNotEligibleError,
+      locationUnavailableTitle: copy.locationUnavailableTitle,
     },
   };
 }

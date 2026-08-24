@@ -22,7 +22,6 @@ const blockUser = vi.fn<MessagesDockDependencies['blockUser']>();
 const editMessage = vi.fn<MessagesDockDependencies['editMessage']>();
 const getInbox = vi.fn<MessagesDockDependencies['getInbox']>();
 const getThread = vi.fn<MessagesDockDependencies['getThread']>();
-const getUnreadCount = vi.fn<MessagesDockDependencies['getUnreadCount']>();
 const markRead = vi.fn<MessagesDockDependencies['markRead']>();
 const reportMessage = vi.fn<MessagesDockDependencies['reportMessage']>();
 const sendReply = vi.fn<MessagesDockDependencies['sendReply']>();
@@ -37,7 +36,6 @@ const dependencies: MessagesDockDependencies = {
   editMessage,
   getInbox,
   getThread,
-  getUnreadCount,
   markRead,
   reportMessage,
   sendReply,
@@ -95,11 +93,30 @@ describe('MessagesDockController', () => {
     });
   });
 
-  it('opens the inbox at the right and a selected conversation in the adjacent window', async () => {
-    getUnreadCount.mockResolvedValue({
-      object: 'unread_count',
-      count: 2,
+  it('keeps the inbox idle until the user opens the dock', async () => {
+    getInbox.mockResolvedValue({
+      conversations: {
+        object: 'list',
+        url: '/v1/me/conversations',
+        data: [],
+        hasMore: false,
+        nextCursor: null,
+      },
     });
+
+    render(
+      <MessagesDockController unreadCount={0} dependencies={dependencies} />,
+    );
+
+    expect(getInbox).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Open messaging, 0 unread' }),
+    );
+    await waitFor(() => expect(getInbox).toHaveBeenCalledOnce());
+  });
+
+  it('opens the inbox at the right and a selected conversation in the adjacent window', async () => {
     getInbox.mockResolvedValue({
       conversations: {
         object: 'list',
@@ -121,7 +138,9 @@ describe('MessagesDockController', () => {
       blockStatus: { object: 'block_status', blocked: false },
     });
 
-    render(<MessagesDockController dependencies={dependencies} />);
+    render(
+      <MessagesDockController unreadCount={2} dependencies={dependencies} />,
+    );
 
     const launcher = await screen.findByRole('button', {
       name: 'Open messaging, 2 unread',
@@ -142,10 +161,11 @@ describe('MessagesDockController', () => {
   });
 
   it('replaces a failed initial inbox load with an honest retry state', async () => {
-    getUnreadCount.mockRejectedValue(new Error('Network failed'));
     getInbox.mockRejectedValue(new Error('Network failed'));
 
-    render(<MessagesDockController dependencies={dependencies} />);
+    render(
+      <MessagesDockController unreadCount={0} dependencies={dependencies} />,
+    );
 
     fireEvent.click(
       screen.getByRole('button', { name: 'Open messaging, 0 unread' }),
@@ -155,10 +175,6 @@ describe('MessagesDockController', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'empty');
 
-    getUnreadCount.mockResolvedValue({
-      object: 'unread_count',
-      count: 1,
-    });
     getInbox.mockResolvedValue({
       conversations: {
         object: 'list',
@@ -176,10 +192,6 @@ describe('MessagesDockController', () => {
   });
 
   it('replaces a failed conversation load with an honest retry state', async () => {
-    getUnreadCount.mockResolvedValue({
-      object: 'unread_count',
-      count: 1,
-    });
     getInbox.mockResolvedValue({
       conversations: {
         object: 'list',
@@ -191,7 +203,9 @@ describe('MessagesDockController', () => {
     });
     getThread.mockRejectedValue(new Error('Network failed'));
 
-    render(<MessagesDockController dependencies={dependencies} />);
+    render(
+      <MessagesDockController unreadCount={1} dependencies={dependencies} />,
+    );
 
     fireEvent.click(
       await screen.findByRole('button', {
