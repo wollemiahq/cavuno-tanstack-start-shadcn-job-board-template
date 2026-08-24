@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 
+import { resolveTalentDirectoryVisibility } from '../board/board-feature-flags';
 import { menuColorClasses } from '../lib/menu-color';
 import { resolveSignupDestination } from '../lib/signup-destination';
 import { m } from '../paraglide/messages';
@@ -162,15 +163,10 @@ export default function Header({
     jobSearch: jobSearchCopy(),
     nav: navCopy(),
   };
-  const configuredTalentDirectory = features.talentDirectory;
-  const talentMode =
-    talentDirectoryVisibility ??
-    (configuredTalentDirectory === 'public' ||
-    configuredTalentDirectory === 'employers_only'
-      ? configuredTalentDirectory
-      : configuredTalentDirectory
-        ? 'public'
-        : 'off');
+  const talentMode = resolveTalentDirectoryVisibility(
+    talentDirectoryVisibility,
+    features.talentDirectory,
+  );
   // 'off' is a truthy string — compare explicitly, never coerce.
   const talentDirectoryEnabled = talentMode !== 'off';
   const navLinks = [

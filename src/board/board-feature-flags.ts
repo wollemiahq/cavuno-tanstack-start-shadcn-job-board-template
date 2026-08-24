@@ -29,6 +29,24 @@ export interface RuntimeBoardFeatureFlags {
   messaging: boolean;
 }
 
+export type TalentDirectoryVisibility = 'off' | 'public' | 'employers_only';
+
+/** Preserve the tri-state feature enum while supporting older boolean boards. */
+export function resolveTalentDirectoryVisibility(
+  explicit: TalentDirectoryVisibility | null,
+  configured: TalentDirectoryVisibility | boolean,
+): TalentDirectoryVisibility {
+  if (explicit !== null) return explicit;
+  if (
+    configured === 'off' ||
+    configured === 'public' ||
+    configured === 'employers_only'
+  ) {
+    return configured;
+  }
+  return configured ? 'public' : 'off';
+}
+
 /**
  * Read the two runtime flags off the context's `features` group, narrowing
  * once here at the boundary. Absent ⇒ `true` (default-on).

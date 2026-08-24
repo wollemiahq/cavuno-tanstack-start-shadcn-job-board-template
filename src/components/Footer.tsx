@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { Link } from '@tanstack/react-router';
 
+import { resolveTalentDirectoryVisibility } from '../board/board-feature-flags';
 import { m } from '../paraglide/messages';
 
 import { FacebookIcon, LinkedInIcon, XIcon } from '@/components/brand-icons';
@@ -234,15 +235,10 @@ export default function Footer({
   });
 
   // ── For Companies ──
-  const configuredTalentDirectory = features.talentDirectory;
-  const talentMode =
-    talentDirectoryVisibility ??
-    (configuredTalentDirectory === 'public' ||
-    configuredTalentDirectory === 'employers_only'
-      ? configuredTalentDirectory
-      : configuredTalentDirectory
-        ? 'public'
-        : 'off');
+  const talentMode = resolveTalentDirectoryVisibility(
+    talentDirectoryVisibility,
+    features.talentDirectory,
+  );
   // 'off' is a truthy string — compare explicitly, never coerce.
   const talentLinked = talentMode !== 'off';
   const companyLinks: FooterLink[] = [

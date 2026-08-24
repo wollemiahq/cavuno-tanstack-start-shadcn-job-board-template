@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveRuntimeFeatureFlags } from './board-feature-flags';
+import {
+  resolveRuntimeFeatureFlags,
+  resolveTalentDirectoryVisibility,
+} from './board-feature-flags';
 
 /**
  * The runtime flags (Board PR #968) ride the board context ahead of the
@@ -64,5 +67,19 @@ describe('resolveRuntimeFeatureFlags', () => {
         features({ nativeApplications: false, messaging: true }),
       ),
     ).toEqual({ nativeApplications: false, messaging: true });
+  });
+});
+
+describe('resolveTalentDirectoryVisibility', () => {
+  it('preserves an off enum when the explicit preview value is absent', () => {
+    expect(resolveTalentDirectoryVisibility(null, 'off')).toBe('off');
+  });
+
+  it('maps legacy booleans without overriding an explicit value', () => {
+    expect(resolveTalentDirectoryVisibility(null, true)).toBe('public');
+    expect(resolveTalentDirectoryVisibility(null, false)).toBe('off');
+    expect(resolveTalentDirectoryVisibility('employers_only', false)).toBe(
+      'employers_only',
+    );
   });
 });
