@@ -3,7 +3,12 @@
  * job slug from the browser: destination, country, and candidate profile all
  * remain Cavuno-owned server-side data.
  */
-import { isSafeApplicationUrl, type BoardClient } from '@cavuno/board';
+import {
+  isSafeApplicationUrl,
+  type ApplyIntent,
+  type BoardSdk,
+  type PublicJob,
+} from '@cavuno/board';
 
 import { isTrustedApplyGatewayUrl } from '@/lib/apply-gateway-url';
 import { withApplyGatewayCapability } from '@/lib/board';
@@ -11,13 +16,6 @@ import { withApplyGatewayCapability } from '@/lib/board';
 export const APPLY_SESSION_COOKIE = '__Host-cavuno_apply_session';
 
 const SESSION_KEY_RE = /^[A-Za-z0-9_-]{20,200}$/;
-
-export interface ApplyIntent {
-  id: string;
-  object: 'apply_intent';
-  gatewayUrl: string;
-  expiresAt: string;
-}
 
 /**
  * A cross-site form could otherwise manufacture an Apply attempt. We accept
@@ -87,18 +85,15 @@ export async function applyJobSlug(request: Request): Promise<string | null> {
 }
 
 export async function createApplyIntent(
-  client: BoardClient,
+  board: BoardSdk,
   jobSlug: string,
   sessionKey: string,
   headers: Record<string, string>,
 ): Promise<ApplyIntent> {
-  return client.fetch<ApplyIntent>(
-    `/jobs/${encodeURIComponent(jobSlug)}/apply-intents`,
-    {
-      method: 'POST',
-      headers: withApplyGatewayCapability(headers),
-      body: { sessionKey },
-    },
+  return board.jobs.createApplyIntent(
+    jobSlug,
+    { sessionKey },
+    { headers: withApplyGatewayCapability(headers) },
   );
 }
 
@@ -157,7 +152,7 @@ export function ordinaryFallbackRedirect({
 }: {
   isSponsored: boolean | null | undefined;
   applicationUrl: string | null;
-  applyAction: string | null | undefined;
+  applyAction: PublicJob['applyAction'] | null | undefined;
 }): Response | null {
   if (!applicationUrl) return null;
   let destination: URL;

@@ -164,17 +164,7 @@ function JobDetailPage() {
           <ApplyButton
             jobSlug={job.slug}
             applicationUrl={job.applicationUrl}
-            applyAction={
-              (
-                job as typeof job & {
-                  applyAction?:
-                    | 'native'
-                    | 'gateway_native'
-                    | 'external_direct'
-                    | 'gateway_external';
-                }
-              ).applyAction
-            }
+            applyAction={job.applyAction}
             language={board.language}
             returnTo={returnTo}
             nativeApplications={board.features.nativeApplications}

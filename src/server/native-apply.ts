@@ -1,19 +1,12 @@
 import { APPLY_SESSION_COOKIE, applySessionKey } from './apply-intent';
 
 import { withApplyGatewayCapability } from '@/lib/board';
-import type { ApplyApprovalPlan } from '@/lib/native-apply';
-import type { Application, ApplyBody } from '@cavuno/board';
-
-interface NativeApplyClient {
-  fetch(
-    path: string,
-    options: {
-      method: 'POST';
-      headers: Record<string, string>;
-      body: Record<string, unknown>;
-    },
-  ): Promise<unknown>;
-}
+import type {
+  Application,
+  ApplyApprovalPlan,
+  ApplyBody,
+  BoardSdk,
+} from '@cavuno/board';
 
 export interface ApplyCookieOptions {
   path: '/';
@@ -54,16 +47,16 @@ export function ensureApplySession(
 }
 
 export function prepareNativeApply(
-  client: NativeApplyClient,
+  board: BoardSdk,
   jobSlug: string,
   sessionKey: string,
   headers: Record<string, string>,
 ): Promise<ApplyApprovalPlan> {
-  return client.fetch(`/jobs/${encodeURIComponent(jobSlug)}/apply-approvals`, {
-    method: 'POST',
-    headers: withApplyGatewayCapability(headers),
-    body: { sessionKey },
-  }) as Promise<ApplyApprovalPlan>;
+  return board.jobs.prepareApplyApproval(
+    jobSlug,
+    { sessionKey },
+    { headers: withApplyGatewayCapability(headers) },
+  );
 }
 
 const RECEIPT_ID_RE = /^[A-Za-z0-9_-]{20,300}$/;
@@ -80,7 +73,7 @@ function safeApplyBody(body: ApplyBody | undefined): ApplyBody {
 }
 
 export function submitNativeApply(
-  client: NativeApplyClient,
+  board: BoardSdk,
   jobSlug: string,
   body: ApplyBody | undefined,
   approvalReceipt: string | undefined,
@@ -90,10 +83,9 @@ export function submitNativeApply(
   if (approvalReceipt && !RECEIPT_ID_RE.test(approvalReceipt)) {
     throw new Error('Invalid Apply approval receipt');
   }
-  return client.fetch(`/jobs/${encodeURIComponent(jobSlug)}/apply`, {
-    method: 'POST',
-    headers: withApplyGatewayCapability(headers),
-    body: {
+  return board.jobs.apply(
+    jobSlug,
+    {
       ...safeApplyBody(body),
       ...(approvalReceipt
         ? {
@@ -102,5 +94,6 @@ export function submitNativeApply(
           }
         : {}),
     },
-  }) as Promise<Application>;
+    { headers: withApplyGatewayCapability(headers) },
+  );
 }

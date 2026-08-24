@@ -62,6 +62,7 @@ const profile = {
   handle: 'ada',
   headline: 'Engineer',
   location: 'London',
+  countryCode: null,
   profileVisibility: 'public',
   jobSearchStatus: 'open_to_offers',
   jobSearchStatusVisibleTo: 'everyone',

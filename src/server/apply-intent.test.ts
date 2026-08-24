@@ -94,27 +94,26 @@ describe('board-local Apply intent seam', () => {
   });
 
   it('calls the versioned intent endpoint with only the server-owned session key', async () => {
-    const fetch = vi.fn().mockResolvedValue({
+    const create = vi.fn().mockResolvedValue({
       id: 'intent_1234567890',
       object: 'apply_intent',
       gatewayUrl: 'https://apply.cavuno.com/a/intent_1234567890',
       expiresAt: '2026-08-23T00:00:00.000Z',
     });
     await createApplyIntent(
-      { fetch } as never,
+      { jobs: { createApplyIntent: create } } as never,
       'senior engineer/au',
       'S'.repeat(32),
       { authorization: 'Bearer trusted' },
     );
-    expect(fetch).toHaveBeenCalledWith(
-      '/jobs/senior%20engineer%2Fau/apply-intents',
+    expect(create).toHaveBeenCalledWith(
+      'senior engineer/au',
+      { sessionKey: 'S'.repeat(32) },
       {
-        method: 'POST',
         headers: {
           authorization: 'Bearer trusted',
           'x-cavuno-board-capabilities': 'apply-gateway-v1',
         },
-        body: { sessionKey: 'S'.repeat(32) },
       },
     );
   });
@@ -224,7 +223,7 @@ describe('ordinary all_jobs degraded Apply', () => {
     { ...ordinary, applyAction: 'external_direct' },
     { ...ordinary, applicationUrl: 'javascript:alert(1)' },
     { ...ordinary, applicationUrl: 'http://jobs.example/apply/123' },
-  ])(
+  ] as const)(
     'never falls back for Sponsored, unknown, direct, or unsafe jobs',
     (job) => {
       expect(ordinaryFallbackRedirect(job)).toBeNull();
