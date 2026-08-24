@@ -307,7 +307,13 @@ function ResumeOfferStep({
       title={m.authVerifyEmailRequired_resumeTitle()}
       supportingText={m.authVerifyEmailRequired_resumeIntroText()}
     >
-      {resume ? <ResumeUpload resume={resume} /> : null}
+      {resume ? (
+        <ResumeUpload
+          resume={resume}
+          variant="embedded"
+          showKeepOnFile={false}
+        />
+      ) : null}
       <div
         className="border-border flex items-start gap-3 rounded-lg border p-4"
         data-test="recommendation-email-opt-in"
@@ -316,7 +322,7 @@ function ResumeOfferStep({
           className="mt-0.5 shrink-0"
           checked={recommendationEmails}
           disabled={recommendationPending}
-          aria-label={m.notificationSettings_recommendedJobEmailsTitle()}
+          aria-label={m.authVerifyEmailRequired_recommendedJobEmailsLabel()}
           onCheckedChange={async (checked) => {
             setRecommendationPending(true);
             try {
@@ -334,13 +340,8 @@ function ResumeOfferStep({
             }
           }}
         />
-        <span>
-          <span className="block font-medium">
-            {m.notificationSettings_recommendedJobEmailsTitle()}
-          </span>
-          <span className="text-muted-foreground block text-sm">
-            {m.notificationSettings_recommendedJobEmailsDescription()}
-          </span>
+        <span className="block font-medium">
+          {m.authVerifyEmailRequired_recommendedJobEmailsLabel()}
         </span>
       </div>
       <Button

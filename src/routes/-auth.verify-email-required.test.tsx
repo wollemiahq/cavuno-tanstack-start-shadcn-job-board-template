@@ -385,8 +385,13 @@ describe('/auth/verify-email-required resume offer step', () => {
     // Offering the step must not navigate away on its own.
     expect(mocks.navigate).not.toHaveBeenCalled();
 
+    expect(
+      screen.queryByRole('checkbox', {
+        name: m.resumeUpload_keepCopyLabel(),
+      }),
+    ).toBeNull();
     const recommendations = screen.getByRole('checkbox', {
-      name: m.notificationSettings_recommendedJobEmailsTitle(),
+      name: m.authVerifyEmailRequired_recommendedJobEmailsLabel(),
     });
     expect(recommendations).not.toBeChecked();
     fireEvent.click(recommendations);
@@ -442,7 +447,7 @@ describe('/auth/verify-email-required resume offer step', () => {
       target: { value: '123456' },
     });
     const checkbox = await screen.findByRole('checkbox', {
-      name: m.notificationSettings_recommendedJobEmailsTitle(),
+      name: m.authVerifyEmailRequired_recommendedJobEmailsLabel(),
     });
     fireEvent.click(checkbox);
     await waitFor(() => {

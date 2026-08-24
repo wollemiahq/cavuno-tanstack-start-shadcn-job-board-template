@@ -55,7 +55,37 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+const emptyResume = {
+  ...resume,
+  parseStatus: null,
+  parsedAt: null,
+  keepResumeOnFile: false,
+  hasResumeOnFile: false,
+  file: null,
+} satisfies Resume;
+
 describe('ResumeUpload', () => {
+  it('hides the keep-on-file checkbox on first-run onboarding and still keeps the file', async () => {
+    mocks.uploadResume.mockResolvedValue(undefined);
+    render(<ResumeUpload resume={emptyResume} showKeepOnFile={false} />);
+
+    expect(
+      screen.queryByRole('checkbox', { name: 'Keep my resume saved' }),
+    ).toBeNull();
+
+    const input = document.querySelector(
+      '[data-test="resume-file-input"]',
+    ) as HTMLInputElement;
+    const file = new File(['cv'], 'cv.pdf', { type: 'application/pdf' });
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(mocks.uploadResume).toHaveBeenCalled();
+    });
+    const formData = mocks.uploadResume.mock.calls[0]?.[0]?.data as FormData;
+    expect(formData.get('keepResumeOnFile')).toBe('true');
+  });
+
   it('fires a recoverable error toast and re-enables delete when deletion fails', async () => {
     mocks.deleteResume.mockRejectedValue(new Error('network unavailable'));
     render(<ResumeUpload resume={resume} />);
