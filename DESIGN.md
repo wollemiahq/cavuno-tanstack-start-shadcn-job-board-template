@@ -2025,6 +2025,7 @@ Props:
 - `copy: RegistrationCopy`
 - `footer?: ReactNode`
 - `marketingConsent?: MarketingConsentCopy | undefined`
+- `onOAuthStart?: ((provider: "google" | "linkedin") => Promise<OAuthRegistrationResult>) | undefined`
 - `onSubmit: (values: { displayName: string; email: string; password: string; marketingConsent?: boolean | undefined; }) => Promis…`
 - `successHref: string`
 - `supportingText: ReactNode`

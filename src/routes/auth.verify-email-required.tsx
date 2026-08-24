@@ -95,7 +95,7 @@ export const Route = createFileRoute('/auth/verify-email-required')({
         emailVerified: user.emailVerified,
         role,
         resume: user.emailVerified ? resume : null,
-        resumeOnboardingDismissed: dismissedFor === user.id,
+        resumeOnboardingDismissed: dismissedFor?.includes(user.id) ?? false,
         userId: user.id,
         seo,
       };

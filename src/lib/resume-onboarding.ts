@@ -5,19 +5,30 @@ const RESUME_ONBOARDING_MAX_AGE = 365 * 24 * 60 * 60;
 
 export function parseResumeOnboardingDismissal(
   cookieHeader: string | null | undefined,
-): string | null {
-  if (!cookieHeader) return null;
-  const pair = cookieHeader
-    .split(';')
-    .map((part) => part.trim())
-    .find((part) => part.startsWith(`${RESUME_ONBOARDING_COOKIE}=`));
-  if (!pair) return null;
-  const value = decodeURIComponent(
-    pair.slice(RESUME_ONBOARDING_COOKIE.length + 1),
-  );
-  return value || null;
+): string[] {
+  if (!cookieHeader) return [];
+  const completed = new Set<string>();
+  const perUserPrefix = `${RESUME_ONBOARDING_COOKIE}_`;
+
+  for (const part of cookieHeader.split(';')) {
+    const [name, rawValue = ''] = part.trim().split('=', 2);
+    try {
+      // Read the first single-value version as a migration path for browsers
+      // that received it during development before per-user cookies shipped.
+      if (name === RESUME_ONBOARDING_COOKIE && rawValue) {
+        completed.add(decodeURIComponent(rawValue));
+      } else if (name.startsWith(perUserPrefix) && rawValue === '1') {
+        completed.add(decodeURIComponent(name.slice(perUserPrefix.length)));
+      }
+    } catch {
+      // Ignore malformed browser preferences instead of blocking onboarding.
+    }
+  }
+
+  return [...completed];
 }
 
 export function serializeResumeOnboardingDismissal(userId: string): string {
-  return `${RESUME_ONBOARDING_COOKIE}=${encodeURIComponent(userId)}; Path=/; Max-Age=${RESUME_ONBOARDING_MAX_AGE}; SameSite=Lax`;
+  const name = `${RESUME_ONBOARDING_COOKIE}_${encodeURIComponent(userId)}`;
+  return `${name}=1; Path=/; Max-Age=${RESUME_ONBOARDING_MAX_AGE}; SameSite=Lax`;
 }

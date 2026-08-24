@@ -30,18 +30,10 @@ export function MessagesNavController({
     if (!enabled) {
       setUnreadCount(0);
       onUnreadCount?.(0);
-      return;
     }
-    void refresh();
   }, [enabled, onUnreadCount]);
 
-  useVisiblePoll(
-    () => {
-      void refresh();
-    },
-    15000,
-    enabled,
-  );
+  useVisiblePoll(() => refresh(), 15000, enabled, true);
 
   return <MessagesNavLink unreadCount={unreadCount} />;
 }

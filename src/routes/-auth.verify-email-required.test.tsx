@@ -38,7 +38,7 @@ const mocks = vi.hoisted(() => ({
     } | null>
   >(),
   getResume: vi.fn<() => Promise<Resume>>(),
-  getResumeOnboardingDismissal: vi.fn<() => Promise<string | null>>(),
+  getResumeOnboardingDismissal: vi.fn<() => Promise<string[]>>(),
   updateNotificationPreference: vi.fn(),
   toastActionError: vi.fn(),
 }));
@@ -408,7 +408,7 @@ describe('/auth/verify-email-required resume offer step', () => {
       expect(mocks.navigate).toHaveBeenCalledWith({ href: returnTo });
     });
     expect(document.cookie).toContain(
-      'cavuno_resume_onboarding_completed=candidate-1',
+      'cavuno_resume_onboarding_completed_candidate-1=1',
     );
   });
 
@@ -498,7 +498,7 @@ describe('/auth/verify-email-required resume loader', () => {
       emailVerified: true,
       role: 'candidate',
     });
-    mocks.getResumeOnboardingDismissal.mockResolvedValue('candidate-1');
+    mocks.getResumeOnboardingDismissal.mockResolvedValue(['candidate-1']);
     mocks.getResume.mockResolvedValue(emptyResume);
     await expect(routeLoader()()).resolves.toMatchObject({
       emailVerified: true,
