@@ -73,6 +73,7 @@ describe('resolveRuntimeFeatureFlags', () => {
 describe('resolveTalentDirectoryVisibility', () => {
   it('preserves an off enum when the explicit preview value is absent', () => {
     expect(resolveTalentDirectoryVisibility(null, 'off')).toBe('off');
+    expect(resolveTalentDirectoryVisibility(undefined, undefined)).toBe('off');
   });
 
   it('maps legacy booleans without overriding an explicit value', () => {

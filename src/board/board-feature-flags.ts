@@ -33,10 +33,10 @@ export type TalentDirectoryVisibility = 'off' | 'public' | 'employers_only';
 
 /** Preserve the tri-state feature enum while supporting older boolean boards. */
 export function resolveTalentDirectoryVisibility(
-  explicit: TalentDirectoryVisibility | null,
-  configured: TalentDirectoryVisibility | boolean,
+  explicit: TalentDirectoryVisibility | null | undefined,
+  configured: TalentDirectoryVisibility | boolean | undefined,
 ): TalentDirectoryVisibility {
-  if (explicit !== null) return explicit;
+  if (explicit !== null && explicit !== undefined) return explicit;
   if (
     configured === 'off' ||
     configured === 'public' ||
