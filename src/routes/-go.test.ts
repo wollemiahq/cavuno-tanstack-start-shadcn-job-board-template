@@ -7,29 +7,29 @@ import { describe, expect, it } from 'vitest';
 
 import { Route } from './go.$';
 
-type GetHandler = (ctx: { request: Request }) => Promise<Response> | Response;
-
-function getHandler(): GetHandler {
-  const handlers = Route.options.server?.handlers as
-    | { GET?: GetHandler }
-    | GetHandler
-    | undefined;
-  const get =
-    typeof handlers === 'function'
-      ? undefined
-      : handlers && typeof handlers === 'object'
-        ? handlers.GET
-        : undefined;
-  if (typeof get !== 'function') {
+function getHandler() {
+  const handlers = Route.options.server?.handlers;
+  if (!handlers || !('GET' in handlers) || !handlers.GET) {
     throw new Error('expected /go/$ to export a GET server handler');
   }
-  return get;
+  return handlers.GET;
 }
 
 async function getGo(pathWithQuery: string): Promise<Response> {
   const request = new Request(`https://board.example.com${pathWithQuery}`);
-  // TanStack Start handlers receive a context object with `request`.
-  return getHandler()({ request });
+  const result = await getHandler()({
+    context: undefined,
+    request,
+    params: { _splat: pathWithQuery.slice('/go/'.length).split('?')[0] },
+    pathname: '/go/$',
+    next: () => {
+      throw new Error('The /go/$ handler must not defer');
+    },
+  });
+  if (!(result instanceof Response)) {
+    throw new Error('The /go/$ GET handler must return a response');
+  }
+  return result;
 }
 
 function locationPathAndSearch(res: Response): string {

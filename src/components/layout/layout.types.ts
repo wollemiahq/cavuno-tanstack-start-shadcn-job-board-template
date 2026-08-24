@@ -12,6 +12,13 @@ export type Responsive<T> =
       xl?: T;
       '2xl'?: T;
     }>;
+type ResponsiveObject<T> = Extract<Responsive<T>, object>;
+
+function isResponsiveObject<Token extends string | number>(
+  value: Responsive<Token>,
+): value is ResponsiveObject<Token> {
+  return Object(value) === value;
+}
 
 export type Space =
   | '0'
@@ -53,7 +60,7 @@ export type LayoutProps<
 
 const breakpoints = ['base', 'sm', 'md', 'lg', 'xl', '2xl'] as const;
 
-export const spaceValues: Record<Space, string> = {
+export const spaceValues = {
   '0': '0rem',
   '1': 'calc(var(--spacing) * 1)',
   '1.5': 'calc(var(--spacing) * 1.5)',
@@ -67,7 +74,7 @@ export const spaceValues: Record<Space, string> = {
   '12': 'calc(var(--spacing) * 12)',
   '16': 'calc(var(--spacing) * 16)',
   '20': 'calc(var(--spacing) * 20)',
-};
+} satisfies Record<Space, string>;
 
 /**
  * Converts a constrained mobile-first value to private CSS variables. Missing
@@ -79,7 +86,9 @@ export function responsiveTokenStyle<Token extends string | number>(
   value: Responsive<Token>,
   values: Record<Token, string>,
 ) {
-  const responsive = typeof value === 'object' ? value : { base: value };
+  const responsive: ResponsiveObject<Token> = isResponsiveObject(value)
+    ? value
+    : { base: value };
   const style: Record<string, string> = {};
   let current = responsive.base;
 
@@ -88,16 +97,18 @@ export function responsiveTokenStyle<Token extends string | number>(
     style[`--${name}-${breakpoint}`] = values[current];
   }
 
+  // SAFETY: The generated keys are private CSS custom properties consumed by
+  // layout utility classes; values are resolved from the supplied token map.
   return style as CSSProperties;
 }
 
 export type ContainerWidth = 'narrow' | 'content' | 'wide';
 
-export const containerWidthValues: Record<ContainerWidth, string> = {
+export const containerWidthValues = {
   narrow: '42rem',
   content: '48rem',
   wide: '80rem',
-};
+} satisfies Record<ContainerWidth, string>;
 
 export const containerGridClass =
   'grid w-full grid-cols-[minmax(var(--layout-gutter),1fr)_[content-start]_minmax(0,var(--layout-width))_[content-end]_minmax(var(--layout-gutter),1fr)] [&>*]:col-[content-start/content-end] [&>[data-layout=bleed]]:col-[1/-1]';

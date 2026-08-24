@@ -114,8 +114,10 @@ function injectVendorScripts(analytics: BoardAnalyticsConfig) {
  */
 export function AnalyticsScripts({
   analytics,
+  reportWebVitals = startWebVitalsReporting,
 }: {
   analytics: BoardAnalyticsConfig;
+  reportWebVitals?: () => Promise<void>;
 }) {
   const { required, choice } = useCookieConsent();
   const allowed = !required || choice === 'accepted';
@@ -123,8 +125,8 @@ export function AnalyticsScripts({
   useEffect(() => {
     if (!allowed) return;
     injectVendorScripts(analytics);
-    void startWebVitalsReporting();
-  }, [allowed, analytics]);
+    void reportWebVitals();
+  }, [allowed, analytics, reportWebVitals]);
 
   return null;
 }

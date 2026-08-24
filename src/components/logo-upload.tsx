@@ -2,13 +2,17 @@
 
 import { useRef, useState } from 'react';
 
-import { useRouter } from '@tanstack/react-router';
-
 import { m } from '../paraglide/messages';
-import { uploadCompanyLogo } from '../server/employers';
 
 import { EmployerIdentityAvatar } from '@/components/account-shell';
 import { Button } from '@/components/ui/button';
+
+export type LogoUploadActions = {
+  uploadCompanyLogo: (
+    ...args: Parameters<typeof import('../server/employers').uploadCompanyLogo>
+  ) => ReturnType<typeof import('../server/employers').uploadCompanyLogo>;
+  invalidate: () => Promise<void>;
+};
 
 /**
  * Company-logo uploader — mirrors the candidate `AvatarUpload` mechanism: pick a
@@ -20,12 +24,13 @@ export function LogoUpload({
   slug,
   logoUrl,
   companyName,
+  actions,
 }: {
   slug: string;
   logoUrl: string | null;
   companyName: string;
+  actions: LogoUploadActions;
 }) {
-  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<'idle' | 'pending' | 'error'>('idle');
 
@@ -47,8 +52,8 @@ export function LogoUpload({
             formData.append('slug', slug);
             formData.append('logo', file);
             try {
-              await uploadCompanyLogo({ data: formData });
-              await router.invalidate();
+              await actions.uploadCompanyLogo({ data: formData });
+              await actions.invalidate();
               setStatus('idle');
             } catch {
               setStatus('error');

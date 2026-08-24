@@ -30,6 +30,7 @@ import type {
 } from '@/board/job-detail-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
 import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
+import { RelativeTimestamp } from '@/components/board/relative-timestamp';
 import { TaxonomyTags } from '@/components/board/taxonomy-tags';
 import { Container } from '@/components/layout/container';
 import { PageLayout } from '@/components/layout/page-layout';
@@ -179,7 +180,9 @@ export function JobDetail({
 
                 <p className="text-muted-foreground text-sm">
                   {vm.locationLabel ?? m.jobDetail_locationNotSpecifiedLabel()}
-                  {vm.publishedLabel ? ` · ${vm.publishedLabel}` : null}
+                  {vm.publishedLabel ? (
+                    <RelativeTimestamp label={vm.publishedLabel} prefix=" · " />
+                  ) : null}
                 </p>
               </header>
             </div>

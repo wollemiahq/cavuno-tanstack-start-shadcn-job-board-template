@@ -6,32 +6,28 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BlockedController,
   InboxController,
+  messagesRuntimeDependencies,
   ThreadController,
+  type MessagesRuntimeDependencies,
 } from './-messages-runtime';
 
-import { useVisiblePoll } from '@/lib/use-visible-poll';
-import { getInbox, markRead, unblockUser } from '@/server/messaging';
 import type {
   BlockedUser,
   Conversation,
   ConversationDetail,
 } from '@cavuno/board';
 
-vi.mock('@/lib/use-visible-poll', () => ({ useVisiblePoll: vi.fn() }));
-
-vi.mock('@/server/messaging', () => ({
-  archiveConversation: vi.fn(),
-  blockUser: vi.fn(),
-  editMessage: vi.fn(),
-  getInbox: vi.fn(),
-  getThread: vi.fn(),
-  markRead: vi.fn(),
-  reportMessage: vi.fn(),
-  sendReply: vi.fn(),
-  unarchiveConversation: vi.fn(),
-  unblockUser: vi.fn(),
-  unsendMessage: vi.fn(),
-}));
+const getInbox = vi.fn<MessagesRuntimeDependencies['getInbox']>();
+const markRead = vi.fn<MessagesRuntimeDependencies['markRead']>();
+const unblockUser = vi.fn<MessagesRuntimeDependencies['unblockUser']>();
+const useVisiblePoll = vi.fn<MessagesRuntimeDependencies['useVisiblePoll']>();
+const dependencies: MessagesRuntimeDependencies = {
+  ...messagesRuntimeDependencies,
+  getInbox,
+  markRead,
+  unblockUser,
+  useVisiblePoll,
+};
 
 const conversation: Conversation = {
   id: 'conversation-1',
@@ -74,7 +70,7 @@ describe('messaging runtime failures', () => {
   });
 
   it('announces a failed inbox pagination request and leaves Load more available', async () => {
-    vi.mocked(getInbox).mockRejectedValue(new Error('Network failed'));
+    getInbox.mockRejectedValue(new Error('Network failed'));
 
     render(
       <InboxController
@@ -87,6 +83,7 @@ describe('messaging runtime failures', () => {
         }}
         archived={false}
         onSelect={vi.fn()}
+        dependencies={dependencies}
       />,
     );
 
@@ -100,9 +97,11 @@ describe('messaging runtime failures', () => {
   });
 
   it('announces a failed unblock without removing the blocked user', async () => {
-    vi.mocked(unblockUser).mockRejectedValue(new Error('Network failed'));
+    unblockUser.mockRejectedValue(new Error('Network failed'));
 
-    render(<BlockedController initial={[blockedUser]} />);
+    render(
+      <BlockedController initial={[blockedUser]} dependencies={dependencies} />,
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Unblock' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
@@ -114,7 +113,7 @@ describe('messaging runtime failures', () => {
   });
 
   it('announces when a conversation could not be marked as read', async () => {
-    vi.mocked(markRead).mockRejectedValue(new Error('Mark read failed'));
+    markRead.mockRejectedValue(new Error('Mark read failed'));
 
     render(
       <ThreadController
@@ -128,6 +127,7 @@ describe('messaging runtime failures', () => {
         }}
         initialBlockStatus={{ object: 'block_status', blocked: false }}
         onExit={vi.fn()}
+        dependencies={dependencies}
       />,
     );
 
@@ -137,7 +137,10 @@ describe('messaging runtime failures', () => {
   });
 
   it('keeps an open inbox and thread comfortably inside the API call budget', () => {
-    vi.mocked(markRead).mockResolvedValue({} as never);
+    markRead.mockResolvedValue({
+      object: 'read_receipt',
+      markedAt: '2026-07-14T05:00:00.000Z',
+    });
 
     render(
       <InboxController
@@ -150,6 +153,7 @@ describe('messaging runtime failures', () => {
         }}
         archived={false}
         onSelect={vi.fn()}
+        dependencies={dependencies}
       />,
     );
     render(
@@ -164,12 +168,13 @@ describe('messaging runtime failures', () => {
         }}
         initialBlockStatus={{ object: 'block_status', blocked: false }}
         onExit={vi.fn()}
+        dependencies={dependencies}
       />,
     );
 
-    const [inboxPoll, threadPoll] = vi
-      .mocked(useVisiblePoll)
-      .mock.calls.map((call) => call[1] ?? 4_000);
+    const [inboxPoll, threadPoll] = useVisiblePoll.mock.calls.map(
+      (call) => call[1] ?? 4_000,
+    );
     const unreadCallsPerMinute = 8;
     const inboxCallsPerMinute = (60_000 / inboxPoll) * 2;
     const threadCallsPerMinute = (60_000 / threadPoll) * 4;

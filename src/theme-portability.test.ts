@@ -53,16 +53,16 @@ const RAW_COLOR_FN_RE = /(?:rgba?|hsla?|oklch|oklab|lab|lch)\(([^)]*)\)/g;
  * theme-breaking color introduced into any OTHER surface (a redesigned card,
  * a new route), not to police these known-special files line by line.
  */
-const ALLOWLIST: Record<string, string> = {
+const ALLOWLIST = {
   'src/components/brand-icons.tsx':
     'Third-party brand marks (Google) — fixed by the brand, must not re-theme.',
-  'src/routes/auth.sign-in.tsx':
+  'src/routes/-auth.sign-in.tsx':
     'LinkedIn brand blue on its own icon — a brand constant, not a theme color.',
   'src/components/marketing/dither-canvas.tsx':
     'Canvas scratch-context default (#000) before resolving a real token color.',
   'src/components/preview/preview-emails.tsx':
     'Captured email documents render on white regardless of the app theme.',
-};
+} satisfies Record<string, string>;
 
 /** Recursively collect app-authored source, skipping shadcn-owned ui/. */
 function appSourceFiles(dir: string): string[] {

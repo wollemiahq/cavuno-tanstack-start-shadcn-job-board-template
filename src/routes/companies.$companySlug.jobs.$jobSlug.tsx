@@ -1,4 +1,3 @@
-import { isNotFound } from '@cavuno/board';
 /**
  * Job detail — hosted-parity URL (/companies/:companySlug/jobs/:jobSlug),
  * rendered by the @cavuno registry `job-detail` block:
@@ -15,7 +14,6 @@ import { isNotFound } from '@cavuno/board';
 import {
   createFileRoute,
   getRouteApi,
-  notFound,
   useLocation,
   useRouter,
 } from '@tanstack/react-router';
@@ -24,18 +22,10 @@ import { Search } from 'lucide-react';
 import { jobAlertDefaultsFromJob } from '../lib/job-alert-defaults';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
-import { getSessionUser, saveJob } from '../server/account';
-import {
-  applyToJob,
-  myApplicationForJob,
-  prepareApplyToJob,
-} from '../server/applications';
-import { getJobDetailPage } from '../server/job-detail-page';
-import {
-  getCompany,
-  getSimilarJobs,
-  subscribeJobAlert,
-} from '../server/queries';
+import { saveJob } from '../server/account';
+import { applyToJob, prepareApplyToJob } from '../server/applications';
+import { subscribeJobAlert } from '../server/queries';
+import { createJobDetailLoader } from './-job-detail-loader';
 
 import { toJobDetailVM } from '@/board/job-detail-view-model';
 import { toJobCardVM } from '@/board/job-view-model';
@@ -56,65 +46,10 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { companyIntro } from '@/lib/company-intro';
-import type { PublicJobCard } from '@cavuno/board';
 
 export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
   staticData: { fullBleed: true, ownsMain: true },
-  loader: async ({ params }) => {
-    try {
-      // `board` comes from the root loader (read via rootApi in the component):
-      // this loader neither gates on it nor uses it in head(), so it is not
-      // re-fetched here — that would be a duplicate board-context read.
-      // getJobDetailPage returns job + seo + precomputed head/jsonLd so the
-      // route module never imports @cavuno/board/seo into the client graph.
-      // Similar-jobs is a below-the-fold, search-backed rail. It needs only
-      // the job slug, so it is kicked off BEFORE the batch below is awaited —
-      // starting it after made it a second serial wave, and SSR renders the
-      // rail into the document, so "deferred" did not keep it off the
-      // first-byte path. A search outage (503) hides it, never breaks the
-      // page (mirrors the hosted similar-jobs loader).
-      const similar = getSimilarJobs({ data: { jobSlug: params.jobSlug } })
-        .then((r) => ({ jobs: r.data }))
-        .catch(() => ({ jobs: [] as PublicJobCard[] }));
-      // The application lookup is CHAINED off the session probe inside the
-      // batch rather than awaited after it: it needs only the job slug, and
-      // `user` is just a gate, so as a trailing `await` it was a third
-      // serial wave for every signed-in candidate. Anonymous visitors still
-      // pay nothing (the chain short-circuits to null).
-      // Company retrieve is only for `summary` (about-card intro). Name/logo/
-      // link come from job.company; never use company.description HTML here.
-      const [page, session, company] = await Promise.all([
-        getJobDetailPage({ data: { jobSlug: params.jobSlug } }),
-        getSessionUser().then(async (user) => ({
-          user,
-          application: user?.emailVerified
-            ? await myApplicationForJob({
-                data: { jobSlug: params.jobSlug },
-              }).catch(() => null)
-            : null,
-        })),
-        getCompany({ data: { companySlug: params.companySlug } }).catch(
-          () => null,
-        ),
-      ]);
-      const { user, application } = session;
-      // Category/skill chips link directly: every slug the API emits
-      // resolves (ADR-0099 platform guarantee) — no re-verification round trip.
-      return {
-        job: page.job,
-        user,
-        similar,
-        companySummary: company?.summary ?? null,
-        seo: page.seo,
-        head: page.head,
-        jsonLd: page.jsonLd,
-        alreadyApplied: application !== null,
-      };
-    } catch (error) {
-      if (isNotFound(error)) throw notFound();
-      throw error;
-    }
-  },
+  loader: createJobDetailLoader(),
   head: ({ loaderData }) =>
     loaderData
       ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }

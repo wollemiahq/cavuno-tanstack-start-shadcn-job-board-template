@@ -49,6 +49,7 @@ import {
   type PreviewEmailsRoster,
   type PreviewPersona,
   type PreviewRoster,
+  type SandboxConfigPatch,
   type PreviewState,
   type PreviewSwitchResult,
 } from '../lib/preview';
@@ -86,7 +87,7 @@ let sandboxProbe: Promise<boolean> | null = null;
 function probeSandbox(): Promise<boolean> {
   sandboxProbe ??= fetchRoster().then(
     () => true,
-    (error: unknown) => {
+    (error: Error) => {
       if (isNotFound(error)) return false;
       sandboxProbe = null;
       return false;
@@ -353,7 +354,7 @@ export const exitPreview = createServerFn({ method: 'POST' }).handler(
  * Sandbox-gated. Dual-source: always the demo client when configured.
  */
 export const updateSandboxFlags = createServerFn({ method: 'POST' })
-  .validator((input: { config: Record<string, unknown> }) => input)
+  .validator((input: { config: SandboxConfigPatch }) => input)
   .handler(async ({ data }): Promise<PreviewActionResult> => {
     const capability = await resolveCapabilityFromBoard();
     if (!capability.canPreview) {

@@ -24,12 +24,12 @@ export type GridProps<Element extends LayoutElement = 'div'> = LayoutProps<
   GridOwnProps
 >;
 
-const columnValues: Record<GridColumns, string> = {
+const columnValues = {
   1: '1',
   2: '2',
   3: '3',
   4: '4',
-};
+} satisfies Record<GridColumns, string>;
 
 const columnClass =
   '[grid-template-columns:repeat(var(--layout-columns-base),minmax(0,1fr))] sm:[grid-template-columns:repeat(var(--layout-columns-sm),minmax(0,1fr))] md:[grid-template-columns:repeat(var(--layout-columns-md),minmax(0,1fr))] lg:[grid-template-columns:repeat(var(--layout-columns-lg),minmax(0,1fr))] xl:[grid-template-columns:repeat(var(--layout-columns-xl),minmax(0,1fr))] 2xl:[grid-template-columns:repeat(var(--layout-columns-2xl),minmax(0,1fr))]';
@@ -45,6 +45,8 @@ export function Grid<Element extends LayoutElement = 'div'>({
   gap = '0',
   ...props
 }: GridProps<Element>) {
+  // SAFETY: `as` is constrained to LayoutElement; React accepts that finite
+  // intrinsic element set as an ElementType for polymorphic rendering.
   const Component = (as ?? 'div') as ElementType;
   const layoutStyle = {
     ...responsiveTokenStyle('layout-columns', columns, columnValues),

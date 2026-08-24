@@ -5,6 +5,12 @@ import { getLocale } from '../../paraglide/runtime';
 
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { cn } from '@/lib/utils';
+
+function finiteNumber(value: number | undefined): number | undefined {
+  if (value === undefined || !Number.isFinite(value)) return undefined;
+  return value;
+}
+
 /** The honest result count and current page range directly above the cards. */
 export function JobsResultsBar({
   count,
@@ -27,31 +33,36 @@ export function JobsResultsBar({
   // Viewer chrome locale for number/plural formatting (prop kept for call-site
   // compatibility; prefer getLocale() so a stale prop cannot drift).
   const locale = language || getLocale();
+  const totalCount = finiteNumber(count);
+  const currentPage = finiteNumber(page);
+  const currentPageSize = finiteNumber(pageSize);
   const showRange =
-    typeof count === 'number' &&
-    typeof page === 'number' &&
-    typeof pageSize === 'number' &&
-    count > 0;
+    totalCount !== undefined &&
+    currentPage !== undefined &&
+    currentPageSize !== undefined &&
+    totalCount > 0;
   const totalLabel =
-    typeof count === 'number'
+    totalCount !== undefined
       ? heading
         ? m.jobSearch_contextualResultsHeading({
-            count: count.toLocaleString(locale),
+            count: totalCount.toLocaleString(locale),
             heading,
           })
-        : new Intl.PluralRules(locale).select(count) === 'one'
+        : new Intl.PluralRules(locale).select(totalCount) === 'one'
           ? m.jobSearch_resultsCountOne({
-              count: count.toLocaleString(locale),
+              count: totalCount.toLocaleString(locale),
             })
           : m.jobSearch_resultsCountMany({
-              count: count.toLocaleString(locale),
+              count: totalCount.toLocaleString(locale),
             })
       : (heading ?? jobSearchCopy().headingJobs);
   const rangeLabel = showRange
     ? m.jobSearch_resultsShowingRange({
-        from: ((page - 1) * pageSize + 1).toLocaleString(locale),
-        to: Math.min(page * pageSize, count).toLocaleString(locale),
-        count: count.toLocaleString(locale),
+        from: ((currentPage - 1) * currentPageSize + 1).toLocaleString(locale),
+        to: Math.min(currentPage * currentPageSize, totalCount).toLocaleString(
+          locale,
+        ),
+        count: totalCount.toLocaleString(locale),
       })
     : null;
 

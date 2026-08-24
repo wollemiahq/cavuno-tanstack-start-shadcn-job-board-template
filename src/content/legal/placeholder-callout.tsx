@@ -8,7 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
  * Operators must replace the surrounding content before launch — this callout
  * is deliberately not subtle.
  */
-const CALLOUT: Record<LegalLocale, { title: string; description: string }> = {
+const CALLOUT = {
   en: {
     title: 'Placeholder — replace before launch',
     description:
@@ -24,11 +24,20 @@ const CALLOUT: Record<LegalLocale, { title: string; description: string }> = {
     description:
       "Ceci est un contenu d'espace réservé pour un board modèle. Ne le publiez pas comme une vraie politique ou page à propos. Remplacez les sections ci-dessous par votre propre texte (et faites relire les pages juridiques) avant la mise en ligne.",
   },
-};
+} satisfies Record<LegalLocale, { title: string; description: string }>;
+
+const CALLOUT_LOCALES = [
+  'en',
+  'de',
+  'fr',
+] as const satisfies readonly LegalLocale[];
+
+function resolveCalloutLocale(locale: string): LegalLocale {
+  return CALLOUT_LOCALES.find((candidate) => candidate === locale) ?? 'en';
+}
 
 export function LegalPlaceholderCallout() {
-  const locale = getLocale();
-  const copy = CALLOUT[locale as LegalLocale] ?? CALLOUT.en;
+  const copy = CALLOUT[resolveCalloutLocale(getLocale())];
 
   return (
     <div className="not-typeset mb-6">

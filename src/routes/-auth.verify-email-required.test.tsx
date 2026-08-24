@@ -18,66 +18,50 @@ import {
   vi,
 } from 'vitest';
 
-vi.mock('../server/queries', () => ({ getSeoBase: vi.fn() }));
-
 import type { Resume } from '@cavuno/board';
 
 type AuthResult = { ok: true } | { ok: false; message: string };
 
-const mocks = vi.hoisted(() => ({
+interface VerificationViewState {
+  emailVerified: boolean;
+  role: 'candidate' | 'employer';
+  resume: Resume | null;
+  resumeOnboardingDismissed: boolean;
+  userId: string;
+}
+
+const mocks = {
+  getSeoBase: vi.fn().mockResolvedValue({
+    boardName: 'Acme Board',
+    language: 'en',
+    origin: 'https://board.example',
+  }),
   invalidate: vi.fn<(options?: { sync?: boolean }) => Promise<void>>(),
-  navigate: vi.fn<(options: { href: string }) => Promise<void>>(),
+  navigate: vi.fn<(href: string) => Promise<void>>(),
   resendOtp: vi.fn<() => Promise<AuthResult>>(),
   verifyOtpCode:
     vi.fn<(input: { data: { code: string } }) => Promise<AuthResult>>(),
   getSessionUser: vi.fn<
     () => Promise<{
-      id?: string;
+      id: string;
       emailVerified: boolean;
       role?: string;
     } | null>
   >(),
   getResume: vi.fn<() => Promise<Resume>>(),
-  getResumeOnboardingDismissal: vi.fn<() => Promise<string[]>>(),
+  getResumeOnboardingDismissal: vi
+    .fn<() => Promise<string[]>>()
+    .mockResolvedValue([]),
   updateNotificationPreference: vi.fn(),
   toastActionError: vi.fn(),
-}));
-
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    useRouter: () => ({
-      invalidate: mocks.invalidate,
-      navigate: mocks.navigate,
-    }),
-  };
-});
-
-vi.mock('../server/auth', () => ({
-  resendOtp: mocks.resendOtp,
-  verifyOtpCode: mocks.verifyOtpCode,
-}));
-
-vi.mock('../server/account', () => ({
-  getSessionUserStrict: mocks.getSessionUser,
-  getResume: mocks.getResume,
-  getResumeOnboardingDismissal: mocks.getResumeOnboardingDismissal,
-  uploadResume: vi.fn(),
-  deleteResume: vi.fn(),
-}));
-
-vi.mock('../server/settings', () => ({
-  updateNotificationPreference: mocks.updateNotificationPreference,
-}));
-
-vi.mock('@/lib/action-toast', () => ({
-  toastActionError: mocks.toastActionError,
-}));
+};
 
 import { isRedirect, redirect } from '@tanstack/react-router';
 
+import {
+  loadVerificationGate,
+  VerifyEmailRequiredView,
+} from './-auth.verify-email-required';
 import { Route } from './auth.verify-email-required';
 
 import { m } from '@/paraglide/messages';
@@ -141,26 +125,45 @@ function renderVerifyPage({
   resumeOnboardingDismissed?: boolean;
   userId?: string;
 } = {}) {
-  vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo });
-  vi.spyOn(Route, 'useLoaderData').mockReturnValue({
-    emailVerified,
-    role,
-    resume,
-    resumeOnboardingDismissed,
-    userId,
-  });
-  const VerifyPage = Route.options.component;
-  if (!VerifyPage) throw new Error('The verification route needs a component');
-  return render(<VerifyPage />);
+  return render(
+    <VerifyEmailRequiredView
+      emailVerified={emailVerified}
+      role={role}
+      resume={resume}
+      resumeOnboardingDismissed={resumeOnboardingDismissed}
+      userId={userId}
+      returnTo={returnTo}
+      verifyOtpCodeAction={mocks.verifyOtpCode}
+      resendOtpAction={mocks.resendOtp}
+      updateNotificationPreferenceAction={mocks.updateNotificationPreference}
+      invalidate={(sync) => mocks.invalidate(sync ? { sync: true } : undefined)}
+      navigate={mocks.navigate}
+      reportActionError={mocks.toastActionError}
+      renderResumeUpload={() => <div data-test="resume-upload" />}
+    />,
+  );
 }
 
 describe('/auth/verify-email-required search contract', () => {
   it('validates a complete internal candidate destination', () => {
     const validate = Route.options.validateSearch;
-    if (typeof validate !== 'function') {
+    if (!validate) {
       throw new Error(
         'The verification gate must validate its search parameters',
       );
+    }
+    if ('parse' in validate) {
+      expect(
+        validate.parse({
+          returnTo: '/jobs?q=design&selectedJob=product-designer',
+        }),
+      ).toEqual({
+        returnTo: '/jobs?q=design&selectedJob=product-designer',
+      });
+      return;
+    }
+    if ('~standard' in validate) {
+      throw new Error('The verification gate uses an unexpected schema');
     }
 
     expect(
@@ -187,7 +190,7 @@ describe('/auth/verify-email-required search contract', () => {
         data: { code: '123456' },
       });
       expect(mocks.invalidate).toHaveBeenCalledOnce();
-      expect(mocks.navigate).toHaveBeenCalledWith({ href: returnTo });
+      expect(mocks.navigate).toHaveBeenCalledWith(returnTo);
     });
   });
 
@@ -288,7 +291,7 @@ describe('/auth/verify-email-required resume offer step', () => {
     });
 
     await waitFor(() => {
-      expect(mocks.navigate).toHaveBeenCalledWith({ href: returnTo });
+      expect(mocks.navigate).toHaveBeenCalledWith(returnTo);
     });
     expect(
       screen.queryByText(m.authVerifyEmailRequired_resumeTitle()),
@@ -308,7 +311,7 @@ describe('/auth/verify-email-required resume offer step', () => {
     });
 
     await waitFor(() => {
-      expect(mocks.navigate).toHaveBeenCalledWith({ href: returnTo });
+      expect(mocks.navigate).toHaveBeenCalledWith(returnTo);
     });
     expect(
       screen.queryByText(m.authVerifyEmailRequired_resumeTitle()),
@@ -317,10 +320,10 @@ describe('/auth/verify-email-required resume offer step', () => {
 
   it('reconciles a revoked OTP when the email was already verified elsewhere', async () => {
     const returnTo = '/jobs?q=design';
-    let loaderData = {
+    let loaderData: VerificationViewState = {
       emailVerified: false,
-      role: 'candidate' as const,
-      resume: null as Resume | null,
+      role: 'candidate',
+      resume: null,
       resumeOnboardingDismissed: false,
       userId: 'candidate-1',
     };
@@ -328,12 +331,13 @@ describe('/auth/verify-email-required resume offer step', () => {
       ok: false,
       message: 'Invalid verification code',
     });
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo });
-    vi.spyOn(Route, 'useLoaderData').mockImplementation(() => loaderData);
-    const VerifyPage = Route.options.component;
-    if (!VerifyPage)
-      throw new Error('The verification route needs a component');
-    const { container, rerender } = render(<VerifyPage />);
+    const initial = renderVerifyPage({
+      returnTo,
+      emailVerified: loaderData.emailVerified,
+      role: loaderData.role,
+      resume: loaderData.resume,
+    });
+    const { container, rerender } = initial;
 
     fireEvent.change(container.querySelector('input[name="code"]')!, {
       target: { value: '123456' },
@@ -347,7 +351,25 @@ describe('/auth/verify-email-required resume offer step', () => {
       resumeOnboardingDismissed: false,
       userId: 'candidate-1',
     };
-    rerender(<VerifyPage />);
+    rerender(
+      <VerifyEmailRequiredView
+        emailVerified={loaderData.emailVerified}
+        role={loaderData.role}
+        resume={loaderData.resume}
+        resumeOnboardingDismissed={loaderData.resumeOnboardingDismissed}
+        userId={loaderData.userId}
+        returnTo={returnTo}
+        verifyOtpCodeAction={mocks.verifyOtpCode}
+        resendOtpAction={mocks.resendOtp}
+        updateNotificationPreferenceAction={mocks.updateNotificationPreference}
+        invalidate={(sync) =>
+          mocks.invalidate(sync ? { sync: true } : undefined)
+        }
+        navigate={mocks.navigate}
+        reportActionError={mocks.toastActionError}
+        renderResumeUpload={() => <div data-test="resume-upload" />}
+      />,
+    );
 
     expect(
       await screen.findByText(m.authVerifyEmailRequired_resumeTitle()),
@@ -364,7 +386,7 @@ describe('/auth/verify-email-required resume offer step', () => {
       screen.queryByText(m.authVerifyEmailRequired_resumeTitle()),
     ).toBeNull();
     expect(document.querySelector('input[name="code"]')).toBeNull();
-    expect(mocks.navigate).toHaveBeenCalledWith({ href: returnTo });
+    expect(mocks.navigate).toHaveBeenCalledWith(returnTo);
   });
 
   it('offers a skippable resume upload after verification', async () => {
@@ -410,7 +432,7 @@ describe('/auth/verify-email-required resume offer step', () => {
       }),
     );
     await waitFor(() => {
-      expect(mocks.navigate).toHaveBeenCalledWith({ href: returnTo });
+      expect(mocks.navigate).toHaveBeenCalledWith(returnTo);
     });
     expect(document.cookie).toContain(
       'cavuno_resume_onboarding_completed_candidate-1=1',
@@ -430,7 +452,7 @@ describe('/auth/verify-email-required resume offer step', () => {
     });
 
     await waitFor(() => {
-      expect(mocks.navigate).toHaveBeenCalledWith({ href: returnTo });
+      expect(mocks.navigate).toHaveBeenCalledWith(returnTo);
     });
     expect(
       screen.queryByText(m.authVerifyEmailRequired_resumeTitle()),
@@ -458,17 +480,16 @@ describe('/auth/verify-email-required resume offer step', () => {
 });
 
 describe('/auth/verify-email-required resume loader', () => {
-  function routeLoader() {
-    const loader = Route.options.loader;
-    if (typeof loader !== 'function') {
-      throw new Error('The verification gate needs a resume loader');
-    }
-    return loader as unknown as () => Promise<{
-      emailVerified: boolean;
-      role: 'candidate' | 'employer';
-      resume: Resume | null;
-      resumeOnboardingDismissed: boolean;
-    }>;
+  function runVerificationGate() {
+    return loadVerificationGate(
+      { returnTo: '/account' },
+      {
+        getResume: mocks.getResume,
+        getResumeOnboardingDismissal: mocks.getResumeOnboardingDismissal,
+        getSeoBase: mocks.getSeoBase,
+        getSessionUserStrict: mocks.getSessionUser,
+      },
+    );
   }
 
   it('redirects signed-out visitors to sign-in with the final destination preserved', async () => {
@@ -477,7 +498,7 @@ describe('/auth/verify-email-required resume loader', () => {
 
     let result: unknown;
     try {
-      await routeLoader()();
+      await runVerificationGate();
     } catch (error) {
       result = error;
     }
@@ -493,7 +514,7 @@ describe('/auth/verify-email-required resume loader', () => {
   it('surfaces a failed session probe instead of treating it as signed out', async () => {
     mocks.getSessionUser.mockRejectedValue(new Error('profile unavailable'));
 
-    await expect(routeLoader()()).rejects.toThrow('profile unavailable');
+    await expect(runVerificationGate()).rejects.toThrow('profile unavailable');
     expect(mocks.getResume).not.toHaveBeenCalled();
   });
 
@@ -505,7 +526,7 @@ describe('/auth/verify-email-required resume loader', () => {
     });
     mocks.getResumeOnboardingDismissal.mockResolvedValue(['candidate-1']);
     mocks.getResume.mockResolvedValue(emptyResume);
-    await expect(routeLoader()()).resolves.toMatchObject({
+    await expect(runVerificationGate()).resolves.toMatchObject({
       emailVerified: true,
       role: 'candidate',
       resume: emptyResume,
@@ -515,11 +536,12 @@ describe('/auth/verify-email-required resume loader', () => {
 
   it('degrades to no resume state while the candidate is unverified', async () => {
     mocks.getSessionUser.mockResolvedValue({
+      id: 'candidate-1',
       emailVerified: false,
       role: 'candidate',
     });
     mocks.getResume.mockRejectedValue(new Error('EMAIL_UNVERIFIED'));
-    await expect(routeLoader()()).resolves.toMatchObject({
+    await expect(runVerificationGate()).resolves.toMatchObject({
       emailVerified: false,
       role: 'candidate',
       resume: null,
@@ -528,11 +550,12 @@ describe('/auth/verify-email-required resume loader', () => {
 
   it('does not load candidate resume state for an unverified employer', async () => {
     mocks.getSessionUser.mockResolvedValue({
+      id: 'employer-1',
       emailVerified: false,
       role: 'employer',
     });
 
-    await expect(routeLoader()()).resolves.toMatchObject({
+    await expect(runVerificationGate()).resolves.toMatchObject({
       emailVerified: false,
       role: 'employer',
       resume: null,
@@ -542,11 +565,12 @@ describe('/auth/verify-email-required resume loader', () => {
 
   it('re-throws board-access redirects instead of swallowing them', async () => {
     mocks.getSessionUser.mockResolvedValue({
+      id: 'candidate-1',
       emailVerified: false,
       role: 'candidate',
     });
     mocks.getResume.mockRejectedValue(redirect({ to: '/password' }));
-    await expect(routeLoader()()).rejects.toSatisfy((error) =>
+    await expect(runVerificationGate()).rejects.toSatisfy((error) =>
       isRedirect(error),
     );
   });

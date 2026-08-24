@@ -9,12 +9,11 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../server/queries', () => ({ getSeoBase: vi.fn() }));
+import type { UrlSearchInput } from '../lib/pagination';
 
-const forgotPassword = vi.hoisted(() => vi.fn());
+const forgotPassword = vi.fn();
 
-vi.mock('../server/auth', () => ({ forgotPassword }));
-
+import { ForgotPasswordView } from './-auth.forgot-password';
 import { Route } from './auth.forgot-password';
 
 afterEach(() => {
@@ -23,11 +22,17 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-function validateSearch(search: Record<string, unknown>) {
+function validateSearch(search: UrlSearchInput) {
   const validate = Route.options.validateSearch;
-  if (typeof validate !== 'function') {
+  if (!validate) {
     throw new Error(
       'The forgot-password route must validate its search parameters',
+    );
+  }
+  if ('parse' in validate) return validate.parse(search);
+  if ('~standard' in validate) {
+    throw new Error(
+      'The forgot-password route uses an unexpected async schema',
     );
   }
   return validate(search);
@@ -49,13 +54,13 @@ describe('/auth/forgot-password continuation', () => {
 
   it('keeps the destination on the confirmation link back to sign in', async () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo });
     forgotPassword.mockResolvedValue({ ok: true });
-    const ForgotPasswordPage = Route.options.component;
-    if (!ForgotPasswordPage)
-      throw new Error('The forgot-password route needs a component');
-
-    const { container } = render(<ForgotPasswordPage />);
+    const { container } = render(
+      <ForgotPasswordView
+        returnTo={returnTo}
+        forgotPasswordAction={forgotPassword}
+      />,
+    );
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
     });
@@ -72,13 +77,13 @@ describe('/auth/forgot-password continuation', () => {
   });
 
   it('recovers when the reset-link request rejects unexpectedly', async () => {
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo: '/account' });
     forgotPassword.mockRejectedValue(new Error('network unavailable'));
-    const ForgotPasswordPage = Route.options.component;
-    if (!ForgotPasswordPage)
-      throw new Error('The forgot-password route needs a component');
-
-    const { container } = render(<ForgotPasswordPage />);
+    const { container } = render(
+      <ForgotPasswordView
+        returnTo="/account"
+        forgotPasswordAction={forgotPassword}
+      />,
+    );
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
     });

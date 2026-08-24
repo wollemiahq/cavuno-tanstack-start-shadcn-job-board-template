@@ -1,4 +1,10 @@
-import { pageSearchValue, parsePageParam } from '@/lib/pagination';
+import {
+  pageSearchValue,
+  parsePageParam,
+  searchString,
+  type UrlSearchInput,
+  type UrlSearchValue,
+} from '@/lib/pagination';
 
 export interface CompaniesSearch {
   /** 1-based page used by both browse and search pagination; page 1 drops from the URL. */
@@ -10,17 +16,15 @@ export interface CompaniesSearch {
 
 export type CompaniesListingSearch = Omit<CompaniesSearch, 'selectedCompany'>;
 
-function stringSearchValue(value: unknown) {
-  return typeof value === 'string' && value ? value : undefined;
+function stringSearchValue(value: UrlSearchValue) {
+  return searchString(value);
 }
 
-function selectedCompanySearchValue(value: unknown) {
-  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+function selectedCompanySearchValue(value: UrlSearchValue) {
+  return searchString(value)?.trim() || undefined;
 }
 
-export function parseCompaniesSearch(
-  search: Record<string, unknown>,
-): CompaniesSearch {
+export function parseCompaniesSearch(search: UrlSearchInput): CompaniesSearch {
   return {
     query: stringSearchValue(search.query),
     page: pageSearchValue(parsePageParam(search.page)),

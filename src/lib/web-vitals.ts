@@ -29,6 +29,8 @@ function reportWebVital(metric: Metric) {
     new CustomEvent<WebVitalDetail>(WEB_VITAL_EVENT, { detail }),
   );
 
+  // SAFETY: Analytics scripts attach optional globals to window; both are
+  // checked before use and ignored when absent.
   const analyticsWindow = window as typeof window & {
     dataLayer?: unknown[];
     gtag?: (...args: unknown[]) => void;
@@ -44,7 +46,7 @@ function reportWebVital(metric: Metric) {
     non_interaction: true,
   };
 
-  if (typeof analyticsWindow.gtag === 'function') {
+  if (analyticsWindow.gtag instanceof Function) {
     analyticsWindow.gtag('event', metric.name, eventParameters);
   } else if (Array.isArray(analyticsWindow.dataLayer)) {
     analyticsWindow.dataLayer.push({

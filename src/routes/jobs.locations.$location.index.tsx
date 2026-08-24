@@ -7,13 +7,12 @@
  * Head meta is computed in getJobsLocationPage so `@cavuno/board/seo` stays
  * out of the universal client entry.
  */
-import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 
 import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
-import { pageToOffset } from '../lib/pagination';
 import { m } from '../paraglide/messages';
 import { saveJob } from '../server/account';
-import { getJobsLocationPage } from '../server/jobs-listing-pages';
+import { createJobsLocationLoader } from './-jobs-taxonomy-loaders';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
 import { jsonLdHeadScripts } from '@/components/json-ld';
@@ -24,31 +23,7 @@ export const Route = createFileRoute('/jobs/locations/$location/')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseJobsSearch,
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
-  loader: async ({ params, deps }) => {
-    // ONE server fn: place resolve joins the listing + SEO batch so we do
-    // not pay a serial resolve hop before the real page read.
-    const result = await getJobsLocationPage({
-      data: {
-        locationSlug: params.location,
-        q: deps.q,
-        remoteOption: deps.remoteOption,
-        employmentType: deps.employmentType,
-        seniority: deps.seniority,
-        sort: deps.sort,
-        offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
-        limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
-      },
-    });
-    if (result.kind === 'not_found') throw notFound();
-    if (result.kind === 'redirect') {
-      throw redirect({
-        to: '/jobs/locations/$location',
-        params: { location: result.to },
-        statusCode: 308,
-      });
-    }
-    return result;
-  },
+  loader: createJobsLocationLoader(),
   head: ({ loaderData }) =>
     loaderData
       ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }

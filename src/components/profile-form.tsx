@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
+import { searchString } from '@/lib/pagination';
 import type { CandidateProfile } from '@cavuno/board';
 
 type FormState = {
@@ -70,6 +71,65 @@ function toForm(profile: CandidateProfileWithCountry): FormState {
 
 type Status = 'idle' | 'saving';
 type HandleState = { checking: boolean; available: boolean | null };
+type VisibilityLabels = Record<CandidateProfile['profileVisibility'], string>;
+type SearchStatusLabels = Record<CandidateProfile['jobSearchStatus'], string>;
+type VisibleToLabels = Record<
+  CandidateProfile['jobSearchStatusVisibleTo'],
+  string
+>;
+
+const PROFILE_VISIBILITIES = [
+  'public',
+  'logged_in_only',
+  'hidden',
+] as const satisfies readonly CandidateProfile['profileVisibility'][];
+
+const JOB_SEARCH_STATUSES = [
+  'actively_looking',
+  'open_to_offers',
+  'not_looking',
+] as const satisfies readonly CandidateProfile['jobSearchStatus'][];
+
+const JOB_SEARCH_STATUS_VISIBLE_TO = [
+  'everyone',
+  'employers_only',
+] as const satisfies readonly CandidateProfile['jobSearchStatusVisibleTo'][];
+
+function profileVisibilityChoice(
+  value: string | null | undefined,
+): CandidateProfile['profileVisibility'] | undefined {
+  return PROFILE_VISIBILITIES.find((option) => option === value);
+}
+
+function jobSearchStatusChoice(
+  value: string | null | undefined,
+): CandidateProfile['jobSearchStatus'] | undefined {
+  return JOB_SEARCH_STATUSES.find((option) => option === value);
+}
+
+function jobSearchStatusVisibleToChoice(
+  value: string | null | undefined,
+): CandidateProfile['jobSearchStatusVisibleTo'] | undefined {
+  return JOB_SEARCH_STATUS_VISIBLE_TO.find((option) => option === value);
+}
+
+export interface ProfileFormDependencies {
+  checkHandle: (
+    input: Parameters<typeof checkHandle>[0],
+  ) => ReturnType<typeof checkHandle>;
+  updateProfile: (
+    input: Parameters<typeof updateProfile>[0],
+  ) => ReturnType<typeof updateProfile>;
+  toastActionError: () => void | Promise<void>;
+  toastActionSuccess: () => void | Promise<void>;
+}
+
+const profileFormDependencies: ProfileFormDependencies = {
+  checkHandle,
+  updateProfile,
+  toastActionError,
+  toastActionSuccess,
+};
 
 /**
  * Profile edit form — recreates the hosted `/account` profile editor. One
@@ -81,34 +141,27 @@ export function ProfileForm({
   profile,
   locationSuggestions,
   language,
+  dependencies = profileFormDependencies,
 }: {
   profile: CandidateProfile;
   locationSuggestions: LocationSuggestionState;
   language: string;
+  dependencies?: ProfileFormDependencies;
 }) {
-  const visibilityLabels: Record<
-    CandidateProfile['profileVisibility'],
-    string
-  > = {
+  const visibilityLabels = {
     public: m.profileForm_visibilityPublic(),
     logged_in_only: m.profileForm_visibilityLoggedInOnly(),
     hidden: m.profileForm_visibilityHidden(),
-  };
-  const searchStatusLabels: Record<
-    CandidateProfile['jobSearchStatus'],
-    string
-  > = {
+  } satisfies VisibilityLabels;
+  const searchStatusLabels = {
     actively_looking: m.profileForm_searchStatusActivelyLooking(),
     open_to_offers: m.profileForm_searchStatusOpenToOffers(),
     not_looking: m.profileForm_searchStatusNotLooking(),
-  };
-  const visibleToLabels: Record<
-    CandidateProfile['jobSearchStatusVisibleTo'],
-    string
-  > = {
+  } satisfies SearchStatusLabels;
+  const visibleToLabels = {
     everyone: m.profileForm_visibleToEveryone(),
     employers_only: m.profileForm_visibleToEmployersOnly(),
-  };
+  } satisfies VisibleToLabels;
 
   const router = useRouter();
   const [form, setForm] = useState<FormState>(() => toForm(profile));
@@ -135,30 +188,44 @@ export function ProfileForm({
         setStatus('saving');
         const handle = form.handle.trim();
         try {
-          await updateProfile({
-            data: {
-              displayName: form.displayName.trim(),
-              bio: form.bio.trim(),
-              headline: form.headline.trim(),
-              location: form.location.trim(),
-              // This is deliberately independent of the free-text location:
-              // no locale parsing or backfill can turn an ambiguous historic
-              // location into an eligibility decision.
-              countryCode: form.countryCode,
-              ...(handle ? { handle } : {}),
-              profileVisibility: form.profileVisibility,
-              jobSearchStatus: form.jobSearchStatus,
-              jobSearchStatusVisibleTo: form.jobSearchStatusVisibleTo,
-              openToRelocate: form.openToRelocate,
-            },
-          });
+          const data = handle
+            ? {
+                displayName: form.displayName.trim(),
+                bio: form.bio.trim(),
+                headline: form.headline.trim(),
+                location: form.location.trim(),
+                // This is deliberately independent of the free-text location:
+                // no locale parsing or backfill can turn an ambiguous historic
+                // location into an eligibility decision.
+                countryCode: form.countryCode,
+                handle,
+                profileVisibility: form.profileVisibility,
+                jobSearchStatus: form.jobSearchStatus,
+                jobSearchStatusVisibleTo: form.jobSearchStatusVisibleTo,
+                openToRelocate: form.openToRelocate,
+              }
+            : {
+                displayName: form.displayName.trim(),
+                bio: form.bio.trim(),
+                headline: form.headline.trim(),
+                location: form.location.trim(),
+                // This is deliberately independent of the free-text location:
+                // no locale parsing or backfill can turn an ambiguous historic
+                // location into an eligibility decision.
+                countryCode: form.countryCode,
+                profileVisibility: form.profileVisibility,
+                jobSearchStatus: form.jobSearchStatus,
+                jobSearchStatusVisibleTo: form.jobSearchStatusVisibleTo,
+                openToRelocate: form.openToRelocate,
+              };
+          await dependencies.updateProfile({ data });
           await router.invalidate();
           setStatus('idle');
           setHandleState({ checking: false, available: null });
-          void toastActionSuccess();
+          void dependencies.toastActionSuccess();
         } catch {
           setStatus('idle');
-          void toastActionError();
+          void dependencies.toastActionError();
         }
       }}
     >
@@ -194,7 +261,9 @@ export function ProfileForm({
                 if (!handle || !handleChanged) return;
                 setHandleState({ checking: true, available: null });
                 try {
-                  const result = await checkHandle({ data: { handle } });
+                  const result = await dependencies.checkHandle({
+                    data: { handle },
+                  });
                   setHandleState({
                     checking: false,
                     available: result.available,
@@ -287,12 +356,10 @@ export function ProfileForm({
             <Select
               items={visibilityLabels}
               value={form.profileVisibility}
-              onValueChange={(value) =>
-                set(
-                  'profileVisibility',
-                  value as FormState['profileVisibility'],
-                )
-              }
+              onValueChange={(value) => {
+                const next = profileVisibilityChoice(searchString(value));
+                if (next) set('profileVisibility', next);
+              }}
             >
               <SelectTrigger id="profile-visibility" className="w-full">
                 <SelectValue />
@@ -313,9 +380,10 @@ export function ProfileForm({
             <Select
               items={searchStatusLabels}
               value={form.jobSearchStatus}
-              onValueChange={(value) =>
-                set('jobSearchStatus', value as FormState['jobSearchStatus'])
-              }
+              onValueChange={(value) => {
+                const next = jobSearchStatusChoice(searchString(value));
+                if (next) set('jobSearchStatus', next);
+              }}
             >
               <SelectTrigger id="profile-search-status" className="w-full">
                 <SelectValue />
@@ -336,12 +404,12 @@ export function ProfileForm({
             <Select
               items={visibleToLabels}
               value={form.jobSearchStatusVisibleTo}
-              onValueChange={(value) =>
-                set(
-                  'jobSearchStatusVisibleTo',
-                  value as FormState['jobSearchStatusVisibleTo'],
-                )
-              }
+              onValueChange={(value) => {
+                const next = jobSearchStatusVisibleToChoice(
+                  searchString(value),
+                );
+                if (next) set('jobSearchStatusVisibleTo', next);
+              }}
             >
               <SelectTrigger id="profile-visible-to" className="w-full">
                 <SelectValue />

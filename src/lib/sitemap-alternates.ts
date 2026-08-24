@@ -21,6 +21,14 @@ import type { SitemapBucket, SitemapUrlEntry } from '@cavuno/board/sitemap';
 const SITEMAP_NS = 'http://www.sitemaps.org/schemas/sitemap/0.9';
 const XHTML_NS = 'http://www.w3.org/1999/xhtml';
 
+function isStringEntry(entry: string | SitemapUrlEntry): entry is string {
+  return Object.prototype.toString.call(entry) === '[object String]';
+}
+
+function sitemapEntry(entry: string | SitemapUrlEntry): SitemapUrlEntry {
+  return isStringEntry(entry) ? { url: entry } : entry;
+}
+
 export const LOCALIZED_BUCKETS: readonly SitemapBucket[] = [
   'marketing',
   'jobs-categories',
@@ -50,9 +58,7 @@ export function renderUrlsetWithAlternates(
   entries: readonly (string | SitemapUrlEntry)[],
   origin: string,
 ): string {
-  const normalized = entries.map((entry) =>
-    typeof entry === 'string' ? { url: entry } : entry,
-  );
+  const normalized = entries.map(sitemapEntry);
   let xml =
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
     `<urlset xmlns="${SITEMAP_NS}" xmlns:xhtml="${XHTML_NS}">\n`;

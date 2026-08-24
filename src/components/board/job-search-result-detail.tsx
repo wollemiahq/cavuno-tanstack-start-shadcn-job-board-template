@@ -8,6 +8,7 @@ import type {
 } from '@/board/job-detail-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
 import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
+import { RelativeTimestamp } from '@/components/board/relative-timestamp';
 import { SearchDetailHeader } from '@/components/board/search-detail-header';
 import { Prose } from '@/components/prose';
 import { SearchResultDetailHeader } from '@/components/search-results/search-results';
@@ -255,7 +256,9 @@ function ExpandedJobDetailHeader({
             className="text-muted-foreground min-h-5 text-sm"
           >
             {vm.locationLabel ?? m.jobDetail_locationNotSpecifiedLabel()}
-            {vm.publishedLabel ? ` · ${vm.publishedLabel}` : null}
+            {vm.publishedLabel ? (
+              <RelativeTimestamp label={vm.publishedLabel} prefix=" · " />
+            ) : null}
           </p>
 
           <div

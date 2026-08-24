@@ -1,51 +1,50 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getCompany, getCompanyJobsPage } = vi.hoisted(() => ({
-  getCompany: vi.fn(),
-  getCompanyJobsPage: vi.fn(),
-}));
+import { createCompanyJobsLoader } from './-company-jobs-loader';
+import { publicCompanyFixture } from './-route-test-fixtures';
 
-vi.mock('../server/queries', () => ({
-  getCompany,
-}));
+import type { getCompanyJobsPage as GetCompanyJobsPage } from '../server/companies-pages';
 
-vi.mock('../server/companies-pages', () => ({
-  getCompanyJobsPage,
-}));
+const getCompanyJobsPage = vi.fn<typeof GetCompanyJobsPage>();
+const loadCompanyJobs = createCompanyJobsLoader(getCompanyJobsPage);
 
-import { Route } from './companies.$companySlug.jobs.index';
-
-function loader() {
-  const load = Route.options.loader;
-  if (typeof load !== 'function') {
-    throw new Error('The company jobs route does not define a callable loader');
-  }
-  return load;
+function companyJobsLoaderContext(deps: {
+  q?: string;
+  location?: string;
+  page?: number;
+}) {
+  return {
+    params: { companySlug: 'acme-research' },
+    deps,
+  };
 }
 
 beforeEach(() => {
-  getCompany.mockReset();
-  getCompany.mockResolvedValue({
-    id: 'internal-company-id',
-    slug: 'acme-research',
-    name: 'Acme Research',
-  });
   getCompanyJobsPage.mockReset();
   getCompanyJobsPage.mockResolvedValue({
-    page: { data: [], count: 0 },
-    seo: { origin: 'https://example.com' },
+    company: publicCompanyFixture('acme-research'),
+    page: {
+      object: 'list',
+      url: '/v1/jobs',
+      data: [],
+      hasMore: false,
+      nextCursor: null,
+      count: 0,
+    },
+    seo: {
+      boardName: 'Example Jobs',
+      language: 'en',
+      origin: 'https://example.com',
+    },
     hasSalaries: false,
-    head: {},
+    head: { meta: [], links: [] },
     jsonLd: [],
   });
 });
 
 describe('company jobs route — public company scoping', () => {
   it('uses the public company slug for browse results', async () => {
-    await loader()({
-      params: { companySlug: 'acme-research' },
-      deps: {},
-    } as never);
+    await loadCompanyJobs(companyJobsLoaderContext({}));
 
     expect(getCompanyJobsPage).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -60,10 +59,9 @@ describe('company jobs route — public company scoping', () => {
   });
 
   it('uses the public company slug for keyword results', async () => {
-    await loader()({
-      params: { companySlug: 'acme-research' },
-      deps: { q: 'robotics', location: 'sydney', page: 2 },
-    } as never);
+    await loadCompanyJobs(
+      companyJobsLoaderContext({ q: 'robotics', location: 'sydney', page: 2 }),
+    );
 
     expect(getCompanyJobsPage).toHaveBeenCalledWith({
       data: expect.objectContaining({

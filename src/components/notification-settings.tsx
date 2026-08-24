@@ -7,7 +7,10 @@ import { useRouter } from '@tanstack/react-router';
 import { m } from '../paraglide/messages';
 import { updateNotificationPreference } from '../server/settings';
 
-import type { StarterNotificationChannel } from '../server/settings';
+import type {
+  StarterNotificationChannel,
+  StarterUpdateNotificationPreferenceBody,
+} from '../server/settings';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import type { NotificationPreference } from '@cavuno/board';
@@ -16,10 +19,7 @@ type StarterNotificationPreference = Omit<NotificationPreference, 'channel'> & {
   channel: StarterNotificationChannel;
 };
 
-const CHANNEL_LABELS: Record<
-  StarterNotificationChannel,
-  { title: () => string; description: () => string }
-> = {
+const CHANNEL_LABELS = {
   messageEmails: {
     title: m.notificationSettings_messageEmailsTitle,
     description: m.notificationSettings_messageEmailsDescription,
@@ -32,7 +32,10 @@ const CHANNEL_LABELS: Record<
     title: m.notificationSettings_recommendedJobEmailsTitle,
     description: m.notificationSettings_recommendedJobEmailsDescription,
   },
-};
+} satisfies Record<
+  StarterNotificationChannel,
+  { title: () => string; description: () => string }
+>;
 
 /**
  * Email notification toggles — one checkbox per channel over
@@ -41,8 +44,12 @@ const CHANNEL_LABELS: Record<
  */
 export function NotificationSettings({
   preferences,
+  updatePreference = updateNotificationPreference,
 }: {
   preferences: StarterNotificationPreference[];
+  updatePreference?: (options: {
+    data: StarterUpdateNotificationPreferenceBody;
+  }) => ReturnType<typeof updateNotificationPreference>;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
@@ -71,7 +78,7 @@ export function NotificationSettings({
                 onCheckedChange={async (isSelected) => {
                   setPending(pref.channel);
                   try {
-                    await updateNotificationPreference({
+                    await updatePreference({
                       data: {
                         channel: pref.channel,
                         subscribed: isSelected,

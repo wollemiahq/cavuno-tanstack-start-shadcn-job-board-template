@@ -25,6 +25,7 @@ import { Link } from '@tanstack/react-router';
  */
 import type { JobCardVM } from '@/board/job-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
+import { RelativeTimestamp } from '@/components/board/relative-timestamp';
 import { TaxonomyTags } from '@/components/board/taxonomy-tags';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -192,7 +193,7 @@ export function JobCard({
             <div className="flex shrink-0 flex-col items-end gap-2">
               {vm.postedAtLabel ? (
                 <p className="text-muted-foreground text-sm whitespace-nowrap">
-                  {vm.postedAtLabel}
+                  <RelativeTimestamp label={vm.postedAtLabel} />
                 </p>
               ) : null}
               {action ? <span className="relative z-10">{action}</span> : null}
@@ -287,7 +288,7 @@ export function JobCard({
                       <div className="flex min-h-8 items-end justify-between gap-3">
                         {vm.postedAtLabel ? (
                           <p className="text-muted-foreground text-xs">
-                            {vm.postedAtLabel}
+                            <RelativeTimestamp label={vm.postedAtLabel} />
                           </p>
                         ) : (
                           <span />

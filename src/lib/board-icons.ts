@@ -150,10 +150,12 @@ export function boardManifestIcons(
 }
 
 /** Read icons off a board context value even when SDK types lag the wire. */
+type BoardIconsContext = {
+  icons?: BoardBrandIcons | null;
+};
+
 export function boardIconsFromContext(
-  board: unknown,
+  board: BoardIconsContext | null | undefined,
 ): BoardBrandIcons | null | undefined {
-  if (!board || typeof board !== 'object') return undefined;
-  const icons = (board as { icons?: BoardBrandIcons | null }).icons;
-  return icons;
+  return board?.icons;
 }

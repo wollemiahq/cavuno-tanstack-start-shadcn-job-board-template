@@ -3,7 +3,7 @@ import { LegalPlaceholderCallout } from './placeholder-callout';
 import type { LegalLocale, LegalPageContent } from './types';
 
 /** Titles match `breadcrumbs_termsOfService` per locale. */
-export const termsOfServiceContent: Record<LegalLocale, LegalPageContent> = {
+export const termsOfServiceContent = {
   en: {
     title: 'Terms of Service',
     description:
@@ -89,4 +89,4 @@ export const termsOfServiceContent: Record<LegalLocale, LegalPageContent> = {
       );
     },
   },
-};
+} satisfies Record<LegalLocale, LegalPageContent>;

@@ -1,66 +1,29 @@
 import { companyPath } from '@cavuno/board/paths';
-import {
-  createFileRoute,
-  isRedirect,
-  notFound,
-  redirect,
-  useNavigate,
-} from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import {
   MessagesSidebarController,
   ThreadController,
 } from './-messages-runtime';
+import { createConversationLoader } from './-messages.$conversationId';
 
 import { Page, PageContent } from '@/components/layout/page';
 import { MessagingLayout } from '@/components/messages/messaging-layout';
-import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
-import { getInbox, getThread } from '@/server/messaging';
-import { getBoardContext, getSeoBase } from '@/server/queries';
+import type { UrlSearchInput } from '@/lib/pagination';
 
 type ThreadSearch = { view?: 'archived' };
+type ThreadLoaderView = { view: 'inbox' | 'archived' };
 
 export const Route = createFileRoute('/messages/$conversationId')({
   staticData: { ownsMain: true },
-  validateSearch: (search: Record<string, unknown>): ThreadSearch =>
+  validateSearch: (search: UrlSearchInput): ThreadSearch =>
     search.view === 'archived' ? { view: 'archived' } : {},
-  loaderDeps: ({ search }) => ({ view: search.view ?? 'inbox' }),
-  loader: async ({ params, deps }) => {
-    // Messaging feature off ⇒ the surface does not exist on this board.
-    const board = await getBoardContext();
-    if (!board.features.messaging) throw notFound();
-    const returnTo = `/messages/${encodeURIComponent(params.conversationId)}${
-      deps.view === 'archived' ? '?view=archived' : ''
-    }`;
-    try {
-      const [thread, inbox, seo] = await Promise.all([
-        getThread({ data: { id: params.conversationId } }),
-        getInbox({ data: { archived: deps.view === 'archived' } }),
-        // Was `seo: await getSeoBase()` in the return — a second serial wave
-        // hidden in an object literal.
-        getSeoBase(),
-      ]);
-      return { ...thread, inbox, view: deps.view, seo };
-    } catch (error) {
-      if (isRedirect(error)) throw error;
-      const authFailure = candidateLoaderError(error);
-      if (authFailure === 'email-unverified') {
-        throw redirect({
-          to: '/auth/verify-email-required',
-          search: { returnTo },
-        });
-      }
-      if (authFailure === 'unauthenticated') {
-        throw redirect({ to: '/auth/sign-in', search: { returnTo } });
-      }
-      throw redirect({
-        to: '/messages',
-        search: deps.view === 'archived' ? { view: 'archived' } : {},
-      });
-    }
-  },
+  loaderDeps: ({ search }): ThreadLoaderView => ({
+    view: search.view ?? 'inbox',
+  }),
+  loader: createConversationLoader(),
   head: ({ loaderData }) => ({
     meta: [
       {

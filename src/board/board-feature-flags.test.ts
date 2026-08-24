@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveRuntimeFeatureFlags } from './board-feature-flags';
+import {
+  resolveRuntimeFeatureFlags,
+  resolveTalentDirectoryVisibility,
+} from './board-feature-flags';
 
 /**
  * The runtime flags (Board PR #968) ride the board context ahead of the
@@ -9,26 +12,34 @@ import { resolveRuntimeFeatureFlags } from './board-feature-flags';
  * platform's enforcement. These pin that boundary defaulting so no surface
  * mis-reads an unset flag as "off".
  */
-// The published SDK type has no native/messaging keys, so the fixtures cast
-// through unknown to model both a pre-#968 and a post-#968 deployment body.
-const features = (extra: Record<string, unknown>) =>
-  ({
+type RuntimeFeatureInput = Parameters<typeof resolveRuntimeFeatureFlags>[0];
+
+function features(
+  extra: Partial<RuntimeFeatureInput> = {},
+): RuntimeFeatureInput {
+  return {
     jobAlerts: true,
     candidates: true,
     employers: true,
     blog: true,
-    talentDirectory: true,
+    talentDirectory: 'public',
     registrationWall: false,
     passwordProtected: false,
     publicJobSubmission: true,
     candidatePaywall: false,
     impressum: false,
+    nativeApplications: true,
+    messaging: true,
     ...extra,
-  }) as unknown as Parameters<typeof resolveRuntimeFeatureFlags>[0];
+  };
+}
 
 describe('resolveRuntimeFeatureFlags', () => {
   it('defaults both flags to ON when absent (older API deployment)', () => {
-    expect(resolveRuntimeFeatureFlags(features({}))).toEqual({
+    const legacyFeatures = features();
+    Reflect.deleteProperty(legacyFeatures, 'nativeApplications');
+    Reflect.deleteProperty(legacyFeatures, 'messaging');
+    expect(resolveRuntimeFeatureFlags(legacyFeatures)).toEqual({
       nativeApplications: true,
       messaging: true,
     });
@@ -56,5 +67,20 @@ describe('resolveRuntimeFeatureFlags', () => {
         features({ nativeApplications: false, messaging: true }),
       ),
     ).toEqual({ nativeApplications: false, messaging: true });
+  });
+});
+
+describe('resolveTalentDirectoryVisibility', () => {
+  it('preserves an off enum when the explicit preview value is absent', () => {
+    expect(resolveTalentDirectoryVisibility(null, 'off')).toBe('off');
+    expect(resolveTalentDirectoryVisibility(undefined, undefined)).toBe('off');
+  });
+
+  it('maps legacy booleans without overriding an explicit value', () => {
+    expect(resolveTalentDirectoryVisibility(null, true)).toBe('public');
+    expect(resolveTalentDirectoryVisibility(null, false)).toBe('off');
+    expect(resolveTalentDirectoryVisibility('employers_only', false)).toBe(
+      'employers_only',
+    );
   });
 });

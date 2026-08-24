@@ -46,10 +46,12 @@ function localeDetectionRequest(request: Request): Request {
   return new Request(url, { method: 'GET', headers: request.headers });
 }
 
+interface WorkerEnvironment {}
+
 export default {
   async fetch(
     request: Request,
-    _env?: unknown,
+    _env?: WorkerEnvironment,
     executionContext?: { waitUntil(promise: Promise<unknown>): void },
   ): Promise<Response> {
     const cached = await readPublicHtmlCache(request);

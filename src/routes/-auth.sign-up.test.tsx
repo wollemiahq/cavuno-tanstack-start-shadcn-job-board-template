@@ -3,40 +3,13 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({
+const mocks = {
   getOAuthAuthorizationUrl: vi.fn(),
   invalidate: vi.fn(),
   signUp: vi.fn(),
-}));
+};
 
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    Link: ({
-      to,
-      children,
-      ...props
-    }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { to: string }) => (
-      <a href={to} {...props}>
-        {children}
-      </a>
-    ),
-    useRouter: () => ({ invalidate: mocks.invalidate }),
-  };
-});
-
-vi.mock('../server/auth', () => ({
-  getOAuthAuthorizationUrl: mocks.getOAuthAuthorizationUrl,
-  signUp: mocks.signUp,
-}));
-vi.mock('../server/queries', () => ({ getBoardContext: vi.fn() }));
-// The loader's already-authed guard reads the session; default to signed-out.
-vi.mock('../server/account', () => ({
-  getSessionUser: vi.fn().mockResolvedValue(null),
-}));
-
+import { SignUpView } from './-auth.sign-up';
 import { Route } from './auth.sign-up';
 
 afterEach(() => {
@@ -48,8 +21,21 @@ afterEach(() => {
 describe('/auth/sign-up search contract', () => {
   it('validates a complete internal candidate destination', () => {
     const validate = Route.options.validateSearch;
-    if (typeof validate !== 'function') {
+    if (!validate) {
       throw new Error('The candidate sign-up route must validate search');
+    }
+    if ('parse' in validate) {
+      expect(
+        validate.parse({
+          returnTo: '/jobs?q=design&selectedJob=product-designer',
+        }),
+      ).toEqual({
+        returnTo: '/jobs?q=design&selectedJob=product-designer',
+      });
+      return;
+    }
+    if ('~standard' in validate) {
+      throw new Error('The candidate sign-up route uses an unexpected schema');
     }
 
     expect(
@@ -61,19 +47,19 @@ describe('/auth/sign-up search contract', () => {
 
   it('offers the same Google and LinkedIn account entry points as sign-in', async () => {
     const returnTo = '/jobs?q=design';
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo });
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
-      boardName: 'Cavuno Jobs',
-    });
     mocks.getOAuthAuthorizationUrl.mockResolvedValue({
       ok: false,
       message: 'OAuth unavailable in this test',
     });
-    const SignUpPage = Route.options.component;
-    if (!SignUpPage)
-      throw new Error('The candidate sign-up route needs a component');
-
-    render(<SignUpPage />);
+    render(
+      <SignUpView
+        boardName="Cavuno Jobs"
+        returnTo={returnTo}
+        signUpAction={mocks.signUp}
+        getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
+        invalidate={mocks.invalidate}
+      />,
+    );
 
     fireEvent.click(
       screen.getByRole('button', { name: 'Continue with Google' }),
@@ -93,16 +79,16 @@ describe('/auth/sign-up search contract', () => {
 
   it('keeps the destination in the post-registration verification action', async () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo });
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
-      boardName: 'Cavuno Jobs',
-    });
     mocks.signUp.mockResolvedValue({ ok: true });
-    const SignUpPage = Route.options.component;
-    if (!SignUpPage)
-      throw new Error('The candidate sign-up route needs a component');
-
-    render(<SignUpPage />);
+    render(
+      <SignUpView
+        boardName="Cavuno Jobs"
+        returnTo={returnTo}
+        signUpAction={mocks.signUp}
+        getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
+        invalidate={mocks.invalidate}
+      />,
+    );
     fireEvent.change(screen.getByLabelText('Name'), {
       target: { value: 'Ada Lovelace' },
     });

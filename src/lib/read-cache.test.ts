@@ -16,28 +16,32 @@ import {
  */
 import type { BoardRequest } from '@cavuno/board';
 
+type CacheRequestInit = RequestInit & {
+  cf?: { cacheTtl?: number; cacheEverything?: boolean };
+};
+
 /** Build a BoardRequest the way the SDK hands one to the `onRequest` hook. */
 function req(
   method: string,
   headers: Record<string, string> = {},
   cf?: { cacheTtl?: number; cacheEverything?: boolean },
 ): BoardRequest {
+  const init: CacheRequestInit = {
+    method,
+    headers: new Headers(headers),
+  };
+  if (cf) init.cf = cf;
   return {
     url: 'https://api.example.test/v1/jobs',
-    init: {
-      method,
-      headers: new Headers(headers),
-      ...(cf ? { cf } : {}),
-    } as RequestInit,
+    init,
   };
 }
 
 /** Read back the Workers-augmented init the hook mutates in place. */
 function init(r: BoardRequest) {
-  return r.init as RequestInit & {
-    cache?: string;
-    cf?: { cacheTtl?: number; cacheEverything?: boolean };
-  };
+  // SAFETY: applyReadCache mutates this exact request-init object with only
+  // the Workers `cache` and `cf` fields declared by CacheRequestInit.
+  return r.init as CacheRequestInit;
 }
 
 describe('applyReadCache — the anonymous/authed edge-cache split', () => {
@@ -54,7 +58,7 @@ describe('applyReadCache — the anonymous/authed edge-cache split', () => {
   it('defaults the method to GET when the SDK omits it', () => {
     const r = applyReadCache({
       url: 'https://api.example.test/v1/jobs',
-      init: { headers: new Headers() } as RequestInit,
+      init: { headers: new Headers() },
     });
     expect(init(r).cf).toEqual({
       cacheTtl: READ_CACHE_TTL.content,

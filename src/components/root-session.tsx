@@ -16,18 +16,20 @@ import {
 
 import type { BoardUser, CompanyMembership } from '@cavuno/board';
 
+type RootPreview = Awaited<
+  ReturnType<typeof getRootSessionShellData>
+>['preview'];
+
 /** Default preview shape while session shell has not resolved yet. */
-export const EMPTY_ROOT_PREVIEW = {
+export const EMPTY_ROOT_PREVIEW: RootPreview = {
   capability: {
-    canPreview: false as const,
-    reason: 'not-sandbox' as const,
+    canPreview: false,
+    reason: 'not-sandbox',
   },
-  personas: [] as Awaited<
-    ReturnType<typeof getRootSessionShellData>
-  >['preview']['personas'],
+  personas: [],
   demoConfigured: false,
   demoBoardPrivate: false,
-  dataSource: 'board' as const,
+  dataSource: 'board',
 };
 
 export type RootSessionValue = {

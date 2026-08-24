@@ -290,6 +290,8 @@ export type PageSectionProps =
  */
 export function PageSection(props: PageSectionProps) {
   const generatedId = useId();
+  // SAFETY: PageSectionProps is a closed union of the two labelled section
+  // shapes; this normalized view only exposes common native section props.
   const {
     eyebrow,
     title,

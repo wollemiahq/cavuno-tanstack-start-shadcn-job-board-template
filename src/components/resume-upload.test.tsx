@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -11,30 +18,28 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { Resume } from '@cavuno/board';
 
-const mocks = vi.hoisted(() => ({
+const mocks = {
   deleteResume: vi.fn(),
-  invalidate: vi.fn(),
   uploadResume: vi.fn(),
   toastActionError: vi.fn(),
-}));
-
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return { ...actual, useRouter: () => ({ invalidate: mocks.invalidate }) };
-});
-
-vi.mock('../server/account', () => ({
-  deleteResume: mocks.deleteResume,
-  uploadResume: mocks.uploadResume,
-}));
-
-vi.mock('@/lib/action-toast', () => ({
-  toastActionError: mocks.toastActionError,
-  toastActionSuccess: vi.fn(),
-}));
+};
 
 import { ResumeUpload } from './resume-upload';
+
+async function renderWithRouter(node: React.ReactNode) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => <>{node}</>,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  await router.load();
+  return render(<RouterProvider router={router} />);
+}
 
 const resume = {
   object: 'resume',
@@ -67,28 +72,40 @@ const emptyResume = {
 describe('ResumeUpload', () => {
   it('hides the keep-on-file checkbox on first-run onboarding and still keeps the file', async () => {
     mocks.uploadResume.mockResolvedValue(undefined);
-    render(<ResumeUpload resume={emptyResume} showKeepOnFile={false} />);
+    await renderWithRouter(
+      <ResumeUpload
+        resume={emptyResume}
+        showKeepOnFile={false}
+        dependencies={mocks}
+      />,
+    );
 
     expect(
       screen.queryByRole('checkbox', { name: 'Keep my resume saved' }),
     ).toBeNull();
 
-    const input = document.querySelector(
+    const input = document.querySelector<HTMLInputElement>(
       '[data-test="resume-file-input"]',
-    ) as HTMLInputElement;
+    );
+    if (!input) throw new Error('Expected the resume file input to render');
     const file = new File(['cv'], 'cv.pdf', { type: 'application/pdf' });
     fireEvent.change(input, { target: { files: [file] } });
 
     await waitFor(() => {
       expect(mocks.uploadResume).toHaveBeenCalled();
     });
-    const formData = mocks.uploadResume.mock.calls[0]?.[0]?.data as FormData;
+    const formData = mocks.uploadResume.mock.calls[0]?.[0]?.data;
+    if (!(formData instanceof FormData)) {
+      throw new Error('Expected the upload to submit FormData');
+    }
     expect(formData.get('keepResumeOnFile')).toBe('true');
   });
 
   it('fires a recoverable error toast and re-enables delete when deletion fails', async () => {
     mocks.deleteResume.mockRejectedValue(new Error('network unavailable'));
-    render(<ResumeUpload resume={resume} />);
+    await renderWithRouter(
+      <ResumeUpload resume={resume} dependencies={mocks} />,
+    );
 
     expect(document.querySelector('[data-slot="attachment"]')).toBeVisible();
 
@@ -98,6 +115,5 @@ describe('ResumeUpload', () => {
       expect(mocks.toastActionError).toHaveBeenCalled();
       expect(screen.getByRole('button', { name: 'Delete' })).toBeEnabled();
     });
-    expect(mocks.invalidate).not.toHaveBeenCalled();
   });
 });

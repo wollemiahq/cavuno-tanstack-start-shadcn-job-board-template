@@ -20,6 +20,8 @@ export function useVisiblePoll(
 
   useEffect(() => {
     if (!enabled) return;
+    const visibleDocument = globalThis.document;
+    if (!visibleDocument) return;
 
     let timer: ReturnType<typeof setTimeout> | undefined;
     let stopped = false;
@@ -36,7 +38,7 @@ export function useVisiblePoll(
 
     const run = async () => {
       if (stopped || inFlight) return;
-      if (typeof document !== 'undefined' && document.hidden) {
+      if (visibleDocument.hidden) {
         schedule();
         return;
       }
@@ -48,10 +50,7 @@ export function useVisiblePoll(
         // later refreshes.
       } finally {
         inFlight = false;
-        if (
-          refreshAfterFlight &&
-          (typeof document === 'undefined' || !document.hidden)
-        ) {
+        if (refreshAfterFlight && !visibleDocument.hidden) {
           refreshAfterFlight = false;
           void run();
         } else {
@@ -62,7 +61,7 @@ export function useVisiblePoll(
     };
 
     const onVisibility = () => {
-      if (document.hidden) return;
+      if (visibleDocument.hidden) return;
       if (inFlight) {
         refreshAfterFlight = true;
         return;
@@ -74,12 +73,12 @@ export function useVisiblePoll(
 
     if (immediate) void run();
     else schedule();
-    document.addEventListener('visibilitychange', onVisibility);
+    visibleDocument.addEventListener('visibilitychange', onVisibility);
 
     return () => {
       stopped = true;
       if (timer) clearTimeout(timer);
-      document.removeEventListener('visibilitychange', onVisibility);
+      visibleDocument.removeEventListener('visibilitychange', onVisibility);
     };
   }, [enabled, immediate, intervalMs]);
 }

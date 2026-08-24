@@ -9,30 +9,18 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { ManagePageView, type AlertManageDependencies } from './-alerts.manage';
+
 import type { JobAlertManageState } from '@cavuno/board';
 
-const mocks = vi.hoisted(() => ({
-  deleteJobAlertPreference: vi.fn<() => unknown>(),
-  getJobAlertManageState: vi.fn<() => unknown>(),
-  invalidate: vi.fn<() => unknown>(),
-  resubscribeJobAlert: vi.fn<() => unknown>(),
-  unsubscribeJobAlert: vi.fn<() => unknown>(),
-}));
-
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return { ...actual, useRouter: () => ({ invalidate: mocks.invalidate }) };
-});
-
-vi.mock('../server/queries', () => ({
-  deleteJobAlertPreference: mocks.deleteJobAlertPreference,
-  getJobAlertManageState: mocks.getJobAlertManageState,
-  resubscribeJobAlert: mocks.resubscribeJobAlert,
-  unsubscribeJobAlert: mocks.unsubscribeJobAlert,
-}));
-
-import { Route } from './alerts.manage';
+const invalidate = vi.fn<() => Promise<void>>();
+const dependencies: AlertManageDependencies = {
+  deleteJobAlertPreference: vi.fn(),
+  getJobAlertManageState: vi.fn(),
+  getSeoBase: vi.fn(),
+  resubscribeJobAlert: vi.fn(),
+  unsubscribeJobAlert: vi.fn(),
+};
 
 const state = {
   object: 'job_alert_manage_state',
@@ -53,19 +41,26 @@ const state = {
 
 afterEach(() => {
   cleanup();
-  vi.restoreAllMocks();
   vi.clearAllMocks();
 });
 
+function renderManage(
+  data: { state: JobAlertManageState } | { error: true },
+  search: { subscription?: string; token?: string } = {},
+) {
+  render(
+    <ManagePageView
+      data={data}
+      search={search}
+      invalidate={invalidate}
+      dependencies={dependencies}
+    />,
+  );
+}
+
 describe('public job-alert management', () => {
   it('uses the owned Empty composition for an invalid manage link', () => {
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({ error: true });
-    vi.spyOn(Route, 'useSearch').mockReturnValue({});
-    const ManagePage = Route.options.component;
-    if (!ManagePage)
-      throw new Error('The manage-alerts route needs a component');
-
-    render(<ManagePage />);
+    renderManage({ error: true });
 
     expect(
       screen.getByText('Manage link invalid').closest('[data-slot="empty"]'),
@@ -73,18 +68,10 @@ describe('public job-alert management', () => {
   });
 
   it('uses the owned Alert composition for the unsubscribed state', () => {
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
-      state: { ...state, unsubscribed: true },
-    });
-    vi.spyOn(Route, 'useSearch').mockReturnValue({
-      subscription: 'subscription-1',
-      token: 'subscription-token',
-    });
-    const ManagePage = Route.options.component;
-    if (!ManagePage)
-      throw new Error('The manage-alerts route needs a component');
-
-    render(<ManagePage />);
+    renderManage(
+      { state: { ...state, unsubscribed: true } },
+      { subscription: 'subscription-1', token: 'subscription-token' },
+    );
 
     expect(
       screen
@@ -94,16 +81,10 @@ describe('public job-alert management', () => {
   });
 
   it('uses the owned Item composition for each alert preference', () => {
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({ state });
-    vi.spyOn(Route, 'useSearch').mockReturnValue({
-      subscription: 'subscription-1',
-      token: 'subscription-token',
-    });
-    const ManagePage = Route.options.component;
-    if (!ManagePage)
-      throw new Error('The manage-alerts route needs a component');
-
-    render(<ManagePage />);
+    renderManage(
+      { state },
+      { subscription: 'subscription-1', token: 'subscription-token' },
+    );
 
     const item = screen.getByText('All jobs').closest('[data-slot="item"]');
     expect(item).not.toBeNull();
@@ -112,19 +93,13 @@ describe('public job-alert management', () => {
   });
 
   it('turns a rejected unsubscribe into visible, recoverable feedback', async () => {
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({ state });
-    vi.spyOn(Route, 'useSearch').mockReturnValue({
-      subscription: 'subscription-1',
-      token: 'subscription-token',
-    });
-    mocks.unsubscribeJobAlert.mockRejectedValue(
+    vi.mocked(dependencies.unsubscribeJobAlert).mockRejectedValue(
       new Error('unsubscribe unavailable'),
     );
-    const ManagePage = Route.options.component;
-    if (!ManagePage)
-      throw new Error('The manage-alerts route needs a component');
-
-    render(<ManagePage />);
+    renderManage(
+      { state },
+      { subscription: 'subscription-1', token: 'subscription-token' },
+    );
     fireEvent.click(
       screen.getByRole('button', { name: 'Unsubscribe from all alerts' }),
     );
@@ -138,6 +113,6 @@ describe('public job-alert management', () => {
         screen.getByRole('button', { name: 'Unsubscribe from all alerts' }),
       ).toBeEnabled();
     });
-    expect(mocks.invalidate).not.toHaveBeenCalled();
+    expect(invalidate).not.toHaveBeenCalled();
   });
 });

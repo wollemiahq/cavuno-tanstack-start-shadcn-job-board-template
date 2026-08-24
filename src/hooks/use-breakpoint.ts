@@ -19,9 +19,10 @@ const screens = {
  * @returns A boolean indicating whether the viewport size applies.
  */
 export const useBreakpoint = (size: 'sm' | 'md' | 'lg' | 'xl' | '2xl') => {
+  const browserWindow = globalThis.window;
   const [matches, setMatches] = useState(
-    typeof window !== 'undefined'
-      ? window.matchMedia(`(min-width: ${screens[size]})`).matches
+    browserWindow
+      ? browserWindow.matchMedia(`(min-width: ${screens[size]})`).matches
       : true,
   );
 

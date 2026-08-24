@@ -15,6 +15,18 @@ export type SelectedJobState = {
   retry: () => void;
 };
 
+export type SelectedJobDependencies = {
+  getCompany: typeof getCompany;
+  getJob: typeof getJob;
+  myApplicationForJob: typeof myApplicationForJob;
+};
+
+const selectedJobDependencies: SelectedJobDependencies = {
+  getCompany,
+  getJob,
+  myApplicationForJob,
+};
+
 /**
  * Load the master–detail job pane for a URL-selected slug.
  *
@@ -27,6 +39,7 @@ export function useSelectedJob(
   jobSlug?: string,
   includeApplicationState = false,
   companySlug?: string | null,
+  dependencies: SelectedJobDependencies = selectedJobDependencies,
 ): SelectedJobState {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<Omit<SelectedJobState, 'retry'>>({
@@ -54,7 +67,9 @@ export function useSelectedJob(
     }));
 
     const applicationP = includeApplicationState
-      ? myApplicationForJob({ data: { jobSlug } }).catch(() => null)
+      ? dependencies
+          .myApplicationForJob({ data: { jobSlug } })
+          .catch(() => null)
       : Promise.resolve(null);
 
     const knownCompany = companySlug?.trim() || null;
@@ -63,10 +78,10 @@ export function useSelectedJob(
       try {
         if (knownCompany) {
           const [job, company, application] = await Promise.all([
-            getJob({ data: { jobSlug } }),
-            getCompany({ data: { companySlug: knownCompany } }).catch(
-              () => null,
-            ),
+            dependencies.getJob({ data: { jobSlug } }),
+            dependencies
+              .getCompany({ data: { companySlug: knownCompany } })
+              .catch(() => null),
             applicationP,
           ]);
           if (cancelled) return;
@@ -80,14 +95,16 @@ export function useSelectedJob(
         }
 
         const [job, application] = await Promise.all([
-          getJob({ data: { jobSlug } }),
+          dependencies.getJob({ data: { jobSlug } }),
           applicationP,
         ]);
         const resolvedCompanySlug = job.company?.slug ?? null;
         const company = resolvedCompanySlug
-          ? await getCompany({
-              data: { companySlug: resolvedCompanySlug },
-            }).catch(() => null)
+          ? await dependencies
+              .getCompany({
+                data: { companySlug: resolvedCompanySlug },
+              })
+              .catch(() => null)
           : null;
         if (cancelled) return;
         setState({
@@ -111,7 +128,7 @@ export function useSelectedJob(
     return () => {
       cancelled = true;
     };
-  }, [attempt, companySlug, includeApplicationState, jobSlug]);
+  }, [attempt, companySlug, dependencies, includeApplicationState, jobSlug]);
 
   const retry = useCallback(() => setAttempt((value) => value + 1), []);
 

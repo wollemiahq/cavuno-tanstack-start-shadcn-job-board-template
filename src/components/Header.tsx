@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 
+import { resolveTalentDirectoryVisibility } from '../board/board-feature-flags';
 import { menuColorClasses } from '../lib/menu-color';
 import { resolveSignupDestination } from '../lib/signup-destination';
 import { m } from '../paraglide/messages';
@@ -162,13 +163,10 @@ export default function Header({
     jobSearch: jobSearchCopy(),
     nav: navCopy(),
   };
-  const talentMode =
-    talentDirectoryVisibility ??
-    (typeof features.talentDirectory === 'string'
-      ? features.talentDirectory
-      : features.talentDirectory
-        ? 'public'
-        : 'off');
+  const talentMode = resolveTalentDirectoryVisibility(
+    talentDirectoryVisibility,
+    features.talentDirectory,
+  );
   // 'off' is a truthy string — compare explicitly, never coerce.
   const talentDirectoryEnabled = talentMode !== 'off';
   const navLinks = [
@@ -282,7 +280,7 @@ export default function Header({
       {authEnabled ? (
         <Link
           to="/auth/sign-in"
-          search={{ returnTo: undefined }}
+          search={{ returnTo: '/account' }}
           className={buttonVariants({ variant: 'ghost', size: 'sm' })}
         >
           {signInLabel}

@@ -1,8 +1,15 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
+import type { ReactNode } from 'react';
+
 import { BoardApiError } from '@cavuno/board';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
   isNotFound as isRouteNotFound,
   isRedirect,
 } from '@tanstack/react-router';
@@ -17,132 +24,32 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({
-  addApplicantNote: vi.fn(),
-  bulkRejectApplicants: vi.fn(),
-  checkoutJob: vi.fn(),
-  createJob: vi.fn(),
-  createStage: vi.fn(),
-  deleteJob: vi.fn(),
-  getCompanyWorkspace: vi.fn(),
-  getEmployerCompany: vi.fn(),
-  uploadCompanyLogo: vi.fn(),
-  getEmployerJobStats: vi.fn(),
-  getEmployerJobStatsTimeseries: vi.fn(),
-  getEmployerProfileStats: vi.fn(),
-  getEmployerProfileStatsTimeseries: vi.fn(),
-  getCompany: vi.fn(),
-  getJob: vi.fn(),
-  getSeoBase: vi.fn(),
-  getBoardContext: vi.fn(),
-  getPipeline: vi.fn(),
-  invalidate: vi.fn(),
-  moveApplicant: vi.fn(),
-  navigate: vi.fn(),
-  publishJob: vi.fn(),
-  refreshSession: vi.fn(),
-  removeStage: vi.fn(),
-  renameStage: vi.fn(),
-  toastSuccess: vi.fn(),
-  toastError: vi.fn(),
-  unpublishJob: vi.fn(),
-  updateCompany: vi.fn(),
-  updateJob: vi.fn(),
-  deleteCompany: vi.fn(),
-  listCompanyMembers: vi.fn(),
-  listCompanyInvites: vi.fn(),
-  createCompanyInvite: vi.fn(),
-  revokeCompanyInvite: vi.fn(),
-  acceptCompanyInvite: vi.fn(),
-  updateCompanyMemberRole: vi.fn(),
-  removeCompanyMember: vi.fn(),
-  leaveCompany: vi.fn(),
-  getSessionUser: vi.fn(),
-}));
-
-vi.mock('sonner', () => ({
-  toast: { success: mocks.toastSuccess, error: mocks.toastError },
-  Toaster: () => null,
-}));
-
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  const React = await import('react');
-
-  return {
-    ...actual,
-    getRouteApi: () => ({
-      useLoaderData: () => ({
-        board: { language: 'en-AU', labels: undefined },
-      }),
-    }),
-    Link: ({
-      children,
-      params: _params,
-      to,
-      ...props
-    }: {
-      children: React.ReactNode;
-      params?: Record<string, string>;
-      to: string;
-    } & React.ComponentProps<'a'>) =>
-      React.createElement('a', { href: to, ...props }, children),
-    useRouter: () => ({
-      invalidate: mocks.invalidate,
-      navigate: mocks.navigate,
-    }),
-  };
-});
-
-vi.mock('../server/employers', () => ({
-  addApplicantNote: mocks.addApplicantNote,
-  bulkRejectApplicants: mocks.bulkRejectApplicants,
-  checkoutJob: mocks.checkoutJob,
-  createJob: mocks.createJob,
-  createStage: mocks.createStage,
-  deleteJob: mocks.deleteJob,
-  getCompanyWorkspace: mocks.getCompanyWorkspace,
-  getEmployerCompany: mocks.getEmployerCompany,
-  uploadCompanyLogo: mocks.uploadCompanyLogo,
-  getEmployerJobStats: mocks.getEmployerJobStats,
-  getEmployerJobStatsTimeseries: mocks.getEmployerJobStatsTimeseries,
-  getEmployerProfileStats: mocks.getEmployerProfileStats,
-  getEmployerProfileStatsTimeseries: mocks.getEmployerProfileStatsTimeseries,
-  getJob: mocks.getJob,
-  getPipeline: mocks.getPipeline,
-  moveApplicant: mocks.moveApplicant,
-  publishJob: mocks.publishJob,
-  removeStage: mocks.removeStage,
-  renameStage: mocks.renameStage,
-  unpublishJob: mocks.unpublishJob,
-  updateCompany: mocks.updateCompany,
-  updateJob: mocks.updateJob,
-  deleteCompany: mocks.deleteCompany,
-  listCompanyMembers: mocks.listCompanyMembers,
-  listCompanyInvites: mocks.listCompanyInvites,
-  createCompanyInvite: mocks.createCompanyInvite,
-  revokeCompanyInvite: mocks.revokeCompanyInvite,
-  acceptCompanyInvite: mocks.acceptCompanyInvite,
-  updateCompanyMemberRole: mocks.updateCompanyMemberRole,
-  removeCompanyMember: mocks.removeCompanyMember,
-  leaveCompany: mocks.leaveCompany,
-}));
-
-vi.mock('../server/account', () => ({
-  getSessionUser: mocks.getSessionUser,
-}));
-
-vi.mock('../server/auth', () => ({ refreshSession: mocks.refreshSession }));
-
-vi.mock('../server/queries', () => ({
-  getCompany: mocks.getCompany,
-  getSeoBase: mocks.getSeoBase,
-  getBoardContext: mocks.getBoardContext,
-}));
-
 import { ApplicantPipelineBoard } from '../components/employer/applicant-pipeline-board';
+import { handleEmployerLoaderErrorUsing } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
+import {
+  ApplicantsPageView,
+  createApplicantsLoader,
+  type ApplicantsLoaderDependencies,
+} from './-employers.applicants';
+import {
+  CompanyJobsPageView,
+  createCompanyJobsLoader,
+  type CompanyJobsLoaderDependencies,
+  type CompanyJobsViewActions,
+  type CompanyJobsViewData,
+} from './-employers.company-jobs';
+import {
+  CompanyMembersPageView,
+  type CompanyMembersViewActions,
+  type CompanyMembersViewData,
+} from './-employers.company-members';
+import {
+  CompanyProfilePageView,
+  type CompanyProfileLoaderData,
+  type CompanyProfileViewData,
+  type CompanyProfileViewActions,
+} from './-employers.company-profile';
 import { Route as JobsRoute } from './employers.companies.$slug.index';
 import { Route as ApplicantsRoute } from './employers.companies.$slug.jobs.$jobId.applicants';
 import { Route as MembersRoute } from './employers.companies.$slug.members';
@@ -151,17 +58,71 @@ import { Route as ProfileRoute } from './employers.companies.$slug.profile';
 import type { PipelineBoardVM } from '../board/pipeline-view-model';
 import type { PipelineActions } from '../components/employer/applicant-pipeline-board';
 
-// The board takes its mutations as a typed `actions` prop now; inject the same
-// hoisted doubles the route would pass. (The `../server/employers` module mock
-// above still covers the workspace routes imported in this file.)
-const pipelineActions: PipelineActions = {
-  moveApplicant: mocks.moveApplicant,
-  bulkRejectApplicants: mocks.bulkRejectApplicants,
-  addApplicantNote: mocks.addApplicantNote,
-  createStage: mocks.createStage,
-  renameStage: mocks.renameStage,
-  removeStage: mocks.removeStage,
-};
+const pipelineActions = {
+  moveApplicant: vi.fn<PipelineActions['moveApplicant']>(),
+  bulkRejectApplicants: vi.fn<PipelineActions['bulkRejectApplicants']>(),
+  addApplicantNote: vi.fn<PipelineActions['addApplicantNote']>(),
+  createStage: vi.fn<PipelineActions['createStage']>(),
+  renameStage: vi.fn<PipelineActions['renameStage']>(),
+  removeStage: vi.fn<PipelineActions['removeStage']>(),
+  invalidate: vi.fn(),
+  toastError: vi.fn(),
+} satisfies PipelineActions;
+
+const refreshSession = vi.fn<() => Promise<{ ok: boolean }>>();
+const jobsLoaderDependencies = {
+  getCompanyWorkspace:
+    vi.fn<CompanyJobsLoaderDependencies['getCompanyWorkspace']>(),
+  getEmployerJobStats:
+    vi.fn<CompanyJobsLoaderDependencies['getEmployerJobStats']>(),
+  getEmployerJobStatsTimeseries:
+    vi.fn<CompanyJobsLoaderDependencies['getEmployerJobStatsTimeseries']>(),
+  getSeoBase: vi.fn<CompanyJobsLoaderDependencies['getSeoBase']>(),
+  handleEmployerLoaderError: vi.fn((error, returnTo, options) =>
+    handleEmployerLoaderErrorUsing(refreshSession, error, returnTo, options),
+  ),
+} satisfies CompanyJobsLoaderDependencies;
+const applicantsLoaderDependencies = {
+  getBoardContext: vi.fn<ApplicantsLoaderDependencies['getBoardContext']>(),
+  getPipeline: vi.fn<ApplicantsLoaderDependencies['getPipeline']>(),
+  getSeoBase: vi.fn<ApplicantsLoaderDependencies['getSeoBase']>(),
+  handleEmployerLoaderError: vi.fn((error, returnTo, options) =>
+    handleEmployerLoaderErrorUsing(refreshSession, error, returnTo, options),
+  ),
+} satisfies ApplicantsLoaderDependencies;
+const jobsActions = {
+  deleteJob: vi.fn<CompanyJobsViewActions['deleteJob']>(),
+  publishJob: vi.fn<CompanyJobsViewActions['publishJob']>(),
+  unpublishJob: vi.fn<CompanyJobsViewActions['unpublishJob']>(),
+  invalidate: vi.fn(),
+  navigateToEdit: vi.fn(),
+  toastError: vi.fn(),
+  toastSuccess: vi.fn(),
+} satisfies CompanyJobsViewActions;
+const membersActions = {
+  createCompanyInvite:
+    vi.fn<CompanyMembersViewActions['createCompanyInvite']>(),
+  leaveCompany: vi.fn<CompanyMembersViewActions['leaveCompany']>(),
+  removeCompanyMember:
+    vi.fn<CompanyMembersViewActions['removeCompanyMember']>(),
+  revokeCompanyInvite:
+    vi.fn<CompanyMembersViewActions['revokeCompanyInvite']>(),
+  updateCompanyMemberRole:
+    vi.fn<CompanyMembersViewActions['updateCompanyMemberRole']>(),
+  invalidate: vi.fn(),
+  navigateToDashboard: vi.fn(),
+  navigateToMembers: vi.fn(),
+  toastError: vi.fn(),
+  toastSuccess: vi.fn(),
+} satisfies CompanyMembersViewActions;
+const profileActions = {
+  updateCompany: vi.fn<CompanyProfileViewActions['updateCompany']>(),
+  uploadCompanyLogo: vi.fn<CompanyProfileViewActions['uploadCompanyLogo']>(),
+  deleteCompany: vi.fn<CompanyProfileViewActions['deleteCompany']>(),
+  invalidate: vi.fn(),
+  navigateToDashboard: vi.fn(),
+  toastSuccess: vi.fn(),
+} satisfies CompanyProfileViewActions;
 
 const draftJob = {
   id: 'job-1',
@@ -213,7 +174,21 @@ const employerCompany = {
   linkedinUrl: 'https://linkedin.com/company/northstar',
   facebookUrl: null,
   logoUrl: null,
-};
+} satisfies CompanyProfileLoaderData['employerCompany'];
+
+const profileLoaderData = {
+  workspace: {
+    slug: 'northstar-labs',
+    membership: { role: 'admin' },
+  },
+  company,
+  employerCompany,
+  members: { data: [] },
+} satisfies CompanyProfileViewData;
+
+function renderProfile(data: CompanyProfileViewData = profileLoaderData) {
+  render(<CompanyProfilePageView data={data} actions={profileActions} />);
+}
 
 type EmployerJobStat = {
   object: 'employer_job_stat';
@@ -228,12 +203,42 @@ type EmployerJobStatsPoint = {
   views: number;
   applyClicks: number;
 };
+type EmployerJob = CompanyJobsViewData['jobs']['data'][number];
+
+function jobsLoaderContext(search: { reauth?: string }) {
+  return {
+    params: { slug: 'northstar-labs' },
+    location: { search },
+  } satisfies Parameters<ReturnType<typeof createCompanyJobsLoader>>[0];
+}
+
+function applicantsLoaderContext() {
+  return {
+    params: { slug: 'northstar-labs', jobId: 'job-1' },
+    location: { search: {} },
+  } satisfies Parameters<ReturnType<typeof createApplicantsLoader>>[0];
+}
+
+async function renderWithRouter(element: ReactNode) {
+  const rootRoute = createRootRoute();
+  const pageRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => element,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([pageRoute]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  await router.load();
+  render(<RouterProvider router={router} />);
+}
 
 // The jobs page defers its stats via <Await> (per-row stat cells + the chart),
 // so the render must flush the resolved promises inside an async act — a bare
 // sync render would leave suspense pending and trip the strict console guard.
 async function renderJobs(
-  jobs: unknown[],
+  jobs: EmployerJob[],
   deferred: {
     stats?: EmployerJobStat[];
     timeseries?: EmployerJobStatsPoint[];
@@ -243,47 +248,54 @@ async function renderJobs(
     new Map((deferred.stats ?? []).map((stat) => [stat.jobId, stat])),
   );
   const timeseries = Promise.resolve(deferred.timeseries ?? []);
-  vi.spyOn(JobsRoute, 'useLoaderData').mockReturnValue({
+  const data = {
     slug: 'northstar-labs',
     membership: { company: { name: 'Northstar Labs' } },
     jobs: { data: jobs },
-    billingOptions: { data: [] },
-    plans: [],
     statsIndex,
     timeseries,
-  } as never);
-  const JobsPage = JobsRoute.options.component;
-  if (!JobsPage) throw new Error('The jobs route must expose its component');
+  } satisfies CompanyJobsViewData;
   await act(async () => {
-    render(<JobsPage />);
+    await renderWithRouter(
+      <CompanyJobsPageView data={data} actions={jobsActions} />,
+    );
   });
 }
 
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
-  mocks.invalidate.mockResolvedValue(undefined);
-  mocks.navigate.mockResolvedValue(undefined);
+  jobsActions.invalidate.mockResolvedValue(undefined);
+  jobsActions.navigateToEdit.mockResolvedValue(undefined);
+  membersActions.invalidate.mockResolvedValue(undefined);
+  membersActions.navigateToDashboard.mockResolvedValue(undefined);
+  membersActions.navigateToMembers.mockResolvedValue(undefined);
+  profileActions.invalidate.mockResolvedValue(undefined);
+  profileActions.navigateToDashboard.mockResolvedValue(undefined);
+  pipelineActions.invalidate.mockResolvedValue(undefined);
 });
 
 beforeEach(() => {
-  mocks.getSeoBase.mockResolvedValue({ boardName: 'Acme Board' });
-  mocks.refreshSession.mockResolvedValue({ ok: false });
+  jobsLoaderDependencies.getSeoBase.mockResolvedValue({
+    boardName: 'Acme Board',
+  });
+  applicantsLoaderDependencies.getSeoBase.mockResolvedValue({
+    boardName: 'Acme Board',
+  });
+  refreshSession.mockResolvedValue({ ok: false });
   // Deferred reporting reads default to empty envelopes; individual tests
   // override them to exercise the join and the chart.
-  mocks.getEmployerJobStats.mockResolvedValue({ data: [] });
-  mocks.getEmployerJobStatsTimeseries.mockResolvedValue({ data: [] });
-  mocks.getEmployerProfileStats.mockResolvedValue({
-    object: 'employer_profile_stats',
-    profileViews: 0,
+  jobsLoaderDependencies.getEmployerJobStats.mockResolvedValue({
+    data: [],
   });
-  mocks.getEmployerProfileStatsTimeseries.mockResolvedValue({ data: [] });
+  jobsLoaderDependencies.getEmployerJobStatsTimeseries.mockResolvedValue({
+    data: [],
+  });
   // The applicants loader gates on the native-applications feature flag;
   // default it on so the existing pipeline tests exercise the API path.
-  mocks.getBoardContext.mockResolvedValue({
-    features: { nativeApplications: true, messaging: true },
+  applicantsLoaderDependencies.getBoardContext.mockResolvedValue({
+    features: { nativeApplications: true },
   });
-  mocks.listCompanyInvites.mockResolvedValue({ data: [] });
 });
 
 describe('employer company workspace', () => {
@@ -297,7 +309,7 @@ describe('employer company workspace', () => {
   });
 
   it('recovers a transient auth failure with a refresh instead of sign-in', async () => {
-    mocks.getCompanyWorkspace.mockRejectedValue(
+    jobsLoaderDependencies.getCompanyWorkspace.mockRejectedValue(
       new BoardApiError({
         status: 401,
         code: 'auth_unauthorized',
@@ -305,22 +317,17 @@ describe('employer company workspace', () => {
         raw: {},
       }),
     );
-    mocks.refreshSession.mockResolvedValue({ ok: true });
-    const loader = JobsRoute.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('The company jobs route needs a loader');
-
+    refreshSession.mockResolvedValue({ ok: true });
     let result: unknown;
     try {
-      result = await loader({
-        params: { slug: 'northstar-labs' },
-        location: { search: {} },
-      } as never);
+      result = await createCompanyJobsLoader(jobsLoaderDependencies)(
+        jobsLoaderContext({}),
+      );
     } catch (error) {
       result = error;
     }
 
-    expect(mocks.refreshSession).toHaveBeenCalledTimes(1);
+    expect(refreshSession).toHaveBeenCalledTimes(1);
     expect(isRedirect(result)).toBe(true);
     if (!isRedirect(result)) return;
     // A successful refresh reloads the same page (bounded by ?reauth=1).
@@ -330,7 +337,7 @@ describe('employer company workspace', () => {
   });
 
   it('falls through to sign-in once the refresh cannot recover', async () => {
-    mocks.getCompanyWorkspace.mockRejectedValue(
+    jobsLoaderDependencies.getCompanyWorkspace.mockRejectedValue(
       new BoardApiError({
         status: 401,
         code: 'auth_unauthorized',
@@ -338,17 +345,12 @@ describe('employer company workspace', () => {
         raw: {},
       }),
     );
-    mocks.refreshSession.mockResolvedValue({ ok: false });
-    const loader = JobsRoute.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('The company jobs route needs a loader');
-
+    refreshSession.mockResolvedValue({ ok: false });
     let result: unknown;
     try {
-      result = await loader({
-        params: { slug: 'northstar-labs' },
-        location: { search: {} },
-      } as never);
+      result = await createCompanyJobsLoader(jobsLoaderDependencies)(
+        jobsLoaderContext({}),
+      );
     } catch (error) {
       result = error;
     }
@@ -362,7 +364,7 @@ describe('employer company workspace', () => {
   });
 
   it('does not refresh again on the retried load, going straight to sign-in', async () => {
-    mocks.getCompanyWorkspace.mockRejectedValue(
+    jobsLoaderDependencies.getCompanyWorkspace.mockRejectedValue(
       new BoardApiError({
         status: 401,
         code: 'auth_unauthorized',
@@ -370,28 +372,24 @@ describe('employer company workspace', () => {
         raw: {},
       }),
     );
-    mocks.refreshSession.mockResolvedValue({ ok: true });
-    const loader = JobsRoute.options.loader;
-    if (typeof loader !== 'function') throw new Error('needs a loader');
-
+    refreshSession.mockResolvedValue({ ok: true });
     let result: unknown;
     try {
-      result = await loader({
-        params: { slug: 'northstar-labs' },
-        location: { search: { reauth: '1' } },
-      } as never);
+      result = await createCompanyJobsLoader(jobsLoaderDependencies)(
+        jobsLoaderContext({ reauth: '1' }),
+      );
     } catch (error) {
       result = error;
     }
 
-    expect(mocks.refreshSession).not.toHaveBeenCalled();
+    expect(refreshSession).not.toHaveBeenCalled();
     expect(isRedirect(result)).toBe(true);
     if (!isRedirect(result)) return;
     expect(result.options).toMatchObject({ to: '/auth/sign-in' });
   });
 
   it('keeps forbidden company workspace errors distinct from authentication', async () => {
-    mocks.getPipeline.mockRejectedValue(
+    applicantsLoaderDependencies.getPipeline.mockRejectedValue(
       new BoardApiError({
         status: 403,
         code: 'auth_forbidden',
@@ -399,38 +397,29 @@ describe('employer company workspace', () => {
         raw: {},
       }),
     );
-    const loader = ApplicantsRoute.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('The applicants route needs a loader');
-
     await expect(
-      loader({
-        params: { slug: 'northstar-labs', jobId: 'job-1' },
-        location: { search: {} },
-      } as never),
+      createApplicantsLoader(applicantsLoaderDependencies)(
+        applicantsLoaderContext(),
+      ),
     ).rejects.toMatchObject({ status: 403 });
   });
 
   it('degrades the applicants pipeline to not-found when native applications are off', async () => {
-    mocks.getBoardContext.mockResolvedValue({
-      features: { nativeApplications: false, messaging: true },
+    applicantsLoaderDependencies.getBoardContext.mockResolvedValue({
+      features: { nativeApplications: false },
     });
-    const loader = ApplicantsRoute.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('The applicants route needs a loader');
-
     let outcome: unknown;
     try {
-      await loader({
-        params: { slug: 'northstar-labs', jobId: 'job-1' },
-      } as never);
+      await createApplicantsLoader(applicantsLoaderDependencies)(
+        applicantsLoaderContext(),
+      );
     } catch (error) {
       outcome = error;
     }
 
     expect(isRouteNotFound(outcome)).toBe(true);
     // The API pipeline read is never attempted — the feature does not exist.
-    expect(mocks.getPipeline).not.toHaveBeenCalled();
+    expect(applicantsLoaderDependencies.getPipeline).not.toHaveBeenCalled();
   });
 
   it('titles the jobs list with the company name and its active-job count', async () => {
@@ -453,7 +442,7 @@ describe('employer company workspace', () => {
     });
     expect(roleLink).toHaveAttribute(
       'href',
-      '/employers/companies/$slug/jobs/$jobId/edit',
+      '/employers/companies/northstar-labs/jobs/job-1/edit',
     );
     // Publish is no longer a standalone pill — it lives only in the menu.
     expect(
@@ -468,7 +457,7 @@ describe('employer company workspace', () => {
     // A draft's Publish menu item lands on the edit page (plan picker + pay).
     expect(screen.getByRole('menuitem', { name: 'Publish' })).toHaveAttribute(
       'href',
-      '/employers/companies/$slug/jobs/$jobId/edit',
+      '/employers/companies/northstar-labs/jobs/job-1/edit',
     );
     expect(screen.getByRole('menuitem', { name: 'Edit' })).toBeInTheDocument();
     expect(
@@ -551,7 +540,7 @@ describe('employer company workspace', () => {
   it('still renders the jobs table when the stats read degrades', async () => {
     // A rejected deferred stats promise (the loader catch → empty Map) must not
     // take the table down: the rows render, the stat cells resolve to dashes.
-    vi.spyOn(JobsRoute, 'useLoaderData').mockReturnValue({
+    const data = {
       slug: 'northstar-labs',
       membership: { company: { name: 'Northstar Labs' } },
       jobs: {
@@ -564,15 +553,13 @@ describe('employer company workspace', () => {
           },
         ],
       },
-      billingOptions: { data: [] },
-      plans: [],
       statsIndex: Promise.resolve(new Map()),
       timeseries: Promise.resolve([]),
-    } as never);
-    const JobsPage = JobsRoute.options.component;
-    if (!JobsPage) throw new Error('needs a component');
+    } satisfies CompanyJobsViewData;
     await act(async () => {
-      render(<JobsPage />);
+      await renderWithRouter(
+        <CompanyJobsPageView data={data} actions={jobsActions} />,
+      );
     });
 
     expect(
@@ -588,7 +575,7 @@ describe('employer company workspace', () => {
       id: 'job-live',
       status: 'published',
       publishedAt: '2026-07-01',
-    };
+    } satisfies EmployerJob;
 
     // All-zero window → the honest empty panel, not a chart on a broken axis.
     await renderJobs([publishedJob], {
@@ -651,7 +638,7 @@ describe('employer company workspace', () => {
   });
 
   it('republishes an entitled job in place and toasts', async () => {
-    mocks.publishJob.mockResolvedValue({ ok: true, data: {} });
+    jobsActions.publishJob.mockResolvedValue({ ok: true, data: {} });
     await renderJobs([
       {
         ...draftJob,
@@ -667,13 +654,15 @@ describe('employer company workspace', () => {
     );
     fireEvent.click(screen.getByRole('menuitem', { name: 'Republish' }));
 
-    await waitFor(() => expect(mocks.publishJob).toHaveBeenCalledTimes(1));
-    expect(mocks.toastSuccess).toHaveBeenCalledTimes(1);
-    expect(mocks.navigate).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(jobsActions.publishJob).toHaveBeenCalledTimes(1),
+    );
+    expect(jobsActions.toastSuccess).toHaveBeenCalledTimes(1);
+    expect(jobsActions.navigateToEdit).not.toHaveBeenCalled();
   });
 
   it('routes an unentitled republish to the edit/pay page', async () => {
-    mocks.publishJob.mockResolvedValue({
+    jobsActions.publishJob.mockResolvedValue({
       ok: false,
       message: 'Payment required',
     });
@@ -693,26 +682,16 @@ describe('employer company workspace', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: 'Republish' }));
 
     await waitFor(() =>
-      expect(mocks.navigate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          to: '/employers/companies/$slug/jobs/$jobId/edit',
-        }),
+      expect(jobsActions.navigateToEdit).toHaveBeenCalledWith(
+        'northstar-labs',
+        'job-1',
       ),
     );
-    expect(mocks.toastSuccess).not.toHaveBeenCalled();
+    expect(jobsActions.toastSuccess).not.toHaveBeenCalled();
   });
 
   it('keeps the company profile editable in place with the public link visible', () => {
-    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
-      workspace: { slug: 'northstar-labs', membership: { company } },
-      company,
-      employerCompany,
-    } as never);
-
-    const ProfilePage = ProfileRoute.options.component;
-    if (!ProfilePage)
-      throw new Error('The profile route must expose its component');
-    render(<ProfilePage />);
+    renderProfile();
 
     expect(
       screen.getByRole('heading', { level: 1, name: 'Company profile' }),
@@ -736,15 +715,7 @@ describe('employer company workspace', () => {
   });
 
   it('auto-strips a pasted social URL down to the handle', () => {
-    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
-      workspace: { slug: 'northstar-labs', membership: { company } },
-      company,
-      employerCompany,
-    } as never);
-
-    const ProfilePage = ProfileRoute.options.component;
-    if (!ProfilePage) throw new Error('needs a component');
-    render(<ProfilePage />);
+    renderProfile();
 
     const linkedin = screen.getByRole('textbox', { name: 'LinkedIn' });
     fireEvent.change(linkedin, {
@@ -754,15 +725,7 @@ describe('employer company workspace', () => {
   });
 
   it('prefills the tagline and social fields from the editable company read', () => {
-    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
-      workspace: { slug: 'northstar-labs', membership: { company } },
-      company,
-      employerCompany,
-    } as never);
-
-    const ProfilePage = ProfileRoute.options.component;
-    if (!ProfilePage) throw new Error('needs a component');
-    render(<ProfilePage />);
+    renderProfile();
 
     // The tagline is no longer a write-only blank — it round-trips from
     // `summary`, so the field carries the stored value on load.
@@ -776,46 +739,45 @@ describe('employer company workspace', () => {
   });
 
   it('uploads a new company logo through the profile logo control', async () => {
-    mocks.uploadCompanyLogo.mockResolvedValue({
+    profileActions.uploadCompanyLogo.mockResolvedValue({
       ...employerCompany,
       logoUrl: 'https://cdn.example/logo.png',
     });
-    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
-      workspace: { slug: 'northstar-labs', membership: { company } },
-      company,
-      employerCompany,
-    } as never);
-
-    const ProfilePage = ProfileRoute.options.component;
-    if (!ProfilePage) throw new Error('needs a component');
-    render(<ProfilePage />);
+    renderProfile();
 
     // The upload control is present now (no more "not available here yet").
     expect(
       screen.getByRole('button', { name: 'Change logo' }),
     ).toBeInTheDocument();
 
-    const input = document.querySelector(
+    const input = document.querySelector<HTMLInputElement>(
       '[data-test="logo-file-input"]',
-    ) as HTMLInputElement;
-    expect(input).not.toBeNull();
+    );
+    if (!(input instanceof HTMLInputElement)) {
+      throw new Error('The logo control must render a file input');
+    }
     const file = new File(['logo-bytes'], 'logo.png', { type: 'image/png' });
     await act(async () => {
       fireEvent.change(input, { target: { files: [file] } });
     });
 
-    expect(mocks.uploadCompanyLogo).toHaveBeenCalledTimes(1);
-    const formData = mocks.uploadCompanyLogo.mock.calls[0][0].data as FormData;
+    expect(profileActions.uploadCompanyLogo).toHaveBeenCalledTimes(1);
+    const firstCall = profileActions.uploadCompanyLogo.mock.calls[0];
+    if (!firstCall) throw new Error('Expected a logo upload call');
+    const uploadInput = firstCall[0];
+    if (!uploadInput) throw new Error('Expected logo upload input');
+    const formData = uploadInput.data;
+    if (!(formData instanceof FormData)) {
+      throw new Error('The logo upload boundary requires FormData');
+    }
     expect(formData.get('slug')).toBe('northstar-labs');
     expect(formData.get('logo')).toBe(file);
-    await waitFor(() => expect(mocks.invalidate).toHaveBeenCalled());
+    await waitFor(() => expect(profileActions.invalidate).toHaveBeenCalled());
   });
 
   it('streams the profile-views stat into the header once the deferred read resolves', async () => {
-    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
-      workspace: { slug: 'northstar-labs', membership: { company } },
-      company,
-      employerCompany,
+    const data = {
+      ...profileLoaderData,
       profileViews: Promise.resolve({
         total: 1204,
         points: [
@@ -831,14 +793,11 @@ describe('employer company workspace', () => {
           },
         ],
       }),
-    } as never);
-
-    const ProfilePage = ProfileRoute.options.component;
-    if (!ProfilePage) throw new Error('needs a component');
+    } satisfies CompanyProfileViewData;
     // The deferred stat suspends via <Await>; await the render so the resolved
     // promise flushes inside act (the strict setup rejects un-awaited suspense).
     await act(async () => {
-      render(<ProfilePage />);
+      renderProfile(data);
     });
 
     expect(
@@ -849,28 +808,19 @@ describe('employer company workspace', () => {
   });
 
   it('shows the honest zero state when the company has no profile views yet', async () => {
-    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
-      workspace: { slug: 'northstar-labs', membership: { company } },
-      company,
-      employerCompany,
+    const data = {
+      ...profileLoaderData,
       profileViews: Promise.resolve({ total: 0, points: [] }),
-    } as never);
-
-    const ProfilePage = ProfileRoute.options.component;
-    if (!ProfilePage) throw new Error('needs a component');
+    } satisfies CompanyProfileViewData;
     await act(async () => {
-      render(<ProfilePage />);
+      renderProfile(data);
     });
 
     expect(screen.getByText('No views yet')).toBeInTheDocument();
   });
 
   it('renders the applicant pipeline as a kanban board with cards in their stage column', () => {
-    vi.spyOn(ApplicantsRoute, 'useParams').mockReturnValue({
-      slug: 'northstar-labs',
-      jobId: 'job-1',
-    });
-    vi.spyOn(ApplicantsRoute, 'useLoaderData').mockReturnValue({
+    const pipeline = {
       object: 'employer_pipeline',
       job: {
         id: 'job-1',
@@ -921,12 +871,18 @@ describe('employer company workspace', () => {
           timeline: [],
         },
       ],
-    } as never);
+      seo: {
+        boardName: 'Acme Board',
+      },
+    } satisfies Parameters<typeof ApplicantsPageView>[0]['pipeline'];
 
-    const ApplicantsPage = ApplicantsRoute.options.component;
-    if (!ApplicantsPage)
-      throw new Error('The applicants route must expose its component');
-    render(<ApplicantsPage />);
+    render(
+      <ApplicantsPageView
+        slug="northstar-labs"
+        pipeline={pipeline}
+        actions={pipelineActions}
+      />,
+    );
 
     expect(
       screen.getByRole('heading', {
@@ -997,7 +953,7 @@ describe('employer company workspace', () => {
   });
 
   it('keeps a failed stage rename open and reports the error in the dialog', async () => {
-    mocks.renameStage.mockResolvedValue({
+    pipelineActions.renameStage.mockResolvedValue({
       ok: false,
       message: 'Rename failed',
     });
@@ -1039,11 +995,11 @@ describe('employer company workspace', () => {
     expect(screen.getByRole('textbox', { name: 'Stage name' })).toHaveValue(
       'Interview',
     );
-    expect(mocks.invalidate).not.toHaveBeenCalled();
+    expect(pipelineActions.invalidate).not.toHaveBeenCalled();
   });
 
   it('reports a failed reject in the detail sheet action area', async () => {
-    mocks.bulkRejectApplicants.mockResolvedValue({
+    pipelineActions.bulkRejectApplicants.mockResolvedValue({
       ok: false,
       message: 'Reject failed',
     });
@@ -1063,14 +1019,14 @@ describe('employer company workspace', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Reject failed');
     expect(alert.closest('[data-applicant-action-feedback]')).not.toBeNull();
-    expect(mocks.invalidate).not.toHaveBeenCalled();
+    expect(pipelineActions.invalidate).not.toHaveBeenCalled();
   });
 
   it('moves a card optimistically through the detail sheet stage picker', async () => {
     // Hold the move in-flight so the optimistic column placement is observable
     // (a resolved move + mocked invalidate would settle back to the static prop).
     let resolveMove!: (value: { ok: true; data: null }) => void;
-    mocks.moveApplicant.mockReturnValue(
+    pipelineActions.moveApplicant.mockReturnValue(
       new Promise((resolve) => {
         resolveMove = resolve;
       }),
@@ -1124,7 +1080,7 @@ describe('employer company workspace', () => {
     fireEvent.click(interviewOption);
 
     await waitFor(() =>
-      expect(mocks.moveApplicant).toHaveBeenCalledWith({
+      expect(pipelineActions.moveApplicant).toHaveBeenCalledWith({
         data: {
           slug: 'northstar-labs',
           applicationId: 'application-1',
@@ -1142,7 +1098,7 @@ describe('employer company workspace', () => {
     await act(async () => {
       resolveMove({ ok: true, data: null });
     });
-    await waitFor(() => expect(mocks.invalidate).toHaveBeenCalled());
+    await waitFor(() => expect(pipelineActions.invalidate).toHaveBeenCalled());
   });
 
   const memberAda = {
@@ -1166,30 +1122,33 @@ describe('employer company workspace', () => {
     createdAt: '2026-02-01T00:00:00.000Z',
   };
 
+  const membersLoaderData = {
+    workspace: {
+      slug: 'northstar-labs',
+      membership: { role: 'admin', company },
+    },
+    members: { data: [memberAda, memberGrace] },
+    invites: { data: [] },
+    user: { id: 'user-ada' },
+    joined: false,
+  } satisfies CompanyMembersViewData;
+
+  function renderMembers(data: CompanyMembersViewData = membersLoaderData) {
+    render(<CompanyMembersPageView data={data} actions={membersActions} />);
+  }
+
   it('lets admins remove members and surfaces last_admin inline', async () => {
-    mocks.removeCompanyMember.mockResolvedValue({
+    membersActions.removeCompanyMember.mockResolvedValue({
       ok: false,
       code: 'last_admin',
       message: 'last admin',
     });
-    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
-      workspace: {
-        slug: 'northstar-labs',
-        membership: { role: 'admin', company },
-      },
+    renderMembers({
+      ...membersLoaderData,
       members: {
         data: [memberAda, { ...memberGrace, role: 'admin' as const }],
       },
-      invites: { data: [] },
-      user: { id: 'user-ada' },
-      seo: { boardName: 'Acme Board' },
-      joined: false,
-    } as never);
-
-    const MembersPage = MembersRoute.options.component;
-    if (!MembersPage)
-      throw new Error('The members route must expose its component');
-    render(<MembersPage />);
+    });
 
     expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
     expect(screen.getByText('grace@northstar.example')).toBeInTheDocument();
@@ -1217,7 +1176,7 @@ describe('employer company workspace', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       m.employerMembers_lastAdminError(),
     );
-    expect(mocks.removeCompanyMember).toHaveBeenCalledWith({
+    expect(membersActions.removeCompanyMember).toHaveBeenCalledWith({
       data: {
         slug: 'northstar-labs',
         memberId: 'member-grace',
@@ -1226,7 +1185,7 @@ describe('employer company workspace', () => {
   });
 
   it('lets members leave and surfaces last_admin in the leave dialog', async () => {
-    mocks.leaveCompany.mockResolvedValue({
+    membersActions.leaveCompany.mockResolvedValue({
       ok: false,
       code: 'last_admin',
       message: 'last admin',
@@ -1234,24 +1193,12 @@ describe('employer company workspace', () => {
     // Two admins: the viewer is not the sole admin, so the button is
     // enabled and the inline error covers the race where the other
     // admin was demoted after this page loaded.
-    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
-      workspace: {
-        slug: 'northstar-labs',
-        membership: { role: 'admin', company },
-      },
+    renderMembers({
+      ...membersLoaderData,
       members: {
         data: [memberAda, { ...memberGrace, role: 'admin' as const }],
       },
-      invites: { data: [] },
-      user: { id: 'user-ada' },
-      seo: { boardName: 'Acme Board' },
-      joined: false,
-    } as never);
-
-    const MembersPage = MembersRoute.options.component;
-    if (!MembersPage)
-      throw new Error('The members route must expose its component');
-    render(<MembersPage />);
+    });
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -1274,28 +1221,13 @@ describe('employer company workspace', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       m.employerMembers_leaveLastAdminError(),
     );
-    expect(mocks.leaveCompany).toHaveBeenCalledWith({
+    expect(membersActions.leaveCompany).toHaveBeenCalledWith({
       data: { slug: 'northstar-labs' },
     });
   });
 
   it('disables leave with a tooltip reason for the sole admin', () => {
-    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
-      workspace: {
-        slug: 'northstar-labs',
-        membership: { role: 'admin', company },
-      },
-      members: { data: [memberAda, memberGrace] },
-      invites: { data: [] },
-      user: { id: 'user-ada' },
-      seo: { boardName: 'Acme Board' },
-      joined: false,
-    } as never);
-
-    const MembersPage = MembersRoute.options.component;
-    if (!MembersPage)
-      throw new Error('The members route must expose its component');
-    render(<MembersPage />);
+    renderMembers();
 
     expect(
       screen.getByRole('button', {
@@ -1305,22 +1237,15 @@ describe('employer company workspace', () => {
   });
 
   it('renders member roles read-only for non-admins', () => {
-    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
+    renderMembers({
+      ...membersLoaderData,
       workspace: {
+        ...membersLoaderData.workspace,
         slug: 'northstar-labs',
         membership: { role: 'member', company },
       },
-      members: { data: [memberAda, memberGrace] },
-      invites: { data: [] },
       user: { id: 'user-grace' },
-      seo: { boardName: 'Acme Board' },
-      joined: false,
-    } as never);
-
-    const MembersPage = MembersRoute.options.component;
-    if (!MembersPage)
-      throw new Error('The members route must expose its component');
-    render(<MembersPage />);
+    });
 
     expect(
       screen.queryByRole('combobox', {
@@ -1346,22 +1271,7 @@ describe('employer company workspace', () => {
   });
 
   it('matches the jobs-page header: company heading, plural subtitle, admin invite CTA', () => {
-    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
-      workspace: {
-        slug: 'northstar-labs',
-        membership: { role: 'admin', company },
-      },
-      members: { data: [memberAda, memberGrace] },
-      invites: { data: [] },
-      user: { id: 'user-ada' },
-      seo: { boardName: 'Acme Board' },
-      joined: false,
-    } as never);
-
-    const MembersPage = MembersRoute.options.component;
-    if (!MembersPage)
-      throw new Error('The members route must expose its component');
-    render(<MembersPage />);
+    renderMembers();
 
     expect(
       screen.getByRole('heading', {
@@ -1384,7 +1294,7 @@ describe('employer company workspace', () => {
   });
 
   it('opens the invite dialog, surfaces already_member inline, and sends an invite', async () => {
-    mocks.createCompanyInvite
+    membersActions.createCompanyInvite
       .mockResolvedValueOnce({
         ok: false,
         code: 'already_member',
@@ -1400,22 +1310,10 @@ describe('employer company workspace', () => {
           expiresAt: '2026-03-08T00:00:00.000Z',
         },
       });
-    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
-      workspace: {
-        slug: 'northstar-labs',
-        membership: { role: 'admin', company },
-      },
+    renderMembers({
+      ...membersLoaderData,
       members: { data: [memberAda] },
-      invites: { data: [] },
-      user: { id: 'user-ada' },
-      seo: { boardName: 'Acme Board' },
-      joined: false,
-    } as never);
-
-    const MembersPage = MembersRoute.options.component;
-    if (!MembersPage)
-      throw new Error('The members route must expose its component');
-    render(<MembersPage />);
+    });
 
     fireEvent.click(
       screen.getByRole('button', { name: m.employerMembers_inviteLabel() }),
@@ -1455,15 +1353,15 @@ describe('employer company workspace', () => {
     );
 
     await waitFor(() =>
-      expect(mocks.createCompanyInvite).toHaveBeenCalledWith({
+      expect(membersActions.createCompanyInvite).toHaveBeenCalledWith({
         data: {
           slug: 'northstar-labs',
           body: { email: 'pat@northstar.example' },
         },
       }),
     );
-    await waitFor(() => expect(mocks.invalidate).toHaveBeenCalled());
-    expect(mocks.toastSuccess).toHaveBeenCalledWith(
+    await waitFor(() => expect(membersActions.invalidate).toHaveBeenCalled());
+    expect(membersActions.toastSuccess).toHaveBeenCalledWith(
       m.employerMembers_inviteSentToast(),
     );
   });
@@ -1476,23 +1374,23 @@ describe('employer company workspace', () => {
       createdAt: '2026-03-01T00:00:00.000Z',
       expiresAt: '2026-03-08T00:00:00.000Z',
     };
-    mocks.revokeCompanyInvite.mockResolvedValue({ ok: true, data: null });
-    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
+    membersActions.revokeCompanyInvite.mockResolvedValue({
+      ok: true,
+      data: null,
+    });
+    const memberView = {
+      ...membersLoaderData,
       workspace: {
+        ...membersLoaderData.workspace,
         slug: 'northstar-labs',
         membership: { role: 'member', company },
       },
-      members: { data: [memberAda, memberGrace] },
       invites: { data: [pendingInvite] },
       user: { id: 'user-grace' },
-      seo: { boardName: 'Acme Board' },
-      joined: false,
-    } as never);
-
-    const MembersPage = MembersRoute.options.component;
-    if (!MembersPage)
-      throw new Error('The members route must expose its component');
-    const { unmount } = render(<MembersPage />);
+    } satisfies CompanyMembersViewData;
+    const { unmount } = render(
+      <CompanyMembersPageView data={memberView} actions={membersActions} />,
+    );
 
     expect(screen.getByText('pat@northstar.example')).toBeInTheDocument();
     expect(
@@ -1513,18 +1411,10 @@ describe('employer company workspace', () => {
     ).toBeNull();
     unmount();
 
-    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
-      workspace: {
-        slug: 'northstar-labs',
-        membership: { role: 'admin', company },
-      },
-      members: { data: [memberAda, memberGrace] },
+    renderMembers({
+      ...membersLoaderData,
       invites: { data: [pendingInvite] },
-      user: { id: 'user-ada' },
-      seo: { boardName: 'Acme Board' },
-      joined: false,
-    } as never);
-    render(<MembersPage />);
+    });
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -1534,34 +1424,22 @@ describe('employer company workspace', () => {
       }),
     );
     await waitFor(() =>
-      expect(mocks.revokeCompanyInvite).toHaveBeenCalledWith({
+      expect(membersActions.revokeCompanyInvite).toHaveBeenCalledWith({
         data: { slug: 'northstar-labs', inviteId: 'inv-1' },
       }),
     );
   });
 
   it('does not render a Joined via column for invite or unknown provenance', () => {
-    vi.spyOn(MembersRoute, 'useLoaderData').mockReturnValue({
-      workspace: {
-        slug: 'northstar-labs',
-        membership: { role: 'admin', company },
-      },
+    renderMembers({
+      ...membersLoaderData,
       members: {
         data: [
           { ...memberGrace, approvedBy: 'invite' },
           { ...memberAda, approvedBy: null },
         ],
       },
-      invites: { data: [] },
-      user: { id: 'user-ada' },
-      seo: { boardName: 'Acme Board' },
-      joined: false,
-    } as never);
-
-    const MembersPage = MembersRoute.options.component;
-    if (!MembersPage)
-      throw new Error('The members route must expose its component');
-    render(<MembersPage />);
+    });
 
     expect(screen.queryByText(m.employerMembers_joinedViaColumn())).toBeNull();
     expect(screen.queryByText(m.employerMembers_joinedViaInvite())).toBeNull();
@@ -1570,21 +1448,18 @@ describe('employer company workspace', () => {
   });
 
   it('disables company delete for non-admins and deletes after typed confirmation', async () => {
-    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
+    const memberProfile = {
+      ...profileLoaderData,
       workspace: {
+        ...profileLoaderData.workspace,
         slug: 'northstar-labs',
-        membership: { role: 'member', company },
-        jobs: { data: [] },
+        membership: { role: 'member' },
       },
-      company,
-      employerCompany,
       members: { data: [memberAda] },
-    } as never);
-
-    const ProfilePage = ProfileRoute.options.component;
-    if (!ProfilePage)
-      throw new Error('The profile route must expose its component');
-    const { unmount } = render(<ProfilePage />);
+    } satisfies CompanyProfileViewData;
+    const { unmount } = render(
+      <CompanyProfilePageView data={memberProfile} actions={profileActions} />,
+    );
 
     expect(
       screen.getByRole('button', { name: m.employerDelete_submitLabel() }),
@@ -1594,18 +1469,11 @@ describe('employer company workspace', () => {
     ).toBeInTheDocument();
     unmount();
 
-    mocks.deleteCompany.mockResolvedValue({ ok: true, data: null });
-    vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
-      workspace: {
-        slug: 'northstar-labs',
-        membership: { role: 'admin', company },
-        jobs: { data: [] },
-      },
-      company,
-      employerCompany,
+    profileActions.deleteCompany.mockResolvedValue({ ok: true, data: null });
+    renderProfile({
+      ...profileLoaderData,
       members: { data: [memberAda] },
-    } as never);
-    render(<ProfilePage />);
+    });
 
     fireEvent.click(
       screen.getByRole('button', { name: m.employerDelete_submitLabel() }),
@@ -1622,12 +1490,10 @@ describe('employer company workspace', () => {
     fireEvent.click(confirmButtons[confirmButtons.length - 1]!);
 
     await waitFor(() =>
-      expect(mocks.deleteCompany).toHaveBeenCalledWith({
+      expect(profileActions.deleteCompany).toHaveBeenCalledWith({
         data: { slug: 'northstar-labs' },
       }),
     );
-    expect(mocks.navigate).toHaveBeenCalledWith({
-      to: '/employers/dashboard',
-    });
+    expect(profileActions.navigateToDashboard).toHaveBeenCalledOnce();
   });
 });

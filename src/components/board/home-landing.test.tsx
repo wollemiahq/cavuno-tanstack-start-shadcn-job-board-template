@@ -50,9 +50,7 @@ beforeEach(() => {
   // none and would log a "not implemented" warning. Stub getContext to null —
   // the band degrades to its plain-background fallback, its production path
   // wherever WebGL2 is unavailable.
-  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
-    null as never,
-  );
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
   vi.spyOn(window, 'Image').mockImplementation(function MockImage() {
     const image = document.createElement('img');
     Object.defineProperties(image, {
@@ -172,26 +170,37 @@ const hiringCompanies: LandingProps['companies'] = [
   },
 ];
 
-const post = {
+const post: PublicBlogPostSummary = {
   id: 'p1',
+  object: 'public_blog_post',
   slug: 'building-robots',
   title: 'Building Robots at Scale',
+  featured: false,
   coverUrl: null,
   featureImageAlt: null,
   customExcerpt: null,
+  readingTimeMin: null,
   publishedAt: '2026-01-01T00:00:00.000Z',
+  canonicalUrl: 'https://jobs.example/blog/building-robots',
+  createdAt: '2026-01-01T00:00:00.000Z',
   tags: [],
   authors: [],
-} as unknown as PublicBlogPostSummary;
+};
 
-const candidate = {
+const candidate: TalentDirectoryEntry = {
+  object: 'talent_directory_entry',
   displayName: 'Ada Lovelace',
   handle: 'ada',
   avatarUrl: null,
   location: null,
   headline: null,
+  summary: null,
+  bio: null,
+  jobSearchStatus: 'open_to_offers',
   skills: [],
-} as unknown as TalentDirectoryEntry;
+  experiences: [],
+  education: [],
+};
 
 const baseProps: LandingProps = {
   jobs: [job, productDesignerJob, machineLearningJob],
@@ -343,9 +352,8 @@ describe('HomeLanding — latest jobs reuse the shared card into the workspace',
     expect(cardTile).not.toBeNull();
     // "Featured" is a real Badge, not plain text.
     const article = link.closest('article');
-    const featured = within(article as HTMLElement).getByText(
-      job.featuredLabel!,
-    );
+    if (!article) throw new Error('Expected the job link inside an article');
+    const featured = within(article).getByText(job.featuredLabel);
     expect(featured).toHaveAttribute('data-slot', 'badge');
   });
 

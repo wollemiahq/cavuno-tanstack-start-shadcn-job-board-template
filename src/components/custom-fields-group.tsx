@@ -21,14 +21,22 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { searchString } from '@/lib/pagination';
 import type { PublicBoard } from '@cavuno/board';
 
 type CustomFieldDefinition = PublicBoard['customFields']['job'][number];
+type CustomFieldValue = string | string[] | boolean | number;
 
-export type CustomFieldValues = Record<
-  string,
-  string | string[] | boolean | number
->;
+export type CustomFieldValues = Record<string, CustomFieldValue>;
+
+function textValue(value: CustomFieldValue | undefined): string {
+  return searchString(value) ?? '';
+}
+
+function numberValue(value: CustomFieldValue | undefined): number | '' {
+  if (!Number.isFinite(value)) return '';
+  return Number(value);
+}
 
 /**
  * Board-defined custom fields for the public posting form. They render as
@@ -68,7 +76,7 @@ export function CustomFieldsGroup({
                 <Input
                   id={id}
                   required={definition.required}
-                  value={typeof value === 'string' ? value : ''}
+                  value={textValue(value)}
                   onChange={(event) => set(definition.key, event.target.value)}
                 />
               </Field>
@@ -83,7 +91,7 @@ export function CustomFieldsGroup({
                   id={id}
                   rows={3}
                   required={definition.required}
-                  value={typeof value === 'string' ? value : ''}
+                  value={textValue(value)}
                   onChange={(event) => set(definition.key, event.target.value)}
                 />
               </Field>
@@ -101,7 +109,7 @@ export function CustomFieldsGroup({
                   required={definition.required}
                   min={definition.min}
                   max={definition.max}
-                  value={typeof value === 'number' ? value : ''}
+                  value={numberValue(value)}
                   onChange={(event) => {
                     const next = Number(event.target.value);
                     set(
@@ -145,9 +153,9 @@ export function CustomFieldsGroup({
                     label: customFieldOptionLabel(definition.key, option),
                   }))}
                   required={definition.required}
-                  value={typeof value === 'string' ? value : null}
+                  value={textValue(value) || null}
                   onValueChange={(next) =>
-                    set(definition.key, (next as string | null) ?? '')
+                    set(definition.key, searchString(next) ?? '')
                   }
                 >
                   <SelectTrigger id={id} className="w-full">

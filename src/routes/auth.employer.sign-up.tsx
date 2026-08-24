@@ -1,37 +1,18 @@
-import {
-  Link,
-  createFileRoute,
-  notFound,
-  useRouter,
-} from '@tanstack/react-router';
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
 
-import { redirectIfSignedIn, sessionUserOrNull } from '../lib/auth-guard';
-import { MARKETING_CONSENT } from '../lib/marketing-consent';
 import { m } from '../paraglide/messages';
 import { signUpEmployer } from '../server/auth';
-import { getBoardContext } from '../server/queries';
+import {
+  EmployerSignUpUnavailable,
+  EmployerSignUpView,
+  loadEmployerSignUp,
+} from './-auth.employer.sign-up';
 
-import { RegistrationPage } from '@/components/registration-page';
 import { buttonVariants } from '@/components/ui/button';
-import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
 import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/auth/employer/sign-up')({
-  loader: async () => {
-    const [user, board] = await Promise.all([
-      sessionUserOrNull(),
-      getBoardContext(),
-    ]);
-    if (user?.role === 'employer') {
-      const destination = user.emailVerified
-        ? '/employers/dashboard'
-        : '/auth/verify-email-required?returnTo=%2Femployers%2Fdashboard';
-      redirectIfSignedIn(user, destination);
-    }
-    redirectIfSignedIn(user, '/');
-    if (!board.features.employers) throw notFound();
-    return { boardName: board.name };
-  },
+  loader: () => loadEmployerSignUp(),
   head: ({ loaderData }) => ({
     meta: [
       { title: headTitle(loaderData?.boardName, m.authEmployerSignUp_title()) },
@@ -39,62 +20,24 @@ export const Route = createFileRoute('/auth/employer/sign-up')({
     ],
   }),
   component: EmployerSignUpPage,
-  notFoundComponent: () => (
-    <div>
-      <Empty className="border-border bg-card border">
-        <EmptyHeader>
-          <EmptyDescription>
-            {m.authEmployerSignUp_notAvailableText()}
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    </div>
-  ),
+  notFoundComponent: EmployerSignUpUnavailable,
 });
 
 function EmployerSignUpPage() {
   const router = useRouter();
   const { boardName } = Route.useLoaderData();
-
   return (
-    <RegistrationPage
-      title={m.authEmployerSignUp_cardTitle({ boardName })}
-      supportingText={m.authEmployerSignUp_supportingText()}
-      copy={{
-        nameLabel: m.authEmployerSignUp_nameLabel(),
-        emailLabel: m.authEmployerSignUp_workEmailLabel(),
-        passwordLabel: m.authEmployerSignUp_passwordLabel(),
-        submitLabel: m.authEmployerSignUp_submitLabel(),
-        pendingLabel: m.authEmployerSignUp_creatingAccountLabel(),
-        successTitle: m.authEmployerSignUp_checkEmailTitle(),
-        successText: m.authEmployerSignUp_checkEmailBody(),
-        successActionLabel: m.authEmployerSignUp_goToDashboardLabel(),
-      }}
-      marketingConsent={
-        MARKETING_CONSENT.employerSignUp
-          ? {
-              disclosure: m.marketingConsent_signUpDisclosure(),
-              ...(MARKETING_CONSENT.privacyPolicyUrl
-                ? {
-                    privacyPolicyUrl: MARKETING_CONSENT.privacyPolicyUrl,
-                    privacyLinkLabel: m.marketingConsent_privacyLinkLabel(),
-                  }
-                : {}),
-            }
-          : undefined
-      }
-      successHref="/auth/verify-email-required?returnTo=%2Femployers%2Fdashboard"
-      onSubmit={async (values) => {
-        const result = await signUpEmployer({ data: values });
-        if (result.ok) await router.invalidate();
-        return result;
+    <EmployerSignUpView
+      boardName={boardName}
+      signUpEmployerAction={signUpEmployer}
+      invalidate={async () => {
+        await router.invalidate();
       }}
       footer={
         <p className="text-muted-foreground text-center text-sm">
           {m.authEmployerSignUp_lookingForWorkText()}{' '}
           <Link
             to="/auth/sign-up"
-            search={{ returnTo: undefined }}
             className={buttonVariants({ variant: 'link', size: 'sm' })}
           >
             {m.authEmployerSignUp_joinAsCandidateLink()}

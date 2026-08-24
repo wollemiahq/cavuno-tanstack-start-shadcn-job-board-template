@@ -65,7 +65,7 @@ describe('MessageBubble', () => {
 
   it('keeps a failed report available inside shadcn Card and Alert feedback', async () => {
     const onReport = vi
-      .fn<(reason: string) => Promise<unknown>>()
+      .fn<(reason: string) => Promise<void>>()
       .mockRejectedValue(new Error('Report failed'));
 
     render(

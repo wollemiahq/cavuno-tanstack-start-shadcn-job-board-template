@@ -25,6 +25,15 @@ type CarouselProps = {
   setApi?: (api: CarouselApi) => void;
 };
 
+export interface CarouselController {
+  scrollPrev: () => void;
+  scrollNext: () => void;
+  canScrollPrev: () => boolean;
+  canScrollNext: () => boolean;
+  on: (event: 'reInit' | 'select', callback: () => void) => void;
+  off: (event: 'select', callback: () => void) => void;
+}
+
 type CarouselContextProps = {
   carouselRef: ReturnType<typeof useEmblaCarousel>[0];
   api: ReturnType<typeof useEmblaCarousel>[1];
@@ -46,50 +55,64 @@ function useCarousel() {
   return context;
 }
 
-function Carousel({
-  orientation = 'horizontal',
+export function resolveCarouselOptions({
+  orientation,
   opts,
-  setApi,
-  plugins,
-  className,
-  children,
   dir,
-  ...props
-}: React.ComponentProps<'div'> & CarouselProps) {
-  // Embla translates the track in raw pixels, so `<html dir>` alone does NOT
-  // mirror it: under RTL the flex track lays its slides out right-to-left
-  // while embla keeps scrolling the LTR way, and the arrows (already flipped
-  // by `rtl:` variants) end up pointing opposite the content. `direction` is
-  // embla's own first-class flip. A caller who passes `opts.direction`
-  // explicitly still wins — this only supplies the document's default.
-  const contextDirection = useDirection();
+  contextDirection,
+}: {
+  orientation: 'horizontal' | 'vertical';
+  opts?: CarouselOptions;
+  dir?: string;
+  contextDirection: 'ltr' | 'rtl';
+}) {
   const direction =
     opts?.direction ??
     (dir === 'ltr' || dir === 'rtl' ? dir : contextDirection);
-  const [carouselRef, api] = useEmblaCarousel(
-    {
+  return {
+    direction,
+    options: {
       ...opts,
       axis: orientation === 'horizontal' ? 'x' : 'y',
       direction,
-    },
-    plugins,
-  );
+    } satisfies CarouselOptions,
+  };
+}
+
+export function CarouselRoot({
+  orientation = 'horizontal',
+  opts,
+  setApi,
+  className,
+  children,
+  dir,
+  carouselRef,
+  api,
+  controller,
+  ...props
+}: React.ComponentProps<'div'> &
+  CarouselProps & {
+    carouselRef: ReturnType<typeof useEmblaCarousel>[0];
+    api: CarouselApi;
+    controller: CarouselController | undefined;
+  }) {
+  const direction = opts?.direction ?? (dir === 'rtl' ? 'rtl' : 'ltr');
   const [canScrollPrev, setCanScrollPrev] = React.useState(false);
   const [canScrollNext, setCanScrollNext] = React.useState(false);
 
-  const onSelect = React.useCallback((api: CarouselApi) => {
-    if (!api) return;
-    setCanScrollPrev(api.canScrollPrev());
-    setCanScrollNext(api.canScrollNext());
-  }, []);
+  const onSelect = React.useCallback(() => {
+    if (!controller) return;
+    setCanScrollPrev(controller.canScrollPrev());
+    setCanScrollNext(controller.canScrollNext());
+  }, [controller]);
 
   const scrollPrev = React.useCallback(() => {
-    api?.scrollPrev();
-  }, [api]);
+    controller?.scrollPrev();
+  }, [controller]);
 
   const scrollNext = React.useCallback(() => {
-    api?.scrollNext();
-  }, [api]);
+    controller?.scrollNext();
+  }, [controller]);
 
   // Arrow keys are PHYSICAL, the scroll is LOGICAL: with a horizontal axis
   // flipped, the next slide is the one to the left, so ArrowLeft advances.
@@ -117,15 +140,15 @@ function Carousel({
   }, [api, setApi]);
 
   React.useEffect(() => {
-    if (!api) return;
-    onSelect(api);
-    api.on('reInit', onSelect);
-    api.on('select', onSelect);
+    if (!controller) return;
+    onSelect();
+    controller.on('reInit', onSelect);
+    controller.on('select', onSelect);
 
     return () => {
-      api?.off('select', onSelect);
+      controller.off('select', onSelect);
     };
-  }, [api, onSelect]);
+  }, [api, controller, onSelect]);
 
   return (
     <CarouselContext.Provider
@@ -153,6 +176,38 @@ function Carousel({
         {children}
       </div>
     </CarouselContext.Provider>
+  );
+}
+
+function Carousel(props: React.ComponentProps<'div'> & CarouselProps) {
+  const {
+    orientation = 'horizontal',
+    opts,
+    plugins,
+    dir,
+    ...rootProps
+  } = props;
+  // Embla translates the track in raw pixels, so `<html dir>` alone does NOT
+  // mirror it. Its own direction option must follow the document default.
+  const contextDirection = useDirection();
+  const resolved = resolveCarouselOptions({
+    orientation,
+    opts,
+    dir,
+    contextDirection,
+  });
+  const [carouselRef, api] = useEmblaCarousel(resolved.options, plugins);
+
+  return (
+    <CarouselRoot
+      {...rootProps}
+      orientation={orientation}
+      opts={resolved.options}
+      dir={resolved.direction}
+      carouselRef={carouselRef}
+      api={api}
+      controller={api}
+    />
   );
 }
 

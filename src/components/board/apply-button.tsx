@@ -30,13 +30,30 @@ import {
   candidateSignInHref,
   candidateVerifyEmailHref,
 } from '@/lib/candidate-return-to';
-import { NativeApplyApprovalError, runNativeApply } from '@/lib/native-apply';
+import {
+  NativeApplyApprovalError,
+  runNativeApply,
+  type NativeApplyPrepareResult,
+} from '@/lib/native-apply';
 
 const ApplyLocationDialog = lazy(() =>
   import('./apply-location-dialog').then((module) => ({
     default: module.ApplyLocationDialog,
   })),
 );
+
+export type ApplyButtonDependencies = {
+  loadGatewayApply: () => Promise<
+    Pick<
+      typeof import('@/lib/gateway-apply'),
+      'navigateToExternalApply' | 'requestGatewayApply'
+    >
+  >;
+};
+
+const applyButtonDependencies: ApplyButtonDependencies = {
+  loadGatewayApply: () => import('@/lib/gateway-apply'),
+};
 
 export function ApplyButton({
   jobSlug,
@@ -50,6 +67,7 @@ export function ApplyButton({
   alreadyApplied = false,
   applicationsHref = '/me/applications',
   nativeApplications = true,
+  dependencies = applyButtonDependencies,
 }: {
   /** Null when the job has no native-apply support (external-only). */
   jobSlug: string | null;
@@ -69,7 +87,7 @@ export function ApplyButton({
    * Board API error code for a stale verification state).
    */
   /** Ask Cavuno whether this native Apply needs a browser-edge receipt. */
-  onPrepareApply: (jobSlug: string) => Promise<unknown>;
+  onPrepareApply: (jobSlug: string) => Promise<NativeApplyPrepareResult>;
   /** Submit natively; a receipt id is present only when preparation required it. */
   onApply: (jobSlug: string, approvalReceipt?: string) => Promise<void>;
   /**
@@ -85,6 +103,7 @@ export function ApplyButton({
    * than a dead-end apply form (the platform 422s the native apply).
    */
   nativeApplications?: boolean;
+  dependencies?: ApplyButtonDependencies;
 }) {
   // Only the transient in-session interaction lives in state; the
   // returning-visitor "applied" truth comes from the `alreadyApplied`
@@ -152,7 +171,7 @@ export function ApplyButton({
               setState('applying');
               try {
                 const { navigateToExternalApply, requestGatewayApply } =
-                  await import('@/lib/gateway-apply');
+                  await dependencies.loadGatewayApply();
                 const result = await requestGatewayApply(form);
                 if (result.kind === 'location-denied') {
                   setState('location-denied');

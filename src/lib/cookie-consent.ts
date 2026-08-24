@@ -16,7 +16,11 @@ export const COOKIE_CONSENT_COOKIE = 'cavuno_cookie_consent';
 /** ~13 months in seconds — long-lived preference, not a session token. */
 export const COOKIE_CONSENT_MAX_AGE = 13 * 30 * 24 * 60 * 60;
 
-const CHOICE_SET = new Set<string>(['accepted', 'denied']);
+const COOKIE_CONSENT_CHOICES = ['accepted', 'denied'] as const;
+
+function cookieConsentChoice(value: string): CookieConsentChoice | null {
+  return COOKIE_CONSENT_CHOICES.find((choice) => choice === value) ?? null;
+}
 
 /** Parse the consent preference from a Cookie header. Null if absent/invalid. */
 export function parseCookieConsent(
@@ -31,7 +35,7 @@ export function parseCookieConsent(
   const value = decodeURIComponent(
     pair.slice(COOKIE_CONSENT_COOKIE.length + 1),
   );
-  return CHOICE_SET.has(value) ? (value as CookieConsentChoice) : null;
+  return cookieConsentChoice(value);
 }
 
 /**

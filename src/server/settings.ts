@@ -47,9 +47,7 @@ export interface StarterUnsubscribeBody extends Omit<
 }
 
 /** Bearer + board-access grant for one gated `/me/*` call. */
-function authedHeaders(
-  context: SessionContext & BoardAccessContext,
-): Record<string, string> {
+function authedHeaders(context: SessionContext & BoardAccessContext) {
   return { ...context.authHeaders, ...context.boardAccessHeaders };
 }
 
@@ -71,6 +69,8 @@ export const updateNotificationPreference = createServerFn({ method: 'POST' })
     // only at the installed 4.6 SDK boundary until the next SDK release.
     const headers = authedHeaders(context);
     await requireVerifiedBoardUser(headers);
+    // SAFETY: StarterUpdateNotificationPreferenceBody is the SDK body with the
+    // channel narrowed to the starter-supported notification channels.
     return getBoard().me.notificationPreferences.update(
       data as UpdateNotificationPreferenceBody,
       { headers },
@@ -81,6 +81,8 @@ export const updateNotificationPreference = createServerFn({ method: 'POST' })
 export const unsubscribeWithToken = createServerFn({ method: 'POST' })
   .validator((input: StarterUnsubscribeBody) => input)
   .handler(async ({ data }) => {
+    // SAFETY: StarterUnsubscribeBody is the SDK body with the channel narrowed
+    // to the starter-supported notification channels.
     await getBoard().me.notificationPreferences.unsubscribeWithToken(
       data as UnsubscribeBody,
     );
@@ -121,11 +123,13 @@ export const getSettingsAccount = createServerFn({ method: 'GET' })
     gatedRead(context, () => requireVerifiedBoardUser(authedHeaders(context))),
   );
 
-function actionError(error: unknown): {
+type SettingsActionError = {
   ok: false;
   code: string;
   message: string;
-} {
+};
+
+function actionError<T>(error: T): SettingsActionError {
   if (isBoardApiError(error)) {
     return { ok: false, code: error.code, message: error.message };
   }

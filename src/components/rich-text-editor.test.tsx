@@ -9,6 +9,11 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  createRichTextEditor,
+  type RichTextEditorDependencies,
+} from './rich-text-editor';
+
 interface SelectionRange {
   from: number;
   to: number;
@@ -21,6 +26,18 @@ interface EditorOptions {
   };
   immediatelyRender: boolean;
   onUpdate: (context: { editor: typeof editorHarness.editor }) => void;
+}
+
+interface EditorToolbarState {
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  link: boolean;
+  alignLeft: boolean;
+  alignCenter: boolean;
+  alignRight: boolean;
+  bulletList: boolean;
+  characters: number;
 }
 
 const editorHarness = vi.hoisted(() => {
@@ -95,8 +112,8 @@ const editorHarness = vi.hoisted(() => {
     getAttributes: vi.fn(() => ({ href: 'https://existing.example' })),
     getHTML: vi.fn(() => '<p>Updated description</p>'),
     isActive: vi.fn((query: string | Record<string, string>) => {
-      if (typeof query === 'string') return active.has(query);
-      return query.textAlign === 'left';
+      if (JSON.stringify(query) === '{"textAlign":"left"}') return true;
+      return active.has(String(query));
     }),
     schema: { marks: { link: linkMark } },
     state: { selection: { from: 3, to: 9, $from: resolvedFrom } },
@@ -105,7 +122,11 @@ const editorHarness = vi.hoisted(() => {
         characters: vi.fn(() => 7),
       },
     },
-    view: { dom: undefined as Element | undefined },
+    view: {
+      // SAFETY: The editor view is deliberately unattached until a test gives
+      // the harness a DOM element.
+      dom: undefined as Element | undefined,
+    },
   };
 
   return {
@@ -114,35 +135,37 @@ const editorHarness = vi.hoisted(() => {
     editor,
     linkMark,
     // Set per-test; `undefined` means "the caret is not inside a link mark".
+    // SAFETY: Tests set this when simulating a caret inside a link mark.
     markRange: undefined as SelectionRange | undefined,
+    // SAFETY: The mocked useEditor call records the most recent options here.
     options: undefined as EditorOptions | undefined,
     resolvedFrom,
   };
 });
 
 const rectFor = (from: number, to: number) =>
-  ({
-    x: from,
-    y: 100,
-    top: 100,
-    bottom: 120,
-    left: from,
-    right: to,
-    width: to - from,
-    height: 20,
-    toJSON: () => ({}),
-  }) as DOMRect;
+  new DOMRect(from, 100, to - from, 20);
 
-vi.mock('@tiptap/react', () => ({
-  getMarkRange: (...args: unknown[]) => {
-    editorHarness.calls.getMarkRange(...args);
-    return editorHarness.markRange;
+const dependencies = {
+  useEditor: (options: EditorOptions) => {
+    editorHarness.options = options;
+    return editorHarness.editor;
   },
-  posToDOMRect: (view: unknown, from: number, to: number) => {
-    editorHarness.calls.posToDOMRect(view, from, to);
-    return rectFor(from, to);
+  useToolbarState: (editor: typeof editorHarness.editor | null) => {
+    if (!editor) return undefined;
+    return {
+      bold: editor.isActive('bold'),
+      italic: editor.isActive('italic'),
+      underline: editor.isActive('underline'),
+      link: editor.isActive('link'),
+      alignLeft: editor.isActive({ textAlign: 'left' }),
+      alignCenter: editor.isActive({ textAlign: 'center' }),
+      alignRight: editor.isActive({ textAlign: 'right' }),
+      bulletList: editor.isActive('bulletList'),
+      characters: editor.storage.characterCount.characters(),
+    } satisfies EditorToolbarState;
   },
-  EditorContent: () => {
+  renderEditorContent: () => {
     const attributes = editorHarness.options?.editorProps.attributes ?? {};
     return (
       <div
@@ -153,18 +176,25 @@ vi.mock('@tiptap/react', () => ({
       />
     );
   },
-  useEditor: (options: EditorOptions) => {
-    editorHarness.options = options;
-    return editorHarness.editor;
+  linkAnchorRange: (editor: typeof editorHarness.editor) => {
+    const { from, to, $from } = editor.state.selection;
+    if (from !== to) return { from, to };
+    editorHarness.calls.getMarkRange($from, editorHarness.linkMark);
+    return editorHarness.markRange ?? { from, to };
   },
-  useEditorState: ({
-    selector,
-  }: {
-    selector: (context: { editor: typeof editorHarness.editor }) => unknown;
-  }) => selector({ editor: editorHarness.editor }),
-}));
+  selectionAnchor: (
+    editor: typeof editorHarness.editor,
+    range: SelectionRange,
+  ) => ({
+    getBoundingClientRect: () => {
+      editorHarness.calls.posToDOMRect(editor.view, range.from, range.to);
+      return rectFor(range.from, range.to);
+    },
+    contextElement: editor.view.dom,
+  }),
+} satisfies RichTextEditorDependencies<typeof editorHarness.editor>;
 
-import { RichTextEditor } from './rich-text-editor';
+const RichTextEditor = createRichTextEditor(dependencies);
 
 beforeEach(() => {
   editorHarness.options = undefined;

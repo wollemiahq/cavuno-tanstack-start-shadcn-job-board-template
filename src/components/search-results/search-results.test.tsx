@@ -112,10 +112,10 @@ describe('Search results composition', () => {
       value: 201,
       writable: true,
     });
-    detail.getBoundingClientRect = () => ({ top: 100 }) as DOMRect;
+    detail.getBoundingClientRect = () => new DOMRect(0, 100, 0, 0);
 
     let rectTop = 99;
-    boundary.getBoundingClientRect = () => ({ top: rectTop }) as DOMRect;
+    boundary.getBoundingClientRect = () => new DOMRect(0, rectTop, 0, 0);
     fireEvent.scroll(detail);
 
     expect(detail).toHaveAttribute('data-condensed', 'true');

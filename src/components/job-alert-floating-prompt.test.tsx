@@ -4,11 +4,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../server/queries', () => ({
-  subscribeJobAlert: vi.fn(),
-}));
-
-import { JobAlertFloatingPrompt } from './job-alert-floating-prompt';
+import { JobAlertFloatingPromptView } from './job-alert-floating-prompt-view';
 
 import { m } from '@/paraglide/messages';
 
@@ -20,9 +16,10 @@ afterEach(() => {
 describe('JobAlertFloatingPrompt', () => {
   it('offers job alerts without duplicating the signup form', async () => {
     render(
-      <JobAlertFloatingPrompt
+      <JobAlertFloatingPromptView
         defaults={{ filters: {}, context: { source: 'jobs_list' } }}
         language="en"
+        subscribe={vi.fn()}
       />,
     );
 

@@ -26,18 +26,20 @@ import { toCompanyCardVM } from '@/board/company-view-model';
 import { m } from '@/paraglide/messages';
 import type { PublicCompany } from '@cavuno/board';
 
-const company = {
+const company: PublicCompany = {
   id: 'company-1',
   object: 'public_company',
   slug: 'acme',
   name: 'Acme',
   logoUrl: null,
   website: 'https://acme.example',
+  summary: 'Builds rockets.',
   description: '<p>Builds rockets.</p>',
   jobCount: 3,
   publishedJobCount: 3,
+  salarySampleCount: 0,
   links: { public: 'https://jobs.example/companies/acme' },
-} as PublicCompany;
+};
 
 // The page now takes resolved `CompanyCardVM[]`; the test maps the wire
 // fixture exactly as the route pane does.
@@ -313,9 +315,13 @@ describe('CompanySearchPage — results description line', () => {
 describe('CompanySearchPage — arrival scroll', () => {
   // jsdom ships no scrollIntoView; the hook guards on its presence, so provide
   // a spy to observe the arrival alignment.
-  const scrollIntoView = vi.fn();
+  const scrolledResultIds: Array<string | null> = [];
+  const scrollIntoView = vi.fn(function (this: Element) {
+    scrolledResultIds.push(this.getAttribute('data-result-id'));
+  });
   beforeEach(() => {
     scrollIntoView.mockClear();
+    scrolledResultIds.length = 0;
     Element.prototype.scrollIntoView = scrollIntoView;
   });
 
@@ -361,8 +367,7 @@ describe('CompanySearchPage — arrival scroll', () => {
     await screen.findByRole('main');
     expect(scrollIntoView).toHaveBeenCalledTimes(1);
     expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
-    const target = scrollIntoView.mock.instances[0] as HTMLElement;
-    expect(target.getAttribute('data-result-id')).toBe('acme');
+    expect(scrolledResultIds).toEqual(['acme']);
   });
 
   it('does not scroll a manual selection made after arrival', async () => {

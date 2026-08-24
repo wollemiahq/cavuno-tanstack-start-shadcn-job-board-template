@@ -1,88 +1,115 @@
 import { isRedirect } from '@tanstack/react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  createJobsCategoryLoader,
+  createJobsLocationCategoryLoader,
+  createJobsLocationLoader,
+  createJobsLocationSkillLoader,
+  createJobsSkillLoader,
+} from './-jobs-taxonomy-loaders';
+
+import type * as JobsListingPages from '../server/jobs-listing-pages';
+
 // The programmatic jobs routes 308 an inbound alias slug to its canonical form
 // (parity with `companies.markets` and the salaries family). A redirect thrown
 // WITHOUT an explicit `statusCode` defaults to a temporary 307, which tells
 // crawlers the alias URL is the canonical one — the opposite of the intent.
 // These contracts pin the permanent 308 on every taxonomy-alias redirect.
 
-const {
-  resolveCategory,
-  resolveSkill,
-  resolvePlace,
-  listJobs,
-  searchJobs,
-  getSeoBase,
-  getJobsCategoryPage,
-  getJobsSkillPage,
-  getJobsLocationPage,
+const getJobsCategoryPage =
+  vi.fn<typeof JobsListingPages.getJobsCategoryPage>();
+const getJobsSkillPage = vi.fn<typeof JobsListingPages.getJobsSkillPage>();
+const getJobsLocationPage =
+  vi.fn<typeof JobsListingPages.getJobsLocationPage>();
+const getJobsLocationCategoryPage =
+  vi.fn<typeof JobsListingPages.getJobsLocationCategoryPage>();
+const getJobsLocationSkillPage =
+  vi.fn<typeof JobsListingPages.getJobsLocationSkillPage>();
+
+const keywordLoader = createJobsCategoryLoader(getJobsCategoryPage);
+const skillLoader = createJobsSkillLoader(getJobsSkillPage);
+const locationLoader = createJobsLocationLoader(getJobsLocationPage);
+const locationKeywordLoader = createJobsLocationCategoryLoader(
   getJobsLocationCategoryPage,
+);
+const locationSkillLoader = createJobsLocationSkillLoader(
   getJobsLocationSkillPage,
-} = vi.hoisted(() => ({
-  resolveCategory: vi.fn(),
-  resolveSkill: vi.fn(),
-  resolvePlace: vi.fn(),
-  listJobs: vi.fn(),
-  searchJobs: vi.fn(),
-  getSeoBase: vi.fn().mockResolvedValue({}),
-  getJobsCategoryPage: vi.fn(),
-  getJobsSkillPage: vi.fn(),
-  getJobsLocationPage: vi.fn(),
-  getJobsLocationCategoryPage: vi.fn(),
-  getJobsLocationSkillPage: vi.fn(),
-}));
-
-vi.mock('../server/queries', () => ({
-  resolveCategory,
-  resolveSkill,
-  resolvePlace,
-  listJobs,
-  searchJobs,
-  getSeoBase,
-}));
-
-// The taxonomy resolve now runs INSIDE each page fn (one parallel batch
-// instead of a serial resolve hop), so the alias decision arrives as a
-// discriminated `{ kind: 'redirect' }` result rather than the loader
-// awaiting a resolver first. The contract under test is unchanged: the
-// loader must turn that into a PERMANENT 308.
-vi.mock('../server/jobs-listing-pages', () => ({
-  getJobsCategoryPage,
-  getJobsSkillPage,
-  getJobsLocationPage,
-  getJobsLocationCategoryPage,
-  getJobsLocationSkillPage,
-}));
-
-vi.mock('@/routes/-programmatic-jobs-view', () => ({
-  PROGRAMMATIC_JOBS_PAGE_SIZE: 20,
-  ProgrammaticJobsView: () => null,
-}));
-
-vi.mock('../server/account', () => ({
-  saveJob: vi.fn(),
-}));
-
-vi.mock('./-use-location-suggestions', () => ({
-  useLocationSuggestions: vi.fn(),
-}));
-
-import { Route as KeywordRoute } from './jobs.$keyword';
-import { Route as LocationKeywordRoute } from './jobs.locations.$location.$keyword';
-import { Route as LocationRoute } from './jobs.locations.$location.index';
-import { Route as LocationSkillRoute } from './jobs.locations.$location.skills.$skill';
-import { Route as SkillRoute } from './jobs.skills.$skill';
+);
 
 /** A page result whose inbound slug is an alias — `to` names the canonical. */
 const aliasRedirect = (to: string) => ({ kind: 'redirect' as const, to });
 
-async function runLoader(loader: unknown, args: unknown): Promise<unknown> {
-  if (typeof loader !== 'function') {
-    throw new Error('route has no callable loader');
-  }
+function keywordLoaderInput() {
+  return {
+    params: { keyword: 'eng' },
+    deps: {},
+  };
+}
+
+function skillLoaderInput() {
+  return {
+    params: { skill: 'reactjs' },
+    deps: {},
+  };
+}
+
+function locationLoaderInput() {
+  return {
+    params: { location: 'ldn' },
+    deps: {},
+  };
+}
+
+function locationKeywordLoaderInput() {
+  return {
+    params: { location: 'ldn', keyword: 'engineering' },
+    deps: {},
+  };
+}
+
+function locationSkillLoaderInput() {
+  return {
+    params: { location: 'london', skill: 'reactjs' },
+    deps: {},
+  };
+}
+
+async function runKeywordLoader() {
   try {
-    return await loader(args);
+    return await keywordLoader(keywordLoaderInput());
+  } catch (error) {
+    return error;
+  }
+}
+
+async function runSkillLoader() {
+  try {
+    return await skillLoader(skillLoaderInput());
+  } catch (error) {
+    return error;
+  }
+}
+
+async function runLocationLoader() {
+  try {
+    return await locationLoader(locationLoaderInput());
+  } catch (error) {
+    return error;
+  }
+}
+
+async function runLocationKeywordLoader() {
+  try {
+    return await locationKeywordLoader(locationKeywordLoaderInput());
+  } catch (error) {
+    return error;
+  }
+}
+
+async function runLocationSkillLoader() {
+  try {
+    return await locationSkillLoader(locationSkillLoaderInput());
   } catch (error) {
     return error;
   }
@@ -99,38 +126,35 @@ beforeEach(() => {
 describe('programmatic jobs routes — canonical-slug redirects are permanent (308)', () => {
   it('/jobs/$keyword 308s an alias category slug', async () => {
     getJobsCategoryPage.mockResolvedValue(aliasRedirect('engineering'));
-    const result = await runLoader(KeywordRoute.options.loader, {
-      params: { keyword: 'eng' },
-      deps: {},
-    });
+    const result = await runKeywordLoader();
     expect(isRedirect(result)).toBe(true);
-    expect(
-      (result as { options: { statusCode?: number } }).options,
-    ).toMatchObject({ to: '/jobs/$keyword', statusCode: 308 });
+    if (!isRedirect(result)) throw new Error('Expected a keyword redirect');
+    expect(result.options).toMatchObject({
+      to: '/jobs/$keyword',
+      statusCode: 308,
+    });
   });
 
   it('/jobs/skills/$skill 308s an alias skill slug', async () => {
     getJobsSkillPage.mockResolvedValue(aliasRedirect('react'));
-    const result = await runLoader(SkillRoute.options.loader, {
-      params: { skill: 'reactjs' },
-      deps: {},
-    });
+    const result = await runSkillLoader();
     expect(isRedirect(result)).toBe(true);
-    expect(
-      (result as { options: { statusCode?: number } }).options,
-    ).toMatchObject({ to: '/jobs/skills/$skill', statusCode: 308 });
+    if (!isRedirect(result)) throw new Error('Expected a skill redirect');
+    expect(result.options).toMatchObject({
+      to: '/jobs/skills/$skill',
+      statusCode: 308,
+    });
   });
 
   it('/jobs/locations/$location 308s an alias place slug', async () => {
     getJobsLocationPage.mockResolvedValue(aliasRedirect('london'));
-    const result = await runLoader(LocationRoute.options.loader, {
-      params: { location: 'ldn' },
-      deps: {},
-    });
+    const result = await runLocationLoader();
     expect(isRedirect(result)).toBe(true);
-    expect(
-      (result as { options: { statusCode?: number } }).options,
-    ).toMatchObject({ to: '/jobs/locations/$location', statusCode: 308 });
+    if (!isRedirect(result)) throw new Error('Expected a location redirect');
+    expect(result.options).toMatchObject({
+      to: '/jobs/locations/$location',
+      statusCode: 308,
+    });
   });
 
   it('/jobs/locations/$location/$keyword 308s when either slug is an alias', async () => {
@@ -139,14 +163,12 @@ describe('programmatic jobs routes — canonical-slug redirects are permanent (3
       locationTo: 'london',
       keywordTo: 'engineering',
     });
-    const result = await runLoader(LocationKeywordRoute.options.loader, {
-      params: { location: 'ldn', keyword: 'engineering' },
-      deps: {},
-    });
+    const result = await runLocationKeywordLoader();
     expect(isRedirect(result)).toBe(true);
-    expect(
-      (result as { options: { statusCode?: number } }).options,
-    ).toMatchObject({
+    if (!isRedirect(result)) {
+      throw new Error('Expected a location keyword redirect');
+    }
+    expect(result.options).toMatchObject({
       to: '/jobs/locations/$location/$keyword',
       statusCode: 308,
     });
@@ -158,14 +180,12 @@ describe('programmatic jobs routes — canonical-slug redirects are permanent (3
       locationTo: 'london',
       skillTo: 'react',
     });
-    const result = await runLoader(LocationSkillRoute.options.loader, {
-      params: { location: 'london', skill: 'reactjs' },
-      deps: {},
-    });
+    const result = await runLocationSkillLoader();
     expect(isRedirect(result)).toBe(true);
-    expect(
-      (result as { options: { statusCode?: number } }).options,
-    ).toMatchObject({
+    if (!isRedirect(result)) {
+      throw new Error('Expected a location skill redirect');
+    }
+    expect(result.options).toMatchObject({
       to: '/jobs/locations/$location/skills/$skill',
       statusCode: 308,
     });

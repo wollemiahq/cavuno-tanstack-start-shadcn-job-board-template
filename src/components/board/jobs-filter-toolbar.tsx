@@ -159,11 +159,11 @@ export function JobsFilterToolbar({
   const closeSheet = () => setSheetOpen(false);
 
   const applyDraft = () => {
-    onApply({
-      ...(draft.workplace ? { workplace: draft.workplace } : {}),
-      ...(draft.employmentType ? { employmentType: draft.employmentType } : {}),
-      ...(draft.seniority?.length ? { seniority: draft.seniority } : {}),
-    });
+    const next: JobsFilterValues = {};
+    if (draft.workplace) next.workplace = draft.workplace;
+    if (draft.employmentType) next.employmentType = draft.employmentType;
+    if (draft.seniority?.length) next.seniority = draft.seniority;
+    onApply(next);
     closeSheet();
   };
 

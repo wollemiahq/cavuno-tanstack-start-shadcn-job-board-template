@@ -9,98 +9,95 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({
-  fetchLogoByDomain: vi.fn(),
-  getPostPlans: vi.fn(),
-  submitJobPosting: vi.fn(),
-  uploadLogo: vi.fn(),
-}));
+import {
+  PostJobPageView,
+  postRouteDependencies,
+  type PostRouteDependencies,
+} from './-post-route-support';
+import { Route } from './post';
 
-vi.mock('../server/post', () => mocks);
+import type { SubmitJobInput } from '../server/post';
 
-// post.tsx pulls the location-suggestion controller, whose server fn module
-// resolves cloudflare:workers — stub the seam for the jsdom suite.
-vi.mock('../server/queries', () => ({
-  searchPlaces: vi.fn(),
-  getRemotePermits: vi.fn().mockResolvedValue({ data: [] }),
-}));
+const submission: SubmitJobInput = {
+  companyName: 'Acme',
+  contactName: 'Ada Lovelace',
+  contactEmail: 'ada@example.com',
+  title: 'Designer',
+  description: '<p>Design thoughtful products.</p>',
+  employmentType: 'full_time',
+  remoteOption: 'remote',
+  officeLocations: [],
+  applicationUrl: 'https://example.com/apply',
+};
 
-// The route reads board custom-field definitions from the root loader.
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    getRouteApi: () => ({
-      useLoaderData: () => ({ board: { customFields: { job: [] } } }),
-    }),
-  };
-});
-
-vi.mock('@/components/post-job-form', () => ({
-  PostJobForm: ({
-    plans,
-    initialPlanId,
-    onSubmit,
-  }: {
-    plans: Array<{ id: string }>;
-    initialPlanId?: string;
-    onSubmit: (input: { title: string }) => Promise<unknown>;
-  }) => (
+const submitJobPosting = vi.fn<PostRouteDependencies['submitJobPosting']>();
+const dependencies: PostRouteDependencies = {
+  ...postRouteDependencies,
+  submitJobPosting,
+  renderForm: ({ plans, initialPlanId, onSubmit }) => (
     <div
       data-testid="post-job-form"
       data-plan={plans[0]?.id}
       data-initial-plan={initialPlanId}
     >
-      <button
-        type="button"
-        onClick={() => void onSubmit({ title: 'Designer' })}
-      >
+      <button type="button" onClick={() => onSubmit(submission)}>
         Submit through route
       </button>
     </div>
   ),
-}));
+};
 
-import { Route } from './post';
+const plans: ReturnType<typeof Route.useLoaderData>['plans'] = {
+  object: 'list',
+  url: '/v1/job-posting/plans',
+  data: [
+    {
+      object: 'job_posting_plan',
+      id: 'plan-standard',
+      name: 'Standard listing',
+      description: null,
+      kind: 'one_time',
+      billingInterval: null,
+      purpose: 'job_posting',
+      isRecommended: false,
+      displayOrder: 1,
+      invoiceOnly: false,
+      publishTiming: null,
+      netTermsDays: null,
+      prices: [{ currency: 'AUD', amountCents: 14900, isActive: true }],
+      features: [],
+    },
+  ],
+  hasMore: false,
+  nextCursor: null,
+};
 
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
-  vi.restoreAllMocks();
 });
+
+function renderPost(initialPlanId?: string) {
+  render(
+    <PostJobPageView
+      plans={plans}
+      remotePermits={null}
+      initialPlanId={initialPlanId}
+      customFields={[]}
+      locale="en"
+      officeLocationSuggestions={{
+        suggestions: [],
+        loading: false,
+        onQueryChange: vi.fn(),
+      }}
+      dependencies={dependencies}
+    />,
+  );
+}
 
 describe('/post route composition', () => {
   it('keeps API calls in the route and passes loaded plans to the owned form', async () => {
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
-      remotePermits: null,
-      plans: {
-        object: 'list',
-        url: '/v1/job-posting/plans',
-        data: [
-          {
-            object: 'job_posting_plan',
-            id: 'plan-standard',
-            name: 'Standard listing',
-            description: null,
-            kind: 'one_time',
-            billingInterval: null,
-            purpose: 'job_posting',
-            isRecommended: false,
-            displayOrder: 1,
-            invoiceOnly: false,
-            publishTiming: null,
-            netTermsDays: null,
-            prices: [{ currency: 'AUD', amountCents: 14900, isActive: true }],
-            features: [],
-          },
-        ],
-        hasMore: false,
-        nextCursor: null,
-      },
-    } as never);
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ plan: undefined });
-    mocks.submitJobPosting.mockResolvedValue({
+    submitJobPosting.mockResolvedValue({
       ok: true,
       result: {
         object: 'job_posting_result',
@@ -109,10 +106,7 @@ describe('/post route composition', () => {
         jobSlug: 'designer',
       },
     });
-    const PostPage = Route.options.component;
-    if (!PostPage) throw new Error('/post must define a page component');
-
-    render(<PostPage />);
+    renderPost();
 
     expect(screen.getByTestId('post-job-form')).toHaveAttribute(
       'data-plan',
@@ -123,30 +117,30 @@ describe('/post route composition', () => {
     );
 
     await waitFor(() =>
-      expect(mocks.submitJobPosting).toHaveBeenCalledWith({
-        data: { title: 'Designer' },
+      expect(submitJobPosting).toHaveBeenCalledWith({
+        data: submission,
       }),
     );
   });
 
   it('validates and forwards plan continuity from the URL', () => {
     const validate = Route.options.validateSearch;
-    if (typeof validate !== 'function') {
+    if (!validate) {
       throw new Error('/post must validate the selected plan search parameter');
     }
-    expect(validate({ plan: 'plan-standard' })).toEqual({
-      plan: 'plan-standard',
-    });
+    if ('parse' in validate) {
+      expect(validate.parse({ plan: 'plan-standard' })).toEqual({
+        plan: 'plan-standard',
+      });
+    } else if ('~standard' in validate) {
+      throw new Error('/post uses an unexpected async search schema');
+    } else {
+      expect(validate({ plan: 'plan-standard' })).toEqual({
+        plan: 'plan-standard',
+      });
+    }
 
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
-      remotePermits: null,
-      plans: { data: [{ id: 'plan-standard' }] },
-    } as never);
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ plan: 'plan-standard' });
-    const PostPage = Route.options.component;
-    if (!PostPage) throw new Error('/post must define a page component');
-
-    render(<PostPage />);
+    renderPost('plan-standard');
 
     expect(screen.getByTestId('post-job-form')).toHaveAttribute(
       'data-initial-plan',

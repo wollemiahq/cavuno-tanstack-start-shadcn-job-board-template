@@ -1,3 +1,5 @@
+import { searchString, type UrlSearchValue } from './pagination';
+
 export interface ShellBreadcrumbLabels {
   home: string;
   jobs: string;
@@ -58,29 +60,69 @@ export interface ShellBreadcrumbPrivateLabels {
   authConfirmEmailChange: string;
 }
 
+type ShellBreadcrumbItem = { name: string; href?: string };
+type ShellBreadcrumbResult = { items: ShellBreadcrumbItem[] };
+type BreadcrumbLabelField = 'displayName' | 'name' | 'title';
+
+interface BreadcrumbLabelSource {
+  displayName?: UrlSearchValue;
+  href?: UrlSearchValue;
+  name?: UrlSearchValue;
+  title?: UrlSearchValue;
+}
+
+interface BreadcrumbWorkspace {
+  membership?: { company?: BreadcrumbLabelSource | null } | null;
+}
+
+interface BreadcrumbLoaderData {
+  author?: BreadcrumbLabelSource | null;
+  breadcrumbTrail?: readonly BreadcrumbLabelSource[];
+  category?: BreadcrumbLabelSource | null;
+  company?: BreadcrumbLabelSource | null;
+  job?: BreadcrumbLabelSource | null;
+  market?: BreadcrumbLabelSource | null;
+  place?: BreadcrumbLabelSource | null;
+  post?: BreadcrumbLabelSource | null;
+  profile?: BreadcrumbLabelSource | null;
+  skill?: BreadcrumbLabelSource | null;
+  tag?: BreadcrumbLabelSource | null;
+  workspace?: BreadcrumbWorkspace | null;
+}
+
 interface RouteMatch {
-  loaderData?: unknown;
+  loaderData?: object | null;
 }
 
 // Only surfaces where a trail is meaningless: embeds render inside someone
 // else's chrome, and the board-password gate is a lock screen.
 const excludedPrefixes = ['/embed', '/password'] as const;
 
-function record(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === 'object'
-    ? (value as Record<string, unknown>)
-    : null;
+function routeData<T>(value: T): BreadcrumbLoaderData | null {
+  if (value === null || value === undefined || Object(value) !== value) {
+    return null;
+  }
+  // SAFETY: Breadcrumb extraction only reads optional route-loader entity
+  // slots, then decodes visible labels/hrefs through searchString.
+  return value as BreadcrumbLoaderData;
 }
 
-function stringField(value: unknown, field: string) {
-  const source = record(value);
-  const candidate = source?.[field];
-  return typeof candidate === 'string' && candidate.trim() !== ''
-    ? candidate
-    : undefined;
+function labelSource<T>(value: T): BreadcrumbLabelSource | null {
+  if (value === null || value === undefined || Object(value) !== value) {
+    return null;
+  }
+  // SAFETY: Breadcrumb entities are treated as optional label containers; each
+  // field is decoded through searchString before display.
+  return value as BreadcrumbLabelSource;
 }
 
-function entityLabel(value: unknown, fields: string[]) {
+function stringField<T>(value: T, field: BreadcrumbLabelField) {
+  const source = labelSource(value);
+  const candidate = searchString(source?.[field])?.trim();
+  return candidate || undefined;
+}
+
+function entityLabel<T>(value: T, fields: readonly BreadcrumbLabelField[]) {
   for (const field of fields) {
     const label = stringField(value, field);
     if (label) return label;
@@ -99,21 +141,20 @@ function entityLabel(value: unknown, fields: string[]) {
  */
 export function resolveShellBreadcrumbTrail(
   matches: readonly RouteMatch[],
-): { name: string; href?: string }[] | null {
-  let trail: { name: string; href?: string }[] | null = null;
+): ShellBreadcrumbItem[] | null {
+  let trail: ShellBreadcrumbItem[] | null = null;
   for (const match of matches) {
-    const candidate = record(match.loaderData)?.breadcrumbTrail;
+    const candidate = routeData(match.loaderData)?.breadcrumbTrail;
     if (!Array.isArray(candidate) || candidate.length === 0) continue;
-    const parsed: { name: string; href?: string }[] = [];
+    const parsed: ShellBreadcrumbItem[] = [];
     let valid = true;
     for (const item of candidate) {
-      const row = record(item);
-      const name = typeof row?.name === 'string' ? row.name.trim() : '';
+      const name = searchString(item.name)?.trim() ?? '';
       if (name === '') {
         valid = false;
         break;
       }
-      const href = typeof row?.href === 'string' ? row.href : undefined;
+      const href = searchString(item.href);
       parsed.push(href ? { name, href } : { name });
     }
     if (valid) trail = parsed;
@@ -128,7 +169,7 @@ export function resolveShellBreadcrumbEntities(
   const entities: ShellBreadcrumbEntities = {};
 
   for (const match of matches) {
-    const data = record(match.loaderData);
+    const data = routeData(match.loaderData);
     if (!data) continue;
 
     entities.location ??= entityLabel(data.place, ['displayName', 'name']);
@@ -139,10 +180,10 @@ export function resolveShellBreadcrumbEntities(
     entities.company ??= entityLabel(data.company, ['name', 'displayName']);
     // Employer loaders nest the company inside a workspace envelope
     // ({ workspace: { membership: { company } } }).
-    entities.company ??= entityLabel(
-      record(record(data.workspace)?.membership)?.company,
-      ['name', 'displayName'],
-    );
+    entities.company ??= entityLabel(data.workspace?.membership?.company, [
+      'name',
+      'displayName',
+    ]);
     entities.job ??= entityLabel(data.job, ['title', 'name']);
     entities.profile ??= entityLabel(data.profile, ['displayName', 'name']);
     entities.post ??= entityLabel(data.post, ['title', 'name']);
@@ -159,7 +200,7 @@ function readableSegment(segment: string) {
     .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
-function finish(items: { name: string; href?: string }[]) {
+function finish(items: ShellBreadcrumbItem[]): ShellBreadcrumbResult {
   return {
     items: items.map((item, index) =>
       index === items.length - 1 ? { name: item.name } : item,
@@ -183,7 +224,7 @@ export function resolveShellBreadcrumb({
    * When present it wins over path derivation; the excluded-prefix gate still
    * applies first so embeds and the password screen stay bare. */
   override?: readonly { name: string; href?: string }[] | null;
-}): { items: { name: string; href?: string }[] } | null {
+}): ShellBreadcrumbResult | null {
   if (
     excludedPrefixes.some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
@@ -200,9 +241,7 @@ export function resolveShellBreadcrumb({
     privateLabels[key] ?? readableSegment(segment);
 
   const segments = pathname.split('/').filter(Boolean);
-  const items: { name: string; href?: string }[] = [
-    { name: labels.home, href: '/' },
-  ];
+  const items: ShellBreadcrumbItem[] = [{ name: labels.home, href: '/' }];
 
   if (segments.length === 0) return finish(items);
 
@@ -306,23 +345,23 @@ export function resolveShellBreadcrumb({
   }
 
   if (section === 'auth') {
-    const authSegmentLabels: Record<string, string | undefined> = {
-      'sign-in': priv('signIn', 'sign-in'),
-      join: priv('authJoin', 'join'),
-      'forgot-password': priv('authForgotPassword', 'forgot-password'),
-      'reset-password': priv('authResetPassword', 'reset-password'),
-      'magic-link': priv('authMagicLink', 'magic-link'),
-      'confirm-email-change': priv(
-        'authConfirmEmailChange',
+    const authSegmentLabels = new Map([
+      ['sign-in', priv('signIn', 'sign-in')],
+      ['join', priv('authJoin', 'join')],
+      ['forgot-password', priv('authForgotPassword', 'forgot-password')],
+      ['reset-password', priv('authResetPassword', 'reset-password')],
+      ['magic-link', priv('authMagicLink', 'magic-link')],
+      [
         'confirm-email-change',
-      ),
-    };
+        priv('authConfirmEmailChange', 'confirm-email-change'),
+      ],
+    ]);
     const segment = rest[0] ?? section;
     const name = segment.endsWith('sign-up')
       ? priv('signUp', 'sign-up')
       : segment.startsWith('verify-')
         ? priv('authVerifyEmail', segment)
-        : (authSegmentLabels[segment] ?? readableSegment(segment));
+        : (authSegmentLabels.get(segment) ?? readableSegment(segment));
     items.push({ name });
     return finish(items);
   }

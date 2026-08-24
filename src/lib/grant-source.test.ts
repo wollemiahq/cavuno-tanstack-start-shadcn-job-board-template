@@ -1,5 +1,7 @@
 import { grantCookieName } from '@cavuno/board/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import { createDataSourceRuntime } from './data-source-runtime';
 
 /**
  * F2 — grant cookies scoped per data source (mirror session isolation).
@@ -7,34 +9,30 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
  * untouched and vice versa.
  */
 
-const envState = vi.hoisted(() => ({
+interface EnvState {
+  apiUrl: string;
+  board: string;
+  demoBoard: string | undefined;
+  demoBoardPrivate: boolean;
+}
+
+const envState: EnvState = {
   apiUrl: 'https://api.example.test',
   board: 'pk_primary',
-  demoBoard: 'pk_demo' as string | undefined,
+  demoBoard: 'pk_demo',
   demoBoardPrivate: false,
-}));
+};
 
-vi.mock('cloudflare:workers', () => ({ env: {} }));
-
-vi.mock('./env', () => ({
-  getServerEnv: () => ({
-    apiUrl: envState.apiUrl,
-    board: envState.board,
-    demoBoard: envState.demoBoard,
-    demoBoardPrivate: envState.demoBoardPrivate,
-  }),
-}));
-
-vi.mock('@tanstack/react-start/server', () => ({
-  getRequestHeader: () => null,
-}));
-
-import {
+const {
   clearGrantForSource,
   parseGrantForSource,
   serializeGrantForSource,
   sessionCookieOptionsFor,
-} from './data-source.server';
+} = createDataSourceRuntime({
+  getServerEnv: () => envState,
+  getRequestHeader: () => null,
+  setResponseHeader: () => {},
+});
 
 beforeEach(() => {
   envState.demoBoard = 'pk_demo';

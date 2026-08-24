@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { searchString } from '@/lib/pagination';
 
 /**
  * Month + year picker for profile dates (experience/education). People rarely
@@ -26,7 +27,9 @@ import {
 const YEARS_BACK = 60;
 const YEARS_FORWARD = 6;
 
-function parseParts(value: string): { year: string; month: string } {
+type MonthYearParts = { year: string; month: string };
+
+function parseParts(value: string): MonthYearParts {
   const [year, month] = value.split('-');
   if (
     !year ||
@@ -107,7 +110,7 @@ export function MonthYearField({
           value={parts.month || null}
           required={required}
           onValueChange={(month) =>
-            commit({ ...parts, month: (month as string | null) ?? '' })
+            commit({ ...parts, month: searchString(month) ?? '' })
           }
         >
           <SelectTrigger
@@ -130,7 +133,7 @@ export function MonthYearField({
           value={parts.year || null}
           required={required}
           onValueChange={(year) =>
-            commit({ ...parts, year: (year as string | null) ?? '' })
+            commit({ ...parts, year: searchString(year) ?? '' })
           }
         >
           <SelectTrigger

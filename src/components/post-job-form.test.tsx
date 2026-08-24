@@ -12,26 +12,23 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PostJobForm } from './post-job-form';
 
+import type { RichTextEditorProps } from './rich-text-editor';
 import { m } from '@/paraglide/messages';
 import type { JobPostingPlan } from '@cavuno/board';
 
-vi.mock('./rich-text-editor', () => ({
-  RichTextEditor: ({
-    value,
-    onChange,
-    ariaLabel,
-  }: {
-    value: string;
-    onChange: (value: string) => void;
-    ariaLabel: string;
-  }) => (
+function DescriptionEditor({
+  value,
+  onChange,
+  ariaLabel,
+}: RichTextEditorProps) {
+  return (
     <textarea
       aria-label={ariaLabel}
       value={value}
       onChange={(event) => onChange(`<p>${event.target.value}</p>`)}
     />
-  ),
-}));
+  );
+}
 
 const plans: JobPostingPlan[] = [
   {
@@ -84,6 +81,7 @@ describe('PostJobForm', () => {
 
     render(
       <PostJobForm
+        DescriptionEditor={DescriptionEditor}
         customFields={[]}
         remotePermits={null}
         locale="en"
@@ -139,7 +137,7 @@ describe('PostJobForm', () => {
     // plan (free → publish, paid → checkout), so pinning the copy would be brittle.
     const submitButton = screen
       .getAllByRole('button')
-      .find((button) => (button as HTMLButtonElement).type === 'submit');
+      .find((button) => button.getAttribute('type') === 'submit');
     if (!submitButton) throw new Error('The post form needs a submit button');
     fireEvent.click(submitButton);
 
@@ -175,6 +173,7 @@ describe('PostJobForm', () => {
   it('explains when posting is unavailable instead of rendering an unusable form', () => {
     render(
       <PostJobForm
+        DescriptionEditor={DescriptionEditor}
         customFields={[]}
         remotePermits={null}
         locale="en"
@@ -200,6 +199,7 @@ describe('PostJobForm', () => {
   it('uses the owned Field and InputGroup anatomy for every labelled control', () => {
     const { container } = render(
       <PostJobForm
+        DescriptionEditor={DescriptionEditor}
         customFields={[]}
         remotePermits={null}
         locale="en"
@@ -234,6 +234,7 @@ describe('PostJobForm', () => {
   it('keeps a deep-linked posting plan selected when the form opens', () => {
     render(
       <PostJobForm
+        DescriptionEditor={DescriptionEditor}
         customFields={[]}
         remotePermits={null}
         locale="en"
@@ -263,6 +264,7 @@ describe('PostJobForm', () => {
     });
     render(
       <PostJobForm
+        DescriptionEditor={DescriptionEditor}
         customFields={[]}
         remotePermits={null}
         locale="en"
@@ -307,6 +309,7 @@ describe('PostJobForm', () => {
     );
     const { container } = render(
       <PostJobForm
+        DescriptionEditor={DescriptionEditor}
         customFields={[]}
         remotePermits={null}
         locale="en"
@@ -348,6 +351,7 @@ describe('PostJobForm', () => {
   it('never presents an inactive paid plan as free', () => {
     render(
       <PostJobForm
+        DescriptionEditor={DescriptionEditor}
         customFields={[]}
         remotePermits={null}
         locale="en-AU"

@@ -25,7 +25,7 @@ import type { AccessCheckoutBody } from '@cavuno/board';
 function authed(
   context: SessionContext & BoardAccessContext,
   grant: Record<string, string>,
-): Record<string, string> {
+) {
   return { ...context.authHeaders, ...grant };
 }
 
@@ -76,6 +76,8 @@ export const startCheckout = createServerFn({ method: 'POST' })
       return getBoard().me.access.checkout(
         {
           // A key picked from `getPaywallOffers` — the API re-validates it.
+          // SAFETY: offerKey is an opaque API key selected from getPaywallOffers;
+          // the pinned SDK narrows the generated type more than the wire contract.
           offerKey: data.offerKey as AccessCheckoutBody['offerKey'],
           returnPath: data.returnPath,
           colorMode: 'light',

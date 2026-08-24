@@ -78,12 +78,12 @@ export function HeaderSearchEnhanced({
     setMarket,
   } = fields;
   const keywordInputRef = useRef<HTMLInputElement>(null);
-  const scopePlaceholders: Record<HeaderSearchScope, string> = {
+  const scopePlaceholders = {
     jobs: jobsPlaceholder,
     companies: companiesPlaceholder,
     talent: talentPlaceholder,
     blog: blogPlaceholder,
-  };
+  } satisfies Record<HeaderSearchScope, string>;
 
   return (
     <form

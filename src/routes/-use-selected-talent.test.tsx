@@ -3,16 +3,27 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getTalentProfile } = vi.hoisted(() => ({ getTalentProfile: vi.fn() }));
+import {
+  useSelectedTalent,
+  type SelectedTalentDependencies,
+} from './-use-selected-talent';
 
-vi.mock('../server/queries', () => ({ getTalentProfile }));
+import type { TalentProfile } from '@cavuno/board';
 
-import { useSelectedTalent } from './-use-selected-talent';
+const getTalentProfile =
+  vi.fn<SelectedTalentDependencies['getTalentProfile']>();
+const dependencies: SelectedTalentDependencies = { getTalentProfile };
 
-function profile(handle: string) {
+function profile(handle: string): TalentProfile {
   return {
     object: 'talent_profile',
     handle,
+    displayName: handle,
+    headline: null,
+    location: null,
+    bio: null,
+    avatarUrl: null,
+    jobSearchStatus: null,
     experiences: [],
     education: [],
     skills: [],
@@ -38,9 +49,10 @@ describe('useSelectedTalent', () => {
     getTalentProfile.mockReturnValueOnce(nextProfile.promise);
 
     const { result, rerender } = renderHook(
-      ({ handle }) => useSelectedTalent(handle),
+      ({ handle }: { handle: string | undefined }) =>
+        useSelectedTalent(handle, dependencies),
       {
-        initialProps: { handle: 'ada' as string | undefined },
+        initialProps: { handle: 'ada' },
       },
     );
 
@@ -57,7 +69,7 @@ describe('useSelectedTalent', () => {
     getTalentProfile
       .mockRejectedValueOnce(new Error('Temporary outage'))
       .mockResolvedValueOnce(profile('ada'));
-    const { result } = renderHook(() => useSelectedTalent('ada'));
+    const { result } = renderHook(() => useSelectedTalent('ada', dependencies));
 
     await waitFor(() => expect(result.current.status).toBe('error'));
     act(() => result.current.retry());
@@ -66,7 +78,9 @@ describe('useSelectedTalent', () => {
   });
 
   it('returns to idle without fetching when there is no public handle', async () => {
-    const { result } = renderHook(() => useSelectedTalent(undefined));
+    const { result } = renderHook(() =>
+      useSelectedTalent(undefined, dependencies),
+    );
     await waitFor(() => expect(result.current.status).toBe('idle'));
     expect(getTalentProfile).not.toHaveBeenCalled();
   });

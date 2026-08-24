@@ -61,15 +61,22 @@ export function prepareNativeApply(
 
 const RECEIPT_ID_RE = /^[A-Za-z0-9_-]{20,300}$/;
 
+function stringBodyField<T>(value: T): string | undefined {
+  return Object.prototype.toString.call(value) === '[object String]'
+    ? String(value)
+    : undefined;
+}
+
 function safeApplyBody(body: ApplyBody | undefined): ApplyBody {
-  if (!body || typeof body !== 'object') return {};
-  return {
-    ...(typeof body.name === 'string' ? { name: body.name } : {}),
-    ...(typeof body.email === 'string' ? { email: body.email } : {}),
-    ...(typeof body.coverNote === 'string'
-      ? { coverNote: body.coverNote }
-      : {}),
-  };
+  const safe: ApplyBody = {};
+  if (!body) return safe;
+  const name = stringBodyField(body.name);
+  if (name !== undefined) safe.name = name;
+  const email = stringBodyField(body.email);
+  if (email !== undefined) safe.email = email;
+  const coverNote = stringBodyField(body.coverNote);
+  if (coverNote !== undefined) safe.coverNote = coverNote;
+  return safe;
 }
 
 export function submitNativeApply(
@@ -83,17 +90,12 @@ export function submitNativeApply(
   if (approvalReceipt && !RECEIPT_ID_RE.test(approvalReceipt)) {
     throw new Error('Invalid Apply approval receipt');
   }
-  return board.jobs.apply(
-    jobSlug,
-    {
-      ...safeApplyBody(body),
-      ...(approvalReceipt
-        ? {
-            approvalReceipt,
-            approvalSessionKey: sessionKey,
-          }
-        : {}),
-    },
-    { headers: withApplyGatewayCapability(headers) },
-  );
+  const applyBody = safeApplyBody(body);
+  if (approvalReceipt) {
+    applyBody.approvalReceipt = approvalReceipt;
+    applyBody.approvalSessionKey = sessionKey;
+  }
+  return board.jobs.apply(jobSlug, applyBody, {
+    headers: withApplyGatewayCapability(headers),
+  });
 }

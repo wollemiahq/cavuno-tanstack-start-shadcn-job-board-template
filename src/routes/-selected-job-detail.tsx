@@ -14,17 +14,35 @@ import { JobSearchResultDetail } from '@/components/board/job-search-result-deta
 import { SaveJobButton } from '@/components/board/save-job-button';
 import { companyIntro } from '@/lib/company-intro';
 
+export type SelectedJobDetailDependencies = {
+  applyToJob: (options: {
+    data: Parameters<typeof applyToJob>[0]['data'];
+  }) => ReturnType<typeof applyToJob>;
+  prepareApplyToJob: (options: {
+    data: { jobSlug: string };
+  }) => ReturnType<typeof prepareApplyToJob>;
+  saveJob: (options: { data: { jobId: string } }) => ReturnType<typeof saveJob>;
+};
+
+const selectedJobDetailDependencies: SelectedJobDetailDependencies = {
+  applyToJob,
+  prepareApplyToJob,
+  saveJob,
+};
+
 export function SelectedJobDetail({
   state,
   board,
   user,
   saveSlot,
+  dependencies = selectedJobDetailDependencies,
 }: {
   state: SelectedJobState;
   board: Awaited<ReturnType<typeof getBoardContext>>;
   user: Awaited<ReturnType<typeof getSessionUser>>;
   /** Override for surfaces where the job is already saved (saved-jobs page). */
   saveSlot?: React.ReactNode;
+  dependencies?: SelectedJobDetailDependencies;
 }) {
   const router = useRouter();
   const returnTo = useLocation({ select: (location) => location.href });
@@ -60,9 +78,11 @@ export function SelectedJobDetail({
       nativeApplications={board.features.nativeApplications}
       viewer={user ? { emailVerified: user.emailVerified } : null}
       alreadyApplied={state.alreadyApplied}
-      onPrepareApply={(jobSlug) => prepareApplyToJob({ data: { jobSlug } })}
+      onPrepareApply={(jobSlug) =>
+        dependencies.prepareApplyToJob({ data: { jobSlug } })
+      }
       onApply={async (jobSlug, approvalReceipt) => {
-        await applyToJob({ data: { jobSlug, approvalReceipt } });
+        await dependencies.applyToJob({ data: { jobSlug, approvalReceipt } });
       }}
     />
   ) : undefined;
@@ -82,7 +102,7 @@ export function SelectedJobDetail({
           error: m.saveJobButton_errorText(),
         }}
         onSave={async (jobId) => {
-          await saveJob({ data: { jobId } });
+          await dependencies.saveJob({ data: { jobId } });
         }}
         onSaved={() => router.invalidate()}
       />

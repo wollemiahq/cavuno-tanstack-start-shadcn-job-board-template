@@ -1,26 +1,45 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
+import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({
+const mocks = {
   getUnreadCount: vi.fn(),
-}));
+};
 
-vi.mock('@tanstack/react-router', () => ({
-  Link: ({
-    children,
-    ...props
-  }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
-    <a {...props}>{children}</a>
-  ),
-}));
+import {
+  MessagesNavController,
+  type MessagesNavDependencies,
+} from './-messages-nav-controller';
 
-vi.mock('@/server/messaging', () => ({
+import { useVisiblePoll } from '@/lib/use-visible-poll';
+
+const dependencies: MessagesNavDependencies = {
   getUnreadCount: mocks.getUnreadCount,
-}));
+  useVisiblePoll,
+};
 
-import { MessagesNavController } from './-messages-nav-controller';
+async function renderWithRouter(node: React.ReactNode) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => <>{node}</>,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  await router.load();
+  return render(<RouterProvider router={router} />);
+}
 
 afterEach(() => {
   cleanup();
@@ -33,8 +52,12 @@ describe('MessagesNavController', () => {
     vi.useFakeTimers();
     const onUnreadCount = vi.fn();
 
-    render(
-      <MessagesNavController enabled={false} onUnreadCount={onUnreadCount} />,
+    await renderWithRouter(
+      <MessagesNavController
+        enabled={false}
+        onUnreadCount={onUnreadCount}
+        dependencies={dependencies}
+      />,
     );
     await act(() => vi.advanceTimersByTimeAsync(30_000));
 
@@ -50,7 +73,13 @@ describe('MessagesNavController', () => {
       count: 3,
     });
 
-    render(<MessagesNavController enabled onUnreadCount={onUnreadCount} />);
+    await renderWithRouter(
+      <MessagesNavController
+        enabled
+        onUnreadCount={onUnreadCount}
+        dependencies={dependencies}
+      />,
+    );
     await act(async () => {
       await Promise.resolve();
     });

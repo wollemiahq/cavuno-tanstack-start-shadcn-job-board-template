@@ -3,22 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ isLoading: false }));
-
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    useRouterState: ({
-      select,
-    }: {
-      select: (state: { isLoading: boolean }) => boolean;
-    }) => select({ isLoading: mocks.isLoading }),
-  };
-});
-
-import { NavigationProgress } from './navigation-progress';
+import { NavigationProgressIndicator } from './navigation-progress';
 
 function bar() {
   return document.querySelector('[data-test="navigation-progress"]');
@@ -27,20 +12,17 @@ function bar() {
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
-  mocks.isLoading = false;
 });
 
 describe('NavigationProgress', () => {
   it('never flashes when loaders settle inside the show delay', () => {
     vi.useFakeTimers();
-    mocks.isLoading = true;
-    const { rerender } = render(<NavigationProgress />);
+    const { rerender } = render(<NavigationProgressIndicator isLoading />);
     expect(bar()).toHaveAttribute('data-phase', 'idle');
 
     // A preloaded nav commits in ~100ms — before the show delay elapses.
     act(() => vi.advanceTimersByTime(100));
-    mocks.isLoading = false;
-    rerender(<NavigationProgress />);
+    rerender(<NavigationProgressIndicator isLoading={false} />);
     act(() => vi.advanceTimersByTime(1000));
 
     expect(bar()).toHaveAttribute('data-phase', 'idle');
@@ -48,8 +30,7 @@ describe('NavigationProgress', () => {
 
   it('appears once loaders outlive the show delay', () => {
     vi.useFakeTimers();
-    mocks.isLoading = true;
-    render(<NavigationProgress />);
+    render(<NavigationProgressIndicator isLoading />);
 
     act(() => vi.advanceTimersByTime(150));
 
@@ -58,13 +39,11 @@ describe('NavigationProgress', () => {
 
   it('completes and settles back to idle when loading finishes', () => {
     vi.useFakeTimers();
-    mocks.isLoading = true;
-    const { rerender } = render(<NavigationProgress />);
+    const { rerender } = render(<NavigationProgressIndicator isLoading />);
     act(() => vi.advanceTimersByTime(150));
     expect(bar()).toHaveAttribute('data-phase', 'loading');
 
-    mocks.isLoading = false;
-    rerender(<NavigationProgress />);
+    rerender(<NavigationProgressIndicator isLoading={false} />);
     expect(bar()).toHaveAttribute('data-phase', 'done');
 
     act(() => vi.advanceTimersByTime(400));
@@ -72,7 +51,7 @@ describe('NavigationProgress', () => {
   });
 
   it('stays out of the accessibility tree', () => {
-    render(<NavigationProgress />);
+    render(<NavigationProgressIndicator isLoading={false} />);
     expect(bar()).toHaveAttribute('aria-hidden', 'true');
   });
 });

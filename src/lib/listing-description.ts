@@ -5,6 +5,11 @@ import { m } from '../paraglide/messages';
  */
 import { pageTitle } from './page-title';
 
+function finiteCount(count: number | undefined): number | undefined {
+  if (count === undefined || !Number.isFinite(count)) return undefined;
+  return count;
+}
+
 /**
  * Document title for a jobs listing page. Application owns counters, the
  * heading, separator, and board name — same pipe format as `pageTitle`.
@@ -15,9 +20,10 @@ export function listingPageTitle(options: {
   language: string;
   count?: number;
 }): string {
+  const count = finiteCount(options.count);
   const page =
-    typeof options.count === 'number'
-      ? `${new Intl.NumberFormat(options.language).format(options.count)} ${options.heading}`
+    count !== undefined
+      ? `${new Intl.NumberFormat(options.language).format(count)} ${options.heading}`
       : options.heading;
   return pageTitle([page], options.boardName);
 }
@@ -28,9 +34,10 @@ export function listingMetaDescription(options: {
   boardName: string;
   count?: number;
 }): string {
-  if (typeof options.count === 'number') {
+  const count = finiteCount(options.count);
+  if (count !== undefined) {
     return m.listing_metaDescriptionWithCount({
-      count: options.count,
+      count,
       heading: options.heading,
       boardName: options.boardName,
     });

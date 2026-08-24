@@ -12,8 +12,9 @@ import type { PublicJobCard } from '@cavuno/board';
  * summary, chip hrefs, featured label, detail-link slugs). These pin them
  * so the pure-markup cards can be restyled without changing the data.
  */
-const baseJob = {
+const baseJob: PublicJobCard = {
   id: 'job_1',
+  object: 'job_card',
   slug: 'senior-engineer',
   title: 'Senior Engineer',
   // Server-derived card teaser (always on the wire after API 4.2).
@@ -22,16 +23,22 @@ const baseJob = {
   employmentType: 'full_time',
   remoteOption: 'remote',
   remoteLocationLabel: 'Worldwide',
+  remoteWorldwide: true,
+  remoteWorkPermitCountryCodes: [],
   locationLabel: 'Remote',
   salaryMin: 100000,
   salaryMax: 140000,
   salaryCurrency: 'USD',
   salaryTimeframe: 'year',
   isFeatured: true,
+  isSponsored: false,
   company: { slug: 'acme-co', name: 'Acme Co', logoUrl: null },
   categories: [{ slug: 'engineering', name: 'Engineering' }],
   skills: [{ slug: 'react', name: 'React' }],
-} as unknown as PublicJobCard;
+  links: {
+    public: 'https://board.example/companies/acme-co/jobs/senior-engineer',
+  },
+};
 
 describe('toJobCardVM', () => {
   const vm = toJobCardVM(baseJob, 'en');
@@ -74,9 +81,10 @@ describe('toJobCardVM', () => {
       {
         ...baseJob,
         remoteOption: 'on_site',
+        remoteWorldwide: null,
         remoteLocationLabel: null,
         locationLabel: null,
-      } as unknown as PublicJobCard,
+      },
       'en',
     );
 
@@ -93,9 +101,9 @@ describe('toJobCardVM', () => {
     const legacy = toJobCardVM(
       {
         ...baseJob,
-        summary: undefined,
+        summary: null,
         description: '<p>Legacy description still works.</p>',
-      } as unknown as PublicJobCard,
+      },
       'en',
     );
     expect(legacy.summary).toBeNull();
@@ -115,10 +123,7 @@ describe('toJobCardVM', () => {
   });
 
   it('marks a company-less job as unlinkable', () => {
-    const noCompany = toJobCardVM(
-      { ...baseJob, company: null } as unknown as PublicJobCard,
-      'en',
-    );
+    const noCompany = toJobCardVM({ ...baseJob, company: null }, 'en');
     expect(noCompany.detailHref).toBeNull();
     expect(noCompany.companyAvatarName).toBe('Senior Engineer');
   });
@@ -128,7 +133,7 @@ describe('toSavedJobCardVM', () => {
   // me/saved-jobs embeds a PublicJobCard. Categories / skills can still be
   // absent on a partial fixture — the mapper defaults them so one stale row
   // never takes down /saved-jobs.
-  const slimSavedJob = {
+  const slimSavedJob: PublicJobCard = {
     id: 'job_2',
     object: 'job_card',
     slug: 'staff-engineer',
@@ -137,6 +142,7 @@ describe('toSavedJobCardVM', () => {
     employmentType: 'full_time',
     remoteOption: 'remote',
     remoteWorldwide: true,
+    remoteWorkPermitCountryCodes: [],
     remoteLocationLabel: null,
     locationLabel: null,
     salaryMin: null,
@@ -144,13 +150,15 @@ describe('toSavedJobCardVM', () => {
     salaryCurrency: null,
     salaryTimeframe: null,
     isFeatured: false,
+    isSponsored: false,
+    summary: null,
     company: { slug: 'acme-co', name: 'Acme Co', logoUrl: null },
-    categories: undefined,
-    skills: undefined,
+    categories: [],
+    skills: [],
     links: {
       public: 'https://board.example/companies/acme-co/jobs/staff-engineer',
     },
-  } as unknown as PublicJobCard;
+  };
 
   it('maps the slim saved-list card embed without requiring full-job fields', () => {
     const vm = toSavedJobCardVM(slimSavedJob, 'en');
@@ -177,7 +185,7 @@ describe('worldwide remote card wording', () => {
       remoteWorldwide: true,
       remoteLocationLabel: 'Weltweit',
       locationLabel: 'Weltweit (Remote)',
-    } as never;
+    } satisfies PublicJobCard;
     expect(toJobCardVM(job, 'en').locationLabel).toBe('Remote (worldwide)');
     // Chrome catalog follows compiled locales; dormant de stays English.
     expect(toJobCardVM(job, 'de').locationLabel).toBe('Remote (worldwide)');
@@ -191,7 +199,7 @@ describe('worldwide remote card wording', () => {
       remoteWorkPermitCountryCodes: ['US', 'GB'],
       remoteLocationLabel: 'United States + 1 more',
       locationLabel: 'United States + 1 more',
-    } as never;
+    } satisfies PublicJobCard;
     // Intl.DisplayNames + ListFormat in the viewer locale, not the
     // board-language wire label.
     expect(toJobCardVM(job, 'de').locationLabel).toContain(
@@ -210,7 +218,7 @@ describe('worldwide remote card wording', () => {
       remoteWorkPermitCountryCodes: ['US', 'GB', 'DE', 'FR', 'ES'],
       remoteLocationLabel: 'Europe',
       locationLabel: 'Europe',
-    } as never;
+    } satisfies PublicJobCard;
     expect(toJobCardVM(job, 'en').locationLabel).toContain('Europe');
   });
 
@@ -220,7 +228,7 @@ describe('worldwide remote card wording', () => {
       remoteOption: 'remote',
       remoteLocationLabel: 'Worldwide',
       locationLabel: 'Worldwide (Remote)',
-    } as never;
+    } satisfies PublicJobCard;
     expect(toJobCardVM(job, 'de').locationLabel).toBe('Remote (worldwide)');
     // Unified with the detail header's catalog phrasing (was the wire's
     // 'Worldwide (Remote)').

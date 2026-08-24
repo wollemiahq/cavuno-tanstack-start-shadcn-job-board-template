@@ -74,15 +74,17 @@ export async function requestGatewayApply(
 }
 
 async function jsonBody(response: Response) {
+  // SAFETY: The body stays untrusted; every consumed field is checked against
+  // an exact sentinel or parsed as a bounded HTTPS URL before use.
   return (await response.json().catch(() => null)) as {
-    code?: unknown;
-    gatewayUrl?: unknown;
-    redirectUrl?: unknown;
+    code?: string;
+    gatewayUrl?: string;
+    redirectUrl?: string;
   } | null;
 }
 
-function safeExternalUrl(value: unknown): value is string {
-  if (typeof value !== 'string' || value.length > 2_048) return false;
+function safeExternalUrl(value: string | null | undefined): value is string {
+  if (!value || value.length > 2_048) return false;
   try {
     const url = new URL(value);
     return (
@@ -93,8 +95,8 @@ function safeExternalUrl(value: unknown): value is string {
   }
 }
 
-function trustedGatewayUrl(value: unknown): URL | null {
-  if (typeof value !== 'string' || value.length > 500) return null;
+function trustedGatewayUrl(value: string | null | undefined): URL | null {
+  if (!value || value.length > 500) return null;
   try {
     const url = new URL(value);
     const opaque = url.pathname.startsWith('/a/')

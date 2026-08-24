@@ -73,12 +73,10 @@ export const Route = createFileRoute('/apply')({
         );
         const applySession = applySessionKey(cookieHeader);
         const grant = parseGrantForSource(cookieHeader, dataSource);
-        const headers = {
-          ...(resolution.session
-            ? authHeaders(resolution.session.accessToken)
-            : {}),
-          ...(grant ? { 'x-board-access': grant } : {}),
-        };
+        const headers: Record<string, string> = resolution.session
+          ? authHeaders(resolution.session.accessToken)
+          : {};
+        if (grant) headers['x-board-access'] = grant;
         const cookies = [
           resolution.setCookie === 'rotate' && resolution.session
             ? serializeSessionForSource(resolution.session, dataSource)

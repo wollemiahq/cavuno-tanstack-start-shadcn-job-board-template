@@ -8,6 +8,8 @@ import { m } from '../paraglide/messages';
 import {
   MessagesSidebarController,
   ThreadController,
+  messagesRuntimeDependencies,
+  type MessagesRuntimeDependencies,
 } from './-messages-runtime';
 
 import { MessagingDock } from '@/components/messages/messaging-dock';
@@ -19,13 +21,18 @@ import {
   EmptyHeader,
 } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getInbox, getThread } from '@/server/messaging';
 import type {
   Conversation,
   ConversationDetail,
   ListEnvelope,
   Message,
 } from '@cavuno/board';
+
+export type MessagesDockDependencies = MessagesRuntimeDependencies;
+
+const messagesDockDependencies: MessagesDockDependencies = {
+  ...messagesRuntimeDependencies,
+};
 
 type ThreadPayload = {
   conversation: ConversationDetail;
@@ -73,8 +80,10 @@ function LoadFailure({
 
 export function MessagesDockController({
   unreadCount,
+  dependencies = messagesDockDependencies,
 }: {
   unreadCount: number;
+  dependencies?: MessagesDockDependencies;
 }) {
   const [open, setOpen] = useState(false);
   const [inbox, setInbox] = useState<ListEnvelope<Conversation> | null>(null);
@@ -88,13 +97,13 @@ export function MessagesDockController({
 
   const refreshInbox = useCallback(async () => {
     try {
-      const result = await getInbox();
+      const result = await dependencies.getInbox();
       setInbox(result.conversations);
       setInboxError(false);
     } catch {
       setInboxError(true);
     }
-  }, []);
+  }, [dependencies]);
 
   useEffect(() => {
     if (open) void refreshInbox();
@@ -106,7 +115,9 @@ export function MessagesDockController({
     setThread(null);
     setThreadError(false);
     try {
-      const result = await getThread({ data: { id: conversationId } });
+      const result = await dependencies.getThread({
+        data: { id: conversationId },
+      });
       if (request === requestSequence.current) setThread(result);
     } catch {
       if (request === requestSequence.current) setThreadError(true);
@@ -153,6 +164,7 @@ export function MessagesDockController({
             }
             showTitle={false}
             showTabs={false}
+            dependencies={dependencies}
           />
         ) : inboxError ? (
           <LoadFailure
@@ -181,6 +193,7 @@ export function MessagesDockController({
                 closeConversation();
                 void refreshInbox();
               }}
+              dependencies={dependencies}
             />
           ) : threadError ? (
             <LoadFailure

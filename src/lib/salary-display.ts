@@ -30,16 +30,13 @@ import { isLocale } from '../paraglide/runtime';
  * adjectives, and reusing them here rendered "/ Yearly" in English and
  * doubled the preposition in German ("pro pro Jahr").
  */
-const TIMEFRAME_UNITS: Record<
-  SalaryTimeframeValue,
-  typeof m.jobSalary_unitPerYear
-> = {
+const TIMEFRAME_UNITS = {
   per_year: m.jobSalary_unitPerYear,
   per_month: m.jobSalary_unitPerMonth,
   per_week: m.jobSalary_unitPerWeek,
   per_day: m.jobSalary_unitPerDay,
   per_hour: m.jobSalary_unitPerHour,
-};
+} satisfies Record<SalaryTimeframeValue, typeof m.jobSalary_unitPerYear>;
 
 /** Format a job salary range with bound chrome for open floors/ceilings. */
 export function formatJobSalary(
@@ -72,8 +69,7 @@ export function formatJobSalary(
   const unitMessage = formatted.timeframe
     ? TIMEFRAME_UNITS[formatted.timeframe]
     : undefined;
-  const unit =
-    typeof unitMessage === 'function' ? unitMessage({}, locale) : null;
+  const unit = unitMessage ? unitMessage({}, locale) : null;
   const amount = unit
     ? m.jobSalary_perTimeframe({ amount: formatted.text, unit }, locale)
     : formatted.text;

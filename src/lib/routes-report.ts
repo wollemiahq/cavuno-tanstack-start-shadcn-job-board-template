@@ -30,7 +30,7 @@ export function mapRouteTreeToPathTemplates(tree: TanStackRouteNode): string[] {
 }
 
 type PostMessageTarget = {
-  postMessage: (message: unknown, targetOrigin: string) => void;
+  postMessage: (message: RoutesReportPayload, targetOrigin: string) => void;
 };
 
 /**
@@ -50,7 +50,7 @@ export function emitRoutesReport(
   },
 ): void {
   try {
-    const hasWindow = typeof window !== 'undefined';
+    const hasWindow = globalThis.window !== undefined;
     const selfWin =
       options?.selfWindow !== undefined
         ? options.selfWindow
@@ -67,7 +67,8 @@ export function emitRoutesReport(
           : null;
     if (parent == null) return;
     // Not embedded (top-level window).
-    if (parent === (selfWin as unknown)) return;
+    // SAFETY: The comparison only checks object identity with the browser Window.
+    if (parent === (selfWin as Window)) return;
 
     const routes = mapRouteTreeToPathTemplates(tree).slice(
       0,

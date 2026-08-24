@@ -1,22 +1,50 @@
 // @vitest-environment jsdom
-import type { ReactNode } from 'react';
-
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
-vi.mock('../server/queries', () => ({
-  embedJobs: vi.fn(),
-  getBoardContext: vi.fn(),
-}));
+import {
+  EmbedJobsView,
+  embedJobsViewDependencies,
+  type EmbedJobsViewDependencies,
+} from './embed.jobs';
 
-vi.mock('@/components/board/embed-jobs-header', () => ({
-  EmbedJobsHeader: ({
-    boardName,
-    initialSearch,
-  }: {
-    boardName: string;
-    initialSearch: Record<string, unknown>;
-  }) => (
+import { m } from '@/paraglide/messages';
+import type { PublicJobCard } from '@cavuno/board';
+
+afterEach(cleanup);
+
+const job = {
+  id: 'job-1',
+  object: 'job_card',
+  slug: 'product-designer',
+  title: 'Product Designer',
+  description: '<p>Build useful tools.</p>',
+  publishedAt: null,
+  employmentType: 'full_time',
+  remoteOption: 'hybrid',
+  remoteLocationLabel: null,
+  remoteWorldwide: false,
+  remoteWorkPermitCountryCodes: [],
+  locationLabel: 'Sydney',
+  salaryMin: null,
+  salaryMax: null,
+  salaryCurrency: null,
+  salaryTimeframe: null,
+  isFeatured: false,
+  isSponsored: false,
+  summary: 'Build useful tools.',
+  company: { slug: 'acme', name: 'Acme', logoUrl: null },
+  categories: [],
+  skills: [],
+  links: {
+    public: 'https://jobs.example/companies/acme/jobs/product-designer',
+  },
+} satisfies PublicJobCard;
+
+const dependencies: EmbedJobsViewDependencies = {
+  ...embedJobsViewDependencies,
+  renderCtaLink: (cta) => <a href="/jobs">{cta.label}</a>,
+  renderHeader: ({ boardName, initialSearch }) => (
     <div
       data-test="embed-jobs-header"
       data-initial-search={JSON.stringify(initialSearch)}
@@ -24,47 +52,13 @@ vi.mock('@/components/board/embed-jobs-header', () => ({
       {boardName}
     </div>
   ),
-}));
-
-vi.mock('@/components/board/job-card', () => ({
-  JobCard: ({ openInNewTab }: { openInNewTab?: boolean }) => (
+  renderJobCard: ({ openInNewTab }) => (
     <article
       data-test="embed-job-card"
-      data-open-in-new-tab={String(Boolean(openInNewTab))}
+      data-open-in-new-tab={String(openInNewTab)}
     />
   ),
-}));
-
-vi.mock('@/board/job-view-model', () => ({
-  toJobCardVM: (job: { id: string }) => ({ id: job.id }),
-}));
-
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    Link: ({
-      children,
-      ...props
-    }: {
-      children: ReactNode;
-      to?: string;
-      search?: unknown;
-      target?: string;
-      className?: string;
-    }) => <a {...props}>{children}</a>,
-  };
-});
-
-import { EmbedJobsView } from './embed.jobs';
-
-import { m } from '@/paraglide/messages';
-import type { PublicJobCard } from '@cavuno/board';
-
-afterEach(cleanup);
-
-const job = { id: 'job-1' } as PublicJobCard;
+};
 
 describe('embed jobs view', () => {
   it('renders the header above results and opens job cards in a new tab', async () => {
@@ -75,6 +69,7 @@ describe('embed jobs view', () => {
         boardName="Acme Board"
         logoUrl={null}
         search={{}}
+        dependencies={dependencies}
       />,
     );
 
@@ -95,6 +90,7 @@ describe('embed jobs view', () => {
         boardName="Acme Board"
         logoUrl={null}
         search={{}}
+        dependencies={dependencies}
       />,
     );
 
@@ -111,6 +107,7 @@ describe('embed jobs view', () => {
         boardName="Acme Board"
         logoUrl={null}
         search={{ q: 'nurse', location: 'london', remoteOption: 'remote' }}
+        dependencies={dependencies}
       />,
     );
 

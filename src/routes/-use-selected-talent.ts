@@ -11,7 +11,18 @@ export type SelectedTalentState = {
   retry: () => void;
 };
 
-export function useSelectedTalent(handle?: string): SelectedTalentState {
+export type SelectedTalentDependencies = {
+  getTalentProfile: typeof getTalentProfile;
+};
+
+const selectedTalentDependencies: SelectedTalentDependencies = {
+  getTalentProfile,
+};
+
+export function useSelectedTalent(
+  handle?: string,
+  dependencies: SelectedTalentDependencies = selectedTalentDependencies,
+): SelectedTalentState {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<Omit<SelectedTalentState, 'retry'>>({
     status: 'idle',
@@ -29,7 +40,8 @@ export function useSelectedTalent(handle?: string): SelectedTalentState {
       profile: previous.profile,
     }));
 
-    void getTalentProfile({ data: { handle } })
+    void dependencies
+      .getTalentProfile({ data: { handle } })
       .then((profile) => {
         if (!cancelled) setState({ status: 'ready', profile });
       })
@@ -45,7 +57,7 @@ export function useSelectedTalent(handle?: string): SelectedTalentState {
     return () => {
       cancelled = true;
     };
-  }, [attempt, handle]);
+  }, [attempt, dependencies, handle]);
 
   const retry = useCallback(() => setAttempt((value) => value + 1), []);
 

@@ -29,6 +29,24 @@ export interface RuntimeBoardFeatureFlags {
   messaging: boolean;
 }
 
+export type TalentDirectoryVisibility = 'off' | 'public' | 'employers_only';
+
+/** Preserve the tri-state feature enum while supporting older boolean boards. */
+export function resolveTalentDirectoryVisibility(
+  explicit: TalentDirectoryVisibility | null | undefined,
+  configured: TalentDirectoryVisibility | boolean | undefined,
+): TalentDirectoryVisibility {
+  if (explicit !== null && explicit !== undefined) return explicit;
+  if (
+    configured === 'off' ||
+    configured === 'public' ||
+    configured === 'employers_only'
+  ) {
+    return configured;
+  }
+  return configured ? 'public' : 'off';
+}
+
 /**
  * Read the two runtime flags off the context's `features` group, narrowing
  * once here at the boundary. Absent ⇒ `true` (default-on).
@@ -36,6 +54,8 @@ export interface RuntimeBoardFeatureFlags {
 export function resolveRuntimeFeatureFlags(
   features: BoardContextFeatures,
 ): RuntimeBoardFeatureFlags {
+  // SAFETY: Runtime feature flags are additive wire fields that may be absent
+  // from the pinned SDK type; absent values default to true below.
   const parity = features as BoardContextFeatures & {
     nativeApplications?: boolean;
     messaging?: boolean;

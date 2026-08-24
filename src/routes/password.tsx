@@ -10,6 +10,9 @@ import { getSeoBase } from '../server/queries';
 
 import { Button } from '@/components/ui/button';
 import { headTitle } from '@/lib/page-title';
+import { searchString, type UrlSearchInput } from '@/lib/pagination';
+
+type PasswordSearch = { redirect?: string };
 
 /**
  * The board-password challenge. A gated content read on a protected board
@@ -19,8 +22,8 @@ import { headTitle } from '@/lib/page-title';
  * /password page.
  */
 export const Route = createFileRoute('/password')({
-  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
-    redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
+  validateSearch: (search: UrlSearchInput): PasswordSearch => ({
+    redirect: searchString(search.redirect),
   }),
   loader: () => getSeoBase(),
   head: ({ loaderData }) => ({

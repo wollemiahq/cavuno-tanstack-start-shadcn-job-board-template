@@ -33,7 +33,7 @@ export type LegalPageViewModel = {
  * (which is also the URL path). Prose lives in `src/content/legal/`; this table
  * only owns path, breadcrumb key, and JSON-LD `@type`.
  */
-export const LEGAL_PAGES: Record<LegalPageType, LegalPageMeta> = {
+export const LEGAL_PAGES = {
   about: { path: '/about', breadcrumbKey: 'about', jsonLdType: 'AboutPage' },
   'privacy-policy': {
     path: '/privacy-policy',
@@ -55,4 +55,4 @@ export const LEGAL_PAGES: Record<LegalPageType, LegalPageMeta> = {
     breadcrumbKey: 'impressum',
     jsonLdType: 'WebPage',
   },
-};
+} satisfies Record<LegalPageType, LegalPageMeta>;

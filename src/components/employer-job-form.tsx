@@ -83,11 +83,37 @@ const SENIORITIES = [
   'executive',
 ] as const;
 
+type EmploymentTypeOption = (typeof EMPLOYMENT_TYPES)[number];
+type RemoteOptionChoice = (typeof REMOTE_OPTIONS)[number];
+type SeniorityOption = (typeof SENIORITIES)[number];
+
 type PermitType = NonNullable<
   CreateEmployerJobBody['remotePermits']
 >[number]['type'];
 
 type OfficeLocationDraft = { key: string; displayName: string };
+type JobPermitSelection = RemotePermitSelection & { type: PermitType };
+type ApplyMethod = 'external' | 'native';
+
+function isPermitType(value: string): value is PermitType {
+  return value !== 'worldwide';
+}
+
+type EmployerJobFormState = {
+  title: string;
+  employmentType: EmploymentTypeOption;
+  seniority: SeniorityOption | null;
+  remoteOption: RemoteOptionChoice;
+  officeLocations: OfficeLocationDraft[];
+  permitSelections: JobPermitSelection[];
+  description: string;
+  currency: string;
+  salaryTimeframe: SalaryTimeframe;
+  salaryMin: string;
+  salaryMax: string;
+  applyMethod: ApplyMethod;
+  applicationTarget: string;
+};
 
 export type EmployerJobFormMode =
   | { kind: 'create' }
@@ -103,7 +129,25 @@ export type EmployerJobFormProps = {
   mode: EmployerJobFormMode;
   /** Prefill for edit mode. */
   job?: EmployerJob;
+  dependencies?: EmployerJobFormDependencies;
 };
+
+export interface EmployerJobFormDependencies {
+  createJob: (
+    input: Parameters<typeof createJob>[0],
+  ) => ReturnType<typeof createJob>;
+  updateJob: (
+    input: Parameters<typeof updateJob>[0],
+  ) => ReturnType<typeof updateJob>;
+  checkoutJob: (
+    input: Parameters<typeof checkoutJob>[0],
+  ) => ReturnType<typeof checkoutJob>;
+  invalidate: () => Promise<void>;
+  navigate: (options: {
+    to: '/employers/companies/$slug';
+    params: { slug: string };
+  }) => Promise<void>;
+}
 
 function formatPrice(
   language: string,
@@ -122,21 +166,21 @@ function formatPrice(
 function initialForm(
   job: EmployerJob | undefined,
   countryName: (code: string) => string,
-) {
+): EmployerJobFormState {
   if (!job) {
     return {
       title: '',
-      employmentType: 'full_time' as (typeof EMPLOYMENT_TYPES)[number],
-      seniority: null as (typeof SENIORITIES)[number] | null,
-      remoteOption: 'hybrid' as (typeof REMOTE_OPTIONS)[number],
-      officeLocations: [] as OfficeLocationDraft[],
-      permitSelections: [] as RemotePermitSelection[],
+      employmentType: 'full_time' satisfies EmploymentTypeOption,
+      seniority: null,
+      remoteOption: 'hybrid' satisfies RemoteOptionChoice,
+      officeLocations: [],
+      permitSelections: [],
       description: '',
       currency: 'USD',
-      salaryTimeframe: DEFAULT_SALARY_TIMEFRAME as SalaryTimeframe,
+      salaryTimeframe: DEFAULT_SALARY_TIMEFRAME,
       salaryMin: '',
       salaryMax: '',
-      applyMethod: 'external' as 'external' | 'native',
+      applyMethod: 'external',
       applicationTarget: '',
     };
   }
@@ -154,8 +198,11 @@ function initialForm(
 
   // A stored `worldwide` permit is the form's "no selection" default, so it
   // never becomes an editable tag.
-  const permitSelections: RemotePermitSelection[] = job.remotePermits
+  const permitSelections: JobPermitSelection[] = job.remotePermits
     .filter((permit) => permit.type !== 'worldwide')
+    .filter((permit): permit is RemotePermitSelection & { type: PermitType } =>
+      isPermitType(permit.type),
+    )
     .map((permit) => ({
       type: permit.type,
       value: permit.value,
@@ -171,24 +218,22 @@ function initialForm(
 
   return {
     title: job.title,
-    employmentType: (EMPLOYMENT_TYPES.find(
-      (value) => value === job.employmentType,
-    ) ?? 'full_time') as (typeof EMPLOYMENT_TYPES)[number],
+    employmentType:
+      EMPLOYMENT_TYPES.find((value) => value === job.employmentType) ??
+      'full_time',
     seniority,
-    remoteOption: (REMOTE_OPTIONS.find((value) => value === job.remoteOption) ??
-      'hybrid') as (typeof REMOTE_OPTIONS)[number],
+    remoteOption:
+      REMOTE_OPTIONS.find((value) => value === job.remoteOption) ?? 'hybrid',
     officeLocations,
     permitSelections,
     description: job.description ?? '',
     currency: job.salaryCurrency ?? 'USD',
-    salaryTimeframe: (SALARY_TIMEFRAMES.find(
-      (value) => value === job.salaryTimeframe,
-    ) ?? DEFAULT_SALARY_TIMEFRAME) as SalaryTimeframe,
+    salaryTimeframe:
+      SALARY_TIMEFRAMES.find((value) => value === job.salaryTimeframe) ??
+      DEFAULT_SALARY_TIMEFRAME,
     salaryMin: job.salaryMin != null ? String(job.salaryMin) : '',
     salaryMax: job.salaryMax != null ? String(job.salaryMax) : '',
-    applyMethod: (job.applicationUrl ? 'external' : 'native') as
-      | 'external'
-      | 'native',
+    applyMethod: job.applicationUrl ? 'external' : 'native',
     applicationTarget,
   };
 }
@@ -202,8 +247,16 @@ export function EmployerJobForm({
   officeLocationSuggestions,
   mode,
   job,
+  dependencies,
 }: EmployerJobFormProps) {
   const router = useRouter();
+  const actions: EmployerJobFormDependencies = dependencies ?? {
+    createJob,
+    updateJob,
+    checkoutJob,
+    invalidate: () => router.invalidate(),
+    navigate: (options) => router.navigate(options),
+  };
   const countryChoices = useMemo(() => countryOptions(locale), [locale]);
   const countryName = useMemo(() => {
     const byCode = new Map<string, string>(
@@ -300,39 +353,31 @@ export function EmployerJobForm({
       Number.isFinite(salaryMin) &&
       Number.isFinite(salaryMax);
 
-    return {
+    const body: CreateEmployerJobBody = {
       title: form.title.trim(),
       description: form.description,
       employmentType: form.employmentType,
       remoteOption: form.remoteOption,
-      ...(form.seniority ? { seniority: form.seniority } : {}),
-      ...(form.officeLocations.length > 0
-        ? {
-            officeLocations: form.officeLocations.map((location) => ({
-              query: location.displayName,
-            })),
-          }
-        : {}),
-      ...(form.remoteOption === 'remote'
-        ? {
-            remotePermits:
-              form.permitSelections.length > 0
-                ? form.permitSelections.map(({ type, value }) => ({
-                    type: type as PermitType,
-                    value,
-                  }))
-                : [{ type: 'worldwide' as const, value: 'worldwide' }],
-          }
-        : {}),
-      ...(salaryRange
-        ? {
-            salaryMin,
-            salaryMax,
-            salaryCurrency: form.currency,
-            salaryTimeframe: form.salaryTimeframe,
-          }
-        : {}),
     };
+    if (form.seniority) body.seniority = form.seniority;
+    if (form.officeLocations.length > 0) {
+      body.officeLocations = form.officeLocations.map((location) => ({
+        query: location.displayName,
+      }));
+    }
+    if (form.remoteOption === 'remote') {
+      body.remotePermits =
+        form.permitSelections.length > 0
+          ? form.permitSelections.map(({ type, value }) => ({ type, value }))
+          : [{ type: 'worldwide', value: 'worldwide' }];
+    }
+    if (salaryRange) {
+      body.salaryMin = salaryMin;
+      body.salaryMax = salaryMax;
+      body.salaryCurrency = form.currency;
+      body.salaryTimeframe = form.salaryTimeframe;
+    }
+    return body;
   }
 
   /**
@@ -365,7 +410,7 @@ export function EmployerJobForm({
           planId: (selectedBilling ?? '').replace(/^plan:/, ''),
         };
 
-    const checkout = await checkoutJob({
+    const checkout = await actions.checkoutJob({
       data: { slug, id: jobId, body: { billing } },
     });
     if (!checkout.ok) {
@@ -381,15 +426,15 @@ export function EmployerJobForm({
     if (outcome.status === 'invoice_sent') {
       setStatus('idle');
       setNotice(m.employerCompany_invoiceSentText());
-      await router.invalidate();
+      await actions.invalidate();
       return;
     }
     await goToList();
   }
 
   async function goToList() {
-    await router.invalidate();
-    await router.navigate({
+    await actions.invalidate();
+    await actions.navigate({
       to: '/employers/companies/$slug',
       params: { slug },
     });
@@ -431,11 +476,9 @@ export function EmployerJobForm({
     // "Saving" with no feedback.
     try {
       if (mode.kind === 'create') {
-        const body = {
-          ...buildBody(),
-          ...(applicationUrl ? { applicationUrl } : {}),
-        } satisfies CreateEmployerJobBody;
-        const result = await createJob({ data: { slug, body } });
+        const body = buildBody();
+        if (applicationUrl) body.applicationUrl = applicationUrl;
+        const result = await actions.createJob({ data: { slug, body } });
         if (!result.ok) {
           setStatus('error');
           setMessage(boardErrorMessage(result));
@@ -455,7 +498,9 @@ export function EmployerJobForm({
         ...salaryClear(),
         applicationUrl: applicationUrl ?? null,
       } satisfies UpdateEmployerJobBody;
-      const result = await updateJob({ data: { slug, id: mode.jobId, body } });
+      const result = await actions.updateJob({
+        data: { slug, id: mode.jobId, body },
+      });
       if (!result.ok) {
         setStatus('error');
         setMessage(boardErrorMessage(result));
@@ -503,12 +548,8 @@ export function EmployerJobForm({
               <Select
                 items={employmentItems}
                 value={form.employmentType}
-                onValueChange={(value) =>
-                  set(
-                    'employmentType',
-                    (value as (typeof EMPLOYMENT_TYPES)[number] | null) ??
-                      'full_time',
-                  )
+                onValueChange={(value: EmploymentTypeOption | null) =>
+                  set('employmentType', value ?? 'full_time')
                 }
               >
                 <SelectTrigger id="job-employment-type" className="w-full">
@@ -530,11 +571,8 @@ export function EmployerJobForm({
               <Select
                 items={seniorityItems}
                 value={form.seniority}
-                onValueChange={(value) =>
-                  set(
-                    'seniority',
-                    (value as (typeof SENIORITIES)[number] | null) ?? null,
-                  )
+                onValueChange={(value: SeniorityOption | null) =>
+                  set('seniority', value ?? null)
                 }
               >
                 <SelectTrigger id="job-seniority" className="w-full">
@@ -570,12 +608,10 @@ export function EmployerJobForm({
             <Select
               items={remoteItems}
               value={form.remoteOption}
-              onValueChange={(value) =>
+              onValueChange={(value: RemoteOptionChoice | null) =>
                 setForm((prev) => ({
                   ...prev,
-                  remoteOption:
-                    (value as (typeof REMOTE_OPTIONS)[number] | null) ??
-                    'hybrid',
+                  remoteOption: value ?? 'hybrid',
                 }))
               }
             >
@@ -664,8 +700,11 @@ export function EmployerJobForm({
                 }))}
                 onAddSuggestion={(choice: LocationSuggestionVM) => {
                   const separator = choice.id.indexOf(':');
-                  const selection = {
-                    type: choice.id.slice(0, separator),
+                  if (separator < 0) return;
+                  const type = choice.id.slice(0, separator);
+                  if (!isPermitType(type)) return;
+                  const selection: JobPermitSelection = {
+                    type,
                     value: choice.id.slice(separator + 1),
                     label: choice.name,
                   };
@@ -729,8 +768,8 @@ export function EmployerJobForm({
               <Select
                 items={currencyItems}
                 value={form.currency}
-                onValueChange={(value) =>
-                  set('currency', (value as string) ?? 'USD')
+                onValueChange={(value: string | null) =>
+                  set('currency', value ?? 'USD')
                 }
               >
                 <SelectTrigger id="job-currency" className="w-full">
@@ -752,12 +791,8 @@ export function EmployerJobForm({
               <Select
                 items={timeframeItems}
                 value={form.salaryTimeframe}
-                onValueChange={(value) =>
-                  set(
-                    'salaryTimeframe',
-                    (value as SalaryTimeframe | null) ??
-                      DEFAULT_SALARY_TIMEFRAME,
-                  )
+                onValueChange={(value: SalaryTimeframe | null) =>
+                  set('salaryTimeframe', value ?? DEFAULT_SALARY_TIMEFRAME)
                 }
               >
                 <SelectTrigger id="job-salary-timeframe" className="w-full">
@@ -864,8 +899,8 @@ export function EmployerJobForm({
               <Field data-invalid={fieldErrors.billing || undefined}>
                 <RadioGroup
                   value={selectedBilling}
-                  onValueChange={(value) =>
-                    setSelectedBilling((value as string | null) ?? null)
+                  onValueChange={(value: string | null) =>
+                    setSelectedBilling(value ?? null)
                   }
                   className="gap-4"
                   aria-label={m.employerCompany_choosePlanHeading()}

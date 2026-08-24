@@ -17,8 +17,9 @@ import { toJobCardVM } from '@/board/job-view-model';
 import { m } from '@/paraglide/messages';
 import type { PublicJobCard } from '@cavuno/board';
 
-const job = {
+const job: PublicJobCard = {
   id: 'job-1',
+  object: 'job_card',
   slug: 'product-designer',
   title: 'Product designer',
   description: '<p>Own product discovery.</p>',
@@ -26,16 +27,23 @@ const job = {
   employmentType: 'full_time',
   remoteOption: 'hybrid',
   remoteLocationLabel: null,
+  remoteWorldwide: null,
+  remoteWorkPermitCountryCodes: [],
   locationLabel: 'Sydney',
   salaryMin: null,
   salaryMax: null,
   salaryCurrency: null,
   salaryTimeframe: null,
   isFeatured: false,
+  isSponsored: false,
+  summary: null,
   company: { slug: 'acme', name: 'Acme', logoUrl: null },
   categories: [],
   skills: [],
-} as unknown as PublicJobCard;
+  links: {
+    public: 'https://jobs.example/companies/acme/jobs/product-designer',
+  },
+};
 
 // The mapping seam now lives in the loader/pane, so the page takes resolved
 // `JobCardVM[]`; the test maps the wire fixture the same way a route would.

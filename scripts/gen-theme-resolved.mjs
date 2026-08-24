@@ -39,18 +39,22 @@ writeFileSync(
  */
 export const tokensHash = '${hash}'
 
-export const themeMeta: {
+export interface ThemeMeta {
   mode: string | null
   fontSans: string | null
   fontHeading: string | null
   fontsImport: string | null
   ogFontFamily: string | null
-} = ${JSON.stringify(parsed.meta, null, 2)}
+}
 
-export const themeTokens: {
+export interface ThemeTokens {
   light: Record<string, string>
   dark: Record<string, string>
-} = {
+}
+
+export const themeMeta: ThemeMeta = ${JSON.stringify(parsed.meta, null, 2)}
+
+export const themeTokens: ThemeTokens = {
   light: ${JSON.stringify(parsed.light, null, 2)},
   dark: ${JSON.stringify(parsed.dark, null, 2)},
 }

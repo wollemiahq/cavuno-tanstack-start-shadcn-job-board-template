@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { decideSession, type SessionRefresh } from './session-decision';
+
 /**
  * `decideSession` is the extracted, pure heart of the session middleware — the
  * single-flight-refresh decision and the catch→clear→signed-out branch, with
@@ -9,29 +11,6 @@ import { describe, expect, it, vi } from 'vitest';
  * reads the cookie, applies the returned cookie action, and derives headers.
  */
 import type { BoardSession } from '@cavuno/board/server';
-
-// The module imports `./board` and `./data-source.server`, which pull
-// `cloudflare:workers` / request headers at load. `decideSession` takes its
-// refresher as an argument, so the real board is never touched — stub the
-// seams to keep the import graph node-safe.
-vi.mock('cloudflare:workers', () => ({ env: {} }));
-vi.mock('@tanstack/react-start/server', () => ({
-  getRequestHeader: () => null,
-  setResponseHeader: () => {},
-}));
-vi.mock('./env', () => ({
-  getServerEnv: () => ({
-    apiUrl: 'https://api.example.test',
-    board: 'pk_test',
-    demoBoardPrivate: false,
-  }),
-}));
-vi.mock('./board', () => ({
-  authHeaders: (token: string) => ({ authorization: `Bearer ${token}` }),
-  getSessionRefresher: () => async () => null,
-}));
-
-import { decideSession, type SessionRefresh } from './session-middleware';
 
 const NOW = 1_000_000_000_000;
 const FIVE_MIN = 5 * 60 * 1000;

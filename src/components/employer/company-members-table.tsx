@@ -2,16 +2,9 @@
 
 import { useState } from 'react';
 
-import { useRouter } from '@tanstack/react-router';
 import { LogOut, Trash2 } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
-import {
-  leaveCompany,
-  removeCompanyMember,
-  revokeCompanyInvite,
-  updateCompanyMemberRole,
-} from '../../server/employers';
 
 import {
   AlertDialog,
@@ -47,8 +40,44 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import type { CompanyMember, CompanyMemberInvite } from '@cavuno/board';
+
+export type CompanyMembersTableActions = {
+  updateCompanyMemberRole: (
+    ...args: Parameters<
+      typeof import('../../server/employers').updateCompanyMemberRole
+    >
+  ) => Promise<
+    | { ok: true; data?: object | null }
+    | { ok: false; code: string; message: string }
+  >;
+  removeCompanyMember: (
+    ...args: Parameters<
+      typeof import('../../server/employers').removeCompanyMember
+    >
+  ) => Promise<
+    | { ok: true; data?: object | null }
+    | { ok: false; code: string; message: string }
+  >;
+  revokeCompanyInvite: (
+    ...args: Parameters<
+      typeof import('../../server/employers').revokeCompanyInvite
+    >
+  ) => Promise<
+    | { ok: true; data?: object | null }
+    | { ok: false; code: string; message: string }
+  >;
+  leaveCompany: (
+    ...args: Parameters<typeof import('../../server/employers').leaveCompany>
+  ) => Promise<
+    | { ok: true; data?: object | null }
+    | { ok: false; code: string; message: string }
+  >;
+  invalidate: () => Promise<void>;
+  navigateToDashboard: () => Promise<void>;
+  toastError: (message: string) => void;
+  toastSuccess: (message: string) => void;
+};
 
 const ROLE_ITEMS = {
   admin: () => m.employerMembers_roleAdmin(),
@@ -96,6 +125,7 @@ export function CompanyMembersTable({
   invites,
   isAdmin,
   currentUserId,
+  actions,
 }: {
   slug: string;
   companyName: string;
@@ -103,8 +133,8 @@ export function CompanyMembersTable({
   invites: CompanyMemberInvite[];
   isAdmin: boolean;
   currentUserId: string;
+  actions: CompanyMembersTableActions;
 }) {
-  const router = useRouter();
   const [lastAdminError, setLastAdminError] = useState(false);
   const [leaveLastAdminError, setLeaveLastAdminError] = useState(false);
   // Prevent rather than punish: disable Leave with the reason as a
@@ -134,7 +164,7 @@ export function CompanyMembersTable({
     setLastAdminError(false);
     setPendingMemberId(member.id);
     try {
-      const result = await updateCompanyMemberRole({
+      const result = await actions.updateCompanyMemberRole({
         data: {
           slug,
           memberId: member.id,
@@ -145,13 +175,13 @@ export function CompanyMembersTable({
         if (result.code === 'last_admin') {
           setLastAdminError(true);
         } else {
-          void toastActionError(m.employerMembers_updateError());
+          actions.toastError(m.employerMembers_updateError());
         }
         return;
       }
-      await router.invalidate();
+      await actions.invalidate();
     } catch {
-      void toastActionError(m.employerMembers_updateError());
+      actions.toastError(m.employerMembers_updateError());
     } finally {
       setPendingMemberId(null);
     }
@@ -161,7 +191,7 @@ export function CompanyMembersTable({
     setLastAdminError(false);
     setPendingMemberId(member.id);
     try {
-      const result = await removeCompanyMember({
+      const result = await actions.removeCompanyMember({
         data: { slug, memberId: member.id },
       });
       if (!result.ok) {
@@ -169,14 +199,14 @@ export function CompanyMembersTable({
           setLastAdminError(true);
           setRemoveMemberId(null);
         } else {
-          void toastActionError(m.employerMembers_updateError());
+          actions.toastError(m.employerMembers_updateError());
         }
         return;
       }
       setRemoveMemberId(null);
-      await router.invalidate();
+      await actions.invalidate();
     } catch {
-      void toastActionError(m.employerMembers_updateError());
+      actions.toastError(m.employerMembers_updateError());
     } finally {
       setPendingMemberId(null);
     }
@@ -186,22 +216,22 @@ export function CompanyMembersTable({
     setLeaveLastAdminError(false);
     setPendingMemberId('self');
     try {
-      const result = await leaveCompany({ data: { slug } });
+      const result = await actions.leaveCompany({ data: { slug } });
       if (!result.ok) {
         if (result.code === 'last_admin') {
           setLeaveLastAdminError(true);
         } else {
-          void toastActionError(m.employerMembers_updateError());
+          actions.toastError(m.employerMembers_updateError());
         }
         return;
       }
-      void toastActionSuccess(
+      actions.toastSuccess(
         m.employerMembers_leaveSuccessToast({ company: companyName }),
       );
-      await router.navigate({ to: '/employers/dashboard' });
+      await actions.navigateToDashboard();
       setLeaveOpen(false);
     } catch {
-      void toastActionError(m.employerMembers_updateError());
+      actions.toastError(m.employerMembers_updateError());
     } finally {
       setPendingMemberId(null);
     }
@@ -210,16 +240,16 @@ export function CompanyMembersTable({
   async function revoke(inviteId: string) {
     setPendingInviteId(inviteId);
     try {
-      const result = await revokeCompanyInvite({
+      const result = await actions.revokeCompanyInvite({
         data: { slug, inviteId },
       });
       if (!result.ok) {
-        void toastActionError(m.employerMembers_revokeError());
+        actions.toastError(m.employerMembers_revokeError());
         return;
       }
-      await router.invalidate();
+      await actions.invalidate();
     } catch {
-      void toastActionError(m.employerMembers_revokeError());
+      actions.toastError(m.employerMembers_revokeError());
     } finally {
       setPendingInviteId(null);
     }

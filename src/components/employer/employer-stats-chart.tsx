@@ -57,8 +57,17 @@ import { Spinner } from '@/components/ui/spinner';
 // 30 daily buckets is too many x-ticks; thin them so labels never collide.
 const X_TICK_INTERVAL = 4;
 
+export function employerStatsChartDirection(direction: 'ltr' | 'rtl') {
+  const isRtl = direction === 'rtl';
+  return {
+    xAxisReversed: isRtl,
+    yAxisOrientation: isRtl ? ('right' as const) : ('left' as const),
+    margin: isRtl ? { left: 8, right: 4 } : { left: 4, right: 8 },
+  };
+}
+
 export function EmployerStatsChart({ vm }: { vm: EmployerStatsChartVM }) {
-  const isRtl = useDirection() === 'rtl';
+  const chartDirection = employerStatsChartDirection(useDirection());
   // Built at render so the legend labels resolve to the active board locale
   // (module-scope `m.*` would freeze them to the import-time locale).
   const chartConfig = {
@@ -102,7 +111,7 @@ export function EmployerStatsChart({ vm }: { vm: EmployerStatsChartVM }) {
               // The wider margin is the gutter that keeps the LAST x tick
               // from clipping at the plot's trailing edge — which is the
               // left edge once the axis is reversed.
-              margin={isRtl ? { left: 8, right: 4 } : { left: 4, right: 8 }}
+              margin={chartDirection.margin}
             >
               <defs>
                 <linearGradient
@@ -132,12 +141,12 @@ export function EmployerStatsChart({ vm }: { vm: EmployerStatsChartVM }) {
                 tickMargin={8}
                 interval={X_TICK_INTERVAL}
                 minTickGap={16}
-                reversed={isRtl}
+                reversed={chartDirection.xAxisReversed}
               />
               <YAxis
                 tickLine={false}
                 axisLine={false}
-                orientation={isRtl ? 'right' : 'left'}
+                orientation={chartDirection.yAxisOrientation}
                 width={32}
                 allowDecimals={false}
                 tickMargin={4}

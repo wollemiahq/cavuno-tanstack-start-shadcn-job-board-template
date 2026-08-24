@@ -3,7 +3,7 @@ import { LegalPlaceholderCallout } from './placeholder-callout';
 import type { LegalLocale, LegalPageContent } from './types';
 
 /** Titles match `breadcrumbs_privacyPolicy` per locale. */
-export const privacyPolicyContent: Record<LegalLocale, LegalPageContent> = {
+export const privacyPolicyContent = {
   en: {
     title: 'Privacy Policy',
     description:
@@ -90,4 +90,4 @@ export const privacyPolicyContent: Record<LegalLocale, LegalPageContent> = {
       );
     },
   },
-};
+} satisfies Record<LegalLocale, LegalPageContent>;

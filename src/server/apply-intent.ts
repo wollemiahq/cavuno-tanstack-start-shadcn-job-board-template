@@ -12,6 +12,7 @@ import {
 
 import { isTrustedApplyGatewayUrl } from '@/lib/apply-gateway-url';
 import { withApplyGatewayCapability } from '@/lib/board';
+import { searchString } from '@/lib/pagination';
 
 export const APPLY_SESSION_COOKIE = '__Host-cavuno_apply_session';
 
@@ -44,10 +45,12 @@ function cookieValue(cookieHeader: string | null, name: string): string | null {
   return null;
 }
 
+type ApplySessionKey = { sessionKey: string; setCookie: string | null };
+
 export function applySessionKey(
   cookieHeader: string | null,
   create = () => crypto.randomUUID().replaceAll('-', ''),
-): { sessionKey: string; setCookie: string | null } {
+): ApplySessionKey {
   const existing = cookieValue(cookieHeader, APPLY_SESSION_COOKIE);
   if (existing && SESSION_KEY_RE.test(existing)) {
     return { sessionKey: existing, setCookie: null };
@@ -76,10 +79,10 @@ export async function applyJobSlug(request: Request): Promise<string | null> {
   // Keep this route's browser contract intentionally tiny. In particular, do
   // not silently discard a caller-supplied destination/profile/session field.
   if (keys.length !== 1 || keys[0] !== 'jobSlug') return null;
-  const jobSlug = form.get('jobSlug');
+  const jobSlug = searchString(form.get('jobSlug'));
   // Do not accept a destination, profile country, or browser-provided session
   // field. Cavuno resolves all of those from its stored job and identity data.
-  if (typeof jobSlug !== 'string') return null;
+  if (!jobSlug) return null;
   const normalized = jobSlug.trim();
   return normalized.length > 0 && normalized.length <= 200 ? normalized : null;
 }

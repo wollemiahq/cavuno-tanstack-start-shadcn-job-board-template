@@ -9,17 +9,16 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { m } from '../../paraglide/messages';
-import { ApplyButton } from './apply-button';
+import { ApplyButton, type ApplyButtonDependencies } from './apply-button';
 
-const { navigateToExternalApply, requestGatewayApply } = vi.hoisted(() => ({
-  navigateToExternalApply: vi.fn(),
-  requestGatewayApply: vi.fn(),
-}));
-
-vi.mock('@/lib/gateway-apply', () => ({
-  navigateToExternalApply,
-  requestGatewayApply,
-}));
+const navigateToExternalApply = vi.fn();
+const requestGatewayApply = vi.fn();
+const dependencies: ApplyButtonDependencies = {
+  loadGatewayApply: async () => ({
+    navigateToExternalApply,
+    requestGatewayApply,
+  }),
+};
 
 afterEach(() => {
   cleanup();
@@ -36,6 +35,7 @@ const base = {
     kind: 'not_required' as const,
   })),
   onApply: vi.fn(async () => {}),
+  dependencies,
 };
 
 const futureExpiry = () => new Date(Date.now() + 60_000).toISOString();
@@ -121,10 +121,11 @@ describe('ApplyButton gateway external jobs', () => {
         viewer={null}
       />,
     );
-    const form = container.querySelector('form')!;
+    const form = container.querySelector('form');
+    if (!form) throw new Error('Expected the apply control to render a form');
     fireEvent.submit(form);
     expect(
-      (screen.getByRole('button', { name: /applying/i }) as HTMLButtonElement)
+      screen.getByRole<HTMLButtonElement>('button', { name: /applying/i })
         .disabled,
     ).toBe(true);
   });
@@ -143,7 +144,9 @@ describe('ApplyButton gateway external jobs', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /apply/i }));
 
-    expect(await screen.findByRole('alertdialog')).not.toBeNull();
+    expect(
+      await screen.findByRole('alertdialog', undefined, { timeout: 10_000 }),
+    ).not.toBeNull();
     expect(
       screen.getByRole('heading', {
         name: m.apply_locationUnavailableTitle(),

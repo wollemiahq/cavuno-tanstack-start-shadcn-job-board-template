@@ -7,7 +7,7 @@ import type { RefObject } from '@react-types/shared';
  * @returns True if the ResizeObserver API is supported, false otherwise.
  */
 function hasResizeObserver() {
-  return typeof window.ResizeObserver !== 'undefined';
+  return globalThis.window.ResizeObserver !== undefined;
 }
 
 /**

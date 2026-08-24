@@ -38,13 +38,11 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({
-  getDataSourceFacts: vi.fn<() => Promise<unknown>>(),
-}));
+import type { PreviewDataSourceFacts } from '../server/preview';
 
-vi.mock('../server/preview', () => ({
-  getDataSourceFacts: mocks.getDataSourceFacts,
-}));
+const mocks = {
+  getDataSourceFacts: vi.fn<() => Promise<PreviewDataSourceFacts>>(),
+};
 
 import { AppRouteError, AppRouteErrorPage } from './app-route-error';
 
@@ -55,13 +53,10 @@ const cookieWrites: string[] = [];
 const reloadMock = vi.fn();
 
 beforeEach(() => {
-  // Reaching a boundary is the behaviour under test, and TanStack reports it
-  // through console.warn/error on the way. The suite's strict console policy
-  // (src/test/setup.ts) turns any such call into a thrown error, which would
-  // convert the subject's OWN expected output into a failure — React then
-  // unmounts the tree and every assertion here sees an empty container.
-  vi.spyOn(console, 'warn').mockImplementation(() => {});
-  vi.spyOn(console, 'error').mockImplementation(() => {});
+  // TanStack only reports a caught route error to the console in development.
+  // This suite exercises the production boundary contract, where the visitor
+  // sees the recovery surface without a framework diagnostic alongside it.
+  vi.stubEnv('NODE_ENV', 'production');
   // Default: no dual-source — keeps existing tests free of the switcher.
   mocks.getDataSourceFacts.mockResolvedValue({
     demoConfigured: false,
@@ -85,6 +80,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  vi.unstubAllEnvs();
 });
 
 /**
@@ -93,8 +89,14 @@ afterEach(() => {
  * is part of what is under test.
  */
 async function renderRejectingLoader() {
+  const caughtErrors: unknown[] = [];
   const rootRoute = createRootRoute({
-    errorComponent: AppRouteErrorPage,
+    errorComponent: (props) => (
+      <AppRouteErrorPage
+        {...props}
+        loadDataSourceFacts={mocks.getDataSourceFacts}
+      />
+    ),
     component: () => <Outlet />,
   });
   const indexRoute = createRoute({
@@ -116,8 +118,14 @@ async function renderRejectingLoader() {
     history: createMemoryHistory({ initialEntries: ['/companies/acme'] }),
   });
 
-  render(<RouterProvider router={router} />);
+  render(<RouterProvider router={router} />, {
+    // React 19 reports caught errors unless the root provides this callback.
+    // Capture the expected rejection so the test proves the boundary caught it.
+    onCaughtError: (error) => caughtErrors.push(error),
+  });
   await screen.findByRole('heading', { level: 1 });
+  expect(caughtErrors).toHaveLength(1);
+  expect(caughtErrors[0]).toBeInstanceOf(TypeError);
 }
 
 /** The surface renders a typed `Link`, so it only mounts under a router. */
@@ -193,6 +201,7 @@ describe('public route error backstop', () => {
       <AppRouteErrorPage
         error={new TypeError('Failed to fetch')}
         reset={vi.fn()}
+        loadDataSourceFacts={mocks.getDataSourceFacts}
       />,
     );
 
@@ -213,6 +222,7 @@ describe('sticky-demo escape hatch on the error surface (F1)', () => {
       <AppRouteErrorPage
         error={new TypeError('Failed to fetch')}
         reset={vi.fn()}
+        loadDataSourceFacts={mocks.getDataSourceFacts}
       />,
     );
 
@@ -236,6 +246,7 @@ describe('sticky-demo escape hatch on the error surface (F1)', () => {
       <AppRouteErrorPage
         error={new TypeError('Failed to fetch')}
         reset={vi.fn()}
+        loadDataSourceFacts={mocks.getDataSourceFacts}
       />,
     );
     await waitFor(() => expect(mocks.getDataSourceFacts).toHaveBeenCalled());
@@ -254,6 +265,7 @@ describe('sticky-demo escape hatch on the error surface (F1)', () => {
       <AppRouteErrorPage
         error={new TypeError('Failed to fetch')}
         reset={vi.fn()}
+        loadDataSourceFacts={mocks.getDataSourceFacts}
       />,
     );
     await waitFor(() => expect(mocks.getDataSourceFacts).toHaveBeenCalled());
@@ -268,6 +280,7 @@ describe('sticky-demo escape hatch on the error surface (F1)', () => {
       <AppRouteErrorPage
         error={new TypeError('Failed to fetch')}
         reset={vi.fn()}
+        loadDataSourceFacts={mocks.getDataSourceFacts}
       />,
     );
     await waitFor(() => expect(mocks.getDataSourceFacts).toHaveBeenCalled());

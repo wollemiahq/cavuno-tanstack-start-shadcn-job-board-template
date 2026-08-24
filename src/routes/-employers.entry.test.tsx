@@ -1,8 +1,6 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
-import type { ReactNode } from 'react';
-
 import { isRedirect } from '@tanstack/react-router';
 import {
   act,
@@ -12,97 +10,95 @@ import {
   screen,
   within,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import {
+  createEmployerDashboardLoader,
+  EmployerDashboardView,
+  type EmployerDashboardLoaderDependencies,
+  type EmployerDashboardViewDependencies,
+} from './-employers.dashboard';
+import {
+  EmployersPageView,
+  type EmployersPageViewDependencies,
+} from './-employers.index';
+import {
+  createEmployerOnboardingLoader,
+  EmployerOnboardingPageView,
+  type EmployerOnboardingLoaderDependencies,
+  type EmployerOnboardingViewDependencies,
+} from './-employers.onboarding';
+import { Route as DashboardRoute } from './employers.dashboard';
+import { Route as OnboardingRoute } from './employers.onboarding.$slug';
 
 import type { CompanyMembership, Plan } from '@cavuno/board';
 
-const mocks = vi.hoisted(() => ({
-  invalidate: vi.fn(),
-  navigate: vi.fn(),
-}));
+const listCompanies =
+  vi.fn<EmployerDashboardLoaderDependencies['listCompanies']>();
+const getSeoBase = vi.fn<EmployerDashboardLoaderDependencies['getSeoBase']>();
+const refreshSession =
+  vi.fn<EmployerDashboardLoaderDependencies['refreshSession']>();
+const searchCompanies =
+  vi.fn<EmployerDashboardViewDependencies['searchCompanies']>();
+const claimCompany = vi.fn<EmployerDashboardViewDependencies['claimCompany']>();
+const createCompany =
+  vi.fn<EmployerDashboardViewDependencies['createCompany']>();
+const sendWorkEmail =
+  vi.fn<EmployerOnboardingViewDependencies['sendWorkEmail']>();
+const cancelClaim = vi.fn<EmployerOnboardingViewDependencies['cancelClaim']>();
+const invalidate = vi.fn<() => Promise<void>>();
+const navigateToOnboarding = vi.fn<(slug: string) => Promise<void>>();
+const navigateToDashboard = vi.fn<() => Promise<void>>();
+const showActionError = vi.fn<(message: string) => Promise<void>>();
 
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    Link: ({
-      to,
-      params,
-      search,
-      children,
-      ...props
-    }: {
-      to: string;
-      params?: Record<string, string>;
-      search?: Record<string, string | undefined>;
-      children: ReactNode;
-      className?: string;
-    }) => (
-      <a
-        href={`${Object.entries(params ?? {}).reduce(
-          (href, [key, value]) => href.replace(`$${key}`, value),
-          to,
-        )}${
-          search
-            ? `?${new URLSearchParams(
-                Object.entries(search).filter(
-                  (entry): entry is [string, string] => entry[1] !== undefined,
-                ),
-              )}`
-            : ''
-        }`}
-        {...props}
-      >
-        {children}
-      </a>
-    ),
-    useRouter: () => ({
-      invalidate: mocks.invalidate,
-      navigate: mocks.navigate,
-    }),
-  };
-});
-
-vi.mock('../server/employers', () => ({
-  cancelClaim: vi.fn(),
-  claimCompany: vi.fn(),
-  createCompany: vi.fn(),
-  listCompanies: vi.fn(),
-  searchCompanies: vi.fn(),
-  sendWorkEmail: vi.fn(),
-}));
-
-vi.mock('../server/queries', () => ({
-  getSeoBase: vi.fn(),
-  listPlans: vi.fn(),
-  listSalesLedPlans: vi.fn(),
-}));
-vi.mock('../server/marketing-pages', () => ({
-  getEmployersPage: vi.fn().mockResolvedValue({
-    plans: [],
-    salesLed: [],
-    seo: { boardName: 'Acme', origin: 'https://example.com', language: 'en' },
-    head: {},
-    jsonLd: [],
-  }),
-  getAuthJoinSeo: vi.fn(),
-}));
-// The employer loader's refresh-before-redirect path; default to no recovery,
-// so an UNAUTHENTICATED loader still redirects to sign-in.
-vi.mock('../server/auth', () => ({
-  refreshSession: vi.fn().mockResolvedValue({ ok: false }),
-}));
-
-import {
-  cancelClaim,
+const dashboardLoader = createEmployerDashboardLoader({
   listCompanies,
+  getSeoBase,
+  refreshSession,
+});
+const onboardingLoader = createEmployerOnboardingLoader({
+  listCompanies,
+  getSeoBase,
+  refreshSession,
+} satisfies EmployerOnboardingLoaderDependencies);
+
+const dashboardViewDependencies = {
   searchCompanies,
+  claimCompany,
+  createCompany,
+  invalidate,
+  navigateToOnboarding,
+  companyRouteElement: ({ approved, slug }) => (
+    <a
+      href={
+        approved
+          ? `/employers/companies/${slug}`
+          : `/employers/onboarding/${slug}`
+      }
+    />
+  ),
+} satisfies EmployerDashboardViewDependencies;
+
+const onboardingViewDependencies = {
   sendWorkEmail,
-} from '../server/employers';
-import { Route as DashboardRoute } from './employers.dashboard';
-import { Route as EmployersRoute } from './employers.index';
-import { Route as OnboardingRoute } from './employers.onboarding.$slug';
+  cancelClaim,
+  invalidate,
+  navigateToDashboard,
+  showActionError,
+} satisfies EmployerOnboardingViewDependencies;
+
+const employersPageViewDependencies = {
+  postingPlanLink: ({ planId, className, children }) => (
+    <a href={`/post?plan=${planId}`} className={className}>
+      {children}
+    </a>
+  ),
+  joinLink: ({ className, children }) => (
+    <a href="/auth/join" className={className}>
+      {children}
+    </a>
+  ),
+} satisfies EmployersPageViewDependencies;
 
 const plan = {
   object: 'plan',
@@ -142,23 +138,72 @@ const membership = {
   },
 } satisfies CompanyMembership;
 
+function dashboardLoaderContext() {
+  const pathname = '/employers/dashboard';
+  return {
+    abortController: new AbortController(),
+    preload: false,
+    params: {},
+    deps: {},
+    context: { origin: 'https://jobs.example.test' },
+    location: {
+      href: pathname,
+      pathname,
+      search: {},
+      searchStr: '',
+      state: { __TSR_index: 0 },
+      hash: '',
+      publicHref: pathname,
+      external: false,
+    },
+    navigate: vi.fn(),
+    parentMatchPromise: new Promise<never>(() => undefined),
+    cause: 'enter' as const,
+    route: DashboardRoute,
+  };
+}
+
+function onboardingLoaderContext() {
+  const pathname = '/employers/onboarding/acme-ventures';
+  return {
+    ...dashboardLoaderContext(),
+    params: { slug: 'acme-ventures' },
+    location: {
+      ...dashboardLoaderContext().location,
+      href: pathname,
+      pathname,
+      publicHref: pathname,
+    },
+    route: OnboardingRoute,
+  };
+}
+
 afterEach(() => {
   vi.useRealTimers();
   cleanup();
-  vi.restoreAllMocks();
   vi.clearAllMocks();
+});
+
+beforeEach(() => {
+  getSeoBase.mockResolvedValue({
+    boardName: 'Acme',
+    language: 'en',
+    origin: 'https://jobs.example.test',
+  });
+  refreshSession.mockResolvedValue({ ok: false });
+  invalidate.mockResolvedValue(undefined);
+  navigateToOnboarding.mockResolvedValue(undefined);
+  navigateToDashboard.mockResolvedValue(undefined);
+  showActionError.mockResolvedValue(undefined);
 });
 
 describe('employer entry surfaces', () => {
   it('returns signed-out employers to the dashboard they originally requested', async () => {
-    vi.mocked(listCompanies).mockRejectedValue(new Error('UNAUTHENTICATED'));
-    const loader = DashboardRoute.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('The employer dashboard needs a loader');
+    listCompanies.mockRejectedValue(new Error('UNAUTHENTICATED'));
 
     let result: unknown;
     try {
-      result = await loader({} as never);
+      result = await dashboardLoader(dashboardLoaderContext());
     } catch (error) {
       result = error;
     }
@@ -172,23 +217,19 @@ describe('employer entry surfaces', () => {
   });
 
   it('does not disguise a non-authentication employer failure as signed out', async () => {
-    vi.mocked(listCompanies).mockRejectedValue(new Error('UPSTREAM_TIMEOUT'));
-    const loader = DashboardRoute.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('The employer dashboard needs a loader');
+    listCompanies.mockRejectedValue(new Error('UPSTREAM_TIMEOUT'));
 
-    await expect(loader({} as never)).rejects.toThrow('UPSTREAM_TIMEOUT');
+    await expect(dashboardLoader(dashboardLoaderContext())).rejects.toThrow(
+      'UPSTREAM_TIMEOUT',
+    );
   });
 
   it('sends an unverified employer back through verification for the dashboard', async () => {
-    vi.mocked(listCompanies).mockRejectedValue(new Error('EMAIL_UNVERIFIED'));
-    const loader = DashboardRoute.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('The employer dashboard needs a loader');
+    listCompanies.mockRejectedValue(new Error('EMAIL_UNVERIFIED'));
 
     let result: unknown;
     try {
-      await loader({} as never);
+      await dashboardLoader(dashboardLoaderContext());
     } catch (error) {
       result = error;
     }
@@ -202,14 +243,11 @@ describe('employer entry surfaces', () => {
   });
 
   it('preserves the pending company path across employer sign-in', async () => {
-    vi.mocked(listCompanies).mockRejectedValue(new Error('UNAUTHENTICATED'));
-    const loader = OnboardingRoute.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('Employer onboarding needs a loader');
+    listCompanies.mockRejectedValue(new Error('UNAUTHENTICATED'));
 
     let result: unknown;
     try {
-      result = await loader({ params: { slug: 'acme-ventures' } } as never);
+      result = await onboardingLoader(onboardingLoaderContext());
     } catch (error) {
       result = error;
     }
@@ -223,83 +261,67 @@ describe('employer entry surfaces', () => {
   });
 
   it('sends a self-service employer offer into the matching public posting plan', () => {
-    vi.spyOn(EmployersRoute, 'useLoaderData').mockReturnValue({
-      plans: [plan],
-      salesLed: [],
-      seo: {
-        origin: 'https://jobs.example.test',
-        boardName: 'Example Jobs',
-        language: 'en',
-        labels: {},
-      },
-      jsonLd: [],
-    });
-    const EmployersPage = EmployersRoute.options.component;
-    if (!EmployersPage)
-      throw new Error('The employer landing route needs a component');
-
-    render(<EmployersPage />);
+    render(
+      <EmployersPageView
+        plans={[plan]}
+        salesLed={[]}
+        seo={{ boardName: 'Example Jobs' }}
+        dependencies={employersPageViewDependencies}
+      />,
+    );
 
     expect(
       screen.getByRole('heading', { level: 1, name: 'For employers' }),
     ).toBeVisible();
     const growthCard = screen.getByText('Growth').closest('[data-slot="card"]');
-    expect(growthCard).toBeInTheDocument();
-    const growthCardElement = growthCard as HTMLElement;
-    expect(within(growthCardElement).getByText('Recommended')).toBeVisible();
+    if (!(growthCard instanceof HTMLElement)) {
+      throw new Error('The Growth plan must render in a card');
+    }
+    expect(within(growthCard).getByText('Recommended')).toBeVisible();
     // A job-posting plan's action posts a job — it is not a subscription.
     expect(
-      within(growthCardElement).getByRole('link', { name: 'Post a job' }),
+      within(growthCard).getByRole('link', { name: 'Post a job' }),
     ).toHaveAttribute('href', '/post?plan=plan-growth');
   });
 
   it('does not send a talent-access subscription into the job-posting form', () => {
-    vi.spyOn(EmployersRoute, 'useLoaderData').mockReturnValue({
-      plans: [
-        {
-          ...plan,
-          id: 'plan-talent',
-          name: 'Talent access',
-          purpose: 'talent_access',
-        },
-      ],
-      salesLed: [],
-      seo: {
-        origin: 'https://jobs.example.test',
-        boardName: 'Example Jobs',
-        language: 'en',
-        labels: {},
-      },
-      jsonLd: [],
-    });
-    const EmployersPage = EmployersRoute.options.component;
-    if (!EmployersPage)
-      throw new Error('The employer landing route needs a component');
-
-    render(<EmployersPage />);
+    render(
+      <EmployersPageView
+        plans={[
+          {
+            ...plan,
+            id: 'plan-talent',
+            name: 'Talent access',
+            purpose: 'talent_access',
+          },
+        ]}
+        salesLed={[]}
+        seo={{ boardName: 'Example Jobs' }}
+        dependencies={employersPageViewDependencies}
+      />,
+    );
 
     const talentCard = screen
       .getAllByText('Talent access')
       .map((element) => element.closest('[data-slot="card"]'))
       .find((element) => element !== null);
-    expect(talentCard).toBeInTheDocument();
+    if (!(talentCard instanceof HTMLElement)) {
+      throw new Error('The Talent access plan must render in a card');
+    }
     expect(
-      within(talentCard as HTMLElement).getByRole('link', {
+      within(talentCard).getByRole('link', {
         name: 'Subscribe',
       }),
     ).toHaveAttribute('href', '/auth/join');
   });
 
   it('presents approved memberships as an authenticated company workspace list', () => {
-    vi.spyOn(DashboardRoute, 'useSearch').mockReturnValue({});
-    vi.spyOn(DashboardRoute, 'useLoaderData').mockReturnValue({
-      data: [membership],
-    });
-    const DashboardPage = DashboardRoute.options.component;
-    if (!DashboardPage)
-      throw new Error('The employer dashboard route needs a component');
-
-    render(<DashboardPage />);
+    render(
+      <EmployerDashboardView
+        companies={[membership]}
+        dependencies={dashboardViewDependencies}
+      />,
+    );
 
     expect(
       screen.getByRole('heading', { level: 1, name: 'Your companies' }),
@@ -307,17 +329,16 @@ describe('employer entry surfaces', () => {
     const companyItem = screen
       .getByText('Acme Ventures')
       .closest('[data-slot="item"]');
-    expect(companyItem).toBeInTheDocument();
-    expect(within(companyItem as HTMLElement).getByText('owner')).toBeVisible();
+    if (!(companyItem instanceof HTMLElement)) {
+      throw new Error('The approved company must render in a workspace item');
+    }
+    expect(within(companyItem).getByText('owner')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Add company' })).toBeEnabled();
   });
 
   it('uses the owned focus-managed dialog when adding a company', async () => {
     vi.useFakeTimers();
-    vi.spyOn(DashboardRoute, 'useSearch').mockReturnValue({});
-    vi.spyOn(DashboardRoute, 'useSearch').mockReturnValue({});
-    vi.spyOn(DashboardRoute, 'useLoaderData').mockReturnValue({ data: [] });
-    vi.mocked(searchCompanies).mockResolvedValue({
+    searchCompanies.mockResolvedValue({
       ok: true,
       data: {
         object: 'list',
@@ -327,11 +348,12 @@ describe('employer entry surfaces', () => {
         nextCursor: null,
       },
     });
-    const DashboardPage = DashboardRoute.options.component;
-    if (!DashboardPage)
-      throw new Error('The employer dashboard route needs a component');
-
-    render(<DashboardPage />);
+    render(
+      <EmployerDashboardView
+        companies={[]}
+        dependencies={dashboardViewDependencies}
+      />,
+    );
     const companySearch = screen.getByLabelText('Search companies by name...');
     fireEvent.change(companySearch, {
       target: { value: 'Acme' },
@@ -353,14 +375,8 @@ describe('employer entry surfaces', () => {
 
   it('keeps the connect-company panel open across keystrokes while results update in place', async () => {
     vi.useFakeTimers();
-    vi.spyOn(DashboardRoute, 'useSearch').mockReturnValue({});
-    vi.spyOn(DashboardRoute, 'useLoaderData').mockReturnValue({ data: [] });
     // Echo the query back through the result so we can watch the list swap.
-    vi.mocked(searchCompanies).mockImplementation((({
-      data,
-    }: {
-      data: { q: string };
-    }) =>
+    searchCompanies.mockImplementation(({ data }) =>
       Promise.resolve({
         ok: true,
         data: {
@@ -369,6 +385,7 @@ describe('employer entry surfaces', () => {
           data: [
             {
               id: `co-${data.q}`,
+              object: 'claimable_company',
               name: `Match ${data.q}`,
               slug: `match-${data.q}`,
               website: null,
@@ -377,12 +394,14 @@ describe('employer entry surfaces', () => {
           hasMore: false,
           nextCursor: null,
         },
-      })) as never);
-    const DashboardPage = DashboardRoute.options.component;
-    if (!DashboardPage)
-      throw new Error('The employer dashboard route needs a component');
-
-    render(<DashboardPage />);
+      }),
+    );
+    render(
+      <EmployerDashboardView
+        companies={[]}
+        dependencies={dashboardViewDependencies}
+      />,
+    );
     const companySearch = screen.getByLabelText('Search companies by name...');
 
     fireEvent.change(companySearch, { target: { value: 'Ac' } });
@@ -409,17 +428,13 @@ describe('employer entry surfaces', () => {
   });
 
   it('keeps a pending membership inside the employer workspace while awaiting approval', () => {
-    vi.spyOn(OnboardingRoute, 'useLoaderData').mockReturnValue({
-      membership: { ...membership, status: 'awaiting_admin' },
-    });
-    vi.spyOn(OnboardingRoute, 'useParams').mockReturnValue({
-      slug: 'acme-ventures',
-    });
-    const OnboardingPage = OnboardingRoute.options.component;
-    if (!OnboardingPage)
-      throw new Error('The employer onboarding route needs a component');
-
-    render(<OnboardingPage />);
+    render(
+      <EmployerOnboardingPageView
+        membership={{ ...membership, status: 'awaiting_admin' }}
+        slug="acme-ventures"
+        dependencies={onboardingViewDependencies}
+      />,
+    );
 
     expect(
       screen.getByRole('heading', { level: 1, name: 'Awaiting approval' }),
@@ -430,46 +445,44 @@ describe('employer entry surfaces', () => {
   });
 
   it('resets work-email state when navigating between onboarding companies', () => {
-    let loaderData = {
-      membership: {
-        ...membership,
-        status: 'pending_work_email' as const,
-        workEmail: 'owner@acme.test',
-        workEmailVerifiedAt: null,
-      },
+    const firstMembership = {
+      ...membership,
+      status: 'pending_work_email' as const,
+      workEmail: 'owner@acme.test',
+      workEmailVerifiedAt: null,
     };
-    let params = { slug: 'acme-ventures' };
-    vi.spyOn(OnboardingRoute, 'useLoaderData').mockImplementation(
-      () => loaderData,
+    const { rerender } = render(
+      <EmployerOnboardingPageView
+        membership={firstMembership}
+        slug="acme-ventures"
+        dependencies={onboardingViewDependencies}
+      />,
     );
-    vi.spyOn(OnboardingRoute, 'useParams').mockImplementation(() => params);
-    const OnboardingPage = OnboardingRoute.options.component;
-    if (!OnboardingPage)
-      throw new Error('The employer onboarding route needs a component');
-
-    const { rerender } = render(<OnboardingPage />);
     fireEvent.click(
       screen.getByRole('button', { name: 'Use a different email' }),
     );
     expect(screen.getByLabelText('Work email')).toHaveValue('owner@acme.test');
 
-    loaderData = {
-      membership: {
-        ...membership,
-        id: 'membership-beta',
-        status: 'pending_work_email',
-        workEmail: 'hiring@beta.test',
-        workEmailVerifiedAt: null,
-        company: {
-          ...membership.company,
-          id: 'company-beta',
-          name: 'Beta Labs',
-          slug: 'beta-labs',
-        },
+    const secondMembership = {
+      ...membership,
+      id: 'membership-beta',
+      status: 'pending_work_email' as const,
+      workEmail: 'hiring@beta.test',
+      workEmailVerifiedAt: null,
+      company: {
+        ...membership.company,
+        id: 'company-beta',
+        name: 'Beta Labs',
+        slug: 'beta-labs',
       },
     };
-    params = { slug: 'beta-labs' };
-    rerender(<OnboardingPage />);
+    rerender(
+      <EmployerOnboardingPageView
+        membership={secondMembership}
+        slug="beta-labs"
+        dependencies={onboardingViewDependencies}
+      />,
+    );
 
     expect(screen.getByText(/hiring@beta\.test/)).toBeVisible();
     fireEvent.click(
@@ -480,22 +493,18 @@ describe('employer entry surfaces', () => {
   });
 
   it('keeps a failed cancellation visible without leaving onboarding', async () => {
-    vi.spyOn(OnboardingRoute, 'useLoaderData').mockReturnValue({
-      membership: { ...membership, status: 'awaiting_admin' },
-    });
-    vi.spyOn(OnboardingRoute, 'useParams').mockReturnValue({
-      slug: 'acme-ventures',
-    });
-    vi.mocked(cancelClaim).mockResolvedValue({
+    cancelClaim.mockResolvedValue({
       ok: false,
       code: 'employer_not_member',
       message: 'wire text',
     });
-    const OnboardingPage = OnboardingRoute.options.component;
-    if (!OnboardingPage)
-      throw new Error('The employer onboarding route needs a component');
-
-    render(<OnboardingPage />);
+    render(
+      <EmployerOnboardingPageView
+        membership={{ ...membership, status: 'awaiting_admin' }}
+        slug="acme-ventures"
+        dependencies={onboardingViewDependencies}
+      />,
+    );
     const cancel = screen.getByRole('button', { name: 'Cancel claim' });
     fireEvent.click(cancel);
 
@@ -503,7 +512,7 @@ describe('employer entry surfaces', () => {
       'You’re not a member of this company’s team.',
     );
     expect(cancel).toBeEnabled();
-    expect(mocks.invalidate).not.toHaveBeenCalled();
-    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(invalidate).not.toHaveBeenCalled();
+    expect(navigateToDashboard).not.toHaveBeenCalled();
   });
 });

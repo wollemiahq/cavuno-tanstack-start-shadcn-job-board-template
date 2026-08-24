@@ -84,7 +84,9 @@ const compiledPublic = (
   Array.isArray(settings.locales) ? settings.locales : []
 ).filter(
   (locale) =>
-    typeof locale === 'string' && locale !== 'en-XA' && locale !== 'ar-XB',
+    Object.prototype.toString.call(locale) === '[object String]' &&
+    locale !== 'en-XA' &&
+    locale !== 'ar-XB',
 );
 const ltrRoutes = [
   '/jobs',

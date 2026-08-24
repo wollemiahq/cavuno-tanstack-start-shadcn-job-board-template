@@ -9,17 +9,11 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../server/queries', () => ({ getSeoBase: vi.fn() }));
-
-const mocks = vi.hoisted(() => ({
+const mocks = {
   confirmEmailChange: vi.fn(),
-}));
+};
 
-vi.mock('../server/auth', () => ({
-  confirmEmailChange: mocks.confirmEmailChange,
-}));
-
-import { Route } from './auth.confirm-email-change';
+import { ConfirmEmailChangeView } from './-auth.confirm-email-change';
 
 import { m } from '@/paraglide/messages';
 
@@ -31,12 +25,12 @@ afterEach(() => {
 
 describe('/auth/confirm-email-change', () => {
   it('asks the visitor to request a new change when the token is missing', () => {
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ token: undefined });
-    const Page = Route.options.component;
-    if (!Page)
-      throw new Error('The confirm-email-change route needs a component');
-
-    render(<Page />);
+    render(
+      <ConfirmEmailChangeView
+        token={undefined}
+        confirmEmailChangeAction={mocks.confirmEmailChange}
+      />,
+    );
 
     expect(
       screen.getByRole('heading', {
@@ -51,13 +45,13 @@ describe('/auth/confirm-email-change', () => {
   });
 
   it('confirms a valid token and links back to settings', async () => {
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ token: 'tok' });
     mocks.confirmEmailChange.mockResolvedValue({ ok: true });
-    const Page = Route.options.component;
-    if (!Page)
-      throw new Error('The confirm-email-change route needs a component');
-
-    render(<Page />);
+    render(
+      <ConfirmEmailChangeView
+        token="tok"
+        confirmEmailChangeAction={mocks.confirmEmailChange}
+      />,
+    );
     fireEvent.click(
       screen.getByRole('button', {
         name: m.authConfirmEmailChange_submitLabel(),
@@ -82,17 +76,17 @@ describe('/auth/confirm-email-change', () => {
   });
 
   it('renders invalid_token and email_taken as distinct states', async () => {
-    vi.spyOn(Route, 'useSearch').mockReturnValue({ token: 'tok' });
     mocks.confirmEmailChange.mockResolvedValue({
       ok: false,
       code: 'invalid_token',
       message: 'expired',
     });
-    const Page = Route.options.component;
-    if (!Page)
-      throw new Error('The confirm-email-change route needs a component');
-
-    render(<Page />);
+    render(
+      <ConfirmEmailChangeView
+        token="tok"
+        confirmEmailChangeAction={mocks.confirmEmailChange}
+      />,
+    );
     fireEvent.click(
       screen.getByRole('button', {
         name: m.authConfirmEmailChange_submitLabel(),

@@ -47,15 +47,16 @@ import { useSearchSelection } from '@/hooks/use-search-selection';
 import { toastActionError } from '@/lib/action-toast';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
+import { searchString, type UrlSearchInput } from '@/lib/pagination';
 
 const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/saved-jobs')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
-  validateSearch: (search: Record<string, unknown>): { selectedJob?: string } =>
-    typeof search.selectedJob === 'string' && search.selectedJob
-      ? { selectedJob: search.selectedJob }
-      : {},
+  validateSearch: (search: UrlSearchInput): { selectedJob?: string } => {
+    const selectedJob = searchString(search.selectedJob);
+    return selectedJob ? { selectedJob } : {};
+  },
   pendingComponent: CandidateRoutePendingPage,
   errorComponent: CandidateRouteErrorPage,
   loader: async () => {

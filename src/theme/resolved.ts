@@ -6,13 +6,20 @@
  */
 export const tokensHash = '13dc150a42c1aedf661d4086ab809c9a09175dba64cc8d6db00fa232754df711'
 
-export const themeMeta: {
+export interface ThemeMeta {
   mode: string | null
   fontSans: string | null
   fontHeading: string | null
   fontsImport: string | null
   ogFontFamily: string | null
-} = {
+}
+
+export interface ThemeTokens {
+  light: Record<string, string>
+  dark: Record<string, string>
+}
+
+export const themeMeta: ThemeMeta = {
   "mode": "system",
   "fontSans": "geist",
   "fontHeading": "inherit",
@@ -20,10 +27,7 @@ export const themeMeta: {
   "ogFontFamily": "Geist"
 }
 
-export const themeTokens: {
-  light: Record<string, string>
-  dark: Record<string, string>
-} = {
+export const themeTokens: ThemeTokens = {
   light: {
   "--background": "oklch(1 0 0)",
   "--foreground": "oklch(0.145 0 0)",

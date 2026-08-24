@@ -9,6 +9,15 @@ import {
   mapRouteTreeToPathTemplates,
 } from './routes-report';
 
+class TestWindow {
+  parent: TestWindow;
+  readonly postMessage = vi.fn();
+
+  constructor() {
+    this.parent = this;
+  }
+}
+
 describe('mapRouteTreeToPathTemplates', () => {
   it('converts $param segments to :param form', () => {
     const tree = {
@@ -42,15 +51,11 @@ describe('mapRouteTreeToPathTemplates', () => {
 describe('emitRoutesReport', () => {
   it('does not emit when not embedded (parent === self)', () => {
     const postMessage = vi.fn();
-    const selfWin = {
-      parent: null as unknown as { postMessage: typeof postMessage },
-    };
-    // Parent points at self — top-level window.
-    selfWin.parent = selfWin as never;
+    const selfWin = new TestWindow();
 
     emitRoutesReport(
       { id: '__root__', children: [{ fullPath: '/jobs' }] },
-      { selfWindow: selfWin as never, parent: selfWin as never },
+      { selfWindow: selfWin, parent: selfWin },
     );
 
     expect(postMessage).not.toHaveBeenCalled();
@@ -74,7 +79,9 @@ describe('emitRoutesReport', () => {
     );
 
     expect(postMessage).toHaveBeenCalledTimes(1);
-    const [payload, targetOrigin] = postMessage.mock.calls[0]!;
+    const call = postMessage.mock.calls.at(0);
+    if (!call) throw new Error('Expected a routes report postMessage call');
+    const [payload, targetOrigin] = call;
     expect(targetOrigin).toBe('*');
     expect(payload).toEqual({
       type: ROUTES_REPORT_TYPE,

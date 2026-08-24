@@ -14,7 +14,7 @@ const labels = {
   website: 'Website',
 };
 
-const company = {
+const company: PublicCompany = {
   id: 'company-1',
   object: 'public_company',
   name: 'Acme Research',
@@ -25,8 +25,9 @@ const company = {
   description: '<p>Research tools for ambitious engineering teams.</p>',
   jobCount: 3,
   publishedJobCount: 3,
+  salarySampleCount: 0,
   links: { public: 'https://jobs.example/companies/acme-research' },
-} as PublicCompany;
+};
 
 describe('company view models', () => {
   it('maps a list company to honest, canonical card data', () => {
@@ -50,7 +51,7 @@ describe('company view models', () => {
         summary: null,
         description: null,
         publishedJobCount: 0,
-      } as PublicCompany,
+      },
       labels,
     );
 
@@ -64,7 +65,7 @@ describe('company view models', () => {
         ...company,
         summary: 'Operator-authored one-liner.',
         description: '<p>Long HTML that should not become the card line.</p>',
-      } as PublicCompany,
+      },
       labels,
     );
     expect(vm.descriptionText).toBe('Operator-authored one-liner.');
@@ -76,7 +77,7 @@ describe('company view models', () => {
         ...company,
         website: 'https://acme.example/',
         markets: [{ name: 'Developer tools', slug: 'developer-tools' }],
-      } as PublicCompanyDetail,
+      } satisfies PublicCompanyDetail,
       labels,
     );
 

@@ -19,7 +19,13 @@
  */
 import { isLocale, localizeHref } from '../paraglide/runtime';
 
-const SECTION_TRANSLATIONS: Record<string, Record<string, string>> = {
+type SplitPath = {
+  pathname: string;
+  search: string;
+  hash: string;
+};
+
+const SECTION_TRANSLATIONS = {
   fr: {
     jobs: 'emplois',
     companies: 'entreprises',
@@ -37,14 +43,18 @@ const SECTION_TRANSLATIONS: Record<string, Record<string, string>> = {
 const TRANSLATED_PREFIX = Object.keys(SECTION_TRANSLATIONS).join('|');
 const PREFIXED_SECTION = new RegExp(`^/(${TRANSLATED_PREFIX})/([^/?#]+)(.*)$`);
 
-const LOCALIZED_TO_CANONICAL: Record<
-  string,
-  Record<string, string>
-> = Object.fromEntries(
-  Object.entries(SECTION_TRANSLATIONS).map(([locale, map]) => [
+const SECTION_TRANSLATION_MAP = new Map(
+  Object.entries(SECTION_TRANSLATIONS).map(([locale, entries]) => [
     locale,
-    Object.fromEntries(
-      Object.entries(map).map(([canonical, localized]) => [
+    new Map(Object.entries(entries)),
+  ]),
+);
+
+const LOCALIZED_TO_CANONICAL = new Map(
+  Object.entries(SECTION_TRANSLATIONS).map(([locale, entries]) => [
+    locale,
+    new Map(
+      Object.entries(entries).map(([canonical, localized]) => [
         localized,
         canonical,
       ]),
@@ -52,11 +62,7 @@ const LOCALIZED_TO_CANONICAL: Record<
   ]),
 );
 
-function splitPath(path: string): {
-  pathname: string;
-  search: string;
-  hash: string;
-} {
+function splitPath(path: string): SplitPath {
   const hashIndex = path.indexOf('#');
   const hash = hashIndex >= 0 ? path.slice(hashIndex) : '';
   const noHash = hashIndex >= 0 ? path.slice(0, hashIndex) : path;
@@ -88,7 +94,7 @@ export function localizePath(
   const match = prefixed.match(PREFIXED_SECTION);
   if (!match) return prefixed;
   const [, locale, section, rest] = match;
-  const localized = SECTION_TRANSLATIONS[locale!]?.[section!];
+  const localized = SECTION_TRANSLATION_MAP.get(locale!)?.get(section!);
   return localized ? `/${locale}/${localized}${rest}` : prefixed;
 }
 
@@ -98,7 +104,7 @@ export function localizeSegments(pathname: string): string {
   const match = pathname.match(PREFIXED_SECTION);
   if (!match) return pathname;
   const [, locale, section, rest] = match;
-  const localized = SECTION_TRANSLATIONS[locale!]?.[section!];
+  const localized = SECTION_TRANSLATION_MAP.get(locale!)?.get(section!);
   return localized ? `/${locale}/${localized}${rest}` : pathname;
 }
 
@@ -108,6 +114,6 @@ export function delocalizeSegments(pathname: string): string {
   const match = pathname.match(PREFIXED_SECTION);
   if (!match) return pathname;
   const [, locale, section, rest] = match;
-  const canonical = LOCALIZED_TO_CANONICAL[locale!]?.[section!];
+  const canonical = LOCALIZED_TO_CANONICAL.get(locale!)?.get(section!);
   return canonical ? `/${locale}/${canonical}${rest}` : pathname;
 }

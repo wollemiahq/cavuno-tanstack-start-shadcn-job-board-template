@@ -1,68 +1,79 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const {
+import {
+  createJobDetailLoader,
+  type JobDetailLoaderDependencies,
+} from './-job-detail-loader';
+import {
+  applicationFixture,
+  publicCompanyFixture,
+  publicJobFixture,
+} from './-route-test-fixtures';
+
+import type { PublicJobCard } from '@cavuno/board';
+
+const getCompany = vi.fn<JobDetailLoaderDependencies['getCompany']>();
+const getJobDetailPage =
+  vi.fn<JobDetailLoaderDependencies['getJobDetailPage']>();
+const getSessionUser = vi.fn<JobDetailLoaderDependencies['getSessionUser']>();
+const getSimilarJobs = vi.fn<JobDetailLoaderDependencies['getSimilarJobs']>();
+const myApplicationForJob =
+  vi.fn<JobDetailLoaderDependencies['myApplicationForJob']>();
+const dependencies: JobDetailLoaderDependencies = {
   getCompany,
   getJobDetailPage,
   getSessionUser,
   getSimilarJobs,
   myApplicationForJob,
-} = vi.hoisted(() => ({
-  getCompany: vi.fn(),
-  getJobDetailPage: vi.fn(),
-  getSessionUser: vi.fn(),
-  getSimilarJobs: vi.fn(),
-  myApplicationForJob: vi.fn(),
-}));
+};
+const loadJobDetail = createJobDetailLoader(dependencies);
 
-vi.mock('../server/job-detail-page', () => ({
-  getJobDetailPage,
-}));
-
-vi.mock('../server/queries', () => ({
-  getCompany,
-  getSimilarJobs,
-  subscribeJobAlert: vi.fn(),
-}));
-
-vi.mock('../server/account', () => ({
-  getSessionUser,
-  saveJob: vi.fn(),
-}));
-
-vi.mock('../server/applications', () => ({
-  applyToJob: vi.fn(),
-  myApplicationForJob,
-}));
-
-import { Route } from './companies.$companySlug.jobs.$jobSlug';
+function jobDetailLoaderInput() {
+  return {
+    params: { companySlug: 'acme', jobSlug: 'platform-engineer' },
+  };
+}
 
 beforeEach(() => {
+  const similarJobs: PublicJobCard[] = [];
   getJobDetailPage.mockReset();
   getSessionUser.mockReset();
   getSimilarJobs.mockReset();
   getCompany.mockReset();
   myApplicationForJob.mockReset();
   getJobDetailPage.mockResolvedValue({
-    job: { id: 'job-1', slug: 'platform-engineer' },
-    seo: { origin: 'https://board.example', boardName: 'Board' },
+    job: publicJobFixture('platform-engineer'),
+    seo: {
+      origin: 'https://board.example',
+      boardName: 'Board',
+      language: 'en',
+    },
     head: { meta: [], links: [] },
     jsonLd: [],
   });
-  getSessionUser.mockResolvedValue({ emailVerified: true });
-  getSimilarJobs.mockResolvedValue({ data: [] });
-  getCompany.mockResolvedValue(null);
-  myApplicationForJob.mockResolvedValue({ id: 'application-1' });
+  getSessionUser.mockResolvedValue({
+    id: 'user-1',
+    object: 'board_user',
+    role: 'candidate',
+    email: 'candidate@example.com',
+    displayName: null,
+    emailVerified: true,
+    hasPassword: true,
+  });
+  getSimilarJobs.mockResolvedValue({
+    object: 'list',
+    url: '/v1/jobs/similar',
+    data: similarJobs,
+    hasMore: false,
+    nextCursor: null,
+  });
+  getCompany.mockResolvedValue(publicCompanyFixture('acme'));
+  myApplicationForJob.mockResolvedValue(applicationFixture());
 });
 
 describe('full job application state', () => {
   it('loads prior application state for a verified returning candidate', async () => {
-    const loader = Route.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('Expected a route loader');
-
-    const data = await loader({
-      params: { companySlug: 'acme', jobSlug: 'platform-engineer' },
-    } as never);
+    const data = await loadJobDetail(jobDetailLoaderInput());
 
     expect(myApplicationForJob).toHaveBeenCalledWith({
       data: { jobSlug: 'platform-engineer' },
@@ -71,14 +82,17 @@ describe('full job application state', () => {
   });
 
   it('does not request private application state for an unverified viewer', async () => {
-    getSessionUser.mockResolvedValue({ emailVerified: false });
+    getSessionUser.mockResolvedValue({
+      id: 'user-1',
+      object: 'board_user',
+      role: 'candidate',
+      email: 'candidate@example.com',
+      displayName: null,
+      emailVerified: false,
+      hasPassword: true,
+    });
 
-    const loader = Route.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('Expected a route loader');
-    const data = await loader({
-      params: { companySlug: 'acme', jobSlug: 'platform-engineer' },
-    } as never);
+    const data = await loadJobDetail(jobDetailLoaderInput());
 
     expect(myApplicationForJob).not.toHaveBeenCalled();
     expect(data).toMatchObject({ alreadyApplied: false });
@@ -89,12 +103,7 @@ describe('full job application state', () => {
       new Error('Private state unavailable'),
     );
 
-    const loader = Route.options.loader;
-    if (typeof loader !== 'function')
-      throw new Error('Expected a route loader');
-    const data = await loader({
-      params: { companySlug: 'acme', jobSlug: 'platform-engineer' },
-    } as never);
+    const data = await loadJobDetail(jobDetailLoaderInput());
 
     expect(data).toMatchObject({
       job: { slug: 'platform-engineer' },

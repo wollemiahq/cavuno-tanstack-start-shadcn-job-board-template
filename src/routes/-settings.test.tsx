@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -9,56 +16,64 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../server/queries', () => ({
-  getSeoBase: vi.fn().mockResolvedValue({ boardName: 'Acme Board' }),
-}));
-
-const mocks = vi.hoisted(() => ({
-  requestEmailChange: vi.fn(),
-  updatePassword: vi.fn(),
-  requestSetPassword: vi.fn(),
-  updateNotificationPreference: vi.fn(),
-  unsubscribeWithToken: vi.fn(),
-}));
-
-vi.mock('../server/settings', () => ({
-  getNotificationPreferences: vi.fn(),
-  getMarketingConsent: vi.fn(),
-  getSettingsAccount: vi.fn(),
-  unsubscribeWithToken: mocks.unsubscribeWithToken,
-  requestEmailChange: mocks.requestEmailChange,
-  updatePassword: mocks.updatePassword,
-  requestSetPassword: mocks.requestSetPassword,
-  updateNotificationPreference: mocks.updateNotificationPreference,
-}));
-
-vi.mock('../server/account', () => ({
-  deleteAccount: vi.fn(),
-}));
-
-vi.mock('../server/auth', () => ({
-  signOut: vi.fn(),
-}));
-
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    useRouter: () => ({
-      invalidate: vi.fn(),
-      navigate: vi.fn(),
-    }),
-  };
-});
-
-import { Route } from './settings';
+import {
+  SettingsPageView,
+  createSettingsLoader,
+  settingsRouteDependencies,
+  type SettingsRouteDependencies,
+} from './-settings';
 
 import { m } from '@/paraglide/messages';
 
+const requestEmailChange =
+  vi.fn<SettingsRouteDependencies['requestEmailChange']>();
+const updatePassword = vi.fn<SettingsRouteDependencies['updatePassword']>();
+const requestSetPassword =
+  vi.fn<SettingsRouteDependencies['requestSetPassword']>();
+const updateNotificationPreference =
+  vi.fn<SettingsRouteDependencies['updateNotificationPreference']>();
+const unsubscribeWithToken =
+  vi.fn<SettingsRouteDependencies['unsubscribeWithToken']>();
+const dependencies: SettingsRouteDependencies = {
+  ...settingsRouteDependencies,
+  getSeoBase: vi.fn().mockResolvedValue({ boardName: 'Acme Board' }),
+  requestEmailChange,
+  updatePassword,
+  requestSetPassword,
+  updateNotificationPreference,
+  unsubscribeWithToken,
+};
+
+function settingsLoaderContext() {
+  const pathname = '/settings';
+  return {
+    abortController: new AbortController(),
+    preload: false,
+    params: {},
+    deps: {
+      token: 'signed-token',
+      boardUserId: 'candidate-1',
+      channel: 'recommendedJobEmails' as const,
+    },
+    context: { origin: 'https://board.example' },
+    location: {
+      href: pathname,
+      pathname,
+      search: {},
+      searchStr: '',
+      state: { __TSR_index: 0 },
+      hash: '',
+      publicHref: pathname,
+      external: false,
+    },
+    navigate: vi.fn(),
+    parentMatchPromise: new Promise<never>(() => undefined),
+    cause: 'enter' as const,
+  };
+}
+
 afterEach(() => {
   cleanup();
-  vi.restoreAllMocks();
   vi.clearAllMocks();
 });
 
@@ -72,49 +87,73 @@ const account = {
   hasPassword: true,
 };
 
-function renderSettings(
+async function renderSettings(
   overrides: {
     hasPassword?: boolean;
     preferences?: {
+      object: 'notification_preference';
       channel: 'messageEmails' | 'applicationEmails' | 'recommendedJobEmails';
       subscribed: boolean;
+      updatedAt: number | null;
     }[];
   } = {},
 ) {
-  vi.spyOn(Route, 'useLoaderData').mockReturnValue({
+  await renderSettingsData({
     mode: 'settings',
     preferences: overrides.preferences ?? [
-      { channel: 'messageEmails', subscribed: true },
-      { channel: 'applicationEmails', subscribed: true },
-      { channel: 'recommendedJobEmails', subscribed: false },
+      {
+        object: 'notification_preference',
+        channel: 'messageEmails',
+        subscribed: true,
+        updatedAt: null,
+      },
+      {
+        object: 'notification_preference',
+        channel: 'applicationEmails',
+        subscribed: true,
+        updatedAt: null,
+      },
+      {
+        object: 'notification_preference',
+        channel: 'recommendedJobEmails',
+        subscribed: false,
+        updatedAt: null,
+      },
     ],
     consent: null,
     account: { ...account, hasPassword: overrides.hasPassword ?? true },
-    seo: { boardName: 'Acme Board' },
-  } as never);
-  const SettingsPage = Route.options.component;
-  if (!SettingsPage) throw new Error('The settings route needs a component');
-  render(<SettingsPage />);
+  });
+}
+
+async function renderSettingsData(
+  data: Parameters<typeof SettingsPageView>[0]['data'],
+) {
+  const rootRoute = createRootRoute();
+  const pageRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => (
+      <SettingsPageView data={data} dependencies={dependencies} />
+    ),
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([pageRoute]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  await router.load();
+  render(<RouterProvider router={router} />);
 }
 
 describe('settings unsubscribe recovery', () => {
   it('accepts a signed recommendation-email unsubscribe before auth', async () => {
-    mocks.unsubscribeWithToken.mockResolvedValue({ ok: true });
-    const loader = Route.options.loader;
-    if (typeof loader !== 'function') throw new Error('Expected loader');
+    unsubscribeWithToken.mockResolvedValue({ ok: true });
     await expect(
-      loader({
-        deps: {
-          token: 'signed-token',
-          boardUserId: 'candidate-1',
-          channel: 'recommendedJobEmails',
-        },
-      } as never),
+      createSettingsLoader(dependencies)(settingsLoaderContext()),
     ).resolves.toMatchObject({
       mode: 'unsubscribed',
       channel: 'recommendedJobEmails',
     });
-    expect(mocks.unsubscribeWithToken).toHaveBeenCalledWith({
+    expect(unsubscribeWithToken).toHaveBeenCalledWith({
       data: {
         token: 'signed-token',
         boardUserId: 'candidate-1',
@@ -123,14 +162,8 @@ describe('settings unsubscribe recovery', () => {
     });
   });
 
-  it('returns an expired-link recipient to settings after sign in', () => {
-    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
-      mode: 'unsubscribe-failed',
-    } as never);
-    const SettingsPage = Route.options.component;
-    if (!SettingsPage) throw new Error('The settings route needs a component');
-
-    render(<SettingsPage />);
+  it('returns an expired-link recipient to settings after sign in', async () => {
+    await renderSettingsData({ mode: 'unsubscribe-failed' });
 
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
       'href',
@@ -144,8 +177,8 @@ describe('signed-in settings account cards', () => {
     window.sessionStorage.clear();
   });
 
-  it('renders notifications, email, password, then danger zone', () => {
-    renderSettings();
+  it('renders notifications, email, password, then danger zone', async () => {
+    await renderSettings();
 
     const notifications = document.querySelector(
       '[data-test="notification-settings"]',
@@ -176,8 +209,8 @@ describe('signed-in settings account cards', () => {
     ).toBeNull();
   });
 
-  it('shows the candidate-controlled recommendation email preference', () => {
-    renderSettings();
+  it('shows the candidate-controlled recommendation email preference', async () => {
+    await renderSettings();
     expect(
       screen.getByRole('checkbox', {
         name: m.notificationSettings_recommendedJobEmailsTitle(),
@@ -186,15 +219,24 @@ describe('signed-in settings account cards', () => {
   });
 
   it('persists the recommendation preference immediately from settings', async () => {
-    mocks.updateNotificationPreference.mockResolvedValue({});
-    renderSettings();
+    updateNotificationPreference.mockResolvedValue({
+      object: 'list',
+      url: '/v1/me/notification-preferences',
+      count: 0,
+      limit: 0,
+      offset: 0,
+      hasMore: false,
+      nextCursor: null,
+      data: [],
+    });
+    await renderSettings();
     fireEvent.click(
       screen.getByRole('checkbox', {
         name: m.notificationSettings_recommendedJobEmailsTitle(),
       }),
     );
     await waitFor(() => {
-      expect(mocks.updateNotificationPreference).toHaveBeenCalledWith({
+      expect(updateNotificationPreference).toHaveBeenCalledWith({
         data: {
           channel: 'recommendedJobEmails',
           subscribed: true,
@@ -204,8 +246,8 @@ describe('signed-in settings account cards', () => {
   });
 
   it('requests an email change and swaps to the pending notice', async () => {
-    mocks.requestEmailChange.mockResolvedValue({ ok: true });
-    renderSettings();
+    requestEmailChange.mockResolvedValue({ ok: true });
+    await renderSettings();
 
     fireEvent.change(screen.getByLabelText(m.settingsEmail_title()), {
       target: { value: 'new@example.com' },
@@ -219,18 +261,18 @@ describe('signed-in settings account cards', () => {
         m.settingsEmail_pendingBody({ email: 'new@example.com' }),
       ),
     ).toBeInTheDocument();
-    expect(mocks.requestEmailChange).toHaveBeenCalledWith({
+    expect(requestEmailChange).toHaveBeenCalledWith({
       data: { email: 'new@example.com' },
     });
   });
 
   it('renders email_taken and same_email inline', async () => {
-    mocks.requestEmailChange.mockResolvedValue({
+    requestEmailChange.mockResolvedValue({
       ok: false,
       code: 'email_taken',
       message: 'taken',
     });
-    renderSettings();
+    await renderSettings();
 
     fireEvent.change(screen.getByLabelText(m.settingsEmail_title()), {
       target: { value: 'taken@example.com' },
@@ -255,12 +297,12 @@ describe('signed-in settings account cards', () => {
   });
 
   it('updates a password and surfaces invalid_current_password inline', async () => {
-    mocks.updatePassword.mockResolvedValue({
+    updatePassword.mockResolvedValue({
       ok: false,
       code: 'invalid_current_password',
       message: 'wrong',
     });
-    renderSettings();
+    await renderSettings();
 
     fireEvent.change(screen.getByLabelText(m.settingsPassword_currentLabel()), {
       target: { value: 'oldpass99' },
@@ -278,14 +320,14 @@ describe('signed-in settings account cards', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       m.settingsPassword_invalidCurrentError(),
     );
-    expect(mocks.updatePassword).toHaveBeenCalledWith({
+    expect(updatePassword).toHaveBeenCalledWith({
       data: { currentPassword: 'oldpass99', newPassword: 'newpass99' },
     });
   });
 
   it('sends a set-password email for passwordless accounts', async () => {
-    mocks.requestSetPassword.mockResolvedValue({ ok: true });
-    renderSettings({ hasPassword: false });
+    requestSetPassword.mockResolvedValue({ ok: true });
+    await renderSettings({ hasPassword: false });
 
     expect(
       document.querySelector('[data-test="settings-password-card"]'),
@@ -295,7 +337,7 @@ describe('signed-in settings account cards', () => {
     );
 
     await waitFor(() => {
-      expect(mocks.requestSetPassword).toHaveBeenCalledWith({
+      expect(requestSetPassword).toHaveBeenCalledWith({
         data: { email: 'ada@example.com' },
       });
     });

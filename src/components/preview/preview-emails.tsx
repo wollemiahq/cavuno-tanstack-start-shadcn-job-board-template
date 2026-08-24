@@ -33,6 +33,10 @@ import { cn } from '@/lib/utils';
 
 type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 
+export type LoadPreviewEmails = (
+  input: Parameters<typeof listSandboxEmails>[0],
+) => ReturnType<typeof listSandboxEmails>;
+
 /**
  * The "Emails" panel — a Mailpit/letter_opener-style viewer for the sandbox's
  * captured outbound mail. A Sheet triggered from inside the preview
@@ -57,6 +61,7 @@ export function PreviewEmailsSheet({
   disabled,
   open: openProp,
   onOpenChange: onOpenChangeProp,
+  loadEmails = listSandboxEmails,
 }: {
   disabled?: boolean;
   /**
@@ -66,6 +71,7 @@ export function PreviewEmailsSheet({
    */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  loadEmails?: LoadPreviewEmails;
 }) {
   const controlled = openProp !== undefined;
   const [openState, setOpenState] = useState(false);
@@ -77,7 +83,7 @@ export function PreviewEmailsSheet({
   const load = useCallback(async () => {
     setStatus('loading');
     try {
-      const result = await listSandboxEmails({
+      const result = await loadEmails({
         data: { limit: PREVIEW_EMAILS_DEFAULT_LIMIT },
       });
       setEmails(result);
@@ -88,7 +94,7 @@ export function PreviewEmailsSheet({
     } catch {
       setStatus('error');
     }
-  }, []);
+  }, [loadEmails]);
 
   // Lazy first load whenever the panel opens with nothing fetched yet — works
   // in both controlled (toolbar-driven) and uncontrolled (own-trigger) modes.

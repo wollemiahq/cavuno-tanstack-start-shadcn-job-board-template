@@ -2,6 +2,8 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { confirmWorkEmail } from '../server/employers';
 
+import { searchString, type UrlSearchInput } from '@/lib/pagination';
+
 /**
  * Work-email verification landing — the target of the link the API emails when
  * an employer verifies a company work email. The token IS the authorization
@@ -11,9 +13,9 @@ import { confirmWorkEmail } from '../server/employers';
  * `/auth/verify-work-email` GET route.
  */
 export const Route = createFileRoute('/auth/verify-work-email')({
-  validateSearch: (search: Record<string, unknown>) => ({
-    token: typeof search.token === 'string' ? search.token : '',
-    slug: typeof search.slug === 'string' ? search.slug : '',
+  validateSearch: (search: UrlSearchInput) => ({
+    token: searchString(search.token) ?? '',
+    slug: searchString(search.slug) ?? '',
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {

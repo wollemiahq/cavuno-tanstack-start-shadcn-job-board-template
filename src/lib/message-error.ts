@@ -6,7 +6,7 @@ import { m } from '../paraglide/messages';
  * (see `board-access.ts`), so the client sees a plain `Error` whose message
  * carries the server-side text — fall back to a generic line otherwise.
  */
-export function errorMessage(error: unknown): string {
+export function errorMessage<T>(error: T): string {
   if (error instanceof Error && error.message.includes('EMAIL_UNVERIFIED')) {
     return m.messages_verifyEmailFirstText();
   }

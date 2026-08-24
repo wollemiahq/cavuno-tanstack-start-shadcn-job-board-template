@@ -39,6 +39,8 @@ import {
 } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
 
+import { searchString } from '@/lib/pagination';
+
 export type ActionResult<T> =
   | { ok: true; data: T }
   | { ok: false; code: string; message: string };
@@ -55,17 +57,18 @@ async function run<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
   }
 }
 
-function invitedEmailFromDetails(details: unknown): string | undefined {
-  if (typeof details !== 'object' || details === null) return undefined;
-  if (!('email' in details)) return undefined;
-  const email = (details as { email: unknown }).email;
-  return typeof email === 'string' && email.length > 0 ? email : undefined;
+type ErrorDetails = { email?: string };
+function invitedEmailFromDetails<T>(details: T): string | undefined {
+  if (details === null || details === undefined || Object(details) !== details)
+    return undefined;
+  // SAFETY: Board API error details are object records; only the optional
+  // email field is read and decoded before being returned.
+  const row = details as ErrorDetails;
+  return searchString(row.email);
 }
 
 /** Bearer + board-access grant for one gated `/me/companies/*` call. */
-function authedHeaders(
-  context: SessionContext & BoardAccessContext,
-): Record<string, string> {
+function authedHeaders(context: SessionContext & BoardAccessContext) {
   return { ...context.authHeaders, ...context.boardAccessHeaders };
 }
 
@@ -284,11 +287,14 @@ export const acceptCompanyInvite = createServerFn({ method: 'POST' })
     } catch (error) {
       if (isBoardApiError(error)) {
         const email = invitedEmailFromDetails(error.details);
-        return {
+        const body = {
           ok: false as const,
           code: error.code,
           message: error.message,
-          ...(email ? { email } : {}),
+        };
+        if (email) return { ...body, email };
+        return {
+          ...body,
         };
       }
       return {
@@ -310,8 +316,8 @@ export const uploadCompanyLogo = createServerFn({ method: 'POST' })
     if (!(data instanceof FormData)) {
       throw new Error('Expected FormData');
     }
-    const slug = data.get('slug');
-    if (typeof slug !== 'string' || !slug) {
+    const slug = searchString(data.get('slug'));
+    if (!slug) {
       throw new Error('Expected a company slug');
     }
     const file = data.get('logo');

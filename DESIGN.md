@@ -282,6 +282,14 @@ Props:
 - `alerts: { id: string; object: "alert"; label: string | null; frequency: "weekly"; isActive: boolean; filters: { jobFunctions:…`
 - `places: AlertPlaceOption[]`
 
+### AlertManagerView — `src/components/alert-manager.tsx`
+
+Props:
+
+- `alerts: { id: string; object: "alert"; label: string | null; frequency: "weekly"; isActive: boolean; filters: { jobFunctions:…`
+- `dependencies: AlertManagerDependencies`
+- `places: AlertPlaceOption[]`
+
 ### AlternateLinks — `src/components/alternate-links.tsx`
 
 Props:
@@ -299,6 +307,7 @@ a later revocation applies from the next page load.
 Props:
 
 - `analytics: BoardAnalyticsConfig`
+- `reportWebVitals?: (() => Promise<void>) | undefined`
 
 ### NotFound — `src/components/app-not-found.tsx`
 
@@ -332,6 +341,10 @@ Props:
 - `title: string`
 
 ### AppRouteErrorPage — `src/components/app-route-error.tsx`
+
+Props:
+
+- `loadDataSourceFacts?: (() => Promise<PreviewDataSourceFacts>) | undefined`
 
 ### AuthCard — `src/components/auth-form.tsx`
 
@@ -395,11 +408,12 @@ Props:
 - `applicationsHref?: string | undefined`
 - `applicationUrl: string | null`
 - `applyAction?: PublicApplyAction | null | undefined`
+- `dependencies?: ApplyButtonDependencies | undefined`
 - `jobSlug: string | null`
 - `language: string`
 - `nativeApplications?: boolean | undefined`
 - `onApply: (jobSlug: string, approvalReceipt?: string | undefined) => Promise<void>`
-- `onPrepareApply: (jobSlug: string) => Promise<unknown>`
+- `onPrepareApply: (jobSlug: string) => Promise<NativeApplyPrepareResult>`
 - `returnTo: string`
 - `viewer: { emailVerified: boolean; } | null`
 
@@ -880,6 +894,18 @@ Props:
 
 - `label: string`
 
+### RelativeTimestamp — `src/components/board/relative-timestamp.tsx`
+
+Relative labels are intentionally time-dependent: SSR and hydration can
+straddle a minute boundary even when both render from the same job data.
+Keep that expected one-node difference from forcing React to discard and
+rebuild the surrounding result card or job-detail tree.
+
+Props:
+
+- `label: string`
+- `prefix?: string | undefined`
+
 ### CompactCompanySalarySummary — `src/components/board/salary-sections.tsx`
 
 Props:
@@ -1241,6 +1267,7 @@ Props:
 Props:
 
 - `billingOptions: { id: string; object: "employer_billing_option"; type: "subscription" | "order"; planId: string; planName: string; pl…`
+- `dependencies?: EmployerJobFormDependencies | undefined`
 - `job?: ({ id: string; object: "employer_job"; title: string; slug: string | null; status: "draft" | "published" | "expired" …`
 - `locale: string`
 - `mode: EmployerJobFormMode`
@@ -1276,6 +1303,7 @@ Props:
 
 Props:
 
+- `actions: CompanyDeleteActions`
 - `companyName: string`
 - `isAdmin: boolean`
 - `otherApprovedMembers: number`
@@ -1285,6 +1313,7 @@ Props:
 
 Props:
 
+- `actions: CompanyMembersTableActions`
 - `companyName: string`
 - `currentUserId: string`
 - `invites: { id: string; object: "company_member_invite"; email: string; createdAt: string; expiresAt: string; }[]`
@@ -1333,6 +1362,7 @@ area reserves its space instead of shifting layout when the data streams in.
 
 Props:
 
+- `actions: InviteMemberDialogActions`
 - `onOpenChange: (open: boolean) => void`
 - `open: boolean`
 - `slug: string`
@@ -1492,6 +1522,14 @@ Props:
 - `search: HeaderSearchState & { onSubmit: (submission: HeaderSearchSubmission) => void; keywordSuggestions: KeywordSuggestionSt…`
 - `value: string`
 
+### JobAlertFloatingPromptView — `src/components/job-alert-floating-prompt-view.tsx`
+
+Props:
+
+- `defaults: JobAlertDefaults`
+- `language: string`
+- `subscribe: (input: JobAlertSubscribeInput) => Promise<{ status: "submitted"; }>`
+
 ### JobAlertFloatingPrompt — `src/components/job-alert-floating-prompt.tsx`
 
 The hosted board's dismissible bottom-corner job-alert prompt on listing
@@ -1503,6 +1541,14 @@ Props:
 
 - `defaults: JobAlertDefaults`
 - `language: string`
+
+### JobAlertFloatingPromptView — `src/components/job-alert-floating-prompt.tsx`
+
+Props:
+
+- `defaults: JobAlertDefaults`
+- `language: string`
+- `subscribe: (input: JobAlertSubscribeInput) => Promise<{ status: "submitted"; }>`
 
 ### JsonLd — `src/components/json-ld.tsx`
 
@@ -1546,6 +1592,7 @@ Props:
 Props:
 
 - `className?: string | undefined`
+- `menuLoader?: LanguageSwitcherMenuLoader | undefined`
 - `options: LocaleOption[]`
 
 ### LanguagesSection — `src/components/languages-section.tsx`
@@ -1637,11 +1684,18 @@ is `board.me.companies.uploadLogo(slug, file)`.
 
 Props:
 
+- `actions: LogoUploadActions`
 - `companyName: string`
 - `logoUrl: string | null`
 - `slug: string`
 
 ### MarketingConsentSettings — `src/components/marketing-consent-settings.tsx`
+
+Props:
+
+- `consent: MarketingConsentState | null`
+
+### MarketingConsentSettingsView — `src/components/marketing-consent-settings.tsx`
 
 Marketing-consent row for /settings — grant AND withdraw, beside this
 app's own disclosure copy. Granting from a settings page is safe only
@@ -1655,6 +1709,8 @@ above it, which default to subscribed.
 Props:
 
 - `consent: MarketingConsentState | null`
+- `invalidate: () => Promise<void>`
+- `updateConsent: UpdateMarketingConsent`
 
 ### DitherCanvas — `src/components/marketing/dither-canvas.tsx`
 
@@ -1750,10 +1806,10 @@ Props:
 
 - `message: { id: string; object: "message"; conversationId: string; authorBoardUserId: string; recipientBoardUserId: string; bod…`
 - `onChanged: () => void`
-- `onEdit: (body: string) => Promise<unknown>`
-- `onReport: (reason: Reason) => Promise<unknown>`
+- `onEdit: (body: string) => Promise<MessageActionResult>`
+- `onReport: (reason: Reason) => Promise<MessageActionResult>`
 - `onReported: () => void`
-- `onUnsend: () => Promise<unknown>`
+- `onUnsend: () => Promise<MessageActionResult>`
 - `own: boolean`
 - `showSeen: boolean`
 
@@ -1794,18 +1850,18 @@ Props:
 - `companyHref?: string | undefined`
 - `conversation: { id: string; object: "conversation"; lastMessageAt: string; lastMessageSnippet: string; lastMessageAuthorBoardUserId…`
 - `messages: { id: string; object: "message"; conversationId: string; authorBoardUserId: string; recipientBoardUserId: string; bod…`
-- `onArchive: () => Promise<unknown>`
+- `onArchive: () => Promise<MessageActionResult>`
 - `onBack?: (() => void) | undefined`
-- `onBlock: () => Promise<unknown>`
+- `onBlock: () => Promise<MessageActionResult>`
 - `onClose?: (() => void) | undefined`
-- `onEditMessage: (messageId: string, body: string) => Promise<unknown>`
+- `onEditMessage: (messageId: string, body: string) => Promise<MessageActionResult>`
 - `onRefresh: () => void`
 - `onReported: () => void`
-- `onReportMessage: (messageId: string, reason: ReportReason) => Promise<unknown>`
+- `onReportMessage: (messageId: string, reason: ReportReason) => Promise<MessageActionResult>`
 - `onSend: (body: string) => Promise<void>`
-- `onUnarchive: () => Promise<unknown>`
-- `onUnblock: () => Promise<unknown>`
-- `onUnsendMessage: (messageId: string) => Promise<unknown>`
+- `onUnarchive: () => Promise<MessageActionResult>`
+- `onUnblock: () => Promise<MessageActionResult>`
+- `onUnsendMessage: (messageId: string) => Promise<MessageActionResult>`
 - `statusError?: string | null | undefined`
 
 ### MonthYearField — `src/components/month-year-field.tsx`
@@ -1825,6 +1881,12 @@ Props:
 
 ### NavigationProgress — `src/components/navigation-progress.tsx`
 
+### NavigationProgressIndicator — `src/components/navigation-progress.tsx`
+
+Props:
+
+- `isLoading: boolean`
+
 ### NotificationSettings — `src/components/notification-settings.tsx`
 
 Email notification toggles — one checkbox per channel over
@@ -1834,6 +1896,7 @@ PUTs immediately and refreshes.
 Props:
 
 - `preferences: StarterNotificationPreference[]`
+- `updatePreference?: ((options: { data: StarterUpdateNotificationPreferenceBody; }) => Promise<OffsetPagination & { object: "list"; url: s…`
 
 ### EmbeddedCheckout — `src/components/paywall/embedded-checkout.tsx`
 
@@ -1887,6 +1950,7 @@ Props:
 Props:
 
 - `customFields: { key: string; label: string; type: "number" | "boolean" | "short_text" | "long_text" | "single_select" | "multi_sele…`
+- `DescriptionEditor?: ComponentType<RichTextEditorProps> | undefined`
 - `initialPlanId?: string | undefined`
 - `locale: string`
 - `officeLocationSuggestions: LocationSuggestionState`
@@ -1898,6 +1962,14 @@ Props:
 - `remotePermits: { type: string; value: string; label: string; }[] | null`
 
 ### PreviewBoardSettingsSheet — `src/components/preview/preview-board-settings.tsx`
+
+Props:
+
+- `config: PreviewBoardConfig`
+- `onOpenChange: (open: boolean) => void`
+- `open: boolean`
+
+### PreviewBoardSettingsSheetView — `src/components/preview/preview-board-settings.tsx`
 
 The "Board settings" surface — the sandbox analog of the dashboard's board
 settings, split out of the persona menu into its own
@@ -1915,8 +1987,10 @@ invalidate, so the control reverts to the real `config` prop.
 Props:
 
 - `config: PreviewBoardConfig`
+- `invalidate: () => Promise<void>`
 - `onOpenChange: (open: boolean) => void`
 - `open: boolean`
+- `updateFlags: (input: RequiredFetcherDataOptions<undefined, (input: { config: SandboxConfigPatch; }) => { config: SandboxConfigPatc…`
 
 ### PreviewEmailsSheet — `src/components/preview/preview-emails.tsx`
 
@@ -1942,10 +2016,23 @@ sandbox-gated and returns `[]` off the sandbox, so the panel is inert there.
 Props:
 
 - `disabled?: boolean | undefined`
+- `loadEmails?: LoadPreviewEmails | undefined`
 - `onOpenChange?: ((open: boolean) => void) | undefined`
 - `open?: boolean | undefined`
 
 ### PreviewToolbar — `src/components/preview/preview-toolbar.tsx`
+
+Props:
+
+- `capability: PreviewCapability`
+- `config: PreviewBoardConfig`
+- `dataSource?: DataSource | undefined`
+- `demoBoardPrivate?: boolean | undefined`
+- `demoConfigured?: boolean | undefined`
+- `personas: PreviewPersona[]`
+- `viewer: PreviewViewer | null`
+
+### PreviewToolbarView — `src/components/preview/preview-toolbar.tsx`
 
 The developer-preview toolbar for the sandbox preview state
 spec. A floating, unobtrusive pill that renders ONLY when the server-side
@@ -1983,6 +2070,7 @@ Props:
 - `dataSource?: DataSource | undefined`
 - `demoBoardPrivate?: boolean | undefined`
 - `demoConfigured?: boolean | undefined`
+- `dependencies: PreviewToolbarDependencies`
 - `personas: PreviewPersona[]`
 - `viewer: PreviewViewer | null`
 
@@ -2006,6 +2094,7 @@ is part of the same patch (the SDK hides the two-mutation split).
 
 Props:
 
+- `dependencies?: ProfileFormDependencies | undefined`
 - `language: string`
 - `locationSuggestions: LocationSuggestionState`
 - `profile: { id: string; object: "candidate_profile"; displayName: string | null; bio: string | null; avatarUrl: string | null; …`
@@ -2035,7 +2124,7 @@ Props:
 - `footer?: ReactNode`
 - `marketingConsent?: MarketingConsentCopy | undefined`
 - `onOAuthStart?: ((provider: "google" | "linkedin") => Promise<OAuthRegistrationResult>) | undefined`
-- `onSubmit: (values: { displayName: string; email: string; password: string; marketingConsent?: boolean | undefined; }) => Promis…`
+- `onSubmit: (values: RegistrationSubmitValues) => Promise<RegistrationResult>`
 - `successHref: string`
 - `supportingText: ReactNode`
 - `title: string`
@@ -2067,7 +2156,9 @@ Props:
 
 Props:
 
+- `dependencies?: ResumeUploadDependencies | undefined`
 - `resume: { object: "resume"; parseStatus: "parsing" | "parsed" | "failed" | null; parseFailureReason: string | null; parsedAt:…`
+- `showKeepOnFile?: boolean | undefined`
 - `variant?: "section" | "embedded" | undefined`
 
 ### RichTextEditor — `src/components/rich-text-editor.tsx`
@@ -2152,6 +2243,7 @@ Props:
 Props:
 
 - `currentEmail: string`
+- `requestChange?: ((options: { data: { email: string; }; }) => Promise<SettingsActionError | { ok: true; }>) | undefined`
 
 ### SettingsPasswordCard — `src/components/settings-password-card.tsx`
 
@@ -2162,6 +2254,8 @@ Props:
 
 - `email: string`
 - `hasPassword: boolean`
+- `requestPassword?: RequestPassword | undefined`
+- `updateCurrentPassword?: UpdateCurrentPassword | undefined`
 
 ### MainContentTarget — `src/components/shell-accessibility.tsx`
 
@@ -2474,6 +2568,18 @@ Props:
 
 - `size?: "default" | "sm" | "lg" | "icon" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 - `variant?: "default" | "link" | "secondary" | "outline" | "ghost" | "destructive" | null | undefined`
+
+### CarouselRoot — `src/components/ui/carousel.tsx`
+
+Props:
+
+- `api: EmblaCarouselType | undefined`
+- `carouselRef: EmblaViewportRefType`
+- `controller: CarouselController | undefined`
+- `opts?: Partial<OptionsType> | undefined`
+- `orientation?: "horizontal" | "vertical" | undefined`
+- `plugins?: CreatePluginType<LoosePluginType, {}>[] | undefined`
+- `setApi?: ((api: EmblaCarouselType | undefined) => void) | undefined`
 
 ### ChartContainer — `src/components/ui/chart.tsx`
 

@@ -5,30 +5,23 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import { getCompaniesIndexPage } from '../server/companies-pages';
+import {
+  COMPANIES_PAGE_SIZE,
+  createCompaniesIndexLoader,
+} from './-companies-index-loader';
 
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import {
   companiesListingLoaderDeps,
   parseCompaniesSearch,
 } from '@/lib/companies-search';
-import { pageToOffset } from '@/lib/pagination';
 import { ProgrammaticCompaniesView } from '@/routes/-programmatic-companies-view';
-
-const COMPANIES_PAGE_SIZE = 24;
 
 export const Route = createFileRoute('/companies/')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseCompaniesSearch,
   loaderDeps: ({ search }) => companiesListingLoaderDeps(search),
-  loader: async ({ deps }) =>
-    getCompaniesIndexPage({
-      data: {
-        query: deps.query,
-        offset: pageToOffset(deps.page ?? 1, COMPANIES_PAGE_SIZE),
-        limit: COMPANIES_PAGE_SIZE,
-      },
-    }),
+  loader: createCompaniesIndexLoader(),
   head: ({ loaderData }) =>
     loaderData
       ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }

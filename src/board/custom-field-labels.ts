@@ -15,21 +15,29 @@ type MessageFn = (
   options?: { locale?: Locale },
 ) => string;
 
-const FIELD_LABELS: Record<
-  string,
-  { label: MessageFn; options?: Record<string, MessageFn> }
-> = {
-  visa_sponsorship: {
-    label: m.customField_visaSponsorship_label,
-    options: {
-      yes: m.customField_visaSponsorship_optionYes,
-      no: m.customField_visaSponsorship_optionNo,
-      case_by_case: m.customField_visaSponsorship_optionCaseByCase,
+interface CustomFieldLabelEntry {
+  label: MessageFn;
+  options?: Map<string, MessageFn>;
+}
+
+const FIELD_LABELS = new Map<string, CustomFieldLabelEntry>([
+  [
+    'visa_sponsorship',
+    {
+      label: m.customField_visaSponsorship_label,
+      options: new Map([
+        ['yes', m.customField_visaSponsorship_optionYes],
+        ['no', m.customField_visaSponsorship_optionNo],
+        ['case_by_case', m.customField_visaSponsorship_optionCaseByCase],
+      ]),
     },
-  },
-  team_page_url: { label: m.customField_teamPageUrl_label },
-  relocation_assistance: { label: m.customField_relocationAssistance_label },
-};
+  ],
+  ['team_page_url', { label: m.customField_teamPageUrl_label }],
+  [
+    'relocation_assistance',
+    { label: m.customField_relocationAssistance_label },
+  ],
+]);
 
 function localeOpt(language?: string) {
   return isLocale(language) ? { locale: language } : undefined;
@@ -40,7 +48,7 @@ export function customFieldLabel(
   field: { key: string; label: string },
   language?: string,
 ): string {
-  const entry = FIELD_LABELS[field.key];
+  const entry = FIELD_LABELS.get(field.key);
   return entry ? entry.label({}, localeOpt(language)) : field.label;
 }
 
@@ -50,6 +58,6 @@ export function customFieldOptionLabel(
   option: { key: string; label: string },
   language?: string,
 ): string {
-  const message = FIELD_LABELS[fieldKey]?.options?.[option.key];
+  const message = FIELD_LABELS.get(fieldKey)?.options?.get(option.key);
   return message ? message({}, localeOpt(language)) : option.label;
 }

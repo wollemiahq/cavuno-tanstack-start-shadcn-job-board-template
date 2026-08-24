@@ -1,4 +1,3 @@
-import { isNotFound } from '@cavuno/board';
 /**
  * Company jobs subpage — every open job at one company, with a
  * keyword search and page-based pagination. The `/companies/:slug/jobs/`
@@ -16,18 +15,23 @@ import { isNotFound } from '@cavuno/board';
  * a fresh query drops `?page=` (see CompanyJobsSearchBar), resetting to
  * page 1.
  */
-import { createFileRoute, notFound, useLocation } from '@tanstack/react-router';
+import { createFileRoute, useLocation } from '@tanstack/react-router';
 
 import { CompanyJobsSearchBar } from '../components/company-jobs-search-bar';
 import {
   listingPageHref,
   pageSearchValue,
-  pageToOffset,
   parsePageParam,
+  searchString,
+  type UrlSearchInput,
 } from '../lib/pagination';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
-import { getCompanyJobsPage } from '../server/companies-pages';
+import {
+  COMPANY_JOBS_PAGE_SIZE,
+  createCompanyJobsLoader,
+  type CompanyJobsSearch,
+} from './-company-jobs-loader';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { toJobCardVM } from '@/board/job-view-model';
@@ -36,68 +40,19 @@ import { JobList } from '@/components/board/job-list';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 
-interface CompanyJobsSearch {
-  /** Free-text keyword, scoped to this company via the jobs search endpoint. */
-  q?: string;
-  /**
-   * Place slug for the API's geo-radius search. A slug (not free text) — the
-   * combobox only emits one the places endpoint resolved, and the API ignores
-   * anything unresolvable. Radius is left at the API default (50km).
-   */
-  location?: string;
-  /** Human label for `location`, so the combobox rehydrates on a cold load. */
-  locationName?: string;
-  /** 1-based page; page 1 drops from the URL (clean canonical). */
-  page?: number;
-}
-
-const COMPANY_JOBS_PAGE_SIZE = 20;
-
 export const Route = createFileRoute('/companies/$companySlug/jobs/')({
   // Full-bleed: the shared company-section shell owns the page container +
   // breadcrumb placement (the shell header is the hero here — no centered
   // shared company header band — matching /companies + /companies/…/salaries).
   staticData: { fullBleed: true, ownsMain: true },
-  validateSearch: (search: Record<string, unknown>): CompanyJobsSearch => ({
-    q: typeof search.q === 'string' && search.q ? search.q : undefined,
-    location:
-      typeof search.location === 'string' && search.location
-        ? search.location
-        : undefined,
-    locationName:
-      typeof search.locationName === 'string' && search.locationName
-        ? search.locationName
-        : undefined,
+  validateSearch: (search: UrlSearchInput): CompanyJobsSearch => ({
+    q: searchString(search.q),
+    location: searchString(search.location),
+    locationName: searchString(search.locationName),
     page: pageSearchValue(parsePageParam(search.page)),
   }),
   loaderDeps: ({ search }) => search,
-  loader: async ({ params, deps }) => {
-    try {
-      const offset = pageToOffset(deps.page ?? 1, COMPANY_JOBS_PAGE_SIZE);
-      // ONE server fn: it fetches the company alongside the job page, the SEO
-      // base and the salary gate in a single parallel batch. Awaiting a
-      // separate `getCompany` here first put an extra serial round trip in
-      // front of all of them.
-      const pageData = await getCompanyJobsPage({
-        data: {
-          companySlug: params.companySlug,
-          q: deps.q,
-          location: deps.location,
-          offset,
-          limit: COMPANY_JOBS_PAGE_SIZE,
-        },
-      });
-      return {
-        ...pageData,
-        q: deps.q ?? null,
-        location: deps.location ?? null,
-        locationName: deps.locationName ?? null,
-      };
-    } catch (error) {
-      if (isNotFound(error)) throw notFound();
-      throw error;
-    }
-  },
+  loader: createCompanyJobsLoader(),
   head: ({ loaderData }) =>
     loaderData
       ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }

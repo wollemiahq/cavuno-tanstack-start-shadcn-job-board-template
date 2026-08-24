@@ -37,6 +37,8 @@ export function Container<Element extends LayoutElement = 'div'>({
   gutter = { base: '4', md: '8' },
   ...props
 }: ContainerProps<Element>) {
+  // SAFETY: `as` is constrained to LayoutElement; React accepts that finite
+  // intrinsic element set as an ElementType for polymorphic rendering.
   const Component = (as ?? 'div') as ElementType;
   const layoutStyle = {
     '--layout-width': containerWidthValues[width],

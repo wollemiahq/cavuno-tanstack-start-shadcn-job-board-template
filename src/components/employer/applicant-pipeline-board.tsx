@@ -1,6 +1,5 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
-import { useRouter } from '@tanstack/react-router';
 import {
   CopyIcon,
   CheckIcon,
@@ -99,6 +98,8 @@ export interface PipelineActions {
   removeStage: (opts: {
     data: { slug: string; stageId: string };
   }) => Promise<PipelineActionResult>;
+  invalidate: () => Promise<void>;
+  toastError: (message: string) => void;
 }
 
 type StageDialogState =
@@ -140,7 +141,6 @@ export function ApplicantPipelineBoard({
   defaultOpenCardId,
   defaultStageDialog = null,
 }: ApplicantPipelineBoardProps) {
-  const router = useRouter();
   const { stages, cards } = board;
 
   // Optimistic stage overrides: cardId → target stage id. The card renders
@@ -158,7 +158,7 @@ export function ApplicantPipelineBoard({
   }
 
   async function invalidate() {
-    await router.invalidate();
+    await actions.invalidate();
   }
 
   const openCard = openCardId
@@ -206,6 +206,7 @@ export function ApplicantPipelineBoard({
                   slug,
                   invalidate,
                   moveApplicant: actions.moveApplicant,
+                  toastError: actions.toastError,
                 });
               }}
             />
@@ -233,6 +234,7 @@ export function ApplicantPipelineBoard({
             slug,
             invalidate,
             moveApplicant: actions.moveApplicant,
+            toastError: actions.toastError,
           });
         }}
         actions={actions}
@@ -241,6 +243,11 @@ export function ApplicantPipelineBoard({
       />
 
       <StageDialogs
+        key={
+          stageDialog
+            ? `${stageDialog.kind}:${'stage' in stageDialog ? stageDialog.stage.id : 'new'}`
+            : 'closed'
+        }
         slug={slug}
         jobId={jobId}
         state={stageDialog}
@@ -262,6 +269,7 @@ async function moveCard({
   slug,
   invalidate,
   moveApplicant,
+  toastError,
 }: {
   cardId: string;
   toStageId: string;
@@ -271,6 +279,7 @@ async function moveCard({
   slug: string;
   invalidate: () => Promise<void>;
   moveApplicant: PipelineActions['moveApplicant'];
+  toastError: PipelineActions['toastError'];
 }) {
   const card = cards.find((item) => item.id === cardId);
   const currentColumn = pendingMoves[cardId] ?? card?.columnStageId;
@@ -285,12 +294,10 @@ async function moveCard({
     if (result.ok) {
       await invalidate();
     } else {
-      const { toast } = await import('sonner');
-      toast.error(result.message || m.employerApplicants_moveError());
+      toastError(result.message || m.employerApplicants_moveError());
     }
   } catch {
-    const { toast } = await import('sonner');
-    toast.error(m.employerApplicants_moveError());
+    toastError(m.employerApplicants_moveError());
   } finally {
     setPendingMoves((current) => {
       const { [cardId]: _dropped, ...rest } = current;
@@ -740,17 +747,6 @@ function StageDialogs({
     pending: false,
     message: '',
   });
-
-  // Re-seed local state whenever the dialog target changes.
-  const key = state
-    ? `${state.kind}:${'stage' in state ? state.stage.id : 'new'}`
-    : 'closed';
-  const seedRef = useRef(key);
-  if (seedRef.current !== key) {
-    seedRef.current = key;
-    setLabel(state && state.kind === 'rename' ? state.stage.label : '');
-    setStatus({ pending: false, message: '' });
-  }
 
   async function submit(fn: () => Promise<{ ok: boolean; message?: string }>) {
     if (status.pending) return;

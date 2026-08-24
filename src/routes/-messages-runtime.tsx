@@ -46,6 +46,35 @@ import type {
   Message,
 } from '@cavuno/board';
 
+export type MessagesRuntimeDependencies = {
+  archiveConversation: typeof archiveConversation;
+  blockUser: typeof blockUser;
+  editMessage: typeof editMessage;
+  getInbox: typeof getInbox;
+  getThread: typeof getThread;
+  markRead: typeof markRead;
+  reportMessage: typeof reportMessage;
+  sendReply: typeof sendReply;
+  unarchiveConversation: typeof unarchiveConversation;
+  unblockUser: typeof unblockUser;
+  unsendMessage: typeof unsendMessage;
+  useVisiblePoll: typeof useVisiblePoll;
+};
+
+export const messagesRuntimeDependencies: MessagesRuntimeDependencies = {
+  archiveConversation,
+  blockUser,
+  editMessage,
+  getInbox,
+  getThread,
+  markRead,
+  reportMessage,
+  sendReply,
+  unarchiveConversation,
+  unblockUser,
+  unsendMessage,
+  useVisiblePoll,
+};
 const MESSAGING_POLL_INTERVAL_MS = 15_000;
 
 export function InboxController({
@@ -54,12 +83,14 @@ export function InboxController({
   selectedConversationId,
   onSelect,
   query = '',
+  dependencies = messagesRuntimeDependencies,
 }: {
   initial: ListEnvelope<Conversation>;
   archived: boolean;
   selectedConversationId?: string;
   onSelect?: (conversationId: string) => void;
   query?: string;
+  dependencies?: MessagesRuntimeDependencies;
 }) {
   const [conversations, setConversations] = useState(initial.data);
   const [nextCursor, setNextCursor] = useState(initial.nextCursor);
@@ -67,9 +98,10 @@ export function InboxController({
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  useVisiblePoll(
+  dependencies.useVisiblePoll(
     () =>
-      getInbox({ data: { archived } })
+      dependencies
+        .getInbox({ data: { archived } })
         .then(({ conversations: page }) => {
           setConversations((current) => mergeConversations(current, page.data));
           setLoadError(null);
@@ -98,7 +130,7 @@ export function InboxController({
     setLoadingMore(true);
     setLoadError(null);
     try {
-      const { conversations: page } = await getInbox({
+      const { conversations: page } = await dependencies.getInbox({
         data: { archived, cursor: nextCursor },
       });
       setConversations((current) => mergeConversations(current, page.data));
@@ -140,9 +172,11 @@ export function InboxController({
 export function BlockedController({
   initial,
   query = '',
+  dependencies = messagesRuntimeDependencies,
 }: {
   initial: BlockedUser[];
   query?: string;
+  dependencies?: MessagesRuntimeDependencies;
 }) {
   const [users, setUsers] = useState(initial);
   const [pendingUserId, setPendingUserId] = useState<string | null>(null);
@@ -158,7 +192,7 @@ export function BlockedController({
     setPendingUserId(boardUserId);
     setActionError(null);
     try {
-      await unblockUser({ data: { boardUserId } });
+      await dependencies.unblockUser({ data: { boardUserId } });
       setUsers((current) =>
         current.filter((user) => user.boardUserId !== boardUserId),
       );
@@ -205,6 +239,7 @@ type MessagesSidebarControllerProps = {
   onSelect?: (conversationId: string) => void;
   showTitle?: boolean;
   showTabs?: boolean;
+  dependencies?: MessagesRuntimeDependencies;
 };
 
 export function MessagesSidebarController({
@@ -215,6 +250,7 @@ export function MessagesSidebarController({
   onSelect,
   showTitle = true,
   showTabs = true,
+  dependencies = messagesRuntimeDependencies,
 }: MessagesSidebarControllerProps) {
   const [query, setQuery] = useState('');
 
@@ -266,7 +302,11 @@ export function MessagesSidebarController({
       ) : null}
 
       {view === 'blocked' && initialBlocked ? (
-        <BlockedController initial={initialBlocked} query={query} />
+        <BlockedController
+          initial={initialBlocked}
+          query={query}
+          dependencies={dependencies}
+        />
       ) : initialInbox ? (
         <InboxController
           key={view}
@@ -275,6 +315,7 @@ export function MessagesSidebarController({
           selectedConversationId={selectedConversationId}
           onSelect={onSelect}
           query={query}
+          dependencies={dependencies}
         />
       ) : null}
     </div>
@@ -289,6 +330,7 @@ export function ThreadController({
   onBack,
   onClose,
   onExit,
+  dependencies = messagesRuntimeDependencies,
 }: {
   initialConversation: ConversationDetail;
   initialMessages: ListEnvelope<Message>;
@@ -297,6 +339,7 @@ export function ThreadController({
   onBack?: () => void;
   onClose?: () => void;
   onExit: () => void;
+  dependencies?: MessagesRuntimeDependencies;
 }) {
   const [conversation, setConversation] = useState(initialConversation);
   const [messages, setMessages] = useState(initialMessages.data);
@@ -306,7 +349,9 @@ export function ThreadController({
 
   const refresh = async () => {
     try {
-      const result = await getThread({ data: { id: conversation.id } });
+      const result = await dependencies.getThread({
+        data: { id: conversation.id },
+      });
       setConversation(result.conversation);
       setMessages((current) => mergeMessages(current, result.messages.data));
       setBlocked(result.blockStatus.blocked);
@@ -317,13 +362,16 @@ export function ThreadController({
     }
   };
 
-  useVisiblePoll(() => refresh().catch(() => {}), MESSAGING_POLL_INTERVAL_MS);
+  dependencies.useVisiblePoll(
+    () => refresh().catch(() => {}),
+    MESSAGING_POLL_INTERVAL_MS,
+  );
 
   useEffect(() => {
-    void markRead({ data: { id: conversation.id } }).catch((error) =>
-      setSyncError(errorMessage(error)),
-    );
-  }, [conversation.id, latestMessageId]);
+    void dependencies
+      .markRead({ data: { id: conversation.id } })
+      .catch((error) => setSyncError(errorMessage(error)));
+  }, [conversation.id, dependencies, latestMessageId]);
 
   return (
     <ThreadView
@@ -335,37 +383,45 @@ export function ThreadController({
       onBack={onBack}
       onClose={onClose}
       onArchive={async () => {
-        await archiveConversation({ data: { id: conversation.id } });
+        await dependencies.archiveConversation({
+          data: { id: conversation.id },
+        });
         onExit();
       }}
       onUnarchive={async () => {
-        await unarchiveConversation({ data: { id: conversation.id } });
+        await dependencies.unarchiveConversation({
+          data: { id: conversation.id },
+        });
         setConversation((current) => ({ ...current, archivedAt: null }));
       }}
       onBlock={async () => {
-        await blockUser({
+        await dependencies.blockUser({
           data: { boardUserId: conversation.counterparty.boardUserId },
         });
         onExit();
       }}
       onUnblock={async () => {
-        await unblockUser({
+        await dependencies.unblockUser({
           data: { boardUserId: conversation.counterparty.boardUserId },
         });
         setBlocked(false);
       }}
       onEditMessage={async (messageId, body) => {
-        await editMessage({ data: { id: messageId, body: { body } } });
+        await dependencies.editMessage({
+          data: { id: messageId, body: { body } },
+        });
       }}
       onUnsendMessage={async (messageId) => {
-        await unsendMessage({ data: { id: messageId } });
+        await dependencies.unsendMessage({ data: { id: messageId } });
       }}
       onReportMessage={async (messageId, reason) => {
-        await reportMessage({ data: { id: messageId, body: { reason } } });
+        await dependencies.reportMessage({
+          data: { id: messageId, body: { reason } },
+        });
         setBlocked(true);
       }}
       onSend={async (body) => {
-        const sent = await sendReply({
+        const sent = await dependencies.sendReply({
           data: { id: conversation.id, body: { body } },
         });
         setMessages((current) => mergeMessages(current, [sent]));

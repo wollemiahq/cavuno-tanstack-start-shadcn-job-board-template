@@ -7,13 +7,12 @@
  * Head meta is computed in getJobsLocationCategoryPage so `@cavuno/board/seo`
  * stays out of the universal client entry.
  */
-import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 
 import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
-import { pageToOffset } from '../lib/pagination';
 import { m } from '../paraglide/messages';
 import { saveJob } from '../server/account';
-import { getJobsLocationCategoryPage } from '../server/jobs-listing-pages';
+import { createJobsLocationCategoryLoader } from './-jobs-taxonomy-loaders';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
 import { jsonLdHeadScripts } from '@/components/json-ld';
@@ -24,34 +23,7 @@ export const Route = createFileRoute('/jobs/locations/$location/$keyword')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseJobsSearch,
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
-  loader: async ({ params, deps }) => {
-    // ONE server fn: both resolves join the listing + SEO batch so we do not
-    // pay a serial resolve hop before the real page read.
-    const result = await getJobsLocationCategoryPage({
-      data: {
-        locationSlug: params.location,
-        categorySlug: params.keyword,
-        remoteOption: deps.remoteOption,
-        employmentType: deps.employmentType,
-        seniority: deps.seniority,
-        sort: deps.sort,
-        offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
-        limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
-      },
-    });
-    if (result.kind === 'not_found') throw notFound();
-    if (result.kind === 'redirect') {
-      throw redirect({
-        to: '/jobs/locations/$location/$keyword',
-        params: {
-          location: result.locationTo,
-          keyword: result.keywordTo,
-        },
-        statusCode: 308,
-      });
-    }
-    return result;
-  },
+  loader: createJobsLocationCategoryLoader(),
   head: ({ loaderData }) =>
     loaderData
       ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }

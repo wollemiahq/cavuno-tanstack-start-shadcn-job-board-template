@@ -1,3 +1,4 @@
+import { createBoardClient } from '@cavuno/board';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -6,26 +7,38 @@ import {
   submitNativeApply,
 } from './native-apply';
 
+import type { Application, ApplyApprovalPlan, ApplyBody } from '@cavuno/board';
+
 function fakeClient() {
-  const prepareApplyApproval = vi.fn(
-    async (
-      _jobSlug: string,
-      _body: unknown,
-      _options: unknown,
-    ): Promise<unknown> => ({
-      object: 'apply_approval_plan',
-      kind: 'not_required',
-    }),
-  );
-  const apply = vi.fn(
-    async (
-      _jobSlug: string,
-      _body: unknown,
-      _options: unknown,
-    ): Promise<unknown> => ({}),
-  );
+  const board = createBoardClient({
+    baseUrl: 'https://api.example.test',
+    board: 'pk_native_apply_test',
+    auth: { storage: 'nostore' },
+  });
+  const approvalPlan = {
+    object: 'apply_approval_plan',
+    kind: 'not_required',
+  } satisfies ApplyApprovalPlan;
+  const application = {
+    id: 'application_123',
+    object: 'application',
+    status: 'applied',
+    appliedAt: '2026-08-24T00:00:00.000Z',
+    updatedAt: '2026-08-24T00:00:00.000Z',
+    coverNote: null,
+    candidateName: null,
+    candidateEmail: null,
+    candidateLocation: null,
+    candidateHeadline: null,
+    resumeFilename: null,
+    job: null,
+  } satisfies Application;
+  const prepareApplyApproval = vi
+    .spyOn(board.jobs, 'prepareApplyApproval')
+    .mockResolvedValue(approvalPlan);
+  const apply = vi.spyOn(board.jobs, 'apply').mockResolvedValue(application);
   return {
-    board: { jobs: { prepareApplyApproval, apply } } as never,
+    board,
     prepareApplyApproval,
     apply,
   };
@@ -87,15 +100,20 @@ describe('authenticated native Apply server boundary', () => {
 
   it('never forwards client-supplied country, IP, or approval session fields', async () => {
     const client = fakeClient();
+    const browserBody = {
+      name: 'Candidate',
+      country: 'AU',
+      ip: '203.0.113.1',
+      approvalSessionKey: 'browser_forged_key',
+    } satisfies ApplyBody & {
+      country: string;
+      ip: string;
+      approvalSessionKey: string;
+    };
     await submitNativeApply(
       client.board,
       'senior-engineer',
-      {
-        name: 'Candidate',
-        country: 'AU',
-        ip: '203.0.113.1',
-        approvalSessionKey: 'browser_forged_key',
-      } as never,
+      browserBody,
       'aar_receipt_abcdefghijklmnopqrstuvwxyz',
       'server_owned_apply_session_key',
       { authorization: 'Bearer candidate' },

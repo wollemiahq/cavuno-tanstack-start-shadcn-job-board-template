@@ -16,11 +16,7 @@ import { CookieConsentProvider, useCookieConsent } from './cookie-consent';
 import type { BoardAnalyticsConfig } from './analytics-scripts';
 import { COOKIE_CONSENT_COOKIE } from '@/lib/cookie-consent';
 
-const { startWebVitalsReporting } = vi.hoisted(() => ({
-  startWebVitalsReporting: vi.fn(),
-}));
-
-vi.mock('@/lib/web-vitals', () => ({ startWebVitalsReporting }));
+const startWebVitalsReporting = vi.fn<() => Promise<void>>();
 
 const STORAGE_KEY = 'cavuno:cookie-consent';
 
@@ -32,6 +28,34 @@ const analytics: BoardAnalyticsConfig = {
 };
 
 const VENDOR_KEYS = ['gtm', 'ga4', 'meta-pixel', 'linkedin'] as const;
+
+interface GtmStartEvent {
+  'gtm.start': number;
+  event: string;
+}
+
+type AnalyticsRuntimeValue = string | number | Date;
+type AnalyticsDataLayerEntry = IArguments | GtmStartEvent;
+
+declare global {
+  interface Window {
+    dataLayer?: AnalyticsDataLayerEntry[];
+    gtag?: (...args: AnalyticsRuntimeValue[]) => void;
+    fbq?: {
+      (...args: string[]): void;
+      queue?: IArguments[];
+    };
+    _fbq?: Window['fbq'];
+    _linkedin_partner_id?: string;
+    _linkedin_data_partner_ids?: string[];
+  }
+}
+
+function isGtmStartEvent(
+  entry: AnalyticsDataLayerEntry,
+): entry is GtmStartEvent {
+  return Object.hasOwn(entry, 'gtm.start');
+}
 
 const injectedKeys = () =>
   VENDOR_KEYS.filter(
@@ -58,7 +82,7 @@ afterEach(() => {
     '_linkedin_partner_id',
     '_linkedin_data_partner_ids',
   ]) {
-    delete (window as unknown as Record<string, unknown>)[key];
+    Reflect.deleteProperty(window, key);
   }
 });
 
@@ -73,7 +97,12 @@ function AcceptButton() {
 
 describe('AnalyticsScripts', () => {
   it('injects every configured tracker when consent is not required', () => {
-    render(<AnalyticsScripts analytics={analytics} />);
+    render(
+      <AnalyticsScripts
+        analytics={analytics}
+        reportWebVitals={startWebVitalsReporting}
+      />,
+    );
 
     expect(injectedKeys()).toEqual([...VENDOR_KEYS]);
     expect(startWebVitalsReporting).toHaveBeenCalledOnce();
@@ -92,50 +121,38 @@ describe('AnalyticsScripts', () => {
     // This jsdom setup does not auto-execute appended inline scripts, so
     // run the EXACT injected text by hand and assert its side effects —
     // the queues each vendor's external loader drains in a real browser.
-    render(<AnalyticsScripts analytics={analytics} />);
+    render(
+      <AnalyticsScripts
+        analytics={analytics}
+        reportWebVitals={startWebVitalsReporting}
+      />,
+    );
 
     for (const key of VENDOR_KEYS) {
       const text = document.getElementById(
         `cavuno-analytics-${key}`,
       )?.textContent;
       expect(text, `${key} inline bootstrap`).toBeTruthy();
-      new Function(text!)();
+      if (!text) throw new Error(`Expected ${key} inline bootstrap text`);
+      new Function(text)();
     }
 
-    const w = window as typeof window & {
-      dataLayer?: unknown[];
-      fbq?: { (...args: unknown[]): void; queue?: unknown[] };
-      _linkedin_partner_id?: string;
-      _linkedin_data_partner_ids?: string[];
-    };
-
     // GTM pushed its start event; GA4's gtag pushed js + config arguments.
-    const flat = (w.dataLayer ?? []).map((entry) =>
-      entry && typeof entry === 'object' ? Object.values(entry) : [entry],
+    const flat = (window.dataLayer ?? []).map((entry) =>
+      isGtmStartEvent(entry) ? Object.values(entry) : Array.from(entry),
     );
-    expect(
-      (w.dataLayer ?? []).some(
-        (entry) =>
-          typeof entry === 'object' &&
-          entry !== null &&
-          'gtm.start' in (entry as Record<string, unknown>),
-      ),
-    ).toBe(true);
-    expect(
-      flat.some((values) => (values as unknown[]).includes('G-TEST123')),
-    ).toBe(true);
+    expect((window.dataLayer ?? []).some(isGtmStartEvent)).toBe(true);
+    expect(flat.some((values) => values.includes('G-TEST123'))).toBe(true);
 
     // Meta's stub is callable and queued init + PageView for the loader.
-    expect(typeof w.fbq).toBe('function');
-    const fbqCalls = (w.fbq?.queue ?? []).map((args) => [
-      ...(args as unknown[]),
-    ]);
+    expect(window.fbq).toBeTypeOf('function');
+    const fbqCalls = (window.fbq?.queue ?? []).map((args) => Array.from(args));
     expect(fbqCalls).toContainEqual(['init', '1234567890']);
     expect(fbqCalls).toContainEqual(['track', 'PageView']);
 
     // LinkedIn registered the partner id for insight.min.js.
-    expect(w._linkedin_partner_id).toBe('54321');
-    expect(w._linkedin_data_partner_ids).toContain('54321');
+    expect(window._linkedin_partner_id).toBe('54321');
+    expect(window._linkedin_data_partner_ids).toContain('54321');
   });
 
   it('injects only the configured trackers', () => {
@@ -147,6 +164,7 @@ describe('AnalyticsScripts', () => {
           metaPixelId: null,
           linkedInPartnerId: null,
         }}
+        reportWebVitals={startWebVitalsReporting}
       />,
     );
 
@@ -156,7 +174,10 @@ describe('AnalyticsScripts', () => {
   it('waits for an explicit accept on a consent-required board', () => {
     render(
       <CookieConsentProvider required>
-        <AnalyticsScripts analytics={analytics} />
+        <AnalyticsScripts
+          analytics={analytics}
+          reportWebVitals={startWebVitalsReporting}
+        />
         <AcceptButton />
       </CookieConsentProvider>,
     );
@@ -174,7 +195,10 @@ describe('AnalyticsScripts', () => {
     localStorage.setItem(STORAGE_KEY, 'accepted');
     render(
       <CookieConsentProvider required>
-        <AnalyticsScripts analytics={analytics} />
+        <AnalyticsScripts
+          analytics={analytics}
+          reportWebVitals={startWebVitalsReporting}
+        />
       </CookieConsentProvider>,
     );
 
@@ -185,7 +209,10 @@ describe('AnalyticsScripts', () => {
     localStorage.setItem(STORAGE_KEY, 'denied');
     render(
       <CookieConsentProvider required>
-        <AnalyticsScripts analytics={analytics} />
+        <AnalyticsScripts
+          analytics={analytics}
+          reportWebVitals={startWebVitalsReporting}
+        />
       </CookieConsentProvider>,
     );
 

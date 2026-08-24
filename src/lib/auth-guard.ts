@@ -2,6 +2,8 @@ import { redirect } from '@tanstack/react-router';
 
 import { getSessionUser } from '../server/account';
 
+export type SessionUserLoader = () => Promise<{ id: string } | null>;
+
 /**
  * Bounce an already-signed-in visitor away from an auth entry page (sign-in,
  * sign-up, join). A live session on those screens is a dead end — send them
@@ -10,7 +12,15 @@ import { getSessionUser } from '../server/account';
  * signed-in-but-unverified user.
  */
 export async function redirectIfAuthenticated(returnTo: string): Promise<void> {
-  redirectIfSignedIn(await sessionUserOrNull(), returnTo);
+  return redirectIfAuthenticatedUsing(getSessionUser, returnTo);
+}
+
+/** Dependency-explicit form used by entry loaders and focused tests. */
+export async function redirectIfAuthenticatedUsing(
+  loadSessionUser: SessionUserLoader,
+  returnTo: string,
+): Promise<void> {
+  redirectIfSignedIn(await sessionUserOrNullUsing(loadSessionUser), returnTo);
 }
 
 /**
@@ -20,11 +30,18 @@ export async function redirectIfAuthenticated(returnTo: string): Promise<void> {
  * not depend on those reads, so it can be made after they all resolve.
  */
 export function sessionUserOrNull() {
-  return getSessionUser().catch(() => null);
+  return sessionUserOrNullUsing(getSessionUser);
+}
+
+export function sessionUserOrNullUsing(loadSessionUser: SessionUserLoader) {
+  return loadSessionUser().catch(() => null);
 }
 
 /** The bounce itself, applied to an already-resolved session probe. */
-export function redirectIfSignedIn(user: unknown, returnTo: string): void {
+export function redirectIfSignedIn(
+  user: { id: string } | null,
+  returnTo: string,
+): void {
   if (user) {
     throw redirect({ href: returnTo });
   }

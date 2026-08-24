@@ -6,64 +6,25 @@ import { isNotFound as isRouteNotFound } from '@tanstack/react-router';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getTalentIndexPage, getTalentProfilePage, rootData } = vi.hoisted(
-  () => ({
-    getTalentIndexPage: vi.fn(),
-    getTalentProfilePage: vi.fn(),
-    // The profile hero reads the viewer session from the root loader (via
-    // getRouteApi('__root__')) and the current URL (useLocation), exactly like
-    // the talent search pane. Mock that seam so the CTA gating can be exercised
-    // per viewer without a full RouterProvider.
-    rootData: {
-      value: {
-        user: null as null | { role: 'employer' | 'candidate' },
-        board: { features: { messaging: true } },
-      },
-    },
-  }),
-);
-
-vi.mock('../server/talent-pages', () => ({
-  getTalentIndexPage,
-  getTalentProfilePage,
-}));
-
-// Selected-talent pane hook still reads getTalentProfile from queries.
-vi.mock('../server/queries', () => ({
-  getTalentProfile: vi.fn(),
-  getSeoBase: vi.fn(),
-  listTalent: vi.fn(),
-}));
-
-// The viewer comes from the root SESSION context, not the root loader — the
-// route reads `board` from `getRouteApi('__root__')` but `user` from
-// `useRootSession()`. Both seams have to be stubbed or every viewer resolves
-// anonymous and the gating assertions below silently test nothing.
-vi.mock('@/components/root-session', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@/components/root-session')>();
-  return {
-    ...actual,
-    useRootSession: () => ({ user: rootData.value.user }),
-  };
-});
-
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    useLocation: () => ({ href: '/p/ada-lovelace' }),
-    getRouteApi: (id: string) =>
-      id === '__root__'
-        ? { useLoaderData: () => rootData.value }
-        : (actual.getRouteApi as (routeId: string) => unknown)(id),
-  };
-});
-
 import { RestrictedTalentDirectory } from './-restricted-talent-directory';
+import {
+  createTalentDirectoryLoader,
+  createTalentProfileLoader,
+  type TalentDirectoryRouteDependencies,
+  type TalentProfileRouteDependencies,
+} from './-talent-loaders';
+import { TalentProfilePageView } from './-talent-profile-view';
 import { Route as ProfileRoute } from './p.$handle';
 import { Route as TalentRoute } from './talent.index';
+
+const getTalentIndexPage =
+  vi.fn<TalentDirectoryRouteDependencies['getTalentIndexPage']>();
+const getTalentProfilePage =
+  vi.fn<TalentProfileRouteDependencies['getTalentProfilePage']>();
+
+type TalentProfilePageData = Awaited<
+  ReturnType<TalentProfileRouteDependencies['getTalentProfilePage']>
+>;
 
 const seo = {
   boardName: 'Acme Careers',
@@ -72,7 +33,7 @@ const seo = {
   origin: 'https://careers.acme.test',
 };
 
-const profile = {
+const profile: TalentProfilePageData['profile'] = {
   object: 'talent_profile',
   handle: 'ada-lovelace',
   displayName: 'Ada Lovelace',
@@ -96,21 +57,74 @@ function apiError(status: number, code: string) {
   });
 }
 
-function routeLoader(route: typeof TalentRoute | typeof ProfileRoute) {
-  const load = route.options.loader;
-  if (typeof load !== 'function') {
-    throw new Error('The talent route does not define a callable loader');
-  }
-  return load;
+const talentLoader = createTalentDirectoryLoader({ getTalentIndexPage });
+const profileLoader = createTalentProfileLoader({ getTalentProfilePage });
+
+function talentLoaderContext(deps: {
+  q?: string;
+  skill?: string;
+  page?: number;
+}) {
+  return {
+    abortController: new AbortController(),
+    preload: false,
+    params: {},
+    deps,
+    context: { origin: 'https://careers.acme.test' },
+    location: {
+      href: 'https://careers.acme.test/talent',
+      pathname: '/talent',
+      search: {},
+      searchStr: '',
+      state: { __TSR_index: 0 },
+      hash: '',
+      publicHref: 'https://careers.acme.test/talent',
+      external: false,
+    },
+    navigate: vi.fn(),
+    parentMatchPromise: new Promise<never>(() => undefined),
+    cause: 'enter' as const,
+    route: TalentRoute,
+  };
+}
+
+function profileLoaderContext(handle: string) {
+  return {
+    abortController: new AbortController(),
+    preload: false,
+    params: { handle },
+    deps: {},
+    context: { origin: 'https://careers.acme.test' },
+    location: {
+      href: `https://careers.acme.test/p/${handle}`,
+      pathname: `/p/${handle}`,
+      search: {},
+      searchStr: '',
+      state: { __TSR_index: 0 },
+      hash: '',
+      publicHref: `https://careers.acme.test/p/${handle}`,
+      external: false,
+    },
+    navigate: vi.fn(),
+    parentMatchPromise: new Promise<never>(() => undefined),
+    cause: 'enter' as const,
+    route: ProfileRoute,
+  };
 }
 
 beforeEach(() => {
   getTalentIndexPage.mockReset();
   getTalentIndexPage.mockResolvedValue({
     seo,
-    page: { data: [], hasMore: false, nextCursor: null },
+    page: {
+      object: 'list',
+      url: '/v1/talent',
+      data: [],
+      hasMore: false,
+      nextCursor: null,
+    },
     restricted: false,
-    head: {},
+    head: { meta: [], links: [] },
     jsonLd: [],
   });
   getTalentProfilePage.mockReset();
@@ -136,54 +150,38 @@ beforeEach(() => {
       },
     ],
   });
-  rootData.value = {
-    user: null,
-    board: { features: { messaging: true } },
-  };
 });
 
-/** Render the canonical profile component with the mocked route loader data. */
-function renderProfile() {
-  vi.spyOn(ProfileRoute, 'useLoaderData').mockReturnValue({
-    profile,
-    seo,
-    jsonLd: [
-      {
-        '@context': 'https://schema.org',
-        '@type': 'ProfilePage',
-        url: 'https://careers.acme.test/p/ada-lovelace',
-        mainEntity: {
-          '@type': 'Person',
-          name: 'Ada Lovelace',
-          jobTitle: 'Robotics engineer',
-          knowsAbout: ['Robotics'],
-        },
-      },
-    ],
-  } as never);
-
-  const ProfileComponent = ProfileRoute.options.component;
-  if (typeof ProfileComponent !== 'function') {
-    throw new Error('The public profile route does not define a component');
-  }
-
-  return render(<ProfileComponent />);
+function renderProfile({
+  user = null,
+  messagingEnabled = true,
+}: {
+  user?: { role: 'employer' | 'candidate' } | null;
+  messagingEnabled?: boolean;
+} = {}) {
+  return render(
+    <TalentProfilePageView
+      profile={profile}
+      user={user}
+      messagingEnabled={messagingEnabled}
+      locationHref="/p/ada-lovelace"
+    />,
+  );
 }
 
 afterEach(() => {
   cleanup();
-  vi.restoreAllMocks();
 });
 
 describe('talent directory route — query and capability contracts', () => {
   it('passes the complete URL-backed query, paging by offset, to the talent directory', async () => {
-    await routeLoader(TalentRoute)({
-      deps: {
+    await talentLoader(
+      talentLoaderContext({
         q: 'robotics engineer',
         skill: 'TypeScript',
         page: 3,
-      },
-    } as never);
+      }),
+    );
 
     expect(getTalentIndexPage).toHaveBeenCalledWith({
       data: {
@@ -200,13 +198,11 @@ describe('talent directory route — query and capability contracts', () => {
       seo,
       page: null,
       restricted: true,
-      head: {},
+      head: { meta: [], links: [] },
       jsonLd: [],
     });
 
-    await expect(
-      routeLoader(TalentRoute)({ deps: {} } as never),
-    ).resolves.toMatchObject({
+    await expect(talentLoader(talentLoaderContext({}))).resolves.toMatchObject({
       page: null,
       restricted: true,
     });
@@ -245,9 +241,7 @@ describe('talent directory route — query and capability contracts', () => {
     const error = apiError(403, 'auth_forbidden');
     getTalentIndexPage.mockRejectedValue(error);
 
-    await expect(routeLoader(TalentRoute)({ deps: {} } as never)).rejects.toBe(
-      error,
-    );
+    await expect(talentLoader(talentLoaderContext({}))).rejects.toBe(error);
   });
 
   it('turns a disabled or missing directory into the route not-found outcome', async () => {
@@ -257,7 +251,7 @@ describe('talent directory route — query and capability contracts', () => {
 
     let outcome: unknown;
     try {
-      await routeLoader(TalentRoute)({ deps: {} } as never);
+      await talentLoader(talentLoaderContext({}));
     } catch (error) {
       outcome = error;
     }
@@ -268,20 +262,54 @@ describe('talent directory route — query and capability contracts', () => {
 
 describe('canonical talent profile route', () => {
   it('retrieves the requested public handle and retains canonical metadata', async () => {
-    const loaderData = await routeLoader(ProfileRoute)({
-      params: { handle: 'ada-lovelace' },
-    } as never);
+    const loaderData = await profileLoader(
+      profileLoaderContext('ada-lovelace'),
+    );
 
     expect(getTalentProfilePage).toHaveBeenCalledWith({
       data: { handle: 'ada-lovelace' },
     });
 
     const head = ProfileRoute.options.head;
-    if (typeof head !== 'function') {
+    if (!head) {
       throw new Error('The public profile route does not define metadata');
     }
 
-    expect(head({ loaderData } as never)).toMatchObject({
+    const match = {
+      id: '/p/$handle',
+      routeId: '/p/$handle',
+      fullPath: '/p/$handle',
+      index: 1,
+      pathname: '/p/ada-lovelace',
+      params: { handle: 'ada-lovelace' },
+      _strictParams: { handle: 'ada-lovelace' },
+      status: 'success',
+      isFetching: false,
+      error: null,
+      paramsError: null,
+      searchError: null,
+      updatedAt: Date.now(),
+      _nonReactive: {},
+      loaderData,
+      context: { origin: 'https://careers.acme.test' },
+      search: {},
+      _strictSearch: {},
+      fetchCount: 1,
+      abortController: new AbortController(),
+      cause: 'enter',
+      loaderDeps: {},
+      preload: false,
+      invalid: false,
+      staticData: { fullBleed: true, ownsMain: true },
+    } satisfies Parameters<typeof head>[0]['match'];
+    expect(
+      await head({
+        loaderData,
+        match,
+        matches: [match],
+        params: { handle: 'ada-lovelace' },
+      }),
+    ).toMatchObject({
       meta: expect.arrayContaining([
         { title: 'Ada Lovelace | Acme Careers' },
         { name: 'description', content: 'Robotics engineer' },
@@ -307,27 +335,56 @@ describe('canonical talent profile route', () => {
     // Structured data rides route head() `scripts` (React 19 streaming SSR
     // can drop body-rendered <script> elements), so the contract is the head
     // payload: the loader's jsonLd serialized as application/ld+json entries.
-    const loaderData = await routeLoader(ProfileRoute)({
-      params: { handle: 'ada-lovelace' },
-    } as never);
+    const loaderData = await profileLoader(
+      profileLoaderContext('ada-lovelace'),
+    );
     const head = ProfileRoute.options.head;
-    if (typeof head !== 'function') {
+    if (!head) {
       throw new Error('The public profile route does not define metadata');
     }
-    const { scripts } = head({ loaderData } as never) as {
-      scripts?: Array<{ type: string; children: string }>;
-    };
-    const payloads = (scripts ?? [])
-      .filter((script) => script.type === 'application/ld+json')
-      .map((script) => JSON.parse(script.children) as Record<string, unknown>);
-
-    expect(payloads).toEqual(
+    const match = {
+      id: '/p/$handle',
+      routeId: '/p/$handle',
+      fullPath: '/p/$handle',
+      index: 1,
+      pathname: '/p/ada-lovelace',
+      params: { handle: 'ada-lovelace' },
+      _strictParams: { handle: 'ada-lovelace' },
+      status: 'success',
+      isFetching: false,
+      error: null,
+      paramsError: null,
+      searchError: null,
+      updatedAt: Date.now(),
+      _nonReactive: {},
+      loaderData,
+      context: { origin: 'https://careers.acme.test' },
+      search: {},
+      _strictSearch: {},
+      fetchCount: 1,
+      abortController: new AbortController(),
+      cause: 'enter',
+      loaderDeps: {},
+      preload: false,
+      invalid: false,
+      staticData: { fullBleed: true, ownsMain: true },
+    } satisfies Parameters<typeof head>[0]['match'];
+    const { scripts } = await head({
+      loaderData,
+      match,
+      matches: [match],
+      params: { handle: 'ada-lovelace' },
+    });
+    expect(scripts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          '@type': 'ProfilePage',
-          mainEntity: expect.objectContaining({
-            '@type': 'Person',
-            name: 'Ada Lovelace',
+          type: 'application/ld+json',
+          children: JSON.stringify({
+            '@type': 'ProfilePage',
+            mainEntity: {
+              '@type': 'Person',
+              name: 'Ada Lovelace',
+            },
           }),
         }),
       ]),
@@ -335,12 +392,7 @@ describe('canonical talent profile route', () => {
   });
 
   it('offers an allowed employer the gated Message action in the profile hero', () => {
-    rootData.value = {
-      user: { role: 'employer' },
-      board: { features: { messaging: true } },
-    };
-
-    const { container } = renderProfile();
+    const { container } = renderProfile({ user: { role: 'employer' } });
 
     const actions = container.querySelector<HTMLElement>(
       "[data-slot='talent-profile-actions']",
@@ -355,11 +407,6 @@ describe('canonical talent profile route', () => {
   });
 
   it('routes an anonymous viewer’s Message action to sign-in', () => {
-    rootData.value = {
-      user: null,
-      board: { features: { messaging: true } },
-    };
-
     renderProfile();
 
     const message = screen.getByRole('link', { name: 'Message' });
@@ -369,12 +416,7 @@ describe('canonical talent profile route', () => {
   });
 
   it('hides the Message action from a candidate viewer (no cold-messaging) ', () => {
-    rootData.value = {
-      user: { role: 'candidate' },
-      board: { features: { messaging: true } },
-    };
-
-    const { container } = renderProfile();
+    const { container } = renderProfile({ user: { role: 'candidate' } });
 
     expect(
       container.querySelector("[data-slot='talent-profile-actions']"),
@@ -383,12 +425,10 @@ describe('canonical talent profile route', () => {
   });
 
   it('hides the Message action when board messaging is disabled', () => {
-    rootData.value = {
+    renderProfile({
       user: { role: 'employer' },
-      board: { features: { messaging: false } },
-    };
-
-    renderProfile();
+      messagingEnabled: false,
+    });
 
     expect(screen.queryByRole('link', { name: 'Message' })).toBeNull();
   });

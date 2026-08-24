@@ -20,8 +20,19 @@ import { selfUrl } from '@/lib/self-url';
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 type JsonObject = { [key: string]: JsonValue };
+type ProfilePersonJsonLd = {
+  '@type': 'Person';
+  '@id': string;
+  name?: string;
+  jobTitle?: string;
+  description?: string;
+  homeLocation?: string;
+  knowsAbout?: string[];
+};
 
-function asJsonObjects(value: unknown): JsonObject[] {
+function asJsonObjects<T>(value: T): JsonObject[] {
+  // SAFETY: Structured data is composed from literal schema.org objects and
+  // Board strings, then JSON round-tripped to erase readonly SDK helper types.
   return JSON.parse(JSON.stringify(value)) as JsonObject[];
 }
 
@@ -130,23 +141,32 @@ export const getTalentProfilePage = createServerFn({ method: 'GET' })
         profile.displayName ?? m.publicProfile_anonymousCandidateLabel();
       const canonical = selfUrl(seo.origin, `/p/${profile.handle}`);
       const c = breadcrumbsCopy();
+      const person: ProfilePersonJsonLd = {
+        '@type': 'Person',
+        '@id': `${canonical}#person`,
+      };
+      if (profile.displayName) {
+        person.name = profile.displayName;
+      }
+      if (profile.headline) {
+        person.jobTitle = profile.headline;
+      }
+      if (profile.bio) {
+        person.description = profile.bio;
+      }
+      if (profile.location) {
+        person.homeLocation = profile.location;
+      }
+      if (profile.skills.length > 0) {
+        person.knowsAbout = profile.skills.map((skill) => skill.name);
+      }
       const jsonLd = asJsonObjects(
         [
           {
             '@context': 'https://schema.org',
             '@type': 'ProfilePage',
             url: canonical,
-            mainEntity: {
-              '@type': 'Person',
-              '@id': `${canonical}#person`,
-              ...(profile.displayName ? { name: profile.displayName } : {}),
-              ...(profile.headline ? { jobTitle: profile.headline } : {}),
-              ...(profile.bio ? { description: profile.bio } : {}),
-              ...(profile.location ? { homeLocation: profile.location } : {}),
-              ...(profile.skills.length > 0
-                ? { knowsAbout: profile.skills.map((skill) => skill.name) }
-                : {}),
-            },
+            mainEntity: person,
           },
           createBreadcrumbJsonLd([
             { label: c.home, href: selfUrl(seo.origin, '/') },

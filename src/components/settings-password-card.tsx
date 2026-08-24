@@ -21,6 +21,13 @@ import { boardErrorMessage } from '@/lib/board-error-message';
 
 const MIN_PASSWORD_LENGTH = 8;
 
+type RequestPassword = (options: {
+  data: { email: string };
+}) => ReturnType<typeof requestSetPassword>;
+type UpdateCurrentPassword = (options: {
+  data: { currentPassword: string; newPassword: string };
+}) => ReturnType<typeof updatePassword>;
+
 /**
  * Password card — change-password when `hasPassword`, otherwise the
  * set-password path that reuses `board.auth.forgotPassword`.
@@ -28,17 +35,25 @@ const MIN_PASSWORD_LENGTH = 8;
 export function SettingsPasswordCard({
   hasPassword,
   email,
+  requestPassword = requestSetPassword,
+  updateCurrentPassword = updatePassword,
 }: {
   hasPassword: boolean;
   email: string;
+  requestPassword?: RequestPassword;
+  updateCurrentPassword?: UpdateCurrentPassword;
 }) {
   if (!hasPassword) {
-    return <SetPasswordCard email={email} />;
+    return <SetPasswordCard email={email} requestPassword={requestPassword} />;
   }
-  return <ChangePasswordCard />;
+  return <ChangePasswordCard updateCurrentPassword={updateCurrentPassword} />;
 }
 
-function ChangePasswordCard() {
+function ChangePasswordCard({
+  updateCurrentPassword,
+}: {
+  updateCurrentPassword: UpdateCurrentPassword;
+}) {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'saving'>('idle');
 
@@ -70,7 +85,7 @@ function ChangePasswordCard() {
           }
           setStatus('saving');
           try {
-            const result = await updatePassword({
+            const result = await updateCurrentPassword({
               data: { currentPassword, newPassword },
             });
             if (result.ok) {
@@ -145,7 +160,13 @@ function ChangePasswordCard() {
   );
 }
 
-function SetPasswordCard({ email }: { email: string }) {
+function SetPasswordCard({
+  email,
+  requestPassword,
+}: {
+  email: string;
+  requestPassword: RequestPassword;
+}) {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'saving'>('idle');
@@ -177,7 +198,7 @@ function SetPasswordCard({ email }: { email: string }) {
                 setError(null);
                 setStatus('saving');
                 try {
-                  await requestSetPassword({ data: { email } });
+                  await requestPassword({ data: { email } });
                   setSent(true);
                 } catch {
                   setError(m.candidateAction_errorText());

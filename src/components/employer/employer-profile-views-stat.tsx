@@ -27,7 +27,7 @@ export function EmployerProfileViewsStat({
 }: {
   vm: EmployerProfileViewsVM;
 }) {
-  const isRtl = useDirection() === 'rtl';
+  const xAxisReversed = employerProfileViewsDirection(useDirection());
   // Built at render so the label resolves to the active board locale.
   const chartConfig = {
     views: {
@@ -84,7 +84,7 @@ export function EmployerProfileViewsStat({
                   />
                 </linearGradient>
               </defs>
-              <XAxis hide dataKey="date" reversed={isRtl} />
+              <XAxis hide dataKey="date" reversed={xAxisReversed} />
               <Area
                 dataKey="views"
                 type="monotone"
@@ -100,6 +100,10 @@ export function EmployerProfileViewsStat({
       </CardContent>
     </Card>
   );
+}
+
+export function employerProfileViewsDirection(direction: 'ltr' | 'rtl') {
+  return direction === 'rtl';
 }
 
 /**

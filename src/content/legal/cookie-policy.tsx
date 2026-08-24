@@ -3,7 +3,7 @@ import { LegalPlaceholderCallout } from './placeholder-callout';
 import type { LegalLocale, LegalPageContent } from './types';
 
 /** Titles match `breadcrumbs_cookiePolicy` per locale. */
-export const cookiePolicyContent: Record<LegalLocale, LegalPageContent> = {
+export const cookiePolicyContent = {
   en: {
     title: 'Cookie Policy',
     description:
@@ -91,4 +91,4 @@ export const cookiePolicyContent: Record<LegalLocale, LegalPageContent> = {
       );
     },
   },
-};
+} satisfies Record<LegalLocale, LegalPageContent>;

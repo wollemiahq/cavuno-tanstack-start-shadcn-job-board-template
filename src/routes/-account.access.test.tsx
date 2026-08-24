@@ -12,7 +12,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { AccessGrant, PaywallOffer } from '@cavuno/board';
 
-const mocks = vi.hoisted(() => ({
+interface AccessLoaderData {
+  grant: AccessGrant;
+  offers: PaywallOffer[];
+}
+
+interface AccessSearch {
+  session_id?: string;
+  returnTo?: string;
+}
+
+const mocks = {
   getAccessGrant: vi.fn(),
   getPaywallOffers: vi.fn(),
   invalidate: vi.fn(),
@@ -22,45 +32,11 @@ const mocks = vi.hoisted(() => ({
   toastActionError: vi.fn(),
   // AccessPage reads its route data via `getRouteApi('/account_/access')`; the
   // hook stubs below stand in for that route match under jsdom.
-  useLoaderData: vi.fn(),
-  useSearch: vi.fn(),
-}));
+  useLoaderData: vi.fn<() => AccessLoaderData>(),
+  useSearch: vi.fn<() => AccessSearch>(),
+};
 
-vi.mock('@tanstack/react-router', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-router')>();
-  return {
-    ...actual,
-    useRouter: () => ({
-      invalidate: mocks.invalidate,
-      navigate: mocks.navigate,
-    }),
-    getRouteApi: () => ({
-      useLoaderData: mocks.useLoaderData,
-      useSearch: mocks.useSearch,
-    }),
-  };
-});
-
-// The route threads getSeoBase through its loader for the page title; the
-// module resolves cloudflare:workers, so stub the seam for jsdom.
-vi.mock('../server/queries', () => ({
-  getSeoBase: vi.fn().mockResolvedValue({ boardName: 'Acme Board' }),
-}));
-
-vi.mock('../server/paywall', () => ({
-  getAccessGrant: mocks.getAccessGrant,
-  getPaywallOffers: mocks.getPaywallOffers,
-  openBillingPortal: mocks.openBillingPortal,
-  startCheckout: mocks.startCheckout,
-}));
-
-vi.mock('@/lib/action-toast', () => ({
-  toastActionError: mocks.toastActionError,
-  toastActionSuccess: vi.fn(),
-}));
-
-import { AccessPage } from './-access-page';
+import { AccessPageView } from './-access-page';
 
 const grant = {
   object: 'access_grant',
@@ -95,6 +71,25 @@ const annualOffer = {
   isDefault: false,
 } satisfies PaywallOffer;
 
+function renderAccessPage() {
+  const loaderData = mocks.useLoaderData();
+  const search = mocks.useSearch();
+  return render(
+    <AccessPageView
+      grant={loaderData.grant}
+      offers={loaderData.offers}
+      sessionId={search.session_id}
+      returnToRaw={search.returnTo}
+      getAccessGrantAction={mocks.getAccessGrant}
+      openBillingPortalAction={mocks.openBillingPortal}
+      startCheckoutAction={mocks.startCheckout}
+      invalidate={mocks.invalidate}
+      navigate={mocks.navigate}
+      reportActionError={mocks.toastActionError}
+    />,
+  );
+}
+
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
@@ -109,7 +104,9 @@ describe('candidate access actions', () => {
       offers: [offer, annualOffer],
     });
     mocks.useSearch.mockReturnValue({ session_id: undefined });
-    let rejectCheckout!: (reason?: unknown) => void;
+    let rejectCheckout: (reason?: Error) => void = () => {
+      throw new Error('Checkout rejection was not initialized');
+    };
     mocks.startCheckout.mockImplementation(
       () =>
         new Promise((_, reject) => {
@@ -117,7 +114,7 @@ describe('candidate access actions', () => {
         }),
     );
 
-    render(<AccessPage />);
+    renderAccessPage();
     fireEvent.click(screen.getAllByRole('button', { name: 'Choose' })[0]!);
 
     for (const button of screen.getAllByRole('button')) {
@@ -137,7 +134,7 @@ describe('candidate access actions', () => {
     mocks.useSearch.mockReturnValue({ session_id: undefined });
     mocks.startCheckout.mockRejectedValue(new Error('checkout unavailable'));
 
-    render(<AccessPage />);
+    renderAccessPage();
     fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
 
     await waitFor(() => {
@@ -159,7 +156,7 @@ describe('candidate access actions', () => {
     mocks.useSearch.mockReturnValue({ session_id: undefined });
     mocks.openBillingPortal.mockRejectedValue(new Error('portal unavailable'));
 
-    render(<AccessPage />);
+    renderAccessPage();
     fireEvent.click(
       screen.getByRole('button', { name: 'Manage subscription' }),
     );
@@ -179,7 +176,7 @@ describe('candidate access actions', () => {
     });
     mocks.useSearch.mockReturnValue({ session_id: undefined });
 
-    render(<AccessPage />);
+    renderAccessPage();
 
     expect(screen.getAllByRole('button', { name: 'Choose' })).toHaveLength(2);
     expect(
@@ -209,7 +206,7 @@ describe('candidate access actions', () => {
       value: { href: '' },
     });
 
-    render(<AccessPage />);
+    renderAccessPage();
     fireEvent.click(
       screen.getByRole('button', { name: 'Manage subscription' }),
     );
@@ -240,7 +237,7 @@ describe('candidate access actions', () => {
     });
     mocks.useSearch.mockReturnValue({ session_id: undefined });
 
-    render(<AccessPage />);
+    renderAccessPage();
 
     // A lifetime grant cannot be managed via the portal, and it is an entitled
     // state rather than the plan picker.
@@ -258,7 +255,7 @@ describe('candidate access actions', () => {
     });
     mocks.getAccessGrant.mockRejectedValue(new Error('grant unavailable'));
 
-    render(<AccessPage />);
+    renderAccessPage();
     expect(screen.getByText('Confirming your purchase…')).toBeVisible();
 
     await act(async () => {
@@ -284,10 +281,10 @@ describe('candidate access actions', () => {
       returnTo: '/jobs?q=react',
     });
 
-    render(<AccessPage />);
+    renderAccessPage();
 
     await waitFor(() => {
-      expect(mocks.navigate).toHaveBeenCalledWith({ href: '/jobs?q=react' });
+      expect(mocks.navigate).toHaveBeenCalledWith('/jobs?q=react');
     });
     // The bridge state shows instead of parking on the entitled surface.
     expect(
@@ -310,7 +307,7 @@ describe('candidate access actions', () => {
       returnTo: 'https://evil.example/phish',
     });
 
-    render(<AccessPage />);
+    renderAccessPage();
 
     expect(mocks.navigate).not.toHaveBeenCalled();
     expect(

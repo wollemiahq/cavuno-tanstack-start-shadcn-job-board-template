@@ -4,11 +4,16 @@ import { describe, expect, it } from 'vitest';
 
 import { useViewerUnreadCount } from './use-viewer-unread-count';
 
+type ViewerUnreadProps = { viewerId: string | null };
+
 describe('useViewerUnreadCount', () => {
   it('ignores a late unread result from the previous viewer', () => {
+    const initialProps: ViewerUnreadProps = {
+      viewerId: 'candidate-a',
+    };
     const { result, rerender } = renderHook(
       ({ viewerId }) => useViewerUnreadCount(viewerId),
-      { initialProps: { viewerId: 'candidate-a' as string | null } },
+      { initialProps },
     );
     const publishCandidateA = result.current[1];
 

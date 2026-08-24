@@ -38,26 +38,49 @@ import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { searchNumber } from '@/lib/pagination';
 import { composeSalaryFaqs } from '@/lib/salary-faq';
 import { selfUrl } from '@/lib/self-url';
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 type JsonObject = { [key: string]: JsonValue };
+type CompanySalaryWire = { salarySampleCount?: number | null };
+type SalarySummaryEmpty = {
+  overallSalary: null;
+  byCategory: never[];
+  currency: string | null;
+};
+type OrganizationJsonLd = {
+  '@type': 'Organization';
+  '@id': string;
+  name: string;
+  identifier: string;
+  description?: string;
+  url: string;
+  logo?: string;
+  sameAs?: string[];
+};
 
-function isCompanySearchUnavailable(error: unknown) {
+function isCompanySearchUnavailable<T>(error: T) {
   return isBoardApiError(error) && error.code === 'search_unavailable';
 }
 
-function asJsonObjects(value: unknown): JsonObject[] {
+function asJsonObjects<T>(value: T): JsonObject[] {
+  // SAFETY: JSON.stringify removes non-JSON values and JSON.parse returns the
+  // plain data needed by the route JSON-LD payload.
   return JSON.parse(JSON.stringify(value)) as JsonObject[];
 }
 
 /** Public company wire field; treat missing/undefined as 0 (pre-field APIs). */
-function companySalarySampleCount(company: unknown): number {
-  if (!company || typeof company !== 'object') return 0;
-  const n = (company as { salarySampleCount?: unknown }).salarySampleCount;
-  return typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : 0;
+function companySalarySampleCount<T>(company: T): number {
+  if (company === null || company === undefined || Object(company) !== company)
+    return 0;
+  // SAFETY: Public company payloads are object records here; the optional
+  // salarySampleCount field is decoded before it affects behavior.
+  const wire = company as CompanySalaryWire;
+  const count = searchNumber(wire.salarySampleCount);
+  return count && count > 0 ? count : 0;
 }
 
 async function seoBase() {
@@ -293,10 +316,10 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
 /** Categories shown in the profile's salary teaser (matches queries.ts). */
 const COMPANY_SALARY_SUMMARY_CATEGORIES = 5;
 
-const EMPTY_SALARY_SUMMARY = {
-  overallSalary: null as null,
-  byCategory: [] as never[],
-  currency: null as string | null,
+const EMPTY_SALARY_SUMMARY: SalarySummaryEmpty = {
+  overallSalary: null,
+  byCategory: [],
+  currency: null,
 };
 
 export const getCompanyProfilePage = createServerFn({ method: 'GET' })
@@ -380,22 +403,24 @@ export const getCompanyProfilePage = createServerFn({ method: 'GET' })
       const c = breadcrumbsCopy();
       // Organization JSON-LD uses plain-text summary (schema text field).
       // Full HTML body stays on the page via Prose — not duplicated as stripped text.
+      const mainEntity: OrganizationJsonLd = {
+        '@type': 'Organization',
+        '@id': `${canonical}#organization`,
+        name: company.name,
+        identifier: company.id,
+        url: website ?? canonical,
+      };
+      if (summary) mainEntity.description = summary;
+      if (company.logoUrl) mainEntity.logo = company.logoUrl;
+      if (website) mainEntity.sameAs = [website];
+
       const jsonLd = asJsonObjects(
         [
           {
             '@context': 'https://schema.org',
             '@type': 'ProfilePage',
             url: canonical,
-            mainEntity: {
-              '@type': 'Organization',
-              '@id': `${canonical}#organization`,
-              name: company.name,
-              identifier: company.id,
-              ...(summary ? { description: summary } : {}),
-              url: website ?? canonical,
-              ...(company.logoUrl ? { logo: company.logoUrl } : {}),
-              ...(website ? { sameAs: [website] } : {}),
-            },
+            mainEntity,
           },
           createBreadcrumbJsonLd([
             { label: c.home, href: selfUrl(seo.origin, '/') },
@@ -441,10 +466,12 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
           ? board.jobs.search(
               {
                 query: data.q,
-                filters: {
-                  companySlug: [data.companySlug],
-                  ...(data.location ? { location: data.location } : {}),
-                },
+                filters: data.location
+                  ? {
+                      companySlug: [data.companySlug],
+                      location: data.location,
+                    }
+                  : { companySlug: [data.companySlug] },
                 offset: data.offset,
                 limit: data.limit,
               },
@@ -452,12 +479,18 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
               { headers },
             )
           : board.jobs.list(
-              {
-                companySlug: [data.companySlug],
-                ...(data.location ? { location: data.location } : {}),
-                offset: data.offset,
-                limit: data.limit,
-              },
+              data.location
+                ? {
+                    companySlug: [data.companySlug],
+                    location: data.location,
+                    offset: data.offset,
+                    limit: data.limit,
+                  }
+                : {
+                    companySlug: [data.companySlug],
+                    offset: data.offset,
+                    limit: data.limit,
+                  },
               { headers },
             ),
         seoBase(),

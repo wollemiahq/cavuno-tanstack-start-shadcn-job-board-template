@@ -28,35 +28,30 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   Carousel,
+  CarouselRoot,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  resolveCarouselOptions,
 } from '@/components/ui/carousel';
 import { DirectionProvider } from '@/components/ui/direction';
 
-const embla = vi.hoisted(() => ({
-  options: [] as Record<string, unknown>[],
-  scrollNext: vi.fn(),
-  scrollPrev: vi.fn(),
-}));
+type CarouselOptions = NonNullable<
+  React.ComponentProps<typeof Carousel>['opts']
+>;
 
-vi.mock('embla-carousel-react', () => ({
-  default: (options: Record<string, unknown>) => {
-    embla.options.push(options);
-    return [
-      () => {},
-      {
-        scrollNext: embla.scrollNext,
-        scrollPrev: embla.scrollPrev,
-        canScrollNext: () => true,
-        canScrollPrev: () => true,
-        on: () => {},
-        off: () => {},
-      },
-    ];
-  },
-}));
+interface CarouselHarness {
+  options: CarouselOptions[];
+  scrollNext: ReturnType<typeof vi.fn<() => void>>;
+  scrollPrev: ReturnType<typeof vi.fn<() => void>>;
+}
+
+const embla: CarouselHarness = {
+  options: [],
+  scrollNext: vi.fn<() => void>(),
+  scrollPrev: vi.fn<() => void>(),
+};
 
 /** The last options object embla was constructed with. */
 function lastOptions() {
@@ -67,16 +62,39 @@ function renderCarousel(
   direction: 'ltr' | 'rtl',
   props: React.ComponentProps<typeof Carousel> = {},
 ) {
+  const orientation = props.orientation ?? 'horizontal';
+  const resolved = resolveCarouselOptions({
+    orientation,
+    opts: props.opts,
+    dir: props.dir,
+    contextDirection: direction,
+  });
+  embla.options.push(resolved.options);
   return render(
     <DirectionProvider direction={direction}>
-      <Carousel {...props}>
+      <CarouselRoot
+        {...props}
+        orientation={orientation}
+        opts={resolved.options}
+        dir={resolved.direction}
+        carouselRef={() => undefined}
+        api={undefined}
+        controller={{
+          scrollNext: embla.scrollNext,
+          scrollPrev: embla.scrollPrev,
+          canScrollNext: () => true,
+          canScrollPrev: () => true,
+          on: () => undefined,
+          off: () => undefined,
+        }}
+      >
         <CarouselContent>
           <CarouselItem>one</CarouselItem>
           <CarouselItem>two</CarouselItem>
         </CarouselContent>
         <CarouselPrevious />
         <CarouselNext />
-      </Carousel>
+      </CarouselRoot>
     </DirectionProvider>,
   );
 }

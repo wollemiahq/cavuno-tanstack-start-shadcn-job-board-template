@@ -6,6 +6,23 @@ import { join } from 'node:path';
 const root = join(import.meta.dirname, '..');
 const read = (path: string) => readFileSync(join(root, path), 'utf8');
 
+function dependencyVersions(json: string): Map<string, string> {
+  const parsed = JSON.parse(json);
+  const versions = new Map<string, string>();
+  for (const group of [
+    parsed.dependencies ?? {},
+    parsed.devDependencies ?? {},
+  ]) {
+    for (const [name, version] of Object.entries(group)) {
+      if (Object.prototype.toString.call(version) !== '[object String]') {
+        throw new Error(`Expected dependency ${name} to have a string version`);
+      }
+      versions.set(name, String(version));
+    }
+  }
+  return versions;
+}
+
 /**
  * Every `@import '@fontsource…'` in theme.css, split into the npm package
  * name (what must be installed) and the family slug (what the token must
@@ -103,14 +120,7 @@ describe('shadcn theme foundation', () => {
   // fonts".
   it('installs every @fontsource package that theme.css imports', () => {
     const theme = read('src/theme.css');
-    const pkg = JSON.parse(read('package.json')) as {
-      dependencies?: Record<string, string>;
-      devDependencies?: Record<string, string>;
-    };
-    const declared = new Set([
-      ...Object.keys(pkg.dependencies ?? {}),
-      ...Object.keys(pkg.devDependencies ?? {}),
-    ]);
+    const declared = new Set(dependencyVersions(read('package.json')).keys());
 
     const imports = fontsourceImports(theme);
     expect(imports.length).toBeGreaterThan(0);
@@ -128,9 +138,7 @@ describe('shadcn theme foundation', () => {
   });
 
   it('ships the full 20-font catalog so a swap never needs a dependency change', () => {
-    const pkg = JSON.parse(read('package.json')) as {
-      dependencies: Record<string, string>;
-    };
+    const dependencies = dependencyVersions(read('package.json'));
     const CATALOG_PACKAGES = [
       '@fontsource-variable/inter',
       '@fontsource-variable/plus-jakarta-sans',
@@ -155,7 +163,7 @@ describe('shadcn theme foundation', () => {
     ];
     for (const name of CATALOG_PACKAGES) {
       expect(
-        pkg.dependencies[name],
+        dependencies.get(name),
         `${name} must be pre-installed`,
       ).toBeTruthy();
     }

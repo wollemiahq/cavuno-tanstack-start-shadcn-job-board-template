@@ -2,13 +2,16 @@
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getCompanyMarkets } = vi.hoisted(() => ({
-  getCompanyMarkets: vi.fn(),
-}));
+import {
+  useCompanyMarketSuggestions,
+  type CompanyMarketSuggestionDependencies,
+} from './-use-company-market-suggestions';
 
-vi.mock('../server/queries', () => ({ getCompanyMarkets }));
-
-import { useCompanyMarketSuggestions } from './-use-company-market-suggestions';
+const getCompanyMarkets =
+  vi.fn<CompanyMarketSuggestionDependencies['getCompanyMarkets']>();
+const dependencies: CompanyMarketSuggestionDependencies = {
+  getCompanyMarkets,
+};
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -33,7 +36,9 @@ afterEach(() => {
 
 describe('useCompanyMarketSuggestions', () => {
   it('debounces market text through the Board markets API and exposes its suggestions', async () => {
-    const { result } = renderHook(() => useCompanyMarketSuggestions(true));
+    const { result } = renderHook(() =>
+      useCompanyMarketSuggestions(true, dependencies),
+    );
 
     expect(result.current.suggestions).toEqual([]);
 
@@ -53,7 +58,9 @@ describe('useCompanyMarketSuggestions', () => {
   });
 
   it('does not query markets outside the Companies search scope', async () => {
-    const { result } = renderHook(() => useCompanyMarketSuggestions(false));
+    const { result } = renderHook(() =>
+      useCompanyMarketSuggestions(false, dependencies),
+    );
 
     act(() => result.current.onQueryChange('industrial'));
     await act(async () => vi.advanceTimersByTimeAsync(500));

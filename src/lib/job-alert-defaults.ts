@@ -5,7 +5,7 @@ import type {
 } from '@cavuno/board';
 
 const MAX_JOB_FUNCTIONS = 8;
-const REMOTE_OPTIONS: readonly string[] = ['on_site', 'hybrid', 'remote'];
+const REMOTE_OPTIONS = ['on_site', 'hybrid', 'remote'] as const;
 
 export interface JobAlertDefaults {
   /** Heading hint (job title / keyword) — display only. */
@@ -21,9 +21,8 @@ function dedupe(values: string[]): string[] {
 function toRemoteOptions(
   value: string | null,
 ): JobAlertRemoteOption[] | undefined {
-  return value && REMOTE_OPTIONS.includes(value)
-    ? [value as JobAlertRemoteOption]
-    : undefined;
+  const option = REMOTE_OPTIONS.find((remoteOption) => remoteOption === value);
+  return option ? [option] : undefined;
 }
 
 /**

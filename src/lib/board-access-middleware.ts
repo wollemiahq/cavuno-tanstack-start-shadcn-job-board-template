@@ -39,10 +39,9 @@ export const boardAccessMiddleware = createMiddleware({
       dataSource,
     );
     const boardAccessContext: BoardAccessContext = {
-      boardAccessHeaders: {
-        ...(grant ? { 'x-board-access': grant } : {}),
-        ...context.authHeaders,
-      },
+      boardAccessHeaders: grant
+        ? { 'x-board-access': grant, ...context.authHeaders }
+        : context.authHeaders,
       currentPath: currentPathFromReferer(getRequestHeader('referer') ?? null),
     };
     return next({ context: boardAccessContext });

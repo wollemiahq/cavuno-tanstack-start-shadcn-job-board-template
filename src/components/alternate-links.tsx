@@ -28,11 +28,11 @@ import { getLocale, locales } from '../paraglide/runtime';
 const EXCLUDED_PREFIXES = ['/embed', '/password'];
 
 /** og:locale wants language_TERRITORY; hreflang wants bare tags. */
-const OG_LOCALES: Record<string, string> = {
-  en: 'en_US',
-  de: 'de_DE',
-  fr: 'fr_FR',
-};
+const OG_LOCALES = new Map([
+  ['en', 'en_US'],
+  ['de', 'de_DE'],
+  ['fr', 'fr_FR'],
+]);
 
 interface HeadWithLinks {
   links?: Array<{ rel?: string; href?: string }>;
@@ -43,6 +43,8 @@ export function matchesDeclareExternalCanonical(
   origin: string,
 ): boolean {
   return matches.some((match) => {
+    // SAFETY: Route loaderData contracts are heterogeneous; this head probe
+    // only reads an optional canonical link shape before deciding hreflang output.
     const head = (match.loaderData as { head?: HeadWithLinks } | undefined)
       ?.head;
     return (
@@ -87,7 +89,7 @@ export function AlternateLinks({ origin }: { origin: string }) {
       ) : null}
       <meta
         property="og:locale"
-        content={OG_LOCALES[activeLocale] ?? activeLocale}
+        content={OG_LOCALES.get(activeLocale) ?? activeLocale}
       />
       {alternates
         .filter((locale) => locale !== activeLocale)
@@ -95,7 +97,7 @@ export function AlternateLinks({ origin }: { origin: string }) {
           <meta
             key={locale}
             property="og:locale:alternate"
-            content={OG_LOCALES[locale] ?? locale}
+            content={OG_LOCALES.get(locale) ?? locale}
           />
         ))}
     </>

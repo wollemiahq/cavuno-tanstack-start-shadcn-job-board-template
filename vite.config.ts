@@ -6,6 +6,53 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import viteReact from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+import type { OxlintConfig } from 'oxlint';
+
+const previewServer =
+  process.env.CAVUNO_PREVIEW_PROXIED === '1'
+    ? { hmr: { protocol: 'wss' as const, clientPort: 443 } }
+    : undefined;
+
+const antiSlopLint = {
+  ignorePatterns: [
+    '.agent/**',
+    '.agents/**',
+    '.claude/**',
+    '.codex/**',
+    '.continue/**',
+    '.cursor/**',
+    '.gemini/**',
+    '.opencode/**',
+    '.pi/**',
+    '.roo/**',
+    '.windsurf/**',
+    'tools/oxlint/anti-slop/**',
+  ],
+  jsPlugins: [
+    {
+      name: 'anti-slop',
+      specifier: './tools/oxlint/anti-slop/index.ts',
+    },
+  ],
+  rules: {
+    'anti-slop/no-chained-type-assertions': 'error',
+    'anti-slop/no-conditional-empty-object-spread': 'error',
+    'anti-slop/no-known-value-widening': 'error',
+    'anti-slop/no-module-mocking': 'error',
+    'anti-slop/no-object-parameters': 'error',
+    'anti-slop/no-reflect-apply': 'error',
+    'anti-slop/no-reflect-get': 'error',
+    'anti-slop/no-runtime-typeof': 'error',
+    'anti-slop/no-shape-in-symbol-names': 'error',
+    'anti-slop/no-unknown-parameters': 'error',
+    'anti-slop/no-unknown-returns': 'error',
+    'anti-slop/no-unknown-type-aliases': 'error',
+    'anti-slop/no-unsafe-dictionary-type': 'error',
+    'anti-slop/no-widen-then-assert': 'error',
+    'anti-slop/require-safety-comment-for-type-assertion': 'error',
+  },
+} satisfies OxlintConfig;
+
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
   // Builder sandbox preview proxy: the page is served at
@@ -20,9 +67,7 @@ const config = defineConfig({
   // host passes WebSocket upgrades through to vite untouched.
   // Gated on the env var the builder's /serve command sets so local
   // `npm run dev` keeps vite's defaults.
-  ...(process.env.CAVUNO_PREVIEW_PROXIED === '1'
-    ? { server: { hmr: { protocol: 'wss' as const, clientPort: 443 } } }
-    : {}),
+  server: previewServer,
   plugins: [
     // Compile-time i18n: messages/{locale}.json → tree-shakeable
     // functions in src/paraglide (generated; gitignored). Messages are
@@ -95,4 +140,4 @@ const config = defineConfig({
   ],
 });
 
-export default config;
+export default { ...config, lint: antiSlopLint };

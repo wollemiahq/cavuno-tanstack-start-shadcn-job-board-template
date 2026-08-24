@@ -6,6 +6,14 @@ import {
   type ApplyApprovalPlan,
 } from './native-apply';
 
+type ReceiptPayload =
+  | {
+      object: 'apply_approval_receipt';
+      id: string;
+      expiresAt: string;
+    }
+  | Record<string, string | number | boolean | null>;
+
 const FUTURE_EXPIRY = new Date(Date.now() + 60_000).toISOString();
 
 const requiredPlan: ApplyApprovalPlan = {
@@ -16,7 +24,7 @@ const requiredPlan: ApplyApprovalPlan = {
 };
 
 function receiptResponse(
-  body: unknown = {
+  body: ReceiptPayload = {
     object: 'apply_approval_receipt',
     id: 'aar_receipt_abcdefghijklmnopqrstuvwxyz',
     expiresAt: FUTURE_EXPIRY,

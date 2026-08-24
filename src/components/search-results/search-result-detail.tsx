@@ -69,10 +69,14 @@ export function SearchResultDetail({
   /** True while a condensed-header rAF is queued (id alone is wrong if rAF is sync). */
   const pendingFrameRef = useRef(false);
   const frameIdRef = useRef<number | null>(null);
+  const isRefCallback = (
+    value: typeof ref,
+  ): value is (instance: HTMLElement | null) => void =>
+    Object.prototype.toString.call(value) === '[object Function]';
   const setDetailRef = useCallback(
     (node: HTMLElement | null) => {
       detailRef.current = node;
-      if (typeof ref === 'function') {
+      if (isRefCallback(ref)) {
         ref(node);
       } else if (ref) {
         ref.current = node;

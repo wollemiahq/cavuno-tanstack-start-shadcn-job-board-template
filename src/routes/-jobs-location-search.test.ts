@@ -1,57 +1,63 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getJobsLocationPage } = vi.hoisted(() => ({
-  getJobsLocationPage: vi.fn(),
-}));
+import { createJobsLocationLoader } from './-jobs-taxonomy-loaders';
 
-vi.mock('../server/jobs-listing-pages', () => ({
-  getJobsLocationPage,
-}));
+import type { getJobsLocationPage as GetJobsLocationPage } from '../server/jobs-listing-pages';
 
-vi.mock('../server/queries', () => ({
-  resolvePlace: vi.fn().mockResolvedValue({
-    id: 'sydney',
-    slug: 'sydney',
-    displayName: 'Sydney',
-  }),
-}));
+const getJobsLocationPage = vi.fn<typeof GetJobsLocationPage>();
+const loadLocationJobs = createJobsLocationLoader(getJobsLocationPage);
 
-vi.mock('@/routes/-programmatic-jobs-view', () => ({
-  PROGRAMMATIC_JOBS_PAGE_SIZE: 20,
-  ProgrammaticJobsView: () => null,
-}));
-
-vi.mock('../server/account', () => ({
-  saveJob: vi.fn(),
-}));
-
-vi.mock('./-use-location-suggestions', () => ({
-  useLocationSuggestions: vi.fn(),
-}));
-
-import { Route } from './jobs.locations.$location.index';
+function locationJobsLoaderContext() {
+  return {
+    params: { location: 'sydney' },
+    deps: { q: 'robotics' },
+  };
+}
 
 describe('location jobs route — combined keyword and place filtering', () => {
   beforeEach(() => {
     getJobsLocationPage.mockReset();
     getJobsLocationPage.mockResolvedValue({
-      list: { data: [], count: 0 },
-      seo: { origin: 'https://example.com' },
+      kind: 'ok',
+      place: {
+        object: 'taxonomy_resolution',
+        type: 'place',
+        sourceSlug: 'sydney',
+        canonicalSlug: 'sydney',
+        displayName: 'Sydney',
+        redirectTo: null,
+        geo: {
+          lat: -33.8688,
+          lng: 151.2093,
+          countryCode: 'AU',
+          regionCode: 'NSW',
+          region: 'New South Wales',
+          city: 'Sydney',
+          locality: null,
+          placeType: 'city',
+        },
+      },
+      list: {
+        object: 'list',
+        url: '/v1/jobs',
+        data: [],
+        hasMore: false,
+        nextCursor: null,
+        count: 0,
+      },
+      seo: {
+        boardName: 'Example Jobs',
+        language: 'en',
+        origin: 'https://example.com',
+      },
       relatedSearches: undefined,
-      head: {},
+      head: { meta: [], links: [] },
+      jsonLd: [],
     });
   });
 
   it('passes q to the jobs query instead of silently dropping the keyword', async () => {
-    const loader = Route.options.loader;
-    if (typeof loader !== 'function') {
-      throw new Error('The location route does not define a callable loader');
-    }
-
-    await loader({
-      params: { location: 'sydney' },
-      deps: { q: 'robotics' },
-    } as never);
+    await loadLocationJobs(locationJobsLoaderContext());
 
     expect(getJobsLocationPage).toHaveBeenCalledWith({
       data: expect.objectContaining({

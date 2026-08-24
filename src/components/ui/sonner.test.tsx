@@ -22,7 +22,7 @@ afterEach(() => {
  */
 describe('Toaster theming', () => {
   const themedList = () =>
-    document.querySelector('[data-sonner-toaster]') as HTMLElement | null;
+    document.querySelector<HTMLElement>('[data-sonner-toaster]');
 
   it('follows the board light mode when <html> has no dark class', async () => {
     render(<Toaster />);

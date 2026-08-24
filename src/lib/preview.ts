@@ -473,6 +473,27 @@ export interface PreviewBoardConfig {
   registrationWallEnabled: boolean;
 }
 
+export type SandboxConfigValue = string | number | boolean | null;
+export type SandboxConfigKey =
+  | keyof PreviewBoardConfig
+  | 'jobAccessPreviewCount';
+export interface SandboxConfigPatch {
+  jobAccessPaywallEnabled?: SandboxConfigValue;
+  jobAccessPreviewCount?: SandboxConfigValue;
+  talentDirectoryVisibility?: SandboxConfigValue;
+  blogEnabled?: SandboxConfigValue;
+  jobAlertsEnabled?: SandboxConfigValue;
+  candidatesEnabled?: SandboxConfigValue;
+  employersEnabled?: SandboxConfigValue;
+  nativeApplicationsEnabled?: SandboxConfigValue;
+  applicantMessagingEnabled?: SandboxConfigValue;
+  registrationWallEnabled?: SandboxConfigValue;
+}
+
+function isSandboxConfigKey(key: string): key is SandboxConfigKey {
+  return SANDBOX_CONFIG_WHITELIST.has(key);
+}
+
 export function toPreviewBoardConfig(context: {
   features: {
     candidatePaywall: boolean;
@@ -554,20 +575,26 @@ export function unmetFlagRequirements(
  * whitelists too, but the frontend must never forward an arbitrary config bag.
  */
 export function pickWhitelistedConfig(
-  config: Record<string, unknown>,
-): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
+  config: SandboxConfigPatch,
+): SandboxConfigPatch {
+  const out: SandboxConfigPatch = {};
   for (const [key, value] of Object.entries(config)) {
-    if (SANDBOX_CONFIG_WHITELIST.has(key)) out[key] = value;
+    if (isSandboxConfigKey(key)) {
+      out[key] = value;
+    }
   }
   return out;
 }
 
-/** Group personas by role for the toolbar's sectioned menu. */
-export function groupPersonasByRole(personas: readonly PreviewPersona[]): {
+type PreviewPersonaGroups = {
   candidate: PreviewPersona[];
   employer: PreviewPersona[];
-} {
+};
+
+/** Group personas by role for the toolbar's sectioned menu. */
+export function groupPersonasByRole(
+  personas: readonly PreviewPersona[],
+): PreviewPersonaGroups {
   return {
     candidate: personas.filter((p) => p.role === 'candidate'),
     employer: personas.filter((p) => p.role === 'employer'),

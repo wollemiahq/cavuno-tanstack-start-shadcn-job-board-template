@@ -3,7 +3,7 @@ import { LegalPlaceholderCallout } from './placeholder-callout';
 import type { LegalLocale, LegalPageContent } from './types';
 
 /** Titles match `breadcrumbs_about` per locale so h1 / title / crumb agree. */
-export const aboutContent: Record<LegalLocale, LegalPageContent> = {
+export const aboutContent = {
   en: {
     title: 'About',
     description:
@@ -85,4 +85,4 @@ export const aboutContent: Record<LegalLocale, LegalPageContent> = {
       );
     },
   },
-};
+} satisfies Record<LegalLocale, LegalPageContent>;

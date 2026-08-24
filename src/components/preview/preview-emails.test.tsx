@@ -13,14 +13,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { rewritePreviewEmailLinks } from '../../lib/preview';
 
 import type { PreviewEmail } from '../../lib/preview';
+import type { LoadPreviewEmails } from './preview-emails';
 
-const mocks = vi.hoisted(() => ({
-  listSandboxEmails: vi.fn<() => unknown>(),
-}));
-
-vi.mock('../../server/preview', () => ({
-  listSandboxEmails: mocks.listSandboxEmails,
-}));
+const mocks = {
+  listSandboxEmails: vi.fn<LoadPreviewEmails>(),
+};
 
 import { PreviewEmailsSheet } from './preview-emails';
 
@@ -53,22 +50,26 @@ afterEach(() => {
 });
 
 function openPanel() {
-  render(<PreviewEmailsSheet />);
+  render(<PreviewEmailsSheet loadEmails={mocks.listSandboxEmails} />);
   fireEvent.click(screen.getByRole('button', { name: 'Emails' }));
 }
 
 /** The master list — scopes queries so a subject that also appears in the
  * detail metadata (the auto-selected email) isn't ambiguous. */
 function list(): HTMLElement {
-  return document.querySelector(
+  const element = document.querySelector<HTMLElement>(
     '[data-test="preview-emails-list"]',
-  ) as HTMLElement;
+  );
+  if (!element) throw new Error('Expected the preview email list');
+  return element;
 }
 
 function detail(): HTMLElement {
-  return document.querySelector(
+  const element = document.querySelector<HTMLElement>(
     '[data-test="preview-email-detail"]',
-  ) as HTMLElement;
+  );
+  if (!element) throw new Error('Expected the preview email detail');
+  return element;
 }
 
 /** The list/detail panes are portaled and populated after the async load — wait
@@ -129,10 +130,10 @@ describe('PreviewEmailsSheet', () => {
 
     // The body is isolated in a sandboxed iframe and the platform HTML is
     // handed to srcDoc verbatim (AGENTS.md rule 4: rendered as-is).
-    const frame = within(pane).getByTitle('Email body') as HTMLIFrameElement;
+    const frame = within(pane).getByTitle<HTMLIFrameElement>('Email body');
     expect(frame.tagName).toBe('IFRAME');
     expect(frame).toHaveAttribute('sandbox', '');
-    expect(frame.getAttribute('srcdoc')).toBe(emails[0]!.html);
+    expect(frame.getAttribute('srcdoc')).toBe(emails[0]?.html);
   });
 
   it('shows the plain-text fallback when a selected email has no HTML body', async () => {
@@ -176,7 +177,7 @@ describe('PreviewEmailsSheet', () => {
     openPanel();
 
     const pane = await findDetail();
-    const frame = within(pane).getByTitle('Email body') as HTMLIFrameElement;
+    const frame = within(pane).getByTitle<HTMLIFrameElement>('Email body');
     const srcdoc = frame.getAttribute('srcdoc') ?? '';
     // The link now opens in the running app, path/query preserved…
     expect(srcdoc).toContain(

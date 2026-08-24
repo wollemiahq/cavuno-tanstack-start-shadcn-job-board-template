@@ -6,7 +6,7 @@ import type { LegalLocale, LegalPageContent } from './types';
  * Titles stay "Impressum" (legal term) in en/de; fr uses the catalog
  * `breadcrumbs_impressum` value so h1 / title / crumb agree per locale.
  */
-export const impressumContent: Record<LegalLocale, LegalPageContent> = {
+export const impressumContent = {
   en: {
     title: 'Impressum',
     description:
@@ -97,4 +97,4 @@ export const impressumContent: Record<LegalLocale, LegalPageContent> = {
       );
     },
   },
-};
+} satisfies Record<LegalLocale, LegalPageContent>;

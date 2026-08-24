@@ -203,6 +203,11 @@ export type RemotePermitSelection = {
   label: string;
 };
 
+type RemotePermitsSubmission = Pick<
+  JobPostingFormInput,
+  'remoteWorkingPermits' | 'remoteWorkPermitCountryCodes'
+>;
+
 /**
  * Map the geographic-restriction selections to the posting body's permit
  * fields. No selection means worldwide. Region/group entries let the server
@@ -212,10 +217,7 @@ export type RemotePermitSelection = {
 export function remotePermitsSubmission(
   selections: RemotePermitSelection[],
   worldwideLabel: string,
-): Pick<
-  JobPostingFormInput,
-  'remoteWorkingPermits' | 'remoteWorkPermitCountryCodes'
-> {
+): RemotePermitsSubmission {
   if (selections.length === 0) {
     return {
       remoteWorkingPermits: [
@@ -224,18 +226,17 @@ export function remotePermitsSubmission(
     };
   }
 
-  return {
+  const payload: RemotePermitsSubmission = {
     remoteWorkingPermits: selections.map(({ type, value, label }) => ({
       type,
       value,
       label,
     })),
-    ...(selections.every((selection) => selection.type === 'country')
-      ? {
-          remoteWorkPermitCountryCodes: selections.map(
-            (selection) => selection.value,
-          ),
-        }
-      : {}),
   };
+  if (selections.every((selection) => selection.type === 'country')) {
+    payload.remoteWorkPermitCountryCodes = selections.map(
+      (selection) => selection.value,
+    );
+  }
+  return payload;
 }

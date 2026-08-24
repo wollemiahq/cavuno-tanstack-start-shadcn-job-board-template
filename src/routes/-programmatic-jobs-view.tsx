@@ -11,6 +11,7 @@ import { toJobCardVM } from '@/board/job-view-model';
 import { JobSearchPage } from '@/components/board/job-search-page';
 import { useRootSession } from '@/components/root-session';
 import type { JobsSearch } from '@/lib/jobs-search';
+import type { UrlSearchInput } from '@/lib/pagination';
 import type { PublicJobCard, RelatedSearch } from '@cavuno/board';
 
 const rootApi = getRouteApi('__root__');
@@ -18,7 +19,7 @@ const rootApi = getRouteApi('__root__');
 type LooseNavigate = (opts: {
   to?: string;
   params?: Record<string, string>;
-  search?: (prev: Record<string, unknown>) => Record<string, unknown>;
+  search?: (prev: UrlSearchInput) => UrlSearchInput;
   replace?: boolean;
   resetScroll?: boolean;
 }) => void;
@@ -49,7 +50,10 @@ export function ProgrammaticJobsView({
 }) {
   const { board } = rootApi.useLoaderData();
   const { user } = useRootSession();
-  const navigate = useNavigate() as unknown as LooseNavigate;
+  const routeNavigate = useNavigate();
+  // SAFETY: This component only uses stable search-object updates supported by
+  // TanStack navigate; route-specific typing is erased at this shared view seam.
+  const navigate = routeNavigate as LooseNavigate;
   const selectedSlug = jobs.some((job) => job.slug === filters.selectedJob)
     ? filters.selectedJob
     : undefined;

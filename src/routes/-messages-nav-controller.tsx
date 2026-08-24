@@ -6,17 +6,30 @@ import { MessagesNavLink } from '@/components/messages-nav-link';
 import { useVisiblePoll } from '@/lib/use-visible-poll';
 import { getUnreadCount } from '@/server/messaging';
 
+export type MessagesNavDependencies = {
+  getUnreadCount: () => Promise<{ count: number }>;
+  useVisiblePoll: typeof useVisiblePoll;
+};
+
+const messagesNavDependencies: MessagesNavDependencies = {
+  getUnreadCount,
+  useVisiblePoll,
+};
+
 export function MessagesNavController({
   enabled = true,
   onUnreadCount,
+  dependencies = messagesNavDependencies,
 }: {
   enabled?: boolean;
   onUnreadCount?: (count: number) => void;
+  dependencies?: MessagesNavDependencies;
 }) {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const refresh = () =>
-    getUnreadCount()
+    dependencies
+      .getUnreadCount()
       .then((result) => {
         setUnreadCount(result.count);
         onUnreadCount?.(result.count);
@@ -33,7 +46,7 @@ export function MessagesNavController({
     }
   }, [enabled, onUnreadCount]);
 
-  useVisiblePoll(() => refresh(), 15000, enabled, true);
+  dependencies.useVisiblePoll(() => refresh(), 15000, enabled, true);
 
   return <MessagesNavLink unreadCount={unreadCount} />;
 }

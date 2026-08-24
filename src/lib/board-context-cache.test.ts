@@ -9,31 +9,28 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  * same process), and a failure that is never retained.
  */
 
-const { contextSpy, dataSource } = vi.hoisted(() => ({
-  contextSpy: vi.fn(),
-  dataSource: { current: 'primary' as 'primary' | 'demo' },
-}));
+interface DataSourceState {
+  current: 'primary' | 'demo';
+}
 
-vi.mock('./board', () => ({
-  getBoard: () => ({ context: contextSpy }),
-}));
+import { createBoardContextCache } from './board-context-cache-core';
 
-vi.mock('./data-source.server', () => ({
-  getDataSource: () => dataSource.current,
-}));
-
-vi.mock('./read-cache', () => ({
-  boardGlobalReadCache: () => ({
-    cf: { cacheTtl: 300, cacheEverything: true },
-  }),
-}));
-
+const contextSpy = vi.fn();
+const dataSource: DataSourceState = { current: 'primary' };
 const {
   readBoardContext,
   readEmployerOfferGate,
   resetBoardContextCache,
   resetEmployerOfferGateCache,
-} = await import('./board-context-cache');
+} = createBoardContextCache(
+  {
+    getBoardContext: () =>
+      contextSpy({ cf: { cacheTtl: 300, cacheEverything: true } }),
+    getDataSource: () => (dataSource.current === 'primary' ? 'board' : 'demo'),
+    now: () => Date.now(),
+  },
+  30_000,
+);
 
 beforeEach(() => {
   vi.useFakeTimers();

@@ -8,30 +8,23 @@ const read = (path: string) => readFileSync(join(root, path), 'utf8');
 
 describe('package metadata', () => {
   it('carries useful package metadata without becoming publishable to npm', () => {
-    const packageJson = JSON.parse(read('package.json')) as {
-      description?: string;
-      homepage?: string;
-      keywords?: string[];
-      license?: string;
-      private?: boolean;
-      repository?: { type?: string; url?: string };
-    };
+    const packageJson: unknown = JSON.parse(read('package.json'));
 
-    expect(packageJson.private).toBe(true);
-    expect(packageJson.description).toMatch(/shadcn\/ui job board/i);
-    expect(packageJson.homepage).toBe('https://cavuno.com');
-    expect(packageJson.license).toBe('MIT');
-    expect(packageJson.repository).toEqual({
-      type: 'git',
-      url: 'https://github.com/wollemiahq/cavuno-tanstack-start-shadcn-job-board-template.git',
-    });
-    expect(packageJson.keywords).toEqual(
-      expect.arrayContaining([
+    expect(packageJson).toMatchObject({
+      private: true,
+      description: expect.stringMatching(/shadcn\/ui job board/i),
+      homepage: 'https://cavuno.com',
+      license: 'MIT',
+      repository: {
+        type: 'git',
+        url: 'https://github.com/wollemiahq/cavuno-tanstack-start-shadcn-job-board-template.git',
+      },
+      keywords: expect.arrayContaining([
         'shadcn-ui',
         'tanstack-start',
         'job-board',
         'base-ui',
       ]),
-    );
+    });
   });
 });

@@ -20,7 +20,7 @@ import {
 import { salaryCurrencyOptions } from '../lib/salary-currencies';
 import { m } from '../paraglide/messages';
 import { PageSection } from './layout/page';
-import { RichTextEditor } from './rich-text-editor';
+import { RichTextEditor, type RichTextEditorProps } from './rich-text-editor';
 import { Alert, AlertDescription } from './ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
@@ -75,6 +75,7 @@ import type { LocationSuggestionState } from '@/components/location-combobox';
 import { PlaceTagsField } from '@/components/place-tags-field';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
+import { searchString } from '@/lib/pagination';
 import type {
   JobPostingPlan,
   PublicBoard,
@@ -102,6 +103,7 @@ const SENIORITIES = [
   'executive',
 ] as const;
 const PROTOCOL_PREFIX = 'https://';
+type RemoteOptionChoice = (typeof REMOTE_OPTIONS)[number];
 
 type Status =
   | { kind: 'idle' }
@@ -137,6 +139,18 @@ type PostJobFormState = {
   customFieldValues: CustomFieldValues;
 };
 
+function remoteOptionChoice(
+  value: string | null | undefined,
+): RemoteOptionChoice | undefined {
+  return REMOTE_OPTIONS.find((option) => option === value);
+}
+
+function salaryTimeframeChoice(
+  value: string | null | undefined,
+): SalaryTimeframe | undefined {
+  return SALARY_TIMEFRAMES.find((timeframe) => timeframe === value);
+}
+
 export type PostJobFormProps = {
   locale: string;
   plans: JobPostingPlan[];
@@ -153,6 +167,8 @@ export type PostJobFormProps = {
   onLogoFetch: (domain: string) => Promise<LogoResult>;
   onLogoUpload: (data: FormData) => Promise<LogoResult>;
   onCheckout: (url: string) => void;
+  /** Editor implementation seam for isolated form tests. */
+  DescriptionEditor?: React.ComponentType<RichTextEditorProps>;
 };
 
 function formatPrice(locale: string, amount: number, currency: string) {
@@ -186,6 +202,7 @@ export function PostJobForm({
   onLogoFetch,
   onLogoUpload,
   onCheckout,
+  DescriptionEditor = RichTextEditor,
 }: PostJobFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -419,7 +436,7 @@ export function PostJobForm({
     );
 
     try {
-      const result = await onSubmit({
+      const input: SubmitJobInput = {
         companyName: String(form.get('companyName')),
         companyWebsite: ensureProtocol(readString(form, 'companyWebsite')),
         contactName: String(form.get('contactName')),
@@ -428,19 +445,9 @@ export function PostJobForm({
         description,
         employmentType: String(form.get('employmentType')),
         remoteOption: String(form.get('remoteOption')),
-        ...(seniority ? { seniority } : {}),
         officeLocations: officeLocations.map(
           ({ key: _key, ...location }) => location,
         ),
-        ...(remoteOption === 'remote'
-          ? remotePermitsSubmission(
-              remotePermitSelections,
-              m.postJob_remoteRestrictionWorldwide(),
-            )
-          : {}),
-        ...(Object.keys(submittableCustomFieldValues).length
-          ? { customFieldValues: submittableCustomFieldValues }
-          : {}),
         applicationUrl:
           normalizeApplicationTarget(readString(form, 'applicationUrl')) ?? '',
         salaryMin,
@@ -449,7 +456,21 @@ export function PostJobForm({
         salaryTimeframe,
         selectedPlan: selectedPlanId,
         logoUrl: logoUrl ?? undefined,
-      });
+      };
+      if (seniority) input.seniority = seniority;
+      if (remoteOption === 'remote') {
+        Object.assign(
+          input,
+          remotePermitsSubmission(
+            remotePermitSelections,
+            m.postJob_remoteRestrictionWorldwide(),
+          ),
+        );
+      }
+      if (Object.keys(submittableCustomFieldValues).length) {
+        input.customFieldValues = submittableCustomFieldValues;
+      }
+      const result = await onSubmit(input);
 
       if (!result.ok) {
         updateFormState({
@@ -635,9 +656,9 @@ export function PostJobForm({
                 items={seniorityItems}
                 name="seniority"
                 value={seniority}
-                onValueChange={(value) =>
+                onValueChange={(value: string | null) =>
                   updateFormState({
-                    seniority: (value as string | null) ?? null,
+                    seniority: value ?? null,
                   })
                 }
               >
@@ -667,7 +688,7 @@ export function PostJobForm({
             onValueChange={(value) =>
               updateFormState({
                 remoteOption:
-                  (value as (typeof REMOTE_OPTIONS)[number] | null) ?? 'hybrid',
+                  remoteOptionChoice(searchString(value)) ?? 'hybrid',
                 officeLocationsError: false,
               })
             }
@@ -774,7 +795,7 @@ export function PostJobForm({
           ) : null}
           <Field>
             <FieldLabel>{m.postJob_descriptionLabel()}</FieldLabel>
-            <RichTextEditor
+            <DescriptionEditor
               value={description}
               onChange={(value) => updateFormState({ description: value })}
               ariaLabel={m.postJob_descriptionLabel()}
@@ -810,7 +831,7 @@ export function PostJobForm({
               onValueChange={(value) =>
                 updateFormState({
                   salaryTimeframe:
-                    (value as SalaryTimeframe | null) ??
+                    salaryTimeframeChoice(searchString(value)) ??
                     DEFAULT_SALARY_TIMEFRAME,
                 })
               }
@@ -843,8 +864,8 @@ export function PostJobForm({
         <RadioGroup
           name="selectedPlan"
           value={selectedPlanId ?? null}
-          onValueChange={(value) =>
-            setSelectedPlanId((value as string | null) ?? undefined)
+          onValueChange={(value: string | null) =>
+            setSelectedPlanId(value ?? undefined)
           }
           aria-label={m.postJob_planHeading()}
         >

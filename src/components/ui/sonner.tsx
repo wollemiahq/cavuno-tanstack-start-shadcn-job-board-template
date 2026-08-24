@@ -37,8 +37,21 @@ function useResolvedThemeMode(): 'light' | 'dark' {
   return mode;
 }
 
+type ToasterStyle = React.CSSProperties & {
+  '--border-radius': string;
+  '--normal-bg': string;
+  '--normal-border': string;
+  '--normal-text': string;
+};
+
 const Toaster = ({ position = 'top-right', ...props }: ToasterProps) => {
   const theme = useResolvedThemeMode();
+  const style: ToasterStyle = {
+    '--normal-bg': 'var(--popover)',
+    '--normal-text': 'var(--popover-foreground)',
+    '--normal-border': 'var(--border)',
+    '--border-radius': 'var(--radius)',
+  };
 
   return (
     <Sonner
@@ -52,14 +65,7 @@ const Toaster = ({ position = 'top-right', ...props }: ToasterProps) => {
         error: <OctagonXIcon className="size-4" />,
         loading: <Loader2Icon className="size-4 animate-spin" />,
       }}
-      style={
-        {
-          '--normal-bg': 'var(--popover)',
-          '--normal-text': 'var(--popover-foreground)',
-          '--normal-border': 'var(--border)',
-          '--border-radius': 'var(--radius)',
-        } as React.CSSProperties
-      }
+      style={style}
       toastOptions={{
         classNames: {
           toast: 'cn-toast',

@@ -2,11 +2,13 @@
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { searchPlaces } = vi.hoisted(() => ({ searchPlaces: vi.fn() }));
+import {
+  useLocationSuggestions,
+  type LocationSuggestionDependencies,
+} from './-use-location-suggestions';
 
-vi.mock('../server/queries', () => ({ searchPlaces }));
-
-import { useLocationSuggestions } from './-use-location-suggestions';
+const searchPlaces = vi.fn<LocationSuggestionDependencies['searchPlaces']>();
+const dependencies: LocationSuggestionDependencies = { searchPlaces };
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -22,7 +24,9 @@ afterEach(() => {
 
 describe('useLocationSuggestions — route-owned place loading', () => {
   it('waits for a meaningful query and debounces the Board request', async () => {
-    const { result } = renderHook(() => useLocationSuggestions('en'));
+    const { result } = renderHook(() =>
+      useLocationSuggestions('en', dependencies),
+    );
 
     act(() => result.current.onQueryChange('L'));
     await act(async () => vi.advanceTimersByTimeAsync(500));

@@ -7,7 +7,21 @@ type MarketSuggestion = { slug: string; name: string };
 const MIN_QUERY = 2;
 const DEBOUNCE_MS = 200;
 
-export function useCompanyMarketSuggestions(enabled: boolean) {
+export type CompanyMarketSuggestionDependencies = {
+  getCompanyMarkets: (input: {
+    data: { search: string; limit: number };
+  }) => Promise<{
+    data: Awaited<ReturnType<typeof getCompanyMarkets>>['data'];
+  }>;
+};
+
+const companyMarketSuggestionDependencies: CompanyMarketSuggestionDependencies =
+  { getCompanyMarkets };
+
+export function useCompanyMarketSuggestions(
+  enabled: boolean,
+  dependencies: CompanyMarketSuggestionDependencies = companyMarketSuggestionDependencies,
+) {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<MarketSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
@@ -27,7 +41,8 @@ export function useCompanyMarketSuggestions(enabled: boolean) {
     // list is replaced in place once fresh results resolve.
     setLoading(true);
     const timer = setTimeout(() => {
-      void getCompanyMarkets({ data: { search, limit: 10 } })
+      void dependencies
+        .getCompanyMarkets({ data: { search, limit: 10 } })
         .then((response) => {
           if (!cancelled) {
             setSuggestions(
@@ -47,7 +62,7 @@ export function useCompanyMarketSuggestions(enabled: boolean) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [enabled, query]);
+  }, [dependencies, enabled, query]);
 
   return { suggestions, loading, onQueryChange: setQuery };
 }
