@@ -346,6 +346,8 @@ function ResumeOfferStep({
           checked={recommendationEmails}
           disabled={recommendationPending}
           onCheckedChange={async (checked) => {
+            const previousRecommendationEmails = recommendationEmails;
+            setRecommendationEmails(checked);
             setRecommendationPending(true);
             try {
               await updateNotificationPreferenceAction({
@@ -354,8 +356,8 @@ function ResumeOfferStep({
                   subscribed: checked,
                 },
               });
-              setRecommendationEmails(checked);
             } catch {
+              setRecommendationEmails(previousRecommendationEmails);
               reportActionError();
             } finally {
               setRecommendationPending(false);

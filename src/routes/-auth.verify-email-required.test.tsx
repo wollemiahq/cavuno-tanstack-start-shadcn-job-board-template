@@ -461,10 +461,13 @@ describe('/auth/verify-email-required resume offer step', () => {
     ).toBeNull();
   });
 
-  it('keeps the onboarding opt-in unchecked when the immediate save fails', async () => {
+  it('checks the onboarding opt-in immediately and reverts when saving fails', async () => {
+    let rejectPreference!: () => void;
     mocks.verifyOtpCode.mockResolvedValue({ ok: true });
-    mocks.updateNotificationPreference.mockRejectedValue(
-      new Error('network unavailable'),
+    mocks.updateNotificationPreference.mockReturnValue(
+      new Promise<void>((_resolve, reject) => {
+        rejectPreference = () => reject(new Error('network unavailable'));
+      }),
     );
     const { container } = renderVerifyPage({ resume: emptyResume });
     fireEvent.change(container.querySelector('input[name="code"]')!, {
@@ -474,6 +477,9 @@ describe('/auth/verify-email-required resume offer step', () => {
       name: m.authVerifyEmailRequired_recommendedJobEmailsLabel(),
     });
     fireEvent.click(checkbox);
+    expect(checkbox).toBeChecked();
+
+    rejectPreference();
     await waitFor(() => {
       expect(mocks.toastActionError).toHaveBeenCalled();
     });
