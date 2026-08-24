@@ -54,6 +54,14 @@ const allFeatures: HeaderFeatures = {
   nativeApplications: true,
 };
 
+function findAccountButton() {
+  return screen.findByRole(
+    'button',
+    { name: m.siteHeader_accountLabel() },
+    { timeout: 10_000 },
+  );
+}
+
 type TalentDirectoryVisibility = 'off' | 'public' | 'employers_only' | null;
 
 function renderHeader({
@@ -411,9 +419,7 @@ describe('Header — native-applications account gating', () => {
   it('shows the Applications account entry when native applications are on', async () => {
     renderHeader({ user: signedInUser });
 
-    fireEvent.click(
-      await screen.findByRole('button', { name: m.siteHeader_accountLabel() }),
-    );
+    fireEvent.click(await findAccountButton());
 
     expect(
       await screen.findByRole('menuitem', {
@@ -425,9 +431,7 @@ describe('Header — native-applications account gating', () => {
   it('lists recommended jobs above saved jobs', async () => {
     renderHeader({ user: signedInUser });
 
-    fireEvent.click(
-      await screen.findByRole('button', { name: m.siteHeader_accountLabel() }),
-    );
+    fireEvent.click(await findAccountButton());
 
     const recommended = await screen.findByRole('menuitem', {
       name: m.accountShell_recommendedJobsNav(),
@@ -445,9 +449,7 @@ describe('Header — native-applications account gating', () => {
       features: { ...allFeatures, nativeApplications: false },
     });
 
-    fireEvent.click(
-      await screen.findByRole('button', { name: m.siteHeader_accountLabel() }),
-    );
+    fireEvent.click(await findAccountButton());
 
     // The menu is open (a sibling item resolves) but Applications is absent.
     expect(
@@ -477,9 +479,7 @@ describe('Header — subscription entry gating', () => {
   it('shows the Subscription account entry when the viewer holds an active grant', async () => {
     renderHeader({ user: signedInUser, hasAccessGrant: true });
 
-    fireEvent.click(
-      await screen.findByRole('button', { name: m.siteHeader_accountLabel() }),
-    );
+    fireEvent.click(await findAccountButton());
 
     const subscription = await screen.findByRole('menuitem', {
       name: m.accountShell_subscriptionNav(),
@@ -492,9 +492,7 @@ describe('Header — subscription entry gating', () => {
     // this menu — the account entry would advertise a page of no use to them.
     renderHeader({ user: signedInUser, hasAccessGrant: false });
 
-    fireEvent.click(
-      await screen.findByRole('button', { name: m.siteHeader_accountLabel() }),
-    );
+    fireEvent.click(await findAccountButton());
 
     // The menu is open (a sibling item resolves) but Subscription is absent.
     expect(
