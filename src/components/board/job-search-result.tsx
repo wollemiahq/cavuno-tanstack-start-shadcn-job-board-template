@@ -2,6 +2,7 @@ import type { MouseEvent as ReactMouseEvent, ReactNode } from 'react';
 
 import type { JobCardVM } from '@/board/job-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
+import { RelativeTimestamp } from '@/components/board/relative-timestamp';
 import { SearchResultCard } from '@/components/search-results/search-results';
 import { localizePath } from '@/lib/localized-path';
 
@@ -81,7 +82,7 @@ export function JobSearchResult({
             <div className="mt-3 flex min-h-8 items-end justify-between gap-3">
               {vm.postedAtLabel ? (
                 <p className="text-muted-foreground text-xs">
-                  {vm.postedAtLabel}
+                  <RelativeTimestamp label={vm.postedAtLabel} />
                 </p>
               ) : (
                 <span />
