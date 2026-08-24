@@ -416,7 +416,9 @@ describe('/auth/verify-email-required resume offer step', () => {
       name: m.authVerifyEmailRequired_recommendedJobEmailsLabel(),
     });
     expect(recommendations).not.toBeChecked();
-    fireEvent.click(recommendations);
+    fireEvent.click(
+      screen.getByText(m.authVerifyEmailRequired_recommendedJobEmailsLabel()),
+    );
     await waitFor(() => {
       expect(mocks.updateNotificationPreference).toHaveBeenCalledWith({
         data: {

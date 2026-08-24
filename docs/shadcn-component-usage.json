@@ -593,7 +593,8 @@
       "productionReferences": [
         "src/components/employer-job-form.tsx",
         "src/components/experience-section.tsx",
-        "src/components/resume-upload.tsx"
+        "src/components/resume-upload.tsx",
+        "src/routes/-auth.verify-email-required.tsx"
       ]
     },
     {

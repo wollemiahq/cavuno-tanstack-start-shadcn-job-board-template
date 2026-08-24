@@ -30,6 +30,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp';
+import { Label } from '@/components/ui/label';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import type { Resume } from '@cavuno/board';
 
@@ -334,15 +335,16 @@ function ResumeOfferStep({
       supportingText={m.authVerifyEmailRequired_resumeIntroText()}
     >
       {resume ? renderResumeUpload(resume) : null}
-      <div
-        className="border-border flex items-start gap-3 rounded-lg border p-4"
+      <Label
+        htmlFor="recommendation-email-opt-in"
+        className="w-fit cursor-pointer items-center gap-3 py-1 text-sm leading-6"
         data-test="recommendation-email-opt-in"
       >
         <Checkbox
-          className="mt-0.5 shrink-0"
+          id="recommendation-email-opt-in"
+          className="shrink-0"
           checked={recommendationEmails}
           disabled={recommendationPending}
-          aria-label={m.authVerifyEmailRequired_recommendedJobEmailsLabel()}
           onCheckedChange={async (checked) => {
             setRecommendationPending(true);
             try {
@@ -363,7 +365,7 @@ function ResumeOfferStep({
         <span className="block font-medium">
           {m.authVerifyEmailRequired_recommendedJobEmailsLabel()}
         </span>
-      </div>
+      </Label>
       <Button
         type="button"
         variant={resume?.hasResumeOnFile ? 'default' : 'outline'}
