@@ -26,6 +26,13 @@ export async function handleEmployerLoaderError(
 ): Promise<never> {
   if (isRedirect(error)) throw error;
 
+  if (error instanceof Error && error.message.includes('EMAIL_UNVERIFIED')) {
+    throw redirect({
+      to: '/auth/verify-email-required',
+      search: { returnTo },
+    });
+  }
+
   if (
     isUnauthorized(error) ||
     (error instanceof Error && error.message.includes('UNAUTHENTICATED'))

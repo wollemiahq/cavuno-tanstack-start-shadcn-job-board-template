@@ -17,6 +17,7 @@ import {
   type SessionContext,
 } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
+import { requireVerifiedBoardUser } from './me-verification';
 
 import type { AccessCheckoutBody } from '@cavuno/board';
 
@@ -51,9 +52,11 @@ export const getPaywallOffers = createServerFn({ method: 'GET' })
 export const getAccessGrant = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) =>
-    gatedRead(context, (h) =>
-      getBoard().me.access.grant({ headers: authed(context, h) }),
-    ),
+    gatedRead(context, async (h) => {
+      const headers = authed(context, h);
+      await requireVerifiedBoardUser(headers);
+      return getBoard().me.access.grant({ headers });
+    }),
   );
 
 /**
@@ -67,17 +70,19 @@ export const startCheckout = createServerFn({ method: 'POST' })
   })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context, data }) =>
-    gatedRead(context, (h) =>
-      getBoard().me.access.checkout(
+    gatedRead(context, async (h) => {
+      const headers = authed(context, h);
+      await requireVerifiedBoardUser(headers);
+      return getBoard().me.access.checkout(
         {
           // A key picked from `getPaywallOffers` — the API re-validates it.
           offerKey: data.offerKey as AccessCheckoutBody['offerKey'],
           returnPath: data.returnPath,
           colorMode: 'light',
         },
-        { headers: authed(context, h) },
-      ),
-    ),
+        { headers },
+      );
+    }),
   );
 
 /**
@@ -91,10 +96,12 @@ export const openBillingPortal = createServerFn({ method: 'POST' })
   })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context, data }) =>
-    gatedRead(context, (h) =>
-      getBoard().me.access.portal(
+    gatedRead(context, async (h) => {
+      const headers = authed(context, h);
+      await requireVerifiedBoardUser(headers);
+      return getBoard().me.access.portal(
         { returnPath: data.returnPath },
-        { headers: authed(context, h) },
-      ),
-    ),
+        { headers },
+      );
+    }),
   );

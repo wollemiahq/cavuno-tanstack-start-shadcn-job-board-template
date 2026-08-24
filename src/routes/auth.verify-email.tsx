@@ -11,6 +11,7 @@ import {
   candidateSignInHref,
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
+import { getSessionUserStrict } from '../server/account';
 import { verifyEmail } from '../server/auth';
 import { getSeoBase } from '../server/queries';
 
@@ -37,13 +38,33 @@ export const Route = createFileRoute('/auth/verify-email')({
     const seoPromise = getSeoBase();
     if (!deps.token)
       return { status: 'missing-token' as const, seo: await seoPromise };
+    // Capture the session before consuming the public token. Its role is safe
+    // to use only if this exact user transitions from unverified to verified;
+    // an unrelated or already-verified browser session must not choose where
+    // the token's subject continues.
+    const sessionBefore = await getSessionUserStrict();
     const [result, seo] = await Promise.all([
       verifyEmail({ data: { token: deps.token } }),
       seoPromise,
     ]);
-    return result.ok
-      ? { status: 'verified' as const, seo }
-      : { status: 'invalid' as const, seo };
+    if (!result.ok)
+      return { status: 'invalid' as const, returnTo: deps.returnTo, seo };
+    const sessionAfter =
+      sessionBefore && !sessionBefore.emailVerified
+        ? await getSessionUserStrict()
+        : null;
+    const verifiedSameSession =
+      sessionAfter !== null &&
+      sessionAfter.id === sessionBefore?.id &&
+      sessionAfter.emailVerified;
+    return {
+      status: 'verified' as const,
+      returnTo:
+        verifiedSameSession && sessionAfter.role === 'employer'
+          ? '/employers/dashboard'
+          : candidateReturnTo(deps.returnTo),
+      seo,
+    };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -57,8 +78,9 @@ export const Route = createFileRoute('/auth/verify-email')({
 });
 
 function VerifyEmailPage() {
-  const { status } = Route.useLoaderData();
-  const { returnTo } = Route.useSearch();
+  const { status, returnTo } = Route.useLoaderData();
+  const search = Route.useSearch();
+  const fallbackReturnTo = returnTo ?? search.returnTo;
 
   if (status === 'verified') {
     return (
@@ -67,7 +89,7 @@ function VerifyEmailPage() {
         supportingText={m.authVerifyEmail_verifiedBody()}
       >
         <a
-          href={returnTo}
+          href={fallbackReturnTo}
           className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
         >
           {m.authVerifyEmail_goToAccountLabel()}
@@ -86,7 +108,7 @@ function VerifyEmailPage() {
       }
     >
       <a
-        href={candidateSignInHref(returnTo)}
+        href={candidateSignInHref(fallbackReturnTo)}
         className={cn(
           buttonVariants({ variant: 'outline', size: 'lg' }),
           'w-full',

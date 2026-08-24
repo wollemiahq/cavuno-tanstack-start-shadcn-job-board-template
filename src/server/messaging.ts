@@ -21,6 +21,7 @@ import {
   type SessionContext,
 } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
+import { requireVerifiedBoardUser } from './me-verification';
 
 import type {
   BlockUserBody,
@@ -37,14 +38,6 @@ function authedHeaders(
   return { ...context.authHeaders, ...context.boardAccessHeaders };
 }
 
-async function requireVerifiedBoardUser(headers: Record<string, string>) {
-  const me = await getBoard().me.retrieve(undefined, { headers });
-  if (!me.emailVerified) {
-    throw new Error('EMAIL_UNVERIFIED');
-  }
-  return me;
-}
-
 // ── Reads (polled) ───────────────────────────────────────────────────────
 
 /** The inbox (or archived view) — one page of conversations. Unread is polled
@@ -56,9 +49,11 @@ export const getInbox = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (access) => {
+      const headers = { ...context.authHeaders, ...access };
+      await requireVerifiedBoardUser(headers);
       const conversations = await getBoard().me.conversations.list(
         { archived: data?.archived, cursor: data?.cursor, limit: 20 },
-        { headers: { ...context.authHeaders, ...access } },
+        { headers },
       );
       return { conversations };
     }),
@@ -68,22 +63,22 @@ export const getInbox = createServerFn({ method: 'GET' })
 export const getUnreadCount = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) =>
-    gatedRead(context, (access) =>
-      getBoard().me.conversations.unreadCount({
-        headers: { ...context.authHeaders, ...access },
-      }),
-    ),
+    gatedRead(context, async (access) => {
+      const headers = { ...context.authHeaders, ...access };
+      await requireVerifiedBoardUser(headers);
+      return getBoard().me.conversations.unreadCount({ headers });
+    }),
   );
 
 /** The users the viewer has blocked. */
 export const getBlocked = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) =>
-    gatedRead(context, (access) =>
-      getBoard().me.blocks.list({
-        headers: { ...context.authHeaders, ...access },
-      }),
-    ),
+    gatedRead(context, async (access) => {
+      const headers = { ...context.authHeaders, ...access };
+      await requireVerifiedBoardUser(headers);
+      return getBoard().me.blocks.list({ headers });
+    }),
   );
 
 /** One thread: the conversation header, its messages, and the block status. */
@@ -94,6 +89,7 @@ export const getThread = createServerFn({ method: 'GET' })
     gatedRead(context, async (access) => {
       const board = getBoard();
       const headers = { ...context.authHeaders, ...access };
+      await requireVerifiedBoardUser(headers);
       const conversation = await board.me.conversations.retrieve(data.id, {
         headers,
       });
@@ -134,29 +130,29 @@ export const startConversation = createServerFn({ method: 'POST' })
 export const markRead = createServerFn({ method: 'POST' })
   .validator((input: { id: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
-  .handler(({ data, context }) =>
-    getBoard().me.conversations.markRead(data.id, {
-      headers: authedHeaders(context),
-    }),
-  );
+  .handler(async ({ data, context }) => {
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.conversations.markRead(data.id, { headers });
+  });
 
 export const archiveConversation = createServerFn({ method: 'POST' })
   .validator((input: { id: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
-  .handler(({ data, context }) =>
-    getBoard().me.conversations.archive(data.id, {
-      headers: authedHeaders(context),
-    }),
-  );
+  .handler(async ({ data, context }) => {
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.conversations.archive(data.id, { headers });
+  });
 
 export const unarchiveConversation = createServerFn({ method: 'POST' })
   .validator((input: { id: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
-  .handler(({ data, context }) =>
-    getBoard().me.conversations.unarchive(data.id, {
-      headers: authedHeaders(context),
-    }),
-  );
+  .handler(async ({ data, context }) => {
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.conversations.unarchive(data.id, { headers });
+  });
 
 export const editMessage = createServerFn({ method: 'POST' })
   .validator((input: { id: string; body: EditMessageBody }) => input)
@@ -170,9 +166,11 @@ export const editMessage = createServerFn({ method: 'POST' })
 export const unsendMessage = createServerFn({ method: 'POST' })
   .validator((input: { id: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
-  .handler(({ data, context }) =>
-    getBoard().me.messages.unsend(data.id, { headers: authedHeaders(context) }),
-  );
+  .handler(async ({ data, context }) => {
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.messages.unsend(data.id, { headers });
+  });
 
 export const reportMessage = createServerFn({ method: 'POST' })
   .validator((input: { id: string; body: ReportBody }) => input)
@@ -186,15 +184,17 @@ export const reportMessage = createServerFn({ method: 'POST' })
 export const blockUser = createServerFn({ method: 'POST' })
   .validator((input: BlockUserBody) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
-  .handler(({ data, context }) =>
-    getBoard().me.blocks.create(data, { headers: authedHeaders(context) }),
-  );
+  .handler(async ({ data, context }) => {
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.blocks.create(data, { headers });
+  });
 
 export const unblockUser = createServerFn({ method: 'POST' })
   .validator((input: { boardUserId: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
-  .handler(({ data, context }) =>
-    getBoard().me.blocks.remove(data.boardUserId, {
-      headers: authedHeaders(context),
-    }),
-  );
+  .handler(async ({ data, context }) => {
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.blocks.remove(data.boardUserId, { headers });
+  });

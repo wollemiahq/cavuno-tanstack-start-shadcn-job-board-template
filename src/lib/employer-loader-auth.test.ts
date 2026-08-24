@@ -28,6 +28,20 @@ afterEach(() => {
 });
 
 describe('handleEmployerLoaderError', () => {
+  it('sends an unverified employer through verification with returnTo', async () => {
+    const error = (await thrownBy(
+      new Error('EMAIL_UNVERIFIED'),
+      '/employers/companies/acme/profile',
+    )) as { options: { to?: string; search?: unknown } };
+
+    expect(mockRefreshSession).not.toHaveBeenCalled();
+    expect(isRedirect(error)).toBe(true);
+    expect(error.options.to).toBe('/auth/verify-email-required');
+    expect(error.options.search).toEqual({
+      returnTo: '/employers/companies/acme/profile',
+    });
+  });
+
   it('on unauthorized: refreshes once and, on success, retries with ?reauth=1', async () => {
     mockRefreshSession.mockResolvedValue({ ok: true });
 

@@ -23,6 +23,7 @@ import {
   type SessionContext,
 } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
+import { requireVerifiedBoardUser } from './me-verification';
 
 import type {
   UnsubscribeBody,
@@ -55,11 +56,11 @@ function authedHeaders(
 export const getNotificationPreferences = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) =>
-    gatedRead(context, () =>
-      getBoard().me.notificationPreferences.retrieve({
-        headers: authedHeaders(context),
-      }),
-    ),
+    gatedRead(context, async () => {
+      const headers = authedHeaders(context);
+      await requireVerifiedBoardUser(headers);
+      return getBoard().me.notificationPreferences.retrieve({ headers });
+    }),
   );
 
 export const updateNotificationPreference = createServerFn({ method: 'POST' })
@@ -68,11 +69,11 @@ export const updateNotificationPreference = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }) => {
     // Runtime API support lands with this starter change. Keep the narrow cast
     // only at the installed 4.6 SDK boundary until the next SDK release.
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
     return getBoard().me.notificationPreferences.update(
       data as UpdateNotificationPreferenceBody,
-      {
-        headers: authedHeaders(context),
-      },
+      { headers },
     );
   });
 
@@ -96,11 +97,11 @@ export const getMarketingConsent = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) => {
     if (!MARKETING_CONSENT.notificationPreferences) return null;
-    return gatedRead(context, () =>
-      getBoard().me.marketingConsent.retrieve({
-        headers: authedHeaders(context),
-      }),
-    );
+    return gatedRead(context, async () => {
+      const headers = authedHeaders(context);
+      await requireVerifiedBoardUser(headers);
+      return getBoard().me.marketingConsent.retrieve({ headers });
+    });
   });
 
 export const setMarketingConsent = createServerFn({ method: 'POST' })
@@ -109,6 +110,7 @@ export const setMarketingConsent = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }) => {
     const consent = getBoard().me.marketingConsent;
     const options = { headers: authedHeaders(context) };
+    await requireVerifiedBoardUser(options.headers);
     return data.granted ? consent.grant(options) : consent.withdraw(options);
   });
 
@@ -116,11 +118,7 @@ export const setMarketingConsent = createServerFn({ method: 'POST' })
 export const getSettingsAccount = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) =>
-    gatedRead(context, () =>
-      getBoard().me.retrieve(undefined, {
-        headers: authedHeaders(context),
-      }),
-    ),
+    gatedRead(context, () => requireVerifiedBoardUser(authedHeaders(context))),
   );
 
 function actionError(error: unknown): {
@@ -139,8 +137,10 @@ export const requestEmailChange = createServerFn({ method: 'POST' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
     try {
+      const headers = authedHeaders(context);
+      await requireVerifiedBoardUser(headers);
       await getBoard().me.requestEmailChange(data, {
-        headers: authedHeaders(context),
+        headers,
       });
       return { ok: true as const };
     } catch (error) {
@@ -152,7 +152,8 @@ export const requestEmailChange = createServerFn({ method: 'POST' })
 export const requestSetPassword = createServerFn({ method: 'POST' })
   .validator((input: { email: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    await requireVerifiedBoardUser(authedHeaders(context));
     await getBoard().auth.forgotPassword(data);
     return { ok: true as const };
   });
@@ -162,8 +163,10 @@ export const updatePassword = createServerFn({ method: 'POST' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
     try {
+      const headers = authedHeaders(context);
+      await requireVerifiedBoardUser(headers);
       const session = await getBoard().me.updatePassword(data, {
-        headers: authedHeaders(context),
+        headers,
       });
       persistAuthSession(session);
       return { ok: true as const };

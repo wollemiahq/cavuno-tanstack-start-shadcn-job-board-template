@@ -5,6 +5,7 @@
  * headers the session middleware resolved, plus the board-access grant the
  * board-access middleware resolved (so a password-protected board answers).
  */
+import { isRedirect } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 
 import { getBoard } from '../lib/board';
@@ -18,6 +19,7 @@ import {
   type SessionContext,
 } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
+import { requireVerifiedBoardUser } from './me-verification';
 
 import type {
   AlertBody,
@@ -40,15 +42,7 @@ function authedHeaders(
   return { ...context.authHeaders, ...context.boardAccessHeaders };
 }
 
-async function requireVerifiedBoardUser(headers: Record<string, string>) {
-  const me = await getBoard().me.retrieve(undefined, { headers });
-  if (!me.emailVerified) {
-    throw new Error('EMAIL_UNVERIFIED');
-  }
-  return me;
-}
-
-/** Session probe for layouts/headers: null when signed out (or walled). */
+/** Session probe for layouts/headers: null when signed out. */
 export const getSessionUser = createServerFn({ method: 'GET' })
   .middleware([sessionMiddleware, boardAccessMiddleware])
   .handler(async ({ context }) => {
@@ -57,9 +51,24 @@ export const getSessionUser = createServerFn({ method: 'GET' })
       return await getBoard().me.retrieve(undefined, {
         headers: authedHeaders(context),
       });
-    } catch {
+    } catch (error) {
+      if (isRedirect(error)) throw error;
       return null;
     }
+  });
+
+/**
+ * Authoritative session probe for auth state machines. Unlike the shell probe
+ * above, transport/API failures bubble so a one-time token is not consumed
+ * after mistaking an unavailable profile for a signed-out visitor.
+ */
+export const getSessionUserStrict = createServerFn({ method: 'GET' })
+  .middleware([sessionMiddleware, boardAccessMiddleware])
+  .handler(({ context }) => {
+    if (!context.session) return null;
+    return getBoard().me.retrieve(undefined, {
+      headers: authedHeaders(context),
+    });
   });
 
 /** Everything the `/account` page renders, fetched in parallel. */
