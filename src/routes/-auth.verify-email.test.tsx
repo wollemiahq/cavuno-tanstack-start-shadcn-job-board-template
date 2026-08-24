@@ -64,10 +64,17 @@ describe('/auth/verify-email search contract', () => {
 
   it('uses same-browser employer session truth after consuming the token', async () => {
     mocks.verifyEmail.mockResolvedValue({ ok: true });
-    mocks.getSessionUser.mockResolvedValue({
-      role: 'employer',
-      emailVerified: true,
-    });
+    mocks.getSessionUser
+      .mockResolvedValueOnce({
+        id: 'employer-1',
+        role: 'employer',
+        emailVerified: false,
+      })
+      .mockResolvedValueOnce({
+        id: 'employer-1',
+        role: 'employer',
+        emailVerified: true,
+      });
     const loader = Route.options.loader;
     if (typeof loader !== 'function') {
       throw new Error('The email verification route must have a loader');
@@ -105,5 +112,31 @@ describe('/auth/verify-email search contract', () => {
       status: 'verified',
       returnTo: '/account',
     });
+  });
+
+  it('does not infer the token subject from an unrelated verified session', async () => {
+    mocks.verifyEmail.mockResolvedValue({ ok: true });
+    mocks.getSessionUser.mockResolvedValue({
+      id: 'other-employer',
+      role: 'employer',
+      emailVerified: true,
+    });
+    const loader = Route.options.loader;
+    if (typeof loader !== 'function') {
+      throw new Error('The email verification route must have a loader');
+    }
+
+    await expect(
+      loader({
+        deps: {
+          token: 'candidate-token',
+          returnTo: '/account',
+        },
+      } as never),
+    ).resolves.toMatchObject({
+      status: 'verified',
+      returnTo: '/account',
+    });
+    expect(mocks.getSessionUser).toHaveBeenCalledOnce();
   });
 });

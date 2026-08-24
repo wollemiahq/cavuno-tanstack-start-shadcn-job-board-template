@@ -146,4 +146,28 @@ describe('messages thread route — messaging feature gate', () => {
       search: { returnTo: '/messages/c1?view=archived' },
     });
   });
+
+  it('keeps the messages fallback for non-authentication thread failures', async () => {
+    messagingMocks.getThread.mockRejectedValue(new Error('upstream timeout'));
+    const loader = ConversationRoute.options.loader;
+    if (typeof loader !== 'function')
+      throw new Error('The thread route needs a loader');
+
+    let outcome: unknown;
+    try {
+      await loader({
+        params: { conversationId: 'c1' },
+        deps: { view: 'archived' },
+      } as never);
+    } catch (error) {
+      outcome = error;
+    }
+
+    expect(isRedirect(outcome)).toBe(true);
+    if (!isRedirect(outcome)) return;
+    expect(outcome.options).toMatchObject({
+      to: '/messages',
+      search: { view: 'archived' },
+    });
+  });
 });

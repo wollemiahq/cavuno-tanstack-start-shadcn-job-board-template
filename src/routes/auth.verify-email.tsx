@@ -38,17 +38,29 @@ export const Route = createFileRoute('/auth/verify-email')({
     const seoPromise = getSeoBase();
     if (!deps.token)
       return { status: 'missing-token' as const, seo: await seoPromise };
+    // Capture the session before consuming the public token. Its role is safe
+    // to use only if this exact user transitions from unverified to verified;
+    // an unrelated or already-verified browser session must not choose where
+    // the token's subject continues.
+    const sessionBefore = await getSessionUser();
     const [result, seo] = await Promise.all([
       verifyEmail({ data: { token: deps.token } }),
       seoPromise,
     ]);
     if (!result.ok)
       return { status: 'invalid' as const, returnTo: deps.returnTo, seo };
-    const user = await getSessionUser();
+    const sessionAfter =
+      sessionBefore && !sessionBefore.emailVerified
+        ? await getSessionUser()
+        : null;
+    const verifiedSameSession =
+      sessionAfter !== null &&
+      sessionAfter.id === sessionBefore?.id &&
+      sessionAfter.emailVerified;
     return {
       status: 'verified' as const,
       returnTo:
-        user?.role === 'employer'
+        verifiedSameSession && sessionAfter.role === 'employer'
           ? '/employers/dashboard'
           : candidateReturnTo(deps.returnTo),
       seo,

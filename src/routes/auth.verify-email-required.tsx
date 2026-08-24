@@ -63,9 +63,10 @@ export const Route = createFileRoute('/auth/verify-email-required')({
     if (!user) {
       throw redirect({
         to: '/auth/sign-in',
-        search: {
-          returnTo: `/auth/verify-email-required?returnTo=${encodeURIComponent(returnTo)}`,
-        },
+        // The destination route will re-apply this verification gate after
+        // sign-in. Passing the auth route itself would be normalized to
+        // `/account` by candidateReturnTo and lose the original destination.
+        search: { returnTo },
       });
     }
     const role = user.role === 'employer' ? 'employer' : 'candidate';

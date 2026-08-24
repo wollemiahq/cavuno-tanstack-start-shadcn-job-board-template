@@ -427,7 +427,7 @@ describe('/auth/verify-email-required resume loader', () => {
     }>;
   }
 
-  it('redirects signed-out visitors to sign-in with the verification URL preserved', async () => {
+  it('redirects signed-out visitors to sign-in with the final destination preserved', async () => {
     mocks.getSessionUser.mockResolvedValue(null);
     mocks.getResume.mockRejectedValue(new Error('UNAUTHENTICATED'));
 
@@ -442,7 +442,7 @@ describe('/auth/verify-email-required resume loader', () => {
     if (!isRedirect(result)) return;
     expect(result.options.to).toBe('/auth/sign-in');
     expect(result.options.search).toEqual({
-      returnTo: '/auth/verify-email-required?returnTo=%2Faccount',
+      returnTo: '/account',
     });
   });
 

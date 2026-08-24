@@ -15,6 +15,7 @@ import {
 
 import { Page, PageContent } from '@/components/layout/page';
 import { MessagingLayout } from '@/components/messages/messaging-layout';
+import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 import { getInbox, getThread } from '@/server/messaging';
 import { getBoardContext, getSeoBase } from '@/server/queries';
@@ -44,13 +45,20 @@ export const Route = createFileRoute('/messages/$conversationId')({
       return { ...thread, inbox, view: deps.view, seo };
     } catch (error) {
       if (isRedirect(error)) throw error;
-      if (String(error).includes('EMAIL_UNVERIFIED')) {
+      const authFailure = candidateLoaderError(error);
+      if (authFailure === 'email-unverified') {
         throw redirect({
           to: '/auth/verify-email-required',
           search: { returnTo },
         });
       }
-      throw redirect({ to: '/auth/sign-in', search: { returnTo } });
+      if (authFailure === 'unauthenticated') {
+        throw redirect({ to: '/auth/sign-in', search: { returnTo } });
+      }
+      throw redirect({
+        to: '/messages',
+        search: deps.view === 'archived' ? { view: 'archived' } : {},
+      });
     }
   },
   head: ({ loaderData }) => ({
