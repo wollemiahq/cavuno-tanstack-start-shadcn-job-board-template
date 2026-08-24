@@ -28,6 +28,7 @@ import {
   type SessionContext,
 } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
+import { requireVerifiedBoardUser } from './me-verification';
 import {
   ensureApplySession,
   prepareNativeApply,
@@ -39,14 +40,6 @@ function authedHeaders(
   context: SessionContext & BoardAccessContext,
 ): Record<string, string> {
   return { ...context.authHeaders, ...context.boardAccessHeaders };
-}
-
-async function requireVerifiedBoardUser(headers: Record<string, string>) {
-  const me = await getBoard().me.retrieve(undefined, { headers });
-  if (!me.emailVerified) {
-    throw new Error('EMAIL_UNVERIFIED');
-  }
-  return me;
 }
 
 /** The candidate's applications across the board (newest first). */

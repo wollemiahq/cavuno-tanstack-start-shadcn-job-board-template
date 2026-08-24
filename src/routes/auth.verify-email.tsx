@@ -11,6 +11,7 @@ import {
   candidateSignInHref,
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
+import { getSessionUser } from '../server/account';
 import { verifyEmail } from '../server/auth';
 import { getSeoBase } from '../server/queries';
 
@@ -41,9 +42,17 @@ export const Route = createFileRoute('/auth/verify-email')({
       verifyEmail({ data: { token: deps.token } }),
       seoPromise,
     ]);
-    return result.ok
-      ? { status: 'verified' as const, seo }
-      : { status: 'invalid' as const, seo };
+    if (!result.ok)
+      return { status: 'invalid' as const, returnTo: deps.returnTo, seo };
+    const user = await getSessionUser();
+    return {
+      status: 'verified' as const,
+      returnTo:
+        user?.role === 'employer'
+          ? '/employers/dashboard'
+          : candidateReturnTo(deps.returnTo),
+      seo,
+    };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -57,8 +66,9 @@ export const Route = createFileRoute('/auth/verify-email')({
 });
 
 function VerifyEmailPage() {
-  const { status } = Route.useLoaderData();
-  const { returnTo } = Route.useSearch();
+  const { status, returnTo } = Route.useLoaderData();
+  const search = Route.useSearch();
+  const fallbackReturnTo = returnTo ?? search.returnTo;
 
   if (status === 'verified') {
     return (
@@ -67,7 +77,7 @@ function VerifyEmailPage() {
         supportingText={m.authVerifyEmail_verifiedBody()}
       >
         <a
-          href={returnTo}
+          href={fallbackReturnTo}
           className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
         >
           {m.authVerifyEmail_goToAccountLabel()}
@@ -86,7 +96,7 @@ function VerifyEmailPage() {
       }
     >
       <a
-        href={candidateSignInHref(returnTo)}
+        href={candidateSignInHref(fallbackReturnTo)}
         className={cn(
           buttonVariants({ variant: 'outline', size: 'lg' }),
           'w-full',

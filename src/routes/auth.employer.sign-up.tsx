@@ -22,6 +22,12 @@ export const Route = createFileRoute('/auth/employer/sign-up')({
       sessionUserOrNull(),
       getBoardContext(),
     ]);
+    if (user?.role === 'employer') {
+      const destination = user.emailVerified
+        ? '/employers/dashboard'
+        : '/auth/verify-email-required?returnTo=%2Femployers%2Fdashboard';
+      redirectIfSignedIn(user, destination);
+    }
     redirectIfSignedIn(user, '/');
     if (!board.features.employers) throw notFound();
     return { boardName: board.name };
@@ -77,7 +83,7 @@ function EmployerSignUpPage() {
             }
           : undefined
       }
-      successHref="/employers/dashboard"
+      successHref="/auth/verify-email-required?returnTo=%2Femployers%2Fdashboard"
       onSubmit={async (values) => {
         const result = await signUpEmployer({ data: values });
         if (result.ok) await router.invalidate();

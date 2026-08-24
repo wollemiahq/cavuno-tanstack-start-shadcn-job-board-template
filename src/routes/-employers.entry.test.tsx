@@ -94,7 +94,11 @@ vi.mock('../server/auth', () => ({
   refreshSession: vi.fn().mockResolvedValue({ ok: false }),
 }));
 
-import { listCompanies, searchCompanies } from '../server/employers';
+import {
+  cancelClaim,
+  listCompanies,
+  searchCompanies,
+} from '../server/employers';
 import { Route as DashboardRoute } from './employers.dashboard';
 import { Route as EmployersRoute } from './employers.index';
 import { Route as OnboardingRoute } from './employers.onboarding.$slug';
@@ -401,5 +405,33 @@ describe('employer entry surfaces', () => {
     expect(screen.getByText(/request to join Acme Ventures/i)).toBeVisible();
     // The step's single escape hatch withdraws the claim (no Back link).
     expect(screen.getByRole('button', { name: 'Cancel claim' })).toBeEnabled();
+  });
+
+  it('keeps a failed cancellation visible without leaving onboarding', async () => {
+    vi.spyOn(OnboardingRoute, 'useLoaderData').mockReturnValue({
+      membership: { ...membership, status: 'awaiting_admin' },
+    });
+    vi.spyOn(OnboardingRoute, 'useParams').mockReturnValue({
+      slug: 'acme-ventures',
+    });
+    vi.mocked(cancelClaim).mockResolvedValue({
+      ok: false,
+      code: 'employer_not_member',
+      message: 'wire text',
+    });
+    const OnboardingPage = OnboardingRoute.options.component;
+    if (!OnboardingPage)
+      throw new Error('The employer onboarding route needs a component');
+
+    render(<OnboardingPage />);
+    const cancel = screen.getByRole('button', { name: 'Cancel claim' });
+    fireEvent.click(cancel);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'You’re not a member of this company’s team.',
+    );
+    expect(cancel).toBeEnabled();
+    expect(mocks.invalidate).not.toHaveBeenCalled();
+    expect(mocks.navigate).not.toHaveBeenCalled();
   });
 });

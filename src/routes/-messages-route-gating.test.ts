@@ -5,7 +5,10 @@
  * board's `features.messaging` flag: when the surface is off the loader must
  * read as not-found (the feature does not exist), never fetch the inbox.
  */
-import { isNotFound as isRouteNotFound } from '@tanstack/react-router';
+import {
+  isNotFound as isRouteNotFound,
+  isRedirect,
+} from '@tanstack/react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const queryMocks = vi.hoisted(() => ({
@@ -118,5 +121,29 @@ describe('messages thread route — messaging feature gate', () => {
 
     expect(isRouteNotFound(outcome)).toBe(true);
     expect(messagingMocks.getThread).not.toHaveBeenCalled();
+  });
+
+  it('returns unauthenticated thread visitors to the exact thread after sign-in', async () => {
+    messagingMocks.getThread.mockRejectedValue(new Error('UNAUTHENTICATED'));
+    const loader = ConversationRoute.options.loader;
+    if (typeof loader !== 'function')
+      throw new Error('The thread route needs a loader');
+
+    let outcome: unknown;
+    try {
+      await loader({
+        params: { conversationId: 'c1' },
+        deps: { view: 'archived' },
+      } as never);
+    } catch (error) {
+      outcome = error;
+    }
+
+    expect(isRedirect(outcome)).toBe(true);
+    if (!isRedirect(outcome)) return;
+    expect(outcome.options).toMatchObject({
+      to: '/auth/sign-in',
+      search: { returnTo: '/messages/c1?view=archived' },
+    });
   });
 });

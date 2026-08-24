@@ -273,28 +273,41 @@ function StepHeading({ title, body }: { title: string; body: string }) {
 function CancelClaimButton({ slug }: { slug: string }) {
   const router = useRouter();
   const [cancelling, setCancelling] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="text-muted-foreground"
-      disabled={cancelling}
-      onClick={async () => {
-        setCancelling(true);
-        try {
-          await cancelClaim({ data: { slug } });
-          await router.invalidate();
-          await router.navigate({ to: '/employers/dashboard' });
-        } catch {
-          // Without this a rejecting call is an unhandled rejection and the
-          // silently-skipped navigation reads as a dead button.
-          void toastActionError(m.employerCompany_genericError());
-        } finally {
-          setCancelling(false);
-        }
-      }}
-    >
-      {m.employerDashboard_cancelClaimLabel()}
-    </Button>
+    <>
+      {error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground"
+        disabled={cancelling}
+        onClick={async () => {
+          setError(null);
+          setCancelling(true);
+          try {
+            const result = await cancelClaim({ data: { slug } });
+            if (!result.ok) {
+              setError(boardErrorMessage(result));
+              return;
+            }
+            await router.invalidate();
+            await router.navigate({ to: '/employers/dashboard' });
+          } catch {
+            // Without this a rejecting call is an unhandled rejection and the
+            // silently-skipped navigation reads as a dead button.
+            void toastActionError(m.employerCompany_genericError());
+          } finally {
+            setCancelling(false);
+          }
+        }}
+      >
+        {m.employerDashboard_cancelClaimLabel()}
+      </Button>
+    </>
   );
 }

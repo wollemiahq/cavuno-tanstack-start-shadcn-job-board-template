@@ -8,13 +8,18 @@
  */
 import { useEffect, useState } from 'react';
 
-import { createFileRoute, isRedirect, useRouter } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  isRedirect,
+  redirect,
+  useRouter,
+} from '@tanstack/react-router';
 
 import { AuthCard, FormError } from '../components/auth-form';
 import { ResumeUpload } from '../components/resume-upload';
 import { candidateReturnTo } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
-import { getResume } from '../server/account';
+import { getResume, getSessionUser } from '../server/account';
 import { resendOtp, verifyOtpCode } from '../server/auth';
 import { getSeoBase } from '../server/queries';
 import { updateNotificationPreference } from '../server/settings';
@@ -40,22 +45,54 @@ export const Route = createFileRoute('/auth/verify-email-required')({
         ? candidateReturnTo(search.returnTo)
         : undefined,
   }),
+  loaderDeps: ({ search }) => ({
+    returnTo: candidateReturnTo(search.returnTo),
+  }),
   // Resume state for the post-verify step. Null while the candidate is still
   // unverified (the /me/resume read requires a verified email); the verify
   // success path invalidates the router, which re-runs this with the now
   // verified session. ResumeUpload's own invalidations refresh it the same
   // way, so an upload during the step updates the rendered file state.
-  loader: async () => {
+  loader: async (context) => {
     // Started once, before the try: the error path needs the SEO base too,
     // and re-issuing it there made the failure case pay a second serial
     // round trip (every sibling auth route already shares one promise).
     const seoPromise = getSeoBase();
+    const user = await getSessionUser();
+    const returnTo = candidateReturnTo(context?.deps?.returnTo);
+    if (!user) {
+      throw redirect({
+        to: '/auth/sign-in',
+        search: {
+          returnTo: `/auth/verify-email-required?returnTo=${encodeURIComponent(returnTo)}`,
+        },
+      });
+    }
+    const role = user.role === 'employer' ? 'employer' : 'candidate';
+    if (role === 'employer') {
+      return {
+        emailVerified: user.emailVerified,
+        role,
+        resume: null,
+        seo: await seoPromise,
+      };
+    }
     try {
       const [resume, seo] = await Promise.all([getResume(), seoPromise]);
-      return { resume, seo };
+      return {
+        emailVerified: user.emailVerified,
+        role,
+        resume: user.emailVerified ? resume : null,
+        seo,
+      };
     } catch (error) {
       if (isRedirect(error)) throw error;
-      return { resume: null, seo: await seoPromise };
+      return {
+        emailVerified: user.emailVerified,
+        role,
+        resume: null,
+        seo: await seoPromise,
+      };
     }
   },
   head: ({ loaderData }) => ({
@@ -75,13 +112,25 @@ export const Route = createFileRoute('/auth/verify-email-required')({
 function VerifyEmailRequiredPage() {
   const router = useRouter();
   const search = Route.useSearch();
-  const { resume } = Route.useLoaderData();
+  const { emailVerified, role, resume } = Route.useLoaderData();
   const returnTo = candidateReturnTo(search.returnTo);
-  const [step, setStep] = useState<'code' | 'resume'>('code');
+  const [step, setStep] = useState<'code' | 'resume'>(() =>
+    emailVerified && role === 'candidate' ? 'resume' : 'code',
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
+
+  useEffect(() => {
+    if (!emailVerified) return;
+    setError(null);
+    if (role === 'employer') {
+      void router.navigate({ href: returnTo });
+      return;
+    }
+    setStep('resume');
+  }, [emailVerified, role, router, returnTo]);
 
   // Shared by the auto-submit (`onComplete`) and the form's implicit
   // Enter-key submission — the sixth digit IS the submit action.
@@ -93,8 +142,9 @@ function VerifyEmailRequiredPage() {
       const result = await verifyOtpCode({ data: { code: code.trim() } });
       if (result.ok) {
         await router.invalidate();
-        setStep('resume');
+        if (role === 'candidate') setStep('resume');
       } else {
+        await router.invalidate({ sync: true });
         setError(boardErrorMessage(result));
       }
     } catch {
@@ -103,6 +153,8 @@ function VerifyEmailRequiredPage() {
       setPending(false);
     }
   }
+
+  if (emailVerified && role === 'employer') return null;
 
   if (step === 'resume') {
     return <ResumeOfferStep resume={resume} returnTo={returnTo} />;

@@ -50,10 +50,7 @@ export const Route = createFileRoute('/messages/$conversationId')({
           search: { returnTo },
         });
       }
-      throw redirect({
-        to: '/messages',
-        search: deps.view === 'archived' ? { view: 'archived' } : {},
-      });
+      throw redirect({ to: '/auth/sign-in', search: { returnTo } });
     }
   },
   head: ({ loaderData }) => ({
