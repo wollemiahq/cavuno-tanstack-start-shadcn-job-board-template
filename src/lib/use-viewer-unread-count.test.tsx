@@ -26,6 +26,13 @@ describe('useViewerUnreadCount', () => {
     expect(result.current[0]).toBe(2);
 
     rerender({ viewerId: 'candidate-a' });
+    const publishCandidateASecondSession = result.current[1];
     expect(result.current[0]).toBe(0);
+
+    act(() => publishCandidateASecondSession(3));
+    expect(result.current[0]).toBe(3);
+
+    act(() => publishCandidateA(11));
+    expect(result.current[0]).toBe(3);
   });
 });
