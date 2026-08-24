@@ -351,7 +351,7 @@ describe('/auth/verify-email-required resume offer step', () => {
     expect(mocks.navigate).not.toHaveBeenCalled();
 
     const recommendations = screen.getByRole('checkbox', {
-      name: m.notificationSettings_recommendedJobEmailsTitle(),
+      name: m.authVerifyEmailRequired_recommendedJobEmailsLabel(),
     });
     expect(recommendations).not.toBeChecked();
     fireEvent.click(recommendations);
@@ -404,7 +404,7 @@ describe('/auth/verify-email-required resume offer step', () => {
       target: { value: '123456' },
     });
     const checkbox = await screen.findByRole('checkbox', {
-      name: m.notificationSettings_recommendedJobEmailsTitle(),
+      name: m.authVerifyEmailRequired_recommendedJobEmailsLabel(),
     });
     fireEvent.click(checkbox);
     await waitFor(() => {
