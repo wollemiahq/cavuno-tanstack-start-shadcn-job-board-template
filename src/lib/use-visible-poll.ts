@@ -9,11 +9,17 @@ import { useEffect, useRef } from 'react';
  * the tab is hidden to avoid background churn, and fires an immediate refresh
  * when the tab becomes visible again so a returning user isn't stale.
  */
-export function useVisiblePoll(callback: () => void, intervalMs = 4000) {
+export function useVisiblePoll(
+  callback: () => void,
+  intervalMs = 4000,
+  enabled = true,
+) {
   const savedCallback = useRef(callback);
   savedCallback.current = callback;
 
   useEffect(() => {
+    if (!enabled) return;
+
     let timer: ReturnType<typeof setTimeout> | undefined;
     let stopped = false;
 
@@ -37,5 +43,5 @@ export function useVisiblePoll(callback: () => void, intervalMs = 4000) {
       if (timer) clearTimeout(timer);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [intervalMs]);
+  }, [enabled, intervalMs]);
 }

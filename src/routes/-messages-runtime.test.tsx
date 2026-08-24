@@ -9,6 +9,7 @@ import {
   ThreadController,
 } from './-messages-runtime';
 
+import { useVisiblePoll } from '@/lib/use-visible-poll';
 import { getInbox, markRead, unblockUser } from '@/server/messaging';
 import type {
   BlockedUser,
@@ -133,5 +134,50 @@ describe('messaging runtime failures', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Something went wrong. Please try again.',
     );
+  });
+
+  it('keeps an open inbox and thread comfortably inside the API call budget', () => {
+    vi.mocked(markRead).mockResolvedValue({} as never);
+
+    render(
+      <InboxController
+        initial={{
+          object: 'list',
+          url: '/v1/me/conversations',
+          data: [conversation],
+          hasMore: false,
+          nextCursor: null,
+        }}
+        archived={false}
+        onSelect={vi.fn()}
+      />,
+    );
+    render(
+      <ThreadController
+        initialConversation={detail}
+        initialMessages={{
+          object: 'list',
+          url: `/v1/me/conversations/${conversation.id}/messages`,
+          data: [],
+          hasMore: false,
+          nextCursor: null,
+        }}
+        initialBlockStatus={{ object: 'block_status', blocked: false }}
+        onExit={vi.fn()}
+      />,
+    );
+
+    const [inboxPoll, threadPoll] = vi
+      .mocked(useVisiblePoll)
+      .mock.calls.map((call) => call[1] ?? 4_000);
+    const unreadCallsPerMinute = 8;
+    const inboxCallsPerMinute = (60_000 / inboxPoll) * 2;
+    const threadCallsPerMinute = (60_000 / threadPoll) * 4;
+
+    // Leave at least 60% of the per-board-user 100/minute allowance for
+    // initial loads, read receipts, replies, and ordinary navigation.
+    expect(
+      unreadCallsPerMinute + inboxCallsPerMinute + threadCallsPerMinute,
+    ).toBeLessThanOrEqual(40);
   });
 });

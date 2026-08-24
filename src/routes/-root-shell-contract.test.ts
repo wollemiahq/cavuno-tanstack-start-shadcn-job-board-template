@@ -45,4 +45,11 @@ describe('root shell contract', () => {
   it('origin is provided by beforeLoad, so it costs no round trip', () => {
     expect(ROOT_SOURCE).toContain('beforeLoad: () => ({ origin:');
   });
+
+  it('does not mount messaging polling before email verification', () => {
+    expect(ROOT_SOURCE).toContain('enabled={user.emailVerified}');
+    expect(ROOT_SOURCE).toMatch(
+      /user &&\s*user\.emailVerified &&\s*board\.features\.messaging/,
+    );
+  });
 });

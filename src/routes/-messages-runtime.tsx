@@ -46,6 +46,8 @@ import type {
   Message,
 } from '@cavuno/board';
 
+const MESSAGING_POLL_INTERVAL_MS = 15_000;
+
 export function InboxController({
   initial,
   archived,
@@ -72,7 +74,7 @@ export function InboxController({
         setLoadError(null);
       })
       .catch((error) => setLoadError(errorMessage(error)));
-  });
+  }, MESSAGING_POLL_INTERVAL_MS);
 
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const visibleConversations = normalizedQuery
@@ -315,7 +317,7 @@ export function ThreadController({
 
   useVisiblePoll(() => {
     void refresh().catch(() => {});
-  });
+  }, MESSAGING_POLL_INTERVAL_MS);
 
   useEffect(() => {
     void markRead({ data: { id: conversation.id } }).catch((error) =>

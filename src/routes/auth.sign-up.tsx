@@ -8,7 +8,7 @@ import {
 } from '../lib/candidate-return-to';
 import { MARKETING_CONSENT } from '../lib/marketing-consent';
 import { m } from '../paraglide/messages';
-import { signUp } from '../server/auth';
+import { getOAuthAuthorizationUrl, signUp } from '../server/auth';
 import { getBoardContext } from '../server/queries';
 
 import { RegistrationPage } from '@/components/registration-page';
@@ -74,6 +74,9 @@ function SignUpPage() {
           : undefined
       }
       successHref={candidateVerifyEmailHref(returnTo)}
+      onOAuthStart={(provider) =>
+        getOAuthAuthorizationUrl({ data: { provider, returnTo } })
+      }
       onSubmit={async (values) => {
         const result = await signUp({ data: values });
         if (result.ok) await router.invalidate();
