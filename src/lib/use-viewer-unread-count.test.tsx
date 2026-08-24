@@ -19,10 +19,13 @@ describe('useViewerUnreadCount', () => {
     const publishCandidateB = result.current[1];
     expect(result.current[0]).toBe(0);
 
-    act(() => publishCandidateA(9));
-    expect(result.current[0]).toBe(0);
-
     act(() => publishCandidateB(2));
     expect(result.current[0]).toBe(2);
+
+    act(() => publishCandidateA(9));
+    expect(result.current[0]).toBe(2);
+
+    rerender({ viewerId: 'candidate-a' });
+    expect(result.current[0]).toBe(0);
   });
 });
