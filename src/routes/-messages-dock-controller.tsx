@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { companyPath } from '@cavuno/board/paths';
 
@@ -19,8 +19,7 @@ import {
   EmptyHeader,
 } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useVisiblePoll } from '@/lib/use-visible-poll';
-import { getInbox, getThread, getUnreadCount } from '@/server/messaging';
+import { getInbox, getThread } from '@/server/messaging';
 import type {
   Conversation,
   ConversationDetail,
@@ -72,9 +71,12 @@ function LoadFailure({
   );
 }
 
-export function MessagesDockController() {
+export function MessagesDockController({
+  unreadCount,
+}: {
+  unreadCount: number;
+}) {
   const [open, setOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [inbox, setInbox] = useState<ListEnvelope<Conversation> | null>(null);
   const [inboxError, setInboxError] = useState(false);
   const [selectedConversationId, setSelectedConversationId] = useState<
@@ -84,27 +86,19 @@ export function MessagesDockController() {
   const [threadError, setThreadError] = useState(false);
   const requestSequence = useRef(0);
 
-  const refreshInbox = async () => {
+  const refreshInbox = useCallback(async () => {
     try {
-      const [unread, result] = await Promise.all([
-        getUnreadCount(),
-        getInbox(),
-      ]);
-      setUnreadCount(unread.count);
+      const result = await getInbox();
       setInbox(result.conversations);
       setInboxError(false);
     } catch {
       setInboxError(true);
     }
-  };
-
-  useEffect(() => {
-    void refreshInbox();
   }, []);
 
-  useVisiblePoll(() => {
-    void refreshInbox();
-  });
+  useEffect(() => {
+    if (open) void refreshInbox();
+  }, [open, refreshInbox]);
 
   const selectConversation = async (conversationId: string) => {
     const request = ++requestSequence.current;

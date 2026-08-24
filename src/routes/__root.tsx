@@ -67,6 +67,7 @@ import {
   resolveShellBreadcrumbEntities,
   resolveShellBreadcrumbTrail,
 } from '@/lib/shell-breadcrumb';
+import { useViewerUnreadCount } from '@/lib/use-viewer-unread-count';
 
 const LazyFooter = lazy(() =>
   import('../components/Footer').then((mod) => ({ default: mod.default })),
@@ -220,6 +221,8 @@ function RootChrome({
   consentChoice: Awaited<ReturnType<typeof getRootShellData>>['consentChoice'];
 }) {
   const { user, employerCompanies, hasAccessGrant, preview } = useRootSession();
+  const [messagingUnreadCount, publishMessagingUnreadCount] =
+    useViewerUnreadCount(user?.id ?? null);
   const isFullBleed = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fullBleed),
   });
@@ -386,7 +389,11 @@ function RootChrome({
       messagesNav={
         user && board.features.messaging ? (
           <Suspense fallback={null}>
-            <LazyMessagesNavController />
+            <LazyMessagesNavController
+              key={user.id}
+              enabled={user.emailVerified}
+              onUnreadCount={publishMessagingUnreadCount}
+            />
           </Suspense>
         ) : undefined
       }
@@ -478,6 +485,7 @@ function RootChrome({
         </Suspense>
         <CookieConsentBanner />
         {user &&
+        user.emailVerified &&
         board.features.messaging &&
         !location.pathname.startsWith('/messages') ? (
           // Keyed by viewer: the dock holds polled inbox + open-thread state
@@ -485,7 +493,10 @@ function RootChrome({
           // (sign-out/in, persona switch) — never survive across viewers. The
           // whole messaging surface is hidden when the board flag is off.
           <Suspense fallback={null}>
-            <LazyMessagesDockController key={user.id} />
+            <LazyMessagesDockController
+              key={user.id}
+              unreadCount={messagingUnreadCount}
+            />
           </Suspense>
         ) : null}
         {preview.capability.canPreview || preview.demoConfigured ? (

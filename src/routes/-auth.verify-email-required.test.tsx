@@ -30,9 +30,15 @@ const mocks = vi.hoisted(() => ({
   resendOtp: vi.fn<() => Promise<AuthResult>>(),
   verifyOtpCode:
     vi.fn<(input: { data: { code: string } }) => Promise<AuthResult>>(),
-  getSessionUser:
-    vi.fn<() => Promise<{ emailVerified: boolean; role?: string } | null>>(),
+  getSessionUser: vi.fn<
+    () => Promise<{
+      id?: string;
+      emailVerified: boolean;
+      role?: string;
+    } | null>
+  >(),
   getResume: vi.fn<() => Promise<Resume>>(),
+  getResumeOnboardingDismissal: vi.fn<() => Promise<string[]>>(),
   updateNotificationPreference: vi.fn(),
   toastActionError: vi.fn(),
 }));
@@ -57,6 +63,7 @@ vi.mock('../server/auth', () => ({
 vi.mock('../server/account', () => ({
   getSessionUserStrict: mocks.getSessionUser,
   getResume: mocks.getResume,
+  getResumeOnboardingDismissal: mocks.getResumeOnboardingDismissal,
   uploadResume: vi.fn(),
   deleteResume: vi.fn(),
 }));
@@ -124,17 +131,23 @@ function renderVerifyPage({
   emailVerified = false,
   role = 'candidate',
   resume = null,
+  resumeOnboardingDismissed = false,
+  userId = 'candidate-1',
 }: {
   returnTo?: string;
   emailVerified?: boolean;
   role?: 'candidate' | 'employer';
   resume?: Resume | null;
+  resumeOnboardingDismissed?: boolean;
+  userId?: string;
 } = {}) {
   vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo });
   vi.spyOn(Route, 'useLoaderData').mockReturnValue({
     emailVerified,
     role,
     resume,
+    resumeOnboardingDismissed,
+    userId,
   });
   const VerifyPage = Route.options.component;
   if (!VerifyPage) throw new Error('The verification route needs a component');
@@ -284,12 +297,32 @@ describe('/auth/verify-email-required resume offer step', () => {
     expect(mocks.verifyOtpCode).not.toHaveBeenCalled();
   });
 
+  it('continues immediately on refresh after the candidate previously skipped the resume offer', async () => {
+    const returnTo = '/account';
+
+    renderVerifyPage({
+      returnTo,
+      emailVerified: true,
+      resume: emptyResume,
+      resumeOnboardingDismissed: true,
+    });
+
+    await waitFor(() => {
+      expect(mocks.navigate).toHaveBeenCalledWith({ href: returnTo });
+    });
+    expect(
+      screen.queryByText(m.authVerifyEmailRequired_resumeTitle()),
+    ).toBeNull();
+  });
+
   it('reconciles a revoked OTP when the email was already verified elsewhere', async () => {
     const returnTo = '/jobs?q=design';
     let loaderData = {
       emailVerified: false,
       role: 'candidate' as const,
       resume: null as Resume | null,
+      resumeOnboardingDismissed: false,
+      userId: 'candidate-1',
     };
     mocks.verifyOtpCode.mockResolvedValue({
       ok: false,
@@ -311,6 +344,8 @@ describe('/auth/verify-email-required resume offer step', () => {
       emailVerified: true,
       role: 'candidate',
       resume: emptyResume,
+      resumeOnboardingDismissed: false,
+      userId: 'candidate-1',
     };
     rerender(<VerifyPage />);
 
@@ -372,6 +407,9 @@ describe('/auth/verify-email-required resume offer step', () => {
     await waitFor(() => {
       expect(mocks.navigate).toHaveBeenCalledWith({ href: returnTo });
     });
+    expect(document.cookie).toContain(
+      'cavuno_resume_onboarding_completed_candidate-1=1',
+    );
   });
 
   it('skips the offer when a resume is already on file', async () => {
@@ -424,6 +462,7 @@ describe('/auth/verify-email-required resume loader', () => {
       emailVerified: boolean;
       role: 'candidate' | 'employer';
       resume: Resume | null;
+      resumeOnboardingDismissed: boolean;
     }>;
   }
 
@@ -455,14 +494,17 @@ describe('/auth/verify-email-required resume loader', () => {
 
   it('loads the resume state for the post-verify step', async () => {
     mocks.getSessionUser.mockResolvedValue({
+      id: 'candidate-1',
       emailVerified: true,
       role: 'candidate',
     });
+    mocks.getResumeOnboardingDismissal.mockResolvedValue(['candidate-1']);
     mocks.getResume.mockResolvedValue(emptyResume);
     await expect(routeLoader()()).resolves.toMatchObject({
       emailVerified: true,
       role: 'candidate',
       resume: emptyResume,
+      resumeOnboardingDismissed: true,
     });
   });
 

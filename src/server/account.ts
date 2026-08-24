@@ -7,6 +7,7 @@
  */
 import { isRedirect } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
+import { getRequestHeader } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
 import {
@@ -21,6 +22,7 @@ import {
 import { gatedRead } from './board-access';
 import { requireVerifiedBoardUser } from './me-verification';
 
+import { parseResumeOnboardingDismissal } from '@/lib/resume-onboarding';
 import type {
   AlertBody,
   CreateEducationBody,
@@ -70,6 +72,13 @@ export const getSessionUserStrict = createServerFn({ method: 'GET' })
       headers: authedHeaders(context),
     });
   });
+
+/** Starter-owned completion state for the optional resume offer. */
+export const getResumeOnboardingDismissal = createServerFn({
+  method: 'GET',
+}).handler(() =>
+  parseResumeOnboardingDismissal(getRequestHeader('cookie') ?? null),
+);
 
 /** Everything the `/account` page renders, fetched in parallel. */
 export const getAccount = createServerFn({ method: 'GET' })

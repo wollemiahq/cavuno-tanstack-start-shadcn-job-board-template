@@ -11,12 +11,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MessagesDockController } from './-messages-dock-controller';
 
-import {
-  getInbox,
-  getThread,
-  getUnreadCount,
-  markRead,
-} from '@/server/messaging';
+import { getInbox, getThread, markRead } from '@/server/messaging';
 import type { Conversation, ConversationDetail, Message } from '@cavuno/board';
 
 vi.mock('@/server/messaging', () => ({
@@ -82,11 +77,28 @@ describe('MessagesDockController', () => {
     });
   });
 
-  it('opens the inbox at the right and a selected conversation in the adjacent window', async () => {
-    vi.mocked(getUnreadCount).mockResolvedValue({
-      object: 'unread_count',
-      count: 2,
+  it('keeps the inbox idle until the user opens the dock', async () => {
+    vi.mocked(getInbox).mockResolvedValue({
+      conversations: {
+        object: 'list',
+        url: '/v1/me/conversations',
+        data: [],
+        hasMore: false,
+        nextCursor: null,
+      },
     });
+
+    render(<MessagesDockController unreadCount={0} />);
+
+    expect(getInbox).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Open messaging, 0 unread' }),
+    );
+    await waitFor(() => expect(getInbox).toHaveBeenCalledOnce());
+  });
+
+  it('opens the inbox at the right and a selected conversation in the adjacent window', async () => {
     vi.mocked(getInbox).mockResolvedValue({
       conversations: {
         object: 'list',
@@ -108,7 +120,7 @@ describe('MessagesDockController', () => {
       blockStatus: { object: 'block_status', blocked: false },
     });
 
-    render(<MessagesDockController />);
+    render(<MessagesDockController unreadCount={2} />);
 
     const launcher = await screen.findByRole('button', {
       name: 'Open messaging, 2 unread',
@@ -129,10 +141,9 @@ describe('MessagesDockController', () => {
   });
 
   it('replaces a failed initial inbox load with an honest retry state', async () => {
-    vi.mocked(getUnreadCount).mockRejectedValue(new Error('Network failed'));
     vi.mocked(getInbox).mockRejectedValue(new Error('Network failed'));
 
-    render(<MessagesDockController />);
+    render(<MessagesDockController unreadCount={0} />);
 
     fireEvent.click(
       screen.getByRole('button', { name: 'Open messaging, 0 unread' }),
@@ -142,10 +153,6 @@ describe('MessagesDockController', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'empty');
 
-    vi.mocked(getUnreadCount).mockResolvedValue({
-      object: 'unread_count',
-      count: 1,
-    });
     vi.mocked(getInbox).mockResolvedValue({
       conversations: {
         object: 'list',
@@ -163,10 +170,6 @@ describe('MessagesDockController', () => {
   });
 
   it('replaces a failed conversation load with an honest retry state', async () => {
-    vi.mocked(getUnreadCount).mockResolvedValue({
-      object: 'unread_count',
-      count: 1,
-    });
     vi.mocked(getInbox).mockResolvedValue({
       conversations: {
         object: 'list',
@@ -178,7 +181,7 @@ describe('MessagesDockController', () => {
     });
     vi.mocked(getThread).mockRejectedValue(new Error('Network failed'));
 
-    render(<MessagesDockController />);
+    render(<MessagesDockController unreadCount={1} />);
 
     fireEvent.click(
       await screen.findByRole('button', {

@@ -18,8 +18,13 @@ import {
 import { AuthCard, FormError } from '../components/auth-form';
 import { ResumeUpload } from '../components/resume-upload';
 import { candidateReturnTo } from '../lib/candidate-return-to';
+import { serializeResumeOnboardingDismissal } from '../lib/resume-onboarding';
 import { m } from '../paraglide/messages';
-import { getResume, getSessionUserStrict } from '../server/account';
+import {
+  getResume,
+  getResumeOnboardingDismissal,
+  getSessionUserStrict,
+} from '../server/account';
 import { resendOtp, verifyOtpCode } from '../server/auth';
 import { getSeoBase } from '../server/queries';
 import { updateNotificationPreference } from '../server/settings';
@@ -75,15 +80,23 @@ export const Route = createFileRoute('/auth/verify-email-required')({
         emailVerified: user.emailVerified,
         role,
         resume: null,
+        resumeOnboardingDismissed: false,
+        userId: user.id,
         seo: await seoPromise,
       };
     }
     try {
-      const [resume, seo] = await Promise.all([getResume(), seoPromise]);
+      const [resume, dismissedFor, seo] = await Promise.all([
+        getResume(),
+        getResumeOnboardingDismissal().catch(() => null),
+        seoPromise,
+      ]);
       return {
         emailVerified: user.emailVerified,
         role,
         resume: user.emailVerified ? resume : null,
+        resumeOnboardingDismissed: dismissedFor?.includes(user.id) ?? false,
+        userId: user.id,
         seo,
       };
     } catch (error) {
@@ -92,6 +105,8 @@ export const Route = createFileRoute('/auth/verify-email-required')({
         emailVerified: user.emailVerified,
         role,
         resume: null,
+        resumeOnboardingDismissed: false,
+        userId: user.id,
         seo: await seoPromise,
       };
     }
@@ -113,7 +128,8 @@ export const Route = createFileRoute('/auth/verify-email-required')({
 function VerifyEmailRequiredPage() {
   const router = useRouter();
   const search = Route.useSearch();
-  const { emailVerified, role, resume } = Route.useLoaderData();
+  const { emailVerified, role, resume, resumeOnboardingDismissed, userId } =
+    Route.useLoaderData();
   const returnTo = candidateReturnTo(search.returnTo);
   const [step, setStep] = useState<'code' | 'resume'>(() =>
     emailVerified && role === 'candidate' ? 'resume' : 'code',
@@ -158,7 +174,14 @@ function VerifyEmailRequiredPage() {
   if (emailVerified && role === 'employer') return null;
 
   if (step === 'resume') {
-    return <ResumeOfferStep resume={resume} returnTo={returnTo} />;
+    return (
+      <ResumeOfferStep
+        resume={resume}
+        returnTo={returnTo}
+        dismissed={resumeOnboardingDismissed}
+        userId={userId}
+      />
+    );
   }
 
   return (
@@ -254,9 +277,13 @@ function VerifyEmailRequiredPage() {
 function ResumeOfferStep({
   resume,
   returnTo,
+  dismissed,
+  userId,
 }: {
   resume: Resume | null;
   returnTo: string;
+  dismissed: boolean;
+  userId: string;
 }) {
   const router = useRouter();
   const [recommendationEmails, setRecommendationEmails] = useState(false);
@@ -266,7 +293,7 @@ function ResumeOfferStep({
   // to load) continues straight to the destination; uploading DURING the step
   // updates `resume` without re-triggering this.
   const [offerUpload] = useState(
-    () => resume !== null && !resume.hasResumeOnFile,
+    () => resume !== null && !resume.hasResumeOnFile && !dismissed,
   );
 
   useEffect(() => {
@@ -322,7 +349,12 @@ function ResumeOfferStep({
         size="lg"
         className="w-full"
         data-test="resume-step-continue"
-        onClick={() => void router.navigate({ href: returnTo })}
+        onClick={() => {
+          if (!resume?.hasResumeOnFile) {
+            document.cookie = serializeResumeOnboardingDismissal(userId);
+          }
+          void router.navigate({ href: returnTo });
+        }}
       >
         {resume?.hasResumeOnFile
           ? m.authVerifyEmailRequired_resumeContinueLabel()

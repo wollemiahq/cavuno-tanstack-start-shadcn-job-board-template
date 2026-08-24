@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
+  getOAuthAuthorizationUrl: vi.fn(),
   invalidate: vi.fn(),
   signUp: vi.fn(),
 }));
@@ -26,7 +27,10 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
   };
 });
 
-vi.mock('../server/auth', () => ({ signUp: mocks.signUp }));
+vi.mock('../server/auth', () => ({
+  getOAuthAuthorizationUrl: mocks.getOAuthAuthorizationUrl,
+  signUp: mocks.signUp,
+}));
 vi.mock('../server/queries', () => ({ getBoardContext: vi.fn() }));
 // The loader's already-authed guard reads the session; default to signed-out.
 vi.mock('../server/account', () => ({
@@ -52,6 +56,38 @@ describe('/auth/sign-up search contract', () => {
       validate({ returnTo: '/jobs?q=design&selectedJob=product-designer' }),
     ).toEqual({
       returnTo: '/jobs?q=design&selectedJob=product-designer',
+    });
+  });
+
+  it('offers the same Google and LinkedIn account entry points as sign-in', async () => {
+    const returnTo = '/jobs?q=design';
+    vi.spyOn(Route, 'useSearch').mockReturnValue({ returnTo });
+    vi.spyOn(Route, 'useLoaderData').mockReturnValue({
+      boardName: 'Cavuno Jobs',
+    });
+    mocks.getOAuthAuthorizationUrl.mockResolvedValue({
+      ok: false,
+      message: 'OAuth unavailable in this test',
+    });
+    const SignUpPage = Route.options.component;
+    if (!SignUpPage)
+      throw new Error('The candidate sign-up route needs a component');
+
+    render(<SignUpPage />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Continue with Google' }),
+    );
+    await screen.findByRole('alert');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Continue with LinkedIn' }),
+    );
+
+    expect(mocks.getOAuthAuthorizationUrl).toHaveBeenNthCalledWith(1, {
+      data: { provider: 'google', returnTo },
+    });
+    expect(mocks.getOAuthAuthorizationUrl).toHaveBeenNthCalledWith(2, {
+      data: { provider: 'linkedin', returnTo },
     });
   });
 
