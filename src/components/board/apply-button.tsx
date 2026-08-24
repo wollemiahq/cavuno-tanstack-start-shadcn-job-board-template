@@ -38,28 +38,6 @@ const ApplyLocationDialog = lazy(() =>
   })),
 );
 
-const APPLY_LOCATION_UNAVAILABLE = 'APPLY_LOCATION_UNAVAILABLE';
-
-async function requestGatewayApply(form: HTMLFormElement) {
-  const response = await fetch(form.action, {
-    method: 'POST',
-    body: new FormData(form),
-    headers: { accept: 'application/json' },
-    credentials: 'same-origin',
-  });
-  const body = (await response.json().catch(() => null)) as {
-    code?: unknown;
-    redirectUrl?: unknown;
-  } | null;
-  if (response.status === 403 && body?.code === APPLY_LOCATION_UNAVAILABLE) {
-    return { kind: 'location-denied' as const };
-  }
-  if (!response.ok || typeof body?.redirectUrl !== 'string') {
-    throw new Error('Apply handoff failed');
-  }
-  return { kind: 'redirect' as const, redirectUrl: body.redirectUrl };
-}
-
 export function ApplyButton({
   jobSlug,
   applicationUrl,
@@ -161,8 +139,8 @@ export function ApplyButton({
       );
     case 'gateway-external':
       // No gateway or provider URL is emitted into the page. The POST target
-      // is this board's own stable route; after its click-time edge check, the
-      // browser contacts the Cavuno user-edge gateway directly.
+      // is this board's own stable route; on click the browser asks Cavuno's
+      // user-edge gateway for the canonical decision directly.
       return (
         <div className="flex flex-col gap-1">
           <form
@@ -170,9 +148,12 @@ export function ApplyButton({
             action="/apply"
             onSubmit={async (event: FormEvent<HTMLFormElement>) => {
               event.preventDefault();
+              const form = event.currentTarget;
               setState('applying');
               try {
-                const result = await requestGatewayApply(event.currentTarget);
+                const { requestGatewayApply } =
+                  await import('@/lib/gateway-apply');
+                const result = await requestGatewayApply(form);
                 if (result.kind === 'location-denied') {
                   setState('location-denied');
                   return;

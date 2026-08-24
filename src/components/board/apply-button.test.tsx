@@ -11,8 +11,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { m } from '../../paraglide/messages';
 import { ApplyButton } from './apply-button';
 
+const { requestGatewayApply } = vi.hoisted(() => ({
+  requestGatewayApply: vi.fn(),
+}));
+
+vi.mock('@/lib/gateway-apply', () => ({ requestGatewayApply }));
+
 afterEach(() => {
   cleanup();
+  requestGatewayApply.mockReset();
   vi.restoreAllMocks();
 });
 
@@ -99,9 +106,7 @@ describe('ApplyButton gateway external jobs', () => {
   });
 
   it('disables the gateway Apply control after a submit to avoid a double click', () => {
-    vi.spyOn(globalThis, 'fetch').mockImplementation(
-      () => new Promise<Response>(() => {}),
-    );
+    requestGatewayApply.mockImplementation(() => new Promise(() => {}));
     const { container } = render(
       <ApplyButton
         {...base}
@@ -119,10 +124,8 @@ describe('ApplyButton gateway external jobs', () => {
     ).toBe(true);
   });
 
-  it('shows a lazy location dialog when the board edge returns the location code', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      Response.json({ code: 'APPLY_LOCATION_UNAVAILABLE' }, { status: 403 }),
-    );
+  it('shows a lazy location dialog when the canonical gateway returns the location code', async () => {
+    requestGatewayApply.mockResolvedValue({ kind: 'location-denied' });
     render(
       <ApplyButton
         {...base}
@@ -142,12 +145,8 @@ describe('ApplyButton gateway external jobs', () => {
       }),
     ).not.toBeNull();
     expect(screen.getByText(m.apply_locationNotEligibleError())).not.toBeNull();
-    expect(globalThis.fetch).toHaveBeenCalledWith(
-      'http://localhost:3000/apply',
-      expect.objectContaining({
-        method: 'POST',
-        headers: { accept: 'application/json' },
-      }),
+    expect(requestGatewayApply).toHaveBeenCalledWith(
+      expect.any(HTMLFormElement),
     );
   });
 
