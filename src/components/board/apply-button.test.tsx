@@ -99,6 +99,9 @@ describe('ApplyButton gateway external jobs', () => {
   });
 
   it('disables the gateway Apply control after a submit to avoid a double click', () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(
+      () => new Promise<Response>(() => {}),
+    );
     const { container } = render(
       <ApplyButton
         {...base}
@@ -114,6 +117,38 @@ describe('ApplyButton gateway external jobs', () => {
       (screen.getByRole('button', { name: /applying/i }) as HTMLButtonElement)
         .disabled,
     ).toBe(true);
+  });
+
+  it('shows a lazy location dialog when the board edge returns the location code', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      Response.json({ code: 'APPLY_LOCATION_UNAVAILABLE' }, { status: 403 }),
+    );
+    render(
+      <ApplyButton
+        {...base}
+        jobSlug="sponsored-role"
+        applicationUrl={null}
+        applyAction="gateway_external"
+        viewer={null}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+
+    expect(await screen.findByRole('alertdialog')).not.toBeNull();
+    expect(
+      screen.getByRole('heading', {
+        name: m.apply_locationUnavailableTitle(),
+      }),
+    ).not.toBeNull();
+    expect(screen.getByText(m.apply_locationNotEligibleError())).not.toBeNull();
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'http://localhost:3000/apply',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { accept: 'application/json' },
+      }),
+    );
   });
 
   it('keeps an ordinary direct external application as an employer link', () => {
@@ -183,7 +218,7 @@ describe('ApplyButton native approval flow', () => {
     ).not.toBeNull();
   });
 
-  it('shows the localized location denial and does not apply after an explicit gateway 4xx', async () => {
+  it('shows the localized location dialog and does not apply after an explicit gateway 4xx', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(null, { status: 403 }),
     );
@@ -208,9 +243,8 @@ describe('ApplyButton native approval flow', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: /apply/i }));
 
-    expect((await screen.findByRole('alert')).textContent).toContain(
-      m.apply_locationNotEligibleError(),
-    );
+    expect(await screen.findByRole('alertdialog')).not.toBeNull();
+    expect(screen.getByText(m.apply_locationNotEligibleError())).not.toBeNull();
     expect(onApply).not.toHaveBeenCalled();
   });
 

@@ -17,7 +17,7 @@
  * The auth/verify/applications paths are plain hrefs — point them at
  * your app's routes and swap `<a>` for your router's Link if desired.
  */
-import { useState } from 'react';
+import { lazy, Suspense, useState, type FormEvent } from 'react';
 
 import { m } from '../../paraglide/messages';
 
@@ -31,6 +31,34 @@ import {
   candidateVerifyEmailHref,
 } from '@/lib/candidate-return-to';
 import { NativeApplyApprovalError, runNativeApply } from '@/lib/native-apply';
+
+const ApplyLocationDialog = lazy(() =>
+  import('./apply-location-dialog').then((module) => ({
+    default: module.ApplyLocationDialog,
+  })),
+);
+
+const APPLY_LOCATION_UNAVAILABLE = 'APPLY_LOCATION_UNAVAILABLE';
+
+async function requestGatewayApply(form: HTMLFormElement) {
+  const response = await fetch(form.action, {
+    method: 'POST',
+    body: new FormData(form),
+    headers: { accept: 'application/json' },
+    credentials: 'same-origin',
+  });
+  const body = (await response.json().catch(() => null)) as {
+    code?: unknown;
+    redirectUrl?: unknown;
+  } | null;
+  if (response.status === 403 && body?.code === APPLY_LOCATION_UNAVAILABLE) {
+    return { kind: 'location-denied' as const };
+  }
+  if (!response.ok || typeof body?.redirectUrl !== 'string') {
+    throw new Error('Apply handoff failed');
+  }
+  return { kind: 'redirect' as const, redirectUrl: body.redirectUrl };
+}
 
 export function ApplyButton({
   jobSlug,
@@ -103,6 +131,17 @@ export function ApplyButton({
     language,
     nativeApplications,
   });
+  const locationDialog =
+    state === 'location-denied' ? (
+      <Suspense fallback={null}>
+        <ApplyLocationDialog
+          open
+          title={copy.locationUnavailableTitle}
+          description={copy.locationNotEligibleError}
+          onClose={() => setState('idle')}
+        />
+      </Suspense>
+    ) : null;
 
   switch (action.kind) {
     case 'none':
@@ -122,21 +161,42 @@ export function ApplyButton({
       );
     case 'gateway-external':
       // No gateway or provider URL is emitted into the page. The POST target
-      // is this board's own stable route; its 303 then makes the browser
-      // contact the Cavuno user-edge gateway directly.
+      // is this board's own stable route; after its click-time edge check, the
+      // browser contacts the Cavuno user-edge gateway directly.
       return (
-        <form
-          method="post"
-          action="/apply"
-          onSubmit={() => setState('applying')}
-        >
-          <input type="hidden" name="jobSlug" value={action.jobSlug} />
-          <Button type="submit" size="lg" disabled={state === 'applying'}>
-            {state === 'applying'
-              ? copy.applyingLabel
-              : m.applyButton_applyLabel()}
-          </Button>
-        </form>
+        <div className="flex flex-col gap-1">
+          <form
+            method="post"
+            action="/apply"
+            onSubmit={async (event: FormEvent<HTMLFormElement>) => {
+              event.preventDefault();
+              setState('applying');
+              try {
+                const result = await requestGatewayApply(event.currentTarget);
+                if (result.kind === 'location-denied') {
+                  setState('location-denied');
+                  return;
+                }
+                window.location.assign(result.redirectUrl);
+              } catch {
+                setState('error');
+              }
+            }}
+          >
+            <input type="hidden" name="jobSlug" value={action.jobSlug} />
+            <Button type="submit" size="lg" disabled={state === 'applying'}>
+              {state === 'applying'
+                ? copy.applyingLabel
+                : m.applyButton_applyLabel()}
+            </Button>
+          </form>
+          {state === 'error' ? (
+            <p role="alert" className="text-destructive text-sm">
+              {copy.applicationSubmitError}
+            </p>
+          ) : null}
+          {locationDialog}
+        </div>
       );
     case 'sign-in':
       return (
@@ -205,11 +265,8 @@ export function ApplyButton({
             <p role="alert" className="text-destructive text-sm">
               {copy.applicationSubmitError}
             </p>
-          ) : state === 'location-denied' ? (
-            <p role="alert" className="text-destructive text-sm">
-              {copy.locationNotEligibleError}
-            </p>
           ) : null}
+          {locationDialog}
         </div>
       );
   }

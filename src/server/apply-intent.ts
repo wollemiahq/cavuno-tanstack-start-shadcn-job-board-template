@@ -17,6 +17,22 @@ export const APPLY_SESSION_COOKIE = '__Host-cavuno_apply_session';
 
 const SESSION_KEY_RE = /^[A-Za-z0-9_-]{20,200}$/;
 
+export const APPLY_LOCATION_UNAVAILABLE = 'APPLY_LOCATION_UNAVAILABLE';
+
+type CountryCheck =
+  | { kind: 'unrestricted' }
+  | { kind: 'countries'; countryCodes: string[] }
+  | { kind: 'denied' }
+  | { kind: 'gateway_only' };
+
+type ApplyIntentWithCountryCheck = ApplyIntent & {
+  countryCheck?: unknown;
+};
+
+type RequestWithCloudflareCountry = Request & {
+  readonly cf?: { readonly country?: string };
+};
+
 /**
  * A cross-site form could otherwise manufacture an Apply attempt. We accept
  * only browser navigations that name this board as their Origin; referer is a
@@ -97,6 +113,85 @@ export async function createApplyIntent(
   );
 }
 
+function countryCheckFromIntent(intent: ApplyIntent): CountryCheck | null {
+  const value = (intent as ApplyIntentWithCountryCheck).countryCheck;
+  if (!value || typeof value !== 'object') return null;
+  const kind = (value as { kind?: unknown }).kind;
+  if (kind === 'unrestricted' || kind === 'denied' || kind === 'gateway_only') {
+    return { kind };
+  }
+  if (kind !== 'countries') return null;
+  const countryCodes = (value as { countryCodes?: unknown }).countryCodes;
+  if (
+    !Array.isArray(countryCodes) ||
+    countryCodes.length === 0 ||
+    countryCodes.some(
+      (country) => typeof country !== 'string' || !/^[A-Z]{2}$/.test(country),
+    )
+  ) {
+    return null;
+  }
+  return { kind, countryCodes };
+}
+
+/**
+ * Cloudflare attaches this value directly to the Worker Request. Never use a
+ * browser-supplied country header here: the canonical gateway rechecks the
+ * decision independently before releasing the destination.
+ */
+export function visitorCountryFromRequest(request: Request): string | null {
+  const country = (request as RequestWithCloudflareCountry).cf?.country;
+  return typeof country === 'string' && /^[A-Z]{2}$/.test(country)
+    ? country
+    : null;
+}
+
+export function applyIntentLocationDenied(
+  intent: ApplyIntent,
+  request: Request,
+): boolean {
+  const check = countryCheckFromIntent(intent);
+  if (!check) return false;
+  if (check.kind === 'denied') return true;
+  if (check.kind !== 'countries') return false;
+  const visitorCountry = visitorCountryFromRequest(request);
+  // Missing edge geography leaves the canonical gateway in charge.
+  return (
+    visitorCountry !== null && !check.countryCodes.includes(visitorCountry)
+  );
+}
+
+export function wantsApplyJson(request: Request): boolean {
+  return request.headers.get('accept')?.includes('application/json') === true;
+}
+
+export function applyJsonRedirect(location: string): Response {
+  return Response.json(
+    { redirectUrl: location },
+    {
+      headers: {
+        'cache-control': 'no-store',
+        'referrer-policy': 'strict-origin',
+        'x-robots-tag': 'noindex, nofollow',
+      },
+    },
+  );
+}
+
+export function applyLocationDeniedResponse(): Response {
+  return Response.json(
+    { code: APPLY_LOCATION_UNAVAILABLE },
+    {
+      status: 403,
+      headers: {
+        'cache-control': 'no-store',
+        'referrer-policy': 'strict-origin',
+        'x-robots-tag': 'noindex, nofollow',
+      },
+    },
+  );
+}
+
 export function gatewayRedirect(
   intent: ApplyIntent,
   setCookie: string | null,
@@ -126,6 +221,13 @@ export function gatewayRedirect(
   });
   if (setCookie) headers.set('set-cookie', setCookie);
   return new Response(null, { status: 303, headers });
+}
+
+export function gatewayLocation(intent: ApplyIntent): string {
+  const response = gatewayRedirect(intent, null);
+  const location = response.headers.get('location');
+  if (!location) throw new Error('Invalid Apply gateway URL');
+  return location;
 }
 
 /** Append every cookie side-effect; a session rotation and duplicate key can

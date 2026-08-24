@@ -76,6 +76,7 @@
       "name": "alert-dialog",
       "status": "used",
       "productionReferences": [
+        "src/components/board/apply-location-dialog.tsx",
         "src/components/danger-zone.tsx",
         "src/components/employer/applicant-pipeline-board.tsx",
         "src/components/employer/company-delete-danger-zone.tsx",

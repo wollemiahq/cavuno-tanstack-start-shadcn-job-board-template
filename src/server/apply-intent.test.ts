@@ -2,12 +2,18 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   APPLY_SESSION_COOKIE,
+  APPLY_LOCATION_UNAVAILABLE,
+  applyIntentLocationDenied,
+  applyJsonRedirect,
   applyJobSlug,
+  applyLocationDeniedResponse,
   applySessionKey,
   createApplyIntent,
   gatewayRedirect,
   isSameOriginApplyRequest,
   ordinaryFallbackRedirect,
+  visitorCountryFromRequest,
+  wantsApplyJson,
   withApplyCookies,
 } from './apply-intent';
 
@@ -116,6 +122,53 @@ describe('board-local Apply intent seam', () => {
         },
       },
     );
+  });
+
+  it('uses only trusted Cloudflare request metadata for the visitor country', () => {
+    const request = new Request('https://board.example/apply', {
+      headers: { 'cf-ipcountry': 'US' },
+    }) as Request & { cf?: { country?: string } };
+    expect(visitorCountryFromRequest(request)).toBeNull();
+    request.cf = { country: 'AU' };
+    expect(visitorCountryFromRequest(request)).toBe('AU');
+  });
+
+  it('preflights a known country mismatch but leaves missing metadata to the gateway', () => {
+    const intent = {
+      id: 'intent_12345678901234567890',
+      object: 'apply_intent',
+      gatewayUrl: 'https://apply.cavuno.com/a/intent_12345678901234567890',
+      expiresAt: '2099-08-23T00:00:00.000Z',
+      countryCheck: { kind: 'countries', countryCodes: ['AU'] },
+    } as never;
+    const usRequest = new Request('https://board.example/apply') as Request & {
+      cf?: { country?: string };
+    };
+    usRequest.cf = { country: 'US' };
+    expect(applyIntentLocationDenied(intent, usRequest)).toBe(true);
+    expect(
+      applyIntentLocationDenied(
+        intent,
+        new Request('https://board.example/apply'),
+      ),
+    ).toBe(false);
+  });
+
+  it('provides a small no-store JSON contract for click-time navigation', async () => {
+    expect(
+      wantsApplyJson(
+        new Request('https://board.example/apply', {
+          headers: { accept: 'application/json' },
+        }),
+      ),
+    ).toBe(true);
+    const redirect = applyJsonRedirect('https://apply.cavuno.com/a/token');
+    expect(await redirect.json()).toEqual({
+      redirectUrl: 'https://apply.cavuno.com/a/token',
+    });
+    const denied = applyLocationDeniedResponse();
+    expect(denied.status).toBe(403);
+    expect(await denied.json()).toEqual({ code: APPLY_LOCATION_UNAVAILABLE });
   });
 
   it('turns a successful 201 intent into a temporary, non-indexable 303', () => {

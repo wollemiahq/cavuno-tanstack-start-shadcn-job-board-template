@@ -124,6 +124,7 @@
   "applyButton_applyLabel": "Postuler",
   "apply_applicationSubmitError": "Une erreur est survenue. Veuillez réessayer.",
   "apply_locationNotEligibleError": "Cette offre n’est pas disponible dans votre région.",
+  "apply_locationUnavailableTitle": "Cette offre n’est pas disponible dans votre région",
   "apply_appliedViewApplicationsLabel": "Candidature envoyée — voir mes candidatures",
   "apply_applyButtonText": "Postuler à cette offre",
   "apply_applyOnEmployerSiteLabel": "Postuler sur le site de l'employeur",

@@ -124,6 +124,7 @@
   "applyButton_applyLabel": "Bewerben",
   "apply_applicationSubmitError": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
   "apply_locationNotEligibleError": "Dieser Job ist an deinem Standort nicht verfügbar.",
+  "apply_locationUnavailableTitle": "Dieser Job ist an deinem Standort nicht verfügbar",
   "apply_appliedViewApplicationsLabel": "Beworben — Bewerbungen ansehen",
   "apply_applyButtonText": "Jetzt bewerben",
   "apply_applyOnEmployerSiteLabel": "Beim Unternehmen bewerben",
