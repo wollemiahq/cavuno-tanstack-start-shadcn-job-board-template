@@ -24,6 +24,7 @@ export function useVisiblePoll(
     let timer: ReturnType<typeof setTimeout> | undefined;
     let stopped = false;
     let inFlight = false;
+    let refreshAfterFlight = false;
 
     const schedule = () => {
       if (stopped) return;
@@ -47,12 +48,25 @@ export function useVisiblePoll(
         // later refreshes.
       } finally {
         inFlight = false;
-        schedule();
+        if (
+          refreshAfterFlight &&
+          (typeof document === 'undefined' || !document.hidden)
+        ) {
+          refreshAfterFlight = false;
+          void run();
+        } else {
+          refreshAfterFlight = false;
+          schedule();
+        }
       }
     };
 
     const onVisibility = () => {
       if (document.hidden) return;
+      if (inFlight) {
+        refreshAfterFlight = true;
+        return;
+      }
       if (timer) clearTimeout(timer);
       timer = undefined;
       void run();

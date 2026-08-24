@@ -67,6 +67,7 @@ import {
   resolveShellBreadcrumbEntities,
   resolveShellBreadcrumbTrail,
 } from '@/lib/shell-breadcrumb';
+import { useViewerUnreadCount } from '@/lib/use-viewer-unread-count';
 
 const LazyFooter = lazy(() =>
   import('../components/Footer').then((mod) => ({ default: mod.default })),
@@ -220,7 +221,8 @@ function RootChrome({
   consentChoice: Awaited<ReturnType<typeof getRootShellData>>['consentChoice'];
 }) {
   const { user, employerCompanies, hasAccessGrant, preview } = useRootSession();
-  const [messagingUnreadCount, setMessagingUnreadCount] = useState(0);
+  const [messagingUnreadCount, publishMessagingUnreadCount] =
+    useViewerUnreadCount(user?.id ?? null);
   const isFullBleed = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fullBleed),
   });
@@ -390,7 +392,7 @@ function RootChrome({
             <LazyMessagesNavController
               key={user.id}
               enabled={user.emailVerified}
-              onUnreadCount={setMessagingUnreadCount}
+              onUnreadCount={publishMessagingUnreadCount}
             />
           </Suspense>
         ) : undefined

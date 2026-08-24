@@ -27,8 +27,8 @@ describe('useVisiblePoll', () => {
     await act(() => vi.advanceTimersByTimeAsync(5_000));
     expect(callback).toHaveBeenCalledOnce();
 
-    await act(async () => finishRequest?.());
-    await act(() => vi.advanceTimersByTimeAsync(1_000));
+    const finishFirstRequest = finishRequest;
+    await act(async () => finishFirstRequest?.());
     expect(callback).toHaveBeenCalledTimes(2);
   });
 });
