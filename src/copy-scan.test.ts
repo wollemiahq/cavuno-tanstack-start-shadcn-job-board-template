@@ -5,6 +5,10 @@
 import ts from 'typescript-6';
 import { describe, expect, it } from 'vitest';
 
+import deMessages from '../messages/de.json';
+import enMessages from '../messages/en.json';
+import frMessages from '../messages/fr.json';
+
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
@@ -17,6 +21,24 @@ import { join, relative } from 'node:path';
 
 const ROOT = join(import.meta.dirname, '..');
 const SRC_ROOT = join(ROOT, 'src');
+
+const LOCALIZED_MESSAGE_AUDITS = [
+  {
+    locale: 'de',
+    messages: deMessages,
+    pattern: /\b(?:Platzhalter|Skelett)\b/i,
+  },
+  {
+    locale: 'en',
+    messages: enMessages,
+    pattern: /\b(?:placeholder|skeleton)\b/i,
+  },
+  {
+    locale: 'fr',
+    messages: frMessages,
+    pattern: /\b(?:espace réservé|squelette)\b/i,
+  },
+];
 
 const USER_VISIBLE_ATTRS = new Set([
   'placeholder',
@@ -121,6 +143,21 @@ describe('hardcoded-copy guard (en-XA coverage companion)', () => {
       `Hardcoded user-visible copy — route it through Paraglide messages ` +
         `(messages/en.json + de/fr, npm run gen:messages) or the boardCopy ` +
         `seam:\n${violations.join('\n')}`,
+    ).toEqual([]);
+  });
+
+  it('keeps implementation terminology out of localized UI copy', () => {
+    const violations = LOCALIZED_MESSAGE_AUDITS.flatMap(
+      ({ locale, messages, pattern }) =>
+        Object.entries(messages)
+          .filter(([, value]) => pattern.test(value))
+          .map(([key, value]) => `${locale}.${key}: ${JSON.stringify(value)}`),
+    );
+
+    expect(
+      violations,
+      `User-facing copy describes the product implementation instead of the ` +
+        `user's situation:\n${violations.join('\n')}`,
     ).toEqual([]);
   });
 });

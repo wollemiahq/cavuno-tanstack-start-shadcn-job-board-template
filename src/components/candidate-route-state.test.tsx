@@ -46,7 +46,7 @@ describe('candidate route states', () => {
     expect(reset).toHaveBeenCalledOnce();
   });
 
-  it('describes the placeholder that keeps the failed route layout stable', () => {
+  it('explains recovery without exposing implementation details', () => {
     const errorProps: ErrorComponentProps = {
       error: new Error('account unavailable'),
       reset: vi.fn(),
@@ -54,10 +54,13 @@ describe('candidate route states', () => {
     render(<CandidateRouteErrorPage {...errorProps} />);
 
     expect(
+      screen.getByRole('heading', { name: 'Your information didn’t load' }),
+    ).toBeVisible();
+    expect(
       screen.getByText(
-        'Try again. A placeholder keeps the page layout stable while this content is unavailable.',
+        'Try again. You’ll stay in the same place while this information reloads, then continue where you left off.',
       ),
     ).toBeVisible();
-    expect(screen.queryByText(/navigation will stay/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/placeholder|skeleton/i)).not.toBeInTheDocument();
   });
 });
