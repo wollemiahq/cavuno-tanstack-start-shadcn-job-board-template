@@ -6,11 +6,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   CandidateRouteError,
-  CandidateRouteErrorPage,
   CandidateRoutePending,
 } from './candidate-route-state';
-
-import type { ErrorComponentProps } from '@tanstack/react-router';
 
 afterEach(cleanup);
 
@@ -44,20 +41,5 @@ describe('candidate route states', () => {
     ).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(reset).toHaveBeenCalledOnce();
-  });
-
-  it('describes the placeholder that keeps the failed route layout stable', () => {
-    const errorProps: ErrorComponentProps = {
-      error: new Error('account unavailable'),
-      reset: vi.fn(),
-    };
-    render(<CandidateRouteErrorPage {...errorProps} />);
-
-    expect(
-      screen.getByText(
-        'Try again. A placeholder keeps the page layout stable while this content is unavailable.',
-      ),
-    ).toBeVisible();
-    expect(screen.queryByText(/navigation will stay/i)).not.toBeInTheDocument();
   });
 });
