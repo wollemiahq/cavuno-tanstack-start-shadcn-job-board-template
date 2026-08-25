@@ -1,7 +1,4 @@
-import {
-  parseBucketFilename,
-  renderUrlset,
-} from '@cavuno/board/sitemap';
+import { parseBucketFilename, renderUrlset } from '@cavuno/board/sitemap';
 /**
  * Sub-sitemap — one content bucket of the 8-bucket model, served as a plain
  * `<urlset>`. `$file` is e.g. `jobs-details.xml` (chunk 0) or `jobs-details-2.xml`
@@ -13,14 +10,14 @@ import { getRequest } from '@tanstack/react-start/server';
 
 import { getPrimaryBoard } from '../lib/board';
 import {
+  LOCALIZED_BUCKETS,
+  renderUrlsetWithAlternates,
+} from '../lib/sitemap-alternates';
+import {
   findSitemapChunk,
   loadSitemapContext,
   SITEMAP_RESPONSE_CACHE_CONTROL,
 } from '../lib/sitemap-context';
-import {
-  LOCALIZED_BUCKETS,
-  renderUrlsetWithAlternates,
-} from '../lib/sitemap-alternates';
 
 // `throw notFound()` inside a server handler serializes as a 200 JSON
 // body — crawlers need a REAL 404 status for unknown sitemap files.
