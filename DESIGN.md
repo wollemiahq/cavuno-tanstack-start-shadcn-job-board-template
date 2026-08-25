@@ -404,8 +404,8 @@ Props:
 
 Props:
 
-- `alreadyApplied?: boolean | undefined`
 - `applicationsHref?: string | undefined`
+- `applicationState?: "not-requested" | "applied" | "not-applied" | "unknown" | undefined`
 - `applicationUrl: string | null`
 - `applyAction?: PublicApplyAction | null | undefined`
 - `dependencies?: ApplyButtonDependencies | undefined`
@@ -414,6 +414,7 @@ Props:
 - `nativeApplications?: boolean | undefined`
 - `onApply: (jobSlug: string, approvalReceipt?: string | undefined) => Promise<void>`
 - `onPrepareApply: (jobSlug: string) => Promise<NativeApplyPrepareResult>`
+- `onRetryApplicationState?: (() => void) | undefined`
 - `returnTo: string`
 - `viewer: { emailVerified: boolean; } | null`
 
@@ -995,6 +996,15 @@ Props:
 - `nameHref?: string | null | undefined`
 - `subtitle?: ReactNode`
 
+### TalentMessageAction — `src/components/board/talent-message-action.tsx`
+
+Props:
+
+- `action: TalentDetailCtaLink | TalentDetailCtaComposer`
+- `candidateName: string`
+- `onConversationStarted?: ((conversationId: string) => void) | undefined`
+- `onStartConversation?: StartTalentConversation | undefined`
+
 ### TalentProfileContent — `src/components/board/talent-profile-content.tsx`
 
 Props:
@@ -1064,6 +1074,8 @@ Props:
 
 - `cta?: TalentDetailCta | undefined`
 - `interactive?: boolean | undefined`
+- `onConversationStarted?: ((conversationId: string) => void) | undefined`
+- `onStartConversation?: StartTalentConversation | undefined`
 - `vm: TalentProfileVM`
 
 ### TalentSearchResultDetailSkeleton — `src/components/board/talent-search-result-detail.tsx`
@@ -1306,7 +1318,7 @@ Props:
 - `actions: CompanyDeleteActions`
 - `companyName: string`
 - `isAdmin: boolean`
-- `otherApprovedMembers: number`
+- `otherApprovedMembers: number | null`
 - `slug: string`
 
 ### CompanyMembersTable — `src/components/employer/company-members-table.tsx`
@@ -1318,6 +1330,7 @@ Props:
 - `currentUserId: string`
 - `invites: { id: string; object: "company_member_invite"; email: string; createdAt: string; expiresAt: string; }[]`
 - `isAdmin: boolean`
+- `locale: string`
 - `members: { id: string; object: "company_member"; boardUserId: string; displayName: string | null; email: string; role: "admin"…`
 - `slug: string`
 
@@ -1457,6 +1470,7 @@ Props:
 
 - `employerCompanies: { id: string; object: "company_membership"; status: "approved" | "pending_work_email" | "awaiting_admin" | "rejected"…`
 - `hasAccessGrant: boolean`
+- `jobRecommendationsEnabled: boolean`
 - `nativeApplications: boolean`
 - `onSignOut: () => void`
 - `onSignOutPendingChange: (pending: boolean) => void`
@@ -1778,8 +1792,8 @@ Props:
 
 - `disabled: boolean`
 - `hint: string | null`
-- `onSend: (body: string) => Promise<void>`
-- `onSent: () => void`
+- `onSend: (body: string) => Promise<TResult>`
+- `onSent: (result: TResult) => void`
 
 ### HydrationSafeDate — `src/components/messages/hydration-safe-date.tsx`
 
@@ -1899,6 +1913,7 @@ PUTs immediately and refreshes.
 Props:
 
 - `preferences: StarterNotificationPreference[]`
+- `recommendedJobEmailsEnabled?: boolean | undefined`
 - `updatePreference?: ((options: { data: StarterUpdateNotificationPreferenceBody; }) => Promise<OffsetPagination & { object: "list"; url: s…`
 
 ### EmbeddedCheckout — `src/components/paywall/embedded-checkout.tsx`
@@ -2027,6 +2042,7 @@ Props:
 
 Props:
 
+- `activePersonaId?: string | null | undefined`
 - `capability: PreviewCapability`
 - `config: PreviewBoardConfig`
 - `dataSource?: DataSource | undefined`
@@ -2068,6 +2084,7 @@ nominal bottom-right ask.
 
 Props:
 
+- `activePersonaId?: string | null | undefined`
 - `capability: PreviewCapability`
 - `config: PreviewBoardConfig`
 - `dataSource?: DataSource | undefined`
