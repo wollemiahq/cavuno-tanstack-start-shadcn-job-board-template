@@ -450,7 +450,10 @@ describe('Header — native-applications account gating', () => {
       screen.queryByRole('link', { name: m.siteHeader_signInLabel() }),
     ).toBeNull();
     expect(
-      screen.getByRole('button', { name: m.siteHeader_accountLabel() }),
+      screen.queryByRole('button', { name: m.siteHeader_accountLabel() }),
+    ).toBeNull();
+    expect(
+      screen.getByRole('status', { name: m.ui_loadingLabel() }),
     ).toBeTruthy();
 
     resolveSignOut?.();
@@ -467,6 +470,37 @@ describe('Header — native-applications account gating', () => {
     );
     await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith({ to: '/' }));
     await waitFor(() => expect(invalidateSpy).toHaveBeenCalledOnce());
+  });
+
+  it('restores the account action when sign-out fails', async () => {
+    let rejectSignOut: ((reason: Error) => void) | undefined;
+    signOutMock.mockReturnValue(
+      new Promise<void>((_, reject) => {
+        rejectSignOut = reject;
+      }),
+    );
+    renderHeader({ user: signedInUser });
+
+    fireEvent.click(await findAccountButton());
+    fireEvent.click(
+      await screen.findByRole('menuitem', {
+        name: m.accountHome_signOutLabel(),
+      }),
+    );
+
+    expect(
+      screen.getByRole('status', { name: m.ui_loadingLabel() }),
+    ).toBeTruthy();
+    rejectSignOut?.(new Error('offline'));
+
+    expect(
+      await screen.findByRole('button', {
+        name: m.siteHeader_accountLabel(),
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('link', { name: m.siteHeader_signInLabel() }),
+    ).toBeNull();
   });
 
   it('shows the Applications account entry when native applications are on', async () => {

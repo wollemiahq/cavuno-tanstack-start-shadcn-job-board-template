@@ -29,12 +29,14 @@ export function HeaderAccountMenu({
   nativeApplications,
   employerCompanies,
   onSignOut,
+  onSignOutPendingChange,
 }: {
   user: BoardUser;
   hasAccessGrant: boolean;
   nativeApplications: boolean;
   employerCompanies: CompanyMembership[] | null;
   onSignOut: () => void;
+  onSignOutPendingChange: (pending: boolean) => void;
 }) {
   const companyWorkspaces = (employerCompanies ?? []).filter(
     (membership) =>
@@ -169,8 +171,16 @@ export function HeaderAccountMenu({
         <DropdownMenuItem
           data-test="account-menu-sign-out"
           onClick={async () => {
-            await signOut();
+            onSignOutPendingChange(true);
+            try {
+              await signOut();
+            } catch {
+              // Keep the truthful signed-in state so the user can retry.
+              onSignOutPendingChange(false);
+              return;
+            }
             onSignOut();
+            onSignOutPendingChange(false);
             await router.navigate({ to: '/' });
             await router.invalidate();
           }}

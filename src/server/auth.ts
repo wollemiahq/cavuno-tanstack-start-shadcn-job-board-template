@@ -137,22 +137,22 @@ export const refreshSession = createServerFn({ method: 'POST' }).handler(
   },
 );
 
-export const signOut = createServerFn({ method: 'POST' }).handler(async () => {
-  const dataSource = getDataSource();
-  const session = parseSessionForSource(
-    getRequestHeader('cookie') ?? null,
-    dataSource,
-  );
-  if (session) {
-    waitUntil(
-      getBoard()
-        .auth.logout({ refreshToken: session.refreshToken })
-        .catch(() => undefined),
+export const signOut = createServerFn({ method: 'POST' })
+  .middleware([sessionMiddleware])
+  .handler(async ({ context }) => {
+    if (context.session) {
+      waitUntil(
+        getBoard()
+          .auth.logout({ refreshToken: context.session.refreshToken })
+          .catch(() => undefined),
+      );
+    }
+    setResponseHeader(
+      'Set-Cookie',
+      clearSessionForSource(context.dataSource ?? getDataSource()),
     );
-  }
-  setResponseHeader('Set-Cookie', clearSessionForSource(dataSource));
-  return { ok: true as const };
-});
+    return { ok: true as const };
+  });
 
 export const verifyEmail = createServerFn({ method: 'POST' })
   .validator((input: { token: string }) => input)

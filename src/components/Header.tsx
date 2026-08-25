@@ -25,6 +25,7 @@ import type { KeywordSuggestionState } from '@/components/keyword-combobox';
 import { Box } from '@/components/layout/box';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { navCopy } from '@/copy-groups/nav';
 import type {
@@ -122,6 +123,7 @@ export default function Header({
   };
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   // One copy of the search field state for BOTH renders of the form (the
   // page header and the open mobile-nav sheet share it, so opening the menu
   // never swaps the input for an empty twin).
@@ -265,7 +267,17 @@ export default function Header({
       ) : null}
     </div>
   );
-  const accountActions = user ? (
+  const accountActions = signingOut ? (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      disabled
+      aria-label={m.accountHome_signOutLabel()}
+    >
+      <Spinner />
+    </Button>
+  ) : user ? (
     <>
       {messagesNav}
       <Suspense fallback={null}>
@@ -275,6 +287,7 @@ export default function Header({
           nativeApplications={features.nativeApplications}
           employerCompanies={employerCompanies}
           onSignOut={onSignOut}
+          onSignOutPendingChange={setSigningOut}
         />
       </Suspense>
     </>
