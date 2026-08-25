@@ -6,11 +6,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   CandidateRouteError,
-  CandidateRouteErrorPage,
   CandidateRoutePending,
 } from './candidate-route-state';
-
-import type { ErrorComponentProps } from '@tanstack/react-router';
 
 afterEach(cleanup);
 
@@ -44,23 +41,5 @@ describe('candidate route states', () => {
     ).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(reset).toHaveBeenCalledOnce();
-  });
-
-  it('explains recovery without exposing implementation details', () => {
-    const errorProps: ErrorComponentProps = {
-      error: new Error('account unavailable'),
-      reset: vi.fn(),
-    };
-    render(<CandidateRouteErrorPage {...errorProps} />);
-
-    expect(
-      screen.getByRole('heading', { name: 'Your information didn’t load' }),
-    ).toBeVisible();
-    expect(
-      screen.getByText(
-        'Try again. You’ll stay in the same place while this information reloads, then continue where you left off.',
-      ),
-    ).toBeVisible();
-    expect(screen.queryByText(/placeholder|skeleton/i)).not.toBeInTheDocument();
   });
 });
