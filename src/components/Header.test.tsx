@@ -37,9 +37,7 @@ import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
 import { m } from '../paraglide/messages';
 import Header from './Header';
 
-const signOutMock = vi.hoisted(() => vi.fn());
-
-vi.mock('../server/auth', () => ({ signOut: signOutMock }));
+const signOutMock = vi.fn();
 
 afterEach(() => {
   cleanup();
@@ -184,6 +182,7 @@ function renderHeader({
             features={features}
             hasAccessGrant={hasAccessGrant}
             onSignOut={() => setViewer(null)}
+            signOutAction={signOutMock}
             talentDirectoryVisibility={talentDirectoryVisibility}
             search={{
               ...initialSearch,

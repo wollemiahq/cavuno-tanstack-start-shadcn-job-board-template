@@ -20,6 +20,7 @@ import { menuColorClasses } from '../lib/menu-color';
 import { resolveSignupDestination } from '../lib/signup-destination';
 import { m } from '../paraglide/messages';
 
+import type { SignOutAction } from './header-account-menu';
 import type { CompanyMarketSuggestionState } from '@/components/company-search-combobox';
 import { HeaderSearchEnhanced } from '@/components/header-search-enhanced';
 import type { KeywordSuggestionState } from '@/components/keyword-combobox';
@@ -93,6 +94,7 @@ export default function Header({
   hasAccessGrant = false,
   employerCompanies = null,
   onSignOut,
+  signOutAction,
   talentDirectoryVisibility,
   search,
   messagesNav,
@@ -112,6 +114,7 @@ export default function Header({
   hasAccessGrant?: boolean;
   employerCompanies?: CompanyMembership[] | null;
   onSignOut: () => void;
+  signOutAction?: SignOutAction;
   talentDirectoryVisibility: 'off' | 'public' | 'employers_only' | null;
   messagesNav?: ReactNode;
   search: HeaderSearchState & {
@@ -292,6 +295,7 @@ export default function Header({
           employerCompanies={employerCompanies}
           onSignOut={onSignOut}
           onSignOutPendingChange={setSigningOut}
+          signOutAction={signOutAction}
         />
       </Suspense>
     </>

@@ -22,6 +22,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { BoardUser, CompanyMembership } from '@cavuno/board';
 
+export type SignOutAction = () => Promise<void | { ok: true }>;
+
 /** Authenticated-only header UI, split out of the anonymous public shell. */
 export function HeaderAccountMenu({
   user,
@@ -30,6 +32,7 @@ export function HeaderAccountMenu({
   employerCompanies,
   onSignOut,
   onSignOutPendingChange,
+  signOutAction = signOut,
 }: {
   user: BoardUser;
   hasAccessGrant: boolean;
@@ -37,6 +40,7 @@ export function HeaderAccountMenu({
   employerCompanies: CompanyMembership[] | null;
   onSignOut: () => void;
   onSignOutPendingChange: (pending: boolean) => void;
+  signOutAction?: SignOutAction;
 }) {
   const companyWorkspaces = (employerCompanies ?? []).filter(
     (membership) =>
@@ -173,7 +177,7 @@ export function HeaderAccountMenu({
           onClick={async () => {
             onSignOutPendingChange(true);
             try {
-              await signOut();
+              await signOutAction();
             } catch {
               // Keep the truthful signed-in state so the user can retry.
               onSignOutPendingChange(false);
