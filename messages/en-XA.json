@@ -1190,6 +1190,8 @@
   "previewFlag_jobAccessPaywallEnabled_label": "⟦Çáñðíðáţé þáýŵáĺĺ⟧",
   "previewFlag_jobAlertsEnabled_description": "⟦Áĺĺóŵ áñóñýɱóúš ĵóƀ-áĺéŕţ šúƀšçŕíþţíóñš.⟧",
   "previewFlag_jobAlertsEnabled_label": "⟦Ĵóƀ áĺéŕţš⟧",
+  "previewFlag_jobRecommendationsEnabled_description": "⟦Šĥóŵ šíğñéð-íñ çáñðíðáţéš þéŕšóñáĺížéð ĵóƀ ɱáţçĥéš ƀášéð óñ ţĥéíŕ þŕóƒíĺé áñð ŕéšúɱé.⟧",
+  "previewFlag_jobRecommendationsEnabled_label": "⟦Ĵóƀ ŕéçóɱɱéñðáţíóñš⟧",
   "previewFlag_nativeApplicationsEnabled_description": "⟦Ɓúíĺţ-íñ ÁŢŠ áþþĺý — óƒƒ ɱéáñš éẋţéŕñáĺ-áþþĺíçáţíóñš-óñĺý.⟧",
   "previewFlag_nativeApplicationsEnabled_label": "⟦Ñáţíṽé áþþĺíçáţíóñš⟧",
   "previewFlag_registrationWallEnabled_description": "⟦Ŕéɋúíŕé šíğñ-íñ ţó áþþĺý — ðíšáƀĺéš ğúéšţ áþþĺíçáţíóñš.⟧",

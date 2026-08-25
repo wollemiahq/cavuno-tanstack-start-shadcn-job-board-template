@@ -1190,6 +1190,8 @@
   "previewFlag_jobAccessPaywallEnabled_label": "Paywall candidats",
   "previewFlag_jobAlertsEnabled_description": "Autoriser les abonnements anonymes aux alertes emploi.",
   "previewFlag_jobAlertsEnabled_label": "Alertes emploi",
+  "previewFlag_jobRecommendationsEnabled_description": "Afficher aux candidats connectés des offres personnalisées selon leur profil et leur CV.",
+  "previewFlag_jobRecommendationsEnabled_label": "Recommandations d’emploi",
   "previewFlag_nativeApplicationsEnabled_description": "Candidature ATS intégrée — désactivé signifie candidatures externes uniquement.",
   "previewFlag_nativeApplicationsEnabled_label": "Candidatures natives",
   "previewFlag_registrationWallEnabled_description": "Connexion requise pour postuler — désactive les candidatures invitées.",

@@ -38,6 +38,7 @@ const PLATFORM_SANDBOX_CONFIG_WHITELIST = {
   talentDirectoryVisibility: 'enum',
   blogEnabled: 'boolean',
   jobAlertsEnabled: 'boolean',
+  jobRecommendationsEnabled: 'boolean',
   candidatesEnabled: 'boolean',
   employersEnabled: 'boolean',
   nativeApplicationsEnabled: 'boolean',
@@ -139,6 +140,7 @@ describe('pickWhitelistedConfig', () => {
       talentDirectoryVisibility: 'public',
       blogEnabled: true,
       jobAlertsEnabled: false,
+      jobRecommendationsEnabled: true,
       candidatesEnabled: true,
       employersEnabled: false,
       registrationWallEnabled: true,
@@ -202,6 +204,7 @@ describe('toPreviewBoardConfig', () => {
         candidatePaywall: true,
         blog: false,
         jobAlerts: true,
+        jobRecommendationsEnabled: false,
         candidates: false,
         employers: true,
         registrationWall: false,
@@ -215,6 +218,7 @@ describe('toPreviewBoardConfig', () => {
       talentDirectoryVisibility: 'employers_only',
       blogEnabled: false,
       jobAlertsEnabled: true,
+      jobRecommendationsEnabled: false,
       candidatesEnabled: false,
       employersEnabled: true,
       nativeApplicationsEnabled: false,
@@ -237,6 +241,7 @@ describe('toPreviewBoardConfig', () => {
     });
     expect(config.nativeApplicationsEnabled).toBe(true);
     expect(config.applicantMessagingEnabled).toBe(true);
+    expect(config.jobRecommendationsEnabled).toBe(true);
   });
 
   it('defaults a null talent visibility to "off"', () => {
@@ -315,6 +320,7 @@ describe('unmetFlagRequirements (dependency gating)', () => {
     talentDirectoryVisibility: 'public',
     blogEnabled: true,
     jobAlertsEnabled: true,
+    jobRecommendationsEnabled: true,
     candidatesEnabled: true,
     employersEnabled: true,
     nativeApplicationsEnabled: true,

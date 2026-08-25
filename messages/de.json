@@ -1190,6 +1190,8 @@
   "previewFlag_jobAccessPaywallEnabled_label": "Kandidaten-Paywall",
   "previewFlag_jobAlertsEnabled_description": "Anonyme Job-Alert-Abos erlauben.",
   "previewFlag_jobAlertsEnabled_label": "Job-Alerts",
+  "previewFlag_jobRecommendationsEnabled_description": "Angemeldeten Kandidaten personalisierte Job-Matches auf Grundlage ihres Profils und Lebenslaufs anzeigen.",
+  "previewFlag_jobRecommendationsEnabled_label": "Jobempfehlungen",
   "previewFlag_nativeApplicationsEnabled_description": "Integrierte ATS-Bewerbung — aus bedeutet nur externe Bewerbungen.",
   "previewFlag_nativeApplicationsEnabled_label": "Native Bewerbungen",
   "previewFlag_registrationWallEnabled_description": "Anmeldung zum Bewerben erforderlich — deaktiviert Gast-Bewerbungen.",

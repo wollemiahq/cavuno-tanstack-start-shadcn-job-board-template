@@ -63,7 +63,10 @@ import {
   loadVerificationGate,
   VerifyEmailRequiredView,
 } from './-auth.verify-email-required';
-import { Route } from './auth.verify-email-required';
+import {
+  resolveVerifiedDestination,
+  Route,
+} from './auth.verify-email-required';
 
 import { m } from '@/paraglide/messages';
 
@@ -87,6 +90,16 @@ const storedResume: Resume = {
     sizeBytes: 12_345,
   },
 };
+
+describe('resolveVerifiedDestination', () => {
+  it('falls back from matches when Job recommendations were disabled', () => {
+    expect(resolveVerifiedDestination('/matches', false)).toBe('/account');
+    expect(resolveVerifiedDestination('/matches', true)).toBe('/matches');
+    expect(resolveVerifiedDestination('/jobs?q=design', false)).toBe(
+      '/jobs?q=design',
+    );
+  });
+});
 
 const OriginalResizeObserver = globalThis.ResizeObserver;
 
