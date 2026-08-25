@@ -4,12 +4,15 @@ import type {
 } from '@/board/talent-view-model';
 import { SearchDetailHeader } from '@/components/board/search-detail-header';
 import {
+  TalentMessageAction,
+  type StartTalentConversation,
+} from '@/components/board/talent-message-action';
+import {
   TalentProfileContent,
   TalentProfileIdentity,
 } from '@/components/board/talent-profile-content';
 import { SearchResultDetailHeader } from '@/components/search-results/search-results';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { initialsOf } from '@/lib/initials';
 import { localizePath } from '@/lib/localized-path';
@@ -37,9 +40,15 @@ function TalentMark({ vm }: { vm: TalentProfileVM }) {
 function TalentDetailActions({
   cta,
   interactive,
+  candidateName,
+  onStartConversation,
+  onConversationStarted,
 }: {
   cta: TalentDetailCta;
   interactive: boolean;
+  candidateName: string;
+  onStartConversation?: StartTalentConversation;
+  onConversationStarted?: (conversationId: string) => void;
 }) {
   if (!interactive || !cta.message) return null;
 
@@ -48,9 +57,12 @@ function TalentDetailActions({
       data-slot="talent-detail-actions"
       className="flex flex-wrap items-center gap-2"
     >
-      <a href={cta.message.href} className={buttonVariants()}>
-        {cta.message.label}
-      </a>
+      <TalentMessageAction
+        action={cta.message}
+        candidateName={candidateName}
+        onStartConversation={onStartConversation}
+        onConversationStarted={onConversationStarted}
+      />
     </div>
   );
 }
@@ -59,10 +71,14 @@ function ExpandedTalentDetailHeader({
   vm,
   cta,
   interactive,
+  onStartConversation,
+  onConversationStarted,
 }: {
   vm: TalentProfileVM;
   cta: TalentDetailCta;
   interactive: boolean;
+  onStartConversation?: StartTalentConversation;
+  onConversationStarted?: (conversationId: string) => void;
 }) {
   const hasActions = interactive && Boolean(cta.message);
 
@@ -83,7 +99,13 @@ function ExpandedTalentDetailHeader({
       </div>
       {hasActions ? (
         <div className="col-start-1 row-start-2 w-fit justify-self-start">
-          <TalentDetailActions cta={cta} interactive />
+          <TalentDetailActions
+            cta={cta}
+            interactive
+            candidateName={vm.displayName}
+            onStartConversation={onStartConversation}
+            onConversationStarted={onConversationStarted}
+          />
         </div>
       ) : null}
     </header>
@@ -94,10 +116,14 @@ function CompactTalentDetailHeader({
   vm,
   cta,
   interactive,
+  onStartConversation,
+  onConversationStarted,
 }: {
   vm: TalentProfileVM;
   cta: TalentDetailCta;
   interactive: boolean;
+  onStartConversation?: StartTalentConversation;
+  onConversationStarted?: (conversationId: string) => void;
 }) {
   return (
     <SearchDetailHeader
@@ -107,7 +133,15 @@ function CompactTalentDetailHeader({
         interactive && vm.detailHref ? localizePath(vm.detailHref) : null
       }
       subtitle={vm.headline}
-      actions={<TalentDetailActions cta={cta} interactive={interactive} />}
+      actions={
+        <TalentDetailActions
+          cta={cta}
+          interactive={interactive}
+          candidateName={vm.displayName}
+          onStartConversation={onStartConversation}
+          onConversationStarted={onConversationStarted}
+        />
+      }
     />
   );
 }
@@ -168,10 +202,14 @@ export function TalentSearchResultDetail({
   vm,
   cta = { message: null, viewProfile: null },
   interactive = true,
+  onStartConversation,
+  onConversationStarted,
 }: {
   vm: TalentProfileVM;
   cta?: TalentDetailCta;
   interactive?: boolean;
+  onStartConversation?: StartTalentConversation;
+  onConversationStarted?: (conversationId: string) => void;
 }) {
   return (
     <article className="max-w-full min-w-0">
@@ -181,6 +219,8 @@ export function TalentSearchResultDetail({
             vm={vm}
             cta={cta}
             interactive={interactive}
+            onStartConversation={onStartConversation}
+            onConversationStarted={onConversationStarted}
           />
         }
         compact={
@@ -188,6 +228,8 @@ export function TalentSearchResultDetail({
             vm={vm}
             cta={cta}
             interactive={interactive}
+            onStartConversation={onStartConversation}
+            onConversationStarted={onConversationStarted}
           />
         }
       />

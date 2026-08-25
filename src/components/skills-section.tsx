@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/empty';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { toastActionError } from '@/lib/action-toast';
+import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
 
 /**
  * Skills — badges over the whole-set replace
@@ -49,14 +49,14 @@ export function SkillsSection({ skills }: { skills: string[] }) {
     setPending(true);
     try {
       await replaceSkills({ data: { skills: next } });
-      await router.invalidate();
-      return true;
     } catch {
       void toastActionError();
       return false;
     } finally {
       setPending(false);
     }
+    await reconcileCommittedAction(() => router.invalidate());
+    return true;
   };
 
   const submitAdd = async () => {

@@ -380,9 +380,11 @@ function MetaRow({
 
 /**
  * The captured body. When HTML is present it is framed in a sandboxed iframe —
- * `srcDoc` receives the platform HTML verbatim (AGENTS.md rule 4: rendered
- * as-is, never interpolated), `sandbox=""` blocks scripts and same-origin
- * access, so the frame is opaque: no style bleed either way. The frame carries
+ * `srcDoc` receives the server-retargeted platform HTML (AGENTS.md rule 4:
+ * rendered as-is apart from the viewer-only link transform). The sandbox
+ * allows only user-activated top-level navigation, so local completion links
+ * can escape the mail pane while scripts and same-origin access stay blocked.
+ * The frame carries
  * a fixed height with its own internal scroll (a `sandbox=""` frame can't be
  * measured cross-origin for auto-height), centred on a muted backdrop with a
  * white card to mimic an email client. When HTML is empty the plain-text
@@ -400,7 +402,7 @@ function EmailBody({ email }: { email: PreviewEmail }) {
           <iframe
             title={m.previewToolbar_emailsBodyLabel()}
             srcDoc={email.html}
-            sandbox=""
+            sandbox="allow-top-navigation-by-user-activation"
             className="block h-[32rem] w-full bg-white"
           />
         </div>

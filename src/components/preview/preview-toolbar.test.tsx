@@ -67,6 +67,8 @@ const config: PreviewBoardConfig = {
 interface RenderToolbarOptions {
   capability?: PreviewCapability;
   viewer?: PreviewViewer | null;
+  activePersonaId?: string | null;
+  personasOverride?: PreviewPersona[];
   demoConfigured?: boolean;
   demoBoardPrivate?: boolean;
   dataSource?: 'board' | 'demo';
@@ -75,6 +77,8 @@ interface RenderToolbarOptions {
 function renderToolbar({
   capability = capable,
   viewer = null,
+  activePersonaId = null,
+  personasOverride = personas,
   demoConfigured = false,
   demoBoardPrivate = false,
   dataSource = 'board',
@@ -82,7 +86,8 @@ function renderToolbar({
   return render(
     <PreviewToolbarView
       capability={capability}
-      personas={personas}
+      personas={personasOverride}
+      activePersonaId={activePersonaId}
       viewer={viewer}
       config={config}
       demoConfigured={demoConfigured}
@@ -299,6 +304,95 @@ describe('PreviewToolbar', () => {
     await waitFor(() => expect(mocks.invalidate).toHaveBeenCalled());
   });
 
+  it('tracks overlapping flag writes independently and reconciles once after both settle', async () => {
+    let resolveBlog!: (value: { ok: true }) => void;
+    let resolveAlerts!: (value: { ok: true }) => void;
+    const blogWrite = new Promise<{ ok: true }>((resolve) => {
+      resolveBlog = resolve;
+    });
+    const alertsWrite = new Promise<{ ok: true }>((resolve) => {
+      resolveAlerts = resolve;
+    });
+    mocks.updateSandboxFlags.mockImplementation(({ data }) =>
+      'blogEnabled' in data.config ? blogWrite : alertsWrite,
+    );
+    mocks.invalidate.mockResolvedValue(undefined);
+    renderToolbar();
+    openBoardSettings();
+
+    const blog = screen.getByRole('switch', { name: 'Blog' });
+    const alerts = screen.getByRole('switch', { name: 'Job alerts' });
+    fireEvent.click(blog);
+    fireEvent.click(alerts);
+
+    expect(blog).toHaveAttribute('aria-disabled', 'true');
+    expect(alerts).toHaveAttribute('aria-disabled', 'true');
+    expect(blog).not.toBeChecked();
+    expect(alerts).not.toBeChecked();
+
+    resolveAlerts({ ok: true });
+    await waitFor(() => expect(alerts).not.toHaveAttribute('aria-disabled'));
+    expect(blog).toHaveAttribute('aria-disabled', 'true');
+    expect(mocks.invalidate).not.toHaveBeenCalled();
+
+    resolveBlog({ ok: true });
+    await waitFor(() => expect(blog).not.toHaveAttribute('aria-disabled'));
+    await waitFor(() => expect(mocks.invalidate).toHaveBeenCalledOnce());
+    // Static test props deliberately remain stale; committed selections must
+    // not snap back while the sheet stays open.
+    expect(blog).not.toBeChecked();
+    expect(alerts).not.toBeChecked();
+  });
+
+  it('reports reconciliation failure separately after a flag write commits', async () => {
+    mocks.updateSandboxFlags.mockResolvedValue({ ok: true });
+    mocks.invalidate.mockRejectedValue(new Error('refresh unavailable'));
+    renderToolbar();
+    openBoardSettings();
+
+    const blog = screen.getByRole('switch', { name: 'Blog' });
+    fireEvent.click(blog);
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        /setting was updated.*couldn't refresh/i,
+      ),
+    );
+    expect(blog).not.toBeChecked();
+    expect(screen.getByRole('alert')).not.toHaveTextContent(
+      /couldn't update board settings/i,
+    );
+  });
+
+  it('clears a settled optimistic flag after the sheet closes mid-write', async () => {
+    let resolveWrite!: (value: { ok: true }) => void;
+    mocks.updateSandboxFlags.mockReturnValue(
+      new Promise<{ ok: true }>((resolve) => {
+        resolveWrite = resolve;
+      }),
+    );
+    mocks.invalidate.mockResolvedValue(undefined);
+    renderToolbar();
+    openBoardSettings();
+
+    const blog = screen.getByRole('switch', { name: 'Blog' });
+    expect(blog).toBeChecked();
+    fireEvent.click(blog);
+    expect(blog).not.toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+    await waitFor(() =>
+      expect(
+        document.querySelector('[data-test="preview-board-settings-panel"]'),
+      ).toBeNull(),
+    );
+    resolveWrite({ ok: true });
+    await waitFor(() => expect(mocks.invalidate).toHaveBeenCalledOnce());
+
+    openBoardSettings();
+    expect(screen.getByRole('switch', { name: 'Blog' })).toBeChecked();
+  }, 10_000);
+
   it('sets the tri-state talent directory via the enum config key', async () => {
     mocks.updateSandboxFlags.mockResolvedValue({ ok: true });
     renderToolbar();
@@ -363,6 +457,88 @@ describe('PreviewToolbar', () => {
     await waitFor(() => expect(mocks.reseedSandbox).toHaveBeenCalled());
     // Reseed purges the viewer's own board user — reload to the honest state.
     await waitFor(() => expect(reloadMock).toHaveBeenCalled());
+  });
+
+  it.each([
+    [
+      'typed failure',
+      () =>
+        Promise.resolve({
+          ok: false,
+          code: 'unknown',
+          message: 'nope',
+        } as const),
+    ],
+    ['thrown failure', () => Promise.reject(new Error('network'))],
+  ])('keeps reseed recoverable after a %s', async (_label, resultFactory) => {
+    mocks.reseedSandbox.mockReturnValue(resultFactory());
+    renderToolbar();
+    openMenu();
+    fireEvent.click(screen.getByRole('button', { name: 'Reseed' }));
+    const confirm = screen.getByRole('alertdialog');
+    fireEvent.click(within(confirm).getByRole('button', { name: 'Reseed' }));
+
+    await waitFor(() =>
+      expect(within(confirm).getByRole('alert')).toHaveTextContent(
+        /couldn't reseed.*try again/i,
+      ),
+    );
+    expect(confirm).toBeVisible();
+    expect(reloadMock).not.toHaveBeenCalled();
+    expect(
+      within(confirm).getByRole('button', { name: 'Reseed' }),
+    ).not.toBeDisabled();
+  });
+
+  it.each([
+    [
+      'unexpected result',
+      () =>
+        Promise.resolve({
+          ok: false,
+          code: 'unknown',
+          message: 'unknown',
+        } as const),
+    ],
+    ['rejected request', () => Promise.reject(new Error('network'))],
+  ])(
+    'shows feedback and preserves state for an %s persona switch',
+    async (_label, resultFactory) => {
+      mocks.switchPersona.mockReturnValue(resultFactory());
+      renderToolbar({ demoConfigured: true, dataSource: 'board' });
+      openMenu();
+      fireEvent.click(screen.getByText('Nadia New'));
+
+      await waitFor(() =>
+        expect(screen.getByRole('alert')).toHaveTextContent(
+          /couldn't switch persona.*session is unchanged/i,
+        ),
+      );
+      expect(cookieWrites).toHaveLength(0);
+      expect(reloadMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it('marks exactly the stable active persona when display names collide', () => {
+    const duplicateNames: PreviewPersona[] = personas.map((persona) => ({
+      ...persona,
+      displayName: 'Same Name',
+    }));
+    renderToolbar({
+      personasOverride: duplicateNames,
+      activePersonaId: 'employer-admin',
+      viewer: {
+        displayName: 'Same Name',
+        email: 'employer@example.com',
+        role: 'employer',
+      },
+    });
+    openMenu();
+
+    const rows = screen.getAllByRole('button', { name: /Same Name,/ });
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).not.toHaveAttribute('aria-current');
+    expect(rows[1]).toHaveAttribute('aria-current', 'true');
   });
 });
 

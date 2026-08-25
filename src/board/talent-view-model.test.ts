@@ -265,6 +265,7 @@ describe('talent view models', () => {
 
 describe('resolveTalentDetailCta', () => {
   const base = {
+    candidateHandle: 'ada-lovelace',
     detailHref: '/p/ada-lovelace',
     signInHref: '/auth/sign-in?returnTo=%2Ftalent',
     pricingHref: '/employers',
@@ -276,8 +277,16 @@ describe('resolveTalentDetailCta', () => {
     expect(
       resolveTalentDetailCta({ ...base, viewer: { kind: 'anonymous' } }),
     ).toEqual({
-      message: { label: 'Message', href: '/auth/sign-in?returnTo=%2Ftalent' },
-      viewProfile: { label: 'View profile', href: '/p/ada-lovelace' },
+      message: {
+        kind: 'link',
+        label: 'Message',
+        href: '/auth/sign-in?returnTo=%2Ftalent',
+      },
+      viewProfile: {
+        kind: 'link',
+        label: 'View profile',
+        href: '/p/ada-lovelace',
+      },
     });
   });
 
@@ -286,7 +295,11 @@ describe('resolveTalentDetailCta', () => {
       resolveTalentDetailCta({ ...base, viewer: { kind: 'candidate' } }),
     ).toEqual({
       message: null,
-      viewProfile: { label: 'View profile', href: '/p/ada-lovelace' },
+      viewProfile: {
+        kind: 'link',
+        label: 'View profile',
+        href: '/p/ada-lovelace',
+      },
     });
   });
 
@@ -297,20 +310,32 @@ describe('resolveTalentDetailCta', () => {
         viewer: { kind: 'employer', hasTalentAccess: false },
       }),
     ).toEqual({
-      message: { label: 'Message', href: '/employers' },
-      viewProfile: { label: 'View profile', href: '/p/ada-lovelace' },
+      message: { kind: 'link', label: 'Message', href: '/employers' },
+      viewProfile: {
+        kind: 'link',
+        label: 'View profile',
+        href: '/p/ada-lovelace',
+      },
     });
   });
 
-  it('hands an employer with access to the canonical profile and drops the duplicate link', () => {
+  it('opens a composer by public handle for an employer with talent access', () => {
     expect(
       resolveTalentDetailCta({
         ...base,
         viewer: { kind: 'employer', hasTalentAccess: true },
       }),
     ).toEqual({
-      message: { label: 'Message', href: '/p/ada-lovelace' },
-      viewProfile: null,
+      message: {
+        kind: 'compose',
+        label: 'Message',
+        candidateHandle: 'ada-lovelace',
+      },
+      viewProfile: {
+        kind: 'link',
+        label: 'View profile',
+        href: '/p/ada-lovelace',
+      },
     });
   });
 
@@ -322,7 +347,11 @@ describe('resolveTalentDetailCta', () => {
         showViewProfile: false,
       }),
     ).toEqual({
-      message: { label: 'Message', href: '/auth/sign-in?returnTo=%2Ftalent' },
+      message: {
+        kind: 'link',
+        label: 'Message',
+        href: '/auth/sign-in?returnTo=%2Ftalent',
+      },
       viewProfile: null,
     });
   });
@@ -331,6 +360,7 @@ describe('resolveTalentDetailCta', () => {
     expect(
       resolveTalentDetailCta({
         ...base,
+        candidateHandle: null,
         detailHref: null,
         viewer: { kind: 'employer', hasTalentAccess: true },
       }),
@@ -354,7 +384,11 @@ describe('resolveTalentDetailCta', () => {
         resolveTalentDetailCta({ ...base, viewer, messagingEnabled: false }),
       ).toEqual({
         message: null,
-        viewProfile: { label: 'View profile', href: '/p/ada-lovelace' },
+        viewProfile: {
+          kind: 'link',
+          label: 'View profile',
+          href: '/p/ada-lovelace',
+        },
       });
     },
   );

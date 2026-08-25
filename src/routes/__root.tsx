@@ -512,6 +512,7 @@ function RootChrome({
             <LazyPreviewToolbar
               capability={preview.capability}
               personas={preview.personas}
+              activePersonaId={preview.activePersonaId}
               viewer={
                 user
                   ? {

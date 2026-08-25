@@ -35,7 +35,11 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/components/ui/item';
-import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
+import {
+  reconcileCommittedAction,
+  toastActionError,
+  toastActionSuccess,
+} from '@/lib/action-toast';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 import type { Application, ApplicationsListQuery } from '@cavuno/board';
@@ -232,13 +236,14 @@ export function ApplicationsPageView({
                             await dependencies.withdrawApplication({
                               data: { id: application.id },
                             });
-                            await invalidate();
-                            void toastActionSuccess();
                           } catch {
                             void toastActionError();
-                          } finally {
                             setPendingId(null);
+                            return;
                           }
+                          void toastActionSuccess();
+                          await reconcileCommittedAction(invalidate);
+                          setPendingId(null);
                         }}
                       >
                         {m.meApplications_withdrawLabel()}

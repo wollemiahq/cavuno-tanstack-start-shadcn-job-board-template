@@ -171,7 +171,9 @@ export function ManagePageView({
   dependencies?: AlertManageDependencies;
 }) {
   const [pending, setPending] = useState(false);
-  const [actionError, setActionError] = useState(false);
+  const [actionError, setActionError] = useState<
+    'mutation' | 'reconciliation' | null
+  >(null);
 
   if ('error' in data) {
     return (
@@ -210,15 +212,20 @@ export function ManagePageView({
   }
   const run = async (action: () => Promise<void>) => {
     setPending(true);
-    setActionError(false);
+    setActionError(null);
     try {
       await action();
+    } catch {
+      setPending(false);
+      setActionError('mutation');
+      return;
+    }
+    try {
       await invalidate();
     } catch {
-      setActionError(true);
-    } finally {
-      setPending(false);
+      setActionError('reconciliation');
     }
+    setPending(false);
   };
 
   return (
@@ -233,9 +240,13 @@ export function ManagePageView({
           </header>
 
           {actionError ? (
-            <Alert variant="destructive">
+            <Alert
+              variant={actionError === 'mutation' ? 'destructive' : 'default'}
+            >
               <AlertDescription>
-                {m.alertsManage_actionErrorText()}
+                {actionError === 'mutation'
+                  ? m.alertsManage_actionErrorText()
+                  : m.candidateAction_reconciliationError()}
               </AlertDescription>
             </Alert>
           ) : null}

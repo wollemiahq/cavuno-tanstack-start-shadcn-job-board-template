@@ -115,4 +115,30 @@ describe('public job-alert management', () => {
     });
     expect(invalidate).not.toHaveBeenCalled();
   });
+
+  it('reports a committed unsubscribe as saved when refresh fails', async () => {
+    vi.mocked(dependencies.unsubscribeJobAlert).mockResolvedValue({
+      object: 'job_alert_manage_result',
+      success: true,
+    });
+    invalidate.mockRejectedValue(new Error('refresh unavailable'));
+    renderManage(
+      { state },
+      { subscription: 'subscription-1', token: 'subscription-token' },
+    );
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Unsubscribe from all alerts' }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Your change was saved, but this page could not refresh.',
+      );
+    });
+    expect(dependencies.unsubscribeJobAlert).toHaveBeenCalledOnce();
+    expect(screen.getByRole('alert')).not.toHaveTextContent(
+      'Something went wrong. Try again.',
+    );
+  });
 });

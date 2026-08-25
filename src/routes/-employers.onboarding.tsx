@@ -149,28 +149,37 @@ function WorkEmailStep({
 }) {
   const [editing, setEditing] = useState(!membership.workEmail);
   const [email, setEmail] = useState(membership.workEmail ?? '');
-  const [status, setStatus] = useState<'idle' | 'sending' | 'error'>('idle');
+  const [status, setStatus] = useState<
+    'idle' | 'sending' | 'error' | 'committed'
+  >('idle');
   const [message, setMessage] = useState('');
 
   async function send(target: string) {
     setStatus('sending');
     setMessage('');
+    let result: Awaited<ReturnType<typeof dependencies.sendWorkEmail>>;
     try {
-      const result = await dependencies.sendWorkEmail({
+      result = await dependencies.sendWorkEmail({
         data: { slug, body: { workEmail: target } },
       });
-      if (!result.ok) {
-        setStatus('error');
-        setMessage(boardErrorMessage(result));
-        return;
-      }
-      setStatus('idle');
-      setEditing(false);
-      await dependencies.invalidate();
     } catch {
       // A rejecting call (network drop, 5xx) must not strand "Sending".
       setStatus('error');
       setMessage(m.employerCompany_genericError());
+      return;
+    }
+    if (!result.ok) {
+      setStatus('error');
+      setMessage(boardErrorMessage(result));
+      return;
+    }
+    setStatus('committed');
+    setEditing(false);
+    try {
+      await dependencies.invalidate();
+    } catch {
+      setStatus('error');
+      setMessage(m.employerCompany_reconciliationError());
     }
   }
 
@@ -205,7 +214,7 @@ function WorkEmailStep({
           <Button
             variant="ghost"
             size="sm"
-            disabled={status === 'sending'}
+            disabled={status === 'sending' || status === 'committed'}
             onClick={() => send(verifiedEmail)}
           >
             {status === 'sending' ? <Spinner data-icon="inline-start" /> : null}
@@ -265,7 +274,7 @@ function WorkEmailStep({
           type="submit"
           size="lg"
           className="w-full"
-          disabled={status === 'sending'}
+          disabled={status === 'sending' || status === 'committed'}
         >
           {status === 'sending' ? <Spinner data-icon="inline-start" /> : null}
           {status === 'sending'
@@ -309,7 +318,9 @@ function CancelClaimButton({
   slug: string;
   dependencies: EmployerOnboardingViewDependencies;
 }) {
-  const [cancelling, setCancelling] = useState(false);
+  const [cancelling, setCancelling] = useState<false | 'pending' | 'committed'>(
+    false,
+  );
   const [error, setError] = useState<string | null>(null);
   return (
     <>
@@ -322,24 +333,31 @@ function CancelClaimButton({
         variant="ghost"
         size="sm"
         className="text-muted-foreground"
-        disabled={cancelling}
+        disabled={Boolean(cancelling)}
         onClick={async () => {
           setError(null);
-          setCancelling(true);
+          setCancelling('pending');
+          let result: Awaited<ReturnType<typeof dependencies.cancelClaim>>;
           try {
-            const result = await dependencies.cancelClaim({ data: { slug } });
-            if (!result.ok) {
-              setError(boardErrorMessage(result));
-              return;
-            }
+            result = await dependencies.cancelClaim({ data: { slug } });
+          } catch {
+            void dependencies.showActionError(m.employerCompany_genericError());
+            setCancelling(false);
+            return;
+          }
+          if (!result.ok) {
+            setError(boardErrorMessage(result));
+            setCancelling(false);
+            return;
+          }
+          setCancelling('committed');
+          try {
             await dependencies.invalidate();
             await dependencies.navigateToDashboard();
           } catch {
-            // Without this a rejecting call is an unhandled rejection and the
-            // silently-skipped navigation reads as a dead button.
-            void dependencies.showActionError(m.employerCompany_genericError());
-          } finally {
-            setCancelling(false);
+            void dependencies.showActionError(
+              m.employerCompany_reconciliationError(),
+            );
           }
         }}
       >

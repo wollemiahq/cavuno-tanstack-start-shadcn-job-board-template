@@ -32,7 +32,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
+import {
+  reconcileCommittedAction,
+  toastActionError,
+  toastActionReconciliationError,
+  toastActionSuccess,
+} from '@/lib/action-toast';
 import { searchString } from '@/lib/pagination';
 import type { CandidateProfile } from '@cavuno/board';
 
@@ -121,6 +126,7 @@ export interface ProfileFormDependencies {
     input: Parameters<typeof updateProfile>[0],
   ) => ReturnType<typeof updateProfile>;
   toastActionError: () => void | Promise<void>;
+  toastActionReconciliationError: () => void | Promise<void>;
   toastActionSuccess: () => void | Promise<void>;
 }
 
@@ -128,6 +134,7 @@ const profileFormDependencies: ProfileFormDependencies = {
   checkHandle,
   updateProfile,
   toastActionError,
+  toastActionReconciliationError,
   toastActionSuccess,
 };
 
@@ -219,14 +226,18 @@ export function ProfileForm({
                 openToRelocate: form.openToRelocate,
               };
           await dependencies.updateProfile({ data });
-          await router.invalidate();
-          setStatus('idle');
-          setHandleState({ checking: false, available: null });
-          void dependencies.toastActionSuccess();
         } catch {
           setStatus('idle');
           void dependencies.toastActionError();
+          return;
         }
+        setStatus('idle');
+        setHandleState({ checking: false, available: null });
+        void dependencies.toastActionSuccess();
+        await reconcileCommittedAction(
+          () => router.invalidate(),
+          dependencies.toastActionReconciliationError,
+        );
       }}
     >
       <FieldGroup className="gap-4">

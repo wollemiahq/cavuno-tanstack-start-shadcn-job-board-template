@@ -1,19 +1,22 @@
 import {
-  SITEMAP_CHUNK_SIZE,
-  buildBucketUrls,
-  chunk,
   parseBucketFilename,
   renderUrlset,
 } from '@cavuno/board/sitemap';
 /**
  * Sub-sitemap — one content bucket of the 8-bucket model, served as a plain
  * `<urlset>`. `$file` is e.g. `jobs-details.xml` (chunk 0) or `jobs-details-2.xml`
- * (chunk 1). Unknown bucket / non-xml → 404. CDN-cached for an hour.
+ * (chunk 1). Unknown bucket / non-xml → 404. Each XML response is cached for
+ * five minutes over the longer-lived shared context.
  */
 import { createFileRoute } from '@tanstack/react-router';
 import { getRequest } from '@tanstack/react-start/server';
 
-import { getBoard } from '../lib/board';
+import { getPrimaryBoard } from '../lib/board';
+import {
+  findSitemapChunk,
+  loadSitemapContext,
+  SITEMAP_RESPONSE_CACHE_CONTROL,
+} from '../lib/sitemap-context';
 import {
   LOCALIZED_BUCKETS,
   renderUrlsetWithAlternates,
@@ -31,23 +34,13 @@ export const Route = createFileRoute('/sitemap/$file')({
         if (!parsed) return notFoundResponse();
 
         const origin = new URL(getRequest().url).origin;
-        const urls = await buildBucketUrls(getBoard(), origin, parsed.bucket);
-        const chunks = chunk(urls, SITEMAP_CHUNK_SIZE);
-
-        // Chunk 0 always serves (an empty bucket → a valid empty urlset, since
-        // the index may list a bucket that turns out empty); a higher chunk that
-        // does not exist → 404.
-        const slice =
-          chunks[parsed.chunkIndex] ?? (parsed.chunkIndex === 0 ? [] : null);
-        if (slice === null) return notFoundResponse();
-
-        if (chunks.length > 1 && parsed.chunkIndex === 0) {
-          console.warn(
-            `[sitemap] bucket "${parsed.bucket}" spans ${chunks.length} chunks ` +
-              `(>${SITEMAP_CHUNK_SIZE} URLs); the index links only chunk 0. ` +
-              `Full chunk-indexing needs a shared build cache (hosted parity gap).`,
-          );
-        }
+        const context = await loadSitemapContext(getPrimaryBoard(), origin);
+        const slice = findSitemapChunk(
+          context,
+          parsed.bucket,
+          parsed.chunkIndex,
+        );
+        if (!slice) return notFoundResponse();
 
         // Self-canonical buckets carry xhtml:link locale alternates so
         // crawlers can DISCOVER /de/ and /fr/, not just infer them from
@@ -58,7 +51,7 @@ export const Route = createFileRoute('/sitemap/$file')({
         return new Response(xml, {
           headers: {
             'Content-Type': 'application/xml; charset=utf-8',
-            'Cache-Control': 'public, max-age=3600',
+            'Cache-Control': SITEMAP_RESPONSE_CACHE_CONTROL,
           },
         });
       },

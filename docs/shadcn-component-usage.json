@@ -56,6 +56,7 @@
       "name": "alert",
       "status": "used",
       "productionReferences": [
+        "src/components/board/apply-button.tsx",
         "src/components/board/company-search-detail-state.tsx",
         "src/components/board/job-search-detail-state.tsx",
         "src/components/board/job-search-page.tsx",
@@ -66,6 +67,7 @@
         "src/components/post-job-form.tsx",
         "src/content/legal/placeholder-callout.tsx",
         "src/routes/-alerts.manage.tsx",
+        "src/routes/-auth.sign-in.tsx",
         "src/routes/-auth.verify-email-required.tsx",
         "src/routes/-employers.dashboard.tsx",
         "src/routes/-employers.onboarding.tsx",
@@ -81,7 +83,8 @@
         "src/components/employer/applicant-pipeline-board.tsx",
         "src/components/employer/company-delete-danger-zone.tsx",
         "src/components/employer/company-members-table.tsx",
-        "src/components/preview/preview-toolbar.tsx"
+        "src/components/preview/preview-toolbar.tsx",
+        "src/routes/-employers.company-jobs.tsx"
       ]
     },
     {
@@ -202,9 +205,9 @@
         "src/components/board/listing-search-band.tsx",
         "src/components/board/salary-sections.tsx",
         "src/components/board/save-job-button.tsx",
+        "src/components/board/talent-message-action.tsx",
         "src/components/board/talent-search-detail-state.tsx",
         "src/components/board/talent-search-page.tsx",
-        "src/components/board/talent-search-result-detail.tsx",
         "src/components/candidate-route-state.tsx",
         "src/components/cookie-consent.tsx",
         "src/components/danger-zone.tsx",
@@ -262,12 +265,12 @@
         "src/routes/-messages-dock-controller.tsx",
         "src/routes/-restricted-talent-directory.tsx",
         "src/routes/-settings.tsx",
-        "src/routes/-talent-profile-view.tsx",
         "src/routes/auth.employer.sign-up.tsx",
         "src/routes/companies.$companySlug.index.tsx",
         "src/routes/embed.jobs.tsx",
         "src/routes/employers.invites.accept.tsx",
         "src/routes/matches.tsx",
+        "src/routes/messages.$conversationId.tsx",
         "src/routes/p.$handle.tsx",
         "src/routes/password.tsx",
         "src/routes/salaries.index.tsx",
@@ -395,6 +398,7 @@
       "status": "used",
       "productionReferences": [
         "src/components/alert-manager.tsx",
+        "src/components/board/talent-message-action.tsx",
         "src/components/education-section.tsx",
         "src/components/employer/applicant-pipeline-board.tsx",
         "src/components/employer/invite-member-dialog.tsx",

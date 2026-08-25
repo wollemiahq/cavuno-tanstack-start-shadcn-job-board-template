@@ -12,7 +12,11 @@ import type {
   StarterUpdateNotificationPreferenceBody,
 } from '../server/settings';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
+import {
+  reconcileCommittedAction,
+  toastActionError,
+  toastActionSuccess,
+} from '@/lib/action-toast';
 import type { NotificationPreference } from '@cavuno/board';
 
 type StarterNotificationPreference = Omit<NotificationPreference, 'channel'> & {
@@ -84,13 +88,14 @@ export function NotificationSettings({
                         subscribed: isSelected,
                       },
                     });
-                    await router.invalidate();
-                    void toastActionSuccess();
                   } catch {
                     void toastActionError();
-                  } finally {
                     setPending(null);
+                    return;
                   }
+                  void toastActionSuccess();
+                  await reconcileCommittedAction(() => router.invalidate());
+                  setPending(null);
                 }}
               />
             </li>

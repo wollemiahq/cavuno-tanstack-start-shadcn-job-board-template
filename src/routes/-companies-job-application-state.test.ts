@@ -78,7 +78,7 @@ describe('full job application state', () => {
     expect(myApplicationForJob).toHaveBeenCalledWith({
       data: { jobSlug: 'platform-engineer' },
     });
-    expect(data).toMatchObject({ alreadyApplied: true });
+    expect(data).toMatchObject({ applicationState: 'applied' });
   });
 
   it('does not request private application state for an unverified viewer', async () => {
@@ -95,7 +95,7 @@ describe('full job application state', () => {
     const data = await loadJobDetail(jobDetailLoaderInput());
 
     expect(myApplicationForJob).not.toHaveBeenCalled();
-    expect(data).toMatchObject({ alreadyApplied: false });
+    expect(data).toMatchObject({ applicationState: 'not-requested' });
   });
 
   it('keeps a valid public job available when private application state fails', async () => {
@@ -107,7 +107,7 @@ describe('full job application state', () => {
 
     expect(data).toMatchObject({
       job: { slug: 'platform-engineer' },
-      alreadyApplied: false,
+      applicationState: 'unknown',
     });
   });
 });

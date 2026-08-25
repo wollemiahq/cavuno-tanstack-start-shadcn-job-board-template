@@ -54,10 +54,30 @@ export interface PreviewRoster {
   password: string;
 }
 
+/** Resolve the current safe roster id while raw email stays server-side. */
+export function activePersonaIdForViewer(
+  personas: readonly RawPreviewPersona[],
+  viewerEmail: string | null,
+): string | null {
+  const normalizedViewerEmail = viewerEmail?.trim().toLowerCase() ?? null;
+  if (!normalizedViewerEmail) return null;
+  return (
+    personas.find(
+      (persona) => persona.email.trim().toLowerCase() === normalizedViewerEmail,
+    )?.id ?? null
+  );
+}
+
 /** What the toolbar loads: capability + the browser-safe roster. */
 export interface PreviewState {
   capability: PreviewCapability;
   personas: PreviewPersona[];
+  /**
+   * Stable, browser-safe roster identity for the signed-in preview viewer.
+   * Resolved by matching email only on the server; credentials never cross
+   * the projection boundary.
+   */
+  activePersonaId: string | null;
   /**
    * Dual-source: builder injected `CAVUNO_DEMO_BOARD`. When true the toolbar
    * shows the "Your board (real data)" entry and capability is resolved from
@@ -176,23 +196,37 @@ function rewriteUrlOrigin(
  * the viewer instead of the hosted board. A conservative transform of the
  * platform's already-sanitized HTML (AGENTS.md rule 4): it matches only the
  * quoted value of `href` attributes and rewrites ONLY the origin — no other
- * string is interpolated, and non-board-origin hrefs (external links, relative
- * links, `mailto:`) are left untouched.
+ * string is interpolated. Rewritten/same-app links are also targeted at the
+ * top-level app for the captured-email viewer; external links, relative links,
+ * and `mailto:` links are left untouched.
  */
 export function rewriteEmailHtmlLinks(
   html: string,
   origins: PreviewEmailOrigins,
 ): string {
-  if (origins.boardOrigin === origins.appOrigin) return html;
-  return html.replace(
-    /(\bhref\s*=\s*)(["'])(.*?)\2/gi,
-    (match, prefix: string, quote: string, url: string) => {
-      const rewritten = rewriteUrlOrigin(url, origins);
-      return rewritten === url
-        ? match
-        : `${prefix}${quote}${rewritten}${quote}`;
-    },
-  );
+  return html.replace(/<a\b[^>]*>/gi, (anchor) => {
+    const href = anchor.match(/(\bhref\s*=\s*)(["'])(.*?)\2/i);
+    if (!href) return anchor;
+
+    const [attribute, prefix, quote, url] = href;
+    if (!attribute || !prefix || !quote || url == null) return anchor;
+    const rewritten = rewriteUrlOrigin(url, origins);
+    if (toOrigin(rewritten) !== origins.appOrigin) return anchor;
+
+    // Completion links must leave the opaque email frame and open in the
+    // local/top-level app. Replace any platform-supplied target so there is a
+    // single unambiguous destination; scripts and same-origin access remain
+    // disabled by the iframe's sandbox.
+    const withoutTarget = anchor.replace(
+      /\s+target\s*=\s*(?:["'][^"']*["']|[^\s>]+)/gi,
+      '',
+    );
+    const withHref = withoutTarget.replace(
+      attribute,
+      `${prefix}${quote}${rewritten}${quote}`,
+    );
+    return withHref.replace(/>$/, ' target="_top">');
+  });
 }
 
 /**
@@ -217,14 +251,13 @@ export function rewriteEmailTextLinks(
  * Rewrite the board-origin links in one captured email (HTML body + plain-text
  * fallback) to the viewer's own origin, leaving everything else — subject,
  * recipient, external links — untouched. Pure so the server fn's per-email map
- * is unit-testable without the runtime; a no-op when the two origins match
- * (e.g. the viewer is served from the board's own origin).
+ * is unit-testable without the runtime. When the origins already match, the
+ * top-level navigation target is still applied to same-app links.
  */
 export function rewritePreviewEmailLinks(
   email: PreviewEmail,
   origins: PreviewEmailOrigins,
 ): PreviewEmail {
-  if (origins.boardOrigin === origins.appOrigin) return email;
   return {
     ...email,
     html: rewriteEmailHtmlLinks(email.html, origins),

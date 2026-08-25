@@ -20,6 +20,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { toastActionError } from '@/lib/action-toast';
 import type { BoardUser, CompanyMembership } from '@cavuno/board';
 
 export type SignOutAction = () => Promise<void | { ok: true }>;
@@ -181,12 +182,19 @@ export function HeaderAccountMenu({
             } catch {
               // Keep the truthful signed-in state so the user can retry.
               onSignOutPendingChange(false);
+              void toastActionError();
               return;
             }
             onSignOut();
             onSignOutPendingChange(false);
-            await router.navigate({ to: '/' });
-            await router.invalidate();
+            try {
+              await router.navigate({ to: '/' });
+              await router.invalidate();
+            } catch {
+              // The cookie is already cleared. Reconcile with a hard reload
+              // instead of presenting a retryable sign-out failure.
+              window.location.assign('/');
+            }
           }}
         >
           {m.accountHome_signOutLabel()}

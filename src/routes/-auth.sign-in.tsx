@@ -15,6 +15,7 @@ import {
 import { m } from '../paraglide/messages';
 
 import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { boardErrorMessage } from '@/lib/board-error-message';
@@ -22,14 +23,14 @@ import { cn } from '@/lib/utils';
 
 export function SignInView({
   returnTo,
+  notice,
   signInAction,
   requestMagicLinkAction,
   getOAuthAuthorizationUrlAction,
-  invalidate,
-  navigate,
   assignLocation,
 }: {
   returnTo: string;
+  notice?: 'password-reset';
   signInAction: (input: {
     data: { email: string; password: string };
   }) => Promise<
@@ -142,6 +143,13 @@ export function SignInView({
 
   return (
     <AuthCard title={m.authSignIn_title()}>
+      {notice === 'password-reset' ? (
+        <Alert role="status">
+          <AlertDescription>
+            {m.authSignIn_passwordResetSuccessText()}
+          </AlertDescription>
+        </Alert>
+      ) : null}
       <RadioGroup
         name="sign-in-method"
         value={mode}
@@ -184,8 +192,11 @@ export function SignInView({
           setError(null);
           const form = new FormData(event.currentTarget);
           const email = String(form.get('email'));
+          let result:
+            | Awaited<ReturnType<typeof signInAction>>
+            | Awaited<ReturnType<typeof requestMagicLinkAction>>;
           try {
-            const result =
+            result =
               mode === 'password'
                 ? await signInAction({
                     data: {
@@ -199,19 +210,24 @@ export function SignInView({
                       returnTo,
                     },
                   });
-            if (result.ok && mode === 'password') {
-              await invalidate();
-              await navigate(returnTo);
-            } else if (result.ok) {
-              setSentTo(email);
-            } else {
-              setError(boardErrorMessage(result));
-            }
           } catch {
             setError(m.candidateAction_errorText());
-          } finally {
             setPending(false);
+            return;
           }
+          if (result.ok && mode === 'password') {
+            // The httpOnly session is committed. A hard navigation both
+            // reconciles the shell and prevents later router failures from
+            // being reported as an authentication failure.
+            assignLocation(returnTo);
+            return;
+          }
+          if (result.ok) {
+            setSentTo(email);
+          } else {
+            setError(boardErrorMessage(result));
+          }
+          setPending(false);
         }}
       >
         <Field

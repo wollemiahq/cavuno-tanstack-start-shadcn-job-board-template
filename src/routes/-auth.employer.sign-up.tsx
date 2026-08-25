@@ -10,6 +10,7 @@ import {
   type MarketingConsentCopy,
 } from '@/components/registration-page';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
+import { reconcileCommittedAction } from '@/lib/action-toast';
 
 export async function loadEmployerSignUp(
   actions: {
@@ -98,7 +99,7 @@ export function EmployerSignUpView({
       successHref="/auth/verify-email-required?returnTo=%2Femployers%2Fdashboard"
       onSubmit={async (values) => {
         const result = await signUpEmployerAction({ data: values });
-        if (result.ok) await invalidate();
+        if (result.ok) await reconcileCommittedAction(invalidate);
         return result;
       }}
       footer={footer}

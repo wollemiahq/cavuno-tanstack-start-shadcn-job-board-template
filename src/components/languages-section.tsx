@@ -44,7 +44,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { toastActionError } from '@/lib/action-toast';
+import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
 import { searchString } from '@/lib/pagination';
 
 type Language = { name: string; proficiency: string };
@@ -80,14 +80,14 @@ export function LanguagesSection({ languages }: { languages: Language[] }) {
     setPending(true);
     try {
       await replaceLanguages({ data: { languages: next } });
-      await router.invalidate();
-      return true;
     } catch {
       void toastActionError();
       return false;
     } finally {
       setPending(false);
     }
+    await reconcileCommittedAction(() => router.invalidate());
+    return true;
   };
 
   const submit = async () => {

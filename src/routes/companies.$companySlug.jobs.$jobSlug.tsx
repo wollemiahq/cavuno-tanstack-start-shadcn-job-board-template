@@ -72,7 +72,7 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
 const rootApi = getRouteApi('__root__');
 
 function JobDetailPage() {
-  const { job, user, similar, companySummary, alreadyApplied } =
+  const { job, user, similar, companySummary, applicationState } =
     Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const defaults = jobAlertDefaultsFromJob(job);
@@ -104,7 +104,8 @@ function JobDetailPage() {
             returnTo={returnTo}
             nativeApplications={board.features.nativeApplications}
             viewer={user ? { emailVerified: user.emailVerified } : null}
-            alreadyApplied={alreadyApplied}
+            applicationState={applicationState}
+            onRetryApplicationState={() => router.invalidate()}
             onPrepareApply={(jobSlug) =>
               prepareApplyToJob({ data: { jobSlug } })
             }

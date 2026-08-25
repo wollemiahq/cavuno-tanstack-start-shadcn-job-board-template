@@ -276,9 +276,14 @@ export function EmployerJobForm({
   const [form, setForm] = useState(() => initialForm(job, countryName));
   /** `option:{id}` (existing credit) or `plan:{planId}` (new purchase). */
   const [selectedBilling, setSelectedBilling] = useState<string | null>(null);
-  const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
+  const [status, setStatus] = useState<
+    'idle' | 'saving' | 'error' | 'committed'
+  >('idle');
   const [message, setMessage] = useState('');
   const [notice, setNotice] = useState('');
+  const [committedCheckoutJobId, setCommittedCheckoutJobId] = useState<
+    string | null
+  >(null);
   const [fieldErrors, setFieldErrors] = useState<{
     description?: boolean;
     officeLocations?: boolean;
@@ -400,6 +405,8 @@ export function EmployerJobForm({
   }
 
   async function runCheckout(jobId: string) {
+    setStatus('saving');
+    setMessage('');
     const option = billingOptions.find(
       (candidate) => `option:${candidate.id}` === selectedBilling,
     );
@@ -410,11 +417,18 @@ export function EmployerJobForm({
           planId: (selectedBilling ?? '').replace(/^plan:/, ''),
         };
 
-    const checkout = await actions.checkoutJob({
-      data: { slug, id: jobId, body: { billing } },
-    });
+    let checkout: Awaited<ReturnType<typeof actions.checkoutJob>>;
+    try {
+      checkout = await actions.checkoutJob({
+        data: { slug, id: jobId, body: { billing } },
+      });
+    } catch {
+      setStatus('committed');
+      setMessage(m.employerCompany_genericError());
+      return;
+    }
     if (!checkout.ok) {
-      setStatus('error');
+      setStatus('committed');
       setMessage(boardErrorMessage(checkout));
       return;
     }
@@ -424,23 +438,37 @@ export function EmployerJobForm({
       return;
     }
     if (outcome.status === 'invoice_sent') {
-      setStatus('idle');
+      setCommittedCheckoutJobId(null);
+      setStatus('committed');
       setNotice(m.employerCompany_invoiceSentText());
-      await actions.invalidate();
+      try {
+        await actions.invalidate();
+      } catch {
+        setNotice(
+          `${m.employerCompany_invoiceSentText()} ${m.employerCompany_reconciliationError()}`,
+        );
+      }
       return;
     }
+    setCommittedCheckoutJobId(null);
     await goToList();
   }
 
   async function goToList() {
-    await actions.invalidate();
-    await actions.navigate({
-      to: '/employers/companies/$slug',
-      params: { slug },
-    });
+    setStatus('committed');
+    try {
+      await actions.invalidate();
+      await actions.navigate({
+        to: '/employers/companies/$slug',
+        params: { slug },
+      });
+    } catch {
+      setNotice(m.employerCompany_reconciliationError());
+    }
   }
 
   async function submit() {
+    if (status === 'saving' || status === 'committed') return;
     const applyExternal =
       form.applyMethod === 'external' &&
       normalizeApplicationTarget(form.applicationTarget) === undefined;
@@ -471,50 +499,58 @@ export function EmployerJobForm({
     setMessage('');
     setNotice('');
 
-    // The `!result.ok` branches carry the server's message; this catch covers
-    // a rejecting call (network drop, 5xx) so the form never sticks on
-    // "Saving" with no feedback.
-    try {
-      if (mode.kind === 'create') {
-        const body = buildBody();
-        if (applicationUrl) body.applicationUrl = applicationUrl;
-        const result = await actions.createJob({ data: { slug, body } });
-        if (!result.ok) {
-          setStatus('error');
-          setMessage(boardErrorMessage(result));
-          return;
-        }
-        if (!selectedBilling) {
-          await goToList();
-          return;
-        }
-        await runCheckout(result.data.id);
+    if (mode.kind === 'create') {
+      const body = buildBody();
+      if (applicationUrl) body.applicationUrl = applicationUrl;
+      let result: Awaited<ReturnType<typeof actions.createJob>>;
+      try {
+        result = await actions.createJob({ data: { slug, body } });
+      } catch {
+        setStatus('error');
+        setMessage(m.employerCompany_genericError());
         return;
       }
-
-      // Edit.
-      const body = {
-        ...buildBody(),
-        ...salaryClear(),
-        applicationUrl: applicationUrl ?? null,
-      } satisfies UpdateEmployerJobBody;
-      const result = await actions.updateJob({
-        data: { slug, id: mode.jobId, body },
-      });
       if (!result.ok) {
         setStatus('error');
         setMessage(boardErrorMessage(result));
         return;
       }
-      if (isDraftEdit && selectedBilling) {
-        await runCheckout(mode.jobId);
+      if (!selectedBilling) {
+        await goToList();
         return;
       }
-      await goToList();
+      setCommittedCheckoutJobId(result.data.id);
+      await runCheckout(result.data.id);
+      return;
+    }
+
+    // Edit.
+    const body = {
+      ...buildBody(),
+      ...salaryClear(),
+      applicationUrl: applicationUrl ?? null,
+    } satisfies UpdateEmployerJobBody;
+    let result: Awaited<ReturnType<typeof actions.updateJob>>;
+    try {
+      result = await actions.updateJob({
+        data: { slug, id: mode.jobId, body },
+      });
     } catch {
       setStatus('error');
       setMessage(m.employerCompany_genericError());
+      return;
     }
+    if (!result.ok) {
+      setStatus('error');
+      setMessage(boardErrorMessage(result));
+      return;
+    }
+    if (isDraftEdit && selectedBilling) {
+      setCommittedCheckoutJobId(mode.jobId);
+      await runCheckout(mode.jobId);
+      return;
+    }
+    await goToList();
   }
 
   const submitLabel =
@@ -1011,7 +1047,10 @@ export function EmployerJobForm({
       {/* In-page form: primary action left-aligned, Cancel a ghost beside it —
           a single inline row, not a stacked pair. */}
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" disabled={status === 'saving'}>
+        <Button
+          type="submit"
+          disabled={status === 'saving' || status === 'committed'}
+        >
           {submitLabel}
         </Button>
         <Button
@@ -1026,7 +1065,18 @@ export function EmployerJobForm({
         >
           {m.employerOnboarding_cancelLabel()}
         </Button>
-        {status === 'error' ? <FieldError>{message}</FieldError> : null}
+        {status === 'error' || (status === 'committed' && message) ? (
+          <FieldError>{message}</FieldError>
+        ) : null}
+        {status === 'committed' && committedCheckoutJobId && message ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void runCheckout(committedCheckoutJobId)}
+          >
+            {m.postJob_checkoutButtonLabel()}
+          </Button>
+        ) : null}
         {notice ? (
           <p role="status" className="text-sm">
             {notice}

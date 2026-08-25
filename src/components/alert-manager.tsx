@@ -43,7 +43,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
+import {
+  reconcileCommittedAction,
+  toastActionError,
+  toastActionReconciliationError,
+  toastActionSuccess,
+} from '@/lib/action-toast';
 import type { Alert, AlertBody } from '@cavuno/board';
 
 const REMOTE_OPTIONS = ['on_site', 'hybrid', 'remote'] as const;
@@ -318,6 +323,7 @@ export interface AlertManagerDependencies {
   invalidate: () => Promise<void>;
   notifySuccess: () => void;
   notifyError: () => void;
+  notifyReconciliationError: () => void;
 }
 
 export function AlertManagerView({
@@ -427,13 +433,17 @@ export function AlertManagerView({
                           await dependencies.deleteAlert({
                             data: { id: alert.id },
                           });
-                          await dependencies.invalidate();
-                          dependencies.notifySuccess();
                         } catch {
                           dependencies.notifyError();
-                        } finally {
                           setPendingDeleteId(null);
+                          return;
                         }
+                        dependencies.notifySuccess();
+                        await reconcileCommittedAction(
+                          dependencies.invalidate,
+                          dependencies.notifyReconciliationError,
+                        );
+                        setPendingDeleteId(null);
                       }}
                     >
                       {m.alertManager_deleteLabel()}
@@ -463,8 +473,11 @@ export function AlertManagerView({
             onSubmit={async (body) => {
               await dependencies.createAlert({ data: body });
               setCreating(false);
-              await dependencies.invalidate();
               dependencies.notifySuccess();
+              await reconcileCommittedAction(
+                dependencies.invalidate,
+                dependencies.notifyReconciliationError,
+              );
             }}
           />
         </DialogContent>
@@ -495,8 +508,11 @@ export function AlertManagerView({
                     data: { id: editingAlert.id, body },
                   });
                   setEditing(null);
-                  await dependencies.invalidate();
                   dependencies.notifySuccess();
+                  await reconcileCommittedAction(
+                    dependencies.invalidate,
+                    dependencies.notifyReconciliationError,
+                  );
                 }}
               />
             ) : null}
@@ -526,6 +542,7 @@ export function AlertManager({
         invalidate: () => router.invalidate(),
         notifySuccess: () => void toastActionSuccess(),
         notifyError: () => void toastActionError(),
+        notifyReconciliationError: () => void toastActionReconciliationError(),
       }}
     />
   );

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { formatDate } from '@cavuno/board/format';
 import { LogOut, Trash2 } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
@@ -106,21 +107,10 @@ function sortInvites(invites: CompanyMemberInvite[]): CompanyMemberInvite[] {
   });
 }
 
-/**
- * Fixed locale so the server render and the browser agree on the string
- * (a bare toLocaleDateString would hydration-mismatch the tooltip).
- */
-function formatExpiryDate(timestamp: number | string): string {
-  return new Date(timestamp).toLocaleDateString('en-GB', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
 export function CompanyMembersTable({
   slug,
   companyName,
+  locale,
   members,
   invites,
   isAdmin,
@@ -129,6 +119,7 @@ export function CompanyMembersTable({
 }: {
   slug: string;
   companyName: string;
+  locale: string;
   members: CompanyMember[];
   invites: CompanyMemberInvite[];
   isAdmin: boolean;
@@ -179,7 +170,11 @@ export function CompanyMembersTable({
         }
         return;
       }
-      await actions.invalidate();
+      try {
+        await actions.invalidate();
+      } catch {
+        actions.toastError(m.employerCompany_reconciliationError());
+      }
     } catch {
       actions.toastError(m.employerMembers_updateError());
     } finally {
@@ -204,7 +199,11 @@ export function CompanyMembersTable({
         return;
       }
       setRemoveMemberId(null);
-      await actions.invalidate();
+      try {
+        await actions.invalidate();
+      } catch {
+        actions.toastError(m.employerCompany_reconciliationError());
+      }
     } catch {
       actions.toastError(m.employerMembers_updateError());
     } finally {
@@ -228,8 +227,12 @@ export function CompanyMembersTable({
       actions.toastSuccess(
         m.employerMembers_leaveSuccessToast({ company: companyName }),
       );
-      await actions.navigateToDashboard();
       setLeaveOpen(false);
+      try {
+        await actions.navigateToDashboard();
+      } catch {
+        actions.toastError(m.employerCompany_reconciliationError());
+      }
     } catch {
       actions.toastError(m.employerMembers_updateError());
     } finally {
@@ -247,7 +250,11 @@ export function CompanyMembersTable({
         actions.toastError(m.employerMembers_revokeError());
         return;
       }
-      await actions.invalidate();
+      try {
+        await actions.invalidate();
+      } catch {
+        actions.toastError(m.employerCompany_reconciliationError());
+      }
     } catch {
       actions.toastError(m.employerMembers_revokeError());
     } finally {
@@ -396,7 +403,7 @@ export function CompanyMembersTable({
                         </TooltipTrigger>
                         <TooltipContent>
                           {m.employerMembers_expiresTooltip({
-                            date: formatExpiryDate(invite.expiresAt),
+                            date: formatDate(locale, invite.expiresAt) ?? '',
                           })}
                         </TooltipContent>
                       </Tooltip>

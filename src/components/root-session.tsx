@@ -28,6 +28,7 @@ export const EMPTY_ROOT_PREVIEW: RootPreview = {
     reason: 'not-sandbox',
   },
   personas: [],
+  activePersonaId: null,
   demoConfigured: false,
   demoBoardPrivate: false,
   dataSource: 'board',

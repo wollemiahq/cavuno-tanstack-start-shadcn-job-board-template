@@ -41,10 +41,14 @@ function validateSearch(search: UrlSearchInput) {
   return validate(search);
 }
 
-function renderSignIn(returnTo: string) {
+function renderSignIn(
+  returnTo: string,
+  notice?: Parameters<typeof SignInView>[0]['notice'],
+) {
   return render(
     <SignInView
       returnTo={returnTo}
+      notice={notice}
       signInAction={mocks.signIn}
       requestMagicLinkAction={mocks.requestMagicLink}
       getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
@@ -66,10 +70,26 @@ describe('/auth/sign-in search contract', () => {
     });
   });
 
+  it('preserves only the bounded password-reset marker and renders its durable status', () => {
+    expect(
+      validateSearch({
+        returnTo: '/account',
+        reset: 'password',
+      }),
+    ).toEqual({ returnTo: '/account', reset: 'password' });
+    expect(validateSearch({ reset: 'unexpected' })).toEqual({});
+
+    renderSignIn('/account', 'password-reset');
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Your password was updated. Sign in with your new password.',
+    );
+  });
+
   it('returns a password sign-in to the validated destination', async () => {
     const returnTo =
       '/companies/acme/jobs/platform-engineer?source=search#apply';
     mocks.signIn.mockResolvedValue({ ok: true });
+    mocks.invalidate.mockRejectedValue(new Error('refresh unavailable'));
     const { container } = renderSignIn(returnTo);
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
@@ -80,9 +100,10 @@ describe('/auth/sign-in search contract', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
 
     await waitFor(() => {
-      expect(mocks.invalidate).toHaveBeenCalledOnce();
-      expect(mocks.navigate).toHaveBeenCalledWith(returnTo);
+      expect(mocks.assignLocation).toHaveBeenCalledWith(returnTo);
     });
+    expect(mocks.invalidate).not.toHaveBeenCalled();
+    expect(mocks.navigate).not.toHaveBeenCalled();
   });
 
   it('recovers when password sign-in rejects unexpectedly', async () => {

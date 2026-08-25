@@ -32,7 +32,9 @@ export function LogoUpload({
   actions: LogoUploadActions;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [status, setStatus] = useState<'idle' | 'pending' | 'error'>('idle');
+  const [status, setStatus] = useState<
+    'idle' | 'pending' | 'upload_error' | 'reconciliation_error'
+  >('idle');
 
   return (
     <div className="flex items-center gap-4">
@@ -53,10 +55,16 @@ export function LogoUpload({
             formData.append('logo', file);
             try {
               await actions.uploadCompanyLogo({ data: formData });
+            } catch {
+              setStatus('upload_error');
+              if (inputRef.current) inputRef.current.value = '';
+              return;
+            }
+            try {
               await actions.invalidate();
               setStatus('idle');
             } catch {
-              setStatus('error');
+              setStatus('reconciliation_error');
             }
             if (inputRef.current) inputRef.current.value = '';
           }}
@@ -64,16 +72,18 @@ export function LogoUpload({
         <Button
           variant="outline"
           size="sm"
-          disabled={status === 'pending'}
+          disabled={status === 'pending' || status === 'reconciliation_error'}
           onClick={() => inputRef.current?.click()}
         >
           {status === 'pending'
             ? m.logoUpload_uploadingLabel()
             : m.logoUpload_changeLogoLabel()}
         </Button>
-        {status === 'error' ? (
+        {status === 'upload_error' || status === 'reconciliation_error' ? (
           <p className="text-destructive text-xs" role="status">
-            {m.logoUpload_uploadErrorText()}
+            {status === 'upload_error'
+              ? m.logoUpload_uploadErrorText()
+              : m.employerCompany_reconciliationError()}
           </p>
         ) : null}
       </div>

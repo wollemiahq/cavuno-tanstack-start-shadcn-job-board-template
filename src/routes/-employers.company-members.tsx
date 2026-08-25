@@ -226,6 +226,7 @@ export function CompanyMembersPageView({
           <CompanyMembersTable
             slug={workspace.slug}
             companyName={companyName}
+            locale={getLocale()}
             members={members.data}
             invites={invites.data}
             isAdmin={isAdmin}

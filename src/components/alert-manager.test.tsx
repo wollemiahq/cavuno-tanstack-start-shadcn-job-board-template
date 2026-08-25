@@ -19,6 +19,7 @@ const mocks = {
   updateMyAlert: vi.fn<AlertManagerDependencies['updateAlert']>(),
   toastActionSuccess: vi.fn(),
   toastActionError: vi.fn(),
+  toastActionReconciliationError: vi.fn(),
 };
 
 import { AlertManagerView } from './alert-manager';
@@ -69,6 +70,7 @@ function renderManager({
         invalidate: mocks.invalidate,
         notifySuccess: mocks.toastActionSuccess,
         notifyError: mocks.toastActionError,
+        notifyReconciliationError: mocks.toastActionReconciliationError,
       }}
     />,
   );
@@ -216,5 +218,20 @@ describe('AlertManager', () => {
       expect(deleteButton).toBeEnabled();
     });
     expect(mocks.invalidate).not.toHaveBeenCalled();
+  });
+
+  it('keeps a committed delete successful when refresh reconciliation fails', async () => {
+    mocks.deleteMyAlert.mockResolvedValue({ ok: true });
+    mocks.invalidate.mockRejectedValue(new Error('refresh unavailable'));
+    renderManager({ alerts: [alert] });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() => {
+      expect(mocks.toastActionSuccess).toHaveBeenCalledOnce();
+      expect(mocks.toastActionReconciliationError).toHaveBeenCalledOnce();
+      expect(screen.getByRole('button', { name: 'Delete' })).toBeEnabled();
+    });
+    expect(mocks.toastActionError).not.toHaveBeenCalled();
   });
 });

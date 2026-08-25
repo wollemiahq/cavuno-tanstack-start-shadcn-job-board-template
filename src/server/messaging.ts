@@ -9,6 +9,7 @@
  * Writes are merge-only (the grant is already established by page load) and
  * verify-gated (only a verified board user may send).
  */
+import { isBoardApiError } from '@cavuno/board';
 import { createServerFn } from '@tanstack/react-start';
 
 import { getBoard } from '../lib/board';
@@ -122,7 +123,17 @@ export const startConversation = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }) => {
     const headers = authedHeaders(context);
     await requireVerifiedBoardUser(headers);
-    return getBoard().me.conversations.start(data, { headers });
+    try {
+      const message = await getBoard().me.conversations.start(data, {
+        headers,
+      });
+      return { ok: true as const, data: message };
+    } catch (error) {
+      if (isBoardApiError(error)) {
+        return { ok: false as const, code: error.code, message: error.message };
+      }
+      throw error;
+    }
   });
 
 export const markRead = createServerFn({ method: 'POST' })

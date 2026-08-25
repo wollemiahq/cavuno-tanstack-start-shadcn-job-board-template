@@ -76,6 +76,8 @@ export interface PreviewToolbarDependencies {
 export interface PreviewToolbarProps {
   capability: PreviewCapability;
   personas: PreviewPersona[];
+  /** Stable server-resolved roster id for the current signed-in viewer. */
+  activePersonaId?: string | null;
   viewer: PreviewViewer | null;
   config: PreviewBoardConfig;
   /** Builder injected `CAVUNO_DEMO_BOARD`. */
@@ -119,6 +121,7 @@ export interface PreviewToolbarProps {
 export function PreviewToolbarView({
   capability,
   personas,
+  activePersonaId = null,
   viewer,
   config,
   demoConfigured = false,
@@ -134,6 +137,8 @@ export function PreviewToolbarView({
   const [reseeding, setReseeding] = useState(false);
   const [exiting, setExiting] = useState(false);
   const [stalePersona, setStalePersona] = useState<string | null>(null);
+  const [switchError, setSwitchError] = useState(false);
+  const [reseedError, setReseedError] = useState(false);
 
   // Full sandbox preview (personas/emails/settings) needs canPreview. Dual-
   // source escape hatch: when the demo key is configured we still render so
@@ -171,6 +176,7 @@ export function PreviewToolbarView({
 
   async function onSwitch(persona: PreviewPersona) {
     setStalePersona(null);
+    setSwitchError(false);
     setSwitching(persona.id);
     try {
       const result = await dependencies.switchPersona({
@@ -191,20 +197,32 @@ export function PreviewToolbarView({
       } else if (result.code === 'persona-unavailable') {
         // Reseeded out from under a stale menu.
         setStalePersona(persona.id);
+      } else {
+        setSwitchError(true);
       }
+    } catch {
+      // The existing source/session and data-source cookie remain untouched.
+      setSwitchError(true);
     } finally {
       setSwitching(null);
     }
   }
 
   async function onReseed() {
+    setReseedError(false);
     setReseeding(true);
     try {
-      await dependencies.reseedSandbox();
+      const result = await dependencies.reseedSandbox();
+      if (!result.ok) {
+        setReseedError(true);
+        return;
+      }
       // Reseed purges and recreates the personas — the CURRENT session's
       // board user is among the purged, so the viewer's own session is now
       // stale by construction. Reload lands on the honest signed-out state.
       window.location.reload();
+    } catch {
+      setReseedError(true);
     } finally {
       setReseeding(false);
     }
@@ -297,6 +315,16 @@ export function PreviewToolbarView({
             </div>
           ) : null}
 
+          {switchError ? (
+            <div
+              className="text-destructive bg-destructive/10 m-3 flex items-start gap-2 rounded-2xl p-3 text-xs"
+              role="alert"
+            >
+              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+              <span>{m.previewToolbar_switchError()}</span>
+            </div>
+          ) : null}
+
           <div
             className="max-h-72 overflow-y-auto p-2"
             data-test="preview-personas"
@@ -336,7 +364,7 @@ export function PreviewToolbarView({
                 <PersonaGroup
                   label={m.previewToolbar_candidates()}
                   personas={grouped.candidate}
-                  viewer={onYourBoard ? null : viewer}
+                  activePersonaId={onYourBoard ? null : activePersonaId}
                   switching={switching}
                   disabled={busy}
                   onSwitch={onSwitch}
@@ -344,7 +372,7 @@ export function PreviewToolbarView({
                 <PersonaGroup
                   label={m.previewToolbar_employers()}
                   personas={grouped.employer}
-                  viewer={onYourBoard ? null : viewer}
+                  activePersonaId={onYourBoard ? null : activePersonaId}
                   switching={switching}
                   disabled={busy}
                   onSwitch={onSwitch}
@@ -420,7 +448,13 @@ export function PreviewToolbarView({
       />
 
       {showBoardControls ? (
-        <AlertDialog open={reseedOpen} onOpenChange={setReseedOpen}>
+        <AlertDialog
+          open={reseedOpen}
+          onOpenChange={(open) => {
+            setReseedOpen(open);
+            if (!open) setReseedError(false);
+          }}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
@@ -430,6 +464,15 @@ export function PreviewToolbarView({
                 {m.previewToolbar_reseedConfirmBody()}
               </AlertDialogDescription>
             </AlertDialogHeader>
+            {reseedError ? (
+              <div
+                className="text-destructive bg-destructive/10 flex items-start gap-2 rounded-2xl p-3 text-xs"
+                role="alert"
+              >
+                <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+                <span>{m.previewToolbar_reseedError()}</span>
+              </div>
+            ) : null}
             <AlertDialogFooter>
               <AlertDialogCancel disabled={reseeding}>
                 {m.previewToolbar_cancel()}
@@ -496,14 +539,14 @@ function FooterAction({
 function PersonaGroup({
   label,
   personas,
-  viewer,
+  activePersonaId,
   switching,
   disabled,
   onSwitch,
 }: {
   label: string;
   personas: PreviewPersona[];
-  viewer: PreviewViewer | null;
+  activePersonaId: string | null;
   switching: string | null;
   disabled: boolean;
   onSwitch: (persona: PreviewPersona) => void;
@@ -516,11 +559,9 @@ function PersonaGroup({
       </p>
       <ul>
         {personas.map((persona) => {
-          // Best-effort "current" marker: the browser-safe roster carries no
-          // email (credentials are server-only), so match on displayName.
-          const active =
-            viewer?.displayName != null &&
-            viewer.displayName === persona.displayName;
+          // The server compares the authenticated viewer to the raw roster
+          // and projects only this stable, non-secret id to the browser.
+          const active = activePersonaId === persona.id;
           const isSwitching = switching === persona.id;
           return (
             <li key={persona.id}>

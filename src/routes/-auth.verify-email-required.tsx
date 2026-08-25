@@ -123,6 +123,7 @@ export function VerifyEmailRequiredView({
   invalidate,
   navigate,
   reportActionError,
+  reportReconciliationError,
   renderResumeUpload,
 }: {
   emailVerified: boolean;
@@ -143,6 +144,7 @@ export function VerifyEmailRequiredView({
   invalidate: (sync?: boolean) => Promise<void>;
   navigate: (href: string) => Promise<void>;
   reportActionError: () => void;
+  reportReconciliationError: () => void;
   renderResumeUpload: (resume: Resume) => React.ReactNode;
 }) {
   const [step, setStep] = useState<'code' | 'resume'>(() =>
@@ -169,20 +171,32 @@ export function VerifyEmailRequiredView({
     if (pending) return;
     setPending(true);
     setError(null);
+    let result: { ok: true } | { ok: false; code?: string; message: string };
     try {
-      const result = await verifyOtpCodeAction({ data: { code: code.trim() } });
-      if (result.ok) {
-        await invalidate();
-        if (role === 'candidate') setStep('resume');
-      } else {
-        await invalidate(true);
-        setError(boardErrorMessage(result));
-      }
+      result = await verifyOtpCodeAction({ data: { code: code.trim() } });
     } catch {
       setError(m.candidateAction_errorText());
-    } finally {
       setPending(false);
+      return;
     }
+    if (result.ok) {
+      if (role === 'candidate') setStep('resume');
+      try {
+        await invalidate();
+      } catch {
+        reportReconciliationError();
+      }
+      setPending(false);
+      return;
+    }
+    try {
+      await invalidate(true);
+    } catch {
+      // The verification failed, so this refresh is optional lockout-state
+      // reconciliation; keep the authoritative typed error below.
+    }
+    setError(boardErrorMessage(result));
+    setPending(false);
   }
 
   if (emailVerified && role === 'employer') return null;

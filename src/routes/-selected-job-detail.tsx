@@ -77,7 +77,8 @@ export function SelectedJobDetail({
       returnTo={returnTo}
       nativeApplications={board.features.nativeApplications}
       viewer={user ? { emailVerified: user.emailVerified } : null}
-      alreadyApplied={state.alreadyApplied}
+      applicationState={state.applicationState}
+      onRetryApplicationState={state.retry}
       onPrepareApply={(jobSlug) =>
         dependencies.prepareApplyToJob({ data: { jobSlug } })
       }

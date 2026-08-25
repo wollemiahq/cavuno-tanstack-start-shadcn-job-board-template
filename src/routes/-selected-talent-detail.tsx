@@ -7,6 +7,7 @@ import {
   toTalentProfileVM,
   type TalentDetailViewer,
 } from '@/board/talent-view-model';
+import type { StartTalentConversation } from '@/components/board/talent-message-action';
 import { TalentSearchDetailState } from '@/components/board/talent-search-detail-state';
 import { TalentSearchResultDetail } from '@/components/board/talent-search-result-detail';
 
@@ -19,6 +20,8 @@ export function SelectedTalentDetail({
   viewer,
   signInHref,
   messagingEnabled,
+  onStartConversation,
+  onConversationStarted,
 }: {
   state: SelectedTalentState;
   locale: string;
@@ -28,6 +31,8 @@ export function SelectedTalentDetail({
   signInHref: string;
   /** Board `features.messaging`: `false` hides the Message CTA entirely. */
   messagingEnabled: boolean;
+  onStartConversation: StartTalentConversation;
+  onConversationStarted: (conversationId: string) => void;
 }) {
   const detail = state.profile
     ? (() => {
@@ -38,6 +43,7 @@ export function SelectedTalentDetail({
         );
         const cta = resolveTalentDetailCta({
           viewer,
+          candidateHandle: vm.handle,
           detailHref: vm.detailHref,
           signInHref,
           pricingHref: PRICING_HREF,
@@ -56,6 +62,8 @@ export function SelectedTalentDetail({
             vm={vm}
             cta={cta}
             interactive={state.status === 'ready'}
+            onStartConversation={onStartConversation}
+            onConversationStarted={onConversationStarted}
           />
         );
       })()

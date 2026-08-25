@@ -21,6 +21,8 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { localizePath } from '@/lib/localized-path';
+import { startConversation } from '@/server/messaging';
 const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/p/$handle')({
@@ -77,6 +79,12 @@ function TalentProfilePage() {
       user={user}
       messagingEnabled={board.features.messaging}
       locationHref={location.href}
+      onStartConversation={(input) => startConversation({ data: input })}
+      onConversationStarted={(conversationId) =>
+        window.location.assign(
+          localizePath(`/messages/${encodeURIComponent(conversationId)}`),
+        )
+      }
     />
   );
 }

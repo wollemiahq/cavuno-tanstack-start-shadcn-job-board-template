@@ -19,3 +19,29 @@ export async function toastActionError(message?: string): Promise<void> {
   const { toast } = await import('sonner');
   toast.error(message ?? m.candidateAction_errorText());
 }
+
+export async function toastActionReconciliationError(): Promise<void> {
+  const { toast } = await import('sonner');
+  toast.warning(m.candidateAction_reconciliationError());
+}
+
+/**
+ * Reconcile a mutation that has already committed. Refresh failure is a
+ * distinct recovery state and must never be reported as if the write failed.
+ */
+export async function reconcileCommittedAction(
+  reconcile: () => void | Promise<void>,
+  reportFailure: () => void | Promise<void> = toastActionReconciliationError,
+): Promise<boolean> {
+  try {
+    await reconcile();
+    return true;
+  } catch {
+    try {
+      await reportFailure();
+    } catch {
+      // Feedback transport is best-effort; the committed write remains truth.
+    }
+    return false;
+  }
+}

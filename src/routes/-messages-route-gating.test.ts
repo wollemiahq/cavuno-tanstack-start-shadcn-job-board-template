@@ -19,6 +19,7 @@ import {
   createConversationLoader,
   type ConversationLoaderDependencies,
 } from './-messages.$conversationId';
+import { hasSelectedConversationRoute } from './messages';
 
 const getBoardContext = vi.fn<MessagesLoaderDependencies['getBoardContext']>();
 const getSeoBase = vi.fn<MessagesLoaderDependencies['getSeoBase']>();
@@ -133,6 +134,24 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+describe('messages route nesting', () => {
+  it('hands a selected conversation URL to the nested thread route', () => {
+    expect(
+      hasSelectedConversationRoute([
+        { routeId: '__root__' },
+        { routeId: '/messages' },
+        { routeId: '/messages/$conversationId' },
+      ]),
+    ).toBe(true);
+    expect(
+      hasSelectedConversationRoute([
+        { routeId: '__root__' },
+        { routeId: '/messages' },
+      ]),
+    ).toBe(false);
+  });
+});
+
 describe('messages inbox route — messaging feature gate', () => {
   it('loads the inbox when messaging is on', async () => {
     const data = await createMessagesLoader(messagesDependencies)(
@@ -167,7 +186,7 @@ describe('messages thread route — messaging feature gate', () => {
       conversationLoaderContext('inbox'),
     );
 
-    expect(data).toMatchObject({ view: 'inbox' });
+    expect(data).toMatchObject({ status: 'ready', view: 'inbox' });
     expect(getThread).toHaveBeenCalledOnce();
   });
 
@@ -207,22 +226,17 @@ describe('messages thread route — messaging feature gate', () => {
     });
   });
 
-  it('keeps the messages fallback for non-authentication thread failures', async () => {
+  it('keeps the failed thread selected for a recoverable non-authentication failure', async () => {
     getThread.mockRejectedValue(new Error('upstream timeout'));
-    let outcome: unknown;
-    try {
-      await createConversationLoader(conversationDependencies)(
-        conversationLoaderContext('archived'),
-      );
-    } catch (error) {
-      outcome = error;
-    }
+    const outcome = await createConversationLoader(conversationDependencies)(
+      conversationLoaderContext('archived'),
+    );
 
-    expect(isRedirect(outcome)).toBe(true);
-    if (!isRedirect(outcome)) return;
-    expect(outcome.options).toMatchObject({
-      to: '/messages',
-      search: { view: 'archived' },
+    expect(outcome).toMatchObject({
+      status: 'error',
+      conversationId: 'c1',
+      view: 'archived',
+      inbox,
     });
   });
 });

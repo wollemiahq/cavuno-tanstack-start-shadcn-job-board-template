@@ -23,6 +23,16 @@ export function candidateSignInHref<T>(value: T) {
   return candidateAuthHref('/auth/sign-in', value);
 }
 
+/** Durable password-reset completion destination. The bounded marker is
+ * display-only and contains no account or token data. */
+export function candidatePasswordResetSignInHref<T>(value: T) {
+  const search = new URLSearchParams({
+    returnTo: localizePath(candidateReturnTo(value)),
+    reset: 'password',
+  });
+  return `${localizePath('/auth/sign-in')}?${search}`;
+}
+
 export function candidateVerifyEmailHref<T>(value: T) {
   return candidateAuthHref('/auth/verify-email-required', value);
 }

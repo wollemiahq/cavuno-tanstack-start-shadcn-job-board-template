@@ -3,7 +3,13 @@
 import '@testing-library/jest-dom/vitest';
 import { BoardApiError } from '@cavuno/board';
 import { isNotFound as isRouteNotFound } from '@tanstack/react-router';
-import { cleanup, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RestrictedTalentDirectory } from './-restricted-talent-directory';
@@ -21,6 +27,8 @@ const getTalentIndexPage =
   vi.fn<TalentDirectoryRouteDependencies['getTalentIndexPage']>();
 const getTalentProfilePage =
   vi.fn<TalentProfileRouteDependencies['getTalentProfilePage']>();
+const onStartConversation = vi.fn();
+const onConversationStarted = vi.fn();
 
 type TalentProfilePageData = Awaited<
   ReturnType<TalentProfileRouteDependencies['getTalentProfilePage']>
@@ -113,6 +121,12 @@ function profileLoaderContext(handle: string) {
 }
 
 beforeEach(() => {
+  onStartConversation.mockReset();
+  onStartConversation.mockResolvedValue({
+    ok: true,
+    data: { conversationId: 'conversation-1' },
+  });
+  onConversationStarted.mockReset();
   getTalentIndexPage.mockReset();
   getTalentIndexPage.mockResolvedValue({
     seo,
@@ -165,6 +179,8 @@ function renderProfile({
       user={user}
       messagingEnabled={messagingEnabled}
       locationHref="/p/ada-lovelace"
+      onStartConversation={onStartConversation}
+      onConversationStarted={onConversationStarted}
     />,
   );
 }
@@ -391,19 +407,22 @@ describe('canonical talent profile route', () => {
     );
   });
 
-  it('offers an allowed employer the gated Message action in the profile hero', () => {
-    const { container } = renderProfile({ user: { role: 'employer' } });
+  it('lets an eligible employer message the candidate by public handle', async () => {
+    renderProfile({ user: { role: 'employer' } });
 
-    const actions = container.querySelector<HTMLElement>(
-      "[data-slot='talent-profile-actions']",
+    fireEvent.click(screen.getByRole('button', { name: 'Message' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Send a message' }), {
+      target: { value: 'Hello Ada' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
+
+    await waitFor(() =>
+      expect(onStartConversation).toHaveBeenCalledWith({
+        candidateHandle: 'ada-lovelace',
+        body: 'Hello Ada',
+      }),
     );
-    if (!actions) throw new Error('The profile hero action was not rendered');
-    // An employer with talent access is handed off to the canonical profile
-    // (where the conversation opens) — the same target as the search pane.
-    expect(screen.getByRole('link', { name: 'Message' })).toHaveAttribute(
-      'href',
-      '/p/ada-lovelace',
-    );
+    expect(onConversationStarted).toHaveBeenCalledWith('conversation-1');
   });
 
   it('routes an anonymous viewer’s Message action to sign-in', () => {

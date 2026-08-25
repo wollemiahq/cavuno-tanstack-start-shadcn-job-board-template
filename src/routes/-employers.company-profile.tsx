@@ -136,7 +136,7 @@ export function createCompanyProfileLoader(
           }),
           loaderDependencies
             .listCompanyMembers({ data: { slug: params.slug } })
-            .catch(() => ({ data: [] })),
+            .catch(() => null),
           loaderDependencies.getSeoBase(),
         ]);
       // Reporting is non-critical: defer both profile-views reads so a slow or
@@ -186,7 +186,7 @@ export type CompanyProfileViewData = {
     'name' | 'links' | 'markets'
   >;
   employerCompany: CompanyProfileLoaderData['employerCompany'];
-  members?: { data: unknown[] };
+  members?: { data: unknown[] } | null;
   profileViews?: CompanyProfileLoaderData['profileViews'];
 };
 
@@ -206,6 +206,7 @@ export type CompanyProfileViewActions = {
   >;
   invalidate: () => Promise<void>;
   navigateToDashboard: () => Promise<void>;
+  toastError: (message: string) => void;
   toastSuccess: (message: string) => void;
 };
 
@@ -278,7 +279,11 @@ export function CompanyProfilePageView({
             slug={workspace.slug}
             companyName={employerCompany.name}
             isAdmin={workspace.membership?.role === 'admin'}
-            otherApprovedMembers={Math.max(0, (members?.data.length ?? 0) - 1)}
+            otherApprovedMembers={
+              members === null
+                ? null
+                : Math.max(0, (members?.data.length ?? 0) - 1)
+            }
             actions={actions}
           />
 
@@ -330,7 +335,9 @@ function ProfileEditorCard({
       ? stripSocialHandle(company.facebookUrl, ['facebook.com'])
       : '',
   });
-  const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
+  const [status, setStatus] = useState<
+    'idle' | 'saving' | 'error' | 'committed'
+  >('idle');
   const [message, setMessage] = useState('');
 
   async function save() {
@@ -382,8 +389,13 @@ function ProfileEditorCard({
       setMessage(boardErrorMessage(result));
       return;
     }
-    setStatus('idle');
-    await actions.invalidate();
+    setStatus('committed');
+    try {
+      await actions.invalidate();
+      setStatus('idle');
+    } catch {
+      setMessage(m.employerCompany_reconciliationError());
+    }
   }
 
   return (
@@ -510,12 +522,17 @@ function ProfileEditorCard({
           </Field>
           {/* In-page form: primary action left-aligned, in reading flow. */}
           <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" disabled={status === 'saving'}>
+            <Button
+              type="submit"
+              disabled={status === 'saving' || status === 'committed'}
+            >
               {status === 'saving'
                 ? m.employerCompany_savingLabel()
                 : m.employerCompany_saveCompanyLabel()}
             </Button>
-            {status === 'error' ? <FieldError>{message}</FieldError> : null}
+            {status === 'error' || (status === 'committed' && message) ? (
+              <FieldError>{message}</FieldError>
+            ) : null}
           </div>
         </form>
       </CardContent>

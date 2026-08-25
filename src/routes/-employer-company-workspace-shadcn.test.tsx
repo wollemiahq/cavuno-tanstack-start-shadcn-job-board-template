@@ -25,6 +25,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApplicantPipelineBoard } from '../components/employer/applicant-pipeline-board';
+import { CompanyMembersTable } from '../components/employer/company-members-table';
 import { handleEmployerLoaderErrorUsing } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
 import {
@@ -121,6 +122,7 @@ const profileActions = {
   deleteCompany: vi.fn<CompanyProfileViewActions['deleteCompany']>(),
   invalidate: vi.fn(),
   navigateToDashboard: vi.fn(),
+  toastError: vi.fn(),
   toastSuccess: vi.fn(),
 } satisfies CompanyProfileViewActions;
 
@@ -465,6 +467,42 @@ describe('employer company workspace', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('requires named confirmation before deleting a job and suppresses duplicate delete', async () => {
+    let resolveDelete!: (value: { ok: true; data: null }) => void;
+    jobsActions.deleteJob.mockReturnValue(
+      new Promise((resolve) => {
+        resolveDelete = resolve;
+      }),
+    );
+    await renderJobs([draftJob]);
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Actions for Senior Product Designer',
+      }),
+    );
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+
+    expect(jobsActions.deleteJob).not.toHaveBeenCalled();
+    const dialog = screen.getByRole('alertdialog', {
+      name: 'Delete Senior Product Designer?',
+    });
+    expect(dialog).toHaveTextContent(
+      'This permanently deletes Senior Product Designer and removes its public job page.',
+    );
+    const confirm = within(dialog).getByRole('button', { name: 'Delete' });
+    fireEvent.click(confirm);
+    fireEvent.click(confirm);
+    expect(jobsActions.deleteJob).toHaveBeenCalledOnce();
+
+    resolveDelete({ ok: true, data: null });
+    await waitFor(() =>
+      expect(jobsActions.toastSuccess).toHaveBeenCalledWith(
+        'Senior Product Designer was deleted.',
+      ),
+    );
+  });
+
   it('joins per-job view / apply-click / application stats into the table', async () => {
     await renderJobs(
       [
@@ -775,6 +813,20 @@ describe('employer company workspace', () => {
     await waitFor(() => expect(profileActions.invalidate).toHaveBeenCalled());
   });
 
+  it('reports profile reconciliation failure without calling the saved write failed', async () => {
+    profileActions.updateCompany.mockResolvedValue({ ok: true, data: null });
+    profileActions.invalidate.mockRejectedValue(new Error('refresh failed'));
+    renderProfile();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+
+    await waitFor(() =>
+      expect(profileActions.updateCompany).toHaveBeenCalledOnce(),
+    );
+    expect(await screen.findByText(/change was saved/i)).toBeInTheDocument();
+    expect(screen.queryByText('Something went wrong.')).not.toBeInTheDocument();
+  });
+
   it('streams the profile-views stat into the header once the deferred read resolves', async () => {
     const data = {
       ...profileLoaderData,
@@ -1020,6 +1072,30 @@ describe('employer company workspace', () => {
     expect(alert).toHaveTextContent('Reject failed');
     expect(alert.closest('[data-applicant-action-feedback]')).not.toBeNull();
     expect(pipelineActions.invalidate).not.toHaveBeenCalled();
+  });
+
+  it('keeps a committed applicant note successful when pipeline refresh fails', async () => {
+    pipelineActions.addApplicantNote.mockResolvedValue({ ok: true });
+    pipelineActions.invalidate.mockRejectedValue(new Error('refresh failed'));
+    render(
+      <ApplicantPipelineBoard
+        slug="northstar-labs"
+        jobId="job-1"
+        actions={pipelineActions}
+        board={reviewBoardVM()}
+        defaultOpenCardId="application-1"
+      />,
+    );
+
+    const note = screen.getByRole('textbox', { name: 'Add a private note' });
+    fireEvent.change(note, { target: { value: 'Strong communicator' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save note' }));
+
+    await waitFor(() => expect(note).toHaveValue(''));
+    expect(pipelineActions.toastError).toHaveBeenCalledWith(
+      expect.stringMatching(/change was saved/i),
+    );
+    expect(screen.queryByText('Something went wrong.')).not.toBeInTheDocument();
   });
 
   it('moves a card optimistically through the detail sheet stage picker', async () => {
@@ -1430,6 +1506,36 @@ describe('employer company workspace', () => {
     );
   });
 
+  it('formats invitation expiry with the active locale seam', async () => {
+    const invite = {
+      object: 'company_member_invite' as const,
+      id: 'invite-locale',
+      email: 'locale@example.com',
+      role: 'member' as const,
+      createdAt: '2026-07-01T00:00:00.000Z',
+      expiresAt: '2026-12-24T00:00:00.000Z',
+    };
+    render(
+      <CompanyMembersTable
+        slug="northstar-labs"
+        companyName="Northstar Labs"
+        locale="de"
+        members={[memberAda]}
+        invites={[invite]}
+        isAdmin
+        currentUserId="user-ada"
+        actions={membersActions}
+      />,
+    );
+
+    const trigger = screen
+      .getByText('Invited')
+      .closest<HTMLElement>('[data-slot="tooltip-trigger"]');
+    if (!trigger) throw new Error('Expected the invite expiry tooltip trigger');
+    fireEvent.focus(trigger);
+    expect(await screen.findByText(/24\.12\.2026/)).toBeInTheDocument();
+  });
+
   it('does not render a Joined via column for invite or unknown provenance', () => {
     renderMembers({
       ...membersLoaderData,
@@ -1495,5 +1601,16 @@ describe('employer company workspace', () => {
       }),
     );
     expect(profileActions.navigateToDashboard).toHaveBeenCalledOnce();
+  });
+
+  it('blocks company deletion when team membership consequences are unknown', () => {
+    renderProfile({ ...profileLoaderData, members: null });
+
+    expect(
+      screen.getByRole('button', { name: m.employerDelete_submitLabel() }),
+    ).toBeDisabled();
+    expect(
+      screen.getByText(/Team membership could not be loaded/),
+    ).toBeVisible();
   });
 });

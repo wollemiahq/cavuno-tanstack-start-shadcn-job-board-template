@@ -42,17 +42,22 @@ export function createJobDetailLoader(
         dependencies.getJobDetailPage({ data: { jobSlug: params.jobSlug } }),
         dependencies.getSessionUser().then(async (user) => ({
           user,
-          application: user?.emailVerified
+          applicationState: user?.emailVerified
             ? await dependencies
                 .myApplicationForJob({ data: { jobSlug: params.jobSlug } })
-                .catch(() => null)
-            : null,
+                .then((application) =>
+                  application === null
+                    ? ('not-applied' as const)
+                    : ('applied' as const),
+                )
+                .catch(() => 'unknown' as const)
+            : ('not-requested' as const),
         })),
         dependencies
           .getCompany({ data: { companySlug: params.companySlug } })
           .catch(() => null),
       ]);
-      const { user, application } = session;
+      const { user, applicationState } = session;
       return {
         job: page.job,
         user,
@@ -61,7 +66,7 @@ export function createJobDetailLoader(
         seo: page.seo,
         head: page.head,
         jsonLd: page.jsonLd,
-        alreadyApplied: application !== null,
+        applicationState,
       };
     } catch (error) {
       if (isNotFound(error)) throw notFound();

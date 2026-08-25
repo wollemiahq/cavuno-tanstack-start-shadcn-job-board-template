@@ -32,16 +32,8 @@ export function createConversationLoader(
     const returnTo = `/messages/${encodeURIComponent(params.conversationId)}${
       deps.view === 'archived' ? '?view=archived' : ''
     }`;
-    try {
-      const [thread, inbox, seo] = await Promise.all([
-        dependencies.getThread({ data: { id: params.conversationId } }),
-        dependencies.getInbox({ data: { archived: deps.view === 'archived' } }),
-        // Was `seo: await getSeoBase()` in the return — a second serial wave
-        // hidden in an object literal.
-        dependencies.getSeoBase(),
-      ]);
-      return { ...thread, inbox, view: deps.view, seo };
-    } catch (error) {
+
+    const redirectAuthFailure = <T,>(error: T) => {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
       if (authFailure === 'email-unverified') {
@@ -53,10 +45,53 @@ export function createConversationLoader(
       if (authFailure === 'unauthenticated') {
         throw redirect({ to: '/auth/sign-in', search: { returnTo } });
       }
-      throw redirect({
-        to: '/messages',
-        search: deps.view === 'archived' ? { view: 'archived' } : {},
-      });
+    };
+
+    // Start all reads together, but handle the thread independently: a
+    // transient failure belongs in the selected pane and must not erase the
+    // conversation URL or the otherwise healthy inbox.
+    const threadPromise = dependencies
+      .getThread({ data: { id: params.conversationId } })
+      .then(
+        (thread) => ({ ok: true as const, thread }),
+        (error) => ({ ok: false as const, error }),
+      );
+    const inboxPromise = dependencies.getInbox({
+      data: { archived: deps.view === 'archived' },
+    });
+    const seoPromise = dependencies.getSeoBase();
+
+    let support: [
+      Awaited<ReturnType<ConversationLoaderDependencies['getInbox']>>,
+      Awaited<ReturnType<ConversationLoaderDependencies['getSeoBase']>>,
+    ];
+    try {
+      support = await Promise.all([inboxPromise, seoPromise]);
+    } catch (error) {
+      redirectAuthFailure(error);
+      throw error;
     }
+
+    const [inbox, seo] = support;
+    const threadResult = await threadPromise;
+    if (threadResult.ok) {
+      const thread = threadResult.thread;
+      return {
+        status: 'ready' as const,
+        ...thread,
+        inbox,
+        view: deps.view,
+        seo,
+      };
+    }
+
+    redirectAuthFailure(threadResult.error);
+    return {
+      status: 'error' as const,
+      conversationId: params.conversationId,
+      inbox,
+      view: deps.view,
+      seo,
+    };
   };
 }

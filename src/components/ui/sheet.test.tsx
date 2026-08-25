@@ -19,6 +19,14 @@ describe('Sheet', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Close' })).toBeVisible();
+    const sheet = screen.getByRole('dialog', { name: 'Default close' });
+    expect(sheet).toHaveClass('motion-reduce:transition-none');
+    expect(sheet).toHaveClass(
+      'motion-reduce:data-[side=right]:data-starting-style:translate-x-0',
+    );
+    expect(document.querySelector('[data-slot="sheet-overlay"]')).toHaveClass(
+      'motion-reduce:transition-none',
+    );
 
     rerender(
       <Sheet open>

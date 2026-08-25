@@ -54,6 +54,7 @@ const mocks = {
     .mockResolvedValue([]),
   updateNotificationPreference: vi.fn(),
   toastActionError: vi.fn(),
+  toastActionReconciliationError: vi.fn(),
 };
 
 import { isRedirect, redirect } from '@tanstack/react-router';
@@ -139,6 +140,7 @@ function renderVerifyPage({
       invalidate={(sync) => mocks.invalidate(sync ? { sync: true } : undefined)}
       navigate={mocks.navigate}
       reportActionError={mocks.toastActionError}
+      reportReconciliationError={mocks.toastActionReconciliationError}
       renderResumeUpload={() => <div data-test="resume-upload" />}
     />,
   );
@@ -178,6 +180,7 @@ describe('/auth/verify-email-required search contract', () => {
     // offer and continues straight to the destination.
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
     mocks.verifyOtpCode.mockResolvedValue({ ok: true });
+    mocks.invalidate.mockRejectedValue(new Error('refresh unavailable'));
 
     const { container } = renderVerifyPage({ returnTo, resume: null });
     // Typing the sixth digit IS the submit — no Verify button exists.
@@ -191,6 +194,7 @@ describe('/auth/verify-email-required search contract', () => {
       });
       expect(mocks.invalidate).toHaveBeenCalledOnce();
       expect(mocks.navigate).toHaveBeenCalledWith(returnTo);
+      expect(mocks.toastActionReconciliationError).toHaveBeenCalledOnce();
     });
   });
 
@@ -367,6 +371,7 @@ describe('/auth/verify-email-required resume offer step', () => {
         }
         navigate={mocks.navigate}
         reportActionError={mocks.toastActionError}
+        reportReconciliationError={mocks.toastActionReconciliationError}
         renderResumeUpload={() => <div data-test="resume-upload" />}
       />,
     );

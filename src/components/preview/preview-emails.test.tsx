@@ -128,11 +128,14 @@ describe('PreviewEmailsSheet', () => {
     ).toBeInTheDocument();
     expect(within(pane).getByText('nadia@example.com')).toBeInTheDocument();
 
-    // The body is isolated in a sandboxed iframe and the platform HTML is
-    // handed to srcDoc verbatim (AGENTS.md rule 4: rendered as-is).
+    // The body remains isolated, but narrowly permits user-activated top-level
+    // navigation so completion links can leave the mail pane.
     const frame = within(pane).getByTitle<HTMLIFrameElement>('Email body');
     expect(frame.tagName).toBe('IFRAME');
-    expect(frame).toHaveAttribute('sandbox', '');
+    expect(frame).toHaveAttribute(
+      'sandbox',
+      'allow-top-navigation-by-user-activation',
+    );
     expect(frame.getAttribute('srcdoc')).toBe(emails[0]?.html);
   });
 
@@ -183,8 +186,13 @@ describe('PreviewEmailsSheet', () => {
     expect(srcdoc).toContain(
       'href="http://[::1]:3030/auth/verify-email?token=xyz"',
     );
+    expect(srcdoc).toContain('target="_top"');
     // …and no longer points at the hosted board.
     expect(srcdoc).not.toContain('https://sandbox.cavuno.com');
+    // The narrow navigation token does not enable script execution or
+    // same-origin DOM access.
+    expect(frame.getAttribute('sandbox')).not.toContain('allow-scripts');
+    expect(frame.getAttribute('sandbox')).not.toContain('allow-same-origin');
   });
 
   it('shows the empty state when nothing has been captured', async () => {

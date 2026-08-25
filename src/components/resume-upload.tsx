@@ -20,7 +20,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { toastActionError } from '@/lib/action-toast';
+import {
+  reconcileCommittedAction,
+  toastActionError,
+  toastActionReconciliationError,
+} from '@/lib/action-toast';
 import type { Resume } from '@cavuno/board';
 
 /**
@@ -51,12 +55,14 @@ export interface ResumeUploadDependencies {
     input: Parameters<typeof uploadResume>[0],
   ) => ReturnType<typeof uploadResume>;
   toastActionError: () => void | Promise<void>;
+  toastActionReconciliationError: () => void | Promise<void>;
 }
 
 const resumeUploadDependencies: ResumeUploadDependencies = {
   deleteResume,
   uploadResume,
   toastActionError,
+  toastActionReconciliationError,
 };
 
 export function ResumeUpload({
@@ -156,12 +162,16 @@ export function ResumeUpload({
                 setStatus('deleting');
                 try {
                   await dependencies.deleteResume();
-                  await router.invalidate();
-                  setStatus('idle');
                 } catch {
                   setStatus('idle');
                   void dependencies.toastActionError();
+                  return;
                 }
+                setStatus('idle');
+                await reconcileCommittedAction(
+                  () => router.invalidate(),
+                  dependencies.toastActionReconciliationError,
+                );
               }}
             >
               {m.resumeUpload_deleteLabel()}
@@ -188,11 +198,16 @@ export function ResumeUpload({
           );
           try {
             await dependencies.uploadResume({ data: formData });
-            await router.invalidate();
-            setStatus('idle');
           } catch {
             setStatus('upload-error');
+            if (inputRef.current) inputRef.current.value = '';
+            return;
           }
+          setStatus('idle');
+          await reconcileCommittedAction(
+            () => router.invalidate(),
+            dependencies.toastActionReconciliationError,
+          );
           if (inputRef.current) inputRef.current.value = '';
         }}
       />

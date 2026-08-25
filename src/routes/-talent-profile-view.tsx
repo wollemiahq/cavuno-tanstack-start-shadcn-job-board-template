@@ -5,6 +5,10 @@ import {
   type TalentDetailViewer,
 } from '@/board/talent-view-model';
 import {
+  TalentMessageAction,
+  type StartTalentConversation,
+} from '@/components/board/talent-message-action';
+import {
   TalentProfileContent,
   TalentProfileIdentity,
 } from '@/components/board/talent-profile-content';
@@ -12,7 +16,6 @@ import { Container } from '@/components/layout/container';
 import { PageLayout } from '@/components/layout/page-layout';
 import { DitherCanvas } from '@/components/marketing/dither-canvas';
 import type { RootSessionValue } from '@/components/root-session';
-import { buttonVariants } from '@/components/ui/button';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
 import { m } from '@/paraglide/messages';
 import { getLocale } from '@/paraglide/runtime';
@@ -25,11 +28,15 @@ export function TalentProfilePageView({
   user,
   messagingEnabled,
   locationHref,
+  onStartConversation,
+  onConversationStarted,
 }: {
   profile: Awaited<ReturnType<typeof getTalentProfilePage>>['profile'];
   user: Pick<NonNullable<RootSessionValue['user']>, 'role'> | null;
   messagingEnabled: boolean;
   locationHref: string;
+  onStartConversation: StartTalentConversation;
+  onConversationStarted: (conversationId: string) => void;
 }) {
   const vm = toTalentProfileVM(profile, getLocale(), getTalentSearchLabels());
   const viewer: TalentDetailViewer =
@@ -40,6 +47,7 @@ export function TalentProfilePageView({
         : { kind: 'candidate' };
   const cta = resolveTalentDetailCta({
     viewer,
+    candidateHandle: vm.handle,
     detailHref: vm.detailHref,
     signInHref: candidateSignInHref(locationHref),
     pricingHref: PRICING_HREF,
@@ -64,9 +72,12 @@ export function TalentProfilePageView({
                     data-slot="talent-profile-actions"
                     className="flex shrink-0 flex-wrap items-center gap-2"
                   >
-                    <a href={cta.message.href} className={buttonVariants()}>
-                      {cta.message.label}
-                    </a>
+                    <TalentMessageAction
+                      action={cta.message}
+                      candidateName={vm.displayName}
+                      onStartConversation={onStartConversation}
+                      onConversationStarted={onConversationStarted}
+                    />
                   </div>
                 ) : null}
               </div>
