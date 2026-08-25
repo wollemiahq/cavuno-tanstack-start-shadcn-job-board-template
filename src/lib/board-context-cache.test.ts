@@ -19,6 +19,8 @@ const contextSpy = vi.fn();
 const dataSource: DataSourceState = { current: 'primary' };
 const {
   readBoardContext,
+  refreshBoardContext,
+  readStaleBoardContext,
   readEmployerOfferGate,
   resetBoardContextCache,
   resetEmployerOfferGateCache,
@@ -26,6 +28,7 @@ const {
   {
     getBoardContext: () =>
       contextSpy({ cf: { cacheTtl: 300, cacheEverything: true } }),
+    getFreshBoardContext: () => contextSpy({ cache: 'no-store' }),
     getDataSource: () => (dataSource.current === 'primary' ? 'board' : 'demo'),
     now: () => Date.now(),
   },
@@ -89,6 +92,64 @@ describe('board context memo', () => {
     expect(contextSpy).toHaveBeenCalledWith({
       cf: { cacheTtl: 300, cacheEverything: true },
     });
+  });
+
+  it('a fresh kill-switch read bypasses caches and replaces the memo', async () => {
+    contextSpy.mockResolvedValueOnce({
+      features: { jobRecommendationsEnabled: true },
+    });
+    await readBoardContext();
+
+    contextSpy.mockResolvedValueOnce({
+      features: { jobRecommendationsEnabled: false },
+    });
+    await expect(refreshBoardContext()).resolves.toEqual({
+      features: { jobRecommendationsEnabled: false },
+    });
+
+    await expect(readBoardContext()).resolves.toEqual({
+      features: { jobRecommendationsEnabled: false },
+    });
+    expect(contextSpy).toHaveBeenCalledTimes(2);
+    expect(contextSpy).toHaveBeenLastCalledWith({ cache: 'no-store' });
+  });
+
+  it('retains the last successful memo when a fresh kill-switch read fails', async () => {
+    const previous = {
+      features: { jobRecommendationsEnabled: true },
+    };
+    contextSpy.mockResolvedValueOnce(previous);
+    await readBoardContext();
+
+    contextSpy.mockRejectedValueOnce(new Error('fresh read unavailable'));
+    await expect(refreshBoardContext()).rejects.toThrow(
+      'fresh read unavailable',
+    );
+
+    await expect(readStaleBoardContext()).resolves.toEqual(previous);
+    expect(contextSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps sibling reads on the stable memo while a fresh probe is in flight', async () => {
+    const previous = {
+      features: { jobRecommendationsEnabled: true },
+    };
+    contextSpy.mockResolvedValueOnce(previous);
+    await readBoardContext();
+
+    let rejectFresh!: (error: Error) => void;
+    contextSpy.mockImplementationOnce(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectFresh = reject;
+        }),
+    );
+    const refresh = refreshBoardContext();
+
+    await expect(readBoardContext()).resolves.toEqual(previous);
+    rejectFresh(new Error('fresh read unavailable'));
+    await expect(refresh).rejects.toThrow('fresh read unavailable');
+    await expect(readStaleBoardContext()).resolves.toEqual(previous);
   });
 });
 

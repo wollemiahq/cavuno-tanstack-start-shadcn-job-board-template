@@ -1,22 +1,27 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  failClosedJobRecommendations,
+  type RuntimeBoardFeatureFlags,
   resolveRuntimeFeatureFlags,
   resolveTalentDirectoryVisibility,
 } from './board-feature-flags';
 
 /**
  * The runtime flags (Board PR #968) ride the board context ahead of the
- * pinned SDK's types. Polarity is additive / default-ON: a flag ABSENT from
- * an older API deployment means the feature is available, mirroring the
- * platform's enforcement. These pin that boundary defaulting so no surface
- * mis-reads an unset flag as "off".
+ * pinned SDK's types. Job recommendations preserve shipped behavior when
+ * absent; Recommended talent remains opt-in and therefore defaults off.
  */
 type RuntimeFeatureInput = Parameters<typeof resolveRuntimeFeatureFlags>[0];
+type RuntimeFeatureFixture = Omit<
+  RuntimeFeatureInput,
+  keyof RuntimeBoardFeatureFlags
+> &
+  Partial<RuntimeBoardFeatureFlags>;
 
 function features(
-  extra: Partial<RuntimeFeatureInput> = {},
-): RuntimeFeatureInput {
+  extra: Partial<RuntimeFeatureFixture> = {},
+): RuntimeFeatureFixture {
   return {
     jobAlerts: true,
     candidates: true,
@@ -35,38 +40,88 @@ function features(
 }
 
 describe('resolveRuntimeFeatureFlags', () => {
-  it('defaults both flags to ON when absent (older API deployment)', () => {
+  it('keeps Job recommendations on and Recommended talent off when absent', () => {
     const legacyFeatures = features();
     Reflect.deleteProperty(legacyFeatures, 'nativeApplications');
     Reflect.deleteProperty(legacyFeatures, 'messaging');
+    Reflect.deleteProperty(legacyFeatures, 'jobRecommendationsEnabled');
+    Reflect.deleteProperty(legacyFeatures, 'recommendedTalentEnabled');
     expect(resolveRuntimeFeatureFlags(legacyFeatures)).toEqual({
       nativeApplications: true,
       messaging: true,
+      jobRecommendationsEnabled: true,
+      recommendedTalentEnabled: false,
     });
   });
 
   it('honors an explicit false for each flag', () => {
     expect(
       resolveRuntimeFeatureFlags(
-        features({ nativeApplications: false, messaging: false }),
+        features({
+          nativeApplications: false,
+          messaging: false,
+          jobRecommendationsEnabled: false,
+          recommendedTalentEnabled: false,
+        }),
       ),
-    ).toEqual({ nativeApplications: false, messaging: false });
+    ).toEqual({
+      nativeApplications: false,
+      messaging: false,
+      jobRecommendationsEnabled: false,
+      recommendedTalentEnabled: false,
+    });
   });
 
   it('honors an explicit true for each flag', () => {
     expect(
       resolveRuntimeFeatureFlags(
-        features({ nativeApplications: true, messaging: true }),
+        features({
+          nativeApplications: true,
+          messaging: true,
+          jobRecommendationsEnabled: true,
+          recommendedTalentEnabled: true,
+        }),
       ),
-    ).toEqual({ nativeApplications: true, messaging: true });
+    ).toEqual({
+      nativeApplications: true,
+      messaging: true,
+      jobRecommendationsEnabled: true,
+      recommendedTalentEnabled: true,
+    });
   });
 
   it('resolves each flag independently', () => {
     expect(
       resolveRuntimeFeatureFlags(
-        features({ nativeApplications: false, messaging: true }),
+        features({
+          nativeApplications: false,
+          messaging: true,
+          jobRecommendationsEnabled: false,
+          recommendedTalentEnabled: true,
+        }),
       ),
-    ).toEqual({ nativeApplications: false, messaging: true });
+    ).toEqual({
+      nativeApplications: false,
+      messaging: true,
+      jobRecommendationsEnabled: false,
+      recommendedTalentEnabled: true,
+    });
+  });
+});
+
+describe('failClosedJobRecommendations', () => {
+  it('preserves unrelated board features while disabling recommendations', () => {
+    expect(
+      failClosedJobRecommendations({
+        jobRecommendationsEnabled: true,
+        messaging: true,
+        employers: true,
+      }),
+    ).toEqual({
+      jobRecommendationsEnabled: false,
+      messaging: true,
+      employers: true,
+    });
   });
 });
 

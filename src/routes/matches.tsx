@@ -1,7 +1,9 @@
+import { isNotFound as isApiNotFound } from '@cavuno/board';
 import {
   createFileRoute,
   getRouteApi,
   isRedirect,
+  notFound,
   redirect,
   useNavigate,
   useRouter,
@@ -13,10 +15,11 @@ import {
 import { Briefcase, Upload } from 'lucide-react';
 
 import { ResumeImportDialog } from '../components/resume-import-dialog';
+import { candidateReturnTo } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getRecommendedJobs, saveJob } from '../server/account';
-import { getSeoBase } from '../server/queries';
+import { getFreshBoardContext, getSeoBase } from '../server/queries';
 import { SelectedJobDetail } from './-selected-job-detail';
 import { useSelectedJob } from './-use-selected-job';
 
@@ -45,6 +48,58 @@ import { recommendedJobsEmptyKind } from '@/lib/recommended-jobs';
 
 const rootApi = getRouteApi('__root__');
 
+export type MatchesLoaderDependencies = {
+  getBoardContext: () => Promise<{
+    features: { jobRecommendationsEnabled?: boolean };
+  }>;
+  getRecommendedJobs: () => ReturnType<typeof getRecommendedJobs>;
+  getSeoBase: () => Promise<{ boardName: string }>;
+};
+
+const matchesLoaderDependencies: MatchesLoaderDependencies = {
+  getBoardContext: getFreshBoardContext,
+  getRecommendedJobs,
+  getSeoBase,
+};
+
+export function createMatchesLoader(
+  dependencies: MatchesLoaderDependencies = matchesLoaderDependencies,
+) {
+  return async (context?: { location?: { href: string } }) => {
+    const returnTo = candidateReturnTo(context?.location?.href ?? '/matches');
+    // The context read gives the route a fast, clean 404 for a disabled
+    // surface. If that freshness probe is transiently unavailable, continue
+    // to the recommendation API: it enforces the same gate authoritatively
+    // and preserves the existing auth redirects.
+    const board = await dependencies.getBoardContext().catch(() => null);
+    if (board?.features.jobRecommendationsEnabled === false) throw notFound();
+    try {
+      const [recommended, seo] = await Promise.all([
+        dependencies.getRecommendedJobs(),
+        dependencies.getSeoBase(),
+      ]);
+      return { ...recommended, seo };
+    } catch (error) {
+      if (isRedirect(error)) throw error;
+      if (isApiNotFound(error)) throw notFound();
+      const authFailure = candidateLoaderError(error);
+      if (authFailure === 'email-unverified') {
+        throw redirect({
+          to: '/auth/verify-email-required',
+          search: { returnTo },
+        });
+      }
+      if (authFailure === 'unauthenticated') {
+        throw redirect({
+          to: '/auth/sign-in',
+          search: { returnTo },
+        });
+      }
+      throw error;
+    }
+  };
+}
+
 export const Route = createFileRoute('/matches')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: (search: UrlSearchInput): { selectedJob?: string } => {
@@ -53,31 +108,7 @@ export const Route = createFileRoute('/matches')({
   },
   pendingComponent: CandidateRoutePendingPage,
   errorComponent: CandidateRouteErrorPage,
-  loader: async () => {
-    try {
-      const [recommended, seo] = await Promise.all([
-        getRecommendedJobs(),
-        getSeoBase(),
-      ]);
-      return { ...recommended, seo };
-    } catch (error) {
-      if (isRedirect(error)) throw error;
-      const authFailure = candidateLoaderError(error);
-      if (authFailure === 'email-unverified') {
-        throw redirect({
-          to: '/auth/verify-email-required',
-          search: { returnTo: '/matches' },
-        });
-      }
-      if (authFailure === 'unauthenticated') {
-        throw redirect({
-          to: '/auth/sign-in',
-          search: { returnTo: '/matches' },
-        });
-      }
-      throw error;
-    }
-  },
+  loader: createMatchesLoader(),
   head: ({ loaderData }) => ({
     meta: [
       {

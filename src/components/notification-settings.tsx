@@ -48,9 +48,11 @@ const CHANNEL_LABELS = {
  */
 export function NotificationSettings({
   preferences,
+  recommendedJobEmailsEnabled = true,
   updatePreference = updateNotificationPreference,
 }: {
   preferences: StarterNotificationPreference[];
+  recommendedJobEmailsEnabled?: boolean;
   updatePreference?: (options: {
     data: StarterUpdateNotificationPreferenceBody;
   }) => ReturnType<typeof updateNotificationPreference>;
@@ -63,13 +65,26 @@ export function NotificationSettings({
       <ul className="divide-border divide-y" data-test="notification-settings">
         {preferences.map((pref) => {
           const label = CHANNEL_LABELS[pref.channel];
+          const recommendationPaused =
+            pref.channel === 'recommendedJobEmails' &&
+            !recommendedJobEmailsEnabled;
+          const disabled =
+            pending === pref.channel ||
+            (recommendationPaused && !pref.subscribed);
           return (
             <li
               key={pref.channel}
               className="flex items-center justify-between gap-4 py-3"
             >
               <div>
-                <p className="font-medium">{label.title()}</p>
+                <p className="flex items-center gap-2 font-medium">
+                  <span>{label.title()}</span>
+                  {recommendationPaused ? (
+                    <span className="text-muted-foreground text-xs">
+                      {m.alertManager_pausedBadge()}
+                    </span>
+                  ) : null}
+                </p>
                 <p className="text-muted-foreground text-sm">
                   {label.description()}
                 </p>
@@ -78,8 +93,9 @@ export function NotificationSettings({
                 className="shrink-0"
                 aria-label={label.title()}
                 checked={pref.subscribed}
-                disabled={pending === pref.channel}
+                disabled={disabled}
                 onCheckedChange={async (isSelected) => {
+                  if (recommendationPaused && !pref.subscribed) return;
                   setPending(pref.channel);
                   try {
                     await updatePreference({

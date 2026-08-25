@@ -67,6 +67,13 @@ const FLAG_COPY = new Map<
     },
   ],
   [
+    'jobRecommendationsEnabled',
+    {
+      label: m.previewFlag_jobRecommendationsEnabled_label,
+      description: m.previewFlag_jobRecommendationsEnabled_description,
+    },
+  ],
+  [
     'candidatesEnabled',
     {
       label: m.previewFlag_candidatesEnabled_label,

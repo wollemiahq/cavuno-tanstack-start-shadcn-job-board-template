@@ -110,6 +110,7 @@ export default function Header({
     blog: boolean;
     talentDirectory: 'off' | 'public' | 'employers_only' | boolean;
     nativeApplications: boolean;
+    jobRecommendationsEnabled?: boolean;
   };
   hasAccessGrant?: boolean;
   employerCompanies?: CompanyMembership[] | null;
@@ -292,6 +293,7 @@ export default function Header({
           user={user}
           hasAccessGrant={hasAccessGrant}
           nativeApplications={features.nativeApplications}
+          jobRecommendationsEnabled={features.jobRecommendationsEnabled ?? true}
           employerCompanies={employerCompanies}
           onSignOut={onSignOut}
           onSignOutPendingChange={setSigningOut}

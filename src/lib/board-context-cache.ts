@@ -36,6 +36,7 @@ const CONTEXT_TTL_MS = 30_000;
 const cache = createBoardContextCache<BoardContext>(
   {
     getBoardContext: () => getBoard().context(boardGlobalReadCache()),
+    getFreshBoardContext: () => getBoard().context({ cache: 'no-store' }),
     getDataSource,
     now: Date.now,
   },
@@ -43,6 +44,12 @@ const cache = createBoardContextCache<BoardContext>(
 );
 
 export const readBoardContext = cache.readBoardContext;
+
+/** Bypass isolate and shared edge caches for operator kill switches. */
+export const refreshBoardContext = cache.refreshBoardContext;
+
+/** Previous memo for fail-closed recovery after a failed freshness probe. */
+export const readStaleBoardContext = cache.readStaleBoardContext;
 
 /** Test seam: drop everything held for the current or all data sources. */
 export function resetBoardContextCache(source?: DataSource): void {

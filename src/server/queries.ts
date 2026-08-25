@@ -23,6 +23,8 @@ import { withApplyGatewayCapability } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import {
   readBoardContext,
+  readStaleBoardContext,
+  refreshBoardContext,
   readEmployerOfferGate,
 } from '../lib/board-context-cache';
 import { boardGlobalReadCache } from '../lib/read-cache';
@@ -58,43 +60,62 @@ import type {
 const EMPTY_NAVIGATION_ORDER: string[] = [];
 const EMPTY_CUSTOM_LINKS: BoardContextFooter['customLinks'] = [];
 
+function resolveBoardContext(
+  context: Awaited<ReturnType<typeof readBoardContext>>,
+) {
+  return {
+    ...context,
+    // Runtime feature flags are resolved to clean typed booleans here at
+    // the single context boundary — absent ⇒ on. See
+    // src/board/board-feature-flags.ts for the additive polarity.
+    features: {
+      ...context.features,
+      ...resolveRuntimeFeatureFlags(context.features),
+    },
+    // 4.0.0: contact is identity data. Footer description / navigationOrder /
+    // customLinks are app-owned presentation (Puck on hosted; defaults here).
+    footer: {
+      description: null,
+      contactEmail: context.contact?.email ?? null,
+      websiteUrl: context.contact?.websiteUrl ?? null,
+      xUrl: context.contact?.xUrl ?? null,
+      facebookUrl: context.contact?.facebookUrl ?? null,
+      linkedinUrl: context.contact?.linkedinUrl ?? null,
+      navigationOrder: EMPTY_NAVIGATION_ORDER,
+      customLinks: EMPTY_CUSTOM_LINKS,
+    } satisfies BoardContextFooter,
+    // 4.0.0: talent directory is features.talentDirectory enum ('off' is truthy!).
+    talentDirectoryVisibility: context.features.talentDirectory,
+    // The `analytics` group is in the published SDK types, but an API
+    // deployment predating it would omit it from the body — default to
+    // "no trackers, no consent gate" rather than faulting the root render.
+    analytics: context.analytics ?? {
+      ga4MeasurementId: null,
+      gtmId: null,
+      metaPixelId: null,
+      linkedInPartnerId: null,
+      cookieConsentRequired: false,
+    },
+  };
+}
+
 export const getBoardContext = createServerFn({ method: 'GET' }).handler(
+  async () => resolveBoardContext(await readBoardContext()),
+);
+
+/**
+ * Fresh context for operator-controlled kill-switch enforcement. This read
+ * bypasses both cache layers and refreshes the isolate memo for later reads.
+ */
+export const getFreshBoardContext = createServerFn({ method: 'GET' }).handler(
+  async () => resolveBoardContext(await refreshBoardContext()),
+);
+
+/** Last successful context, only for a fail-closed shell after fresh failure. */
+export const getStaleBoardContext = createServerFn({ method: 'GET' }).handler(
   async () => {
-    const context = await readBoardContext();
-    return {
-      ...context,
-      // Runtime feature flags are resolved to clean typed booleans here at
-      // the single context boundary — absent ⇒ on. See
-      // src/board/board-feature-flags.ts for the additive polarity.
-      features: {
-        ...context.features,
-        ...resolveRuntimeFeatureFlags(context.features),
-      },
-      // 4.0.0: contact is identity data. Footer description / navigationOrder /
-      // customLinks are app-owned presentation (Puck on hosted; defaults here).
-      footer: {
-        description: null,
-        contactEmail: context.contact?.email ?? null,
-        websiteUrl: context.contact?.websiteUrl ?? null,
-        xUrl: context.contact?.xUrl ?? null,
-        facebookUrl: context.contact?.facebookUrl ?? null,
-        linkedinUrl: context.contact?.linkedinUrl ?? null,
-        navigationOrder: EMPTY_NAVIGATION_ORDER,
-        customLinks: EMPTY_CUSTOM_LINKS,
-      } satisfies BoardContextFooter,
-      // 4.0.0: talent directory is features.talentDirectory enum ('off' is truthy!).
-      talentDirectoryVisibility: context.features.talentDirectory,
-      // The `analytics` group is in the published SDK types, but an API
-      // deployment predating it would omit it from the body — default to
-      // "no trackers, no consent gate" rather than faulting the root render.
-      analytics: context.analytics ?? {
-        ga4MeasurementId: null,
-        gtmId: null,
-        metaPixelId: null,
-        linkedInPartnerId: null,
-        cookieConsentRequired: false,
-      },
-    };
+    const stale = readStaleBoardContext();
+    return resolveBoardContext(await (stale ?? readBoardContext()));
   },
 );
 

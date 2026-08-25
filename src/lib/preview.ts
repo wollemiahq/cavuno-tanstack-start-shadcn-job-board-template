@@ -376,6 +376,7 @@ export interface PreviewBooleanFlag {
     | 'jobAccessPaywallEnabled'
     | 'blogEnabled'
     | 'jobAlertsEnabled'
+    | 'jobRecommendationsEnabled'
     | 'candidatesEnabled'
     | 'employersEnabled'
     | 'nativeApplicationsEnabled'
@@ -425,6 +426,15 @@ export const PREVIEW_FEATURE_FLAGS: readonly PreviewFeatureFlag[] = [
     kind: 'boolean',
     label: 'Job alerts',
     description: 'Allow anonymous job-alert subscriptions.',
+  },
+  {
+    key: 'jobRecommendationsEnabled',
+    kind: 'boolean',
+    label: 'Job recommendations',
+    description:
+      'Show signed-in candidates personalized job matches based on their profile and resume.',
+    requires: ['candidatesEnabled'],
+    requiresNote: 'Requires candidate accounts.',
   },
   {
     key: 'candidatesEnabled',
@@ -481,6 +491,7 @@ export const SANDBOX_CONFIG_WHITELIST: ReadonlySet<string> = new Set([
   'talentDirectoryVisibility',
   'blogEnabled',
   'jobAlertsEnabled',
+  'jobRecommendationsEnabled',
   'candidatesEnabled',
   'employersEnabled',
   'nativeApplicationsEnabled',
@@ -499,6 +510,7 @@ export interface PreviewBoardConfig {
   talentDirectoryVisibility: TalentDirectoryVisibility;
   blogEnabled: boolean;
   jobAlertsEnabled: boolean;
+  jobRecommendationsEnabled: boolean;
   candidatesEnabled: boolean;
   employersEnabled: boolean;
   nativeApplicationsEnabled: boolean;
@@ -516,6 +528,7 @@ export interface SandboxConfigPatch {
   talentDirectoryVisibility?: SandboxConfigValue;
   blogEnabled?: SandboxConfigValue;
   jobAlertsEnabled?: SandboxConfigValue;
+  jobRecommendationsEnabled?: SandboxConfigValue;
   candidatesEnabled?: SandboxConfigValue;
   employersEnabled?: SandboxConfigValue;
   nativeApplicationsEnabled?: SandboxConfigValue;
@@ -532,6 +545,7 @@ export function toPreviewBoardConfig(context: {
     candidatePaywall: boolean;
     blog: boolean;
     jobAlerts: boolean;
+    jobRecommendationsEnabled?: boolean;
     candidates: boolean;
     employers: boolean;
     registrationWall: boolean;
@@ -555,6 +569,8 @@ export function toPreviewBoardConfig(context: {
       'off',
     blogEnabled: context.features.blog,
     jobAlertsEnabled: context.features.jobAlerts,
+    jobRecommendationsEnabled:
+      context.features.jobRecommendationsEnabled ?? true,
     candidatesEnabled: context.features.candidates,
     employersEnabled: context.features.employers,
     nativeApplicationsEnabled: context.features.nativeApplications ?? true,

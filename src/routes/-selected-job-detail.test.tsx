@@ -90,6 +90,8 @@ const board = {
   customFields: { job: [] },
   features: {
     jobAlerts: true,
+    jobRecommendationsEnabled: true,
+    recommendedTalentEnabled: false,
     candidates: true,
     employers: true,
     blog: true,

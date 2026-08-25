@@ -153,6 +153,10 @@ export const Route = createRootRoute({
   // Public shell only (board + SEO + offer gate + consent). Session chrome
   // is RootSessionProvider after paint — see getRootSessionShellData.
   loader: () => getRootShellData(),
+  // Board feature flags are operator-controlled kill switches. Revalidate the
+  // shell on every navigation so account chrome and route loaders cannot use
+  // different generations of those flags after a live settings change.
+  staleTime: 0,
   head: ({ loaderData }) => {
     const board = loaderData?.board;
     // Brand icons from board.context() (`logoUrl` + `icons`), not board.seo().

@@ -1190,6 +1190,8 @@
   "previewFlag_jobAccessPaywallEnabled_label": "Candidate paywall",
   "previewFlag_jobAlertsEnabled_description": "Allow anonymous job-alert subscriptions.",
   "previewFlag_jobAlertsEnabled_label": "Job alerts",
+  "previewFlag_jobRecommendationsEnabled_description": "Show signed-in candidates personalized job matches based on their profile and resume.",
+  "previewFlag_jobRecommendationsEnabled_label": "Job recommendations",
   "previewFlag_nativeApplicationsEnabled_description": "Built-in ATS apply — off means external-applications-only.",
   "previewFlag_nativeApplicationsEnabled_label": "Native applications",
   "previewFlag_registrationWallEnabled_description": "Require sign-in to apply — disables guest applications.",

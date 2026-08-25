@@ -155,6 +155,7 @@ const CHANNEL_NAMES = {
 
 export function SettingsPageView({
   data,
+  jobRecommendationsEnabled = true,
   dependencies = settingsRouteDependencies,
 }: {
   data:
@@ -166,6 +167,7 @@ export function SettingsPageView({
         consent: Parameters<typeof MarketingConsentSettings>[0]['consent'];
         account: { email: string; hasPassword?: unknown };
       };
+  jobRecommendationsEnabled?: boolean;
   dependencies?: SettingsRouteDependencies;
 }) {
   if (data.mode === 'unsubscribed') {
@@ -223,6 +225,7 @@ export function SettingsPageView({
       preferences={data.preferences}
       consent={data.consent}
       account={data.account}
+      jobRecommendationsEnabled={jobRecommendationsEnabled}
       dependencies={dependencies}
     />
   );
@@ -236,11 +239,13 @@ function SignedInSettings({
   preferences,
   consent,
   account,
+  jobRecommendationsEnabled,
   dependencies,
 }: {
   preferences: Parameters<typeof NotificationSettings>[0]['preferences'];
   consent: Parameters<typeof MarketingConsentSettings>[0]['consent'];
   account: { email: string; hasPassword?: unknown };
+  jobRecommendationsEnabled: boolean;
   dependencies: SettingsRouteDependencies;
 }) {
   return (
@@ -257,6 +262,7 @@ function SignedInSettings({
           </h2>
           <NotificationSettings
             preferences={preferences}
+            recommendedJobEmailsEnabled={jobRecommendationsEnabled}
             updatePreference={dependencies.updateNotificationPreference}
           />
           {MARKETING_CONSENT.notificationPreferences ? (

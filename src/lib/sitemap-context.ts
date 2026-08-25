@@ -46,12 +46,17 @@ type CachedContext = {
 let contextCache = new WeakMap<BoardSdk, Map<string, CachedContext>>();
 let edgeCacheRefused = false;
 
-type EdgeCacheStorage = { default?: Cache };
+declare global {
+  interface CacheStorage {
+    /** Cloudflare Workers' named default edge cache. */
+    readonly default?: Cache;
+  }
+}
 
 function defaultEdgeCache(): Cache | undefined {
   if (edgeCacheRefused) return undefined;
   try {
-    return (globalThis as { caches?: EdgeCacheStorage }).caches?.default;
+    return globalThis.caches?.default;
   } catch {
     // Workers for Platforms can expose `caches` but refuse `.default`.
     // Retain the per-isolate promise cache there instead of failing sitemap XML.
@@ -74,19 +79,22 @@ async function readPersistentContext(
       persistentCacheRequest(origin),
     );
     if (!response) return null;
+    // SAFETY: The persistent entry is written only by writePersistentContext
+    // below; the following bounds checks reject malformed or expired values.
     const payload = (await response.json()) as {
       context?: SitemapContext;
       expiresAt?: number;
     };
+    const expiresAt = Number(payload.expiresAt);
     if (
       !payload.context ||
       !Array.isArray(payload.context.buckets) ||
-      typeof payload.expiresAt !== 'number' ||
-      payload.expiresAt <= Date.now()
+      !Number.isFinite(expiresAt) ||
+      expiresAt <= Date.now()
     ) {
       return null;
     }
-    return { context: payload.context, expiresAt: payload.expiresAt };
+    return { context: payload.context, expiresAt };
   } catch {
     edgeCacheRefused = true;
     return null;

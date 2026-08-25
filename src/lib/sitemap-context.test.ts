@@ -12,6 +12,8 @@ import {
 import type { BoardSdk } from '@cavuno/board';
 
 const ORIGIN = 'https://jobs.example';
+// SAFETY: Source fakes own every BoardSdk interaction in these unit tests;
+// the board value is used only as an opaque WeakMap identity.
 const board = {} as BoardSdk;
 const originalCaches = globalThis.caches;
 
@@ -93,13 +95,18 @@ describe('hosted-shaped sitemap context', () => {
   it('reuses the persistent Worker snapshot across isolated board clients', async () => {
     const stored = new Map<string, Response>();
     const edgeCache = {
-      match: vi.fn(async (request: Request) =>
-        stored.get(request.url)?.clone(),
+      add: vi.fn(async () => {}),
+      addAll: vi.fn(async () => {}),
+      delete: vi.fn(async () => false),
+      keys: vi.fn(async () => []),
+      match: vi.fn(async (request: RequestInfo | URL) =>
+        stored.get(new Request(request).url)?.clone(),
       ),
-      put: vi.fn(async (request: Request, response: Response) => {
-        stored.set(request.url, response.clone());
+      matchAll: vi.fn(async () => []),
+      put: vi.fn(async (request: RequestInfo | URL, response: Response) => {
+        stored.set(new Request(request).url, response.clone());
       }),
-    } as unknown as Cache;
+    } satisfies Cache;
     Object.defineProperty(globalThis, 'caches', {
       configurable: true,
       value: { default: edgeCache },
@@ -112,11 +119,10 @@ describe('hosted-shaped sitemap context', () => {
     // Cache API entry, then use a distinct SDK client object.
     resetSitemapContextCacheForTest();
     const secondSource = source({ buckets: ['blog'] });
-    const second = await loadSitemapContext(
-      {} as BoardSdk,
-      ORIGIN,
-      secondSource,
-    );
+    // SAFETY: As above, the source fake owns all SDK calls and this distinct
+    // value exists only to model a second isolate's client identity.
+    const secondBoard = {} as BoardSdk;
+    const second = await loadSitemapContext(secondBoard, ORIGIN, secondSource);
 
     expect(second).toEqual(first);
     expect(secondSource.listedBuckets).not.toHaveBeenCalled();

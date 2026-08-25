@@ -57,6 +57,7 @@ const config: PreviewBoardConfig = {
   talentDirectoryVisibility: 'public',
   blogEnabled: true,
   jobAlertsEnabled: true,
+  jobRecommendationsEnabled: true,
   candidatesEnabled: true,
   employersEnabled: true,
   nativeApplicationsEnabled: true,
@@ -286,6 +287,9 @@ describe('PreviewToolbar', () => {
     ).toBeInTheDocument();
     expect(
       within(panel).getByRole('combobox', { name: 'Talent directory' }),
+    ).toBeInTheDocument();
+    expect(
+      within(panel).getByRole('switch', { name: 'Job recommendations' }),
     ).toBeInTheDocument();
   });
 

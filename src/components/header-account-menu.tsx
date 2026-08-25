@@ -30,6 +30,7 @@ export function HeaderAccountMenu({
   user,
   hasAccessGrant,
   nativeApplications,
+  jobRecommendationsEnabled,
   employerCompanies,
   onSignOut,
   onSignOutPendingChange,
@@ -38,6 +39,7 @@ export function HeaderAccountMenu({
   user: BoardUser;
   hasAccessGrant: boolean;
   nativeApplications: boolean;
+  jobRecommendationsEnabled: boolean;
   employerCompanies: CompanyMembership[] | null;
   onSignOut: () => void;
   onSignOutPendingChange: (pending: boolean) => void;
@@ -73,9 +75,14 @@ export function HeaderAccountMenu({
         <DropdownMenuItem nativeButton={false} render={<Link to="/account" />}>
           {m.accountShell_profileNav()}
         </DropdownMenuItem>
-        <DropdownMenuItem nativeButton={false} render={<Link to="/matches" />}>
-          {m.accountShell_recommendedJobsNav()}
-        </DropdownMenuItem>
+        {jobRecommendationsEnabled ? (
+          <DropdownMenuItem
+            nativeButton={false}
+            render={<Link to="/matches" />}
+          >
+            {m.accountShell_recommendedJobsNav()}
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem
           nativeButton={false}
           render={<Link to="/saved-jobs" />}

@@ -73,6 +73,13 @@ export function applyReadCache(req: BoardRequest): BoardRequest {
     headers.has('x-board-access') ||
     headers.has('x-cavuno-board-capabilities');
 
+  // Feature-gate/kill-switch reads may explicitly require the latest value.
+  // Never layer Cloudflare's shared cache back onto those requests.
+  if (init.cache === 'no-store') {
+    delete init.cf;
+    return req;
+  }
+
   if (method === 'GET' && !viewerSpecific) {
     // Respect an explicit board-global TTL a call site already tagged;
     // otherwise apply the default short content TTL.

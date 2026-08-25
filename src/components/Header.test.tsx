@@ -82,6 +82,7 @@ function renderHeader({
   keywordSuggestions = [],
   companyMarketSuggestions = [],
   resolvedKeywordLabel,
+  jobRecommendationsEnabled = true,
 }: {
   initialEntry?: string;
   features?: HeaderFeatures;
@@ -105,6 +106,7 @@ function renderHeader({
   }>;
   companyMarketSuggestions?: Array<{ slug: string; name: string }>;
   resolvedKeywordLabel?: string;
+  jobRecommendationsEnabled?: boolean;
 } = {}) {
   const initialUrl = new URL(initialEntry, 'https://board.example');
   const initialSearch = resolveHeaderSearchState(
@@ -179,7 +181,7 @@ function renderHeader({
             logoUrl={logoUrl}
             user={viewer}
             language="en"
-            features={features}
+            features={{ ...features, jobRecommendationsEnabled }}
             hasAccessGrant={hasAccessGrant}
             onSignOut={() => setViewer(null)}
             signOutAction={signOutMock}
@@ -527,6 +529,26 @@ describe('Header — native-applications account gating', () => {
       name: m.accountShell_savedJobsNav(),
     });
     expect(saved).toHaveAttribute('href', '/saved-jobs');
+  });
+
+  it('hides recommended jobs when the board turns recommendations off', async () => {
+    renderHeader({
+      user: signedInUser,
+      jobRecommendationsEnabled: false,
+    });
+
+    fireEvent.click(await findAccountButton());
+
+    expect(
+      await screen.findByRole('menuitem', {
+        name: m.accountShell_savedJobsNav(),
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('menuitem', {
+        name: m.accountShell_recommendedJobsNav(),
+      }),
+    ).toBeNull();
   });
 
   it('hides the Applications account entry when native applications are off', async () => {

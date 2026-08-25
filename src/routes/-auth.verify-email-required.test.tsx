@@ -63,7 +63,11 @@ import {
   loadVerificationGate,
   VerifyEmailRequiredView,
 } from './-auth.verify-email-required';
-import { Route } from './auth.verify-email-required';
+import {
+  isJobMatchesDestination,
+  resolveVerifiedDestination,
+  Route,
+} from './auth.verify-email-required';
 
 import { m } from '@/paraglide/messages';
 
@@ -87,6 +91,16 @@ const storedResume: Resume = {
     sizeBytes: 12_345,
   },
 };
+
+describe('resolveVerifiedDestination', () => {
+  it('falls back from matches when Job recommendations were disabled', () => {
+    expect(resolveVerifiedDestination('/matches', false)).toBe('/account');
+    expect(resolveVerifiedDestination('/matches', true)).toBe('/matches');
+    expect(resolveVerifiedDestination('/jobs?q=design', false)).toBe(
+      '/jobs?q=design',
+    );
+  });
+});
 
 const OriginalResizeObserver = globalThis.ResizeObserver;
 
@@ -118,6 +132,7 @@ function renderVerifyPage({
   resume = null,
   resumeOnboardingDismissed = false,
   userId = 'candidate-1',
+  jobRecommendationsEnabled = true,
 }: {
   returnTo?: string;
   emailVerified?: boolean;
@@ -125,6 +140,7 @@ function renderVerifyPage({
   resume?: Resume | null;
   resumeOnboardingDismissed?: boolean;
   userId?: string;
+  jobRecommendationsEnabled?: boolean;
 } = {}) {
   return render(
     <VerifyEmailRequiredView
@@ -134,6 +150,7 @@ function renderVerifyPage({
       resumeOnboardingDismissed={resumeOnboardingDismissed}
       userId={userId}
       returnTo={returnTo}
+      jobRecommendationsEnabled={jobRecommendationsEnabled}
       verifyOtpCodeAction={mocks.verifyOtpCode}
       resendOtpAction={mocks.resendOtp}
       updateNotificationPreferenceAction={mocks.updateNotificationPreference}
@@ -147,6 +164,25 @@ function renderVerifyPage({
 }
 
 describe('/auth/verify-email-required search contract', () => {
+  it.each([
+    ['/matches?selectedJob=job-1', '/account'],
+    ['/fr/matches', '/fr/account'],
+    ['/fr/matches?selectedJob=job-1', '/fr/account'],
+    ['/jobs?q=design', '/jobs?q=design'],
+  ])(
+    'resolves a disabled recommendation destination %s to %s',
+    (returnTo, expected) => {
+      expect(resolveVerifiedDestination(returnTo, false)).toBe(expected);
+    },
+  );
+
+  it.each(['/matches?selectedJob=job-1', '/fr/matches'])(
+    'recognizes %s as a recommendation destination requiring a fresh gate read',
+    (returnTo) => {
+      expect(isJobMatchesDestination(returnTo)).toBe(true);
+    },
+  );
+
   it('validates a complete internal candidate destination', () => {
     const validate = Route.options.validateSearch;
     if (!validate) {
@@ -495,6 +531,28 @@ describe('/auth/verify-email-required resume offer step', () => {
     expect(wasDisabledWhilePending).toBe(true);
     expect(checkbox).not.toBeChecked();
     expect(skipButton).toBeEnabled();
+  });
+
+  it('does not offer recommendation emails when recommendations are off', async () => {
+    mocks.verifyOtpCode.mockResolvedValue({ ok: true });
+
+    const { container } = renderVerifyPage({
+      resume: emptyResume,
+      jobRecommendationsEnabled: false,
+    });
+    fireEvent.change(container.querySelector('input[name="code"]')!, {
+      target: { value: '123456' },
+    });
+
+    expect(
+      await screen.findByText(m.authVerifyEmailRequired_resumeTitle()),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('checkbox', {
+        name: m.authVerifyEmailRequired_recommendedJobEmailsLabel(),
+      }),
+    ).toBeNull();
+    expect(mocks.updateNotificationPreference).not.toHaveBeenCalled();
   });
 });
 

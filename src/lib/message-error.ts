@@ -1,5 +1,19 @@
+import { BOARD_API_ERROR_CODES, isBoardApiError } from '@cavuno/board';
+
 import { m } from '../paraglide/messages';
 import { boardErrorMessage } from './board-error-message';
+
+const KNOWN_BOARD_ERROR_CODES: ReadonlySet<string> = new Set(
+  BOARD_API_ERROR_CODES,
+);
+
+function serializedBoardErrorCode<T>(error: T): string | null {
+  if (error === null || error === undefined) return null;
+  const descriptor = Object.getOwnPropertyDescriptor(Object(error), 'code');
+  if (!descriptor) return null;
+  const code = String(descriptor.value);
+  return KNOWN_BOARD_ERROR_CODES.has(code) ? code : null;
+}
 
 /**
  * A user-facing string for an error caught from a messaging server function.
@@ -8,14 +22,11 @@ import { boardErrorMessage } from './board-error-message';
  * carries the server-side text — fall back to a generic line otherwise.
  */
 export function errorMessage<T>(error: T): string {
-  if (
-    error &&
-    typeof error === 'object' &&
-    'code' in error &&
-    typeof error.code === 'string'
-  ) {
+  if (isBoardApiError(error)) {
     return boardErrorMessage({ code: error.code });
   }
+  const serializedCode = serializedBoardErrorCode(error);
+  if (serializedCode) return boardErrorMessage({ code: serializedCode });
   if (error instanceof Error && error.message.includes('EMAIL_UNVERIFIED')) {
     return m.messages_verifyEmailFirstText();
   }
