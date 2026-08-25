@@ -1458,6 +1458,9 @@ Props:
 - `employerCompanies: { id: string; object: "company_membership"; status: "approved" | "pending_work_email" | "awaiting_admin" | "rejected"…`
 - `hasAccessGrant: boolean`
 - `nativeApplications: boolean`
+- `onSignOut: () => void`
+- `onSignOutPendingChange: (pending: boolean) => void`
+- `signOutAction?: SignOutAction | undefined`
 - `user: { id: string; object: "board_user"; role: "candidate" | "employer"; email: string; displayName: string | null; emailV…`
 
 ### HeaderMobileMenu — `src/components/header-mobile-menu.tsx`
