@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  failClosedJobRecommendations,
   type RuntimeBoardFeatureFlags,
   resolveRuntimeFeatureFlags,
   resolveTalentDirectoryVisibility,
@@ -104,6 +105,22 @@ describe('resolveRuntimeFeatureFlags', () => {
       messaging: true,
       jobRecommendationsEnabled: false,
       recommendedTalentEnabled: true,
+    });
+  });
+});
+
+describe('failClosedJobRecommendations', () => {
+  it('preserves unrelated board features while disabling recommendations', () => {
+    expect(
+      failClosedJobRecommendations({
+        jobRecommendationsEnabled: true,
+        messaging: true,
+        employers: true,
+      }),
+    ).toEqual({
+      jobRecommendationsEnabled: false,
+      messaging: true,
+      employers: true,
     });
   });
 });

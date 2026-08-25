@@ -7,7 +7,12 @@ import { getSessionUser } from './account';
 import { listCompanies } from './employers';
 import { getAccessGrant } from './paywall';
 import { getDataSourceFacts, resolvePreviewStateForViewer } from './preview';
-import { getBoardContext, getBoardSeo, getEmployerOfferGate } from './queries';
+import {
+  getBoardSeo,
+  getEmployerOfferGate,
+  getFreshBoardContext,
+  getStaleBoardContext,
+} from './queries';
 
 /**
  * Public root shell only — board identity, SEO, footer gate, consent cookie.
@@ -27,7 +32,13 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
     );
 
     const [board, seo, offerGate] = await Promise.all([
-      getBoardContext(),
+      getFreshBoardContext().catch(async () => {
+        const cached = await getStaleBoardContext();
+        return {
+          ...cached,
+          features: failClosedJobRecommendations(cached.features),
+        };
+      }),
       getBoardSeo(),
       getEmployerOfferGate(),
     ]);
@@ -95,3 +106,4 @@ export function resolveRootHasAccessGrant(
 ) {
   return resolveSubscriptionEntryVisible(candidatePaywall, hasGrant);
 }
+import { failClosedJobRecommendations } from '../board/board-feature-flags';

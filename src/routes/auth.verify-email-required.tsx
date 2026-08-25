@@ -8,7 +8,7 @@ import { ResumeUpload } from '../components/resume-upload';
 import { candidateReturnTo } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { resendOtp, verifyOtpCode } from '../server/auth';
-import { getBoardContext } from '../server/queries';
+import { getFreshBoardContext } from '../server/queries';
 import { updateNotificationPreference } from '../server/settings';
 import {
   loadVerificationGate,
@@ -28,9 +28,16 @@ export function resolveVerifiedDestination(
   returnTo: string,
   jobRecommendationsEnabled: boolean,
 ): string {
-  return returnTo === '/matches' && !jobRecommendationsEnabled
-    ? '/account'
-    : returnTo;
+  if (jobRecommendationsEnabled) return returnTo;
+  const pathname = returnTo.split(/[?#]/, 1)[0] ?? returnTo;
+  if (pathname === '/matches') return '/account';
+  const localizedMatch = pathname.match(/^\/([^/]+)\/matches$/);
+  return localizedMatch ? `/${localizedMatch[1]}/account` : returnTo;
+}
+
+export function isJobMatchesDestination(returnTo: string): boolean {
+  const pathname = returnTo.split(/[?#]/, 1)[0] ?? returnTo;
+  return pathname === '/matches' || /^\/[^/]+\/matches$/.test(pathname);
 }
 
 export const Route = createFileRoute('/auth/verify-email-required')({
@@ -83,9 +90,9 @@ function VerifyEmailRequiredPage() {
       }}
       navigate={async (href) => {
         let recommendationsEnabled = jobRecommendationsEnabled;
-        if (href === '/matches') {
+        if (isJobMatchesDestination(href)) {
           try {
-            const currentBoard = await getBoardContext();
+            const currentBoard = await getFreshBoardContext();
             recommendationsEnabled =
               currentBoard.features.jobRecommendationsEnabled ?? true;
           } catch {

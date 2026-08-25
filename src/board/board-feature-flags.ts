@@ -79,3 +79,11 @@ export function resolveRuntimeFeatureFlags(
     recommendedTalentEnabled: parity.recommendedTalentEnabled ?? false,
   };
 }
+
+/** Keep the rest of a cached board shell available when a fresh kill-switch
+ * read fails, while never re-exposing recommendations from stale state. */
+export function failClosedJobRecommendations<
+  Features extends { jobRecommendationsEnabled: boolean },
+>(features: Features): Features {
+  return { ...features, jobRecommendationsEnabled: false };
+}

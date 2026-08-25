@@ -1,3 +1,4 @@
+import { isNotFound as isApiNotFound } from '@cavuno/board';
 import {
   createFileRoute,
   getRouteApi,
@@ -14,10 +15,11 @@ import {
 import { Briefcase, Upload } from 'lucide-react';
 
 import { ResumeImportDialog } from '../components/resume-import-dialog';
+import { candidateReturnTo } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getRecommendedJobs, saveJob } from '../server/account';
-import { getBoardContext, getSeoBase } from '../server/queries';
+import { getFreshBoardContext, getSeoBase } from '../server/queries';
 import { SelectedJobDetail } from './-selected-job-detail';
 import { useSelectedJob } from './-use-selected-job';
 
@@ -55,7 +57,7 @@ export type MatchesLoaderDependencies = {
 };
 
 const matchesLoaderDependencies: MatchesLoaderDependencies = {
-  getBoardContext,
+  getBoardContext: getFreshBoardContext,
   getRecommendedJobs,
   getSeoBase,
 };
@@ -63,9 +65,14 @@ const matchesLoaderDependencies: MatchesLoaderDependencies = {
 export function createMatchesLoader(
   dependencies: MatchesLoaderDependencies = matchesLoaderDependencies,
 ) {
-  return async () => {
-    const board = await dependencies.getBoardContext();
-    if (board.features.jobRecommendationsEnabled === false) throw notFound();
+  return async (context?: { location?: { href: string } }) => {
+    const returnTo = candidateReturnTo(context?.location?.href ?? '/matches');
+    // The context read gives the route a fast, clean 404 for a disabled
+    // surface. If that freshness probe is transiently unavailable, continue
+    // to the recommendation API: it enforces the same gate authoritatively
+    // and preserves the existing auth redirects.
+    const board = await dependencies.getBoardContext().catch(() => null);
+    if (board?.features.jobRecommendationsEnabled === false) throw notFound();
     try {
       const [recommended, seo] = await Promise.all([
         dependencies.getRecommendedJobs(),
@@ -74,17 +81,18 @@ export function createMatchesLoader(
       return { ...recommended, seo };
     } catch (error) {
       if (isRedirect(error)) throw error;
+      if (isApiNotFound(error)) throw notFound();
       const authFailure = candidateLoaderError(error);
       if (authFailure === 'email-unverified') {
         throw redirect({
           to: '/auth/verify-email-required',
-          search: { returnTo: '/matches' },
+          search: { returnTo },
         });
       }
       if (authFailure === 'unauthenticated') {
         throw redirect({
           to: '/auth/sign-in',
-          search: { returnTo: '/matches' },
+          search: { returnTo },
         });
       }
       throw error;

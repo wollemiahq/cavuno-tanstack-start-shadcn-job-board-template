@@ -56,6 +56,15 @@ describe('matches route — recommendations feature gate', () => {
     expect(getRecommendedJobs).toHaveBeenCalledOnce();
   });
 
+  it('falls through to the authoritative API when the fresh context read fails', async () => {
+    getBoardContext.mockRejectedValue(new Error('context unavailable'));
+
+    const data = await createMatchesLoader(dependencies)();
+
+    expect(data).toMatchObject({ data: [] });
+    expect(getRecommendedJobs).toHaveBeenCalledOnce();
+  });
+
   it('is not-found when recommendations are off, and never reads matches', async () => {
     getBoardContext.mockResolvedValue({
       features: { jobRecommendationsEnabled: false },
@@ -73,6 +82,44 @@ describe('matches route — recommendations feature gate', () => {
   });
 
   it('returns unauthenticated visitors to matches after sign-in', async () => {
+    getRecommendedJobs.mockRejectedValue(new Error('UNAUTHENTICATED'));
+    let outcome: unknown;
+    try {
+      await createMatchesLoader(dependencies)();
+    } catch (error) {
+      outcome = error;
+    }
+
+    expect(isRedirect(outcome)).toBe(true);
+    if (!isRedirect(outcome)) return;
+    expect(outcome.options).toMatchObject({
+      to: '/auth/sign-in',
+      search: { returnTo: '/matches' },
+    });
+  });
+
+  it.each(['/matches?selectedJob=job-1', '/fr/matches?selectedJob=job-1'])(
+    'preserves the complete matches return URL through auth: %s',
+    async (href) => {
+      getRecommendedJobs.mockRejectedValue(new Error('UNAUTHENTICATED'));
+      let outcome: unknown;
+      try {
+        await createMatchesLoader(dependencies)({ location: { href } });
+      } catch (error) {
+        outcome = error;
+      }
+
+      expect(isRedirect(outcome)).toBe(true);
+      if (!isRedirect(outcome)) return;
+      expect(outcome.options).toMatchObject({
+        to: '/auth/sign-in',
+        search: { returnTo: href },
+      });
+    },
+  );
+
+  it('still redirects unauthenticated visitors when the context probe fails', async () => {
+    getBoardContext.mockRejectedValue(new Error('context unavailable'));
     getRecommendedJobs.mockRejectedValue(new Error('UNAUTHENTICATED'));
     let outcome: unknown;
     try {

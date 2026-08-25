@@ -64,6 +64,7 @@ import {
   VerifyEmailRequiredView,
 } from './-auth.verify-email-required';
 import {
+  isJobMatchesDestination,
   resolveVerifiedDestination,
   Route,
 } from './auth.verify-email-required';
@@ -163,6 +164,25 @@ function renderVerifyPage({
 }
 
 describe('/auth/verify-email-required search contract', () => {
+  it.each([
+    ['/matches?selectedJob=job-1', '/account'],
+    ['/fr/matches', '/fr/account'],
+    ['/fr/matches?selectedJob=job-1', '/fr/account'],
+    ['/jobs?q=design', '/jobs?q=design'],
+  ])(
+    'resolves a disabled recommendation destination %s to %s',
+    (returnTo, expected) => {
+      expect(resolveVerifiedDestination(returnTo, false)).toBe(expected);
+    },
+  );
+
+  it.each(['/matches?selectedJob=job-1', '/fr/matches'])(
+    'recognizes %s as a recommendation destination requiring a fresh gate read',
+    (returnTo) => {
+      expect(isJobMatchesDestination(returnTo)).toBe(true);
+    },
+  );
+
   it('validates a complete internal candidate destination', () => {
     const validate = Route.options.validateSearch;
     if (!validate) {

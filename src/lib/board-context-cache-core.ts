@@ -7,6 +7,7 @@ interface CacheEntry<Value> {
 
 export interface BoardContextCacheDependencies<Context> {
   getBoardContext: () => Promise<Context>;
+  getFreshBoardContext: () => Promise<Context>;
   getDataSource: () => DataSource;
   now: () => number;
 }
@@ -17,6 +18,7 @@ export function createBoardContextCache<Context>(
   ttlMs: number,
 ) {
   const contextCache = new Map<DataSource, CacheEntry<Context>>();
+  const contextRefreshes = new Map<DataSource, Promise<Context>>();
   const offerGateCache = new Map<
     DataSource,
     CacheEntry<{ hasEmployerOfferPage: boolean }>
@@ -38,9 +40,49 @@ export function createBoardContextCache<Context>(
     return promise;
   }
 
+  function refreshBoardContext(): Promise<Context> {
+    const source = dependencies.getDataSource();
+    const active = contextRefreshes.get(source);
+    if (active) return active;
+
+    const now = dependencies.now();
+    let promise: Promise<Context>;
+    promise = dependencies
+      .getFreshBoardContext()
+      .then((context) => {
+        if (contextRefreshes.get(source) === promise) {
+          contextCache.set(source, {
+            at: now,
+            promise: Promise.resolve(context),
+          });
+        }
+        return context;
+      })
+      .finally(() => {
+        if (contextRefreshes.get(source) === promise) {
+          contextRefreshes.delete(source);
+        }
+      });
+    // Keep the previous successful memo visible to sibling route loaders
+    // while the no-store probe is in flight. Replace it only on success.
+    contextRefreshes.set(source, promise);
+    return promise;
+  }
+
+  /** Last successful/in-flight memo regardless of age, used only after an
+   * explicit fresh probe fails so the caller can render a fail-closed shell. */
+  function readStaleBoardContext(): Promise<Context> | null {
+    return contextCache.get(dependencies.getDataSource())?.promise ?? null;
+  }
+
   function resetBoardContextCache(source?: DataSource): void {
-    if (source) contextCache.delete(source);
-    else contextCache.clear();
+    if (source) {
+      contextCache.delete(source);
+      contextRefreshes.delete(source);
+    } else {
+      contextCache.clear();
+      contextRefreshes.clear();
+    }
   }
 
   function readEmployerOfferGate(
@@ -68,6 +110,8 @@ export function createBoardContextCache<Context>(
 
   return {
     readBoardContext,
+    refreshBoardContext,
+    readStaleBoardContext,
     readEmployerOfferGate,
     resetBoardContextCache,
     resetEmployerOfferGateCache,

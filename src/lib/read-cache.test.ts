@@ -66,6 +66,26 @@ describe('applyReadCache — the anonymous/authed edge-cache split', () => {
     });
   });
 
+  it('preserves an explicit no-store freshness read without shared caching', () => {
+    const request = req('GET');
+    request.init.cache = 'no-store';
+    const r = applyReadCache(request);
+    expect(init(r).cache).toBe('no-store');
+    expect(init(r).cf).toBeUndefined();
+  });
+
+  it('removes a pre-attached shared policy from a no-store freshness read', () => {
+    const request = req(
+      'GET',
+      {},
+      { cacheTtl: READ_CACHE_TTL.boardGlobal, cacheEverything: true },
+    );
+    request.init.cache = 'no-store';
+    const r = applyReadCache(request);
+    expect(init(r).cache).toBe('no-store');
+    expect(init(r).cf).toBeUndefined();
+  });
+
   it('GET carrying an Authorization bearer → cache no-store, never cacheable', () => {
     const r = applyReadCache(
       req('GET', { authorization: 'Bearer abc.def.ghi' }),
