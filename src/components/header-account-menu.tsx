@@ -169,9 +169,10 @@ export function HeaderAccountMenu({
         <DropdownMenuItem
           data-test="account-menu-sign-out"
           onClick={async () => {
-            onSignOut();
             await signOut();
+            onSignOut();
             await router.navigate({ to: '/' });
+            await router.invalidate();
           }}
         >
           {m.accountHome_signOutLabel()}

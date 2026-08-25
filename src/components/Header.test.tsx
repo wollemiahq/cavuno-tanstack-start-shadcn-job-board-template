@@ -427,9 +427,16 @@ describe('Header — native-applications account gating', () => {
     hasPassword: true,
   } as const;
 
-  it('shows signed-out actions before the server request settles', async () => {
-    signOutMock.mockReturnValue(new Promise(() => undefined));
-    renderHeader({ user: signedInUser });
+  it('updates the header and clears cached routes after sign-out succeeds', async () => {
+    let resolveSignOut: (() => void) | undefined;
+    signOutMock.mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveSignOut = resolve;
+      }),
+    );
+    const router = renderHeader({ user: signedInUser });
+    const navigateSpy = vi.spyOn(router, 'navigate');
+    const invalidateSpy = vi.spyOn(router, 'invalidate');
 
     fireEvent.click(await findAccountButton());
     fireEvent.click(
@@ -438,14 +445,28 @@ describe('Header — native-applications account gating', () => {
       }),
     );
 
+    expect(signOutMock).toHaveBeenCalledOnce();
+    expect(
+      screen.queryByRole('link', { name: m.siteHeader_signInLabel() }),
+    ).toBeNull();
+    expect(
+      screen.getByRole('button', { name: m.siteHeader_accountLabel() }),
+    ).toBeTruthy();
+
+    resolveSignOut?.();
+
     expect(
       await screen.findByRole('link', {
         name: m.siteHeader_signInLabel(),
       }),
     ).toBeTruthy();
-    expect(
-      screen.queryByRole('button', { name: m.siteHeader_accountLabel() }),
-    ).toBeNull();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('button', { name: m.siteHeader_accountLabel() }),
+      ).toBeNull(),
+    );
+    await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith({ to: '/' }));
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledOnce());
   });
 
   it('shows the Applications account entry when native applications are on', async () => {
