@@ -17,21 +17,28 @@ import {
 import { headTitle } from '@/lib/page-title';
 import type { UrlSearchInput } from '@/lib/pagination';
 
+export interface EmployerDashboardSearch {
+  add?: boolean;
+  verified?: WorkEmailVerificationOutcome;
+}
+
+export function validateEmployerDashboardSearch(
+  search: UrlSearchInput,
+): EmployerDashboardSearch {
+  const result: EmployerDashboardSearch = {};
+  if (search.add === true || search.add === 'true') result.add = true;
+  if (
+    search.verified === 'approved' ||
+    search.verified === 'pending' ||
+    search.verified === 'invalid'
+  ) {
+    result.verified = search.verified;
+  }
+  return result;
+}
+
 export const Route = createFileRoute('/employers/dashboard')({
-  validateSearch: (
-    search: UrlSearchInput,
-  ): { add?: boolean; verified?: WorkEmailVerificationOutcome } => {
-    const verified =
-      search.verified === 'approved' ||
-      search.verified === 'pending' ||
-      search.verified === 'invalid'
-        ? search.verified
-        : undefined;
-    return {
-      ...(search.add === true || search.add === 'true' ? { add: true } : {}),
-      ...(verified ? { verified } : {}),
-    };
-  },
+  validateSearch: validateEmployerDashboardSearch,
   loader: createEmployerDashboardLoader(),
   head: ({ loaderData }) => ({
     meta: [

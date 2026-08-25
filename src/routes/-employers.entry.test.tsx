@@ -29,7 +29,10 @@ import {
   type EmployerOnboardingLoaderDependencies,
   type EmployerOnboardingViewDependencies,
 } from './-employers.onboarding';
-import { Route as DashboardRoute } from './employers.dashboard';
+import {
+  Route as DashboardRoute,
+  validateEmployerDashboardSearch,
+} from './employers.dashboard';
 import { Route as OnboardingRoute } from './employers.onboarding.$slug';
 
 import type { CompanyMembership, Plan } from '@cavuno/board';
@@ -353,13 +356,17 @@ describe('employer entry surfaces', () => {
     );
     await waitFor(() => expect(consume).toHaveBeenCalledOnce());
 
-    const validateSearch = DashboardRoute.options.validateSearch as (
-      search: Record<string, unknown>,
-    ) => unknown;
-    expect(validateSearch({ verified: 'pending', unsafe: 'value' })).toEqual({
-      verified: 'pending',
-    });
-    expect(validateSearch({ verified: 'javascript:alert(1)' })).toEqual({});
+    expect(
+      validateEmployerDashboardSearch({
+        verified: 'pending',
+        unsafe: 'value',
+      }),
+    ).toEqual({ verified: 'pending' });
+    expect(
+      validateEmployerDashboardSearch({
+        verified: 'javascript:alert(1)',
+      }),
+    ).toEqual({});
   });
 
   it('uses the owned focus-managed dialog when adding a company', async () => {
