@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import {
@@ -19,6 +19,7 @@ import {
 } from '@/lib/pagination';
 
 type Channel = SettingsSearch['channel'];
+const rootApi = getRouteApi('__root__');
 
 function asChannel(value: UrlSearchValue): Channel {
   return value === 'messageEmails' ||
@@ -50,5 +51,13 @@ export const Route = createFileRoute('/settings')({
 
 function SettingsPage() {
   const data = Route.useLoaderData();
-  return <SettingsPageView data={data} />;
+  const { board } = rootApi.useLoaderData();
+  return (
+    <SettingsPageView
+      data={data}
+      jobRecommendationsEnabled={
+        board.features.jobRecommendationsEnabled ?? true
+      }
+    />
+  );
 }

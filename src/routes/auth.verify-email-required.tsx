@@ -1,4 +1,8 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  getRouteApi,
+  useRouter,
+} from '@tanstack/react-router';
 
 import { ResumeUpload } from '../components/resume-upload';
 import { candidateReturnTo } from '../lib/candidate-return-to';
@@ -13,6 +17,8 @@ import {
 import { toastActionError } from '@/lib/action-toast';
 import { headTitle } from '@/lib/page-title';
 import type { UrlSearchInput } from '@/lib/pagination';
+
+const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/auth/verify-email-required')({
   validateSearch: (search: UrlSearchInput) => ({
@@ -39,6 +45,7 @@ export const Route = createFileRoute('/auth/verify-email-required')({
 function VerifyEmailRequiredPage() {
   const router = useRouter();
   const search = Route.useSearch();
+  const { board } = rootApi.useLoaderData();
   const { emailVerified, role, resume, resumeOnboardingDismissed, userId } =
     Route.useLoaderData();
   const returnTo = candidateReturnTo(search.returnTo);
@@ -50,6 +57,9 @@ function VerifyEmailRequiredPage() {
       resumeOnboardingDismissed={resumeOnboardingDismissed}
       userId={userId}
       returnTo={returnTo}
+      jobRecommendationsEnabled={
+        board.features.jobRecommendationsEnabled ?? true
+      }
       verifyOtpCodeAction={verifyOtpCode}
       resendOtpAction={resendOtp}
       updateNotificationPreferenceAction={async (input) => {

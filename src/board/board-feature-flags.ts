@@ -5,8 +5,8 @@
  * context (`getBoardContext` in `src/server/queries.ts`), and hand
  * components clean typed booleans so no cast leaks into presentation.
  *
- * Polarity is additive / default-ON, mirroring the platform's enforcement:
- * a flag ABSENT from an older API deployment ⇒ the feature is ON.
+ * Existing additive flags and Job recommendations are default-on. Recommended
+ * talent is deliberately opt-in, so an absent value remains off.
  *
  *  - `nativeApplications === false` ⇒ external-applications-only: native
  *    apply is 422'd and applicant / pipeline reads 404 / are disabled.
@@ -27,7 +27,17 @@ export interface RuntimeBoardFeatureFlags {
   nativeApplications: boolean;
   /** false ⇒ the applicant↔employer messaging surface is off. */
   messaging: boolean;
+  /** false ⇒ candidate-facing job recommendations are unavailable. */
+  jobRecommendationsEnabled: boolean;
+  /** false ⇒ recommended talent is unavailable. */
+  recommendedTalentEnabled: boolean;
 }
+
+type RuntimeBoardFeatureInput = Omit<
+  BoardContextFeatures,
+  keyof RuntimeBoardFeatureFlags
+> &
+  Partial<RuntimeBoardFeatureFlags>;
 
 export type TalentDirectoryVisibility = 'off' | 'public' | 'employers_only';
 
@@ -48,20 +58,24 @@ export function resolveTalentDirectoryVisibility(
 }
 
 /**
- * Read the two runtime flags off the context's `features` group, narrowing
- * once here at the boundary. Absent ⇒ `true` (default-on).
+ * Read runtime flags off the context's `features` group, narrowing once here
+ * at the boundary. Recommended talent is the sole default-off capability.
  */
 export function resolveRuntimeFeatureFlags(
-  features: BoardContextFeatures,
+  features: RuntimeBoardFeatureInput,
 ): RuntimeBoardFeatureFlags {
   // SAFETY: Runtime feature flags are additive wire fields that may be absent
-  // from the pinned SDK type; absent values default to true below.
+  // from the pinned SDK type; defaults follow the platform contract below.
   const parity = features as BoardContextFeatures & {
     nativeApplications?: boolean;
     messaging?: boolean;
+    jobRecommendationsEnabled?: boolean;
+    recommendedTalentEnabled?: boolean;
   };
   return {
     nativeApplications: parity.nativeApplications ?? true,
     messaging: parity.messaging ?? true,
+    jobRecommendationsEnabled: parity.jobRecommendationsEnabled ?? true,
+    recommendedTalentEnabled: parity.recommendedTalentEnabled ?? false,
   };
 }

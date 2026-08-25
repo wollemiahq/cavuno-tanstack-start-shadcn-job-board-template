@@ -2,6 +2,7 @@ import {
   createFileRoute,
   getRouteApi,
   isRedirect,
+  notFound,
   redirect,
   useNavigate,
   useRouter,
@@ -16,7 +17,7 @@ import { ResumeImportDialog } from '../components/resume-import-dialog';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getRecommendedJobs, saveJob } from '../server/account';
-import { getSeoBase } from '../server/queries';
+import { getBoardContext, getSeoBase } from '../server/queries';
 import { SelectedJobDetail } from './-selected-job-detail';
 import { useSelectedJob } from './-use-selected-job';
 
@@ -45,19 +46,30 @@ import { recommendedJobsEmptyKind } from '@/lib/recommended-jobs';
 
 const rootApi = getRouteApi('__root__');
 
-export const Route = createFileRoute('/matches')({
-  staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
-  validateSearch: (search: UrlSearchInput): { selectedJob?: string } => {
-    const selectedJob = searchString(search.selectedJob);
-    return selectedJob ? { selectedJob } : {};
-  },
-  pendingComponent: CandidateRoutePendingPage,
-  errorComponent: CandidateRouteErrorPage,
-  loader: async () => {
+export type MatchesLoaderDependencies = {
+  getBoardContext: () => Promise<{
+    features: { jobRecommendationsEnabled?: boolean };
+  }>;
+  getRecommendedJobs: () => ReturnType<typeof getRecommendedJobs>;
+  getSeoBase: () => Promise<{ boardName: string }>;
+};
+
+const matchesLoaderDependencies: MatchesLoaderDependencies = {
+  getBoardContext,
+  getRecommendedJobs,
+  getSeoBase,
+};
+
+export function createMatchesLoader(
+  dependencies: MatchesLoaderDependencies = matchesLoaderDependencies,
+) {
+  return async () => {
+    const board = await dependencies.getBoardContext();
+    if (board.features.jobRecommendationsEnabled === false) throw notFound();
     try {
       const [recommended, seo] = await Promise.all([
-        getRecommendedJobs(),
-        getSeoBase(),
+        dependencies.getRecommendedJobs(),
+        dependencies.getSeoBase(),
       ]);
       return { ...recommended, seo };
     } catch (error) {
@@ -77,7 +89,18 @@ export const Route = createFileRoute('/matches')({
       }
       throw error;
     }
+  };
+}
+
+export const Route = createFileRoute('/matches')({
+  staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
+  validateSearch: (search: UrlSearchInput): { selectedJob?: string } => {
+    const selectedJob = searchString(search.selectedJob);
+    return selectedJob ? { selectedJob } : {};
   },
+  pendingComponent: CandidateRoutePendingPage,
+  errorComponent: CandidateRouteErrorPage,
+  loader: createMatchesLoader(),
   head: ({ loaderData }) => ({
     meta: [
       {

@@ -90,50 +90,63 @@ const account = {
 async function renderSettings(
   overrides: {
     hasPassword?: boolean;
+    jobRecommendationsEnabled?: boolean;
     preferences?: {
       object: 'notification_preference';
       channel: 'messageEmails' | 'applicationEmails' | 'recommendedJobEmails';
       subscribed: boolean;
+      waitlisted: boolean;
       updatedAt: number | null;
     }[];
   } = {},
 ) {
-  await renderSettingsData({
-    mode: 'settings',
-    preferences: overrides.preferences ?? [
-      {
-        object: 'notification_preference',
-        channel: 'messageEmails',
-        subscribed: true,
-        updatedAt: null,
-      },
-      {
-        object: 'notification_preference',
-        channel: 'applicationEmails',
-        subscribed: true,
-        updatedAt: null,
-      },
-      {
-        object: 'notification_preference',
-        channel: 'recommendedJobEmails',
-        subscribed: false,
-        updatedAt: null,
-      },
-    ],
-    consent: null,
-    account: { ...account, hasPassword: overrides.hasPassword ?? true },
-  });
+  await renderSettingsData(
+    {
+      mode: 'settings',
+      preferences: overrides.preferences ?? [
+        {
+          object: 'notification_preference',
+          channel: 'messageEmails',
+          subscribed: true,
+          waitlisted: false,
+          updatedAt: null,
+        },
+        {
+          object: 'notification_preference',
+          channel: 'applicationEmails',
+          subscribed: true,
+          waitlisted: false,
+          updatedAt: null,
+        },
+        {
+          object: 'notification_preference',
+          channel: 'recommendedJobEmails',
+          subscribed: false,
+          waitlisted: false,
+          updatedAt: null,
+        },
+      ],
+      consent: null,
+      account: { ...account, hasPassword: overrides.hasPassword ?? true },
+    },
+    overrides.jobRecommendationsEnabled,
+  );
 }
 
 async function renderSettingsData(
   data: Parameters<typeof SettingsPageView>[0]['data'],
+  jobRecommendationsEnabled = true,
 ) {
   const rootRoute = createRootRoute();
   const pageRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
     component: () => (
-      <SettingsPageView data={data} dependencies={dependencies} />
+      <SettingsPageView
+        data={data}
+        jobRecommendationsEnabled={jobRecommendationsEnabled}
+        dependencies={dependencies}
+      />
     ),
   });
   const router = createRouter({
@@ -240,6 +253,71 @@ describe('signed-in settings account cards', () => {
         data: {
           channel: 'recommendedJobEmails',
           subscribed: true,
+        },
+      });
+    });
+  });
+
+  it('shows a paused recommendation preference without allowing a fresh opt-in', async () => {
+    await renderSettings({ jobRecommendationsEnabled: false });
+
+    const checkbox = screen.getByRole('checkbox', {
+      name: m.notificationSettings_recommendedJobEmailsTitle(),
+    });
+    expect(checkbox).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByText(m.alertManager_pausedBadge())).toBeInTheDocument();
+    fireEvent.click(checkbox);
+    expect(updateNotificationPreference).not.toHaveBeenCalled();
+  });
+
+  it('still allows opting out of recommendation emails while the feature is paused', async () => {
+    updateNotificationPreference.mockResolvedValue({
+      object: 'list',
+      url: '/v1/me/notification-preferences',
+      count: 0,
+      limit: 0,
+      offset: 0,
+      hasMore: false,
+      nextCursor: null,
+      data: [],
+    });
+    await renderSettings({
+      jobRecommendationsEnabled: false,
+      preferences: [
+        {
+          object: 'notification_preference',
+          channel: 'messageEmails',
+          subscribed: true,
+          waitlisted: false,
+          updatedAt: null,
+        },
+        {
+          object: 'notification_preference',
+          channel: 'applicationEmails',
+          subscribed: true,
+          waitlisted: false,
+          updatedAt: null,
+        },
+        {
+          object: 'notification_preference',
+          channel: 'recommendedJobEmails',
+          subscribed: true,
+          waitlisted: false,
+          updatedAt: null,
+        },
+      ],
+    });
+
+    fireEvent.click(
+      screen.getByRole('checkbox', {
+        name: m.notificationSettings_recommendedJobEmailsTitle(),
+      }),
+    );
+    await waitFor(() => {
+      expect(updateNotificationPreference).toHaveBeenCalledWith({
+        data: {
+          channel: 'recommendedJobEmails',
+          subscribed: false,
         },
       });
     });

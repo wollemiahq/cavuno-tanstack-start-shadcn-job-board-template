@@ -117,6 +117,7 @@ export function VerifyEmailRequiredView({
   resumeOnboardingDismissed,
   userId,
   returnTo,
+  jobRecommendationsEnabled = true,
   verifyOtpCodeAction,
   resendOtpAction,
   updateNotificationPreferenceAction,
@@ -131,6 +132,7 @@ export function VerifyEmailRequiredView({
   resumeOnboardingDismissed: boolean;
   userId: string;
   returnTo: string;
+  jobRecommendationsEnabled?: boolean;
   verifyOtpCodeAction: (input: {
     data: { code: string };
   }) => Promise<{ ok: true } | { ok: false; code?: string; message: string }>;
@@ -194,6 +196,7 @@ export function VerifyEmailRequiredView({
         returnTo={returnTo}
         dismissed={resumeOnboardingDismissed}
         userId={userId}
+        jobRecommendationsEnabled={jobRecommendationsEnabled}
         updateNotificationPreferenceAction={updateNotificationPreferenceAction}
         navigate={navigate}
         reportActionError={reportActionError}
@@ -297,6 +300,7 @@ function ResumeOfferStep({
   returnTo,
   dismissed,
   userId,
+  jobRecommendationsEnabled,
   updateNotificationPreferenceAction,
   navigate,
   reportActionError,
@@ -306,6 +310,7 @@ function ResumeOfferStep({
   returnTo: string;
   dismissed: boolean;
   userId: string;
+  jobRecommendationsEnabled: boolean;
   updateNotificationPreferenceAction: (input: {
     data: { channel: 'recommendedJobEmails'; subscribed: boolean };
   }) => Promise<void>;
@@ -335,39 +340,41 @@ function ResumeOfferStep({
       supportingText={m.authVerifyEmailRequired_resumeIntroText()}
     >
       {resume ? renderResumeUpload(resume) : null}
-      <Label
-        htmlFor="recommendation-email-opt-in"
-        className="w-fit cursor-pointer items-center gap-3 py-1 text-sm leading-6"
-        data-test="recommendation-email-opt-in"
-      >
-        <Checkbox
-          id="recommendation-email-opt-in"
-          className="shrink-0"
-          checked={recommendationEmails}
-          disabled={recommendationPending}
-          onCheckedChange={async (checked) => {
-            const previousRecommendationEmails = recommendationEmails;
-            setRecommendationEmails(checked);
-            setRecommendationPending(true);
-            try {
-              await updateNotificationPreferenceAction({
-                data: {
-                  channel: 'recommendedJobEmails',
-                  subscribed: checked,
-                },
-              });
-            } catch {
-              setRecommendationEmails(previousRecommendationEmails);
-              reportActionError();
-            } finally {
-              setRecommendationPending(false);
-            }
-          }}
-        />
-        <span className="block font-medium">
-          {m.authVerifyEmailRequired_recommendedJobEmailsLabel()}
-        </span>
-      </Label>
+      {jobRecommendationsEnabled ? (
+        <Label
+          htmlFor="recommendation-email-opt-in"
+          className="w-fit cursor-pointer items-center gap-3 py-1 text-sm leading-6"
+          data-test="recommendation-email-opt-in"
+        >
+          <Checkbox
+            id="recommendation-email-opt-in"
+            className="shrink-0"
+            checked={recommendationEmails}
+            disabled={recommendationPending}
+            onCheckedChange={async (checked) => {
+              const previousRecommendationEmails = recommendationEmails;
+              setRecommendationEmails(checked);
+              setRecommendationPending(true);
+              try {
+                await updateNotificationPreferenceAction({
+                  data: {
+                    channel: 'recommendedJobEmails',
+                    subscribed: checked,
+                  },
+                });
+              } catch {
+                setRecommendationEmails(previousRecommendationEmails);
+                reportActionError();
+              } finally {
+                setRecommendationPending(false);
+              }
+            }}
+          />
+          <span className="block font-medium">
+            {m.authVerifyEmailRequired_recommendedJobEmailsLabel()}
+          </span>
+        </Label>
+      ) : null}
       <Button
         type="button"
         variant={resume?.hasResumeOnFile ? 'default' : 'outline'}

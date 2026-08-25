@@ -117,6 +117,7 @@ function renderVerifyPage({
   resume = null,
   resumeOnboardingDismissed = false,
   userId = 'candidate-1',
+  jobRecommendationsEnabled = true,
 }: {
   returnTo?: string;
   emailVerified?: boolean;
@@ -124,6 +125,7 @@ function renderVerifyPage({
   resume?: Resume | null;
   resumeOnboardingDismissed?: boolean;
   userId?: string;
+  jobRecommendationsEnabled?: boolean;
 } = {}) {
   return render(
     <VerifyEmailRequiredView
@@ -133,6 +135,7 @@ function renderVerifyPage({
       resumeOnboardingDismissed={resumeOnboardingDismissed}
       userId={userId}
       returnTo={returnTo}
+      jobRecommendationsEnabled={jobRecommendationsEnabled}
       verifyOtpCodeAction={mocks.verifyOtpCode}
       resendOtpAction={mocks.resendOtp}
       updateNotificationPreferenceAction={mocks.updateNotificationPreference}
@@ -490,6 +493,28 @@ describe('/auth/verify-email-required resume offer step', () => {
     expect(wasDisabledWhilePending).toBe(true);
     expect(checkbox).not.toBeChecked();
     expect(skipButton).toBeEnabled();
+  });
+
+  it('does not offer recommendation emails when recommendations are off', async () => {
+    mocks.verifyOtpCode.mockResolvedValue({ ok: true });
+
+    const { container } = renderVerifyPage({
+      resume: emptyResume,
+      jobRecommendationsEnabled: false,
+    });
+    fireEvent.change(container.querySelector('input[name="code"]')!, {
+      target: { value: '123456' },
+    });
+
+    expect(
+      await screen.findByText(m.authVerifyEmailRequired_resumeTitle()),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('checkbox', {
+        name: m.authVerifyEmailRequired_recommendedJobEmailsLabel(),
+      }),
+    ).toBeNull();
+    expect(mocks.updateNotificationPreference).not.toHaveBeenCalled();
   });
 });
 

@@ -27,11 +27,13 @@ export function HeaderAccountMenu({
   user,
   hasAccessGrant,
   nativeApplications,
+  jobRecommendationsEnabled,
   employerCompanies,
 }: {
   user: BoardUser;
   hasAccessGrant: boolean;
   nativeApplications: boolean;
+  jobRecommendationsEnabled: boolean;
   employerCompanies: CompanyMembership[] | null;
 }) {
   const companyWorkspaces = (employerCompanies ?? []).filter(
@@ -64,9 +66,14 @@ export function HeaderAccountMenu({
         <DropdownMenuItem nativeButton={false} render={<Link to="/account" />}>
           {m.accountShell_profileNav()}
         </DropdownMenuItem>
-        <DropdownMenuItem nativeButton={false} render={<Link to="/matches" />}>
-          {m.accountShell_recommendedJobsNav()}
-        </DropdownMenuItem>
+        {jobRecommendationsEnabled ? (
+          <DropdownMenuItem
+            nativeButton={false}
+            render={<Link to="/matches" />}
+          >
+            {m.accountShell_recommendedJobsNav()}
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem
           nativeButton={false}
           render={<Link to="/saved-jobs" />}
