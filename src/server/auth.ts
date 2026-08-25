@@ -10,6 +10,7 @@ import {
   getRequestHeader,
   setResponseHeader,
 } from '@tanstack/react-start/server';
+import { waitUntil } from 'cloudflare:workers';
 
 import { getBoard, getSessionRefresher } from '../lib/board';
 import {
@@ -136,23 +137,22 @@ export const refreshSession = createServerFn({ method: 'POST' }).handler(
   },
 );
 
-export const signOut = createServerFn({ method: 'POST' })
-  .middleware([sessionMiddleware])
-  .handler(async ({ context }) => {
-    const dataSource = context.dataSource ?? getDataSource();
-    if (context.session) {
-      try {
-        await getBoard().auth.logout({
-          refreshToken: context.session.refreshToken,
-        });
-      } catch {
-        // Revoke is idempotent server-side; a network failure here must
-        // not strand the user signed in locally.
-      }
-    }
-    setResponseHeader('Set-Cookie', clearSessionForSource(dataSource));
-    return { ok: true as const };
-  });
+export const signOut = createServerFn({ method: 'POST' }).handler(async () => {
+  const dataSource = getDataSource();
+  const session = parseSessionForSource(
+    getRequestHeader('cookie') ?? null,
+    dataSource,
+  );
+  if (session) {
+    waitUntil(
+      getBoard()
+        .auth.logout({ refreshToken: session.refreshToken })
+        .catch(() => undefined),
+    );
+  }
+  setResponseHeader('Set-Cookie', clearSessionForSource(dataSource));
+  return { ok: true as const };
+});
 
 export const verifyEmail = createServerFn({ method: 'POST' })
   .validator((input: { token: string }) => input)

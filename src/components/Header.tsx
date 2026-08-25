@@ -91,6 +91,7 @@ export default function Header({
   features,
   hasAccessGrant = false,
   employerCompanies = null,
+  onSignOut,
   talentDirectoryVisibility,
   search,
   messagesNav,
@@ -109,6 +110,7 @@ export default function Header({
   };
   hasAccessGrant?: boolean;
   employerCompanies?: CompanyMembership[] | null;
+  onSignOut: () => void;
   talentDirectoryVisibility: 'off' | 'public' | 'employers_only' | null;
   messagesNav?: ReactNode;
   search: HeaderSearchState & {
@@ -272,6 +274,7 @@ export default function Header({
           hasAccessGrant={hasAccessGrant}
           nativeApplications={features.nativeApplications}
           employerCompanies={employerCompanies}
+          onSignOut={onSignOut}
         />
       </Suspense>
     </>

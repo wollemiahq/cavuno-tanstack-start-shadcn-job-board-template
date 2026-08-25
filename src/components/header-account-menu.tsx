@@ -28,11 +28,13 @@ export function HeaderAccountMenu({
   hasAccessGrant,
   nativeApplications,
   employerCompanies,
+  onSignOut,
 }: {
   user: BoardUser;
   hasAccessGrant: boolean;
   nativeApplications: boolean;
   employerCompanies: CompanyMembership[] | null;
+  onSignOut: () => void;
 }) {
   const companyWorkspaces = (employerCompanies ?? []).filter(
     (membership) =>
@@ -167,8 +169,8 @@ export function HeaderAccountMenu({
         <DropdownMenuItem
           data-test="account-menu-sign-out"
           onClick={async () => {
+            onSignOut();
             await signOut();
-            await router.invalidate();
             await router.navigate({ to: '/' });
           }}
         >

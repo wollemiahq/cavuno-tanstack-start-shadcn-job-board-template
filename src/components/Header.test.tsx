@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
+import { useState } from 'react';
+
 /**
  * Public-header behavior.
  *
@@ -35,7 +37,14 @@ import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
 import { m } from '../paraglide/messages';
 import Header from './Header';
 
-afterEach(cleanup);
+const signOutMock = vi.hoisted(() => vi.fn());
+
+vi.mock('../server/auth', () => ({ signOut: signOutMock }));
+
+afterEach(() => {
+  cleanup();
+  signOutMock.mockReset();
+});
 
 type HeaderFeatures = Omit<
   React.ComponentProps<typeof Header>['features'],
@@ -113,6 +122,7 @@ function renderHeader({
       path,
       component: () => {
         const navigate = useNavigate();
+        const [viewer, setViewer] = useState(user);
 
         function submitSearch({
           scope,
@@ -169,10 +179,11 @@ function renderHeader({
           <Header
             boardName="Robotics Jobs"
             logoUrl={logoUrl}
-            user={user}
+            user={viewer}
             language="en"
             features={features}
             hasAccessGrant={hasAccessGrant}
+            onSignOut={() => setViewer(null)}
             talentDirectoryVisibility={talentDirectoryVisibility}
             search={{
               ...initialSearch,
@@ -415,6 +426,27 @@ describe('Header — native-applications account gating', () => {
     emailVerified: true,
     hasPassword: true,
   } as const;
+
+  it('shows signed-out actions before the server request settles', async () => {
+    signOutMock.mockReturnValue(new Promise(() => undefined));
+    renderHeader({ user: signedInUser });
+
+    fireEvent.click(await findAccountButton());
+    fireEvent.click(
+      await screen.findByRole('menuitem', {
+        name: m.accountHome_signOutLabel(),
+      }),
+    );
+
+    expect(
+      await screen.findByRole('link', {
+        name: m.siteHeader_signInLabel(),
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('button', { name: m.siteHeader_accountLabel() }),
+    ).toBeNull();
+  });
 
   it('shows the Applications account entry when native applications are on', async () => {
     renderHeader({ user: signedInUser });
