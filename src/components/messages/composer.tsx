@@ -20,7 +20,7 @@ const MAX_BODY = 8000;
 
 /** Reply composer. Disabled (not hidden) with a reason hint when the viewer is
  * blocked or the cold-message rule is in effect — mirrors the hosted board. */
-export function Composer({
+export function Composer<TResult = void>({
   disabled,
   hint,
   onSend,
@@ -28,8 +28,8 @@ export function Composer({
 }: {
   disabled: boolean;
   hint: string | null;
-  onSend: (body: string) => Promise<void>;
-  onSent: () => void;
+  onSend: (body: string) => Promise<TResult>;
+  onSent: (result: TResult) => void;
 }) {
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
@@ -51,15 +51,19 @@ export function Composer({
     if (!trimmed || sending) return;
     setSending(true);
     setError(null);
+    let result: TResult;
     try {
-      await onSend(trimmed);
-      setBody('');
-      onSent();
+      result = await onSend(trimmed);
     } catch (err) {
       setError(errorMessage(err));
-    } finally {
       setSending(false);
+      return;
     }
+    // The message is committed. Keep route reconciliation outside the send
+    // catch so a navigation failure can never invite a duplicate send.
+    setBody('');
+    setSending(false);
+    onSent(result);
   };
 
   const onKeyDown = (event: React.KeyboardEvent) => {

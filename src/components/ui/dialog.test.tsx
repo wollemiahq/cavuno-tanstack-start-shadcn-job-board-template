@@ -30,6 +30,10 @@ describe('Dialog', () => {
     // inside the component's own subtree — so the app's <body> theme applies.
     expect(container).not.toContainElement(dialog);
     expect(document.body).toContainElement(dialog);
+    expect(dialog).toHaveClass('motion-reduce:animate-none');
+    expect(document.querySelector('[data-slot="dialog-overlay"]')).toHaveClass(
+      'motion-reduce:animate-none',
+    );
   });
 
   it('shows the canonical close control by default and lets callers hide it', () => {

@@ -41,6 +41,26 @@ const base = {
 const futureExpiry = () => new Date(Date.now() + 60_000).toISOString();
 
 describe('ApplyButton authentication return paths', () => {
+  it('blocks Apply and offers a deliberate retry while private application state is unknown', () => {
+    const onRetryApplicationState = vi.fn();
+    render(
+      <ApplyButton
+        {...base}
+        jobSlug="platform-engineer"
+        applicationUrl={null}
+        viewer={{ emailVerified: true }}
+        applicationState="unknown"
+        onRetryApplicationState={onRetryApplicationState}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: /^apply$/i })).toBeNull();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Check application status' }),
+    );
+    expect(onRetryApplicationState).toHaveBeenCalledOnce();
+  });
+
   it('keeps the complete job destination through candidate sign-in', () => {
     const returnTo =
       '/companies/acme/jobs/platform-engineer?source=search#apply';

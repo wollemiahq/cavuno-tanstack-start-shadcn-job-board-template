@@ -287,23 +287,39 @@ async function moveCard({
   if (!card || currentColumn === toStageId || cardId in pendingMoves) return;
 
   setPendingMoves((current) => ({ ...current, [cardId]: toStageId }));
+  let result: PipelineActionResult;
   try {
-    const result = await moveApplicant({
+    result = await moveApplicant({
       data: { slug, applicationId: cardId, stageId: toStageId },
     });
-    if (result.ok) {
-      await invalidate();
-    } else {
-      toastError(result.message || m.employerApplicants_moveError());
-    }
   } catch {
     toastError(m.employerApplicants_moveError());
-  } finally {
     setPendingMoves((current) => {
       const { [cardId]: _dropped, ...rest } = current;
       return rest;
     });
+    return;
   }
+  if (!result.ok) {
+    toastError(result.message || m.employerApplicants_moveError());
+    setPendingMoves((current) => {
+      const { [cardId]: _dropped, ...rest } = current;
+      return rest;
+    });
+    return;
+  }
+  try {
+    await invalidate();
+  } catch {
+    // Keep the committed optimistic position until reload instead of falsely
+    // reverting it, and identify only the reconciliation as failed.
+    toastError(m.employerCompany_reconciliationError());
+    return;
+  }
+  setPendingMoves((current) => {
+    const { [cardId]: _dropped, ...rest } = current;
+    return rest;
+  });
 }
 
 function StageColumn({
@@ -537,19 +553,9 @@ function ApplicantDetailBody({
   ) {
     if (action.pending) return false;
     setAction({ pending: true, scope, message: '' });
+    let result: { ok: boolean; message?: string };
     try {
-      const result = await fn();
-      if (!result.ok) {
-        setAction({
-          pending: false,
-          scope,
-          message: result.message ?? m.employerApplicants_genericError(),
-        });
-        return false;
-      }
-      await onInvalidate();
-      setAction({ pending: false, scope: null, message: '' });
-      return true;
+      result = await fn();
     } catch {
       setAction({
         pending: false,
@@ -558,6 +564,21 @@ function ApplicantDetailBody({
       });
       return false;
     }
+    if (!result.ok) {
+      setAction({
+        pending: false,
+        scope,
+        message: result.message ?? m.employerApplicants_genericError(),
+      });
+      return false;
+    }
+    setAction({ pending: false, scope: null, message: '' });
+    try {
+      await onInvalidate();
+    } catch {
+      actions.toastError(m.employerCompany_reconciliationError());
+    }
+    return true;
   }
 
   return (
@@ -751,22 +772,28 @@ function StageDialogs({
   async function submit(fn: () => Promise<{ ok: boolean; message?: string }>) {
     if (status.pending) return;
     setStatus({ pending: true, message: '' });
+    let result: { ok: boolean; message?: string };
     try {
-      const result = await fn();
-      if (!result.ok) {
-        setStatus({
-          pending: false,
-          message: result.message ?? m.employerApplicants_genericError(),
-        });
-        return;
-      }
-      await onInvalidate();
-      onClose();
+      result = await fn();
     } catch {
       setStatus({
         pending: false,
         message: m.employerApplicants_genericError(),
       });
+      return;
+    }
+    if (!result.ok) {
+      setStatus({
+        pending: false,
+        message: result.message ?? m.employerApplicants_genericError(),
+      });
+      return;
+    }
+    onClose();
+    try {
+      await onInvalidate();
+    } catch {
+      actions.toastError(m.employerCompany_reconciliationError());
     }
   }
 

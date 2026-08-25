@@ -44,7 +44,7 @@ import {
 import { Text } from '@/components/text';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useSearchSelection } from '@/hooks/use-search-selection';
-import { toastActionError } from '@/lib/action-toast';
+import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
@@ -224,12 +224,15 @@ function SavedJobsPage() {
                                   await unsaveJob({
                                     data: { jobId: saved.jobId },
                                   });
-                                  await router.invalidate();
                                 } catch {
                                   void toastActionError();
-                                } finally {
                                   setPendingId(null);
+                                  return;
                                 }
+                                await reconcileCommittedAction(() =>
+                                  router.invalidate(),
+                                );
+                                setPendingId(null);
                               }}
                             >
                               <BookmarkCheck aria-hidden />
@@ -268,12 +271,15 @@ function SavedJobsPage() {
                             setPendingId(saved.id);
                             try {
                               await unsaveJob({ data: { jobId: saved.jobId } });
-                              await router.invalidate();
                             } catch {
                               void toastActionError();
-                            } finally {
                               setPendingId(null);
+                              return;
                             }
+                            await reconcileCommittedAction(() =>
+                              router.invalidate(),
+                            );
+                            setPendingId(null);
                           }}
                         >
                           <BookmarkCheck aria-hidden data-icon="inline-start" />

@@ -1,13 +1,13 @@
 import { useState } from 'react';
 
-import { createFileRoute, useRouter } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 
 import { AuthCard, Field, FormError } from '../components/auth-form';
 import { boardErrorMessage } from '../lib/board-error-message';
 import {
   candidateForgotPasswordHref,
+  candidatePasswordResetSignInHref,
   candidateReturnTo,
-  candidateSignInHref,
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { resetPassword } from '../server/auth';
@@ -41,15 +41,12 @@ export const Route = createFileRoute('/auth/reset-password')({
 
 function ResetPasswordPage() {
   const { token, returnTo } = Route.useSearch();
-  const router = useRouter();
   return (
     <ResetPasswordView
       token={token}
       returnTo={returnTo}
       resetPasswordAction={resetPassword}
-      invalidate={async () => {
-        await router.invalidate();
-      }}
+      redirectToSignIn={(href) => window.location.replace(href)}
     />
   );
 }
@@ -58,18 +55,17 @@ export function ResetPasswordView({
   token,
   returnTo,
   resetPasswordAction,
-  invalidate,
+  redirectToSignIn,
 }: {
   token?: string;
   returnTo: string;
   resetPasswordAction: (input: {
     data: { token: string; password: string };
   }) => Promise<{ ok: true } | { ok: false; code: string; message: string }>;
-  invalidate: () => Promise<void>;
+  redirectToSignIn: (href: string) => void;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [done, setDone] = useState(false);
 
   if (!token) {
     return (
@@ -90,22 +86,6 @@ export function ResetPasswordView({
     );
   }
 
-  if (done) {
-    return (
-      <AuthCard
-        title={m.authResetPassword_updatedTitle()}
-        supportingText={m.authResetPassword_updatedBody()}
-      >
-        <a
-          href={candidateSignInHref(returnTo)}
-          className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
-        >
-          {m.authResetPassword_signInLabel()}
-        </a>
-      </AuthCard>
-    );
-  }
-
   return (
     <AuthCard title={m.authResetPassword_title()}>
       <form
@@ -115,29 +95,37 @@ export function ResetPasswordView({
           setPending(true);
           setError(null);
           const form = new FormData(event.currentTarget);
+          let result:
+            | { ok: true }
+            | { ok: false; code: string; message: string };
           try {
-            const result = await resetPasswordAction({
+            result = await resetPasswordAction({
               data: { token, password: String(form.get('password')) },
             });
-            if (result.ok) {
-              await invalidate();
-              setDone(true);
-            } else {
-              // "Link expired" only for actual token failures — a weak
-              // password or rate limit deserves its own sentence, not a
-              // false claim that the link is dead.
-              setError(
-                result.code === 'board_auth_invalid_token' ||
-                  result.code === 'board_auth_token_expired'
-                  ? m.authResetPassword_expiredError()
-                  : boardErrorMessage(result),
-              );
-            }
           } catch {
             setError(m.candidateAction_errorText());
-          } finally {
             setPending(false);
+            return;
           }
+
+          if (result.ok) {
+            // The reset is already committed. Leave the single-use token URL
+            // immediately; later page-data reconciliation must never turn
+            // this success into a reset failure.
+            redirectToSignIn(candidatePasswordResetSignInHref(returnTo));
+            return;
+          }
+
+          // "Link expired" only for actual token failures — a weak password
+          // or rate limit deserves its own sentence, not a false claim that
+          // the link is dead.
+          setError(
+            result.code === 'board_auth_invalid_token' ||
+              result.code === 'board_auth_token_expired'
+              ? m.authResetPassword_expiredError()
+              : boardErrorMessage(result),
+          );
+          setPending(false);
         }}
       >
         <Field

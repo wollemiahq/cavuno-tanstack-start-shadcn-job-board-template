@@ -27,6 +27,14 @@ export const CODE_MESSAGES = {
   validation_bad_request: m.boardError_validationText,
   validation_payload_too_large: m.boardError_payloadTooLargeText,
   plan_upgrade_required: m.boardError_planUpgradeText,
+  // Employer↔candidate messaging policy:
+  messaging_blocked: m.boardError_messagingBlockedText,
+  messaging_cold_rule: m.boardError_messagingColdRuleText,
+  messaging_disabled: m.boardError_messagingDisabledText,
+  messaging_not_permitted: m.boardError_messagingNotPermittedText,
+  messaging_rate_limited: m.boardError_messagingRateLimitedText,
+  messaging_recipient_not_found: m.boardError_messagingRecipientNotFoundText,
+  messaging_recipient_not_open: m.boardError_messagingRecipientNotOpenText,
   // Employer dashboard / posting flow:
   employer_job_slug_taken: m.boardError_jobSlugTakenText,
   employer_jobs_quota_exceeded: m.boardError_jobsQuotaText,

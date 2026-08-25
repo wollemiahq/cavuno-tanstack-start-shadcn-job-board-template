@@ -27,6 +27,7 @@ export type InviteMemberDialogActions = {
     | { ok: false; code: string; message: string }
   >;
   invalidate: () => Promise<void>;
+  toastError: (message: string) => void;
   toastSuccess: (message: string) => void;
 };
 
@@ -86,7 +87,11 @@ export function InviteMemberDialog({
               }
               actions.toastSuccess(m.employerMembers_inviteSentToast());
               close(false);
-              await actions.invalidate();
+              try {
+                await actions.invalidate();
+              } catch {
+                actions.toastError(m.employerCompany_reconciliationError());
+              }
             } catch {
               setError(m.employerMembers_updateError());
             } finally {

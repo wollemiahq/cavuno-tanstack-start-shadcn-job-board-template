@@ -10,6 +10,7 @@ import { uploadAvatar } from '../server/account';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { reconcileCommittedAction } from '@/lib/action-toast';
 
 /**
  * Avatar uploader — mirrors the hosted `profile-avatar-uploader`: pick a
@@ -50,11 +51,13 @@ export function AvatarUpload({
             formData.append('avatar', file);
             try {
               await uploadAvatar({ data: formData });
-              await router.invalidate();
-              setStatus('idle');
             } catch {
               setStatus('error');
+              if (inputRef.current) inputRef.current.value = '';
+              return;
             }
+            setStatus('idle');
+            await reconcileCommittedAction(() => router.invalidate());
             if (inputRef.current) inputRef.current.value = '';
           }}
         />

@@ -10,6 +10,7 @@ import {
   type MarketingConsentCopy,
 } from '@/components/registration-page';
 import { buttonVariants } from '@/components/ui/button';
+import { reconcileCommittedAction } from '@/lib/action-toast';
 
 export function SignUpView({
   boardName,
@@ -65,7 +66,7 @@ export function SignUpView({
       successHref={candidateVerifyEmailHref(returnTo)}
       onSubmit={async (values) => {
         const result = await signUpAction({ data: values });
-        if (result.ok) await invalidate();
+        if (result.ok) await reconcileCommittedAction(invalidate);
         return result;
       }}
       onOAuthStart={(provider) =>

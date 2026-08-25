@@ -1,3 +1,5 @@
+import { useCallback } from 'react';
+
 import { Link, createFileRoute, useRouter } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
@@ -9,14 +11,27 @@ import {
 import {
   EmployerDashboardView,
   createEmployerDashboardLoader,
+  type WorkEmailVerificationOutcome,
 } from './-employers.dashboard';
 
 import { headTitle } from '@/lib/page-title';
 import type { UrlSearchInput } from '@/lib/pagination';
 
 export const Route = createFileRoute('/employers/dashboard')({
-  validateSearch: (search: UrlSearchInput): { add?: boolean } =>
-    search.add === true || search.add === 'true' ? { add: true } : {},
+  validateSearch: (
+    search: UrlSearchInput,
+  ): { add?: boolean; verified?: WorkEmailVerificationOutcome } => {
+    const verified =
+      search.verified === 'approved' ||
+      search.verified === 'pending' ||
+      search.verified === 'invalid'
+        ? search.verified
+        : undefined;
+    return {
+      ...(search.add === true || search.add === 'true' ? { add: true } : {}),
+      ...(verified ? { verified } : {}),
+    };
+  },
   loader: createEmployerDashboardLoader(),
   head: ({ loaderData }) => ({
     meta: [
@@ -34,12 +49,22 @@ export const Route = createFileRoute('/employers/dashboard')({
 
 function EmployerDashboard() {
   const companies = Route.useLoaderData();
-  const { add } = Route.useSearch();
+  const { add, verified } = Route.useSearch();
   const router = useRouter();
+  const consumeVerificationOutcome = useCallback(() => {
+    void router.navigate({
+      to: '/employers/dashboard',
+      search: add ? { add: true } : {},
+      replace: true,
+      resetScroll: false,
+    });
+  }, [add, router]);
   return (
     <EmployerDashboardView
       companies={companies.data}
       add={add}
+      verified={verified}
+      consumeVerificationOutcome={consumeVerificationOutcome}
       dependencies={{
         searchCompanies,
         claimCompany,

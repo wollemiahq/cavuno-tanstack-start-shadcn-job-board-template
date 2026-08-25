@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  activePersonaIdForViewer,
   clampEmailLimit,
   groupPersonasByRole,
   pickWhitelistedConfig,
@@ -83,6 +84,18 @@ describe('projectPersona', () => {
       states: ['application-tracker', 'saved-jobs'],
     });
     expect('email' in projected).toBe(false);
+  });
+
+  it('resolves a stable active id server-side without projecting email', () => {
+    expect(
+      activePersonaIdForViewer(
+        [raw],
+        ' CANDIDATE-COMPLETE@SANDBOX.CAVUNO.COM ',
+      ),
+    ).toBe('candidate-complete');
+    expect(activePersonaIdForViewer([raw], 'someone-else@example.com')).toBe(
+      null,
+    );
   });
 });
 
@@ -385,7 +398,7 @@ describe('rewriteEmailHtmlLinks', () => {
     const html =
       '<p>Click <a href="https://sandbox.cavuno.com/auth/verify-email?token=a%2Bb&amp;x=1#done">here</a>.</p>';
     expect(rewriteEmailHtmlLinks(html, origins)).toBe(
-      '<p>Click <a href="http://[::1]:3030/auth/verify-email?token=a%2Bb&amp;x=1#done">here</a>.</p>',
+      '<p>Click <a href="http://[::1]:3030/auth/verify-email?token=a%2Bb&amp;x=1#done" target="_top">here</a>.</p>',
     );
   });
 
@@ -402,18 +415,30 @@ describe('rewriteEmailHtmlLinks', () => {
       "<a href='https://sandbox.cavuno.com/a'>a</a>" +
       '<a href="https://sandbox.cavuno.com/b?q=2">b</a>';
     expect(rewriteEmailHtmlLinks(html, origins)).toBe(
-      "<a href='http://[::1]:3030/a'>a</a>" +
-        '<a href="http://[::1]:3030/b?q=2">b</a>',
+      '<a href=\'http://[::1]:3030/a\' target="_top">a</a>' +
+        '<a href="http://[::1]:3030/b?q=2" target="_top">b</a>',
     );
   });
 
-  it('is a no-op when the two origins are identical', () => {
+  it('targets same-origin completion links at the top-level app', () => {
     const same = {
       boardOrigin: 'https://sandbox.cavuno.com',
       appOrigin: 'https://sandbox.cavuno.com',
     };
     const html = '<a href="https://sandbox.cavuno.com/a">a</a>';
-    expect(rewriteEmailHtmlLinks(html, same)).toBe(html);
+    expect(rewriteEmailHtmlLinks(html, same)).toBe(
+      '<a href="https://sandbox.cavuno.com/a" target="_top">a</a>',
+    );
+  });
+
+  it('replaces an existing completion-link target without touching external links', () => {
+    const html =
+      '<a target="_blank" href="https://sandbox.cavuno.com/a">local</a>' +
+      '<a target="_blank" href="https://example.com/a">external</a>';
+    expect(rewriteEmailHtmlLinks(html, origins)).toBe(
+      '<a href="http://[::1]:3030/a" target="_top">local</a>' +
+        '<a target="_blank" href="https://example.com/a">external</a>',
+    );
   });
 });
 

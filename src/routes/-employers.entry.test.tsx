@@ -8,6 +8,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
   within,
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -336,6 +337,31 @@ describe('employer entry surfaces', () => {
     expect(screen.getByRole('button', { name: 'Add company' })).toBeEnabled();
   });
 
+  it('preserves only bounded work-email outcomes and announces them once', async () => {
+    const consume = vi.fn();
+    render(
+      <EmployerDashboardView
+        companies={[membership]}
+        verified="approved"
+        consumeVerificationOutcome={consume}
+        dependencies={dashboardViewDependencies}
+      />,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Your work email was verified. You can now manage this company.',
+    );
+    await waitFor(() => expect(consume).toHaveBeenCalledOnce());
+
+    const validateSearch = DashboardRoute.options.validateSearch as (
+      search: Record<string, unknown>,
+    ) => unknown;
+    expect(validateSearch({ verified: 'pending', unsafe: 'value' })).toEqual({
+      verified: 'pending',
+    });
+    expect(validateSearch({ verified: 'javascript:alert(1)' })).toEqual({});
+  });
+
   it('uses the owned focus-managed dialog when adding a company', async () => {
     vi.useFakeTimers();
     searchCompanies.mockResolvedValue({
@@ -425,6 +451,53 @@ describe('employer entry surfaces', () => {
       document.querySelector('[data-slot="combobox-content"]'),
     ).toBeVisible();
     expect(screen.getByText('Match Acm')).toBeVisible();
+  });
+
+  it('clears stale company results and reports a rejected debounced search', async () => {
+    vi.useFakeTimers();
+    searchCompanies
+      .mockResolvedValueOnce({
+        ok: true,
+        data: {
+          object: 'list',
+          url: '/v1/me/companies/search',
+          data: [
+            {
+              id: 'co-acme',
+              object: 'claimable_company',
+              name: 'Acme Ventures',
+              slug: 'acme',
+              website: null,
+            },
+          ],
+          hasMore: false,
+          nextCursor: null,
+        },
+      })
+      .mockRejectedValueOnce(new Error('network'));
+    render(
+      <EmployerDashboardView
+        companies={[]}
+        dependencies={dashboardViewDependencies}
+      />,
+    );
+    const input = screen.getByLabelText('Search companies by name...');
+    fireEvent.change(input, { target: { value: 'Acme' } });
+    await act(() => vi.advanceTimersByTimeAsync(250));
+    expect(screen.getByText('Acme Ventures')).toBeVisible();
+
+    fireEvent.change(input, { target: { value: 'Acme Labs' } });
+    await act(() => vi.advanceTimersByTimeAsync(250));
+
+    expect(screen.queryByText('Acme Ventures')).not.toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Something went wrong.',
+    );
+    expect(
+      screen.getByRole('button', {
+        name: 'Add “Acme Labs” as a new company',
+      }),
+    ).toBeEnabled();
   });
 
   it('keeps a pending membership inside the employer workspace while awaiting approval', () => {

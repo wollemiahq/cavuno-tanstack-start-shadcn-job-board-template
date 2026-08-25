@@ -1,3 +1,5 @@
+import { useRef, useState } from 'react';
+
 import { formatDate } from '@cavuno/board/format';
 import { Await, Link } from '@tanstack/react-router';
 import { MoreHorizontalIcon, PlusIcon } from 'lucide-react';
@@ -41,6 +43,16 @@ import {
 } from '@/components/employer/employer-stats-chart';
 import { Page, PageContent } from '@/components/layout/page';
 import { Text } from '@/components/text';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -382,19 +394,39 @@ function JobRow({
   const displayStatus = expired ? 'expired' : job.status;
   const isDraft = job.status === 'draft';
   const isPublished = job.status === 'published' && !expired;
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<
+    'status' | 'republish' | 'delete' | null
+  >(null);
+  const deletePendingRef = useRef(false);
+
+  async function reconcile() {
+    try {
+      await actions.invalidate();
+    } catch {
+      actions.toastError(m.employerCompany_reconciliationError());
+    }
+  }
 
   async function act(fn: () => Promise<{ ok: boolean; message?: string }>) {
+    if (pendingAction) return;
+    setPendingAction('status');
+    let result: { ok: boolean; message?: string };
     try {
-      const result = await fn();
-      if (result.ok) {
-        await actions.invalidate();
-      } else {
-        actions.toastError(boardErrorMessage(result));
-      }
+      result = await fn();
     } catch {
       // A rejecting call (network drop, 5xx) must surface, not vanish.
       actions.toastError(m.employerCompany_genericError());
+      setPendingAction(null);
+      return;
     }
+    if (!result.ok) {
+      actions.toastError(boardErrorMessage(result));
+      setPendingAction(null);
+      return;
+    }
+    await reconcile();
+    setPendingAction(null);
   }
 
   // The one smart "Republish": try to publish with the job's existing
@@ -402,6 +434,8 @@ function JobRow({
   // toast; anything the server refuses (payment required, expired credit)
   // routes to the edit page, where the plan picker + payment live.
   async function republish() {
+    if (pendingAction) return;
+    setPendingAction('republish');
     let result;
     try {
       result = await actions.publishJob({ data: { slug, id: job.id } });
@@ -409,14 +443,48 @@ function JobRow({
       // A transport failure is not a server refusal — routing to the edit
       // page would misread it as "payment required". Surface and stop.
       actions.toastError(m.employerCompany_genericError());
+      setPendingAction(null);
       return;
     }
     if (result.ok) {
       actions.toastSuccess(m.employerJobs_republishedToast());
-      await actions.invalidate();
+      await reconcile();
+      setPendingAction(null);
       return;
     }
-    await actions.navigateToEdit(slug, job.id);
+    try {
+      await actions.navigateToEdit(slug, job.id);
+    } catch {
+      actions.toastError(m.employerCompany_genericError());
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function confirmDelete() {
+    if (pendingAction || deletePendingRef.current) return;
+    deletePendingRef.current = true;
+    setPendingAction('delete');
+    let result;
+    try {
+      result = await actions.deleteJob({ data: { slug, id: job.id } });
+    } catch {
+      actions.toastError(m.employerCompany_genericError());
+      setPendingAction(null);
+      deletePendingRef.current = false;
+      return;
+    }
+    if (!result.ok) {
+      actions.toastError(boardErrorMessage(result));
+      setPendingAction(null);
+      deletePendingRef.current = false;
+      return;
+    }
+    setDeleteOpen(false);
+    actions.toastSuccess(m.employerJobs_deletedToast({ title: job.title }));
+    await reconcile();
+    setPendingAction(null);
+    deletePendingRef.current = false;
   }
 
   const dateLine = expired
@@ -552,14 +620,44 @@ function JobRow({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"
-                onClick={() =>
-                  act(() => actions.deleteJob({ data: { slug, id: job.id } }))
-                }
+                onClick={() => setDeleteOpen(true)}
               >
                 {m.employerCompany_deleteLabel()}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <AlertDialog
+            open={deleteOpen}
+            onOpenChange={(open) => {
+              if (!open && pendingAction === 'delete') return;
+              setDeleteOpen(open);
+            }}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {m.employerJobs_deleteConfirmTitle({ title: job.title })}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {m.employerJobs_deleteConfirmBody({ title: job.title })}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={pendingAction === 'delete'}>
+                  {m.dangerZone_cancelLabel()}
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  variant="destructive"
+                  disabled={pendingAction === 'delete'}
+                  onClick={confirmDelete}
+                >
+                  {pendingAction === 'delete'
+                    ? m.employerJobs_deletingLabel()
+                    : m.employerCompany_deleteLabel()}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </TableCell>
     </TableRow>

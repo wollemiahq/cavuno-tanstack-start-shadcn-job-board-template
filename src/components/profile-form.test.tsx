@@ -22,6 +22,7 @@ const mocks = {
   checkHandle: vi.fn(),
   updateProfile: vi.fn(),
   toastActionError: vi.fn(),
+  toastActionReconciliationError: vi.fn(),
   toastActionSuccess: vi.fn(),
 };
 

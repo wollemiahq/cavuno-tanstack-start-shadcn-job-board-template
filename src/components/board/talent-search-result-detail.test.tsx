@@ -9,7 +9,7 @@ import {
   within,
   waitFor,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { TalentSearchResultDetail } from './talent-search-result-detail';
 import { profileVm } from './talent-ui-test-fixtures';
@@ -23,7 +23,20 @@ afterEach(cleanup);
 // route no longer offers a separate "View profile" button — the NAME is the
 // link to the canonical profile — so `viewProfile` is always null here.
 const messageCta: TalentDetailCta = {
-  message: { label: 'Message', href: '/auth/sign-in?returnTo=%2Ftalent' },
+  message: {
+    kind: 'link',
+    label: 'Message',
+    href: '/auth/sign-in?returnTo=%2Ftalent',
+  },
+  viewProfile: null,
+};
+
+const composerCta: TalentDetailCta = {
+  message: {
+    kind: 'compose',
+    label: 'Message',
+    candidateHandle: 'ada-lovelace',
+  },
   viewProfile: null,
 };
 
@@ -91,6 +104,39 @@ describe('TalentSearchResultDetail', () => {
       'href',
       '/p/ada-lovelace',
     );
+  });
+
+  it('starts a conversation by handle and hands off to the returned thread', async () => {
+    const onStartConversation = vi.fn().mockResolvedValue({
+      ok: true,
+      data: { conversationId: 'conversation-1' },
+    });
+    const onConversationStarted = vi.fn();
+    render(
+      <TalentSearchResultDetail
+        vm={profileVm}
+        cta={composerCta}
+        onStartConversation={onStartConversation}
+        onConversationStarted={onConversationStarted}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Message' }));
+    expect(
+      screen.getByRole('heading', { name: 'Message Ada Lovelace' }),
+    ).toBeVisible();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Send a message' }), {
+      target: { value: '  Your work looks like a great fit.  ' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
+
+    await waitFor(() =>
+      expect(onStartConversation).toHaveBeenCalledWith({
+        candidateHandle: 'ada-lovelace',
+        body: 'Your work looks like a great fit.',
+      }),
+    );
+    expect(onConversationStarted).toHaveBeenCalledWith('conversation-1');
   });
 
   it('removes every profile action while preserved detail is read-only', () => {

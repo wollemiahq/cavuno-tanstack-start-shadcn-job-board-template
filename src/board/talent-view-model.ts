@@ -251,13 +251,20 @@ export interface TalentDetailCtaLabels {
 }
 
 export interface TalentDetailCtaLink {
+  kind: 'link';
   label: string;
   href: string;
 }
 
+export interface TalentDetailCtaComposer {
+  kind: 'compose';
+  label: string;
+  candidateHandle: string;
+}
+
 export interface TalentDetailCta {
   /** The emphasized action, or `null` when the viewer gets no Message CTA. */
-  message: TalentDetailCtaLink | null;
+  message: TalentDetailCtaLink | TalentDetailCtaComposer | null;
   /** The subdued canonical-profile link, or `null` when it would duplicate
    *  the primary action or the surface already is the canonical profile. */
   viewProfile: TalentDetailCtaLink | null;
@@ -271,16 +278,15 @@ export interface TalentDetailCta {
  *  - candidate               → no Message (candidates can't cold-message
  *                              candidates); only the View-profile link.
  *  - employer, no access     → Message routes to pricing (`pricingHref`).
- *  - employer, has access    → Message routes to the canonical profile
- *                              (`detailHref`), where the conversation opens.
+ *  - employer, has access    → composer targeting the public candidate handle.
  *
- * NOTE: a live in-pane conversation start is not wired because the public
- * talent shapes expose only `handle`, never the `candidateBoardUserId` that
- * `board.me.conversations.start` requires — a platform follow-up. Until then
- * the employer-with-access action hands off to the canonical profile.
+ * `conversations.start` accepts the public candidate handle and converges on
+ * an existing employer↔candidate conversation, so the talent wire does not
+ * need to expose the private board-user id used by `findExisting`.
  */
 export function resolveTalentDetailCta(input: {
   viewer: TalentDetailViewer;
+  candidateHandle: string | null;
   /** Canonical `/p/{handle}` link, or `null` when the handle is missing. */
   detailHref: string | null;
   signInHref: string;
@@ -300,29 +306,43 @@ export function resolveTalentDetailCta(input: {
 
   const viewProfile: TalentDetailCtaLink | null =
     input.showViewProfile && detailHref
-      ? { label: labels.viewProfile, href: detailHref }
+      ? { kind: 'link', label: labels.viewProfile, href: detailHref }
       : null;
 
-  let message: TalentDetailCtaLink | null = null;
+  let message: TalentDetailCta['message'] = null;
   if (!messagingEnabled) {
     // No messaging surface ⇒ no Message CTA; keep the profile link.
     return { message: null, viewProfile };
   }
   if (viewer.kind === 'anonymous') {
-    message = { label: labels.message, href: input.signInHref };
+    message = {
+      kind: 'link',
+      label: labels.message,
+      href: input.signInHref,
+    };
   } else if (viewer.kind === 'employer') {
     message = viewer.hasTalentAccess
-      ? detailHref
-        ? { label: labels.message, href: detailHref }
+      ? input.candidateHandle
+        ? {
+            kind: 'compose',
+            label: labels.message,
+            candidateHandle: input.candidateHandle,
+          }
         : null
-      : { label: labels.message, href: input.pricingHref };
+      : {
+          kind: 'link',
+          label: labels.message,
+          href: input.pricingHref,
+        };
   }
 
   // Never render two controls pointing at the same place.
   return {
     message,
     viewProfile:
-      message && viewProfile && message.href === viewProfile.href
+      message?.kind === 'link' &&
+      viewProfile &&
+      message.href === viewProfile.href
         ? null
         : viewProfile,
   };

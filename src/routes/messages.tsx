@@ -1,4 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  Outlet,
+  useRouterState,
+} from '@tanstack/react-router';
 import { MessageSquare } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
@@ -36,8 +40,22 @@ export const Route = createFileRoute('/messages')({
       { name: 'robots', content: 'noindex' },
     ],
   }),
-  component: MessagesPage,
+  component: MessagesRoute,
 });
+
+export function hasSelectedConversationRoute(
+  matches: ReadonlyArray<{ routeId: string }>,
+): boolean {
+  return matches.some((match) => match.routeId === '/messages/$conversationId');
+}
+
+function MessagesRoute() {
+  const hasSelectedConversation = useRouterState({
+    select: (state) => hasSelectedConversationRoute(state.matches),
+  });
+
+  return hasSelectedConversation ? <Outlet /> : <MessagesPage />;
+}
 
 function MessagesPage() {
   const data = Route.useLoaderData();

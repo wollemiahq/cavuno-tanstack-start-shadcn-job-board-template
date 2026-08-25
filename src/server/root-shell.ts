@@ -6,7 +6,7 @@ import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
 import { getSessionUser } from './account';
 import { listCompanies } from './employers';
 import { getAccessGrant } from './paywall';
-import { getDataSourceFacts, getPreviewState } from './preview';
+import { getDataSourceFacts, resolvePreviewStateForViewer } from './preview';
 import { getBoardContext, getBoardSeo, getEmployerOfferGate } from './queries';
 
 /**
@@ -51,26 +51,30 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
 export const getRootSessionShellData = createServerFn({
   method: 'GET',
 }).handler(async () => {
+  const userPromise = getSessionUser();
   const [user, employerCompanies, preview, hasGrant] = await Promise.all([
-    getSessionUser(),
+    userPromise,
     listCompanies()
       .then((memberships) => memberships.data)
       .catch(() => null),
-    getPreviewState().catch(async () => {
-      const facts = await getDataSourceFacts().catch(() => ({
-        demoConfigured: false,
-        demoBoardPrivate: false,
-        dataSource: 'board' as const,
-      }));
-      return {
-        capability: {
-          canPreview: false as const,
-          reason: 'not-sandbox' as const,
-        },
-        personas: [],
-        ...facts,
-      };
-    }),
+    userPromise
+      .then((user) => resolvePreviewStateForViewer(user?.email ?? null))
+      .catch(async () => {
+        const facts = await getDataSourceFacts().catch(() => ({
+          demoConfigured: false,
+          demoBoardPrivate: false,
+          dataSource: 'board' as const,
+        }));
+        return {
+          capability: {
+            canPreview: false as const,
+            reason: 'not-sandbox' as const,
+          },
+          personas: [],
+          activePersonaId: null,
+          ...facts,
+        };
+      }),
     getAccessGrant()
       .then((grant) => grant.hasAccess)
       .catch(() => false),

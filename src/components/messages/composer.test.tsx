@@ -66,4 +66,28 @@ describe('Composer', () => {
     expect(onSent).toHaveBeenCalledOnce();
     expect(textarea).toHaveValue('');
   });
+
+  it('renders a localized messaging-policy error and keeps the draft', async () => {
+    const onSend = vi
+      .fn()
+      .mockRejectedValue({ code: 'messaging_recipient_not_open' });
+
+    render(
+      <Composer
+        disabled={false}
+        hint={null}
+        onSend={onSend}
+        onSent={vi.fn()}
+      />,
+    );
+
+    const textarea = screen.getByRole('textbox', { name: 'Send a message' });
+    fireEvent.change(textarea, { target: { value: 'Keep this message' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'This candidate isn’t accepting messages.',
+    );
+    expect(textarea).toHaveValue('Keep this message');
+  });
 });

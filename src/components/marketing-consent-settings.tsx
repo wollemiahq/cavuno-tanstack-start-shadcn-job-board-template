@@ -12,7 +12,11 @@ import { m } from '../paraglide/messages';
 import { setMarketingConsent } from '../server/settings';
 
 import { Checkbox } from '@/components/ui/checkbox';
-import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
+import {
+  reconcileCommittedAction,
+  toastActionError,
+  toastActionSuccess,
+} from '@/lib/action-toast';
 
 export type UpdateMarketingConsent = (
   input: Parameters<typeof setMarketingConsent>[0],
@@ -78,13 +82,14 @@ export function MarketingConsentSettingsView({
                 await updateConsent({
                   data: { granted: isSelected === true },
                 });
-                await invalidate();
-                void toastActionSuccess();
               } catch {
                 void toastActionError();
-              } finally {
                 setPending(false);
+                return;
               }
+              void toastActionSuccess();
+              await reconcileCommittedAction(invalidate);
+              setPending(false);
             }}
           />
         </li>

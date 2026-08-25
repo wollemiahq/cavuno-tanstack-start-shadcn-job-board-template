@@ -1,4 +1,5 @@
 import { m } from '../paraglide/messages';
+import { boardErrorMessage } from './board-error-message';
 
 /**
  * A user-facing string for an error caught from a messaging server function.
@@ -7,6 +8,14 @@ import { m } from '../paraglide/messages';
  * carries the server-side text — fall back to a generic line otherwise.
  */
 export function errorMessage<T>(error: T): string {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    typeof error.code === 'string'
+  ) {
+    return boardErrorMessage({ code: error.code });
+  }
   if (error instanceof Error && error.message.includes('EMAIL_UNVERIFIED')) {
     return m.messages_verifyEmailFirstText();
   }

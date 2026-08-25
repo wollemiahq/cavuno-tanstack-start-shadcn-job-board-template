@@ -10,7 +10,12 @@ export type SelectedJobState = {
   job?: PublicJob;
   /** Platform company `summary` for the about-card intro (never HTML body). */
   companySummary: string | null;
-  alreadyApplied: boolean;
+  /**
+   * The private candidate read is independent from the public job. `unknown`
+   * keeps the detail readable without turning a failed lookup into permission
+   * to submit another application.
+   */
+  applicationState: 'not-requested' | 'applied' | 'not-applied' | 'unknown';
   error?: Error;
   retry: () => void;
 };
@@ -45,7 +50,7 @@ export function useSelectedJob(
   const [state, setState] = useState<Omit<SelectedJobState, 'retry'>>({
     status: 'idle',
     companySummary: null,
-    alreadyApplied: false,
+    applicationState: 'not-requested',
   });
 
   useEffect(() => {
@@ -53,7 +58,7 @@ export function useSelectedJob(
       setState({
         status: 'idle',
         companySummary: null,
-        alreadyApplied: false,
+        applicationState: 'not-requested',
       });
       return;
     }
@@ -63,14 +68,19 @@ export function useSelectedJob(
       status: 'loading',
       job: previous.job,
       companySummary: previous.companySummary,
-      alreadyApplied: previous.alreadyApplied,
+      applicationState: includeApplicationState ? 'unknown' : 'not-requested',
     }));
 
     const applicationP = includeApplicationState
       ? dependencies
           .myApplicationForJob({ data: { jobSlug } })
-          .catch(() => null)
-      : Promise.resolve(null);
+          .then((application) =>
+            application === null
+              ? ({ status: 'not-applied' } as const)
+              : ({ status: 'applied' } as const),
+          )
+          .catch(() => ({ status: 'unknown' }) as const)
+      : Promise.resolve({ status: 'not-requested' } as const);
 
     const knownCompany = companySlug?.trim() || null;
 
@@ -89,7 +99,7 @@ export function useSelectedJob(
             status: 'ready',
             job,
             companySummary: company?.summary ?? null,
-            alreadyApplied: application !== null,
+            applicationState: application.status,
           });
           return;
         }
@@ -111,7 +121,7 @@ export function useSelectedJob(
           status: 'ready',
           job,
           companySummary: company?.summary ?? null,
-          alreadyApplied: application !== null,
+          applicationState: application.status,
         });
       } catch (cause: unknown) {
         if (cancelled) return;
@@ -119,7 +129,7 @@ export function useSelectedJob(
           status: 'error',
           job: previous.job,
           companySummary: previous.companySummary,
-          alreadyApplied: previous.alreadyApplied,
+          applicationState: previous.applicationState,
           error: cause instanceof Error ? cause : new Error(String(cause)),
         }));
       }

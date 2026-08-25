@@ -14,11 +14,17 @@ import { SignInView } from './-auth.sign-in';
 import { headTitle } from '@/lib/page-title';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
 
+type SignInSearch = { returnTo?: string; reset?: 'password' };
+
 export const Route = createFileRoute('/auth/sign-in')({
-  validateSearch: (search: UrlSearchInput): { returnTo?: string } =>
-    searchString(search.returnTo)
-      ? { returnTo: candidateReturnTo(search.returnTo) }
-      : {},
+  validateSearch: (search: UrlSearchInput): SignInSearch => {
+    const validated: SignInSearch = {};
+    if (searchString(search.returnTo)) {
+      validated.returnTo = candidateReturnTo(search.returnTo);
+    }
+    if (search.reset === 'password') validated.reset = 'password';
+    return validated;
+  },
   loaderDeps: ({ search }) => ({ returnTo: search.returnTo }),
   loader: async ({ deps }) => {
     await redirectIfAuthenticated(candidateReturnTo(deps.returnTo));
@@ -40,6 +46,7 @@ function SignInPage() {
   return (
     <SignInView
       returnTo={returnTo}
+      notice={search.reset === 'password' ? 'password-reset' : undefined}
       signInAction={signIn}
       requestMagicLinkAction={requestMagicLink}
       getOAuthAuthorizationUrlAction={getOAuthAuthorizationUrl}

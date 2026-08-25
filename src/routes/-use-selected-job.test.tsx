@@ -199,7 +199,7 @@ describe('useSelectedJob', () => {
     expect(myApplicationForJob).toHaveBeenCalledWith({
       data: { jobSlug: 'first-job' },
     });
-    expect(result.current.alreadyApplied).toBe(true);
+    expect(result.current.applicationState).toBe('applied');
   });
 
   it('still renders the public job when private application state is unavailable', async () => {
@@ -214,7 +214,7 @@ describe('useSelectedJob', () => {
 
     await waitFor(() => expect(result.current.status).toBe('ready'));
     expect(result.current.job?.slug).toBe('first-job');
-    expect(result.current.alreadyApplied).toBe(false);
+    expect(result.current.applicationState).toBe('unknown');
   });
 
   it('does not request private application state for anonymous or unverified viewers', async () => {
@@ -226,7 +226,7 @@ describe('useSelectedJob', () => {
 
     await waitFor(() => expect(result.current.status).toBe('ready'));
     expect(myApplicationForJob).not.toHaveBeenCalled();
-    expect(result.current.alreadyApplied).toBe(false);
+    expect(result.current.applicationState).toBe('not-requested');
   });
 
   it('loads company summary for the about-company intro (never description HTML)', async () => {

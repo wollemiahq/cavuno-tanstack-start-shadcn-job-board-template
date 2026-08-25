@@ -14,7 +14,10 @@ import {
   VerifyEmailRequiredView,
 } from './-auth.verify-email-required';
 
-import { toastActionError } from '@/lib/action-toast';
+import {
+  toastActionError,
+  toastActionReconciliationError,
+} from '@/lib/action-toast';
 import { headTitle } from '@/lib/page-title';
 import type { UrlSearchInput } from '@/lib/pagination';
 
@@ -72,6 +75,7 @@ function VerifyEmailRequiredPage() {
         await router.navigate({ href });
       }}
       reportActionError={toastActionError}
+      reportReconciliationError={toastActionReconciliationError}
       renderResumeUpload={(currentResume) => (
         <ResumeUpload
           resume={currentResume}

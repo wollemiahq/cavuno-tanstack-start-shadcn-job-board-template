@@ -24,6 +24,7 @@ afterEach(() => {
 describe('/auth/employer/sign-up continuation', () => {
   it('sends successful employer signup to the verification gate for the dashboard', async () => {
     mocks.signUpEmployer.mockResolvedValue({ ok: true });
+    mocks.invalidate.mockRejectedValue(new Error('refresh unavailable'));
     render(
       <EmployerSignUpView
         boardName="Cavuno Jobs"

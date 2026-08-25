@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -27,6 +28,7 @@ export const EMPTY_ROOT_PREVIEW: RootPreview = {
     reason: 'not-sandbox',
   },
   personas: [],
+  activePersonaId: null,
   demoConfigured: false,
   demoBoardPrivate: false,
   dataSource: 'board',
@@ -43,12 +45,17 @@ export type RootSessionValue = {
   ready: boolean;
 };
 
-const RootSessionContext = createContext<RootSessionValue>({
+type RootSessionContextValue = RootSessionValue & {
+  clearSession: () => void;
+};
+
+const RootSessionContext = createContext<RootSessionContextValue>({
   user: null,
   employerCompanies: null,
   hasAccessGrant: false,
   preview: EMPTY_ROOT_PREVIEW,
   ready: false,
+  clearSession: () => undefined,
 });
 
 /**
@@ -95,7 +102,18 @@ export function RootSessionProvider({
     };
   }, [candidatePaywall]);
 
-  const value = useMemo(() => session, [session]);
+  const clearSession = useCallback(() => {
+    setSession((current) => ({
+      ...current,
+      user: null,
+      employerCompanies: null,
+      hasAccessGrant: false,
+    }));
+  }, []);
+  const value = useMemo(
+    () => ({ ...session, clearSession }),
+    [clearSession, session],
+  );
 
   return (
     <RootSessionContext.Provider value={value}>
@@ -104,6 +122,6 @@ export function RootSessionProvider({
   );
 }
 
-export function useRootSession(): RootSessionValue {
+export function useRootSession(): RootSessionContextValue {
   return useContext(RootSessionContext);
 }

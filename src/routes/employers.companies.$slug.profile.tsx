@@ -11,7 +11,7 @@ import {
   createCompanyProfileLoader,
 } from './-employers.company-profile';
 
-import { toastActionSuccess } from '@/lib/action-toast';
+import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/employers/companies/$slug/profile')({
@@ -43,6 +43,7 @@ function CompanyProfilePage() {
         invalidate: () => router.invalidate(),
         navigateToDashboard: () =>
           router.navigate({ to: '/employers/dashboard' }),
+        toastError: (message) => void toastActionError(message),
         toastSuccess: (message) => void toastActionSuccess(message),
       }}
     />

@@ -61,6 +61,8 @@ import type { CompanyMembership } from '@cavuno/board';
 
 type CompanyStatusLabels = Record<CompanyMembership['status'], () => string>;
 
+export type WorkEmailVerificationOutcome = 'approved' | 'pending' | 'invalid';
+
 export type EmployerDashboardLoaderDependencies = {
   listCompanies: typeof listCompanies;
   getSeoBase: typeof getSeoBase;
@@ -117,18 +119,28 @@ export type EmployerDashboardViewDependencies = {
 export function EmployerDashboardView({
   companies,
   add,
+  verified,
+  consumeVerificationOutcome,
   dependencies,
 }: {
   companies: CompanyMembership[];
   add?: boolean;
+  verified?: WorkEmailVerificationOutcome;
+  consumeVerificationOutcome?: () => void;
   dependencies: EmployerDashboardViewDependencies;
 }) {
   const [adding, setAdding] = useState(add === true);
+  const [verificationOutcome] = useState(verified);
+
+  useEffect(() => {
+    if (verified) consumeVerificationOutcome?.();
+  }, [consumeVerificationOutcome, verified]);
 
   if (companies.length === 0 || adding) {
     return (
       <ConnectCompany
         onBack={companies.length > 0 ? () => setAdding(false) : undefined}
+        verificationOutcome={verificationOutcome}
         dependencies={dependencies}
       />
     );
@@ -138,6 +150,7 @@ export function EmployerDashboardView({
     <YourCompanies
       memberships={companies}
       onAdd={() => setAdding(true)}
+      verificationOutcome={verificationOutcome}
       dependencies={dependencies}
     />
   );
@@ -146,10 +159,12 @@ export function EmployerDashboardView({
 function YourCompanies({
   memberships,
   onAdd,
+  verificationOutcome,
   dependencies,
 }: {
   memberships: CompanyMembership[];
   onAdd: () => void;
+  verificationOutcome?: WorkEmailVerificationOutcome;
   dependencies: EmployerDashboardViewDependencies;
 }) {
   return (
@@ -168,6 +183,7 @@ function YourCompanies({
           />
         }
       >
+        <VerificationOutcomeAlert outcome={verificationOutcome} />
         <section
           aria-label={m.employerOnboarding_yourCompaniesTitle()}
           className="grid gap-3"
@@ -252,9 +268,11 @@ type ConnectCompanyState = {
 
 function ConnectCompany({
   onBack,
+  verificationOutcome,
   dependencies,
 }: {
   onBack?: () => void;
+  verificationOutcome?: WorkEmailVerificationOutcome;
   dependencies: EmployerDashboardViewDependencies;
 }) {
   const anchorRef = useComboboxAnchor();
@@ -273,6 +291,9 @@ function ConnectCompany({
 
   useEffect(() => {
     const q = query.trim();
+    // Every query transition invalidates older in-flight requests, including
+    // clearing the field while a request is already on the wire.
+    const seq = ++searchSeq.current;
     // Search from the very first character — a one-letter pause showing
     // nothing while two letters show results reads as broken.
     if (q.length < 1) {
@@ -280,17 +301,30 @@ function ConnectCompany({
         ...current,
         results: [],
         open: false,
+        message: '',
       }));
       return;
     }
-    const seq = ++searchSeq.current;
     const timer = setTimeout(async () => {
-      const result = await dependencies.searchCompanies({ data: { q } });
+      let result: Awaited<ReturnType<typeof dependencies.searchCompanies>>;
+      try {
+        result = await dependencies.searchCompanies({ data: { q } });
+      } catch {
+        if (seq !== searchSeq.current) return;
+        setState((current) => ({
+          ...current,
+          results: [],
+          message: m.employerCompany_genericError(),
+          open: true,
+        }));
+        return;
+      }
       if (seq !== searchSeq.current) return;
       if (result.ok) {
         setState((current) => ({
           ...current,
           results: result.data.data,
+          message: '',
           open: true,
         }));
       } else {
@@ -309,17 +343,22 @@ function ConnectCompany({
 
   async function claim(slug: string) {
     updateState({ message: '', open: false });
+    let result: Awaited<ReturnType<typeof dependencies.claimCompany>>;
     try {
-      const result = await dependencies.claimCompany({ data: { slug } });
-      if (!result.ok) {
-        updateState({ message: boardErrorMessage(result) });
-        return;
-      }
+      result = await dependencies.claimCompany({ data: { slug } });
+    } catch {
+      updateState({ message: m.employerCompany_genericError() });
+      return;
+    }
+    if (!result.ok) {
+      updateState({ message: boardErrorMessage(result) });
+      return;
+    }
+    try {
       await dependencies.invalidate();
       await dependencies.navigateToOnboarding(slug);
     } catch {
-      // A rejecting call (network drop, 5xx) must surface, not vanish.
-      updateState({ message: m.employerCompany_genericError() });
+      updateState({ message: m.employerCompany_reconciliationError() });
     }
   }
 
@@ -334,6 +373,7 @@ function ConnectCompany({
           />
         }
       >
+        <VerificationOutcomeAlert outcome={verificationOutcome} />
         <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6">
           <Field className="w-full" data-invalid={Boolean(message)}>
             <FieldLabel htmlFor="company-search" className="sr-only">
@@ -461,6 +501,27 @@ function ConnectCompany({
   );
 }
 
+function VerificationOutcomeAlert({
+  outcome,
+}: {
+  outcome?: WorkEmailVerificationOutcome;
+}) {
+  if (!outcome) return null;
+  const copy = {
+    approved: m.employerDashboard_verifiedApproved,
+    pending: m.employerDashboard_verifiedPending,
+    invalid: m.employerDashboard_verifiedInvalid,
+  }[outcome]();
+  return (
+    <Alert
+      variant={outcome === 'invalid' ? 'destructive' : 'default'}
+      className="mx-auto mb-6 max-w-2xl"
+    >
+      <AlertDescription>{copy}</AlertDescription>
+    </Alert>
+  );
+}
+
 function CreateCompanyModal({
   initialName,
   onClose,
@@ -471,7 +532,9 @@ function CreateCompanyModal({
   dependencies: EmployerDashboardViewDependencies;
 }) {
   const [form, setForm] = useState({ name: initialName, website: '' });
-  const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
+  const [status, setStatus] = useState<
+    'idle' | 'saving' | 'error' | 'committed'
+  >('idle');
   const [message, setMessage] = useState('');
   return (
     <Dialog
@@ -497,18 +560,27 @@ function CreateCompanyModal({
           className="space-y-5"
           onSubmit={async (event) => {
             event.preventDefault();
+            if (status === 'saving' || status === 'committed') return;
             setStatus('saving');
             const website = form.website.trim();
+            let result: Awaited<ReturnType<typeof dependencies.createCompany>>;
             try {
               const body = website
                 ? { name: form.name.trim(), website: `https://${website}` }
                 : { name: form.name.trim() };
-              const result = await dependencies.createCompany({ data: body });
-              if (!result.ok) {
-                setStatus('error');
-                setMessage(boardErrorMessage(result));
-                return;
-              }
+              result = await dependencies.createCompany({ data: body });
+            } catch {
+              setStatus('error');
+              setMessage(m.employerCompany_genericError());
+              return;
+            }
+            if (!result.ok) {
+              setStatus('error');
+              setMessage(boardErrorMessage(result));
+              return;
+            }
+            setStatus('committed');
+            try {
               await dependencies.invalidate();
               const slug = result.data.company.slug;
               if (slug && result.data.status !== 'approved') {
@@ -517,9 +589,7 @@ function CreateCompanyModal({
                 onClose();
               }
             } catch {
-              // A rejecting call (network drop, 5xx) must not strand "Saving".
-              setStatus('error');
-              setMessage(m.employerCompany_genericError());
+              setMessage(m.employerCompany_reconciliationError());
             }
           }}
         >
@@ -574,13 +644,18 @@ function CreateCompanyModal({
                 />
               </InputGroup>
             </Field>
-            {status === 'error' ? <FieldError>{message}</FieldError> : null}
+            {status === 'error' || (status === 'committed' && message) ? (
+              <FieldError>{message}</FieldError>
+            ) : null}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               {m.employerOnboarding_cancelLabel()}
             </Button>
-            <Button type="submit" disabled={status === 'saving'}>
+            <Button
+              type="submit"
+              disabled={status === 'saving' || status === 'committed'}
+            >
               {status === 'saving' ? (
                 <Spinner data-icon="inline-start" />
               ) : null}

@@ -80,6 +80,7 @@ describe('/auth/sign-up search contract', () => {
   it('keeps the destination in the post-registration verification action', async () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
     mocks.signUp.mockResolvedValue({ ok: true });
+    mocks.invalidate.mockRejectedValue(new Error('refresh unavailable'));
     render(
       <SignUpView
         boardName="Cavuno Jobs"

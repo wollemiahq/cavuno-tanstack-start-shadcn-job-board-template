@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
 import { TriangleAlert } from 'lucide-react';
@@ -140,8 +140,16 @@ export function PreviewBoardSettingsSheetView({
   ) => ReturnType<typeof updateSandboxFlags>;
   invalidate: () => Promise<void>;
 }) {
-  const [pendingFlag, setPendingFlag] = useState<string | null>(null);
+  const [pendingFlags, setPendingFlags] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
   const [flagError, setFlagError] = useState(false);
+  const [flagSyncError, setFlagSyncError] = useState(false);
+  const requestRevision = useRef(0);
+  const latestRequestByFlag = useRef(new Map<string, number>());
+  const pendingRequestCount = useRef(0);
+  const needsReconciliation = useRef(false);
+  const resetWhenSettled = useRef(false);
   // Optimistic overlay for the board-setting controls: the control adopts the
   // picked value immediately instead of disable→revert→snap while the PATCH +
   // loader refetch round-trips. Cleared on settle (success keeps the server
@@ -156,39 +164,100 @@ export function PreviewBoardSettingsSheetView({
    * or platform whitelist drifted) or a typed `not-sandbox` result — surface the
    * error banner and DON'T invalidate: the control stays bound to the current
    * `config` prop, so it reverts to its real value rather than sticking at the
-   * value the user just picked. Wrapped so a 4xx never unhandled-rejects.
+   * previous effective value. Wrapped so a 4xx never unhandled-rejects.
    */
   async function onSetFlag(
     key: keyof PreviewBoardConfig,
     next: boolean | TalentDirectoryVisibility,
   ) {
+    const previous = effectiveConfig[key];
+    const revision = ++requestRevision.current;
+    latestRequestByFlag.current.set(key, revision);
+    pendingRequestCount.current += 1;
     setFlagError(false);
-    setPendingFlag(key);
+    setFlagSyncError(false);
+    setPendingFlags((current) => new Set(current).add(key));
     setOptimisticConfig((current) => ({ ...current, [key]: next }));
     try {
       const result = await updateFlags({
         data: { config: { [key]: next } },
       });
       if (result.ok) {
-        await invalidate();
+        // Do one authoritative refresh only after every overlapping write has
+        // committed. This avoids reverse-order invalidations restoring an
+        // older snapshot over a newer selection.
+        needsReconciliation.current = true;
       } else {
         setFlagError(true);
+        if (latestRequestByFlag.current.get(key) === revision) {
+          setOptimisticConfig((current) => ({
+            ...current,
+            [key]: previous,
+          }));
+        }
       }
     } catch {
       setFlagError(true);
+      if (latestRequestByFlag.current.get(key) === revision) {
+        setOptimisticConfig((current) => ({
+          ...current,
+          [key]: previous,
+        }));
+      }
     } finally {
-      // Settle: server truth (fresh `config` after invalidate) or revert.
-      setOptimisticConfig((current) => {
-        const rest = { ...current };
-        delete rest[key];
-        return rest;
-      });
-      setPendingFlag(null);
+      pendingRequestCount.current -= 1;
+      if (latestRequestByFlag.current.get(key) === revision) {
+        setPendingFlags((current) => {
+          const nextPending = new Set(current);
+          nextPending.delete(key);
+          return nextPending;
+        });
+      }
+
+      if (pendingRequestCount.current === 0 && needsReconciliation.current) {
+        const refreshRevision = requestRevision.current;
+        needsReconciliation.current = false;
+        try {
+          await invalidate();
+          // Keep committed selections overlaid until the sheet closes. Route
+          // props may apply out of order after overlapping invalidations; an
+          // older snapshot must never restore stale visible truth.
+        } catch {
+          if (requestRevision.current === refreshRevision) {
+            // The PATCH committed. Keep the optimistic committed values and
+            // report reconciliation separately instead of claiming the write
+            // failed (B-01).
+            setFlagSyncError(true);
+          }
+        }
+      }
+      if (pendingRequestCount.current === 0 && resetWhenSettled.current) {
+        resetWhenSettled.current = false;
+        setOptimisticConfig({});
+        setFlagError(false);
+        setFlagSyncError(false);
+      }
     }
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet
+      open={open}
+      onOpenChange={(nextOpen) => {
+        resetWhenSettled.current = !nextOpen;
+        if (!nextOpen) {
+          if (pendingRequestCount.current === 0) {
+            resetWhenSettled.current = false;
+            setOptimisticConfig({});
+            setFlagError(false);
+            setFlagSyncError(false);
+          }
+        } else {
+          resetWhenSettled.current = false;
+        }
+        onOpenChange(nextOpen);
+      }}
+    >
       <SheetContent
         side="right"
         className="w-full gap-0 p-0 sm:max-w-md"
@@ -213,13 +282,22 @@ export function PreviewBoardSettingsSheetView({
               <span>{m.previewToolbar_flagError()}</span>
             </div>
           ) : null}
+          {flagSyncError ? (
+            <div
+              className="text-destructive bg-destructive/10 mb-4 flex items-start gap-2 rounded-2xl p-3 text-xs"
+              role="alert"
+            >
+              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+              <span>{m.previewToolbar_flagRefreshError()}</span>
+            </div>
+          ) : null}
           <ul className="flex flex-col gap-4">
             {PREVIEW_FEATURE_FLAGS.map((flag) => (
               <FlagControl
                 key={flag.key}
                 flag={flag}
                 config={effectiveConfig}
-                pending={pendingFlag === flag.key}
+                pending={pendingFlags.has(flag.key)}
                 onSet={onSetFlag}
               />
             ))}

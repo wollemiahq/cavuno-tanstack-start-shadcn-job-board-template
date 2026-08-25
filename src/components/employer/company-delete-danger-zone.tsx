@@ -34,6 +34,7 @@ export type CompanyDeleteActions = {
   >;
   invalidate: () => Promise<void>;
   navigateToDashboard: () => Promise<void>;
+  toastError: (message: string) => void;
   toastSuccess: (message: string) => void;
 };
 
@@ -49,15 +50,21 @@ export function CompanyDeleteDangerZone({
   slug: string;
   companyName: string;
   isAdmin: boolean;
-  otherApprovedMembers: number;
+  otherApprovedMembers: number | null;
   actions: CompanyDeleteActions;
 }) {
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState('');
   const [status, setStatus] = useState<'idle' | 'deleting' | 'error'>('idle');
   const [disabledReason, setDisabledReason] = useState<
-    'not_admin' | 'company_deletion_disabled' | null
-  >(isAdmin ? null : 'not_admin');
+    'not_admin' | 'company_deletion_disabled' | 'members_unknown' | null
+  >(
+    !isAdmin
+      ? 'not_admin'
+      : otherApprovedMembers === null
+        ? 'members_unknown'
+        : null,
+  );
   const [hidden, setHidden] = useState(false);
 
   if (hidden) return null;
@@ -67,12 +74,17 @@ export function CompanyDeleteDangerZone({
       ? m.employerDelete_notAdminText()
       : disabledReason === 'company_deletion_disabled'
         ? m.employerDelete_disabledText()
-        : m.employerDelete_warningText();
+        : disabledReason === 'members_unknown'
+          ? m.employerDelete_membersUnknownText()
+          : m.employerDelete_warningText();
   const disabled = disabledReason !== null;
 
   // Job postings are deliberately uncounted ("all of its job postings");
   // members stay counted because the number is small and personal.
   function consequence(): string {
+    if (otherApprovedMembers === null) {
+      return m.employerDelete_membersUnknownText();
+    }
     if (otherApprovedMembers === 0) {
       return m.employerDelete_consequenceSolo({ company: companyName });
     }
@@ -172,9 +184,17 @@ export function CompanyDeleteDangerZone({
                     actions.toastSuccess(
                       m.employerDelete_deletedToast({ company: companyName }),
                     );
-                    await actions.invalidate();
-                    await actions.navigateToDashboard();
                     setOpen(false);
+                    setHidden(true);
+                    try {
+                      await actions.invalidate();
+                      await actions.navigateToDashboard();
+                    } catch {
+                      actions.toastError(
+                        m.employerCompany_reconciliationError(),
+                      );
+                    }
+                    setStatus('idle');
                   } catch {
                     setStatus('error');
                   }

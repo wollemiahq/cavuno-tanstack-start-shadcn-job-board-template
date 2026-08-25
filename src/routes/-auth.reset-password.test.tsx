@@ -12,7 +12,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { UrlSearchInput } from '../lib/pagination';
 
 const mocks = {
-  invalidate: vi.fn(),
+  redirectToSignIn: vi.fn(),
   resetPassword: vi.fn(),
 };
 
@@ -59,7 +59,7 @@ describe('/auth/reset-password continuation', () => {
         token={undefined}
         returnTo={returnTo}
         resetPasswordAction={mocks.resetPassword}
-        invalidate={mocks.invalidate}
+        redirectToSignIn={mocks.redirectToSignIn}
       />,
     );
 
@@ -79,7 +79,7 @@ describe('/auth/reset-password continuation', () => {
         token="reset-token"
         returnTo={returnTo}
         resetPasswordAction={mocks.resetPassword}
-        invalidate={mocks.invalidate}
+        redirectToSignIn={mocks.redirectToSignIn}
       />,
     );
     fireEvent.change(container.querySelector('input[name="password"]')!, {
@@ -87,12 +87,11 @@ describe('/auth/reset-password continuation', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Update password' }));
 
-    await waitFor(() => {
-      expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
-        'href',
-        `/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}`,
-      );
-    });
+    await waitFor(() =>
+      expect(mocks.redirectToSignIn).toHaveBeenCalledWith(
+        `/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}&reset=password`,
+      ),
+    );
   });
 
   it('recovers when the password update rejects unexpectedly', async () => {
@@ -102,7 +101,7 @@ describe('/auth/reset-password continuation', () => {
         token="reset-token"
         returnTo="/account"
         resetPasswordAction={mocks.resetPassword}
-        invalidate={mocks.invalidate}
+        redirectToSignIn={mocks.redirectToSignIn}
       />,
     );
     fireEvent.change(container.querySelector('input[name="password"]')!, {
@@ -116,5 +115,30 @@ describe('/auth/reset-password continuation', () => {
     expect(
       screen.getByRole('button', { name: 'Update password' }),
     ).toBeEnabled();
+  });
+
+  it('keeps typed single-use token failures distinct from generic failures', async () => {
+    mocks.resetPassword.mockResolvedValue({
+      ok: false,
+      code: 'board_auth_token_expired',
+      message: 'expired',
+    });
+    const { container } = render(
+      <ResetPasswordView
+        token="expired-token"
+        returnTo="/account"
+        resetPasswordAction={mocks.resetPassword}
+        redirectToSignIn={mocks.redirectToSignIn}
+      />,
+    );
+    fireEvent.change(container.querySelector('input[name="password"]')!, {
+      target: { value: 'strong-password' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Update password' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'This link is invalid or has expired — request a new one.',
+    );
+    expect(mocks.redirectToSignIn).not.toHaveBeenCalled();
   });
 });

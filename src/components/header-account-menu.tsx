@@ -20,7 +20,10 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { toastActionError } from '@/lib/action-toast';
 import type { BoardUser, CompanyMembership } from '@cavuno/board';
+
+export type SignOutAction = () => Promise<void | { ok: true }>;
 
 /** Authenticated-only header UI, split out of the anonymous public shell. */
 export function HeaderAccountMenu({
@@ -29,12 +32,18 @@ export function HeaderAccountMenu({
   nativeApplications,
   jobRecommendationsEnabled,
   employerCompanies,
+  onSignOut,
+  onSignOutPendingChange,
+  signOutAction = signOut,
 }: {
   user: BoardUser;
   hasAccessGrant: boolean;
   nativeApplications: boolean;
   jobRecommendationsEnabled: boolean;
   employerCompanies: CompanyMembership[] | null;
+  onSignOut: () => void;
+  onSignOutPendingChange: (pending: boolean) => void;
+  signOutAction?: SignOutAction;
 }) {
   const companyWorkspaces = (employerCompanies ?? []).filter(
     (membership) =>
@@ -174,9 +183,25 @@ export function HeaderAccountMenu({
         <DropdownMenuItem
           data-test="account-menu-sign-out"
           onClick={async () => {
-            await signOut();
-            await router.invalidate();
-            await router.navigate({ to: '/' });
+            onSignOutPendingChange(true);
+            try {
+              await signOutAction();
+            } catch {
+              // Keep the truthful signed-in state so the user can retry.
+              onSignOutPendingChange(false);
+              void toastActionError();
+              return;
+            }
+            onSignOut();
+            onSignOutPendingChange(false);
+            try {
+              await router.navigate({ to: '/' });
+              await router.invalidate();
+            } catch {
+              // The cookie is already cleared. Reconcile with a hard reload
+              // instead of presenting a retryable sign-out failure.
+              window.location.assign('/');
+            }
           }}
         >
           {m.accountHome_signOutLabel()}

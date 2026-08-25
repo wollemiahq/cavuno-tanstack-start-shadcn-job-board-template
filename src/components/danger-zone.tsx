@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 
-import { useRouter } from '@tanstack/react-router';
-
 import { m } from '../paraglide/messages';
 import { deleteAccount } from '../server/account';
 import { signOut } from '../server/auth';
@@ -29,6 +27,7 @@ import {
 } from '@/components/ui/card';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { toastActionReconciliationError } from '@/lib/action-toast';
 
 // The confirm word is part of the localized instruction sentence
 // (dangerZone_confirmLabel interpolates it) — an English DELETE inside a
@@ -41,7 +40,6 @@ const CONFIRM_WORD = () => m.dangerZone_confirmWord();
  * guards against accidents. On success we clear the session and go home.
  */
 export function DangerZone() {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState('');
   const [status, setStatus] = useState<'idle' | 'deleting' | 'error'>('idle');
@@ -104,14 +102,21 @@ export function DangerZone() {
                   setStatus('deleting');
                   try {
                     await deleteAccount();
-                    await signOut();
-                    await router.invalidate();
-                    await router.navigate({ to: '/' });
-                    setOpen(false);
-                    resetConfirmation();
                   } catch {
                     setStatus('error');
+                    return;
                   }
+                  setOpen(false);
+                  resetConfirmation();
+                  try {
+                    await signOut();
+                  } catch {
+                    void toastActionReconciliationError();
+                  }
+                  // A full navigation authoritatively reconciles the deleted
+                  // account even if session cleanup or router invalidation
+                  // would reject after the durable delete.
+                  window.location.assign('/');
                 }}
               >
                 {status === 'deleting'

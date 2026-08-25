@@ -55,7 +55,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
-import { toastActionError } from '@/lib/action-toast';
+import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
 import type { CandidateExperience } from '@cavuno/board';
 
 type Editing = { id: string | null } | null;
@@ -135,14 +135,15 @@ export function ExperienceSection({
       } else {
         await createExperience({ data: body });
       }
-      await router.invalidate();
-      setEditing(null);
-      setDraft(EMPTY);
     } catch {
       void toastActionError();
-    } finally {
       setPending(false);
+      return;
     }
+    setEditing(null);
+    setDraft(EMPTY);
+    await reconcileCommittedAction(() => router.invalidate());
+    setPending(false);
   };
 
   const editorForm =
@@ -345,12 +346,13 @@ export function ExperienceSection({
                       setPending(true);
                       try {
                         await deleteExperience({ data: { id: item.id } });
-                        await router.invalidate();
                       } catch {
                         void toastActionError();
-                      } finally {
                         setPending(false);
+                        return;
                       }
+                      await reconcileCommittedAction(() => router.invalidate());
+                      setPending(false);
                     }}
                   >
                     <Trash2 aria-hidden />

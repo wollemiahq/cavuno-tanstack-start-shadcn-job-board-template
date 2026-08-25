@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Bookmark, BookmarkCheck, LoaderCircle } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/ui/button';
+import { reconcileCommittedAction } from '@/lib/action-toast';
 import {
   candidateSignInHref,
   candidateVerifyEmailHref,
@@ -145,15 +146,16 @@ export function SaveJobButton({
           setState('saving');
           try {
             await onSave(jobId);
-            await onSaved?.();
-            setState('saved');
           } catch (error) {
             if (String(error).includes('EMAIL_UNVERIFIED')) {
               window.location.assign(candidateVerifyEmailHref(returnTo));
               return;
             }
             setState('error');
+            return;
           }
+          setState('saved');
+          if (onSaved) await reconcileCommittedAction(onSaved);
         }}
       >
         {controlLabel(

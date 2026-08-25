@@ -24,7 +24,7 @@
  */
 import { isNotFound, isUnauthorized } from '@cavuno/board';
 import { type BoardSession } from '@cavuno/board/server';
-import { createServerFn } from '@tanstack/react-start';
+import { createServerFn, createServerOnlyFn } from '@tanstack/react-start';
 import { getRequest, setResponseHeader } from '@tanstack/react-start/server';
 
 import { getPreviewBoard } from '../lib/board';
@@ -36,6 +36,7 @@ import {
   serializeSessionForSource,
 } from '../lib/data-source.server';
 import {
+  activePersonaIdForViewer,
   clampEmailLimit,
   pickWhitelistedConfig,
   projectPersona,
@@ -131,7 +132,7 @@ async function retargetEmailLinks(
 ): Promise<PreviewEmail[]> {
   const boardOrigin = toOrigin((await previewBoard().seo()).canonicalBase);
   const appOrigin = toOrigin(getRequest().url);
-  if (!boardOrigin || !appOrigin || boardOrigin === appOrigin) return emails;
+  if (!boardOrigin || !appOrigin) return emails;
   return emails.map((email) =>
     rewritePreviewEmailLinks(email, { boardOrigin, appOrigin }),
   );
@@ -212,7 +213,17 @@ export const getDataSourceFacts = createServerFn({ method: 'GET' }).handler(
  * probe answering false and an empty roster.
  */
 export const getPreviewState = createServerFn({ method: 'GET' }).handler(
-  async (): Promise<PreviewState> => {
+  (): Promise<PreviewState> => resolvePreviewStateForViewer(null),
+);
+
+/**
+ * Build the safe preview state for the current shell viewer. The caller may
+ * supply the already-authenticated board-user email, but the raw roster email
+ * is consumed only inside this server module. The browser receives only the
+ * matching non-secret persona id.
+ */
+export const resolvePreviewStateForViewer = createServerOnlyFn(
+  async (viewerEmail: string | null): Promise<PreviewState> => {
     const capability = await resolveCapabilityFromBoard();
     const demoConfigured = isDemoBoardConfigured();
     const demoBoardPrivate = isDemoBoardPrivate();
@@ -221,15 +232,21 @@ export const getPreviewState = createServerFn({ method: 'GET' }).handler(
       return {
         capability,
         personas: [],
+        activePersonaId: null,
         demoConfigured,
         demoBoardPrivate,
         dataSource,
       };
     }
     const roster = await fetchRoster();
+    const activePersonaId = activePersonaIdForViewer(
+      roster.personas,
+      viewerEmail,
+    );
     return {
       capability,
       personas: roster.personas.map(projectPersona),
+      activePersonaId,
       demoConfigured,
       demoBoardPrivate,
       dataSource,

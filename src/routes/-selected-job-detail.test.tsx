@@ -152,7 +152,7 @@ function renderSelectedJob(status: SelectedJobState['status']) {
     status,
     job,
     companySummary: null,
-    alreadyApplied: false,
+    applicationState: 'not-applied',
     retry: vi.fn(),
   };
   const rootRoute = createRootRoute();

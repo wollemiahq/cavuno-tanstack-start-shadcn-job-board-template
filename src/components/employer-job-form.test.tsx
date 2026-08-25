@@ -198,6 +198,43 @@ describe('EmployerJobForm', () => {
     );
   });
 
+  it('retries checkout for the committed job without saving it again', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    mocks.checkoutJob
+      .mockRejectedValueOnce(new Error('checkout unavailable'))
+      .mockResolvedValueOnce({
+        ok: true,
+        data: { status: 'published', checkoutUrl: null },
+      });
+
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
+        job={draftJob}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    const retry = await screen.findByRole('button', {
+      name: 'Proceed to secure checkout',
+    });
+    expect(mocks.updateJob).toHaveBeenCalledOnce();
+    fireEvent.click(retry);
+
+    await waitFor(() => expect(mocks.checkoutJob).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledOnce());
+    expect(mocks.updateJob).toHaveBeenCalledOnce();
+  });
+
   it('sends salary nulls when an edit clears both bounds (withdraw the salary)', async () => {
     mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
 
@@ -277,6 +314,33 @@ describe('EmployerJobForm', () => {
     expect(
       screen.queryByRole('radio', { name: /Growth/ }),
     ).not.toBeInTheDocument();
+  });
+
+  it('keeps a saved edit committed when list reconciliation fails', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    mocks.invalidate.mockRejectedValue(new Error('refresh failed'));
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'published' }}
+        job={{ ...draftJob, status: 'published' }}
+      />,
+    );
+
+    fireEvent.submit(container.querySelector('form')!);
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      /change was saved/i,
+    );
+    expect(mocks.updateJob).toHaveBeenCalledOnce();
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
   });
 
   it('requires a billing choice before a create can publish', async () => {

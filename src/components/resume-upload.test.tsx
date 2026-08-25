@@ -22,6 +22,7 @@ const mocks = {
   deleteResume: vi.fn(),
   uploadResume: vi.fn(),
   toastActionError: vi.fn(),
+  toastActionReconciliationError: vi.fn(),
 };
 
 import { ResumeUpload } from './resume-upload';

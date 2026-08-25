@@ -9,6 +9,7 @@ import {
   BookOpenText,
   BriefcaseBusiness,
   Building2,
+  Loader2,
   Menu,
   Users,
   X,
@@ -19,6 +20,7 @@ import { menuColorClasses } from '../lib/menu-color';
 import { resolveSignupDestination } from '../lib/signup-destination';
 import { m } from '../paraglide/messages';
 
+import type { SignOutAction } from './header-account-menu';
 import type { CompanyMarketSuggestionState } from '@/components/company-search-combobox';
 import { HeaderSearchEnhanced } from '@/components/header-search-enhanced';
 import type { KeywordSuggestionState } from '@/components/keyword-combobox';
@@ -91,6 +93,8 @@ export default function Header({
   features,
   hasAccessGrant = false,
   employerCompanies = null,
+  onSignOut,
+  signOutAction,
   talentDirectoryVisibility,
   search,
   messagesNav,
@@ -110,6 +114,8 @@ export default function Header({
   };
   hasAccessGrant?: boolean;
   employerCompanies?: CompanyMembership[] | null;
+  onSignOut: () => void;
+  signOutAction?: SignOutAction;
   talentDirectoryVisibility: 'off' | 'public' | 'employers_only' | null;
   messagesNav?: ReactNode;
   search: HeaderSearchState & {
@@ -121,6 +127,7 @@ export default function Header({
   };
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   // One copy of the search field state for BOTH renders of the form (the
   // page header and the open mobile-nav sheet share it, so opening the menu
   // never swaps the input for an empty twin).
@@ -264,7 +271,21 @@ export default function Header({
       ) : null}
     </div>
   );
-  const accountActions = user ? (
+  const accountActions = signingOut ? (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      disabled
+      aria-label={m.accountHome_signOutLabel()}
+    >
+      <Loader2
+        role="status"
+        aria-label={m.ui_loadingLabel()}
+        className="size-4 animate-spin"
+      />
+    </Button>
+  ) : user ? (
     <>
       {messagesNav}
       <Suspense fallback={null}>
@@ -274,6 +295,9 @@ export default function Header({
           nativeApplications={features.nativeApplications}
           jobRecommendationsEnabled={features.jobRecommendationsEnabled ?? true}
           employerCompanies={employerCompanies}
+          onSignOut={onSignOut}
+          onSignOutPendingChange={setSigningOut}
+          signOutAction={signOutAction}
         />
       </Suspense>
     </>

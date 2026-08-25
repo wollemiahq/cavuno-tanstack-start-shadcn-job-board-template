@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
+import { useState } from 'react';
+
 /**
  * Public-header behavior.
  *
@@ -35,7 +37,12 @@ import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
 import { m } from '../paraglide/messages';
 import Header from './Header';
 
-afterEach(cleanup);
+const signOutMock = vi.fn();
+
+afterEach(() => {
+  cleanup();
+  signOutMock.mockReset();
+});
 
 type HeaderFeatures = Omit<
   React.ComponentProps<typeof Header>['features'],
@@ -115,6 +122,7 @@ function renderHeader({
       path,
       component: () => {
         const navigate = useNavigate();
+        const [viewer, setViewer] = useState(user);
 
         function submitSearch({
           scope,
@@ -171,10 +179,12 @@ function renderHeader({
           <Header
             boardName="Robotics Jobs"
             logoUrl={logoUrl}
-            user={user}
+            user={viewer}
             language="en"
             features={{ ...features, jobRecommendationsEnabled }}
             hasAccessGrant={hasAccessGrant}
+            onSignOut={() => setViewer(null)}
+            signOutAction={signOutMock}
             talentDirectoryVisibility={talentDirectoryVisibility}
             search={{
               ...initialSearch,
@@ -417,6 +427,82 @@ describe('Header — native-applications account gating', () => {
     emailVerified: true,
     hasPassword: true,
   } as const;
+
+  it('updates the header and clears cached routes after sign-out succeeds', async () => {
+    let resolveSignOut: (() => void) | undefined;
+    signOutMock.mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveSignOut = resolve;
+      }),
+    );
+    const router = renderHeader({ user: signedInUser });
+    const navigateSpy = vi.spyOn(router, 'navigate');
+    const invalidateSpy = vi.spyOn(router, 'invalidate');
+
+    fireEvent.click(await findAccountButton());
+    fireEvent.click(
+      await screen.findByRole('menuitem', {
+        name: m.accountHome_signOutLabel(),
+      }),
+    );
+
+    expect(signOutMock).toHaveBeenCalledOnce();
+    expect(
+      screen.queryByRole('link', { name: m.siteHeader_signInLabel() }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: m.siteHeader_accountLabel() }),
+    ).toBeNull();
+    expect(
+      screen.getByRole('status', { name: m.ui_loadingLabel() }),
+    ).toBeTruthy();
+
+    resolveSignOut?.();
+
+    expect(
+      await screen.findByRole('link', {
+        name: m.siteHeader_signInLabel(),
+      }),
+    ).toBeTruthy();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('button', { name: m.siteHeader_accountLabel() }),
+      ).toBeNull(),
+    );
+    await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith({ to: '/' }));
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledOnce());
+  });
+
+  it('restores the account action when sign-out fails', async () => {
+    let rejectSignOut: ((reason: Error) => void) | undefined;
+    signOutMock.mockReturnValue(
+      new Promise<void>((_, reject) => {
+        rejectSignOut = reject;
+      }),
+    );
+    renderHeader({ user: signedInUser });
+
+    fireEvent.click(await findAccountButton());
+    fireEvent.click(
+      await screen.findByRole('menuitem', {
+        name: m.accountHome_signOutLabel(),
+      }),
+    );
+
+    expect(
+      screen.getByRole('status', { name: m.ui_loadingLabel() }),
+    ).toBeTruthy();
+    rejectSignOut?.(new Error('offline'));
+
+    expect(
+      await screen.findByRole('button', {
+        name: m.siteHeader_accountLabel(),
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('link', { name: m.siteHeader_signInLabel() }),
+    ).toBeNull();
+  });
 
   it('shows the Applications account entry when native applications are on', async () => {
     renderHeader({ user: signedInUser });

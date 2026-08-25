@@ -223,7 +223,8 @@ function RootChrome({
   offerGate: Awaited<ReturnType<typeof getRootShellData>>['offerGate'];
   consentChoice: Awaited<ReturnType<typeof getRootShellData>>['consentChoice'];
 }) {
-  const { user, employerCompanies, hasAccessGrant, preview } = useRootSession();
+  const { user, employerCompanies, hasAccessGrant, preview, clearSession } =
+    useRootSession();
   const [messagingUnreadCount, publishMessagingUnreadCount] =
     useViewerUnreadCount(user?.id ?? null);
   const isFullBleed = useRouterState({
@@ -391,6 +392,7 @@ function RootChrome({
       features={board.features}
       hasAccessGrant={hasAccessGrant}
       employerCompanies={employerCompanies}
+      onSignOut={clearSession}
       talentDirectoryVisibility={board.talentDirectoryVisibility}
       messagesNav={
         user && board.features.messaging ? (
@@ -510,6 +512,7 @@ function RootChrome({
             <LazyPreviewToolbar
               capability={preview.capability}
               personas={preview.personas}
+              activePersonaId={preview.activePersonaId}
               viewer={
                 user
                   ? {

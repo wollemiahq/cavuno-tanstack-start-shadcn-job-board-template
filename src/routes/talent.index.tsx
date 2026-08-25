@@ -26,6 +26,7 @@ import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { useRootSession } from '@/components/root-session';
 import { buttonVariants } from '@/components/ui/button';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
+import { localizePath } from '@/lib/localized-path';
 import { pageSearchValue } from '@/lib/pagination';
 import {
   parseTalentSearch,
@@ -33,6 +34,7 @@ import {
 } from '@/lib/talent-search';
 import { SelectedTalentDetail } from '@/routes/-selected-talent-detail';
 import { useSelectedTalent } from '@/routes/-use-selected-talent';
+import { startConversation } from '@/server/messaging';
 
 const rootApi = getRouteApi('__root__');
 export const Route = createFileRoute('/talent/')({
@@ -87,8 +89,8 @@ function TalentDirectoryPage() {
   const location = useLocation();
   const navigate = useNavigate({ from: '/talent/' });
   // Gate the detail-pane Message CTA by the viewer's role. A candidate cannot
-  // cold-message another candidate; an employer's Message hands off to the
-  // canonical profile (see resolveTalentDetailCta for the full matrix).
+  // cold-message another candidate; eligible employers compose by public
+  // candidate handle (see resolveTalentDetailCta for the full matrix).
   const viewer: TalentDetailViewer =
     user === null
       ? { kind: 'anonymous' }
@@ -163,6 +165,12 @@ function TalentDirectoryPage() {
             viewer={viewer}
             signInHref={signInHref}
             messagingEnabled={board.features.messaging}
+            onStartConversation={(input) => startConversation({ data: input })}
+            onConversationStarted={(conversationId) =>
+              window.location.assign(
+                localizePath(`/messages/${encodeURIComponent(conversationId)}`),
+              )
+            }
           />
         }
       />

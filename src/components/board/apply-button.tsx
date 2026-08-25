@@ -25,6 +25,7 @@ import {
   toApplyButtonVM,
   type PublicApplyAction,
 } from '@/board/apply-view-model';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
   candidateSignInHref,
@@ -64,7 +65,8 @@ export function ApplyButton({
   returnTo,
   onPrepareApply,
   onApply,
-  alreadyApplied = false,
+  applicationState = 'not-requested',
+  onRetryApplicationState,
   applicationsHref = '/me/applications',
   nativeApplications = true,
   dependencies = applyButtonDependencies,
@@ -91,11 +93,12 @@ export function ApplyButton({
   /** Submit natively; a receipt id is present only when preparation required it. */
   onApply: (jobSlug: string, approvalReceipt?: string) => Promise<void>;
   /**
-   * Seed the "already applied" state from server data — pass the loader's
-   * prior-application status (e.g. `board.jobs.myApplication(jobSlug)`) so
-   * a returning visitor sees "Applied" instead of the apply button again.
+   * Seed the private application lookup. `unknown` is deliberately distinct
+   * from `not-applied`: it blocks another submission until a retry resolves.
    */
-  alreadyApplied?: boolean;
+  applicationState?: 'not-requested' | 'applied' | 'not-applied' | 'unknown';
+  /** Retry the independent private application-state read. */
+  onRetryApplicationState?: () => void;
   applicationsHref?: string;
   /**
    * Board feature flag (`board.features.nativeApplications`, default-on).
@@ -106,7 +109,7 @@ export function ApplyButton({
   dependencies?: ApplyButtonDependencies;
 }) {
   // Only the transient in-session interaction lives in state; the
-  // returning-visitor "applied" truth comes from the `alreadyApplied`
+  // returning-visitor "applied" truth comes from the `applicationState`
   // prop (server data). Reset the transient state when the job changes —
   // a component instance reused across client-side navigation (same tree
   // position, new `jobSlug`) must not carry Job A's "applied" onto Job B.
@@ -119,12 +122,30 @@ export function ApplyButton({
     setState('idle');
   }
 
+  if (applicationState === 'unknown') {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription className="flex flex-col items-start gap-3">
+          <span>{m.applyButton_applicationStateUnknownText()}</span>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onRetryApplicationState}
+            disabled={!onRetryApplicationState}
+          >
+            {m.applyButton_retryApplicationStateLabel()}
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   const { action, copy } = toApplyButtonVM({
     jobSlug,
     applicationUrl,
     applyAction,
     viewer,
-    applied: alreadyApplied || state === 'applied',
+    applied: applicationState === 'applied' || state === 'applied',
     language,
     nativeApplications,
   });

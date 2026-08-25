@@ -17,8 +17,8 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | Component | Status | Production references |
 | --- | --- | --- |
 | `accordion` | Available | Installed for adoption when the product needs this behavior. |
-| `alert` | Used (14) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-detail-state.tsx`<br>`src/components/board/job-search-page.tsx`<br>+11 more in the JSON ledger |
-| `alert-dialog` | Used (6) | `src/components/board/apply-location-dialog.tsx`<br>`src/components/danger-zone.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>+3 more in the JSON ledger |
+| `alert` | Used (16) | `src/components/board/apply-button.tsx`<br>`src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-detail-state.tsx`<br>+13 more in the JSON ledger |
+| `alert-dialog` | Used (7) | `src/components/board/apply-location-dialog.tsx`<br>`src/components/danger-zone.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>+4 more in the JSON ledger |
 | `aspect-ratio` | Available | Installed for adoption when the product needs this behavior. |
 | `attachment` | Used (1) | `src/components/resume-upload.tsx` |
 | `avatar` | Used (14) | `src/components/account-shell.tsx`<br>`src/components/avatar-upload.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+11 more in the JSON ledger |
@@ -36,7 +36,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `combobox` | Used (6) | `src/components/company-search-combobox.tsx`<br>`src/components/keyword-combobox.tsx`<br>`src/components/location-combobox.tsx`<br>+3 more in the JSON ledger |
 | `command` | Available | Installed for adoption when the product needs this behavior. |
 | `context-menu` | Available | Installed for adoption when the product needs this behavior. |
-| `dialog` | Used (9) | `src/components/alert-manager.tsx`<br>`src/components/education-section.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>+6 more in the JSON ledger |
+| `dialog` | Used (10) | `src/components/alert-manager.tsx`<br>`src/components/board/talent-message-action.tsx`<br>`src/components/education-section.tsx`<br>+7 more in the JSON ledger |
 | `direction` | Used (3) | `src/components/employer/employer-profile-views-stat.tsx`<br>`src/components/employer/employer-stats-chart.tsx`<br>`src/routes/__root.tsx` |
 | `drawer` | Available | Installed for adoption when the product needs this behavior. |
 | `dropdown-menu` | Used (6) | `src/components/employer/applicant-pipeline-board.tsx`<br>`src/components/header-account-menu.tsx`<br>`src/components/language-switcher-menu.tsx`<br>+3 more in the JSON ledger |
