@@ -12,7 +12,11 @@ import {
 } from '@tanstack/react-start/server';
 import { waitUntil } from 'cloudflare:workers';
 
-import { getBoard, getSessionRefresher } from '../lib/board';
+import {
+  getBoard,
+  getSessionRefresher,
+  getSessionRefresherFor,
+} from '../lib/board';
 import {
   clearSessionForSource,
   getDataSource,
@@ -137,22 +141,30 @@ export const refreshSession = createServerFn({ method: 'POST' }).handler(
   },
 );
 
-export const signOut = createServerFn({ method: 'POST' })
-  .middleware([sessionMiddleware])
-  .handler(async ({ context }) => {
-    if (context.session) {
-      waitUntil(
-        getBoard()
-          .auth.logout({ refreshToken: context.session.refreshToken })
-          .catch(() => undefined),
-      );
+export const signOut = createServerFn({ method: 'POST' }).handler(async () => {
+  const dataSource = getDataSource();
+  const session = parseSessionForSource(
+    getRequestHeader('cookie') ?? null,
+    dataSource,
+  );
+  if (session) {
+    let logoutSession = session;
+    try {
+      logoutSession =
+        (await getSessionRefresherFor(dataSource).beginSignOut(session)) ??
+        session;
+    } catch {
+      // A failed concurrent refresh must not prevent local sign-out.
     }
-    setResponseHeader(
-      'Set-Cookie',
-      clearSessionForSource(context.dataSource ?? getDataSource()),
+    waitUntil(
+      getBoard()
+        .auth.logout({ refreshToken: logoutSession.refreshToken })
+        .catch(() => undefined),
     );
-    return { ok: true as const };
-  });
+  }
+  setResponseHeader('Set-Cookie', clearSessionForSource(dataSource));
+  return { ok: true as const };
+});
 
 export const verifyEmail = createServerFn({ method: 'POST' })
   .validator((input: { token: string }) => input)

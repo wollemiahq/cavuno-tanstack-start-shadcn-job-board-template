@@ -24,6 +24,10 @@ import { createBoardClientRegistry } from './board-client-registry';
 import { getDataSource } from './data-source.server';
 import { getServerEnv } from './env';
 import { applyReadCache } from './read-cache';
+import {
+  coordinateSessionRefresh,
+  type CoordinatedSessionRefresher,
+} from './session-refresh-coordinator';
 
 import type { DataSource } from './data-source';
 
@@ -32,7 +36,8 @@ const APPLY_GATEWAY_CAPABILITY = 'apply-gateway-v1';
 
 const registry = createBoardClientRegistry({
   createClient: createBoardClient,
-  createRefresher: createSessionRefresher,
+  createRefresher: (client) =>
+    coordinateSessionRefresh(createSessionRefresher(client)),
   getDataSource,
   getServerEnv,
   onRequest: applyReadCache,
@@ -93,21 +98,15 @@ export function getPreviewBoard(): BoardSdk {
  * the single-flight slot that keeps concurrent requests from burning the
  * single-use refresh token).
  */
-export function getPrimarySessionRefresher(): ReturnType<
-  typeof createSessionRefresher
-> {
+export function getPrimarySessionRefresher(): CoordinatedSessionRefresher {
   return registry.getPrimarySessionRefresher();
 }
 
-export function getDemoSessionRefresher(): ReturnType<
-  typeof createSessionRefresher
-> {
+export function getDemoSessionRefresher(): CoordinatedSessionRefresher {
   return registry.getDemoSessionRefresher();
 }
 
-export function getActiveSessionRefresher(): ReturnType<
-  typeof createSessionRefresher
-> {
+export function getActiveSessionRefresher(): CoordinatedSessionRefresher {
   return registry.getActiveSessionRefresher();
 }
 
@@ -115,16 +114,14 @@ export function getActiveSessionRefresher(): ReturnType<
  * Session refresher for the active data source (alias so existing middleware
  * keeps working and automatically scopes refresh to the right tenant).
  */
-export function getSessionRefresher(): ReturnType<
-  typeof createSessionRefresher
-> {
+export function getSessionRefresher(): CoordinatedSessionRefresher {
   return getActiveSessionRefresher();
 }
 
 /** Session refresher matching a concrete data source. */
 export function getSessionRefresherFor(
   source: DataSource,
-): ReturnType<typeof createSessionRefresher> {
+): CoordinatedSessionRefresher {
   return registry.getSessionRefresherFor(source);
 }
 

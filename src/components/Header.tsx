@@ -9,6 +9,7 @@ import {
   BookOpenText,
   BriefcaseBusiness,
   Building2,
+  Loader2,
   Menu,
   Users,
   X,
@@ -25,7 +26,6 @@ import type { KeywordSuggestionState } from '@/components/keyword-combobox';
 import { Box } from '@/components/layout/box';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { navCopy } from '@/copy-groups/nav';
 import type {
@@ -275,7 +275,11 @@ export default function Header({
       disabled
       aria-label={m.accountHome_signOutLabel()}
     >
-      <Spinner />
+      <Loader2
+        role="status"
+        aria-label={m.ui_loadingLabel()}
+        className="size-4 animate-spin"
+      />
     </Button>
   ) : user ? (
     <>
