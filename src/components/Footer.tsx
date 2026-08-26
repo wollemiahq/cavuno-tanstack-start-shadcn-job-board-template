@@ -13,23 +13,24 @@ import { Badge } from '@/components/ui/badge';
 import { footerCopy } from '@/copy-groups/footer';
 import { navCopy } from '@/copy-groups/nav';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
+import {
+  chromeFooter,
+  chromeRemovedNavItems,
+  type ChromeCustomLink,
+} from '@/lib/site-chrome';
 import { cn } from '@/lib/utils';
 /**
- * The board-context `footer` data group (hosted-footer parity slice) —
- * description, contact, website + social links, and the operator's nav
- * order/custom links. Not yet in the published SDK types, so the root
- * loader picks it off the wire body defensively; `null` against an API
- * that predates the slice (everything falls back to catalog defaults).
+ * Contact/social identity from `board.context().contact` (kept on the
+ * public API). Presentation — description, nav order, custom links — is
+ * `src/chrome.json` only. Those Puck/settings fields go away after
+ * every board is on the builder; do not read them at runtime.
  */
 export interface BoardContextFooter {
-  description: string | null;
   contactEmail: string | null;
   websiteUrl: string | null;
   xUrl: string | null;
   facebookUrl: string | null;
   linkedinUrl: string | null;
-  navigationOrder: string[];
-  customLinks: Array<{ id: string; label: string; url: string }>;
 }
 
 interface FooterLink {
@@ -62,7 +63,7 @@ function buildNavigationLinks({
   systemItems,
 }: {
   order: string[];
-  customLinks: BoardContextFooter['customLinks'];
+  customLinks: ChromeCustomLink[];
   systemItems: Record<string, FooterLink | null>;
 }): FooterLink[] {
   const customById = new Map(customLinks.map((link) => [link.id, link]));
@@ -219,18 +220,28 @@ export default function Footer({
     footer: footerCopy(),
     nav: navCopy(),
   };
+  const presentation = chromeFooter();
+  const removedNav = new Set(chromeRemovedNavItems());
 
   // ── For Candidates — operator-ordered system + custom links ──
   const navigationLinks = buildNavigationLinks({
-    order: footer?.navigationOrder ?? [],
-    customLinks: footer?.customLinks ?? [],
+    order: presentation.navigationOrder,
+    customLinks: presentation.customLinks,
     systemItems: {
-      home: { href: '/jobs', label: copy.nav.home },
-      companies: { href: '/companies', label: copy.nav.companies },
-      pricing: hasEmployerOfferPage
-        ? { href: '/employers', label: copy.nav.pricing }
-        : null,
-      blog: features.blog ? { href: '/blog', label: copy.nav.blog } : null,
+      home: removedNav.has('home')
+        ? null
+        : { href: '/jobs', label: copy.nav.home },
+      companies: removedNav.has('companies')
+        ? null
+        : { href: '/companies', label: copy.nav.companies },
+      pricing:
+        hasEmployerOfferPage && !removedNav.has('pricing')
+          ? { href: '/employers', label: copy.nav.pricing }
+          : null,
+      blog:
+        features.blog && !removedNav.has('blog')
+          ? { href: '/blog', label: copy.nav.blog }
+          : null,
     },
   });
 
@@ -242,13 +253,15 @@ export default function Footer({
   // 'off' is a truthy string — compare explicitly, never coerce.
   const talentLinked = talentMode !== 'off';
   const companyLinks: FooterLink[] = [
-    ...(features.publicJobSubmission
+    ...(features.publicJobSubmission && !removedNav.has('post')
       ? [{ href: '/post', label: copy.nav.post }]
       : []),
-    ...(hasEmployerOfferPage
+    ...(hasEmployerOfferPage && !removedNav.has('pricing')
       ? [{ href: '/employers', label: copy.nav.pricing }]
       : []),
-    ...(talentLinked ? [{ href: '/talent', label: copy.nav.talent }] : []),
+    ...(talentLinked && !removedNav.has('talent')
+      ? [{ href: '/talent', label: copy.nav.talent }]
+      : []),
   ];
 
   // ── Resources ──
@@ -292,7 +305,7 @@ export default function Footer({
   ].filter((link) => link !== null);
 
   const description = resolveTemplate(
-    footer?.description || copy.footer.defaultDescription,
+    presentation.description || copy.footer.defaultDescription,
     boardName,
   );
   const copyright = `${resolveTemplate(copy.footer.copyrightPrefix, boardName)} ${copy.footer.allRightsReservedText}`;

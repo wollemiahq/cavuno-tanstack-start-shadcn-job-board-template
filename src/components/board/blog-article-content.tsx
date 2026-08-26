@@ -6,6 +6,7 @@ import { FileWarning } from 'lucide-react';
 import { m } from '../../paraglide/messages';
 
 import { toBlogArticleVM } from '@/board/blog-view-model';
+import { BoardAdSlot } from '@/components/board/board-ad-slot';
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
 import { FacebookIcon, LinkedInIcon, XIcon } from '@/components/brand-icons';
 import {
@@ -409,6 +410,7 @@ export function BlogArticleContent({
                 links={links}
                 className="sticky top-8"
               />
+              <BoardAdSlot placement="blog:post.sidebar" />
             </aside>
           </div>
 

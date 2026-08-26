@@ -16,6 +16,7 @@
     // The generated src/paraglide output is JSDoc-typed .js — allowJs lets
     // its types flow to consumers (runtime getLocale, messages m.*).
     "allowJs": true,
+    "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,

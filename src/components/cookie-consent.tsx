@@ -106,9 +106,9 @@ export function CookieConsentProvider({
   required: boolean;
   children: ReactNode;
 }) {
-  const [choice, setChoice] = useState<
-    CookieConsentChoice | null | undefined
-  >(undefined);
+  const [choice, setChoice] = useState<CookieConsentChoice | null | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     const fromCookie = parseCookieConsent(document.cookie);

@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
+import { failClosedJobRecommendations } from '../board/board-feature-flags';
 import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
 import { getSessionUser } from './account';
 import { listCompanies } from './employers';
@@ -102,4 +103,3 @@ export function resolveRootHasAccessGrant(
 ) {
   return resolveSubscriptionEntryVisible(candidatePaywall, hasGrant);
 }
-import { failClosedJobRecommendations } from '../board/board-feature-flags';

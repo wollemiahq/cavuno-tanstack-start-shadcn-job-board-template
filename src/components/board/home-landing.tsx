@@ -37,6 +37,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { localizePath } from '@/lib/localized-path';
+import { httpsAssetUrl } from '@/lib/site-branding';
 import type {
   PublicBlogPostSummary,
   TalentDirectoryEntry,
@@ -194,6 +195,7 @@ export function HomeLanding({
   publicJobSubmission = false,
   viewer,
   onSaveJob,
+  backgroundImageUrl,
 }: {
   jobs: JobCardVM[];
   /** Pre-resolved "N jobs" eyebrow for the Latest jobs section. */
@@ -221,7 +223,10 @@ export function HomeLanding({
   viewer: { emailVerified: boolean } | null;
   /** Persists a saved job — the route forwards the `saveJob` server function. */
   onSaveJob: (jobId: string) => Promise<void>;
+  /** HTTPS hero photo from `src/branding.json`; anything else keeps the dither. */
+  backgroundImageUrl?: string | null;
 }) {
+  const heroPhotoUrl = httpsAssetUrl(backgroundImageUrl);
   // Return here after the save flow's sign-in / verify-email detour (mirrors
   // the `/jobs` list, which reads the current href the same way).
   // The EXTERNAL localized URL — post-auth redirects must land back on
@@ -244,8 +249,19 @@ export function HomeLanding({
               {/* The band is relative + clipped so the decorative dither field
                   can sit behind the hero content (counts belong to the section
                   headers below, not the hero). */}
-              <div className="relative isolate overflow-hidden">
-                <DitherCanvas className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
+              <div
+                className="relative isolate overflow-hidden"
+                data-hero-background={heroPhotoUrl ? 'photo' : 'dither'}
+              >
+                {heroPhotoUrl ? (
+                  <img
+                    src={heroPhotoUrl}
+                    alt=""
+                    className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"
+                  />
+                ) : (
+                  <DitherCanvas className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
+                )}
                 <Container width="wide">
                   <div className="py-8 md:py-12">
                     {/* Hero is the headline + its CTAs only. Companies earn

@@ -1,84 +1,50 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { getRequest } from '@tanstack/react-start/server';
-
-import {
-  getBoardSeo,
-  getEmployerOfferGate,
-  getFreshBoardContext,
-} from './queries';
-import { getRootShellData } from './root-shell';
+import { readFileSync } from 'node:fs';
 
 /**
- * The public root loader must stay viewer-anonymous: consent is resolved
- * client-side so edge-cached HTML is byte-identical for consented and
- * undecided visitors.
+ * Public documents stay viewer-anonymous (X-Cavuno-Doc-Vary). Consent is a
+ * client island after paint — the SSR loader must not read cookies or
+ * emit consentChoice, or the edge cache cannot reuse one HTML copy.
  */
+const SOURCE = readFileSync(
+  new URL('./root-shell.ts', import.meta.url),
+  'utf8',
+);
 
-vi.mock('@tanstack/react-start', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@tanstack/react-start')>();
-  const builder = () => {
-    const chain = {
-      middleware: () => chain,
-      validator: () => chain,
-      inputValidator: () => chain,
-      handler: <T extends (...args: never[]) => unknown>(fn: T) => fn,
-    };
-    return chain;
-  };
-  return { ...actual, createServerFn: builder };
-});
-
-vi.mock('@tanstack/react-start/server', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@tanstack/react-start/server')>();
-  return {
-    ...actual,
-    getRequest: vi.fn(),
-  };
-});
-
-vi.mock('./queries', () => ({
-  getFreshBoardContext: vi.fn(),
-  getStaleBoardContext: vi.fn(),
-  getBoardSeo: vi.fn(),
-  getEmployerOfferGate: vi.fn(),
-}));
-
-const board = { name: 'Test Board', features: {} };
-const seo = { adsTxt: null };
-const offerGate = { hasEmployerOfferPage: false };
-
-beforeEach(() => {
-  vi.mocked(getFreshBoardContext).mockResolvedValue(board as never);
-  vi.mocked(getBoardSeo).mockResolvedValue(seo as never);
-  vi.mocked(getEmployerOfferGate).mockResolvedValue(offerGate);
-});
-
-async function invoke(cookie: string | null) {
-  const headers = new Headers();
-  if (cookie) headers.set('cookie', cookie);
-  vi.mocked(getRequest).mockReturnValue(
-    new Request('https://board.test/', { headers }),
-  );
-  return getRootShellData();
+function handlerBody(name: string): string {
+  const start = SOURCE.indexOf(`export const ${name}`);
+  expect(start, `${name} was renamed — update this guard`).toBeGreaterThan(-1);
+  const next = SOURCE.indexOf('export const', start + 1);
+  const end = next === -1 ? SOURCE.length : next;
+  return SOURCE.slice(start, end);
 }
 
-describe('getRootShellData', () => {
-  it('payload has no consentChoice and ignores request cookies', async () => {
-    const cookieless = await invoke(null);
-    const withCookies = await invoke(
-      'cavuno_cookie_consent=accepted; __Host-cavuno_board_session=secret',
-    );
+describe('getRootShellData stays viewer-anonymous', () => {
+  it('does not read cookies, session, or consent on the public document', () => {
+    const body = handlerBody('getRootShellData');
+    expect(body).not.toContain('consentChoice');
+    expect(body).not.toContain('cookie');
+    expect(body).not.toContain('getSessionUser');
+    expect(body).not.toContain('CookieConsent');
+  });
 
-    expect(cookieless).not.toHaveProperty('consentChoice');
-    expect(withCookies).not.toHaveProperty('consentChoice');
-    expect(withCookies).toEqual(cookieless);
-    expect(cookieless).toEqual({
-      origin: 'https://board.test',
-      board,
-      seo,
-      offerGate,
-    });
+  it('returns only origin, board, seo, and offerGate', () => {
+    const body = handlerBody('getRootShellData');
+    expect(body).toContain('origin:');
+    expect(body).toContain('board,');
+    expect(body).toContain('seo,');
+    expect(body).toContain('offerGate,');
+    expect(body).toContain('getFreshBoardContext');
+    expect(body).toContain('getBoardSeo');
+    expect(body).toContain('getEmployerOfferGate');
+  });
+
+  it('defers session, employer, paywall, and preview to the client island', () => {
+    const body = handlerBody('getRootSessionShellData');
+    expect(body).toContain('getSessionUser');
+    expect(body).toContain('listCompanies');
+    expect(body).toContain('resolvePreviewStateForViewer');
+    expect(body).toContain('getAccessGrant');
   });
 });
