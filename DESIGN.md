@@ -1210,19 +1210,17 @@ choice is what gates the analytics scripts.
 Site-wide cookie-consent state for boards whose operator enabled
 "cookie consent required" (`board.analytics.cookieConsentRequired`).
 
-The choice lives in a client-readable cookie so SSR can paint the banner
-when undecided (LCP on listing pages). `initialChoice` comes from the root
-loader reading that cookie; there is no hydration gate — SSR and the first
-client render agree on `bannerOpen`.
+Choice is resolved client-side after mount so SSR and the first client
+render are identical: no banner, no footer preferences action. A brief
+post-hydration pop-in is accepted and standard for consent UIs. The
+public document can then be edge-cached without varying on the cookie.
 
-Migration: on mount, if no cookie but localStorage still has a legacy
-choice, adopt it (set cookie + state). Returning visitors on the old
-storage may see a brief banner flash once; that is acceptable.
+On mount: `document.cookie` via `parseCookieConsent`, then the legacy
+localStorage key, else `null` (undecided).
 
 Props:
 
 - `children: ReactNode`
-- `initialChoice?: CookieConsentChoice | null | undefined`
 - `required: boolean`
 
 ### CookiePreferencesFooterAction — `src/components/cookie-consent.tsx`

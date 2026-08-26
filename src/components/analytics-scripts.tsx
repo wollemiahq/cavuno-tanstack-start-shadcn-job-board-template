@@ -120,6 +120,7 @@ export function AnalyticsScripts({
   reportWebVitals?: () => Promise<void>;
 }) {
   const { required, choice } = useCookieConsent();
+  // Unresolved (`undefined`) and denied/undecided are not allowed yet.
   const allowed = !required || choice === 'accepted';
 
   useEffect(() => {

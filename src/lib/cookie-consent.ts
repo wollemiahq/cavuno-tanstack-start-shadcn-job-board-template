@@ -1,12 +1,11 @@
 /**
  * Cookie-consent preference helpers — pure (no env, no request) so the
- * banner can write the cookie from the browser and the root shell can
- * parse it on the server.
+ * banner can read and write the cookie from the browser.
  *
  * Cookie `cavuno_cookie_consent` is consent state (`accepted` | `denied`),
  * not an auth credential: Path=/, SameSite=Lax, max-age ~13 months, not
  * httpOnly so client JS can write it. Hard rule 3 (session credentials)
- * does not apply.
+ * does not apply. Public-document SSR does not read this cookie.
  */
 
 export type CookieConsentChoice = 'accepted' | 'denied';

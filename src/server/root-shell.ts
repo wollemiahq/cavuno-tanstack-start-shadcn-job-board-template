@@ -1,7 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
-import { getRequest, getRequestHeader } from '@tanstack/react-start/server';
+import { getRequest } from '@tanstack/react-start/server';
 
-import { parseCookieConsent } from '../lib/cookie-consent';
 import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
 import { getSessionUser } from './account';
 import { listCompanies } from './employers';
@@ -15,7 +14,11 @@ import {
 } from './queries';
 
 /**
- * Public root shell only — board identity, SEO, footer gate, consent cookie.
+ * Public root shell only — board identity, SEO, footer gate.
+ *
+ * Fully viewer-anonymous: the document must render byte-identically for
+ * consented and undecided visitors so the edge cache can reuse one copy.
+ * Consent is resolved client-side after paint (CookieConsentProvider).
  *
  * Session / employer / paywall / preview used to fan out here on EVERY request
  * (including cold anonymous SEO hits). Those are not needed to paint public
@@ -25,12 +28,6 @@ import {
  */
 export const getRootShellData = createServerFn({ method: 'GET' }).handler(
   async () => {
-    // Consent state is a client-readable cookie (not an auth credential) so
-    // SSR can paint the banner when undecided — listing-page LCP fix.
-    const consentChoice = parseCookieConsent(
-      getRequestHeader('cookie') ?? null,
-    );
-
     const [board, seo, offerGate] = await Promise.all([
       getFreshBoardContext().catch(async () => {
         const cached = await getStaleBoardContext();
@@ -50,7 +47,6 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
       board,
       seo,
       offerGate,
-      consentChoice,
     };
   },
 );
