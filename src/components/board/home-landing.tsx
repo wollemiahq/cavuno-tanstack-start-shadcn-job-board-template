@@ -82,8 +82,8 @@ function ViewAllAction({
 }
 
 /**
- * The category browse rail, built from the browse envelope's related searches —
- * already ranked by the API and counted, so it costs no extra read.
+ * The category browse rail. Counts are the live board-wide totals from
+ * `taxonomy.categories.list({ sort: 'jobCount' })`, not a page-window facet.
  */
 function CategoryBrowse({ categories }: { categories: HomeCategoryCard[] }) {
   return (
