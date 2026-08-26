@@ -469,6 +469,13 @@ Props:
 - `allActive?: boolean | undefined`
 - `tags: ({ id: string; name: string; slug: string; description: string | null; } & { object: "public_blog_tag"; })[]`
 
+### BoardAdSlot — `src/components/board/board-ad-slot.tsx`
+
+Props:
+
+- `className?: string | undefined`
+- `placement: string`
+
 ### Breadcrumb — `src/components/board/breadcrumb.tsx`
 
 The shared breadcrumb trail (nav › ol › li) used by the job-detail and salary pages. Pass an ordered items list; a crumb with no href renders as the current page.
@@ -683,6 +690,7 @@ Props:
 
 Props:
 
+- `backgroundImageUrl?: string | null | undefined`
 - `boardName: string`
 - `candidatesEnabled: boolean`
 - `categories?: HomeCategoryCard[] | undefined`
