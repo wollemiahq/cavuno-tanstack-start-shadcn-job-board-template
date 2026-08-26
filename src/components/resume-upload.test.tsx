@@ -85,7 +85,9 @@ describe('ResumeUpload', () => {
       screen.queryByRole('checkbox', { name: 'Keep my resume saved' }),
     ).toBeNull();
 
-    const attachment = document.querySelector('[data-test="resume-attachment"]');
+    const attachment = document.querySelector(
+      '[data-test="resume-attachment"]',
+    );
     expect(attachment).toHaveAttribute('data-slot', 'attachment');
     expect(attachment).toHaveAttribute('data-state', 'idle');
 
