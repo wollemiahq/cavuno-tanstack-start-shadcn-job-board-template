@@ -6,9 +6,9 @@
  * streaming SSR reliably emits ld+json via head scripts — body `<JsonLd>`
  * was non-deterministic on `/`).
  *
- * Folds the home loader's multi-RPC fan-out (getBoardContext, listJobs,
- * listCompanies, listTopJobCategories, getSeoBase, optional blog/talent)
- * into a single getHomePage call so client navigation does not grow.
+ * Folds the home loader's multi-RPC fan-out (board context, jobs rail,
+ * taxonomy category tiles, companies, optional blog/talent) into a single
+ * getHomePage call so client navigation does not grow.
  */
 import { listingJsonLd } from '@cavuno/board/seo';
 import { createServerFn } from '@tanstack/react-start';
@@ -22,9 +22,10 @@ import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
 import { readTalentDirectory } from './talent-directory-read';
 
+import { topCategoriesFromTaxonomy } from '@/board/top-categories';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { selfUrl } from '@/lib/self-url';
-import type { RelatedSearch } from '@cavuno/board';
+import type { RelatedSearch, TaxonomyListQuery } from '@cavuno/board';
 
 /**
  * JSON-LD is schema.org-shaped nested objects. TanStack Start's server-fn
@@ -41,9 +42,10 @@ function asJsonObjects<T>(value: T): JsonObject[] {
   return JSON.parse(JSON.stringify(value)) as JsonObject[];
 }
 
-/** Enough rows for the home job rail and for relatedSearches category facets. */
-const HOME_JOBS_LIST_LIMIT = 20;
+/** Job cards on the landing rail. Category tiles come from the taxonomy
+ * collection (live `jobCount`), not from `relatedSearches` on this page. */
 const HOME_JOB_RAIL_LIMIT = 8;
+const HOME_CATEGORY_LIMIT = 8;
 
 export const getHomePage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
@@ -53,12 +55,26 @@ export const getHomePage = createServerFn({ method: 'GET' })
       // Board context is an OPEN read (password wall does not gate it),
       // matching getSeoBase / getJobDetailPage. Content reads use headers.
       const boardContextP = readBoardContext();
-      // One jobs.list feeds both the 8-card rail and top-category facets
-      // (relatedSearches). A second list({ limit: 20 }) was pure over-fetch.
       const jobsListP = board.jobs.list(
-        { limit: HOME_JOBS_LIST_LIMIT },
+        { limit: HOME_JOB_RAIL_LIMIT },
         { headers },
       );
+      // Live board-wide counts from `activeCategoryCounts`, not a tally of
+      // the jobs rail. `sort=jobCount` is additive on the Board API; an
+      // older deployment that rejects the query key fails soft to the
+      // page-window relatedSearches facets rather than 500ing `/`.
+      const categoriesP = board.taxonomy.categories
+        .list(
+          // SAFETY: Board API #1652 adds sort=jobCount; SDK 4.8.0
+          // TaxonomyListQuery does not list it yet. Extra keys are
+          // forwarded on the query string.
+          {
+            limit: HOME_CATEGORY_LIMIT,
+            sort: 'jobCount',
+          } as TaxonomyListQuery,
+          { headers },
+        )
+        .catch(() => null);
       // Additive companies strip — fail soft so a rejecting preview never
       // faults the whole landing.
       const companiesP = board.companies
@@ -80,22 +96,25 @@ export const getHomePage = createServerFn({ method: 'GET' })
           : null,
       );
 
-      const [boardContext, jobsEnvelope, companies, blog, talent] =
+      const [boardContext, jobsEnvelope, companies, blog, talent, categories] =
         await Promise.all([
           boardContextP,
           jobsListP,
           companiesP,
           blogP,
           talentP,
+          categoriesP,
         ]);
 
       const page = {
         ...jobsEnvelope,
         data: jobsEnvelope.data.slice(0, HOME_JOB_RAIL_LIMIT),
       };
-      const topCategories = (jobsEnvelope.relatedSearches ?? []).filter(
-        (related): related is RelatedSearch => related.type === 'category',
-      );
+      const topCategories =
+        topCategoriesFromTaxonomy(categories?.data) ??
+        (jobsEnvelope.relatedSearches ?? []).filter(
+          (related): related is RelatedSearch => related.type === 'category',
+        );
 
       const origin = new URL(getRequest().url).origin;
       const seo = {

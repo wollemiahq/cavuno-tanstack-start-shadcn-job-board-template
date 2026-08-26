@@ -50,7 +50,6 @@ import type {
   PlacesListQuery,
   PlansListQuery,
   PublicBlogAdjacentPosts,
-  RelatedSearch,
   TalentDirectoryQuery,
   TaxonomyResolution,
 } from '@cavuno/board';
@@ -199,38 +198,6 @@ export const searchJobs = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().jobs.search(data, undefined, { headers: h }),
     ),
-  );
-
-/**
- * Top job categories for the homepage's "Browse by category" section — the
- * server-computed category facets from the browse envelope's `relatedSearches`
- * rather than a client-side tally. The facets are derived from the
- * returned page window (parity with the hosted page-derived related-searches),
- * so this reads a FULL page to collect the board's busiest categories — a
- * `limit: 1` read returns no facets at all.
- *
- * Each surviving facet is then run through the taxonomy resolver — the SAME
- * check the `/jobs/:keyword` category page runs — and only the ones that
- * resolve are kept, linked via their CANONICAL slug. This is a defensive guard
- * against a board whose facet read model has drifted from its taxonomy-resolve
- * read model (see the platform bug note): a tile that 404s is worse than an
- * absent tile. Anonymous, and gated behind the board-password wall like the
- * other content reads.
- */
-export const listTopJobCategories = createServerFn({ method: 'GET' })
-  .middleware([boardAccessMiddleware])
-  .handler(({ context }) =>
-    gatedRead(context, async (h) => {
-      const envelope = await getBoard().jobs.list(
-        { limit: 20 },
-        { headers: h },
-      );
-      // Every facet slug the API emits resolves — guaranteed by the platform
-      // (ADR-0099, documented on the endpoint), so the tiles link directly.
-      return (envelope.relatedSearches ?? []).filter(
-        (related): related is RelatedSearch => related.type === 'category',
-      );
-    }),
   );
 
 /**
