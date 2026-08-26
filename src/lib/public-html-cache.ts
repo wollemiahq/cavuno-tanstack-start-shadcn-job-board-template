@@ -3,9 +3,10 @@ import { delocalizeSegments } from './localized-path';
 /**
  * Anonymous public-document caching policy.
  *
- * Identity-bearing requests never touch this cache. That invariant lets the
- * public HTML stay fast without making the authenticated shell client-only or
- * risking one viewer's server-rendered state being served to another.
+ * Requests that carry a doc-vary cookie never touch this cache. That
+ * invariant lets the public HTML stay fast without making the authenticated
+ * shell client-only or risking one viewer's server-rendered state being
+ * served to another.
  */
 
 const PUBLIC_DOCUMENT_PREFIXES = [
@@ -40,6 +41,8 @@ const PUBLIC_DOCUMENT_PATHS = new Set([
  * a client island, so consented and undecided visitors share one document.
  * The worker-side cache in this repo and the `Cloudflare-CDN-Cache-Control`
  * opt-in therefore also apply to consented visitors.
+ *
+ * Audited: account.ts:78 and applications.ts:110 cookie reads are POST/non-public-document only.
  */
 export const DOC_VARY_COOKIE_PREFIXES = [
   '__Host-cavuno_board_access',
@@ -72,7 +75,7 @@ export function isPublicDocumentPath(pathname: string): boolean {
   );
 }
 
-function carriesIdentity(cookieHeader: string | null): boolean {
+function carriesDocVaryCookie(cookieHeader: string | null): boolean {
   if (!cookieHeader) return false;
   const names = cookieHeader
     .split(';')
@@ -87,7 +90,7 @@ export function isAnonymousPublicDocumentRequest(request: Request): boolean {
   if (request.method !== 'GET') return false;
   if (!isPublicDocumentPath(new URL(request.url).pathname)) return false;
   if (request.headers.has('authorization')) return false;
-  return !carriesIdentity(request.headers.get('cookie'));
+  return !carriesDocVaryCookie(request.headers.get('cookie'));
 }
 
 /** Attach separate browser and shared-edge freshness policies. */

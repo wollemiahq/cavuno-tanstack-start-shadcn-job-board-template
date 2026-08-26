@@ -29,7 +29,7 @@ describe('public HTML cache policy', () => {
     expect(isPublicDocumentPath('/account')).toBe(false);
   });
 
-  it('bypasses every request that can change server-rendered identity', () => {
+  it('bypasses every request that carries a doc-vary cookie', () => {
     const publicUrl = 'https://board.test/jobs';
     expect(isAnonymousPublicDocumentRequest(new Request(publicUrl))).toBe(true);
     expect(
@@ -80,14 +80,12 @@ describe('public HTML cache policy', () => {
       'public, max-age=60, stale-while-revalidate=300',
     );
     expect(cached.headers.get('vary')).toContain('Cookie');
-    expect(cached.headers.get('X-Cavuno-Doc-Vary')).toBe(
+    expect(DOC_VARY_COOKIE_PREFIXES.join(', ')).toBe(
       '__Host-cavuno_board_access, __Host-cavuno_board_session, cavuno_data_source',
     );
-    expect([...DOC_VARY_COOKIE_PREFIXES]).toEqual([
-      '__Host-cavuno_board_access',
-      '__Host-cavuno_board_session',
-      'cavuno_data_source',
-    ]);
+    expect(cached.headers.get('X-Cavuno-Doc-Vary')).toBe(
+      DOC_VARY_COOKIE_PREFIXES.join(', '),
+    );
 
     const personalized = withPublicHtmlCacheHeaders(
       new Request(request, {
@@ -123,7 +121,7 @@ describe('public HTML cache policy', () => {
       'public, max-age=60, stale-while-revalidate=300',
     );
     expect(response.headers.get('X-Cavuno-Doc-Vary')).toBe(
-      '__Host-cavuno_board_access, __Host-cavuno_board_session, cavuno_data_source',
+      DOC_VARY_COOKIE_PREFIXES.join(', '),
     );
     await writePublicHtmlCache(request, response);
     expect(match).toHaveBeenCalledOnce();

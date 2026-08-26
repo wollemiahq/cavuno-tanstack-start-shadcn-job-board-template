@@ -105,22 +105,48 @@ describe('CookieConsentBanner', () => {
     },
   );
 
-  it('first client render shows no banner even when a cookie is already set', async () => {
-    document.cookie = `${COOKIE_CONSENT_COOKIE}=accepted; Path=/`;
-    const seen: Array<{ bannerOpen: boolean; choice: unknown }> = [];
-    renderWithRouter(() => (
-      <CookieConsentProvider required>
-        <FirstRenderProbe seen={seen} />
-        <CookieConsentBanner />
-        <CookiePreferencesFooterAction />
-      </CookieConsentProvider>
-    ));
+  it.each([
+    [
+      'no cookie',
+      '',
+      () =>
+        screen.findByRole('region', {
+          name: m.cookieConsent_regionAriaLabel(),
+        }),
+    ],
+    [
+      'accepted cookie',
+      `${COOKIE_CONSENT_COOKIE}=accepted; Path=/`,
+      () =>
+        screen.findByRole('button', {
+          name: m.cookieConsent_preferencesLabel(),
+        }),
+    ],
+    [
+      'denied cookie',
+      `${COOKIE_CONSENT_COOKIE}=denied; Path=/`,
+      () =>
+        screen.findByRole('button', {
+          name: m.cookieConsent_preferencesLabel(),
+        }),
+    ],
+  ])(
+    'first client render shows no banner regardless of cookie (%s)',
+    async (_label, cookie, waitForSettled) => {
+      if (cookie) document.cookie = cookie;
+      const seen: Array<{ bannerOpen: boolean; choice: unknown }> = [];
+      renderWithRouter(() => (
+        <CookieConsentProvider required>
+          <FirstRenderProbe seen={seen} />
+          <CookieConsentBanner />
+          <CookiePreferencesFooterAction />
+        </CookieConsentProvider>
+      ));
 
-    await screen.findByRole('button', {
-      name: m.cookieConsent_preferencesLabel(),
-    });
-    expect(seen[0]).toEqual({ bannerOpen: false, choice: undefined });
-  });
+      await waitForSettled();
+      expect(seen[0]).toEqual({ bannerOpen: false, choice: undefined });
+    },
+  );
 
   it('opens after mount when required and no cookie is present', async () => {
     renderWithRouter(() => <Consent />);
