@@ -2,6 +2,7 @@
 
 import '@testing-library/jest-dom/vitest';
 import type { ReactNode } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 /**
  * Cookie-consent behavior: the choice is resolved client-side after mount
@@ -18,7 +19,6 @@ import {
   createRouter,
 } from '@tanstack/react-router';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { m } from '../paraglide/messages';

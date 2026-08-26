@@ -1,6 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-
 import { getRequest } from '@tanstack/react-start/server';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   getBoardSeo,
