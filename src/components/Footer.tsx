@@ -14,25 +14,23 @@ import { footerCopy } from '@/copy-groups/footer';
 import { navCopy } from '@/copy-groups/nav';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
 import {
+  chromeFooter,
   chromeRemovedNavItems,
-  resolveFooterPresentation,
+  type ChromeCustomLink,
 } from '@/lib/site-chrome';
 import { cn } from '@/lib/utils';
 /**
- * Footer identity from `board.contact()` plus presentation from
- * `src/chrome.json` (description, nav order, custom links). Contact
- * still arrives on this prop from the root loader; presentation is
- * merged in via `resolveFooterPresentation`.
+ * Contact/social identity from `board.context().contact` (kept on the
+ * public API). Presentation — description, nav order, custom links — is
+ * `src/chrome.json` only. Those Puck/settings fields go away after
+ * every board is on the builder; do not read them at runtime.
  */
 export interface BoardContextFooter {
-  description: string | null;
   contactEmail: string | null;
   websiteUrl: string | null;
   xUrl: string | null;
   facebookUrl: string | null;
   linkedinUrl: string | null;
-  navigationOrder: string[];
-  customLinks: Array<{ id: string; label: string; url: string }>;
 }
 
 interface FooterLink {
@@ -65,7 +63,7 @@ function buildNavigationLinks({
   systemItems,
 }: {
   order: string[];
-  customLinks: BoardContextFooter['customLinks'];
+  customLinks: ChromeCustomLink[];
   systemItems: Record<string, FooterLink | null>;
 }): FooterLink[] {
   const customById = new Map(customLinks.map((link) => [link.id, link]));
@@ -222,13 +220,13 @@ export default function Footer({
     footer: footerCopy(),
     nav: navCopy(),
   };
-  const chromeFooter = resolveFooterPresentation(footer);
+  const presentation = chromeFooter();
   const removedNav = new Set(chromeRemovedNavItems());
 
   // ── For Candidates — operator-ordered system + custom links ──
   const navigationLinks = buildNavigationLinks({
-    order: chromeFooter.navigationOrder,
-    customLinks: chromeFooter.customLinks,
+    order: presentation.navigationOrder,
+    customLinks: presentation.customLinks,
     systemItems: {
       home: removedNav.has('home')
         ? null
@@ -307,7 +305,7 @@ export default function Footer({
   ].filter((link) => link !== null);
 
   const description = resolveTemplate(
-    chromeFooter.description || copy.footer.defaultDescription,
+    presentation.description || copy.footer.defaultDescription,
     boardName,
   );
   const copyright = `${resolveTemplate(copy.footer.copyrightPrefix, boardName)} ${copy.footer.allRightsReservedText}`;

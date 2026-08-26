@@ -176,28 +176,6 @@ export function chromeRemovedNavItems(): string[] {
   return chrome.removedNavItems;
 }
 
-/** Chrome wins when it actually has a value; otherwise keep the API identity. */
-export function resolveFooterPresentation(
-  apiFooter: {
-    description: string | null;
-    navigationOrder: string[];
-    customLinks: ChromeCustomLink[];
-  } | null,
-  overlay: ChromeFooter = chromeFooter(),
-): ChromeFooter {
-  return {
-    description: overlay.description ?? apiFooter?.description ?? null,
-    navigationOrder:
-      overlay.navigationOrder.length > 0
-        ? overlay.navigationOrder
-        : (apiFooter?.navigationOrder ?? []),
-    customLinks:
-      overlay.customLinks.length > 0
-        ? overlay.customLinks
-        : (apiFooter?.customLinks ?? []),
-  };
-}
-
 /**
  * Order enabled system ids to match `navigationOrder`. Unknown ids are
  * ignored; enabled items missing from the order still append.

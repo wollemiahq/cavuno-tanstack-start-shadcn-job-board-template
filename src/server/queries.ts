@@ -56,9 +56,6 @@ import type {
 
 // ── OPEN reads (allowlisted-open on the hosted board, even when protected) ──
 
-const EMPTY_NAVIGATION_ORDER: string[] = [];
-const EMPTY_CUSTOM_LINKS: BoardContextFooter['customLinks'] = [];
-
 function resolveBoardContext(
   context: Awaited<ReturnType<typeof readBoardContext>>,
 ) {
@@ -71,18 +68,15 @@ function resolveBoardContext(
       ...context.features,
       ...resolveRuntimeFeatureFlags(context.features),
     },
-    // Presentation (description / navigationOrder / customLinks) is
-    // app-owned git (`src/chrome.json`); contact is identity on the API.
-    // Do not restore API footer presentation.
+    // Contact/social only. Footer description, nav order, and custom
+    // links are src/chrome.json (baked at Prepare). Do not read the
+    // soon-deleted Puck/settings copy fields off the wire.
     footer: {
-      description: null,
       contactEmail: context.contact?.email ?? null,
       websiteUrl: context.contact?.websiteUrl ?? null,
       xUrl: context.contact?.xUrl ?? null,
       facebookUrl: context.contact?.facebookUrl ?? null,
       linkedinUrl: context.contact?.linkedinUrl ?? null,
-      navigationOrder: EMPTY_NAVIGATION_ORDER,
-      customLinks: EMPTY_CUSTOM_LINKS,
     } satisfies BoardContextFooter,
     // 4.0.0: talent directory is features.talentDirectory enum ('off' is truthy!).
     talentDirectoryVisibility: context.features.talentDirectory,

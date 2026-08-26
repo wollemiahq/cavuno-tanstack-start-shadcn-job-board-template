@@ -7,7 +7,6 @@ import {
   chromeRemovedNavItems,
   orderEnabledNavIds,
   readChrome,
-  resolveFooterPresentation,
 } from './site-chrome';
 
 describe('stock src/chrome.json', () => {
@@ -80,47 +79,13 @@ describe('readChrome', () => {
   });
 });
 
-describe('resolveFooterPresentation', () => {
-  it('prefers non-empty chrome description, order, and custom links', () => {
-    const resolved = resolveFooterPresentation(
-      {
-        description: 'API description',
-        navigationOrder: ['blog'],
-        customLinks: [
-          { id: 'api', label: 'API', url: 'https://example.com/api' },
-        ],
-      },
-      {
-        description: 'Chrome description',
-        navigationOrder: ['home', 'custom:abc'],
-        customLinks: [
-          { id: 'abc', label: 'Careers Hub', url: 'https://example.com/hub' },
-        ],
-      },
-    );
-    expect(resolved.description).toBe('Chrome description');
-    expect(resolved.navigationOrder).toEqual(['home', 'custom:abc']);
-    expect(resolved.customLinks).toEqual([
-      { id: 'abc', label: 'Careers Hub', url: 'https://example.com/hub' },
-    ]);
-  });
-
-  it('falls back to the API footer when chrome is empty', () => {
-    const resolved = resolveFooterPresentation(
-      {
-        description: 'API description',
-        navigationOrder: ['blog'],
-        customLinks: [
-          { id: 'api', label: 'API', url: 'https://example.com/api' },
-        ],
-      },
-      { description: null, navigationOrder: [], customLinks: [] },
-    );
-    expect(resolved.description).toBe('API description');
-    expect(resolved.navigationOrder).toEqual(['blog']);
-    expect(resolved.customLinks).toEqual([
-      { id: 'api', label: 'API', url: 'https://example.com/api' },
-    ]);
+describe('chrome presentation is git-only', () => {
+  it('does not take description, order, or custom links from an API footer bag', () => {
+    expect(chromeFooter()).toEqual({
+      description: null,
+      navigationOrder: [],
+      customLinks: [],
+    });
   });
 });
 

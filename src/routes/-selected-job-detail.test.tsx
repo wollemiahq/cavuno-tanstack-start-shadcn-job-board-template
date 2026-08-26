@@ -119,14 +119,11 @@ const board = {
     linkedinUrl: null,
   },
   footer: {
-    description: null,
     contactEmail: null,
     websiteUrl: null,
     xUrl: null,
     facebookUrl: null,
     linkedinUrl: null,
-    navigationOrder: [],
-    customLinks: [],
   },
   talentDirectoryVisibility: 'public',
 } satisfies Parameters<typeof SelectedJobDetail>[0]['board'];
