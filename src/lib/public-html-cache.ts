@@ -27,15 +27,24 @@ const PUBLIC_DOCUMENT_PATHS = new Set([
   '/terms-of-service',
 ]);
 
-const IDENTITY_COOKIE_PREFIXES = [
+/**
+ * Cookie prefixes that still influence public-document SSR.
+ *
+ * Consumed by the platform dispatch worker (builder-live-gateway
+ * html-cache.ts): a cached copy may be served to a cookie-bearing request
+ * only when none of its cookie names start with these prefixes. Templates
+ * that SSR new viewer state MUST add its cookie prefix here or stop
+ * stamping `X-Cavuno-Doc-Vary`.
+ *
+ * Consent (`cavuno_cookie_consent`) is deliberately absent — the banner is
+ * a client island, so consented and undecided visitors share one document.
+ * The worker-side cache in this repo and the `Cloudflare-CDN-Cache-Control`
+ * opt-in therefore also apply to consented visitors.
+ */
+export const DOC_VARY_COOKIE_PREFIXES = [
   '__Host-cavuno_board_access',
   '__Host-cavuno_board_session',
   'cavuno_data_source',
-  // Not identity, but SSR output varies on it (banner + dehydrated
-  // consentChoice), and the edge cache does not honor Vary: Cookie — a
-  // decided visitor's banner-less document must never be stored for, or
-  // served to, undecided visitors.
-  'cavuno_cookie_consent',
 ] as const;
 
 const BROWSER_CACHE_CONTROL = 'public, max-age=0, must-revalidate';
@@ -69,7 +78,7 @@ function carriesIdentity(cookieHeader: string | null): boolean {
     .split(';')
     .map((part) => part.trim().split('=')[0]);
   return names.some((name) =>
-    IDENTITY_COOKIE_PREFIXES.some((prefix) => name.startsWith(prefix)),
+    DOC_VARY_COOKIE_PREFIXES.some((prefix) => name.startsWith(prefix)),
   );
 }
 
@@ -99,6 +108,7 @@ export function withPublicHtmlCacheHeaders(
   headers.set('Cache-Control', BROWSER_CACHE_CONTROL);
   headers.set('Cloudflare-CDN-Cache-Control', EDGE_CACHE_CONTROL);
   headers.append('Vary', 'Cookie');
+  headers.set('X-Cavuno-Doc-Vary', DOC_VARY_COOKIE_PREFIXES.join(', '));
   return new Response(response.body, {
     headers,
     status: response.status,

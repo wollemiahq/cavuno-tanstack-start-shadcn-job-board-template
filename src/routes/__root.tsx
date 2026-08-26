@@ -1,12 +1,14 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 
 /**
- * Root: loads the PUBLIC board shell once (identity, features, SEO, consent)
+ * Root: loads the PUBLIC board shell once (identity, features, SEO)
  * and renders shared chrome. Session-dependent fields (user, employer
  * memberships, paywall grant, preview toolbar) load client-side after paint
  * via RootSessionProvider — hard-refresh may briefly show Sign-in chrome for
  * signed-in users; soft navigations keep session in the root tree.
- * Presentation tokens and light/dark mode are repo-owned (`src/theme.css`).
+ * Cookie consent is a client island (CookieConsentProvider); the public
+ * document does not vary on it. Presentation tokens and light/dark mode
+ * are repo-owned (`src/theme.css`).
  */
 import {
   HeadContent,
@@ -149,8 +151,9 @@ export const Route = createRootRoute({
   // hreflang hrefs. Zero I/O — request URL on the server, window.location
   // on the client.
   beforeLoad: () => ({ origin: requestOrigin() }),
-  // Public shell only (board + SEO + offer gate + consent). Session chrome
-  // is RootSessionProvider after paint — see getRootSessionShellData.
+  // Public shell only (board + SEO + offer gate). Session chrome is
+  // RootSessionProvider after paint — see getRootSessionShellData.
+  // Consent is resolved client-side; this loader stays viewer-anonymous.
   loader: () => getRootShellData(),
   // Board feature flags are operator-controlled kill switches. Revalidate the
   // shell on every navigation so account chrome and route loaders cannot use
@@ -190,7 +193,7 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
-  const { board, offerGate, consentChoice } = Route.useLoaderData();
+  const { board, offerGate } = Route.useLoaderData();
 
   // Embed widget: no site chrome and no session island (third-party iframe).
   const isEmbed = useRouterState({
@@ -208,11 +211,7 @@ function RootLayout() {
 
   return (
     <RootSessionProvider candidatePaywall={board.features.candidatePaywall}>
-      <RootChrome
-        board={board}
-        offerGate={offerGate}
-        consentChoice={consentChoice}
-      />
+      <RootChrome board={board} offerGate={offerGate} />
     </RootSessionProvider>
   );
 }
@@ -220,11 +219,9 @@ function RootLayout() {
 function RootChrome({
   board,
   offerGate,
-  consentChoice,
 }: {
   board: Awaited<ReturnType<typeof getRootShellData>>['board'];
   offerGate: Awaited<ReturnType<typeof getRootShellData>>['offerGate'];
-  consentChoice: Awaited<ReturnType<typeof getRootShellData>>['consentChoice'];
 }) {
   const { user, employerCompanies, hasAccessGrant, preview, clearSession } =
     useRootSession();
@@ -443,10 +440,7 @@ function RootChrome({
   );
 
   return (
-    <CookieConsentProvider
-      required={board.analytics.cookieConsentRequired}
-      initialChoice={consentChoice}
-    >
+    <CookieConsentProvider required={board.analytics.cookieConsentRequired}>
       {/* Consent state wraps the whole chrome: the banner (floating stack),
           the footer's "Cookie preferences" reopener, the job-alert prompt's
           yield, and the analytics gate all read the same choice. The embed

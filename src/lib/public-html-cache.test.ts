@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  DOC_VARY_COOKIE_PREFIXES,
   isAnonymousPublicDocumentRequest,
   isPublicDocumentPath,
   readPublicHtmlCache,
@@ -40,14 +41,21 @@ describe('public HTML cache policy', () => {
     ).toBe(true);
 
     for (const cookie of [
+      'cavuno_cookie_consent=accepted',
+      'cavuno_cookie_consent=denied',
+    ]) {
+      expect(
+        isAnonymousPublicDocumentRequest(
+          new Request(publicUrl, { headers: { cookie } }),
+        ),
+      ).toBe(true);
+    }
+
+    for (const cookie of [
       '__Host-cavuno_board_session=secret',
       '__Host-cavuno_board_session_pk_demo-123=secret',
       '__Host-cavuno_board_access=grant',
       'cavuno_data_source=demo',
-      // Consent varies SSR output (banner + dehydrated choice); the edge
-      // cache ignores Vary: Cookie, so decided visitors must bypass it.
-      'cavuno_cookie_consent=accepted',
-      'cavuno_cookie_consent=denied',
     ]) {
       expect(
         isAnonymousPublicDocumentRequest(
@@ -72,6 +80,14 @@ describe('public HTML cache policy', () => {
       'public, max-age=60, stale-while-revalidate=300',
     );
     expect(cached.headers.get('vary')).toContain('Cookie');
+    expect(cached.headers.get('X-Cavuno-Doc-Vary')).toBe(
+      '__Host-cavuno_board_access, __Host-cavuno_board_session, cavuno_data_source',
+    );
+    expect([...DOC_VARY_COOKIE_PREFIXES]).toEqual([
+      '__Host-cavuno_board_access',
+      '__Host-cavuno_board_session',
+      'cavuno_data_source',
+    ]);
 
     const personalized = withPublicHtmlCacheHeaders(
       new Request(request, {
@@ -82,6 +98,36 @@ describe('public HTML cache policy', () => {
       }),
     );
     expect(personalized.headers.get('cache-control')).toBeNull();
+    expect(personalized.headers.get('X-Cavuno-Doc-Vary')).toBeNull();
+  });
+
+  it('caches a request that only carries the consent cookie', async () => {
+    const match = vi.fn(async () => new Response('cached'));
+    const put = vi.fn(async () => undefined);
+    Object.defineProperty(globalThis, 'caches', {
+      configurable: true,
+      value: { default: { match, put } },
+    });
+
+    const request = new Request('https://board.test/jobs', {
+      headers: { cookie: 'cavuno_cookie_consent=accepted' },
+    });
+    expect(isAnonymousPublicDocumentRequest(request)).toBe(true);
+    expect(await (await readPublicHtmlCache(request))?.text()).toBe('cached');
+
+    const response = withPublicHtmlCacheHeaders(
+      request,
+      new Response('fresh', { headers: { 'Content-Type': 'text/html' } }),
+    );
+    expect(response.headers.get('cloudflare-cdn-cache-control')).toBe(
+      'public, max-age=60, stale-while-revalidate=300',
+    );
+    expect(response.headers.get('X-Cavuno-Doc-Vary')).toBe(
+      '__Host-cavuno_board_access, __Host-cavuno_board_session, cavuno_data_source',
+    );
+    await writePublicHtmlCache(request, response);
+    expect(match).toHaveBeenCalledOnce();
+    expect(put).toHaveBeenCalledOnce();
   });
 
   it('reads and writes the edge cache only for eligible responses', async () => {

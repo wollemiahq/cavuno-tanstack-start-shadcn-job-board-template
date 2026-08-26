@@ -38,8 +38,11 @@ export type { CookieConsentChoice };
 interface CookieConsentState {
   /** The board's `analytics.cookieConsentRequired` flag. */
   required: boolean;
-  /** The visitor's saved choice; `null` while undecided (or not required). */
-  choice: CookieConsentChoice | null;
+  /**
+   * Saved choice. `undefined` until the client resolves cookie/storage;
+   * `null` once resolved and still undecided.
+   */
+  choice: CookieConsentChoice | null | undefined;
   /** True while the accept/deny banner occupies the floating-stack slot. */
   bannerOpen: boolean;
   accept: () => void;
@@ -88,57 +91,49 @@ function clearPersistedChoice() {
  * Site-wide cookie-consent state for boards whose operator enabled
  * "cookie consent required" (`board.analytics.cookieConsentRequired`).
  *
- * The choice lives in a client-readable cookie so SSR can paint the banner
- * when undecided (LCP on listing pages). `initialChoice` comes from the root
- * loader reading that cookie; there is no hydration gate — SSR and the first
- * client render agree on `bannerOpen`.
+ * Choice is resolved client-side after mount so SSR and the first client
+ * render are identical: no banner, no footer preferences action. A brief
+ * post-hydration pop-in is accepted and standard for consent UIs. The
+ * public document can then be edge-cached without varying on the cookie.
  *
- * Migration: on mount, if no cookie but localStorage still has a legacy
- * choice, adopt it (set cookie + state). Returning visitors on the old
- * storage may see a brief banner flash once; that is acceptable.
+ * On mount: `document.cookie` via `parseCookieConsent`, then the legacy
+ * localStorage key, else `null` (undecided).
  */
 export function CookieConsentProvider({
   required,
-  initialChoice = null,
   children,
 }: {
   required: boolean;
-  /** Server-read consent cookie value; `null` when undecided or absent. */
-  initialChoice?: CookieConsentChoice | null;
   children: ReactNode;
 }) {
-  const [choice, setChoice] = useState<CookieConsentChoice | null>(
-    initialChoice,
-  );
+  const [choice, setChoice] = useState<
+    CookieConsentChoice | null | undefined
+  >(undefined);
 
   useEffect(() => {
-    // Cookie already decided on the server — nothing to migrate.
-    if (initialChoice !== null) return;
-    // The document may be a shared/stale render (edge-cached HTML, bfcache):
-    // the browser's own cookie is the source of truth, so adopt it before
-    // falling back to the legacy localStorage migration.
     const fromCookie = parseCookieConsent(document.cookie);
     if (fromCookie !== null) {
       setChoice(fromCookie);
       return;
     }
-    let stored: string | null = null;
     try {
-      stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored === 'accepted' || stored === 'denied') {
+        document.cookie = serializeCookieConsent(stored);
+        setChoice(stored);
+        return;
+      }
     } catch {
-      return;
+      // localStorage may be blocked; cookie is the source of truth.
     }
-    if (stored === 'accepted' || stored === 'denied') {
-      document.cookie = serializeCookieConsent(stored);
-      setChoice(stored);
-    }
-  }, [initialChoice]);
+    setChoice(null);
+  }, []);
 
   const value = useMemo<CookieConsentState>(
     () => ({
       required,
       choice,
-      // No hydration gate: SSR paints the banner when required && undecided.
+      // Undetermined (`undefined`) must match SSR: no banner until mount.
       bannerOpen: required && choice === null,
       accept: () => {
         persistChoice('accepted');
@@ -230,7 +225,7 @@ export function CookieConsentBanner() {
 export function CookiePreferencesFooterAction() {
   const { required, choice, reopenBanner } = useCookieConsent();
 
-  if (!required || choice === null) return null;
+  if (!required || (choice !== 'accepted' && choice !== 'denied')) return null;
 
   return (
     <button
