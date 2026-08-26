@@ -65,6 +65,9 @@ export const getHomePage = createServerFn({ method: 'GET' })
       // page-window relatedSearches facets rather than 500ing `/`.
       const categoriesP = board.taxonomy.categories
         .list(
+          // SAFETY: Board API #1652 adds sort=jobCount; SDK 4.8.0
+          // TaxonomyListQuery does not list it yet. Extra keys are
+          // forwarded on the query string.
           {
             limit: HOME_CATEGORY_LIMIT,
             sort: 'jobCount',

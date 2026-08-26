@@ -8,10 +8,23 @@ describe('topCategoriesFromTaxonomy', () => {
     expect(topCategoriesFromTaxonomy([])).toBeNull();
   });
 
-  it('returns null when no term carries a numeric jobCount (older API)', () => {
+  it('returns null when any term is missing a finite jobCount', () => {
     expect(
       topCategoriesFromTaxonomy([
         { canonicalSlug: 'cybersecurity', displayName: 'Cybersecurity' },
+      ]),
+    ).toBeNull();
+    expect(
+      topCategoriesFromTaxonomy([
+        {
+          canonicalSlug: 'cybersecurity',
+          displayName: 'Cybersecurity',
+          jobCount: 412,
+        },
+        {
+          canonicalSlug: 'incident-response',
+          displayName: 'Incident Response',
+        },
       ]),
     ).toBeNull();
   });
