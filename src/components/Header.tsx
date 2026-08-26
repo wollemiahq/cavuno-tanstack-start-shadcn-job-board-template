@@ -37,6 +37,11 @@ import type {
   HeaderSearchTerm,
 } from '@/lib/header-search';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
+import {
+  chromeFooter,
+  chromeRemovedNavItems,
+  orderEnabledNavIds,
+} from '@/lib/site-chrome';
 import { cn } from '@/lib/utils';
 import type { BoardUser, CompanyMembership } from '@cavuno/board';
 const navItemClassName =
@@ -177,48 +182,66 @@ export default function Header({
   );
   // 'off' is a truthy string — compare explicitly, never coerce.
   const talentDirectoryEnabled = talentMode !== 'off';
+  const removedNav = new Set(chromeRemovedNavItems());
   const navLinks = [
     {
+      id: 'home',
       to: '/jobs',
       label: copy.nav.home,
       icon: BriefcaseBusiness,
       enabled: true,
     },
     {
+      id: 'companies',
       to: '/companies',
       label: copy.nav.companies,
       icon: Building2,
       enabled: true,
     },
     {
+      id: 'talent',
       to: '/talent',
       label: copy.nav.talent,
       icon: Users,
       enabled: talentDirectoryEnabled,
     },
     {
+      id: 'blog',
       to: '/blog',
       label: copy.nav.blog,
       icon: BookOpenText,
       enabled: features.blog,
     },
   ] as const;
-  const visibleNavLinks = navLinks.filter((item) => item.enabled);
+  const enabledNavLinks = navLinks.filter(
+    (item) => item.enabled && !removedNav.has(item.id),
+  );
+  const visibleNavIds = orderEnabledNavIds(
+    enabledNavLinks.map((item) => item.id),
+    chromeFooter().navigationOrder,
+  );
+  const navById = new Map(enabledNavLinks.map((item) => [item.id, item]));
+  const visibleNavLinks = visibleNavIds.flatMap((id) => {
+    const item = navById.get(id);
+    return item ? [item] : [];
+  });
+  const postRemoved = removedNav.has('post');
   const signInLabel = m.siteHeader_signInLabel();
   const signUpLabel = m.siteHeader_signUpLabel();
   const authEnabled = features.candidates || features.employers;
   const signUpHref = resolveSignupDestination(features);
-  const postJob = features.publicJobSubmission ? (
-    <Link
-      to="/post"
-      className={cn(
-        buttonVariants({ variant: 'outline', size: 'sm' }),
-        'hidden xl:inline-flex',
-      )}
-    >
-      {m.siteHeader_postJobLabel()}
-    </Link>
-  ) : null;
+  const postJob =
+    features.publicJobSubmission && !postRemoved ? (
+      <Link
+        to="/post"
+        className={cn(
+          buttonVariants({ variant: 'outline', size: 'sm' }),
+          'hidden xl:inline-flex',
+        )}
+      >
+        {copy.nav.post}
+      </Link>
+    ) : null;
   const headerLeft = (
     <div
       data-slot="header-left"
@@ -396,9 +419,9 @@ export default function Header({
         <Suspense fallback={null}>
           <LazyMobileMenu
             navLinks={visibleNavLinks}
-            showPostJob={!user && features.publicJobSubmission}
+            showPostJob={!user && features.publicJobSubmission && !postRemoved}
             navigationLabel={m.siteHeader_primaryNavigationAriaLabel()}
-            postJobLabel={m.siteHeader_postJobLabel()}
+            postJobLabel={copy.nav.post}
             onOpenChange={(open) => {
               setMenuOpen(open);
               if (!open) {

@@ -14,6 +14,7 @@ import { jobSearchCopy } from './copy-groups/job-search';
 import { navCopy } from './copy-groups/nav';
 import { paginationCopy } from './copy-groups/pagination';
 import { salaryCopy } from './copy-groups/salary';
+import { m } from './paraglide/messages';
 import { baseLocale, overwriteGetLocale } from './paraglide/runtime';
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -136,6 +137,26 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
     expect(jobDetailCopy().posted('today')).toBe(
       boardCopy('en').jobDetail.posted('today'),
     );
+  });
+
+  it('overlays chrome.json nav and entity strings onto catalog defaults', () => {
+    // Stock src/chrome.json is `{}`, so every key stays the Paraglide
+    // catalog string. A non-empty chromeNav()/chromeEntity() key replaces
+    // that default (see site-chrome.test.ts).
+    expect(navCopy()).toEqual({
+      blog: m.nav_blog(),
+      companies: m.nav_companies(),
+      home: m.nav_home(),
+      post: m.nav_post(),
+      pricing: m.nav_pricing(),
+      talent: m.nav_talent(),
+    });
+    expect(entityCopy()).toEqual({
+      companyPlural: m.entity_companyPlural(),
+      companySingular: m.entity_companySingular(),
+      jobPlural: m.entity_jobPlural(),
+      jobSingular: m.entity_jobSingular(),
+    });
   });
 });
 

@@ -293,6 +293,59 @@ describe('HomeLanding — pure landing hero', () => {
     expect(screen.queryByRole('searchbox')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Search' })).toBeNull();
   });
+
+  it('keeps the dither canvas when no background image is provided', async () => {
+    renderLanding(baseProps);
+    await screen.findByRole('heading', { name: m.home_heroHeadline() });
+    expect(
+      document.querySelector('[data-hero-background="dither"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('img[src="https://assets.cavuno.com/hero.png"]'),
+    ).toBeNull();
+  });
+
+  it('renders an https hero photo instead of the dither canvas', async () => {
+    renderLanding({
+      ...baseProps,
+      backgroundImageUrl: 'https://assets.cavuno.com/hero.png',
+    });
+    await screen.findByRole('heading', { name: m.home_heroHeadline() });
+    expect(
+      document.querySelector('img[src="https://assets.cavuno.com/hero.png"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-hero-background="photo"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-hero-background="dither"]'),
+    ).toBeNull();
+  });
+
+  it('treats http and javascript URLs as missing and keeps the dither canvas', async () => {
+    renderLanding({
+      ...baseProps,
+      backgroundImageUrl: 'http://evil.example/x.png',
+    });
+    await screen.findByRole('heading', { name: m.home_heroHeadline() });
+    expect(
+      document.querySelector('[data-hero-background="dither"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('img[src="http://evil.example/x.png"]'),
+    ).toBeNull();
+
+    cleanup();
+    renderLanding({
+      ...baseProps,
+      backgroundImageUrl: 'javascript:alert(1)',
+    });
+    await screen.findByRole('heading', { name: m.home_heroHeadline() });
+    expect(
+      document.querySelector('[data-hero-background="dither"]'),
+    ).not.toBeNull();
+    expect(document.querySelector('img[src="javascript:alert(1)"]')).toBeNull();
+  });
 });
 
 describe('HomeLanding — latest jobs reuse the shared card into the workspace', () => {

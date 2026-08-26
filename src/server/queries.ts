@@ -71,8 +71,9 @@ function resolveBoardContext(
       ...context.features,
       ...resolveRuntimeFeatureFlags(context.features),
     },
-    // 4.0.0: contact is identity data. Footer description / navigationOrder /
-    // customLinks are app-owned presentation (Puck on hosted; defaults here).
+    // Presentation (description / navigationOrder / customLinks) is
+    // app-owned git (`src/chrome.json`); contact is identity on the API.
+    // Do not restore API footer presentation.
     footer: {
       description: null,
       contactEmail: context.contact?.email ?? null,

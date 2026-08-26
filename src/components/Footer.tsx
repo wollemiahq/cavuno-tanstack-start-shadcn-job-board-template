@@ -13,13 +13,16 @@ import { Badge } from '@/components/ui/badge';
 import { footerCopy } from '@/copy-groups/footer';
 import { navCopy } from '@/copy-groups/nav';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
+import {
+  chromeRemovedNavItems,
+  resolveFooterPresentation,
+} from '@/lib/site-chrome';
 import { cn } from '@/lib/utils';
 /**
- * The board-context `footer` data group (hosted-footer parity slice) —
- * description, contact, website + social links, and the operator's nav
- * order/custom links. Not yet in the published SDK types, so the root
- * loader picks it off the wire body defensively; `null` against an API
- * that predates the slice (everything falls back to catalog defaults).
+ * Footer identity from `board.contact()` plus presentation from
+ * `src/chrome.json` (description, nav order, custom links). Contact
+ * still arrives on this prop from the root loader; presentation is
+ * merged in via `resolveFooterPresentation`.
  */
 export interface BoardContextFooter {
   description: string | null;
@@ -219,18 +222,28 @@ export default function Footer({
     footer: footerCopy(),
     nav: navCopy(),
   };
+  const chromeFooter = resolveFooterPresentation(footer);
+  const removedNav = new Set(chromeRemovedNavItems());
 
   // ── For Candidates — operator-ordered system + custom links ──
   const navigationLinks = buildNavigationLinks({
-    order: footer?.navigationOrder ?? [],
-    customLinks: footer?.customLinks ?? [],
+    order: chromeFooter.navigationOrder,
+    customLinks: chromeFooter.customLinks,
     systemItems: {
-      home: { href: '/jobs', label: copy.nav.home },
-      companies: { href: '/companies', label: copy.nav.companies },
-      pricing: hasEmployerOfferPage
-        ? { href: '/employers', label: copy.nav.pricing }
-        : null,
-      blog: features.blog ? { href: '/blog', label: copy.nav.blog } : null,
+      home: removedNav.has('home')
+        ? null
+        : { href: '/jobs', label: copy.nav.home },
+      companies: removedNav.has('companies')
+        ? null
+        : { href: '/companies', label: copy.nav.companies },
+      pricing:
+        hasEmployerOfferPage && !removedNav.has('pricing')
+          ? { href: '/employers', label: copy.nav.pricing }
+          : null,
+      blog:
+        features.blog && !removedNav.has('blog')
+          ? { href: '/blog', label: copy.nav.blog }
+          : null,
     },
   });
 
@@ -242,13 +255,15 @@ export default function Footer({
   // 'off' is a truthy string — compare explicitly, never coerce.
   const talentLinked = talentMode !== 'off';
   const companyLinks: FooterLink[] = [
-    ...(features.publicJobSubmission
+    ...(features.publicJobSubmission && !removedNav.has('post')
       ? [{ href: '/post', label: copy.nav.post }]
       : []),
-    ...(hasEmployerOfferPage
+    ...(hasEmployerOfferPage && !removedNav.has('pricing')
       ? [{ href: '/employers', label: copy.nav.pricing }]
       : []),
-    ...(talentLinked ? [{ href: '/talent', label: copy.nav.talent }] : []),
+    ...(talentLinked && !removedNav.has('talent')
+      ? [{ href: '/talent', label: copy.nav.talent }]
+      : []),
   ];
 
   // ── Resources ──
@@ -292,7 +307,7 @@ export default function Footer({
   ].filter((link) => link !== null);
 
   const description = resolveTemplate(
-    footer?.description || copy.footer.defaultDescription,
+    chromeFooter.description || copy.footer.defaultDescription,
     boardName,
   );
   const copyright = `${resolveTemplate(copy.footer.copyrightPrefix, boardName)} ${copy.footer.allRightsReservedText}`;

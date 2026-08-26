@@ -11,7 +11,8 @@
  * (`getLocale()` — the URL locale; extra chrome prefixes like `/de/`
  * only exist after those locales are compiled).
  * Operator label overrides (`board.labels` / `BoardLabelOverrides`) were
- * removed from the Board API in 4.0.0 — the catalog is the sole source.
+ * removed from the Board API in 4.0.0. Nav/entity overlays live in
+ * `src/chrome.json` and merge over the catalog in the copy groups.
  * The `language` parameter callers thread is retained for the block prop
  * contract but no longer selects the catalog: `baseLocale === board.language`
  * is a generation-time invariant (project.inlang/settings.json is emitted

@@ -10,6 +10,7 @@ import {
   relatedSearchesTitle,
   relatedSearchesToChips,
 } from '@/board/related-searches';
+import { BoardAdSlot } from '@/components/board/board-ad-slot';
 import { JobSearchResult } from '@/components/board/job-search-result';
 import { JobsFilterControls } from '@/components/board/jobs-filter-controls';
 import { JobsResultsBar } from '@/components/board/jobs-results-bar';
@@ -193,6 +194,7 @@ export function JobSearchPage({
                   className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0"
                 >
                   <div className="space-y-4">{resultsBar}</div>
+                  <BoardAdSlot placement="jobs:list.banner" className="py-4" />
                   <JobsEmpty
                     filters={filters}
                     hasRouteConstraint={Boolean(heading)}
@@ -220,6 +222,8 @@ export function JobSearchPage({
                   scrollRestorationId="jobs-search-results"
                 >
                   <div className="space-y-4">{resultsBar}</div>
+
+                  <BoardAdSlot placement="jobs:list.banner" className="py-4" />
 
                   <div className="space-y-3">
                     {jobVms.map((vm) => (
@@ -287,6 +291,8 @@ export function JobSearchPage({
                     }
                     onPageChange={onPageChange}
                   />
+
+                  <BoardAdSlot placement="jobs:list.footer" className="py-4" />
 
                   {relatedChips.length > 0 ? (
                     <section

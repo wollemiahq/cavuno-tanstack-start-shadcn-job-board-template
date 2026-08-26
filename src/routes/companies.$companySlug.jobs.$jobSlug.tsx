@@ -31,6 +31,7 @@ import { toJobDetailVM } from '@/board/job-detail-view-model';
 import { toJobCardVM } from '@/board/job-view-model';
 import { AlertSignupForm } from '@/components/board/alert-signup-form';
 import { ApplyButton } from '@/components/board/apply-button';
+import { BoardAdSlot } from '@/components/board/board-ad-slot';
 import { CopyLinkButton } from '@/components/board/copy-link-button';
 import { JobDetail } from '@/components/board/job-detail';
 import { JobList } from '@/components/board/job-list';
@@ -152,6 +153,10 @@ function JobDetailPage() {
                   <Text as="h2" variant="heading4">
                     {vm.similarJobsHeading}
                   </Text>
+                  <BoardAdSlot
+                    placement="job:detail.similar"
+                    className="py-4"
+                  />
                   <JobList
                     jobs={similarRail.jobs.map((job) =>
                       toJobCardVM(job, getLocale()),

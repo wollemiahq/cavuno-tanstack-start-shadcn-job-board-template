@@ -7,6 +7,7 @@ import { JobAlertFloatingPrompt } from '@/components/job-alert-floating-prompt';
 import { useRootSession } from '@/components/root-session';
 import { entityCopy } from '@/copy-groups/entity';
 import { jobAlertDefaultsFromSearch } from '@/lib/job-alert-defaults';
+import { backgroundImageUrl } from '@/lib/site-branding';
 import { m } from '@/paraglide/messages';
 import { getLocale } from '@/paraglide/runtime';
 import { saveJob } from '@/server/account';
@@ -119,6 +120,7 @@ export function HomePage() {
         candidatesEnabled={board.features.candidates}
         employersEnabled={board.features.employers}
         publicJobSubmission={board.features.publicJobSubmission}
+        backgroundImageUrl={backgroundImageUrl()}
         viewer={user ? { emailVerified: user.emailVerified } : null}
         onSaveJob={async (jobId) =>
           saveJob({ data: { jobId } }).then(() => undefined)
