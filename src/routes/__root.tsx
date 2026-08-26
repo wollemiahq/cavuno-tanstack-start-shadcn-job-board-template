@@ -47,7 +47,6 @@ import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { NavigationProgress } from '@/components/navigation-progress';
 import { RootSessionProvider, useRootSession } from '@/components/root-session';
-import { RouterDevtools } from '@/components/router-devtools';
 import {
   MainContentTarget,
   SkipToContentLink,
@@ -589,7 +588,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <SkipToContentLink label={m.siteHeader_skipToContentLabel()} />
           {children}
           <DeferredToaster />
-          <RouterDevtools />
           <Scripts />
         </body>
       </html>

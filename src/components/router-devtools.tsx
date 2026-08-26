@@ -1,12 +1,13 @@
 import { lazy, Suspense, type ComponentType } from 'react';
 
 /**
- * TanStack Router Devtools — development only.
+ * TanStack Router Devtools — opt-in, development only.
  *
- * Used to inspect matches, loader status, preload cache, and pending
- * navigations when chasing waterfalls / over-fetch. The import is gated on
- * `import.meta.env.DEV` so production builds drop the branch and never load
- * the panel chunk. Vite's `devtools()` plugin strips related tooling on build.
+ * Not mounted. To restore the panel, import this component in
+ * `src/routes/__root.tsx` and render `<RouterDevtools />` in `RootDocument`.
+ *
+ * Gated on `import.meta.env.DEV` so production never loads the chunk.
+ * `@tanstack/react-router-devtools` stays installed for that opt-in.
  *
  * The toggle sits bottom-right so it does not overlap the preview
  * toolbar (persona/board switcher), which anchors bottom-left.
