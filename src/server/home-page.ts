@@ -22,6 +22,7 @@ import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
 import { readTalentDirectory } from './talent-directory-read';
 
+import { topCategoriesFromTaxonomy } from '@/board/top-categories';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { selfUrl } from '@/lib/self-url';
 import type { RelatedSearch, TaxonomyListQuery } from '@cavuno/board';
@@ -39,29 +40,6 @@ function asJsonObjects<T>(value: T): JsonObject[] {
   // SAFETY: Structured data is composed from literal schema.org objects and
   // SDK SEO builders, then JSON round-tripped to erase readonly helper types.
   return JSON.parse(JSON.stringify(value)) as JsonObject[];
-}
-
-function termJobCount(term: { jobCount?: unknown }): number {
-  return typeof term.jobCount === 'number' ? term.jobCount : 0;
-}
-
-function topCategoriesFromTaxonomy(
-  terms:
-    | ReadonlyArray<{
-        canonicalSlug: string;
-        displayName: string;
-        jobCount?: unknown;
-      }>
-    | undefined,
-): RelatedSearch[] | null {
-  if (!terms || terms.length === 0) return null;
-  if (!terms.some((term) => typeof term.jobCount === 'number')) return null;
-  return terms.map((term) => ({
-    type: 'category' as const,
-    slug: term.canonicalSlug,
-    term: term.displayName,
-    count: termJobCount(term),
-  }));
 }
 
 /** Job cards on the landing rail. Category tiles come from the taxonomy

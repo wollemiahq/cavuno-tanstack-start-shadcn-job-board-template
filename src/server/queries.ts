@@ -51,7 +51,6 @@ import type {
   PlansListQuery,
   PublicBlogAdjacentPosts,
   TalentDirectoryQuery,
-  TaxonomyListQuery,
   TaxonomyResolution,
 } from '@cavuno/board';
 
@@ -199,33 +198,6 @@ export const searchJobs = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().jobs.search(data, undefined, { headers: h }),
     ),
-  );
-
-/**
- * Top job categories for the homepage's "Browse by category" section —
- * `taxonomy.categories.list({ sort: 'jobCount' })` so each tile's count is
- * the live board-wide published-job total, not a tally of the jobs rail.
- * Anonymous, and gated behind the board-password wall like the other
- * content reads.
- */
-export const listTopJobCategories = createServerFn({ method: 'GET' })
-  .middleware([boardAccessMiddleware])
-  .handler(({ context }) =>
-    gatedRead(context, async (h) => {
-      const page = await getBoard().taxonomy.categories.list(
-        { limit: 8, sort: 'jobCount' } as TaxonomyListQuery,
-        { headers: h },
-      );
-      return page.data.map((term) => {
-        const jobCount = (term as { jobCount?: unknown }).jobCount;
-        return {
-          type: 'category' as const,
-          slug: term.canonicalSlug,
-          term: term.displayName,
-          count: typeof jobCount === 'number' ? jobCount : 0,
-        };
-      });
-    }),
   );
 
 /**
