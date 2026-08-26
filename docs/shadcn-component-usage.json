@@ -96,6 +96,7 @@
       "name": "attachment",
       "status": "used",
       "productionReferences": [
+        "src/components/post-job-form.tsx",
         "src/components/resume-upload.tsx"
       ]
     },
@@ -114,7 +115,6 @@
         "src/components/header-account-menu.tsx",
         "src/components/messages/avatar.tsx",
         "src/components/post-card.tsx",
-        "src/components/post-job-form.tsx",
         "src/components/talent-card.tsx",
         "src/routes/blog.author.$authorSlug.tsx"
       ]
@@ -770,6 +770,7 @@
         "src/components/post-job-form.tsx",
         "src/components/preview/preview-emails.tsx",
         "src/components/preview/preview-toolbar.tsx",
+        "src/components/resume-upload.tsx",
         "src/routes/-access-page.tsx",
         "src/routes/-employers.dashboard.tsx",
         "src/routes/-employers.onboarding.tsx"

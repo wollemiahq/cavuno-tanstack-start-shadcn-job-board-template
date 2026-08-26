@@ -3587,7 +3587,7 @@ Primitives: Alert, AlertDescription, FieldError, FieldDescription, Spinner, toas
 
 A page header, titled field sections, a field grid, and a submit with status — the shape of every data-entry surface.
 
-Primitives: Card, Field, FieldSet, FieldLegend, FieldGroup, FieldLabel, FieldDescription, FieldError, Input, Select, Textarea, Checkbox, Button, Alert
+Primitives: Card, Field, FieldSet, FieldLegend, FieldGroup, FieldLabel, FieldDescription, FieldError, Input, Select, Textarea, Checkbox, Attachment, Button, Alert
 
 ### Listing page — `docs/patterns/listing-page.md`
 

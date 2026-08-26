@@ -85,6 +85,10 @@ describe('ResumeUpload', () => {
       screen.queryByRole('checkbox', { name: 'Keep my resume saved' }),
     ).toBeNull();
 
+    const attachment = document.querySelector('[data-test="resume-attachment"]');
+    expect(attachment).toHaveAttribute('data-slot', 'attachment');
+    expect(attachment).toHaveAttribute('data-state', 'idle');
+
     const input = document.querySelector<HTMLInputElement>(
       '[data-test="resume-file-input"]',
     );
@@ -109,6 +113,9 @@ describe('ResumeUpload', () => {
     );
 
     expect(document.querySelector('[data-slot="attachment"]')).toBeVisible();
+    expect(
+      screen.getByRole('button', { name: 'Replace resume' }),
+    ).toBeVisible();
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 

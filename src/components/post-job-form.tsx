@@ -22,7 +22,14 @@ import { m } from '../paraglide/messages';
 import { PageSection } from './layout/page';
 import { RichTextEditor, type RichTextEditorProps } from './rich-text-editor';
 import { Alert, AlertDescription } from './ui/alert';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import {
+  Attachment,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentMedia,
+  AttachmentTitle,
+  AttachmentTrigger,
+} from './ui/attachment';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
@@ -331,15 +338,6 @@ export function PostJobForm({
     label: timeframeLabel(value),
   }));
 
-  const companyInitials = companyName
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join('')
-    .toUpperCase();
-
   async function runLogoAction(action: () => Promise<LogoResult>) {
     updateFormState({ logoUrl: null, logoStatus: { kind: 'working' } });
 
@@ -390,8 +388,13 @@ export function PostJobForm({
     void runLogoAction(() => onLogoUpload(data));
   }
 
-  function onLogoDrop(event: React.DragEvent<HTMLDivElement>) {
+  function onLogoDragOver(event: React.DragEvent) {
     event.preventDefault();
+  }
+
+  function onLogoDrop(event: React.DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
     if (logoStatus.kind === 'working') return;
     const file = event.dataTransfer.files[0];
     if (file) uploadLogoFile(file);
@@ -552,6 +555,71 @@ export function PostJobForm({
       onSubmit={handleSubmit}
     >
       <PageSection title={m.postJob_companyHeading()}>
+        <Field data-invalid={logoStatus.kind === 'error'}>
+          <input
+            ref={logoInputRef}
+            id="companyLogo"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            tabIndex={-1}
+            aria-hidden="true"
+            className="sr-only"
+            disabled={logoStatus.kind === 'working'}
+            onChange={onLogoChange}
+          />
+          <Attachment
+            data-testid="company-logo-dropzone"
+            className="w-full"
+            state={
+              logoStatus.kind === 'working'
+                ? 'uploading'
+                : logoStatus.kind === 'error'
+                  ? 'error'
+                  : logoUrl
+                    ? 'done'
+                    : 'idle'
+            }
+            onDragOver={onLogoDragOver}
+            onDrop={onLogoDrop}
+          >
+            <AttachmentMedia variant={logoUrl ? 'image' : 'icon'}>
+              {logoStatus.kind === 'working' ? (
+                <Spinner />
+              ) : logoUrl ? (
+                <img src={logoUrl} alt={m.postJob_logoPreviewAlt()} />
+              ) : (
+                <ImagePlus aria-hidden="true" />
+              )}
+            </AttachmentMedia>
+            <AttachmentContent>
+              <AttachmentTitle>
+                {logoStatus.kind === 'working'
+                  ? m.postJob_workingLabel()
+                  : logoUrl
+                    ? m.logoUpload_changeLogoLabel()
+                    : m.postJob_logoLabel()}
+              </AttachmentTitle>
+              <AttachmentDescription>
+                {m.postJob_logoDropHint()}
+              </AttachmentDescription>
+            </AttachmentContent>
+            {logoStatus.kind === 'working' ? null : (
+              <AttachmentTrigger
+                aria-label={
+                  logoUrl
+                    ? m.logoUpload_changeLogoLabel()
+                    : m.postJob_logoLabel()
+                }
+                onDragOver={onLogoDragOver}
+                onDrop={onLogoDrop}
+                onClick={() => logoInputRef.current?.click()}
+              />
+            )}
+          </Attachment>
+          {logoStatus.kind === 'error' ? (
+            <FieldError>{logoStatus.message}</FieldError>
+          ) : null}
+        </Field>
         <div className="grid gap-5 sm:grid-cols-2">
           <LabeledInput
             label={m.postJob_companyNameLabel()}
@@ -578,65 +646,6 @@ export function PostJobForm({
             type="email"
             required
           />
-        </div>
-      </PageSection>
-
-      <PageSection
-        title={m.postJob_logoLabel()}
-        description={m.postJob_logoDropHint()}
-      >
-        <div
-          data-testid="company-logo-dropzone"
-          className="border-border flex items-center gap-4 rounded-3xl border border-dashed p-4"
-          onDragOver={(event) => event.preventDefault()}
-          onDrop={onLogoDrop}
-        >
-          <Avatar className="size-16">
-            {logoUrl ? (
-              <AvatarImage src={logoUrl} alt={m.postJob_logoPreviewAlt()} />
-            ) : null}
-            <AvatarFallback className="text-base">
-              {companyInitials || <ImagePlus aria-hidden="true" />}
-            </AvatarFallback>
-          </Avatar>
-          <Field
-            className="min-w-0 flex-1 gap-2"
-            data-invalid={logoStatus.kind === 'error'}
-          >
-            <FieldLabel htmlFor="companyLogo">
-              {m.postJob_logoLabel()}
-            </FieldLabel>
-            <input
-              ref={logoInputRef}
-              id="companyLogo"
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              className="sr-only"
-              disabled={logoStatus.kind === 'working'}
-              onChange={onLogoChange}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-fit"
-              disabled={logoStatus.kind === 'working'}
-              onClick={() => logoInputRef.current?.click()}
-            >
-              {logoStatus.kind === 'working'
-                ? m.postJob_workingLabel()
-                : m.postJob_logoLabel()}
-            </Button>
-            {logoStatus.kind === 'working' ? (
-              <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                <Spinner />
-                {m.postJob_workingLabel()}
-              </div>
-            ) : null}
-            {logoStatus.kind === 'error' ? (
-              <FieldError>{logoStatus.message}</FieldError>
-            ) : null}
-          </Field>
         </div>
       </PageSection>
 

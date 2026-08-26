@@ -20,8 +20,8 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `alert` | Used (16) | `src/components/board/apply-button.tsx`<br>`src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-detail-state.tsx`<br>+13 more in the JSON ledger |
 | `alert-dialog` | Used (7) | `src/components/board/apply-location-dialog.tsx`<br>`src/components/danger-zone.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>+4 more in the JSON ledger |
 | `aspect-ratio` | Available | Installed for adoption when the product needs this behavior. |
-| `attachment` | Used (1) | `src/components/resume-upload.tsx` |
-| `avatar` | Used (14) | `src/components/account-shell.tsx`<br>`src/components/avatar-upload.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+11 more in the JSON ledger |
+| `attachment` | Used (2) | `src/components/post-job-form.tsx`<br>`src/components/resume-upload.tsx` |
+| `avatar` | Used (13) | `src/components/account-shell.tsx`<br>`src/components/avatar-upload.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+10 more in the JSON ledger |
 | `badge` | Used (38) | `src/components/Footer.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+35 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
@@ -68,7 +68,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `skeleton` | Used (7) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-result-detail.tsx`<br>`src/components/board/public-content-pending.tsx`<br>+4 more in the JSON ledger |
 | `slider` | Available | Installed for adoption when the product needs this behavior. |
 | `sonner` | Used (1) | `src/routes/__root.tsx` |
-| `spinner` | Used (15) | `src/components/board/alert-signup-form.tsx`<br>`src/components/company-search-combobox.tsx`<br>`src/components/employer/employer-profile-views-stat.tsx`<br>+12 more in the JSON ledger |
+| `spinner` | Used (16) | `src/components/board/alert-signup-form.tsx`<br>`src/components/company-search-combobox.tsx`<br>`src/components/employer/employer-profile-views-stat.tsx`<br>+13 more in the JSON ledger |
 | `switch` | Used (1) | `src/components/preview/preview-board-settings.tsx` |
 | `table` | Used (3) | `src/components/board/salary-sections.tsx`<br>`src/components/employer/company-members-table.tsx`<br>`src/routes/-employers.company-jobs.tsx` |
 | `tabs` | Available | Installed for adoption when the product needs this behavior. |
@@ -101,6 +101,6 @@ The source remains intentionally owned after installation. Small extensions pres
 
 ## Messaging component coverage
 
-The text-messaging experience composes `Bubble`, `Marker`, `Message`, and `MessageScroller`. `Attachment` is installed and used by resume upload, but Cavuno's current messaging API accepts message bodies only; the starter does not present a fake message-attachment action that cannot be sent.
+The text-messaging experience composes `Bubble`, `Marker`, `Message`, and `MessageScroller`. `Attachment` is installed and used for resume and logo uploads, but Cavuno's current messaging API accepts message bodies only; the starter does not present a fake message-attachment action that cannot be sent.
 
 Run `pnpm run gen:shadcn` after adding or removing production imports. `pnpm run check:shadcn` fails when the installed registry, configuration, JSON ledger, or this document drifts.

@@ -1,7 +1,7 @@
 ---
 name: Form page
 purpose: A page header, titled field sections, a field grid, and a submit with status — the shape of every data-entry surface.
-primitives: [Card, Field, FieldSet, FieldLegend, FieldGroup, FieldLabel, FieldDescription, FieldError, Input, Select, Textarea, Checkbox, Button, Alert]
+primitives: [Card, Field, FieldSet, FieldLegend, FieldGroup, FieldLabel, FieldDescription, FieldError, Input, Select, Textarea, Checkbox, Attachment, Button, Alert]
 usedBy: [src/components/profile-form.tsx, src/components/experience-section.tsx, src/components/education-section.tsx, src/components/post-job-form.tsx, src/routes/employers.onboarding.$slug.tsx, src/routes/employers.companies.$slug.profile.tsx, src/routes/employers.companies.$slug.jobs.$jobId.applicants.tsx, src/routes/employers.dashboard.tsx]
 ---
 
@@ -26,7 +26,8 @@ every form legible and accessible.
   related control set needs a visible name.
 - `FieldGroup` for spacing groups of fields.
 - Each field composes `Field`, `FieldLabel`, a control (`Input`, `Select`,
-  `Textarea`, or `Checkbox`), optional `FieldDescription`, and `FieldError`.
+  `Textarea`, `Checkbox`, or `Attachment`), optional `FieldDescription`, and
+  `FieldError`.
 - Submit `Button` + an action-level `Alert` or the domain feedback component
   that wraps it.
 

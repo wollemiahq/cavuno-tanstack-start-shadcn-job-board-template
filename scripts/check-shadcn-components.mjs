@@ -288,7 +288,7 @@ The source remains intentionally owned after installation. Small extensions pres
 
 ## Messaging component coverage
 
-The text-messaging experience composes \`Bubble\`, \`Marker\`, \`Message\`, and \`MessageScroller\`. \`Attachment\` is installed and used by resume upload, but Cavuno's current messaging API accepts message bodies only; the starter does not present a fake message-attachment action that cannot be sent.
+The text-messaging experience composes \`Bubble\`, \`Marker\`, \`Message\`, and \`MessageScroller\`. \`Attachment\` is installed and used for resume and logo uploads, but Cavuno's current messaging API accepts message bodies only; the starter does not present a fake message-attachment action that cannot be sent.
 
 Run \`pnpm run gen:shadcn\` after adding or removing production imports. \`pnpm run check:shadcn\` fails when the installed registry, configuration, JSON ledger, or this document drifts.
 `;

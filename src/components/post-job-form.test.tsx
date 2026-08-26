@@ -281,8 +281,11 @@ describe('PostJobForm', () => {
       />,
     );
     const file = new File(['logo'], 'acme.png', { type: 'image/png' });
+    const dropzone = screen.getByTestId('company-logo-dropzone');
+    expect(dropzone).toHaveAttribute('data-slot', 'attachment');
+    expect(dropzone).toHaveAttribute('data-state', 'idle');
 
-    fireEvent.drop(screen.getByTestId('company-logo-dropzone'), {
+    fireEvent.drop(dropzone, {
       dataTransfer: { files: [file] },
     });
 
@@ -331,6 +334,9 @@ describe('PostJobForm', () => {
       dataTransfer: { files: [file] },
     });
 
+    const dropzone = screen.getByTestId('company-logo-dropzone');
+    expect(dropzone).toHaveAttribute('data-slot', 'attachment');
+    expect(dropzone).toHaveAttribute('data-state', 'uploading');
     expect(container.querySelector('[data-slot="spinner"]')).toBeVisible();
 
     await act(async () =>
