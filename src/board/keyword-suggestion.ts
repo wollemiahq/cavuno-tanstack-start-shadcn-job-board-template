@@ -9,7 +9,7 @@ export interface KeywordSuggestionVM {
 
 /** Map the localized Board taxonomy term to the keyword combobox contract. */
 export function toKeywordSuggestionVM(
-  term: PublicTaxonomyTerm,
+  term: Pick<PublicTaxonomyTerm, 'type' | 'canonicalSlug' | 'displayName'>,
 ): KeywordSuggestionVM {
   return {
     id: `${term.type}:${term.canonicalSlug}`,
