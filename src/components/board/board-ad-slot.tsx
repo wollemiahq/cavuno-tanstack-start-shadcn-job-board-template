@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 
-import { adsClientId, adsEnabled, adsSlot } from '@/lib/site-ads';
+import { adsSlot } from '@/lib/site-ads';
 
 const ADSENSE_SCRIPT_ID = 'cavuno-adsense-loader';
 
@@ -18,27 +18,27 @@ function ensureAdSenseScript(clientId: string) {
 
 export function BoardAdSlot({
   placement,
+  clientId,
   className,
 }: {
   placement: string;
+  clientId: string;
   className?: string;
 }) {
-  const enabled = adsEnabled();
-  const clientId = adsClientId();
   const slot = adsSlot(placement);
-  const active = enabled && clientId !== null && slot !== null;
+  const isRail = placement.startsWith('search:rail.');
 
   useEffect(() => {
-    if (!active || !clientId) return;
+    if (!slot) return;
     ensureAdSenseScript(clientId);
     // SAFETY: adsbygoogle is the publisher queue AdSense attaches to window;
     // we only push an empty object onto that array.
     const w = window as Window & { adsbygoogle?: unknown[] };
     w.adsbygoogle = w.adsbygoogle ?? [];
     w.adsbygoogle.push({});
-  }, [active, clientId]);
+  }, [clientId, slot]);
 
-  if (!active || !clientId || !slot) return null;
+  if (!slot) return null;
 
   return (
     <div data-ad-placement={placement} className={className}>
@@ -46,8 +46,14 @@ export function BoardAdSlot({
         className="adsbygoogle"
         data-ad-client={clientId}
         data-ad-slot={slot.slotId}
-        data-full-width-responsive="true"
-        style={{ display: 'block' }}
+        data-ad-format={slot.format ?? (isRail ? 'vertical' : undefined)}
+        data-ad-layout={slot.layout}
+        data-full-width-responsive={isRail ? undefined : 'true'}
+        style={
+          isRail
+            ? { display: 'block', width: '160px', height: '600px' }
+            : { display: 'block' }
+        }
       />
     </div>
   );

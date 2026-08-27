@@ -68,6 +68,7 @@ export function ProgrammaticJobsView({
   return (
     <>
       <JobSearchPage
+        ads={board.ads}
         heading={heading}
         count={count}
         gatedCount={gatedCount}

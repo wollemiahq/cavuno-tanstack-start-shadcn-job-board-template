@@ -120,6 +120,7 @@ function TalentDirectoryPage() {
   return (
     <>
       <TalentSearchPage
+        ads={board.ads}
         candidates={page.data.map((candidate) =>
           toTalentCardVM(candidate, getTalentSearchLabels()),
         )}

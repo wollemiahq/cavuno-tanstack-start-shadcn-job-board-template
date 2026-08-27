@@ -8,9 +8,12 @@ import { BoardAdSlot } from './board-ad-slot';
 afterEach(cleanup);
 
 describe('BoardAdSlot', () => {
-  it('renders nothing when ads.json is the stock disabled file', () => {
+  it('renders nothing when ads.json has no slot for the placement', () => {
     const { container } = render(
-      <BoardAdSlot placement="jobs:list.banner" className="py-4" />,
+      <BoardAdSlot
+        placement="search:rail.start"
+        clientId="ca-pub-1234567890123456"
+      />,
     );
     expect(container).toBeEmptyDOMElement();
     expect(document.getElementById('cavuno-adsense-loader')).toBeNull();

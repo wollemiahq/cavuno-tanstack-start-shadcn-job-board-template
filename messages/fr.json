@@ -911,6 +911,7 @@
   "jobSalary_unitPerMonth": "mois",
   "jobSalary_unitPerWeek": "semaine",
   "jobSalary_unitPerYear": "an",
+  "adRail_label": "Publicité",
   "jobSearch_allFiltersLabel": "Tous les filtres",
   "jobSearch_anyTypeLabel": "Tous les types",
   "jobSearch_anyWorkplaceLabel": "Tous les modes de travail",

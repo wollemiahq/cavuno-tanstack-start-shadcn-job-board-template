@@ -450,6 +450,7 @@ Complete reusable article presentation for the canonical post route.
 Props:
 
 - `adjacent?: { object: "blog_adjacent_posts"; previous: { id: string; object: "public_blog_post"; title: string; slug: string; fea…`
+- `ads?: BoardAdsConfig | undefined`
 - `breadcrumb: BreadcrumbData`
 - `language: string`
 - `missingBody: BlogArticleMissingBodyState`
@@ -474,6 +475,7 @@ Props:
 Props:
 
 - `className?: string | undefined`
+- `clientId: string`
 - `placement: string`
 
 ### Breadcrumb — `src/components/board/breadcrumb.tsx`
@@ -578,6 +580,7 @@ Props:
 
 Props:
 
+- `ads?: BoardAdsConfig | undefined`
 - `breadcrumb?: BreadcrumbData | undefined`
 - `companies: CompanyCardVM[]`
 - `count: number`
@@ -770,6 +773,7 @@ Usage: Fetch with board.jobs.list({ ...filters, cursor, limit: 20 }) (board.jobs
 
 Props:
 
+- `ads?: BoardAdsConfig | undefined`
 - `count?: number | undefined`
 - `detail: ReactNode`
 - `endAd?: AdPlacement | undefined`
@@ -1061,6 +1065,7 @@ Props:
 
 Props:
 
+- `ads?: BoardAdsConfig | undefined`
 - `candidates: TalentCardVM[]`
 - `count: number`
 - `detail: ReactNode`

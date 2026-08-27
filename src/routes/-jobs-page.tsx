@@ -37,6 +37,7 @@ export function JobsPage() {
   return (
     <>
       <JobSearchPage
+        ads={board.ads}
         jobs={page.data.map((job) => toJobCardVM(job, getLocale()))}
         count={page.count}
         gatedCount={page.gatedCount}

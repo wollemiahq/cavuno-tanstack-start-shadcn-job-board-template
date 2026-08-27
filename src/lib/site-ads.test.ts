@@ -1,76 +1,35 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  adsClientId,
-  adsEnabled,
-  adsSlot,
-  adsSlotFromFile,
-  readAds,
-} from './site-ads';
+import { adsSlot, adsSlotFromFile } from './site-ads';
 
 describe('stock src/ads.json', () => {
-  it('is off and yields no slots', () => {
-    expect(adsEnabled()).toBe(false);
-    expect(adsClientId()).toBeNull();
-    expect(adsSlot('jobs:list.banner')).toBeNull();
-    expect(adsSlot('jobs:list.footer')).toBeNull();
+  it('yields no slots until an operator fills placement ids', () => {
+    expect(adsSlot('search:rail.start')).toBeNull();
+    expect(adsSlot('search:rail.end')).toBeNull();
     expect(adsSlot('blog:post.sidebar')).toBeNull();
-    expect(adsSlot('job:detail.similar')).toBeNull();
   });
 });
 
-describe('readAds', () => {
-  const validClient = 'ca-pub-1234567890123456';
+describe('adsSlotFromFile', () => {
   const validSlot = '1234567890';
-
-  it('enables only when enabled is true and clientId matches ca-pub- plus 16 digits', () => {
-    expect(
-      readAds({
-        enabled: true,
-        clientId: validClient,
-        slots: {},
-      }).enabled,
-    ).toBe(true);
-    expect(
-      readAds({
-        enabled: true,
-        clientId: 'ca-pub-123',
-        slots: {},
-      }).enabled,
-    ).toBe(false);
-    expect(
-      readAds({
-        enabled: false,
-        clientId: validClient,
-        slots: {},
-      }).enabled,
-    ).toBe(false);
-  });
 
   it('returns a slot only when that placement is enabled with a 10-digit slotId', () => {
     const file = {
-      enabled: true,
-      clientId: validClient,
       slots: {
-        'jobs:list.banner': {
+        'search:rail.start': {
           enabled: true,
           slotId: validSlot,
-          layout: 'in-article',
-          format: 'auto',
-          style: 'display:block',
+          format: 'vertical',
         },
-        'jobs:list.footer': { enabled: false, slotId: validSlot },
+        'search:rail.end': { enabled: false, slotId: validSlot },
         'blog:post.sidebar': { enabled: true, slotId: 'short' },
       },
     };
-    expect(adsSlotFromFile(file, 'jobs:list.banner')).toEqual({
+    expect(adsSlotFromFile(file, 'search:rail.start')).toEqual({
       slotId: validSlot,
-      layout: 'in-article',
-      format: 'auto',
-      style: 'display:block',
+      format: 'vertical',
     });
-    expect(adsSlotFromFile(file, 'jobs:list.footer')).toBeNull();
+    expect(adsSlotFromFile(file, 'search:rail.end')).toBeNull();
     expect(adsSlotFromFile(file, 'blog:post.sidebar')).toBeNull();
-    expect(adsSlotFromFile(file, 'job:detail.similar')).toBeNull();
   });
 });

@@ -10,17 +10,19 @@ import {
   relatedSearchesTitle,
   relatedSearchesToChips,
 } from '@/board/related-searches';
-import { BoardAdSlot } from '@/components/board/board-ad-slot';
 import { JobSearchResult } from '@/components/board/job-search-result';
 import { JobsFilterControls } from '@/components/board/jobs-filter-controls';
 import { JobsResultsBar } from '@/components/board/jobs-results-bar';
+import {
+  listingAdRail,
+  type AdPlacement,
+} from '@/components/board/listing-ad-rail';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { SaveJobButton } from '@/components/board/save-job-button';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { Page } from '@/components/layout/page';
 import {
-  AdRail,
   SearchResultDetail,
   SearchResultsLayout,
   SearchResultsList,
@@ -37,14 +39,13 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
+import type { BoardAdsConfig } from '@/lib/board-ads';
 import { localizePath } from '@/lib/localized-path';
 import { listingPageHref } from '@/lib/pagination';
 import type { RelatedSearch } from '@cavuno/board';
 import type { ListingFilters } from '@cavuno/board/filters';
-type AdPlacement = {
-  label: string;
-  content: React.ReactNode;
-};
+
+const ADS_OFF: BoardAdsConfig = { enabled: false, clientId: null };
 
 function JobsEmpty({
   filters,
@@ -104,6 +105,7 @@ export function JobSearchPage({
   detail,
   startAd,
   endAd,
+  ads = ADS_OFF,
   viewer,
   onSaveJob,
 }: {
@@ -125,6 +127,7 @@ export function JobSearchPage({
   detail: React.ReactNode;
   startAd?: AdPlacement;
   endAd?: AdPlacement;
+  ads?: BoardAdsConfig;
   viewer: { emailVerified: boolean } | null;
   onSaveJob: (jobId: string) => Promise<void>;
 }) {
@@ -178,23 +181,14 @@ export function JobSearchPage({
         >
           {jobVms.length === 0 ? (
             <SearchResultsLayout
-              startAd={
-                startAd ? (
-                  <AdRail label={startAd.label}>{startAd.content}</AdRail>
-                ) : undefined
-              }
-              endAd={
-                endAd ? (
-                  <AdRail label={endAd.label}>{endAd.content}</AdRail>
-                ) : undefined
-              }
+              startAd={listingAdRail(startAd, 'start', ads)}
+              endAd={listingAdRail(endAd, 'end', ads)}
               list={
                 <div
                   data-slot="job-empty-results"
                   className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0"
                 >
                   <div className="space-y-4">{resultsBar}</div>
-                  <BoardAdSlot placement="jobs:list.banner" className="py-4" />
                   <JobsEmpty
                     filters={filters}
                     hasRouteConstraint={Boolean(heading)}
@@ -205,16 +199,8 @@ export function JobSearchPage({
             />
           ) : (
             <SearchResultsLayout
-              startAd={
-                startAd ? (
-                  <AdRail label={startAd.label}>{startAd.content}</AdRail>
-                ) : undefined
-              }
-              endAd={
-                endAd ? (
-                  <AdRail label={endAd.label}>{endAd.content}</AdRail>
-                ) : undefined
-              }
+              startAd={listingAdRail(startAd, 'start', ads)}
+              endAd={listingAdRail(endAd, 'end', ads)}
               list={
                 <SearchResultsList
                   ref={selection.listRef}
@@ -222,8 +208,6 @@ export function JobSearchPage({
                   scrollRestorationId="jobs-search-results"
                 >
                   <div className="space-y-4">{resultsBar}</div>
-
-                  <BoardAdSlot placement="jobs:list.banner" className="py-4" />
 
                   <div className="space-y-3">
                     {jobVms.map((vm) => (
@@ -291,8 +275,6 @@ export function JobSearchPage({
                     }
                     onPageChange={onPageChange}
                   />
-
-                  <BoardAdSlot placement="jobs:list.footer" className="py-4" />
 
                   {relatedChips.length > 0 ? (
                     <section
