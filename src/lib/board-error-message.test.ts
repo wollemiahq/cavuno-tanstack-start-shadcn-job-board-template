@@ -50,6 +50,12 @@ describe('board error code map', () => {
       'already_invited',
       'invalid_email',
       'candidate_role',
+      'messaging_talent_access_required',
+      'talent_access_required',
+      'talent_access_unavailable',
+      'company_required',
+      'already_on_plan',
+      'stripe_not_connected',
     ];
     const unmapped = reachable.filter((code) => !(code in CODE_MESSAGES));
     expect(unmapped).toEqual([]);

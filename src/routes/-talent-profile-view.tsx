@@ -26,6 +26,8 @@ const PRICING_HREF = '/employers';
 export function TalentProfilePageView({
   profile,
   user,
+  hasTalentAccess = false,
+  canStartMessage,
   messagingEnabled,
   locationHref,
   onStartConversation,
@@ -33,6 +35,8 @@ export function TalentProfilePageView({
 }: {
   profile: Awaited<ReturnType<typeof getTalentProfilePage>>['profile'];
   user: Pick<NonNullable<RootSessionValue['user']>, 'role'> | null;
+  hasTalentAccess?: boolean;
+  canStartMessage?: boolean;
   messagingEnabled: boolean;
   locationHref: string;
   onStartConversation: StartTalentConversation;
@@ -43,7 +47,11 @@ export function TalentProfilePageView({
     user === null
       ? { kind: 'anonymous' }
       : user.role === 'employer'
-        ? { kind: 'employer', hasTalentAccess: true }
+        ? {
+            kind: 'employer',
+            hasTalentAccess,
+            canStartMessage: canStartMessage ?? hasTalentAccess,
+          }
         : { kind: 'candidate' };
   const cta = resolveTalentDetailCta({
     viewer,
@@ -54,6 +62,7 @@ export function TalentProfilePageView({
     labels: {
       message: m.talentSearch_messageLabel(),
       viewProfile: vm.viewProfileLabel,
+      upgrade: m.talentSearch_upgradeToMessageLabel(),
     },
     showViewProfile: false,
     messagingEnabled,

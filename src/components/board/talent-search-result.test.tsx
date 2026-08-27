@@ -9,6 +9,7 @@ import { TalentSearchResult } from './talent-search-result';
 import type { TalentCardVM } from '@/board/talent-view-model';
 
 const vm: TalentCardVM = {
+  id: 'bu_ada-lovelace',
   handle: 'ada-lovelace',
   detailHref: '/p/ada-lovelace',
   displayName: 'Ada Lovelace',
@@ -18,6 +19,7 @@ const vm: TalentCardVM = {
   location: 'London, United Kingdom',
   jobSearchStatusLabel: 'Open to offers',
   skills: ['Analytical engines', 'Mathematics'],
+  redacted: false,
 };
 
 afterEach(cleanup);
@@ -73,6 +75,36 @@ describe('TalentSearchResult', () => {
       container.querySelector("[data-slot='search-result-card']")!,
     );
     expect(onActivate).not.toHaveBeenCalled();
+  });
+
+  it('renders a redacted card with the initials fallback and the name the API sent', () => {
+    const { container } = render(
+      <TalentSearchResult
+        vm={{
+          ...vm,
+          displayName: 'Ada L',
+          avatarName: 'Ada L',
+          avatarUrl: null,
+          headline: null,
+          location: 'London, United Kingdom',
+          jobSearchStatusLabel: null,
+          skills: [],
+          redacted: true,
+          detailHref: '/p/bu_ada-lovelace',
+        }}
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: /Ada L/i })).toHaveAttribute(
+      'href',
+      '/p/bu_ada-lovelace',
+    );
+    expect(screen.getByText('AL')).toBeVisible();
+    expect(screen.queryByText('Computing pioneer')).toBeNull();
+    expect(screen.queryByText('Analytical engines')).toBeNull();
+    expect(
+      container.querySelector("[data-slot='search-result-card']"),
+    ).toHaveAttribute('data-redacted', 'true');
   });
 
   it('omits optional candidate facts rather than inventing placeholders', () => {

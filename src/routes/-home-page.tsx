@@ -2,6 +2,7 @@ import { jobsCategoryPath } from '@cavuno/board/paths';
 import { getRouteApi } from '@tanstack/react-router';
 
 import { toJobCardVM } from '@/board/job-view-model';
+import { sellsTalentProfileUnlocks } from '@/board/talent-view-model';
 import { HomeLanding } from '@/components/board/home-landing';
 import { JobAlertFloatingPrompt } from '@/components/job-alert-floating-prompt';
 import { useRootSession } from '@/components/root-session';
@@ -27,7 +28,7 @@ export function HomePage() {
     talentCount,
   } = routeApi.useLoaderData();
   const { board } = rootApi.useLoaderData();
-  const { user } = useRootSession();
+  const { user, talentAccess } = useRootSession();
   const copy = {
     entity: entityCopy(),
   };
@@ -116,6 +117,7 @@ export function HomePage() {
         companies={hiringCompanies}
         posts={posts}
         talent={talent}
+        profileUnlocks={sellsTalentProfileUnlocks(talentAccess.accessModel)}
         boardName={board.name}
         candidatesEnabled={board.features.candidates}
         employersEnabled={board.features.employers}

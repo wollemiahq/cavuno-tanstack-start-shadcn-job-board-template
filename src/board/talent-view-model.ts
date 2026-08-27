@@ -1,6 +1,11 @@
 import { normalizeWebsiteUrl } from '@cavuno/board/format';
 
-import type { TalentDirectoryEntry, TalentProfile } from '@cavuno/board';
+import type {
+  TalentAccess,
+  TalentCandidateAccess,
+  TalentDirectoryEntry,
+  TalentProfile,
+} from '@cavuno/board';
 
 export interface TalentViewModelLabels {
   anonymousCandidate: string;
@@ -18,6 +23,7 @@ export interface TalentViewModelLabels {
 }
 
 export interface TalentCardVM {
+  id: string;
   handle: string | null;
   detailHref: string | null;
   displayName: string;
@@ -27,6 +33,23 @@ export interface TalentCardVM {
   location: string | null;
   jobSearchStatusLabel: string | null;
   skills: string[];
+  /**
+   * True when the API withheld the card's identifying fields. The starter
+   * renders the redacted payload as given (initials + "First L"); it does
+   * not invent extra blur.
+   */
+  redacted: boolean;
+}
+
+export interface TalentCardMappingOptions {
+  /**
+   * When the board sells profile unlocks, directory cards must link to the
+   * opaque `/p/{id}` route so the unlock gate can apply. Named `/p/{handle}`
+   * is the share bypass. Thread this in rather than reading session state;
+   * redacted payloads still route opaquely even when the caller does not
+   * know the board's access model (anonymous viewers get an empty grant).
+   */
+  profileUnlocks?: boolean;
 }
 
 export interface TalentExperienceVM {
@@ -82,8 +105,92 @@ export interface TalentProfileVM extends TalentCardVM {
   viewProfileLabel: string;
 }
 
-function profilePath(handle: string | null) {
-  return handle ? `/p/${encodeURIComponent(handle)}` : null;
+function profilePath(param: string | null) {
+  return param ? `/p/${encodeURIComponent(param)}` : null;
+}
+
+/**
+ * Redaction keeps the first name and cuts the surname to a single initial
+ * (`"Ada L"`), or drops it entirely for a mononym (`"Prince"` stays
+ * `"Prince"`). The initial is upper-cased but is not necessarily Latin, so
+ * this matches any single-character final token rather than `[A-Z]`.
+ *
+ * A mononym is indistinguishable from an unredacted one, which is why this
+ * is only ever a fallback signal: the board's access model decides.
+ */
+function isRedactedDisplayName(name: string | null) {
+  if (name === null) return false;
+  const tokens = name.trim().split(/\s+/);
+  if (tokens.length === 1) return tokens[0] !== '';
+  return [...(tokens[tokens.length - 1] ?? '')].length === 1;
+}
+
+/**
+ * The unlocks model redacts directory entries server-side: `avatarUrl`,
+ * `headline`, `summary`, and `skills` are withheld and the name is
+ * `"First L"`. Detect that payload rather than inventing a client-side
+ * redaction.
+ */
+export function isRedactedTalentDirectoryEntry(
+  candidate: Pick<
+    TalentDirectoryEntry,
+    'avatarUrl' | 'headline' | 'summary' | 'skills' | 'displayName'
+  >,
+) {
+  return (
+    candidate.avatarUrl === null &&
+    candidate.headline === null &&
+    candidate.summary === null &&
+    candidate.skills.length === 0 &&
+    isRedactedDisplayName(candidate.displayName)
+  );
+}
+
+export function isRedactedTalentProfile(
+  profile: Pick<
+    TalentProfile,
+    'avatarUrl' | 'headline' | 'bio' | 'skills' | 'education' | 'displayName'
+  >,
+) {
+  return (
+    profile.avatarUrl === null &&
+    profile.headline === null &&
+    (profile.bio === null || profile.bio === '') &&
+    profile.skills.length === 0 &&
+    profile.education.length === 0 &&
+    isRedactedDisplayName(profile.displayName)
+  );
+}
+
+/** Named `/p/{handle}` is the share bypass; opaque `/p/{id}` is the gate. */
+export function isOpaqueTalentRoute(
+  routeParam: string,
+  profileHandle: string | null,
+) {
+  return profileHandle !== routeParam;
+}
+
+export function sellsTalentProfileUnlocks(
+  accessModel: TalentAccess['accessModel'],
+) {
+  return accessModel === 'paid_unlocks_and_messaging';
+}
+
+export function employerCanStartMessage(access: {
+  hasTalentAccess: boolean;
+  accessModel: TalentAccess['accessModel'];
+  hasUnlimitedMessages: boolean;
+  messageCreditsRemaining: number;
+}) {
+  if (!access.hasTalentAccess) return false;
+  if (access.accessModel === 'none') return true;
+  return access.hasUnlimitedMessages || access.messageCreditsRemaining > 0;
+}
+
+/** The URL param a card's `detailHref` selects (`id` or `handle`). */
+export function talentCardSelectionKey(vm: TalentCardVM): string | null {
+  if (!vm.detailHref) return null;
+  return decodeURIComponent(vm.detailHref.slice('/p/'.length));
 }
 
 function enumLabel(
@@ -128,12 +235,17 @@ function formatMonthRange(
 export function toTalentCardVM(
   candidate: TalentDirectoryEntry,
   labels: TalentViewModelLabels,
+  options?: TalentCardMappingOptions,
 ): TalentCardVM {
   const displayName = candidate.displayName ?? labels.anonymousCandidate;
+  const redacted = isRedactedTalentDirectoryEntry(candidate);
+  const profileUnlocks = options?.profileUnlocks === true || redacted;
+  const detailParam = profileUnlocks ? candidate.id : candidate.handle;
 
   return {
+    id: candidate.id,
     handle: candidate.handle,
-    detailHref: profilePath(candidate.handle),
+    detailHref: profilePath(detailParam),
     displayName,
     avatarUrl: candidate.avatarUrl,
     avatarName: displayName,
@@ -144,6 +256,7 @@ export function toTalentCardVM(
       labels.jobSearchStatuses,
     ),
     skills: candidate.skills,
+    redacted,
   };
 }
 
@@ -157,6 +270,7 @@ export function toTalentProfileVM(
   profile: TalentProfile,
   language: string,
   labels: TalentViewModelLabels,
+  options?: TalentCardMappingOptions,
 ): TalentProfileVM {
   // Detail wire has full `bio` (no card `summary`); synthetic entry only
   // feeds the shared card fields (handle/name/headline/…).
@@ -170,6 +284,7 @@ export function toTalentProfileVM(
       education: profile.education,
     },
     labels,
+    options,
   );
 
   return {
@@ -243,11 +358,22 @@ export function toTalentProfileVM(
 export type TalentDetailViewer =
   | { kind: 'anonymous' }
   | { kind: 'candidate' }
-  | { kind: 'employer'; hasTalentAccess: boolean };
+  | {
+      kind: 'employer';
+      hasTalentAccess: boolean;
+      /**
+       * Remaining first-message credits (or unlimited / inert paywall).
+       * Defaults to `hasTalentAccess` when omitted so older call sites stay
+       * honest for boards that do not sell message credits.
+       */
+      canStartMessage?: boolean;
+    };
 
 export interface TalentDetailCtaLabels {
   message: string;
   viewProfile: string;
+  /** Employer with access but no remaining message credits. */
+  upgrade?: string;
 }
 
 export interface TalentDetailCtaLink {
@@ -278,6 +404,7 @@ export interface TalentDetailCta {
  *  - candidate               → no Message (candidates can't cold-message
  *                              candidates); only the View-profile link.
  *  - employer, no access     → Message routes to pricing (`pricingHref`).
+ *  - employer, access, no message credits → same pricing upsell (upgrade).
  *  - employer, has access    → composer targeting the public candidate handle.
  *
  * `conversations.start` accepts the public candidate handle and converges on
@@ -321,19 +448,25 @@ export function resolveTalentDetailCta(input: {
       href: input.signInHref,
     };
   } else if (viewer.kind === 'employer') {
-    message = viewer.hasTalentAccess
-      ? input.candidateHandle
+    const canStartMessage = viewer.canStartMessage ?? viewer.hasTalentAccess;
+    if (viewer.hasTalentAccess && canStartMessage) {
+      message = input.candidateHandle
         ? {
             kind: 'compose',
             label: labels.message,
             candidateHandle: input.candidateHandle,
           }
-        : null
-      : {
-          kind: 'link',
-          label: labels.message,
-          href: input.pricingHref,
-        };
+        : null;
+    } else {
+      message = {
+        kind: 'link',
+        label:
+          viewer.hasTalentAccess && labels.upgrade
+            ? labels.upgrade
+            : labels.message,
+        href: input.pricingHref,
+      };
+    }
   }
 
   // Never render two controls pointing at the same place.
@@ -346,4 +479,74 @@ export function resolveTalentDetailCta(input: {
         ? null
         : viewProfile,
   };
+}
+
+export type TalentProfileSurface =
+  | 'profile'
+  | 'pending'
+  | 'unlock_needed'
+  | 'out_of_unlocks'
+  | 'no_plan';
+
+/**
+ * Decide whether `/p/$handle` renders the public profile or an unlock gate.
+ * Named `/p/{handle}` is always the full profile (share bypass); the opaque
+ * `/p/{id}` route is the one the paywall gates.
+ *
+ * `sellsUnlocks` (the board's access model) is the signal, not the shape of
+ * the payload: redaction leaves no reliable marker on a mononym or a
+ * non-Latin surname, and sniffing for one would strand exactly those
+ * candidates behind a blank profile with no way to unlock them. Payload
+ * detection stays only as the fallback for a viewer whose access model we do
+ * not have (anonymous), where the answer is `no_plan` either way.
+ */
+export function resolveTalentProfileSurface(input: {
+  routeParam: string;
+  profile: Pick<
+    TalentProfile,
+    | 'handle'
+    | 'avatarUrl'
+    | 'headline'
+    | 'bio'
+    | 'skills'
+    | 'education'
+    | 'displayName'
+  >;
+  sellsUnlocks: boolean;
+  viewerRole: 'employer' | 'candidate' | null;
+  candidateAccess: Pick<
+    TalentCandidateAccess,
+    | 'alreadyUnlocked'
+    | 'hasUnlimitedUnlocks'
+    | 'hasActiveTalentSubscription'
+    | 'unlockCreditsRemaining'
+  > | null;
+  candidateAccessReady: boolean;
+}): TalentProfileSurface {
+  if (!isOpaqueTalentRoute(input.routeParam, input.profile.handle)) {
+    return 'profile';
+  }
+  if (!input.sellsUnlocks && !isRedactedTalentProfile(input.profile)) {
+    return 'profile';
+  }
+  if (input.viewerRole !== 'employer') {
+    return 'no_plan';
+  }
+  if (!input.candidateAccessReady) {
+    return 'pending';
+  }
+  const access = input.candidateAccess;
+  if (!access) {
+    return 'no_plan';
+  }
+  if (access.alreadyUnlocked || access.hasUnlimitedUnlocks) {
+    return 'profile';
+  }
+  if (!access.hasActiveTalentSubscription) {
+    return 'no_plan';
+  }
+  if (access.unlockCreditsRemaining > 0) {
+    return 'unlock_needed';
+  }
+  return 'out_of_unlocks';
 }

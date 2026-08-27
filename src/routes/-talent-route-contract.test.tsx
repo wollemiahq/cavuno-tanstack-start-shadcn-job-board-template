@@ -9,6 +9,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -20,6 +21,7 @@ import {
   type TalentProfileRouteDependencies,
 } from './-talent-loaders';
 import { TalentProfilePageView } from './-talent-profile-view';
+import { TalentUnlockGate } from './-talent-unlock-gate';
 import { Route as ProfileRoute } from './p.$handle';
 import { Route as TalentRoute } from './talent.index';
 
@@ -43,6 +45,7 @@ const seo = {
 
 const profile: TalentProfilePageData['profile'] = {
   object: 'talent_profile',
+  id: 'bu_ada-lovelace',
   handle: 'ada-lovelace',
   displayName: 'Ada Lovelace',
   headline: 'Robotics engineer',
@@ -168,15 +171,21 @@ beforeEach(() => {
 
 function renderProfile({
   user = null,
+  hasTalentAccess = false,
+  canStartMessage,
   messagingEnabled = true,
 }: {
   user?: { role: 'employer' | 'candidate' } | null;
+  hasTalentAccess?: boolean;
+  canStartMessage?: boolean;
   messagingEnabled?: boolean;
 } = {}) {
   return render(
     <TalentProfilePageView
       profile={profile}
       user={user}
+      hasTalentAccess={hasTalentAccess}
+      canStartMessage={canStartMessage}
       messagingEnabled={messagingEnabled}
       locationHref="/p/ada-lovelace"
       onStartConversation={onStartConversation}
@@ -407,8 +416,17 @@ describe('canonical talent profile route', () => {
     );
   });
 
+  it('routes an employer without talent access to pricing', () => {
+    renderProfile({ user: { role: 'employer' }, hasTalentAccess: false });
+
+    expect(screen.getByRole('link', { name: 'Message' })).toHaveAttribute(
+      'href',
+      '/employers',
+    );
+  });
+
   it('lets an eligible employer message the candidate by public handle', async () => {
-    renderProfile({ user: { role: 'employer' } });
+    renderProfile({ user: { role: 'employer' }, hasTalentAccess: true });
 
     fireEvent.click(screen.getByRole('button', { name: 'Message' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Send a message' }), {
@@ -450,5 +468,117 @@ describe('canonical talent profile route', () => {
     });
 
     expect(screen.queryByRole('link', { name: 'Message' })).toBeNull();
+  });
+
+  it('offers an upgrade link when an employer has access but no message credits', () => {
+    renderProfile({
+      user: { role: 'employer' },
+      hasTalentAccess: true,
+      canStartMessage: false,
+    });
+
+    expect(
+      screen.getByRole('link', { name: 'Upgrade to message' }),
+    ).toHaveAttribute('href', '/employers');
+    expect(screen.queryByRole('button', { name: 'Message' })).toBeNull();
+  });
+
+  it('renders the named profile without an unlock gate', () => {
+    renderProfile();
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Ada Lovelace' }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('heading', { name: 'Unlock this profile' }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole('heading', { name: 'Talent access required' }),
+    ).toBeNull();
+  });
+});
+
+describe('opaque talent profile unlock gate', () => {
+  it('confirms an unlock when the employer still has credits', async () => {
+    const onUnlock = vi.fn().mockResolvedValue(undefined);
+    render(
+      <TalentUnlockGate
+        surface="unlock_needed"
+        creditsRemaining={2}
+        plans={[]}
+        busy={null}
+        onUnlock={onUnlock}
+        onUpgrade={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Unlock profile' }));
+    const dialog = screen.getByRole('alertdialog');
+    expect(dialog).toBeVisible();
+    fireEvent.click(
+      within(dialog).getByRole('button', { name: 'Unlock profile' }),
+    );
+
+    await waitFor(() => expect(onUnlock).toHaveBeenCalledOnce());
+  });
+
+  it('offers in-place plan upgrades when unlock credits are exhausted', () => {
+    const onUpgrade = vi.fn();
+    render(
+      <TalentUnlockGate
+        surface="out_of_unlocks"
+        creditsRemaining={0}
+        plans={[
+          {
+            object: 'plan',
+            id: 'plan-pro',
+            name: 'Talent access — monthly',
+            description: null,
+            purpose: 'talent_access',
+            kind: 'subscription',
+            billingInterval: 'month',
+            isRecommended: true,
+            displayOrder: 1,
+            invoiceOnly: false,
+            publishTiming: 'on_payment',
+            netTermsDays: null,
+            price: {
+              currency: 'usd',
+              amountCents: 4900,
+              stripePriceId: 'price_talent',
+            },
+            featureSummary: {
+              durationDays: 30,
+              maxActiveJobs: 0,
+              featuredSlots: 0,
+              featureSelectionMode: 'manual',
+            },
+          },
+        ]}
+        busy={null}
+        onUnlock={vi.fn()}
+        onUpgrade={onUpgrade}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Upgrade' }));
+    expect(onUpgrade).toHaveBeenCalledWith('plan-pro');
+  });
+
+  it('sends viewers without a talent plan to /employers', () => {
+    render(
+      <TalentUnlockGate
+        surface="no_plan"
+        creditsRemaining={0}
+        plans={[]}
+        busy={null}
+        onUnlock={vi.fn()}
+        onUpgrade={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole('link', { name: 'View talent plans' }),
+    ).toHaveAttribute('href', '/employers');
   });
 });

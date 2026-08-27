@@ -1,8 +1,10 @@
 import type { TalentProfileVM } from '@/board/talent-view-model';
 
 export const profileVm: TalentProfileVM = {
+  id: 'bu_ada-lovelace',
   handle: 'ada-lovelace',
   detailHref: '/p/ada-lovelace',
+  redacted: false,
   displayName: 'Ada Lovelace',
   avatarUrl: 'https://cdn.example/ada.jpg',
   avatarName: 'Ada Lovelace',
