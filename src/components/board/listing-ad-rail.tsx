@@ -41,16 +41,18 @@ export function listingAdRail(
   if (override) {
     return <AdRail label={override.label}>{override.content}</AdRail>;
   }
-  if (!wide || !ads.enabled || !ads.clientId) return undefined;
+  if (!ads.enabled || !ads.clientId) return undefined;
   const placement = side === 'start' ? 'search:rail.start' : 'search:rail.end';
   if (!adsSlot(placement)) return undefined;
   return (
     <AdRail label={m.adRail_label()}>
-      <BoardAdSlot
-        placement={placement}
-        clientId={ads.clientId}
-        layout="rail"
-      />
+      {wide ? (
+        <BoardAdSlot
+          placement={placement}
+          clientId={ads.clientId}
+          layout="rail"
+        />
+      ) : null}
     </AdRail>
   );
 }

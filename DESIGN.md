@@ -476,6 +476,7 @@ Props:
 
 - `className?: string | undefined`
 - `clientId: string`
+- `layout?: "responsive" | "rail" | undefined`
 - `placement: string`
 
 ### Breadcrumb — `src/components/board/breadcrumb.tsx`
@@ -2901,7 +2902,7 @@ Variants — `variant`: default, icon
 
 Props:
 
-- `orientation?: "horizontal" | "vertical" | "responsive" | null | undefined`
+- `orientation?: "responsive" | "horizontal" | "vertical" | null | undefined`
 
 Variants — `orientation`: vertical, horizontal, responsive
 

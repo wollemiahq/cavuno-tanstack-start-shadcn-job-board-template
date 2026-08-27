@@ -10,7 +10,7 @@ describe('listingAdRail', () => {
     expect(listingAdRail(undefined, 'start', ADS_OFF, true)).toBeUndefined();
   });
 
-  it('returns nothing for default rails below 1600px so AdSense is not requested while hidden', () => {
+  it('returns nothing when ads are on but git has no slot id for the rail', () => {
     expect(
       listingAdRail(
         undefined,

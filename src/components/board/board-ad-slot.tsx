@@ -49,7 +49,7 @@ export function BoardAdSlot({
         className="adsbygoogle"
         data-ad-client={clientId}
         data-ad-slot={slotId}
-        data-ad-format={slot.format ?? (isRail ? 'vertical' : undefined)}
+        data-ad-format={slot.format}
         data-ad-layout={slot.layout}
         data-full-width-responsive={isRail ? undefined : 'true'}
         style={
