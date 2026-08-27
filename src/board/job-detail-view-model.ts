@@ -26,6 +26,7 @@ import {
   customFieldLabel,
   customFieldOptionLabel,
 } from '@/board/custom-field-labels';
+import { resolveJobForm } from '@/board/job-form';
 import { jobDetailCopy } from '@/copy-groups/job-detail';
 import { enumLabel } from '@/lib/enum-labels';
 import { jobBreadcrumbItems } from '@/lib/job-breadcrumbs';
@@ -130,6 +131,7 @@ export function toJobDetailVM(
    * breaks it, which is why this is two arguments and not one.
    */
   displayLocale: string = language,
+  jobForm?: unknown,
 ): JobDetailVM {
   const copy = jobDetailCopy();
   const company = job.company;
@@ -320,13 +322,15 @@ export function toJobDetailVM(
       }
     : null;
 
-  const salaryLabel = formatJobSalary(
-    displayLocale,
-    job.salaryMin,
-    job.salaryMax,
-    job.salaryTimeframe,
-    job.salaryCurrency,
-  );
+  const salaryLabel = resolveJobForm(jobForm).salary.visible
+    ? formatJobSalary(
+        displayLocale,
+        job.salaryMin,
+        job.salaryMax,
+        job.salaryTimeframe,
+        job.salaryCurrency,
+      )
+    : null;
   const published = formatPublishedRelativeDate(displayLocale, job.publishedAt);
   // Resolve remote work-permit ISO codes to country names the same way the
   // card mapper does (the SDK's card location label reads names the API

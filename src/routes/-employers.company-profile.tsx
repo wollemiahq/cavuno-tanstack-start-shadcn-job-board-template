@@ -284,6 +284,10 @@ export function CompanyProfilePageView({
                 ? null
                 : Math.max(0, (members?.data.length ?? 0) - 1)
             }
+            deletionEnabled={
+              (employerCompany as { deletionEnabled?: boolean })
+                .deletionEnabled !== false
+            }
             actions={actions}
           />
 

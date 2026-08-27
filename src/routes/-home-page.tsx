@@ -48,7 +48,7 @@ export function HomePage() {
       : undefined;
   };
 
-  const jobs = page.data.map((job) => toJobCardVM(job, getLocale()));
+  const jobs = page.data.map((job) => toJobCardVM(job, getLocale(), board));
   const hiringCompanies = companies
     .filter((company) => company.publishedJobCount > 0)
     .map((company) => ({

@@ -25,6 +25,7 @@ import { salaryCurrencyOptions } from '../lib/salary-currencies';
 import { m } from '../paraglide/messages';
 import { checkoutJob, createJob, updateJob } from '../server/employers';
 
+import { resolveJobForm, type JobFormVisibility } from '@/board/job-form';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import { planFeatureLines } from '@/board/plan-view-model';
 import type { LocationSuggestionState } from '@/components/location-combobox';
@@ -127,6 +128,8 @@ export type EmployerJobFormProps = {
   billingOptions: EmployerBillingOption[];
   officeLocationSuggestions: LocationSuggestionState;
   mode: EmployerJobFormMode;
+  /** Built-in field visibility from `board.context().jobForm`. */
+  jobForm?: JobFormVisibility | unknown;
   /** Prefill for edit mode. */
   job?: EmployerJob;
   dependencies?: EmployerJobFormDependencies;
@@ -247,8 +250,10 @@ export function EmployerJobForm({
   officeLocationSuggestions,
   mode,
   job,
+  jobForm: jobFormSource,
   dependencies,
 }: EmployerJobFormProps) {
+  const jobForm = resolveJobForm(jobFormSource);
   const router = useRouter();
   const actions: EmployerJobFormDependencies = dependencies ?? {
     createJob,
@@ -364,8 +369,9 @@ export function EmployerJobForm({
       employmentType: form.employmentType,
       remoteOption: form.remoteOption,
     };
-    if (form.seniority) body.seniority = form.seniority;
-    if (form.officeLocations.length > 0) {
+    if (jobForm.seniority.visible && form.seniority)
+      body.seniority = form.seniority;
+    if (jobForm.location.visible && form.officeLocations.length > 0) {
       body.officeLocations = form.officeLocations.map((location) => ({
         query: location.displayName,
       }));
@@ -376,7 +382,7 @@ export function EmployerJobForm({
           ? form.permitSelections.map(({ type, value }) => ({ type, value }))
           : [{ type: 'worldwide', value: 'worldwide' }];
     }
-    if (salaryRange) {
+    if (jobForm.salary.visible && salaryRange) {
       body.salaryMin = salaryMin;
       body.salaryMax = salaryMax;
       body.salaryCurrency = form.currency;
@@ -393,6 +399,7 @@ export function EmployerJobForm({
    * carries the null variant.
    */
   function salaryClear() {
+    if (!jobForm.salary.visible) return {};
     if (mode.kind !== 'edit') return {};
     if (form.salaryMin || form.salaryMax) return {};
     if (job?.salaryMin == null && job?.salaryMax == null) return {};
@@ -475,7 +482,9 @@ export function EmployerJobForm({
     const errors = {
       description: isRichTextEmpty(form.description),
       officeLocations:
-        form.remoteOption !== 'remote' && form.officeLocations.length === 0,
+        jobForm.location.visible &&
+        form.remoteOption !== 'remote' &&
+        form.officeLocations.length === 0,
       applicationTarget: applyExternal,
       billing: billingRequired && selectedBilling === null,
     };
@@ -600,29 +609,33 @@ export function EmployerJobForm({
                 </SelectContent>
               </Select>
             </Field>
-            <Field>
-              <FieldLabel htmlFor="job-seniority">
-                {m.postJob_seniorityLabel()}
-              </FieldLabel>
-              <Select
-                items={seniorityItems}
-                value={form.seniority}
-                onValueChange={(value: SeniorityOption | null) =>
-                  set('seniority', value ?? null)
-                }
-              >
-                <SelectTrigger id="job-seniority" className="w-full">
-                  <SelectValue placeholder={m.postJob_seniorityPlaceholder()} />
-                </SelectTrigger>
-                <SelectContent>
-                  {seniorityItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
+            {jobForm.seniority.visible ? (
+              <Field>
+                <FieldLabel htmlFor="job-seniority">
+                  {m.postJob_seniorityLabel()}
+                </FieldLabel>
+                <Select
+                  items={seniorityItems}
+                  value={form.seniority}
+                  onValueChange={(value: SeniorityOption | null) =>
+                    set('seniority', value ?? null)
+                  }
+                >
+                  <SelectTrigger id="job-seniority" className="w-full">
+                    <SelectValue
+                      placeholder={m.postJob_seniorityPlaceholder()}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {seniorityItems.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            ) : null}
           </div>
 
           <Field>
@@ -664,64 +677,68 @@ export function EmployerJobForm({
             </Select>
           </Field>
 
-          <Field data-invalid={fieldErrors.officeLocations || undefined}>
-            <FieldLabel htmlFor="job-office-locations">
-              {m.postJob_officeLocationsLabel()}
-            </FieldLabel>
-            <PlaceTagsField
-              id="job-office-locations"
-              tags={form.officeLocations.map((location) => ({
-                key: location.key,
-                label: location.displayName,
-              }))}
-              onAddSuggestion={(place: LocationSuggestionVM) =>
-                setForm((prev) =>
-                  prev.officeLocations.some(
-                    (location) => location.key === place.id,
+          {jobForm.location.visible ? (
+            <Field data-invalid={fieldErrors.officeLocations || undefined}>
+              <FieldLabel htmlFor="job-office-locations">
+                {m.postJob_officeLocationsLabel()}
+              </FieldLabel>
+              <PlaceTagsField
+                id="job-office-locations"
+                tags={form.officeLocations.map((location) => ({
+                  key: location.key,
+                  label: location.displayName,
+                }))}
+                onAddSuggestion={(place: LocationSuggestionVM) =>
+                  setForm((prev) =>
+                    prev.officeLocations.some(
+                      (location) => location.key === place.id,
+                    )
+                      ? prev
+                      : {
+                          ...prev,
+                          officeLocations: [
+                            ...prev.officeLocations,
+                            { key: place.id, displayName: place.name },
+                          ],
+                        },
                   )
-                    ? prev
-                    : {
-                        ...prev,
-                        officeLocations: [
-                          ...prev.officeLocations,
-                          { key: place.id, displayName: place.name },
-                        ],
-                      },
-                )
-              }
-              onAddFreeText={(text) =>
-                setForm((prev) => ({
-                  ...prev,
-                  officeLocations: [
-                    ...prev.officeLocations,
-                    { key: `text:${text}`, displayName: text },
-                  ],
-                }))
-              }
-              onRemove={(key) =>
-                setForm((prev) => ({
-                  ...prev,
-                  officeLocations: prev.officeLocations.filter(
-                    (location) => location.key !== key,
-                  ),
-                }))
-              }
-              placeholder={m.postJob_officeLocationsPlaceholder()}
-              searchingText={m.locationCombobox_searchingText()}
-              removeAriaLabel={(name) => m.placeTags_removeAriaLabel({ name })}
-              {...officeLocationSuggestions}
-            />
-            {form.remoteOption === 'remote' ? (
-              <FieldDescription>
-                {m.postJob_officeLocationsRemoteHelperText()}
-              </FieldDescription>
-            ) : null}
-            {fieldErrors.officeLocations ? (
-              <FieldError>
-                {m.postJob_officeLocationsRequiredError()}
-              </FieldError>
-            ) : null}
-          </Field>
+                }
+                onAddFreeText={(text) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    officeLocations: [
+                      ...prev.officeLocations,
+                      { key: `text:${text}`, displayName: text },
+                    ],
+                  }))
+                }
+                onRemove={(key) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    officeLocations: prev.officeLocations.filter(
+                      (location) => location.key !== key,
+                    ),
+                  }))
+                }
+                placeholder={m.postJob_officeLocationsPlaceholder()}
+                searchingText={m.locationCombobox_searchingText()}
+                removeAriaLabel={(name) =>
+                  m.placeTags_removeAriaLabel({ name })
+                }
+                {...officeLocationSuggestions}
+              />
+              {form.remoteOption === 'remote' ? (
+                <FieldDescription>
+                  {m.postJob_officeLocationsRemoteHelperText()}
+                </FieldDescription>
+              ) : null}
+              {fieldErrors.officeLocations ? (
+                <FieldError>
+                  {m.postJob_officeLocationsRequiredError()}
+                </FieldError>
+              ) : null}
+            </Field>
+          ) : null}
 
           {form.remoteOption === 'remote' ? (
             <Field>
@@ -796,80 +813,82 @@ export function EmployerJobForm({
             ) : null}
           </Field>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <Field>
-              <FieldLabel htmlFor="job-currency">
-                {m.postJob_currencyLabel()}
-              </FieldLabel>
-              <Select
-                items={currencyItems}
-                value={form.currency}
-                onValueChange={(value: string | null) =>
-                  set('currency', value ?? 'USD')
-                }
-              >
-                <SelectTrigger id="job-currency" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencyItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="job-salary-timeframe">
-                {m.postJob_salaryTimeframeLabel()}
-              </FieldLabel>
-              <Select
-                items={timeframeItems}
-                value={form.salaryTimeframe}
-                onValueChange={(value: SalaryTimeframe | null) =>
-                  set('salaryTimeframe', value ?? DEFAULT_SALARY_TIMEFRAME)
-                }
-              >
-                <SelectTrigger id="job-salary-timeframe" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeframeItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="job-salary-min">
-                {m.postJob_salaryMinLabel()}
-              </FieldLabel>
-              <Input
-                id="job-salary-min"
-                type="number"
-                inputMode="numeric"
-                min={0}
-                value={form.salaryMin}
-                onChange={(event) => set('salaryMin', event.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="job-salary-max">
-                {m.postJob_salaryMaxLabel()}
-              </FieldLabel>
-              <Input
-                id="job-salary-max"
-                type="number"
-                inputMode="numeric"
-                min={0}
-                value={form.salaryMax}
-                onChange={(event) => set('salaryMax', event.target.value)}
-              />
-            </Field>
-          </div>
+          {jobForm.salary.visible ? (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              <Field>
+                <FieldLabel htmlFor="job-currency">
+                  {m.postJob_currencyLabel()}
+                </FieldLabel>
+                <Select
+                  items={currencyItems}
+                  value={form.currency}
+                  onValueChange={(value: string | null) =>
+                    set('currency', value ?? 'USD')
+                  }
+                >
+                  <SelectTrigger id="job-currency" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencyItems.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="job-salary-timeframe">
+                  {m.postJob_salaryTimeframeLabel()}
+                </FieldLabel>
+                <Select
+                  items={timeframeItems}
+                  value={form.salaryTimeframe}
+                  onValueChange={(value: SalaryTimeframe | null) =>
+                    set('salaryTimeframe', value ?? DEFAULT_SALARY_TIMEFRAME)
+                  }
+                >
+                  <SelectTrigger id="job-salary-timeframe" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeframeItems.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="job-salary-min">
+                  {m.postJob_salaryMinLabel()}
+                </FieldLabel>
+                <Input
+                  id="job-salary-min"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  value={form.salaryMin}
+                  onChange={(event) => set('salaryMin', event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="job-salary-max">
+                  {m.postJob_salaryMaxLabel()}
+                </FieldLabel>
+                <Input
+                  id="job-salary-max"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  value={form.salaryMax}
+                  onChange={(event) => set('salaryMax', event.target.value)}
+                />
+              </Field>
+            </div>
+          ) : null}
 
           <Field>
             <FieldLabel>{m.employerPostJob_applyMethodLabel()}</FieldLabel>

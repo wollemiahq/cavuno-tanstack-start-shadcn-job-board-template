@@ -1,3 +1,5 @@
+import { getRouteApi } from '@tanstack/react-router';
+
 import { m } from '../paraglide/messages';
 
 import type { SelectedCompanyState } from './-use-selected-company';
@@ -7,6 +9,9 @@ import { toJobCardVM } from '@/board/job-view-model';
 import { toOverallSalaryVM } from '@/board/salary-view-model';
 import { CompanySearchDetailState } from '@/components/board/company-search-detail-state';
 import { CompanySearchResultDetail } from '@/components/board/company-search-result-detail';
+
+const rootApi = getRouteApi('__root__');
+
 export function SelectedCompanyDetail({
   state,
   language,
@@ -14,6 +19,7 @@ export function SelectedCompanyDetail({
   state: SelectedCompanyState;
   language: string;
 }) {
+  const { board } = rootApi.useLoaderData();
   const hasSalaries = Boolean(
     state.salarySummary &&
     (state.salarySummary.overallSalary !== null ||
@@ -50,7 +56,7 @@ export function SelectedCompanyDetail({
       vm={toCompanyDetailVM(state.company, getCompanySearchLabels())}
       jobPreviews={(state.jobs?.data ?? [])
         .slice(0, 4)
-        .map((job) => toJobCardVM(job, language))}
+        .map((job) => toJobCardVM(job, language, board))}
       salaryOverall={salaryOverall}
       hasSalaries={hasSalaries}
       interactive={state.status === 'ready'}

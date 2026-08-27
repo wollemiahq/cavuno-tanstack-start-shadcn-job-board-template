@@ -72,7 +72,7 @@ export function ProgrammaticJobsView({
         heading={heading}
         count={count}
         gatedCount={gatedCount}
-        jobs={jobs.map((job) => toJobCardVM(job, getLocale()))}
+        jobs={jobs.map((job) => toJobCardVM(job, getLocale(), board))}
         page={page}
         pageSize={pageSize}
         relatedSearches={relatedSearches}

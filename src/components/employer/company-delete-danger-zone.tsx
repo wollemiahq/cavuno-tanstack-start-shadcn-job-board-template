@@ -45,12 +45,15 @@ export function CompanyDeleteDangerZone({
   companyName,
   isAdmin,
   otherApprovedMembers,
+  deletionEnabled = true,
   actions,
 }: {
   slug: string;
   companyName: string;
   isAdmin: boolean;
   otherApprovedMembers: number | null;
+  /** Board Features toggle. Hosted hides the zone entirely when off. */
+  deletionEnabled?: boolean;
   actions: CompanyDeleteActions;
 }) {
   const [open, setOpen] = useState(false);
@@ -67,6 +70,7 @@ export function CompanyDeleteDangerZone({
   );
   const [hidden, setHidden] = useState(false);
 
+  if (!deletionEnabled) return null;
   if (hidden) return null;
 
   const description =

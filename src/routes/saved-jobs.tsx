@@ -106,7 +106,7 @@ function SavedJobsPage() {
 
   const rows = savedJobs.data.flatMap((saved) => {
     if (!saved.job) return [];
-    const vm = toSavedJobCardVM(saved.job, getLocale());
+    const vm = toSavedJobCardVM(saved.job, getLocale(), board);
     return vm ? [{ saved, vm }] : [];
   });
 

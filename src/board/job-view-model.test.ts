@@ -54,6 +54,17 @@ describe('toJobCardVM', () => {
   // own goldens pin the formatted shape; these pin only the wiring, so
   // an SDK formatting change (or an intentional presentation change)
   // breaks nothing here.
+  it('suppresses salary when the board job form hides it', () => {
+    const hidden = toJobCardVM(baseJob, 'en', {
+      salary: { visible: false },
+      seniority: { visible: true },
+      location: { visible: true },
+      sponsorship: { visible: true },
+    });
+    expect(hidden.salaryLabel).toBeNull();
+    expect(hidden.compLine).not.toContain('$');
+  });
+
   it('delegates salary + compLine to the SDK formatters', () => {
     const expectedSalary = formatJobSalary('en', 100000, 140000, 'year', 'USD');
     expect(vm.salaryLabel).toBe(expectedSalary);

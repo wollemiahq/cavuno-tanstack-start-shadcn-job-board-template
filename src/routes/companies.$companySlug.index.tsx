@@ -2,6 +2,7 @@ import { isNotFound } from '@cavuno/board';
 import { companySalaryPath } from '@cavuno/board/paths';
 import {
   createFileRoute,
+  getRouteApi,
   interpolatePath,
   Link,
   notFound,
@@ -114,9 +115,12 @@ function openJobsHeading(count: number) {
 /** How many jobs the profile previews before deferring to the /jobs subpage. */
 const JOBS_PREVIEW_COUNT = 6;
 
+const rootApi = getRouteApi('__root__');
+
 function CompanyPage() {
   const { company, jobs, similar, salarySummary, hasSalaries } =
     Route.useLoaderData();
+  const { board } = rootApi.useLoaderData();
 
   // Salary summary VMs condense the Salaries tab: the overall
   // range + the top few category rows, built through the SAME mappers the
@@ -219,7 +223,7 @@ function CompanyPage() {
                 {previewJobs.map((job) => (
                   <JobCard
                     key={job.id}
-                    vm={toJobCardVM(job, getLocale())}
+                    vm={toJobCardVM(job, getLocale(), board)}
                     compact
                   />
                 ))}

@@ -89,6 +89,7 @@ function JobDetailPage() {
     companyIntro(companySummary),
     board.language,
     getLocale(),
+    board,
   );
 
   return (
@@ -154,7 +155,7 @@ function JobDetailPage() {
                   </Text>
                   <JobList
                     jobs={similarRail.jobs.map((job) =>
-                      toJobCardVM(job, getLocale()),
+                      toJobCardVM(job, getLocale(), board),
                     )}
                     language={board.language}
                     variant="compact"
