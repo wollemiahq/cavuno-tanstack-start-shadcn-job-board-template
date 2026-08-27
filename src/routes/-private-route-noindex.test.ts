@@ -1,9 +1,9 @@
 /**
  * The board's robots.txt is a byte-parity mirror of the hosted board, which
- * deliberately carries NO `Disallow` lines (see `seo-handlers.ts` + its test).
- * The hosted board keeps its private, transactional surfaces out of the index
- * with per-route `noindex` meta instead — so this frontend must too. These
- * tests pin that every signed-in / auth surface emits
+ * allows `/` and only disallows short-link prefixes + listing pagination
+ * (see `seo-handlers.ts` + its test). Private, transactional surfaces stay
+ * out of the index with per-route `noindex` meta instead — so this frontend
+ * must too. These tests pin that every signed-in / auth surface emits
  * `<meta name="robots" content="noindex">` in its `head()`, independent of
  * loader data, so a future refactor cannot quietly expose an account or
  * messages page to crawlers.

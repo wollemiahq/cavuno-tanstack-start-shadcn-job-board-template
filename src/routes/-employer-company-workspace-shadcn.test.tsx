@@ -167,6 +167,7 @@ const company = {
 const employerCompany = {
   id: 'company-1',
   object: 'employer_company',
+  deletionEnabled: true,
   name: 'Northstar Labs',
   slug: 'northstar-labs',
   website: 'https://northstar.example',

@@ -130,6 +130,12 @@ const board = {
     linkedinUrl: null,
   },
   talentDirectoryVisibility: 'public',
+  jobForm: {
+    salary: { visible: true },
+    seniority: { visible: true },
+    location: { visible: true },
+    sponsorship: { visible: true },
+  },
 } satisfies Parameters<typeof SelectedJobDetail>[0]['board'];
 
 const user = {
