@@ -113,7 +113,11 @@ export function ProgrammaticCompaniesView({
         })
       }
       detail={
-        <SelectedCompanyDetail state={selectedCompany} language={getLocale()} />
+        <SelectedCompanyDetail
+          state={selectedCompany}
+          language={getLocale()}
+          jobForm={board}
+        />
       }
     />
   );
