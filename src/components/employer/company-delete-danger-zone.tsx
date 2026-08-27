@@ -26,6 +26,22 @@ import {
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
+/**
+ * Employer company as far as the Features deletion toggle. `object` is
+ * required so this is not a weak type: 4.8.0 `EmployerCompany` is
+ * assignable (it has `object`, not `deletionEnabled`).
+ */
+export type CompanyDeletionSource = {
+  object: string;
+  deletionEnabled?: boolean;
+};
+
+export function companyDeletionEnabled(
+  company: CompanyDeletionSource,
+): boolean {
+  return company.deletionEnabled !== false;
+}
+
 export type CompanyDeleteActions = {
   deleteCompany: (
     ...args: Parameters<typeof import('../../server/employers').deleteCompany>

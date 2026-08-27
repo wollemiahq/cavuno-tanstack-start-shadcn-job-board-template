@@ -19,7 +19,7 @@ import {
 import { m } from '../paraglide/messages';
 import { isLocale } from '../paraglide/runtime';
 
-import { resolveJobForm, type JobFormVisibility } from '@/board/job-form';
+import { resolveJobForm, type JobFormSource } from '@/board/job-form';
 import { jobCardCopy } from '@/copy-groups/job-card';
 import { cardSummary } from '@/lib/derive-summary';
 import { enumLabel } from '@/lib/enum-labels';
@@ -81,7 +81,7 @@ export interface JobCardVM {
 export function toJobCardVM(
   job: PublicJobCard,
   language: string,
-  jobForm?: JobFormVisibility | unknown,
+  jobForm?: JobFormSource | null,
 ): JobCardVM {
   const company = job.company;
 
@@ -176,7 +176,7 @@ export function toJobCardVM(
 export function toSavedJobCardVM(
   job: PublicJobCard | null | undefined,
   language: string,
-  jobForm?: JobFormVisibility | unknown,
+  jobForm?: JobFormSource | null,
 ): JobCardVM | null {
   if (!job) return null;
   try {

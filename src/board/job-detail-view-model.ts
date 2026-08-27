@@ -26,7 +26,7 @@ import {
   customFieldLabel,
   customFieldOptionLabel,
 } from '@/board/custom-field-labels';
-import { resolveJobForm } from '@/board/job-form';
+import { resolveJobForm, type JobFormSource } from '@/board/job-form';
 import { jobDetailCopy } from '@/copy-groups/job-detail';
 import { enumLabel } from '@/lib/enum-labels';
 import { jobBreadcrumbItems } from '@/lib/job-breadcrumbs';
@@ -131,7 +131,7 @@ export function toJobDetailVM(
    * breaks it, which is why this is two arguments and not one.
    */
   displayLocale: string = language,
-  jobForm?: unknown,
+  jobForm?: JobFormSource | null,
 ): JobDetailVM {
   const copy = jobDetailCopy();
   const company = job.company;

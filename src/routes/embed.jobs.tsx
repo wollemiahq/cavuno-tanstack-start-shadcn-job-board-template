@@ -19,6 +19,7 @@ import { embedJobs, getBoardContext } from '../server/queries';
 import { useKeywordSuggestions } from './-use-keyword-suggestions';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
+import type { JobFormSource } from '@/board/job-form';
 import { toJobCardVM } from '@/board/job-view-model';
 import { JobCard } from '@/components/board/job-card';
 import { Badge } from '@/components/ui/badge';
@@ -146,10 +147,7 @@ export const Route = createFileRoute('/embed/jobs')({
       showCavunoBranding: context.showCavunoBranding,
       boardName: context.name,
       logoUrl: context.logoUrl ?? null,
-      jobForm:
-        'jobForm' in context
-          ? (context as { jobForm: unknown }).jobForm
-          : undefined,
+      jobForm: context,
     };
   },
   // The embed widget is a fragment meant to be iframed — never indexed (parity
@@ -228,7 +226,7 @@ export function EmbedJobsView({
   boardName: string;
   logoUrl: string | null;
   search: EmbedSearch;
-  jobForm?: unknown;
+  jobForm?: JobFormSource | null;
   dependencies?: EmbedJobsViewDependencies;
 }) {
   const jobs = page.data;
@@ -332,7 +330,7 @@ export type EmbedJobsViewDependencies = {
     job: PublicJobCard;
     locale: string;
     openInNewTab: boolean;
-    jobForm?: unknown;
+    jobForm?: JobFormSource | null;
   }) => ReactNode;
   useKeywordSuggestions: typeof useKeywordSuggestions;
   useLocationSuggestions: typeof useLocationSuggestions;

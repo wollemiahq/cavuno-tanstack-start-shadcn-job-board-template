@@ -71,7 +71,7 @@ import type {
   SubmitJobInput,
   SubmitJobResult,
 } from '../server/post';
-import { resolveJobForm, type JobFormVisibility } from '@/board/job-form';
+import { resolveJobForm, type JobFormSource } from '@/board/job-form';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import { planDescription, planName } from '@/board/plan-labels';
 import { planFeatureLines } from '@/board/plan-view-model';
@@ -166,7 +166,7 @@ export type PostJobFormProps = {
   /** Board-defined custom field definitions, in operator-config order. */
   customFields: PublicBoard['customFields']['job'];
   /** Built-in field visibility from `board.context().jobForm`. */
-  jobForm?: JobFormVisibility | unknown;
+  jobForm?: JobFormSource | null;
   /**
    * The remote-permit taxonomy (regions / country groups) for the
    * geographic-restriction scope; `null` degrades to worldwide/countries.
@@ -462,17 +462,15 @@ export function PostJobForm({
           : [],
         applicationUrl:
           normalizeApplicationTarget(readString(form, 'applicationUrl')) ?? '',
-        ...(jobForm.salary.visible
-          ? {
-              salaryMin,
-              salaryMax,
-              salaryCurrency: currency,
-              salaryTimeframe,
-            }
-          : {}),
         selectedPlan: selectedPlanId,
         logoUrl: logoUrl ?? undefined,
       };
+      if (jobForm.salary.visible) {
+        input.salaryMin = salaryMin;
+        input.salaryMax = salaryMax;
+        input.salaryCurrency = currency;
+        input.salaryTimeframe = salaryTimeframe;
+      }
       if (jobForm.seniority.visible && seniority) input.seniority = seniority;
       if (remoteOption === 'remote') {
         Object.assign(

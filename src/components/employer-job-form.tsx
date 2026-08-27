@@ -25,7 +25,7 @@ import { salaryCurrencyOptions } from '../lib/salary-currencies';
 import { m } from '../paraglide/messages';
 import { checkoutJob, createJob, updateJob } from '../server/employers';
 
-import { resolveJobForm, type JobFormVisibility } from '@/board/job-form';
+import { resolveJobForm, type JobFormSource } from '@/board/job-form';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import { planFeatureLines } from '@/board/plan-view-model';
 import type { LocationSuggestionState } from '@/components/location-combobox';
@@ -129,7 +129,7 @@ export type EmployerJobFormProps = {
   officeLocationSuggestions: LocationSuggestionState;
   mode: EmployerJobFormMode;
   /** Built-in field visibility from `board.context().jobForm`. */
-  jobForm?: JobFormVisibility | unknown;
+  jobForm?: JobFormSource | null;
   /** Prefill for edit mode. */
   job?: EmployerJob;
   dependencies?: EmployerJobFormDependencies;

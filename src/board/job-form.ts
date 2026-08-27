@@ -10,6 +10,23 @@ export type JobFormVisibility = {
   sponsorship: { visible: boolean };
 };
 
+type JobFormGroup = {
+  salary?: { visible?: boolean };
+  seniority?: { visible?: boolean };
+  location?: { visible?: boolean };
+  sponsorship?: { visible?: boolean };
+};
+
+/**
+ * Board context as far as job-form visibility. `object` is required so this
+ * is not a weak type: 4.8.0 `PublicBoard` is assignable (it has `object`,
+ * not `jobForm`). A raw `jobForm` group is also assignable.
+ */
+export type JobFormSource = JobFormGroup & {
+  object?: string;
+  jobForm?: JobFormGroup | null;
+};
+
 const ALL_VISIBLE: JobFormVisibility = {
   salary: { visible: true },
   seniority: { visible: true },
@@ -21,19 +38,12 @@ function visibleFlag(value: { visible?: boolean } | undefined): boolean {
   return value?.visible !== false;
 }
 
-function asJobForm(value: unknown): JobFormVisibility | undefined {
-  if (typeof value !== 'object' || value === null) return undefined;
-  return value as JobFormVisibility;
-}
-
 /** Resolve visibility from a public board context (or a raw `jobForm` group). */
-export function resolveJobForm(source: unknown): JobFormVisibility {
-  if (source === null || source === undefined) return ALL_VISIBLE;
-  if (typeof source !== 'object') return ALL_VISIBLE;
-  const record = source as { jobForm?: unknown };
-  const jobForm =
-    'jobForm' in record ? asJobForm(record.jobForm) : asJobForm(source);
-  if (!jobForm) return ALL_VISIBLE;
+export function resolveJobForm(
+  source?: JobFormSource | null,
+): JobFormVisibility {
+  if (source == null) return ALL_VISIBLE;
+  const jobForm = source.jobForm ?? source;
   return {
     salary: { visible: visibleFlag(jobForm.salary) },
     seniority: { visible: visibleFlag(jobForm.seniority) },
