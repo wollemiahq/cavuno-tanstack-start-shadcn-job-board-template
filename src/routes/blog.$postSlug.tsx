@@ -1,6 +1,11 @@
 import { isNotFound } from '@cavuno/board';
 import { blogPostPath } from '@cavuno/board/paths';
-import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  getRouteApi,
+  notFound,
+  redirect,
+} from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -69,8 +74,11 @@ function BlogPostNotFound() {
   );
 }
 
+const rootApi = getRouteApi('__root__');
+
 function PostPage() {
   const { post, adjacent, related, seo } = Route.useLoaderData();
+  const { board } = rootApi.useLoaderData();
   const permalink =
     post.canonicalUrl ?? `${seo.origin}${blogPostPath(post.slug)}`;
   const crumbs = breadcrumbsCopy();
@@ -90,6 +98,7 @@ function PostPage() {
         post={post}
         language={getLocale()}
         permalink={permalink}
+        ads={board.ads}
         adjacent={adjacent}
         related={related}
         missingBody={{

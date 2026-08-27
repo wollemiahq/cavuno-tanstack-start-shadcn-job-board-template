@@ -10,7 +10,7 @@
  * The form itself lives in `EmployerJobForm`, shared with the per-job edit
  * page so the two never drift.
  */
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
 import {
   handleEmployerLoaderError,
@@ -59,8 +59,11 @@ export const Route = createFileRoute('/employers/companies/$slug/jobs/new')({
   component: NewJobPage,
 });
 
+const rootApi = getRouteApi('__root__');
+
 function NewJobPage() {
   const { workspace, remotePermits } = Route.useLoaderData();
+  const { board } = rootApi.useLoaderData();
   const locale = getLocale();
   const officeLocationSuggestions = useLocationSuggestions(locale);
 
@@ -84,6 +87,7 @@ function NewJobPage() {
             plans={workspace.plans}
             billingOptions={workspace.billingOptions.data}
             officeLocationSuggestions={officeLocationSuggestions}
+            jobForm={board}
             mode={{ kind: 'create' }}
           />
         </div>

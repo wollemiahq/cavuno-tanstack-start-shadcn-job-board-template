@@ -21,6 +21,7 @@ import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
 import { getBoard } from '../lib/board';
 import { withApplyGatewayCapability } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
+import { resolveBoardAds } from '../lib/board-ads';
 import {
   readBoardContext,
   readStaleBoardContext,
@@ -90,6 +91,9 @@ function resolveBoardContext(
       linkedInPartnerId: null,
       cookieConsentRequired: false,
     },
+    // Older SDKs omit `ads`; treat missing as off. Publisher id comes from
+    // Cavuno advertising settings; slot ids stay in src/ads.json.
+    ads: resolveBoardAds(context),
   };
 }
 

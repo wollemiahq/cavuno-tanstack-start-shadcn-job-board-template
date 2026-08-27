@@ -15,7 +15,10 @@ import { useState } from 'react';
 import { Await } from '@tanstack/react-router';
 import { ExternalLinkIcon } from 'lucide-react';
 
-import { CompanyDeleteDangerZone } from '../components/employer/company-delete-danger-zone';
+import {
+  CompanyDeleteDangerZone,
+  companyDeletionEnabled,
+} from '../components/employer/company-delete-danger-zone';
 import {
   handleEmployerLoaderError,
   isReauthRetry,
@@ -284,6 +287,7 @@ export function CompanyProfilePageView({
                 ? null
                 : Math.max(0, (members?.data.length ?? 0) - 1)
             }
+            deletionEnabled={companyDeletionEnabled(employerCompany)}
             actions={actions}
           />
 

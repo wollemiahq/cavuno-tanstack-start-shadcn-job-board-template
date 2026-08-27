@@ -111,6 +111,10 @@ const board = {
     linkedInPartnerId: null,
     cookieConsentRequired: false,
   },
+  ads: {
+    enabled: false,
+    clientId: null,
+  },
   contact: {
     email: null,
     websiteUrl: null,

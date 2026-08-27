@@ -911,6 +911,7 @@
   "jobSalary_unitPerMonth": "month",
   "jobSalary_unitPerWeek": "week",
   "jobSalary_unitPerYear": "year",
+  "adRail_label": "Advertisement",
   "jobSearch_allFiltersLabel": "All filters",
   "jobSearch_anyTypeLabel": "Any type",
   "jobSearch_anyWorkplaceLabel": "Any workplace",

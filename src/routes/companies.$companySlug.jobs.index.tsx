@@ -15,7 +15,11 @@
  * a fresh query drops `?page=` (see CompanyJobsSearchBar), resetting to
  * page 1.
  */
-import { createFileRoute, useLocation } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  getRouteApi,
+  useLocation,
+} from '@tanstack/react-router';
 
 import { CompanyJobsSearchBar } from '../components/company-jobs-search-bar';
 import {
@@ -65,9 +69,12 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
   ),
 });
 
+const rootApi = getRouteApi('__root__');
+
 function CompanyJobsPage() {
   const { company, page, q, location, locationName, hasSalaries } =
     Route.useLoaderData();
+  const { board } = rootApi.useLoaderData();
   const search = Route.useSearch();
   const locationSuggestions = useLocationSuggestions(getLocale());
   const navigate = Route.useNavigate();
@@ -120,7 +127,7 @@ function CompanyJobsPage() {
         <p className="text-foreground text-base font-semibold">{countLabel}</p>
 
         <JobList
-          jobs={page.data.map((job) => toJobCardVM(job, getLocale()))}
+          jobs={page.data.map((job) => toJobCardVM(job, getLocale(), board))}
           language={getLocale()}
           variant="grid"
           compact

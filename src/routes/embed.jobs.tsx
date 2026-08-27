@@ -19,6 +19,7 @@ import { embedJobs, getBoardContext } from '../server/queries';
 import { useKeywordSuggestions } from './-use-keyword-suggestions';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
+import type { JobFormSource } from '@/board/job-form';
 import { toJobCardVM } from '@/board/job-view-model';
 import { JobCard } from '@/components/board/job-card';
 import { Badge } from '@/components/ui/badge';
@@ -146,6 +147,7 @@ export const Route = createFileRoute('/embed/jobs')({
       showCavunoBranding: context.showCavunoBranding,
       boardName: context.name,
       logoUrl: context.logoUrl ?? null,
+      jobForm: context,
     };
   },
   // The embed widget is a fragment meant to be iframed — never indexed (parity
@@ -216,6 +218,7 @@ export function EmbedJobsView({
   boardName,
   logoUrl,
   search,
+  jobForm,
   dependencies = embedJobsViewDependencies,
 }: {
   page: { data: PublicJobCard[]; count?: number };
@@ -223,6 +226,7 @@ export function EmbedJobsView({
   boardName: string;
   logoUrl: string | null;
   search: EmbedSearch;
+  jobForm?: JobFormSource | null;
   dependencies?: EmbedJobsViewDependencies;
 }) {
   const jobs = page.data;
@@ -256,7 +260,12 @@ export function EmbedJobsView({
         <div className="space-y-3" data-test="embed-jobs-list">
           {jobs.map((job) => (
             <div key={job.id} className="contents">
-              {dependencies.renderJobCard({ job, locale, openInNewTab: true })}
+              {dependencies.renderJobCard({
+                job,
+                locale,
+                openInNewTab: true,
+                jobForm,
+              })}
             </div>
           ))}
         </div>
@@ -321,6 +330,7 @@ export type EmbedJobsViewDependencies = {
     job: PublicJobCard;
     locale: string;
     openInNewTab: boolean;
+    jobForm?: JobFormSource | null;
   }) => ReactNode;
   useKeywordSuggestions: typeof useKeywordSuggestions;
   useLocationSuggestions: typeof useLocationSuggestions;
@@ -342,15 +352,18 @@ export const embedJobsViewDependencies: EmbedJobsViewDependencies = {
     </Link>
   ),
   renderHeader: (input) => <LazyEmbedJobsHeader {...input} />,
-  renderJobCard: ({ job, locale, openInNewTab }) => (
-    <JobCard vm={toJobCardVM(job, locale)} openInNewTab={openInNewTab} />
+  renderJobCard: ({ job, locale, openInNewTab, jobForm }) => (
+    <JobCard
+      vm={toJobCardVM(job, locale, jobForm)}
+      openInNewTab={openInNewTab}
+    />
   ),
   useKeywordSuggestions,
   useLocationSuggestions,
 };
 
 function EmbedJobsPage() {
-  const { page, showCavunoBranding, boardName, logoUrl } =
+  const { page, showCavunoBranding, boardName, logoUrl, jobForm } =
     Route.useLoaderData();
   const search = Route.useSearch();
   return (
@@ -362,6 +375,7 @@ function EmbedJobsPage() {
       boardName={boardName}
       logoUrl={logoUrl}
       search={search}
+      jobForm={jobForm}
     />
   );
 }

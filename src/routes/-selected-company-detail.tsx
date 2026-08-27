@@ -3,16 +3,20 @@ import { m } from '../paraglide/messages';
 import type { SelectedCompanyState } from './-use-selected-company';
 import { getCompanySearchLabels } from '@/board/company-search-labels';
 import { toCompanyDetailVM } from '@/board/company-view-model';
+import type { JobFormSource } from '@/board/job-form';
 import { toJobCardVM } from '@/board/job-view-model';
 import { toOverallSalaryVM } from '@/board/salary-view-model';
 import { CompanySearchDetailState } from '@/components/board/company-search-detail-state';
 import { CompanySearchResultDetail } from '@/components/board/company-search-result-detail';
+
 export function SelectedCompanyDetail({
   state,
   language,
+  jobForm,
 }: {
   state: SelectedCompanyState;
   language: string;
+  jobForm?: JobFormSource | null;
 }) {
   const hasSalaries = Boolean(
     state.salarySummary &&
@@ -50,7 +54,7 @@ export function SelectedCompanyDetail({
       vm={toCompanyDetailVM(state.company, getCompanySearchLabels())}
       jobPreviews={(state.jobs?.data ?? [])
         .slice(0, 4)
-        .map((job) => toJobCardVM(job, language))}
+        .map((job) => toJobCardVM(job, language, jobForm))}
       salaryOverall={salaryOverall}
       hasSalaries={hasSalaries}
       interactive={state.status === 'ready'}

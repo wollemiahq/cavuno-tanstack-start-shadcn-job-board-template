@@ -71,6 +71,7 @@ import type {
   SubmitJobInput,
   SubmitJobResult,
 } from '../server/post';
+import { resolveJobForm, type JobFormSource } from '@/board/job-form';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import { planDescription, planName } from '@/board/plan-labels';
 import { planFeatureLines } from '@/board/plan-view-model';
@@ -164,6 +165,8 @@ export type PostJobFormProps = {
   officeLocationSuggestions: LocationSuggestionState;
   /** Board-defined custom field definitions, in operator-config order. */
   customFields: PublicBoard['customFields']['job'];
+  /** Built-in field visibility from `board.context().jobForm`. */
+  jobForm?: JobFormSource | null;
   /**
    * The remote-permit taxonomy (regions / country groups) for the
    * geographic-restriction scope; `null` degrades to worldwide/countries.
@@ -203,6 +206,7 @@ export function PostJobForm({
   plans,
   officeLocationSuggestions,
   customFields,
+  jobForm: jobFormSource,
   remotePermits,
   initialPlanId,
   onSubmit,
@@ -211,6 +215,7 @@ export function PostJobForm({
   onCheckout,
   DescriptionEditor = RichTextEditor,
 }: PostJobFormProps) {
+  const jobForm = resolveJobForm(jobFormSource);
   const formRef = useRef<HTMLFormElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const autoFetched = useRef(new Set<string>());
@@ -415,7 +420,11 @@ export function PostJobForm({
 
     // On-site and hybrid roles need somewhere to be on-site AT — mirror the
     // hosted submission wizard's requirement. Remote roles may leave it empty.
-    if (remoteOption !== 'remote' && officeLocations.length === 0) {
+    if (
+      jobForm.location.visible &&
+      remoteOption !== 'remote' &&
+      officeLocations.length === 0
+    ) {
       updateFormState({
         officeLocationsError: true,
         status: {
@@ -448,19 +457,21 @@ export function PostJobForm({
         description,
         employmentType: String(form.get('employmentType')),
         remoteOption: String(form.get('remoteOption')),
-        officeLocations: officeLocations.map(
-          ({ key: _key, ...location }) => location,
-        ),
+        officeLocations: jobForm.location.visible
+          ? officeLocations.map(({ key: _key, ...location }) => location)
+          : [],
         applicationUrl:
           normalizeApplicationTarget(readString(form, 'applicationUrl')) ?? '',
-        salaryMin,
-        salaryMax,
-        salaryCurrency: currency,
-        salaryTimeframe,
         selectedPlan: selectedPlanId,
         logoUrl: logoUrl ?? undefined,
       };
-      if (seniority) input.seniority = seniority;
+      if (jobForm.salary.visible) {
+        input.salaryMin = salaryMin;
+        input.salaryMax = salaryMax;
+        input.salaryCurrency = currency;
+        input.salaryTimeframe = salaryTimeframe;
+      }
+      if (jobForm.seniority.visible && seniority) input.seniority = seniority;
       if (remoteOption === 'remote') {
         Object.assign(
           input,
@@ -657,32 +668,36 @@ export function PostJobForm({
               name="employmentType"
               items={employmentItems}
             />
-            <Field>
-              <FieldLabel htmlFor="seniority">
-                {m.postJob_seniorityLabel()}
-              </FieldLabel>
-              <Select
-                items={seniorityItems}
-                name="seniority"
-                value={seniority}
-                onValueChange={(value: string | null) =>
-                  updateFormState({
-                    seniority: value ?? null,
-                  })
-                }
-              >
-                <SelectTrigger id="seniority" className="w-full">
-                  <SelectValue placeholder={m.postJob_seniorityPlaceholder()} />
-                </SelectTrigger>
-                <SelectContent>
-                  {seniorityItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
+            {jobForm.seniority.visible ? (
+              <Field>
+                <FieldLabel htmlFor="seniority">
+                  {m.postJob_seniorityLabel()}
+                </FieldLabel>
+                <Select
+                  items={seniorityItems}
+                  name="seniority"
+                  value={seniority}
+                  onValueChange={(value: string | null) =>
+                    updateFormState({
+                      seniority: value ?? null,
+                    })
+                  }
+                >
+                  <SelectTrigger id="seniority" className="w-full">
+                    <SelectValue
+                      placeholder={m.postJob_seniorityPlaceholder()}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {seniorityItems.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            ) : null}
           </div>
           <LabeledInput
             label={m.postJob_jobTitleLabel()}
@@ -702,50 +717,54 @@ export function PostJobForm({
               })
             }
           />
-          <Field data-invalid={officeLocationsError || undefined}>
-            <FieldLabel htmlFor="officeLocations">
-              {m.postJob_officeLocationsLabel()}
-            </FieldLabel>
-            <PlaceTagsField
-              id="officeLocations"
-              tags={officeLocations.map((location) => ({
-                key: location.key,
-                label: location.displayName,
-              }))}
-              onAddSuggestion={(place: LocationSuggestionVM) =>
-                addOfficeLocation({
-                  key: place.id,
-                  displayName: place.name,
-                  countryCode: place.countryCode ?? undefined,
-                  region: place.regionCode ?? undefined,
-                })
-              }
-              onAddFreeText={(text) =>
-                addOfficeLocation({ key: `text:${text}`, displayName: text })
-              }
-              onRemove={(key) =>
-                updateFormState({
-                  officeLocations: officeLocations.filter(
-                    (location) => location.key !== key,
-                  ),
-                })
-              }
-              placeholder={m.postJob_officeLocationsPlaceholder()}
-              searchingText={m.locationCombobox_searchingText()}
-              removeAriaLabel={(name) => m.placeTags_removeAriaLabel({ name })}
-              {...officeLocationSuggestions}
-            />
-            {remoteOption === 'remote' ? (
-              <FieldDescription>
-                {m.postJob_officeLocationsRemoteHelperText()}
-              </FieldDescription>
-            ) : null}
-            {officeLocationsError ? (
-              <FieldError>
-                {m.postJob_officeLocationsRequiredError()}
-              </FieldError>
-            ) : null}
-          </Field>
+          {jobForm.location.visible ? (
+            <Field data-invalid={officeLocationsError || undefined}>
+              <FieldLabel htmlFor="officeLocations">
+                {m.postJob_officeLocationsLabel()}
+              </FieldLabel>
+              <PlaceTagsField
+                id="officeLocations"
+                tags={officeLocations.map((location) => ({
+                  key: location.key,
+                  label: location.displayName,
+                }))}
+                onAddSuggestion={(place: LocationSuggestionVM) =>
+                  addOfficeLocation({
+                    key: place.id,
+                    displayName: place.name,
+                    countryCode: place.countryCode ?? undefined,
+                    region: place.regionCode ?? undefined,
+                  })
+                }
+                onAddFreeText={(text) =>
+                  addOfficeLocation({ key: `text:${text}`, displayName: text })
+                }
+                onRemove={(key) =>
+                  updateFormState({
+                    officeLocations: officeLocations.filter(
+                      (location) => location.key !== key,
+                    ),
+                  })
+                }
+                placeholder={m.postJob_officeLocationsPlaceholder()}
+                searchingText={m.locationCombobox_searchingText()}
+                removeAriaLabel={(name) =>
+                  m.placeTags_removeAriaLabel({ name })
+                }
+                {...officeLocationSuggestions}
+              />
+              {remoteOption === 'remote' ? (
+                <FieldDescription>
+                  {m.postJob_officeLocationsRemoteHelperText()}
+                </FieldDescription>
+              ) : null}
+              {officeLocationsError ? (
+                <FieldError>
+                  {m.postJob_officeLocationsRequiredError()}
+                </FieldError>
+              ) : null}
+            </Field>
+          ) : null}
           {remoteOption === 'remote' ? (
             <Field>
               <FieldLabel htmlFor="remotePermits">
@@ -810,42 +829,44 @@ export function PostJobForm({
               ariaLabel={m.postJob_descriptionLabel()}
             />
           </Field>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <SelectField
-              label={m.postJob_currencyLabel()}
-              name="salaryCurrency"
-              items={currencyItems}
-              value={currency}
-              onValueChange={(value) =>
-                updateFormState({ currency: value ?? 'USD' })
-              }
-            />
-            <LabeledInput
-              label={m.postJob_salaryMinLabel()}
-              name="salaryMin"
-              type="number"
-              min={0}
-            />
-            <LabeledInput
-              label={m.postJob_salaryMaxLabel()}
-              name="salaryMax"
-              type="number"
-              min={0}
-            />
-            <SelectField
-              label={m.postJob_salaryTimeframeLabel()}
-              name="salaryTimeframe"
-              items={timeframeItems}
-              value={salaryTimeframe}
-              onValueChange={(value) =>
-                updateFormState({
-                  salaryTimeframe:
-                    salaryTimeframeChoice(searchString(value)) ??
-                    DEFAULT_SALARY_TIMEFRAME,
-                })
-              }
-            />
-          </div>
+          {jobForm.salary.visible ? (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              <SelectField
+                label={m.postJob_currencyLabel()}
+                name="salaryCurrency"
+                items={currencyItems}
+                value={currency}
+                onValueChange={(value) =>
+                  updateFormState({ currency: value ?? 'USD' })
+                }
+              />
+              <LabeledInput
+                label={m.postJob_salaryMinLabel()}
+                name="salaryMin"
+                type="number"
+                min={0}
+              />
+              <LabeledInput
+                label={m.postJob_salaryMaxLabel()}
+                name="salaryMax"
+                type="number"
+                min={0}
+              />
+              <SelectField
+                label={m.postJob_salaryTimeframeLabel()}
+                name="salaryTimeframe"
+                items={timeframeItems}
+                value={salaryTimeframe}
+                onValueChange={(value) =>
+                  updateFormState({
+                    salaryTimeframe:
+                      salaryTimeframeChoice(searchString(value)) ??
+                      DEFAULT_SALARY_TIMEFRAME,
+                  })
+                }
+              />
+            </div>
+          ) : null}
           <Field>
             <FieldLabel htmlFor="applicationUrl">
               {m.postJob_applicationUrlLabel()}

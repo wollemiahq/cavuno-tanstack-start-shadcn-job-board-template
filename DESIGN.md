@@ -450,6 +450,7 @@ Complete reusable article presentation for the canonical post route.
 Props:
 
 - `adjacent?: { object: "blog_adjacent_posts"; previous: { id: string; object: "public_blog_post"; title: string; slug: string; fea…`
+- `ads?: BoardAdsConfig | undefined`
 - `breadcrumb: BreadcrumbData`
 - `language: string`
 - `missingBody: BlogArticleMissingBodyState`
@@ -474,6 +475,8 @@ Props:
 Props:
 
 - `className?: string | undefined`
+- `clientId: string`
+- `layout?: "responsive" | "rail" | undefined`
 - `placement: string`
 
 ### Breadcrumb — `src/components/board/breadcrumb.tsx`
@@ -578,6 +581,7 @@ Props:
 
 Props:
 
+- `ads?: BoardAdsConfig | undefined`
 - `breadcrumb?: BreadcrumbData | undefined`
 - `companies: CompanyCardVM[]`
 - `count: number`
@@ -770,6 +774,7 @@ Usage: Fetch with board.jobs.list({ ...filters, cursor, limit: 20 }) (board.jobs
 
 Props:
 
+- `ads?: BoardAdsConfig | undefined`
 - `count?: number | undefined`
 - `detail: ReactNode`
 - `endAd?: AdPlacement | undefined`
@@ -1061,6 +1066,7 @@ Props:
 
 Props:
 
+- `ads?: BoardAdsConfig | undefined`
 - `candidates: TalentCardVM[]`
 - `count: number`
 - `detail: ReactNode`
@@ -1287,6 +1293,7 @@ Props:
 - `billingOptions: { id: string; object: "employer_billing_option"; type: "subscription" | "order"; planId: string; planName: string; pl…`
 - `dependencies?: EmployerJobFormDependencies | undefined`
 - `job?: ({ id: string; object: "employer_job"; title: string; slug: string | null; status: "draft" | "published" | "expired" …`
+- `jobForm?: JobFormSource | null | undefined`
 - `locale: string`
 - `mode: EmployerJobFormMode`
 - `officeLocationSuggestions: LocationSuggestionState`
@@ -1323,6 +1330,7 @@ Props:
 
 - `actions: CompanyDeleteActions`
 - `companyName: string`
+- `deletionEnabled?: boolean | undefined`
 - `isAdmin: boolean`
 - `otherApprovedMembers: number | null`
 - `slug: string`
@@ -1976,6 +1984,7 @@ Props:
 - `customFields: { key: string; label: string; type: "number" | "boolean" | "short_text" | "long_text" | "single_select" | "multi_sele…`
 - `DescriptionEditor?: ComponentType<RichTextEditorProps> | undefined`
 - `initialPlanId?: string | undefined`
+- `jobForm?: JobFormSource | null | undefined`
 - `locale: string`
 - `officeLocationSuggestions: LocationSuggestionState`
 - `onCheckout: (url: string) => void`
@@ -2896,7 +2905,7 @@ Variants — `variant`: default, icon
 
 Props:
 
-- `orientation?: "horizontal" | "vertical" | "responsive" | null | undefined`
+- `orientation?: "responsive" | "horizontal" | "vertical" | null | undefined`
 
 Variants — `orientation`: vertical, horizontal, responsive
 

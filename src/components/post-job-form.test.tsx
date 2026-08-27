@@ -391,4 +391,37 @@ describe('PostJobForm', () => {
     expect(screen.getByText(expectedPrice)).toBeVisible();
     expect(screen.queryByText(m.postJob_freeLabel())).toBeNull();
   });
+
+  it('hides salary, seniority, and office location when the job form says so', () => {
+    render(
+      <PostJobForm
+        DescriptionEditor={DescriptionEditor}
+        customFields={[]}
+        jobForm={{
+          salary: { visible: false },
+          seniority: { visible: false },
+          location: { visible: false },
+          sponsorship: { visible: true },
+        }}
+        remotePermits={null}
+        locale="en"
+        officeLocationSuggestions={{
+          suggestions: [],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
+        plans={plans}
+        onSubmit={vi.fn()}
+        onLogoFetch={vi.fn()}
+        onLogoUpload={vi.fn()}
+        onCheckout={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByLabelText(m.postJob_salaryMinLabel())).toBeNull();
+    expect(screen.queryByLabelText(m.postJob_seniorityLabel())).toBeNull();
+    expect(
+      screen.queryByLabelText(m.postJob_officeLocationsLabel()),
+    ).toBeNull();
+  });
 });

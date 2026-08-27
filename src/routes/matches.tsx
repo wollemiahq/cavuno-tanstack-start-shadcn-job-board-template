@@ -132,7 +132,7 @@ function JobMatchesPage() {
   const router = useRouter();
 
   const rows = recommendedJobs.data.flatMap((item) => {
-    const vm = toSavedJobCardVM(item.job, getLocale());
+    const vm = toSavedJobCardVM(item.job, getLocale(), board);
     return vm ? [{ item, vm }] : [];
   });
 

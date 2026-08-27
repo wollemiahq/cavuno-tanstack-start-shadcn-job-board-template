@@ -10,10 +10,13 @@ import { getLocale } from '../../paraglide/runtime';
 import type { CompanyCardVM } from '@/board/company-view-model';
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
 import { CompanySearchResult } from '@/components/board/company-search-result';
+import {
+  useListingAdRails,
+  type AdPlacement,
+} from '@/components/board/listing-ad-rail';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { Page } from '@/components/layout/page';
 import {
-  AdRail,
   SearchResultDetail,
   SearchResultsLayout,
   SearchResultsList,
@@ -29,13 +32,9 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
+import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
 import { localizePath } from '@/lib/localized-path';
 import { listingPageHref } from '@/lib/pagination';
-
-type AdPlacement = {
-  label: string;
-  content: React.ReactNode;
-};
 
 export function CompanySearchPage({
   companies,
@@ -54,6 +53,7 @@ export function CompanySearchPage({
   detail,
   startAd,
   endAd,
+  ads = ADS_OFF,
 }: {
   companies: CompanyCardVM[];
   count: number;
@@ -71,7 +71,9 @@ export function CompanySearchPage({
   detail: React.ReactNode;
   startAd?: AdPlacement;
   endAd?: AdPlacement;
+  ads?: BoardAdsConfig;
 }) {
+  const rails = useListingAdRails(ads, startAd, endAd);
   const currentHref = useLocation({ select: (location) => location.href });
   const hasActiveSearch = Boolean(query || breadcrumb);
   const companyVms = companies;
@@ -125,16 +127,8 @@ export function CompanySearchPage({
         >
           {companyVms.length === 0 ? (
             <SearchResultsLayout
-              startAd={
-                startAd ? (
-                  <AdRail label={startAd.label}>{startAd.content}</AdRail>
-                ) : undefined
-              }
-              endAd={
-                endAd ? (
-                  <AdRail label={endAd.label}>{endAd.content}</AdRail>
-                ) : undefined
-              }
+              startAd={rails.startAd}
+              endAd={rails.endAd}
               list={
                 <div className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0">
                   {searchUnavailable ? null : (
@@ -175,16 +169,8 @@ export function CompanySearchPage({
             />
           ) : (
             <SearchResultsLayout
-              startAd={
-                startAd ? (
-                  <AdRail label={startAd.label}>{startAd.content}</AdRail>
-                ) : undefined
-              }
-              endAd={
-                endAd ? (
-                  <AdRail label={endAd.label}>{endAd.content}</AdRail>
-                ) : undefined
-              }
+              startAd={rails.startAd}
+              endAd={rails.endAd}
               list={
                 <SearchResultsList
                   ref={selection.listRef}

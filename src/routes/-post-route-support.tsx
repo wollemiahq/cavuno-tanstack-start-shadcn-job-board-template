@@ -49,6 +49,7 @@ export function PostJobPageView({
   remotePermits,
   initialPlanId,
   customFields,
+  jobForm,
   locale,
   officeLocationSuggestions,
   dependencies = postRouteDependencies,
@@ -57,6 +58,7 @@ export function PostJobPageView({
   remotePermits: Awaited<ReturnType<typeof getRemotePermits>> | null;
   initialPlanId?: string;
   customFields: Parameters<typeof PostJobForm>[0]['customFields'];
+  jobForm?: Parameters<typeof PostJobForm>[0]['jobForm'];
   locale: string;
   officeLocationSuggestions: Parameters<
     typeof PostJobForm
@@ -79,6 +81,7 @@ export function PostJobPageView({
             plans: plans.data,
             officeLocationSuggestions,
             customFields,
+            jobForm,
             remotePermits: remotePermits?.data ?? null,
             initialPlanId,
             onSubmit: (input) => dependencies.submitJobPosting({ data: input }),

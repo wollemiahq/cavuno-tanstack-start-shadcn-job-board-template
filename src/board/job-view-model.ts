@@ -19,6 +19,7 @@ import {
 import { m } from '../paraglide/messages';
 import { isLocale } from '../paraglide/runtime';
 
+import { resolveJobForm, type JobFormSource } from '@/board/job-form';
 import { jobCardCopy } from '@/copy-groups/job-card';
 import { cardSummary } from '@/lib/derive-summary';
 import { enumLabel } from '@/lib/enum-labels';
@@ -77,7 +78,11 @@ export interface JobCardVM {
   tags: JobCardTagVM[];
 }
 
-export function toJobCardVM(job: PublicJobCard, language: string): JobCardVM {
+export function toJobCardVM(
+  job: PublicJobCard,
+  language: string,
+  jobForm?: JobFormSource | null,
+): JobCardVM {
   const company = job.company;
 
   // Every emitted slug resolves — the platform guarantees it (ADR-0099), so
@@ -94,13 +99,16 @@ export function toJobCardVM(job: PublicJobCard, language: string): JobCardVM {
       href: path(term.slug),
     };
   };
-  const salaryLabel = formatJobSalary(
-    language,
-    job.salaryMin,
-    job.salaryMax,
-    job.salaryTimeframe,
-    job.salaryCurrency,
-  );
+  const salaryVisible = resolveJobForm(jobForm).salary.visible;
+  const salaryLabel = salaryVisible
+    ? formatJobSalary(
+        language,
+        job.salaryMin,
+        job.salaryMax,
+        job.salaryTimeframe,
+        job.salaryCurrency,
+      )
+    : null;
   const workplaceLabel = job.remoteOption
     ? enumLabel(job.remoteOption, language)
     : null;
@@ -168,6 +176,7 @@ export function toJobCardVM(job: PublicJobCard, language: string): JobCardVM {
 export function toSavedJobCardVM(
   job: PublicJobCard | null | undefined,
   language: string,
+  jobForm?: JobFormSource | null,
 ): JobCardVM | null {
   if (!job) return null;
   try {
@@ -178,6 +187,7 @@ export function toSavedJobCardVM(
         skills: job.skills ?? [],
       },
       language,
+      jobForm,
     );
   } catch {
     return null;

@@ -5,7 +5,7 @@
  * from its own edit page rather than an inline popover on the jobs list. A
  * published/expired job edits its details only.
  */
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
 import {
   handleEmployerLoaderError,
@@ -56,8 +56,11 @@ export const Route = createFileRoute(
   component: EditJobPage,
 });
 
+const rootApi = getRouteApi('__root__');
+
 function EditJobPage() {
   const { workspace, job, remotePermits } = Route.useLoaderData();
+  const { board } = rootApi.useLoaderData();
   const locale = getLocale();
   const officeLocationSuggestions = useLocationSuggestions(locale);
   const isDraft = job.status === 'draft';
@@ -84,6 +87,7 @@ function EditJobPage() {
             plans={workspace.plans}
             billingOptions={workspace.billingOptions.data}
             officeLocationSuggestions={officeLocationSuggestions}
+            jobForm={board}
             mode={{ kind: 'edit', jobId: job.id, status: job.status }}
             job={job}
           />

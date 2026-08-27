@@ -35,6 +35,7 @@ function PostJobPage() {
       remotePermits={remotePermits}
       initialPlanId={search.plan}
       customFields={board.customFields.job}
+      jobForm={board}
       locale={getLocale()}
       officeLocationSuggestions={officeLocationSuggestions}
     />

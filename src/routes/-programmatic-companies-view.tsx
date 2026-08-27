@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router';
+import { getRouteApi, useNavigate } from '@tanstack/react-router';
 
 import { getCompanySearchLabels } from '@/board/company-search-labels';
 import { toCompanyCardVM } from '@/board/company-view-model';
@@ -14,6 +14,8 @@ import { getLocale } from '@/paraglide/runtime';
 import { SelectedCompanyDetail } from '@/routes/-selected-company-detail';
 import { useSelectedCompany } from '@/routes/-use-selected-company';
 import type { PublicCompany } from '@cavuno/board';
+
+const rootApi = getRouteApi('__root__');
 
 type LooseNavigate = (options: {
   to?: string;
@@ -45,6 +47,7 @@ export function ProgrammaticCompaniesView({
   search: CompaniesSearch;
   searchUnavailable?: boolean;
 }) {
+  const { board } = rootApi.useLoaderData();
   const routeNavigate = useNavigate();
   // SAFETY: This component only uses stable search-object updates supported by
   // TanStack navigate; route-specific typing is erased at this shared view seam.
@@ -64,6 +67,7 @@ export function ProgrammaticCompaniesView({
 
   return (
     <CompanySearchPage
+      ads={board.ads}
       companies={page.data.map((company) =>
         toCompanyCardVM(company, companyLabels),
       )}
@@ -109,7 +113,11 @@ export function ProgrammaticCompaniesView({
         })
       }
       detail={
-        <SelectedCompanyDetail state={selectedCompany} language={getLocale()} />
+        <SelectedCompanyDetail
+          state={selectedCompany}
+          language={getLocale()}
+          jobForm={board}
+        />
       }
     />
   );

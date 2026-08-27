@@ -32,6 +32,7 @@ import {
   withHeadingAnchors,
   type TocEntry,
 } from '@/lib/article-toc';
+import type { BoardAdsConfig } from '@/lib/board-ads';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { initialsOf } from '@/lib/initials';
 import { localizePath } from '@/lib/localized-path';
@@ -56,6 +57,7 @@ export interface BlogArticleContentProps {
   missingBody: BlogArticleMissingBodyState;
   adjacent?: PublicBlogAdjacentPosts;
   related?: PublicBlogPostSummary[];
+  ads?: BoardAdsConfig;
 }
 
 function shareLinks(permalink: string, title: string) {
@@ -253,6 +255,7 @@ export function BlogArticleContent({
   missingBody,
   adjacent = { object: 'blog_adjacent_posts', previous: null, next: null },
   related = [],
+  ads,
 }: BlogArticleContentProps) {
   const headings = extractToc(post.html);
   const bodyHtml = withHeadingAnchors(post.html);
@@ -410,7 +413,12 @@ export function BlogArticleContent({
                 links={links}
                 className="sticky top-8"
               />
-              <BoardAdSlot placement="blog:post.sidebar" />
+              {ads?.enabled && ads.clientId ? (
+                <BoardAdSlot
+                  placement="blog:post.sidebar"
+                  clientId={ads.clientId}
+                />
+              ) : null}
             </aside>
           </div>
 

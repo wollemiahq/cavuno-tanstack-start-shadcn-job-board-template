@@ -129,6 +129,19 @@ const similar: PublicJobCard[] = [
 describe('toJobDetailVM', () => {
   const vm = toJobDetailVM(baseJob, customFields, similar, 'Acme intro.', 'en');
 
+  it('suppresses salary when the board job form hides it', () => {
+    const hidden = toJobDetailVM(
+      baseJob,
+      customFields,
+      similar,
+      null,
+      'en',
+      'en',
+      { salary: { visible: false } },
+    );
+    expect(hidden.salaryLabel).toBeNull();
+  });
+
   it('builds chip hrefs from the canonical path helpers', () => {
     expect(vm.categoryChips).toEqual([
       { key: 'engineering', name: 'Engineering', href: '/jobs/engineering' },

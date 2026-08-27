@@ -6,11 +6,14 @@ import { Users } from 'lucide-react';
 import { m } from '../../paraglide/messages';
 
 import type { TalentCardVM } from '@/board/talent-view-model';
+import {
+  useListingAdRails,
+  type AdPlacement,
+} from '@/components/board/listing-ad-rail';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { TalentSearchResult } from '@/components/board/talent-search-result';
 import { Page } from '@/components/layout/page';
 import {
-  AdRail,
   SearchResultDetail,
   SearchResultsLayout,
   SearchResultsList,
@@ -25,12 +28,8 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
+import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
 import { listingPageHref } from '@/lib/pagination';
-
-type AdPlacement = {
-  label: string;
-  content: React.ReactNode;
-};
 
 export function TalentSearchPage({
   candidates,
@@ -47,6 +46,7 @@ export function TalentSearchPage({
   detail,
   startAd,
   endAd,
+  ads = ADS_OFF,
 }: {
   candidates: TalentCardVM[];
   /** Header-owned candidate query that drives the empty-state copy. */
@@ -68,7 +68,9 @@ export function TalentSearchPage({
   detail: React.ReactNode;
   startAd?: AdPlacement;
   endAd?: AdPlacement;
+  ads?: BoardAdsConfig;
 }) {
+  const rails = useListingAdRails(ads, startAd, endAd);
   const currentHref = useLocation({ select: (location) => location.href });
   const hasActiveSearch = Boolean(q || skill);
   const candidateVms = candidates;
@@ -116,16 +118,8 @@ export function TalentSearchPage({
         >
           {candidateVms.length === 0 ? (
             <SearchResultsLayout
-              startAd={
-                startAd ? (
-                  <AdRail label={startAd.label}>{startAd.content}</AdRail>
-                ) : undefined
-              }
-              endAd={
-                endAd ? (
-                  <AdRail label={endAd.label}>{endAd.content}</AdRail>
-                ) : undefined
-              }
+              startAd={rails.startAd}
+              endAd={rails.endAd}
               list={
                 <div className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0">
                   {resultsBar}
@@ -155,16 +149,8 @@ export function TalentSearchPage({
             />
           ) : (
             <SearchResultsLayout
-              startAd={
-                startAd ? (
-                  <AdRail label={startAd.label}>{startAd.content}</AdRail>
-                ) : undefined
-              }
-              endAd={
-                endAd ? (
-                  <AdRail label={endAd.label}>{endAd.content}</AdRail>
-                ) : undefined
-              }
+              startAd={rails.startAd}
+              endAd={rails.endAd}
               list={
                 <SearchResultsList
                   ref={selection.listRef}
