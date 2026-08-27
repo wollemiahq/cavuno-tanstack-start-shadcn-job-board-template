@@ -1293,6 +1293,7 @@ Props:
 - `billingOptions: { id: string; object: "employer_billing_option"; type: "subscription" | "order"; planId: string; planName: string; pl…`
 - `dependencies?: EmployerJobFormDependencies | undefined`
 - `job?: ({ id: string; object: "employer_job"; title: string; slug: string | null; status: "draft" | "published" | "expired" …`
+- `jobForm?: JobFormSource | null | undefined`
 - `locale: string`
 - `mode: EmployerJobFormMode`
 - `officeLocationSuggestions: LocationSuggestionState`
@@ -1329,6 +1330,7 @@ Props:
 
 - `actions: CompanyDeleteActions`
 - `companyName: string`
+- `deletionEnabled?: boolean | undefined`
 - `isAdmin: boolean`
 - `otherApprovedMembers: number | null`
 - `slug: string`
@@ -1982,6 +1984,7 @@ Props:
 - `customFields: { key: string; label: string; type: "number" | "boolean" | "short_text" | "long_text" | "single_select" | "multi_sele…`
 - `DescriptionEditor?: ComponentType<RichTextEditorProps> | undefined`
 - `initialPlanId?: string | undefined`
+- `jobForm?: JobFormSource | null | undefined`
 - `locale: string`
 - `officeLocationSuggestions: LocationSuggestionState`
 - `onCheckout: (url: string) => void`
