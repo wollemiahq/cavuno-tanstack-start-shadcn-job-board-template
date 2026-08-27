@@ -18,10 +18,10 @@ import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
 import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
-import { resolveBoardAds } from '../lib/board-ads';
 import { getBoard } from '../lib/board';
 import { withApplyGatewayCapability } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
+import { resolveBoardAds } from '../lib/board-ads';
 import {
   readBoardContext,
   readStaleBoardContext,
