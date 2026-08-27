@@ -8,8 +8,12 @@ export type BoardAdsConfig = {
 
 export const ADS_OFF: BoardAdsConfig = { enabled: false, clientId: null };
 
-/** Board context as far as ads: 4.8.0 omits `ads`; later SDKs include it. */
+/**
+ * Board context as far as ads. `object` is required so this is not a weak
+ * type: 4.8.0 `PublicBoard` is assignable (it has `object`, not `ads`).
+ */
 export type BoardAdsSource = {
+  object: string;
   ads?: BoardAdsConfig | null;
 };
 
