@@ -13,6 +13,8 @@ describe('seo-handlers — byte-parity with the hosted board', () => {
       [
         'User-Agent: *',
         'Allow: /',
+        'Disallow: /go/',
+        'Disallow: /t/',
         'Disallow: /jobs?page=',
         'Disallow: /jobs*&page=',
         'Disallow: /jobs/*?page=',

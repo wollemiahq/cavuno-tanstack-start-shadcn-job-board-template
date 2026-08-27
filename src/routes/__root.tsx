@@ -64,6 +64,7 @@ import {
 } from '@/lib/header-search';
 import { resolveJobsSearchTarget } from '@/lib/jobs-search-target';
 import type { UrlSearchInput } from '@/lib/pagination';
+import { googleSiteVerificationMeta } from '@/lib/seo-handlers';
 import {
   resolveShellBreadcrumb,
   resolveShellBreadcrumbEntities,
@@ -161,6 +162,8 @@ export const Route = createRootRoute({
   staleTime: 0,
   head: ({ loaderData }) => {
     const board = loaderData?.board;
+    const seo = loaderData?.seo;
+    const gsc = googleSiteVerificationMeta(seo?.googleSiteVerification);
     // Brand icons from board.context() (`logoUrl` + `icons`), not board.seo().
     // Empty / not-yet-generated packs fall back to starter public/ assets.
     const iconLinks = boardHeadIconLinks(board);
@@ -170,6 +173,7 @@ export const Route = createRootRoute({
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { title: board?.name ?? m.rootFallback_title() },
         { name: 'theme-color', content: themeTokens.light['--background'] },
+        ...(gsc ? [gsc] : []),
       ],
       links: [
         ...(themeMeta.fontsImport
