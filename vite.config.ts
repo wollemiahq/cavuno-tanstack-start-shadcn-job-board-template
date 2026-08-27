@@ -6,7 +6,10 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import viteReact from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import type { OxlintConfig } from 'oxlint';
+import type { Plugin } from 'vite';
 
 const previewServer =
   process.env.CAVUNO_PREVIEW_PROXIED === '1'
@@ -53,6 +56,106 @@ const antiSlopLint = {
   },
 } satisfies OxlintConfig;
 
+const INLANG_PROJECT = './project.inlang';
+const PARAGLIDE_OUTDIR = './src/paraglide';
+
+/**
+ * Restrict the paraglide plugin's dev watch to catalogs it actually
+ * compiles.
+ *
+ * `messages/` holds en, de, fr and the two pseudo-locales, but
+ * `project.inlang/settings.json` enables only `locales` (today: `en`).
+ * The dormant catalogs stay on disk so `pnpm locale:add` can flip one on
+ * without starting from a blank file — see scripts/gen-paraglide-messages.mjs.
+ *
+ * The plugin derives its watch set from the files the inlang SDK read
+ * during the last compile, then widens it to those files' *directories*
+ * (unplugin.js → getWatchTargets, so a newly added catalog invalidates
+ * too). Every write under `messages/` therefore takes the `watchChange`
+ * path and recompiles all ~1570 message modules — including for locales
+ * the compiler ignores, where the output is byte-identical. That write
+ * storm into `src/paraglide` is what turns one edit into a cascade of
+ * overlapping reloads, which kills the workerd runner with "Cannot read
+ * properties of undefined (reading 'update') in runInRunnerObject" and the
+ * dev server never comes back. (A single `[vite] program reload` per saved
+ * file is normal here and unrelated — any file in the project produces
+ * one.)
+ *
+ * The plugin exposes no option to narrow this (getWatchTargets takes an
+ * `ignorePath`, but unplugin.js never passes one), so wrap `watchChange`
+ * and drop events for catalogs of disabled locales. Anything that is not a
+ * recognisable `pathPattern` catalog — settings.json itself, en.json, a
+ * brand-new locale file — still falls through to the real hook.
+ */
+type ParaglidePlugin = ReturnType<typeof paraglideVitePlugin>;
+
+function paraglideEnabledLocalesOnly(plugin: ParaglidePlugin): ParaglidePlugin {
+  const settingsPath = resolve(
+    import.meta.dirname,
+    INLANG_PROJECT,
+    'settings.json',
+  );
+  const settings = JSON.parse(readFileSync(settingsPath, 'utf8')) as {
+    locales?: string[];
+    'plugin.inlang.messageFormat'?: { pathPattern?: string };
+  };
+  const enabled = new Set(settings.locales ?? []);
+  const pathPattern = settings['plugin.inlang.messageFormat']?.pathPattern;
+
+  // Turn "./messages/{locale}.json" into a matcher over absolute paths.
+  // Bail out (filter nothing) on a pattern shape we cannot reason about
+  // rather than silently dropping events.
+  const segments = pathPattern?.split('{locale}');
+  if (segments === undefined || segments.length !== 2) {
+    return plugin;
+  }
+  const [prefix, suffix] = segments as [string, string];
+  // `resolve` drops a trailing separator, so resolve a dummy leaf and cut it.
+  const absolutePrefix = resolve(import.meta.dirname, `${prefix}x`).slice(
+    0,
+    -1,
+  );
+
+  function normalize(id: string): string {
+    return id.replaceAll('\\', '/');
+  }
+
+  function localeOf(id: string): string | undefined {
+    const path = normalize(id);
+    if (!path.startsWith(absolutePrefix) || !path.endsWith(suffix)) {
+      return undefined;
+    }
+    const locale = path.slice(
+      absolutePrefix.length,
+      path.length - suffix.length,
+    );
+    return locale.length > 0 && !locale.includes('/') ? locale : undefined;
+  }
+
+  function wrap(one: Plugin): Plugin {
+    const changed = one.watchChange;
+    if (changed === undefined) {
+      return one;
+    }
+    const handler = typeof changed === 'function' ? changed : changed.handler;
+    return {
+      ...one,
+      watchChange(
+        this: ThisParameterType<typeof handler>,
+        ...args: Parameters<typeof handler>
+      ) {
+        const locale = localeOf(args[0]);
+        if (locale !== undefined && !enabled.has(locale)) {
+          return;
+        }
+        return handler.apply(this, args);
+      },
+    };
+  }
+
+  return Array.isArray(plugin) ? plugin.map(wrap) : wrap(plugin);
+}
+
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
   // Builder sandbox preview proxy: the page is served at
@@ -87,20 +190,22 @@ const config = defineConfig({
     //
     // `build` is unaffected: the scanner is a dev-only optimization, and
     // the production build resolves through this plugin normally.
-    paraglideVitePlugin({
-      project: './project.inlang',
-      outdir: './src/paraglide',
-      // Match TanStack's Start + Paraglide reference explicitly: one module
-      // per message lets Vite discard route-owned translations instead of
-      // retaining a whole locale catalog in the universal client entry.
-      outputStructure: 'message-modules',
-      // URL only: documents carry the locale as a path prefix; server-fn
-      // RPCs (unprefixed) get the viewer's locale from a per-request header
-      // (src/lib/locale-middleware.ts) that the server entry turns into a
-      // detection-only URL prefix. No cookie — a cookie is browser-global
-      // while locale is per-tab.
-      strategy: ['url', 'baseLocale'],
-    }),
+    paraglideEnabledLocalesOnly(
+      paraglideVitePlugin({
+        project: INLANG_PROJECT,
+        outdir: PARAGLIDE_OUTDIR,
+        // Match TanStack's Start + Paraglide reference explicitly: one module
+        // per message lets Vite discard route-owned translations instead of
+        // retaining a whole locale catalog in the universal client entry.
+        outputStructure: 'message-modules',
+        // URL only: documents carry the locale as a path prefix; server-fn
+        // RPCs (unprefixed) get the viewer's locale from a per-request header
+        // (src/lib/locale-middleware.ts) that the server entry turns into a
+        // detection-only URL prefix. No cookie — a cookie is browser-global
+        // while locale is per-tab.
+        strategy: ['url', 'baseLocale'],
+      }),
+    ),
     devtools(),
     cloudflare({ viteEnvironment: { name: 'ssr' } }),
     tailwindcss(),
