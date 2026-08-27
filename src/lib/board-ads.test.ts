@@ -5,7 +5,10 @@ import { resolveBoardAds } from './board-ads';
 describe('resolveBoardAds', () => {
   it('is off when context has no ads group', () => {
     expect(resolveBoardAds({})).toEqual({ enabled: false, clientId: null });
-    expect(resolveBoardAds(null)).toEqual({ enabled: false, clientId: null });
+    expect(resolveBoardAds({ ads: null })).toEqual({
+      enabled: false,
+      clientId: null,
+    });
   });
 
   it('requires enabled true and a ca-pub- plus 16 digit client id', () => {

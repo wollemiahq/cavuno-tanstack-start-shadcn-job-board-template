@@ -59,10 +59,7 @@ export function useListingAdRails(
   ads: BoardAdsConfig,
   startOverride?: AdPlacement,
   endOverride?: AdPlacement,
-): {
-  startAd: ReactElement<AdRailProps> | undefined;
-  endAd: ReactElement<AdRailProps> | undefined;
-} {
+) {
   const wide = useMinWidth1600();
   return {
     startAd: listingAdRail(startOverride, 'start', ads, wide),
