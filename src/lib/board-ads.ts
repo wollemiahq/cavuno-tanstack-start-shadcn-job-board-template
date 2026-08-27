@@ -6,7 +6,7 @@ export type BoardAdsConfig = {
   clientId: string | null;
 };
 
-const ADS_OFF: BoardAdsConfig = { enabled: false, clientId: null };
+export const ADS_OFF: BoardAdsConfig = { enabled: false, clientId: null };
 
 /**
  * Read `ads` off board context with deploy/SDK skew: older `@cavuno/board`

@@ -20,32 +20,35 @@ export function BoardAdSlot({
   placement,
   clientId,
   className,
+  layout = 'responsive',
 }: {
   placement: string;
   clientId: string;
   className?: string;
+  layout?: 'responsive' | 'rail';
 }) {
   const slot = adsSlot(placement);
-  const isRail = placement.startsWith('search:rail.');
+  const slotId = slot?.slotId ?? null;
+  const isRail = layout === 'rail';
 
   useEffect(() => {
-    if (!slot) return;
+    if (!slotId) return;
     ensureAdSenseScript(clientId);
     // SAFETY: adsbygoogle is the publisher queue AdSense attaches to window;
     // we only push an empty object onto that array.
     const w = window as Window & { adsbygoogle?: unknown[] };
     w.adsbygoogle = w.adsbygoogle ?? [];
     w.adsbygoogle.push({});
-  }, [clientId, slot]);
+  }, [clientId, slotId]);
 
-  if (!slot) return null;
+  if (!slot || !slotId) return null;
 
   return (
     <div data-ad-placement={placement} className={className}>
       <ins
         className="adsbygoogle"
         data-ad-client={clientId}
-        data-ad-slot={slot.slotId}
+        data-ad-slot={slotId}
         data-ad-format={slot.format ?? (isRail ? 'vertical' : undefined)}
         data-ad-layout={slot.layout}
         data-full-width-responsive={isRail ? undefined : 'true'}

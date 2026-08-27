@@ -14,7 +14,7 @@ import { JobSearchResult } from '@/components/board/job-search-result';
 import { JobsFilterControls } from '@/components/board/jobs-filter-controls';
 import { JobsResultsBar } from '@/components/board/jobs-results-bar';
 import {
-  listingAdRail,
+  useListingAdRails,
   type AdPlacement,
 } from '@/components/board/listing-ad-rail';
 import { ListingPagination } from '@/components/board/listing-pagination';
@@ -39,13 +39,11 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
-import type { BoardAdsConfig } from '@/lib/board-ads';
+import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
 import { localizePath } from '@/lib/localized-path';
 import { listingPageHref } from '@/lib/pagination';
 import type { RelatedSearch } from '@cavuno/board';
 import type { ListingFilters } from '@cavuno/board/filters';
-
-const ADS_OFF: BoardAdsConfig = { enabled: false, clientId: null };
 
 function JobsEmpty({
   filters,
@@ -131,6 +129,7 @@ export function JobSearchPage({
   viewer: { emailVerified: boolean } | null;
   onSaveJob: (jobId: string) => Promise<void>;
 }) {
+  const rails = useListingAdRails(ads, startAd, endAd);
   // The EXTERNAL localized URL — post-auth redirects must land back on
   // /fr/emplois, not the delocalized router path.
   const returnTo = useLocation({
@@ -181,8 +180,8 @@ export function JobSearchPage({
         >
           {jobVms.length === 0 ? (
             <SearchResultsLayout
-              startAd={listingAdRail(startAd, 'start', ads)}
-              endAd={listingAdRail(endAd, 'end', ads)}
+              startAd={rails.startAd}
+              endAd={rails.endAd}
               list={
                 <div
                   data-slot="job-empty-results"
@@ -199,8 +198,8 @@ export function JobSearchPage({
             />
           ) : (
             <SearchResultsLayout
-              startAd={listingAdRail(startAd, 'start', ads)}
-              endAd={listingAdRail(endAd, 'end', ads)}
+              startAd={rails.startAd}
+              endAd={rails.endAd}
               list={
                 <SearchResultsList
                   ref={selection.listRef}
