@@ -13,7 +13,13 @@ import { pseudoBidi, pseudoLocalize } from './pseudo-locale.mjs';
  *
  *   node scripts/gen-paraglide-messages.mjs
  */
-import { writeFileSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+} from 'node:fs';
 
 const PSEUDO_LOCALES = new Set(['en-XA', 'ar-XB']);
 
@@ -32,12 +38,23 @@ function readMessages(locale) {
 
 function writeMessages(locale, messages) {
   mkdirSync('messages', { recursive: true });
-  writeFileSync(
-    `messages/${locale}.json`,
-    JSON.stringify(messages, null, 2) + '\n',
-  );
+  const path = `messages/${locale}.json`;
+  const next = JSON.stringify(messages, null, 2) + '\n';
   const count = Object.keys(messages).filter((k) => !k.startsWith('$')).length;
-  console.log(`messages/${locale}.json — ${count} keys`);
+  // Byte-identical → do not touch the file. Every write here bumps an
+  // mtime the paraglide Vite plugin watches; writing all five catalogs
+  // in ~100ms fires five overlapping recompiles and five back-to-back
+  // `[vite] program reload`s, which tear down the Cloudflare runner
+  // worker mid-entry-load and leave the dev server 500ing until it is
+  // restarted (builder prod 2026-08-27; reproduced 3/3 locally, never
+  // recovered in 150s). Skipping unchanged files turns that into one
+  // recompile for the file that actually changed.
+  if (existsSync(path) && readFileSync(path, 'utf8') === next) {
+    console.log(`${path} — ${count} keys (unchanged)`);
+    return;
+  }
+  writeFileSync(path, next);
+  console.log(`${path} — ${count} keys`);
 }
 
 // Validate source locales parse and share a schema key.
