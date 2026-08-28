@@ -23,7 +23,11 @@ import { jobAlertDefaultsFromJob } from '../lib/job-alert-defaults';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { saveJob } from '../server/account';
-import { applyToJob, prepareApplyToJob } from '../server/applications';
+import {
+  applyToJob,
+  applyToJobAsGuest,
+  prepareApplyToJob,
+} from '../server/applications';
 import { subscribeJobAlert } from '../server/queries';
 import { createJobDetailLoader } from './-job-detail-loader';
 
@@ -107,6 +111,8 @@ function JobDetailPage() {
             language={board.language}
             returnTo={returnTo}
             nativeApplications={board.features.nativeApplications}
+            registrationWall={board.features.registrationWall}
+            onGuestApply={(input) => applyToJobAsGuest({ data: input })}
             viewer={user ? { emailVerified: user.emailVerified } : null}
             applicationState={applicationState}
             onRetryApplicationState={() => router.invalidate()}

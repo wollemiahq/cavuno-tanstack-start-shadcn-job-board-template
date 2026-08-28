@@ -131,11 +131,21 @@ const board = {
   },
   talentDirectoryVisibility: 'public',
   talentAccessModel: null,
+  // The full jobForm group as 4.12.0 types it: an unrestricted board, which
+  // is what this fixture is exercising.
   jobForm: {
-    salary: { visible: true },
-    seniority: { visible: true },
-    location: { visible: true },
+    salary: {
+      visible: true,
+      required: false,
+      minBound: null,
+      maxBound: null,
+      allowedCurrencies: null,
+    },
+    seniority: { visible: true, required: false, allowedOptions: [] },
+    location: { visible: true, allowedCountries: null },
     sponsorship: { visible: true },
+    workArrangement: { allowedOptions: [] },
+    employmentType: { allowedOptions: [] },
   },
 } satisfies Parameters<typeof SelectedJobDetail>[0]['board'];
 
@@ -152,6 +162,7 @@ const user = {
 const dependencies: SelectedJobDetailDependencies = {
   applyToJob: vi.fn(),
   prepareApplyToJob: vi.fn(),
+  applyToJobAsGuest: vi.fn(),
   saveJob: vi.fn(),
 };
 

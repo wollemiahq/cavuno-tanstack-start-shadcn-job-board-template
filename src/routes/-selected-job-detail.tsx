@@ -3,7 +3,11 @@ import { useLocation, useRouter } from '@tanstack/react-router';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getSessionUser, saveJob } from '../server/account';
-import { applyToJob, prepareApplyToJob } from '../server/applications';
+import {
+  applyToJob,
+  applyToJobAsGuest,
+  prepareApplyToJob,
+} from '../server/applications';
 import { getBoardContext } from '../server/queries';
 
 import type { SelectedJobState } from './-use-selected-job';
@@ -21,12 +25,16 @@ export type SelectedJobDetailDependencies = {
   prepareApplyToJob: (options: {
     data: { jobSlug: string };
   }) => ReturnType<typeof prepareApplyToJob>;
+  applyToJobAsGuest: (options: {
+    data: Parameters<typeof applyToJobAsGuest>[0]['data'];
+  }) => ReturnType<typeof applyToJobAsGuest>;
   saveJob: (options: { data: { jobId: string } }) => ReturnType<typeof saveJob>;
 };
 
 const selectedJobDetailDependencies: SelectedJobDetailDependencies = {
   applyToJob,
   prepareApplyToJob,
+  applyToJobAsGuest,
   saveJob,
 };
 
@@ -79,6 +87,8 @@ export function SelectedJobDetail({
       language={board.language}
       returnTo={returnTo}
       nativeApplications={board.features.nativeApplications}
+      registrationWall={board.features.registrationWall}
+      onGuestApply={(input) => dependencies.applyToJobAsGuest({ data: input })}
       viewer={user ? { emailVerified: user.emailVerified } : null}
       applicationState={state.applicationState}
       onRetryApplicationState={state.retry}

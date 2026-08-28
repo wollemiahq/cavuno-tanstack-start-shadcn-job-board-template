@@ -28,6 +28,9 @@ import {
 import { useBoardConversionAnalytics } from '@/components/board-conversion-analytics';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
 import {
   candidateSignInHref,
@@ -73,6 +76,8 @@ export function ApplyButton({
   onRetryApplicationState,
   applicationsHref = '/me/applications',
   nativeApplications = true,
+  registrationWall = false,
+  onGuestApply,
   dependencies = applyButtonDependencies,
 }: {
   /** Cavuno job id for conversion payloads. */
@@ -117,6 +122,25 @@ export function ApplyButton({
    * than a dead-end apply form (the platform 422s the native apply).
    */
   nativeApplications?: boolean;
+  /**
+   * Board flag `features.registrationWall`. `true` ⇒ an anonymous visitor
+   * gets the sign-in CTA on every apply path, the external employer link
+   * included (hosted parity); the platform rejects their guest apply anyway.
+   */
+  registrationWall?: boolean;
+  /**
+   * Submit an anonymous guest application. Providing it is what tells the
+   * decision ladder this UI HAS a guest form — omit it and an anonymous
+   * visitor keeps getting the sign-in CTA.
+   */
+  onGuestApply?: (input: {
+    jobSlug: string;
+    name?: string;
+    email: string;
+    coverNote?: string;
+  }) => Promise<
+    { ok: true; applicationId: string } | { ok: false; reason: string }
+  >;
   dependencies?: ApplyButtonDependencies;
 }) {
   const conversion = useBoardConversionAnalytics();
@@ -150,8 +174,17 @@ export function ApplyButton({
   // a component instance reused across client-side navigation (same tree
   // position, new `jobSlug`) must not carry Job A's "applied" onto Job B.
   const [state, setState] = useState<
-    'idle' | 'applying' | 'applied' | 'error' | 'location-denied'
+    | 'idle'
+    | 'applying'
+    | 'applied'
+    | 'error'
+    | 'location-denied'
+    | 'guest-submitted'
+    | 'guest-not-allowed'
   >('idle');
+  const [guestName, setGuestName] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestCoverNote, setGuestCoverNote] = useState('');
   const [trackedJob, setTrackedJob] = useState(jobSlug);
   if (jobSlug !== trackedJob) {
     setTrackedJob(jobSlug);
@@ -184,6 +217,8 @@ export function ApplyButton({
     applied: applicationState === 'applied' || state === 'applied',
     language,
     nativeApplications,
+    registrationWall,
+    allowGuestApply: onGuestApply !== undefined,
   });
   const locationDialog =
     state === 'location-denied' ? (
@@ -283,6 +318,113 @@ export function ApplyButton({
         >
           {copy.appliedViewApplicationsLabel}
         </a>
+      );
+    case 'guest':
+      // Wall off ⇒ the platform accepts an anonymous apply. Collect the
+      // employer's reply address inline rather than sending the candidate
+      // through registration and losing the application.
+      if (state === 'guest-submitted') {
+        return (
+          <Alert>
+            <AlertDescription className="flex flex-col items-start gap-1">
+              <span className="font-medium">{copy.guestSubmittedHeading}</span>
+              <span>{copy.guestSubmittedText}</span>
+            </AlertDescription>
+          </Alert>
+        );
+      }
+      return (
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={async (event: FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            if (!onGuestApply) return;
+            setState('applying');
+            // Guest apply IS a native apply — track it exactly as the
+            // signed-in native path does, or the 129 wall-off boards go
+            // dark in the conversion pipeline.
+            trackApplyClick('native');
+            try {
+              const result = await onGuestApply({
+                jobSlug: action.jobSlug,
+                name: guestName.trim() || undefined,
+                email: guestEmail.trim(),
+                coverNote: guestCoverNote.trim() || undefined,
+              });
+              if (result.ok) {
+                trackApplySubmit(result.applicationId);
+              }
+              setState(
+                result.ok
+                  ? 'guest-submitted'
+                  : result.reason === 'guest_not_allowed'
+                    ? 'guest-not-allowed'
+                    : 'error',
+              );
+            } catch {
+              setState('error');
+            }
+          }}
+        >
+          <p className="text-sm font-medium">{copy.guestApplyHeading}</p>
+          <Field>
+            <FieldLabel htmlFor="guest-apply-name">
+              {copy.guestNameLabel}
+            </FieldLabel>
+            <Input
+              id="guest-apply-name"
+              name="name"
+              autoComplete="name"
+              value={guestName}
+              onChange={(event) => setGuestName(event.target.value)}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="guest-apply-email">
+              {copy.guestEmailLabel}
+            </FieldLabel>
+            <Input
+              id="guest-apply-email"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              value={guestEmail}
+              onChange={(event) => setGuestEmail(event.target.value)}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="guest-apply-cover-note">
+              {copy.guestCoverNoteLabel}
+            </FieldLabel>
+            <Textarea
+              id="guest-apply-cover-note"
+              name="coverNote"
+              rows={4}
+              value={guestCoverNote}
+              onChange={(event) => setGuestCoverNote(event.target.value)}
+            />
+          </Field>
+          <Button type="submit" size="lg" disabled={state === 'applying'}>
+            {state === 'applying' ? copy.applyingLabel : copy.guestSubmitLabel}
+          </Button>
+          <a
+            href={candidateSignInHref(returnTo)}
+            className="text-muted-foreground text-sm underline"
+          >
+            {copy.guestSignInInsteadLabel}
+          </a>
+          {state === 'guest-not-allowed' ? (
+            <p role="alert" className="text-destructive text-sm">
+              {copy.guestNotAllowedError}
+            </p>
+          ) : null}
+          {state === 'error' ? (
+            <p role="alert" className="text-destructive text-sm">
+              {copy.applicationSubmitError}
+            </p>
+          ) : null}
+        </form>
       );
     case 'native':
       return (

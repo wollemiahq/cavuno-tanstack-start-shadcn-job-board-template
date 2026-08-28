@@ -10,15 +10,16 @@
  * state — it is not derivable from loader data alone. The `ApplyButton`
  * presentation renders from `ApplyButtonVM` and imports nothing from
  * `@cavuno/board*` or `#/copy`, so restyling the button is pure markup while
- * the apply invariant (external URL applies to everyone; unverified native →
- * verify gate) stays sequestered in the SDK.
+ * the apply invariant (the registration wall gates every path; past it the
+ * external URL applies to everyone; unverified native → verify gate) stays
+ * sequestered in the SDK.
  */
-import { resolveApplyAction } from '@cavuno/board';
+import { isSafeApplicationUrl, resolveApplyDecision } from '@cavuno/board';
 
 import { applyCopy } from '@/copy-groups/apply';
 
 /** The resolved apply decision (discriminated on `kind`). */
-export type ApplyAction = ReturnType<typeof resolveApplyAction>;
+export type ApplyAction = ReturnType<typeof resolveApplyDecision>;
 
 /**
  * Cavuno's additive public-job Apply contract. Keep this local until the
@@ -45,11 +46,49 @@ export interface ApplyCopyVM {
   applicationSubmitError: string;
   locationNotEligibleError: string;
   locationUnavailableTitle: string;
+  guestApplyHeading: string;
+  guestNameLabel: string;
+  guestEmailLabel: string;
+  guestCoverNoteLabel: string;
+  guestSubmitLabel: string;
+  guestSignInInsteadLabel: string;
+  guestEmailRequiredError: string;
+  guestNotAllowedError: string;
+  guestSubmittedHeading: string;
+  guestSubmittedText: string;
 }
 
 export interface ApplyButtonVM {
   action: ResolvedApplyAction;
   copy: ApplyCopyVM;
+}
+
+/**
+ * Narrow the copy group to the labels the markup renders. Every return path
+ * ships the same set, so it lives in one place.
+ */
+function toCopyVM(copy: ReturnType<typeof applyCopy>): ApplyCopyVM {
+  return {
+    applyOnEmployerSiteLabel: copy.applyOnEmployerSiteLabel,
+    signInToApplyLabel: copy.signInToApplyLabel,
+    verifyEmailToApplyLabel: copy.verifyEmailToApplyLabel,
+    appliedViewApplicationsLabel: copy.appliedViewApplicationsLabel,
+    applyingLabel: copy.applyingLabel,
+    applyButtonText: copy.applyButtonText,
+    applicationSubmitError: copy.applicationSubmitError,
+    locationNotEligibleError: copy.locationNotEligibleError,
+    locationUnavailableTitle: copy.locationUnavailableTitle,
+    guestApplyHeading: copy.guestApplyHeading,
+    guestNameLabel: copy.guestNameLabel,
+    guestEmailLabel: copy.guestEmailLabel,
+    guestCoverNoteLabel: copy.guestCoverNoteLabel,
+    guestSubmitLabel: copy.guestSubmitLabel,
+    guestSignInInsteadLabel: copy.guestSignInInsteadLabel,
+    guestEmailRequiredError: copy.guestEmailRequiredError,
+    guestNotAllowedError: copy.guestNotAllowedError,
+    guestSubmittedHeading: copy.guestSubmittedHeading,
+    guestSubmittedText: copy.guestSubmittedText,
+  };
 }
 
 export function toApplyButtonVM({
@@ -59,6 +98,8 @@ export function toApplyButtonVM({
   viewer,
   applied,
   nativeApplications = true,
+  registrationWall = false,
+  allowGuestApply = false,
 }: {
   jobSlug: string | null;
   applicationUrl: string | null;
@@ -76,46 +117,43 @@ export function toApplyButtonVM({
    * applies to everyone and is untouched.
    */
   nativeApplications?: boolean;
+  /**
+   * Board feature flag `features.registrationWall` (default-off). `true` ⇒
+   * an anonymous visitor must sign in before ANY apply path, the external
+   * employer link included — the hosted board opens its auth dialog for an
+   * anonymous visitor on a walled board, and the API rejects an anonymous
+   * guest apply there too. Sign-in, not verification, is the bar.
+   */
+  registrationWall?: boolean;
+  /**
+   * Does this render an inline guest-apply form? Opt-in: with the wall off
+   * the hosted API accepts an anonymous apply, so forcing sign-in loses the
+   * application — but a caller with no form must keep getting `sign-in`.
+   */
+  allowGuestApply?: boolean;
 }): ApplyButtonVM {
   const copy = applyCopy();
   if (applyAction === 'gateway_external') {
-    return {
-      // A gateway job without a slug is malformed; fail closed rather than
-      // falling into the legacy URL/native ladder.
-      action: jobSlug
-        ? { kind: 'gateway-external', jobSlug }
-        : { kind: 'none' },
-      copy: {
-        applyOnEmployerSiteLabel: copy.applyOnEmployerSiteLabel,
-        signInToApplyLabel: copy.signInToApplyLabel,
-        verifyEmailToApplyLabel: copy.verifyEmailToApplyLabel,
-        appliedViewApplicationsLabel: copy.appliedViewApplicationsLabel,
-        applyingLabel: copy.applyingLabel,
-        applyButtonText: copy.applyButtonText,
-        applicationSubmitError: copy.applicationSubmitError,
-        locationNotEligibleError: copy.locationNotEligibleError,
-        locationUnavailableTitle: copy.locationUnavailableTitle,
-      },
-    };
+    // The wall outranks the server-declared gateway contract: a walled board
+    // must not hand an anonymous visitor a route to the employer. A gateway
+    // job without a slug is malformed; fail closed rather than falling into
+    // the legacy URL/native ladder.
+    const gatewayAction: ResolvedApplyAction = !jobSlug
+      ? { kind: 'none' }
+      : registrationWall && !viewer
+        ? { kind: 'sign-in', reason: 'registration-wall' }
+        : { kind: 'gateway-external', jobSlug };
+    return { action: gatewayAction, copy: toCopyVM(copy) };
   }
   if (applyAction === 'external_direct' && !applicationUrl) {
     return {
       action: { kind: 'none' },
-      copy: {
-        applyOnEmployerSiteLabel: copy.applyOnEmployerSiteLabel,
-        signInToApplyLabel: copy.signInToApplyLabel,
-        verifyEmailToApplyLabel: copy.verifyEmailToApplyLabel,
-        appliedViewApplicationsLabel: copy.appliedViewApplicationsLabel,
-        applyingLabel: copy.applyingLabel,
-        applyButtonText: copy.applyButtonText,
-        applicationSubmitError: copy.applicationSubmitError,
-        locationNotEligibleError: copy.locationNotEligibleError,
-        locationUnavailableTitle: copy.locationUnavailableTitle,
-      },
+      copy: toCopyVM(copy),
     };
   }
-  const resolved = resolveApplyAction({
+  const resolved = resolveApplyDecision({
     jobSlug,
+    registrationWall,
     // A server-declared native job must not fall through to an old/redacted
     // URL. `gateway_external` is handled above; absent preserves old SDKs.
     applicationUrl:
@@ -124,23 +162,26 @@ export function toApplyButtonVM({
         : applicationUrl,
     viewer,
     applied,
+    allowGuestApply,
   });
+  // An external-applications-only board has no working native path, so every
+  // native-ladder outcome collapses to `none` rather than a dead-end form.
+  // The wall's sign-in CTA survives that collapse ONLY when signing in would
+  // actually reveal an external link — otherwise it is itself a dead end.
+  const externalSurvivesWall =
+    applyAction !== 'native' &&
+    applyAction !== 'gateway_native' &&
+    applicationUrl !== null &&
+    isSafeApplicationUrl(applicationUrl);
+  const keepDespiteNativeOff =
+    resolved.kind === 'external' ||
+    (resolved.kind === 'sign-in' &&
+      resolved.reason === 'registration-wall' &&
+      externalSurvivesWall);
   const action: ResolvedApplyAction =
-    !nativeApplications && resolved.kind !== 'external'
-      ? { kind: 'none' }
-      : resolved;
+    !nativeApplications && !keepDespiteNativeOff ? { kind: 'none' } : resolved;
   return {
     action,
-    copy: {
-      applyOnEmployerSiteLabel: copy.applyOnEmployerSiteLabel,
-      signInToApplyLabel: copy.signInToApplyLabel,
-      verifyEmailToApplyLabel: copy.verifyEmailToApplyLabel,
-      appliedViewApplicationsLabel: copy.appliedViewApplicationsLabel,
-      applyingLabel: copy.applyingLabel,
-      applyButtonText: copy.applyButtonText,
-      applicationSubmitError: copy.applicationSubmitError,
-      locationNotEligibleError: copy.locationNotEligibleError,
-      locationUnavailableTitle: copy.locationUnavailableTitle,
-    },
+    copy: toCopyVM(copy),
   };
 }
