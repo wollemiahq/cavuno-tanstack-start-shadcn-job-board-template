@@ -92,10 +92,10 @@ export const Route = createFileRoute('/companies/$companySlug/')({
 /** Pre-resolve the pluralized "N open job(s)" label (shared across company cards). */
 function jobCountLabel(count: number) {
   const locale = getLocale();
-  const formatted = count.toLocaleString(locale);
-  return new Intl.PluralRules(locale).select(count) === 'one'
-    ? m.companyDetail_openJobsCountOne({ count: formatted })
-    : m.companyDetail_openJobsCountMany({ count: formatted });
+  return m.companyDetail_openJobsCount({
+    count,
+    countLabel: count.toLocaleString(locale),
+  });
 }
 
 /**
@@ -106,10 +106,10 @@ function jobCountLabel(count: number) {
 function openJobsHeading(count: number) {
   if (count === 0) return m.companyDetail_openJobsHeading();
   const locale = getLocale();
-  const formatted = count.toLocaleString(locale);
-  return new Intl.PluralRules(locale).select(count) === 'one'
-    ? m.companyDetail_openJobsHeadingCountOne({ count: formatted })
-    : m.companyDetail_openJobsHeadingCountMany({ count: formatted });
+  return m.companyDetail_openJobsHeadingCount({
+    count,
+    countLabel: count.toLocaleString(locale),
+  });
 }
 
 /** How many jobs the profile previews before deferring to the /jobs subpage. */
@@ -255,7 +255,7 @@ function CompanyPage() {
               {website ? (
                 <div className="flex flex-col gap-1.5">
                   <span className="text-muted-foreground text-sm font-medium">
-                    {m.footer_websiteLabel()}
+                    {m.companyDetail_websiteLabel()}
                   </span>
                   <a
                     href={website}

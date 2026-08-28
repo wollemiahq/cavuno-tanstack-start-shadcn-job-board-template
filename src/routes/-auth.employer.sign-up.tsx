@@ -11,6 +11,7 @@ import {
 } from '@/components/registration-page';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
 import { reconcileCommittedAction } from '@/lib/action-toast';
+import { buildVerifyEmailRedirectPath } from '@/lib/candidate-return-to';
 
 export async function loadEmployerSignUp(
   actions: {
@@ -96,7 +97,7 @@ export function EmployerSignUpView({
         successActionLabel: m.authEmployerSignUp_goToDashboardLabel(),
       }}
       marketingConsent={marketingConsent}
-      successHref="/auth/verify-email-required?returnTo=%2Femployers%2Fdashboard"
+      successHref={buildVerifyEmailRedirectPath('/employers/dashboard')}
       onSubmit={async (values) => {
         const result = await signUpEmployerAction({ data: values });
         if (result.ok) await reconcileCommittedAction(invalidate);

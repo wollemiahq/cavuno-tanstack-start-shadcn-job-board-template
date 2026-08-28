@@ -143,9 +143,10 @@ function SavedJobsPage() {
         {m.accountShell_savedJobsNav()}
       </Text>
       <p className="text-muted-foreground text-sm">
-        {savedJobs.data.length === 1
-          ? m.accountSaved_countOneText()
-          : m.accountSaved_countOtherText({ count: savedJobs.data.length })}
+        {m.accountSaved_count({
+          count: savedJobs.data.length,
+          countLabel: String(savedJobs.data.length),
+        })}
       </p>
     </header>
   );

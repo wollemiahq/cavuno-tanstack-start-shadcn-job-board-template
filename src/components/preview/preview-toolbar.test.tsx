@@ -55,6 +55,7 @@ const personas: PreviewPersona[] = [
 const config: PreviewBoardConfig = {
   jobAccessPaywallEnabled: false,
   talentDirectoryVisibility: 'public',
+  talentAccessModel: 'paid_unlocks_and_messaging',
   blogEnabled: true,
   jobAlertsEnabled: true,
   jobRecommendationsEnabled: true,

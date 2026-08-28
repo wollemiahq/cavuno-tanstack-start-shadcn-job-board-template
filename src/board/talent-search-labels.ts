@@ -1,3 +1,4 @@
+import { entityCopy } from '../copy-groups/entity';
 import { m } from '../paraglide/messages';
 
 import type { TalentViewModelLabels } from '@/board/talent-view-model';
@@ -9,7 +10,7 @@ export function getTalentSearchLabels(): TalentViewModelLabels {
     educationHeading: m.publicProfile_educationHeading(),
     skillsHeading: m.publicProfile_skillsHeading(),
     languagesHeading: m.publicProfile_languagesHeading(),
-    present: m.publicProfile_presentLabel(),
+    present: entityCopy().candidatePresent,
     viewProfile: m.talentSearch_viewProfileLabel(),
     jobSearchStatuses: {
       actively_looking: m.talentSearch_statusActivelyLooking(),

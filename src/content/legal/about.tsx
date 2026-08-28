@@ -85,4 +85,55 @@ export const aboutContent = {
       );
     },
   },
+  es: {
+    title: 'Acerca de',
+    description:
+      'Página «Acerca de» de ejemplo. Sustituye esta descripción y este contenido antes del lanzamiento.',
+    Body: function AboutBodyEs() {
+      return (
+        <>
+          <LegalPlaceholderCallout />
+          <h2>Quiénes somos</h2>
+          <p>
+            Sustituye esta sección por una breve presentación de tu organización
+            o de tu portal.
+          </p>
+          <h2>Para qué sirve este portal</h2>
+          <p>
+            Sustituye esta sección por el propósito del portal y por el público
+            al que se dirige.
+          </p>
+          <h2>Cómo contactarnos</h2>
+          <p>
+            Sustituye esta sección por los datos de contacto públicos que
+            quieras ofrecer a candidatos y empresas.
+          </p>
+        </>
+      );
+    },
+  },
+  pl: {
+    title: 'O nas',
+    description:
+      'Przykładowa strona „O nas”. Zastąp ten opis i treść przed uruchomieniem.',
+    Body: function AboutBodyPl() {
+      return (
+        <>
+          <LegalPlaceholderCallout />
+          <h2>Kim jesteśmy</h2>
+          <p>
+            Zastąp tę sekcję krótkim przedstawieniem swojej organizacji lub
+            portalu.
+          </p>
+          <h2>Czemu służy ten portal</h2>
+          <p>Zastąp tę sekcję opisem celu portalu i grupy, której służy.</p>
+          <h2>Jak się z nami skontaktować</h2>
+          <p>
+            Zastąp tę sekcję publicznymi danymi kontaktowymi dla kandydatów i
+            pracodawców.
+          </p>
+        </>
+      );
+    },
+  },
 } satisfies Record<LegalLocale, LegalPageContent>;

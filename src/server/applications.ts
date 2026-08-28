@@ -167,7 +167,7 @@ export const applyToJob = createServerFn({ method: 'POST' })
  * from a generic failure.
  */
 export type GuestApplyResult =
-  | { ok: true }
+  | { ok: true; applicationId: string }
   | { ok: false; reason: 'guest_not_allowed' | 'failed' };
 
 export const applyToJobAsGuest = createServerFn({ method: 'POST' })
@@ -183,7 +183,7 @@ export const applyToJobAsGuest = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }): Promise<GuestApplyResult> => {
     setResponseHeader('cache-control', 'no-store');
     try {
-      await submitNativeApply(
+      const application = await submitNativeApply(
         getBoard(),
         data.jobSlug,
         { name: data.name, email: data.email, coverNote: data.coverNote },
@@ -191,7 +191,7 @@ export const applyToJobAsGuest = createServerFn({ method: 'POST' })
         nativeApplySessionKey(),
         context.boardAccessHeaders,
       );
-      return { ok: true };
+      return { ok: true, applicationId: application.id };
     } catch (error) {
       // A walled board 403s this; every other failure is generic to the
       // applicant (the wire sentence is English and never displayed).

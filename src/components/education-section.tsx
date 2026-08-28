@@ -51,6 +51,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
+import { entityCopy } from '@/copy-groups/entity';
 import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
 import type { CandidateEducation } from '@cavuno/board';
 
@@ -294,7 +295,7 @@ export function EducationSection({
                       {profileMonthLabel(language, item.startDate)} –{' '}
                       {item.endDate
                         ? profileMonthLabel(language, item.endDate)
-                        : m.educationSection_presentLabel()}
+                        : entityCopy().candidatePresent}
                     </ItemDescription>
                   ) : null}
                 </ItemContent>

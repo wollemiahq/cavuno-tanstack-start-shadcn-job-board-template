@@ -16,6 +16,8 @@ import {
 
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import {
+  employerCanStartMessage,
+  sellsTalentProfileUnlocks,
   toTalentCardVM,
   type TalentDetailViewer,
 } from '@/board/talent-view-model';
@@ -84,7 +86,7 @@ function TalentDirectoryNotFound() {
 function TalentDirectoryPage() {
   const { seo, page, restricted } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
-  const { user } = useRootSession();
+  const { user, talentAccess } = useRootSession();
   const search = Route.useSearch();
   const location = useLocation();
   const navigate = useNavigate({ from: '/talent/' });
@@ -95,11 +97,20 @@ function TalentDirectoryPage() {
     user === null
       ? { kind: 'anonymous' }
       : user.role === 'employer'
-        ? { kind: 'employer', hasTalentAccess: true }
+        ? {
+            kind: 'employer',
+            hasTalentAccess: talentAccess.hasTalentAccess,
+            canStartMessage: employerCanStartMessage(talentAccess),
+          }
         : { kind: 'candidate' };
+  const profileUnlocks = sellsTalentProfileUnlocks(talentAccess.accessModel);
   const signInHref = candidateSignInHref(location.href);
   const selectedTalent = useSelectedTalent(
-    page?.data.some((candidate) => candidate.handle === search.selectedTalent)
+    page?.data.some(
+      (candidate) =>
+        candidate.handle === search.selectedTalent ||
+        candidate.id === search.selectedTalent,
+    )
       ? search.selectedTalent
       : undefined,
   );
@@ -122,7 +133,9 @@ function TalentDirectoryPage() {
       <TalentSearchPage
         ads={board.ads}
         candidates={page.data.map((candidate) =>
-          toTalentCardVM(candidate, getTalentSearchLabels()),
+          toTalentCardVM(candidate, getTalentSearchLabels(), {
+            profileUnlocks,
+          }),
         )}
         q={search.q}
         skill={search.skill}
@@ -166,6 +179,7 @@ function TalentDirectoryPage() {
             viewer={viewer}
             signInHref={signInHref}
             messagingEnabled={board.features.messaging}
+            profileUnlocks={profileUnlocks}
             onStartConversation={(input) => startConversation({ data: input })}
             onConversationStarted={(conversationId) =>
               window.location.assign(

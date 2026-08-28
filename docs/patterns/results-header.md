@@ -37,9 +37,10 @@ const showRange =
   typeof pageSize === "number" && count > pageSize;
 const totalLabel = heading
   ? m.jobSearch_contextualResultsHeading({ count, heading })
-  : count === 1
-    ? m.jobSearch_resultsCountOne({ count })
-    : m.jobSearch_resultsCountMany({ count });
+  : m.jobSearch_resultsCount({
+      count,                                  // raw number: picks the CLDR arm
+      countLabel: count.toLocaleString(locale), // formatted: what renders
+    });
 const rangeLabel = showRange
   ? m.jobSearch_resultsShowingRange({ from, to, count })
   : null;
@@ -49,7 +50,7 @@ const rangeLabel = showRange
 
 | Do | Don't |
 |---|---|
-| Render `JobsResultsBar` and pass raw `count` / `page` / `pageSize`. | Inline the `resultsShowingRange` / `resultsCount*` math into a route. |
+| Render `JobsResultsBar` and pass raw `count` / `page` / `pageSize`. | Inline the `resultsShowingRange` / `resultsCount` math into a route. |
 | Route sort edits back through `onSortChange` with the same sort enum the URL carries. | Build a second sort dropdown buried in a filter bar. |
 
 ## Used by

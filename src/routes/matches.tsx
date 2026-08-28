@@ -174,11 +174,10 @@ function JobMatchesPage() {
       </Text>
       {rows.length > 0 ? (
         <p className="text-muted-foreground text-sm">
-          {rows.length === 1
-            ? m.accountRecommended_countOneText()
-            : m.accountRecommended_countOtherText({
-                count: rows.length,
-              })}
+          {m.accountRecommended_count({
+            count: rows.length,
+            countLabel: String(rows.length),
+          })}
         </p>
       ) : null}
     </header>
