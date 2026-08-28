@@ -130,6 +130,7 @@ const board = {
     linkedinUrl: null,
   },
   talentDirectoryVisibility: 'public',
+  talentAccessModel: null,
   jobForm: {
     salary: { visible: true },
     seniority: { visible: true },

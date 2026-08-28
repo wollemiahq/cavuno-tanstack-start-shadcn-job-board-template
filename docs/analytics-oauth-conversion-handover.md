@@ -65,9 +65,9 @@ resolvePostAuthConversionRedirect(deps.returnTo, {
 
 Page intent (`cavuno_auth_intent`) remains on `returnTo` for rollout compatibility but is **not** used for event selection.
 
-### SDK bump
+### SDK
 
-When `@cavuno/board` publishes `BoardAuthSession.isNewUser`, bump the starter dependency. Until then the field is read optionally from the session object.
+Starter uses `@cavuno/board@4.11.0+` with typed `BoardAuthSession.isNewUser`. Exchange/consume handlers read `session.isNewUser === true` directly.
 
 ---
 
