@@ -436,8 +436,10 @@ Props:
 - `language: string`
 - `nativeApplications?: boolean | undefined`
 - `onApply: (jobSlug: string, approvalReceipt?: string | undefined) => Promise<void | { id: string; }>`
+- `onGuestApply?: ((input: { jobSlug: string; name?: string | undefined; email: string; coverNote?: string | undefined; }) => Promise<{…`
 - `onPrepareApply: (jobSlug: string) => Promise<NativeApplyPrepareResult>`
 - `onRetryApplicationState?: (() => void) | undefined`
+- `registrationWall?: boolean | undefined`
 - `returnTo: string`
 - `viewer: { emailVerified: boolean; } | null`
 
