@@ -498,7 +498,90 @@ describe('canonical talent profile route', () => {
   });
 });
 
+/**
+ * What the API sends for a paywalled profile: rows and logos survive, text
+ * does not. The gate renders this as the silhouette.
+ */
+type GateProfile = Parameters<typeof TalentUnlockGate>[0]['profile'];
+
+function blankExperience(companyLogoUrl: string | null) {
+  return {
+    title: '',
+    companyName: '',
+    companyUrl: null,
+    companyLogoUrl,
+    location: null,
+    employmentType: null,
+    locationType: null,
+    foundVia: null,
+    startDate: '',
+    endDate: null,
+    description: null,
+    experienceSkills: [],
+  };
+}
+
+const redactedProfile: GateProfile = {
+  experiences: [
+    blankExperience('https://cdn.example/acme.png'),
+    blankExperience(null),
+    blankExperience(null),
+  ],
+  education: [
+    {
+      institutionName: '',
+      institutionUrl: null,
+      institutionLogoUrl: null,
+      degree: null,
+      fieldOfStudy: null,
+      grade: null,
+      activitiesAndSocieties: null,
+      startDate: null,
+      endDate: null,
+      description: null,
+    },
+  ],
+  skills: [
+    { name: '', jobSkillId: null },
+    { name: '', jobSkillId: null },
+  ],
+  languages: [{ name: '', proficiency: '' }],
+};
+
 describe('opaque talent profile unlock gate', () => {
+  it('shows how full the profile is behind every gate state', () => {
+    // The reason an employer spends a credit is that they can see there are
+    // three roles and a degree behind the blur. A padlock over an unknown
+    // quantity converts nothing, so each state renders the silhouette.
+    for (const surface of [
+      'unlock_needed',
+      'out_of_unlocks',
+      'no_plan',
+    ] as const) {
+      const { unmount } = render(
+        <TalentUnlockGate
+          surface={surface}
+          creditsRemaining={surface === 'unlock_needed' ? 2 : 0}
+          plans={[]}
+          profile={redactedProfile}
+          busy={null}
+          onUnlock={vi.fn()}
+          onUpgrade={vi.fn()}
+        />,
+      );
+
+      // The silhouette is aria-hidden — a screen reader announcing a dozen
+      // empty bars would be noise, and the upsell above carries the meaning —
+      // so count the rows with hidden elements included.
+      expect(screen.getAllByRole('listitem', { hidden: true })).toHaveLength(
+        redactedProfile.experiences.length + redactedProfile.education.length,
+      );
+      expect(screen.getByText('Experience')).toBeInTheDocument();
+      expect(screen.getByText('Education')).toBeInTheDocument();
+      unmount();
+    }
+  });
+
   it('confirms an unlock when the employer still has credits', async () => {
     const onUnlock = vi.fn().mockResolvedValue(undefined);
     render(
@@ -506,6 +589,7 @@ describe('opaque talent profile unlock gate', () => {
         surface="unlock_needed"
         creditsRemaining={2}
         plans={[]}
+        profile={redactedProfile}
         busy={null}
         onUnlock={onUnlock}
         onUpgrade={vi.fn()}
@@ -527,6 +611,7 @@ describe('opaque talent profile unlock gate', () => {
     render(
       <TalentUnlockGate
         surface="out_of_unlocks"
+        profile={redactedProfile}
         creditsRemaining={0}
         plans={[
           {
@@ -569,6 +654,7 @@ describe('opaque talent profile unlock gate', () => {
     render(
       <TalentUnlockGate
         surface="no_plan"
+        profile={redactedProfile}
         creditsRemaining={0}
         plans={[]}
         busy={null}
