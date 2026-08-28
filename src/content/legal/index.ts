@@ -46,12 +46,28 @@ export const LEGAL_CONTENT = {
     'cookie-policy': cookiePolicyContent.fr,
     impressum: impressumContent.fr,
   },
+  es: {
+    about: aboutContent.es,
+    'privacy-policy': privacyPolicyContent.es,
+    'terms-of-service': termsOfServiceContent.es,
+    'cookie-policy': cookiePolicyContent.es,
+    impressum: impressumContent.es,
+  },
+  pl: {
+    about: aboutContent.pl,
+    'privacy-policy': privacyPolicyContent.pl,
+    'terms-of-service': termsOfServiceContent.pl,
+    'cookie-policy': cookiePolicyContent.pl,
+    impressum: impressumContent.pl,
+  },
 } satisfies Record<LegalLocale, Record<LegalPageType, LegalPageContent>>;
 
 const LEGAL_LOCALES = [
   'en',
   'de',
   'fr',
+  'es',
+  'pl',
 ] as const satisfies readonly LegalLocale[];
 
 function resolveLegalLocale(locale: string): LegalLocale {

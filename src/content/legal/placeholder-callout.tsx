@@ -24,12 +24,24 @@ const CALLOUT = {
     description:
       "Ceci est un contenu d'espace réservé pour un board modèle. Ne le publiez pas comme une vraie politique ou page à propos. Remplacez les sections ci-dessous par votre propre texte (et faites relire les pages juridiques) avant la mise en ligne.",
   },
+  es: {
+    title: 'Contenido de ejemplo — sustituir antes del lanzamiento',
+    description:
+      'Este es contenido de ejemplo de un portal de plantilla. No lo publiques como una política o una página «Acerca de» reales. Sustituye las secciones siguientes por tu propio texto (y somete las páginas legales a revisión jurídica) antes de salir a producción.',
+  },
+  pl: {
+    title: 'Treść przykładowa — zastąp przed uruchomieniem',
+    description:
+      'To jest treść przykładowa szablonu portalu. Nie publikuj jej jako prawdziwej polityki ani strony „O nas”. Zastąp poniższe sekcje własnym tekstem (a strony prawne poddaj weryfikacji prawnej) przed uruchomieniem.',
+  },
 } satisfies Record<LegalLocale, { title: string; description: string }>;
 
 const CALLOUT_LOCALES = [
   'en',
   'de',
   'fr',
+  'es',
+  'pl',
 ] as const satisfies readonly LegalLocale[];
 
 function resolveCalloutLocale(locale: string): LegalLocale {

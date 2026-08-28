@@ -89,4 +89,59 @@ export const termsOfServiceContent = {
       );
     },
   },
+  es: {
+    title: 'Términos del servicio',
+    description:
+      'Términos del servicio de ejemplo. Sustituye esta descripción y este contenido antes del lanzamiento.',
+    Body: function TermsOfServiceBodyEs() {
+      return (
+        <>
+          <LegalPlaceholderCallout />
+          <h2>Qué debe cubrir esta página</h2>
+          <p>
+            Sustituye esta sección por tus términos del servicio tras la
+            revisión legal. No dejes la plantilla en producción.
+          </p>
+          <h2>Qué documentar</h2>
+          <p>
+            Normalmente se describe quién puede usar el portal, el uso
+            aceptable, las cuentas y los límites de responsabilidad. Redacta
+            esas normas para tu producto: esta plantilla no las define.
+          </p>
+          <h2>Cómo contactarnos</h2>
+          <p>
+            Sustituye esta sección por el canal de contacto para consultas sobre
+            los términos.
+          </p>
+        </>
+      );
+    },
+  },
+  pl: {
+    title: 'Regulamin',
+    description:
+      'Przykładowy regulamin. Zastąp ten opis i treść przed uruchomieniem.',
+    Body: function TermsOfServiceBodyPl() {
+      return (
+        <>
+          <LegalPlaceholderCallout />
+          <h2>Co powinna zawierać ta strona</h2>
+          <p>
+            Zastąp tę sekcję swoim regulaminem po weryfikacji prawnej. Nie
+            zostawiaj szablonu w wersji produkcyjnej.
+          </p>
+          <h2>Co udokumentować</h2>
+          <p>
+            Zwykle opisuje się, kto może korzystać z portalu, zasady
+            dopuszczalnego użytkowania, konta oraz granice odpowiedzialności.
+            Opisz te zasady dla swojego produktu — szablon ich nie określa.
+          </p>
+          <h2>Jak się z nami skontaktować</h2>
+          <p>
+            Zastąp tę sekcję kanałem kontaktu w sprawach dotyczących regulaminu.
+          </p>
+        </>
+      );
+    },
+  },
 } satisfies Record<LegalLocale, LegalPageContent>;
