@@ -4,14 +4,13 @@
  * This MIRRORS the hosted board's posting form, which drives its currency
  * list from per-board job-form config (`jobForm.salary.allowedCurrencies`)
  * and falls back to the full ISO 4217 set when the operator has not
- * narrowed it. The v1 Board API defines `JobFormConfig` in its OpenAPI
- * schema but exposes it through no endpoint yet, so the template cannot
- * read a board's allowed list today.
+ * narrowed it. `board.context().jobForm.salary.allowedCurrencies` now
+ * carries that subset, so pass it in — the platform REJECTS a job priced in
+ * a currency outside it (`JOBS_CONSTRAINT_VIOLATION` → 400).
  *
- * MUST be replaced by the board's `jobForm.salary.allowedCurrencies` once
- * the v1 API surfaces `JobFormConfig` (platform ticket pending). Until
- * then this returns the runtime ISO 4217 list via `Intl.supportedValuesOf`
- * (no new dependency), with the most-used currencies front-loaded.
+ * `null` (or an unrecognized list) means no restriction: the runtime ISO
+ * 4217 list via `Intl.supportedValuesOf` (no new dependency), with the
+ * most-used currencies front-loaded.
  */
 
 /** Common currencies floated to the top of the list, in this order. */
@@ -22,11 +21,21 @@ export interface CurrencyOption {
   label: string;
 }
 
-export function salaryCurrencyOptions(): CurrencyOption[] {
+export function salaryCurrencyOptions(
+  allowedCurrencies?: readonly string[] | null,
+): CurrencyOption[] {
   const all = Intl.supportedValuesOf('currency');
   const front = new Set(FRONT_LOADED);
   const tail = all.filter((code) => !front.has(code)).sort();
-  return [...FRONT_LOADED, ...tail].map((code) => ({
+  const full = [...FRONT_LOADED, ...tail];
+  // An allow-list of codes the runtime does not know would empty the picker
+  // and block every posting; the server is the authority, so fall back to
+  // the full list rather than render nothing.
+  const allowed = allowedCurrencies?.length
+    ? full.filter((code) => allowedCurrencies.includes(code))
+    : full;
+  const codes = allowed.length > 0 ? allowed : full;
+  return codes.map((code) => ({
     value: code,
     label: code,
   }));

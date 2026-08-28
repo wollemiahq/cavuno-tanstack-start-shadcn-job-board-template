@@ -32,6 +32,8 @@ import {
   type EmployerJobFormDependencies,
 } from './employer-job-form';
 
+import { m } from '@/paraglide/messages';
+
 const dependencies = mocks satisfies EmployerJobFormDependencies;
 
 async function renderWithRouter(node: React.ReactNode) {
@@ -365,5 +367,39 @@ describe('EmployerJobForm', () => {
       expect(screen.getByText(/Choose a credit or plan/)).toBeInTheDocument(),
     );
     expect(mocks.createJob).not.toHaveBeenCalled();
+  });
+});
+
+describe('EmployerJobForm — board job-form constraints', () => {
+  it('surfaces a blocked save visibly, not just in state', async () => {
+    // `message` renders only under `status === 'error'`; setting the text
+    // alone left the submit button silently dead.
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
+        job={draftJob}
+        // The fixture job pays 100000–140000; the board floor is higher.
+        jobForm={{
+          object: 'public_board',
+          jobForm: { salary: { required: true, minBound: 200000 } },
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    expect(
+      await screen.findByText(m.jobForm_salaryBelowMinError({ min: 200000 })),
+    ).toBeInTheDocument();
+    expect(mocks.updateJob).not.toHaveBeenCalled();
   });
 });
