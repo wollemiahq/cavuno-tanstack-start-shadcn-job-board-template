@@ -1236,6 +1236,8 @@
   "jobForm_salaryBelowMinError": "Wynagrodzenie musi wynosić co najmniej {min}.",
   "jobForm_salaryRequiredError": "Podaj widełki wynagrodzenia dla tego stanowiska.",
   "jobForm_seniorityRequiredError": "Wybierz poziom doświadczenia dla tego stanowiska.",
+  "jobForm_currencyNotAllowedError": "Ta tablica ofert akceptuje wynagrodzenia tylko w: {currencies}.",
+  "jobForm_optionNotAllowedError": "To ogłoszenie używa opcji, której tablica ofert już nie akceptuje. Wybierz nową wartość przed zapisaniem.",
   "jobSalary_boundFrom": "Od {amount}",
   "jobSalary_boundUpTo": "Do {amount}",
   "jobSalary_perTimeframe": "{amount} / {unit}",

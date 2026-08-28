@@ -1196,6 +1196,8 @@
   "jobForm_salaryBelowMinError": "El salario debe ser de al menos {min}.",
   "jobForm_salaryRequiredError": "Indica un rango salarial para este puesto.",
   "jobForm_seniorityRequiredError": "Elige un nivel de experiencia para este puesto.",
+  "jobForm_currencyNotAllowedError": "Este portal solo acepta salarios en: {currencies}.",
+  "jobForm_optionNotAllowedError": "Esta oferta usa una opción que el portal ya no acepta. Elige un nuevo valor antes de guardar.",
   "jobSalary_boundFrom": "Desde {amount}",
   "jobSalary_boundUpTo": "Hasta {amount}",
   "jobSalary_perTimeframe": "{amount} / {unit}",

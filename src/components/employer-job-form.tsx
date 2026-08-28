@@ -96,9 +96,56 @@ const SENIORITIES = [
  * will 400 anything this misses.
  */
 function jobFormConstraintError(
-  form: { salaryMin: string; salaryMax: string; seniority: string | null },
+  form: {
+    salaryMin: string;
+    salaryMax: string;
+    seniority: string | null;
+    officeLocations: OfficeLocationDraft[];
+    employmentType: string;
+    remoteOption: string;
+    currency: string;
+  },
   jobForm: JobFormConstraints,
 ): string {
+  // An EDIT opens with the job's stored values, which predate any narrowing
+  // the operator has since applied — so a job saved as full_time / hybrid /
+  // USD can sit in a form whose pickers now offer none of those. Nothing
+  // downstream catches it: the employer job route runs no server-side
+  // constraint check (only public submission does), so an unchecked save
+  // silently stores a value the board disallows.
+  const disallowed = (
+    [
+      [jobForm.employmentType.allowedOptions, form.employmentType],
+      [jobForm.workArrangement.allowedOptions, form.remoteOption],
+    ] as const
+  ).some(([allowed, value]) => allowed && !allowed.includes(value));
+  if (disallowed) return m.jobForm_optionNotAllowedError();
+  if (
+    jobForm.salary.visible &&
+    jobForm.salary.allowedCurrencies &&
+    !jobForm.salary.allowedCurrencies.includes(form.currency)
+  ) {
+    return m.jobForm_currencyNotAllowedError({
+      currencies: jobForm.salary.allowedCurrencies.join(', '),
+    });
+  }
+  const allowedCountries = jobForm.location.allowedCountries;
+  if (jobForm.location.visible && allowedCountries) {
+    // Same rule as the platform collector: only a location that HAS a
+    // country code outside the list is a violation. The picker refuses new
+    // ones inline; this catches a stored location on a board that narrowed
+    // its list after the job was posted.
+    const offending = form.officeLocations.some(
+      (location) =>
+        location.countryCode &&
+        !allowedCountries.includes(location.countryCode),
+    );
+    if (offending) {
+      return m.jobForm_officeLocationCountryNotAllowedError({
+        countries: allowedCountries.join(', '),
+      });
+    }
+  }
   if (
     jobForm.seniority.visible &&
     jobForm.seniority.required &&
@@ -145,7 +192,17 @@ type PermitType = NonNullable<
   CreateEmployerJobBody['remotePermits']
 >[number]['type'];
 
-type OfficeLocationDraft = { key: string; displayName: string };
+type OfficeLocationDraft = {
+  key: string;
+  displayName: string;
+  /**
+   * ISO country code when the entry came from a resolved place suggestion,
+   * `null` for free text — the API resolves that through Mapbox server-side,
+   * so the country is not knowable here, and the board's country lock treats
+   * an unknown country the same way the platform collector does: it passes.
+   */
+  countryCode: string | null;
+};
 type JobPermitSelection = RemotePermitSelection & { type: PermitType };
 type ApplyMethod = 'external' | 'native';
 
@@ -257,6 +314,10 @@ function initialForm(
         [location.city, location.region, location.country]
           .filter(Boolean)
           .join(', '),
+      // Carried so an EDIT is checked too: an operator can narrow
+      // `allowedCountries` after a job was posted, and hosted's employer
+      // form (whose picker has always kept the country) blocks the save.
+      countryCode: location.countryCode,
     }))
     .filter((location) => location.displayName.length > 0);
 
@@ -381,6 +442,9 @@ export function EmployerJobForm({
   const [fieldErrors, setFieldErrors] = useState<{
     description?: boolean;
     officeLocations?: boolean;
+    /** A picked location outside the board's country list (distinct from
+     *  `officeLocations`, which means "none added"). */
+    officeLocationCountry?: boolean;
     applicationTarget?: boolean;
     billing?: boolean;
   }>({});
@@ -790,7 +854,28 @@ export function EmployerJobForm({
                   key: location.key,
                   label: location.displayName,
                 }))}
-                onAddSuggestion={(place: LocationSuggestionVM) =>
+                onAddSuggestion={(place: LocationSuggestionVM) => {
+                  // Mirror the platform collector exactly: reject only a
+                  // location that HAS a country code outside the board's
+                  // list. The picker already resolves one — the form simply
+                  // threw it away, so the board's country lock could never
+                  // fire on an employer-posted job.
+                  const allowed = jobForm.location.allowedCountries;
+                  if (
+                    allowed &&
+                    place.countryCode &&
+                    !allowed.includes(place.countryCode)
+                  ) {
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      officeLocationCountry: true,
+                    }));
+                    return;
+                  }
+                  setFieldErrors((prev) => ({
+                    ...prev,
+                    officeLocationCountry: false,
+                  }));
                   setForm((prev) =>
                     prev.officeLocations.some(
                       (location) => location.key === place.id,
@@ -800,20 +885,40 @@ export function EmployerJobForm({
                           ...prev,
                           officeLocations: [
                             ...prev.officeLocations,
-                            { key: place.id, displayName: place.name },
+                            {
+                              key: place.id,
+                              displayName: place.name,
+                              countryCode: place.countryCode,
+                            },
                           ],
                         },
-                  )
-                }
-                onAddFreeText={(text) =>
+                  );
+                }}
+                onAddFreeText={(text) => {
+                  // Free text carries no country code. On the PUBLIC form
+                  // that is fine — the server resolves it and rejects a
+                  // disallowed country. This route has no such check, so
+                  // accepting unverifiable text here would be a hole in the
+                  // very lock this form is enforcing.
+                  if (jobForm.location.allowedCountries) {
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      officeLocationCountry: true,
+                    }));
+                    return;
+                  }
                   setForm((prev) => ({
                     ...prev,
                     officeLocations: [
                       ...prev.officeLocations,
-                      { key: `text:${text}`, displayName: text },
+                      {
+                        key: `text:${text}`,
+                        displayName: text,
+                        countryCode: null,
+                      },
                     ],
-                  }))
-                }
+                  }));
+                }}
                 onRemove={(key) =>
                   setForm((prev) => ({
                     ...prev,
@@ -833,6 +938,14 @@ export function EmployerJobForm({
                 <FieldDescription>
                   {m.postJob_officeLocationsRemoteHelperText()}
                 </FieldDescription>
+              ) : null}
+              {fieldErrors.officeLocationCountry &&
+              jobForm.location.allowedCountries ? (
+                <FieldError>
+                  {m.jobForm_officeLocationCountryNotAllowedError({
+                    countries: jobForm.location.allowedCountries.join(', '),
+                  })}
+                </FieldError>
               ) : null}
               {fieldErrors.officeLocations ? (
                 <FieldError>
