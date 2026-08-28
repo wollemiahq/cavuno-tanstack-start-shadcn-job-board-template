@@ -45,13 +45,16 @@ function categories(variants: PluralVariant[]): string[] {
   return Object.keys(variants[0].match).map((arm) => arm.split('=')[1] ?? arm);
 }
 
-const PLURAL_KEYS = [
-  'jobSearch_resultsCount',
-  'companySearch_resultsCount',
-  'employerApplicants_count',
-  'accountSaved_count',
-  'employerMembers_count',
-];
+/**
+ * Every complex (variant) message in the catalog, derived rather than listed —
+ * a hand-written subset only guards the messages someone remembered, and the
+ * arm that goes missing later will be one of the others.
+ */
+const PLURAL_KEYS = Object.entries(
+  readCatalog('en') as Record<string, CatalogEntry>,
+)
+  .filter(([, value]) => Array.isArray(value))
+  .map(([key]) => key);
 
 describe('plural messages', () => {
   it('Polish declares few and many, not just one and other', () => {

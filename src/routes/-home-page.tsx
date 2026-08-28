@@ -31,8 +31,14 @@ export function HomePage() {
   const copy = {
     entity: entityCopy(),
   };
-  // Plural category via Intl.PluralRules, never `count === 1` — the copy
-  // seam supplies One/Many forms and the locale decides which applies.
+  // Plural category via Intl.PluralRules, never `count === 1`.
+  //
+  // LIMITATION: the seam supplies two bare nouns, so this can only ever render
+  // `one` vs everything-else. That is correct for en/de/fr/es but wrong for
+  // Polish, which needs a third (genitive) form — "5 kandydatów", not
+  // "5 kandydaci". Fixing it means a plural message per entity, like the 17
+  // converted elsewhere in this arc; tracked as follow-up rather than widened
+  // here.
   const countEyebrow = (
     count: number | null | undefined,
     singular: string,

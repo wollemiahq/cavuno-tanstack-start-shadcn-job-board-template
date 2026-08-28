@@ -34,8 +34,12 @@ export function jobSearchCopy() {
     // is chosen inside the message against the active locale, so this exposes
     // the general form; the real call sites pass the actual number and get the
     // right category, including languages with more than two forms.
+    // `count: 0` resolves to the catch-all arm (`other` in en/de/fr/es, `many`
+    // in pl) — the closest thing to a general form. Asking for 2 would bake a
+    // SPECIFIC category in any language with a `few`/`two` arm, so a `{{count}}`
+    // of 5 would render the wrong Polish form.
     resultsCount: m.jobSearch_resultsCount({
-      count: 2,
+      count: 0,
       countLabel: '{{count}}',
     }),
     resultsRegionLabel: m.jobSearch_resultsRegionLabel(),
