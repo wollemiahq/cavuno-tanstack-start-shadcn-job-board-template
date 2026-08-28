@@ -50,9 +50,7 @@ function categories(variants: PluralVariant[]): string[] {
  * a hand-written subset only guards the messages someone remembered, and the
  * arm that goes missing later will be one of the others.
  */
-const PLURAL_KEYS = Object.entries(
-  readCatalog('en') as Record<string, CatalogEntry>,
-)
+const PLURAL_KEYS = Object.entries(readCatalog('en'))
   .filter(([, value]) => Array.isArray(value))
   .map(([key]) => key);
 
