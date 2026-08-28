@@ -592,6 +592,9 @@ export function EmployerJobForm({
     // before the round trip.
     const constraintError = jobFormConstraintError(form, jobForm);
     if (constraintError) {
+      // `message` only renders under `status === 'error'` — setting it alone
+      // leaves the employer with a silently dead submit button.
+      setStatus('error');
       setMessage(constraintError);
       return;
     }
