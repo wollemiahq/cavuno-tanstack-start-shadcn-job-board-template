@@ -1,7 +1,33 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  "accessOffer_everyMonths": "⟦éṽéŕý {count} ɱóñţĥš⟧",
-  "accessOffer_everyYears": "⟦éṽéŕý {count} ýéáŕš⟧",
+  "accessOffer_everyMonths": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⟦éṽéŕý {countLabel} ɱóñţĥ⟧",
+        "countPlural=*": "⟦éṽéŕý {countLabel} ɱóñţĥš⟧"
+      }
+    }
+  ],
+  "accessOffer_everyYears": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⟦éṽéŕý {countLabel} ýéáŕ⟧",
+        "countPlural=*": "⟦éṽéŕý {countLabel} ýéáŕš⟧"
+      }
+    }
+  ],
   "accessOffer_oneTime": "⟦óñé-ţíɱé þáýɱéñţ⟧",
   "accessOffer_perDay": "⟦/ðáý⟧",
   "accessOffer_perMonth": "⟦/ɱóñţĥ⟧",
@@ -651,10 +677,49 @@
   "employerJobs_viewsColumn": "⟦Ṽíéŵš⟧",
   "employerJobs_yourJobsHeading": "⟦Ýóúŕ ĵóƀš⟧",
   "employerLanding_enterpriseHeading": "⟦Éñţéŕþŕíšé⟧",
-  "employerLanding_featureFeaturedSlots": "⟦{count} ƒéáţúŕéð⟧",
+  "employerLanding_featureFeaturedSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⟦{countLabel} ƒéáţúŕéð⟧",
+        "countPlural=*": "⟦{countLabel} ƒéáţúŕéð⟧"
+      }
+    }
+  ],
   "employerLanding_featureListingDuration": "⟦{days}-ðáý ĺíšţíñğ⟧",
-  "employerLanding_featureMessages": "⟦{count} ɱéššáğéš⟧",
-  "employerLanding_featureProfileUnlocks": "⟦{count} þŕóƒíĺé úñĺóçķš⟧",
+  "employerLanding_featureMessages": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⟦{countLabel} ɱéššáğé⟧",
+        "countPlural=*": "⟦{countLabel} ɱéššáğéš⟧"
+      }
+    }
+  ],
+  "employerLanding_featureProfileUnlocks": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⟦{countLabel} þŕóƒíĺé úñĺóçķ⟧",
+        "countPlural=*": "⟦{countLabel} þŕóƒíĺé úñĺóçķš⟧"
+      }
+    }
+  ],
   "employerLanding_freeLabel": "⟦Ƒŕéé⟧",
   "employerLanding_jobPostingHeading": "⟦Ĵóƀ þóšţíñğ⟧",
   "employerLanding_noPlansText": "⟦Ñó þĺáñš áŕé áṽáíĺáƀĺé ŕíğĥţ ñóŵ.⟧",
@@ -1356,8 +1421,6 @@
   "salaryHub_companiesMetaDescription": "⟦Áṽéŕáğé šáĺáŕíéš áţ çóɱþáñíéš ĥíŕíñğ óñ {boardName}.⟧",
   "salaryHub_companiesMetaTitle": "⟦Çóɱþáñý šáĺáŕíéš⟧",
   "salaryHub_emptyDescription": "⟦Šáĺáŕý íñšíğĥţš áþþéáŕ ŵĥéñ ɱáţçĥíñğ þúƀĺíšĥéð ĵóƀš çóñţáíñ šáĺáŕý ðáţá.⟧",
-  "salaryHub_jobCountPlural": "⟦{count} ĵóƀš⟧",
-  "salaryHub_jobCountSingular": "⟦{count} ĵóƀ⟧",
   "salaryHub_jobTitlesCrumbLabel": "⟦Ĵóƀ ţíţĺéš⟧",
   "salaryHub_locationsEmptyTitle": "⟦Ñó ĺóçáţíóñ šáĺáŕý ðáţá ýéţ⟧",
   "salaryHub_locationsHeading": "⟦Šáĺáŕíéš ƀý ĺóçáţíóñ⟧",
@@ -1772,5 +1835,19 @@
   ],
   "entity_candidateSingular": "⟦çáñðíðáţé⟧",
   "entity_candidatePlural": "⟦çáñðíðáţéš⟧",
-  "entity_candidatePresent": "⟦Þŕéšéñţ⟧"
+  "entity_candidatePresent": "⟦Þŕéšéñţ⟧",
+  "salaryHub_jobCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⟦{countLabel} ĵóƀ⟧",
+        "countPlural=*": "⟦{countLabel} ĵóƀš⟧"
+      }
+    }
+  ]
 }

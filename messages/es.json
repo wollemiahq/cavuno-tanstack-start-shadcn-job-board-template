@@ -1,7 +1,33 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  "accessOffer_everyMonths": "cada {count} meses",
-  "accessOffer_everyYears": "cada {count} años",
+  "accessOffer_everyMonths": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "cada {countLabel} mes",
+        "countPlural=*": "cada {countLabel} meses"
+      }
+    }
+  ],
+  "accessOffer_everyYears": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "cada {countLabel} año",
+        "countPlural=*": "cada {countLabel} años"
+      }
+    }
+  ],
   "accessOffer_oneTime": "pago único",
   "accessOffer_perDay": "/día",
   "accessOffer_perMonth": "/mes",
@@ -651,10 +677,49 @@
   "employerJobs_viewsColumn": "Visitas",
   "employerJobs_yourJobsHeading": "Tus ofertas",
   "employerLanding_enterpriseHeading": "Empresas grandes",
-  "employerLanding_featureFeaturedSlots": "{count} destacadas",
+  "employerLanding_featureFeaturedSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} destacada",
+        "countPlural=*": "{countLabel} destacadas"
+      }
+    }
+  ],
   "employerLanding_featureListingDuration": "Publicación de {days} días",
-  "employerLanding_featureMessages": "{count} mensajes",
-  "employerLanding_featureProfileUnlocks": "{count} desbloqueos de perfil",
+  "employerLanding_featureMessages": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} mensaje",
+        "countPlural=*": "{countLabel} mensajes"
+      }
+    }
+  ],
+  "employerLanding_featureProfileUnlocks": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} desbloqueo de perfil",
+        "countPlural=*": "{countLabel} desbloqueos de perfil"
+      }
+    }
+  ],
   "employerLanding_freeLabel": "Gratis",
   "employerLanding_jobPostingHeading": "Publicación de ofertas",
   "employerLanding_noPlansText": "No hay planes disponibles ahora mismo.",
@@ -1356,8 +1421,6 @@
   "salaryHub_companiesMetaDescription": "Salarios medios en las empresas que contratan en {boardName}.",
   "salaryHub_companiesMetaTitle": "Salarios por empresa",
   "salaryHub_emptyDescription": "Los datos salariales aparecen cuando las ofertas publicadas que coinciden incluyen información de salario.",
-  "salaryHub_jobCountPlural": "{count} ofertas",
-  "salaryHub_jobCountSingular": "{count} oferta",
   "salaryHub_jobTitlesCrumbLabel": "Puestos",
   "salaryHub_locationsEmptyTitle": "Aún no hay datos salariales por ubicación",
   "salaryHub_locationsHeading": "Salarios por ubicación",
@@ -1772,5 +1835,19 @@
   ],
   "entity_candidateSingular": "candidato",
   "entity_candidatePlural": "candidatos",
-  "entity_candidatePresent": "Actualidad"
+  "entity_candidatePresent": "Actualidad",
+  "salaryHub_jobCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta",
+        "countPlural=*": "{countLabel} ofertas"
+      }
+    }
+  ]
 }

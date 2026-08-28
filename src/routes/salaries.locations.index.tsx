@@ -68,13 +68,10 @@ function LocationTree({
             {formatSalaryRange(locale, n.avgSalaryMin, n.avgSalaryMax, null) ??
               ''}
             {' · '}
-            {new Intl.PluralRules(locale).select(n.jobCount) === 'one'
-              ? m.salaryHub_jobCountSingular({
-                  count: n.jobCount.toLocaleString(locale),
-                })
-              : m.salaryHub_jobCountPlural({
-                  count: n.jobCount.toLocaleString(locale),
-                })}
+            {m.salaryHub_jobCount({
+              count: n.jobCount,
+              countLabel: n.jobCount.toLocaleString(locale),
+            })}
           </span>
           {byParent.has(n.placeSlug) ? (
             <div className="border-border ms-3 mt-1 border-s ps-3">

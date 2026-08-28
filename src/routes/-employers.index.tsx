@@ -85,16 +85,19 @@ function planFeatures(plan: Plan) {
     plan.featureSummary.featuredSlots > 0
       ? m.employerLanding_featureFeaturedSlots({
           count: plan.featureSummary.featuredSlots,
+          countLabel: String(plan.featureSummary.featuredSlots),
         })
       : null,
     plan.talent
       ? m.employerLanding_featureProfileUnlocks({
           count: plan.talent.unlocksPerPeriod,
+          countLabel: String(plan.talent.unlocksPerPeriod),
         })
       : null,
     plan.talent
       ? m.employerLanding_featureMessages({
           count: plan.talent.messagesPerPeriod,
+          countLabel: String(plan.talent.messagesPerPeriod),
         })
       : null,
   ].filter((feature) => feature !== null);
