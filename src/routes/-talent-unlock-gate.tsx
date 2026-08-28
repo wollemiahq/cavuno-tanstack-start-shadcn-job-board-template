@@ -26,6 +26,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { m } from '@/paraglide/messages';
 import { getLocale } from '@/paraglide/runtime';
+import { TalentProfileSilhouette } from '@/routes/-talent-profile-silhouette';
 import type { Plan } from '@cavuno/board';
 
 export function TalentUnlockPending() {
@@ -46,6 +47,7 @@ export function TalentUnlockGate({
   surface,
   creditsRemaining,
   plans,
+  profile,
   busy,
   onUnlock,
   onUpgrade,
@@ -53,6 +55,11 @@ export function TalentUnlockGate({
   surface: 'unlock_needed' | 'out_of_unlocks' | 'no_plan';
   creditsRemaining: number;
   plans: Plan[];
+  /**
+   * The redacted profile, rendered beneath the upsell as a silhouette. The
+   * gate converts on how much is visibly behind it, so every state shows it.
+   */
+  profile: Parameters<typeof TalentProfileSilhouette>[0]['profile'];
   busy: 'unlock' | string | null;
   onUnlock: () => Promise<void> | void;
   onUpgrade: (planId: string) => Promise<void> | void;
@@ -76,6 +83,7 @@ export function TalentUnlockGate({
               </a>
             }
           />
+          <TalentProfileSilhouette profile={profile} />
         </PageContent>
       </Page>
     );
@@ -120,6 +128,7 @@ export function TalentUnlockGate({
                 {m.talentUnlock_viewPlansLabel()}
               </a>
             )}
+            <TalentProfileSilhouette profile={profile} />
           </div>
         </PageContent>
       </Page>
@@ -182,6 +191,7 @@ export function TalentUnlockGate({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        <TalentProfileSilhouette profile={profile} />
       </PageContent>
     </Page>
   );

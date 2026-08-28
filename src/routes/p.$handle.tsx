@@ -169,6 +169,7 @@ function TalentProfilePage() {
         surface={surface}
         creditsRemaining={candidateAccess?.unlockCreditsRemaining ?? 0}
         plans={plans}
+        profile={profile}
         busy={busy}
         onUnlock={async () => {
           setBusy('unlock');
