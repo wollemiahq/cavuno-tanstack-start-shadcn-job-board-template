@@ -23,6 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { footerCopy } from '@/copy-groups/footer';
 import {
   clearCookieConsent,
   parseCookieConsent,
@@ -196,7 +197,7 @@ export function CookieConsentBanner() {
                 to="/cookie-policy"
                 className="text-foreground underline underline-offset-4"
               >
-                {m.footer_cookiePolicyLabel()}
+                {footerCopy().cookiePolicyLabel}
               </Link>
             </CardDescription>
           </CardHeader>

@@ -19,7 +19,9 @@ import {
 import { SalaryEmptyState } from '@/components/board/salary-sections';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { entityCount } from '@/lib/entity-count';
 import { localizePath } from '@/lib/localized-path';
+import { chromeEntity } from '@/lib/site-chrome';
 
 export const Route = createFileRoute('/salaries/locations/')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -53,6 +55,7 @@ function LocationTree({
   const nodes = byParent.get(parentSlug) ?? [];
   if (nodes.length === 0) return null;
   const locale = getLocale();
+  const entityOverrides = chromeEntity();
   return (
     <ul className="space-y-1.5">
       {nodes.map((n) => (
@@ -68,9 +71,9 @@ function LocationTree({
             {formatSalaryRange(locale, n.avgSalaryMin, n.avgSalaryMax, null) ??
               ''}
             {' · '}
-            {m.count_jobs({
-              count: n.jobCount,
-              countLabel: n.jobCount.toLocaleString(locale),
+            {entityCount(n.jobCount, locale, m.count_jobs, {
+              singular: entityOverrides.jobSingular,
+              plural: entityOverrides.jobPlural,
             })}
           </span>
           {byParent.has(n.placeSlug) ? (
