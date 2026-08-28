@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
@@ -23,6 +23,21 @@ type PluralVariant = {
 /** A message is either a simple pattern or a list of variants. */
 type CatalogEntry = string | PluralVariant[];
 type MessageCatalog = Record<string, CatalogEntry>;
+
+/** CI-only pseudo-locales, generated from English; not shipped chrome. */
+const PSEUDO_LOCALES = new Set(['en-XA', 'ar-XB']);
+
+/**
+ * Every real catalog on disk, derived rather than listed. A hand-written list
+ * silently excludes any locale added later — `pnpm locale:add ru` seeds a
+ * catalog by copying English, so a new >2-form language arrives with only
+ * `one` and `*` arms and nothing would have checked it.
+ */
+const LOCALES = readdirSync(join(import.meta.dirname, '../messages'))
+  .filter((name) => name.endsWith('.json'))
+  .map((name) => name.slice(0, -'.json'.length))
+  .filter((locale) => !PSEUDO_LOCALES.has(locale))
+  .sort();
 
 function readCatalog(locale: string): MessageCatalog {
   const path = join(import.meta.dirname, `../messages/${locale}.json`);
@@ -50,29 +65,47 @@ function categories(variants: PluralVariant[]): string[] {
  * a hand-written subset only guards the messages someone remembered, and the
  * arm that goes missing later will be one of the others.
  */
-const PLURAL_KEYS = Object.entries(readCatalog('en'))
-  .filter(([, value]) => Array.isArray(value))
-  .map(([key]) => key);
+const PLURAL_KEYS = [
+  ...new Set(
+    LOCALES.flatMap((locale) =>
+      Object.entries(readCatalog(locale))
+        .filter(([, value]) => Array.isArray(value))
+        .map(([key]) => key),
+    ),
+  ),
+].sort();
 
 describe('plural messages', () => {
-  it('Polish declares few and many, not just one and other', () => {
-    for (const key of PLURAL_KEYS) {
-      const cats = categories(readVariants('pl', key));
-      expect(cats, `${key} in pl`).toContain('one');
-      expect(cats, `${key} in pl`).toContain('few');
-      expect(cats, `${key} in pl`).toContain('many');
-    }
+  it('actually found the plural messages and the catalogs', () => {
+    // Every other test here is a `for (const … of …)` loop, so an empty list
+    // would pass all of them green. These floors are what stop the gate going
+    // vacuous if a message is flattened back to a plain string.
+    expect(PLURAL_KEYS.length).toBeGreaterThanOrEqual(17);
+    expect(LOCALES).toContain('en');
+    expect(LOCALES).toContain('pl');
   });
 
-  it('every locale ends with a wildcard arm so no category renders the raw key', () => {
-    // The compiler falls back to the message KEY when no arm matches, so a
-    // locale missing an arm would print "jobSearch_resultsCount" on the page.
-    for (const locale of ['en', 'de', 'fr', 'es', 'pl']) {
+  it('every locale declares an arm for each category real counts produce', () => {
+    // The invariant a hand-written "Polish needs few/many" check misses:
+    // `pnpm locale:add ru` seeds a catalog by copying English, so a new
+    // >2-form language arrives with only `one` and `*`. That renders SOMETHING
+    // (the wildcard), which is why the wildcard test does not catch it — but it
+    // is the wrong word for 2 and 5.
+    //
+    // Scoped to counts a board actually renders. Modern CLDR also gives es/fr
+    // a `many` category, but only for large compact numbers ("1 millón"),
+    // where falling through to `*` is correct — requiring it would be noise.
+    const REAL_COUNTS = [0, 1, 2, 3, 4, 5, 11, 21, 100, 1000];
+    for (const locale of LOCALES) {
+      const rules = new Intl.PluralRules(locale);
+      const required = [
+        ...new Set(REAL_COUNTS.map((n) => rules.select(n))),
+      ].filter((category) => category !== 'other');
       for (const key of PLURAL_KEYS) {
-        expect(
-          categories(readVariants(locale, key)),
-          `${key} in ${locale}`,
-        ).toContain('*');
+        const declared = categories(readVariants(locale, key));
+        for (const category of required) {
+          expect(declared, `${key} in ${locale}`).toContain(category);
+        }
       }
     }
   });
