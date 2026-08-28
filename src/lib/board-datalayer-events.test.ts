@@ -10,7 +10,18 @@ import {
   pushBoardDataLayerEvent,
   resolvePostAuthConversionRedirect,
   stripAuthConversionSearchParams,
+  type BoardDataLayerEvent,
 } from '@/lib/board-datalayer-events';
+
+function captureDataLayer(): BoardDataLayerEvent[] {
+  const pushes: BoardDataLayerEvent[] = [];
+  Object.defineProperty(window, 'dataLayer', {
+    configurable: true,
+    writable: true,
+    value: pushes,
+  });
+  return pushes;
+}
 
 describe('board-datalayer-events', () => {
   afterEach(() => {
@@ -18,12 +29,7 @@ describe('board-datalayer-events', () => {
   });
 
   it('pushes standard events to window.dataLayer', () => {
-    window.dataLayer = [] as unknown as NonNullable<typeof window.dataLayer>;
-    const pushes = window.dataLayer as {
-      event: string;
-      method: string;
-      board_slug: string;
-    }[];
+    const pushes = captureDataLayer();
 
     pushBoardDataLayerEvent({
       event: 'sign_up',

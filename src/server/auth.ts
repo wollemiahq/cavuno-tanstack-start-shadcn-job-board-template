@@ -1,4 +1,4 @@
-import { isBoardApiError } from '@cavuno/board';
+import { isBoardApiError, type BoardAuthSession } from '@cavuno/board';
 /**
  * Auth server functions. The SDK never
  * stores tokens on the server; these functions move the bearer pair in
@@ -36,8 +36,10 @@ function authError<T>(error: T): AuthActionError {
   throw error;
 }
 
-function authExchangeIsNewUser(session: unknown): boolean {
-  return (session as { isNewUser?: boolean }).isNewUser === true;
+function authExchangeIsNewUser(
+  session: BoardAuthSession & { isNewUser?: boolean },
+): boolean {
+  return session.isNewUser === true;
 }
 
 export const signIn = createServerFn({ method: 'POST' })

@@ -299,13 +299,9 @@ export function ApplyButton({
                   prepare: onPrepareApply,
                   submit: onApply,
                 });
-                if (
-                  application &&
-                  typeof application === 'object' &&
-                  'id' in application &&
-                  typeof application.id === 'string'
-                ) {
-                  trackApplySubmit(application.id);
+                const applicationId = application?.id;
+                if (applicationId !== undefined) {
+                  trackApplySubmit(applicationId);
                 }
                 setState('applied');
               } catch (error) {

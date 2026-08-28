@@ -17,10 +17,7 @@ export interface BoardLinkedInConversionIds {
 export type BoardConversionAnalyticsConfig = BoardAnalyticsConfig &
   BoardLinkedInConversionIds;
 
-type LinkedInConversionArgs = [
-  'track',
-  { conversion_id: string; [key: string]: unknown },
-];
+type LinkedInConversionArgs = ['track', { conversion_id: string }];
 
 type QueuedPixelCall =
   | { vendor: 'meta'; args: [string, ...unknown[]] }
@@ -33,6 +30,8 @@ type AnalyticsWindow = typeof window & {
 };
 
 function analyticsWindow(): AnalyticsWindow {
+  // SAFETY: Pixel vendor scripts attach optional fbq/lintrk/queue globals;
+  // each call site checks they are functions before invoking them.
   return window as AnalyticsWindow;
 }
 
@@ -44,17 +43,17 @@ function pixelQueue(): QueuedPixelCall[] {
 
 /** Drain queued Meta/LinkedIn calls after vendor scripts initialize. */
 export function flushBoardPixelQueue(): void {
-  if (typeof window === 'undefined') return;
+  if (import.meta.env.SSR) return;
   const w = analyticsWindow();
   const queue = w.__cavunoBoardPixelQueue;
   if (!queue?.length) return;
   const pending: QueuedPixelCall[] = [];
   for (const call of queue) {
-    if (call.vendor === 'meta' && typeof w.fbq === 'function') {
+    if (call.vendor === 'meta' && w.fbq instanceof Function) {
       w.fbq(...call.args);
       continue;
     }
-    if (call.vendor === 'linkedin' && typeof w.lintrk === 'function') {
+    if (call.vendor === 'linkedin' && w.lintrk instanceof Function) {
       w.lintrk(...call.args);
       continue;
     }
@@ -65,7 +64,7 @@ export function flushBoardPixelQueue(): void {
 
 function queueOrFireMeta(...args: [string, ...unknown[]]) {
   const w = analyticsWindow();
-  if (typeof w.fbq === 'function') {
+  if (w.fbq instanceof Function) {
     w.fbq(...args);
     return;
   }
@@ -74,7 +73,7 @@ function queueOrFireMeta(...args: [string, ...unknown[]]) {
 
 function queueOrFireLinkedIn(...args: LinkedInConversionArgs) {
   const w = analyticsWindow();
-  if (typeof w.lintrk === 'function') {
+  if (w.lintrk instanceof Function) {
     w.lintrk(...args);
     return;
   }
@@ -132,7 +131,7 @@ export function fireBoardPixelConversion(
   config: BoardConversionAnalyticsConfig,
   event: BoardConversionEvent,
 ): void {
-  if (typeof window === 'undefined') return;
+  if (import.meta.env.SSR) return;
   if (config.metaPixelId) fireMetaConversion(event);
   if (config.linkedInPartnerId) fireLinkedInConversion(config, event);
 }

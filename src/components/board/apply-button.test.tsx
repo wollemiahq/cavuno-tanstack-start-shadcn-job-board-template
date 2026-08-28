@@ -8,22 +8,23 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { m } from '../../paraglide/messages';
 import { ApplyButton, type ApplyButtonDependencies } from './apply-button';
 
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
-import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
+import type { BoardDataLayerEvent } from '@/lib/board-datalayer-events';
 
-vi.mock('@/lib/board-pixel-conversions', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@/lib/board-pixel-conversions')>();
-  return {
-    ...actual,
-    pushBoardConversionEvent: vi.fn(actual.pushBoardConversionEvent),
-  };
-});
+function captureDataLayer(): BoardDataLayerEvent[] {
+  const pushes: BoardDataLayerEvent[] = [];
+  Object.defineProperty(window, 'dataLayer', {
+    configurable: true,
+    writable: true,
+    value: pushes,
+  });
+  return pushes;
+}
 
 const analytics = {
   ga4MeasurementId: null,
@@ -58,7 +59,7 @@ afterEach(() => {
   cleanup();
   navigateToExternalApply.mockReset();
   requestGatewayApply.mockReset();
-  vi.mocked(pushBoardConversionEvent).mockClear();
+  Reflect.deleteProperty(window, 'dataLayer');
   vi.restoreAllMocks();
 });
 
@@ -146,6 +147,12 @@ describe('ApplyButton authentication return paths', () => {
 });
 
 describe('ApplyButton conversion tracking', () => {
+  let pushes: BoardDataLayerEvent[];
+
+  beforeEach(() => {
+    pushes = captureDataLayer();
+  });
+
   it('does not fire apply_click when the candidate must sign in first', () => {
     renderWithConversion(
       <ApplyButton
@@ -159,7 +166,7 @@ describe('ApplyButton conversion tracking', () => {
     fireEvent.click(
       screen.getByRole('link', { name: m.applyButton_applyLabel() }),
     );
-    expect(pushBoardConversionEvent).not.toHaveBeenCalled();
+    expect(pushes).toEqual([]);
   });
 
   it('does not fire apply_click when the candidate must verify email first', () => {
@@ -175,7 +182,7 @@ describe('ApplyButton conversion tracking', () => {
     fireEvent.click(
       screen.getByRole('link', { name: m.applyButton_applyLabel() }),
     );
-    expect(pushBoardConversionEvent).not.toHaveBeenCalled();
+    expect(pushes).toEqual([]);
   });
 
   it('fires apply_click for a direct external apply link', () => {
@@ -190,7 +197,7 @@ describe('ApplyButton conversion tracking', () => {
     );
 
     fireEvent.click(screen.getByRole('link', { name: /apply/i }));
-    expect(pushBoardConversionEvent).toHaveBeenCalledWith(analytics, {
+    expect(pushes).toContainEqual({
       event: 'apply_click',
       job_id: 'job_test_1',
       job_slug: 'ordinary-role',
@@ -221,7 +228,7 @@ describe('ApplyButton conversion tracking', () => {
         'https://employer.example/apply/42',
       ),
     );
-    expect(pushBoardConversionEvent).toHaveBeenCalledWith(analytics, {
+    expect(pushes).toContainEqual({
       event: 'apply_click',
       job_id: 'job_test_1',
       job_slug: 'sponsored-role',
@@ -245,7 +252,7 @@ describe('ApplyButton conversion tracking', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /apply/i }));
     await screen.findByRole('alertdialog');
-    expect(pushBoardConversionEvent).not.toHaveBeenCalled();
+    expect(pushes).toEqual([]);
   });
 
   it('fires apply_submit when native apply returns an application id', async () => {
@@ -267,7 +274,7 @@ describe('ApplyButton conversion tracking', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /apply/i }));
     await waitFor(() =>
-      expect(pushBoardConversionEvent).toHaveBeenCalledWith(analytics, {
+      expect(pushes).toContainEqual({
         event: 'apply_submit',
         job_id: 'job_test_1',
         application_id: 'app_123',
@@ -276,7 +283,7 @@ describe('ApplyButton conversion tracking', () => {
         board_slug: 'acme',
       }),
     );
-    expect(pushBoardConversionEvent).toHaveBeenCalledWith(analytics, {
+    expect(pushes).toContainEqual({
       event: 'apply_click',
       job_id: 'job_test_1',
       job_slug: 'australia-role',

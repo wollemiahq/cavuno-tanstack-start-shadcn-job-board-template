@@ -31,9 +31,7 @@ interface VendorScript {
  */
 function ga4ConfigSnippet(measurementId: string): string {
   const id = JSON.stringify(measurementId);
-  const hostname = JSON.stringify(
-    typeof window !== 'undefined' ? window.location.hostname : 'localhost',
-  );
+  const hostname = JSON.stringify(window.location.hostname);
   return (
     'window.dataLayer=window.dataLayer||[];' +
     'window.gtag=window.gtag||function(){window.dataLayer.push(arguments);};' +

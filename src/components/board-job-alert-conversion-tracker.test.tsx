@@ -2,20 +2,21 @@
 
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
 import { BoardJobAlertConversionTracker } from '@/components/board-job-alert-conversion-tracker';
-import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
+import type { BoardDataLayerEvent } from '@/lib/board-datalayer-events';
 
-vi.mock('@/lib/board-pixel-conversions', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@/lib/board-pixel-conversions')>();
-  return {
-    ...actual,
-    pushBoardConversionEvent: vi.fn(actual.pushBoardConversionEvent),
-  };
-});
+function captureDataLayer(): BoardDataLayerEvent[] {
+  const pushes: BoardDataLayerEvent[] = [];
+  Object.defineProperty(window, 'dataLayer', {
+    configurable: true,
+    writable: true,
+    value: pushes,
+  });
+  return pushes;
+}
 
 const analytics = {
   ga4MeasurementId: null,
@@ -31,10 +32,16 @@ const analytics = {
 
 afterEach(() => {
   cleanup();
-  vi.mocked(pushBoardConversionEvent).mockClear();
+  Reflect.deleteProperty(window, 'dataLayer');
 });
 
 describe('BoardJobAlertConversionTracker', () => {
+  let pushes: BoardDataLayerEvent[];
+
+  beforeEach(() => {
+    pushes = captureDataLayer();
+  });
+
   it('fires job_alert_subscribe only when confirmation succeeds', async () => {
     render(
       <BoardConversionAnalyticsProvider boardSlug="acme" analytics={analytics}>
@@ -43,7 +50,7 @@ describe('BoardJobAlertConversionTracker', () => {
     );
 
     await waitFor(() =>
-      expect(pushBoardConversionEvent).toHaveBeenCalledWith(analytics, {
+      expect(pushes).toContainEqual({
         event: 'job_alert_subscribe',
         board_slug: 'acme',
         source: 'confirm',
@@ -58,6 +65,6 @@ describe('BoardJobAlertConversionTracker', () => {
       </BoardConversionAnalyticsProvider>,
     );
 
-    expect(pushBoardConversionEvent).not.toHaveBeenCalled();
+    expect(pushes).toEqual([]);
   });
 });

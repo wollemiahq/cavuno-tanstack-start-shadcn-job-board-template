@@ -67,7 +67,7 @@ export type BoardDataLayerEvent =
   | ApplySubmitDataLayerEvent
   | JobAlertSubscribeDataLayerEvent;
 
-const BOARD_AUTH_METHODS = new Set<BoardAuthMethod>([
+const BOARD_AUTH_METHODS: ReadonlySet<string> = new Set([
   'password',
   'google',
   'linkedin',
@@ -75,10 +75,12 @@ const BOARD_AUTH_METHODS = new Set<BoardAuthMethod>([
 ]);
 
 function isBoardAuthMethod(value: string): value is BoardAuthMethod {
-  return BOARD_AUTH_METHODS.has(value as BoardAuthMethod);
+  return BOARD_AUTH_METHODS.has(value);
 }
 
 function ensureDataLayer(): unknown[] {
+  // SAFETY: GTM attaches an optional dataLayer array to window; we create it
+  // when missing and only push typed BoardDataLayerEvent values onto it.
   const layer = window as typeof window & { dataLayer?: unknown[] };
   layer.dataLayer = layer.dataLayer ?? [];
   return layer.dataLayer;
@@ -86,7 +88,7 @@ function ensureDataLayer(): unknown[] {
 
 /** Push one standard conversion event to `window.dataLayer` (always, even before GTM loads). */
 export function pushBoardDataLayerEvent(event: BoardDataLayerEvent): void {
-  if (typeof window === 'undefined') return;
+  if (import.meta.env.SSR) return;
   ensureDataLayer().push(event);
 }
 
