@@ -29,6 +29,7 @@ import {
   serializeCookieConsent,
   type CookieConsentChoice,
 } from '@/lib/cookie-consent';
+import { chromeCookieConsent } from '@/lib/site-chrome';
 
 /** Legacy localStorage key — migrated once to the consent cookie on mount. */
 const STORAGE_KEY = 'cavuno:cookie-consent';
@@ -166,6 +167,9 @@ export function CookieConsentProvider({
  */
 export function CookieConsentBanner() {
   const { bannerOpen, accept, deny } = useCookieConsent();
+  // Operator wording baked at migration wins over the catalog; the gate itself
+  // (`analytics.cookieConsentRequired`) still comes from the board API.
+  const copy = chromeCookieConsent();
 
   if (!bannerOpen) return null;
 
@@ -183,11 +187,11 @@ export function CookieConsentBanner() {
                   className="text-primary size-4"
                   aria-hidden="true"
                 />
-                {m.cookieConsent_title()}
+                {copy.title ?? m.cookieConsent_title()}
               </h2>
             </CardTitle>
             <CardDescription>
-              {m.cookieConsent_description()}{' '}
+              {copy.description ?? m.cookieConsent_description()}{' '}
               <Link
                 to="/cookie-policy"
                 className="text-foreground underline underline-offset-4"
@@ -199,7 +203,7 @@ export function CookieConsentBanner() {
           <CardContent>
             <div className="flex gap-2">
               <Button type="button" className="flex-1" onClick={accept}>
-                {m.cookieConsent_acceptLabel()}
+                {copy.acceptLabel ?? m.cookieConsent_acceptLabel()}
               </Button>
               <Button
                 type="button"
@@ -207,7 +211,7 @@ export function CookieConsentBanner() {
                 className="flex-1"
                 onClick={deny}
               >
-                {m.cookieConsent_denyLabel()}
+                {copy.denyLabel ?? m.cookieConsent_denyLabel()}
               </Button>
             </div>
           </CardContent>
@@ -233,7 +237,8 @@ export function CookiePreferencesFooterAction() {
       onClick={reopenBanner}
       className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 rounded-sm text-sm transition-colors outline-none focus-visible:ring-2"
     >
-      {m.cookieConsent_preferencesLabel()}
+      {chromeCookieConsent().preferencesLabel ??
+        m.cookieConsent_preferencesLabel()}
     </button>
   );
 }

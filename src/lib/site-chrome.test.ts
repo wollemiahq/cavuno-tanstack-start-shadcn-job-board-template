@@ -150,3 +150,31 @@ describe('readChrome footer labels', () => {
     expect(readChrome({}).footer.labels).toEqual({});
   });
 });
+
+describe('readChrome cookie consent', () => {
+  it('picks the five operator-configurable banner strings', () => {
+    const parsed = readChrome({
+      cookieConsent: {
+        title: 'Cookies on this board',
+        description: '  We use them.  ',
+        acceptLabel: 'Allow',
+        denyLabel: 'No thanks',
+        preferencesLabel: 'Manage cookies',
+      },
+    });
+    expect(parsed.cookieConsent).toEqual({
+      title: 'Cookies on this board',
+      description: 'We use them.',
+      acceptLabel: 'Allow',
+      denyLabel: 'No thanks',
+      preferencesLabel: 'Manage cookies',
+    });
+  });
+
+  it('falls through to the catalog for blank or absent values', () => {
+    expect(
+      readChrome({ cookieConsent: { title: '  ' } }).cookieConsent,
+    ).toEqual({});
+    expect(readChrome({}).cookieConsent).toEqual({});
+  });
+});

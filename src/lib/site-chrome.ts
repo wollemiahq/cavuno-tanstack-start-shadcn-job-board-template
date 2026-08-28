@@ -62,6 +62,20 @@ export type ChromeFooterLabels = {
   websiteLabel?: string;
 };
 
+/**
+ * Operator overrides for the cookie-consent banner. Hosted stores these as
+ * `cookieBannerTitle` / `Description` / `AcceptLabel` / `RejectLabel` /
+ * `ManageLabel`; the gate itself (`analytics.cookieConsentRequired`) stays on
+ * the wire, only the wording is baked.
+ */
+export type ChromeCookieConsent = {
+  title?: string;
+  description?: string;
+  acceptLabel?: string;
+  denyLabel?: string;
+  preferencesLabel?: string;
+};
+
 export type ChromeFooter = {
   description: string | null;
   navigationOrder: string[];
@@ -95,6 +109,7 @@ export type ChromeFile = {
     } | null>;
     labels?: Partial<Record<ChromeFooterLabelKey, string | null>> | null;
   } | null;
+  cookieConsent?: Partial<Record<ChromeCookieConsentKey, string | null>> | null;
   removedNavItems?: Array<string | null>;
 };
 
@@ -102,6 +117,7 @@ export type ParsedChrome = {
   nav: ChromeNavOverrides;
   entity: ChromeEntityOverrides;
   footer: ChromeFooter;
+  cookieConsent: ChromeCookieConsent;
   removedNavItems: string[];
 };
 
@@ -141,6 +157,21 @@ const FOOTER_LABEL_KEYS = [
 ] as const;
 
 export type ChromeFooterLabelKey = (typeof FOOTER_LABEL_KEYS)[number];
+
+/**
+ * Cookie-banner keys mirroring the `cookieConsent_*` catalog messages.
+ * `regionAriaLabel` is deliberately absent — it is not operator-configurable
+ * hosted-side, so there is nothing to carry.
+ */
+const COOKIE_CONSENT_KEYS = [
+  'title',
+  'description',
+  'acceptLabel',
+  'denyLabel',
+  'preferencesLabel',
+] as const;
+
+export type ChromeCookieConsentKey = (typeof COOKIE_CONSENT_KEYS)[number];
 
 const ENTITY_KEYS = [
   'jobSingular',
@@ -214,6 +245,18 @@ function pickFooterLabels(
   return picked;
 }
 
+function pickCookieConsent(
+  value: ChromeFile['cookieConsent'],
+): ChromeCookieConsent {
+  if (value == null) return {};
+  const picked: ChromeCookieConsent = {};
+  for (const key of COOKIE_CONSENT_KEYS) {
+    const text = trimmedText(value[key]);
+    if (text) picked[key] = text;
+  }
+  return picked;
+}
+
 export function readChrome(file: ChromeFile): ParsedChrome {
   const footer = file.footer;
   return {
@@ -225,6 +268,7 @@ export function readChrome(file: ChromeFile): ParsedChrome {
       customLinks: readCustomLinks(footer?.customLinks),
       labels: pickFooterLabels(footer?.labels),
     },
+    cookieConsent: pickCookieConsent(file.cookieConsent),
     removedNavItems: stringList(file.removedNavItems),
   };
 }
@@ -243,6 +287,10 @@ export function chromeEntity(): ChromeEntityOverrides {
 
 export function chromeFooter(): ChromeFooter {
   return chrome.footer;
+}
+
+export function chromeCookieConsent(): ChromeCookieConsent {
+  return chrome.cookieConsent;
 }
 
 export function chromeRemovedNavItems(): string[] {
