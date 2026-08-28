@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import type { ReactElement } from 'react';
+
 import {
   cleanup,
   fireEvent,
@@ -10,9 +11,10 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { m } from '../../paraglide/messages';
+import { ApplyButton, type ApplyButtonDependencies } from './apply-button';
+
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
 import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
-import { ApplyButton, type ApplyButtonDependencies } from './apply-button';
 
 vi.mock('@/lib/board-pixel-conversions', async (importOriginal) => {
   const actual =

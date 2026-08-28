@@ -15,11 +15,11 @@ import {
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 
-import { appendAuthConversionQuery } from '@/lib/board-datalayer-events';
 import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { appendAuthConversionQuery } from '@/lib/board-datalayer-events';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import { cn } from '@/lib/utils';
 

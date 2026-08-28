@@ -1,11 +1,11 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { AuthCard } from '../components/auth-form';
+import { resolvePostAuthConversionRedirect } from '../lib/board-datalayer-events';
 import {
   candidateReturnTo,
   candidateSignInHref,
 } from '../lib/candidate-return-to';
-import { resolvePostAuthConversionRedirect } from '../lib/board-datalayer-events';
 import { m } from '../paraglide/messages';
 import { consumeMagicLink } from '../server/auth';
 /** Magic-link landing — consumes ?token= and creates the starter session. */
@@ -40,9 +40,10 @@ export const Route = createFileRoute('/auth/magic-link')({
 export async function loadMagicLink(
   deps: MagicLinkSearch,
   actions: {
-    consumeMagicLink: (input: { data: { token: string } }) => Promise<
-      | { ok: true; isNewUser: boolean }
-      | { ok: false; message: string }
+    consumeMagicLink: (input: {
+      data: { token: string };
+    }) => Promise<
+      { ok: true; isNewUser: boolean } | { ok: false; message: string }
     >;
     getSeoBase: () => ReturnType<typeof getSeoBase>;
   } = { consumeMagicLink, getSeoBase },

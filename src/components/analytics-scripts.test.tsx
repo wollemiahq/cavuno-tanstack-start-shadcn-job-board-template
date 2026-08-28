@@ -34,7 +34,10 @@ interface GtmStartEvent {
   event: string;
 }
 
-type AnalyticsDataLayerEntry = IArguments | GtmStartEvent | Record<string, unknown>;
+type AnalyticsDataLayerEntry =
+  | IArguments
+  | GtmStartEvent
+  | Record<string, unknown>;
 
 declare global {
   interface Window {

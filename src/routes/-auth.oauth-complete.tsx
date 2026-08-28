@@ -1,11 +1,11 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { AuthCard } from '../components/auth-form';
+import { resolvePostAuthConversionRedirect } from '../lib/board-datalayer-events';
 import {
   candidateReturnTo,
   candidateSignInHref,
 } from '../lib/candidate-return-to';
-import { resolvePostAuthConversionRedirect } from '../lib/board-datalayer-events';
 import { m } from '../paraglide/messages';
 import { exchangeOAuth } from '../server/auth';
 /** OAuth completion landing — exchanges the callback one-time token. */
@@ -45,9 +45,10 @@ export const Route = createFileRoute('/auth/oauth-complete')({
 export async function loadOAuthComplete(
   deps: OAuthCompleteSearch,
   actions: {
-    exchangeOAuth: (input: { data: { token: string } }) => Promise<
-      | { ok: true; isNewUser: boolean }
-      | { ok: false; message: string }
+    exchangeOAuth: (input: {
+      data: { token: string };
+    }) => Promise<
+      { ok: true; isNewUser: boolean } | { ok: false; message: string }
     >;
     getSeoBase: () => ReturnType<typeof getSeoBase>;
   } = { exchangeOAuth, getSeoBase },

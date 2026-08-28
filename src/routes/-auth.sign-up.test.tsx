@@ -11,7 +11,11 @@ const mocks = {
 
 import { SignUpView } from './-auth.sign-up';
 import { Route } from './auth.sign-up';
-import { buildVerifyEmailRedirectPath, candidateOAuthReturnTo } from '@/lib/candidate-return-to';
+
+import {
+  buildVerifyEmailRedirectPath,
+  candidateOAuthReturnTo,
+} from '@/lib/candidate-return-to';
 
 afterEach(() => {
   cleanup();
@@ -111,7 +115,9 @@ describe('/auth/sign-up search contract', () => {
     const action = await screen.findByRole('link', {
       name: 'Go to my account',
     });
-    expect(action.getAttribute('href')).toBe(buildVerifyEmailRedirectPath(returnTo));
+    expect(action.getAttribute('href')).toBe(
+      buildVerifyEmailRedirectPath(returnTo),
+    );
     const url = new URL(action.getAttribute('href')!, 'https://board.example');
     expect(url.pathname).toBe('/auth/verify-email-required');
     expect(url.searchParams.get('returnTo')).toBe(returnTo);

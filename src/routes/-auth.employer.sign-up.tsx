@@ -10,8 +10,8 @@ import {
   type MarketingConsentCopy,
 } from '@/components/registration-page';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
-import { buildVerifyEmailRedirectPath } from '@/lib/candidate-return-to';
 import { reconcileCommittedAction } from '@/lib/action-toast';
+import { buildVerifyEmailRedirectPath } from '@/lib/candidate-return-to';
 
 export async function loadEmployerSignUp(
   actions: {
@@ -97,9 +97,7 @@ export function EmployerSignUpView({
         successActionLabel: m.authEmployerSignUp_goToDashboardLabel(),
       }}
       marketingConsent={marketingConsent}
-      successHref={buildVerifyEmailRedirectPath(
-        '/employers/dashboard',
-      )}
+      successHref={buildVerifyEmailRedirectPath('/employers/dashboard')}
       onSubmit={async (values) => {
         const result = await signUpEmployerAction({ data: values });
         if (result.ok) await reconcileCommittedAction(invalidate);

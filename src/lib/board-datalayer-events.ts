@@ -154,7 +154,9 @@ export function resolvePostAuthConversionRedirect(
   return appendAuthConversionQuery(base, event, method);
 }
 
-export function stripAuthConversionSearchParams(search: URLSearchParams): string {
+export function stripAuthConversionSearchParams(
+  search: URLSearchParams,
+): string {
   const next = new URLSearchParams(search);
   next.delete(CAVUNO_AUTH_PARAM);
   next.delete(CAVUNO_AUTH_METHOD_PARAM);

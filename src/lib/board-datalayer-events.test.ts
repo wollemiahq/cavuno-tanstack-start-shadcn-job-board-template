@@ -19,7 +19,11 @@ describe('board-datalayer-events', () => {
 
   it('pushes standard events to window.dataLayer', () => {
     window.dataLayer = [] as unknown as NonNullable<typeof window.dataLayer>;
-    const pushes = window.dataLayer as { event: string; method: string; board_slug: string }[];
+    const pushes = window.dataLayer as {
+      event: string;
+      method: string;
+      board_slug: string;
+    }[];
 
     pushBoardDataLayerEvent({
       event: 'sign_up',
@@ -35,7 +39,11 @@ describe('board-datalayer-events', () => {
   it('round-trips auth conversion query params', () => {
     const href = appendAuthConversionQuery('/account', 'login', 'google');
     expect(href).toBe('/account?cavuno_auth=login&cavuno_auth_method=google');
-    expect(parseAuthConversionSearchParams(new URL(href, 'https://x.test').searchParams)).toEqual({
+    expect(
+      parseAuthConversionSearchParams(
+        new URL(href, 'https://x.test').searchParams,
+      ),
+    ).toEqual({
       event: 'login',
       method: 'google',
     });
@@ -85,7 +93,9 @@ describe('board-datalayer-events', () => {
     const search = new URLSearchParams(
       'cavuno_auth=sign_up&cavuno_auth_method=password&returnTo=%2Faccount',
     );
-    expect(stripAuthConversionSearchParams(search)).toBe('?returnTo=%2Faccount');
+    expect(stripAuthConversionSearchParams(search)).toBe(
+      '?returnTo=%2Faccount',
+    );
   });
 
   it('preserves unrelated params when appending intent', () => {

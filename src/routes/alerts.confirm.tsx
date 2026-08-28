@@ -8,8 +8,8 @@ import { createFileRoute } from '@tanstack/react-router';
 import { m } from '../paraglide/messages';
 import { getSeoBase, confirmJobAlert } from '../server/queries';
 
-import { Page, PageContent } from '@/components/layout/page';
 import { BoardJobAlertConversionTracker } from '@/components/board-job-alert-conversion-tracker';
+import { Page, PageContent } from '@/components/layout/page';
 import { headTitle } from '@/lib/page-title';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
 
@@ -87,15 +87,15 @@ function ConfirmPage() {
     <>
       <BoardJobAlertConversionTracker status={status} />
       <Page width="narrow">
-      <PageContent>
-        <div className="space-y-3 py-8 text-center">
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">
-            {copy.heading()}
-          </h1>
-          <p className="text-muted-foreground">{copy.body()}</p>
-        </div>
-      </PageContent>
-    </Page>
+        <PageContent>
+          <div className="space-y-3 py-8 text-center">
+            <h1 className="font-heading text-3xl font-semibold tracking-tight">
+              {copy.heading()}
+            </h1>
+            <p className="text-muted-foreground">{copy.body()}</p>
+          </div>
+        </PageContent>
+      </Page>
     </>
   );
 }
