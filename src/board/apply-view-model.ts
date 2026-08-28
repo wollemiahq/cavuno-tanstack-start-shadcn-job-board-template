@@ -120,10 +120,9 @@ export function toApplyButtonVM({
   /**
    * Board feature flag `features.registrationWall` (default-off). `true` ⇒
    * an anonymous visitor must sign in before ANY apply path, the external
-   * employer link included — hosted `job-apply-button.tsx` opens its auth
-   * dialog on `registrationWallEnabled && !candidate`, and the platform
-   * rejects anonymous guest applies on a walled board. Sign-in, not
-   * verification, is the bar.
+   * employer link included — the hosted board opens its auth dialog for an
+   * anonymous visitor on a walled board, and the API rejects an anonymous
+   * guest apply there too. Sign-in, not verification, is the bar.
    */
   registrationWall?: boolean;
   /**

@@ -150,11 +150,10 @@ describe('toApplyButtonVM — copy', () => {
 });
 
 /**
- * Registration wall (hosted parity). Hosted `job-apply-button.tsx` gates on
- * `registrationWallEnabled && !candidate` and wraps even the external
- * employer link in the auth dialog; the platform separately rejects
- * anonymous guest applies on a walled board. Sign-in — not verification —
- * is the bar.
+ * Registration wall (hosted parity). On a walled board the hosted board
+ * wraps even the external employer link in its auth dialog for an anonymous
+ * visitor, and the API separately rejects an anonymous guest apply.
+ * Sign-in — not verification — is the bar.
  */
 describe('toApplyButtonVM — registrationWall', () => {
   const external = 'https://jobs.acme.com/123';
