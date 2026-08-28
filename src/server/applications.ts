@@ -1,4 +1,5 @@
 import {
+  isBoardApiError,
   isNotFound,
   type ApplicationsListQuery,
   type ApplyBody,
@@ -151,6 +152,58 @@ export const applyToJob = createServerFn({ method: 'POST' })
       nativeApplySessionKey(),
       headers,
     );
+  });
+
+/**
+ * Guest apply — anonymous native apply (ADR-0037 §4). Deliberately WITHOUT
+ * `requireSessionMiddleware`: the platform accepts `auth: ['board_user',
+ * 'none']` on this route and only rejects an anonymous applicant when the
+ * board's registration wall is on, so a starter that forced sign-in here
+ * lost every application on the 129 wall-off boards.
+ *
+ * Returns a discriminated result instead of throwing: `BoardApiError` does
+ * not survive the TanStack server-fn RPC boundary (see `message-error.ts`),
+ * and the guest form needs to tell "this board requires an account" apart
+ * from a generic failure.
+ */
+export type GuestApplyResult =
+  | { ok: true }
+  | { ok: false; reason: 'guest_not_allowed' | 'failed' };
+
+export const applyToJobAsGuest = createServerFn({ method: 'POST' })
+  .validator(
+    (input: {
+      jobSlug: string;
+      name?: string;
+      email: string;
+      coverNote?: string;
+    }) => input,
+  )
+  .middleware([boardAccessMiddleware])
+  .handler(async ({ data, context }): Promise<GuestApplyResult> => {
+    setResponseHeader('cache-control', 'no-store');
+    try {
+      await submitNativeApply(
+        getBoard(),
+        data.jobSlug,
+        { name: data.name, email: data.email, coverNote: data.coverNote },
+        undefined,
+        nativeApplySessionKey(),
+        context.boardAccessHeaders,
+      );
+      return { ok: true };
+    } catch (error) {
+      // A walled board 403s this; every other failure is generic to the
+      // applicant (the wire sentence is English and never displayed).
+      return {
+        ok: false,
+        reason:
+          isBoardApiError(error) &&
+          error.code === 'applications_guest_not_allowed'
+            ? 'guest_not_allowed'
+            : 'failed',
+      };
+    }
   });
 
 /** Attach a resume file to an application — client posts FormData (`resume`). */

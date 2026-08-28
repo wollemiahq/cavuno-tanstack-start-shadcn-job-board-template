@@ -37,6 +37,7 @@ const labels = {
 
 const directoryEntry = {
   object: 'talent_directory_entry',
+  id: 'talent_dir_1',
   handle: 'ada-lovelace',
   displayName: 'Ada Lovelace',
   headline: 'Computing pioneer',
@@ -65,6 +66,7 @@ const directoryEntry = {
 
 const profile = {
   object: 'talent_profile',
+  id: 'talent_prof_1',
   handle: 'ada-lovelace',
   displayName: 'Ada Lovelace',
   headline: 'Computing pioneer',

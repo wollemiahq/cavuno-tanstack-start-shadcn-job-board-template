@@ -151,6 +151,7 @@ const user = {
 const dependencies: SelectedJobDetailDependencies = {
   applyToJob: vi.fn(),
   prepareApplyToJob: vi.fn(),
+  applyToJobAsGuest: vi.fn(),
   saveJob: vi.fn(),
 };
 

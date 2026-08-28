@@ -148,3 +148,135 @@ describe('toApplyButtonVM — copy', () => {
     }
   });
 });
+
+/**
+ * Registration wall (hosted parity). Hosted `job-apply-button.tsx` gates on
+ * `registrationWallEnabled && !candidate` and wraps even the external
+ * employer link in the auth dialog; the platform separately rejects
+ * anonymous guest applies on a walled board. Sign-in — not verification —
+ * is the bar.
+ */
+describe('toApplyButtonVM — registrationWall', () => {
+  const external = 'https://jobs.acme.com/123';
+
+  it('walls the external employer link from an anonymous visitor', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      applicationUrl: external,
+      viewer: null,
+      registrationWall: true,
+    });
+    expect(vm.action).toEqual({ kind: 'sign-in', reason: 'registration-wall' });
+  });
+
+  it('lets a signed-in but UNVERIFIED candidate through to the external link', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      applicationUrl: external,
+      viewer: { emailVerified: false },
+      registrationWall: true,
+    });
+    expect(vm.action).toEqual({ kind: 'external', url: external });
+  });
+
+  it('walls the gateway_external contract too', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      applyAction: 'gateway_external',
+      viewer: null,
+      registrationWall: true,
+    });
+    expect(vm.action).toEqual({ kind: 'sign-in', reason: 'registration-wall' });
+  });
+
+  it('leaves gateway_external intact for a signed-in candidate', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      applyAction: 'gateway_external',
+      viewer: { emailVerified: false },
+      registrationWall: true,
+    });
+    expect(vm.action).toEqual({
+      kind: 'gateway-external',
+      jobSlug: 'senior-eng',
+    });
+  });
+
+  it('keeps the wall CTA on an external job when native apply is off', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      applicationUrl: external,
+      viewer: null,
+      registrationWall: true,
+      nativeApplications: false,
+    });
+    expect(vm.action).toEqual({ kind: 'sign-in', reason: 'registration-wall' });
+  });
+
+  it('drops the wall CTA when native apply is off and there is no external link to reveal', () => {
+    // Signing in would expose nothing — a dead-end CTA is worse than none.
+    const vm = toApplyButtonVM({
+      ...base,
+      viewer: null,
+      registrationWall: true,
+      nativeApplications: false,
+    });
+    expect(vm.action.kind).toBe('none');
+  });
+
+  it('shows nothing when the wall is up but the job has no apply path at all', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      jobSlug: null,
+      viewer: null,
+      registrationWall: true,
+    });
+    expect(vm.action.kind).toBe('none');
+  });
+
+  it('wall off is the pre-existing behaviour: anonymous gets the external link', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      applicationUrl: external,
+      viewer: null,
+      registrationWall: false,
+    });
+    expect(vm.action).toEqual({ kind: 'external', url: external });
+  });
+});
+
+describe('toApplyButtonVM — allowGuestApply', () => {
+  it('routes an anonymous visitor to the guest form when the UI has one', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      viewer: null,
+      allowGuestApply: true,
+    });
+    expect(vm.action).toEqual({ kind: 'guest', jobSlug: 'senior-eng' });
+  });
+
+  it('keeps sign-in when the UI has no guest form', () => {
+    const vm = toApplyButtonVM({ ...base, viewer: null });
+    expect(vm.action).toEqual({ kind: 'sign-in', reason: 'native-apply' });
+  });
+
+  it('the wall beats the guest form', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      viewer: null,
+      allowGuestApply: true,
+      registrationWall: true,
+    });
+    expect(vm.action).toEqual({ kind: 'sign-in', reason: 'registration-wall' });
+  });
+
+  it('an external-applications-only board collapses the guest form away', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      viewer: null,
+      allowGuestApply: true,
+      nativeApplications: false,
+    });
+    expect(vm.action.kind).toBe('none');
+  });
+});

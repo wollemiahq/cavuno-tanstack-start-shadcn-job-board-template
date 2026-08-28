@@ -330,3 +330,115 @@ describe('ApplyButton native approval flow', () => {
     ).not.toBeNull();
   });
 });
+
+/**
+ * Guest apply (registration wall OFF). The platform accepts an anonymous
+ * native apply unless the wall is on, so forcing sign-in here loses the
+ * application outright on the 129 wall-off prod boards.
+ */
+describe('ApplyButton guest apply', () => {
+  it('offers the guest form to an anonymous visitor when a submit handler is wired', () => {
+    render(
+      <ApplyButton
+        {...base}
+        jobSlug="platform-engineer"
+        applicationUrl={null}
+        viewer={null}
+        onGuestApply={vi.fn(async () => ({ ok: true as const }))}
+      />,
+    );
+
+    expect(screen.getByLabelText(m.apply_guestEmailLabel())).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: m.apply_guestSubmitLabel() }),
+    ).toBeTruthy();
+  });
+
+  it('falls back to the sign-in CTA when no guest handler is wired', () => {
+    render(
+      <ApplyButton
+        {...base}
+        jobSlug="platform-engineer"
+        applicationUrl={null}
+        viewer={null}
+      />,
+    );
+
+    expect(screen.queryByLabelText(m.apply_guestEmailLabel())).toBeNull();
+    expect(screen.getByRole('link', { name: /apply/i })).toBeTruthy();
+  });
+
+  it('never offers the guest form once the registration wall is up', () => {
+    render(
+      <ApplyButton
+        {...base}
+        jobSlug="platform-engineer"
+        applicationUrl={null}
+        viewer={null}
+        registrationWall
+        onGuestApply={vi.fn(async () => ({ ok: true as const }))}
+      />,
+    );
+
+    expect(screen.queryByLabelText(m.apply_guestEmailLabel())).toBeNull();
+    expect(screen.getByRole('link', { name: /apply/i })).toBeTruthy();
+  });
+
+  it('submits the guest details and confirms', async () => {
+    const onGuestApply = vi.fn(async () => ({ ok: true as const }));
+    render(
+      <ApplyButton
+        {...base}
+        jobSlug="platform-engineer"
+        applicationUrl={null}
+        viewer={null}
+        onGuestApply={onGuestApply}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText(m.apply_guestNameLabel()), {
+      target: { value: '  Ada Lovelace  ' },
+    });
+    fireEvent.change(screen.getByLabelText(m.apply_guestEmailLabel()), {
+      target: { value: 'ada@example.com' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: m.apply_guestSubmitLabel() }),
+    );
+
+    await waitFor(() => {
+      expect(onGuestApply).toHaveBeenCalledWith({
+        jobSlug: 'platform-engineer',
+        name: 'Ada Lovelace',
+        email: 'ada@example.com',
+        coverNote: undefined,
+      });
+    });
+    await screen.findByText(m.apply_guestSubmittedHeading());
+  });
+
+  it('surfaces the board-requires-an-account rejection distinctly', async () => {
+    render(
+      <ApplyButton
+        {...base}
+        jobSlug="platform-engineer"
+        applicationUrl={null}
+        viewer={null}
+        onGuestApply={vi.fn(async () => ({
+          ok: false as const,
+          reason: 'guest_not_allowed',
+        }))}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText(m.apply_guestEmailLabel()), {
+      target: { value: 'ada@example.com' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: m.apply_guestSubmitLabel() }),
+    );
+
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toBe(m.apply_guestNotAllowedError());
+  });
+});

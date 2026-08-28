@@ -189,6 +189,7 @@ const post: PublicBlogPostSummary = {
 
 const candidate: TalentDirectoryEntry = {
   object: 'talent_directory_entry',
+  id: 'talent_dir_home',
   displayName: 'Ada Lovelace',
   handle: 'ada',
   avatarUrl: null,

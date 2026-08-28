@@ -43,6 +43,7 @@ const seo = {
 
 const profile: TalentProfilePageData['profile'] = {
   object: 'talent_profile',
+  id: 'talent_prof_contract',
   handle: 'ada-lovelace',
   displayName: 'Ada Lovelace',
   headline: 'Robotics engineer',

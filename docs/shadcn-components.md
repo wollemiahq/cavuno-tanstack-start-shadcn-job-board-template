@@ -41,9 +41,9 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `drawer` | Available | Installed for adoption when the product needs this behavior. |
 | `dropdown-menu` | Used (6) | `src/components/employer/applicant-pipeline-board.tsx`<br>`src/components/header-account-menu.tsx`<br>`src/components/language-switcher-menu.tsx`<br>+3 more in the JSON ledger |
 | `empty` | Used (41) | `src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+38 more in the JSON ledger |
-| `field` | Used (26) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+23 more in the JSON ledger |
+| `field` | Used (27) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+24 more in the JSON ledger |
 | `hover-card` | Available | Installed for adoption when the product needs this behavior. |
-| `input` | Used (21) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/custom-fields-group.tsx`<br>+18 more in the JSON ledger |
+| `input` | Used (22) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/apply-button.tsx`<br>+19 more in the JSON ledger |
 | `input-group` | Used (13) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/listing-search-band.tsx`<br>`src/components/company-search-combobox.tsx`<br>+10 more in the JSON ledger |
 | `input-otp` | Used (1) | `src/routes/-auth.verify-email-required.tsx` |
 | `item` | Used (8) | `src/components/alert-manager.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+5 more in the JSON ledger |
@@ -72,7 +72,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `switch` | Used (1) | `src/components/preview/preview-board-settings.tsx` |
 | `table` | Used (3) | `src/components/board/salary-sections.tsx`<br>`src/components/employer/company-members-table.tsx`<br>`src/routes/-employers.company-jobs.tsx` |
 | `tabs` | Available | Installed for adoption when the product needs this behavior. |
-| `textarea` | Used (6) | `src/components/custom-fields-group.tsx`<br>`src/components/education-section.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>+3 more in the JSON ledger |
+| `textarea` | Used (7) | `src/components/board/apply-button.tsx`<br>`src/components/custom-fields-group.tsx`<br>`src/components/education-section.tsx`<br>+4 more in the JSON ledger |
 | `toggle` | Used (1) | `src/components/rich-text-editor.tsx` |
 | `toggle-group` | Available | Installed for adoption when the product needs this behavior. |
 | `tooltip` | Used (2) | `src/components/employer/company-members-table.tsx`<br>`src/components/rich-text-editor.tsx` |

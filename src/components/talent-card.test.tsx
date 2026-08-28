@@ -17,6 +17,7 @@ import type { TalentDirectoryEntry } from '@cavuno/board';
 
 const candidate = {
   object: 'talent_directory_entry',
+  id: 'talent_dir_card',
   handle: 'ada-lovelace',
   displayName: 'Ada Lovelace',
   headline: 'Computing pioneer',

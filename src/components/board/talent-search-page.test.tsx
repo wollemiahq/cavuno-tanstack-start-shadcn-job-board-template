@@ -28,6 +28,7 @@ import type { TalentDirectoryEntry } from '@cavuno/board';
 
 const candidate = {
   object: 'talent_directory_entry',
+  id: 'talent_dir_search',
   handle: 'ada-lovelace',
   displayName: 'Ada Lovelace',
   headline: 'Computing pioneer',
@@ -201,6 +202,7 @@ describe('TalentSearchPage — search results pattern', () => {
 
 const candidate2 = {
   object: 'talent_directory_entry',
+  id: 'talent_dir_search_2',
   handle: 'grace-hopper',
   displayName: 'Grace Hopper',
   headline: 'Compiler pioneer',
