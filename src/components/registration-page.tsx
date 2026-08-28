@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { BriefcaseBusiness } from 'lucide-react';
 
@@ -195,6 +195,11 @@ export function RegistrationPage({
 }) {
   const [status, setStatus] = useState<RegistrationStatus>({ state: 'idle' });
   const succeeded = status.state === 'success';
+
+  useEffect(() => {
+    if (status.state !== 'success') return;
+    window.location.assign(successHref);
+  }, [status.state, successHref]);
 
   return (
     <AuthPageCard

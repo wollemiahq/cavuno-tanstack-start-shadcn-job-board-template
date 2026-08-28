@@ -5,7 +5,10 @@ import { Users } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
-import type { TalentCardVM } from '@/board/talent-view-model';
+import {
+  talentCardSelectionKey,
+  type TalentCardVM,
+} from '@/board/talent-view-model';
 import {
   useListingAdRails,
   type AdPlacement,
@@ -74,12 +77,13 @@ export function TalentSearchPage({
   const currentHref = useLocation({ select: (location) => location.href });
   const hasActiveSearch = Boolean(q || skill);
   const candidateVms = candidates;
-  const selectableHandles = candidateVms.flatMap((vm) =>
-    vm.handle ? [vm.handle] : [],
-  );
+  const selectableIds = candidateVms.flatMap((vm) => {
+    const key = talentCardSelectionKey(vm);
+    return key ? [key] : [];
+  });
   const selection = useSearchSelection({
     selectedId: selectedTalent,
-    resultIds: selectableHandles,
+    resultIds: selectableIds,
     page,
     onReplace: onSelectedTalentReplace,
     onPush: onSelectedTalentPush,
@@ -160,26 +164,32 @@ export function TalentSearchPage({
                   {resultsBar}
 
                   <div className="space-y-3">
-                    {candidateVms.map((vm, index) => (
-                      <div
-                        key={vm.handle ?? `candidate-${index}`}
-                        data-result-id={vm.handle ?? undefined}
-                      >
-                        <TalentSearchResult
-                          vm={vm}
-                          selected={
-                            vm.handle !== null &&
-                            vm.handle === selection.selectedId
-                          }
-                          onActivate={
-                            vm.handle
-                              ? (event) =>
-                                  selection.onResultActivate(event, vm.handle!)
-                              : undefined
-                          }
-                        />
-                      </div>
-                    ))}
+                    {candidateVms.map((vm) => {
+                      const selectionKey = talentCardSelectionKey(vm);
+                      return (
+                        <div
+                          key={vm.id}
+                          data-result-id={selectionKey ?? undefined}
+                        >
+                          <TalentSearchResult
+                            vm={vm}
+                            selected={
+                              selectionKey !== null &&
+                              selectionKey === selection.selectedId
+                            }
+                            onActivate={
+                              selectionKey
+                                ? (event) =>
+                                    selection.onResultActivate(
+                                      event,
+                                      selectionKey,
+                                    )
+                                : undefined
+                            }
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
 
                   <ListingPagination

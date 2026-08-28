@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import type { ReactElement } from 'react';
+
 import {
   cleanup,
   fireEvent,
@@ -6,10 +8,43 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { m } from '../../paraglide/messages';
 import { ApplyButton, type ApplyButtonDependencies } from './apply-button';
+
+import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
+import type { BoardDataLayerEvent } from '@/lib/board-datalayer-events';
+
+function captureDataLayer(): BoardDataLayerEvent[] {
+  const pushes: BoardDataLayerEvent[] = [];
+  Object.defineProperty(window, 'dataLayer', {
+    configurable: true,
+    writable: true,
+    value: pushes,
+  });
+  return pushes;
+}
+
+const analytics = {
+  ga4MeasurementId: null,
+  gtmId: 'GTM-TEST',
+  metaPixelId: null,
+  linkedInPartnerId: null,
+  linkedInConversionSignUpId: null,
+  linkedInConversionLoginId: null,
+  linkedInConversionApplyClickId: null,
+  linkedInConversionApplySubmitId: null,
+  linkedInConversionJobAlertSubscribeId: null,
+};
+
+function renderWithConversion(ui: ReactElement) {
+  return render(
+    <BoardConversionAnalyticsProvider boardSlug="acme" analytics={analytics}>
+      {ui}
+    </BoardConversionAnalyticsProvider>,
+  );
+}
 
 const navigateToExternalApply = vi.fn();
 const requestGatewayApply = vi.fn();
@@ -24,10 +59,14 @@ afterEach(() => {
   cleanup();
   navigateToExternalApply.mockReset();
   requestGatewayApply.mockReset();
+  Reflect.deleteProperty(window, 'dataLayer');
   vi.restoreAllMocks();
 });
 
 const base = {
+  jobId: 'job_test_1',
+  jobSlug: 'platform-engineer',
+  companySlug: 'acme',
   language: 'en',
   returnTo: '/companies/acme/jobs/senior-eng',
   onPrepareApply: vi.fn(async () => ({
@@ -104,6 +143,154 @@ describe('ApplyButton authentication return paths', () => {
     const verifyUrl = new URL(href!, 'https://board.example');
     expect(verifyUrl.pathname).toBe('/auth/verify-email-required');
     expect(verifyUrl.searchParams.get('returnTo')).toBe(returnTo);
+  });
+});
+
+describe('ApplyButton conversion tracking', () => {
+  let pushes: BoardDataLayerEvent[];
+
+  beforeEach(() => {
+    pushes = captureDataLayer();
+  });
+
+  it('does not fire apply_click when the candidate must sign in first', () => {
+    renderWithConversion(
+      <ApplyButton
+        {...base}
+        jobSlug="platform-engineer"
+        applicationUrl={null}
+        viewer={null}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole('link', { name: m.applyButton_applyLabel() }),
+    );
+    expect(pushes).toEqual([]);
+  });
+
+  it('does not fire apply_click when the candidate must verify email first', () => {
+    renderWithConversion(
+      <ApplyButton
+        {...base}
+        jobSlug="platform-engineer"
+        applicationUrl={null}
+        viewer={{ emailVerified: false }}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole('link', { name: m.applyButton_applyLabel() }),
+    );
+    expect(pushes).toEqual([]);
+  });
+
+  it('fires apply_click for a direct external apply link', () => {
+    renderWithConversion(
+      <ApplyButton
+        {...base}
+        jobSlug="ordinary-role"
+        applicationUrl="https://jobs.example/apply/ordinary"
+        applyAction="external_direct"
+        viewer={null}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('link', { name: /apply/i }));
+    expect(pushes).toContainEqual({
+      event: 'apply_click',
+      job_id: 'job_test_1',
+      job_slug: 'ordinary-role',
+      company_slug: 'acme',
+      apply_type: 'external',
+      board_slug: 'acme',
+    });
+  });
+
+  it('fires apply_click only after the gateway approves external apply', async () => {
+    requestGatewayApply.mockResolvedValue({
+      kind: 'redirect',
+      redirectUrl: 'https://employer.example/apply/42',
+    });
+    renderWithConversion(
+      <ApplyButton
+        {...base}
+        jobSlug="sponsored-role"
+        applicationUrl={null}
+        applyAction="gateway_external"
+        viewer={null}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    await waitFor(() =>
+      expect(navigateToExternalApply).toHaveBeenCalledWith(
+        'https://employer.example/apply/42',
+      ),
+    );
+    expect(pushes).toContainEqual({
+      event: 'apply_click',
+      job_id: 'job_test_1',
+      job_slug: 'sponsored-role',
+      company_slug: 'acme',
+      apply_type: 'external',
+      board_slug: 'acme',
+    });
+  });
+
+  it('does not fire apply_click when the gateway denies location', async () => {
+    requestGatewayApply.mockResolvedValue({ kind: 'location-denied' });
+    renderWithConversion(
+      <ApplyButton
+        {...base}
+        jobSlug="sponsored-role"
+        applicationUrl={null}
+        applyAction="gateway_external"
+        viewer={null}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    await screen.findByRole('alertdialog');
+    expect(pushes).toEqual([]);
+  });
+
+  it('fires apply_submit when native apply returns an application id', async () => {
+    const onApply = vi.fn(async () => ({ id: 'app_123' }));
+    renderWithConversion(
+      <ApplyButton
+        {...base}
+        jobSlug="australia-role"
+        applicationUrl={null}
+        applyAction="gateway_native"
+        viewer={{ emailVerified: true }}
+        onPrepareApply={async () => ({
+          object: 'apply_approval_plan',
+          kind: 'not_required',
+        })}
+        onApply={onApply}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    await waitFor(() =>
+      expect(pushes).toContainEqual({
+        event: 'apply_submit',
+        job_id: 'job_test_1',
+        application_id: 'app_123',
+        job_slug: 'australia-role',
+        company_slug: 'acme',
+        board_slug: 'acme',
+      }),
+    );
+    expect(pushes).toContainEqual({
+      event: 'apply_click',
+      job_id: 'job_test_1',
+      job_slug: 'australia-role',
+      company_slug: 'acme',
+      apply_type: 'native',
+      board_slug: 'acme',
+    });
   });
 });
 

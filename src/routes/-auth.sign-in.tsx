@@ -11,6 +11,7 @@ import {
 import {
   candidateForgotPasswordHref,
   candidateJoinHref,
+  candidateOAuthReturnTo,
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 
@@ -18,6 +19,7 @@ import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { appendAuthConversionQuery } from '@/lib/board-datalayer-events';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import { cn } from '@/lib/utils';
 
@@ -61,7 +63,10 @@ export function SignInView({
     setError(null);
     try {
       const result = await getOAuthAuthorizationUrlAction({
-        data: { provider, returnTo },
+        data: {
+          provider,
+          returnTo: candidateOAuthReturnTo(returnTo, 'login', provider),
+        },
       });
       if (result.ok) {
         assignLocation(result.authorizeUrl);
@@ -219,7 +224,9 @@ export function SignInView({
             // The httpOnly session is committed. A hard navigation both
             // reconciles the shell and prevents later router failures from
             // being reported as an authentication failure.
-            assignLocation(returnTo);
+            assignLocation(
+              appendAuthConversionQuery(returnTo, 'login', 'password'),
+            );
             return;
           }
           if (result.ok) {

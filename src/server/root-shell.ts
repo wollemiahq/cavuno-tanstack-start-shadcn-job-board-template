@@ -13,6 +13,7 @@ import {
   getFreshBoardContext,
   getStaleBoardContext,
 } from './queries';
+import { EMPTY_GRANT, getTalentAccessGrant } from './talent-access';
 
 /**
  * Public root shell only — board identity, SEO, footer gate.
@@ -60,39 +61,42 @@ export const getRootSessionShellData = createServerFn({
   method: 'GET',
 }).handler(async () => {
   const userPromise = getSessionUser();
-  const [user, employerCompanies, preview, hasGrant] = await Promise.all([
-    userPromise,
-    listCompanies()
-      .then((memberships) => memberships.data)
-      .catch(() => null),
-    userPromise
-      .then((user) => resolvePreviewStateForViewer(user?.email ?? null))
-      .catch(async () => {
-        const facts = await getDataSourceFacts().catch(() => ({
-          demoConfigured: false,
-          demoBoardPrivate: false,
-          dataSource: 'board' as const,
-        }));
-        return {
-          capability: {
-            canPreview: false as const,
-            reason: 'not-sandbox' as const,
-          },
-          personas: [],
-          activePersonaId: null,
-          ...facts,
-        };
-      }),
-    getAccessGrant()
-      .then((grant) => grant.hasAccess)
-      .catch(() => false),
-  ]);
+  const [user, employerCompanies, preview, hasGrant, talentAccess] =
+    await Promise.all([
+      userPromise,
+      listCompanies()
+        .then((memberships) => memberships.data)
+        .catch(() => null),
+      userPromise
+        .then((user) => resolvePreviewStateForViewer(user?.email ?? null))
+        .catch(async () => {
+          const facts = await getDataSourceFacts().catch(() => ({
+            demoConfigured: false,
+            demoBoardPrivate: false,
+            dataSource: 'board' as const,
+          }));
+          return {
+            capability: {
+              canPreview: false as const,
+              reason: 'not-sandbox' as const,
+            },
+            personas: [],
+            activePersonaId: null,
+            ...facts,
+          };
+        }),
+      getAccessGrant()
+        .then((grant) => grant.hasAccess)
+        .catch(() => false),
+      getTalentAccessGrant().catch(() => EMPTY_GRANT),
+    ]);
 
   return {
     user,
     employerCompanies,
     preview,
     hasGrant,
+    talentAccess,
   };
 });
 

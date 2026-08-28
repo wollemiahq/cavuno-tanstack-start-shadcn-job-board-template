@@ -74,6 +74,7 @@ const rootApi = getRouteApi('__root__');
 function JobDetailPage() {
   const { job, user, similar, companySummary, applicationState } =
     Route.useLoaderData();
+  const { companySlug } = Route.useParams();
   const { board } = rootApi.useLoaderData();
   const defaults = jobAlertDefaultsFromJob(job);
   const router = useRouter();
@@ -98,7 +99,9 @@ function JobDetailPage() {
         vm={vm}
         applySlot={
           <ApplyButton
+            jobId={job.id}
             jobSlug={job.slug}
+            companySlug={companySlug}
             applicationUrl={job.applicationUrl}
             applyAction={job.applyAction}
             language={board.language}
@@ -110,9 +113,9 @@ function JobDetailPage() {
             onPrepareApply={(jobSlug) =>
               prepareApplyToJob({ data: { jobSlug } })
             }
-            onApply={async (jobSlug, approvalReceipt) => {
-              await applyToJob({ data: { jobSlug, approvalReceipt } });
-            }}
+            onApply={(jobSlug, approvalReceipt) =>
+              applyToJob({ data: { jobSlug, approvalReceipt } })
+            }
           />
         }
         secondaryActions={

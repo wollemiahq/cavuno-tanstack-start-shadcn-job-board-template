@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  employerCanStartMessage,
+  isRedactedTalentDirectoryEntry,
   resolveTalentDetailCta,
+  resolveTalentProfileSurface,
   toTalentCardVM,
   toTalentProfileVM,
 } from './talent-view-model';
@@ -37,6 +40,7 @@ const labels = {
 
 const directoryEntry = {
   object: 'talent_directory_entry',
+  id: 'bu_ada-lovelace',
   handle: 'ada-lovelace',
   displayName: 'Ada Lovelace',
   headline: 'Computing pioneer',
@@ -65,6 +69,7 @@ const directoryEntry = {
 
 const profile = {
   object: 'talent_profile',
+  id: 'bu_ada-lovelace',
   handle: 'ada-lovelace',
   displayName: 'Ada Lovelace',
   headline: 'Computing pioneer',
@@ -112,6 +117,7 @@ const profile = {
 describe('talent view models', () => {
   it('maps a handle-backed directory entry to one canonical, localized result card', () => {
     expect(toTalentCardVM(directoryEntry, labels)).toEqual({
+      id: 'bu_ada-lovelace',
       handle: 'ada-lovelace',
       detailHref: '/p/ada-lovelace',
       displayName: 'Ada Lovelace',
@@ -121,6 +127,7 @@ describe('talent view models', () => {
       location: 'London, United Kingdom',
       jobSearchStatusLabel: 'Open to offers',
       skills: ['Mathematics', 'Analytical engines'],
+      redacted: false,
     });
   });
 
@@ -140,6 +147,8 @@ describe('talent view models', () => {
     expect(vm.displayName).toBe('Private candidate');
     expect(vm.avatarName).toBe('Private candidate');
     expect(vm.avatarUrl).toBeNull();
+    expect(vm.id).toBe('bu_ada-lovelace');
+    expect(vm.redacted).toBe(false);
   });
 
   it('maps every supported rich-profile field and formats month ranges for the board locale', () => {
@@ -261,6 +270,46 @@ describe('talent view models', () => {
       'https://logos.example/mit.png',
     );
   });
+
+  it('routes directory cards to the opaque /p/{id} path when the board sells unlocks', () => {
+    const vm = toTalentCardVM(directoryEntry, labels, { profileUnlocks: true });
+
+    expect(vm.detailHref).toBe('/p/bu_ada-lovelace');
+    expect(vm.redacted).toBe(false);
+  });
+
+  it('routes a redacted directory payload to /p/{id} even without the unlocks flag', () => {
+    const redacted = {
+      ...directoryEntry,
+      displayName: 'Ada L',
+      avatarUrl: null,
+      headline: null,
+      summary: null,
+      skills: [],
+      education: [],
+    };
+    expect(isRedactedTalentDirectoryEntry(redacted)).toBe(true);
+
+    const vm = toTalentCardVM(redacted, labels);
+
+    expect(vm.redacted).toBe(true);
+    expect(vm.displayName).toBe('Ada L');
+    expect(vm.detailHref).toBe('/p/bu_ada-lovelace');
+    expect(vm.headline).toBeNull();
+    expect(vm.skills).toEqual([]);
+  });
+
+  it('does not treat a sparse full-name card as redacted', () => {
+    expect(
+      isRedactedTalentDirectoryEntry({
+        ...directoryEntry,
+        avatarUrl: null,
+        headline: null,
+        summary: null,
+        skills: [],
+      }),
+    ).toBe(false);
+  });
 });
 
 describe('resolveTalentDetailCta', () => {
@@ -339,6 +388,53 @@ describe('resolveTalentDetailCta', () => {
     });
   });
 
+  it('sends an access-holding employer without message credits to the pricing upsell', () => {
+    expect(
+      resolveTalentDetailCta({
+        ...base,
+        labels: {
+          ...base.labels,
+          upgrade: 'Upgrade to message',
+        },
+        viewer: {
+          kind: 'employer',
+          hasTalentAccess: true,
+          canStartMessage: false,
+        },
+      }),
+    ).toEqual({
+      message: {
+        kind: 'link',
+        label: 'Upgrade to message',
+        href: '/employers',
+      },
+      viewProfile: {
+        kind: 'link',
+        label: 'View profile',
+        href: '/p/ada-lovelace',
+      },
+    });
+  });
+
+  it('treats an inert paywall as messageable even with zero remaining credits', () => {
+    expect(
+      employerCanStartMessage({
+        hasTalentAccess: true,
+        accessModel: 'none',
+        hasUnlimitedMessages: false,
+        messageCreditsRemaining: 0,
+      }),
+    ).toBe(true);
+    expect(
+      employerCanStartMessage({
+        hasTalentAccess: true,
+        accessModel: 'paid_messaging',
+        hasUnlimitedMessages: false,
+        messageCreditsRemaining: 0,
+      }),
+    ).toBe(false);
+  });
+
   it('omits the View profile link on the canonical profile surface itself', () => {
     expect(
       resolveTalentDetailCta({
@@ -392,4 +488,99 @@ describe('resolveTalentDetailCta', () => {
       });
     },
   );
+});
+
+describe('resolveTalentProfileSurface', () => {
+  const redacted: Pick<
+    TalentProfile,
+    | 'handle'
+    | 'displayName'
+    | 'avatarUrl'
+    | 'headline'
+    | 'bio'
+    | 'skills'
+    | 'education'
+  > = {
+    handle: 'ada-lovelace',
+    displayName: 'Ada L',
+    avatarUrl: null,
+    headline: null,
+    bio: null,
+    skills: [],
+    education: [],
+  };
+  const unlockNeeded = {
+    alreadyUnlocked: false,
+    hasUnlimitedUnlocks: false,
+    hasActiveTalentSubscription: true,
+    unlockCreditsRemaining: 3,
+  };
+
+  it('never gates the named /p/{handle} share bypass', () => {
+    expect(
+      resolveTalentProfileSurface({
+        routeParam: 'ada-lovelace',
+        profile: redacted,
+        sellsUnlocks: true,
+        viewerRole: 'employer',
+        candidateAccess: unlockNeeded,
+        candidateAccessReady: true,
+      }),
+    ).toBe('profile');
+  });
+
+  it('asks an employer with remaining unlocks to confirm on the opaque route', () => {
+    expect(
+      resolveTalentProfileSurface({
+        routeParam: 'bu_ada-lovelace',
+        profile: redacted,
+        sellsUnlocks: true,
+        viewerRole: 'employer',
+        candidateAccess: unlockNeeded,
+        candidateAccessReady: true,
+      }),
+    ).toBe('unlock_needed');
+  });
+
+  it('upsells an employer who is out of unlocks', () => {
+    expect(
+      resolveTalentProfileSurface({
+        routeParam: 'bu_ada-lovelace',
+        profile: redacted,
+        sellsUnlocks: true,
+        viewerRole: 'employer',
+        candidateAccess: { ...unlockNeeded, unlockCreditsRemaining: 0 },
+        candidateAccessReady: true,
+      }),
+    ).toBe('out_of_unlocks');
+  });
+
+  it('gates a mononym on the opaque route, which leaves no redaction marker', () => {
+    // "Prince" redacts to "Prince": nothing in the payload says it was cut,
+    // so sniffing the name would strand this candidate on a blank profile
+    // with no way to unlock them. The board's access model decides instead.
+    expect(
+      resolveTalentProfileSurface({
+        routeParam: 'bu_prince',
+        profile: { ...redacted, displayName: 'Prince' },
+        sellsUnlocks: true,
+        viewerRole: 'employer',
+        candidateAccess: unlockNeeded,
+        candidateAccessReady: true,
+      }),
+    ).toBe('unlock_needed');
+  });
+
+  it('sends anonymous viewers of a redacted opaque profile to plans', () => {
+    expect(
+      resolveTalentProfileSurface({
+        routeParam: 'bu_ada-lovelace',
+        profile: redacted,
+        sellsUnlocks: false,
+        viewerRole: null,
+        candidateAccess: null,
+        candidateAccessReady: true,
+      }),
+    ).toBe('no_plan');
+  });
 });

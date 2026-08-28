@@ -7,7 +7,13 @@ export interface KeywordSuggestionVM {
   name: string;
 }
 
-/** Map the localized Board taxonomy term to the keyword combobox contract. */
+/**
+ * Map the localized Board taxonomy term to the keyword combobox contract.
+ *
+ * Typed to the fields this actually reads rather than the whole
+ * `PublicTaxonomyTerm`: taxonomy collections carry a live `jobCount` that the
+ * suggest endpoint's terms do not, and the combobox wants neither.
+ */
 export function toKeywordSuggestionVM(
   term: Pick<PublicTaxonomyTerm, 'type' | 'canonicalSlug' | 'displayName'>,
 ): KeywordSuggestionVM {

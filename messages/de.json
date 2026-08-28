@@ -7,7 +7,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "alle {countLabel} Monate",
         "countPlural=*": "alle {countLabel} Monate"
@@ -21,7 +23,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "alle {countLabel} Jahre",
         "countPlural=*": "alle {countLabel} Jahre"
@@ -77,7 +81,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "1 Job passt zu deinem Profil und deinen Präferenzen.",
         "countPlural=*": "{countLabel} Jobs passen zu deinem Profil und deinen Präferenzen."
@@ -96,7 +102,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Du hast 1 Job gespeichert.",
         "countPlural=*": "Du hast {countLabel} Jobs gespeichert."
@@ -372,10 +380,12 @@
   "blog_searchPlaceholder": "Artikel suchen...",
   "blog_tagFilterAllLabel": "Alle",
   "blog_tagFilterLabel": "Themen",
+  "boardError_alreadyOnPlanText": "Dein Unternehmen ist bereits auf diesem Plan.",
   "boardError_checkoutFailedText": "Der Bezahlvorgang konnte nicht gestartet werden. Versuche es gleich erneut.",
   "boardError_companyDeletionDisabledText": "Das Löschen von Unternehmen ist auf diesem Board nicht aktiviert.",
   "boardError_companyNameTakenText": "Ein Unternehmen mit diesem Namen existiert bereits auf diesem Board.",
   "boardError_companyNotFoundText": "Dieses Unternehmen existiert nicht mehr. Aktualisiere die Seite und versuche es erneut.",
+  "boardError_companyRequiredText": "Wähle zuerst ein Unternehmen aus.",
   "boardError_emailTakenText": "Ein Konto mit dieser E-Mail existiert bereits.",
   "boardError_forbiddenText": "Dafür hast du keine Berechtigung.",
   "boardError_genericText": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
@@ -395,6 +405,7 @@
   "boardError_messagingRateLimitedText": "Du hast zu viele Unterhaltungen begonnen. Warte eine Weile und versuche es erneut.",
   "boardError_messagingRecipientNotFoundText": "Diese Person ist nicht mehr verfügbar.",
   "boardError_messagingRecipientNotOpenText": "Diese Person nimmt keine Nachrichten an.",
+  "boardError_messagingTalentAccessRequiredText": "Deine Nachrichtenguthaben sind aufgebraucht. Führe ein Upgrade deines Talentplans durch, um weiter Nachrichten zu senden.",
   "boardError_notCompanyAdminText": "Das kann nur eine Admin-Person des Unternehmens.",
   "boardError_notMemberText": "Du bist kein Mitglied des Teams dieses Unternehmens.",
   "boardError_otpExpiredText": "Dieser Code ist abgelaufen. Fordere einen neuen an.",
@@ -405,6 +416,9 @@
   "boardError_rateLimitedText": "Zu viele Versuche. Warte kurz und versuche es dann erneut.",
   "boardError_registrationDisabledText": "Registrierungen sind auf diesem Board geschlossen.",
   "boardError_sameEmailText": "Das ist bereits deine E-Mail-Adresse.",
+  "boardError_stripeNotConnectedText": "Der Bezahlvorgang ist auf diesem Board gerade nicht verfügbar.",
+  "boardError_talentAccessRequiredText": "Für diese Aktion ist Talentzugang erforderlich.",
+  "boardError_talentAccessUnavailableText": "Talentzugang ist auf diesem Board gerade nicht verfügbar.",
   "boardError_unauthorizedText": "Bitte melde dich zuerst an.",
   "boardError_validationText": "Einige Felder brauchen Aufmerksamkeit. Prüfe das Formular und versuche es erneut.",
   "breadcrumbJsonLd_forEmployersLabel": "Für Arbeitgeber",
@@ -456,7 +470,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} offene Stelle",
         "countPlural=*": "{countLabel} offene Stellen"
@@ -471,7 +487,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} offene Stelle",
         "countPlural=*": "{countLabel} offene Stellen"
@@ -487,7 +505,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Alle {countLabel} Stelle ansehen",
         "countPlural=*": "Alle {countLabel} Stellen ansehen"
@@ -538,7 +558,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Unternehmen",
         "countPlural=*": "{countLabel} Unternehmen"
@@ -578,7 +600,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Kandidat",
         "countPlural=*": "{countLabel} Kandidaten"
@@ -592,7 +616,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Unternehmen",
         "countPlural=*": "{countLabel} Unternehmen"
@@ -606,7 +632,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Job",
         "countPlural=*": "{countLabel} Jobs"
@@ -620,7 +648,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Beitrag",
         "countPlural=*": "{countLabel} Beiträge"
@@ -680,7 +710,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Bewerber",
         "countPlural=*": "{countLabel} Bewerber"
@@ -801,7 +833,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} anderes Mitglied",
         "countPlural=*": "{countLabel} andere Mitglieder"
@@ -840,7 +874,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Du hast 1 aktive Stelle.",
         "countPlural=*": "Du hast {countLabel} aktive Stellen."
@@ -866,6 +902,11 @@
   "employerJobs_typeColumn": "Art",
   "employerJobs_viewsColumn": "Aufrufe",
   "employerJobs_yourJobsHeading": "Deine Jobs",
+  "employerLanding_backToPlansLabel": "Zurück zu den Paketen",
+  "employerLanding_completePurchaseSubtitle": "Gib unten deine Zahlungsdaten ein, um Talentzugang zu abonnieren. Du kannst jederzeit zu den Paketen zurückkehren.",
+  "employerLanding_completePurchaseTitle": "Kauf abschließen",
+  "employerLanding_confirmingSubtitle": "Einen Moment. Wir bestätigen deine Zahlung. Du wirst nicht erneut belastet.",
+  "employerLanding_confirmingText": "Kauf wird bestätigt…",
   "employerLanding_enterpriseHeading": "Enterprise",
   "employerLanding_featureActiveJobs": [
     {
@@ -874,7 +915,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} aktive Stellenanzeige",
         "countPlural=*": "{countLabel} aktive Stellenanzeigen"
@@ -888,7 +931,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} hervorgehoben",
         "countPlural=*": "{countLabel} hervorgehoben"
@@ -903,7 +948,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Nachricht",
         "countPlural=*": "{countLabel} Nachrichten"
@@ -917,7 +964,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Profilfreischaltung",
         "countPlural=*": "{countLabel} Profilfreischaltungen"
@@ -926,15 +975,22 @@
   ],
   "employerLanding_freeLabel": "Kostenlos",
   "employerLanding_jobPostingHeading": "Stellenanzeigen",
+  "employerLanding_manageBillingLabel": "Abrechnung verwalten",
   "employerLanding_noPlansText": "Derzeit sind keine Pakete verfügbar.",
+  "employerLanding_openingBillingLabel": "Wird geöffnet…",
+  "employerLanding_paymentReceivedBody": "Dein Zugang wird noch bestätigt. Aktualisiere diese Seite in einem Moment. Du wirst nicht erneut belastet.",
+  "employerLanding_paymentReceivedTitle": "Zahlung eingegangen",
   "employerLanding_perMonthSuffix": "/Monat",
   "employerLanding_perYearSuffix": "/Jahr",
   "employerLanding_recommendedBadge": "Empfohlen",
+  "employerLanding_refreshLabel": "Aktualisieren",
   "employerLanding_requestInvoiceLabel": "Rechnung anfordern",
+  "employerLanding_startingLabel": "Wird gestartet…",
   "employerLanding_subscribeLabel": "Abonnieren",
   "employerLanding_subtitle": "Veröffentlichen Sie Stellenanzeigen und erreichen Sie Kandidaten auf {boardName}.",
   "employerLanding_talentAccessHeading": "Talentzugang",
   "employerLanding_title": "Für Arbeitgeber",
+  "employerLanding_upgradeLabel": "Upgrade",
   "employerMembers_alreadyInvitedError": "Für diese E-Mail liegt bereits eine Einladung vor.",
   "employerMembers_alreadyMemberError": "Diese E-Mail gehört bereits zu einem Teammitglied.",
   "employerMembers_companyHeading": "Teammitglieder bei {company}",
@@ -945,7 +1001,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Du hast 1 Teammitglied.",
         "countPlural=*": "Du hast {countLabel} Teammitglieder."
@@ -1203,7 +1261,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Job",
         "countPlural=*": "{countLabel} Jobs"
@@ -1393,7 +1453,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Enthält 1 hervorgehobenen Job",
         "countPlural=*": "Enthält {countLabel} hervorgehobene Jobs"
@@ -1409,7 +1471,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "1 aktiver Job gleichzeitig",
         "countPlural=*": "Bis zu {countLabel} aktive Jobs"
@@ -1529,6 +1593,8 @@
   "previewToolbar_staleReseed": "Diese Persona wurde neu erstellt. Setze unten die Liste zurück und wechsle erneut.",
   "previewToolbar_subtitle": "Sandbox-Board · echte Sitzungen",
   "previewToolbar_switchError": "Die Persona konnte nicht gewechselt werden. Ihre aktuelle Sitzung bleibt unverändert; versuchen Sie es erneut.",
+  "previewToolbar_talentAccessModel_paidMessaging": "Bezahlte Nachrichten",
+  "previewToolbar_talentAccessModel_paidUnlocksAndMessaging": "Bezahlte Freischaltungen und Nachrichten",
   "previewToolbar_talentVisibility_employersOnly": "Nur Arbeitgeber",
   "previewToolbar_talentVisibility_off": "Aus",
   "previewToolbar_talentVisibility_public": "Öffentlich",
@@ -1650,7 +1716,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Gehälter für {skill} über {countLabel} Standort.",
         "countPlural=*": "Gehälter für {skill} über {countLabel} Standorte."
@@ -1676,7 +1744,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Gehälter für {title} über {countLabel} Standort.",
         "countPlural=*": "Gehälter für {title} über {countLabel} Standorte."
@@ -1702,7 +1772,9 @@
         "input jobCountLabel",
         "local jobCountPlural = jobCount: plural"
       ],
-      "selectors": ["jobCountPlural"],
+      "selectors": [
+        "jobCountPlural"
+      ],
       "match": {
         "jobCountPlural=one": "{jobCountLabel} Stellenanzeige",
         "jobCountPlural=*": "{jobCountLabel} Stellenanzeigen"
@@ -1869,7 +1941,39 @@
   "talentSearch_statusActivelyLooking": "Aktiv auf Jobsuche",
   "talentSearch_statusNotLooking": "Nicht auf Jobsuche",
   "talentSearch_statusOpenToOffers": "Offen für Angebote",
+  "talentSearch_upgradeToMessageLabel": "Upgrade, um zu schreiben",
   "talentSearch_viewProfileLabel": "Profil ansehen",
+  "talentUnlock_confirmAction": "Profil freischalten",
+  "talentUnlock_confirmBody": "Das verbraucht eine Profil-Freischaltung aus dem Talentplan deines Unternehmens.",
+  "talentUnlock_confirmTitle": "Dieses Profil freischalten?",
+  "talentUnlock_creditsRemaining": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{countLabel} Freischaltung übrig.",
+        "countPlural=*": "{countLabel} Freischaltungen übrig."
+      }
+    }
+  ],
+  "talentUnlock_neededBody": "Gib eine Freischaltung aus, um das vollständige Profil zu sehen.",
+  "talentUnlock_neededTitle": "Dieses Profil freischalten",
+  "talentUnlock_noPlanBody": "Abonniere einen Talentplan, um Kandidatenprofile freizuschalten.",
+  "talentUnlock_noPlanTitle": "Talentzugang erforderlich",
+  "talentUnlock_outOfUnlocksBody": "Führe ein Upgrade deines Talentplans durch, um weiter Profile freizuschalten.",
+  "talentUnlock_outOfUnlocksTitle": "Keine Profil-Freischaltungen mehr",
+  "talentUnlock_pendingBody": "Wir prüfen, ob dieses Profil freigeschaltet werden kann.",
+  "talentUnlock_pendingTitle": "Profil wird geladen",
+  "talentUnlock_unlockingLabel": "Wird freigeschaltet…",
+  "talentUnlock_upgradeLabel": "Upgrade",
+  "talentUnlock_upgradingLabel": "Upgrade läuft…",
+  "talentUnlock_viewPlansLabel": "Talentpläne ansehen",
   "threadView_archiveLabel": "Archivieren",
   "threadView_backToInboxAriaLabel": "Zurück zum Posteingang",
   "threadView_blockLabel": "Blockieren",
