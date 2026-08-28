@@ -5,7 +5,7 @@
 
 export const CAVUNO_AUTH_PARAM = 'cavuno_auth';
 export const CAVUNO_AUTH_METHOD_PARAM = 'cavuno_auth_method';
-/** Staged on returnTo during OAuth/magic-link; resolved on the landing redirect. */
+/** Staged on returnTo during OAuth/magic-link for rollout compatibility only. */
 export const CAVUNO_AUTH_INTENT_PARAM = 'cavuno_auth_intent';
 /** Staged on returnTo during OAuth so the completion redirect knows the provider. */
 export const CAVUNO_OAUTH_PROVIDER_PARAM = 'cavuno_oauth_provider';
@@ -132,22 +132,24 @@ export function parseAuthConversionSearchParams(
 /** Resolve OAuth/magic-link completion into a destination with conversion params. */
 export function resolvePostAuthConversionRedirect(
   returnTo: string,
-  fallbackMethod: BoardAuthMethod,
+  input: {
+    isNewUser: boolean;
+    fallbackMethod: BoardAuthMethod;
+  },
 ): string {
   const url = new URL(returnTo, 'https://example.com');
-  const intent = url.searchParams.get(CAVUNO_AUTH_INTENT_PARAM);
   const provider = url.searchParams.get(CAVUNO_OAUTH_PROVIDER_PARAM);
   url.searchParams.delete(CAVUNO_AUTH_INTENT_PARAM);
   url.searchParams.delete(CAVUNO_OAUTH_PROVIDER_PARAM);
-  const event: BoardAuthEvent = intent === 'sign_up' ? 'sign_up' : 'login';
+  const event: BoardAuthEvent = input.isNewUser ? 'sign_up' : 'login';
   const method: BoardAuthMethod =
-    fallbackMethod === 'magic_link'
+    input.fallbackMethod === 'magic_link'
       ? 'magic_link'
       : provider === 'linkedin'
         ? 'linkedin'
         : provider === 'google'
           ? 'google'
-          : fallbackMethod;
+          : input.fallbackMethod;
   const base = `${url.pathname}${url.search}${url.hash}`;
   return appendAuthConversionQuery(base, event, method);
 }

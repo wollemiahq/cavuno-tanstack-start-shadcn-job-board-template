@@ -27,21 +27,7 @@ export const Route = createFileRoute('/auth/oauth-complete')({
     returnTo: candidateReturnTo(search.returnTo),
   }),
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps }) => {
-    // Started before the token branch so it overlaps the exchange.
-    const seoPromise = getSeoBase();
-    if (!deps.token) {
-      return { status: 'missing-token' as const, seo: await seoPromise };
-    }
-    const [result, seo] = await Promise.all([
-      exchangeOAuth({ data: { token: deps.token } }),
-      seoPromise,
-    ]);
-    if (!result.ok) return { status: 'invalid' as const, seo };
-    throw redirect({
-      href: resolvePostAuthConversionRedirect(deps.returnTo, 'google'),
-    });
-  },
+  loader: ({ deps }) => loadOAuthComplete(deps),
   head: ({ loaderData }) => ({
     meta: [
       {
@@ -55,6 +41,33 @@ export const Route = createFileRoute('/auth/oauth-complete')({
   }),
   component: OAuthCompletePage,
 });
+
+export async function loadOAuthComplete(
+  deps: OAuthCompleteSearch,
+  actions: {
+    exchangeOAuth: (input: { data: { token: string } }) => Promise<
+      | { ok: true; isNewUser: boolean }
+      | { ok: false; message: string }
+    >;
+    getSeoBase: () => ReturnType<typeof getSeoBase>;
+  } = { exchangeOAuth, getSeoBase },
+) {
+  const seoPromise = actions.getSeoBase();
+  if (!deps.token) {
+    return { status: 'missing-token' as const, seo: await seoPromise };
+  }
+  const [result, seo] = await Promise.all([
+    actions.exchangeOAuth({ data: { token: deps.token } }),
+    seoPromise,
+  ]);
+  if (!result.ok) return { status: 'invalid' as const, seo };
+  throw redirect({
+    href: resolvePostAuthConversionRedirect(deps.returnTo, {
+      isNewUser: result.isNewUser,
+      fallbackMethod: 'google',
+    }),
+  });
+}
 
 function OAuthCompletePage() {
   const { status } = Route.useLoaderData();

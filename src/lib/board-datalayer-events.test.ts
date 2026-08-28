@@ -41,23 +41,44 @@ describe('board-datalayer-events', () => {
     });
   });
 
-  it('resolves OAuth completion with staged intent and provider', () => {
+  it('maps OAuth completion from server isNewUser, not staged page intent', () => {
     const returnTo = appendOAuthProviderHint(
       appendAuthIntentQuery('/jobs?q=design', 'sign_up'),
       'linkedin',
     );
-    expect(resolvePostAuthConversionRedirect(returnTo, 'google')).toBe(
-      '/jobs?q=design&cavuno_auth=sign_up&cavuno_auth_method=linkedin',
-    );
+    expect(
+      resolvePostAuthConversionRedirect(returnTo, {
+        isNewUser: false,
+        fallbackMethod: 'google',
+      }),
+    ).toBe('/jobs?q=design&cavuno_auth=login&cavuno_auth_method=linkedin');
+    expect(
+      resolvePostAuthConversionRedirect(returnTo, {
+        isNewUser: true,
+        fallbackMethod: 'google',
+      }),
+    ).toBe('/jobs?q=design&cavuno_auth=sign_up&cavuno_auth_method=linkedin');
   });
 
-  it('defaults OAuth completion to login when no sign_up intent is staged', () => {
+  it('defaults OAuth completion to login for returning users without sign_up intent', () => {
     expect(
       resolvePostAuthConversionRedirect(
         appendOAuthProviderHint('/account', 'google'),
-        'google',
+        { isNewUser: false, fallbackMethod: 'google' },
       ),
     ).toBe('/account?cavuno_auth=login&cavuno_auth_method=google');
+  });
+
+  it('fires sign_up for new users even when sign-in intent was staged', () => {
+    expect(
+      resolvePostAuthConversionRedirect(
+        appendAuthIntentQuery(
+          appendOAuthProviderHint('/account', 'google'),
+          'login',
+        ),
+        { isNewUser: true, fallbackMethod: 'google' },
+      ),
+    ).toBe('/account?cavuno_auth=sign_up&cavuno_auth_method=google');
   });
 
   it('strips auth conversion params from search', () => {

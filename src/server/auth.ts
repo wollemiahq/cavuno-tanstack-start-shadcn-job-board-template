@@ -36,6 +36,10 @@ function authError<T>(error: T): AuthActionError {
   throw error;
 }
 
+function authExchangeIsNewUser(session: unknown): boolean {
+  return (session as { isNewUser?: boolean }).isNewUser === true;
+}
+
 export const signIn = createServerFn({ method: 'POST' })
   .validator((input: { email: string; password: string }) => input)
   .handler(async ({ data }) => {
@@ -260,7 +264,11 @@ export const consumeMagicLink = createServerFn({ method: 'POST' })
     try {
       const session = await getBoard().auth.consumeMagicLink(data);
       persistAuthSession(session);
-      return { ok: true as const, boardUser: session.boardUser };
+      return {
+        ok: true as const,
+        boardUser: session.boardUser,
+        isNewUser: authExchangeIsNewUser(session),
+      };
     } catch (error) {
       return authError(error);
     }
@@ -289,7 +297,11 @@ export const exchangeOAuth = createServerFn({ method: 'POST' })
     try {
       const session = await getBoard().auth.exchangeOAuth(data);
       persistAuthSession(session);
-      return { ok: true as const, boardUser: session.boardUser };
+      return {
+        ok: true as const,
+        boardUser: session.boardUser,
+        isNewUser: authExchangeIsNewUser(session),
+      };
     } catch (error) {
       return authError(error);
     }
