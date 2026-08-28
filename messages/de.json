@@ -9,7 +9,7 @@
       ],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "alle {countLabel} Monat",
+        "countPlural=one": "jeden Monat",
         "countPlural=*": "alle {countLabel} Monate"
       }
     }
@@ -23,7 +23,7 @@
       ],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "alle {countLabel} Jahr",
+        "countPlural=one": "jedes Jahr",
         "countPlural=*": "alle {countLabel} Jahre"
       }
     }
@@ -760,7 +760,7 @@
   "employerCompany_publishPayLabel": "Veröffentlichen & bezahlen",
   "employerCompany_reconciliationError": "Die Änderung wurde gespeichert, aber diese Seite konnte nicht aktualisiert werden. Lade die Seite neu, um die neuesten Daten zu sehen.",
   "employerCompany_republishLabel": "Erneut veröffentlichen (falls bezahlt)",
-  "employerCompany_reusableCreditsLabel": "Deine verfügbaren Guthaben",
+  "employerCompany_reusableCreditsLabel": "Dein wiederverwendbares Guthaben",
   "employerCompany_saveCompanyLabel": "Unternehmen speichern",
   "employerCompany_savedText": "Gespeichert.",
   "employerCompany_savingLabel": "Wird gespeichert …",
@@ -1260,7 +1260,7 @@
   "jobsHero_subtitle": "Alle offenen Stellen — suchen, filtern und direkt bewerben.",
   "jobsLocationsIndex_emptyText": "Noch keine Standorte.",
   "jobsLocationsIndex_heading": "Jobs nach Standort",
-  "label_employmentContract": "Freie Mitarbeit",
+  "label_employmentContract": "Auf Vertragsbasis",
   "label_employmentFullTime": "Vollzeit",
   "label_employmentInternship": "Praktikum",
   "label_employmentOther": "Sonstiges",
@@ -1297,7 +1297,7 @@
   "languagesSection_levelConversational": "Konversationssicher",
   "languagesSection_levelFluent": "Fließend",
   "languagesSection_levelNative": "Muttersprache",
-  "languagesSection_levelProfessional": "Verhandlungssicher",
+  "languagesSection_levelProfessional": "Gute Kenntnisse",
   "languagesSection_proficiencyLabel": "Niveau",
   "languagesSection_removeLanguageAriaLabel": "Sprache entfernen",
   "languagesSection_saveLabel": "Speichern",
@@ -1698,7 +1698,7 @@
   "salaryDetail_skillMetaDescriptionEmpty": "Gehaltsdaten für {skill}.",
   "salaryDetail_skillMetaDescriptionWithData": "Gehälter für {skill}: {range}/Jahr aus {jobCount} Jobs.",
   "salaryDetail_skillsInPlaceHeading": "Gehälter nach Skill in {place}",
-  "salaryDetail_skillsInPlaceMetaDescription": "Gehälter nach Skill in {place} für {count} Fähigkeiten.",
+  "salaryDetail_skillsInPlaceMetaDescription": "Gehälter nach Fähigkeit in {place} für {count} Fähigkeiten.",
   "salaryDetail_skillsInPlaceMetaTitle": "Gehälter nach Skill in {place}",
   "salaryDetail_skillsLabel": "Fähigkeiten",
   "salaryDetail_titleHeading": "Gehälter für {title}",
@@ -1830,7 +1830,7 @@
   "settings_signInLabel": "Anmelden",
   "settings_title": "Einstellungen",
   "settings_unsubscribedBody": "Du erhältst keine {channel}-E-Mails mehr. Du kannst sie jederzeit in deinen Kontoeinstellungen wieder aktivieren.",
-  "settings_unsubscribedHeading": "Du hast dich abbestellt",
+  "settings_unsubscribedHeading": "Du hast dich abgemeldet",
   "siteFooter_cavunoLabel": "Cavuno",
   "siteHeader_accountLabel": "Konto",
   "siteHeader_addNewCompanyLabel": "Neues Unternehmen hinzufügen",
@@ -1870,7 +1870,7 @@
   "talentSearch_detailErrorTitle": "Profil konnte nicht geladen werden",
   "talentSearch_detailLoadingLabel": "Profildetails werden geladen…",
   "talentSearch_employmentApprenticeship": "Ausbildung",
-  "talentSearch_employmentContract": "Freie Mitarbeit",
+  "talentSearch_employmentContract": "Auf Vertragsbasis",
   "talentSearch_employmentFreelance": "Freiberuflich",
   "talentSearch_employmentFullTime": "Vollzeit",
   "talentSearch_employmentInternship": "Praktikum",
@@ -1951,8 +1951,8 @@
   "threadView_unblockLabel": "Entsperren",
   "threadView_unreadMessagesLabel": "Ungelesene Nachrichten",
   "ui_breadcrumbLabel": "Pfadnavigation",
-  "ui_carouselNextLabel": "Nächste Karte",
-  "ui_carouselPreviousLabel": "Vorherige Karte",
+  "ui_carouselNextLabel": "Nächstes Element",
+  "ui_carouselPreviousLabel": "Vorheriges Element",
   "ui_loadingLabel": "Wird geladen",
   "ui_moreLabel": "Mehr",
   "ui_sidebarDescription": "Zeigt die mobile Seitenleiste an.",
