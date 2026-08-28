@@ -68,7 +68,7 @@ function LocationTree({
             {formatSalaryRange(locale, n.avgSalaryMin, n.avgSalaryMax, null) ??
               ''}
             {' · '}
-            {m.salaryHub_jobCount({
+            {m.count_jobs({
               count: n.jobCount,
               countLabel: n.jobCount.toLocaleString(locale),
             })}

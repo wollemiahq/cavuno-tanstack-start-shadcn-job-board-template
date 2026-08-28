@@ -5,9 +5,10 @@ import { toJobCardVM } from '@/board/job-view-model';
 import { HomeLanding } from '@/components/board/home-landing';
 import { JobAlertFloatingPrompt } from '@/components/job-alert-floating-prompt';
 import { useRootSession } from '@/components/root-session';
-import { entityCopy } from '@/copy-groups/entity';
+import { entityCount } from '@/lib/entity-count';
 import { jobAlertDefaultsFromSearch } from '@/lib/job-alert-defaults';
 import { backgroundImageUrl } from '@/lib/site-branding';
+import { chromeEntity } from '@/lib/site-chrome';
 import { m } from '@/paraglide/messages';
 import { getLocale } from '@/paraglide/runtime';
 import { saveJob } from '@/server/account';
@@ -28,30 +29,16 @@ export function HomePage() {
   } = routeApi.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const { user } = useRootSession();
-  const copy = {
-    entity: entityCopy(),
-  };
-  // Plural category via Intl.PluralRules, never `count === 1`.
-  //
-  // LIMITATION: the seam supplies two bare nouns, so this can only ever render
-  // `one` vs everything-else. That is correct for en/de/fr/es but wrong for
-  // Polish, which needs a third (genitive) form — "5 kandydatów", not
-  // "5 kandydaci". Fixing it means a plural message per entity, like the 17
-  // converted elsewhere in this arc; tracked as follow-up rather than widened
-  // here.
+  // Counts render through `entityCount`, which picks the CLDR plural form.
+  const chromeEntityOverrides = chromeEntity();
   const countEyebrow = (
     count: number | null | undefined,
-    singular: string,
-    plural: string,
+    message: (args: { count: number; countLabel: string }) => string,
+    override?: { singular?: string; plural?: string },
   ) => {
     const safeCount = Number(count);
-    return Number.isFinite(safeCount) && safeCount > 0
-      ? `${safeCount.toLocaleString(getLocale())} ${
-          new Intl.PluralRules(getLocale()).select(safeCount) === 'one'
-            ? singular
-            : plural
-        }`
-      : undefined;
+    if (!Number.isFinite(safeCount) || safeCount <= 0) return undefined;
+    return entityCount(safeCount, getLocale(), message, override);
   };
 
   const jobs = page.data.map((job) => toJobCardVM(job, getLocale(), board));
@@ -90,26 +77,19 @@ export function HomePage() {
     <>
       <HomeLanding
         jobs={jobs}
-        jobsCountLabel={countEyebrow(
-          page.count,
-          copy.entity.jobSingular,
-          copy.entity.jobPlural,
-        )}
-        companiesCountLabel={countEyebrow(
-          companiesCount,
-          copy.entity.companySingular,
-          copy.entity.companyPlural,
-        )}
-        talentCountLabel={countEyebrow(
-          talentCount,
-          copy.entity.candidateSingular,
-          copy.entity.candidatePlural,
-        )}
-        postsCountLabel={countEyebrow(
-          postsCount,
-          m.home_postSingular(),
-          m.home_postPlural(),
-        )}
+        jobsCountLabel={countEyebrow(page.count, m.count_jobs, {
+          singular: chromeEntityOverrides.jobSingular,
+          plural: chromeEntityOverrides.jobPlural,
+        })}
+        companiesCountLabel={countEyebrow(companiesCount, m.count_companies, {
+          singular: chromeEntityOverrides.companySingular,
+          plural: chromeEntityOverrides.companyPlural,
+        })}
+        talentCountLabel={countEyebrow(talentCount, m.count_candidates, {
+          singular: chromeEntityOverrides.candidateSingular,
+          plural: chromeEntityOverrides.candidatePlural,
+        })}
+        postsCountLabel={countEyebrow(postsCount, m.count_posts)}
         categories={categoryCards}
         companies={hiringCompanies}
         posts={posts}
