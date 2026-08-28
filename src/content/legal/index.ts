@@ -81,12 +81,20 @@ export function resolveLegalContent(type: LegalPageType): LegalPageContent {
 
 /**
  * Resolve impressum legal-entity facts for the view.
- * Returns `null` when unset or both fields empty so the facts card is omitted.
+ *
+ * The legal NAME comes from the board over the wire: hosted stores it as
+ * `companyLegalName` and `board.context().contact.legalName` serves it (SDK
+ * 4.13.0), so a migrated board keeps the name its operator already set without
+ * anyone editing this file. The static `legalEntity` below stays the fallback
+ * for a hand-run board, and is the only source for the ADDRESS, which the
+ * board context does not carry.
+ *
+ * Returns `null` when both fields are empty so the facts card is omitted.
  */
-export function resolveLegalEntity() {
-  if (!legalEntity) return null;
-  const legalName = legalEntity.legalName?.trim() || null;
-  const address = legalEntity.address?.trim() || null;
+export function resolveLegalEntity(contactLegalName?: string | null) {
+  const legalName =
+    contactLegalName?.trim() || legalEntity?.legalName?.trim() || null;
+  const address = legalEntity?.address?.trim() || null;
   if (!legalName && !address) return null;
   return { legalName, address };
 }
