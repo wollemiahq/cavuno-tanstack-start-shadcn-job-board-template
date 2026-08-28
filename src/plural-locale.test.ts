@@ -110,6 +110,22 @@ describe('plural messages', () => {
     }
   });
 
+  it('every locale ends with a wildcard arm so no category renders the raw key', () => {
+    // Separate from the categorical test above, which deliberately filters
+    // `other` out — `*` is what serves `other`, so nothing there requires it.
+    // Without this, deleting `countPlural=*` from a 2-form locale leaves the
+    // categorical test green while every count != 1 falls through to the
+    // compiler's key fallback and the page renders "jobSearch_resultsCount".
+    for (const locale of LOCALES) {
+      for (const key of PLURAL_KEYS) {
+        expect(
+          categories(readVariants(locale, key)),
+          `${key} in ${locale}`,
+        ).toContain('*');
+      }
+    }
+  });
+
   it('Polish uses genuinely different words per category', () => {
     const { match } = readVariants('pl', 'jobSearch_resultsCount')[0];
     const forms = new Set([
