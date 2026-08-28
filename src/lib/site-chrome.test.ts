@@ -17,6 +17,7 @@ describe('stock src/chrome.json', () => {
       description: null,
       navigationOrder: [],
       customLinks: [],
+      labels: {},
     });
     expect(chromeRemovedNavItems()).toEqual([]);
   });
@@ -85,6 +86,7 @@ describe('chrome presentation is git-only', () => {
       description: null,
       navigationOrder: [],
       customLinks: [],
+      labels: {},
     });
   });
 });
@@ -104,5 +106,47 @@ describe('orderEnabledNavIds', () => {
       'home',
       'companies',
     ]);
+  });
+});
+
+describe('readChrome footer labels', () => {
+  it('picks only known footer label keys and trims them', () => {
+    // chrome.json is machine-managed and may carry keys this version does not
+    // know (written by an older or newer emitter). Build the bag as a loose
+    // record so the test can prove readChrome drops the unknown key instead of
+    // passing it through.
+    const labels = {
+      aboutHeading: '  About us  ',
+      poweredByText: 'Built by Acme',
+      somethingElse: 'nope',
+    };
+    const parsed = readChrome({ footer: { labels } });
+    expect(parsed.footer.labels).toEqual({
+      aboutHeading: 'About us',
+      poweredByText: 'Built by Acme',
+    });
+  });
+
+  it('drops empty and null label values so the catalog still wins', () => {
+    const parsed = readChrome({
+      footer: { labels: { aboutHeading: '   ', contactLabel: null } },
+    });
+    expect(parsed.footer.labels).toEqual({});
+  });
+
+  it('keeps handlebars in a templated override — Footer resolves them', () => {
+    // The hosted value is stored with `{{year}}` / `{{board_name}}`, and
+    // Footer.tsx's resolveTemplate replaces exactly that syntax. Rewriting
+    // these to Paraglide's `{x}` would render literal braces.
+    const parsed = readChrome({
+      footer: { labels: { copyrightPrefix: '© {{year}} {{board_name}} GmbH' } },
+    });
+    expect(parsed.footer.labels.copyrightPrefix).toBe(
+      '© {{year}} {{board_name}} GmbH',
+    );
+  });
+
+  it('absent footer group yields no labels', () => {
+    expect(readChrome({}).footer.labels).toEqual({});
   });
 });

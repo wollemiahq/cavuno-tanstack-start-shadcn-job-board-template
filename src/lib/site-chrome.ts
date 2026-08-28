@@ -32,10 +32,41 @@ export type ChromeEntityOverrides = {
   companyPlural?: string;
 };
 
+/**
+ * Operator overrides for the footer's own label catalog. Hosted stores these
+ * as `footerLabels`; migration bakes the ones that differ from stock into
+ * `chrome.json` so the clone keeps them after the dashboard stops being read
+ * (ADR-0104 — applications own chrome copy).
+ *
+ * Values may contain `{{board_name}}` / `{{year}}` handlebars: `Footer.tsx`
+ * resolves those via `resolveTemplate`, exactly as it does for the Paraglide
+ * catalog's own templated strings. Do NOT rewrite them to Paraglide's `{x}`.
+ */
+export type ChromeFooterLabels = {
+  aboutHeading?: string;
+  aboutLabel?: string;
+  allRightsReservedText?: string;
+  contactLabel?: string;
+  cookiePolicyLabel?: string;
+  copyrightPrefix?: string;
+  forCandidatesHeading?: string;
+  forCompaniesHeading?: string;
+  impressumLabel?: string;
+  locationsLabel?: string;
+  poweredByText?: string;
+  privacyPolicyLabel?: string;
+  resourcesHeading?: string;
+  salariesLabel?: string;
+  sitemapLabel?: string;
+  termsOfServiceLabel?: string;
+  websiteLabel?: string;
+};
+
 export type ChromeFooter = {
   description: string | null;
   navigationOrder: string[];
   customLinks: ChromeCustomLink[];
+  labels: ChromeFooterLabels;
 };
 
 /** Machine-managed `src/chrome.json` — only keys that are set are present. */
@@ -62,6 +93,7 @@ export type ChromeFile = {
       label?: string | null;
       url?: string | null;
     } | null>;
+    labels?: Partial<Record<ChromeFooterLabelKey, string | null>> | null;
   } | null;
   removedNavItems?: Array<string | null>;
 };
@@ -81,6 +113,34 @@ const NAV_KEYS = [
   'post',
   'pricing',
 ] as const satisfies ReadonlyArray<ChromeNavKey>;
+
+/**
+ * Footer label keys mirroring `footerCopy()` in `src/copy-groups/footer.ts`.
+ * `defaultDescription` is deliberately absent — the operator's footer prose is
+ * carried by `footer.description`, and having two paths to the same rendered
+ * string is how one silently wins over the other.
+ */
+const FOOTER_LABEL_KEYS = [
+  'aboutHeading',
+  'aboutLabel',
+  'allRightsReservedText',
+  'contactLabel',
+  'cookiePolicyLabel',
+  'copyrightPrefix',
+  'forCandidatesHeading',
+  'forCompaniesHeading',
+  'impressumLabel',
+  'locationsLabel',
+  'poweredByText',
+  'privacyPolicyLabel',
+  'resourcesHeading',
+  'salariesLabel',
+  'sitemapLabel',
+  'termsOfServiceLabel',
+  'websiteLabel',
+] as const;
+
+export type ChromeFooterLabelKey = (typeof FOOTER_LABEL_KEYS)[number];
 
 const ENTITY_KEYS = [
   'jobSingular',
@@ -142,6 +202,18 @@ function pickEntity(value: ChromeFile['entity']): ChromeEntityOverrides {
   return picked;
 }
 
+function pickFooterLabels(
+  value: NonNullable<ChromeFile['footer']>['labels'],
+): ChromeFooterLabels {
+  if (value == null) return {};
+  const picked: ChromeFooterLabels = {};
+  for (const key of FOOTER_LABEL_KEYS) {
+    const text = trimmedText(value[key]);
+    if (text) picked[key] = text;
+  }
+  return picked;
+}
+
 export function readChrome(file: ChromeFile): ParsedChrome {
   const footer = file.footer;
   return {
@@ -151,6 +223,7 @@ export function readChrome(file: ChromeFile): ParsedChrome {
       description: trimmedText(footer?.description),
       navigationOrder: stringList(footer?.navigationOrder),
       customLinks: readCustomLinks(footer?.customLinks),
+      labels: pickFooterLabels(footer?.labels),
     },
     removedNavItems: stringList(file.removedNavItems),
   };
