@@ -496,6 +496,7 @@
   ],
   "companyDetail_viewOpenJobsLabel": "Voir les offres ouvertes",
   "companyDetail_viewSalariesLink": "Voir les salaires",
+  "companyDetail_websiteLabel": "Site web",
   "companyJobDetail_defaultAlertDescription": "De nouvelles offres correspondantes, directement dans votre boîte de réception.",
   "companyJobDetail_defaultAlertTitle": "Recevez des alertes pour des offres similaires",
   "companyJobDetail_notFoundText": "Cette offre n’est plus disponible.",

@@ -4,6 +4,8 @@ import { m } from '../../paraglide/messages';
 import { getLocale } from '../../paraglide/runtime';
 
 import { jobSearchCopy } from '@/copy-groups/job-search';
+import { entityCount } from '@/lib/entity-count';
+import { chromeEntity } from '@/lib/site-chrome';
 import { cn } from '@/lib/utils';
 
 function finiteNumber(value: number | undefined): number | undefined {
@@ -48,9 +50,9 @@ export function JobsResultsBar({
             count: totalCount.toLocaleString(locale),
             heading,
           })
-        : m.jobSearch_resultsCount({
-            count: totalCount,
-            countLabel: totalCount.toLocaleString(locale),
+        : entityCount(totalCount, locale, m.count_jobs, {
+            singular: chromeEntity().jobSingular,
+            plural: chromeEntity().jobPlural,
           })
       : (heading ?? jobSearchCopy().headingJobs);
   const rangeLabel = showRange

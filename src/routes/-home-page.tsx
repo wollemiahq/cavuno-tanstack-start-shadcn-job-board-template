@@ -65,9 +65,9 @@ export function HomePage() {
       name: related.term,
       countLabel:
         related.count > 0
-          ? m.jobSearch_resultsCount({
-              count: related.count,
-              countLabel: related.count.toLocaleString(getLocale()),
+          ? entityCount(related.count, getLocale(), m.count_jobs, {
+              singular: chromeEntity().jobSingular,
+              plural: chromeEntity().jobPlural,
             })
           : null,
       href: jobsCategoryPath(related.slug),

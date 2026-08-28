@@ -17,6 +17,6 @@ export function getCompanySearchLabels(): CompanySearchLabels {
     viewCompany: m.companySearch_viewCompanyLabel(),
     viewJobs: m.companySearch_viewJobsLabel(),
     viewSalaries: m.companyDetail_viewSalariesLink(),
-    website: m.footer_websiteLabel(),
+    website: m.companyDetail_websiteLabel(),
   };
 }

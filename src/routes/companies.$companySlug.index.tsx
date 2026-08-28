@@ -255,7 +255,7 @@ function CompanyPage() {
               {website ? (
                 <div className="flex flex-col gap-1.5">
                   <span className="text-muted-foreground text-sm font-medium">
-                    {m.footer_websiteLabel()}
+                    {m.companyDetail_websiteLabel()}
                   </span>
                   <a
                     href={website}
