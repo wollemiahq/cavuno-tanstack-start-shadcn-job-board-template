@@ -84,7 +84,8 @@
         "src/components/employer/company-delete-danger-zone.tsx",
         "src/components/employer/company-members-table.tsx",
         "src/components/preview/preview-toolbar.tsx",
-        "src/routes/-employers.company-jobs.tsx"
+        "src/routes/-employers.company-jobs.tsx",
+        "src/routes/-talent-unlock-gate.tsx"
       ]
     },
     {
@@ -116,6 +117,7 @@
         "src/components/messages/avatar.tsx",
         "src/components/post-card.tsx",
         "src/components/talent-card.tsx",
+        "src/routes/-talent-profile-silhouette.tsx",
         "src/routes/blog.author.$authorSlug.tsx"
       ]
     },
@@ -261,10 +263,12 @@
         "src/routes/-employers.dashboard.tsx",
         "src/routes/-employers.index.tsx",
         "src/routes/-employers.onboarding.tsx",
+        "src/routes/-employers.talent-access.tsx",
         "src/routes/-me.applications.tsx",
         "src/routes/-messages-dock-controller.tsx",
         "src/routes/-restricted-talent-directory.tsx",
         "src/routes/-settings.tsx",
+        "src/routes/-talent-unlock-gate.tsx",
         "src/routes/auth.employer.sign-up.tsx",
         "src/routes/companies.$companySlug.index.tsx",
         "src/routes/embed.jobs.tsx",
@@ -333,6 +337,7 @@
         "src/routes/-employers.company-profile.tsx",
         "src/routes/-employers.index.tsx",
         "src/routes/-employers.onboarding.tsx",
+        "src/routes/-talent-unlock-gate.tsx",
         "src/routes/account.tsx",
         "src/routes/companies.$companySlug.index.tsx"
       ]
@@ -472,6 +477,7 @@
         "src/routes/-employers.applicants.tsx",
         "src/routes/-employers.company-jobs.tsx",
         "src/routes/-employers.index.tsx",
+        "src/routes/-employers.talent-access.tsx",
         "src/routes/-messages-dock-controller.tsx",
         "src/routes/-restricted-talent-directory.tsx",
         "src/routes/companies.$companySlug.index.tsx",
@@ -773,7 +779,9 @@
         "src/components/resume-upload.tsx",
         "src/routes/-access-page.tsx",
         "src/routes/-employers.dashboard.tsx",
-        "src/routes/-employers.onboarding.tsx"
+        "src/routes/-employers.onboarding.tsx",
+        "src/routes/-employers.talent-access.tsx",
+        "src/routes/-talent-unlock-gate.tsx"
       ]
     },
     {

@@ -1356,7 +1356,7 @@ describe('employer company workspace', () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(m.employerMembers_countMany({ count: '2' })),
+      screen.getByText(m.employerMembers_count({ count: 2, countLabel: '2' })),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: m.employerMembers_inviteLabel() }),

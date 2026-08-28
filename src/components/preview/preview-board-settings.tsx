@@ -9,6 +9,7 @@ import {
   PREVIEW_FEATURE_FLAGS,
   type PreviewBoardConfig,
   type PreviewFeatureFlag,
+  type TalentAccessModel,
   type TalentDirectoryVisibility,
   unmetFlagRequirements,
 } from '../../lib/preview';
@@ -175,7 +176,7 @@ export function PreviewBoardSettingsSheetView({
    */
   async function onSetFlag(
     key: keyof PreviewBoardConfig,
-    next: boolean | TalentDirectoryVisibility,
+    next: boolean | TalentDirectoryVisibility | TalentAccessModel,
   ) {
     const previous = effectiveConfig[key];
     const revision = ++requestRevision.current;
@@ -348,6 +349,16 @@ function visibilityLabel(value: TalentDirectoryVisibility): string {
   }
 }
 
+/** Talent-access charging-model option label, from the message catalog. */
+function accessModelLabel(value: TalentAccessModel): string {
+  switch (value) {
+    case 'paid_messaging':
+      return m.previewToolbar_talentAccessModel_paidMessaging();
+    case 'paid_unlocks_and_messaging':
+      return m.previewToolbar_talentAccessModel_paidUnlocksAndMessaging();
+  }
+}
+
 /**
  * One "Board settings" row. A boolean flag renders a Switch; the tri-state
  * `talentDirectoryVisibility` renders a small native select. Both are
@@ -365,7 +376,7 @@ function FlagControl({
   pending: boolean;
   onSet: (
     key: keyof PreviewBoardConfig,
-    next: boolean | TalentDirectoryVisibility,
+    next: boolean | TalentDirectoryVisibility | TalentAccessModel,
   ) => void;
 }) {
   const controlId = `preview-flag-${flag.key}`;
@@ -411,16 +422,27 @@ function FlagControl({
           disabled={pending}
           // Visible <label htmlFor> already names the control.
           onChange={(event) =>
-            // SAFETY: NativeSelect options are exactly flag.options, which are
-            // ordered TalentDirectoryVisibility enum values.
-            onSet(flag.key, event.target.value as TalentDirectoryVisibility)
+            // SAFETY: NativeSelect renders exactly flag.options, so the change
+            // value is always a member of this flag's own enum.
+            onSet(
+              flag.key,
+              event.target.value as
+                | TalentDirectoryVisibility
+                | TalentAccessModel,
+            )
           }
         >
-          {flag.options.map((option) => (
-            <NativeSelectOption key={option} value={option}>
-              {visibilityLabel(option)}
-            </NativeSelectOption>
-          ))}
+          {flag.key === 'talentAccessModel'
+            ? flag.options.map((option) => (
+                <NativeSelectOption key={option} value={option}>
+                  {accessModelLabel(option)}
+                </NativeSelectOption>
+              ))
+            : flag.options.map((option) => (
+                <NativeSelectOption key={option} value={option}>
+                  {visibilityLabel(option)}
+                </NativeSelectOption>
+              ))}
         </NativeSelect>
       )}
     </li>

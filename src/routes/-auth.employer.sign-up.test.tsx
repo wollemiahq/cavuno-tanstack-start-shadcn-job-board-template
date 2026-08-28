@@ -9,6 +9,8 @@ import {
   loadEmployerSignUp,
 } from './-auth.employer.sign-up';
 
+import { buildVerifyEmailRedirectPath } from '@/lib/candidate-return-to';
+
 const mocks = {
   getBoardContext: vi.fn(),
   getSessionUser: vi.fn(),
@@ -48,9 +50,14 @@ describe('/auth/employer/sign-up continuation', () => {
     const action = await screen.findByRole('link', {
       name: 'Go to employer dashboard',
     });
+    expect(action.getAttribute('href')).toBe(
+      buildVerifyEmailRedirectPath('/employers/dashboard'),
+    );
     const url = new URL(action.getAttribute('href')!, 'https://board.example');
     expect(url.pathname).toBe('/auth/verify-email-required');
     expect(url.searchParams.get('returnTo')).toBe('/employers/dashboard');
+    expect(url.searchParams.get('cavuno_auth')).toBe('sign_up');
+    expect(url.searchParams.get('cavuno_auth_method')).toBe('password');
   });
 
   it('re-enters the verification gate for an existing unverified employer session', async () => {

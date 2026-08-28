@@ -62,7 +62,11 @@ export function TalentSearchResult({
   );
 
   return (
-    <SearchResultCard selected={selectable && selected} className="p-0">
+    <SearchResultCard
+      selected={selectable && selected}
+      className="p-0"
+      data-redacted={vm.redacted ? 'true' : undefined}
+    >
       {vm.detailHref ? (
         <a
           href={localizePath(vm.detailHref)}

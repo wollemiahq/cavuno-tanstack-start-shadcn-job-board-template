@@ -189,6 +189,7 @@ export function HomeLanding({
   companies,
   posts,
   talent,
+  profileUnlocks = false,
   boardName,
   candidatesEnabled,
   employersEnabled,
@@ -210,6 +211,8 @@ export function HomeLanding({
   companies: HomeCompanyCard[];
   posts: PublicBlogPostSummary[] | null;
   talent: TalentDirectoryEntry[] | null;
+  /** Opaque `/p/{id}` links when the board sells profile unlocks. */
+  profileUnlocks?: boolean;
   boardName: string;
   candidatesEnabled: boolean;
   employersEnabled: boolean;
@@ -383,8 +386,11 @@ export function HomeLanding({
           >
             <Grid as="ul" columns={{ base: 1, sm: 2, lg: 3 }} gap="4">
               {featuredTalent.map((candidate) => (
-                <li key={candidate.handle ?? candidate.displayName}>
-                  <TalentCard candidate={candidate} />
+                <li key={candidate.id}>
+                  <TalentCard
+                    candidate={candidate}
+                    profileUnlocks={profileUnlocks}
+                  />
                 </li>
               ))}
             </Grid>

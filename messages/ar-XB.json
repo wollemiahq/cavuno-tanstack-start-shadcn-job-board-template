@@ -1,7 +1,33 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  "accessOffer_everyMonths": "⁧⟦éṽéŕý {count} ɱóñţĥš⟧⁩",
-  "accessOffer_everyYears": "⁧⟦éṽéŕý {count} ýéáŕš⟧⁩",
+  "accessOffer_everyMonths": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦éṽéŕý {countLabel} ɱóñţĥ⟧⁩",
+        "countPlural=*": "⁧⟦éṽéŕý {countLabel} ɱóñţĥš⟧⁩"
+      }
+    }
+  ],
+  "accessOffer_everyYears": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦éṽéŕý {countLabel} ýéáŕ⟧⁩",
+        "countPlural=*": "⁧⟦éṽéŕý {countLabel} ýéáŕš⟧⁩"
+      }
+    }
+  ],
   "accessOffer_oneTime": "⁧⟦óñé-ţíɱé þáýɱéñţ⟧⁩",
   "accessOffer_perDay": "⁧⟦/ðáý⟧⁩",
   "accessOffer_perMonth": "⁧⟦/ɱóñţĥ⟧⁩",
@@ -44,8 +70,39 @@
   "accountHome_unsaveLabel": "⁧⟦Úñšáṽé⟧⁩",
   "accountHome_unverifiedBadge": "⁧⟦Úñṽéŕíƒíéð — çĥéçķ ýóúŕ éɱáíĺ⟧⁩",
   "accountHome_verifiedBadge": "⁧⟦Ṽéŕíƒíéð⟧⁩",
-  "accountSaved_countOneText": "⁧⟦Ýóú ĥáṽé šáṽéð 1 ĵóƀ.⟧⁩",
-  "accountSaved_countOtherText": "⁧⟦Ýóú ĥáṽé šáṽéð {count} ĵóƀš.⟧⁩",
+  "accountRecommended_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦1 ĵóƀ ɱáţçĥéš ýóúŕ þŕóƒíĺé áñð þŕéƒéŕéñçéš.⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} ĵóƀš ɱáţçĥ ýóúŕ þŕóƒíĺé áñð þŕéƒéŕéñçéš.⟧⁩"
+      }
+    }
+  ],
+  "accountRecommended_heading": "⁧⟦{name}'š ɱáţçĥéš⟧⁩",
+  "accountRecommended_headingFallback": "⁧⟦Ýóúŕ ɱáţçĥéš⟧⁩",
+  "accountRecommended_needsProfileTitle": "⁧⟦Úþĺóáð ýóúŕ ŕéšúɱé⟧⁩",
+  "accountRecommended_noneNowText": "⁧⟦Ŵé ðó ñóţ ĥáṽé ɱáţçĥéš ƒóŕ ýóú áţ ţĥé ɱóɱéñţ. Ɓŕóŵšé óþéñ ŕóĺéš íñšţéáð.⟧⁩",
+  "accountRecommended_noneNowTitle": "⁧⟦Ñó ɱáţçĥéš ŕíğĥţ ñóŵ⟧⁩",
+  "accountSaved_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦Ýóú ĥáṽé šáṽéð 1 ĵóƀ.⟧⁩",
+        "countPlural=*": "⁧⟦Ýóú ĥáṽé šáṽéð {countLabel} ĵóƀš.⟧⁩"
+      }
+    }
+  ],
   "accountSaved_savedLabel": "⁧⟦Šáṽéð⟧⁩",
   "accountShell_applicationsNav": "⁧⟦Áþþĺíçáţíóñš⟧⁩",
   "accountShell_candidateNavigationLabel": "⁧⟦Çáñðíðáţé áççóúñţ⟧⁩",
@@ -56,9 +113,11 @@
   "accountShell_membersNav": "⁧⟦Ţéáɱ ɱéɱƀéŕš⟧⁩",
   "accountShell_profileNav": "⁧⟦Þŕóƒíĺé⟧⁩",
   "accountShell_profileStrengthLabel": "⁧⟦Þŕóƒíĺé šţŕéñğţĥ⟧⁩",
+  "accountShell_recommendedJobsNav": "⁧⟦Ĵóƀ ɱáţçĥéš⟧⁩",
   "accountShell_savedJobsNav": "⁧⟦Šáṽéð ĵóƀš⟧⁩",
   "accountShell_settingsNav": "⁧⟦Šéţţíñğš⟧⁩",
   "accountShell_subscriptionNav": "⁧⟦Šúƀšçŕíþţíóñ⟧⁩",
+  "adRail_label": "⁧⟦Áðṽéŕţíšéɱéñţ⟧⁩",
   "alertManager_allNewJobsLabel": "⁧⟦Áĺĺ ñéŵ ĵóƀš⟧⁩",
   "alertManager_anyRoleText": "⁧⟦Áñý ŕóĺé⟧⁩",
   "alertManager_cancelLabel": "⁧⟦Çáñçéĺ⟧⁩",
@@ -125,12 +184,12 @@
   "applyButton_applyLabel": "⁧⟦Áþþĺý⟧⁩",
   "applyButton_retryApplicationStateLabel": "⁧⟦Çĥéçķ áþþĺíçáţíóñ šţáţúš⟧⁩",
   "apply_applicationSubmitError": "⁧⟦Šóɱéţĥíñğ ŵéñţ ŵŕóñğ. Þĺéášé ţŕý áğáíñ.⟧⁩",
-  "apply_locationNotEligibleError": "⁧⟦Ţĥé éɱþĺóýéŕ ĥášñ’ţ ɱáðé ţĥíš ĵóƀ áṽáíĺáƀĺé ţó áþþĺíçáñţš íñ ýóúŕ ĺóçáţíóñ.⟧⁩",
-  "apply_locationUnavailableTitle": "⁧⟦Ţĥíš ĵóƀ íšñ’ţ áṽáíĺáƀĺé íñ ýóúŕ ĺóçáţíóñ⟧⁩",
   "apply_appliedViewApplicationsLabel": "⁧⟦Áþþĺíéð — ṽíéŵ áþþĺíçáţíóñš⟧⁩",
   "apply_applyButtonText": "⁧⟦Áþþĺý ƒóŕ ţĥíš ĵóƀ⟧⁩",
   "apply_applyOnEmployerSiteLabel": "⁧⟦Áþþĺý óñ éɱþĺóýéŕ šíţé⟧⁩",
   "apply_applyingLabel": "⁧⟦Áþþĺýíñğ…⟧⁩",
+  "apply_locationNotEligibleError": "⁧⟦Ţĥé éɱþĺóýéŕ ĥášñ’ţ ɱáðé ţĥíš ĵóƀ áṽáíĺáƀĺé ţó áþþĺíçáñţš íñ ýóúŕ ĺóçáţíóñ.⟧⁩",
+  "apply_locationUnavailableTitle": "⁧⟦Ţĥíš ĵóƀ íšñ’ţ áṽáíĺáƀĺé íñ ýóúŕ ĺóçáţíóñ⟧⁩",
   "apply_signInToApplyLabel": "⁧⟦Šíğñ íñ ţó áþþĺý⟧⁩",
   "apply_verifyEmailToApplyLabel": "⁧⟦Ṽéŕíƒý éɱáíĺ ţó áþþĺý⟧⁩",
   "authConfirmEmailChange_backToSettingsLabel": "⁧⟦Ɓáçķ ţó šéţţíñğš⟧⁩",
@@ -313,10 +372,12 @@
   "blog_searchPlaceholder": "⁧⟦Šéáŕçĥ þóšţš...⟧⁩",
   "blog_tagFilterAllLabel": "⁧⟦Áĺĺ⟧⁩",
   "blog_tagFilterLabel": "⁧⟦Ţóþíçš⟧⁩",
+  "boardError_alreadyOnPlanText": "⁧⟦Ýóúŕ çóɱþáñý íš áĺŕéáðý óñ ţĥíš þĺáñ.⟧⁩",
   "boardError_checkoutFailedText": "⁧⟦Çĥéçķóúţ çóúĺðñ’ţ ƀé šţáŕţéð. Ţŕý áğáíñ íñ á ɱóɱéñţ.⟧⁩",
   "boardError_companyDeletionDisabledText": "⁧⟦Çóɱþáñý ðéĺéţíóñ íš ñóţ éñáƀĺéð óñ ţĥíš ƀóáŕð.⟧⁩",
   "boardError_companyNameTakenText": "⁧⟦Á çóɱþáñý ŵíţĥ ţĥáţ ñáɱé áĺŕéáðý éẋíšţš óñ ţĥíš ƀóáŕð.⟧⁩",
   "boardError_companyNotFoundText": "⁧⟦Ţĥáţ çóɱþáñý ñó ĺóñğéŕ éẋíšţš. Ŕéƒŕéšĥ ţĥé þáğé áñð ţŕý áğáíñ.⟧⁩",
+  "boardError_companyRequiredText": "⁧⟦Çĥóóšé á çóɱþáñý ƀéƒóŕé çóñţíñúíñğ.⟧⁩",
   "boardError_emailTakenText": "⁧⟦Áñ áççóúñţ ŵíţĥ ţĥáţ éɱáíĺ áĺŕéáðý éẋíšţš.⟧⁩",
   "boardError_forbiddenText": "⁧⟦Ýóú ðóñ’ţ ĥáṽé þéŕɱíššíóñ ţó ðó ţĥáţ.⟧⁩",
   "boardError_genericText": "⁧⟦Šóɱéţĥíñğ ŵéñţ ŵŕóñğ. Þĺéášé ţŕý áğáíñ.⟧⁩",
@@ -336,6 +397,7 @@
   "boardError_messagingRateLimitedText": "⁧⟦Ýóú’ṽé šţáŕţéð ţóó ɱáñý çóñṽéŕšáţíóñš. Ŵáíţ á ŵĥíĺé áñð ţŕý áğáíñ.⟧⁩",
   "boardError_messagingRecipientNotFoundText": "⁧⟦Ţĥíš çáñðíðáţé íš ñó ĺóñğéŕ áṽáíĺáƀĺé.⟧⁩",
   "boardError_messagingRecipientNotOpenText": "⁧⟦Ţĥíš çáñðíðáţé íšñ’ţ áççéþţíñğ ɱéššáğéš.⟧⁩",
+  "boardError_messagingTalentAccessRequiredText": "⁧⟦Ýóú’ŕé óúţ óƒ ɱéššáğé çŕéðíţš. Úþğŕáðé ýóúŕ ţáĺéñţ þĺáñ ţó ķééþ ɱéššáğíñğ çáñðíðáţéš.⟧⁩",
   "boardError_notCompanyAdminText": "⁧⟦Óñĺý á çóɱþáñý áðɱíñ çáñ ðó ţĥáţ.⟧⁩",
   "boardError_notMemberText": "⁧⟦Ýóú’ŕé ñóţ á ɱéɱƀéŕ óƒ ţĥíš çóɱþáñý’š ţéáɱ.⟧⁩",
   "boardError_otpExpiredText": "⁧⟦Ţĥáţ çóðé ĥáš éẋþíŕéð. Ŕéɋúéšţ á ñéŵ óñé.⟧⁩",
@@ -346,6 +408,9 @@
   "boardError_rateLimitedText": "⁧⟦Ţóó ɱáñý áţţéɱþţš. Ŵáíţ á ɱóɱéñţ, ţĥéñ ţŕý áğáíñ.⟧⁩",
   "boardError_registrationDisabledText": "⁧⟦Šíğñ-úþš áŕé çĺóšéð óñ ţĥíš ƀóáŕð.⟧⁩",
   "boardError_sameEmailText": "⁧⟦Ţĥáţ’š áĺŕéáðý ýóúŕ éɱáíĺ.⟧⁩",
+  "boardError_stripeNotConnectedText": "⁧⟦Çĥéçķóúţ íšñ’ţ áṽáíĺáƀĺé óñ ţĥíš ƀóáŕð ŕíğĥţ ñóŵ.⟧⁩",
+  "boardError_talentAccessRequiredText": "⁧⟦Ţáĺéñţ áççéšš íš ŕéɋúíŕéð ƒóŕ ţĥíš áçţíóñ.⟧⁩",
+  "boardError_talentAccessUnavailableText": "⁧⟦Ţáĺéñţ áççéšš íšñ’ţ áṽáíĺáƀĺé óñ ţĥíš ƀóáŕð ŕíğĥţ ñóŵ.⟧⁩",
   "boardError_unauthorizedText": "⁧⟦Šíğñ íñ ƒíŕšţ.⟧⁩",
   "boardError_validationText": "⁧⟦Šóɱé ƒíéĺðš ñééð áţţéñţíóñ. Çĥéçķ ţĥé ƒóŕɱ áñð ţŕý áğáíñ.⟧⁩",
   "breadcrumbJsonLd_forEmployersLabel": "⁧⟦Ƒóŕ éɱþĺóýéŕš⟧⁩",
@@ -390,17 +455,54 @@
   "companyDetail_metaDescriptionWithSummary": "⁧⟦{summary} {count} óþéñ ŕóĺéš óñ {boardName}.⟧⁩",
   "companyDetail_noOpenJobsText": "⁧⟦Ñó óþéñ ĵóƀš ŕíğĥţ ñóŵ.⟧⁩",
   "companyDetail_notFoundText": "⁧⟦Çóɱþáñý ñóţ ƒóúñð.⟧⁩",
-  "companyDetail_openJobsCountMany": "⁧⟦{count} óþéñ ĵóƀš⟧⁩",
-  "companyDetail_openJobsCountOne": "⁧⟦{count} óþéñ ĵóƀ⟧⁩",
+  "companyDetail_openJobsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} óþéñ ĵóƀ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} óþéñ ĵóƀš⟧⁩"
+      }
+    }
+  ],
   "companyDetail_openJobsHeading": "⁧⟦Óþéñ ĵóƀš⟧⁩",
-  "companyDetail_openJobsHeadingCountMany": "⁧⟦{count} Óþéñ ĵóƀš⟧⁩",
-  "companyDetail_openJobsHeadingCountOne": "⁧⟦{count} Óþéñ ĵóƀ⟧⁩",
+  "companyDetail_openJobsHeadingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} Óþéñ ĵóƀ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} Óþéñ ĵóƀš⟧⁩"
+      }
+    }
+  ],
   "companyDetail_salariesSummaryHeading": "⁧⟦Šáĺáŕíéš⟧⁩",
   "companyDetail_similarCompaniesHeading": "⁧⟦Šíɱíĺáŕ çóɱþáñíéš⟧⁩",
-  "companyDetail_viewAllJobsCountMany": "⁧⟦Ṽíéŵ áĺĺ {count} ĵóƀš⟧⁩",
-  "companyDetail_viewAllJobsCountOne": "⁧⟦Ṽíéŵ áĺĺ {count} ĵóƀ⟧⁩",
+  "companyDetail_viewAllJobsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦Ṽíéŵ áĺĺ {countLabel} ĵóƀ⟧⁩",
+        "countPlural=*": "⁧⟦Ṽíéŵ áĺĺ {countLabel} ĵóƀš⟧⁩"
+      }
+    }
+  ],
   "companyDetail_viewOpenJobsLabel": "⁧⟦Ṽíéŵ óþéñ ĵóƀš⟧⁩",
   "companyDetail_viewSalariesLink": "⁧⟦Ṽíéŵ šáĺáŕíéš⟧⁩",
+  "companyDetail_websiteLabel": "⁧⟦Ŵéƀšíţé⟧⁩",
   "companyJobDetail_defaultAlertDescription": "⁧⟦Ñéŵ ɱáţçĥíñğ ŕóĺéš, šţŕáíğĥţ ţó ýóúŕ íñƀóẋ.⟧⁩",
   "companyJobDetail_defaultAlertTitle": "⁧⟦Ğéţ áĺéŕţš ƒóŕ ĵóƀš ĺíķé ţĥíš⟧⁩",
   "companyJobDetail_notFoundText": "⁧⟦Ţĥíš ĵóƀ íš ñó ĺóñğéŕ áṽáíĺáƀĺé.⟧⁩",
@@ -435,8 +537,20 @@
   "companySearch_marketLabel": "⁧⟦Ṁáŕķéţ⟧⁩",
   "companySearch_noDescriptionText": "⁧⟦Ñó çóɱþáñý ðéšçŕíþţíóñ íš áṽáíĺáƀĺé ýéţ.⟧⁩",
   "companySearch_queryLabel": "⁧⟦Çóɱþáñý ñáɱé⟧⁩",
-  "companySearch_resultsCountMany": "⁧⟦{count} çóɱþáñíéš⟧⁩",
-  "companySearch_resultsCountOne": "⁧⟦{count} çóɱþáñý⟧⁩",
+  "companySearch_resultsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} çóɱþáñý⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} çóɱþáñíéš⟧⁩"
+      }
+    }
+  ],
   "companySearch_resultsRegionLabel": "⁧⟦Çóɱþáñý ŕéšúĺţš⟧⁩",
   "companySearch_resultsShowingRange": "⁧⟦Šĥóŵíñğ {from}–{to} óƒ {count} çóɱþáñíéš⟧⁩",
   "companySearch_retryLabel": "⁧⟦Ŕéţŕý⟧⁩",
@@ -463,6 +577,62 @@
   "copyLink_ariaLabel": "⁧⟦çóþý ĺíñķ⟧⁩",
   "copyLink_copiedLabel": "⁧⟦Çóþíéð⟧⁩",
   "copyLink_copyLinkLabel": "⁧⟦Çóþý ĺíñķ⟧⁩",
+  "count_candidates": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} çáñðíðáţé⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} çáñðíðáţéš⟧⁩"
+      }
+    }
+  ],
+  "count_companies": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} çóɱþáñý⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} çóɱþáñíéš⟧⁩"
+      }
+    }
+  ],
+  "count_jobs": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} ĵóƀ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} ĵóƀš⟧⁩"
+      }
+    }
+  ],
+  "count_posts": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} þóšţ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} þóšţš⟧⁩"
+      }
+    }
+  ],
   "customField_relocationAssistance_label": "⁧⟦Ŕéĺóçáţíóñ áššíšţáñçé óƒƒéŕéð⟧⁩",
   "customField_teamPageUrl_label": "⁧⟦Ţéáɱ þáğé ÚŔĹ⟧⁩",
   "customField_visaSponsorship_label": "⁧⟦Ṽíšá šþóñšóŕšĥíþ⟧⁩",
@@ -490,7 +660,6 @@
   "educationSection_fieldOfStudyLabel": "⁧⟦Ƒíéĺð óƒ šţúðý⟧⁩",
   "educationSection_heading": "⁧⟦Éðúçáţíóñ⟧⁩",
   "educationSection_institutionLabel": "⁧⟦Íñšţíţúţíóñ⟧⁩",
-  "educationSection_presentLabel": "⁧⟦Þŕéšéñţ⟧⁩",
   "educationSection_saveLabel": "⁧⟦Šáṽé⟧⁩",
   "educationSection_savingLabel": "⁧⟦Šáṽíñğ…⟧⁩",
   "educationSection_startLabel": "⁧⟦Šţáŕţ ðáţé⟧⁩",
@@ -510,8 +679,20 @@
   "employerApplicants_cancelLabel": "⁧⟦Çáñçéĺ⟧⁩",
   "employerApplicants_columnLabel": "⁧⟦{stage} áþþĺíçáñţš⟧⁩",
   "employerApplicants_copyEmailLabel": "⁧⟦Çóþý éɱáíĺ áððŕéšš⟧⁩",
-  "employerApplicants_countMany": "⁧⟦{count} áþþĺíçáñţš⟧⁩",
-  "employerApplicants_countOne": "⁧⟦{count} áþþĺíçáñţ⟧⁩",
+  "employerApplicants_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} áþþĺíçáñţ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} áþþĺíçáñţš⟧⁩"
+      }
+    }
+  ],
   "employerApplicants_coverNoteHeading": "⁧⟦Çóṽéŕ ñóţé⟧⁩",
   "employerApplicants_deleteStageBody": "⁧⟦Ţĥíš šţáğé íš ŕéɱóṽéð ƒŕóɱ ţĥé þíþéĺíñé. Ţĥíš çáñ'ţ ƀé úñðóñé.⟧⁩",
   "employerApplicants_deleteStageMenuLabel": "⁧⟦Ðéĺéţé šţáğé⟧⁩",
@@ -557,7 +738,6 @@
   "employerCompany_draftNoticeText": "⁧⟦Ñéŵ ĵóƀš áŕé ĥéĺð ðŕáƒţš — þúƀĺíšĥ & þáý ƀéĺóŵ.⟧⁩",
   "employerCompany_freeLabel": "⁧⟦Ƒŕéé⟧⁩",
   "employerCompany_genericError": "⁧⟦Šóɱéţĥíñğ ŵéñţ ŵŕóñğ.⟧⁩",
-  "employerCompany_reconciliationError": "⁧⟦Ţĥé çĥáñğé ŵáš šáṽéð, ƀúţ ţĥíš þáğé çóúĺð ñóţ ŕéƒŕéšĥ. Ŕéĺóáð ţó šéé ţĥé ĺáţéšţ ðáţá.⟧⁩",
   "employerCompany_invoiceSentText": "⁧⟦Áñ íñṽóíçé ŵáš éɱáíĺéð ţó ýóú.⟧⁩",
   "employerCompany_jobsEmptyText": "⁧⟦Þóšţ ýóúŕ ƒíŕšţ ĵóƀ ţó šţáŕţ ĥíŕíñğ.⟧⁩",
   "employerCompany_jobsHeading": "⁧⟦Ĵóƀš ({count})⟧⁩",
@@ -568,6 +748,7 @@
   "employerCompany_postJobHeading": "⁧⟦Þóšţ á ĵóƀ⟧⁩",
   "employerCompany_profileHeading": "⁧⟦Çóɱþáñý þŕóƒíĺé⟧⁩",
   "employerCompany_publishPayLabel": "⁧⟦Þúƀĺíšĥ & þáý⟧⁩",
+  "employerCompany_reconciliationError": "⁧⟦Ţĥé çĥáñğé ŵáš šáṽéð, ƀúţ ţĥíš þáğé çóúĺð ñóţ ŕéƒŕéšĥ. Ŕéĺóáð ţó šéé ţĥé ĺáţéšţ ðáţá.⟧⁩",
   "employerCompany_republishLabel": "⁧⟦Ŕéþúƀĺíšĥ⟧⁩",
   "employerCompany_reusableCreditsLabel": "⁧⟦Ýóúŕ ŕéúšáƀĺé çŕéðíţš⟧⁩",
   "employerCompany_saveCompanyLabel": "⁧⟦Šáṽé çóɱþáñý⟧⁩",
@@ -617,18 +798,26 @@
   "employerDelete_deletedToast": "⁧⟦{company} ŵáš ðéĺéţéð.⟧⁩",
   "employerDelete_deletingLabel": "⁧⟦Ðéĺéţíñğ…⟧⁩",
   "employerDelete_disabledText": "⁧⟦Çóɱþáñý ðéĺéţíóñ íš ñóţ éñáƀĺéð óñ ţĥíš ƀóáŕð.⟧⁩",
-  "employerDelete_membersUnknownText": "⁧⟦Ţéáɱ ɱéɱƀéŕšĥíþ çóúĺð ñóţ ƀé ĺóáðéð. Ŕéĺóáð ƀéƒóŕé ðéĺéţíñğ ţĥíš çóɱþáñý šó ţĥé çóñšéɋúéñçéš çáñ ƀé çóñƒíŕɱéð.⟧⁩",
   "employerDelete_errorText": "⁧⟦Çóúĺð ñóţ ðéĺéţé ţĥíš çóɱþáñý. Ţŕý áğáíñ íñ á ɱóɱéñţ.⟧⁩",
   "employerDelete_heading": "⁧⟦Ðáñğéŕ žóñé⟧⁩",
-  "employerDelete_membersCountMany": "⁧⟦{count} óţĥéŕ ɱéɱƀéŕš⟧⁩",
-  "employerDelete_membersCountOne": "⁧⟦{count} óţĥéŕ ɱéɱƀéŕ⟧⁩",
+  "employerDelete_membersCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} óţĥéŕ ɱéɱƀéŕ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} óţĥéŕ ɱéɱƀéŕš⟧⁩"
+      }
+    }
+  ],
+  "employerDelete_membersUnknownText": "⁧⟦Ţéáɱ ɱéɱƀéŕšĥíþ çóúĺð ñóţ ƀé ĺóáðéð. Ŕéĺóáð ƀéƒóŕé ðéĺéţíñğ ţĥíš çóɱþáñý šó ţĥé çóñšéɋúéñçéš çáñ ƀé çóñƒíŕɱéð.⟧⁩",
   "employerDelete_notAdminText": "⁧⟦Óñĺý á çóɱþáñý áðɱíñ çáñ ðéĺéţé ţĥíš çóɱþáñý.⟧⁩",
   "employerDelete_submitLabel": "⁧⟦Ðéĺéţé çóɱþáñý⟧⁩",
   "employerDelete_warningText": "⁧⟦Þéŕɱáñéñţĺý ðéĺéţé ţĥíš çóɱþáñý.⟧⁩",
-  "employerJobs_deleteConfirmBody": "⁧⟦Ţĥíš þéŕɱáñéñţĺý ðéĺéţéš {title} áñð ŕéɱóṽéš íţš þúƀĺíç ĵóƀ þáğé. Ţĥíš çáññóţ ƀé úñðóñé.⟧⁩",
-  "employerJobs_deleteConfirmTitle": "⁧⟦Ðéĺéţé {title}?⟧⁩",
-  "employerJobs_deletedToast": "⁧⟦{title} ŵáš ðéĺéţéð.⟧⁩",
-  "employerJobs_deletingLabel": "⁧⟦Ðéĺéţíñğ…⟧⁩",
   "employerEditJob_draftSubtitleText": "⁧⟦Úþðáţé ţĥé ŕóĺé, ţĥéñ çĥóóšé ĥóŵ ţó þúƀĺíšĥ íţ.⟧⁩",
   "employerEditJob_heading": "⁧⟦Éðíţ ĵóƀ⟧⁩",
   "employerEditJob_publishSaveLabel": "⁧⟦Šáṽé & þúƀĺíšĥ⟧⁩",
@@ -650,12 +839,28 @@
   "employerJob_statusPublished": "⁧⟦Þúƀĺíšĥéð⟧⁩",
   "employerJobs_actionsColumn": "⁧⟦Áçţíóñš⟧⁩",
   "employerJobs_actionsMenuLabel": "⁧⟦Áçţíóñš ƒóŕ {title}⟧⁩",
-  "employerJobs_activeJobsMany": "⁧⟦Ýóú ĥáṽé {count} áçţíṽé ĵóƀš.⟧⁩",
-  "employerJobs_activeJobsOne": "⁧⟦Ýóú ĥáṽé 1 áçţíṽé ĵóƀ.⟧⁩",
+  "employerJobs_activeJobs": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦Ýóú ĥáṽé 1 áçţíṽé ĵóƀ.⟧⁩",
+        "countPlural=*": "⁧⟦Ýóú ĥáṽé {countLabel} áçţíṽé ĵóƀš.⟧⁩"
+      }
+    }
+  ],
   "employerJobs_activeJobsZero": "⁧⟦Ýóú ĥáṽé ñó áçţíṽé ĵóƀš ýéţ.⟧⁩",
   "employerJobs_applicationsColumn": "⁧⟦Áþþĺíçáţíóñš⟧⁩",
   "employerJobs_applyClicksColumn": "⁧⟦Áþþĺý çĺíçķš⟧⁩",
   "employerJobs_companyJobsHeading": "⁧⟦{company} Ĵóƀš⟧⁩",
+  "employerJobs_deleteConfirmBody": "⁧⟦Ţĥíš þéŕɱáñéñţĺý ðéĺéţéš {title} áñð ŕéɱóṽéš íţš þúƀĺíç ĵóƀ þáğé. Ţĥíš çáññóţ ƀé úñðóñé.⟧⁩",
+  "employerJobs_deleteConfirmTitle": "⁧⟦Ðéĺéţé {title}?⟧⁩",
+  "employerJobs_deletedToast": "⁧⟦{title} ŵáš ðéĺéţéð.⟧⁩",
+  "employerJobs_deletingLabel": "⁧⟦Ðéĺéţíñğ…⟧⁩",
   "employerJobs_editLabel": "⁧⟦Éðíţ⟧⁩",
   "employerJobs_expiredOn": "⁧⟦Éẋþíŕéð óñ {date}⟧⁩",
   "employerJobs_publishLabel": "⁧⟦Þúƀĺíšĥ⟧⁩",
@@ -667,29 +872,104 @@
   "employerJobs_typeColumn": "⁧⟦Ţýþé⟧⁩",
   "employerJobs_viewsColumn": "⁧⟦Ṽíéŵš⟧⁩",
   "employerJobs_yourJobsHeading": "⁧⟦Ýóúŕ ĵóƀš⟧⁩",
+  "employerLanding_backToPlansLabel": "⁧⟦Ɓáçķ ţó þĺáñš⟧⁩",
+  "employerLanding_completePurchaseSubtitle": "⁧⟦Éñţéŕ ýóúŕ þáýɱéñţ ðéţáíĺš ƀéĺóŵ ţó šúƀšçŕíƀé ţó ţáĺéñţ áççéšš. Ýóú çáñ ğó ƀáçķ ţó ţĥé þĺáñš áţ áñý ţíɱé.⟧⁩",
+  "employerLanding_completePurchaseTitle": "⁧⟦Çóɱþĺéţé ýóúŕ þúŕçĥášé⟧⁩",
+  "employerLanding_confirmingSubtitle": "⁧⟦Ĥáñğ ţíğĥţ. Ŵé’ŕé çóñƒíŕɱíñğ ýóúŕ þáýɱéñţ. Ýóú ŵóñ’ţ ƀé çĥáŕğéð áğáíñ.⟧⁩",
+  "employerLanding_confirmingText": "⁧⟦Çóñƒíŕɱíñğ ýóúŕ þúŕçĥášé…⟧⁩",
   "employerLanding_enterpriseHeading": "⁧⟦Éñţéŕþŕíšé⟧⁩",
-  "employerLanding_featureActiveJobsMany": "⁧⟦{count} áçţíṽé ĵóƀš⟧⁩",
-  "employerLanding_featureActiveJobsOne": "⁧⟦{count} áçţíṽé ĵóƀ⟧⁩",
-  "employerLanding_featureFeaturedSlots": "⁧⟦{count} ƒéáţúŕéð⟧⁩",
+  "employerLanding_featureActiveJobs": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} áçţíṽé ĵóƀ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} áçţíṽé ĵóƀš⟧⁩"
+      }
+    }
+  ],
+  "employerLanding_featureFeaturedSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} ƒéáţúŕéð⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} ƒéáţúŕéð⟧⁩"
+      }
+    }
+  ],
   "employerLanding_featureListingDuration": "⁧⟦{days}-ðáý ĺíšţíñğ⟧⁩",
-  "employerLanding_featureMessages": "⁧⟦{count} ɱéššáğéš⟧⁩",
-  "employerLanding_featureProfileUnlocks": "⁧⟦{count} þŕóƒíĺé úñĺóçķš⟧⁩",
+  "employerLanding_featureMessages": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} ɱéššáğé⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} ɱéššáğéš⟧⁩"
+      }
+    }
+  ],
+  "employerLanding_featureProfileUnlocks": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} þŕóƒíĺé úñĺóçķ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} þŕóƒíĺé úñĺóçķš⟧⁩"
+      }
+    }
+  ],
   "employerLanding_freeLabel": "⁧⟦Ƒŕéé⟧⁩",
   "employerLanding_jobPostingHeading": "⁧⟦Ĵóƀ þóšţíñğ⟧⁩",
+  "employerLanding_manageBillingLabel": "⁧⟦Ṁáñáğé ƀíĺĺíñğ⟧⁩",
   "employerLanding_noPlansText": "⁧⟦Ñó þĺáñš áŕé áṽáíĺáƀĺé ŕíğĥţ ñóŵ.⟧⁩",
+  "employerLanding_openingBillingLabel": "⁧⟦Óþéñíñğ…⟧⁩",
+  "employerLanding_paymentReceivedBody": "⁧⟦Ýóúŕ áççéšš íš šţíĺĺ ƀéíñğ çóñƒíŕɱéð. Ŕéƒŕéšĥ ţĥíš þáğé íñ á ɱóɱéñţ. Ýóú ŵóñ’ţ ƀé çĥáŕğéð áğáíñ.⟧⁩",
+  "employerLanding_paymentReceivedTitle": "⁧⟦Þáýɱéñţ ŕéçéíṽéð⟧⁩",
   "employerLanding_perMonthSuffix": "⁧⟦/ɱó⟧⁩",
   "employerLanding_perYearSuffix": "⁧⟦/ýŕ⟧⁩",
   "employerLanding_recommendedBadge": "⁧⟦Ŕéçóɱɱéñðéð⟧⁩",
+  "employerLanding_refreshLabel": "⁧⟦Ŕéƒŕéšĥ⟧⁩",
   "employerLanding_requestInvoiceLabel": "⁧⟦Ŕéɋúéšţ íñṽóíçé⟧⁩",
+  "employerLanding_startingLabel": "⁧⟦Šţáŕţíñğ…⟧⁩",
   "employerLanding_subscribeLabel": "⁧⟦Šúƀšçŕíƀé⟧⁩",
   "employerLanding_subtitle": "⁧⟦Þóšţ ĵóƀš áñð ŕéáçĥ çáñðíðáţéš óñ {boardName}.⟧⁩",
   "employerLanding_talentAccessHeading": "⁧⟦Ţáĺéñţ áççéšš⟧⁩",
   "employerLanding_title": "⁧⟦Ƒóŕ éɱþĺóýéŕš⟧⁩",
+  "employerLanding_upgradeLabel": "⁧⟦Úþğŕáðé⟧⁩",
   "employerMembers_alreadyInvitedError": "⁧⟦Áñ íñṽíţé íš áĺŕéáðý þéñðíñğ ƒóŕ ţĥáţ éɱáíĺ.⟧⁩",
   "employerMembers_alreadyMemberError": "⁧⟦Ţĥáţ éɱáíĺ áĺŕéáðý ƀéĺóñğš ţó á ţéáɱ ɱéɱƀéŕ.⟧⁩",
   "employerMembers_companyHeading": "⁧⟦{company} Ţéáɱ Ṁéɱƀéŕš⟧⁩",
-  "employerMembers_countMany": "⁧⟦Ýóú ĥáṽé {count} ţéáɱ ɱéɱƀéŕš.⟧⁩",
-  "employerMembers_countOne": "⁧⟦Ýóú ĥáṽé 1 ţéáɱ ɱéɱƀéŕ.⟧⁩",
+  "employerMembers_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦Ýóú ĥáṽé 1 ţéáɱ ɱéɱƀéŕ.⟧⁩",
+        "countPlural=*": "⁧⟦Ýóú ĥáṽé {countLabel} ţéáɱ ɱéɱƀéŕš.⟧⁩"
+      }
+    }
+  ],
   "employerMembers_countZero": "⁧⟦Ýóú ĥáṽé ñó ţéáɱ ɱéɱƀéŕš ýéţ.⟧⁩",
   "employerMembers_emailColumn": "⁧⟦Éɱáíĺ⟧⁩",
   "employerMembers_emptyText": "⁧⟦Ñó ɱéɱƀéŕš ýéţ.⟧⁩",
@@ -798,6 +1078,9 @@
   "employerStats_emptyTitle": "⁧⟦Ñó áçţíṽíţý ýéţ⟧⁩",
   "employerStats_loadingLabel": "⁧⟦Ĺóáðíñğ áçţíṽíţý…⟧⁩",
   "employerStats_viewsLegend": "⁧⟦Ṽíéŵš⟧⁩",
+  "entity_candidatePlural": "⁧⟦çáñðíðáţéš⟧⁩",
+  "entity_candidatePresent": "⁧⟦Þŕéšéñţ⟧⁩",
+  "entity_candidateSingular": "⁧⟦çáñðíðáţé⟧⁩",
   "entity_companyPlural": "⁧⟦çóɱþáñíéš⟧⁩",
   "entity_companySingular": "⁧⟦çóɱþáñý⟧⁩",
   "entity_jobPlural": "⁧⟦ĵóƀš⟧⁩",
@@ -814,7 +1097,6 @@
   "experienceSection_endLabel": "⁧⟦Éñð ðáţé⟧⁩",
   "experienceSection_heading": "⁧⟦Éẋþéŕíéñçé⟧⁩",
   "experienceSection_locationLabel": "⁧⟦Ĺóçáţíóñ⟧⁩",
-  "experienceSection_presentLabel": "⁧⟦Þŕéšéñţ⟧⁩",
   "experienceSection_saveLabel": "⁧⟦Šáṽé⟧⁩",
   "experienceSection_savingLabel": "⁧⟦Šáṽíñğ…⟧⁩",
   "experienceSection_startLabel": "⁧⟦Šţáŕţ ðáţé⟧⁩",
@@ -842,8 +1124,6 @@
   "home_candidateCtaButton": "⁧⟦Çŕéáţé á çáñðíðáţé þŕóƒíĺé⟧⁩",
   "home_candidateCtaHeading": "⁧⟦Ĺóóķíñğ ƒóŕ ŵóŕķ?⟧⁩",
   "home_candidateCtaSupporting": "⁧⟦Çŕéáţé á þŕóƒíĺé ţó šáṽé ŕóĺéš, ğéţ áĺéŕţš, áñð áþþĺý íñ óñé þĺáçé.⟧⁩",
-  "home_candidatePlural": "⁧⟦çáñðíðáţéš⟧⁩",
-  "home_candidateSingular": "⁧⟦çáñðíðáţé⟧⁩",
   "home_categoriesDescription": "⁧⟦Ĵúɱþ šţŕáíğĥţ ţó ţĥé ŕóĺéš íñ ýóúŕ ƒíéĺð.⟧⁩",
   "home_categoriesHeading": "⁧⟦Ɓŕóŵšé ƀý çáţéğóŕý⟧⁩",
   "home_companiesDescription": "⁧⟦Éẋþĺóŕé ţĥé ţéáɱš ŵíţĥ óþéñ ŕóĺéš ŕíğĥţ ñóŵ.⟧⁩",
@@ -857,8 +1137,6 @@
   "home_heroSupporting": "⁧⟦Šéáŕçĥ óþéñ ŕóĺéš ƒŕóɱ ğŕéáţ ţéáɱš — ƒíĺţéŕ ƀý ŵóŕķþĺáçé, ţýþé, áñð šéñíóŕíţý, ţĥéñ áþþĺý íñ óñé þĺáçé.⟧⁩",
   "home_latestJobsDescription": "⁧⟦Ţĥé ɱóšţ ŕéçéñţ ŕóĺéš ƒŕóɱ ţéáɱš ĥíŕíñğ ñóŵ.⟧⁩",
   "home_latestJobsHeading": "⁧⟦Ĺáţéšţ ĵóƀš⟧⁩",
-  "home_postPlural": "⁧⟦þóšţš⟧⁩",
-  "home_postSingular": "⁧⟦þóšţ⟧⁩",
   "home_talentDescription": "⁧⟦Çáñðíðáţéš ŕéáðý ƒóŕ ţĥéíŕ ñéẋţ ɱóṽé.⟧⁩",
   "home_talentHeading": "⁧⟦Ƒéáţúŕéð ţáĺéñţ⟧⁩",
   "home_viewAllBlogLabel": "⁧⟦Ṽíéŵ áĺĺ þóšţš⟧⁩",
@@ -911,7 +1189,6 @@
   "jobSalary_unitPerMonth": "⁧⟦ɱóñţĥ⟧⁩",
   "jobSalary_unitPerWeek": "⁧⟦ŵééķ⟧⁩",
   "jobSalary_unitPerYear": "⁧⟦ýéáŕ⟧⁩",
-  "adRail_label": "⁧⟦Áðṽéŕţíšéɱéñţ⟧⁩",
   "jobSearch_allFiltersLabel": "⁧⟦Áĺĺ ƒíĺţéŕš⟧⁩",
   "jobSearch_anyTypeLabel": "⁧⟦Áñý ţýþé⟧⁩",
   "jobSearch_anyWorkplaceLabel": "⁧⟦Áñý ŵóŕķþĺáçé⟧⁩",
@@ -937,8 +1214,20 @@
   "jobSearch_queryEmptyText": "⁧⟦Ñó ĵóƀš ɱáţçĥ ţĥíš šéáŕçĥ. Ţŕý áñóţĥéŕ ķéýŵóŕð óŕ ĺóçáţíóñ.⟧⁩",
   "jobSearch_resetFiltersAction": "⁧⟦Ŕéšéţ ƒíĺţéŕš⟧⁩",
   "jobSearch_resetLabel": "⁧⟦Ŕéšéţ⟧⁩",
-  "jobSearch_resultsCountMany": "⁧⟦{count} ĵóƀš⟧⁩",
-  "jobSearch_resultsCountOne": "⁧⟦{count} ĵóƀ⟧⁩",
+  "jobSearch_resultsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} ĵóƀ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} ĵóƀš⟧⁩"
+      }
+    }
+  ],
   "jobSearch_resultsRegionLabel": "⁧⟦Ĵóƀ ŕéšúĺţš⟧⁩",
   "jobSearch_resultsShowingRange": "⁧⟦Šĥóŵíñğ {from}–{to} óƒ {count} ĵóƀš⟧⁩",
   "jobSearch_retryLabel": "⁧⟦Ŕéţŕý⟧⁩",
@@ -1055,6 +1344,7 @@
   "messageFormat_yesterday": "⁧⟦Ýéšţéŕðáý⟧⁩",
   "messagesNavLink_label": "⁧⟦Ṁéššáğéš⟧⁩",
   "messagesPage_archivedTabLabel": "⁧⟦Áŕçĥíṽéð⟧⁩",
+  "messagesPage_backToInboxLabel": "⁧⟦Ɓáçķ ţó íñƀóẋ⟧⁩",
   "messagesPage_blockedTabLabel": "⁧⟦Ɓĺóçķéð⟧⁩",
   "messagesPage_conversationTitle": "⁧⟦Çóñṽéŕšáţíóñ⟧⁩",
   "messagesPage_conversationsAriaLabel": "⁧⟦Çóñṽéŕšáţíóñš⟧⁩",
@@ -1067,7 +1357,6 @@
   "messagesPage_threadErrorBody": "⁧⟦Ţĥé çóñṽéŕšáţíóñ íš šţíĺĺ šéĺéçţéð. Çĥéçķ ýóúŕ çóññéçţíóñ áñð ţŕý ĺóáðíñğ íţ áğáíñ.⟧⁩",
   "messagesPage_threadErrorTitle": "⁧⟦Çóúĺðñ’ţ ĺóáð ţĥíš çóñṽéŕšáţíóñ⟧⁩",
   "messagesPage_threadRetryLabel": "⁧⟦Ŕéţŕý çóñṽéŕšáţíóñ⟧⁩",
-  "messagesPage_backToInboxLabel": "⁧⟦Ɓáçķ ţó íñƀóẋ⟧⁩",
   "messagesPage_title": "⁧⟦Ṁéššáğéš⟧⁩",
   "messages_verifyEmailFirstText": "⁧⟦Ṽéŕíƒý ýóúŕ éɱáíĺ ƀéƒóŕé šéñðíñğ ɱéššáğéš.⟧⁩",
   "messagingDock_closeConversationAriaLabel": "⁧⟦Çĺóšé çóñṽéŕšáţíóñ⟧⁩",
@@ -1115,12 +1404,36 @@
   "planComposed_maxActiveJobs": "⁧⟦Úþ ţó {count} áçţíṽé ĵóƀš⟧⁩",
   "planComposed_standardListing": "⁧⟦Á {days} ðáý šţáñðáŕð ĺíšţíñğ⟧⁩",
   "planComposed_standardName": "⁧⟦Ĵóƀ ĺíšţíñğ⟧⁩",
+  "planFeature_featured": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦Íñçĺúðéš 1 ƒéáţúŕéð þóšţ⟧⁩",
+        "countPlural=*": "⁧⟦Íñçĺúðéš {countLabel} ƒéáţúŕéð þóšţš⟧⁩"
+      }
+    }
+  ],
   "planFeature_featuredAuto": "⁧⟦Éṽéŕý þóšţ íš ƒéáţúŕéð⟧⁩",
-  "planFeature_featuredOne": "⁧⟦Íñçĺúðéš 1 ƒéáţúŕéð þóšţ⟧⁩",
-  "planFeature_featuredOther": "⁧⟦Íñçĺúðéš {count} ƒéáţúŕéð þóšţš⟧⁩",
   "planFeature_liveDays": "⁧⟦Ĺíṽé ƒóŕ {days} ðáýš⟧⁩",
-  "planFeature_maxActiveOne": "⁧⟦1 áçţíṽé ĵóƀ áţ á ţíɱé⟧⁩",
-  "planFeature_maxActiveOther": "⁧⟦Úþ ţó {count} áçţíṽé ĵóƀš⟧⁩",
+  "planFeature_maxActive": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦1 áçţíṽé ĵóƀ áţ á ţíɱé⟧⁩",
+        "countPlural=*": "⁧⟦Úþ ţó {countLabel} áçţíṽé ĵóƀš⟧⁩"
+      }
+    }
+  ],
   "planFeature_unlimitedActive": "⁧⟦Úñĺíɱíţéð áçţíṽé ĵóƀš⟧⁩",
   "plan_featuredListing_description": "⁧⟦Á 30 ðáý ƒéáţúŕéð ĺíšţíñğ — þíññéð ţó ţĥé ţóþ óƒ ţĥé ƀóáŕð áñð ĥíğĥĺíğĥţéð íñ ţĥé ŵééķĺý áĺéŕţ ðíğéšţ.⟧⁩",
   "plan_featuredListing_name": "⁧⟦Ƒéáţúŕéð ĺíšţíñğ⟧⁩",
@@ -1234,6 +1547,8 @@
   "previewToolbar_staleReseed": "⁧⟦Ţĥáţ þéŕšóñá ŵáš ŕéšééðéð. Ŕéšééð ţĥé ŕóšţéŕ ƀéĺóŵ, ţĥéñ ŕé-šŵíţçĥ.⟧⁩",
   "previewToolbar_subtitle": "⁧⟦Šáñðƀóẋ ƀóáŕð · ŕéáĺ šéššíóñš⟧⁩",
   "previewToolbar_switchError": "⁧⟦Çóúĺðñ'ţ šŵíţçĥ þéŕšóñá. Ýóúŕ çúŕŕéñţ šéššíóñ íš úñçĥáñğéð; ţŕý áğáíñ.⟧⁩",
+  "previewToolbar_talentAccessModel_paidMessaging": "⁧⟦Þáíð ɱéššáğíñğ⟧⁩",
+  "previewToolbar_talentAccessModel_paidUnlocksAndMessaging": "⁧⟦Þáíð úñĺóçķš áñð ɱéššáğíñğ⟧⁩",
   "previewToolbar_talentVisibility_employersOnly": "⁧⟦Éɱþĺóýéŕš óñĺý⟧⁩",
   "previewToolbar_talentVisibility_off": "⁧⟦Óƒƒ⟧⁩",
   "previewToolbar_talentVisibility_public": "⁧⟦Þúƀĺíç⟧⁩",
@@ -1281,7 +1596,6 @@
   "publicProfile_languagesHeading": "⁧⟦Ĺáñğúáğéš⟧⁩",
   "publicProfile_notFoundText": "⁧⟦Þŕóƒíĺé ñóţ ƒóúñð.⟧⁩",
   "publicProfile_pageTitle": "⁧⟦{name} — {boardName}⟧⁩",
-  "publicProfile_presentLabel": "⁧⟦Þŕéšéñţ⟧⁩",
   "publicProfile_profileFallbackLabel": "⁧⟦Þŕóƒíĺé⟧⁩",
   "publicProfile_skillsHeading": "⁧⟦Šķíĺĺš⟧⁩",
   "resumeImport_description": "⁧⟦Úþĺóáðíñğ á ŕéšúɱé çóɱþĺéţéš ýóúŕ þŕóƒíĺé. Ŵé úšé ţĥáţ þŕóƒíĺé ţó ɱáţçĥ ýóú ŵíţĥ ŕéĺéṽáñţ ĵóƀš.⟧⁩",
@@ -1349,8 +1663,20 @@
   "salaryDetail_skillInPlaceMetaDescriptionEmpty": "⁧⟦{skill} šáĺáŕý ðáţá íñ {place}.⟧⁩",
   "salaryDetail_skillInPlaceMetaDescriptionWithData": "⁧⟦{skill} šáĺáŕíéš íñ {place}: {range}/ýéáŕ áçŕóšš {jobCount} ĵóƀš.⟧⁩",
   "salaryDetail_skillLocationsHeading": "⁧⟦{skill} šáĺáŕíéš ƀý ĺóçáţíóñ⟧⁩",
-  "salaryDetail_skillLocationsMetaDescriptionMany": "⁧⟦{skill} šáĺáŕíéš áçŕóšš {count} ĺóçáţíóñš.⟧⁩",
-  "salaryDetail_skillLocationsMetaDescriptionOne": "⁧⟦{skill} šáĺáŕíéš áçŕóšš {count} ĺóçáţíóñ.⟧⁩",
+  "salaryDetail_skillLocationsMetaDescription": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{skill} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñ.⟧⁩",
+        "countPlural=*": "⁧⟦{skill} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñš.⟧⁩"
+      }
+    }
+  ],
   "salaryDetail_skillLocationsMetaTitle": "⁧⟦{skill} šáĺáŕíéš ƀý ĺóçáţíóñ⟧⁩",
   "salaryDetail_skillMetaDescriptionEmpty": "⁧⟦{skill} šáĺáŕý ðáţá.⟧⁩",
   "salaryDetail_skillMetaDescriptionWithData": "⁧⟦{skill} šáĺáŕíéš: {range}/ýéáŕ áçŕóšš {jobCount} ĵóƀš.⟧⁩",
@@ -1363,8 +1689,20 @@
   "salaryDetail_titleInPlaceMetaDescriptionEmpty": "⁧⟦{title} šáĺáŕý ðáţá íñ {place}.⟧⁩",
   "salaryDetail_titleInPlaceMetaDescriptionWithData": "⁧⟦{title} šáĺáŕíéš íñ {place}: {range}/ýéáŕ áçŕóšš {jobCount} ĵóƀš.⟧⁩",
   "salaryDetail_titleLocationsHeading": "⁧⟦{title} šáĺáŕíéš ƀý ĺóçáţíóñ⟧⁩",
-  "salaryDetail_titleLocationsMetaDescriptionMany": "⁧⟦{title} šáĺáŕíéš áçŕóšš {count} ĺóçáţíóñš.⟧⁩",
-  "salaryDetail_titleLocationsMetaDescriptionOne": "⁧⟦{title} šáĺáŕíéš áçŕóšš {count} ĺóçáţíóñ.⟧⁩",
+  "salaryDetail_titleLocationsMetaDescription": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{title} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñ.⟧⁩",
+        "countPlural=*": "⁧⟦{title} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñš.⟧⁩"
+      }
+    }
+  ],
   "salaryDetail_titleLocationsMetaTitle": "⁧⟦{title} šáĺáŕíéš ƀý ĺóçáţíóñ⟧⁩",
   "salaryDetail_titleMetaDescriptionEmpty": "⁧⟦{title} šáĺáŕý ðáţá.⟧⁩",
   "salaryDetail_titleMetaDescriptionWithData": "⁧⟦{title} šáĺáŕíéš: {range}/ýéáŕ áçŕóšš {jobCount} ĵóƀš.⟧⁩",
@@ -1377,8 +1715,20 @@
   "salaryDetail_topTitles": "⁧⟦Ţóþ ţíţĺéš⟧⁩",
   "salaryFaq_averageAnswer": "⁧⟦Ţĥé áṽéŕáğé šáĺáŕý ƒóŕ {label} íš {range} þéŕ ýéáŕ, ƀášéð óñ {jobCountLabel} óñ ţĥíš ƀóáŕð ţĥáţ ðíšçĺóšé þáý.⟧⁩",
   "salaryFaq_averageQuestion": "⁧⟦Ŵĥáţ íš ţĥé áṽéŕáğé šáĺáŕý ƒóŕ {label}?⟧⁩",
-  "salaryFaq_jobCountMany": "⁧⟦{jobCount} ĵóƀ þóšţíñğš⟧⁩",
-  "salaryFaq_jobCountOne": "⁧⟦{jobCount} ĵóƀ þóšţíñğ⟧⁩",
+  "salaryFaq_jobCount": [
+    {
+      "declarations": [
+        "input jobCount",
+        "input jobCountLabel",
+        "local jobCountPlural = jobCount: plural"
+      ],
+      "selectors": ["jobCountPlural"],
+      "match": {
+        "jobCountPlural=one": "⁧⟦{jobCountLabel} ĵóƀ þóšţíñğ⟧⁩",
+        "jobCountPlural=*": "⁧⟦{jobCountLabel} ĵóƀ þóšţíñğš⟧⁩"
+      }
+    }
+  ],
   "salaryFaq_methodologyAnswer": "⁧⟦Ţĥéšé ƒíğúŕéš áŕé áğğŕéğáţéð ƒŕóɱ çúŕŕéñţ áñð ŕéçéñţ ĵóƀ þóšţíñğš óñ ţĥíš ƀóáŕð ţĥáţ ðíšçĺóšé þáý, ţĥéñ áṽéŕáğéð áçŕóšš ŕóĺéš. Ţĥéý áŕé éšţíɱáţéš, ñóţ ğúáŕáñţééš óƒ çóɱþéñšáţíóñ.⟧⁩",
   "salaryFaq_methodologyQuestion": "⁧⟦Ĥóŵ íš ţĥé šáĺáŕý ƒíğúŕé ƒóŕ {label} çáĺçúĺáţéð?⟧⁩",
   "salaryFrame_companyCategorySalariesTitle": "⁧⟦{company} {category} Šáĺáŕíéš ({range}/ýŕ)⟧⁩",
@@ -1393,8 +1743,6 @@
   "salaryHub_companiesMetaDescription": "⁧⟦Áṽéŕáğé šáĺáŕíéš áţ çóɱþáñíéš ĥíŕíñğ óñ {boardName}.⟧⁩",
   "salaryHub_companiesMetaTitle": "⁧⟦Çóɱþáñý šáĺáŕíéš⟧⁩",
   "salaryHub_emptyDescription": "⁧⟦Šáĺáŕý íñšíğĥţš áþþéáŕ ŵĥéñ ɱáţçĥíñğ þúƀĺíšĥéð ĵóƀš çóñţáíñ šáĺáŕý ðáţá.⟧⁩",
-  "salaryHub_jobCountPlural": "⁧⟦{count} ĵóƀš⟧⁩",
-  "salaryHub_jobCountSingular": "⁧⟦{count} ĵóƀ⟧⁩",
   "salaryHub_jobTitlesCrumbLabel": "⁧⟦Ĵóƀ ţíţĺéš⟧⁩",
   "salaryHub_locationsEmptyTitle": "⁧⟦Ñó ĺóçáţíóñ šáĺáŕý ðáţá ýéţ⟧⁩",
   "salaryHub_locationsHeading": "⁧⟦Šáĺáŕíéš ƀý ĺóçáţíóñ⟧⁩",
@@ -1500,6 +1848,8 @@
   "talentDirectory_searchPlaceholder": "⁧⟦Šéáŕçĥ çáñðíðáţéš…⟧⁩",
   "talentDirectory_signInLabel": "⁧⟦Šíğñ íñ⟧⁩",
   "talentDirectory_title": "⁧⟦Ţáĺéñţ⟧⁩",
+  "talentMessage_description": "⁧⟦Íñţŕóðúçé ýóúŕšéĺƒ áñð éẋþĺáíñ ŵĥý ýóú’ŕé ŕéáçĥíñğ óúţ.⟧⁩",
+  "talentMessage_title": "⁧⟦Ṁéššáğé {name}⟧⁩",
   "talentSearch_detailErrorTitle": "⁧⟦Çóúĺð ñóţ ĺóáð þŕóƒíĺé⟧⁩",
   "talentSearch_detailLoadingLabel": "⁧⟦Ĺóáðíñğ þŕóƒíĺé ðéţáíĺš…⟧⁩",
   "talentSearch_employmentApprenticeship": "⁧⟦Áþþŕéñţíçéšĥíþ⟧⁩",
@@ -1539,9 +1889,37 @@
   "talentSearch_statusActivelyLooking": "⁧⟦Áçţíṽéĺý ĺóóķíñğ⟧⁩",
   "talentSearch_statusNotLooking": "⁧⟦Ñóţ ĺóóķíñğ⟧⁩",
   "talentSearch_statusOpenToOffers": "⁧⟦Óþéñ ţó óƒƒéŕš⟧⁩",
+  "talentSearch_upgradeToMessageLabel": "⁧⟦Úþğŕáðé ţó ɱéššáğé⟧⁩",
   "talentSearch_viewProfileLabel": "⁧⟦Ṽíéŵ þŕóƒíĺé⟧⁩",
-  "talentMessage_description": "⁧⟦Íñţŕóðúçé ýóúŕšéĺƒ áñð éẋþĺáíñ ŵĥý ýóú’ŕé ŕéáçĥíñğ óúţ.⟧⁩",
-  "talentMessage_title": "⁧⟦Ṁéššáğé {name}⟧⁩",
+  "talentUnlock_confirmAction": "⁧⟦Úñĺóçķ þŕóƒíĺé⟧⁩",
+  "talentUnlock_confirmBody": "⁧⟦Ţĥíš šþéñðš óñé þŕóƒíĺé úñĺóçķ ƒŕóɱ ýóúŕ çóɱþáñý’š ţáĺéñţ þĺáñ.⟧⁩",
+  "talentUnlock_confirmTitle": "⁧⟦Úñĺóçķ ţĥíš þŕóƒíĺé?⟧⁩",
+  "talentUnlock_creditsRemaining": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} úñĺóçķ ŕéɱáíñíñğ.⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} úñĺóçķš ŕéɱáíñíñğ.⟧⁩"
+      }
+    }
+  ],
+  "talentUnlock_neededBody": "⁧⟦Šþéñð óñé úñĺóçķ çŕéðíţ ţó šéé ţĥé ƒúĺĺ þŕóƒíĺé.⟧⁩",
+  "talentUnlock_neededTitle": "⁧⟦Úñĺóçķ ţĥíš þŕóƒíĺé⟧⁩",
+  "talentUnlock_noPlanBody": "⁧⟦Šúƀšçŕíƀé ţó á ţáĺéñţ þĺáñ ţó úñĺóçķ çáñðíðáţé þŕóƒíĺéš.⟧⁩",
+  "talentUnlock_noPlanTitle": "⁧⟦Ţáĺéñţ áççéšš ŕéɋúíŕéð⟧⁩",
+  "talentUnlock_outOfUnlocksBody": "⁧⟦Úþğŕáðé ýóúŕ ţáĺéñţ þĺáñ ţó ķééþ úñĺóçķíñğ þŕóƒíĺéš.⟧⁩",
+  "talentUnlock_outOfUnlocksTitle": "⁧⟦Ýóú’ŕé óúţ óƒ þŕóƒíĺé úñĺóçķš⟧⁩",
+  "talentUnlock_pendingBody": "⁧⟦Çĥéçķíñğ ŵĥéţĥéŕ ţĥíš þŕóƒíĺé çáñ ƀé úñĺóçķéð.⟧⁩",
+  "talentUnlock_pendingTitle": "⁧⟦Ĺóáðíñğ þŕóƒíĺé⟧⁩",
+  "talentUnlock_unlockingLabel": "⁧⟦Úñĺóçķíñğ…⟧⁩",
+  "talentUnlock_upgradeLabel": "⁧⟦Úþğŕáðé⟧⁩",
+  "talentUnlock_upgradingLabel": "⁧⟦Úþğŕáðíñğ…⟧⁩",
+  "talentUnlock_viewPlansLabel": "⁧⟦Ṽíéŵ ţáĺéñţ þĺáñš⟧⁩",
   "threadView_archiveLabel": "⁧⟦Áŕçĥíṽé⟧⁩",
   "threadView_backToInboxAriaLabel": "⁧⟦Ɓáçķ ţó íñƀóẋ⟧⁩",
   "threadView_blockLabel": "⁧⟦Ɓĺóçķ⟧⁩",
@@ -1562,13 +1940,5 @@
   "ui_moreLabel": "⁧⟦Ṁóŕé⟧⁩",
   "ui_sidebarDescription": "⁧⟦Ðíšþĺáýš ţĥé ɱóƀíĺé šíðéƀáŕ.⟧⁩",
   "ui_sidebarTitle": "⁧⟦Šíðéƀáŕ⟧⁩",
-  "ui_sidebarToggleLabel": "⁧⟦Ţóğğĺé šíðéƀáŕ⟧⁩",
-  "accountRecommended_countOneText": "⁧⟦1 ĵóƀ ɱáţçĥéš ýóúŕ þŕóƒíĺé áñð þŕéƒéŕéñçéš.⟧⁩",
-  "accountRecommended_countOtherText": "⁧⟦{count} ĵóƀš ɱáţçĥ ýóúŕ þŕóƒíĺé áñð þŕéƒéŕéñçéš.⟧⁩",
-  "accountRecommended_heading": "⁧⟦{name}'š ɱáţçĥéš⟧⁩",
-  "accountRecommended_headingFallback": "⁧⟦Ýóúŕ ɱáţçĥéš⟧⁩",
-  "accountRecommended_needsProfileTitle": "⁧⟦Úþĺóáð ýóúŕ ŕéšúɱé⟧⁩",
-  "accountRecommended_noneNowText": "⁧⟦Ŵé ðó ñóţ ĥáṽé ɱáţçĥéš ƒóŕ ýóú áţ ţĥé ɱóɱéñţ. Ɓŕóŵšé óþéñ ŕóĺéš íñšţéáð.⟧⁩",
-  "accountRecommended_noneNowTitle": "⁧⟦Ñó ɱáţçĥéš ŕíğĥţ ñóŵ⟧⁩",
-  "accountShell_recommendedJobsNav": "⁧⟦Ĵóƀ ɱáţçĥéš⟧⁩"
+  "ui_sidebarToggleLabel": "⁧⟦Ţóğğĺé šíðéƀáŕ⟧⁩"
 }

@@ -20,6 +20,7 @@ export function SelectedTalentDetail({
   viewer,
   signInHref,
   messagingEnabled,
+  profileUnlocks = false,
   onStartConversation,
   onConversationStarted,
 }: {
@@ -31,6 +32,8 @@ export function SelectedTalentDetail({
   signInHref: string;
   /** Board `features.messaging`: `false` hides the Message CTA entirely. */
   messagingEnabled: boolean;
+  /** Directory cards link to `/p/{id}` when the board sells profile unlocks. */
+  profileUnlocks?: boolean;
   onStartConversation: StartTalentConversation;
   onConversationStarted: (conversationId: string) => void;
 }) {
@@ -40,6 +43,9 @@ export function SelectedTalentDetail({
           state.profile,
           locale,
           getTalentSearchLabels(),
+          {
+            profileUnlocks,
+          },
         );
         const cta = resolveTalentDetailCta({
           viewer,
@@ -50,6 +56,7 @@ export function SelectedTalentDetail({
           labels: {
             message: m.talentSearch_messageLabel(),
             viewProfile: vm.viewProfileLabel,
+            upgrade: m.talentSearch_upgradeToMessageLabel(),
           },
           // The candidate's NAME is the link to their canonical profile (both
           // the expanded identity and the condensed header), so the pane no

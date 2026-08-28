@@ -1,4 +1,4 @@
-import { isBoardApiError } from '@cavuno/board';
+import { isBoardApiError, type BoardAuthSession } from '@cavuno/board';
 /**
  * Auth server functions. The SDK never
  * stores tokens on the server; these functions move the bearer pair in
@@ -34,6 +34,12 @@ function authError<T>(error: T): AuthActionError {
     return { ok: false, code: error.code, message: error.message };
   }
   throw error;
+}
+
+function authExchangeIsNewUser(
+  session: BoardAuthSession & { isNewUser?: boolean },
+): boolean {
+  return session.isNewUser === true;
 }
 
 export const signIn = createServerFn({ method: 'POST' })
@@ -260,7 +266,11 @@ export const consumeMagicLink = createServerFn({ method: 'POST' })
     try {
       const session = await getBoard().auth.consumeMagicLink(data);
       persistAuthSession(session);
-      return { ok: true as const, boardUser: session.boardUser };
+      return {
+        ok: true as const,
+        boardUser: session.boardUser,
+        isNewUser: authExchangeIsNewUser(session),
+      };
     } catch (error) {
       return authError(error);
     }
@@ -289,7 +299,11 @@ export const exchangeOAuth = createServerFn({ method: 'POST' })
     try {
       const session = await getBoard().auth.exchangeOAuth(data);
       persistAuthSession(session);
-      return { ok: true as const, boardUser: session.boardUser };
+      return {
+        ok: true as const,
+        boardUser: session.boardUser,
+        isNewUser: authExchangeIsNewUser(session),
+      };
     } catch (error) {
       return authError(error);
     }

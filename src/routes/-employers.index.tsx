@@ -40,6 +40,11 @@ export type EmployersPageViewDependencies = {
     children: ReactNode;
   }) => ReactElement;
   joinLink: (input: { className: string; children: ReactNode }) => ReactElement;
+  talentPlanAction?: (input: {
+    planId: string;
+    className: string;
+    children: ReactNode;
+  }) => ReactElement;
 };
 
 const employersPageViewDependencies: EmployersPageViewDependencies = {
@@ -49,7 +54,11 @@ const employersPageViewDependencies: EmployersPageViewDependencies = {
     </Link>
   ),
   joinLink: ({ className, children }) => (
-    <Link to="/auth/join" className={className}>
+    <Link
+      to="/auth/join"
+      search={{ returnTo: '/employers' }}
+      className={className}
+    >
       {children}
     </Link>
   ),
@@ -75,29 +84,29 @@ const intervalSuffix = (interval: Plan['billingInterval']) =>
 
 function planFeatures(plan: Plan) {
   return [
-    plan.featureSummary.maxActiveJobs === 1
-      ? m.employerLanding_featureActiveJobsOne({
-          count: plan.featureSummary.maxActiveJobs,
-        })
-      : m.employerLanding_featureActiveJobsMany({
-          count: plan.featureSummary.maxActiveJobs,
-        }),
+    m.employerLanding_featureActiveJobs({
+      count: plan.featureSummary.maxActiveJobs,
+      countLabel: String(plan.featureSummary.maxActiveJobs),
+    }),
     m.employerLanding_featureListingDuration({
       days: plan.featureSummary.durationDays,
     }),
     plan.featureSummary.featuredSlots > 0
       ? m.employerLanding_featureFeaturedSlots({
           count: plan.featureSummary.featuredSlots,
+          countLabel: String(plan.featureSummary.featuredSlots),
         })
       : null,
     plan.talent
       ? m.employerLanding_featureProfileUnlocks({
           count: plan.talent.unlocksPerPeriod,
+          countLabel: String(plan.talent.unlocksPerPeriod),
         })
       : null,
     plan.talent
       ? m.employerLanding_featureMessages({
           count: plan.talent.messagesPerPeriod,
+          countLabel: String(plan.talent.messagesPerPeriod),
         })
       : null,
   ].filter((feature) => feature !== null);
@@ -169,10 +178,16 @@ function PlanCard({
               className: actionClassName,
               children: actionLabel,
             })
-          : dependencies.joinLink({
-              className: actionClassName,
-              children: actionLabel,
-            })}
+          : plan.purpose === 'talent_access' && dependencies.talentPlanAction
+            ? dependencies.talentPlanAction({
+                planId: plan.id,
+                className: actionClassName,
+                children: actionLabel,
+              })
+            : dependencies.joinLink({
+                className: actionClassName,
+                children: actionLabel,
+              })}
       </CardFooter>
     </Card>
   );
@@ -209,14 +224,16 @@ function PlanGroup({
   title,
   plans,
   dependencies,
+  action,
 }: {
   title: string;
   plans: Plan[];
   dependencies: EmployersPageViewDependencies;
+  action?: ReactNode;
 }) {
   if (plans.length === 0) return null;
   return (
-    <PageSection title={title}>
+    <PageSection title={title} actions={action}>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {plans.map((plan) => (
           <PlanCard key={plan.id} plan={plan} dependencies={dependencies} />
@@ -231,11 +248,13 @@ export function EmployersPageView({
   salesLed,
   seo,
   dependencies = employersPageViewDependencies,
+  talentSectionAction,
 }: {
   plans: Plan[];
   salesLed: SalesLedPlan[];
   seo: { boardName: string };
   dependencies?: EmployersPageViewDependencies;
+  talentSectionAction?: ReactNode;
 }) {
   const jobPosting = plans.filter((plan) => plan.purpose === 'job_posting');
   const talentAccess = plans.filter((plan) => plan.purpose === 'talent_access');
@@ -276,6 +295,7 @@ export function EmployersPageView({
               title={m.employerLanding_talentAccessHeading()}
               plans={talentAccess}
               dependencies={dependencies}
+              action={talentSectionAction}
             />
             {salesLed.length > 0 ? (
               <PageSection title={m.employerLanding_enterpriseHeading()}>

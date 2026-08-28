@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { initialsOf } from '../lib/initials';
 import { m } from '../paraglide/messages';
 
+import { isRedactedTalentDirectoryEntry } from '@/board/talent-view-model';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -28,7 +29,14 @@ import type { TalentDirectoryEntry } from '@cavuno/board';
  */
 const MAX_SKILL_TAGS = 4;
 
-export function TalentCard({ candidate }: { candidate: TalentDirectoryEntry }) {
+export function TalentCard({
+  candidate,
+  profileUnlocks = false,
+}: {
+  candidate: TalentDirectoryEntry;
+  /** Opaque `/p/{id}` when the board sells profile unlocks. */
+  profileUnlocks?: boolean;
+}) {
   const displayName =
     candidate.displayName ?? m.talentDirectory_candidateFallbackLabel();
   // Skills are plain strings (no hrefs), so the overflow chip is a Badge
@@ -37,10 +45,12 @@ export function TalentCard({ candidate }: { candidate: TalentDirectoryEntry }) {
     candidate.skills,
     MAX_SKILL_TAGS,
   );
-  const name = candidate.handle ? (
+  const opaque = profileUnlocks || isRedactedTalentDirectoryEntry(candidate);
+  const profileParam = opaque ? candidate.id : candidate.handle;
+  const name = profileParam ? (
     <Link
       to="/p/$handle"
-      params={{ handle: candidate.handle }}
+      params={{ handle: profileParam }}
       className="focus-visible:ring-ring/50 rounded-sm outline-none after:absolute after:inset-0 after:z-(--z-card-overlay) after:rounded-[inherit] hover:underline focus-visible:ring-2"
     >
       {displayName}

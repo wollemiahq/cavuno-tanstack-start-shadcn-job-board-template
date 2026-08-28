@@ -95,10 +95,10 @@ function paraglideEnabledLocalesOnly(plugin: ParaglidePlugin): ParaglidePlugin {
     INLANG_PROJECT,
     'settings.json',
   );
-  const settings = JSON.parse(readFileSync(settingsPath, 'utf8')) as {
+  const settings: {
     locales?: string[];
     'plugin.inlang.messageFormat'?: { pathPattern?: string };
-  };
+  } = JSON.parse(readFileSync(settingsPath, 'utf8'));
   const enabled = new Set(settings.locales ?? []);
   const pathPattern = settings['plugin.inlang.messageFormat']?.pathPattern;
 
@@ -109,7 +109,11 @@ function paraglideEnabledLocalesOnly(plugin: ParaglidePlugin): ParaglidePlugin {
   if (segments === undefined || segments.length !== 2) {
     return plugin;
   }
-  const [prefix, suffix] = segments as [string, string];
+  const prefix = segments[0];
+  const suffix = segments[1];
+  if (prefix === undefined || suffix === undefined) {
+    return plugin;
+  }
   // `resolve` drops a trailing separator, so resolve a dummy leaf and cut it.
   const absolutePrefix = resolve(import.meta.dirname, `${prefix}x`).slice(
     0,
@@ -137,7 +141,7 @@ function paraglideEnabledLocalesOnly(plugin: ParaglidePlugin): ParaglidePlugin {
     if (changed === undefined) {
       return one;
     }
-    const handler = typeof changed === 'function' ? changed : changed.handler;
+    const handler = changed instanceof Function ? changed : changed.handler;
     return {
       ...one,
       watchChange(

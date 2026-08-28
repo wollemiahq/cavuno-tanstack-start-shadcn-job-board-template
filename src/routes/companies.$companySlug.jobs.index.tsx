@@ -22,6 +22,7 @@ import {
 } from '@tanstack/react-router';
 
 import { CompanyJobsSearchBar } from '../components/company-jobs-search-bar';
+import { entityCount } from '../lib/entity-count';
 import {
   listingPageHref,
   pageSearchValue,
@@ -29,6 +30,7 @@ import {
   searchString,
   type UrlSearchInput,
 } from '../lib/pagination';
+import { chromeEntity } from '../lib/site-chrome';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import {
@@ -97,13 +99,10 @@ function CompanyJobsPage() {
         ).toLocaleString(locale),
         count: count.toLocaleString(locale),
       })
-    : new Intl.PluralRules(locale).select(count) === 'one'
-      ? m.jobSearch_resultsCountOne({
-          count: count.toLocaleString(locale),
-        })
-      : m.jobSearch_resultsCountMany({
-          count: count.toLocaleString(locale),
-        });
+    : entityCount(count, locale, m.count_jobs, {
+        singular: chromeEntity().jobSingular,
+        plural: chromeEntity().jobPlural,
+      });
 
   return (
     <CompanySectionShell

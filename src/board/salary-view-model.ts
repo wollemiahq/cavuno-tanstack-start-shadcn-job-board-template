@@ -46,9 +46,11 @@ export function formatSalaryRange(
   return formatSalaryStatRange(language, min, max, currency);
 }
 
-import { entityCopy } from '@/copy-groups/entity';
 import { jobDetailCopy } from '@/copy-groups/job-detail';
 import { salaryCopy } from '@/copy-groups/salary';
+import { entityCount } from '@/lib/entity-count';
+import { chromeEntity } from '@/lib/site-chrome';
+import { m } from '@/paraglide/messages';
 
 /**
  * Salary URL composers — the Layer-1b seam for the salary hrefs the SDK's
@@ -182,7 +184,7 @@ export function toOverallSalaryVM(
   language: string,
   currency: string | null | undefined,
 ): OverallSalaryVM {
-  const entity = entityCopy();
+  const overrides = chromeEntity();
   const copy = salaryCopy();
   const median =
     overall.medianMin !== undefined && overall.medianMax !== undefined
@@ -220,11 +222,10 @@ export function toOverallSalaryVM(
   }
   stats.push({
     label: copy.basedOnLabel,
-    value: `${overall.jobCount.toLocaleString(language)} ${
-      new Intl.PluralRules(language).select(overall.jobCount) === 'one'
-        ? entity.jobSingular
-        : entity.jobPlural
-    }`,
+    value: entityCount(overall.jobCount, language, m.count_jobs, {
+      singular: overrides.jobSingular,
+      plural: overrides.jobPlural,
+    }),
   });
 
   const headlineValue =
@@ -333,7 +334,7 @@ export function toSalaryRailVM(
   items: RailItem[],
   language: string,
 ): SalaryRailVM {
-  const copy = entityCopy();
+  const overrides = chromeEntity();
   return {
     title,
     items: items.map((item) => ({
@@ -341,11 +342,10 @@ export function toSalaryRailVM(
       href: item.href,
       range: item.range,
       logoPath: item.logoPath,
-      jobCountLabel: `${item.jobCount.toLocaleString(language)} ${
-        new Intl.PluralRules(language).select(item.jobCount) === 'one'
-          ? copy.jobSingular
-          : copy.jobPlural
-      }`,
+      jobCountLabel: entityCount(item.jobCount, language, m.count_jobs, {
+        singular: overrides.jobSingular,
+        plural: overrides.jobPlural,
+      }),
     })),
   };
 }

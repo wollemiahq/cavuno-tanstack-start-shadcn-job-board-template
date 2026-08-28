@@ -36,6 +36,7 @@ const PLATFORM_SANDBOX_CONFIG_WHITELIST = {
   jobAccessPaywallEnabled: 'boolean',
   jobAccessPreviewCount: 'number',
   talentDirectoryVisibility: 'enum',
+  talentAccessModel: 'enum',
   blogEnabled: 'boolean',
   jobAlertsEnabled: 'boolean',
   jobRecommendationsEnabled: 'boolean',
@@ -138,6 +139,7 @@ describe('pickWhitelistedConfig', () => {
       jobAccessPaywallEnabled: true,
       jobAccessPreviewCount: 3,
       talentDirectoryVisibility: 'public',
+      talentAccessModel: 'paid_unlocks_and_messaging',
       blogEnabled: true,
       jobAlertsEnabled: false,
       jobRecommendationsEnabled: true,
@@ -212,10 +214,12 @@ describe('toPreviewBoardConfig', () => {
         messaging: true,
       },
       talentDirectoryVisibility: 'employers_only',
+      talentAccessModel: 'paid_messaging',
     });
     expect(config).toEqual({
       jobAccessPaywallEnabled: true,
       talentDirectoryVisibility: 'employers_only',
+      talentAccessModel: 'paid_messaging',
       blogEnabled: false,
       jobAlertsEnabled: true,
       jobRecommendationsEnabled: false,
@@ -225,6 +229,29 @@ describe('toPreviewBoardConfig', () => {
       applicantMessagingEnabled: true,
       registrationWallEnabled: false,
     });
+  });
+
+  it('shows the unlocks model when the board has not chosen one', () => {
+    // `null` means the operator never set it, and the API documents the
+    // fallback as inference from the published talent plans. The toolbar has
+    // no plan list, so it shows the model a board selling unlocks infers to,
+    // which is also what the sandbox baseline sets.
+    const config = toPreviewBoardConfig({
+      features: {
+        candidatePaywall: false,
+        blog: true,
+        jobAlerts: true,
+        jobRecommendationsEnabled: true,
+        candidates: true,
+        employers: true,
+        registrationWall: false,
+        nativeApplications: true,
+        messaging: true,
+      },
+      talentDirectoryVisibility: 'public',
+      talentAccessModel: null,
+    });
+    expect(config.talentAccessModel).toBe('paid_unlocks_and_messaging');
   });
 
   it('defaults the untyped runtime flags to ON when the API omits them', () => {
@@ -318,6 +345,7 @@ describe('unmetFlagRequirements (dependency gating)', () => {
   const baseConfig = {
     jobAccessPaywallEnabled: false,
     talentDirectoryVisibility: 'public',
+    talentAccessModel: 'paid_unlocks_and_messaging',
     blogEnabled: true,
     jobAlertsEnabled: true,
     jobRecommendationsEnabled: true,

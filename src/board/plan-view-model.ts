@@ -34,11 +34,10 @@ export function planFeatureLines(
     const maxActive = Number(maxActiveRaw);
     if (Number.isFinite(maxActive) && maxActive > 0) {
       lines.push(
-        new Intl.PluralRules(locale).select(maxActive) === 'one'
-          ? m.planFeature_maxActiveOne()
-          : m.planFeature_maxActiveOther({
-              count: maxActive.toLocaleString(locale),
-            }),
+        m.planFeature_maxActive({
+          count: maxActive,
+          countLabel: maxActive.toLocaleString(locale),
+        }),
       );
     }
   }
@@ -49,11 +48,10 @@ export function planFeatureLines(
     const slots = Number(byKey.get('jobs.featured_slots'));
     if (Number.isFinite(slots) && slots > 0) {
       lines.push(
-        new Intl.PluralRules(locale).select(slots) === 'one'
-          ? m.planFeature_featuredOne()
-          : m.planFeature_featuredOther({
-              count: slots.toLocaleString(locale),
-            }),
+        m.planFeature_featured({
+          count: slots,
+          countLabel: slots.toLocaleString(locale),
+        }),
       );
     }
   }

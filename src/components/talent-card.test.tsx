@@ -17,6 +17,7 @@ import type { TalentDirectoryEntry } from '@cavuno/board';
 
 const candidate = {
   object: 'talent_directory_entry',
+  id: 'bu_ada-lovelace',
   handle: 'ada-lovelace',
   displayName: 'Ada Lovelace',
   headline: 'Computing pioneer',
@@ -32,12 +33,17 @@ const candidate = {
 
 afterEach(cleanup);
 
-function renderCard(entry: TalentDirectoryEntry) {
+function renderCard(
+  entry: TalentDirectoryEntry,
+  { profileUnlocks = false }: { profileUnlocks?: boolean } = {},
+) {
   const rootRoute = createRootRoute();
   const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
-    component: () => <TalentCard candidate={entry} />,
+    component: () => (
+      <TalentCard candidate={entry} profileUnlocks={profileUnlocks} />
+    ),
   });
   const profileRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -72,6 +78,14 @@ describe('TalentCard', () => {
     expect(
       screen.getByText('Analytical engines').closest("[data-slot='badge']"),
     ).toBeTruthy();
+  });
+
+  it('links a full card to the opaque /p/{id} route when the board sells unlocks', async () => {
+    renderCard(candidate, { profileUnlocks: true });
+
+    expect(
+      await screen.findByRole('link', { name: 'Ada Lovelace' }),
+    ).toHaveAttribute('href', '/p/bu_ada-lovelace');
   });
 
   it('keeps a candidate without a handle visible but unlinked', async () => {
