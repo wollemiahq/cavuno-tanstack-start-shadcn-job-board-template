@@ -97,4 +97,61 @@ export const impressumContent = {
       );
     },
   },
+  es: {
+    title: 'Aviso legal',
+    description:
+      'Aviso legal de ejemplo. Sustituye esta descripción y este contenido antes del lanzamiento.',
+    Body: function ImpressumBodyEs() {
+      return (
+        <>
+          <LegalPlaceholderCallout />
+          <h2>Qué debe cubrir esta página</h2>
+          <p>
+            Sustituye esta sección por los datos de aviso legal exigidos en tu
+            jurisdicción tras la revisión legal. No dejes la plantilla en
+            producción.
+          </p>
+          <h2>Datos de la entidad legal</h2>
+          <p>
+            Completa `legalEntity` en `src/content/legal/types.ts` (razón social
+            y dirección) para que se muestre la tarjeta de datos sobre el
+            contenido. Déjalo sin definir hasta tener esos valores.
+          </p>
+          <h2>Cómo contactarnos</h2>
+          <p>
+            Sustituye esta sección por los datos de contacto públicos exigidos
+            para el aviso legal.
+          </p>
+        </>
+      );
+    },
+  },
+  pl: {
+    title: 'Nota prawna',
+    description:
+      'Przykładowa nota prawna. Zastąp ten opis i treść przed uruchomieniem.',
+    Body: function ImpressumBodyPl() {
+      return (
+        <>
+          <LegalPlaceholderCallout />
+          <h2>Co powinna zawierać ta strona</h2>
+          <p>
+            Zastąp tę sekcję danymi wymaganymi w Twojej jurysdykcji po
+            weryfikacji prawnej. Nie zostawiaj szablonu w wersji produkcyjnej.
+          </p>
+          <h2>Dane podmiotu prawnego</h2>
+          <p>
+            Uzupełnij `legalEntity` w `src/content/legal/types.ts` (nazwa prawna
+            i adres), aby karta z danymi nad treścią mogła się wyświetlić.
+            Zostaw puste, dopóki nie masz tych wartości.
+          </p>
+          <h2>Jak się z nami skontaktować</h2>
+          <p>
+            Zastąp tę sekcję publicznymi danymi kontaktowymi wymaganymi w nocie
+            prawnej.
+          </p>
+        </>
+      );
+    },
+  },
 } satisfies Record<LegalLocale, LegalPageContent>;

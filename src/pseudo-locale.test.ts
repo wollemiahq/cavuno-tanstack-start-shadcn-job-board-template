@@ -11,14 +11,36 @@ import { localeDirection } from './lib/locale-direction';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+type PluralVariant = { match?: Record<string, string> };
+type CatalogEntry = string | PluralVariant[];
+
+/**
+ * Flatten a catalog to the user-visible patterns keyed by message.
+ *
+ * A simple message is one string. A COMPLEX message (pluralization) is an
+ * array of variants whose `match` maps a selector arm to its pattern; each arm
+ * is separately user-visible, so each is checked under `<key>#<arm>`. The
+ * declarations and selector names are machinery, not copy, and are skipped.
+ */
 function readStringCatalog(path: string): Map<string, string> {
-  const parsed = JSON.parse(readFileSync(path, 'utf8'));
+  // SAFETY: the catalogs are committed to this repo and validated by the
+  // Paraglide compiler on every build, so their shape is a repo invariant
+  // rather than an external payload.
+  const parsed = JSON.parse(readFileSync(path, 'utf8')) as Record<
+    string,
+    CatalogEntry
+  >;
   const catalog = new Map<string, string>();
   for (const [key, value] of Object.entries(parsed)) {
-    if (Object.prototype.toString.call(value) !== '[object String]') {
-      throw new Error(`Expected ${key} in ${path} to be a string`);
+    if (Array.isArray(value)) {
+      for (const variant of value) {
+        for (const [arm, pattern] of Object.entries(variant.match ?? {})) {
+          catalog.set(`${key}#${arm}`, pattern);
+        }
+      }
+      continue;
     }
-    catalog.set(key, String(value));
+    catalog.set(key, value);
   }
   return catalog;
 }

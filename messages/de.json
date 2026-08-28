@@ -1,7 +1,33 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  "accessOffer_everyMonths": "alle {count} Monate",
-  "accessOffer_everyYears": "alle {count} Jahre",
+  "accessOffer_everyMonths": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "alle {countLabel} Monate",
+        "countPlural=*": "alle {countLabel} Monate"
+      }
+    }
+  ],
+  "accessOffer_everyYears": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "alle {countLabel} Jahre",
+        "countPlural=*": "alle {countLabel} Jahre"
+      }
+    }
+  ],
   "accessOffer_oneTime": "Einmalzahlung",
   "accessOffer_perDay": "/Tag",
   "accessOffer_perMonth": "/Monat",
@@ -44,15 +70,39 @@
   "accountHome_unsaveLabel": "Entfernen",
   "accountHome_unverifiedBadge": "Nicht bestätigt — prüfe deine E-Mails",
   "accountHome_verifiedBadge": "Bestätigt",
-  "accountRecommended_countOneText": "1 Job passt zu deinem Profil und deinen Präferenzen.",
-  "accountRecommended_countOtherText": "{count} Jobs passen zu deinem Profil und deinen Präferenzen.",
+  "accountRecommended_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 Job passt zu deinem Profil und deinen Präferenzen.",
+        "countPlural=*": "{countLabel} Jobs passen zu deinem Profil und deinen Präferenzen."
+      }
+    }
+  ],
   "accountRecommended_heading": "Matches von {name}",
   "accountRecommended_headingFallback": "Deine Matches",
   "accountRecommended_needsProfileTitle": "Lade deinen Lebenslauf hoch",
   "accountRecommended_noneNowText": "Wir haben im Moment keine Matches für dich. Sieh dir offene Stellen an.",
   "accountRecommended_noneNowTitle": "Gerade keine Matches",
-  "accountSaved_countOneText": "Du hast 1 Job gespeichert.",
-  "accountSaved_countOtherText": "Du hast {count} Jobs gespeichert.",
+  "accountSaved_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Du hast 1 Job gespeichert.",
+        "countPlural=*": "Du hast {countLabel} Jobs gespeichert."
+      }
+    }
+  ],
   "accountSaved_savedLabel": "Gespeichert",
   "accountShell_applicationsNav": "Bewerbungen",
   "accountShell_candidateNavigationLabel": "Bewerberkonto",
@@ -405,17 +455,54 @@
   "companyDetail_metaDescriptionWithSummary": "{summary} {count} offene Stellen auf {boardName}.",
   "companyDetail_noOpenJobsText": "Momentan keine offenen Stellen.",
   "companyDetail_notFoundText": "Unternehmen nicht gefunden.",
-  "companyDetail_openJobsCountMany": "{count} offene Stellen",
-  "companyDetail_openJobsCountOne": "{count} offene Stelle",
+  "companyDetail_openJobsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offene Stelle",
+        "countPlural=*": "{countLabel} offene Stellen"
+      }
+    }
+  ],
   "companyDetail_openJobsHeading": "Offene Stellen",
-  "companyDetail_openJobsHeadingCountMany": "{count} offene Stellen",
-  "companyDetail_openJobsHeadingCountOne": "{count} offene Stelle",
+  "companyDetail_openJobsHeadingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offene Stelle",
+        "countPlural=*": "{countLabel} offene Stellen"
+      }
+    }
+  ],
   "companyDetail_salariesSummaryHeading": "Gehälter",
   "companyDetail_similarCompaniesHeading": "Ähnliche Unternehmen",
-  "companyDetail_viewAllJobsCountMany": "Alle {count} Stellen ansehen",
-  "companyDetail_viewAllJobsCountOne": "Alle {count} Stelle ansehen",
+  "companyDetail_viewAllJobsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Alle {countLabel} Stelle ansehen",
+        "countPlural=*": "Alle {countLabel} Stellen ansehen"
+      }
+    }
+  ],
   "companyDetail_viewOpenJobsLabel": "Offene Stellen ansehen",
   "companyDetail_viewSalariesLink": "Gehälter ansehen",
+  "companyDetail_websiteLabel": "Website",
   "companyJobDetail_defaultAlertDescription": "Neue passende Stellen direkt in dein Postfach.",
   "companyJobDetail_defaultAlertTitle": "Erhalte Benachrichtigungen für ähnliche Jobs",
   "companyJobDetail_notFoundText": "Dieser Job ist nicht mehr verfügbar.",
@@ -450,8 +537,20 @@
   "companySearch_marketLabel": "Branche",
   "companySearch_noDescriptionText": "Für dieses Unternehmen ist noch keine Beschreibung verfügbar.",
   "companySearch_queryLabel": "Firmenname",
-  "companySearch_resultsCountMany": "{count} Unternehmen",
-  "companySearch_resultsCountOne": "{count} Unternehmen",
+  "companySearch_resultsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Unternehmen",
+        "countPlural=*": "{countLabel} Unternehmen"
+      }
+    }
+  ],
   "companySearch_resultsRegionLabel": "Unternehmensergebnisse",
   "companySearch_resultsShowingRange": "Zeige {from}–{to} von {count} Unternehmen",
   "companySearch_retryLabel": "Erneut versuchen",
@@ -478,6 +577,62 @@
   "copyLink_ariaLabel": "Link kopieren",
   "copyLink_copiedLabel": "Kopiert",
   "copyLink_copyLinkLabel": "Link kopieren",
+  "count_candidates": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Kandidat",
+        "countPlural=*": "{countLabel} Kandidaten"
+      }
+    }
+  ],
+  "count_companies": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Unternehmen",
+        "countPlural=*": "{countLabel} Unternehmen"
+      }
+    }
+  ],
+  "count_jobs": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Job",
+        "countPlural=*": "{countLabel} Jobs"
+      }
+    }
+  ],
+  "count_posts": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Beitrag",
+        "countPlural=*": "{countLabel} Beiträge"
+      }
+    }
+  ],
   "customField_relocationAssistance_label": "Umzugsunterstützung angeboten",
   "customField_teamPageUrl_label": "URL der Team-Seite",
   "customField_visaSponsorship_label": "Visum-Sponsoring",
@@ -505,7 +660,6 @@
   "educationSection_fieldOfStudyLabel": "Studienrichtung",
   "educationSection_heading": "Ausbildung",
   "educationSection_institutionLabel": "Einrichtung",
-  "educationSection_presentLabel": "Heute",
   "educationSection_saveLabel": "Speichern",
   "educationSection_savingLabel": "Wird gespeichert …",
   "educationSection_startLabel": "Startdatum",
@@ -525,8 +679,20 @@
   "employerApplicants_cancelLabel": "Abbrechen",
   "employerApplicants_columnLabel": "Bewerber: {stage}",
   "employerApplicants_copyEmailLabel": "E-Mail-Adresse kopieren",
-  "employerApplicants_countMany": "{count} Bewerber",
-  "employerApplicants_countOne": "{count} Bewerber",
+  "employerApplicants_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Bewerber",
+        "countPlural=*": "{countLabel} Bewerber"
+      }
+    }
+  ],
   "employerApplicants_coverNoteHeading": "Anschreiben",
   "employerApplicants_deleteStageBody": "Diese Phase wird aus der Pipeline entfernt. Das kann nicht rückgängig gemacht werden.",
   "employerApplicants_deleteStageMenuLabel": "Phase löschen",
@@ -634,8 +800,20 @@
   "employerDelete_disabledText": "Das Löschen von Unternehmen ist auf diesem Board nicht aktiviert.",
   "employerDelete_errorText": "Das Unternehmen konnte nicht gelöscht werden. Bitte versuche es gleich noch einmal.",
   "employerDelete_heading": "Gefahrenzone",
-  "employerDelete_membersCountMany": "{count} andere Mitglieder",
-  "employerDelete_membersCountOne": "{count} anderes Mitglied",
+  "employerDelete_membersCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} anderes Mitglied",
+        "countPlural=*": "{countLabel} andere Mitglieder"
+      }
+    }
+  ],
   "employerDelete_membersUnknownText": "Die Teammitglieder konnten nicht geladen werden. Laden Sie die Seite vor dem Löschen neu, damit die Folgen bestätigt werden können.",
   "employerDelete_notAdminText": "Nur eine Admin-Person kann dieses Unternehmen löschen.",
   "employerDelete_submitLabel": "Unternehmen löschen",
@@ -661,8 +839,20 @@
   "employerJob_statusPublished": "Veröffentlicht",
   "employerJobs_actionsColumn": "Aktionen",
   "employerJobs_actionsMenuLabel": "Aktionen für {title}",
-  "employerJobs_activeJobsMany": "Du hast {count} aktive Stellen.",
-  "employerJobs_activeJobsOne": "Du hast 1 aktive Stelle.",
+  "employerJobs_activeJobs": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Du hast 1 aktive Stelle.",
+        "countPlural=*": "Du hast {countLabel} aktive Stellen."
+      }
+    }
+  ],
   "employerJobs_activeJobsZero": "Du hast noch keine aktiven Stellen.",
   "employerJobs_applicationsColumn": "Bewerbungen",
   "employerJobs_applyClicksColumn": "Bewerbungsklicks",
@@ -688,12 +878,63 @@
   "employerLanding_confirmingSubtitle": "Einen Moment. Wir bestätigen deine Zahlung. Du wirst nicht erneut belastet.",
   "employerLanding_confirmingText": "Kauf wird bestätigt…",
   "employerLanding_enterpriseHeading": "Enterprise",
-  "employerLanding_featureActiveJobsMany": "{count} aktive Stellenanzeigen",
-  "employerLanding_featureActiveJobsOne": "{count} aktive Stellenanzeige",
-  "employerLanding_featureFeaturedSlots": "{count} hervorgehoben",
+  "employerLanding_featureActiveJobs": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} aktive Stellenanzeige",
+        "countPlural=*": "{countLabel} aktive Stellenanzeigen"
+      }
+    }
+  ],
+  "employerLanding_featureFeaturedSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} hervorgehoben",
+        "countPlural=*": "{countLabel} hervorgehoben"
+      }
+    }
+  ],
   "employerLanding_featureListingDuration": "{days} Tage Laufzeit",
-  "employerLanding_featureMessages": "{count} Nachrichten",
-  "employerLanding_featureProfileUnlocks": "{count} Profil-Freischaltungen",
+  "employerLanding_featureMessages": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Nachricht",
+        "countPlural=*": "{countLabel} Nachrichten"
+      }
+    }
+  ],
+  "employerLanding_featureProfileUnlocks": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Profilfreischaltung",
+        "countPlural=*": "{countLabel} Profilfreischaltungen"
+      }
+    }
+  ],
   "employerLanding_freeLabel": "Kostenlos",
   "employerLanding_jobPostingHeading": "Stellenanzeigen",
   "employerLanding_manageBillingLabel": "Abrechnung verwalten",
@@ -715,8 +956,20 @@
   "employerMembers_alreadyInvitedError": "Für diese E-Mail liegt bereits eine Einladung vor.",
   "employerMembers_alreadyMemberError": "Diese E-Mail gehört bereits zu einem Teammitglied.",
   "employerMembers_companyHeading": "Teammitglieder bei {company}",
-  "employerMembers_countMany": "Du hast {count} Teammitglieder.",
-  "employerMembers_countOne": "Du hast 1 Teammitglied.",
+  "employerMembers_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Du hast 1 Teammitglied.",
+        "countPlural=*": "Du hast {countLabel} Teammitglieder."
+      }
+    }
+  ],
   "employerMembers_countZero": "Du hast noch keine Teammitglieder.",
   "employerMembers_emailColumn": "E-Mail",
   "employerMembers_emptyText": "Noch keine Mitglieder.",
@@ -825,6 +1078,9 @@
   "employerStats_emptyTitle": "Noch keine Aktivität",
   "employerStats_loadingLabel": "Aktivität wird geladen…",
   "employerStats_viewsLegend": "Aufrufe",
+  "entity_candidatePlural": "Kandidaten",
+  "entity_candidatePresent": "Heute",
+  "entity_candidateSingular": "Kandidat",
   "entity_companyPlural": "Unternehmen",
   "entity_companySingular": "Unternehmen",
   "entity_jobPlural": "Jobs",
@@ -841,7 +1097,6 @@
   "experienceSection_endLabel": "Enddatum",
   "experienceSection_heading": "Berufserfahrung",
   "experienceSection_locationLabel": "Standort",
-  "experienceSection_presentLabel": "Heute",
   "experienceSection_saveLabel": "Speichern",
   "experienceSection_savingLabel": "Wird gespeichert …",
   "experienceSection_startLabel": "Startdatum",
@@ -869,8 +1124,6 @@
   "home_candidateCtaButton": "Kandidatenprofil erstellen",
   "home_candidateCtaHeading": "Auf Jobsuche?",
   "home_candidateCtaSupporting": "Erstelle ein Profil, um Stellen zu speichern, Benachrichtigungen zu erhalten und dich an einem Ort zu bewerben.",
-  "home_candidatePlural": "Kandidaten",
-  "home_candidateSingular": "Kandidat",
   "home_categoriesDescription": "Springe direkt zu den Rollen in deinem Bereich.",
   "home_categoriesHeading": "Nach Kategorie stöbern",
   "home_companiesDescription": "Entdecke die Teams mit aktuell offenen Stellen.",
@@ -884,8 +1137,6 @@
   "home_heroSupporting": "Durchsuche offene Stellen von großartigen Teams — filtere nach Arbeitsform, Art und Erfahrung und bewirb dich an einem Ort.",
   "home_latestJobsDescription": "Die neuesten Rollen von Teams, die gerade einstellen.",
   "home_latestJobsHeading": "Neueste Jobs",
-  "home_postPlural": "Beiträge",
-  "home_postSingular": "Beitrag",
   "home_talentDescription": "Kandidaten, die bereit für den nächsten Schritt sind.",
   "home_talentHeading": "Ausgewählte Talente",
   "home_viewAllBlogLabel": "Alle Beiträge ansehen",
@@ -963,8 +1214,20 @@
   "jobSearch_queryEmptyText": "Für diese Suche wurden keine Jobs gefunden. Versuche ein anderes Stichwort oder einen anderen Standort.",
   "jobSearch_resetFiltersAction": "Filter zurücksetzen",
   "jobSearch_resetLabel": "Zurücksetzen",
-  "jobSearch_resultsCountMany": "{count} Jobs",
-  "jobSearch_resultsCountOne": "{count} Job",
+  "jobSearch_resultsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Job",
+        "countPlural=*": "{countLabel} Jobs"
+      }
+    }
+  ],
   "jobSearch_resultsRegionLabel": "Jobergebnisse",
   "jobSearch_resultsShowingRange": "Zeige {from}–{to} von {count} Jobs",
   "jobSearch_retryLabel": "Erneut versuchen",
@@ -1141,12 +1404,36 @@
   "planComposed_maxActiveJobs": "Bis zu {count} aktive Anzeigen",
   "planComposed_standardListing": "Eine Standard-Anzeige für {days} Tage",
   "planComposed_standardName": "Stellenanzeige",
+  "planFeature_featured": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Enthält 1 hervorgehobenen Job",
+        "countPlural=*": "Enthält {countLabel} hervorgehobene Jobs"
+      }
+    }
+  ],
   "planFeature_featuredAuto": "Jeder Job wird hervorgehoben",
-  "planFeature_featuredOne": "Enthält 1 hervorgehobenen Job",
-  "planFeature_featuredOther": "Enthält {count} hervorgehobene Jobs",
   "planFeature_liveDays": "{days} Tage online",
-  "planFeature_maxActiveOne": "1 aktiver Job gleichzeitig",
-  "planFeature_maxActiveOther": "Bis zu {count} aktive Jobs",
+  "planFeature_maxActive": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 aktiver Job gleichzeitig",
+        "countPlural=*": "Bis zu {countLabel} aktive Jobs"
+      }
+    }
+  ],
   "planFeature_unlimitedActive": "Unbegrenzt aktive Jobs",
   "plan_featuredListing_description": "Eine hervorgehobene Anzeige für 30 Tage — oben auf dem Board angepinnt und im wöchentlichen Alert-Digest hervorgehoben.",
   "plan_featuredListing_name": "Hervorgehobene Anzeige",
@@ -1309,7 +1596,6 @@
   "publicProfile_languagesHeading": "Sprachen",
   "publicProfile_notFoundText": "Profil nicht gefunden.",
   "publicProfile_pageTitle": "{name} — {boardName}",
-  "publicProfile_presentLabel": "Heute",
   "publicProfile_profileFallbackLabel": "Profil",
   "publicProfile_skillsHeading": "Fähigkeiten",
   "resumeImport_description": "Einen Lebenslauf hochzuladen vervollständigt dein Profil. Wir nutzen dieses Profil, um dich mit relevanten Jobs zusammenzubringen.",
@@ -1377,8 +1663,20 @@
   "salaryDetail_skillInPlaceMetaDescriptionEmpty": "Gehaltsdaten für {skill} in {place}.",
   "salaryDetail_skillInPlaceMetaDescriptionWithData": "Gehälter für {skill} in {place}: {range}/Jahr über {jobCount} Jobs.",
   "salaryDetail_skillLocationsHeading": "Gehälter für {skill} nach Standort",
-  "salaryDetail_skillLocationsMetaDescriptionMany": "Gehälter für {skill} über {count} Standorte.",
-  "salaryDetail_skillLocationsMetaDescriptionOne": "Gehälter für {skill} über {count} Standort.",
+  "salaryDetail_skillLocationsMetaDescription": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Gehälter für {skill} über {countLabel} Standort.",
+        "countPlural=*": "Gehälter für {skill} über {countLabel} Standorte."
+      }
+    }
+  ],
   "salaryDetail_skillLocationsMetaTitle": "Gehälter für {skill} nach Standort",
   "salaryDetail_skillMetaDescriptionEmpty": "Gehaltsdaten für {skill}.",
   "salaryDetail_skillMetaDescriptionWithData": "Gehälter für {skill}: {range}/Jahr über {jobCount} Jobs.",
@@ -1391,8 +1689,20 @@
   "salaryDetail_titleInPlaceMetaDescriptionEmpty": "Gehaltsdaten für {title} in {place}.",
   "salaryDetail_titleInPlaceMetaDescriptionWithData": "Gehälter für {title} in {place}: {range}/Jahr über {jobCount} Jobs.",
   "salaryDetail_titleLocationsHeading": "Gehälter für {title} nach Standort",
-  "salaryDetail_titleLocationsMetaDescriptionMany": "Gehälter für {title} über {count} Standorte.",
-  "salaryDetail_titleLocationsMetaDescriptionOne": "Gehälter für {title} über {count} Standort.",
+  "salaryDetail_titleLocationsMetaDescription": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Gehälter für {title} über {countLabel} Standort.",
+        "countPlural=*": "Gehälter für {title} über {countLabel} Standorte."
+      }
+    }
+  ],
   "salaryDetail_titleLocationsMetaTitle": "Gehälter für {title} nach Standort",
   "salaryDetail_titleMetaDescriptionEmpty": "Gehaltsdaten für {title}.",
   "salaryDetail_titleMetaDescriptionWithData": "Gehälter für {title}: {range}/Jahr über {jobCount} Jobs.",
@@ -1405,8 +1715,20 @@
   "salaryDetail_topTitles": "Top-Jobtitel",
   "salaryFaq_averageAnswer": "Das Durchschnittsgehalt für {label} beträgt {range} pro Jahr, basierend auf {jobCountLabel} auf diesem Board, die Gehaltsangaben enthalten.",
   "salaryFaq_averageQuestion": "Wie hoch ist das Durchschnittsgehalt für {label}?",
-  "salaryFaq_jobCountMany": "{jobCount} Stellenanzeigen",
-  "salaryFaq_jobCountOne": "{jobCount} Stellenanzeige",
+  "salaryFaq_jobCount": [
+    {
+      "declarations": [
+        "input jobCount",
+        "input jobCountLabel",
+        "local jobCountPlural = jobCount: plural"
+      ],
+      "selectors": ["jobCountPlural"],
+      "match": {
+        "jobCountPlural=one": "{jobCountLabel} Stellenanzeige",
+        "jobCountPlural=*": "{jobCountLabel} Stellenanzeigen"
+      }
+    }
+  ],
   "salaryFaq_methodologyAnswer": "Diese Zahlen basieren auf aktuellen und kürzlichen Stellenanzeigen auf diesem Board, die Gehaltsangaben enthalten, und werden über die Rollen gemittelt. Es handelt sich um Schätzungen, nicht um Gehaltsgarantien.",
   "salaryFaq_methodologyQuestion": "Wie wird das Gehalt für {label} berechnet?",
   "salaryFrame_companyCategorySalariesTitle": "{company} {category} Gehälter ({range}/Jahr)",
@@ -1421,8 +1743,6 @@
   "salaryHub_companiesMetaDescription": "Durchschnittsgehälter bei Unternehmen, die auf {boardName} einstellen.",
   "salaryHub_companiesMetaTitle": "Unternehmensgehälter",
   "salaryHub_emptyDescription": "Gehaltsinformationen erscheinen, sobald passende veröffentlichte Jobs Gehaltsdaten enthalten.",
-  "salaryHub_jobCountPlural": "{count} Jobs",
-  "salaryHub_jobCountSingular": "{count} Job",
   "salaryHub_jobTitlesCrumbLabel": "Jobtitel",
   "salaryHub_locationsEmptyTitle": "Noch keine Gehaltsdaten nach Standort",
   "salaryHub_locationsHeading": "Gehälter nach Standort",
@@ -1574,8 +1894,20 @@
   "talentUnlock_confirmAction": "Profil freischalten",
   "talentUnlock_confirmBody": "Das verbraucht eine Profil-Freischaltung aus dem Talentplan deines Unternehmens.",
   "talentUnlock_confirmTitle": "Dieses Profil freischalten?",
-  "talentUnlock_creditsRemainingMany": "{count} Freischaltungen übrig.",
-  "talentUnlock_creditsRemainingOne": "{count} Freischaltung übrig.",
+  "talentUnlock_creditsRemaining": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Freischaltung übrig.",
+        "countPlural=*": "{countLabel} Freischaltungen übrig."
+      }
+    }
+  ],
   "talentUnlock_neededBody": "Gib eine Freischaltung aus, um das vollständige Profil zu sehen.",
   "talentUnlock_neededTitle": "Dieses Profil freischalten",
   "talentUnlock_noPlanBody": "Abonniere einen Talentplan, um Kandidatenprofile freizuschalten.",

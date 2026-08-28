@@ -136,14 +136,10 @@ export function TalentUnlockGate({
           <CardContent className="text-muted-foreground space-y-2 text-sm">
             <p>{m.talentUnlock_neededBody()}</p>
             <p>
-              {new Intl.PluralRules(getLocale()).select(creditsRemaining) ===
-              'one'
-                ? m.talentUnlock_creditsRemainingOne({
-                    count: creditsRemaining,
-                  })
-                : m.talentUnlock_creditsRemainingMany({
-                    count: creditsRemaining,
-                  })}
+              {m.talentUnlock_creditsRemaining({
+                count: creditsRemaining,
+                countLabel: creditsRemaining.toLocaleString(getLocale()),
+              })}
             </p>
           </CardContent>
           <CardFooter>

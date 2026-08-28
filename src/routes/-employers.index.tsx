@@ -84,29 +84,29 @@ const intervalSuffix = (interval: Plan['billingInterval']) =>
 
 function planFeatures(plan: Plan) {
   return [
-    plan.featureSummary.maxActiveJobs === 1
-      ? m.employerLanding_featureActiveJobsOne({
-          count: plan.featureSummary.maxActiveJobs,
-        })
-      : m.employerLanding_featureActiveJobsMany({
-          count: plan.featureSummary.maxActiveJobs,
-        }),
+    m.employerLanding_featureActiveJobs({
+      count: plan.featureSummary.maxActiveJobs,
+      countLabel: String(plan.featureSummary.maxActiveJobs),
+    }),
     m.employerLanding_featureListingDuration({
       days: plan.featureSummary.durationDays,
     }),
     plan.featureSummary.featuredSlots > 0
       ? m.employerLanding_featureFeaturedSlots({
           count: plan.featureSummary.featuredSlots,
+          countLabel: String(plan.featureSummary.featuredSlots),
         })
       : null,
     plan.talent
       ? m.employerLanding_featureProfileUnlocks({
           count: plan.talent.unlocksPerPeriod,
+          countLabel: String(plan.talent.unlocksPerPeriod),
         })
       : null,
     plan.talent
       ? m.employerLanding_featureMessages({
           count: plan.talent.messagesPerPeriod,
+          countLabel: String(plan.talent.messagesPerPeriod),
         })
       : null,
   ].filter((feature) => feature !== null);

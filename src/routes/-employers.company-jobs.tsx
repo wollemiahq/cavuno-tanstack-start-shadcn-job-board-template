@@ -191,11 +191,9 @@ export type CompanyJobsViewData = {
 function activeJobsSubtitle(count: number) {
   if (count === 0) return m.employerJobs_activeJobsZero();
   const locale = getLocale();
-  if (new Intl.PluralRules(locale).select(count) === 'one') {
-    return m.employerJobs_activeJobsOne();
-  }
-  return m.employerJobs_activeJobsMany({
-    count: count.toLocaleString(locale),
+  return m.employerJobs_activeJobs({
+    count,
+    countLabel: count.toLocaleString(locale),
   });
 }
 
