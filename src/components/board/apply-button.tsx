@@ -138,7 +138,9 @@ export function ApplyButton({
     name?: string;
     email: string;
     coverNote?: string;
-  }) => Promise<{ ok: true } | { ok: false; reason: string }>;
+  }) => Promise<
+    { ok: true; applicationId: string } | { ok: false; reason: string }
+  >;
   dependencies?: ApplyButtonDependencies;
 }) {
   const conversion = useBoardConversionAnalytics();
@@ -338,6 +340,10 @@ export function ApplyButton({
             event.preventDefault();
             if (!onGuestApply) return;
             setState('applying');
+            // Guest apply IS a native apply — track it exactly as the
+            // signed-in native path does, or the 129 wall-off boards go
+            // dark in the conversion pipeline.
+            trackApplyClick('native');
             try {
               const result = await onGuestApply({
                 jobSlug: action.jobSlug,
@@ -345,6 +351,9 @@ export function ApplyButton({
                 email: guestEmail.trim(),
                 coverNote: guestCoverNote.trim() || undefined,
               });
+              if (result.ok) {
+                trackApplySubmit(result.applicationId);
+              }
               setState(
                 result.ok
                   ? 'guest-submitted'

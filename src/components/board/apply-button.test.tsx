@@ -531,7 +531,10 @@ describe('ApplyButton guest apply', () => {
         jobSlug="platform-engineer"
         applicationUrl={null}
         viewer={null}
-        onGuestApply={vi.fn(async () => ({ ok: true as const }))}
+        onGuestApply={vi.fn(async () => ({
+          ok: true as const,
+          applicationId: 'app_1',
+        }))}
       />,
     );
 
@@ -563,7 +566,10 @@ describe('ApplyButton guest apply', () => {
         applicationUrl={null}
         viewer={null}
         registrationWall
-        onGuestApply={vi.fn(async () => ({ ok: true as const }))}
+        onGuestApply={vi.fn(async () => ({
+          ok: true as const,
+          applicationId: 'app_1',
+        }))}
       />,
     );
 
@@ -572,7 +578,10 @@ describe('ApplyButton guest apply', () => {
   });
 
   it('submits the guest details and confirms', async () => {
-    const onGuestApply = vi.fn(async () => ({ ok: true as const }));
+    const onGuestApply = vi.fn(async () => ({
+      ok: true as const,
+      applicationId: 'app_1',
+    }));
     render(
       <ApplyButton
         {...base}
