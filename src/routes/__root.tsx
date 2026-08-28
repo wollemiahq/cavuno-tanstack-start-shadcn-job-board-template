@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 
 /**
  * Root: loads the PUBLIC board shell once (identity, features, SEO)
@@ -37,6 +37,8 @@ import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { AlternateLinks } from '@/components/alternate-links';
 import { AppRouteErrorPage } from '@/components/app-route-error';
+import { BoardAuthConversionTracker } from '@/components/board-auth-conversion-tracker';
+import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
 import { ShellBreadcrumb } from '@/components/board/breadcrumb';
 import { themeModeScript } from '@/components/cavuno/board-theme';
 import {
@@ -57,6 +59,7 @@ import { DirectionProvider } from '@/components/ui/direction';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { boardHeadIconLinks } from '@/lib/board-icons';
 import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
+import { resolveBoardConversionAnalytics } from '@/lib/board-pixel-conversions';
 import {
   resolveHeaderRouteLabels,
   resolveHeaderSearchState,
@@ -252,6 +255,10 @@ function RootChrome({
   });
   const navigate = useNavigate();
   const router = useRouter();
+  const conversionAnalytics = useMemo(
+    () => resolveBoardConversionAnalytics(board.analytics),
+    [board.analytics],
+  );
 
   // Once after hydration, report path templates to the builder parent when
   // this board is embedded in the preview iframe. The tree comes off the
@@ -445,6 +452,10 @@ function RootChrome({
 
   return (
     <CookieConsentProvider required={board.analytics.cookieConsentRequired}>
+      <BoardConversionAnalyticsProvider
+        boardSlug={board.slug}
+        analytics={conversionAnalytics}
+      >
       {/* Consent state wraps the whole chrome: the banner (floating stack),
           the footer's "Cookie preferences" reopener, the job-alert prompt's
           yield, and the analytics gate all read the same choice. The embed
@@ -454,6 +465,7 @@ function RootChrome({
       <Suspense fallback={null}>
         <LazyAnalyticsScripts analytics={board.analytics} />
       </Suspense>
+      <BoardAuthConversionTracker />
       <FloatingStackProvider>
         <NavigationProgress />
         {fillsViewport ? (
@@ -531,6 +543,7 @@ function RootChrome({
           </Suspense>
         ) : null}
       </FloatingStackProvider>
+      </BoardConversionAnalyticsProvider>
     </CookieConsentProvider>
   );
 }

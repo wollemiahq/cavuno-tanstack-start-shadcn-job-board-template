@@ -1,5 +1,10 @@
 import { safeRedirectPath } from '@cavuno/board/server';
 
+import {
+  appendAuthConversionQuery,
+  appendAuthIntentQuery,
+  appendOAuthProviderHint,
+} from './board-datalayer-events';
 import { localizePath } from './localized-path';
 import { searchString } from './pagination';
 
@@ -35,6 +40,26 @@ export function candidatePasswordResetSignInHref<T>(value: T) {
 
 export function candidateVerifyEmailHref<T>(value: T) {
   return candidateAuthHref('/auth/verify-email-required', value);
+}
+
+/** Password sign-up success → verify-email with `cavuno_auth*` intact. */
+export function buildVerifyEmailRedirectPath<T>(value: T) {
+  return appendAuthConversionQuery(
+    candidateVerifyEmailHref(value),
+    'sign_up',
+    'password',
+  );
+}
+
+export function candidateOAuthReturnTo<T>(
+  value: T,
+  intent: 'sign_up' | 'login',
+  provider: 'google' | 'linkedin',
+) {
+  return appendOAuthProviderHint(
+    appendAuthIntentQuery(candidateReturnTo(value), intent),
+    provider,
+  );
 }
 
 export function candidateSignUpHref<T>(value: T) {

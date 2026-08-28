@@ -22,6 +22,8 @@ const mocks = {
 
 import { SignInView } from './-auth.sign-in';
 import { Route } from './auth.sign-in';
+import { appendAuthConversionQuery } from '@/lib/board-datalayer-events';
+import { candidateOAuthReturnTo } from '@/lib/candidate-return-to';
 
 afterEach(() => {
   cleanup();
@@ -100,7 +102,9 @@ describe('/auth/sign-in search contract', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
 
     await waitFor(() => {
-      expect(mocks.assignLocation).toHaveBeenCalledWith(returnTo);
+      expect(mocks.assignLocation).toHaveBeenCalledWith(
+        appendAuthConversionQuery(returnTo, 'login', 'password'),
+      );
     });
     expect(mocks.invalidate).not.toHaveBeenCalled();
     expect(mocks.navigate).not.toHaveBeenCalled();
@@ -155,7 +159,10 @@ describe('/auth/sign-in search contract', () => {
 
     await waitFor(() => {
       expect(mocks.getOAuthAuthorizationUrl).toHaveBeenCalledWith({
-        data: { provider: 'google', returnTo },
+        data: {
+          provider: 'google',
+          returnTo: candidateOAuthReturnTo(returnTo, 'login', 'google'),
+        },
       });
     });
   });

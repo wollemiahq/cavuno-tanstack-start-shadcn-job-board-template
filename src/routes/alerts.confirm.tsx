@@ -9,6 +9,7 @@ import { m } from '../paraglide/messages';
 import { getSeoBase, confirmJobAlert } from '../server/queries';
 
 import { Page, PageContent } from '@/components/layout/page';
+import { BoardJobAlertConversionTracker } from '@/components/board-job-alert-conversion-tracker';
 import { headTitle } from '@/lib/page-title';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
 
@@ -83,7 +84,9 @@ function ConfirmPage() {
   const { status } = Route.useLoaderData();
   const copy = COPY[status];
   return (
-    <Page width="narrow">
+    <>
+      <BoardJobAlertConversionTracker status={status} />
+      <Page width="narrow">
       <PageContent>
         <div className="space-y-3 py-8 text-center">
           <h1 className="font-heading text-3xl font-semibold tracking-tight">
@@ -93,5 +96,6 @@ function ConfirmPage() {
         </div>
       </PageContent>
     </Page>
+    </>
   );
 }

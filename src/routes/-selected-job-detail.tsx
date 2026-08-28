@@ -71,7 +71,9 @@ export function SelectedJobDetail({
 
   const applySlot = state.job ? (
     <ApplyButton
+      jobId={state.job.id}
       jobSlug={state.job.slug}
+      companySlug={state.job.company?.slug ?? ''}
       applicationUrl={state.job.applicationUrl}
       applyAction={state.job.applyAction}
       language={board.language}
@@ -83,9 +85,9 @@ export function SelectedJobDetail({
       onPrepareApply={(jobSlug) =>
         dependencies.prepareApplyToJob({ data: { jobSlug } })
       }
-      onApply={async (jobSlug, approvalReceipt) => {
-        await dependencies.applyToJob({ data: { jobSlug, approvalReceipt } });
-      }}
+      onApply={(jobSlug, approvalReceipt) =>
+        dependencies.applyToJob({ data: { jobSlug, approvalReceipt } })
+      }
     />
   ) : undefined;
 

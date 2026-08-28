@@ -5,6 +5,7 @@ import {
   candidateReturnTo,
   candidateSignInHref,
 } from '../lib/candidate-return-to';
+import { resolvePostAuthConversionRedirect } from '../lib/board-datalayer-events';
 import { m } from '../paraglide/messages';
 import { consumeMagicLink } from '../server/auth';
 /** Magic-link landing — consumes ?token= and creates the starter session. */
@@ -37,7 +38,9 @@ export const Route = createFileRoute('/auth/magic-link')({
       seoPromise,
     ]);
     if (!result.ok) return { status: 'invalid' as const, seo };
-    throw redirect({ href: deps.returnTo });
+    throw redirect({
+      href: resolvePostAuthConversionRedirect(deps.returnTo, 'magic_link'),
+    });
   },
   head: ({ loaderData }) => ({
     meta: [

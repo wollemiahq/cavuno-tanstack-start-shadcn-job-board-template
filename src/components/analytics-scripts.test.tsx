@@ -34,27 +34,29 @@ interface GtmStartEvent {
   event: string;
 }
 
-type AnalyticsRuntimeValue = string | number | Date;
-type AnalyticsDataLayerEntry = IArguments | GtmStartEvent;
+type AnalyticsDataLayerEntry = IArguments | GtmStartEvent | Record<string, unknown>;
 
 declare global {
   interface Window {
     dataLayer?: AnalyticsDataLayerEntry[];
-    gtag?: (...args: AnalyticsRuntimeValue[]) => void;
-    fbq?: {
-      (...args: string[]): void;
-      queue?: IArguments[];
-    };
+    gtag?: (...args: unknown[]) => void;
+    fbq?: ((...args: unknown[]) => void) & { queue?: IArguments[] };
     _fbq?: Window['fbq'];
     _linkedin_partner_id?: string;
     _linkedin_data_partner_ids?: string[];
+    lintrk?: (args: Record<string, unknown>) => void;
   }
 }
 
 function isGtmStartEvent(
   entry: AnalyticsDataLayerEntry,
 ): entry is GtmStartEvent {
-  return Object.hasOwn(entry, 'gtm.start');
+  return (
+    typeof entry === 'object' &&
+    entry !== null &&
+    !Array.isArray(entry) &&
+    Object.hasOwn(entry, 'gtm.start')
+  );
 }
 
 const injectedKeys = () =>
@@ -114,7 +116,7 @@ describe('AnalyticsScripts', () => {
     );
     expect(
       document.getElementById('cavuno-analytics-ga4')?.textContent,
-    ).toContain(`window.gtag('config',"G-TEST123");`);
+    ).toContain(`window.gtag('config',"G-TEST123",{cookie_domain:`);
   });
 
   it('bootstraps each vendor runtime, not just the script tags', () => {
@@ -139,14 +141,20 @@ describe('AnalyticsScripts', () => {
 
     // GTM pushed its start event; GA4's gtag pushed js + config arguments.
     const flat = (window.dataLayer ?? []).map((entry) =>
-      isGtmStartEvent(entry) ? Object.values(entry) : Array.from(entry),
+      isGtmStartEvent(entry)
+        ? Object.values(entry)
+        : entry instanceof Object && 'length' in entry
+          ? Array.from(entry as ArrayLike<unknown>)
+          : Object.values(entry as Record<string, unknown>),
     );
     expect((window.dataLayer ?? []).some(isGtmStartEvent)).toBe(true);
     expect(flat.some((values) => values.includes('G-TEST123'))).toBe(true);
 
     // Meta's stub is callable and queued init + PageView for the loader.
     expect(window.fbq).toBeTypeOf('function');
-    const fbqCalls = (window.fbq?.queue ?? []).map((args) => Array.from(args));
+    const fbqCalls = (
+      (window.fbq as { queue?: IArguments[] } | undefined)?.queue ?? []
+    ).map((args) => Array.from(args));
     expect(fbqCalls).toContainEqual(['init', '1234567890']);
     expect(fbqCalls).toContainEqual(['track', 'PageView']);
 

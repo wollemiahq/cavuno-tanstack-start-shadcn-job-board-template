@@ -11,6 +11,7 @@ const mocks = {
 
 import { SignUpView } from './-auth.sign-up';
 import { Route } from './auth.sign-up';
+import { buildVerifyEmailRedirectPath, candidateOAuthReturnTo } from '@/lib/candidate-return-to';
 
 afterEach(() => {
   cleanup();
@@ -70,14 +71,20 @@ describe('/auth/sign-up search contract', () => {
     );
 
     expect(mocks.getOAuthAuthorizationUrl).toHaveBeenNthCalledWith(1, {
-      data: { provider: 'google', returnTo },
+      data: {
+        provider: 'google',
+        returnTo: candidateOAuthReturnTo(returnTo, 'sign_up', 'google'),
+      },
     });
     expect(mocks.getOAuthAuthorizationUrl).toHaveBeenNthCalledWith(2, {
-      data: { provider: 'linkedin', returnTo },
+      data: {
+        provider: 'linkedin',
+        returnTo: candidateOAuthReturnTo(returnTo, 'sign_up', 'linkedin'),
+      },
     });
   });
 
-  it('keeps the destination in the post-registration verification action', async () => {
+  it('keeps verify-email conversion params on the post-registration fallback link', async () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
     mocks.signUp.mockResolvedValue({ ok: true });
     mocks.invalidate.mockRejectedValue(new Error('refresh unavailable'));
@@ -104,8 +111,11 @@ describe('/auth/sign-up search contract', () => {
     const action = await screen.findByRole('link', {
       name: 'Go to my account',
     });
+    expect(action.getAttribute('href')).toBe(buildVerifyEmailRedirectPath(returnTo));
     const url = new URL(action.getAttribute('href')!, 'https://board.example');
     expect(url.pathname).toBe('/auth/verify-email-required');
     expect(url.searchParams.get('returnTo')).toBe(returnTo);
+    expect(url.searchParams.get('cavuno_auth')).toBe('sign_up');
+    expect(url.searchParams.get('cavuno_auth_method')).toBe('password');
   });
 });

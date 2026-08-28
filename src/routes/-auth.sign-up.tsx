@@ -1,6 +1,7 @@
 import {
   candidateSignInHref,
-  candidateVerifyEmailHref,
+  buildVerifyEmailRedirectPath,
+  candidateOAuthReturnTo,
 } from '../lib/candidate-return-to';
 import { MARKETING_CONSENT } from '../lib/marketing-consent';
 import { m } from '../paraglide/messages';
@@ -63,14 +64,19 @@ export function SignUpView({
         successActionLabel: m.authSignUp_goToAccountLabel(),
       }}
       marketingConsent={marketingConsent}
-      successHref={candidateVerifyEmailHref(returnTo)}
+      successHref={buildVerifyEmailRedirectPath(returnTo)}
       onSubmit={async (values) => {
         const result = await signUpAction({ data: values });
         if (result.ok) await reconcileCommittedAction(invalidate);
         return result;
       }}
       onOAuthStart={(provider) =>
-        getOAuthAuthorizationUrlAction({ data: { provider, returnTo } })
+        getOAuthAuthorizationUrlAction({
+          data: {
+            provider,
+            returnTo: candidateOAuthReturnTo(returnTo, 'sign_up', provider),
+          },
+        })
       }
       footer={
         <p className="text-muted-foreground text-center text-sm">

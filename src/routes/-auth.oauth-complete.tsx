@@ -5,6 +5,7 @@ import {
   candidateReturnTo,
   candidateSignInHref,
 } from '../lib/candidate-return-to';
+import { resolvePostAuthConversionRedirect } from '../lib/board-datalayer-events';
 import { m } from '../paraglide/messages';
 import { exchangeOAuth } from '../server/auth';
 /** OAuth completion landing — exchanges the callback one-time token. */
@@ -37,7 +38,9 @@ export const Route = createFileRoute('/auth/oauth-complete')({
       seoPromise,
     ]);
     if (!result.ok) return { status: 'invalid' as const, seo };
-    throw redirect({ href: deps.returnTo });
+    throw redirect({
+      href: resolvePostAuthConversionRedirect(deps.returnTo, 'google'),
+    });
   },
   head: ({ loaderData }) => ({
     meta: [
