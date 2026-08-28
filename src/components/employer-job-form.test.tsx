@@ -32,6 +32,7 @@ import {
   type EmployerJobFormDependencies,
 } from './employer-job-form';
 
+import type { JobFormSource } from '@/board/job-form';
 import { m } from '@/paraglide/messages';
 
 const dependencies = mocks satisfies EmployerJobFormDependencies;
@@ -401,5 +402,240 @@ describe('EmployerJobForm — board job-form constraints', () => {
       await screen.findByText(m.jobForm_salaryBelowMinError({ min: 200000 })),
     ).toBeInTheDocument();
     expect(mocks.updateJob).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Board country lock on the employer form. The picker resolves a country
+ * code for every suggestion, but the form used to discard it — so a board
+ * with `allowedCountries` got no enforcement at all here. The platform's
+ * server-side constraint check does not run on the employer job route
+ * either — only on public job submission — so this client-side check IS the
+ * enforcement here, matching the hosted employer form.
+ */
+describe('EmployerJobForm — narrowing applied AFTER a job was posted', () => {
+  /**
+   * The employer job route runs NO server-side constraint check (only public
+   * submission does), so this form is the only enforcement. An edit opens
+   * with the job's stored values, which predate any narrowing the operator
+   * has since applied — without a check the save silently stores a value the
+   * board disallows.
+   */
+  function renderNarrowed(jobForm: JobFormSource) {
+    return renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
+        job={draftJob}
+        jobForm={jobForm}
+      />,
+    );
+  }
+
+  async function submitAndExpect(jobForm: JobFormSource, text: string) {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    const { container } = await renderNarrowed(jobForm);
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+    expect(await screen.findByText(text)).toBeInTheDocument();
+    expect(mocks.updateJob).not.toHaveBeenCalled();
+  }
+
+  it('blocks a stored employment type the board no longer accepts', async () => {
+    // draftJob is full_time; the board has narrowed to contract.
+    await submitAndExpect(
+      {
+        object: 'public_board',
+        jobForm: { employmentType: { allowedOptions: ['contract'] } },
+      },
+      m.jobForm_optionNotAllowedError(),
+    );
+  });
+
+  it('blocks a stored work arrangement the board no longer accepts', async () => {
+    await submitAndExpect(
+      {
+        object: 'public_board',
+        jobForm: { workArrangement: { allowedOptions: ['remote'] } },
+      },
+      m.jobForm_optionNotAllowedError(),
+    );
+  });
+
+  it('blocks a stored currency the board no longer accepts', async () => {
+    await submitAndExpect(
+      {
+        object: 'public_board',
+        jobForm: { salary: { allowedCurrencies: ['EUR'] } },
+      },
+      m.jobForm_currencyNotAllowedError({ currencies: 'EUR' }),
+    );
+  });
+
+  it('saves normally when the stored values are all still accepted', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    mocks.checkoutJob.mockResolvedValue({
+      ok: true,
+      data: { status: 'published', checkoutUrl: null },
+    });
+    const { container } = await renderNarrowed({
+      object: 'public_board',
+      jobForm: {
+        employmentType: { allowedOptions: ['full_time'] },
+        workArrangement: { allowedOptions: ['hybrid'] },
+        salary: { allowedCurrencies: ['USD'] },
+      },
+    });
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe('EmployerJobForm — office-location country lock', () => {
+  const germany = {
+    object: 'public_board' as const,
+    jobForm: { location: { allowedCountries: ['DE'] } },
+  };
+  const franceOnly = {
+    object: 'public_board' as const,
+    jobForm: { location: { allowedCountries: ['FR'] } },
+  };
+
+  function renderEdit(jobForm?: JobFormSource) {
+    return renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
+        job={draftJob}
+        jobForm={jobForm}
+      />,
+    );
+  }
+
+  it('blocks a save when a stored location sits outside the board list', async () => {
+    // The fixture job is in Berlin (DE); the board has since narrowed to FR.
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    const { container } = await renderEdit(franceOnly);
+
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    expect(
+      await screen.findByText(
+        m.jobForm_officeLocationCountryNotAllowedError({ countries: 'FR' }),
+      ),
+    ).toBeInTheDocument();
+    expect(mocks.updateJob).not.toHaveBeenCalled();
+  });
+
+  it('refuses a disallowed pick inline, so the tag never enters the form', async () => {
+    // The picker resolves a country for every suggestion — this is the path
+    // that previously threw it away.
+    const paris = {
+      id: 'place-paris',
+      slug: 'paris',
+      name: 'Paris',
+      contextLabel: 'France',
+      countryCode: 'FR',
+      regionCode: null,
+    };
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={{
+          suggestions: [paris],
+          loading: false,
+          onQueryChange: () => {},
+        }}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
+        job={draftJob}
+        jobForm={germany}
+      />,
+    );
+
+    const field = screen.getByLabelText(m.postJob_officeLocationsLabel());
+    fireEvent.input(field, {
+      target: { value: 'Par' },
+      inputType: 'insertText',
+    });
+    fireEvent.click(await screen.findByText('Paris'));
+
+    expect(
+      await screen.findByText(
+        m.jobForm_officeLocationCountryNotAllowedError({ countries: 'DE' }),
+      ),
+    ).toBeInTheDocument();
+    // Berlin (the fixture's own location) is still the only tag.
+    expect(
+      screen.queryByRole('button', {
+        name: m.placeTags_removeAriaLabel({ name: 'Paris' }),
+      }),
+    ).toBeNull();
+  });
+
+  it('saves normally when the stored location is inside the board list', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    mocks.checkoutJob.mockResolvedValue({
+      ok: true,
+      data: { status: 'published', checkoutUrl: null },
+    });
+    const { container } = await renderEdit(germany);
+
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+  });
+
+  it('refuses free text while a country lock is active — it carries no country to check', async () => {
+    // Nothing downstream resolves it on this route, so accepting it would be
+    // a hole in the lock this form exists to enforce.
+    await renderEdit(germany);
+    const field = screen.getByLabelText(m.postJob_officeLocationsLabel());
+    fireEvent.change(field, { target: { value: 'Paris' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+
+    expect(
+      await screen.findByText(
+        m.jobForm_officeLocationCountryNotAllowedError({ countries: 'DE' }),
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', {
+        name: m.placeTags_removeAriaLabel({ name: 'Paris' }),
+      }),
+    ).toBeNull();
+  });
+
+  it('does not block when the board sets no country restriction', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    mocks.checkoutJob.mockResolvedValue({
+      ok: true,
+      data: { status: 'published', checkoutUrl: null },
+    });
+    const { container } = await renderEdit(undefined);
+
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
   });
 });

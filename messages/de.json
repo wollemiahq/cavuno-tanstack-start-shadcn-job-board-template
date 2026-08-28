@@ -1196,6 +1196,8 @@
   "jobForm_salaryAboveMaxError": "Das Gehalt darf höchstens {max} betragen.",
   "jobForm_seniorityRequiredError": "Wählen Sie eine Karrierestufe für diese Stelle.",
   "jobForm_officeLocationCountryNotAllowedError": "Diese Jobbörse akzeptiert nur Bürostandorte in: {countries}.",
+  "jobForm_currencyNotAllowedError": "Diese Jobbörse akzeptiert Gehälter nur in: {currencies}.",
+  "jobForm_optionNotAllowedError": "Diese Anzeige verwendet eine Option, die die Jobbörse nicht mehr akzeptiert. Wählen Sie vor dem Speichern einen neuen Wert.",
   "jobSalary_boundFrom": "Ab {amount}",
   "jobSalary_boundUpTo": "Bis {amount}",
   "jobSalary_perTimeframe": "{amount} pro {unit}",

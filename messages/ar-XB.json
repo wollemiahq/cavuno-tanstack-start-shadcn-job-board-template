@@ -1196,6 +1196,8 @@
   "jobForm_salaryAboveMaxError": "⁧⟦Šáĺáŕý ɱúšţ ƀé áţ ɱóšţ {max}.⟧⁩",
   "jobForm_seniorityRequiredError": "⁧⟦Çĥóóšé á šéñíóŕíţý ĺéṽéĺ ƒóŕ ţĥíš ŕóĺé.⟧⁩",
   "jobForm_officeLocationCountryNotAllowedError": "⁧⟦Ţĥíš ƀóáŕð óñĺý áççéþţš óƒƒíçé ĺóçáţíóñš íñ: {countries}.⟧⁩",
+  "jobForm_currencyNotAllowedError": "⁧⟦Ţĥíš ƀóáŕð óñĺý áççéþţš šáĺáŕíéš íñ: {currencies}.⟧⁩",
+  "jobForm_optionNotAllowedError": "⁧⟦Ţĥíš ĺíšţíñğ úšéš áñ óþţíóñ ţĥé ƀóáŕð ñó ĺóñğéŕ áççéþţš. Þíçķ á ñéŵ ṽáĺúé ƀéƒóŕé šáṽíñğ.⟧⁩",
   "jobSalary_boundFrom": "⁧⟦Ƒŕóɱ {amount}⟧⁩",
   "jobSalary_boundUpTo": "⁧⟦Úþ ţó {amount}⟧⁩",
   "jobSalary_perTimeframe": "⁧⟦{amount} / {unit}⟧⁩",

@@ -1196,6 +1196,8 @@
   "jobForm_salaryAboveMaxError": "Salary must be at most {max}.",
   "jobForm_seniorityRequiredError": "Choose a seniority level for this role.",
   "jobForm_officeLocationCountryNotAllowedError": "This board only accepts office locations in: {countries}.",
+  "jobForm_currencyNotAllowedError": "This board only accepts salaries in: {currencies}.",
+  "jobForm_optionNotAllowedError": "This listing uses an option the board no longer accepts. Pick a new value before saving.",
   "jobSalary_boundFrom": "From {amount}",
   "jobSalary_boundUpTo": "Up to {amount}",
   "jobSalary_perTimeframe": "{amount} / {unit}",

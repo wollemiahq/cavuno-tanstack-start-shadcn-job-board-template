@@ -296,8 +296,10 @@ export function PostJobForm({
       location.countryCode &&
       !allowedCountries.includes(location.countryCode)
     ) {
+      // NOT `officeLocationsError` — that flag renders "Add at least one
+      // office location", which is wrong when a location is already tagged
+      // and the real failure is that this country is not accepted.
       updateFormState({
-        officeLocationsError: true,
         status: {
           kind: 'error',
           message: m.jobForm_officeLocationCountryNotAllowedError({

@@ -1196,6 +1196,8 @@
   "jobForm_salaryAboveMaxError": "Le salaire ne doit pas dépasser {max}.",
   "jobForm_seniorityRequiredError": "Choisissez un niveau d'expérience pour ce poste.",
   "jobForm_officeLocationCountryNotAllowedError": "Ce site n'accepte que des lieux de travail dans : {countries}.",
+  "jobForm_currencyNotAllowedError": "Ce site n'accepte les salaires qu'en : {currencies}.",
+  "jobForm_optionNotAllowedError": "Cette annonce utilise une option que le site n'accepte plus. Choisissez une nouvelle valeur avant d'enregistrer.",
   "jobSalary_boundFrom": "À partir de {amount}",
   "jobSalary_boundUpTo": "Jusqu'à {amount}",
   "jobSalary_perTimeframe": "{amount} par {unit}",
