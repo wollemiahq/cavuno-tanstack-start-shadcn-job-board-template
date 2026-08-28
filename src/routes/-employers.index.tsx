@@ -75,13 +75,10 @@ const intervalSuffix = (interval: Plan['billingInterval']) =>
 
 function planFeatures(plan: Plan) {
   return [
-    plan.featureSummary.maxActiveJobs === 1
-      ? m.employerLanding_featureActiveJobsOne({
-          count: plan.featureSummary.maxActiveJobs,
-        })
-      : m.employerLanding_featureActiveJobsMany({
-          count: plan.featureSummary.maxActiveJobs,
-        }),
+    m.employerLanding_featureActiveJobs({
+      count: plan.featureSummary.maxActiveJobs,
+      countLabel: String(plan.featureSummary.maxActiveJobs),
+    }),
     m.employerLanding_featureListingDuration({
       days: plan.featureSummary.durationDays,
     }),

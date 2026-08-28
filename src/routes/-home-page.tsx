@@ -59,15 +59,10 @@ export function HomePage() {
       // Wire `summary` is already authored-or-derived by the Board API.
       summary: company.summary,
       publishedJobCount: company.publishedJobCount,
-      openJobsLabel:
-        new Intl.PluralRules(getLocale()).select(company.publishedJobCount) ===
-        'one'
-          ? m.companyDetail_openJobsCountOne({
-              count: company.publishedJobCount.toLocaleString(getLocale()),
-            })
-          : m.companyDetail_openJobsCountMany({
-              count: company.publishedJobCount.toLocaleString(getLocale()),
-            }),
+      openJobsLabel: m.companyDetail_openJobsCount({
+        count: company.publishedJobCount,
+        countLabel: company.publishedJobCount.toLocaleString(getLocale()),
+      }),
     }));
   const categoryCards = [...topCategories]
     .sort((a, b) => b.count - a.count)
@@ -77,13 +72,10 @@ export function HomePage() {
       name: related.term,
       countLabel:
         related.count > 0
-          ? new Intl.PluralRules(getLocale()).select(related.count) === 'one'
-            ? m.jobSearch_resultsCountOne({
-                count: related.count.toLocaleString(getLocale()),
-              })
-            : m.jobSearch_resultsCountMany({
-                count: related.count.toLocaleString(getLocale()),
-              })
+          ? m.jobSearch_resultsCount({
+              count: related.count,
+              countLabel: related.count.toLocaleString(getLocale()),
+            })
           : null,
       href: jobsCategoryPath(related.slug),
     }));

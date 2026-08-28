@@ -44,8 +44,6 @@
   "accountHome_unsaveLabel": "⁧⟦Úñšáṽé⟧⁩",
   "accountHome_unverifiedBadge": "⁧⟦Úñṽéŕíƒíéð — çĥéçķ ýóúŕ éɱáíĺ⟧⁩",
   "accountHome_verifiedBadge": "⁧⟦Ṽéŕíƒíéð⟧⁩",
-  "accountSaved_countOneText": "⁧⟦Ýóú ĥáṽé šáṽéð 1 ĵóƀ.⟧⁩",
-  "accountSaved_countOtherText": "⁧⟦Ýóú ĥáṽé šáṽéð {count} ĵóƀš.⟧⁩",
   "accountSaved_savedLabel": "⁧⟦Šáṽéð⟧⁩",
   "accountShell_applicationsNav": "⁧⟦Áþþĺíçáţíóñš⟧⁩",
   "accountShell_candidateNavigationLabel": "⁧⟦Çáñðíðáţé áççóúñţ⟧⁩",
@@ -390,15 +388,9 @@
   "companyDetail_metaDescriptionWithSummary": "⁧⟦{summary} {count} óþéñ ŕóĺéš óñ {boardName}.⟧⁩",
   "companyDetail_noOpenJobsText": "⁧⟦Ñó óþéñ ĵóƀš ŕíğĥţ ñóŵ.⟧⁩",
   "companyDetail_notFoundText": "⁧⟦Çóɱþáñý ñóţ ƒóúñð.⟧⁩",
-  "companyDetail_openJobsCountMany": "⁧⟦{count} óþéñ ĵóƀš⟧⁩",
-  "companyDetail_openJobsCountOne": "⁧⟦{count} óþéñ ĵóƀ⟧⁩",
   "companyDetail_openJobsHeading": "⁧⟦Óþéñ ĵóƀš⟧⁩",
-  "companyDetail_openJobsHeadingCountMany": "⁧⟦{count} Óþéñ ĵóƀš⟧⁩",
-  "companyDetail_openJobsHeadingCountOne": "⁧⟦{count} Óþéñ ĵóƀ⟧⁩",
   "companyDetail_salariesSummaryHeading": "⁧⟦Šáĺáŕíéš⟧⁩",
   "companyDetail_similarCompaniesHeading": "⁧⟦Šíɱíĺáŕ çóɱþáñíéš⟧⁩",
-  "companyDetail_viewAllJobsCountMany": "⁧⟦Ṽíéŵ áĺĺ {count} ĵóƀš⟧⁩",
-  "companyDetail_viewAllJobsCountOne": "⁧⟦Ṽíéŵ áĺĺ {count} ĵóƀ⟧⁩",
   "companyDetail_viewOpenJobsLabel": "⁧⟦Ṽíéŵ óþéñ ĵóƀš⟧⁩",
   "companyDetail_viewSalariesLink": "⁧⟦Ṽíéŵ šáĺáŕíéš⟧⁩",
   "companyJobDetail_defaultAlertDescription": "⁧⟦Ñéŵ ɱáţçĥíñğ ŕóĺéš, šţŕáíğĥţ ţó ýóúŕ íñƀóẋ.⟧⁩",
@@ -435,8 +427,6 @@
   "companySearch_marketLabel": "⁧⟦Ṁáŕķéţ⟧⁩",
   "companySearch_noDescriptionText": "⁧⟦Ñó çóɱþáñý ðéšçŕíþţíóñ íš áṽáíĺáƀĺé ýéţ.⟧⁩",
   "companySearch_queryLabel": "⁧⟦Çóɱþáñý ñáɱé⟧⁩",
-  "companySearch_resultsCountMany": "⁧⟦{count} çóɱþáñíéš⟧⁩",
-  "companySearch_resultsCountOne": "⁧⟦{count} çóɱþáñý⟧⁩",
   "companySearch_resultsRegionLabel": "⁧⟦Çóɱþáñý ŕéšúĺţš⟧⁩",
   "companySearch_resultsShowingRange": "⁧⟦Šĥóŵíñğ {from}–{to} óƒ {count} çóɱþáñíéš⟧⁩",
   "companySearch_retryLabel": "⁧⟦Ŕéţŕý⟧⁩",
@@ -510,8 +500,6 @@
   "employerApplicants_cancelLabel": "⁧⟦Çáñçéĺ⟧⁩",
   "employerApplicants_columnLabel": "⁧⟦{stage} áþþĺíçáñţš⟧⁩",
   "employerApplicants_copyEmailLabel": "⁧⟦Çóþý éɱáíĺ áððŕéšš⟧⁩",
-  "employerApplicants_countMany": "⁧⟦{count} áþþĺíçáñţš⟧⁩",
-  "employerApplicants_countOne": "⁧⟦{count} áþþĺíçáñţ⟧⁩",
   "employerApplicants_coverNoteHeading": "⁧⟦Çóṽéŕ ñóţé⟧⁩",
   "employerApplicants_deleteStageBody": "⁧⟦Ţĥíš šţáğé íš ŕéɱóṽéð ƒŕóɱ ţĥé þíþéĺíñé. Ţĥíš çáñ'ţ ƀé úñðóñé.⟧⁩",
   "employerApplicants_deleteStageMenuLabel": "⁧⟦Ðéĺéţé šţáğé⟧⁩",
@@ -620,8 +608,6 @@
   "employerDelete_membersUnknownText": "⁧⟦Ţéáɱ ɱéɱƀéŕšĥíþ çóúĺð ñóţ ƀé ĺóáðéð. Ŕéĺóáð ƀéƒóŕé ðéĺéţíñğ ţĥíš çóɱþáñý šó ţĥé çóñšéɋúéñçéš çáñ ƀé çóñƒíŕɱéð.⟧⁩",
   "employerDelete_errorText": "⁧⟦Çóúĺð ñóţ ðéĺéţé ţĥíš çóɱþáñý. Ţŕý áğáíñ íñ á ɱóɱéñţ.⟧⁩",
   "employerDelete_heading": "⁧⟦Ðáñğéŕ žóñé⟧⁩",
-  "employerDelete_membersCountMany": "⁧⟦{count} óţĥéŕ ɱéɱƀéŕš⟧⁩",
-  "employerDelete_membersCountOne": "⁧⟦{count} óţĥéŕ ɱéɱƀéŕ⟧⁩",
   "employerDelete_notAdminText": "⁧⟦Óñĺý á çóɱþáñý áðɱíñ çáñ ðéĺéţé ţĥíš çóɱþáñý.⟧⁩",
   "employerDelete_submitLabel": "⁧⟦Ðéĺéţé çóɱþáñý⟧⁩",
   "employerDelete_warningText": "⁧⟦Þéŕɱáñéñţĺý ðéĺéţé ţĥíš çóɱþáñý.⟧⁩",
@@ -650,8 +636,6 @@
   "employerJob_statusPublished": "⁧⟦Þúƀĺíšĥéð⟧⁩",
   "employerJobs_actionsColumn": "⁧⟦Áçţíóñš⟧⁩",
   "employerJobs_actionsMenuLabel": "⁧⟦Áçţíóñš ƒóŕ {title}⟧⁩",
-  "employerJobs_activeJobsMany": "⁧⟦Ýóú ĥáṽé {count} áçţíṽé ĵóƀš.⟧⁩",
-  "employerJobs_activeJobsOne": "⁧⟦Ýóú ĥáṽé 1 áçţíṽé ĵóƀ.⟧⁩",
   "employerJobs_activeJobsZero": "⁧⟦Ýóú ĥáṽé ñó áçţíṽé ĵóƀš ýéţ.⟧⁩",
   "employerJobs_applicationsColumn": "⁧⟦Áþþĺíçáţíóñš⟧⁩",
   "employerJobs_applyClicksColumn": "⁧⟦Áþþĺý çĺíçķš⟧⁩",
@@ -668,8 +652,6 @@
   "employerJobs_viewsColumn": "⁧⟦Ṽíéŵš⟧⁩",
   "employerJobs_yourJobsHeading": "⁧⟦Ýóúŕ ĵóƀš⟧⁩",
   "employerLanding_enterpriseHeading": "⁧⟦Éñţéŕþŕíšé⟧⁩",
-  "employerLanding_featureActiveJobsMany": "⁧⟦{count} áçţíṽé ĵóƀš⟧⁩",
-  "employerLanding_featureActiveJobsOne": "⁧⟦{count} áçţíṽé ĵóƀ⟧⁩",
   "employerLanding_featureFeaturedSlots": "⁧⟦{count} ƒéáţúŕéð⟧⁩",
   "employerLanding_featureListingDuration": "⁧⟦{days}-ðáý ĺíšţíñğ⟧⁩",
   "employerLanding_featureMessages": "⁧⟦{count} ɱéššáğéš⟧⁩",
@@ -688,8 +670,6 @@
   "employerMembers_alreadyInvitedError": "⁧⟦Áñ íñṽíţé íš áĺŕéáðý þéñðíñğ ƒóŕ ţĥáţ éɱáíĺ.⟧⁩",
   "employerMembers_alreadyMemberError": "⁧⟦Ţĥáţ éɱáíĺ áĺŕéáðý ƀéĺóñğš ţó á ţéáɱ ɱéɱƀéŕ.⟧⁩",
   "employerMembers_companyHeading": "⁧⟦{company} Ţéáɱ Ṁéɱƀéŕš⟧⁩",
-  "employerMembers_countMany": "⁧⟦Ýóú ĥáṽé {count} ţéáɱ ɱéɱƀéŕš.⟧⁩",
-  "employerMembers_countOne": "⁧⟦Ýóú ĥáṽé 1 ţéáɱ ɱéɱƀéŕ.⟧⁩",
   "employerMembers_countZero": "⁧⟦Ýóú ĥáṽé ñó ţéáɱ ɱéɱƀéŕš ýéţ.⟧⁩",
   "employerMembers_emailColumn": "⁧⟦Éɱáíĺ⟧⁩",
   "employerMembers_emptyText": "⁧⟦Ñó ɱéɱƀéŕš ýéţ.⟧⁩",
@@ -937,8 +917,6 @@
   "jobSearch_queryEmptyText": "⁧⟦Ñó ĵóƀš ɱáţçĥ ţĥíš šéáŕçĥ. Ţŕý áñóţĥéŕ ķéýŵóŕð óŕ ĺóçáţíóñ.⟧⁩",
   "jobSearch_resetFiltersAction": "⁧⟦Ŕéšéţ ƒíĺţéŕš⟧⁩",
   "jobSearch_resetLabel": "⁧⟦Ŕéšéţ⟧⁩",
-  "jobSearch_resultsCountMany": "⁧⟦{count} ĵóƀš⟧⁩",
-  "jobSearch_resultsCountOne": "⁧⟦{count} ĵóƀ⟧⁩",
   "jobSearch_resultsRegionLabel": "⁧⟦Ĵóƀ ŕéšúĺţš⟧⁩",
   "jobSearch_resultsShowingRange": "⁧⟦Šĥóŵíñğ {from}–{to} óƒ {count} ĵóƀš⟧⁩",
   "jobSearch_retryLabel": "⁧⟦Ŕéţŕý⟧⁩",
@@ -1116,11 +1094,7 @@
   "planComposed_standardListing": "⁧⟦Á {days} ðáý šţáñðáŕð ĺíšţíñğ⟧⁩",
   "planComposed_standardName": "⁧⟦Ĵóƀ ĺíšţíñğ⟧⁩",
   "planFeature_featuredAuto": "⁧⟦Éṽéŕý þóšţ íš ƒéáţúŕéð⟧⁩",
-  "planFeature_featuredOne": "⁧⟦Íñçĺúðéš 1 ƒéáţúŕéð þóšţ⟧⁩",
-  "planFeature_featuredOther": "⁧⟦Íñçĺúðéš {count} ƒéáţúŕéð þóšţš⟧⁩",
   "planFeature_liveDays": "⁧⟦Ĺíṽé ƒóŕ {days} ðáýš⟧⁩",
-  "planFeature_maxActiveOne": "⁧⟦1 áçţíṽé ĵóƀ áţ á ţíɱé⟧⁩",
-  "planFeature_maxActiveOther": "⁧⟦Úþ ţó {count} áçţíṽé ĵóƀš⟧⁩",
   "planFeature_unlimitedActive": "⁧⟦Úñĺíɱíţéð áçţíṽé ĵóƀš⟧⁩",
   "plan_featuredListing_description": "⁧⟦Á 30 ðáý ƒéáţúŕéð ĺíšţíñğ — þíññéð ţó ţĥé ţóþ óƒ ţĥé ƀóáŕð áñð ĥíğĥĺíğĥţéð íñ ţĥé ŵééķĺý áĺéŕţ ðíğéšţ.⟧⁩",
   "plan_featuredListing_name": "⁧⟦Ƒéáţúŕéð ĺíšţíñğ⟧⁩",
@@ -1349,8 +1323,6 @@
   "salaryDetail_skillInPlaceMetaDescriptionEmpty": "⁧⟦{skill} šáĺáŕý ðáţá íñ {place}.⟧⁩",
   "salaryDetail_skillInPlaceMetaDescriptionWithData": "⁧⟦{skill} šáĺáŕíéš íñ {place}: {range}/ýéáŕ áçŕóšš {jobCount} ĵóƀš.⟧⁩",
   "salaryDetail_skillLocationsHeading": "⁧⟦{skill} šáĺáŕíéš ƀý ĺóçáţíóñ⟧⁩",
-  "salaryDetail_skillLocationsMetaDescriptionMany": "⁧⟦{skill} šáĺáŕíéš áçŕóšš {count} ĺóçáţíóñš.⟧⁩",
-  "salaryDetail_skillLocationsMetaDescriptionOne": "⁧⟦{skill} šáĺáŕíéš áçŕóšš {count} ĺóçáţíóñ.⟧⁩",
   "salaryDetail_skillLocationsMetaTitle": "⁧⟦{skill} šáĺáŕíéš ƀý ĺóçáţíóñ⟧⁩",
   "salaryDetail_skillMetaDescriptionEmpty": "⁧⟦{skill} šáĺáŕý ðáţá.⟧⁩",
   "salaryDetail_skillMetaDescriptionWithData": "⁧⟦{skill} šáĺáŕíéš: {range}/ýéáŕ áçŕóšš {jobCount} ĵóƀš.⟧⁩",
@@ -1363,8 +1335,6 @@
   "salaryDetail_titleInPlaceMetaDescriptionEmpty": "⁧⟦{title} šáĺáŕý ðáţá íñ {place}.⟧⁩",
   "salaryDetail_titleInPlaceMetaDescriptionWithData": "⁧⟦{title} šáĺáŕíéš íñ {place}: {range}/ýéáŕ áçŕóšš {jobCount} ĵóƀš.⟧⁩",
   "salaryDetail_titleLocationsHeading": "⁧⟦{title} šáĺáŕíéš ƀý ĺóçáţíóñ⟧⁩",
-  "salaryDetail_titleLocationsMetaDescriptionMany": "⁧⟦{title} šáĺáŕíéš áçŕóšš {count} ĺóçáţíóñš.⟧⁩",
-  "salaryDetail_titleLocationsMetaDescriptionOne": "⁧⟦{title} šáĺáŕíéš áçŕóšš {count} ĺóçáţíóñ.⟧⁩",
   "salaryDetail_titleLocationsMetaTitle": "⁧⟦{title} šáĺáŕíéš ƀý ĺóçáţíóñ⟧⁩",
   "salaryDetail_titleMetaDescriptionEmpty": "⁧⟦{title} šáĺáŕý ðáţá.⟧⁩",
   "salaryDetail_titleMetaDescriptionWithData": "⁧⟦{title} šáĺáŕíéš: {range}/ýéáŕ áçŕóšš {jobCount} ĵóƀš.⟧⁩",
@@ -1377,8 +1347,6 @@
   "salaryDetail_topTitles": "⁧⟦Ţóþ ţíţĺéš⟧⁩",
   "salaryFaq_averageAnswer": "⁧⟦Ţĥé áṽéŕáğé šáĺáŕý ƒóŕ {label} íš {range} þéŕ ýéáŕ, ƀášéð óñ {jobCountLabel} óñ ţĥíš ƀóáŕð ţĥáţ ðíšçĺóšé þáý.⟧⁩",
   "salaryFaq_averageQuestion": "⁧⟦Ŵĥáţ íš ţĥé áṽéŕáğé šáĺáŕý ƒóŕ {label}?⟧⁩",
-  "salaryFaq_jobCountMany": "⁧⟦{jobCount} ĵóƀ þóšţíñğš⟧⁩",
-  "salaryFaq_jobCountOne": "⁧⟦{jobCount} ĵóƀ þóšţíñğ⟧⁩",
   "salaryFaq_methodologyAnswer": "⁧⟦Ţĥéšé ƒíğúŕéš áŕé áğğŕéğáţéð ƒŕóɱ çúŕŕéñţ áñð ŕéçéñţ ĵóƀ þóšţíñğš óñ ţĥíš ƀóáŕð ţĥáţ ðíšçĺóšé þáý, ţĥéñ áṽéŕáğéð áçŕóšš ŕóĺéš. Ţĥéý áŕé éšţíɱáţéš, ñóţ ğúáŕáñţééš óƒ çóɱþéñšáţíóñ.⟧⁩",
   "salaryFaq_methodologyQuestion": "⁧⟦Ĥóŵ íš ţĥé šáĺáŕý ƒíğúŕé ƒóŕ {label} çáĺçúĺáţéð?⟧⁩",
   "salaryFrame_companyCategorySalariesTitle": "⁧⟦{company} {category} Šáĺáŕíéš ({range}/ýŕ)⟧⁩",
@@ -1563,12 +1531,248 @@
   "ui_sidebarDescription": "⁧⟦Ðíšþĺáýš ţĥé ɱóƀíĺé šíðéƀáŕ.⟧⁩",
   "ui_sidebarTitle": "⁧⟦Šíðéƀáŕ⟧⁩",
   "ui_sidebarToggleLabel": "⁧⟦Ţóğğĺé šíðéƀáŕ⟧⁩",
-  "accountRecommended_countOneText": "⁧⟦1 ĵóƀ ɱáţçĥéš ýóúŕ þŕóƒíĺé áñð þŕéƒéŕéñçéš.⟧⁩",
-  "accountRecommended_countOtherText": "⁧⟦{count} ĵóƀš ɱáţçĥ ýóúŕ þŕóƒíĺé áñð þŕéƒéŕéñçéš.⟧⁩",
   "accountRecommended_heading": "⁧⟦{name}'š ɱáţçĥéš⟧⁩",
   "accountRecommended_headingFallback": "⁧⟦Ýóúŕ ɱáţçĥéš⟧⁩",
   "accountRecommended_needsProfileTitle": "⁧⟦Úþĺóáð ýóúŕ ŕéšúɱé⟧⁩",
   "accountRecommended_noneNowText": "⁧⟦Ŵé ðó ñóţ ĥáṽé ɱáţçĥéš ƒóŕ ýóú áţ ţĥé ɱóɱéñţ. Ɓŕóŵšé óþéñ ŕóĺéš íñšţéáð.⟧⁩",
   "accountRecommended_noneNowTitle": "⁧⟦Ñó ɱáţçĥéš ŕíğĥţ ñóŵ⟧⁩",
-  "accountShell_recommendedJobsNav": "⁧⟦Ĵóƀ ɱáţçĥéš⟧⁩"
+  "accountShell_recommendedJobsNav": "⁧⟦Ĵóƀ ɱáţçĥéš⟧⁩",
+  "accountSaved_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦Ýóú ĥáṽé šáṽéð 1 ĵóƀ.⟧⁩",
+        "countPlural=*": "⁧⟦Ýóú ĥáṽé šáṽéð {countLabel} ĵóƀš.⟧⁩"
+      }
+    }
+  ],
+  "companyDetail_openJobsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} óþéñ ĵóƀ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} óþéñ ĵóƀš⟧⁩"
+      }
+    }
+  ],
+  "companyDetail_openJobsHeadingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} Óþéñ ĵóƀ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} Óþéñ ĵóƀš⟧⁩"
+      }
+    }
+  ],
+  "companyDetail_viewAllJobsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦Ṽíéŵ áĺĺ {countLabel} ĵóƀ⟧⁩",
+        "countPlural=*": "⁧⟦Ṽíéŵ áĺĺ {countLabel} ĵóƀš⟧⁩"
+      }
+    }
+  ],
+  "companySearch_resultsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} çóɱþáñý⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} çóɱþáñíéš⟧⁩"
+      }
+    }
+  ],
+  "employerApplicants_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} áþþĺíçáñţ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} áþþĺíçáñţš⟧⁩"
+      }
+    }
+  ],
+  "employerDelete_membersCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} óţĥéŕ ɱéɱƀéŕ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} óţĥéŕ ɱéɱƀéŕš⟧⁩"
+      }
+    }
+  ],
+  "employerJobs_activeJobs": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦Ýóú ĥáṽé 1 áçţíṽé ĵóƀ.⟧⁩",
+        "countPlural=*": "⁧⟦Ýóú ĥáṽé {countLabel} áçţíṽé ĵóƀš.⟧⁩"
+      }
+    }
+  ],
+  "employerLanding_featureActiveJobs": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} áçţíṽé ĵóƀ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} áçţíṽé ĵóƀš⟧⁩"
+      }
+    }
+  ],
+  "employerMembers_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦Ýóú ĥáṽé 1 ţéáɱ ɱéɱƀéŕ.⟧⁩",
+        "countPlural=*": "⁧⟦Ýóú ĥáṽé {countLabel} ţéáɱ ɱéɱƀéŕš.⟧⁩"
+      }
+    }
+  ],
+  "jobSearch_resultsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} ĵóƀ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} ĵóƀš⟧⁩"
+      }
+    }
+  ],
+  "planFeature_featured": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦Íñçĺúðéš 1 ƒéáţúŕéð þóšţ⟧⁩",
+        "countPlural=*": "⁧⟦Íñçĺúðéš {countLabel} ƒéáţúŕéð þóšţš⟧⁩"
+      }
+    }
+  ],
+  "planFeature_maxActive": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦1 áçţíṽé ĵóƀ áţ á ţíɱé⟧⁩",
+        "countPlural=*": "⁧⟦Úþ ţó {countLabel} áçţíṽé ĵóƀš⟧⁩"
+      }
+    }
+  ],
+  "salaryDetail_skillLocationsMetaDescription": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{skill} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñ.⟧⁩",
+        "countPlural=*": "⁧⟦{skill} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñš.⟧⁩"
+      }
+    }
+  ],
+  "salaryDetail_titleLocationsMetaDescription": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{title} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñ.⟧⁩",
+        "countPlural=*": "⁧⟦{title} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñš.⟧⁩"
+      }
+    }
+  ],
+  "salaryFaq_jobCount": [
+    {
+      "declarations": [
+        "input jobCount",
+        "input jobCountLabel",
+        "local jobCountPlural = jobCount: plural"
+      ],
+      "selectors": ["jobCountPlural"],
+      "match": {
+        "jobCountPlural=one": "⁧⟦{jobCountLabel} ĵóƀ þóšţíñğ⟧⁩",
+        "jobCountPlural=*": "⁧⟦{jobCountLabel} ĵóƀ þóšţíñğš⟧⁩"
+      }
+    }
+  ],
+  "accountRecommended_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦1 ĵóƀ ɱáţçĥéš ýóúŕ þŕóƒíĺé áñð þŕéƒéŕéñçéš.⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} ĵóƀš ɱáţçĥ ýóúŕ þŕóƒíĺé áñð þŕéƒéŕéñçéš.⟧⁩"
+      }
+    }
+  ]
 }

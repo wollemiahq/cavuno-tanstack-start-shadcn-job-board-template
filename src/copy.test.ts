@@ -42,8 +42,10 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
     expect(boardCopy('en').jobSearch).toMatchObject({
       contextualResultsHeading: '{{count}} {{heading}}',
       gatedCountText: '{{count}} more roles are available with full access.',
-      resultsCountMany: '{{count}} jobs',
-      resultsCountOne: '{{count}} job',
+      // Was resultsCountOne/Many. The catalog now holds one plural message
+      // whose category is chosen per locale, so the adapter exposes one
+      // template — the general form — matching the catalog key 1:1.
+      resultsCount: '{{count}} jobs',
       resultsShowingRange: 'Showing {{from}}–{{to}} of {{count}} jobs',
       senioritySelectedCount: '{{count}} selected',
     });

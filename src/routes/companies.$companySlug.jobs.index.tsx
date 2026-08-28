@@ -97,13 +97,10 @@ function CompanyJobsPage() {
         ).toLocaleString(locale),
         count: count.toLocaleString(locale),
       })
-    : new Intl.PluralRules(locale).select(count) === 'one'
-      ? m.jobSearch_resultsCountOne({
-          count: count.toLocaleString(locale),
-        })
-      : m.jobSearch_resultsCountMany({
-          count: count.toLocaleString(locale),
-        });
+    : m.jobSearch_resultsCount({
+        count,
+        countLabel: count.toLocaleString(locale),
+      });
 
   return (
     <CompanySectionShell

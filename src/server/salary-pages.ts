@@ -660,16 +660,11 @@ export const getTitleLocationsPage = createServerFn({ method: 'GET' })
           },
           {
             name: 'description',
-            content:
-              payload.locations.length === 1
-                ? m.salaryDetail_titleLocationsMetaDescriptionOne({
-                    title: payload.categoryName,
-                    count: payload.locations.length,
-                  })
-                : m.salaryDetail_titleLocationsMetaDescriptionMany({
-                    title: payload.categoryName,
-                    count: payload.locations.length,
-                  }),
+            content: m.salaryDetail_titleLocationsMetaDescription({
+              title: payload.categoryName,
+              count: payload.locations.length,
+              countLabel: String(payload.locations.length),
+            }),
           },
         ],
         links: [
@@ -744,16 +739,11 @@ export const getSkillLocationsPage = createServerFn({ method: 'GET' })
           },
           {
             name: 'description',
-            content:
-              payload.locations.length === 1
-                ? m.salaryDetail_skillLocationsMetaDescriptionOne({
-                    skill: payload.skillName,
-                    count: payload.locations.length,
-                  })
-                : m.salaryDetail_skillLocationsMetaDescriptionMany({
-                    skill: payload.skillName,
-                    count: payload.locations.length,
-                  }),
+            content: m.salaryDetail_skillLocationsMetaDescription({
+              skill: payload.skillName,
+              count: payload.locations.length,
+              countLabel: String(payload.locations.length),
+            }),
           },
         ],
         links: [

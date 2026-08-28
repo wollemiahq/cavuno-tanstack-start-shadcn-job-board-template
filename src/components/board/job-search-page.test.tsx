@@ -109,7 +109,7 @@ describe('JobSearchPage — search results pattern', () => {
     const filterBar = container.querySelector("[data-slot='jobs-filter-bar']");
     const heading = screen.getByRole('heading', {
       level: 1,
-      name: m.jobSearch_resultsCountMany({ count: '12' }),
+      name: m.jobSearch_resultsCount({ count: 12, countLabel: '12' }),
     });
     expect(filterBar).toBeInTheDocument();
     if (!filterBar) throw new Error('Expected the Jobs filter bar');
@@ -170,7 +170,7 @@ describe('JobSearchPage — search results pattern', () => {
     expect(
       await screen.findByRole('heading', {
         level: 1,
-        name: m.jobSearch_resultsCountMany({ count: '0' }),
+        name: m.jobSearch_resultsCount({ count: 0, countLabel: '0' }),
       }),
     ).toBeVisible();
     expect(

@@ -9,10 +9,10 @@ export function getCompanySearchLabels(): CompanySearchLabels {
     markets: m.companySearch_marketLabel(),
     openJobs: (count) => {
       const locale = getLocale();
-      const formatted = count.toLocaleString(locale);
-      return new Intl.PluralRules(locale).select(count) === 'one'
-        ? m.companyDetail_openJobsCountOne({ count: formatted })
-        : m.companyDetail_openJobsCountMany({ count: formatted });
+      return m.companyDetail_openJobsCount({
+        count,
+        countLabel: count.toLocaleString(locale),
+      });
     },
     viewCompany: m.companySearch_viewCompanyLabel(),
     viewJobs: m.companySearch_viewJobsLabel(),

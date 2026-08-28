@@ -44,8 +44,6 @@
   "accountHome_unsaveLabel": "Unsave",
   "accountHome_unverifiedBadge": "Unverified — check your email",
   "accountHome_verifiedBadge": "Verified",
-  "accountSaved_countOneText": "You have saved 1 job.",
-  "accountSaved_countOtherText": "You have saved {count} jobs.",
   "accountSaved_savedLabel": "Saved",
   "accountShell_applicationsNav": "Applications",
   "accountShell_candidateNavigationLabel": "Candidate account",
@@ -390,15 +388,9 @@
   "companyDetail_metaDescriptionWithSummary": "{summary} {count} open roles on {boardName}.",
   "companyDetail_noOpenJobsText": "No open jobs right now.",
   "companyDetail_notFoundText": "Company not found.",
-  "companyDetail_openJobsCountMany": "{count} open jobs",
-  "companyDetail_openJobsCountOne": "{count} open job",
   "companyDetail_openJobsHeading": "Open jobs",
-  "companyDetail_openJobsHeadingCountMany": "{count} Open jobs",
-  "companyDetail_openJobsHeadingCountOne": "{count} Open job",
   "companyDetail_salariesSummaryHeading": "Salaries",
   "companyDetail_similarCompaniesHeading": "Similar companies",
-  "companyDetail_viewAllJobsCountMany": "View all {count} jobs",
-  "companyDetail_viewAllJobsCountOne": "View all {count} job",
   "companyDetail_viewOpenJobsLabel": "View open jobs",
   "companyDetail_viewSalariesLink": "View salaries",
   "companyJobDetail_defaultAlertDescription": "New matching roles, straight to your inbox.",
@@ -435,8 +427,6 @@
   "companySearch_marketLabel": "Market",
   "companySearch_noDescriptionText": "No company description is available yet.",
   "companySearch_queryLabel": "Company name",
-  "companySearch_resultsCountMany": "{count} companies",
-  "companySearch_resultsCountOne": "{count} company",
   "companySearch_resultsRegionLabel": "Company results",
   "companySearch_resultsShowingRange": "Showing {from}–{to} of {count} companies",
   "companySearch_retryLabel": "Retry",
@@ -510,8 +500,6 @@
   "employerApplicants_cancelLabel": "Cancel",
   "employerApplicants_columnLabel": "{stage} applicants",
   "employerApplicants_copyEmailLabel": "Copy email address",
-  "employerApplicants_countMany": "{count} applicants",
-  "employerApplicants_countOne": "{count} applicant",
   "employerApplicants_coverNoteHeading": "Cover note",
   "employerApplicants_deleteStageBody": "This stage is removed from the pipeline. This can't be undone.",
   "employerApplicants_deleteStageMenuLabel": "Delete stage",
@@ -620,8 +608,6 @@
   "employerDelete_membersUnknownText": "Team membership could not be loaded. Reload before deleting this company so the consequences can be confirmed.",
   "employerDelete_errorText": "Could not delete this company. Try again in a moment.",
   "employerDelete_heading": "Danger zone",
-  "employerDelete_membersCountMany": "{count} other members",
-  "employerDelete_membersCountOne": "{count} other member",
   "employerDelete_notAdminText": "Only a company admin can delete this company.",
   "employerDelete_submitLabel": "Delete company",
   "employerDelete_warningText": "Permanently delete this company.",
@@ -650,8 +636,6 @@
   "employerJob_statusPublished": "Published",
   "employerJobs_actionsColumn": "Actions",
   "employerJobs_actionsMenuLabel": "Actions for {title}",
-  "employerJobs_activeJobsMany": "You have {count} active jobs.",
-  "employerJobs_activeJobsOne": "You have 1 active job.",
   "employerJobs_activeJobsZero": "You have no active jobs yet.",
   "employerJobs_applicationsColumn": "Applications",
   "employerJobs_applyClicksColumn": "Apply clicks",
@@ -668,8 +652,6 @@
   "employerJobs_viewsColumn": "Views",
   "employerJobs_yourJobsHeading": "Your jobs",
   "employerLanding_enterpriseHeading": "Enterprise",
-  "employerLanding_featureActiveJobsMany": "{count} active jobs",
-  "employerLanding_featureActiveJobsOne": "{count} active job",
   "employerLanding_featureFeaturedSlots": "{count} featured",
   "employerLanding_featureListingDuration": "{days}-day listing",
   "employerLanding_featureMessages": "{count} messages",
@@ -688,8 +670,6 @@
   "employerMembers_alreadyInvitedError": "An invite is already pending for that email.",
   "employerMembers_alreadyMemberError": "That email already belongs to a team member.",
   "employerMembers_companyHeading": "{company} Team Members",
-  "employerMembers_countMany": "You have {count} team members.",
-  "employerMembers_countOne": "You have 1 team member.",
   "employerMembers_countZero": "You have no team members yet.",
   "employerMembers_emailColumn": "Email",
   "employerMembers_emptyText": "No members yet.",
@@ -937,8 +917,6 @@
   "jobSearch_queryEmptyText": "No jobs match this search. Try another keyword or location.",
   "jobSearch_resetFiltersAction": "Reset filters",
   "jobSearch_resetLabel": "Reset",
-  "jobSearch_resultsCountMany": "{count} jobs",
-  "jobSearch_resultsCountOne": "{count} job",
   "jobSearch_resultsRegionLabel": "Job results",
   "jobSearch_resultsShowingRange": "Showing {from}–{to} of {count} jobs",
   "jobSearch_retryLabel": "Retry",
@@ -1116,11 +1094,7 @@
   "planComposed_standardListing": "A {days} day standard listing",
   "planComposed_standardName": "Job listing",
   "planFeature_featuredAuto": "Every post is featured",
-  "planFeature_featuredOne": "Includes 1 featured post",
-  "planFeature_featuredOther": "Includes {count} featured posts",
   "planFeature_liveDays": "Live for {days} days",
-  "planFeature_maxActiveOne": "1 active job at a time",
-  "planFeature_maxActiveOther": "Up to {count} active jobs",
   "planFeature_unlimitedActive": "Unlimited active jobs",
   "plan_featuredListing_description": "A 30 day featured listing — pinned to the top of the board and highlighted in the weekly alert digest.",
   "plan_featuredListing_name": "Featured listing",
@@ -1349,8 +1323,6 @@
   "salaryDetail_skillInPlaceMetaDescriptionEmpty": "{skill} salary data in {place}.",
   "salaryDetail_skillInPlaceMetaDescriptionWithData": "{skill} salaries in {place}: {range}/year across {jobCount} jobs.",
   "salaryDetail_skillLocationsHeading": "{skill} salaries by location",
-  "salaryDetail_skillLocationsMetaDescriptionMany": "{skill} salaries across {count} locations.",
-  "salaryDetail_skillLocationsMetaDescriptionOne": "{skill} salaries across {count} location.",
   "salaryDetail_skillLocationsMetaTitle": "{skill} salaries by location",
   "salaryDetail_skillMetaDescriptionEmpty": "{skill} salary data.",
   "salaryDetail_skillMetaDescriptionWithData": "{skill} salaries: {range}/year across {jobCount} jobs.",
@@ -1363,8 +1335,6 @@
   "salaryDetail_titleInPlaceMetaDescriptionEmpty": "{title} salary data in {place}.",
   "salaryDetail_titleInPlaceMetaDescriptionWithData": "{title} salaries in {place}: {range}/year across {jobCount} jobs.",
   "salaryDetail_titleLocationsHeading": "{title} salaries by location",
-  "salaryDetail_titleLocationsMetaDescriptionMany": "{title} salaries across {count} locations.",
-  "salaryDetail_titleLocationsMetaDescriptionOne": "{title} salaries across {count} location.",
   "salaryDetail_titleLocationsMetaTitle": "{title} salaries by location",
   "salaryDetail_titleMetaDescriptionEmpty": "{title} salary data.",
   "salaryDetail_titleMetaDescriptionWithData": "{title} salaries: {range}/year across {jobCount} jobs.",
@@ -1377,8 +1347,6 @@
   "salaryDetail_topTitles": "Top titles",
   "salaryFaq_averageAnswer": "The average salary for {label} is {range} per year, based on {jobCountLabel} on this board that disclose pay.",
   "salaryFaq_averageQuestion": "What is the average salary for {label}?",
-  "salaryFaq_jobCountMany": "{jobCount} job postings",
-  "salaryFaq_jobCountOne": "{jobCount} job posting",
   "salaryFaq_methodologyAnswer": "These figures are aggregated from current and recent job postings on this board that disclose pay, then averaged across roles. They are estimates, not guarantees of compensation.",
   "salaryFaq_methodologyQuestion": "How is the salary figure for {label} calculated?",
   "salaryFrame_companyCategorySalariesTitle": "{company} {category} Salaries ({range}/yr)",
@@ -1563,12 +1531,248 @@
   "ui_sidebarDescription": "Displays the mobile sidebar.",
   "ui_sidebarTitle": "Sidebar",
   "ui_sidebarToggleLabel": "Toggle sidebar",
-  "accountRecommended_countOneText": "1 job matches your profile and preferences.",
-  "accountRecommended_countOtherText": "{count} jobs match your profile and preferences.",
   "accountRecommended_heading": "{name}'s matches",
   "accountRecommended_headingFallback": "Your matches",
   "accountRecommended_needsProfileTitle": "Upload your resume",
   "accountRecommended_noneNowText": "We do not have matches for you at the moment. Browse open roles instead.",
   "accountRecommended_noneNowTitle": "No matches right now",
-  "accountShell_recommendedJobsNav": "Job matches"
+  "accountShell_recommendedJobsNav": "Job matches",
+  "accountSaved_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "You have saved 1 job.",
+        "countPlural=*": "You have saved {countLabel} jobs."
+      }
+    }
+  ],
+  "companyDetail_openJobsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} open job",
+        "countPlural=*": "{countLabel} open jobs"
+      }
+    }
+  ],
+  "companyDetail_openJobsHeadingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Open job",
+        "countPlural=*": "{countLabel} Open jobs"
+      }
+    }
+  ],
+  "companyDetail_viewAllJobsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "View all {countLabel} job",
+        "countPlural=*": "View all {countLabel} jobs"
+      }
+    }
+  ],
+  "companySearch_resultsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} company",
+        "countPlural=*": "{countLabel} companies"
+      }
+    }
+  ],
+  "employerApplicants_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} applicant",
+        "countPlural=*": "{countLabel} applicants"
+      }
+    }
+  ],
+  "employerDelete_membersCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} other member",
+        "countPlural=*": "{countLabel} other members"
+      }
+    }
+  ],
+  "employerJobs_activeJobs": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "You have 1 active job.",
+        "countPlural=*": "You have {countLabel} active jobs."
+      }
+    }
+  ],
+  "employerLanding_featureActiveJobs": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} active job",
+        "countPlural=*": "{countLabel} active jobs"
+      }
+    }
+  ],
+  "employerMembers_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "You have 1 team member.",
+        "countPlural=*": "You have {countLabel} team members."
+      }
+    }
+  ],
+  "jobSearch_resultsCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} job",
+        "countPlural=*": "{countLabel} jobs"
+      }
+    }
+  ],
+  "planFeature_featured": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Includes 1 featured post",
+        "countPlural=*": "Includes {countLabel} featured posts"
+      }
+    }
+  ],
+  "planFeature_maxActive": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 active job at a time",
+        "countPlural=*": "Up to {countLabel} active jobs"
+      }
+    }
+  ],
+  "salaryDetail_skillLocationsMetaDescription": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{skill} salaries across {countLabel} location.",
+        "countPlural=*": "{skill} salaries across {countLabel} locations."
+      }
+    }
+  ],
+  "salaryDetail_titleLocationsMetaDescription": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{title} salaries across {countLabel} location.",
+        "countPlural=*": "{title} salaries across {countLabel} locations."
+      }
+    }
+  ],
+  "salaryFaq_jobCount": [
+    {
+      "declarations": [
+        "input jobCount",
+        "input jobCountLabel",
+        "local jobCountPlural = jobCount: plural"
+      ],
+      "selectors": ["jobCountPlural"],
+      "match": {
+        "jobCountPlural=one": "{jobCountLabel} job posting",
+        "jobCountPlural=*": "{jobCountLabel} job postings"
+      }
+    }
+  ],
+  "accountRecommended_count": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 job matches your profile and preferences.",
+        "countPlural=*": "{countLabel} jobs match your profile and preferences."
+      }
+    }
+  ]
 }

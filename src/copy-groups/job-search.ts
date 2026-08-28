@@ -30,8 +30,14 @@ export function jobSearchCopy() {
     queryEmptyText: m.jobSearch_queryEmptyText(),
     resetFiltersAction: m.jobSearch_resetFiltersAction(),
     resetLabel: m.jobSearch_resetLabel(),
-    resultsCountMany: m.jobSearch_resultsCountMany({ count: '{{count}}' }),
-    resultsCountOne: m.jobSearch_resultsCountOne({ count: '{{count}}' }),
+    // One field per catalog key (the adapter's contract). The plural category
+    // is chosen inside the message against the active locale, so this exposes
+    // the general form; the real call sites pass the actual number and get the
+    // right category, including languages with more than two forms.
+    resultsCount: m.jobSearch_resultsCount({
+      count: 2,
+      countLabel: '{{count}}',
+    }),
     resultsRegionLabel: m.jobSearch_resultsRegionLabel(),
     resultsShowingRange: m.jobSearch_resultsShowingRange({
       from: '{{from}}',

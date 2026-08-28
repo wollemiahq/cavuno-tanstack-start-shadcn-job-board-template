@@ -86,14 +86,10 @@ export function CompanySearchPage({
     onPush: onSelectedCompanyPush,
   });
   const locale = getLocale();
-  const resultCountLabel =
-    new Intl.PluralRules(locale).select(count) === 'one'
-      ? m.companySearch_resultsCountOne({
-          count: count.toLocaleString(locale),
-        })
-      : m.companySearch_resultsCountMany({
-          count: count.toLocaleString(locale),
-        });
+  const resultCountLabel = m.companySearch_resultsCount({
+    count,
+    countLabel: count.toLocaleString(locale),
+  });
   // Both browse and free-text search are offset-paginated with a total `count`,
   // so the description line always renders the exact "Showing X–Y of N" range —
   // the same honest range as the jobs results header.

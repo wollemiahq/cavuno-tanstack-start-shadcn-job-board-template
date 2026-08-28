@@ -17,10 +17,12 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 
 function jobCountLabel(jobCount: number): string {
-  const category = new Intl.PluralRules(getLocale()).select(jobCount);
-  return category === 'one'
-    ? m.salaryFaq_jobCountOne({ jobCount })
-    : m.salaryFaq_jobCountMany({ jobCount });
+  // Plural category is selected inside the message against the active locale,
+  // so languages with more than two forms (Polish: one/few/many) are correct.
+  return m.salaryFaq_jobCount({
+    jobCount,
+    jobCountLabel: jobCount.toLocaleString(getLocale()),
+  });
 }
 
 /**

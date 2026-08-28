@@ -48,13 +48,10 @@ export function JobsResultsBar({
             count: totalCount.toLocaleString(locale),
             heading,
           })
-        : new Intl.PluralRules(locale).select(totalCount) === 'one'
-          ? m.jobSearch_resultsCountOne({
-              count: totalCount.toLocaleString(locale),
-            })
-          : m.jobSearch_resultsCountMany({
-              count: totalCount.toLocaleString(locale),
-            })
+        : m.jobSearch_resultsCount({
+            count: totalCount,
+            countLabel: totalCount.toLocaleString(locale),
+          })
       : (heading ?? jobSearchCopy().headingJobs);
   const rangeLabel = showRange
     ? m.jobSearch_resultsShowingRange({

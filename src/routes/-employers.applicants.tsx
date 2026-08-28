@@ -107,13 +107,10 @@ export function ApplicantsPageView({
             </h1>
             <p className="text-muted-foreground text-sm">
               {employerJobStatusLabel(pipeline.job.status)} ·{' '}
-              {pipeline.applicants.length === 1
-                ? m.employerApplicants_countOne({
-                    count: pipeline.applicants.length,
-                  })
-                : m.employerApplicants_countMany({
-                    count: pipeline.applicants.length,
-                  })}
+              {m.employerApplicants_count({
+                count: pipeline.applicants.length,
+                countLabel: String(pipeline.applicants.length),
+              })}
             </p>
           </header>
 
