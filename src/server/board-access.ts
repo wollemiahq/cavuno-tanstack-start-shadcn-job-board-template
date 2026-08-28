@@ -5,7 +5,7 @@ import { isBoardApiError } from '@cavuno/board';
  * gated read's wall error into the /password redirect.
  */
 import { redirect } from '@tanstack/react-router';
-import { createServerFn } from '@tanstack/react-start';
+import { createServerFn, createServerOnlyFn } from '@tanstack/react-start';
 import { setResponseHeader } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
@@ -85,14 +85,22 @@ export interface GatedReadEffects {
  * reports a signed-out viewer both because the cookie is now gone and because
  * `getSessionUser` swallows the 401 — so there is no bounce back and no loop.
  */
+/**
+ * Server-only: dropping the cookie reaches `.server` modules. `gatedRead` is a
+ * plain export rather than a `createServerFn` handler — which the Start plugin
+ * strips from the client graph — and `src/routes/password.tsx` imports this
+ * module for `verifyBoardPassword`, so an unguarded call would drag
+ * `data-source.server` into the browser bundle and fail import-protection.
+ */
+const clearBoardSession = createServerOnlyFn(() => {
+  setResponseHeader('Set-Cookie', clearSessionForSource(getDataSource()));
+});
+
 export async function gatedRead<T>(
   context: BoardAccessContext,
   read: (headers: Record<string, string>) => Promise<T>,
 ): Promise<T> {
-  return gatedReadUsing(context, read, {
-    clearSession: () =>
-      setResponseHeader('Set-Cookie', clearSessionForSource(getDataSource())),
-  });
+  return gatedReadUsing(context, read, { clearSession: clearBoardSession });
 }
 
 /** Dependency-explicit form, so the recovery paths are unit-testable. */
