@@ -91,4 +91,60 @@ export const cookiePolicyContent = {
       );
     },
   },
+  es: {
+    title: 'Política de cookies',
+    description:
+      'Política de cookies de ejemplo. Sustituye esta descripción y este contenido antes del lanzamiento.',
+    Body: function CookiePolicyBodyEs() {
+      return (
+        <>
+          <LegalPlaceholderCallout />
+          <h2>Qué debe cubrir esta página</h2>
+          <p>
+            Sustituye esta sección por tu política de cookies tras la revisión
+            legal. No dejes la plantilla en producción.
+          </p>
+          <h2>Qué documentar</h2>
+          <p>
+            Normalmente se indican las cookies o tecnologías similares que usa
+            el sitio, su finalidad y cómo cambiar las preferencias. Redacta esos
+            datos para tu configuración: esta plantilla no los define.
+          </p>
+          <h2>Cómo contactarnos</h2>
+          <p>
+            Sustituye esta sección por el canal de contacto para consultas sobre
+            cookies.
+          </p>
+        </>
+      );
+    },
+  },
+  pl: {
+    title: 'Polityka cookies',
+    description:
+      'Przykładowa polityka cookies. Zastąp ten opis i treść przed uruchomieniem.',
+    Body: function CookiePolicyBodyPl() {
+      return (
+        <>
+          <LegalPlaceholderCallout />
+          <h2>Co powinna zawierać ta strona</h2>
+          <p>
+            Zastąp tę sekcję swoją polityką cookies po weryfikacji prawnej. Nie
+            zostawiaj szablonu w wersji produkcyjnej.
+          </p>
+          <h2>Co udokumentować</h2>
+          <p>
+            Zwykle podaje się, jakich plików cookie lub podobnych technologii
+            używa serwis, w jakim celu oraz jak zmienić preferencje. Opisz te
+            fakty dla swojej konfiguracji — szablon ich nie określa.
+          </p>
+          <h2>Jak się z nami skontaktować</h2>
+          <p>
+            Zastąp tę sekcję kanałem kontaktu w sprawach dotyczących plików
+            cookie.
+          </p>
+        </>
+      );
+    },
+  },
 } satisfies Record<LegalLocale, LegalPageContent>;

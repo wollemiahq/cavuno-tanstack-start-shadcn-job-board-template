@@ -14,8 +14,11 @@ import {
   getRootSessionShellData,
   resolveRootHasAccessGrant,
 } from '../server/root-shell';
+import { EMPTY_GRANT, type TalentAccessGrant } from '../server/talent-access';
 
 import type { BoardUser, CompanyMembership } from '@cavuno/board';
+
+const EMPTY_TALENT_ACCESS: TalentAccessGrant = EMPTY_GRANT;
 
 type RootPreview = Awaited<
   ReturnType<typeof getRootSessionShellData>
@@ -38,6 +41,7 @@ export type RootSessionValue = {
   user: BoardUser | null;
   employerCompanies: CompanyMembership[] | null;
   hasAccessGrant: boolean;
+  talentAccess: TalentAccessGrant;
   preview:
     | typeof EMPTY_ROOT_PREVIEW
     | Awaited<ReturnType<typeof getRootSessionShellData>>['preview'];
@@ -53,6 +57,7 @@ const RootSessionContext = createContext<RootSessionContextValue>({
   user: null,
   employerCompanies: null,
   hasAccessGrant: false,
+  talentAccess: EMPTY_TALENT_ACCESS,
   preview: EMPTY_ROOT_PREVIEW,
   ready: false,
   clearSession: () => undefined,
@@ -73,6 +78,7 @@ export function RootSessionProvider({
     user: null,
     employerCompanies: null,
     hasAccessGrant: false,
+    talentAccess: EMPTY_TALENT_ACCESS,
     preview: EMPTY_ROOT_PREVIEW,
     ready: false,
   });
@@ -89,6 +95,7 @@ export function RootSessionProvider({
             candidatePaywall,
             data.hasGrant,
           ),
+          talentAccess: data.talentAccess,
           preview: data.preview,
           ready: true,
         });
@@ -108,6 +115,7 @@ export function RootSessionProvider({
       user: null,
       employerCompanies: null,
       hasAccessGrant: false,
+      talentAccess: EMPTY_TALENT_ACCESS,
     }));
   }, []);
   const value = useMemo(

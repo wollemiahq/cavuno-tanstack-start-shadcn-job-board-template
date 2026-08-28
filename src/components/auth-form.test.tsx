@@ -19,8 +19,9 @@ import {
   fireEvent,
   render as renderUi,
   screen,
+  waitFor,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthCard, AuthDivider, Field, FormError } from './auth-form';
 import { RegistrationPage, RoleSelector } from './registration-page';
@@ -242,6 +243,40 @@ describe('RegistrationPage', () => {
     expect(
       screen.getByRole('heading', { name: 'Check your email' }),
     ).toBeInTheDocument();
+  });
+
+  it('auto-redirects to successHref after registration succeeds', async () => {
+    const assign = vi.fn();
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { assign },
+    });
+    await render(
+      <RegistrationPage
+        title="Create your account"
+        supportingText="Join the board."
+        copy={copy}
+        successHref="/auth/verify-email-required?cavuno_auth=sign_up"
+        onSubmit={async () => ({ ok: true })}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Name'), {
+      target: { value: 'Alex Morgan' },
+    });
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'alex@example.com' },
+    });
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'correct-horse' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+
+    await waitFor(() =>
+      expect(assign).toHaveBeenCalledWith(
+        '/auth/verify-email-required?cavuno_auth=sign_up',
+      ),
+    );
   });
 
   it('keeps the pending Base UI submit in the tab order', async () => {

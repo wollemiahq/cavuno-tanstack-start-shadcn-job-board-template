@@ -388,6 +388,27 @@ Props:
 - `avatarUrl: string | null`
 - `displayName: string | null`
 
+### BoardAuthConversionTracker — `src/components/board-auth-conversion-tracker.tsx`
+
+Parse `cavuno_auth*` query params on any landing page, fire the matching
+conversion, then strip the params with `history.replaceState`.
+
+### BoardConversionAnalyticsProvider — `src/components/board-conversion-analytics.tsx`
+
+Props:
+
+- `analytics: BoardConversionAnalyticsConfig`
+- `boardSlug: string`
+- `children: ReactNode`
+
+### BoardJobAlertConversionTracker — `src/components/board-job-alert-conversion-tracker.tsx`
+
+Fire `job_alert_subscribe` once when double opt-in confirms a new alert.
+
+Props:
+
+- `status: "confirmed" | "already_confirmed" | "expired" | "not_found"`
+
 ### AlertSignupForm — `src/components/board/alert-signup-form.tsx`
 
 Props:
@@ -408,11 +429,13 @@ Props:
 - `applicationState?: "not-requested" | "applied" | "not-applied" | "unknown" | undefined`
 - `applicationUrl: string | null`
 - `applyAction?: PublicApplyAction | null | undefined`
+- `companySlug: string`
 - `dependencies?: ApplyButtonDependencies | undefined`
+- `jobId: string`
 - `jobSlug: string | null`
 - `language: string`
 - `nativeApplications?: boolean | undefined`
-- `onApply: (jobSlug: string, approvalReceipt?: string | undefined) => Promise<void>`
+- `onApply: (jobSlug: string, approvalReceipt?: string | undefined) => Promise<void | { id: string; }>`
 - `onPrepareApply: (jobSlug: string) => Promise<NativeApplyPrepareResult>`
 - `onRetryApplicationState?: (() => void) | undefined`
 - `returnTo: string`
@@ -706,8 +729,9 @@ Props:
 - `onSaveJob: (jobId: string) => Promise<void>`
 - `posts: { id: string; object: "public_blog_post"; title: string; slug: string; featured: boolean; coverUrl: string | null; fe…`
 - `postsCountLabel?: string | undefined`
+- `profileUnlocks?: boolean | undefined`
 - `publicJobSubmission?: boolean | undefined`
-- `talent: { object: "talent_directory_entry"; handle: string | null; displayName: string | null; headline: string | null; locat…`
+- `talent: { object: "talent_directory_entry"; id: string; handle: string | null; displayName: string | null; headline: string |…`
 - `talentCountLabel?: string | undefined`
 - `viewer: { emailVerified: boolean; } | null`
 
@@ -1292,7 +1316,7 @@ Props:
 
 - `billingOptions: { id: string; object: "employer_billing_option"; type: "subscription" | "order"; planId: string; planName: string; pl…`
 - `dependencies?: EmployerJobFormDependencies | undefined`
-- `job?: ({ id: string; object: "employer_job"; title: string; slug: string | null; status: "draft" | "published" | "expired" …`
+- `job?: ({ id: string; object: "employer_job"; title: string; slug: string | null; status: "expired" | "draft" | "published" …`
 - `jobForm?: JobFormSource | null | undefined`
 - `locale: string`
 - `mode: EmployerJobFormMode`
@@ -2314,7 +2338,8 @@ Props:
 
 Props:
 
-- `candidate: { object: "talent_directory_entry"; handle: string | null; displayName: string | null; headline: string | null; locat…`
+- `candidate: { object: "talent_directory_entry"; id: string; handle: string | null; displayName: string | null; headline: string |…`
+- `profileUnlocks?: boolean | undefined`
 
 ### Text — `src/components/text.tsx`
 

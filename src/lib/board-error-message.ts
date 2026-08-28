@@ -35,6 +35,13 @@ export const CODE_MESSAGES = {
   messaging_rate_limited: m.boardError_messagingRateLimitedText,
   messaging_recipient_not_found: m.boardError_messagingRecipientNotFoundText,
   messaging_recipient_not_open: m.boardError_messagingRecipientNotOpenText,
+  messaging_talent_access_required:
+    m.boardError_messagingTalentAccessRequiredText,
+  talent_access_required: m.boardError_talentAccessRequiredText,
+  talent_access_unavailable: m.boardError_talentAccessUnavailableText,
+  company_required: m.boardError_companyRequiredText,
+  already_on_plan: m.boardError_alreadyOnPlanText,
+  stripe_not_connected: m.boardError_stripeNotConnectedText,
   // Employer dashboard / posting flow:
   employer_job_slug_taken: m.boardError_jobSlugTakenText,
   employer_jobs_quota_exceeded: m.boardError_jobsQuotaText,

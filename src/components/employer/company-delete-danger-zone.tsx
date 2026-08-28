@@ -108,12 +108,10 @@ export function CompanyDeleteDangerZone({
     if (otherApprovedMembers === 0) {
       return m.employerDelete_consequenceSolo({ company: companyName });
     }
-    const members =
-      otherApprovedMembers === 1
-        ? m.employerDelete_membersCountOne({ count: otherApprovedMembers })
-        : m.employerDelete_membersCountMany({
-            count: otherApprovedMembers,
-          });
+    const members = m.employerDelete_membersCount({
+      count: otherApprovedMembers,
+      countLabel: String(otherApprovedMembers),
+    });
     return m.employerDelete_consequence({
       company: companyName,
       members,

@@ -90,4 +90,60 @@ export const privacyPolicyContent = {
       );
     },
   },
+  es: {
+    title: 'Política de privacidad',
+    description:
+      'Política de privacidad de ejemplo. Sustituye esta descripción y este contenido antes del lanzamiento.',
+    Body: function PrivacyPolicyBodyEs() {
+      return (
+        <>
+          <LegalPlaceholderCallout />
+          <h2>Qué debe cubrir esta página</h2>
+          <p>
+            Sustituye esta sección por tu política de privacidad tras la
+            revisión legal. No dejes la plantilla en producción.
+          </p>
+          <h2>Qué documentar</h2>
+          <p>
+            Normalmente se indica qué datos personales se recogen, con qué
+            finalidad, cuánto tiempo se conservan y cómo contactar contigo.
+            Redacta esos datos para tu producto: esta plantilla no los define.
+          </p>
+          <h2>Cómo contactarnos</h2>
+          <p>
+            Sustituye esta sección por el canal de contacto para consultas sobre
+            privacidad.
+          </p>
+        </>
+      );
+    },
+  },
+  pl: {
+    title: 'Polityka prywatności',
+    description:
+      'Przykładowa polityka prywatności. Zastąp ten opis i treść przed uruchomieniem.',
+    Body: function PrivacyPolicyBodyPl() {
+      return (
+        <>
+          <LegalPlaceholderCallout />
+          <h2>Co powinna zawierać ta strona</h2>
+          <p>
+            Zastąp tę sekcję swoją polityką prywatności po weryfikacji prawnej.
+            Nie zostawiaj szablonu w wersji produkcyjnej.
+          </p>
+          <h2>Co udokumentować</h2>
+          <p>
+            Zwykle podaje się, jakie dane osobowe są zbierane, w jakim celu, jak
+            długo są przechowywane i jak się z Tobą skontaktować. Opisz te fakty
+            dla swojego produktu — szablon ich nie określa.
+          </p>
+          <h2>Jak się z nami skontaktować</h2>
+          <p>
+            Zastąp tę sekcję kanałem kontaktu w sprawach dotyczących
+            prywatności.
+          </p>
+        </>
+      );
+    },
+  },
 } satisfies Record<LegalLocale, LegalPageContent>;

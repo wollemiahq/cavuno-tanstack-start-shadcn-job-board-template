@@ -33,8 +33,10 @@ import {
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
+import { entityCount } from '@/lib/entity-count';
 import { localizePath } from '@/lib/localized-path';
 import { listingPageHref } from '@/lib/pagination';
+import { chromeEntity } from '@/lib/site-chrome';
 
 export function CompanySearchPage({
   companies,
@@ -86,14 +88,10 @@ export function CompanySearchPage({
     onPush: onSelectedCompanyPush,
   });
   const locale = getLocale();
-  const resultCountLabel =
-    new Intl.PluralRules(locale).select(count) === 'one'
-      ? m.companySearch_resultsCountOne({
-          count: count.toLocaleString(locale),
-        })
-      : m.companySearch_resultsCountMany({
-          count: count.toLocaleString(locale),
-        });
+  const resultCountLabel = entityCount(count, locale, m.count_companies, {
+    singular: chromeEntity().companySingular,
+    plural: chromeEntity().companyPlural,
+  });
   // Both browse and free-text search are offset-paginated with a total `count`,
   // so the description line always renders the exact "Showing X–Y of N" range —
   // the same honest range as the jobs results header.

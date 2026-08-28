@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { AuthCard } from '../components/auth-form';
+import { resolvePostAuthConversionRedirect } from '../lib/board-datalayer-events';
 import {
   candidateReturnTo,
   candidateSignInHref,
@@ -26,19 +27,7 @@ export const Route = createFileRoute('/auth/magic-link')({
     returnTo: candidateReturnTo(search.returnTo),
   }),
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps }) => {
-    // Started before the token branch so it overlaps the token consume.
-    const seoPromise = getSeoBase();
-    if (!deps.token) {
-      return { status: 'missing-token' as const, seo: await seoPromise };
-    }
-    const [result, seo] = await Promise.all([
-      consumeMagicLink({ data: { token: deps.token } }),
-      seoPromise,
-    ]);
-    if (!result.ok) return { status: 'invalid' as const, seo };
-    throw redirect({ href: deps.returnTo });
-  },
+  loader: ({ deps }) => loadMagicLink(deps),
   head: ({ loaderData }) => ({
     meta: [
       { title: headTitle(loaderData?.seo.boardName, m.authMagicLink_title()) },
@@ -47,6 +36,34 @@ export const Route = createFileRoute('/auth/magic-link')({
   }),
   component: MagicLinkPage,
 });
+
+export async function loadMagicLink(
+  deps: MagicLinkSearch,
+  actions: {
+    consumeMagicLink: (input: {
+      data: { token: string };
+    }) => Promise<
+      { ok: true; isNewUser: boolean } | { ok: false; message: string }
+    >;
+    getSeoBase: () => ReturnType<typeof getSeoBase>;
+  } = { consumeMagicLink, getSeoBase },
+) {
+  const seoPromise = actions.getSeoBase();
+  if (!deps.token) {
+    return { status: 'missing-token' as const, seo: await seoPromise };
+  }
+  const [result, seo] = await Promise.all([
+    actions.consumeMagicLink({ data: { token: deps.token } }),
+    seoPromise,
+  ]);
+  if (!result.ok) return { status: 'invalid' as const, seo };
+  throw redirect({
+    href: resolvePostAuthConversionRedirect(deps.returnTo, {
+      isNewUser: result.isNewUser,
+      fallbackMethod: 'magic_link',
+    }),
+  });
+}
 
 function MagicLinkPage() {
   const { status } = Route.useLoaderData();

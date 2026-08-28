@@ -340,6 +340,18 @@ export function rejectSharedDemoMutation(opts: {
  */
 export type TalentDirectoryVisibility = 'off' | 'public' | 'employers_only';
 
+/**
+ * How the operator charges employers for the candidate directory. There is
+ * deliberately no `off` member: the paywall is inert when the board sells no
+ * talent plan, which is a plans decision rather than a config flag.
+ */
+export type TalentAccessModel = 'paid_messaging' | 'paid_unlocks_and_messaging';
+
+export const TALENT_ACCESS_MODELS = [
+  'paid_messaging',
+  'paid_unlocks_and_messaging',
+] as const satisfies readonly TalentAccessModel[];
+
 export const TALENT_DIRECTORY_VISIBILITIES = [
   'off',
   'public',
@@ -387,14 +399,27 @@ export interface PreviewBooleanFlag {
   description: string;
 }
 
-export interface PreviewEnumFlag {
-  key: 'talentDirectoryVisibility';
-  kind: 'enum';
-  label: string;
-  description: string;
-  /** The enum members, in display order; labels come from the message catalog. */
-  options: readonly TalentDirectoryVisibility[];
-}
+/**
+ * An enum-valued flag. Discriminated by `key` so each control keeps its own
+ * option union — a `talentAccessModel` select can never be handed a
+ * directory-visibility member.
+ */
+export type PreviewEnumFlag =
+  | {
+      key: 'talentDirectoryVisibility';
+      kind: 'enum';
+      label: string;
+      description: string;
+      /** The enum members, in display order; labels come from the message catalog. */
+      options: readonly TalentDirectoryVisibility[];
+    }
+  | {
+      key: 'talentAccessModel';
+      kind: 'enum';
+      label: string;
+      description: string;
+      options: readonly TalentAccessModel[];
+    };
 
 export type PreviewFeatureFlag = PreviewBooleanFlag | PreviewEnumFlag;
 
@@ -414,6 +439,14 @@ export const PREVIEW_FEATURE_FLAGS: readonly PreviewFeatureFlag[] = [
     label: 'Talent directory',
     description: 'Who can see the /talent candidate directory.',
     options: TALENT_DIRECTORY_VISIBILITIES,
+  },
+  {
+    key: 'talentAccessModel',
+    kind: 'enum',
+    label: 'Talent access model',
+    description:
+      'How employers pay for the directory: messaging only, or unlocks as well.',
+    options: TALENT_ACCESS_MODELS,
   },
   {
     key: 'blogEnabled',
@@ -489,6 +522,7 @@ export const SANDBOX_CONFIG_WHITELIST: ReadonlySet<string> = new Set([
   'jobAccessPaywallEnabled',
   'jobAccessPreviewCount',
   'talentDirectoryVisibility',
+  'talentAccessModel',
   'blogEnabled',
   'jobAlertsEnabled',
   'jobRecommendationsEnabled',
@@ -508,6 +542,7 @@ export const SANDBOX_CONFIG_WHITELIST: ReadonlySet<string> = new Set([
 export interface PreviewBoardConfig {
   jobAccessPaywallEnabled: boolean;
   talentDirectoryVisibility: TalentDirectoryVisibility;
+  talentAccessModel: TalentAccessModel;
   blogEnabled: boolean;
   jobAlertsEnabled: boolean;
   jobRecommendationsEnabled: boolean;
@@ -526,6 +561,7 @@ export interface SandboxConfigPatch {
   jobAccessPaywallEnabled?: SandboxConfigValue;
   jobAccessPreviewCount?: SandboxConfigValue;
   talentDirectoryVisibility?: SandboxConfigValue;
+  talentAccessModel?: SandboxConfigValue;
   blogEnabled?: SandboxConfigValue;
   jobAlertsEnabled?: SandboxConfigValue;
   jobRecommendationsEnabled?: SandboxConfigValue;
@@ -559,9 +595,18 @@ export function toPreviewBoardConfig(context: {
   };
   /** Nullable off an API deployment predating the tri-state slice — defaults to `'off'`. */
   talentDirectoryVisibility: TalentDirectoryVisibility | null;
+  /**
+   * `null` when the operator has not chosen a model explicitly. The board API
+   * documents the fallback as inference from the published talent plans; the
+   * toolbar has no plan list, so it shows the unlocks model, which is what a
+   * board selling unlocks infers to and what the sandbox baseline sets.
+   */
+  talentAccessModel?: TalentAccessModel | null;
 }): PreviewBoardConfig {
   return {
     jobAccessPaywallEnabled: context.features.candidatePaywall,
+    talentAccessModel:
+      context.talentAccessModel ?? 'paid_unlocks_and_messaging',
     talentDirectoryVisibility:
       // 4.0.0: enum lives on features.talentDirectory ('off' is truthy!).
       context.features.talentDirectory ??

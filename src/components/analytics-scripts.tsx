@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 
 import { useCookieConsent } from '@/components/cookie-consent';
+import { flushBoardPixelQueue } from '@/lib/board-pixel-conversions';
 import { startWebVitalsReporting } from '@/lib/web-vitals';
 
 /** The board context's `analytics` group, minus the consent flag. */
@@ -20,6 +21,23 @@ interface VendorScript {
   inline?: string;
   /** External loader src. */
   src?: string;
+  /** Called after the loader script element is appended. */
+  onLoaderReady?: () => void;
+}
+
+/**
+ * Host-scoped GA4 cookies (MIG-11): never let `_ga` default to a parent
+ * domain like `.cavuno.app` on custom board domains.
+ */
+function ga4ConfigSnippet(measurementId: string): string {
+  const id = JSON.stringify(measurementId);
+  const hostname = JSON.stringify(window.location.hostname);
+  return (
+    'window.dataLayer=window.dataLayer||[];' +
+    'window.gtag=window.gtag||function(){window.dataLayer.push(arguments);};' +
+    "window.gtag('js',new Date());" +
+    `window.gtag('config',${id},{cookie_domain:${hostname},cookie_flags:'SameSite=Lax;Secure'});`
+  );
 }
 
 /**
@@ -37,19 +55,16 @@ function vendorScripts(analytics: BoardAnalyticsConfig): VendorScript[] {
         'window.dataLayer=window.dataLayer||[];' +
         "window.dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});",
       src: `https://www.googletagmanager.com/gtm.js?id=${encodeURIComponent(analytics.gtmId)}`,
+      onLoaderReady: flushBoardPixelQueue,
     });
   }
 
   if (analytics.ga4MeasurementId) {
-    const id = JSON.stringify(analytics.ga4MeasurementId);
     scripts.push({
       key: 'ga4',
-      inline:
-        'window.dataLayer=window.dataLayer||[];' +
-        'window.gtag=window.gtag||function(){window.dataLayer.push(arguments);};' +
-        "window.gtag('js',new Date());" +
-        `window.gtag('config',${id});`,
+      inline: ga4ConfigSnippet(analytics.ga4MeasurementId),
       src: `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(analytics.ga4MeasurementId)}`,
+      onLoaderReady: flushBoardPixelQueue,
     });
   }
 
@@ -65,6 +80,7 @@ function vendorScripts(analytics: BoardAnalyticsConfig): VendorScript[] {
         "f._fbq||(f._fbq=n);n.push=n;n.loaded=!0;n.version='2.0';n.queue=[]}(window);" +
         `window.fbq('init',${id});window.fbq('track','PageView');`,
       src: 'https://connect.facebook.net/en_US/fbevents.js',
+      onLoaderReady: flushBoardPixelQueue,
     });
   }
 
@@ -75,8 +91,11 @@ function vendorScripts(analytics: BoardAnalyticsConfig): VendorScript[] {
       inline:
         `window._linkedin_partner_id=${id};` +
         'window._linkedin_data_partner_ids=window._linkedin_data_partner_ids||[];' +
-        `window._linkedin_data_partner_ids.push(${id});`,
+        `window._linkedin_data_partner_ids.push(${id});` +
+        'window.lintrk=window.lintrk||function(a,b){window.lintrk.q.push([a,b])};' +
+        'window.lintrk.q=window.lintrk.q||[];',
       src: 'https://snap.licdn.com/li.lms-analytics/insight.min.js',
+      onLoaderReady: flushBoardPixelQueue,
     });
   }
 
@@ -100,9 +119,14 @@ function injectVendorScripts(analytics: BoardAnalyticsConfig) {
       loader.id = loaderId;
       loader.async = true;
       loader.src = vendor.src;
+      if (vendor.onLoaderReady) {
+        loader.addEventListener('load', vendor.onLoaderReady, { once: true });
+      }
       document.head.appendChild(loader);
     }
   }
+  // Inline stubs (Meta/LinkedIn) may already be callable before loaders finish.
+  flushBoardPixelQueue();
 }
 
 /**

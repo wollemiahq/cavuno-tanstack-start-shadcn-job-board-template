@@ -73,3 +73,27 @@ pnpm run check:bundle
 
 For a visual change, also exercise the affected route at desktop and mobile
 widths with real development data in the browser.
+
+## Console errors that are not yours
+
+### "Maximum update depth exceeded"
+
+A dev-only artifact of Vite's dependency optimizer, not app code. Anything
+that changes the lockfile mid-session (`pnpm add`, an SDK bump) makes Vite
+re-optimize, and modules already loaded keep a stale `?v=<hash>` reference
+to `@tanstack/router-core`. Two router instances then fight over the same
+state until React trips its update-depth cap.
+
+It is convincing because the stack points into `router.js` and it reproduces
+on every route's initial load, which reads like a global component with a bad
+effect. Client-side navigation never triggers it — only hydration, which is
+the tell that a module is duplicated rather than a render looping.
+
+Clear the cache and restart instead of bisecting effects:
+
+```sh
+rm -rf node_modules/.vite .tanstack
+```
+
+A production build never shows it, so `pnpm run build && pnpm exec vp preview`
+is the check that settles whether a console error is real.

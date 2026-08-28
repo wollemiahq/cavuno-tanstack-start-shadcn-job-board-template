@@ -234,6 +234,40 @@ would otherwise silently resolve `@latest` down to an older version.
 
 ---
 
+## Analytics & conversion tracking
+
+Board analytics IDs (`gtmId`, `ga4MeasurementId`, `metaPixelId`,
+`linkedInPartnerId`, optional LinkedIn conversion IDs) come from
+`board.context().analytics`. The starter supports **two operator paths** —
+use one destination per vendor to avoid double-counting:
+
+| Path | When to use |
+| --- | --- |
+| **Google Tag Manager** | One container ID; wire GA4, Meta, LinkedIn, Google Ads, and custom tags inside GTM |
+| **Direct Meta / LinkedIn** | Pixel ID and/or LinkedIn Partner ID only — native `fbq` / `lintrk` at the same moments |
+
+GTM loads on public pages **and** auth/onboarding routes (`/auth/*`,
+verify-email, resume onboarding). When cookie consent is required, conversion
+events still push to `window.dataLayer` immediately; GTM and pixels load only
+after accept, then flush any queued pixel calls.
+
+### Standard `dataLayer` conversion events
+
+Use these as **Custom Event** triggers in GTM (field names match hosted Cavuno
+boards — [operator docs](https://cavuno.com/docs/analytics/connect-google-tag-manager)):
+
+| Event | When | Key fields |
+| --- | --- | --- |
+| `sign_up` | Account created (password/OAuth/magic-link). Password: auto-redirect to verify-email landing with `cavuno_auth*`, not after OTP | `method`, `board_slug` |
+| `login` | Successful sign-in | `method`, `board_slug` |
+| `apply_click` | Apply flow opened (not the registration wall) | `job_id`, `job_slug`, `company_slug`, `apply_type`, `board_slug` |
+| `apply_submit` | Native application submitted | `job_id`, `application_id`, `job_slug`, `company_slug`, `board_slug` |
+| `job_alert_subscribe` | Job alert confirmed (double opt-in) | `board_slug`, `source` (`confirm`) |
+
+Auth methods: `password`, `google`, `linkedin`, `magic_link`.
+
+---
+
 ## Customize it
 
 This is a **customization template**, not a scaffold to rebuild. The contract

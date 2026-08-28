@@ -84,12 +84,12 @@ function offerBillingLabel(offer: PaywallOffer): string {
   if (offer.intervalUnit === 'month') {
     return count === 1
       ? m.accessOffer_perMonth()
-      : m.accessOffer_everyMonths({ count });
+      : m.accessOffer_everyMonths({ count, countLabel: String(count) });
   }
   if (offer.intervalUnit === 'year') {
     return count === 1
       ? m.accessOffer_perYear()
-      : m.accessOffer_everyYears({ count });
+      : m.accessOffer_everyYears({ count, countLabel: String(count) });
   }
   if (offer.intervalUnit === 'week' && count === 1) {
     return m.accessOffer_perWeek();

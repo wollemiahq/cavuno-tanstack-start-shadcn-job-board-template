@@ -43,11 +43,9 @@ function isJoinedFlag(search: UrlSearchInput | undefined): boolean {
 function teamMembersSubtitle(count: number) {
   if (count === 0) return m.employerMembers_countZero();
   const locale = getLocale();
-  if (new Intl.PluralRules(locale).select(count) === 'one') {
-    return m.employerMembers_countOne();
-  }
-  return m.employerMembers_countMany({
-    count: count.toLocaleString(locale),
+  return m.employerMembers_count({
+    count,
+    countLabel: count.toLocaleString(locale),
   });
 }
 

@@ -25,11 +25,13 @@ import {
   toApplyButtonVM,
   type PublicApplyAction,
 } from '@/board/apply-view-model';
+import { useBoardConversionAnalytics } from '@/components/board-conversion-analytics';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
 import {
   candidateSignInHref,
   candidateVerifyEmailHref,
@@ -60,7 +62,9 @@ const applyButtonDependencies: ApplyButtonDependencies = {
 };
 
 export function ApplyButton({
+  jobId,
   jobSlug,
+  companySlug,
   applicationUrl,
   applyAction,
   viewer,
@@ -76,8 +80,12 @@ export function ApplyButton({
   onGuestApply,
   dependencies = applyButtonDependencies,
 }: {
+  /** Cavuno job id for conversion payloads. */
+  jobId: string;
   /** Null when the job has no native-apply support (external-only). */
   jobSlug: string | null;
+  /** Company slug for conversion payloads and typed routes. */
+  companySlug: string;
   /** The employer's external application URL, when the job carries one. */
   applicationUrl: string | null;
   /** Cavuno's server-supplied Apply contract (absent for pre-gateway data). */
@@ -96,7 +104,10 @@ export function ApplyButton({
   /** Ask Cavuno whether this native Apply needs a browser-edge receipt. */
   onPrepareApply: (jobSlug: string) => Promise<NativeApplyPrepareResult>;
   /** Submit natively; a receipt id is present only when preparation required it. */
-  onApply: (jobSlug: string, approvalReceipt?: string) => Promise<void>;
+  onApply: (
+    jobSlug: string,
+    approvalReceipt?: string,
+  ) => Promise<{ id: string } | void>;
   /**
    * Seed the private application lookup. `unknown` is deliberately distinct
    * from `not-applied`: it blocks another submission until a retry resolves.
@@ -130,6 +141,31 @@ export function ApplyButton({
   }) => Promise<{ ok: true } | { ok: false; reason: string }>;
   dependencies?: ApplyButtonDependencies;
 }) {
+  const conversion = useBoardConversionAnalytics();
+
+  function trackApplyClick(applyType: 'external' | 'native') {
+    if (!conversion || !jobId || !jobSlug || !companySlug) return;
+    pushBoardConversionEvent(conversion.analytics, {
+      event: 'apply_click',
+      job_id: jobId,
+      job_slug: jobSlug,
+      company_slug: companySlug,
+      apply_type: applyType,
+      board_slug: conversion.boardSlug,
+    });
+  }
+
+  function trackApplySubmit(applicationId: string) {
+    if (!conversion || !jobId || !jobSlug || !companySlug) return;
+    pushBoardConversionEvent(conversion.analytics, {
+      event: 'apply_submit',
+      job_id: jobId,
+      application_id: applicationId,
+      job_slug: jobSlug,
+      company_slug: companySlug,
+      board_slug: conversion.boardSlug,
+    });
+  }
   // Only the transient in-session interaction lives in state; the
   // returning-visitor "applied" truth comes from the `applicationState`
   // prop (server data). Reset the transient state when the job changes —
@@ -204,6 +240,7 @@ export function ApplyButton({
           target="_blank"
           rel="noreferrer"
           className={buttonVariants({ size: 'lg' })}
+          onClick={() => trackApplyClick('external')}
         >
           {/* Primary apply label is just "Apply"; the SDK's
               longer applyOnEmployerSiteLabel is dropped from the CTA. */}
@@ -231,6 +268,7 @@ export function ApplyButton({
                   setState('location-denied');
                   return;
                 }
+                trackApplyClick('external');
                 navigateToExternalApply(result.redirectUrl);
               } catch {
                 setState('error');
@@ -387,12 +425,17 @@ export function ApplyButton({
             disabled={state === 'applying'}
             onClick={async () => {
               setState('applying');
+              trackApplyClick('native');
               try {
-                await runNativeApply({
+                const application = await runNativeApply({
                   jobSlug: action.jobSlug,
                   prepare: onPrepareApply,
                   submit: onApply,
                 });
+                const applicationId = application?.id;
+                if (applicationId !== undefined) {
+                  trackApplySubmit(applicationId);
+                }
                 setState('applied');
               } catch (error) {
                 // A stale verification state routes to the verify page;

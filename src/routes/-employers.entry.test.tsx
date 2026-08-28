@@ -98,7 +98,7 @@ const employersPageViewDependencies = {
     </a>
   ),
   joinLink: ({ className, children }) => (
-    <a href="/auth/join" className={className}>
+    <a href="/auth/join?returnTo=/employers" className={className}>
       {children}
     </a>
   ),
@@ -316,7 +316,7 @@ describe('employer entry surfaces', () => {
       within(talentCard).getByRole('link', {
         name: 'Subscribe',
       }),
-    ).toHaveAttribute('href', '/auth/join');
+    ).toHaveAttribute('href', '/auth/join?returnTo=/employers');
   });
 
   it('presents approved memberships as an authenticated company workspace list', () => {

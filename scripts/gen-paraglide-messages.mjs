@@ -69,6 +69,31 @@ for (const locale of SOURCE_LOCALES) {
   if (locale === 'en') enMessages = messages;
 }
 
+/**
+ * Pseudo-localize a message value.
+ *
+ * A simple message is a string. A COMPLEX message (pluralization, gendering)
+ * is an array of variant objects whose `match` maps a selector arm to its
+ * pattern — only those patterns are user-visible text, so the declarations and
+ * selector names must pass through untouched or the compiler can no longer
+ * resolve the variant.
+ */
+function derivePseudoValue(value, derive) {
+  if (!Array.isArray(value)) return derive(value);
+  return value.map((variant) => ({
+    ...variant,
+    match: Object.fromEntries(
+      // Every arm's value is a pattern string — that is what `match` means in
+      // the message format, and the compiler rejects anything else — so it is
+      // derived unconditionally rather than probed.
+      Object.entries(variant.match ?? {}).map(([arm, pattern]) => [
+        arm,
+        derive(pattern),
+      ]),
+    ),
+  }));
+}
+
 // Pseudo-locales — derived from the CURRENT en source so the coverage
 // gates survive catalog additions for free.
 //   en-XA — pseudo-accent: proves every string came through Paraglide.
@@ -81,7 +106,7 @@ for (const [locale, derive] of [
   const pseudo = { $schema: enMessages.$schema };
   for (const [key, value] of Object.entries(enMessages)) {
     if (key.startsWith('$')) continue;
-    pseudo[key] = derive(value);
+    pseudo[key] = derivePseudoValue(value, derive);
   }
   writeMessages(locale, pseudo);
 }
