@@ -23,7 +23,7 @@ export function BoardAuthConversionTracker() {
   const ctx = useBoardConversionAnalytics();
 
   useEffect(() => {
-    if (!ctx || typeof window === 'undefined') return;
+    if (!ctx) return;
     const search = new URLSearchParams(window.location.search);
     const parsed = parseAuthConversionSearchParams(search);
     if (!parsed) return;

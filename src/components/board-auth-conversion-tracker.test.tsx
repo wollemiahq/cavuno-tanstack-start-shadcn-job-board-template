@@ -6,6 +6,17 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { BoardAuthConversionTracker } from '@/components/board-auth-conversion-tracker';
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
+import type { BoardDataLayerEvent } from '@/lib/board-datalayer-events';
+
+function captureDataLayer(): BoardDataLayerEvent[] {
+  const pushes: BoardDataLayerEvent[] = [];
+  Object.defineProperty(window, 'dataLayer', {
+    configurable: true,
+    writable: true,
+    value: pushes,
+  });
+  return pushes;
+}
 
 const analytics = {
   ga4MeasurementId: null,
@@ -33,8 +44,7 @@ describe('BoardAuthConversionTracker', () => {
       '',
       '/auth/verify-email-required?returnTo=%2Faccount&cavuno_auth=sign_up&cavuno_auth_method=password',
     );
-    const pushes: { event: string; method: string; board_slug: string }[] = [];
-    window.dataLayer = pushes as unknown as typeof window.dataLayer;
+    const pushes = captureDataLayer();
 
     render(
       <BoardConversionAnalyticsProvider boardSlug="acme" analytics={analytics}>

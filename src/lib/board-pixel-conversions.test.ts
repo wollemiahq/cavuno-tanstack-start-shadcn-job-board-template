@@ -3,11 +3,34 @@
 import '@testing-library/jest-dom/vitest';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { BoardDataLayerEvent } from '@/lib/board-datalayer-events';
 import {
   fireBoardPixelConversion,
   flushBoardPixelQueue,
   pushBoardConversionEvent,
 } from '@/lib/board-pixel-conversions';
+
+type PixelTestWindow = typeof window & {
+  __cavunoBoardPixelQueue?: unknown[];
+  fbq?: (...args: unknown[]) => void;
+  lintrk?: (event: 'track', payload: { conversion_id: string }) => void;
+};
+
+function pixelTestWindow(): PixelTestWindow {
+  // SAFETY: This file installs fbq/lintrk/queue on window and deletes them
+  // in afterEach; production only reads those same optional slots.
+  return window as PixelTestWindow;
+}
+
+function captureDataLayer(): BoardDataLayerEvent[] {
+  const pushes: BoardDataLayerEvent[] = [];
+  Object.defineProperty(window, 'dataLayer', {
+    configurable: true,
+    writable: true,
+    value: pushes,
+  });
+  return pushes;
+}
 
 const analytics = {
   ga4MeasurementId: null,
@@ -37,7 +60,7 @@ describe('board-pixel-conversions', () => {
     });
 
     const fbq = vi.fn();
-    window.fbq = fbq;
+    pixelTestWindow().fbq = fbq;
     flushBoardPixelQueue();
 
     expect(fbq).toHaveBeenCalledWith('track', 'CompleteRegistration');
@@ -45,7 +68,7 @@ describe('board-pixel-conversions', () => {
 
   it('fires LinkedIn conversion ids when configured', () => {
     const lintrk = vi.fn();
-    window.lintrk = lintrk;
+    pixelTestWindow().lintrk = lintrk;
 
     fireBoardPixelConversion(analytics, 'sign_up');
 
@@ -55,14 +78,9 @@ describe('board-pixel-conversions', () => {
   });
 
   it('pushes dataLayer before pixels', () => {
-    const pushes: unknown[] = [];
-    window.dataLayer = {
-      push(value: unknown) {
-        pushes.push(value);
-      },
-    } as unknown as typeof window.dataLayer;
+    const pushes = captureDataLayer();
     const fbq = vi.fn();
-    window.fbq = fbq;
+    pixelTestWindow().fbq = fbq;
 
     pushBoardConversionEvent(analytics, {
       event: 'login',
@@ -92,9 +110,6 @@ describe('board-pixel-conversions', () => {
 
     flushBoardPixelQueue();
 
-    expect(
-      (window as typeof window & { __cavunoBoardPixelQueue?: unknown[] })
-        .__cavunoBoardPixelQueue,
-    ).toHaveLength(1);
+    expect(pixelTestWindow().__cavunoBoardPixelQueue).toHaveLength(1);
   });
 });

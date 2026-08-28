@@ -34,32 +34,39 @@ interface GtmStartEvent {
   event: string;
 }
 
-type AnalyticsDataLayerEntry =
-  | IArguments
-  | GtmStartEvent
-  | Record<string, unknown>;
+type AnalyticsDataLayerEntry = IArguments | GtmStartEvent;
 
-declare global {
-  interface Window {
-    dataLayer?: AnalyticsDataLayerEntry[];
-    gtag?: (...args: unknown[]) => void;
-    fbq?: ((...args: unknown[]) => void) & { queue?: IArguments[] };
-    _fbq?: Window['fbq'];
-    _linkedin_partner_id?: string;
-    _linkedin_data_partner_ids?: string[];
-    lintrk?: (args: Record<string, unknown>) => void;
-  }
+type AnalyticsScriptsWindow = typeof window & {
+  dataLayer?: AnalyticsDataLayerEntry[];
+  gtag?: (...args: unknown[]) => void;
+  fbq?: ((...args: unknown[]) => void) & { queue?: IArguments[] };
+  _fbq?: AnalyticsScriptsWindow['fbq'];
+  _linkedin_partner_id?: string;
+  _linkedin_data_partner_ids?: string[];
+  lintrk?: (event: string, payload: { conversion_id: string }) => void;
+};
+
+function analyticsScriptsWindow(): AnalyticsScriptsWindow {
+  // SAFETY: The vendor bootstrap this test executes attaches these optional
+  // globals; afterEach deletes them and they are ignored when absent.
+  return window as AnalyticsScriptsWindow;
 }
 
 function isGtmStartEvent(
   entry: AnalyticsDataLayerEntry,
 ): entry is GtmStartEvent {
   return (
-    typeof entry === 'object' &&
-    entry !== null &&
+    entry instanceof Object &&
     !Array.isArray(entry) &&
     Object.hasOwn(entry, 'gtm.start')
   );
+}
+
+function flattenDataLayerEntry(entry: AnalyticsDataLayerEntry): unknown[] {
+  if (isGtmStartEvent(entry)) {
+    return Object.values(entry);
+  }
+  return Array.from(entry);
 }
 
 const injectedKeys = () =>
@@ -143,27 +150,20 @@ describe('AnalyticsScripts', () => {
     }
 
     // GTM pushed its start event; GA4's gtag pushed js + config arguments.
-    const flat = (window.dataLayer ?? []).map((entry) =>
-      isGtmStartEvent(entry)
-        ? Object.values(entry)
-        : entry instanceof Object && 'length' in entry
-          ? Array.from(entry as ArrayLike<unknown>)
-          : Object.values(entry as Record<string, unknown>),
-    );
-    expect((window.dataLayer ?? []).some(isGtmStartEvent)).toBe(true);
+    const w = analyticsScriptsWindow();
+    const flat = (w.dataLayer ?? []).map(flattenDataLayerEntry);
+    expect((w.dataLayer ?? []).some(isGtmStartEvent)).toBe(true);
     expect(flat.some((values) => values.includes('G-TEST123'))).toBe(true);
 
     // Meta's stub is callable and queued init + PageView for the loader.
-    expect(window.fbq).toBeTypeOf('function');
-    const fbqCalls = (
-      (window.fbq as { queue?: IArguments[] } | undefined)?.queue ?? []
-    ).map((args) => Array.from(args));
+    expect(w.fbq).toBeTypeOf('function');
+    const fbqCalls = (w.fbq?.queue ?? []).map((args) => Array.from(args));
     expect(fbqCalls).toContainEqual(['init', '1234567890']);
     expect(fbqCalls).toContainEqual(['track', 'PageView']);
 
     // LinkedIn registered the partner id for insight.min.js.
-    expect(window._linkedin_partner_id).toBe('54321');
-    expect(window._linkedin_data_partner_ids).toContain('54321');
+    expect(w._linkedin_partner_id).toBe('54321');
+    expect(w._linkedin_data_partner_ids).toContain('54321');
   });
 
   it('injects only the configured trackers', () => {
