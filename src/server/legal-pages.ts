@@ -1,4 +1,5 @@
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
+import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
@@ -15,7 +16,9 @@ import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
  *
  * Prose is application-owned (`src/content/legal/`) — this function no longer
  * calls `board.legal.retrieve`. It still reads board context for name /
- * language / feature flags (impressum gate), and builds head meta +
+ * language and enforces the `features.impressum` gate here — the prose is
+ * local, so nothing else 404s a disabled Impressum. It also builds head
+ * meta +
  * AboutPage/WebPage + breadcrumb JSON-LD so route modules and LegalPageView
  * do not import `@cavuno/board/seo` into the universal client entry.
  *
@@ -49,6 +52,14 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
       const meta = LEGAL_PAGES[data.type];
       const content = resolveLegalContent(data.type);
       const boardContext = await readBoardContext();
+
+      // The Impressum gate. Hosted hides the footer link AND does not serve
+      // the page; the starter only hid the link (Footer.tsx), so a disabled
+      // Impressum still rendered — and stayed indexable — on a direct hit.
+      // Prose moved to `src/content/legal/`, so no API 404 gates it any more.
+      if (data.type === 'impressum' && !boardContext.features.impressum) {
+        throw notFound();
+      }
 
       const origin = new URL(getRequest().url).origin;
       const seo = {
