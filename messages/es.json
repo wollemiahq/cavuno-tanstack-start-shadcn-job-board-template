@@ -480,7 +480,6 @@
   "educationSection_fieldOfStudyLabel": "Área de estudio",
   "educationSection_heading": "Formación",
   "educationSection_institutionLabel": "Centro",
-  "educationSection_presentLabel": "Actualidad",
   "educationSection_saveLabel": "Guardar",
   "educationSection_savingLabel": "Guardando…",
   "educationSection_startLabel": "Fecha de inicio",
@@ -794,7 +793,6 @@
   "experienceSection_endLabel": "Fecha de fin",
   "experienceSection_heading": "Experiencia",
   "experienceSection_locationLabel": "Ubicación",
-  "experienceSection_presentLabel": "Actualidad",
   "experienceSection_saveLabel": "Guardar",
   "experienceSection_savingLabel": "Guardando…",
   "experienceSection_startLabel": "Fecha de inicio",
@@ -822,8 +820,6 @@
   "home_candidateCtaButton": "Crear un perfil de candidato",
   "home_candidateCtaHeading": "¿Buscas trabajo?",
   "home_candidateCtaSupporting": "Crea un perfil para guardar ofertas, recibir alertas e inscribirte desde un mismo sitio.",
-  "home_candidatePlural": "candidatos",
-  "home_candidateSingular": "candidato",
   "home_categoriesDescription": "Ve directamente a los puestos de tu sector.",
   "home_categoriesHeading": "Explorar por categoría",
   "home_companiesDescription": "Descubre los equipos que tienen vacantes ahora mismo.",
@@ -1255,7 +1251,6 @@
   "publicProfile_languagesHeading": "Idiomas",
   "publicProfile_notFoundText": "Perfil no encontrado.",
   "publicProfile_pageTitle": "{name} — {boardName}",
-  "publicProfile_presentLabel": "Actualidad",
   "publicProfile_profileFallbackLabel": "Perfil",
   "publicProfile_skillsHeading": "Competencias",
   "resumeImport_description": "Subir un CV completa tu perfil. Usamos ese perfil para mostrarte ofertas relevantes.",
@@ -1774,5 +1769,8 @@
         "countPlural=*": "{countLabel} ofertas coinciden con tu perfil y tus preferencias."
       }
     }
-  ]
+  ],
+  "entity_candidateSingular": "candidato",
+  "entity_candidatePlural": "candidatos",
+  "entity_candidatePresent": "Actualidad"
 }

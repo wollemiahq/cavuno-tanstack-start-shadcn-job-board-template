@@ -480,7 +480,6 @@
   "educationSection_fieldOfStudyLabel": "Kierunek studiów",
   "educationSection_heading": "Wykształcenie",
   "educationSection_institutionLabel": "Uczelnia / szkoła",
-  "educationSection_presentLabel": "Obecnie",
   "educationSection_saveLabel": "Zapisz",
   "educationSection_savingLabel": "Zapisywanie…",
   "educationSection_startLabel": "Data rozpoczęcia",
@@ -794,7 +793,6 @@
   "experienceSection_endLabel": "Data zakończenia",
   "experienceSection_heading": "Doświadczenie",
   "experienceSection_locationLabel": "Lokalizacja",
-  "experienceSection_presentLabel": "Obecnie",
   "experienceSection_saveLabel": "Zapisz",
   "experienceSection_savingLabel": "Zapisywanie…",
   "experienceSection_startLabel": "Data rozpoczęcia",
@@ -822,8 +820,6 @@
   "home_candidateCtaButton": "Utwórz profil kandydata",
   "home_candidateCtaHeading": "Szukasz pracy?",
   "home_candidateCtaSupporting": "Utwórz profil, aby zapisywać oferty, otrzymywać alerty i aplikować w jednym miejscu.",
-  "home_candidatePlural": "kandydatów",
-  "home_candidateSingular": "kandydat",
   "home_categoriesDescription": "Przejdź od razu do stanowisk w swojej dziedzinie.",
   "home_categoriesHeading": "Przeglądaj według kategorii",
   "home_companiesDescription": "Poznaj zespoły, które właśnie rekrutują.",
@@ -1255,7 +1251,6 @@
   "publicProfile_languagesHeading": "Języki",
   "publicProfile_notFoundText": "Nie znaleziono profilu.",
   "publicProfile_pageTitle": "{name} — {boardName}",
-  "publicProfile_presentLabel": "Obecnie",
   "publicProfile_profileFallbackLabel": "Profil",
   "publicProfile_skillsHeading": "Umiejętności",
   "resumeImport_description": "Przesłanie CV uzupełnia Twój profil. Na jego podstawie dopasowujemy odpowiednie oferty.",
@@ -1808,5 +1803,8 @@
         "countPlural=*": "{countLabel} oferty pasują do Twojego profilu i preferencji."
       }
     }
-  ]
+  ],
+  "entity_candidateSingular": "kandydat",
+  "entity_candidatePlural": "kandydaci",
+  "entity_candidatePresent": "Obecnie"
 }

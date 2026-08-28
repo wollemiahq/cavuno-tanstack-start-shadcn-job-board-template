@@ -480,7 +480,6 @@
   "educationSection_fieldOfStudyLabel": "Domaine d'études",
   "educationSection_heading": "Formation",
   "educationSection_institutionLabel": "Établissement",
-  "educationSection_presentLabel": "Aujourd'hui",
   "educationSection_saveLabel": "Enregistrer",
   "educationSection_savingLabel": "Enregistrement…",
   "educationSection_startLabel": "Date de début",
@@ -794,7 +793,6 @@
   "experienceSection_endLabel": "Date de fin",
   "experienceSection_heading": "Expérience",
   "experienceSection_locationLabel": "Lieu",
-  "experienceSection_presentLabel": "Aujourd'hui",
   "experienceSection_saveLabel": "Enregistrer",
   "experienceSection_savingLabel": "Enregistrement…",
   "experienceSection_startLabel": "Date de début",
@@ -822,8 +820,6 @@
   "home_candidateCtaButton": "Créer un profil candidat",
   "home_candidateCtaHeading": "À la recherche d'un emploi ?",
   "home_candidateCtaSupporting": "Créez un profil pour enregistrer des offres, recevoir des alertes et postuler au même endroit.",
-  "home_candidatePlural": "candidats",
-  "home_candidateSingular": "candidat",
   "home_categoriesDescription": "Accédez directement aux postes de votre domaine.",
   "home_categoriesHeading": "Parcourir par catégorie",
   "home_companiesDescription": "Découvrez les équipes qui recrutent en ce moment.",
@@ -1255,7 +1251,6 @@
   "publicProfile_languagesHeading": "Langues",
   "publicProfile_notFoundText": "Profil introuvable.",
   "publicProfile_pageTitle": "{name} — {boardName}",
-  "publicProfile_presentLabel": "Aujourd'hui",
   "publicProfile_profileFallbackLabel": "Profil",
   "publicProfile_skillsHeading": "Compétences",
   "resumeImport_description": "Télécharger un CV complète votre profil. Nous utilisons ce profil pour vous mettre en correspondance avec des offres pertinentes.",
@@ -1774,5 +1769,8 @@
         "countPlural=*": "{countLabel} offres correspondent à votre profil et à vos préférences."
       }
     }
-  ]
+  ],
+  "entity_candidateSingular": "candidat",
+  "entity_candidatePlural": "candidats",
+  "entity_candidatePresent": "Aujourd’hui"
 }

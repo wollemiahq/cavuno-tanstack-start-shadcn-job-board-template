@@ -96,8 +96,8 @@ export function HomePage() {
         )}
         talentCountLabel={countEyebrow(
           talentCount,
-          m.home_candidateSingular(),
-          m.home_candidatePlural(),
+          copy.entity.candidateSingular,
+          copy.entity.candidatePlural,
         )}
         postsCountLabel={countEyebrow(
           postsCount,

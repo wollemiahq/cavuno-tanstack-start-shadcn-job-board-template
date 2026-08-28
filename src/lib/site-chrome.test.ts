@@ -178,3 +178,22 @@ describe('readChrome cookie consent', () => {
     expect(readChrome({}).cookieConsent).toEqual({});
   });
 });
+
+describe('readChrome candidate entity nouns', () => {
+  it('picks the candidate nouns hosted stores in entityLabels', () => {
+    // `candidatePlural` is the single most common real entity override in the
+    // prod fleet; before this there was nowhere in the clone to put it.
+    const parsed = readChrome({
+      entity: {
+        candidateSingular: 'freelancer',
+        candidatePlural: 'freelancers',
+        candidatePresent: 'Ongoing',
+      },
+    });
+    expect(parsed.entity).toEqual({
+      candidateSingular: 'freelancer',
+      candidatePlural: 'freelancers',
+      candidatePresent: 'Ongoing',
+    });
+  });
+});

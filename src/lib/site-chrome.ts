@@ -12,7 +12,10 @@ export type ChromeEntityKey =
   | 'jobSingular'
   | 'jobPlural'
   | 'companySingular'
-  | 'companyPlural';
+  | 'companyPlural'
+  | 'candidateSingular'
+  | 'candidatePlural'
+  | 'candidatePresent';
 
 export type ChromeCustomLink = { id: string; label: string; url: string };
 
@@ -30,6 +33,10 @@ export type ChromeEntityOverrides = {
   jobPlural?: string;
   companySingular?: string;
   companyPlural?: string;
+  candidateSingular?: string;
+  candidatePlural?: string;
+  /** The "still ongoing" end of a date range on a candidate profile. */
+  candidatePresent?: string;
 };
 
 /**
@@ -98,6 +105,9 @@ export type ChromeFile = {
     jobPlural?: string | null;
     companySingular?: string | null;
     companyPlural?: string | null;
+    candidateSingular?: string | null;
+    candidatePlural?: string | null;
+    candidatePresent?: string | null;
   };
   footer?: {
     description?: string | null;
@@ -178,6 +188,9 @@ const ENTITY_KEYS = [
   'jobPlural',
   'companySingular',
   'companyPlural',
+  'candidateSingular',
+  'candidatePlural',
+  'candidatePresent',
 ] as const satisfies ReadonlyArray<ChromeEntityKey>;
 
 function trimmedText(value: string | null | undefined): string | null {

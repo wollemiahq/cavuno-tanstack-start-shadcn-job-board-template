@@ -480,7 +480,6 @@
   "educationSection_fieldOfStudyLabel": "Field of study",
   "educationSection_heading": "Education",
   "educationSection_institutionLabel": "Institution",
-  "educationSection_presentLabel": "Present",
   "educationSection_saveLabel": "Save",
   "educationSection_savingLabel": "Saving…",
   "educationSection_startLabel": "Start date",
@@ -794,7 +793,6 @@
   "experienceSection_endLabel": "End date",
   "experienceSection_heading": "Experience",
   "experienceSection_locationLabel": "Location",
-  "experienceSection_presentLabel": "Present",
   "experienceSection_saveLabel": "Save",
   "experienceSection_savingLabel": "Saving…",
   "experienceSection_startLabel": "Start date",
@@ -822,8 +820,6 @@
   "home_candidateCtaButton": "Create a candidate profile",
   "home_candidateCtaHeading": "Looking for work?",
   "home_candidateCtaSupporting": "Create a profile to save roles, get alerts, and apply in one place.",
-  "home_candidatePlural": "candidates",
-  "home_candidateSingular": "candidate",
   "home_categoriesDescription": "Jump straight to the roles in your field.",
   "home_categoriesHeading": "Browse by category",
   "home_companiesDescription": "Explore the teams with open roles right now.",
@@ -1255,7 +1251,6 @@
   "publicProfile_languagesHeading": "Languages",
   "publicProfile_notFoundText": "Profile not found.",
   "publicProfile_pageTitle": "{name} — {boardName}",
-  "publicProfile_presentLabel": "Present",
   "publicProfile_profileFallbackLabel": "Profile",
   "publicProfile_skillsHeading": "Skills",
   "resumeImport_description": "Uploading a resume completes your profile. We use that profile to match you with relevant jobs.",
@@ -1774,5 +1769,8 @@
         "countPlural=*": "{countLabel} jobs match your profile and preferences."
       }
     }
-  ]
+  ],
+  "entity_candidateSingular": "candidate",
+  "entity_candidatePlural": "candidates",
+  "entity_candidatePresent": "Present"
 }

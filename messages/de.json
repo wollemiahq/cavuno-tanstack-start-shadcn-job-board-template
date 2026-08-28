@@ -480,7 +480,6 @@
   "educationSection_fieldOfStudyLabel": "Studienrichtung",
   "educationSection_heading": "Ausbildung",
   "educationSection_institutionLabel": "Einrichtung",
-  "educationSection_presentLabel": "Heute",
   "educationSection_saveLabel": "Speichern",
   "educationSection_savingLabel": "Wird gespeichert …",
   "educationSection_startLabel": "Startdatum",
@@ -794,7 +793,6 @@
   "experienceSection_endLabel": "Enddatum",
   "experienceSection_heading": "Berufserfahrung",
   "experienceSection_locationLabel": "Standort",
-  "experienceSection_presentLabel": "Heute",
   "experienceSection_saveLabel": "Speichern",
   "experienceSection_savingLabel": "Wird gespeichert …",
   "experienceSection_startLabel": "Startdatum",
@@ -822,8 +820,6 @@
   "home_candidateCtaButton": "Kandidatenprofil erstellen",
   "home_candidateCtaHeading": "Auf Jobsuche?",
   "home_candidateCtaSupporting": "Erstelle ein Profil, um Stellen zu speichern, Benachrichtigungen zu erhalten und dich an einem Ort zu bewerben.",
-  "home_candidatePlural": "Kandidaten",
-  "home_candidateSingular": "Kandidat",
   "home_categoriesDescription": "Springe direkt zu den Rollen in deinem Bereich.",
   "home_categoriesHeading": "Nach Kategorie stöbern",
   "home_companiesDescription": "Entdecke die Teams mit aktuell offenen Stellen.",
@@ -1255,7 +1251,6 @@
   "publicProfile_languagesHeading": "Sprachen",
   "publicProfile_notFoundText": "Profil nicht gefunden.",
   "publicProfile_pageTitle": "{name} — {boardName}",
-  "publicProfile_presentLabel": "Heute",
   "publicProfile_profileFallbackLabel": "Profil",
   "publicProfile_skillsHeading": "Fähigkeiten",
   "resumeImport_description": "Einen Lebenslauf hochzuladen vervollständigt dein Profil. Wir nutzen dieses Profil, um dich mit relevanten Jobs zusammenzubringen.",
@@ -1774,5 +1769,8 @@
         "countPlural=*": "{countLabel} Jobs passen zu deinem Profil und deinen Präferenzen."
       }
     }
-  ]
+  ],
+  "entity_candidateSingular": "Kandidat",
+  "entity_candidatePlural": "Kandidaten",
+  "entity_candidatePresent": "Heute"
 }

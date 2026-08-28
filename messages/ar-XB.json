@@ -480,7 +480,6 @@
   "educationSection_fieldOfStudyLabel": "⁧⟦Ƒíéĺð óƒ šţúðý⟧⁩",
   "educationSection_heading": "⁧⟦Éðúçáţíóñ⟧⁩",
   "educationSection_institutionLabel": "⁧⟦Íñšţíţúţíóñ⟧⁩",
-  "educationSection_presentLabel": "⁧⟦Þŕéšéñţ⟧⁩",
   "educationSection_saveLabel": "⁧⟦Šáṽé⟧⁩",
   "educationSection_savingLabel": "⁧⟦Šáṽíñğ…⟧⁩",
   "educationSection_startLabel": "⁧⟦Šţáŕţ ðáţé⟧⁩",
@@ -794,7 +793,6 @@
   "experienceSection_endLabel": "⁧⟦Éñð ðáţé⟧⁩",
   "experienceSection_heading": "⁧⟦Éẋþéŕíéñçé⟧⁩",
   "experienceSection_locationLabel": "⁧⟦Ĺóçáţíóñ⟧⁩",
-  "experienceSection_presentLabel": "⁧⟦Þŕéšéñţ⟧⁩",
   "experienceSection_saveLabel": "⁧⟦Šáṽé⟧⁩",
   "experienceSection_savingLabel": "⁧⟦Šáṽíñğ…⟧⁩",
   "experienceSection_startLabel": "⁧⟦Šţáŕţ ðáţé⟧⁩",
@@ -822,8 +820,6 @@
   "home_candidateCtaButton": "⁧⟦Çŕéáţé á çáñðíðáţé þŕóƒíĺé⟧⁩",
   "home_candidateCtaHeading": "⁧⟦Ĺóóķíñğ ƒóŕ ŵóŕķ?⟧⁩",
   "home_candidateCtaSupporting": "⁧⟦Çŕéáţé á þŕóƒíĺé ţó šáṽé ŕóĺéš, ğéţ áĺéŕţš, áñð áþþĺý íñ óñé þĺáçé.⟧⁩",
-  "home_candidatePlural": "⁧⟦çáñðíðáţéš⟧⁩",
-  "home_candidateSingular": "⁧⟦çáñðíðáţé⟧⁩",
   "home_categoriesDescription": "⁧⟦Ĵúɱþ šţŕáíğĥţ ţó ţĥé ŕóĺéš íñ ýóúŕ ƒíéĺð.⟧⁩",
   "home_categoriesHeading": "⁧⟦Ɓŕóŵšé ƀý çáţéğóŕý⟧⁩",
   "home_companiesDescription": "⁧⟦Éẋþĺóŕé ţĥé ţéáɱš ŵíţĥ óþéñ ŕóĺéš ŕíğĥţ ñóŵ.⟧⁩",
@@ -1255,7 +1251,6 @@
   "publicProfile_languagesHeading": "⁧⟦Ĺáñğúáğéš⟧⁩",
   "publicProfile_notFoundText": "⁧⟦Þŕóƒíĺé ñóţ ƒóúñð.⟧⁩",
   "publicProfile_pageTitle": "⁧⟦{name} — {boardName}⟧⁩",
-  "publicProfile_presentLabel": "⁧⟦Þŕéšéñţ⟧⁩",
   "publicProfile_profileFallbackLabel": "⁧⟦Þŕóƒíĺé⟧⁩",
   "publicProfile_skillsHeading": "⁧⟦Šķíĺĺš⟧⁩",
   "resumeImport_description": "⁧⟦Úþĺóáðíñğ á ŕéšúɱé çóɱþĺéţéš ýóúŕ þŕóƒíĺé. Ŵé úšé ţĥáţ þŕóƒíĺé ţó ɱáţçĥ ýóú ŵíţĥ ŕéĺéṽáñţ ĵóƀš.⟧⁩",
@@ -1774,5 +1769,8 @@
         "countPlural=*": "⁧⟦{countLabel} ĵóƀš ɱáţçĥ ýóúŕ þŕóƒíĺé áñð þŕéƒéŕéñçéš.⟧⁩"
       }
     }
-  ]
+  ],
+  "entity_candidateSingular": "⁧⟦çáñðíðáţé⟧⁩",
+  "entity_candidatePlural": "⁧⟦çáñðíðáţéš⟧⁩",
+  "entity_candidatePresent": "⁧⟦Þŕéšéñţ⟧⁩"
 }

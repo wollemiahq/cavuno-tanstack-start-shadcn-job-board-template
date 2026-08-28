@@ -158,6 +158,9 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
       companySingular: m.entity_companySingular(),
       jobPlural: m.entity_jobPlural(),
       jobSingular: m.entity_jobSingular(),
+      candidateSingular: m.entity_candidateSingular(),
+      candidatePlural: m.entity_candidatePlural(),
+      candidatePresent: m.entity_candidatePresent(),
     });
   });
 });
