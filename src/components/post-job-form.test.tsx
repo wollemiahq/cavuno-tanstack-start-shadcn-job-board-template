@@ -430,7 +430,7 @@ describe('PostJobForm', () => {
 
 /**
  * Board job-form constraints. The platform ENFORCES these on create
- * (`collectJobConstraintViolations` → 400), so an un-narrowed picker or a
+ * (the API rejects a violating job with a 400), so an un-narrowed picker or a
  * skipped check means the employer fills the whole form and then eats an
  * opaque failure.
  */

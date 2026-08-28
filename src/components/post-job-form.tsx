@@ -286,7 +286,7 @@ export function PostJobForm({
   }
 
   function addOfficeLocation(location: OfficeLocationDraft) {
-    // Mirror the server rule exactly (`collectJobConstraintViolations`): a
+    // Mirror the server rule exactly: a
     // location is rejected only when it HAS a country code outside the
     // board's list. Free text carries no country and is left alone there,
     // so rejecting it here would be stricter than the platform.
@@ -487,7 +487,7 @@ export function PostJobForm({
     }
 
     // Board-configured requirements. The platform enforces these on create
-    // (`collectJobConstraintViolations` → 400), so catching them here is the
+    // (the API rejects a violating job with a 400), so catching them here is the
     // difference between an inline message and an opaque failure after the
     // employer has filled the entire form.
     if (jobForm.seniority.visible && jobForm.seniority.required && !seniority) {

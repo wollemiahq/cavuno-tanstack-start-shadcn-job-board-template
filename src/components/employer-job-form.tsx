@@ -92,7 +92,7 @@ const SENIORITIES = [
 /**
  * The board's job-form constraints, checked against the draft. Returns the
  * viewer-locale message for the first violation, or `''` when clean —
- * `collectJobConstraintViolations` on the platform is the authority and
+ * The platform is the authority and
  * will 400 anything this misses.
  */
 function jobFormConstraintError(
@@ -587,7 +587,7 @@ export function EmployerJobForm({
       return;
 
     // Board-configured requirements. The platform enforces these on save
-    // (`collectJobConstraintViolations` → 400) with an English wire
+    // (the API rejects it with a 400) with an English wire
     // sentence; catching them here gives the employer a localized message
     // before the round trip.
     const constraintError = jobFormConstraintError(form, jobForm);

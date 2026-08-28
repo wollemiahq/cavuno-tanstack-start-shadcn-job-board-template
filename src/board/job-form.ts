@@ -5,8 +5,8 @@
  *
  *   - VISIBILITY hides a field. Absent ⇒ visible (hosted polarity).
  *   - CONSTRAINTS (required / bounds / allow-lists) are ENFORCED by the
- *     platform when the job is created — `collectJobConstraintViolations`
- *     throws `JOBS_CONSTRAINT_VIOLATION`, surfaced as a 400. A form that
+ *     platform when the job is created: it rejects a violating job with a
+ *     400. A form that
  *     ignores them offers options the server will reject and the employer
  *     only finds out on submit, after filling everything in.
  *
