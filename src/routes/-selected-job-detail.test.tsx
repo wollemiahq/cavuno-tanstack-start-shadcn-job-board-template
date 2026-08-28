@@ -117,6 +117,7 @@ const board = {
   },
   contact: {
     email: null,
+    legalName: null,
     websiteUrl: null,
     xUrl: null,
     facebookUrl: null,

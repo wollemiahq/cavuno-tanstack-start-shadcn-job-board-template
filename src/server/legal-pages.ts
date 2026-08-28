@@ -103,7 +103,10 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
       const page: LegalPageViewModel = {
         type: data.type,
         title: content.title,
-        legalEntity: data.type === 'impressum' ? resolveLegalEntity() : null,
+        legalEntity:
+          data.type === 'impressum'
+            ? resolveLegalEntity(boardContext.contact?.legalName)
+            : null,
       };
 
       return { page, seo, head, jsonLd };
