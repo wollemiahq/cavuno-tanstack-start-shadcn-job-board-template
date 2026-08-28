@@ -4,8 +4,8 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { BoardJobAlertConversionTracker } from '@/components/board-job-alert-conversion-tracker';
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
+import { BoardJobAlertConversionTracker } from '@/components/board-job-alert-conversion-tracker';
 import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
 
 vi.mock('@/lib/board-pixel-conversions', async (importOriginal) => {

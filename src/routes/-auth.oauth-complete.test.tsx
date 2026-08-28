@@ -3,13 +3,13 @@ import '@testing-library/jest-dom/vitest';
 import { isRedirect } from '@tanstack/react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { loadOAuthComplete } from './-auth.oauth-complete';
+
 import {
   appendAuthIntentQuery,
   appendOAuthProviderHint,
 } from '@/lib/board-datalayer-events';
 import { candidateOAuthReturnTo } from '@/lib/candidate-return-to';
-
-import { loadOAuthComplete } from './-auth.oauth-complete';
 
 const mocks = {
   exchangeOAuth: vi.fn(),
@@ -30,10 +30,7 @@ describe('/auth/oauth-complete loader', () => {
     mocks.exchangeOAuth.mockResolvedValue({ ok: true, isNewUser: false });
     let result: unknown;
     try {
-      await loadOAuthComplete(
-        { token: 'oauth-token', returnTo },
-        mocks,
-      );
+      await loadOAuthComplete({ token: 'oauth-token', returnTo }, mocks);
     } catch (error) {
       result = error;
     }
@@ -53,10 +50,7 @@ describe('/auth/oauth-complete loader', () => {
     mocks.exchangeOAuth.mockResolvedValue({ ok: true, isNewUser: true });
     let result: unknown;
     try {
-      await loadOAuthComplete(
-        { token: 'oauth-token', returnTo },
-        mocks,
-      );
+      await loadOAuthComplete({ token: 'oauth-token', returnTo }, mocks);
     } catch (error) {
       result = error;
     }

@@ -26,9 +26,9 @@ import {
   type PublicApplyAction,
 } from '@/board/apply-view-model';
 import { useBoardConversionAnalytics } from '@/components/board-conversion-analytics';
-import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
 import {
   candidateSignInHref,
   candidateVerifyEmailHref,
@@ -99,7 +99,10 @@ export function ApplyButton({
   /** Ask Cavuno whether this native Apply needs a browser-edge receipt. */
   onPrepareApply: (jobSlug: string) => Promise<NativeApplyPrepareResult>;
   /** Submit natively; a receipt id is present only when preparation required it. */
-  onApply: (jobSlug: string, approvalReceipt?: string) => Promise<{ id: string } | void>;
+  onApply: (
+    jobSlug: string,
+    approvalReceipt?: string,
+  ) => Promise<{ id: string } | void>;
   /**
    * Seed the private application lookup. `unknown` is deliberately distinct
    * from `not-applied`: it blocks another submission until a retry resolves.

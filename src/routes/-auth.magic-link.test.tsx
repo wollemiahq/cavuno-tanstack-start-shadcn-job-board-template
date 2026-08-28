@@ -3,9 +3,9 @@ import '@testing-library/jest-dom/vitest';
 import { isRedirect } from '@tanstack/react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { appendAuthIntentQuery } from '@/lib/board-datalayer-events';
-
 import { loadMagicLink } from './-auth.magic-link';
+
+import { appendAuthIntentQuery } from '@/lib/board-datalayer-events';
 
 const mocks = {
   consumeMagicLink: vi.fn(),
