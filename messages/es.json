@@ -7,9 +7,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "cada {countLabel} mes",
         "countPlural=*": "cada {countLabel} meses"
@@ -23,9 +21,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "cada {countLabel} año",
         "countPlural=*": "cada {countLabel} años"
@@ -81,9 +77,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "1 oferta coincide con tu perfil y tus preferencias.",
         "countPlural=*": "{countLabel} ofertas coinciden con tu perfil y tus preferencias."
@@ -102,9 +96,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Has guardado 1 oferta.",
         "countPlural=*": "Has guardado {countLabel} ofertas."
@@ -417,8 +409,8 @@
   "boardError_registrationDisabledText": "Los registros están cerrados en este portal.",
   "boardError_sameEmailText": "Ese ya es tu correo.",
   "boardError_stripeNotConnectedText": "El pago no está disponible en este portal ahora mismo.",
-  "boardError_talentAccessRequiredText": "Necesitas acceso a talento para hacer esto.",
-  "boardError_talentAccessUnavailableText": "El acceso a talento no está disponible en este portal ahora mismo.",
+  "boardError_talentAccessRequiredText": "Necesitas acceso al talento para hacer esto.",
+  "boardError_talentAccessUnavailableText": "El acceso al talento no está disponible en este portal ahora mismo.",
   "boardError_unauthorizedText": "Inicia sesión primero.",
   "boardError_validationText": "Hay campos que necesitan atención. Revisa el formulario e inténtalo de nuevo.",
   "breadcrumbJsonLd_forEmployersLabel": "Para empresas",
@@ -470,9 +462,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} oferta abierta",
         "countPlural=*": "{countLabel} ofertas abiertas"
@@ -487,9 +477,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} oferta abierta",
         "countPlural=*": "{countLabel} ofertas abiertas"
@@ -505,9 +493,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Ver la oferta",
         "countPlural=*": "Ver las {countLabel} ofertas"
@@ -558,9 +544,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} empresa",
         "countPlural=*": "{countLabel} empresas"
@@ -600,9 +584,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} candidato",
         "countPlural=*": "{countLabel} candidatos"
@@ -616,9 +598,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} empresa",
         "countPlural=*": "{countLabel} empresas"
@@ -632,9 +612,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} oferta",
         "countPlural=*": "{countLabel} ofertas"
@@ -648,9 +626,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} publicación",
         "countPlural=*": "{countLabel} publicaciones"
@@ -710,9 +686,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} candidato",
         "countPlural=*": "{countLabel} candidatos"
@@ -833,9 +807,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} miembro más",
         "countPlural=*": "{countLabel} miembros más"
@@ -874,9 +846,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Tienes 1 oferta activa.",
         "countPlural=*": "Tienes {countLabel} ofertas activas."
@@ -903,7 +873,7 @@
   "employerJobs_viewsColumn": "Visitas",
   "employerJobs_yourJobsHeading": "Tus ofertas",
   "employerLanding_backToPlansLabel": "Volver a los planes",
-  "employerLanding_completePurchaseSubtitle": "Introduce tus datos de pago para suscribirte al acceso a talento. Puedes volver a los planes cuando quieras.",
+  "employerLanding_completePurchaseSubtitle": "Introduce tus datos de pago para suscribirte al acceso al talento. Puedes volver a los planes cuando quieras.",
   "employerLanding_completePurchaseTitle": "Completa tu compra",
   "employerLanding_confirmingSubtitle": "Un momento. Estamos confirmando tu pago. No se te cobrará de nuevo.",
   "employerLanding_confirmingText": "Confirmando tu compra…",
@@ -915,9 +885,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} oferta activa",
         "countPlural=*": "{countLabel} ofertas activas"
@@ -931,9 +899,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} destacada",
         "countPlural=*": "{countLabel} destacadas"
@@ -948,9 +914,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} mensaje",
         "countPlural=*": "{countLabel} mensajes"
@@ -964,9 +928,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} desbloqueo de perfil",
         "countPlural=*": "{countLabel} desbloqueos de perfil"
@@ -1001,9 +963,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Tienes 1 miembro en el equipo.",
         "countPlural=*": "Tienes {countLabel} miembros en el equipo."
@@ -1261,9 +1221,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} oferta",
         "countPlural=*": "{countLabel} ofertas"
@@ -1453,9 +1411,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Incluye 1 oferta destacada",
         "countPlural=*": "Incluye {countLabel} ofertas destacadas"
@@ -1471,9 +1427,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "1 oferta activa a la vez",
         "countPlural=*": "Hasta {countLabel} ofertas activas"
@@ -1716,9 +1670,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Salarios de {skill} en {countLabel} ubicación.",
         "countPlural=*": "Salarios de {skill} en {countLabel} ubicaciones."
@@ -1744,9 +1696,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Salarios de {title} en {countLabel} ubicación.",
         "countPlural=*": "Salarios de {title} en {countLabel} ubicaciones."
@@ -1772,9 +1722,7 @@
         "input jobCountLabel",
         "local jobCountPlural = jobCount: plural"
       ],
-      "selectors": [
-        "jobCountPlural"
-      ],
+      "selectors": ["jobCountPlural"],
       "match": {
         "jobCountPlural=one": "{jobCountLabel} oferta de empleo",
         "jobCountPlural=*": "{jobCountLabel} ofertas de empleo"
@@ -1941,7 +1889,7 @@
   "talentSearch_statusActivelyLooking": "Buscando activamente",
   "talentSearch_statusNotLooking": "No busca",
   "talentSearch_statusOpenToOffers": "Abierto a ofertas",
-  "talentSearch_upgradeToMessageLabel": "Mejora tu plan para escribir",
+  "talentSearch_upgradeToMessageLabel": "Mejorar plan para escribir",
   "talentSearch_viewProfileLabel": "Ver perfil",
   "talentUnlock_confirmAction": "Desbloquear perfil",
   "talentUnlock_confirmBody": "Esto consume un desbloqueo de perfil del plan de talento de tu empresa.",
@@ -1953,9 +1901,7 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": [
-        "countPlural"
-      ],
+      "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Te queda {countLabel} desbloqueo.",
         "countPlural=*": "Te quedan {countLabel} desbloqueos."
@@ -1965,14 +1911,14 @@
   "talentUnlock_neededBody": "Usa un desbloqueo para ver el perfil completo.",
   "talentUnlock_neededTitle": "Desbloquea este perfil",
   "talentUnlock_noPlanBody": "Suscríbete a un plan de talento para desbloquear perfiles de candidatos.",
-  "talentUnlock_noPlanTitle": "Necesitas acceso a talento",
+  "talentUnlock_noPlanTitle": "Necesitas acceso al talento",
   "talentUnlock_outOfUnlocksBody": "Mejora tu plan de talento para seguir desbloqueando perfiles.",
   "talentUnlock_outOfUnlocksTitle": "Te has quedado sin desbloqueos de perfil",
   "talentUnlock_pendingBody": "Comprobando si este perfil se puede desbloquear.",
   "talentUnlock_pendingTitle": "Cargando perfil",
   "talentUnlock_unlockingLabel": "Desbloqueando…",
   "talentUnlock_upgradeLabel": "Mejorar plan",
-  "talentUnlock_upgradingLabel": "Mejorando…",
+  "talentUnlock_upgradingLabel": "Mejorando plan…",
   "talentUnlock_viewPlansLabel": "Ver planes de talento",
   "threadView_archiveLabel": "Archivar",
   "threadView_backToInboxAriaLabel": "Volver a la bandeja de entrada",
