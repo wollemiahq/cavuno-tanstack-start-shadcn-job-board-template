@@ -71,7 +71,11 @@ import type {
   SubmitJobInput,
   SubmitJobResult,
 } from '../server/post';
-import { resolveJobForm, type JobFormSource } from '@/board/job-form';
+import {
+  narrowOptions,
+  resolveJobFormConstraints,
+  type JobFormSource,
+} from '@/board/job-form';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import { planDescription, planName } from '@/board/plan-labels';
 import { planFeatureLines } from '@/board/plan-view-model';
@@ -111,6 +115,19 @@ const SENIORITIES = [
   'executive',
 ] as const;
 const PROTOCOL_PREFIX = 'https://';
+/**
+ * Keep the form's own default when the board still allows it, and only fall
+ * back to the first allowed value when it does not. Taking `allowed[0]`
+ * unconditionally would silently change the default on the ~165 boards that
+ * configure no restriction at all.
+ */
+function preferredDefault<T extends string>(
+  preferred: T,
+  allowed: readonly T[],
+): T {
+  return allowed.includes(preferred) ? preferred : (allowed[0] ?? preferred);
+}
+
 type RemoteOptionChoice = (typeof REMOTE_OPTIONS)[number];
 
 type Status =
@@ -215,7 +232,21 @@ export function PostJobForm({
   onCheckout,
   DescriptionEditor = RichTextEditor,
 }: PostJobFormProps) {
-  const jobForm = resolveJobForm(jobFormSource);
+  const jobForm = resolveJobFormConstraints(jobFormSource);
+  // A board narrowed to e.g. remote-only or EUR-only would otherwise open
+  // the form pre-filled with a value it rejects, and the employer would
+  // never think to change it.
+  const defaultRemoteOption = preferredDefault(
+    'hybrid',
+    narrowOptions(REMOTE_OPTIONS, jobForm.workArrangement.allowedOptions),
+  );
+  const currencyOptions = salaryCurrencyOptions(
+    jobForm.salary.allowedCurrencies,
+  );
+  const defaultCurrency = preferredDefault(
+    'USD',
+    currencyOptions.map(({ value }) => value),
+  );
   const formRef = useRef<HTMLFormElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const autoFetched = useRef(new Set<string>());
@@ -224,10 +255,10 @@ export function PostJobForm({
     logoUrl: null,
     logoStatus: { kind: 'idle' },
     description: '',
-    currency: 'USD',
+    currency: defaultCurrency,
     salaryTimeframe: DEFAULT_SALARY_TIMEFRAME,
     companyName: '',
-    remoteOption: 'hybrid',
+    remoteOption: defaultRemoteOption,
     remotePermitSelections: [],
     seniority: null,
     officeLocations: [],
@@ -255,6 +286,27 @@ export function PostJobForm({
   }
 
   function addOfficeLocation(location: OfficeLocationDraft) {
+    // Mirror the server rule exactly (`collectJobConstraintViolations`): a
+    // location is rejected only when it HAS a country code outside the
+    // board's list. Free text carries no country and is left alone there,
+    // so rejecting it here would be stricter than the platform.
+    const allowedCountries = jobForm.location.allowedCountries;
+    if (
+      allowedCountries &&
+      location.countryCode &&
+      !allowedCountries.includes(location.countryCode)
+    ) {
+      updateFormState({
+        officeLocationsError: true,
+        status: {
+          kind: 'error',
+          message: m.jobForm_officeLocationCountryNotAllowedError({
+            countries: allowedCountries.join(', '),
+          }),
+        },
+      });
+      return;
+    }
     setFormState((current) =>
       current.officeLocations.some((entry) => entry.key === location.key)
         ? current
@@ -282,15 +334,31 @@ export function PostJobForm({
     selectedPlan?.kind === 'free'
       ? m.postJob_submitButtonLabel()
       : m.postJob_checkoutButtonLabel();
-  const employmentItems = EMPLOYMENT_TYPES.map((value) => ({
+  // Narrow every picker to what the board accepts. The platform 400s a job
+  // carrying a disallowed value (`JOBS_CONSTRAINT_VIOLATION`), so an
+  // un-narrowed picker is a trap: the employer fills the whole form and
+  // only then learns the option was never on offer.
+  const allowedEmploymentTypes = narrowOptions(
+    EMPLOYMENT_TYPES,
+    jobForm.employmentType.allowedOptions,
+  );
+  const allowedRemoteOptions = narrowOptions(
+    REMOTE_OPTIONS,
+    jobForm.workArrangement.allowedOptions,
+  );
+  const allowedSeniorities = narrowOptions(
+    SENIORITIES,
+    jobForm.seniority.allowedOptions,
+  );
+  const employmentItems = allowedEmploymentTypes.map((value) => ({
     value,
     label: enumLabel(value) ?? value,
   }));
-  const remoteItems = REMOTE_OPTIONS.map((value) => ({
+  const remoteItems = allowedRemoteOptions.map((value) => ({
     value,
     label: enumLabel(value) ?? value,
   }));
-  const seniorityItems = SENIORITIES.map((value) => ({
+  const seniorityItems = allowedSeniorities.map((value) => ({
     value,
     label: enumLabel(value) ?? value,
   }));
@@ -330,7 +398,7 @@ export function PostJobForm({
       choice.name.toLowerCase().includes(query),
     );
   }, [permitChoices, permitQuery]);
-  const currencyItems = salaryCurrencyOptions().map(({ value, label }) => ({
+  const currencyItems = currencyOptions.map(({ value, label }) => ({
     value,
     label,
   }));
@@ -418,6 +486,20 @@ export function PostJobForm({
       return;
     }
 
+    // Board-configured requirements. The platform enforces these on create
+    // (`collectJobConstraintViolations` → 400), so catching them here is the
+    // difference between an inline message and an opaque failure after the
+    // employer has filled the entire form.
+    if (jobForm.seniority.visible && jobForm.seniority.required && !seniority) {
+      updateFormState({
+        status: {
+          kind: 'error',
+          message: m.jobForm_seniorityRequiredError(),
+        },
+      });
+      return;
+    }
+
     // On-site and hybrid roles need somewhere to be on-site AT — mirror the
     // hosted submission wizard's requirement. Remote roles may leave it empty.
     if (
@@ -438,6 +520,44 @@ export function PostJobForm({
     const form = new FormData(event.currentTarget);
     const salaryMin = readNumber(form, 'salaryMin');
     const salaryMax = readNumber(form, 'salaryMax');
+
+    if (jobForm.salary.visible) {
+      if (
+        jobForm.salary.required &&
+        (salaryMin === undefined || salaryMax === undefined)
+      ) {
+        updateFormState({
+          status: { kind: 'error', message: m.jobForm_salaryRequiredError() },
+        });
+        return;
+      }
+      // Bounds ride only on a required salary (the API drops them
+      // otherwise), so an absent value here means the field is optional and
+      // left blank — nothing to check.
+      const { minBound, maxBound } = jobForm.salary;
+      const entered = [salaryMin, salaryMax].filter(
+        (value): value is number => value !== undefined,
+      );
+      if (minBound !== null && entered.some((value) => value < minBound)) {
+        updateFormState({
+          status: {
+            kind: 'error',
+            message: m.jobForm_salaryBelowMinError({ min: minBound }),
+          },
+        });
+        return;
+      }
+      if (maxBound !== null && entered.some((value) => value > maxBound)) {
+        updateFormState({
+          status: {
+            kind: 'error',
+            message: m.jobForm_salaryAboveMaxError({ max: maxBound }),
+          },
+        });
+        return;
+      }
+    }
+
     updateFormState({ status: { kind: 'pending' } });
 
     // Empty strings / empty selections are"unanswered", not values.
@@ -712,7 +832,8 @@ export function PostJobForm({
             onValueChange={(value) =>
               updateFormState({
                 remoteOption:
-                  remoteOptionChoice(searchString(value)) ?? 'hybrid',
+                  remoteOptionChoice(searchString(value)) ??
+                  defaultRemoteOption,
                 officeLocationsError: false,
               })
             }
@@ -837,7 +958,7 @@ export function PostJobForm({
                 items={currencyItems}
                 value={currency}
                 onValueChange={(value) =>
-                  updateFormState({ currency: value ?? 'USD' })
+                  updateFormState({ currency: value ?? defaultCurrency })
                 }
               />
               <LabeledInput

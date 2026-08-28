@@ -25,7 +25,12 @@ import { salaryCurrencyOptions } from '../lib/salary-currencies';
 import { m } from '../paraglide/messages';
 import { checkoutJob, createJob, updateJob } from '../server/employers';
 
-import { resolveJobForm, type JobFormSource } from '@/board/job-form';
+import {
+  narrowOptions,
+  resolveJobFormConstraints,
+  type JobFormConstraints,
+  type JobFormSource,
+} from '@/board/job-form';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import { planFeatureLines } from '@/board/plan-view-model';
 import type { LocationSuggestionState } from '@/components/location-combobox';
@@ -83,6 +88,54 @@ const SENIORITIES = [
   'director',
   'executive',
 ] as const;
+
+/**
+ * The board's job-form constraints, checked against the draft. Returns the
+ * viewer-locale message for the first violation, or `''` when clean —
+ * `collectJobConstraintViolations` on the platform is the authority and
+ * will 400 anything this misses.
+ */
+function jobFormConstraintError(
+  form: { salaryMin: string; salaryMax: string; seniority: string | null },
+  jobForm: JobFormConstraints,
+): string {
+  if (
+    jobForm.seniority.visible &&
+    jobForm.seniority.required &&
+    !form.seniority
+  ) {
+    return m.jobForm_seniorityRequiredError();
+  }
+  if (!jobForm.salary.visible) return '';
+  const values = [form.salaryMin, form.salaryMax]
+    .filter((entry) => entry !== '')
+    .map(Number)
+    .filter((value) => Number.isFinite(value));
+  if (jobForm.salary.required && values.length < 2) {
+    return m.jobForm_salaryRequiredError();
+  }
+  const { minBound, maxBound } = jobForm.salary;
+  if (minBound !== null && values.some((value) => value < minBound)) {
+    return m.jobForm_salaryBelowMinError({ min: minBound });
+  }
+  if (maxBound !== null && values.some((value) => value > maxBound)) {
+    return m.jobForm_salaryAboveMaxError({ max: maxBound });
+  }
+  return '';
+}
+
+/**
+ * Keep the form's own default when the board still allows it, and only fall
+ * back to the first allowed value when it does not. Taking `allowed[0]`
+ * unconditionally would silently change the default on the ~165 boards that
+ * configure no restriction at all.
+ */
+function preferredDefault<T extends string>(
+  preferred: T,
+  allowed: readonly T[],
+): T {
+  return allowed.includes(preferred) ? preferred : (allowed[0] ?? preferred);
+}
 
 type EmploymentTypeOption = (typeof EMPLOYMENT_TYPES)[number];
 type RemoteOptionChoice = (typeof REMOTE_OPTIONS)[number];
@@ -169,17 +222,25 @@ function formatPrice(
 function initialForm(
   job: EmployerJob | undefined,
   countryName: (code: string) => string,
+  // A board narrowed to e.g. remote-only, contract-only or EUR-only would
+  // otherwise open the form pre-filled with a value it rejects, and the
+  // employer would never think to change it.
+  defaults: {
+    employmentType: EmploymentTypeOption;
+    remoteOption: RemoteOptionChoice;
+    currency: string;
+  },
 ): EmployerJobFormState {
   if (!job) {
     return {
       title: '',
-      employmentType: 'full_time' satisfies EmploymentTypeOption,
+      employmentType: defaults.employmentType,
       seniority: null,
-      remoteOption: 'hybrid' satisfies RemoteOptionChoice,
+      remoteOption: defaults.remoteOption,
       officeLocations: [],
       permitSelections: [],
       description: '',
-      currency: 'USD',
+      currency: defaults.currency,
       salaryTimeframe: DEFAULT_SALARY_TIMEFRAME,
       salaryMin: '',
       salaryMax: '',
@@ -223,10 +284,11 @@ function initialForm(
     title: job.title,
     employmentType:
       EMPLOYMENT_TYPES.find((value) => value === job.employmentType) ??
-      'full_time',
+      defaults.employmentType,
     seniority,
     remoteOption:
-      REMOTE_OPTIONS.find((value) => value === job.remoteOption) ?? 'hybrid',
+      REMOTE_OPTIONS.find((value) => value === job.remoteOption) ??
+      defaults.remoteOption,
     officeLocations,
     permitSelections,
     description: job.description ?? '',
@@ -253,7 +315,25 @@ export function EmployerJobForm({
   jobForm: jobFormSource,
   dependencies,
 }: EmployerJobFormProps) {
-  const jobForm = resolveJobForm(jobFormSource);
+  const jobForm = resolveJobFormConstraints(jobFormSource);
+  // Narrow every picker to what the board accepts. The platform 400s a job
+  // carrying a disallowed value (`JOBS_CONSTRAINT_VIOLATION`), so an
+  // un-narrowed picker offers options the save will reject.
+  const allowedEmploymentTypes = narrowOptions(
+    EMPLOYMENT_TYPES,
+    jobForm.employmentType.allowedOptions,
+  );
+  const allowedRemoteOptions = narrowOptions(
+    REMOTE_OPTIONS,
+    jobForm.workArrangement.allowedOptions,
+  );
+  const allowedSeniorities = narrowOptions(
+    SENIORITIES,
+    jobForm.seniority.allowedOptions,
+  );
+  const currencyOptions = salaryCurrencyOptions(
+    jobForm.salary.allowedCurrencies,
+  );
   const router = useRouter();
   const actions: EmployerJobFormDependencies = dependencies ?? {
     createJob,
@@ -278,7 +358,16 @@ export function EmployerJobForm({
   const canPublish = billingOptions.length > 0 || plans.length > 0;
   const billingRequired = mode.kind === 'create' && canPublish;
 
-  const [form, setForm] = useState(() => initialForm(job, countryName));
+  const [form, setForm] = useState(() =>
+    initialForm(job, countryName, {
+      employmentType: preferredDefault('full_time', allowedEmploymentTypes),
+      remoteOption: preferredDefault('hybrid', allowedRemoteOptions),
+      currency: preferredDefault(
+        'USD',
+        currencyOptions.map(({ value }) => value),
+      ),
+    }),
+  );
   /** `option:{id}` (existing credit) or `plan:{planId}` (new purchase). */
   const [selectedBilling, setSelectedBilling] = useState<string | null>(null);
   const [status, setStatus] = useState<
@@ -299,19 +388,19 @@ export function EmployerJobForm({
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  const employmentItems = EMPLOYMENT_TYPES.map((value) => ({
+  const employmentItems = allowedEmploymentTypes.map((value) => ({
     value,
     label: enumLabel(value) ?? value,
   }));
-  const remoteItems = REMOTE_OPTIONS.map((value) => ({
+  const remoteItems = allowedRemoteOptions.map((value) => ({
     value,
     label: enumLabel(value) ?? value,
   }));
-  const seniorityItems = SENIORITIES.map((value) => ({
+  const seniorityItems = allowedSeniorities.map((value) => ({
     value,
     label: enumLabel(value) ?? value,
   }));
-  const currencyItems = salaryCurrencyOptions().map(({ value, label }) => ({
+  const currencyItems = currencyOptions.map(({ value, label }) => ({
     value,
     label,
   }));
@@ -496,6 +585,16 @@ export function EmployerJobForm({
       errors.billing
     )
       return;
+
+    // Board-configured requirements. The platform enforces these on save
+    // (`collectJobConstraintViolations` → 400) with an English wire
+    // sentence; catching them here gives the employer a localized message
+    // before the round trip.
+    const constraintError = jobFormConstraintError(form, jobForm);
+    if (constraintError) {
+      setMessage(constraintError);
+      return;
+    }
 
     // Native apply clears the stored URL (create omits it; edit must send null
     // to switch a previously-external job back to on-board applications).

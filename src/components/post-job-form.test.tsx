@@ -13,6 +13,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PostJobForm } from './post-job-form';
 
 import type { RichTextEditorProps } from './rich-text-editor';
+import type { JobFormSource } from '@/board/job-form';
+import { enumLabel } from '@/lib/enum-labels';
 import { m } from '@/paraglide/messages';
 import type { JobPostingPlan } from '@cavuno/board';
 
@@ -423,5 +425,151 @@ describe('PostJobForm', () => {
     expect(
       screen.queryByLabelText(m.postJob_officeLocationsLabel()),
     ).toBeNull();
+  });
+});
+
+/**
+ * Board job-form constraints. The platform ENFORCES these on create
+ * (`collectJobConstraintViolations` → 400), so an un-narrowed picker or a
+ * skipped check means the employer fills the whole form and then eats an
+ * opaque failure.
+ */
+describe('PostJobForm — board job-form constraints', () => {
+  function renderConstrained(jobForm: JobFormSource['jobForm']) {
+    const onSubmit = vi.fn().mockResolvedValue({
+      ok: true,
+      result: {
+        object: 'job_posting_result',
+        status: 'published',
+        jobId: 'job-1',
+        jobSlug: 'staff-product-designer',
+      },
+    });
+    render(
+      <PostJobForm
+        DescriptionEditor={DescriptionEditor}
+        customFields={[]}
+        remotePermits={null}
+        locale="en"
+        officeLocationSuggestions={{
+          suggestions: [],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
+        plans={plans}
+        jobForm={{ object: 'public_board', jobForm }}
+        onSubmit={onSubmit}
+        onLogoFetch={vi.fn()}
+        onLogoUpload={vi.fn()}
+        onCheckout={vi.fn()}
+      />,
+    );
+    return onSubmit;
+  }
+
+  function fillRequiredFields() {
+    for (const [label, value] of [
+      [m.postJob_companyNameLabel(), 'Acme Studio'],
+      [m.postJob_contactNameLabel(), 'Ada Lovelace'],
+      [m.postJob_contactEmailLabel(), 'ada@acme.example'],
+      [m.postJob_jobTitleLabel(), 'Staff Product Designer'],
+      [m.postJob_descriptionLabel(), 'Lead product design.'],
+      [m.postJob_applicationUrlLabel(), 'acme.example/careers/x'],
+    ] as const) {
+      fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    }
+    const officeLocations = screen.getByLabelText(
+      m.postJob_officeLocationsLabel(),
+    );
+    fireEvent.change(officeLocations, { target: { value: 'Berlin' } });
+    fireEvent.keyDown(officeLocations, { key: 'Enter' });
+  }
+
+  function submit() {
+    const button = screen
+      .getAllByRole('button')
+      .find((entry) => entry.getAttribute('type') === 'submit');
+    if (!button) throw new Error('The post form needs a submit button');
+    fireEvent.click(button);
+  }
+
+  // The pickers are listbox widgets, not native <select>: their options
+  // only exist in the DOM while open. The trigger's rendered value is the
+  // observable proof that the allow-list reached the picker — a narrowed
+  // list changes which option is selected when the form opens.
+  function triggerText(label: string) {
+    // The trigger appends a chevron glyph after the selected label.
+    return screen.getByLabelText(label).textContent?.replace(/\u25bc$/, '');
+  }
+
+  it('narrows the employment-type picker so the default is a value the board accepts', () => {
+    renderConstrained({ employmentType: { allowedOptions: ['contract'] } });
+    expect(triggerText(m.postJob_employmentTypeLabel())).toBe(
+      enumLabel('contract'),
+    );
+  });
+
+  it('narrows the currency picker to the board allow-list', () => {
+    renderConstrained({ salary: { allowedCurrencies: ['EUR', 'GBP'] } });
+    expect(triggerText(m.postJob_currencyLabel())).toBe('EUR');
+  });
+
+  it('defaults the work arrangement to a value the board accepts', () => {
+    renderConstrained({ workArrangement: { allowedOptions: ['remote'] } });
+    expect(triggerText(m.postJob_remoteOptionLabel())).toBe(
+      enumLabel('remote'),
+    );
+  });
+
+  it('keeps the form defaults when the board sets no restriction', () => {
+    // Taking allowed[0] unconditionally would flip every unconstrained
+    // board's work arrangement from hybrid to remote and its currency off
+    // USD.
+    renderConstrained({});
+    expect(triggerText(m.postJob_remoteOptionLabel())).toBe(
+      enumLabel('hybrid'),
+    );
+    expect(triggerText(m.postJob_currencyLabel())).toBe('USD');
+  });
+
+  it('blocks submit with a localized message when a required salary is missing', async () => {
+    const onSubmit = renderConstrained({ salary: { required: true } });
+    fillRequiredFields();
+    submit();
+
+    expect(
+      await screen.findByText(m.jobForm_salaryRequiredError()),
+    ).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('blocks a salary under the board floor', async () => {
+    const onSubmit = renderConstrained({
+      salary: { required: true, minBound: 100000 },
+    });
+    fillRequiredFields();
+    fireEvent.change(screen.getByLabelText(m.postJob_salaryMinLabel()), {
+      target: { value: '50000' },
+    });
+    fireEvent.change(screen.getByLabelText(m.postJob_salaryMaxLabel()), {
+      target: { value: '90000' },
+    });
+    submit();
+
+    expect(
+      await screen.findByText(m.jobForm_salaryBelowMinError({ min: 100000 })),
+    ).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('blocks submit when the board requires a seniority level', async () => {
+    const onSubmit = renderConstrained({ seniority: { required: true } });
+    fillRequiredFields();
+    submit();
+
+    expect(
+      await screen.findByText(m.jobForm_seniorityRequiredError()),
+    ).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });
