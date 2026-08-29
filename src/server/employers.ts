@@ -4,6 +4,7 @@ import {
   type ConfirmWorkEmailBody,
   type CreateCompanyBody,
   type CreateCompanyMemberInviteBody,
+  type CompanyMembership,
   type CreateEmployerJobBody,
   type EmployerCheckoutBody,
   type EmployerCompanySearchQuery,
@@ -350,11 +351,26 @@ export const sendWorkEmail = createServerFn({ method: 'POST' })
  * there is NO session or board-access grant to carry, unlike every other
  * `/me/companies/*` call. Returns the membership in its new state (`approved`
  * on a domain match, else `awaiting_admin`). Powers `/auth/verify-work-email`.
+ *
+ * Hits the FLAT `POST /auth/verify-work-email`, not the slug-scoped
+ * `/me/companies/:slug/work-email/confirm` this used to call. The emailed link
+ * carries only a token, so there was never a slug to pass — we sent an empty
+ * one and the route bailed to `verified=invalid`, which read to the employer
+ * as "the link expired" on a perfectly good first click. The server ignored
+ * the slug anyway: the token alone identifies the membership.
+ *
+ * Raw `client.fetch` rather than `board.auth.verifyWorkEmail(...)` because the
+ * typed method lands in @cavuno/board 4.14.0; swap it in at the next re-pin.
  */
 export const confirmWorkEmail = createServerFn({ method: 'POST' })
-  .validator((input: { slug: string; body: ConfirmWorkEmailBody }) => input)
+  .validator((input: { body: ConfirmWorkEmailBody }) => input)
   .handler(({ data }) =>
-    run(() => getBoard().me.companies.workEmail.confirm(data.slug, data.body)),
+    run(() =>
+      getBoard().client.fetch<CompanyMembership>('/auth/verify-work-email', {
+        method: 'POST',
+        body: data.body,
+      }),
+    ),
   );
 
 // ── Jobs ────────────────────────────────────────────────────────────────────
