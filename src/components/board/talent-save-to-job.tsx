@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { m } from '../../paraglide/messages';
 
 import { Button } from '@/components/ui/button';
+import { toastActionError } from '@/lib/action-toast';
 import { saveSourcedCandidate } from '@/server/employers';
 
 export function TalentSaveToJob({
@@ -34,7 +35,14 @@ export function TalentSaveToJob({
           data: { slug, job: jobId, candidateBoardUserId },
         })
           .then((result) => {
-            if (result.ok) setSaved(true);
+            if (result.ok) {
+              setSaved(true);
+              return;
+            }
+            void toastActionError(result.message);
+          })
+          .catch(() => {
+            void toastActionError();
           })
           .finally(() => setPending(false));
       }}

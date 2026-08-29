@@ -70,6 +70,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 
 const DRAG_TYPE = 'cavuno/application';
+const SOURCED_DRAG_TYPE = 'application/x-cavuno-sourced';
 
 /** The settle result every pipeline mutation resolves to. */
 type PipelineActionResult = { ok: boolean; message?: string };
@@ -211,10 +212,7 @@ export function ApplicantPipelineBoard({
                   key={row.id}
                   draggable
                   onDragStart={(event) => {
-                    event.dataTransfer.setData(
-                      'application/x-cavuno-sourced',
-                      row.id,
-                    );
+                    event.dataTransfer.setData(SOURCED_DRAG_TYPE, row.id);
                     event.dataTransfer.effectAllowed = 'move';
                   }}
                   className="bg-background rounded-xl border p-3 text-sm"
@@ -404,16 +402,16 @@ function StageColumn({
   onDropSourced?: (sourcedId: string) => void;
 }) {
   const { dragAndDropHooks } = useDragAndDrop<PipelineCardVM>({
-    acceptedDragTypes: [DRAG_TYPE],
+    acceptedDragTypes: [DRAG_TYPE, SOURCED_DRAG_TYPE],
     getItems: (_keys, items) =>
       items.map((card) => ({
         [DRAG_TYPE]: card.id,
         'text/plain': card.name,
       })),
     getDropOperation: () => 'move',
-    onRootDrop: (event) => moveDropped(event.items, onDropCard),
-    onInsert: (event) => moveDropped(event.items, onDropCard),
-    onItemDrop: (event) => moveDropped(event.items, onDropCard),
+    onRootDrop: (event) => moveDropped(event.items, onDropCard, onDropSourced),
+    onInsert: (event) => moveDropped(event.items, onDropCard, onDropSourced),
+    onItemDrop: (event) => moveDropped(event.items, onDropCard, onDropSourced),
     renderDropIndicator: (target) => (
       <DropIndicator
         target={target}
@@ -426,14 +424,12 @@ function StageColumn({
     <section
       className="border-border/60 bg-muted/30 flex min-h-[24rem] flex-col rounded-2xl border"
       onDragOver={(event) => {
-        if (event.dataTransfer.types.includes('application/x-cavuno-sourced')) {
+        if (event.dataTransfer.types.includes(SOURCED_DRAG_TYPE)) {
           event.preventDefault();
         }
       }}
       onDrop={(event) => {
-        const sourcedId = event.dataTransfer.getData(
-          'application/x-cavuno-sourced',
-        );
+        const sourcedId = event.dataTransfer.getData(SOURCED_DRAG_TYPE);
         if (sourcedId) {
           event.preventDefault();
           onDropSourced?.(sourcedId);
@@ -507,11 +503,18 @@ function StageColumn({
 async function moveDropped(
   items: DropItem[],
   onDropCard: (cardId: string) => void,
+  onDropSourced?: (sourcedId: string) => void,
 ) {
-  const ids = await Promise.all(
-    items.filter(isTextDropItem).map((item) => item.getText(DRAG_TYPE)),
-  );
-  ids.filter(Boolean).forEach((id) => onDropCard(id));
+  const textItems = items.filter(isTextDropItem);
+  for (const item of textItems) {
+    if (item.types.has(SOURCED_DRAG_TYPE)) {
+      const sourcedId = await item.getText(SOURCED_DRAG_TYPE);
+      if (sourcedId) onDropSourced?.(sourcedId);
+      continue;
+    }
+    const cardId = await item.getText(DRAG_TYPE);
+    if (cardId) onDropCard(cardId);
+  }
 }
 
 function ApplicantCard({ card }: { card: PipelineCardVM }) {
