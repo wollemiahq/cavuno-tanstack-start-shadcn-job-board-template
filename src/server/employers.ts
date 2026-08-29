@@ -568,74 +568,18 @@ export const getPipeline = createServerFn({ method: 'GET' })
     ),
   );
 
-type TalentListFilters = {
-  q?: string;
-  skill?: string;
-  jobSearchStatus?: 'actively_looking' | 'open_to_offers' | 'not_looking';
-  languages?: string[];
-  openToRelocate?: boolean;
-  place?: string;
-  sort?: 'relevance' | 'newest';
-  seniority?: string;
-  permitCountry?: string;
-  interestedRole?: string;
-};
-
-type SourcingCompanies = {
-  talentLists: {
-    list: (
-      slug: string,
-      options?: { headers?: HeadersInit },
-    ) => Promise<{
-      data: Array<{
-        id: string;
-        name: string;
-        jobId: string | null;
-        filters: TalentListFilters;
-      }>;
-    }>;
-    create: (
-      slug: string,
-      body: { name: string; filters?: TalentListFilters; job?: string },
-      options?: { headers?: HeadersInit },
-    ) => Promise<{ id: string; name: string }>;
-  };
-  sourcedCandidates: {
-    list: (
-      slug: string,
-      query: { job: string },
-      options?: { headers?: HeadersInit },
-    ) => Promise<{
-      data: Array<{
-        id: string;
-        sourcedAt: number;
-        candidate: {
-          id: string;
-          displayName: string | null;
-          headline: string | null;
-        };
-      }>;
-    }>;
-    add: (
-      slug: string,
-      body: { job: string; candidateBoardUserId: string },
-      options?: { headers?: HeadersInit },
-    ) => Promise<{ id: string; created: boolean }>;
-    convert: (
-      slug: string,
-      sourcedId: string,
-      body: { stage: string },
-      options?: { headers?: HeadersInit },
-    ) => Promise<{ id: string }>;
+export type SourcedRailItem = {
+  id: string;
+  sourcedAt: number;
+  candidate: {
+    id: string;
+    displayName: string | null;
+    headline: string | null;
   };
 };
 
-function sourcingCompanies(): SourcingCompanies {
-  const companies: unknown = getBoard().me.companies;
-  // SAFETY: Published @cavuno/board 4.13.0 omits talentLists and
-  // sourcedCandidates; this branch's Board API serves them. Drop when
-  // the SDK minor ships.
-  return companies as SourcingCompanies;
+function meCompanyPath(slug: string, suffix: string) {
+  return `/me/companies/${encodeURIComponent(slug)}${suffix}`;
 }
 
 export const listEmployerJobs = createServerFn({ method: 'GET' })
@@ -649,46 +593,17 @@ export const listEmployerJobs = createServerFn({ method: 'GET' })
     ),
   );
 
-export const listTalentLists = createServerFn({ method: 'GET' })
-  .validator((input: { slug: string }) => input)
-  .middleware([verifiedBoardUserMiddleware])
-  .handler(({ data, context }) =>
-    gatedRead(context, () =>
-      sourcingCompanies().talentLists.list(data.slug, {
-        headers: authedHeaders(context),
-      }),
-    ),
-  );
-
-export const createTalentList = createServerFn({ method: 'POST' })
-  .validator(
-    (input: {
-      slug: string;
-      name: string;
-      job?: string;
-      filters?: TalentListFilters;
-    }) => input,
-  )
-  .middleware([verifiedBoardUserMiddleware])
-  .handler(({ data, context }) =>
-    run(() =>
-      sourcingCompanies().talentLists.create(
-        data.slug,
-        { name: data.name, job: data.job, filters: data.filters },
-        { headers: authedHeaders(context) },
-      ),
-    ),
-  );
-
 export const listSourcedCandidates = createServerFn({ method: 'GET' })
   .validator((input: { slug: string; job: string }) => input)
   .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, () =>
-      sourcingCompanies().sourcedCandidates.list(
-        data.slug,
-        { job: data.job },
-        { headers: authedHeaders(context) },
+      getBoard().client.fetch<{ data: SourcedRailItem[] }>(
+        meCompanyPath(data.slug, '/sourced-candidates'),
+        {
+          headers: authedHeaders(context),
+          query: { job: data.job },
+        },
       ),
     ),
   );
@@ -701,10 +616,16 @@ export const saveSourcedCandidate = createServerFn({ method: 'POST' })
   .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
-      sourcingCompanies().sourcedCandidates.add(
-        data.slug,
-        { job: data.job, candidateBoardUserId: data.candidateBoardUserId },
-        { headers: authedHeaders(context) },
+      getBoard().client.fetch<{ id: string; created: boolean }>(
+        meCompanyPath(data.slug, '/sourced-candidates'),
+        {
+          method: 'POST',
+          headers: authedHeaders(context),
+          body: {
+            job: data.job,
+            candidateBoardUserId: data.candidateBoardUserId,
+          },
+        },
       ),
     ),
   );
@@ -716,11 +637,16 @@ export const convertSourcedCandidate = createServerFn({ method: 'POST' })
   .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
-      sourcingCompanies().sourcedCandidates.convert(
-        data.slug,
-        data.sourcedId,
-        { stage: data.stage },
-        { headers: authedHeaders(context) },
+      getBoard().client.fetch<{ id: string }>(
+        meCompanyPath(
+          data.slug,
+          `/sourced-candidates/${encodeURIComponent(data.sourcedId)}/convert`,
+        ),
+        {
+          method: 'POST',
+          headers: authedHeaders(context),
+          body: { stage: data.stage },
+        },
       ),
     ),
   );

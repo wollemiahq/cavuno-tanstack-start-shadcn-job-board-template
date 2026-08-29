@@ -47,7 +47,6 @@ export function TalentSearchResult({
           <p className="text-muted-foreground mt-2 text-sm">{vm.location}</p>
         ) : null}
 
-        {save}
         {vm.jobSearchStatusLabel || vm.skills.length > 0 ? (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {vm.jobSearchStatusLabel ? (
@@ -82,6 +81,15 @@ export function TalentSearchResult({
       ) : (
         <div className="p-4">{content}</div>
       )}
+      {save ? (
+        <div
+          className="px-4 pb-4"
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
+          {save}
+        </div>
+      ) : null}
     </SearchResultCard>
   );
 }

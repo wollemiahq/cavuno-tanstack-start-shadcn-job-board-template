@@ -927,6 +927,7 @@ describe('employer company workspace', () => {
       seo: {
         boardName: 'Acme Board',
       },
+      sourced: [],
     } satisfies Parameters<typeof ApplicantsPageView>[0]['pipeline'];
 
     render(

@@ -19,12 +19,15 @@ export function TalentSaveToJob({
   const [saved, setSaved] = useState(false);
 
   if (jobs.length === 0) return null;
+  const oneClick = jobs.length === 1;
 
   return (
     <form
-      className="mt-3 flex flex-wrap items-center gap-2"
+      className="flex flex-wrap items-center gap-2"
+      onClick={(event) => event.stopPropagation()}
       onSubmit={(event) => {
         event.preventDefault();
+        event.stopPropagation();
         if (!jobId) return;
         setPending(true);
         void saveSourcedCandidate({
@@ -36,18 +39,20 @@ export function TalentSaveToJob({
           .finally(() => setPending(false));
       }}
     >
-      <select
-        value={jobId}
-        onChange={(event) => setJobId(event.target.value)}
-        className="border-input bg-background h-8 rounded-md border px-2 text-sm"
-        aria-label={m.talentSave_jobLabel()}
-      >
-        {jobs.map((job) => (
-          <option key={job.id} value={job.id}>
-            {job.title}
-          </option>
-        ))}
-      </select>
+      {oneClick ? null : (
+        <select
+          value={jobId}
+          onChange={(event) => setJobId(event.target.value)}
+          className="border-input bg-background h-8 rounded-md border px-2 text-sm"
+          aria-label={m.talentSave_jobLabel()}
+        >
+          {jobs.map((job) => (
+            <option key={job.id} value={job.id}>
+              {job.title}
+            </option>
+          ))}
+        </select>
+      )}
       <Button type="submit" size="sm" disabled={pending || saved}>
         {saved ? m.talentSave_savedLabel() : m.talentSave_saveLabel()}
       </Button>

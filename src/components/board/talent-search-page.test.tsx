@@ -67,6 +67,7 @@ function renderPage(onPageChange = vi.fn()) {
     component: () => (
       <TalentSearchPage
         candidates={[candidateVm]}
+        search={{}}
         q="engineer"
         skill="Mathematics"
         count={50}
@@ -110,12 +111,9 @@ describe('TalentSearchPage — search results pattern', () => {
       'Candidates',
     );
     expect(screen.queryByRole('searchbox', { name: /candidate/i })).toBeNull();
-    // The redundant in-page skill box is gone: the header owns
-    // the candidate query; `?skill=` still filters via the loader.
-    expect(screen.queryByRole('textbox', { name: /skill/i })).toBeNull();
     expect(
       container.querySelector("[data-slot='talent-filter-bar']"),
-    ).toBeNull();
+    ).not.toBeNull();
     expect(
       container.querySelector("[data-slot='search-results-layout']"),
     ).not.toBeNull();
@@ -159,6 +157,7 @@ describe('TalentSearchPage — search results pattern', () => {
       component: () => (
         <TalentSearchPage
           candidates={[]}
+          search={{ q: 'no-such-candidate', skill: 'Cobol' }}
           q="no-such-candidate"
           skill="Cobol"
           count={0}
@@ -228,6 +227,7 @@ describe('TalentSearchPage — results description line', () => {
       component: () => (
         <TalentSearchPage
           candidates={[candidateVm]}
+          search={{}}
           count={1}
           page={1}
           pageSize={24}
@@ -305,6 +305,7 @@ describe('TalentSearchPage — arrival scroll', () => {
           </button>
           <TalentSearchPage
             candidates={[candidateVm]}
+            search={{}}
             count={1}
             page={1}
             pageSize={24}

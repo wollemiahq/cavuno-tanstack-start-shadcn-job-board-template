@@ -12,7 +12,11 @@ import {
 } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
-import { getPipeline, listSourcedCandidates } from '../server/employers';
+import {
+  getPipeline,
+  listSourcedCandidates,
+  type SourcedRailItem,
+} from '../server/employers';
 import { getBoardContext, getSeoBase } from '../server/queries';
 
 import { Page, PageContent } from '@/components/layout/page';
@@ -65,7 +69,10 @@ export function createApplicantsLoader(
         loaderDependencies.getSeoBase(),
         listSourcedCandidates({
           data: { slug: params.slug, job: params.jobId },
-        }).catch(() => ({ data: [] as const })),
+        }).catch(() => {
+          const data: SourcedRailItem[] = [];
+          return { data };
+        }),
       ]);
       if (pipeline.job.status === 'draft') {
         throw redirect({

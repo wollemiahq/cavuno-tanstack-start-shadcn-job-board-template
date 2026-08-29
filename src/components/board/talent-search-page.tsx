@@ -43,7 +43,7 @@ import { listEmployerJobs } from '@/server/employers';
 
 export function TalentSearchPage({
   candidates,
-  search,
+  search = {},
   q,
   skill,
   count,
@@ -60,7 +60,7 @@ export function TalentSearchPage({
   ads = ADS_OFF,
 }: {
   candidates: TalentCardVM[];
-  search: TalentSearch;
+  search?: TalentSearch;
   /** Header-owned candidate query that drives the empty-state copy. */
   q?: string;
   /** `?skill=` facet from a deep link — drives the empty-state copy. */
@@ -115,7 +115,9 @@ export function TalentSearchPage({
     search.jobSearchStatus ||
     search.languages ||
     search.openToRelocate ||
-    search.place,
+    search.place ||
+    search.seniority ||
+    search.sort,
   );
   const candidateVms = candidates;
   const selectableIds = candidateVms.flatMap((vm) => {
