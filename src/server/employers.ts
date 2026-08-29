@@ -361,9 +361,7 @@ export const sendWorkEmail = createServerFn({ method: 'POST' })
  */
 export const confirmWorkEmail = createServerFn({ method: 'POST' })
   .validator((input: { body: ConfirmWorkEmailBody }) => input)
-  .handler(({ data }) =>
-    run(() => getBoard().auth.verifyWorkEmail(data.body)),
-  );
+  .handler(({ data }) => run(() => getBoard().auth.verifyWorkEmail(data.body)));
 
 // ── Jobs ────────────────────────────────────────────────────────────────────
 
