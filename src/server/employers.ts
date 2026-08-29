@@ -5,12 +5,14 @@ import {
   type CreateCompanyBody,
   type CreateCompanyMemberInviteBody,
   type CreateEmployerJobBody,
+  type CreateTalentListBody,
   type EmployerCheckoutBody,
   type EmployerCompanySearchQuery,
   type SendWorkEmailBody,
   type UpdateCompanyMemberRoleBody,
   type UpdateEmployerCompanyBody,
   type UpdateEmployerJobBody,
+  type UpdateTalentListBody,
 } from '@cavuno/board';
 /**
  * Authenticated server functions — the `/employers/dashboard` employer surface
@@ -660,17 +662,14 @@ export const createTalentList = createServerFn({ method: 'POST' })
   )
   .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
-    run(() =>
-      getBoard().me.companies.talentLists.create(
-        data.slug,
-        {
-          name: data.name,
-          ...(data.filters ? { filters: data.filters } : {}),
-          ...(data.job ? { job: data.job } : {}),
-        },
-        { headers: authedHeaders(context) },
-      ),
-    ),
+    run(() => {
+      const body: CreateTalentListBody = { name: data.name };
+      if (data.filters) body.filters = data.filters;
+      if (data.job) body.job = data.job;
+      return getBoard().me.companies.talentLists.create(data.slug, body, {
+        headers: authedHeaders(context),
+      });
+    }),
   );
 
 export const updateTalentList = createServerFn({ method: 'POST' })
@@ -685,18 +684,18 @@ export const updateTalentList = createServerFn({ method: 'POST' })
   )
   .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
-    run(() =>
-      getBoard().me.companies.talentLists.update(
+    run(() => {
+      const body: UpdateTalentListBody = {};
+      if (data.name !== undefined) body.name = data.name;
+      if (data.filters !== undefined) body.filters = data.filters;
+      if (data.job !== undefined) body.job = data.job;
+      return getBoard().me.companies.talentLists.update(
         data.slug,
         data.listId,
-        {
-          ...(data.name !== undefined ? { name: data.name } : {}),
-          ...(data.filters !== undefined ? { filters: data.filters } : {}),
-          ...(data.job !== undefined ? { job: data.job } : {}),
-        },
+        body,
         { headers: authedHeaders(context) },
-      ),
-    ),
+      );
+    }),
   );
 
 export const deleteTalentList = createServerFn({ method: 'POST' })

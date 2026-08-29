@@ -120,22 +120,20 @@ export function talentSearchToListFilters(
   search: TalentSearch,
 ): TalentListFilters {
   const languages = languageNames(search.languages);
-  return {
-    ...(search.q ? { q: search.q } : {}),
-    ...(search.skill ? { skill: search.skill } : {}),
-    ...(search.jobSearchStatus
-      ? { jobSearchStatus: search.jobSearchStatus }
-      : {}),
-    ...(languages ? { languages } : {}),
-    ...(search.openToRelocate
-      ? { openToRelocate: search.openToRelocate === 'true' }
-      : {}),
-    ...(search.place ? { place: search.place } : {}),
-    ...(search.sort ? { sort: search.sort } : {}),
-    ...(search.seniority ? { seniority: search.seniority } : {}),
-    ...(search.permitCountry ? { permitCountry: search.permitCountry } : {}),
-    ...(search.interestedRole ? { interestedRole: search.interestedRole } : {}),
-  };
+  const filters: TalentListFilters = {};
+  if (search.q) filters.q = search.q;
+  if (search.skill) filters.skill = search.skill;
+  if (search.jobSearchStatus) filters.jobSearchStatus = search.jobSearchStatus;
+  if (languages) filters.languages = languages;
+  if (search.openToRelocate) {
+    filters.openToRelocate = search.openToRelocate === 'true';
+  }
+  if (search.place) filters.place = search.place;
+  if (search.sort) filters.sort = search.sort;
+  if (search.seniority) filters.seniority = search.seniority;
+  if (search.permitCountry) filters.permitCountry = search.permitCountry;
+  if (search.interestedRole) filters.interestedRole = search.interestedRole;
+  return filters;
 }
 
 /** Hydrate a saved list back into `/talent` search params. */
