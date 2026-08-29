@@ -71,3 +71,63 @@ export function LinkedInIcon({ className = 'size-4' }: { className?: string }) {
     </svg>
   );
 }
+
+/**
+ * Gmail's envelope mark in its required brand colours — like `GoogleIcon`, an
+ * identity mark, so the fills are literal rather than themed.
+ */
+export function GmailIcon({ className = 'size-4' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 18" aria-hidden="true" className={className}>
+      <path
+        fill="#4285F4"
+        d="M22.364 18h-3.273V6.955L12 12.273 4.909 6.955V18H1.636A1.636 1.636 0 0 1 0 16.364V1.636C0 .733.733 0 1.636 0h.55L12 7.364 21.814 0h.55C23.267 0 24 .733 24 1.636v14.728C24 17.267 23.267 18 22.364 18z"
+      />
+      <path
+        fill="#34A853"
+        d="M19.091 18V6.955L24 3.273v13.09c0 .904-.733 1.637-1.636 1.637h-3.273z"
+      />
+      <path
+        fill="#FBBC04"
+        d="M22.364 0C23.267 0 24 .733 24 1.636v1.637l-4.909 3.682V0h3.273z"
+      />
+      <path
+        fill="#EA4335"
+        d="M4.909 18H1.636A1.636 1.636 0 0 1 0 16.364V3.273l4.909 3.682V18z"
+      />
+      <path
+        fill="#C5221F"
+        d="M0 3.273V1.636C0 .733.733 0 1.636 0h3.273v6.955L0 3.273z"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Outlook's mark, in Microsoft's Outlook blue — an identity mark, so the fills
+ * are literal rather than themed.
+ */
+export function OutlookIcon({ className = 'size-4' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
+      <path
+        fill="#0364B8"
+        d="M24 12.048c0-.37-.19-.71-.5-.9l-.01-.006-7.94-4.7a1.06 1.06 0 0 0-1.13.005l-7.94 4.7-.01.006c-.31.19-.5.53-.5.9v8.71c0 .69.56 1.24 1.25 1.24h15.53c.69 0 1.25-.55 1.25-1.24v-8.71z"
+      />
+      <path fill="#0A2767" d="M8.47 8.9h6.9v6.32h-6.9z" />
+      <path
+        fill="#28A8EA"
+        d="M23.5 11.142a1.06 1.06 0 0 0-1.06 0l-9.44 5.42a1.06 1.06 0 0 1-1.06 0l-9.44-5.42a1.06 1.06 0 0 0-1.06 0V20.76c0 .69.56 1.24 1.25 1.24h19.56c.69 0 1.25-.55 1.25-1.24v-9.618z"
+        opacity=".6"
+      />
+      <path
+        fill="#0078D4"
+        d="M13.06 1.5H1.06C.47 1.5 0 1.97 0 2.56v18.88c0 .59.47 1.06 1.06 1.06h12c.59 0 1.06-.47 1.06-1.06V2.56c0-.59-.47-1.06-1.06-1.06z"
+      />
+      <path
+        fill="#fff"
+        d="M7.06 6.62c-2.1 0-3.62 1.7-3.62 4.13 0 2.42 1.52 4.13 3.62 4.13s3.62-1.71 3.62-4.13c0-2.43-1.52-4.13-3.62-4.13zm0 6.62c-1.11 0-1.85-1.02-1.85-2.49 0-1.48.74-2.5 1.85-2.5s1.85 1.02 1.85 2.5c0 1.47-.74 2.49-1.85 2.49z"
+      />
+    </svg>
+  );
+}

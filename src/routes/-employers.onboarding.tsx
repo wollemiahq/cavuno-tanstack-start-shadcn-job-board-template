@@ -14,8 +14,9 @@ import { getSeoBase } from '../server/queries';
 
 import { EmployerIdentityAvatar } from '@/components/account-shell';
 import { Page, PageContent } from '@/components/layout/page';
+import { MailAppLinks } from '@/components/mail-app-links';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -192,24 +193,10 @@ function WorkEmailStep({
           body={m.employerOnboarding_emailSentBody({ email: verifiedEmail })}
         />
         {/* Fastest path first: jump straight to the inbox. */}
-        <div className="flex flex-wrap justify-center gap-2">
-          <a
-            href="https://mail.google.com/"
-            target="_blank"
-            rel="noreferrer"
-            className={buttonVariants({ variant: 'outline' })}
-          >
-            {m.employerOnboarding_openGmailLabel()}
-          </a>
-          <a
-            href="https://outlook.live.com/mail/"
-            target="_blank"
-            rel="noreferrer"
-            className={buttonVariants({ variant: 'outline' })}
-          >
-            {m.employerOnboarding_openOutlookLabel()}
-          </a>
-        </div>
+        <MailAppLinks
+          gmailLabel={m.employerOnboarding_openGmailLabel()}
+          outlookLabel={m.employerOnboarding_openOutlookLabel()}
+        />
         <div className="flex flex-wrap items-center justify-center gap-2">
           <Button
             variant="ghost"
