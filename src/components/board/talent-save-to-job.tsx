@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { m } from '../../paraglide/messages';
 
@@ -18,6 +18,10 @@ export function TalentSaveToJob({
   const [jobId, setJobId] = useState(jobs[0]?.id ?? '');
   const [pending, setPending] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setSaved(false);
+  }, [jobId]);
 
   if (jobs.length === 0) return null;
   const oneClick = jobs.length === 1;

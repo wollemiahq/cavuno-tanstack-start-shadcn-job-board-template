@@ -421,21 +421,7 @@ function StageColumn({
   });
 
   return (
-    <section
-      className="border-border/60 bg-muted/30 flex min-h-[24rem] flex-col rounded-2xl border"
-      onDragOver={(event) => {
-        if (event.dataTransfer.types.includes(SOURCED_DRAG_TYPE)) {
-          event.preventDefault();
-        }
-      }}
-      onDrop={(event) => {
-        const sourcedId = event.dataTransfer.getData(SOURCED_DRAG_TYPE);
-        if (sourcedId) {
-          event.preventDefault();
-          onDropSourced?.(sourcedId);
-        }
-      }}
-    >
+    <section className="border-border/60 bg-muted/30 flex min-h-[24rem] flex-col rounded-2xl border">
       <div className="flex items-center gap-2 px-3 py-2.5">
         <h3 className="text-foreground truncate text-sm font-medium">
           {stage.label}
