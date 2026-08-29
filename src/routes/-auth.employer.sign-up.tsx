@@ -11,7 +11,22 @@ import {
 } from '@/components/registration-page';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
 import { reconcileCommittedAction } from '@/lib/action-toast';
+import {
+  appendAuthIntentQuery,
+  appendOAuthProviderHint,
+} from '@/lib/board-datalayer-events';
 import { buildVerifyEmailRedirectPath } from '@/lib/candidate-return-to';
+
+const EMPLOYER_DASHBOARD = '/employers/dashboard';
+
+/** Where an employer lands after the provider round trip, tagged for the
+ * conversion datalayer the same way the candidate surfaces tag theirs. */
+function employerOAuthReturnTo(provider: 'google' | 'linkedin') {
+  return appendOAuthProviderHint(
+    appendAuthIntentQuery(EMPLOYER_DASHBOARD, 'sign_up'),
+    provider,
+  );
+}
 
 export async function loadEmployerSignUp(
   actions: {
@@ -58,6 +73,7 @@ export function EmployerSignUpUnavailable() {
 export function EmployerSignUpView({
   boardName,
   signUpEmployerAction,
+  getOAuthAuthorizationUrlAction,
   invalidate,
   footer,
 }: {
@@ -70,6 +86,15 @@ export function EmployerSignUpView({
       marketingConsent?: boolean;
     };
   }) => Promise<{ ok: true } | { ok: false; message: string }>;
+  getOAuthAuthorizationUrlAction: (input: {
+    data: {
+      provider: 'google' | 'linkedin';
+      returnTo: string;
+      role: 'employer';
+    };
+  }) => Promise<
+    { ok: true; authorizeUrl: string } | { ok: false; message: string }
+  >;
   invalidate: () => Promise<void>;
   footer?: React.ReactNode;
 }) {
@@ -97,12 +122,24 @@ export function EmployerSignUpView({
         successActionLabel: m.authEmployerSignUp_goToDashboardLabel(),
       }}
       marketingConsent={marketingConsent}
-      successHref={buildVerifyEmailRedirectPath('/employers/dashboard')}
+      successHref={buildVerifyEmailRedirectPath(EMPLOYER_DASHBOARD)}
       onSubmit={async (values) => {
         const result = await signUpEmployerAction({ data: values });
         if (result.ok) await reconcileCommittedAction(invalidate);
         return result;
       }}
+      // The role is fixed at authorize time and travels in the provider's
+      // signed state: without it the handshake would mint a candidate who
+      // could never reach the employer dashboard.
+      onOAuthStart={(provider) =>
+        getOAuthAuthorizationUrlAction({
+          data: {
+            provider,
+            returnTo: employerOAuthReturnTo(provider),
+            role: 'employer',
+          },
+        })
+      }
       footer={footer}
     />
   );

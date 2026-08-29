@@ -278,7 +278,13 @@ export const consumeMagicLink = createServerFn({ method: 'POST' })
 
 export const getOAuthAuthorizationUrl = createServerFn({ method: 'GET' })
   .validator(
-    (input: { provider: 'google' | 'linkedin'; returnTo?: string }) => input,
+    (input: {
+      provider: 'google' | 'linkedin';
+      returnTo?: string;
+      /** Role the handshake creates for a NEW user; the API defaults to
+       * `candidate`, so only the employer surfaces pass this. */
+      role?: 'candidate' | 'employer';
+    }) => input,
   )
   .handler(async ({ data }) => {
     try {
