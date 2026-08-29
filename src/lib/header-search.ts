@@ -173,6 +173,16 @@ function locationFromPathname(
   };
 }
 
+function locationFromTalentPlace(
+  place: UrlSearchValue,
+  resolvedLabel?: string,
+): HeaderSearchLocation | null {
+  const slug = stringSearchValue(place);
+  if (!slug) return null;
+
+  return { slug, name: resolvedLabel ?? slug };
+}
+
 function termFromPathname(
   pathname: string,
   resolvedLabel?: string,
@@ -232,7 +242,9 @@ export function resolveHeaderSearchState(
     location:
       scope === 'jobs'
         ? locationFromPathname(pathname, resolvedLocationLabel)
-        : null,
+        : scope === 'talent'
+          ? locationFromTalentPlace(search.place, resolvedLocationLabel)
+          : null,
     term:
       scope === 'jobs' && !explicitQuery
         ? termFromPathname(pathname, resolvedQueryLabel)

@@ -111,14 +111,18 @@ describe('TalentSearchPage — search results pattern', () => {
       'Candidates',
     );
     expect(screen.queryByRole('searchbox', { name: /candidate/i })).toBeNull();
-    expect(
-      container.querySelector("[data-slot='talent-filter-bar']"),
-    ).not.toBeNull();
+    const filterBar = container.querySelector(
+      "[data-slot='talent-filter-bar']",
+    );
+    expect(filterBar).not.toBeNull();
+    expect(filterBar?.textContent ?? '').not.toMatch(/Name or headline/i);
+    expect(filterBar?.querySelector('[type="search"]')).toBeNull();
     expect(
       container.querySelector("[data-slot='search-results-layout']"),
     ).not.toBeNull();
 
     const results = screen.getByRole('region', { name: 'Talent results' });
+    expect(results.querySelector("[data-slot='talent-filter-bar']")).toBeNull();
     expect(
       within(results).getByRole('link', { name: /Ada Lovelace/i }),
     ).toHaveAttribute('href', '/p/ada-lovelace');
@@ -182,6 +186,9 @@ describe('TalentSearchPage — search results pattern', () => {
     expect(
       await screen.findByText('No candidates match these filters.'),
     ).toBeVisible();
+    expect(
+      container.querySelector("[data-slot='talent-filter-bar']"),
+    ).not.toBeNull();
     expect(screen.getByRole('link', { name: 'Reset filters' })).toHaveAttribute(
       'href',
       '/talent',

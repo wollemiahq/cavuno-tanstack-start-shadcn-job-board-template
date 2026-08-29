@@ -7,7 +7,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "tous les mois",
         "countPlural=*": "tous les {countLabel} mois"
@@ -21,7 +23,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "tous les ans",
         "countPlural=*": "tous les {countLabel} ans"
@@ -77,7 +81,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "1 offre correspond à votre profil et à vos préférences.",
         "countPlural=*": "{countLabel} offres correspondent à votre profil et à vos préférences."
@@ -96,7 +102,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Vous avez enregistré 1 offre.",
         "countPlural=*": "Vous avez enregistré {countLabel} offres."
@@ -476,7 +484,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} offre ouverte",
         "countPlural=*": "{countLabel} offres ouvertes"
@@ -491,7 +501,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} offre ouverte",
         "countPlural=*": "{countLabel} offres ouvertes"
@@ -507,7 +519,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Voir {countLabel} offre",
         "countPlural=*": "Voir les {countLabel} offres"
@@ -558,7 +572,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} entreprise",
         "countPlural=*": "{countLabel} entreprises"
@@ -598,7 +614,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} candidat",
         "countPlural=*": "{countLabel} candidats"
@@ -612,7 +630,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} entreprise",
         "countPlural=*": "{countLabel} entreprises"
@@ -626,7 +646,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} offre",
         "countPlural=*": "{countLabel} offres"
@@ -640,7 +662,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} article",
         "countPlural=*": "{countLabel} articles"
@@ -700,7 +724,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} candidat",
         "countPlural=*": "{countLabel} candidats"
@@ -821,7 +847,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} autre membre",
         "countPlural=*": "{countLabel} autres membres"
@@ -860,7 +888,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Vous avez 1 offre active.",
         "countPlural=*": "Vous avez {countLabel} offres actives."
@@ -899,7 +929,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} offre active",
         "countPlural=*": "{countLabel} offres actives"
@@ -913,7 +945,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} mise en avant",
         "countPlural=*": "{countLabel} mises en avant"
@@ -928,7 +962,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} message",
         "countPlural=*": "{countLabel} messages"
@@ -942,7 +978,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} déblocage de profil",
         "countPlural=*": "{countLabel} déblocages de profil"
@@ -977,7 +1015,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Vous avez 1 membre dans l’équipe.",
         "countPlural=*": "Vous avez {countLabel} membres dans l’équipe."
@@ -1242,7 +1282,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} offre",
         "countPlural=*": "{countLabel} offres"
@@ -1432,7 +1474,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Inclut 1 offre mise en avant",
         "countPlural=*": "Inclut {countLabel} offres mises en avant"
@@ -1448,7 +1492,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "1 offre active à la fois",
         "countPlural=*": "Jusqu’à {countLabel} offres actives"
@@ -1691,7 +1737,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Salaires {skill} dans {countLabel} lieu.",
         "countPlural=*": "Salaires {skill} dans {countLabel} lieux."
@@ -1717,7 +1765,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Salaires {title} dans {countLabel} lieu.",
         "countPlural=*": "Salaires {title} dans {countLabel} lieux."
@@ -1743,7 +1793,9 @@
         "input jobCountLabel",
         "local jobCountPlural = jobCount: plural"
       ],
-      "selectors": ["jobCountPlural"],
+      "selectors": [
+        "jobCountPlural"
+      ],
       "match": {
         "jobCountPlural=one": "{jobCountLabel} offre d'emploi",
         "jobCountPlural=*": "{jobCountLabel} offres d'emploi"
@@ -1922,7 +1974,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} déblocage restant.",
         "countPlural=*": "{countLabel} déblocages restants."
@@ -1979,6 +2033,8 @@
   "talentFilters_sortBestMatch": "Best Match",
   "talentFilters_sortNewest": "Newest",
   "talentFilters_seniorityLabel": "Seniority",
+  "talentFilters_permitCountryLabel": "Work authorization",
+  "talentFilters_interestedRoleLabel": "Interested role",
   "talentFilters_applyLabel": "Apply filters",
   "talentSave_jobLabel": "Save to job",
   "talentSave_saveLabel": "Save to job",

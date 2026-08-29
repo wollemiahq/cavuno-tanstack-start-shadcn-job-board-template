@@ -141,7 +141,10 @@ function renderHeader({
               void navigate({ to: '/companies', search: { query } });
             }
           } else if (scope === 'talent') {
-            void navigate({ to: '/talent', search: { q: query } });
+            void navigate({
+              to: '/talent',
+              search: { q: query, place: location?.slug },
+            });
           } else if (scope === 'blog') {
             void navigate({ to: '/blog', search: { q: query } });
           } else if (location && term?.type === 'skill') {
@@ -756,7 +759,7 @@ describe('Header — pathname-scoped submit-only search', () => {
     expect(home.textContent).toContain('Robotics Jobs');
   });
 
-  it('pairs keyword and location in one Jobs bar without leaking location into other scopes', async () => {
+  it('pairs keyword and location on Jobs and Talent, not Companies or Blog', async () => {
     renderHeader({ initialEntry: '/jobs' });
 
     const jobsSearch = await screen.findByRole('search');
@@ -775,6 +778,17 @@ describe('Header — pathname-scoped submit-only search', () => {
       'companies',
     );
     expect(screen.queryByRole('combobox', { name: /location/i })).toBeNull();
+
+    cleanup();
+    renderHeader({ initialEntry: '/talent' });
+    const talentSearch = await screen.findByRole('search');
+    expect(talentSearch).toHaveAttribute('data-search-scope', 'talent');
+    expect(
+      await within(talentSearch).findByRole('combobox', { name: /location/i }),
+    ).toBeTruthy();
+    expect(
+      within(talentSearch).getByRole('searchbox', { name: /keyword/i }),
+    ).toBeTruthy();
 
     cleanup();
     renderHeader({ initialEntry: '/blog?q=systems' });

@@ -113,6 +113,25 @@ describe('resolveHeaderSearchState', () => {
       },
     });
   });
+
+  it('prefills talent place from the query param and keyword from q', () => {
+    expect(
+      resolveHeaderSearchState('/talent', { place: 'berlin', q: 'ada' }),
+    ).toMatchObject({
+      query: 'ada',
+      location: { slug: 'berlin', name: 'berlin' },
+    });
+  });
+
+  it('sets talent location.slug from /talent?place=berlin', () => {
+    expect(
+      resolveHeaderSearchState('/talent', { place: 'berlin' }).location,
+    ).toEqual({ slug: 'berlin', name: 'berlin' });
+  });
+
+  it('prefills talent query from /talent?q=ada', () => {
+    expect(resolveHeaderSearchState('/talent', { q: 'ada' }).query).toBe('ada');
+  });
 });
 
 describe('identity-aware fallback scope', () => {

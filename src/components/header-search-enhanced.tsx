@@ -41,6 +41,12 @@ const LazyHeaderSearchCompanyField = lazy(() =>
   ),
 );
 
+const LazyLocationCombobox = lazy(() =>
+  import('@/components/location-combobox').then(({ LocationCombobox }) => ({
+    default: LocationCombobox,
+  })),
+);
+
 function HeaderSearchFieldsFallback({ fields }: { fields: 1 | 2 }) {
   return Array.from({ length: fields }, (_, index) => (
     <span
@@ -138,36 +144,48 @@ export function HeaderSearchEnhanced({
             />
           </Suspense>
         ) : (
-          <InputGroup className="border-border bg-input/50 h-9 min-w-0 flex-1">
-            <InputGroupInput
-              ref={keywordInputRef}
-              type="search"
-              value={value}
-              onChange={(event) => setValue(event.target.value)}
-              aria-label={m.searchBar_keywordAriaLabel()}
-              placeholder={scopePlaceholders[search.scope]}
-              className="min-w-0"
-            />
-            <InputGroupAddon>
-              <Search aria-hidden="true" />
-            </InputGroupAddon>
-            {value ? (
-              <InputGroupAddon align="inline-end">
-                <InputGroupButton
-                  type="button"
-                  size="icon-xs"
-                  aria-label={m.searchBar_clearAriaLabel()}
-                  onClick={() => {
-                    setValue('');
-                    keywordInputRef.current?.focus();
-                  }}
-                  className="text-muted-foreground"
-                >
-                  <X aria-hidden="true" />
-                </InputGroupButton>
+          <>
+            <InputGroup className="border-border bg-input/50 h-9 min-w-0 flex-1">
+              <InputGroupInput
+                ref={keywordInputRef}
+                type="search"
+                value={value}
+                onChange={(event) => setValue(event.target.value)}
+                aria-label={m.searchBar_keywordAriaLabel()}
+                placeholder={scopePlaceholders[search.scope]}
+                className="min-w-0"
+              />
+              <InputGroupAddon>
+                <Search aria-hidden="true" />
               </InputGroupAddon>
-            ) : null}
-          </InputGroup>
+              {value ? (
+                <InputGroupAddon align="inline-end">
+                  <InputGroupButton
+                    type="button"
+                    size="icon-xs"
+                    aria-label={m.searchBar_clearAriaLabel()}
+                    onClick={() => {
+                      setValue('');
+                      keywordInputRef.current?.focus();
+                    }}
+                    className="text-muted-foreground"
+                  >
+                    <X aria-hidden="true" />
+                  </InputGroupButton>
+                </InputGroupAddon>
+              ) : null}
+            </InputGroup>
+            <Suspense fallback={<HeaderSearchFieldsFallback fields={1} />}>
+              <LazyLocationCombobox
+                {...search.locationSuggestions}
+                value={location?.slug}
+                valueLabel={location?.name}
+                onSelect={setLocation}
+                onClear={() => setLocation(null)}
+                className="border-border bg-input/50 h-9 min-w-0 flex-1"
+              />
+            </Suspense>
+          </>
         )}
         <Button
           type="submit"

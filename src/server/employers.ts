@@ -4,7 +4,6 @@ import {
   type ConfirmWorkEmailBody,
   type CreateCompanyBody,
   type CreateCompanyMemberInviteBody,
-  type CompanyMembership,
   type CreateEmployerJobBody,
   type EmployerCheckoutBody,
   type EmployerCompanySearchQuery,
@@ -41,6 +40,7 @@ import {
 import { gatedRead } from './board-access';
 
 import { searchString } from '@/lib/pagination';
+import type { TalentListFilters } from '@/lib/talent-search';
 
 export type ActionResult<T> =
   | { ok: true; data: T }
@@ -358,19 +358,11 @@ export const sendWorkEmail = createServerFn({ method: 'POST' })
  * one and the route bailed to `verified=invalid`, which read to the employer
  * as "the link expired" on a perfectly good first click. The server ignored
  * the slug anyway: the token alone identifies the membership.
- *
- * Raw `client.fetch` rather than `board.auth.verifyWorkEmail(...)` because the
- * typed method lands in @cavuno/board 4.14.0; swap it in at the next re-pin.
  */
 export const confirmWorkEmail = createServerFn({ method: 'POST' })
   .validator((input: { body: ConfirmWorkEmailBody }) => input)
   .handler(({ data }) =>
-    run(() =>
-      getBoard().client.fetch<CompanyMembership>('/auth/verify-work-email', {
-        method: 'POST',
-        body: data.body,
-      }),
-    ),
+    run(() => getBoard().auth.verifyWorkEmail(data.body)),
   );
 
 // ── Jobs ────────────────────────────────────────────────────────────────────
@@ -594,10 +586,6 @@ export type SourcedRailItem = {
   };
 };
 
-function meCompanyPath(slug: string, suffix: string) {
-  return `/me/companies/${encodeURIComponent(slug)}${suffix}`;
-}
-
 export const listEmployerJobs = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
   .middleware([verifiedBoardUserMiddleware])
@@ -614,12 +602,10 @@ export const listSourcedCandidates = createServerFn({ method: 'GET' })
   .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, () =>
-      getBoard().client.fetch<{ data: SourcedRailItem[] }>(
-        meCompanyPath(data.slug, '/sourced-candidates'),
-        {
-          headers: authedHeaders(context),
-          query: { job: data.job },
-        },
+      getBoard().me.companies.sourcedCandidates.list(
+        data.slug,
+        { job: data.job },
+        { headers: authedHeaders(context) },
       ),
     ),
   );
@@ -632,17 +618,99 @@ export const saveSourcedCandidate = createServerFn({ method: 'POST' })
   .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
-      getBoard().client.fetch<{ id: string; created: boolean }>(
-        meCompanyPath(data.slug, '/sourced-candidates'),
+      getBoard().me.companies.sourcedCandidates.add(
+        data.slug,
         {
-          method: 'POST',
-          headers: authedHeaders(context),
-          body: {
-            job: data.job,
-            candidateBoardUserId: data.candidateBoardUserId,
-          },
+          job: data.job,
+          candidateBoardUserId: data.candidateBoardUserId,
         },
+        { headers: authedHeaders(context) },
       ),
+    ),
+  );
+
+export type TalentListRecord = {
+  id: string;
+  object: 'talent_list';
+  name: string;
+  filters: TalentListFilters;
+  jobId: string | null;
+  createdBy: string;
+  createdAt: number;
+  updatedAt: number;
+};
+
+export const listTalentLists = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string }) => input)
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, () =>
+      getBoard().me.companies.talentLists.list(data.slug, {
+        headers: authedHeaders(context),
+      }),
+    ),
+  );
+
+export const createTalentList = createServerFn({ method: 'POST' })
+  .validator(
+    (input: {
+      slug: string;
+      name: string;
+      filters?: TalentListFilters;
+      job?: string;
+    }) => input,
+  )
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard().me.companies.talentLists.create(
+        data.slug,
+        {
+          name: data.name,
+          ...(data.filters ? { filters: data.filters } : {}),
+          ...(data.job ? { job: data.job } : {}),
+        },
+        { headers: authedHeaders(context) },
+      ),
+    ),
+  );
+
+export const updateTalentList = createServerFn({ method: 'POST' })
+  .validator(
+    (input: {
+      slug: string;
+      listId: string;
+      name?: string;
+      filters?: TalentListFilters;
+      job?: string | null;
+    }) => input,
+  )
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard().me.companies.talentLists.update(
+        data.slug,
+        data.listId,
+        {
+          ...(data.name !== undefined ? { name: data.name } : {}),
+          ...(data.filters !== undefined ? { filters: data.filters } : {}),
+          ...(data.job !== undefined ? { job: data.job } : {}),
+        },
+        { headers: authedHeaders(context) },
+      ),
+    ),
+  );
+
+export const deleteTalentList = createServerFn({ method: 'POST' })
+  .validator((input: { slug: string; listId: string }) => input)
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard()
+        .me.companies.talentLists.remove(data.slug, data.listId, {
+          headers: authedHeaders(context),
+        })
+        .then(() => null),
     ),
   );
 
@@ -653,16 +721,11 @@ export const convertSourcedCandidate = createServerFn({ method: 'POST' })
   .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     run(() =>
-      getBoard().client.fetch<{ id: string }>(
-        meCompanyPath(
-          data.slug,
-          `/sourced-candidates/${encodeURIComponent(data.sourcedId)}/convert`,
-        ),
-        {
-          method: 'POST',
-          headers: authedHeaders(context),
-          body: { stage: data.stage },
-        },
+      getBoard().me.companies.sourcedCandidates.convert(
+        data.slug,
+        data.sourcedId,
+        { stage: data.stage },
+        { headers: authedHeaders(context) },
       ),
     ),
   );
