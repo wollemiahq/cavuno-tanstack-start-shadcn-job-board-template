@@ -10,72 +10,34 @@ import {
 
 import type { BoardAccessContext } from '@/lib/board-access-middleware';
 
-/**
- * Gated-read recovery. Two 401s are recoverable and need opposite treatment,
- * and a third 401 must NOT be treated as either — which is the whole reason
- * the classification is matched on exact codes rather than on status.
- *
- * `board_auth_invalid_token` is the stranded session: the API will never accept
- * this bearer again (its board user is gone, or the `accountId`/`authVersion`
- * claims no longer match the live row). Before this recovery existed, the 401
- * escaped the loader and every gated page — /account, /settings, /saved-jobs,
- * /me/alerts — rendered its error component instead of bouncing to sign-in.
- * The route-level `candidateLoaderError` did not catch it either: that matches
- * only the literal `UNAUTHENTICATED` / `EMAIL_UNVERIFIED` messages, and a
- * stranded viewer's session middleware passes (the cookie is still there).
- */
-
 const CONTEXT: BoardAccessContext = {
-  boardAccessHeaders: { authorization: 'Bearer stranded' },
+  boardAccessHeaders: {
+    authorization: 'Bearer stale',
+    'x-board-access': 'grant',
+  },
   currentPath: '/account',
 };
 
 function boardApiError(code: string, status = 401) {
-  return new BoardApiError({
-    status,
-    code,
-    message: 'Invalid or expired token',
-    raw: {},
-  });
+  return new BoardApiError({ status, code, message: code, raw: {} });
 }
 
-function noEffects() {
-  return { clearSession: vi.fn() };
-}
-
-/** Where a redirect points; a thrown TanStack redirect carries it on `.options`. */
-interface RedirectTarget {
-  to?: string;
-  href?: string;
-}
-
-/**
- * Run a gated read that is expected to redirect and return where it points.
- * Fails loudly if it returns, or throws anything that is not a redirect — both
- * of which would mean the viewer sees an error page instead of a bounce.
- */
-async function redirectTargetOf<T>(
-  run: () => Promise<T>,
-): Promise<RedirectTarget> {
-  try {
-    await run();
-  } catch (error) {
-    if (!isRedirect(error)) throw error;
-    // SAFETY: `isRedirect` above confirms a TanStack redirect, which always
-    // carries its target options under `.options`.
-    return (error as { options: RedirectTarget }).options;
-  }
-  throw new Error('expected the gated read to redirect');
+function effectsWith(accessToken: string | null) {
+  return {
+    refreshSession: vi.fn(async () => accessToken),
+    clearSession: vi.fn(),
+  };
 }
 
 describe('classifyGatedReadError', () => {
   const cases: Array<[string, GatedReadRecovery]> = [
     ['board_password_required', 'password_wall'],
-    ['board_auth_invalid_token', 'stranded_session'],
-    // "Refresh or re-login will fix this" — the session middleware's rotation
-    // window and `refreshSession` own it. Clearing the cookie here would sign
-    // out a viewer whose refresh token is still good.
-    ['board_auth_token_expired', null],
+    // Both bearer refusals take the same path. Neither code proves the SESSION
+    // is dead: `invalid_token` is also raised for a bad signature or a wrong
+    // iss/aud, and refresh tokens are opaque, so a key rotation fails every
+    // access token while every refresh token still works.
+    ['board_auth_invalid_token', 'dead_bearer'],
+    ['board_auth_token_expired', 'dead_bearer'],
     ['job_not_found', null],
   ];
 
@@ -91,7 +53,7 @@ describe('classifyGatedReadError', () => {
 
 describe('gatedReadUsing', () => {
   it('returns the read result and touches nothing on success', async () => {
-    const effects = noEffects();
+    const effects = effectsWith('fresh');
 
     const result = await gatedReadUsing(
       CONTEXT,
@@ -99,53 +61,105 @@ describe('gatedReadUsing', () => {
       effects,
     );
 
-    expect(result).toBe('Bearer stranded');
+    expect(result).toBe('Bearer stale');
+    expect(effects.refreshSession).not.toHaveBeenCalled();
     expect(effects.clearSession).not.toHaveBeenCalled();
   });
 
-  it('clears the session and redirects to sign-in on a stranded session', async () => {
-    const effects = noEffects();
+  // The mass-sign-out guard. A rotated board signing key refuses every access
+  // token with `board_auth_invalid_token` while refresh tokens still rotate
+  // cleanly; clearing the cookie here would discard a working refresh token and
+  // sign out the whole board.
+  it('rotates the bearer and retries, keeping the session, when refresh works', async () => {
+    const effects = effectsWith('fresh');
+    const seen: Array<Record<string, string>> = [];
 
-    const target = await redirectTargetOf(() =>
-      gatedReadUsing(
-        CONTEXT,
-        () => Promise.reject(boardApiError('board_auth_invalid_token')),
-        effects,
-      ),
+    const result = await gatedReadUsing(
+      CONTEXT,
+      async (headers) => {
+        seen.push(headers);
+        if (headers['authorization'] === 'Bearer stale') {
+          throw boardApiError('board_auth_invalid_token');
+        }
+        return 'ok';
+      },
+      effects,
     );
 
-    expect(effects.clearSession).toHaveBeenCalledOnce();
-    // returnTo carries the page they were on, so the bounce is not a dead end.
-    expect(target.href ?? '').toContain('/auth/sign-in');
-    expect(target.href ?? '').toContain(
-      `returnTo=${encodeURIComponent('/account')}`,
-    );
+    expect(result).toBe('ok');
+    expect(effects.refreshSession).toHaveBeenCalledOnce();
+    expect(effects.clearSession).not.toHaveBeenCalled();
+    expect(seen[1]?.['authorization']).toBe('Bearer fresh');
+    // The password grant has to survive the retry, or a walled board would
+    // trade a bearer failure for a password-wall bounce.
+    expect(seen[1]?.['x-board-access']).toBe('grant');
   });
 
-  it('redirects to the password wall WITHOUT clearing the session', async () => {
-    const effects = noEffects();
+  // Only a FAILED rotation proves the session is dead.
+  it('clears the session and throws UNAUTHENTICATED when refresh fails', async () => {
+    const effects = effectsWith(null);
 
-    const target = await redirectTargetOf(() =>
-      gatedReadUsing(
+    const thrown = await gatedReadUsing(
+      CONTEXT,
+      () => Promise.reject(boardApiError('board_auth_invalid_token')),
+      effects,
+    ).catch((error: Error) => error);
+
+    expect(effects.refreshSession).toHaveBeenCalledOnce();
+    expect(effects.clearSession).toHaveBeenCalledOnce();
+    // The same message `requireSessionMiddleware` throws for a viewer with no
+    // session, so every gated route's existing `candidateLoaderError` catch
+    // redirects to sign-in using the route's OWN returnTo. Deliberately not a
+    // redirect from here: `gatedRead` also serves public page loaders, which
+    // must never be bounced to sign-in.
+    expect(isRedirect(thrown)).toBe(false);
+    expect(thrown.message).toBe('UNAUTHENTICATED');
+  });
+
+  it('reads only once more when the retry also fails', async () => {
+    const effects = effectsWith('fresh');
+    const read = vi.fn(() =>
+      Promise.reject(boardApiError('board_auth_invalid_token')),
+    );
+
+    await expect(gatedReadUsing(CONTEXT, read, effects)).rejects.toThrow();
+
+    // One original + one retry. A retry loop would burn refresh tokens.
+    expect(read).toHaveBeenCalledTimes(2);
+    expect(effects.refreshSession).toHaveBeenCalledOnce();
+  });
+
+  it('redirects to the password wall without refreshing or clearing', async () => {
+    const effects = effectsWith('fresh');
+
+    let thrown: unknown;
+    try {
+      await gatedReadUsing(
         CONTEXT,
         () => Promise.reject(boardApiError('board_password_required')),
         effects,
-      ),
-    );
+      );
+    } catch (error) {
+      thrown = error;
+    }
 
-    // A walled board is not an auth failure — signing the viewer out here
-    // would lose a perfectly good session behind the password challenge.
+    // A walled board is not an auth failure — rotating or dropping the session
+    // here would lose a good one behind the password challenge.
+    expect(effects.refreshSession).not.toHaveBeenCalled();
     expect(effects.clearSession).not.toHaveBeenCalled();
-    expect(target.to).toBe('/password');
+    expect(isRedirect(thrown)).toBe(true);
+    if (!isRedirect(thrown)) return;
+    expect(thrown.options.to).toBe('/password');
   });
 
   it('propagates an unrecoverable error unchanged, session intact', async () => {
-    const effects = noEffects();
-    const error = boardApiError('board_auth_token_expired');
+    const effects = effectsWith('fresh');
+    const error = boardApiError('job_not_found', 404);
 
     await expect(
       gatedReadUsing(CONTEXT, () => Promise.reject(error), effects),
     ).rejects.toBe(error);
+    expect(effects.refreshSession).not.toHaveBeenCalled();
     expect(effects.clearSession).not.toHaveBeenCalled();
   });
 });
