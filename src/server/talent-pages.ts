@@ -69,25 +69,26 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
     gatedRead(context, async (headers) => {
       // The directory read does not depend on the SEO base, so it starts
       // first and is awaited below — these used to be two serial waves.
-      const directory = readTalentDirectory(() =>
-        getBoard().talent.list(
-          {
-            offset: data.offset,
-            q: data.q,
-            skill: data.skill,
-            limit: data.limit,
-            jobSearchStatus: data.jobSearchStatus,
-            languages: data.languages,
-            openToRelocate: data.openToRelocate,
-            place: data.place,
-            sort: data.sort,
-            seniority: data.seniority,
-            permitCountry: data.permitCountry,
-            interestedRole: data.interestedRole,
-          } as never,
-          { headers },
-        ),
-      );
+      const directory = readTalentDirectory(() => {
+        const query = {
+          offset: data.offset,
+          q: data.q,
+          skill: data.skill,
+          limit: data.limit,
+          jobSearchStatus: data.jobSearchStatus,
+          languages: data.languages,
+          openToRelocate: data.openToRelocate,
+          place: data.place,
+          sort: data.sort,
+          seniority: data.seniority,
+          permitCountry: data.permitCountry,
+          interestedRole: data.interestedRole,
+        };
+        // SAFETY: Published @cavuno/board 4.13.0 talent.list query omits the
+        // frozen filter keys; the live /talent contract on this branch
+        // accepts them. Drop when the SDK minor ships.
+        return getBoard().talent.list(query as never, { headers });
+      });
       const seo = await seoBase();
       const head = {
         meta: [

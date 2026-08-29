@@ -568,6 +568,19 @@ export const getPipeline = createServerFn({ method: 'GET' })
     ),
   );
 
+type TalentListFilters = {
+  q?: string;
+  skill?: string;
+  jobSearchStatus?: 'actively_looking' | 'open_to_offers' | 'not_looking';
+  languages?: string[];
+  openToRelocate?: boolean;
+  place?: string;
+  sort?: 'relevance' | 'newest';
+  seniority?: string;
+  permitCountry?: string;
+  interestedRole?: string;
+};
+
 type SourcingCompanies = {
   talentLists: {
     list: (
@@ -578,12 +591,12 @@ type SourcingCompanies = {
         id: string;
         name: string;
         jobId: string | null;
-        filters: Record<string, unknown>;
+        filters: TalentListFilters;
       }>;
     }>;
     create: (
       slug: string,
-      body: { name: string; filters?: Record<string, unknown>; job?: string },
+      body: { name: string; filters?: TalentListFilters; job?: string },
       options?: { headers?: HeadersInit },
     ) => Promise<{ id: string; name: string }>;
   };
@@ -618,7 +631,11 @@ type SourcingCompanies = {
 };
 
 function sourcingCompanies(): SourcingCompanies {
-  return getBoard().me.companies as unknown as SourcingCompanies;
+  const companies: unknown = getBoard().me.companies;
+  // SAFETY: Published @cavuno/board 4.13.0 omits talentLists and
+  // sourcedCandidates; this branch's Board API serves them. Drop when
+  // the SDK minor ships.
+  return companies as SourcingCompanies;
 }
 
 export const listEmployerJobs = createServerFn({ method: 'GET' })
@@ -649,7 +666,7 @@ export const createTalentList = createServerFn({ method: 'POST' })
       slug: string;
       name: string;
       job?: string;
-      filters?: Record<string, unknown>;
+      filters?: TalentListFilters;
     }) => input,
   )
   .middleware([verifiedBoardUserMiddleware])

@@ -426,9 +426,7 @@ function StageColumn({
     <section
       className="border-border/60 bg-muted/30 flex min-h-[24rem] flex-col rounded-2xl border"
       onDragOver={(event) => {
-        if (
-          event.dataTransfer.types.includes('application/x-cavuno-sourced')
-        ) {
+        if (event.dataTransfer.types.includes('application/x-cavuno-sourced')) {
           event.preventDefault();
         }
       }}

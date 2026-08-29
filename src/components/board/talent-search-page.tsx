@@ -1,8 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 import { useLocation } from '@tanstack/react-router';
 import { Users } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 import { m } from '../../paraglide/messages';
 
@@ -19,6 +20,7 @@ import { TalentFilters } from '@/components/board/talent-filters';
 import { TalentSaveToJob } from '@/components/board/talent-save-to-job';
 import { TalentSearchResult } from '@/components/board/talent-search-result';
 import { Page } from '@/components/layout/page';
+import { useRootSession } from '@/components/root-session';
 import {
   SearchResultDetail,
   SearchResultsLayout,
@@ -33,12 +35,11 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { useRootSession } from '@/components/root-session';
 import { useSearchSelection } from '@/hooks/use-search-selection';
-import { listEmployerJobs } from '@/server/employers';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
 import { listingPageHref } from '@/lib/pagination';
 import type { TalentSearch } from '@/lib/talent-search';
+import { listEmployerJobs } from '@/server/employers';
 
 export function TalentSearchPage({
   candidates,
@@ -110,11 +111,11 @@ export function TalentSearchPage({
   const currentHref = useLocation({ select: (location) => location.href });
   const hasActiveSearch = Boolean(
     q ||
-      skill ||
-      search.jobSearchStatus ||
-      search.languages ||
-      search.openToRelocate ||
-      search.place,
+    skill ||
+    search.jobSearchStatus ||
+    search.languages ||
+    search.openToRelocate ||
+    search.place,
   );
   const candidateVms = candidates;
   const selectableIds = candidateVms.flatMap((vm) => {

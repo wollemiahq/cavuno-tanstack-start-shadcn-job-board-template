@@ -5,7 +5,14 @@ import { m } from '../../paraglide/messages';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { TalentSearch } from '@/lib/talent-search';
+import { parseTalentSearch, type TalentSearch } from '@/lib/talent-search';
+
+function formField(form: FormData, name: string): string | undefined {
+  const raw = form.get(name);
+  if (raw === null || raw instanceof File) return undefined;
+  const trimmed = raw.trim();
+  return trimmed ? trimmed : undefined;
+}
 
 export function TalentFilters({ search }: { search: TalentSearch }) {
   const navigate = useNavigate({ from: '/talent/' });
@@ -16,27 +23,22 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
       onSubmit={(event) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
-        const value = (name: string) => {
-          const raw = form.get(name);
-          return typeof raw === 'string' && raw.trim() ? raw.trim() : undefined;
-        };
+        const parsed = parseTalentSearch({
+          q: formField(form, 'q'),
+          skill: formField(form, 'skill'),
+          jobSearchStatus: formField(form, 'jobSearchStatus'),
+          languages: formField(form, 'languages'),
+          openToRelocate: formField(form, 'openToRelocate'),
+          place: formField(form, 'place'),
+          sort: formField(form, 'sort'),
+          seniority: formField(form, 'seniority'),
+          permitCountry: formField(form, 'permitCountry'),
+          interestedRole: formField(form, 'interestedRole'),
+        });
         void navigate({
           search: (previous) => ({
             ...previous,
-            q: value('q'),
-            skill: value('skill'),
-            jobSearchStatus: value('jobSearchStatus') as
-              | TalentSearch['jobSearchStatus']
-              | undefined,
-            languages: value('languages'),
-            openToRelocate: value('openToRelocate') as
-              | TalentSearch['openToRelocate']
-              | undefined,
-            place: value('place'),
-            sort: value('sort') as TalentSearch['sort'] | undefined,
-            seniority: value('seniority'),
-            permitCountry: value('permitCountry'),
-            interestedRole: value('interestedRole'),
+            ...parsed,
             page: undefined,
           }),
         });
@@ -71,9 +73,7 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
           <option value="actively_looking">
             {m.talentFilters_statusActive()}
           </option>
-          <option value="open_to_offers">
-            {m.talentFilters_statusOpen()}
-          </option>
+          <option value="open_to_offers">{m.talentFilters_statusOpen()}</option>
         </select>
       </div>
       <div className="space-y-1">

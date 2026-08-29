@@ -2,8 +2,8 @@ import { useState } from 'react';
 
 import { m } from '../../paraglide/messages';
 
-import { saveSourcedCandidate } from '@/server/employers';
 import { Button } from '@/components/ui/button';
+import { saveSourcedCandidate } from '@/server/employers';
 
 export function TalentSaveToJob({
   slug,
