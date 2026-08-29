@@ -31,8 +31,8 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
 import { analytics } from '@/lib/board-analytics';
+import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
 import {
   candidateSignInHref,
   candidateVerifyEmailHref,
@@ -152,7 +152,6 @@ export function ApplyButton({
         jobId,
         jobSlug,
         companySlug,
-        applyType,
       });
     }
     if (!conversion || !jobId || !jobSlug || !companySlug) return;

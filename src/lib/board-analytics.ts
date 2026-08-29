@@ -4,11 +4,8 @@
  * release that exports that subpath; swap the import then delete this file.
  */
 
-export const DEFAULT_COLLECT_URL =
-  'https://cavuno.com/api/analytics/collect';
+export const DEFAULT_COLLECT_URL = 'https://cavuno.com/api/analytics/collect';
 export const DEFAULT_SCRIPT_URL = 'https://cavuno.com/js/metrics.js';
-export const WELL_KNOWN_COLLECT_PATH = '/.well-known/cavuno/collect';
-export const WELL_KNOWN_SCRIPT_PATH = '/.well-known/cavuno/analytics.js';
 export const PENDING_TENANT_ID = 'boards_pending';
 
 type InstallOptions = {
@@ -19,12 +16,18 @@ type InstallOptions = {
 
 type State = { publishableKey: string; collectUrl: string };
 
+type JobApplyClickPayload = {
+  jobId: string;
+  jobSlug: string;
+  companySlug: string;
+};
+
 let installed: State | null = null;
 
 function post(
   state: State,
   action: string,
-  payload?: Record<string, unknown>,
+  payload?: JobApplyClickPayload,
 ): void {
   void fetch(state.collectUrl, {
     method: 'POST',
@@ -43,7 +46,6 @@ function post(
 }
 
 function injectScript(state: State, scriptUrl: string): void {
-  if (typeof document === 'undefined') return;
   if (document.querySelector('script[data-cavuno-analytics="1"]')) return;
 
   const el = document.createElement('script');
@@ -63,8 +65,8 @@ export function install(options: InstallOptions): void {
     throw new Error('analytics.install requires a publishable key (pk_…)');
   }
 
-  // Chassis has no well-known proxy yet; default to Cavuno central collect
-  // so self-host works with only CAVUNO_BOARD (Hydrogen / Monorail model).
+  // The chassis has no well-known proxy yet. Central collect keeps
+  // self-hosting available with only CAVUNO_BOARD.
   const collectUrl = (options.collectUrl ?? DEFAULT_COLLECT_URL).replace(
     /\/+$/,
     '',
@@ -75,10 +77,7 @@ export function install(options: InstallOptions): void {
   injectScript(installed, scriptUrl);
 }
 
-export function track(
-  action: string,
-  payload?: Record<string, unknown>,
-): void {
+export function track(action: string, payload?: JobApplyClickPayload): void {
   const trimmed = action.trim();
   if (!trimmed || !installed) return;
   post(installed, trimmed, payload);

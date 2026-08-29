@@ -14,6 +14,7 @@ import { m } from '../../paraglide/messages';
 import { ApplyButton, type ApplyButtonDependencies } from './apply-button';
 
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
+import { analytics as boardAnalytics } from '@/lib/board-analytics';
 import type { BoardDataLayerEvent } from '@/lib/board-datalayer-events';
 
 function captureDataLayer(): BoardDataLayerEvent[] {
@@ -186,6 +187,9 @@ describe('ApplyButton conversion tracking', () => {
   });
 
   it('fires apply_click for a direct external apply link', () => {
+    const track = vi
+      .spyOn(boardAnalytics, 'track')
+      .mockImplementation(() => undefined);
     renderWithConversion(
       <ApplyButton
         {...base}
@@ -204,6 +208,11 @@ describe('ApplyButton conversion tracking', () => {
       company_slug: 'acme',
       apply_type: 'external',
       board_slug: 'acme',
+    });
+    expect(track).toHaveBeenCalledWith('job_apply_click', {
+      jobId: 'job_test_1',
+      jobSlug: 'ordinary-role',
+      companySlug: 'acme',
     });
   });
 

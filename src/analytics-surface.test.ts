@@ -9,23 +9,19 @@ const legacyGlobal = ['window', 'Tinybird'].join('.');
 const legacyPackage = ['@tinybirdco', 'flock'].join('/');
 const legacyToken = ['CAVUNO', 'TRACKER', 'TOKEN'].join('_');
 const FORBIDDEN: { id: string; re: RegExp }[] = [
-  { id: legacyGlobal, re: new RegExp(`\\b${legacyGlobal}\\b`) },
+  {
+    id: legacyGlobal,
+    re: new RegExp(`\\b${legacyGlobal.replace('.', '\\.')}\\b`),
+  },
   { id: legacyPackage, re: new RegExp(legacyPackage) },
   { id: legacyToken, re: new RegExp(`\\b${legacyToken}\\b`) },
 ];
-const SKIP = new Set([
-  'node_modules',
-  'dist',
-  '.git',
-  'coverage',
-  'paraglide',
-]);
-const SKIP_FILES = new Set(['analytics-surface.test.ts']);
+const SKIP = new Set(['node_modules', 'dist', '.git', 'coverage', 'paraglide']);
 
 function walk(dir: string, out: string[]): void {
   if (!existsSync(dir)) return;
   for (const entry of readdirSync(dir)) {
-    if (SKIP.has(entry) || SKIP_FILES.has(entry)) continue;
+    if (SKIP.has(entry)) continue;
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) {
       walk(full, out);
