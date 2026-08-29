@@ -37,6 +37,7 @@ import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { AlternateLinks } from '@/components/alternate-links';
 import { AppRouteErrorPage } from '@/components/app-route-error';
+import { BoardAnalyticsBoot } from '@/components/board-analytics-boot';
 import { BoardAuthConversionTracker } from '@/components/board-auth-conversion-tracker';
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
 import { ShellBreadcrumb } from '@/components/board/breadcrumb';
@@ -201,7 +202,7 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
-  const { board, offerGate } = Route.useLoaderData();
+  const { board, offerGate, publishableKey } = Route.useLoaderData();
 
   // Embed widget: no site chrome and no session island (third-party iframe).
   const isEmbed = useRouterState({
@@ -219,7 +220,11 @@ function RootLayout() {
 
   return (
     <RootSessionProvider candidatePaywall={board.features.candidatePaywall}>
-      <RootChrome board={board} offerGate={offerGate} />
+      <RootChrome
+        board={board}
+        offerGate={offerGate}
+        publishableKey={publishableKey}
+      />
     </RootSessionProvider>
   );
 }
@@ -227,9 +232,11 @@ function RootLayout() {
 function RootChrome({
   board,
   offerGate,
+  publishableKey,
 }: {
   board: Awaited<ReturnType<typeof getRootShellData>>['board'];
   offerGate: Awaited<ReturnType<typeof getRootShellData>>['offerGate'];
+  publishableKey: string;
 }) {
   const { user, employerCompanies, hasAccessGrant, preview, clearSession } =
     useRootSession();
@@ -477,6 +484,7 @@ function RootChrome({
         <Suspense fallback={null}>
           <LazyAnalyticsScripts analytics={board.analytics} />
         </Suspense>
+        <BoardAnalyticsBoot publishableKey={publishableKey} />
         <BoardAuthConversionTracker />
         <FloatingStackProvider>
           <NavigationProgress />

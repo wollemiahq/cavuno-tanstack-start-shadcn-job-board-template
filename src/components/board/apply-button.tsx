@@ -32,6 +32,7 @@ import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
+import { analytics } from '@/lib/board-analytics';
 import {
   candidateSignInHref,
   candidateVerifyEmailHref,
@@ -146,6 +147,14 @@ export function ApplyButton({
   const conversion = useBoardConversionAnalytics();
 
   function trackApplyClick(applyType: 'external' | 'native') {
+    if (jobId && jobSlug && companySlug) {
+      analytics.track('job_apply_click', {
+        jobId,
+        jobSlug,
+        companySlug,
+        applyType,
+      });
+    }
     if (!conversion || !jobId || !jobSlug || !companySlug) return;
     pushBoardConversionEvent(conversion.analytics, {
       event: 'apply_click',

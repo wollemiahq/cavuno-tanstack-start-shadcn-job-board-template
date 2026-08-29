@@ -7,6 +7,7 @@ import { getSessionUser } from './account';
 import { listCompanies } from './employers';
 import { getAccessGrant } from './paywall';
 import { getDataSourceFacts, resolvePreviewStateForViewer } from './preview';
+import { getServerEnv } from '../lib/env';
 import {
   getBoardSeo,
   getEmployerOfferGate,
@@ -54,6 +55,8 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
       // This deployment's own origin — hreflang alternates and localized
       // self-canonicals reference THIS site, not the hosted board.
       origin: new URL(getRequest().url).origin,
+      // Public publishable key (pk_…) — same credential Board API + analytics.
+      publishableKey: getServerEnv().board,
       board,
       seo,
       offerGate,
