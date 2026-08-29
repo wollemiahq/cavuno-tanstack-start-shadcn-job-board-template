@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import { signUpEmployer } from '../server/auth';
+import { getOAuthAuthorizationUrl, signUpEmployer } from '../server/auth';
 import {
   EmployerSignUpUnavailable,
   EmployerSignUpView,
@@ -30,6 +30,7 @@ function EmployerSignUpPage() {
     <EmployerSignUpView
       boardName={boardName}
       signUpEmployerAction={signUpEmployer}
+      getOAuthAuthorizationUrlAction={getOAuthAuthorizationUrl}
       invalidate={async () => {
         await router.invalidate();
       }}

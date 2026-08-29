@@ -13,6 +13,7 @@ import { buildVerifyEmailRedirectPath } from '@/lib/candidate-return-to';
 
 const mocks = {
   getBoardContext: vi.fn(),
+  getOAuthAuthorizationUrl: vi.fn(),
   getSessionUser: vi.fn(),
   invalidate: vi.fn(),
   signUpEmployer: vi.fn(),
@@ -24,6 +25,41 @@ afterEach(() => {
 });
 
 describe('/auth/employer/sign-up continuation', () => {
+  it('starts Google and LinkedIn as an employer, not as a candidate', async () => {
+    mocks.getOAuthAuthorizationUrl.mockResolvedValue({
+      ok: false,
+      message: 'OAuth unavailable in this test',
+    });
+    render(
+      <EmployerSignUpView
+        boardName="Cavuno Jobs"
+        signUpEmployerAction={mocks.signUpEmployer}
+        getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
+        invalidate={mocks.invalidate}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Continue with Google' }),
+    );
+    await screen.findByRole('alert');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Continue with LinkedIn' }),
+    );
+
+    for (const [index, provider] of ['google', 'linkedin'].entries()) {
+      const call = mocks.getOAuthAuthorizationUrl.mock.calls[index]?.[0];
+      expect(call.data.provider).toBe(provider);
+      // Without this the handshake mints a candidate who can never reach the
+      // employer dashboard.
+      expect(call.data.role).toBe('employer');
+      const returnTo = new URL(call.data.returnTo, 'https://board.example');
+      expect(returnTo.pathname).toBe('/employers/dashboard');
+      expect(returnTo.searchParams.get('cavuno_auth_intent')).toBe('sign_up');
+      expect(returnTo.searchParams.get('cavuno_oauth_provider')).toBe(provider);
+    }
+  });
+
   it('sends successful employer signup to the verification gate for the dashboard', async () => {
     mocks.signUpEmployer.mockResolvedValue({ ok: true });
     mocks.invalidate.mockRejectedValue(new Error('refresh unavailable'));
@@ -31,6 +67,7 @@ describe('/auth/employer/sign-up continuation', () => {
       <EmployerSignUpView
         boardName="Cavuno Jobs"
         signUpEmployerAction={mocks.signUpEmployer}
+        getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
         invalidate={mocks.invalidate}
       />,
     );
