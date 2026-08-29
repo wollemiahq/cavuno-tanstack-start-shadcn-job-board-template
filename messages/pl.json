@@ -312,7 +312,7 @@
   "authVerifyEmailRequired_backToSignInLabel": "Wróć do logowania",
   "authVerifyEmailRequired_cardTitle": "Zweryfikuj swój e-mail",
   "authVerifyEmailRequired_codeLabel": "Kod 6-cyfrowy",
-  "authVerifyEmailRequired_introText": "Wpisz 6-cyfrowy kod z e-maila weryfikacyjnego lub otwórz zawarty w nim link.",
+  "authVerifyEmailRequired_introText": "Wpisz 6-cyfrowy kod z e-maila weryfikacyjnego.",
   "authVerifyEmailRequired_recommendedJobEmailsLabel": "Wysyłaj mi oferty pasujące do mojego profilu",
   "authVerifyEmailRequired_resendLabel": "Wyślij kod ponownie",
   "authVerifyEmailRequired_resentText": "Nowy kod jest w drodze.",
