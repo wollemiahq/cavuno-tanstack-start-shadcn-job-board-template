@@ -1,28 +1,26 @@
-import { useState } from 'react';
+import { useState } from "react";
 
-import { redirect } from '@tanstack/react-router';
+import { redirect } from "@tanstack/react-router";
 
-import { boardErrorMessage } from '../lib/board-error-message';
-import {
-  handleEmployerLoaderErrorUsing,
-  isReauthRetry,
-} from '../lib/employer-loader-auth';
-import { m } from '../paraglide/messages';
-import { refreshSession } from '../server/auth';
-import { cancelClaim, listCompanies, sendWorkEmail } from '../server/employers';
-import { getSeoBase } from '../server/queries';
+import { boardErrorMessage } from "../lib/board-error-message";
+import { handleEmployerLoaderErrorUsing, isReauthRetry } from "../lib/employer-loader-auth";
+import { m } from "../paraglide/messages";
+import { refreshSession } from "../server/auth";
+import { cancelClaim, listCompanies, sendWorkEmail } from "../server/employers";
+import { getSeoBase } from "../server/queries";
 
-import { EmployerIdentityAvatar } from '@/components/account-shell';
-import { Page, PageContent } from '@/components/layout/page';
-import { MailAppLinks } from '@/components/mail-app-links';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { Spinner } from '@/components/ui/spinner';
-import type { UrlSearchInput } from '@/lib/pagination';
-import type { CompanyMembership } from '@cavuno/board';
+import { EmployerIdentityAvatar } from "@/components/account-shell";
+import { Page, PageContent } from "@/components/layout/page";
+import { MailAppLinks } from "@/components/mail-app-links";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import type { UrlSearchInput } from "@/lib/pagination";
+import { textActionClass } from "@/lib/text-link";
+import type { CompanyMembership } from "@cavuno/board";
 
 export type EmployerOnboardingLoaderDependencies = {
   listCompanies: typeof listCompanies;
@@ -30,12 +28,11 @@ export type EmployerOnboardingLoaderDependencies = {
   refreshSession: typeof refreshSession;
 };
 
-const employerOnboardingLoaderDependencies: EmployerOnboardingLoaderDependencies =
-  {
-    listCompanies,
-    getSeoBase,
-    refreshSession,
-  };
+const employerOnboardingLoaderDependencies: EmployerOnboardingLoaderDependencies = {
+  listCompanies,
+  getSeoBase,
+  refreshSession,
+};
 
 export function createEmployerOnboardingLoader(
   dependencies: EmployerOnboardingLoaderDependencies = employerOnboardingLoaderDependencies,
@@ -49,10 +46,7 @@ export function createEmployerOnboardingLoader(
   }) => {
     let loaded;
     try {
-      loaded = await Promise.all([
-        dependencies.listCompanies(),
-        dependencies.getSeoBase(),
-      ]);
+      loaded = await Promise.all([dependencies.listCompanies(), dependencies.getSeoBase()]);
     } catch (error) {
       return await handleEmployerLoaderErrorUsing(
         dependencies.refreshSession,
@@ -62,13 +56,11 @@ export function createEmployerOnboardingLoader(
       );
     }
     const [memberships, seo] = loaded;
-    const membership = memberships.data.find(
-      (candidate) => candidate.company.slug === params.slug,
-    );
-    if (!membership) throw redirect({ to: '/employers/dashboard' });
-    if (membership.status === 'approved') {
+    const membership = memberships.data.find((candidate) => candidate.company.slug === params.slug);
+    if (!membership) throw redirect({ to: "/employers/dashboard" });
+    if (membership.status === "approved") {
       throw redirect({
-        to: '/employers/companies/$slug',
+        to: "/employers/companies/$slug",
         params: { slug: params.slug },
       });
     }
@@ -104,14 +96,14 @@ export function EmployerOnboardingPageView({
             />
           </CardHeader>
           <CardContent className="space-y-8 text-center">
-            {membership.status === 'pending_work_email' ? (
+            {membership.status === "pending_work_email" ? (
               <WorkEmailStep
                 key={`${membership.id}:${slug}`}
                 slug={slug}
                 membership={membership}
                 dependencies={dependencies}
               />
-            ) : membership.status === 'awaiting_admin' ? (
+            ) : membership.status === "awaiting_admin" ? (
               <div className="space-y-5">
                 <StepHeading
                   title={m.employerOnboarding_awaitingAdminTitle()}
@@ -149,15 +141,13 @@ function WorkEmailStep({
   dependencies: EmployerOnboardingViewDependencies;
 }) {
   const [editing, setEditing] = useState(!membership.workEmail);
-  const [email, setEmail] = useState(membership.workEmail ?? '');
-  const [status, setStatus] = useState<
-    'idle' | 'sending' | 'error' | 'committed'
-  >('idle');
-  const [message, setMessage] = useState('');
+  const [email, setEmail] = useState(membership.workEmail ?? "");
+  const [status, setStatus] = useState<"idle" | "sending" | "error" | "committed">("idle");
+  const [message, setMessage] = useState("");
 
   async function send(target: string) {
-    setStatus('sending');
-    setMessage('');
+    setStatus("sending");
+    setMessage("");
     let result: Awaited<ReturnType<typeof dependencies.sendWorkEmail>>;
     try {
       result = await dependencies.sendWorkEmail({
@@ -165,21 +155,21 @@ function WorkEmailStep({
       });
     } catch {
       // A rejecting call (network drop, 5xx) must not strand "Sending".
-      setStatus('error');
+      setStatus("error");
       setMessage(m.employerCompany_genericError());
       return;
     }
     if (!result.ok) {
-      setStatus('error');
+      setStatus("error");
       setMessage(boardErrorMessage(result));
       return;
     }
-    setStatus('committed');
+    setStatus("committed");
     setEditing(false);
     try {
       await dependencies.invalidate();
     } catch {
-      setStatus('error');
+      setStatus("error");
       setMessage(m.employerCompany_reconciliationError());
     }
   }
@@ -192,28 +182,26 @@ function WorkEmailStep({
           title={m.employerOnboarding_emailSentTitle()}
           body={m.employerOnboarding_emailSentBody({ email: verifiedEmail })}
         />
-        {/* Fastest path first: jump straight to the inbox. */}
-        <MailAppLinks
-          gmailLabel={m.employerOnboarding_openGmailLabel()}
-          outlookLabel={m.employerOnboarding_openOutlookLabel()}
-        />
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={status === 'sending' || status === 'committed'}
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm">
+          <button
+            type="button"
+            className={textActionClass}
+            disabled={status === "sending" || status === "committed"}
             onClick={() => send(verifiedEmail)}
           >
-            {status === 'sending' ? <Spinner data-icon="inline-start" /> : null}
-            {status === 'sending'
+            {status === "sending"
               ? m.employerDashboard_sendingLabel()
               : m.employerOnboarding_resendLabel()}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+          </button>
+          <span className="text-muted-foreground" aria-hidden>
+            ·
+          </span>
+          <button type="button" className={textActionClass} onClick={() => setEditing(true)}>
             {m.employerOnboarding_changeEmailLabel()}
-          </Button>
+          </button>
         </div>
-        {status === 'error' ? (
+        <MailAppLinks />
+        {status === "error" ? (
           <Alert variant="destructive">
             <AlertDescription>{message}</AlertDescription>
           </Alert>
@@ -237,45 +225,35 @@ function WorkEmailStep({
           company: membership.company.name,
         })}
       />
-      <Field
-        className="mx-auto max-w-sm text-start"
-        data-invalid={status === 'error'}
-      >
-        <FieldLabel htmlFor="work-email">
-          {m.employerDashboard_workEmailLabel()}
-        </FieldLabel>
+      <Field className="mx-auto max-w-sm text-start" data-invalid={status === "error"}>
+        <FieldLabel htmlFor="work-email">{m.employerDashboard_workEmailLabel()}</FieldLabel>
         <Input
           id="work-email"
           type="email"
           value={email}
           placeholder={m.employerDashboard_workEmailPlaceholder()}
           onChange={(event) => setEmail(event.currentTarget.value)}
-          aria-invalid={status === 'error'}
+          aria-invalid={status === "error"}
           required
           autoFocus
         />
-        {status === 'error' ? <FieldError>{message}</FieldError> : null}
+        {status === "error" ? <FieldError>{message}</FieldError> : null}
       </Field>
       <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-2">
         <Button
           type="submit"
           size="lg"
           className="w-full"
-          disabled={status === 'sending' || status === 'committed'}
+          disabled={status === "sending" || status === "committed"}
         >
-          {status === 'sending' ? <Spinner data-icon="inline-start" /> : null}
-          {status === 'sending'
+          {status === "sending" ? <Spinner data-icon="inline-start" /> : null}
+          {status === "sending"
             ? m.employerDashboard_sendingLabel()
             : m.employerDashboard_sendLinkLabel()}
         </Button>
         {membership.workEmail ? (
           // A link was already sent — backing out returns to the inbox step.
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setEditing(false)}
-          >
+          <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>
             {m.employerOnboarding_cancelLabel()}
           </Button>
         ) : (
@@ -305,9 +283,7 @@ function CancelClaimButton({
   slug: string;
   dependencies: EmployerOnboardingViewDependencies;
 }) {
-  const [cancelling, setCancelling] = useState<false | 'pending' | 'committed'>(
-    false,
-  );
+  const [cancelling, setCancelling] = useState<false | "pending" | "committed">(false);
   const [error, setError] = useState<string | null>(null);
   return (
     <>
@@ -323,7 +299,7 @@ function CancelClaimButton({
         disabled={Boolean(cancelling)}
         onClick={async () => {
           setError(null);
-          setCancelling('pending');
+          setCancelling("pending");
           let result: Awaited<ReturnType<typeof dependencies.cancelClaim>>;
           try {
             result = await dependencies.cancelClaim({ data: { slug } });
@@ -337,14 +313,12 @@ function CancelClaimButton({
             setCancelling(false);
             return;
           }
-          setCancelling('committed');
+          setCancelling("committed");
           try {
             await dependencies.invalidate();
             await dependencies.navigateToDashboard();
           } catch {
-            void dependencies.showActionError(
-              m.employerCompany_reconciliationError(),
-            );
+            void dependencies.showActionError(m.employerCompany_reconciliationError());
           }
         }}
       >
