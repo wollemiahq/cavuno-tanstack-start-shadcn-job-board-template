@@ -1035,6 +1035,12 @@ Props:
 - `nameHref?: string | null | undefined`
 - `subtitle?: ReactNode`
 
+### TalentFilters — `src/components/board/talent-filters.tsx`
+
+Props:
+
+- `search: TalentSearch`
+
 ### TalentMessageAction — `src/components/board/talent-message-action.tsx`
 
 Props:
@@ -1077,6 +1083,14 @@ Props:
 - `size?: "lg" | "xl" | undefined`
 - `vm: TalentProfileVM`
 
+### TalentSaveToJob — `src/components/board/talent-save-to-job.tsx`
+
+Props:
+
+- `candidateBoardUserId: string`
+- `jobs: { id: string; title: string; }[]`
+- `slug: string`
+
 ### TalentSearchDetailState — `src/components/board/talent-search-detail-state.tsx`
 
 Props:
@@ -1104,6 +1118,7 @@ Props:
 - `page: number`
 - `pageSize: number`
 - `q?: string | undefined`
+- `search?: TalentSearch | undefined`
 - `selectedTalent?: string | undefined`
 - `skill?: string | undefined`
 - `startAd?: AdPlacement | undefined`
@@ -1125,6 +1140,7 @@ Props:
 Props:
 
 - `onActivate?: ((event: MouseEvent<HTMLAnchorElement, MouseEvent>) => void) | undefined`
+- `save?: ReactNode`
 - `selected?: boolean | undefined`
 - `vm: TalentCardVM`
 
@@ -1394,6 +1410,7 @@ Props:
 - `defaultStageDialog?: StageDialogState | undefined`
 - `jobId: string`
 - `slug: string`
+- `sourced?: { id: string; candidate: { displayName: string | null; headline: string | null; }; }[] | undefined`
 
 ### CompanyDeleteDangerZone — `src/components/employer/company-delete-danger-zone.tsx`
 
