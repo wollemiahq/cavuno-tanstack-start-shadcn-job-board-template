@@ -1,24 +1,29 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from 'lucide-react';
 
-import { AuthCard, AuthDivider, Field, FormError } from "../components/auth-form";
+import {
+  AuthCard,
+  AuthDivider,
+  Field,
+  FormError,
+} from '../components/auth-form';
 import {
   candidateForgotPasswordHref,
   candidateJoinHref,
   candidateOAuthReturnTo,
-} from "../lib/candidate-return-to";
-import { m } from "../paraglide/messages";
+} from '../lib/candidate-return-to';
+import { m } from '../paraglide/messages';
 
-import { GoogleIcon, LinkedInIcon } from "@/components/brand-icons";
-import { AuthMailAppLinks } from "@/components/mail-app-links";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { appendAuthConversionQuery } from "@/lib/board-datalayer-events";
-import { boardErrorMessage } from "@/lib/board-error-message";
-import { textActionClass, textLinkClass } from "@/lib/text-link";
-import { cn } from "@/lib/utils";
+import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
+import { AuthMailAppLinks } from '@/components/mail-app-links';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { appendAuthConversionQuery } from '@/lib/board-datalayer-events';
+import { boardErrorMessage } from '@/lib/board-error-message';
+import { textActionClass, textLinkClass } from '@/lib/text-link';
+import { cn } from '@/lib/utils';
 
 export function SignInView({
   returnTo,
@@ -29,34 +34,40 @@ export function SignInView({
   assignLocation,
 }: {
   returnTo: string;
-  notice?: "password-reset";
+  notice?: 'password-reset';
   signInAction: (input: {
     data: { email: string; password: string };
-  }) => Promise<{ ok: true; boardUser?: unknown } | { ok: false; code: string; message: string }>;
+  }) => Promise<
+    | { ok: true; boardUser?: unknown }
+    | { ok: false; code: string; message: string }
+  >;
   requestMagicLinkAction: (input: {
     data: { email: string; returnTo?: string };
   }) => Promise<{ ok: true } | { ok: false; code: string; message: string }>;
   getOAuthAuthorizationUrlAction: (input: {
-    data: { provider: "google" | "linkedin"; returnTo?: string };
-  }) => Promise<{ ok: true; authorizeUrl: string } | { ok: false; code?: string; message: string }>;
+    data: { provider: 'google' | 'linkedin'; returnTo?: string };
+  }) => Promise<
+    | { ok: true; authorizeUrl: string }
+    | { ok: false; code?: string; message: string }
+  >;
   invalidate: () => Promise<void>;
   navigate: (href: string) => Promise<void>;
   assignLocation: (url: string) => void;
 }) {
-  const [mode, setMode] = useState<"password" | "magic">("password");
+  const [mode, setMode] = useState<'password' | 'magic'>('password');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   /** The address a magic link was sent to — non-null swaps in the sent state. */
   const [sentTo, setSentTo] = useState<string | null>(null);
 
-  async function startOAuth(provider: "google" | "linkedin") {
+  async function startOAuth(provider: 'google' | 'linkedin') {
     setPending(true);
     setError(null);
     try {
       const result = await getOAuthAuthorizationUrlAction({
         data: {
           provider,
-          returnTo: candidateOAuthReturnTo(returnTo, "login", provider),
+          returnTo: candidateOAuthReturnTo(returnTo, 'login', provider),
         },
       });
       if (result.ok) {
@@ -123,15 +134,17 @@ export function SignInView({
 
   return (
     <AuthCard title={m.authSignIn_title()}>
-      {notice === "password-reset" ? (
+      {notice === 'password-reset' ? (
         <Alert role="status">
-          <AlertDescription>{m.authSignIn_passwordResetSuccessText()}</AlertDescription>
+          <AlertDescription>
+            {m.authSignIn_passwordResetSuccessText()}
+          </AlertDescription>
         </Alert>
       ) : null}
       <RadioGroup
         name="sign-in-method"
         value={mode}
-        onValueChange={(next: "password" | "magic") => {
+        onValueChange={(next: 'password' | 'magic') => {
           setMode(next);
           setError(null);
         }}
@@ -140,10 +153,10 @@ export function SignInView({
       >
         <label
           className={cn(
-            "has-focus-visible:ring-ring/30 flex h-9 cursor-pointer items-center justify-center rounded-xl px-3 text-sm font-medium transition-colors outline-none has-focus-visible:ring-3",
-            mode === "password"
-              ? "bg-background text-foreground shadow-xs"
-              : "text-muted-foreground",
+            'has-focus-visible:ring-ring/30 flex h-9 cursor-pointer items-center justify-center rounded-xl px-3 text-sm font-medium transition-colors outline-none has-focus-visible:ring-3',
+            mode === 'password'
+              ? 'bg-background text-foreground shadow-xs'
+              : 'text-muted-foreground',
           )}
         >
           <RadioGroupItem value="password" className="sr-only" />
@@ -151,8 +164,10 @@ export function SignInView({
         </label>
         <label
           className={cn(
-            "has-focus-visible:ring-ring/30 flex h-9 cursor-pointer items-center justify-center rounded-xl px-3 text-sm font-medium transition-colors outline-none has-focus-visible:ring-3",
-            mode === "magic" ? "bg-background text-foreground shadow-xs" : "text-muted-foreground",
+            'has-focus-visible:ring-ring/30 flex h-9 cursor-pointer items-center justify-center rounded-xl px-3 text-sm font-medium transition-colors outline-none has-focus-visible:ring-3',
+            mode === 'magic'
+              ? 'bg-background text-foreground shadow-xs'
+              : 'text-muted-foreground',
           )}
         >
           <RadioGroupItem value="magic" className="sr-only" />
@@ -167,17 +182,17 @@ export function SignInView({
           setPending(true);
           setError(null);
           const form = new FormData(event.currentTarget);
-          const email = String(form.get("email"));
+          const email = String(form.get('email'));
           let result:
             | Awaited<ReturnType<typeof signInAction>>
             | Awaited<ReturnType<typeof requestMagicLinkAction>>;
           try {
             result =
-              mode === "password"
+              mode === 'password'
                 ? await signInAction({
                     data: {
                       email,
-                      password: String(form.get("password")),
+                      password: String(form.get('password')),
                     },
                   })
                 : await requestMagicLinkAction({
@@ -191,11 +206,13 @@ export function SignInView({
             setPending(false);
             return;
           }
-          if (result.ok && mode === "password") {
+          if (result.ok && mode === 'password') {
             // The httpOnly session is committed. A hard navigation both
             // reconciles the shell and prevents later router failures from
             // being reported as an authentication failure.
-            assignLocation(appendAuthConversionQuery(returnTo, "login", "password"));
+            assignLocation(
+              appendAuthConversionQuery(returnTo, 'login', 'password'),
+            );
             return;
           }
           if (result.ok) {
@@ -206,15 +223,23 @@ export function SignInView({
           setPending(false);
         }}
       >
-        <Field label={m.authSignIn_emailLabel()} name="email" type="email" autoComplete="email" />
-        {mode === "password" ? (
+        <Field
+          label={m.authSignIn_emailLabel()}
+          name="email"
+          type="email"
+          autoComplete="email"
+        />
+        {mode === 'password' ? (
           <Field
             label={m.authSignIn_passwordLabel()}
             name="password"
             type="password"
             autoComplete="current-password"
             labelAction={
-              <a className={textLinkClass} href={candidateForgotPasswordHref(returnTo)}>
+              <a
+                className={textLinkClass}
+                href={candidateForgotPasswordHref(returnTo)}
+              >
                 {m.authSignIn_forgotPasswordLink()}
               </a>
             }
@@ -223,10 +248,10 @@ export function SignInView({
         <FormError message={error} />
         <Button type="submit" size="lg" className="w-full" disabled={pending}>
           {pending
-            ? mode === "password"
+            ? mode === 'password'
               ? m.authSignIn_signingInLabel()
               : m.authSignIn_sendingLabel()
-            : mode === "password"
+            : mode === 'password'
               ? m.authSignIn_submitLabel()
               : m.authSignIn_sendMagicLinkLabel()}
         </Button>
@@ -241,7 +266,7 @@ export function SignInView({
           size="lg"
           className="w-full"
           disabled={pending}
-          onClick={() => void startOAuth("google")}
+          onClick={() => void startOAuth('google')}
         >
           <GoogleIcon />
           {m.authSignIn_continueWithGoogleLabel()}
@@ -252,7 +277,7 @@ export function SignInView({
           size="lg"
           className="w-full"
           disabled={pending}
-          onClick={() => void startOAuth("linkedin")}
+          onClick={() => void startOAuth('linkedin')}
         >
           <LinkedInIcon className="size-4 text-[#0A66C2]" />
           {m.authSignIn_continueWithLinkedinLabel()}
@@ -262,9 +287,9 @@ export function SignInView({
       {/* Mirrors the sign-up card's prompt+link footer, so the two entry
           points read as one pair rather than two conventions. */}
       <p className="text-muted-foreground text-center text-sm">
-        {m.authSignIn_noAccountText()}{" "}
+        {m.authSignIn_noAccountText()}{' '}
         <a
-          className={cn(textLinkClass, "inline-flex items-center gap-1")}
+          className={cn(textLinkClass, 'inline-flex items-center gap-1')}
           href={candidateJoinHref(returnTo)}
         >
           {m.authSignIn_getStartedLink()}
