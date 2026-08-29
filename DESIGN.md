@@ -388,6 +388,15 @@ Props:
 - `avatarUrl: string | null`
 - `displayName: string | null`
 
+### BoardAnalyticsBoot — `src/components/board-analytics-boot.tsx`
+
+Boots Cavuno Analytics once per document. Publishable key comes from
+the public board shell (same pk_ as Board API).
+
+Props:
+
+- `publishableKey: string`
+
 ### BoardAuthConversionTracker — `src/components/board-auth-conversion-tracker.tsx`
 
 Parse `cavuno_auth*` query params on any landing page, fire the matching
