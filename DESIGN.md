@@ -1138,6 +1138,15 @@ Props:
 - `overflow?: number | undefined`
 - `size?: "sm" | "lg" | "md" | undefined`
 
+### AppleIcon — `src/components/brand-icons.tsx`
+
+Apple's mark, tinted from `currentColor` so it holds up on light and dark
+surfaces — there is no single required fill the way Google's G has.
+
+Props:
+
+- `className?: string | undefined`
+
 ### FacebookIcon — `src/components/brand-icons.tsx`
 
 ### GmailIcon — `src/components/brand-icons.tsx`
@@ -1173,7 +1182,25 @@ Props:
 
 - `className?: string | undefined`
 
+### ProtonMailIcon — `src/components/brand-icons.tsx`
+
+Proton Mail's envelope mark in Proton purple — an identity mark, so the
+fill is literal rather than themed.
+
+Props:
+
+- `className?: string | undefined`
+
 ### XIcon — `src/components/brand-icons.tsx`
+
+### YahooIcon — `src/components/brand-icons.tsx`
+
+Yahoo's "Y" on the Mail purple tile — an identity mark, so the fill is
+literal rather than themed.
+
+Props:
+
+- `className?: string | undefined`
 
 ### CandidateProfilePendingPage — `src/components/candidate-route-state.tsx`
 
@@ -1768,20 +1795,10 @@ Props:
 
 The candidate-auth wording (sign-in and password reset share a catalog).
 
-Props:
-
-- `email: string`
-
 ### MailAppLinks — `src/components/mail-app-links.tsx`
 
-One outline button, same shape as "Continue with Google": brand mark to
-the leading edge of the label, full width of the auth card.
-
-Props:
-
-- `email: string`
-- `gmailLabel: string`
-- `outlookLabel: string`
+Icon-only shortcuts into the big webmail apps. Visible labels live on
+`aria-label`; a heading over the row would restate the card.
 
 ### MarketingConsentSettings — `src/components/marketing-consent-settings.tsx`
 

@@ -50,12 +50,12 @@ export function ForgotPasswordView({
         title={m.authForgotPassword_checkEmailTitle()}
         supportingText={m.authForgotPassword_checkEmailBody()}
       >
-        <AuthMailAppLinks email={sentTo} />
         <div className="text-center text-sm">
           <a href={candidateSignInHref(returnTo)} className={textLinkClass}>
             {m.authForgotPassword_backToSignInLabel()}
           </a>
         </div>
+        <AuthMailAppLinks />
       </AuthCard>
     );
   }

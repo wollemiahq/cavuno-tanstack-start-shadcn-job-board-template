@@ -182,11 +182,6 @@ function WorkEmailStep({
           title={m.employerOnboarding_emailSentTitle()}
           body={m.employerOnboarding_emailSentBody({ email: verifiedEmail })}
         />
-        <MailAppLinks
-          email={verifiedEmail}
-          gmailLabel={m.employerOnboarding_openGmailLabel()}
-          outlookLabel={m.employerOnboarding_openOutlookLabel()}
-        />
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm">
           <button
             type="button"
@@ -205,6 +200,7 @@ function WorkEmailStep({
             {m.employerOnboarding_changeEmailLabel()}
           </button>
         </div>
+        <MailAppLinks />
         {status === "error" ? (
           <Alert variant="destructive">
             <AlertDescription>{message}</AlertDescription>

@@ -79,7 +79,6 @@ export function SignInView({
         title={m.authSignIn_magicLinkSentTitle()}
         supportingText={m.authSignIn_magicLinkSentBody({ email: sentTo })}
       >
-        <AuthMailAppLinks email={sentTo} />
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm">
           <button
             type="button"
@@ -116,6 +115,7 @@ export function SignInView({
             {m.authSignIn_useDifferentEmailLabel()}
           </button>
         </div>
+        <AuthMailAppLinks />
         <FormError message={error} />
       </AuthCard>
     );
