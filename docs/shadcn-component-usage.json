@@ -139,6 +139,7 @@
         "src/components/board/job-search-page.tsx",
         "src/components/board/job-search-result-detail.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/board/talent-filters.tsx",
         "src/components/board/talent-profile-content.tsx",
         "src/components/board/talent-search-result.tsx",
         "src/components/board/taxonomy-tags.tsx",
@@ -498,6 +499,7 @@
         "src/components/board/alert-signup-form.tsx",
         "src/components/board/apply-button.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/board/talent-filters.tsx",
         "src/components/custom-fields-group.tsx",
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",
@@ -605,7 +607,6 @@
       "name": "label",
       "status": "used",
       "productionReferences": [
-        "src/components/board/talent-filters.tsx",
         "src/components/employer-job-form.tsx",
         "src/components/experience-section.tsx",
         "src/components/resume-upload.tsx",
@@ -700,6 +701,7 @@
       "productionReferences": [
         "src/components/board/jobs-filter-controls.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/board/talent-filters.tsx",
         "src/components/custom-fields-group.tsx",
         "src/components/employer-job-form.tsx",
         "src/components/employer/applicant-pipeline-board.tsx",
@@ -727,6 +729,7 @@
       "productionReferences": [
         "src/components/alert-manager.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/board/talent-filters.tsx",
         "src/components/education-section.tsx",
         "src/components/employer/applicant-pipeline-board.tsx",
         "src/components/experience-section.tsx",
