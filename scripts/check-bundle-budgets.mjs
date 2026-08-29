@@ -56,7 +56,10 @@ const BUDGETS = {
     // records the corrected ownership rather than accepting route growth.
     '/employers/companies/$slug/jobs/$jobId/applicants': {
       raw: 410_000,
-      gzip: 112_000,
+      // Sourced-rail convert-on-drop (GridList MIME + convert RPC) added
+      // ~0.3 KiB gzip on top of the React Aria drag runtime already charged
+      // here. 112 KiB was 109.4; CI measured 109.7.
+      gzip: 114_000,
     },
     // Desktop-only enhanced search is lazy shell work. Removing the shared
     // Base UI footer menu also made TanStack attribute more of the remaining
