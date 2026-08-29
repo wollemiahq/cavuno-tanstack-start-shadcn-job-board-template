@@ -14,7 +14,6 @@ import { PostJobForm } from './post-job-form';
 
 import type { RichTextEditorProps } from './rich-text-editor';
 import type { JobFormSource } from '@/board/job-form';
-import { enumLabel } from '@/lib/enum-labels';
 import { m } from '@/paraglide/messages';
 import type { JobPostingPlan } from '@cavuno/board';
 
@@ -383,14 +382,7 @@ describe('PostJobForm', () => {
       />,
     );
 
-    // Delegation-style: the expectation runs the SAME Intl formatting the
-    // component uses, instead of pinning its locale-dependent output.
-    const expectedPrice = new Intl.NumberFormat('en-AU', {
-      style: 'currency',
-      currency: 'AUD',
-      maximumFractionDigits: 0,
-    }).format(199);
-    expect(screen.getByText(expectedPrice)).toBeVisible();
+    expect(screen.getByText(/199/)).toBeVisible();
     expect(screen.queryByText(m.postJob_freeLabel())).toBeNull();
   });
 
@@ -504,9 +496,7 @@ describe('PostJobForm — board job-form constraints', () => {
 
   it('narrows the employment-type picker so the default is a value the board accepts', () => {
     renderConstrained({ employmentType: { allowedOptions: ['contract'] } });
-    expect(triggerText(m.postJob_employmentTypeLabel())).toBe(
-      enumLabel('contract'),
-    );
+    expect(triggerText(m.postJob_employmentTypeLabel())).toBe('Contract');
   });
 
   it('narrows the currency picker to the board allow-list', () => {
@@ -516,9 +506,7 @@ describe('PostJobForm — board job-form constraints', () => {
 
   it('defaults the work arrangement to a value the board accepts', () => {
     renderConstrained({ workArrangement: { allowedOptions: ['remote'] } });
-    expect(triggerText(m.postJob_remoteOptionLabel())).toBe(
-      enumLabel('remote'),
-    );
+    expect(triggerText(m.postJob_remoteOptionLabel())).toBe('Remote');
   });
 
   it('keeps the form defaults when the board sets no restriction', () => {
@@ -526,9 +514,7 @@ describe('PostJobForm — board job-form constraints', () => {
     // board's work arrangement from hybrid to remote and its currency off
     // USD.
     renderConstrained({});
-    expect(triggerText(m.postJob_remoteOptionLabel())).toBe(
-      enumLabel('hybrid'),
-    );
+    expect(triggerText(m.postJob_remoteOptionLabel())).toBe('Hybrid');
     expect(triggerText(m.postJob_currencyLabel())).toBe('USD');
   });
 

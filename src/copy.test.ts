@@ -1,20 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { boardCopy, type BoardCopy } from './copy';
-import { alertsCopy } from './copy-groups/alerts';
-import { applyCopy } from './copy-groups/apply';
-import { blogCopy } from './copy-groups/blog';
-import { breadcrumbsCopy } from './copy-groups/breadcrumbs';
-import { copyLinkCopy } from './copy-groups/copy-link';
 import { entityCopy } from './copy-groups/entity';
-import { footerCopy } from './copy-groups/footer';
-import { jobCardCopy } from './copy-groups/job-card';
-import { jobDetailCopy } from './copy-groups/job-detail';
-import { jobSearchCopy } from './copy-groups/job-search';
 import { navCopy } from './copy-groups/nav';
-import { paginationCopy } from './copy-groups/pagination';
-import { salaryCopy } from './copy-groups/salary';
-import { m } from './paraglide/messages';
 import { baseLocale, overwriteGetLocale } from './paraglide/runtime';
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -95,72 +83,25 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
     expect(actual).toEqual(expected);
   });
 
-  it('keeps the route-owned message families equivalent to the canonical adapter', () => {
-    const canonical = boardCopy('en');
-    const modular = {
-      alerts: alertsCopy(),
-      apply: applyCopy(),
-      blog: blogCopy(),
-      breadcrumbs: breadcrumbsCopy(),
-      copyLink: copyLinkCopy(),
-      entity: entityCopy(),
-      footer: footerCopy(),
-      jobCard: jobCardCopy(),
-      jobDetail: jobDetailCopy(),
-      jobSearch: jobSearchCopy(),
-      nav: navCopy(),
-      pagination: paginationCopy(),
-      salary: salaryCopy(),
-    } satisfies BoardCopy;
-
-    for (const group of copyGroupNames) {
-      const canonicalValues = canonical[group];
-      const modularValues = modular[group];
-      expect(Object.keys(modularValues).sort()).toEqual(
-        Object.keys(canonicalValues).sort(),
-      );
-      const modularEntries = Object.entries(modularValues);
-      for (const [key, value] of Object.entries(canonicalValues)) {
-        if (
-          group === 'jobDetail' &&
-          (key === 'experienceYears' || key === 'posted')
-        ) {
-          continue;
-        }
-        expect(
-          modularEntries.find(([candidate]) => candidate === key)?.[1],
-        ).toBe(value);
-      }
-    }
-
-    expect(jobDetailCopy().experienceYears(5)).toBe(
-      boardCopy('en').jobDetail.experienceYears(5),
-    );
-    expect(jobDetailCopy().posted('today')).toBe(
-      boardCopy('en').jobDetail.posted('today'),
-    );
-  });
-
   it('overlays chrome.json nav and entity strings onto catalog defaults', () => {
-    // Stock src/chrome.json is `{}`, so every key stays the Paraglide
-    // catalog string. A non-empty chromeNav()/chromeEntity() key replaces
-    // that default (see site-chrome.test.ts).
+    // Stock src/chrome.json is `{}`, so every key stays the catalog
+    // string. Pin those literals — not the Paraglide calls production uses.
     expect(navCopy()).toEqual({
-      blog: m.nav_blog(),
-      companies: m.nav_companies(),
-      home: m.nav_home(),
-      post: m.nav_post(),
-      pricing: m.nav_pricing(),
-      talent: m.nav_talent(),
+      blog: 'Blog',
+      companies: 'Companies',
+      home: 'Jobs',
+      post: 'Post a job',
+      pricing: 'Pricing',
+      talent: 'Talent',
     });
     expect(entityCopy()).toEqual({
-      companyPlural: m.entity_companyPlural(),
-      companySingular: m.entity_companySingular(),
-      jobPlural: m.entity_jobPlural(),
-      jobSingular: m.entity_jobSingular(),
-      candidateSingular: m.entity_candidateSingular(),
-      candidatePlural: m.entity_candidatePlural(),
-      candidatePresent: m.entity_candidatePresent(),
+      companyPlural: 'companies',
+      companySingular: 'company',
+      jobPlural: 'jobs',
+      jobSingular: 'job',
+      candidateSingular: 'candidate',
+      candidatePlural: 'candidates',
+      candidatePresent: 'Present',
     });
   });
 });

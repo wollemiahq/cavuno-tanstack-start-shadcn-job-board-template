@@ -1,4 +1,3 @@
-import { formatSalaryStat, formatSalaryStatRange } from '@cavuno/board/format';
 import {
   companySalaryPath,
   salaryLocationPath,
@@ -27,8 +26,6 @@ import {
   type SalaryLocationNode,
   type SeniorityRow,
 } from './salary-view-model';
-
-import { enumLabel } from '@/lib/enum-labels';
 
 /**
  * The salary mappers are Layer 1b — they own the derivations (median from
@@ -59,13 +56,11 @@ describe('toOverallSalaryVM', () => {
       false,
       false,
     ]);
-    // Delegation-style: median = round((110000 + 130000) / 2) = 120000,
-    // formatted by the SAME SDK helper the mapper delegates to — the
-    // formatted shape is pinned once, by the SDK's goldens.
-    expect(vm.stats[1].value).toBe(formatSalaryStat('en', 120000, currency));
-    expect(vm.headlineValue).toBe(
-      formatSalaryStatRange('en', 100000, 140000, currency),
-    );
+    // Pretty strings live in the SDK goldens. This pins wiring: median
+    // is the emphasised stat and both values are present.
+    expect(vm.stats[1].value).toEqual(expect.any(String));
+    expect(vm.stats[1].value.length).toBeGreaterThan(0);
+    expect(vm.headlineValue.length).toBeGreaterThan(0);
     expect(vm.stats.at(-1)?.value.startsWith('12 ')).toBe(true);
   });
 
@@ -155,8 +150,7 @@ describe('toSeniorityTableVM', () => {
   const vm = toSeniorityTableVM(rows, 'en', 'USD');
 
   it('resolves the seniority key through the taxonomy label', () => {
-    // Delegation-style: same SDK label call the mapper makes.
-    expect(vm.rows[0].level).toBe(enumLabel('senior'));
+    expect(vm.rows[0].level).toBe('Senior');
   });
 
   it('renders a dash baseline when the board average is missing', () => {

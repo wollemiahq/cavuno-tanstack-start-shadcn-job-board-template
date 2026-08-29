@@ -9,9 +9,9 @@ import { join } from 'node:path';
  * pinned exactly once, by the SDK's golden tests. Component and mapper
  * tests here must not re-pin it: a currency-shaped literal in a test means
  * either an assertion is pinning formatter output (convert it to a
- * symbolic `vm.field` reference or a delegation-style call of the SDK
- * formatter) or a fixture embeds formatter-shaped values (use neutral
- * values / `src/test/fixtures.ts`).
+ * symbolic `vm.field` reference — never replay the SDK formatter) or a
+ * fixture embeds formatter-shaped values (use neutral values /
+ * `src/test/fixtures.ts`).
  *
  * Every re-pinned literal makes presentation edits fan out into unrelated
  * test-content rewrites, so the suite enforces this rule mechanically.

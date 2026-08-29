@@ -5,8 +5,6 @@ import {
   clampEmailLimit,
   groupPersonasByRole,
   pickWhitelistedConfig,
-  PREVIEW_EMAILS_DEFAULT_LIMIT,
-  PREVIEW_EMAILS_MAX_LIMIT,
   PREVIEW_FEATURE_FLAGS,
   rewriteEmailHtmlLinks,
   rewriteEmailTextLinks,
@@ -289,12 +287,12 @@ describe('toPreviewBoardConfig', () => {
 
 describe('clampEmailLimit', () => {
   it('defaults to 50 when no limit is given', () => {
-    expect(clampEmailLimit()).toBe(PREVIEW_EMAILS_DEFAULT_LIMIT);
-    expect(clampEmailLimit(undefined)).toBe(PREVIEW_EMAILS_DEFAULT_LIMIT);
+    expect(clampEmailLimit()).toBe(50);
+    expect(clampEmailLimit(undefined)).toBe(50);
   });
 
   it('caps the limit at 200', () => {
-    expect(clampEmailLimit(9999)).toBe(PREVIEW_EMAILS_MAX_LIMIT);
+    expect(clampEmailLimit(9999)).toBe(200);
   });
 
   it('floors the limit at 1 and truncates fractions', () => {
@@ -304,10 +302,8 @@ describe('clampEmailLimit', () => {
   });
 
   it('falls back to the default for non-finite input', () => {
-    expect(clampEmailLimit(Number.NaN)).toBe(PREVIEW_EMAILS_DEFAULT_LIMIT);
-    expect(clampEmailLimit(Number.POSITIVE_INFINITY)).toBe(
-      PREVIEW_EMAILS_DEFAULT_LIMIT,
-    );
+    expect(clampEmailLimit(Number.NaN)).toBe(50);
+    expect(clampEmailLimit(Number.POSITIVE_INFINITY)).toBe(50);
   });
 });
 
