@@ -568,6 +568,146 @@ export const getPipeline = createServerFn({ method: 'GET' })
     ),
   );
 
+type SourcingCompanies = {
+  talentLists: {
+    list: (
+      slug: string,
+      options?: { headers?: HeadersInit },
+    ) => Promise<{
+      data: Array<{
+        id: string;
+        name: string;
+        jobId: string | null;
+        filters: Record<string, unknown>;
+      }>;
+    }>;
+    create: (
+      slug: string,
+      body: { name: string; filters?: Record<string, unknown>; job?: string },
+      options?: { headers?: HeadersInit },
+    ) => Promise<{ id: string; name: string }>;
+  };
+  sourcedCandidates: {
+    list: (
+      slug: string,
+      query: { job: string },
+      options?: { headers?: HeadersInit },
+    ) => Promise<{
+      data: Array<{
+        id: string;
+        sourcedAt: number;
+        candidate: {
+          id: string;
+          displayName: string | null;
+          headline: string | null;
+        };
+      }>;
+    }>;
+    add: (
+      slug: string,
+      body: { job: string; candidateBoardUserId: string },
+      options?: { headers?: HeadersInit },
+    ) => Promise<{ id: string; created: boolean }>;
+    convert: (
+      slug: string,
+      sourcedId: string,
+      body: { stage: string },
+      options?: { headers?: HeadersInit },
+    ) => Promise<{ id: string }>;
+  };
+};
+
+function sourcingCompanies(): SourcingCompanies {
+  return getBoard().me.companies as unknown as SourcingCompanies;
+}
+
+export const listEmployerJobs = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string }) => input)
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, () =>
+      getBoard().me.companies.jobs.list(data.slug, undefined, {
+        headers: authedHeaders(context),
+      }),
+    ),
+  );
+
+export const listTalentLists = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string }) => input)
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, () =>
+      sourcingCompanies().talentLists.list(data.slug, {
+        headers: authedHeaders(context),
+      }),
+    ),
+  );
+
+export const createTalentList = createServerFn({ method: 'POST' })
+  .validator(
+    (input: {
+      slug: string;
+      name: string;
+      job?: string;
+      filters?: Record<string, unknown>;
+    }) => input,
+  )
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      sourcingCompanies().talentLists.create(
+        data.slug,
+        { name: data.name, job: data.job, filters: data.filters },
+        { headers: authedHeaders(context) },
+      ),
+    ),
+  );
+
+export const listSourcedCandidates = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string; job: string }) => input)
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, () =>
+      sourcingCompanies().sourcedCandidates.list(
+        data.slug,
+        { job: data.job },
+        { headers: authedHeaders(context) },
+      ),
+    ),
+  );
+
+export const saveSourcedCandidate = createServerFn({ method: 'POST' })
+  .validator(
+    (input: { slug: string; job: string; candidateBoardUserId: string }) =>
+      input,
+  )
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      sourcingCompanies().sourcedCandidates.add(
+        data.slug,
+        { job: data.job, candidateBoardUserId: data.candidateBoardUserId },
+        { headers: authedHeaders(context) },
+      ),
+    ),
+  );
+
+export const convertSourcedCandidate = createServerFn({ method: 'POST' })
+  .validator(
+    (input: { slug: string; sourcedId: string; stage: string }) => input,
+  )
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      sourcingCompanies().sourcedCandidates.convert(
+        data.slug,
+        data.sourcedId,
+        { stage: data.stage },
+        { headers: authedHeaders(context) },
+      ),
+    ),
+  );
+
 export const moveApplicant = createServerFn({ method: 'POST' })
   .validator(
     (input: { slug: string; applicationId: string; stageId: string }) => input,

@@ -49,8 +49,20 @@ async function seoBase() {
 
 export const getTalentIndexPage = createServerFn({ method: 'GET' })
   .validator(
-    (input: { offset: number; limit: number; q?: string; skill?: string }) =>
-      input,
+    (input: {
+      offset: number;
+      limit: number;
+      q?: string;
+      skill?: string;
+      jobSearchStatus?: 'actively_looking' | 'open_to_offers' | 'not_looking';
+      languages?: string;
+      openToRelocate?: 'true' | 'false';
+      place?: string;
+      sort?: 'relevance' | 'newest';
+      seniority?: string;
+      permitCountry?: string;
+      interestedRole?: string;
+    }) => input,
   )
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
@@ -64,7 +76,15 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
             q: data.q,
             skill: data.skill,
             limit: data.limit,
-          },
+            jobSearchStatus: data.jobSearchStatus,
+            languages: data.languages,
+            openToRelocate: data.openToRelocate,
+            place: data.place,
+            sort: data.sort,
+            seniority: data.seniority,
+            permitCountry: data.permitCountry,
+            interestedRole: data.interestedRole,
+          } as never,
           { headers },
         ),
       );

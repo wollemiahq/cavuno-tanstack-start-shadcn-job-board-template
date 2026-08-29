@@ -11,10 +11,12 @@ export function TalentSearchResult({
   vm,
   selected = false,
   onActivate,
+  save,
 }: {
   vm: TalentCardVM;
   selected?: boolean;
   onActivate?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
+  save?: React.ReactNode;
 }) {
   const selectable = Boolean(vm.detailHref);
   const content = (
@@ -45,6 +47,7 @@ export function TalentSearchResult({
           <p className="text-muted-foreground mt-2 text-sm">{vm.location}</p>
         ) : null}
 
+        {save}
         {vm.jobSearchStatusLabel || vm.skills.length > 0 ? (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {vm.jobSearchStatusLabel ? (
