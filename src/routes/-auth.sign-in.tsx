@@ -18,10 +18,11 @@ import { m } from '../paraglide/messages';
 import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
 import { AuthMailAppLinks } from '@/components/mail-app-links';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { appendAuthConversionQuery } from '@/lib/board-datalayer-events';
 import { boardErrorMessage } from '@/lib/board-error-message';
+import { textLinkClass } from '@/lib/text-link';
 import { cn } from '@/lib/utils';
 
 export function SignInView({
@@ -235,11 +236,7 @@ export function SignInView({
             autoComplete="current-password"
             labelAction={
               <a
-                className={buttonVariants({
-                  variant: 'link',
-                  size: 'sm',
-                  className: 'h-auto p-0',
-                })}
+                className={textLinkClass}
                 href={candidateForgotPasswordHref(returnTo)}
               >
                 {m.authSignIn_forgotPasswordLink()}
@@ -291,11 +288,11 @@ export function SignInView({
       <p className="text-muted-foreground text-center text-sm">
         {m.authSignIn_noAccountText()}{' '}
         <a
-          className={buttonVariants({ variant: 'link', size: 'sm' })}
+          className={cn(textLinkClass, 'inline-flex items-center gap-1')}
           href={candidateJoinHref(returnTo)}
         >
           {m.authSignIn_getStartedLink()}
-          <ArrowRight data-icon="inline-end" />
+          <ArrowRight className="size-4 shrink-0" aria-hidden />
         </a>
       </p>
     </AuthCard>

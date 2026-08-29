@@ -8,8 +8,8 @@ import {
   loadEmployerSignUp,
 } from './-auth.employer.sign-up';
 
-import { buttonVariants } from '@/components/ui/button';
 import { headTitle } from '@/lib/page-title';
+import { textLinkClass } from '@/lib/text-link';
 
 export const Route = createFileRoute('/auth/employer/sign-up')({
   loader: () => loadEmployerSignUp(),
@@ -36,10 +36,7 @@ function EmployerSignUpPage() {
       footer={
         <p className="text-muted-foreground text-center text-sm">
           {m.authEmployerSignUp_lookingForWorkText()}{' '}
-          <Link
-            to="/auth/sign-up"
-            className={buttonVariants({ variant: 'link', size: 'sm' })}
-          >
+          <Link to="/auth/sign-up" className={textLinkClass}>
             {m.authEmployerSignUp_joinAsCandidateLink()}
           </Link>
         </p>

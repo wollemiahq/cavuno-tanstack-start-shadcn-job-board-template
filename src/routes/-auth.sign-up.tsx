@@ -10,8 +10,8 @@ import {
   RegistrationPage,
   type MarketingConsentCopy,
 } from '@/components/registration-page';
-import { buttonVariants } from '@/components/ui/button';
 import { reconcileCommittedAction } from '@/lib/action-toast';
+import { textLinkClass } from '@/lib/text-link';
 
 export function SignUpView({
   boardName,
@@ -81,10 +81,7 @@ export function SignUpView({
       footer={
         <p className="text-muted-foreground text-center text-sm">
           {m.authSignUp_alreadyHaveAccountText()}{' '}
-          <a
-            href={candidateSignInHref(returnTo)}
-            className={buttonVariants({ variant: 'link', size: 'sm' })}
-          >
+          <a href={candidateSignInHref(returnTo)} className={textLinkClass}>
             {m.authSignUp_signInLink()}
           </a>
         </p>
