@@ -51,9 +51,7 @@ describe('pageTitle (format authority)', () => {
     }).meta.find((entry) => 'title' in entry);
 
     expect(sdkTitle).toEqual({ title });
-    expect(title).toBe(
-      listingPageTitle({ heading, boardName, language: 'en' }),
-    );
+    expect(title).toBe('Robotics jobs in Berlin | Acme Careers');
   });
 
   it('listingPageTitle prefixes a locale-formatted count before the heading', () => {

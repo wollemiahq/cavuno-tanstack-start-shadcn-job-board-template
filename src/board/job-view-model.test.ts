@@ -2,9 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { toJobCardVM, toSavedJobCardVM } from './job-view-model';
 
-import { enumLabel } from '@/lib/enum-labels';
-import { cardLocationLabel } from '@/lib/location-labels';
-import { formatJobSalary } from '@/lib/salary-display';
 import type { PublicJobCard } from '@cavuno/board';
 
 /**
@@ -49,11 +46,6 @@ describe('toJobCardVM', () => {
     expect(vm.detailHref).toBe('/companies/acme-co/jobs/senior-engineer');
   });
 
-  // Delegation-style: expectations CALL the same SDK formatters the
-  // mapper delegates to, instead of hard-coding their output. The SDK's
-  // own goldens pin the formatted shape; these pin only the wiring, so
-  // an SDK formatting change (or an intentional presentation change)
-  // breaks nothing here.
   it('suppresses salary when the board job form hides it', () => {
     const hidden = toJobCardVM(baseJob, 'en', {
       salary: { visible: false },
@@ -65,12 +57,14 @@ describe('toJobCardVM', () => {
     expect(hidden.compLine).not.toContain('$');
   });
 
-  it('delegates salary + compLine to the SDK formatters', () => {
-    const expectedSalary = formatJobSalary('en', 100000, 140000, 'year', 'USD');
-    expect(vm.salaryLabel).toBe(expectedSalary);
-    expect(vm.compLine).toBe(
-      [expectedSalary, cardLocationLabel(baseJob)].join(' · '),
-    );
+  it('exposes a salary label and a two-part compLine when salary is visible', () => {
+    // Pretty strings live in the SDK goldens. This pins wiring: the label
+    // is present, the wire numbers survive, and compLine joins two parts.
+    expect(vm.salaryLabel).toEqual(expect.any(String));
+    expect(vm.salaryLabel?.length).toBeGreaterThan(0);
+    expect(vm.compLine).toContain(' · ');
+    expect(vm.salaryMin).toBe(100000);
+    expect(vm.salaryMax).toBe(140000);
   });
 
   it('exposes the raw wire salary values for component-level re-presentation', () => {
@@ -100,7 +94,7 @@ describe('toJobCardVM', () => {
     );
 
     expect(missingLocation.locationLabel).toBe(
-      `Location not specified (${enumLabel('on_site')})`,
+      'Location not specified (On-site)',
     );
   });
 

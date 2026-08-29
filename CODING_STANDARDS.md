@@ -40,3 +40,9 @@ Same shape, same rejection:
 
 If the assertion would still pass after the behaviour broke, the test is
 tautological. Rewrite it or delete it.
+
+SDK-formatted money, dates, and location strings are pinned **once**, in the
+SDK goldens. Mapper and component tests do not replay those helpers and do
+not re-pin the pretty string. They pin the wire (`salaryMin`, currency) and
+whether a field is present. App-owned copy and limits with no SDK golden
+(nav labels, `50` emails) pin the literal.
