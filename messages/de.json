@@ -304,7 +304,7 @@
   "authVerifyEmailRequired_backToSignInLabel": "Zurück zur Anmeldung",
   "authVerifyEmailRequired_cardTitle": "Bestätige deine E-Mail",
   "authVerifyEmailRequired_codeLabel": "6-stelliger Code",
-  "authVerifyEmailRequired_introText": "Gib den 6-stelligen Code aus der Bestätigungs-E-Mail ein — oder öffne den Link darin.",
+  "authVerifyEmailRequired_introText": "Gib den 6-stelligen Code aus der Bestätigungs-E-Mail ein.",
   "authVerifyEmailRequired_recommendedJobEmailsLabel": "Jobs per E-Mail, die zu meinem Profil passen",
   "authVerifyEmailRequired_resendLabel": "Code erneut senden",
   "authVerifyEmailRequired_resentText": "Ein neuer Code ist unterwegs.",

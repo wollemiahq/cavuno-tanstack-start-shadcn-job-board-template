@@ -11,6 +11,7 @@ import { m } from '../paraglide/messages';
 import { forgotPassword } from '../server/auth';
 import { getSeoBase } from '../server/queries';
 
+import { AuthMailAppLinks } from '@/components/mail-app-links';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { headTitle } from '@/lib/page-title';
 import type { UrlSearchInput } from '@/lib/pagination';
@@ -59,24 +60,7 @@ export function ForgotPasswordView({
         title={m.authForgotPassword_checkEmailTitle()}
         supportingText={m.authForgotPassword_checkEmailBody()}
       >
-        <div className="flex flex-wrap justify-center gap-2">
-          <a
-            href="https://mail.google.com/"
-            target="_blank"
-            rel="noreferrer"
-            className={buttonVariants({ variant: 'outline' })}
-          >
-            {m.authSignIn_openGmailLabel()}
-          </a>
-          <a
-            href="https://outlook.live.com/mail/"
-            target="_blank"
-            rel="noreferrer"
-            className={buttonVariants({ variant: 'outline' })}
-          >
-            {m.authSignIn_openOutlookLabel()}
-          </a>
-        </div>
+        <AuthMailAppLinks />
         <a
           href={candidateSignInHref(returnTo)}
           className={cn(

@@ -304,7 +304,7 @@
   "authVerifyEmailRequired_backToSignInLabel": "Back to sign in",
   "authVerifyEmailRequired_cardTitle": "Verify your email",
   "authVerifyEmailRequired_codeLabel": "6-digit code",
-  "authVerifyEmailRequired_introText": "Enter the 6-digit code from the verification email — or open the link in it.",
+  "authVerifyEmailRequired_introText": "Enter the 6-digit code from the verification email.",
   "authVerifyEmailRequired_recommendedJobEmailsLabel": "Email me jobs that match my profile",
   "authVerifyEmailRequired_resendLabel": "Resend code",
   "authVerifyEmailRequired_resentText": "A fresh code is on its way.",

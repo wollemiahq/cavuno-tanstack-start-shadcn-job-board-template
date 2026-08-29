@@ -233,7 +233,9 @@ export function VerifyEmailRequiredView({
         }}
       >
         <Field>
-          <FieldLabel htmlFor="code">
+          {/* The card's supporting text already asks for the code, so the
+              label is for assistive tech only — the input still needs a name. */}
+          <FieldLabel htmlFor="code" className="sr-only">
             {m.authVerifyEmailRequired_codeLabel()}
           </FieldLabel>
           <InputOTP

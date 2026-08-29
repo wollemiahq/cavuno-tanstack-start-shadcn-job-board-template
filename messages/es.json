@@ -304,7 +304,7 @@
   "authVerifyEmailRequired_backToSignInLabel": "Volver al inicio de sesión",
   "authVerifyEmailRequired_cardTitle": "Verifica tu correo",
   "authVerifyEmailRequired_codeLabel": "Código de 6 dígitos",
-  "authVerifyEmailRequired_introText": "Introduce el código de 6 dígitos del correo de verificación o abre el enlace que contiene.",
+  "authVerifyEmailRequired_introText": "Introduce el código de 6 dígitos del correo de verificación.",
   "authVerifyEmailRequired_recommendedJobEmailsLabel": "Enviarme ofertas que encajen con mi perfil",
   "authVerifyEmailRequired_resendLabel": "Reenviar código",
   "authVerifyEmailRequired_resentText": "Un código nuevo está en camino.",

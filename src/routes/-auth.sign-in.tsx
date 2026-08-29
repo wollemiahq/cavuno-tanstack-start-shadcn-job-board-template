@@ -16,6 +16,7 @@ import {
 import { m } from '../paraglide/messages';
 
 import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
+import { AuthMailAppLinks } from '@/components/mail-app-links';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -88,24 +89,7 @@ export function SignInView({
         title={m.authSignIn_magicLinkSentTitle()}
         supportingText={m.authSignIn_magicLinkSentBody({ email: sentTo })}
       >
-        <div className="flex flex-wrap justify-center gap-2">
-          <a
-            href="https://mail.google.com/"
-            target="_blank"
-            rel="noreferrer"
-            className={buttonVariants({ variant: 'outline' })}
-          >
-            {m.authSignIn_openGmailLabel()}
-          </a>
-          <a
-            href="https://outlook.live.com/mail/"
-            target="_blank"
-            rel="noreferrer"
-            className={buttonVariants({ variant: 'outline' })}
-          >
-            {m.authSignIn_openOutlookLabel()}
-          </a>
-        </div>
+        <AuthMailAppLinks />
         <div className="flex flex-wrap items-center justify-center gap-2">
           <Button
             type="button"
