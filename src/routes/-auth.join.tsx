@@ -22,6 +22,7 @@ import { AuthPageCard, RoleSelector } from '@/components/registration-page';
 import { buttonVariants } from '@/components/ui/button';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
+import { textLinkClass } from '@/lib/text-link';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/auth/join')({
@@ -127,10 +128,7 @@ function JoinPage() {
       )}
       <p className="text-muted-foreground text-center text-sm">
         {m.authJoin_alreadyHaveAccountText()}{' '}
-        <Link
-          to="/auth/sign-in"
-          className={buttonVariants({ variant: 'link', size: 'sm' })}
-        >
+        <Link to="/auth/sign-in" className={textLinkClass}>
           {m.authJoin_logInLink()}
         </Link>
       </p>

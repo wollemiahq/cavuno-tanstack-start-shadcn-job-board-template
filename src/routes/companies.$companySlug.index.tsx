@@ -39,6 +39,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { textLinkClass } from '@/lib/text-link';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/companies/$companySlug/')({
@@ -261,11 +262,7 @@ function CompanyPage() {
                     href={website}
                     target="_blank"
                     rel="noreferrer"
-                    className={buttonVariants({
-                      variant: 'link',
-                      size: 'sm',
-                      className: 'w-fit max-w-full justify-start truncate px-0',
-                    })}
+                    className={cn(textLinkClass, 'w-fit max-w-full truncate')}
                   >
                     {company.website}
                   </a>
