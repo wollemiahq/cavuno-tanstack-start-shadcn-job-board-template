@@ -38,7 +38,15 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
           features: failClosedJobRecommendations(cached.features),
         };
       }),
-      getBoardSeo(),
+      // seo() 503s when the pk_ has no registered public origin (local
+      // unpublished API). Ads.txt / IndexNow / GSC must not 500 the shell.
+      getBoardSeo().catch(() => ({
+        adsTxt: null,
+        indexNowKey: null,
+        googleSiteVerification: null,
+        canonicalBase: '',
+        manifest: { name: '' },
+      })),
       getEmployerOfferGate(),
     ]);
 

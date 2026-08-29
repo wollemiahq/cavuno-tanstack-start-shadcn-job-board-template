@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 import { useLocation } from '@tanstack/react-router';
 import { Users } from 'lucide-react';
 
@@ -14,8 +16,11 @@ import {
   type AdPlacement,
 } from '@/components/board/listing-ad-rail';
 import { ListingPagination } from '@/components/board/listing-pagination';
+import { TalentFilters } from '@/components/board/talent-filters';
+import { TalentSaveToJob } from '@/components/board/talent-save-to-job';
 import { TalentSearchResult } from '@/components/board/talent-search-result';
 import { Page } from '@/components/layout/page';
+import { useRootSession } from '@/components/root-session';
 import {
   SearchResultDetail,
   SearchResultsLayout,
@@ -33,9 +38,12 @@ import {
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
 import { listingPageHref } from '@/lib/pagination';
+import type { TalentSearch } from '@/lib/talent-search';
+import { listEmployerJobs } from '@/server/employers';
 
 export function TalentSearchPage({
   candidates,
+  search = {},
   q,
   skill,
   count,
@@ -52,6 +60,7 @@ export function TalentSearchPage({
   ads = ADS_OFF,
 }: {
   candidates: TalentCardVM[];
+  search?: TalentSearch;
   /** Header-owned candidate query that drives the empty-state copy. */
   q?: string;
   /** `?skill=` facet from a deep link — drives the empty-state copy. */
@@ -74,8 +83,42 @@ export function TalentSearchPage({
   ads?: BoardAdsConfig;
 }) {
   const rails = useListingAdRails(ads, startAd, endAd);
+  const { employerCompanies } = useRootSession();
+  const [saveTo, setSaveTo] = useState<{
+    slug: string;
+    jobs: Array<{ id: string; title: string }>;
+  }>();
+  useEffect(() => {
+    const membership = (employerCompanies ?? []).find(
+      (row) => row.status === 'approved' && row.company.slug,
+    );
+    const slug = membership?.company.slug;
+    if (!slug) return;
+    let cancelled = false;
+    void listEmployerJobs({ data: { slug } })
+      .then((result) => {
+        if (cancelled) return;
+        const jobs = (result.data ?? [])
+          .filter((job) => job.status === 'published')
+          .map((job) => ({ id: job.id, title: job.title }));
+        if (jobs.length > 0) setSaveTo({ slug, jobs });
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [employerCompanies]);
   const currentHref = useLocation({ select: (location) => location.href });
-  const hasActiveSearch = Boolean(q || skill);
+  const hasActiveSearch = Boolean(
+    q ||
+    skill ||
+    search.jobSearchStatus ||
+    search.languages ||
+    search.openToRelocate ||
+    search.place ||
+    search.seniority ||
+    search.sort,
+  );
   const candidateVms = candidates;
   const selectableIds = candidateVms.flatMap((vm) => {
     const key = talentCardSelectionKey(vm);
@@ -126,6 +169,7 @@ export function TalentSearchPage({
               endAd={rails.endAd}
               list={
                 <div className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0">
+                  <TalentFilters search={search} />
                   {resultsBar}
                   <Empty className="min-h-[calc(100dvh-16rem)] border-0">
                     <EmptyHeader>
@@ -161,6 +205,7 @@ export function TalentSearchPage({
                   label={m.talentSearch_resultsRegionLabel()}
                   scrollRestorationId="talent-search-results"
                 >
+                  <TalentFilters search={search} />
                   {resultsBar}
 
                   <div className="space-y-3">
@@ -176,6 +221,15 @@ export function TalentSearchPage({
                             selected={
                               selectionKey !== null &&
                               selectionKey === selection.selectedId
+                            }
+                            save={
+                              saveTo ? (
+                                <TalentSaveToJob
+                                  slug={saveTo.slug}
+                                  jobs={saveTo.jobs}
+                                  candidateBoardUserId={vm.id}
+                                />
+                              ) : null
                             }
                             onActivate={
                               selectionKey

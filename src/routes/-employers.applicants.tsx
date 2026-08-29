@@ -12,7 +12,11 @@ import {
 } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
-import { getPipeline } from '../server/employers';
+import {
+  getPipeline,
+  listSourcedCandidates,
+  type SourcedRailItem,
+} from '../server/employers';
 import { getBoardContext, getSeoBase } from '../server/queries';
 
 import { Page, PageContent } from '@/components/layout/page';
@@ -58,11 +62,17 @@ export function createApplicantsLoader(
     const board = await loaderDependencies.getBoardContext();
     if (!board.features.nativeApplications) throw notFound();
     try {
-      const [pipeline, seo] = await Promise.all([
+      const [pipeline, seo, sourced] = await Promise.all([
         loaderDependencies.getPipeline({
           data: { slug: params.slug, job: params.jobId },
         }),
         loaderDependencies.getSeoBase(),
+        listSourcedCandidates({
+          data: { slug: params.slug, job: params.jobId },
+        }).catch(() => {
+          const data: SourcedRailItem[] = [];
+          return { data };
+        }),
       ]);
       if (pipeline.job.status === 'draft') {
         throw redirect({
@@ -70,7 +80,7 @@ export function createApplicantsLoader(
           params: { slug: params.slug, jobId: params.jobId },
         });
       }
-      return { ...pipeline, seo };
+      return { ...pipeline, seo, sourced: sourced.data };
     } catch (error) {
       return await loaderDependencies.handleEmployerLoaderError(
         error,
@@ -120,6 +130,7 @@ export function ApplicantsPageView({
               jobId={pipeline.job.id}
               board={boardVM}
               actions={actions}
+              sourced={'sourced' in pipeline ? pipeline.sourced : []}
             />
           ) : (
             <Empty className="border">

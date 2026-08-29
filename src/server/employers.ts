@@ -584,6 +584,89 @@ export const getPipeline = createServerFn({ method: 'GET' })
     ),
   );
 
+export type SourcedRailItem = {
+  id: string;
+  sourcedAt: number;
+  candidate: {
+    id: string;
+    displayName: string | null;
+    headline: string | null;
+  };
+};
+
+function meCompanyPath(slug: string, suffix: string) {
+  return `/me/companies/${encodeURIComponent(slug)}${suffix}`;
+}
+
+export const listEmployerJobs = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string }) => input)
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, () =>
+      getBoard().me.companies.jobs.list(data.slug, undefined, {
+        headers: authedHeaders(context),
+      }),
+    ),
+  );
+
+export const listSourcedCandidates = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string; job: string }) => input)
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, () =>
+      getBoard().client.fetch<{ data: SourcedRailItem[] }>(
+        meCompanyPath(data.slug, '/sourced-candidates'),
+        {
+          headers: authedHeaders(context),
+          query: { job: data.job },
+        },
+      ),
+    ),
+  );
+
+export const saveSourcedCandidate = createServerFn({ method: 'POST' })
+  .validator(
+    (input: { slug: string; job: string; candidateBoardUserId: string }) =>
+      input,
+  )
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard().client.fetch<{ id: string; created: boolean }>(
+        meCompanyPath(data.slug, '/sourced-candidates'),
+        {
+          method: 'POST',
+          headers: authedHeaders(context),
+          body: {
+            job: data.job,
+            candidateBoardUserId: data.candidateBoardUserId,
+          },
+        },
+      ),
+    ),
+  );
+
+export const convertSourcedCandidate = createServerFn({ method: 'POST' })
+  .validator(
+    (input: { slug: string; sourcedId: string; stage: string }) => input,
+  )
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard().client.fetch<{ id: string }>(
+        meCompanyPath(
+          data.slug,
+          `/sourced-candidates/${encodeURIComponent(data.sourcedId)}/convert`,
+        ),
+        {
+          method: 'POST',
+          headers: authedHeaders(context),
+          body: { stage: data.stage },
+        },
+      ),
+    ),
+  );
+
 export const moveApplicant = createServerFn({ method: 'POST' })
   .validator(
     (input: { slug: string; applicationId: string; stageId: string }) => input,

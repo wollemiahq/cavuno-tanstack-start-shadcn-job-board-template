@@ -132,6 +132,7 @@ function TalentDirectoryPage() {
     <>
       <TalentSearchPage
         ads={board.ads}
+        search={search}
         candidates={page.data.map((candidate) =>
           toTalentCardVM(candidate, getTalentSearchLabels(), {
             profileUnlocks,

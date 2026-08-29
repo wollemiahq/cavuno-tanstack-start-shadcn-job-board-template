@@ -10,7 +10,7 @@
  * Google's "G" in its required brand colours — an identity mark, so the fills
  * are deliberately literal rather than themed.
  */
-export function GoogleIcon({ className = "size-4" }: { className?: string }) {
+export function GoogleIcon({ className = 'size-4' }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
       <path
@@ -35,7 +35,12 @@ export function GoogleIcon({ className = "size-4" }: { className?: string }) {
 
 export function XIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="size-4">
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className="size-4"
+    >
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
     </svg>
   );
@@ -43,15 +48,25 @@ export function XIcon() {
 
 export function FacebookIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="size-4">
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className="size-4"
+    >
       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
     </svg>
   );
 }
 
-export function LinkedInIcon({ className = "size-4" }: { className?: string }) {
+export function LinkedInIcon({ className = 'size-4' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className={className}
+    >
       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
     </svg>
   );
@@ -61,7 +76,7 @@ export function LinkedInIcon({ className = "size-4" }: { className?: string }) {
  * Gmail's envelope mark in its required brand colours — like `GoogleIcon`, an
  * identity mark, so the fills are literal rather than themed.
  */
-export function GmailIcon({ className = "size-4" }: { className?: string }) {
+export function GmailIcon({ className = 'size-4' }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 18" aria-hidden="true" className={className}>
       <path
@@ -72,9 +87,18 @@ export function GmailIcon({ className = "size-4" }: { className?: string }) {
         fill="#34A853"
         d="M19.091 18V6.955L24 3.273v13.09c0 .904-.733 1.637-1.636 1.637h-3.273z"
       />
-      <path fill="#FBBC04" d="M22.364 0C23.267 0 24 .733 24 1.636v1.637l-4.909 3.682V0h3.273z" />
-      <path fill="#EA4335" d="M4.909 18H1.636A1.636 1.636 0 0 1 0 16.364V3.273l4.909 3.682V18z" />
-      <path fill="#C5221F" d="M0 3.273V1.636C0 .733.733 0 1.636 0h3.273v6.955L0 3.273z" />
+      <path
+        fill="#FBBC04"
+        d="M22.364 0C23.267 0 24 .733 24 1.636v1.637l-4.909 3.682V0h3.273z"
+      />
+      <path
+        fill="#EA4335"
+        d="M4.909 18H1.636A1.636 1.636 0 0 1 0 16.364V3.273l4.909 3.682V18z"
+      />
+      <path
+        fill="#C5221F"
+        d="M0 3.273V1.636C0 .733.733 0 1.636 0h3.273v6.955L0 3.273z"
+      />
     </svg>
   );
 }
@@ -83,11 +107,14 @@ export function GmailIcon({ className = "size-4" }: { className?: string }) {
  * Yahoo's "Y" on the Mail purple tile — an identity mark, so the fill is
  * literal rather than themed.
  */
-export function YahooIcon({ className = "size-4" }: { className?: string }) {
+export function YahooIcon({ className = 'size-4' }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
       <rect width="24" height="24" rx="5.5" fill="#6001D2" />
-      <path fill="#fff" d="M6.7 5.2h3.2L12 11l2.1-5.8h3.2L13.4 13.3V18.8h-2.8v-5.5L6.7 5.2z" />
+      <path
+        fill="#fff"
+        d="M6.7 5.2h3.2L12 11l2.1-5.8h3.2L13.4 13.3V18.8h-2.8v-5.5L6.7 5.2z"
+      />
     </svg>
   );
 }
@@ -96,9 +123,14 @@ export function YahooIcon({ className = "size-4" }: { className?: string }) {
  * Apple's mark, tinted from `currentColor` so it holds up on light and dark
  * surfaces — there is no single required fill the way Google's G has.
  */
-export function AppleIcon({ className = "size-4" }: { className?: string }) {
+export function AppleIcon({ className = 'size-4' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className={className}
+    >
       <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
     </svg>
   );
@@ -108,7 +140,11 @@ export function AppleIcon({ className = "size-4" }: { className?: string }) {
  * Proton Mail's envelope mark in Proton purple — an identity mark, so the
  * fill is literal rather than themed.
  */
-export function ProtonMailIcon({ className = "size-4" }: { className?: string }) {
+export function ProtonMailIcon({
+  className = 'size-4',
+}: {
+  className?: string;
+}) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
       <path
@@ -123,7 +159,7 @@ export function ProtonMailIcon({ className = "size-4" }: { className?: string })
  * Outlook's mark, in Microsoft's Outlook blue — an identity mark, so the fills
  * are literal rather than themed.
  */
-export function OutlookIcon({ className = "size-4" }: { className?: string }) {
+export function OutlookIcon({ className = 'size-4' }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
       <path

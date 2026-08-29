@@ -11,7 +11,7 @@
  * Focus ring matches the plain-anchor treatment already used in `Footer`.
  */
 export const textLinkClass =
-  "text-primary underline-offset-4 hover:underline focus-visible:ring-ring/50 rounded-sm outline-none focus-visible:ring-2";
+  'text-primary underline-offset-4 hover:underline focus-visible:ring-ring/50 rounded-sm outline-none focus-visible:ring-2';
 
 /** Same treatment on a `<button type="button">` (resend / change-email). */
 export const textActionClass = `${textLinkClass} cursor-pointer disabled:opacity-50`;

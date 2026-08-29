@@ -70,6 +70,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 
 const DRAG_TYPE = 'cavuno/application';
+const SOURCED_DRAG_TYPE = 'application/x-cavuno-sourced';
 
 /** The settle result every pipeline mutation resolves to. */
 type PipelineActionResult = { ok: boolean; message?: string };
@@ -100,6 +101,9 @@ export interface PipelineActions {
   }) => Promise<PipelineActionResult>;
   invalidate: () => Promise<void>;
   toastError: (message: string) => void;
+  convertSourced?: (opts: {
+    data: { slug: string; sourcedId: string; stage: string };
+  }) => Promise<PipelineActionResult>;
 }
 
 type StageDialogState =
@@ -118,6 +122,10 @@ export interface ApplicantPipelineBoardProps {
   defaultOpenCardId?: string;
   /** Test/preview hook: render a stage dialog open on mount. */
   defaultStageDialog?: StageDialogState;
+  sourced?: Array<{
+    id: string;
+    candidate: { displayName: string | null; headline: string | null };
+  }>;
 }
 
 /**
@@ -140,6 +148,7 @@ export function ApplicantPipelineBoard({
   actions,
   defaultOpenCardId,
   defaultStageDialog = null,
+  sourced = [],
 }: ApplicantPipelineBoardProps) {
   const { stages, cards } = board;
 
@@ -185,9 +194,42 @@ export function ApplicantPipelineBoard({
         <div
           className="grid min-h-(--detail-pane-min-h) items-stretch gap-3"
           style={{
-            gridTemplateColumns: `repeat(${Math.max(stages.length, 1)}, minmax(min(18rem, calc(100vw - 3rem)), 1fr))`,
+            gridTemplateColumns: `minmax(min(16rem, calc(100vw - 3rem)), 1fr) repeat(${Math.max(stages.length, 1)}, minmax(min(18rem, calc(100vw - 3rem)), 1fr))`,
           }}
         >
+          <section className="border-border/60 bg-muted/20 flex min-h-[24rem] flex-col rounded-2xl border">
+            <div className="flex items-center gap-2 px-3 py-2.5">
+              <h3 className="text-foreground truncate text-sm font-medium">
+                {m.employerApplicants_sourcedHeading()}
+              </h3>
+              <span className="text-muted-foreground text-sm tabular-nums">
+                {sourced.length}
+              </span>
+            </div>
+            <ul className="flex flex-1 flex-col gap-2 p-2">
+              {sourced.map((row) => (
+                <li
+                  key={row.id}
+                  draggable
+                  onDragStart={(event) => {
+                    event.dataTransfer.setData(SOURCED_DRAG_TYPE, row.id);
+                    event.dataTransfer.effectAllowed = 'move';
+                  }}
+                  className="bg-background rounded-xl border p-3 text-sm"
+                >
+                  <p className="font-medium">
+                    {row.candidate.displayName ??
+                      m.employerApplicants_unknownCandidate()}
+                  </p>
+                  {row.candidate.headline ? (
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {row.candidate.headline}
+                    </p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </section>
           {stages.map((stage) => (
             <StageColumn
               key={stage.id}
@@ -208,6 +250,26 @@ export function ApplicantPipelineBoard({
                   moveApplicant: actions.moveApplicant,
                   toastError: actions.toastError,
                 });
+              }}
+              onDropSourced={(sourcedId) => {
+                if (!actions.convertSourced) return;
+                void actions
+                  .convertSourced({
+                    data: {
+                      slug,
+                      sourcedId,
+                      stage: stage.systemStage ?? stage.id,
+                    },
+                  })
+                  .then((result) => {
+                    if (!result.ok) {
+                      actions.toastError(
+                        result.message || m.employerApplicants_moveError(),
+                      );
+                      return;
+                    }
+                    return invalidate();
+                  });
               }}
             />
           ))}
@@ -329,6 +391,7 @@ function StageColumn({
   onRename,
   onDelete,
   onDropCard,
+  onDropSourced,
 }: {
   stage: PipelineStageVM;
   cards: PipelineCardVM[];
@@ -336,18 +399,19 @@ function StageColumn({
   onRename: () => void;
   onDelete: () => void;
   onDropCard: (cardId: string) => void;
+  onDropSourced?: (sourcedId: string) => void;
 }) {
   const { dragAndDropHooks } = useDragAndDrop<PipelineCardVM>({
-    acceptedDragTypes: [DRAG_TYPE],
+    acceptedDragTypes: [DRAG_TYPE, SOURCED_DRAG_TYPE],
     getItems: (_keys, items) =>
       items.map((card) => ({
         [DRAG_TYPE]: card.id,
         'text/plain': card.name,
       })),
     getDropOperation: () => 'move',
-    onRootDrop: (event) => moveDropped(event.items, onDropCard),
-    onInsert: (event) => moveDropped(event.items, onDropCard),
-    onItemDrop: (event) => moveDropped(event.items, onDropCard),
+    onRootDrop: (event) => moveDropped(event.items, onDropCard, onDropSourced),
+    onInsert: (event) => moveDropped(event.items, onDropCard, onDropSourced),
+    onItemDrop: (event) => moveDropped(event.items, onDropCard, onDropSourced),
     renderDropIndicator: (target) => (
       <DropIndicator
         target={target}
@@ -425,11 +489,18 @@ function StageColumn({
 async function moveDropped(
   items: DropItem[],
   onDropCard: (cardId: string) => void,
+  onDropSourced?: (sourcedId: string) => void,
 ) {
-  const ids = await Promise.all(
-    items.filter(isTextDropItem).map((item) => item.getText(DRAG_TYPE)),
-  );
-  ids.filter(Boolean).forEach((id) => onDropCard(id));
+  const textItems = items.filter(isTextDropItem);
+  for (const item of textItems) {
+    if (item.types.has(SOURCED_DRAG_TYPE)) {
+      const sourcedId = await item.getText(SOURCED_DRAG_TYPE);
+      if (sourcedId) onDropSourced?.(sourcedId);
+      continue;
+    }
+    const cardId = await item.getText(DRAG_TYPE);
+    if (cardId) onDropCard(cardId);
+  }
 }
 
 function ApplicantCard({ card }: { card: PipelineCardVM }) {

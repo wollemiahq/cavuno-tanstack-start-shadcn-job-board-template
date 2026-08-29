@@ -1,4 +1,4 @@
-import { m } from "../paraglide/messages";
+import { m } from '../paraglide/messages';
 
 import {
   AppleIcon,
@@ -6,33 +6,33 @@ import {
   OutlookIcon,
   ProtonMailIcon,
   YahooIcon,
-} from "@/components/brand-icons";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+} from '@/components/brand-icons';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const MAIL_APPS = [
   {
-    href: "https://mail.google.com/",
+    href: 'https://mail.google.com/',
     label: () => m.authSignIn_openGmailLabel(),
     Icon: GmailIcon,
   },
   {
-    href: "https://outlook.live.com/mail/",
+    href: 'https://outlook.live.com/mail/',
     label: () => m.authSignIn_openOutlookLabel(),
     Icon: OutlookIcon,
   },
   {
-    href: "https://mail.yahoo.com/",
+    href: 'https://mail.yahoo.com/',
     label: () => m.authSignIn_openYahooLabel(),
     Icon: YahooIcon,
   },
   {
-    href: "https://www.icloud.com/mail",
+    href: 'https://www.icloud.com/mail',
     label: () => m.authSignIn_openIcloudLabel(),
     Icon: AppleIcon,
   },
   {
-    href: "https://mail.proton.me/",
+    href: 'https://mail.proton.me/',
     label: () => m.authSignIn_openProtonLabel(),
     Icon: ProtonMailIcon,
   },
@@ -44,7 +44,10 @@ const MAIL_APPS = [
  */
 export function MailAppLinks() {
   return (
-    <nav aria-label={m.authSignIn_openInboxLabel()} className="flex justify-center gap-2">
+    <nav
+      aria-label={m.authSignIn_openInboxLabel()}
+      className="flex justify-center gap-2"
+    >
       {MAIL_APPS.map(({ href, label, Icon }) => (
         <a
           key={href}
@@ -52,7 +55,9 @@ export function MailAppLinks() {
           target="_blank"
           rel="noreferrer"
           aria-label={label()}
-          className={cn(buttonVariants({ variant: "outline", size: "icon-lg" }))}
+          className={cn(
+            buttonVariants({ variant: 'outline', size: 'icon-lg' }),
+          )}
         >
           <Icon className="size-5" />
         </a>

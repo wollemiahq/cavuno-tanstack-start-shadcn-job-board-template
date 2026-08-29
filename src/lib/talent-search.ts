@@ -13,6 +13,14 @@ export interface TalentSearch {
   q?: string;
   /** Free-form skill-name filter. */
   skill?: string;
+  jobSearchStatus?: 'actively_looking' | 'open_to_offers' | 'not_looking';
+  languages?: string;
+  openToRelocate?: 'true' | 'false';
+  place?: string;
+  sort?: 'relevance' | 'newest';
+  seniority?: string;
+  permitCountry?: string;
+  interestedRole?: string;
   /** Desktop detail-pane selection; the canonical public profile handle. */
   selectedTalent?: string;
 }
@@ -23,10 +31,43 @@ function stringSearchValue(value: UrlSearchValue) {
   return searchString(value)?.trim() || undefined;
 }
 
+const JOB_SEARCH_STATUSES = [
+  'actively_looking',
+  'open_to_offers',
+  'not_looking',
+] as const;
+
+function jobSearchStatusValue(
+  value: UrlSearchValue,
+): TalentSearch['jobSearchStatus'] {
+  const raw = stringSearchValue(value);
+  return JOB_SEARCH_STATUSES.find((status) => status === raw);
+}
+
+function relocateValue(value: UrlSearchValue): TalentSearch['openToRelocate'] {
+  const raw = stringSearchValue(value);
+  if (raw === 'true' || raw === 'false') return raw;
+  return undefined;
+}
+
+function sortValue(value: UrlSearchValue): TalentSearch['sort'] {
+  const raw = stringSearchValue(value);
+  if (raw === 'relevance' || raw === 'newest') return raw;
+  return undefined;
+}
+
 export function parseTalentSearch(search: UrlSearchInput): TalentSearch {
   return {
     q: stringSearchValue(search.q),
     skill: stringSearchValue(search.skill),
+    jobSearchStatus: jobSearchStatusValue(search.jobSearchStatus),
+    languages: stringSearchValue(search.languages),
+    openToRelocate: relocateValue(search.openToRelocate),
+    place: stringSearchValue(search.place),
+    sort: sortValue(search.sort),
+    seniority: stringSearchValue(search.seniority),
+    permitCountry: stringSearchValue(search.permitCountry),
+    interestedRole: stringSearchValue(search.interestedRole),
     page: pageSearchValue(parsePageParam(search.page)),
     selectedTalent: stringSearchValue(search.selectedTalent),
   };
@@ -39,6 +80,14 @@ export function talentListingLoaderDeps(
   return {
     q: search.q,
     skill: search.skill,
+    jobSearchStatus: search.jobSearchStatus,
+    languages: search.languages,
+    openToRelocate: search.openToRelocate,
+    place: search.place,
+    sort: search.sort,
+    seniority: search.seniority,
+    permitCountry: search.permitCountry,
+    interestedRole: search.interestedRole,
     page: search.page,
   };
 }

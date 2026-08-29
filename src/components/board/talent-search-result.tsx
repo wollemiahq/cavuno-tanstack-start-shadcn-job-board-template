@@ -11,10 +11,12 @@ export function TalentSearchResult({
   vm,
   selected = false,
   onActivate,
+  save,
 }: {
   vm: TalentCardVM;
   selected?: boolean;
   onActivate?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
+  save?: React.ReactNode;
 }) {
   const selectable = Boolean(vm.detailHref);
   const content = (
@@ -79,6 +81,15 @@ export function TalentSearchResult({
       ) : (
         <div className="p-4">{content}</div>
       )}
+      {save ? (
+        <div
+          className="px-4 pb-4"
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
+          {save}
+        </div>
+      ) : null}
     </SearchResultCard>
   );
 }
