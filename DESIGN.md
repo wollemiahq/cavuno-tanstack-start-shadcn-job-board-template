@@ -1140,6 +1140,15 @@ Props:
 
 ### FacebookIcon — `src/components/brand-icons.tsx`
 
+### GmailIcon — `src/components/brand-icons.tsx`
+
+Gmail's envelope mark in its required brand colours — like `GoogleIcon`, an
+identity mark, so the fills are literal rather than themed.
+
+Props:
+
+- `className?: string | undefined`
+
 ### GoogleIcon — `src/components/brand-icons.tsx`
 
 Google's "G" in its required brand colours — an identity mark, so the fills
@@ -1150,6 +1159,15 @@ Props:
 - `className?: string | undefined`
 
 ### LinkedInIcon — `src/components/brand-icons.tsx`
+
+Props:
+
+- `className?: string | undefined`
+
+### OutlookIcon — `src/components/brand-icons.tsx`
+
+Outlook's mark, in Microsoft's Outlook blue — an identity mark, so the fills
+are literal rather than themed.
 
 Props:
 
@@ -1745,6 +1763,22 @@ Props:
 - `companyName: string`
 - `logoUrl: string | null`
 - `slug: string`
+
+### AuthMailAppLinks — `src/components/mail-app-links.tsx`
+
+The candidate-auth wording (sign-in and password reset share a catalog).
+
+Props:
+
+- `className?: string | undefined`
+
+### MailAppLinks — `src/components/mail-app-links.tsx`
+
+Props:
+
+- `className?: string | undefined`
+- `gmailLabel: string`
+- `outlookLabel: string`
 
 ### MarketingConsentSettings — `src/components/marketing-consent-settings.tsx`
 
