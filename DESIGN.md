@@ -1770,13 +1770,16 @@ The candidate-auth wording (sign-in and password reset share a catalog).
 
 Props:
 
-- `className?: string | undefined`
+- `email: string`
 
 ### MailAppLinks — `src/components/mail-app-links.tsx`
 
+One outline button, same shape as "Continue with Google": brand mark to
+the leading edge of the label, full width of the auth card.
+
 Props:
 
-- `className?: string | undefined`
+- `email: string`
 - `gmailLabel: string`
 - `outlookLabel: string`
 

@@ -1,23 +1,20 @@
-import { useState } from 'react';
+import { useState } from "react";
 
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute } from "@tanstack/react-router";
 
-import { AuthCard, Field, FormError } from '../components/auth-form';
-import {
-  candidateReturnTo,
-  candidateSignInHref,
-} from '../lib/candidate-return-to';
-import { m } from '../paraglide/messages';
-import { forgotPassword } from '../server/auth';
-import { getSeoBase } from '../server/queries';
+import { AuthCard, Field, FormError } from "../components/auth-form";
+import { candidateReturnTo, candidateSignInHref } from "../lib/candidate-return-to";
+import { m } from "../paraglide/messages";
+import { forgotPassword } from "../server/auth";
+import { getSeoBase } from "../server/queries";
 
-import { AuthMailAppLinks } from '@/components/mail-app-links';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { headTitle } from '@/lib/page-title';
-import type { UrlSearchInput } from '@/lib/pagination';
-import { cn } from '@/lib/utils';
+import { AuthMailAppLinks } from "@/components/mail-app-links";
+import { Button } from "@/components/ui/button";
+import { headTitle } from "@/lib/page-title";
+import type { UrlSearchInput } from "@/lib/pagination";
+import { textLinkClass } from "@/lib/text-link";
 
-export const Route = createFileRoute('/auth/forgot-password')({
+export const Route = createFileRoute("/auth/forgot-password")({
   validateSearch: (search: UrlSearchInput) => ({
     returnTo: candidateReturnTo(search.returnTo),
   }),
@@ -25,7 +22,7 @@ export const Route = createFileRoute('/auth/forgot-password')({
   head: ({ loaderData }) => ({
     meta: [
       { title: headTitle(loaderData?.boardName, m.authForgotPassword_title()) },
-      { name: 'robots', content: 'noindex' },
+      { name: "robots", content: "noindex" },
     ],
   }),
   component: ForgotPasswordPage,
@@ -33,12 +30,7 @@ export const Route = createFileRoute('/auth/forgot-password')({
 
 function ForgotPasswordPage() {
   const returnTo = candidateReturnTo(Route.useSearch().returnTo);
-  return (
-    <ForgotPasswordView
-      returnTo={returnTo}
-      forgotPasswordAction={forgotPassword}
-    />
-  );
+  return <ForgotPasswordView returnTo={returnTo} forgotPasswordAction={forgotPassword} />;
 }
 
 export function ForgotPasswordView({
@@ -46,30 +38,24 @@ export function ForgotPasswordView({
   forgotPasswordAction,
 }: {
   returnTo: string;
-  forgotPasswordAction: (input: {
-    data: { email: string };
-  }) => Promise<{ ok: true }>;
+  forgotPasswordAction: (input: { data: { email: string } }) => Promise<{ ok: true }>;
 }) {
-  const [sent, setSent] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (sent) {
+  if (sentTo) {
     return (
       <AuthCard
         title={m.authForgotPassword_checkEmailTitle()}
         supportingText={m.authForgotPassword_checkEmailBody()}
       >
-        <AuthMailAppLinks />
-        <a
-          href={candidateSignInHref(returnTo)}
-          className={cn(
-            buttonVariants({ variant: 'outline', size: 'lg' }),
-            'w-full',
-          )}
-        >
-          {m.authForgotPassword_backToSignInLabel()}
-        </a>
+        <AuthMailAppLinks email={sentTo} />
+        <div className="text-center text-sm">
+          <a href={candidateSignInHref(returnTo)} className={textLinkClass}>
+            {m.authForgotPassword_backToSignInLabel()}
+          </a>
+        </div>
       </AuthCard>
     );
   }
@@ -83,11 +69,12 @@ export function ForgotPasswordView({
           setPending(true);
           setError(null);
           const form = new FormData(event.currentTarget);
+          const email = String(form.get("email"));
           try {
             await forgotPasswordAction({
-              data: { email: String(form.get('email')) },
+              data: { email },
             });
-            setSent(true);
+            setSentTo(email);
           } catch {
             setError(m.candidateAction_errorText());
           } finally {
@@ -103,9 +90,7 @@ export function ForgotPasswordView({
         />
         <FormError message={error} />
         <Button type="submit" size="lg" className="w-full" disabled={pending}>
-          {pending
-            ? m.authForgotPassword_sendingLabel()
-            : m.authForgotPassword_submitLabel()}
+          {pending ? m.authForgotPassword_sendingLabel() : m.authForgotPassword_submitLabel()}
         </Button>
       </form>
     </AuthCard>
