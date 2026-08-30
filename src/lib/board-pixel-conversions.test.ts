@@ -78,7 +78,7 @@ describe('board-pixel-conversions', () => {
     fireBoardPixelConversion(analytics, 'sign_up');
 
     expect(lintrk).toHaveBeenCalledWith('track', {
-      conversion_id: 'signup-conv',
+      conversion_id: '123456',
     });
   });
 
