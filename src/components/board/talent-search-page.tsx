@@ -19,6 +19,8 @@ import { ListingPagination } from '@/components/board/listing-pagination';
 import { TalentFilters } from '@/components/board/talent-filters';
 import { TalentSaveToJob } from '@/components/board/talent-save-to-job';
 import { TalentSearchResult } from '@/components/board/talent-search-result';
+import { Box } from '@/components/layout/box';
+import { Container } from '@/components/layout/container';
 import { Page } from '@/components/layout/page';
 import { useRootSession } from '@/components/root-session';
 import {
@@ -117,6 +119,8 @@ export function TalentSearchPage({
     search.openToRelocate ||
     search.place ||
     search.seniority ||
+    search.permitCountry ||
+    search.interestedRole ||
     search.sort,
   );
   const candidateVms = candidates;
@@ -159,6 +163,14 @@ export function TalentSearchPage({
         data-layout="talent-search-page"
         className="md:flex md:h-full md:min-h-0 md:flex-col"
       >
+        <Box border="bottom" paddingX={{ base: '4', md: '8' }}>
+          <Container width="wide" gutter="0">
+            <div className="py-3">
+              <TalentFilters search={search} />
+            </div>
+          </Container>
+        </Box>
+
         <div
           data-slot="talent-search-viewport"
           className="min-w-0 overflow-x-clip md:flex md:min-h-0 md:flex-1 md:overflow-hidden"
@@ -169,7 +181,6 @@ export function TalentSearchPage({
               endAd={rails.endAd}
               list={
                 <div className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0">
-                  <TalentFilters search={search} />
                   {resultsBar}
                   <Empty className="min-h-[calc(100dvh-16rem)] border-0">
                     <EmptyHeader>
@@ -205,7 +216,6 @@ export function TalentSearchPage({
                   label={m.talentSearch_resultsRegionLabel()}
                   scrollRestorationId="talent-search-results"
                 >
-                  <TalentFilters search={search} />
                   {resultsBar}
 
                   <div className="space-y-3">

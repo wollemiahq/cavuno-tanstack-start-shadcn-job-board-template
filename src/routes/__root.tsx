@@ -74,6 +74,7 @@ import {
   resolveShellBreadcrumbTrail,
   type ShellBreadcrumbLabels,
 } from '@/lib/shell-breadcrumb';
+import { parseTalentSearch } from '@/lib/talent-search';
 import { useViewerUnreadCount } from '@/lib/use-viewer-unread-count';
 
 const LazyFooter = lazy(() =>
@@ -362,7 +363,18 @@ function RootChrome({
     }
 
     if (scope === 'talent') {
-      void navigate({ to: '/talent', search: { q: query } });
+      // SAFETY: TanStack route search values are URL-serializable scalars;
+      // parseTalentSearch only reads known TalentSearch keys and drops the rest.
+      const current = parseTalentSearch(location.search as UrlSearchInput);
+      void navigate({
+        to: '/talent',
+        search: parseTalentSearch({
+          ...current,
+          q: query,
+          place: selectedLocation?.slug,
+          page: undefined,
+        }),
+      });
       return;
     }
 

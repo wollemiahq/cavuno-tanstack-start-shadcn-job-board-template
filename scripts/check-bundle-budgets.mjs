@@ -70,6 +70,9 @@ const BUDGETS = {
     // 38.9. English-only compile dropped it to 103.5 / 35.5. Charge the
     // members surface here instead of the default.
     '/employers/companies/$slug/members': { raw: 115_000, gzip: 40_000 },
+    // Talent All-filters sheet (Sheet + Badge + permit/interested-role
+    // fields) is charged here, not the shared shell. Measured 84.7 / 30.5.
+    '/talent/': { raw: 92_000, gzip: 34_000 },
   },
 };
 

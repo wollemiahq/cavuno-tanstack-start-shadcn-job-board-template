@@ -6,6 +6,20 @@ import {
   type UrlSearchValue,
 } from '@/lib/pagination';
 
+/** Frozen `/talent` query stored on a talent list. Matches the v1 wire. */
+export type TalentListFilters = {
+  q?: string;
+  skill?: string;
+  jobSearchStatus?: 'actively_looking' | 'open_to_offers' | 'not_looking';
+  languages?: string[];
+  openToRelocate?: boolean;
+  place?: string;
+  sort?: 'relevance' | 'newest';
+  seniority?: string;
+  permitCountry?: string;
+  interestedRole?: string;
+};
+
 export interface TalentSearch {
   /** 1-based page used by directory pagination; page 1 drops from the URL. */
   page?: number;
@@ -89,5 +103,58 @@ export function talentListingLoaderDeps(
     permitCountry: search.permitCountry,
     interestedRole: search.interestedRole,
     page: search.page,
+  };
+}
+
+function languageNames(value: string | undefined): string[] | undefined {
+  if (!value) return undefined;
+  const names = value
+    .split(',')
+    .map((name) => name.trim())
+    .filter(Boolean);
+  return names.length > 0 ? names : undefined;
+}
+
+/** Stored list predicate. Drops pagination and the selected profile pane. */
+export function talentSearchToListFilters(
+  search: TalentSearch,
+): TalentListFilters {
+  const languages = languageNames(search.languages);
+  const filters: TalentListFilters = {};
+  if (search.q) filters.q = search.q;
+  if (search.skill) filters.skill = search.skill;
+  if (search.jobSearchStatus) filters.jobSearchStatus = search.jobSearchStatus;
+  if (languages) filters.languages = languages;
+  if (search.openToRelocate) {
+    filters.openToRelocate = search.openToRelocate === 'true';
+  }
+  if (search.place) filters.place = search.place;
+  if (search.sort) filters.sort = search.sort;
+  if (search.seniority) filters.seniority = search.seniority;
+  if (search.permitCountry) filters.permitCountry = search.permitCountry;
+  if (search.interestedRole) filters.interestedRole = search.interestedRole;
+  return filters;
+}
+
+/** Hydrate a saved list back into `/talent` search params. */
+export function listFiltersToTalentSearch(
+  filters: TalentListFilters,
+): TalentListingSearch {
+  return {
+    q: filters.q,
+    skill: filters.skill,
+    jobSearchStatus: filters.jobSearchStatus,
+    languages: filters.languages?.join(','),
+    openToRelocate:
+      filters.openToRelocate === undefined
+        ? undefined
+        : filters.openToRelocate
+          ? 'true'
+          : 'false',
+    place: filters.place,
+    sort: filters.sort,
+    seniority: filters.seniority,
+    permitCountry: filters.permitCountry,
+    interestedRole: filters.interestedRole,
   };
 }

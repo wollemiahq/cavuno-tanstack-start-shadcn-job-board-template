@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseTalentSearch, talentListingLoaderDeps } from './talent-search';
+import {
+  listFiltersToTalentSearch,
+  parseTalentSearch,
+  talentListingLoaderDeps,
+  talentSearchToListFilters,
+} from './talent-search';
 
 describe('parseTalentSearch', () => {
   it('keeps only trimmed Talent listing and selection state', () => {
@@ -84,5 +89,45 @@ describe('talentListingLoaderDeps', () => {
     expect(
       talentListingLoaderDeps(parseTalentSearch({ skill: 'accessibility' })),
     ).toEqual({ q: undefined, skill: 'accessibility', page: undefined });
+  });
+});
+
+describe('talent list filter round-trip', () => {
+  it('stores the frozen query and drops page plus the selected pane', () => {
+    const filters = talentSearchToListFilters(
+      parseTalentSearch({
+        q: 'platform',
+        skill: 'go',
+        languages: ' German, English ',
+        openToRelocate: 'true',
+        sort: 'newest',
+        page: '3',
+        selectedTalent: 'casey',
+      }),
+    );
+
+    expect(filters).toEqual({
+      q: 'platform',
+      skill: 'go',
+      languages: ['German', 'English'],
+      openToRelocate: true,
+      sort: 'newest',
+    });
+    expect(listFiltersToTalentSearch(filters)).toEqual({
+      q: 'platform',
+      skill: 'go',
+      jobSearchStatus: undefined,
+      languages: 'German,English',
+      openToRelocate: 'true',
+      place: undefined,
+      sort: 'newest',
+      seniority: undefined,
+      permitCountry: undefined,
+      interestedRole: undefined,
+    });
+  });
+
+  it('maps a blank directory to an empty predicate', () => {
+    expect(talentSearchToListFilters(parseTalentSearch({}))).toEqual({});
   });
 });
