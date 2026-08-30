@@ -51,12 +51,14 @@ describe('TalentFilters', () => {
   it('renders status, relocate, and sort without a keyword Search field', async () => {
     const { container } = renderFilters();
 
-    expect(
-      await screen.findByRole('combobox', { name: 'Job search status' }),
-    ).toBeTruthy();
-    expect(
-      screen.getByRole('combobox', { name: 'Open to relocate' }),
-    ).toBeTruthy();
+    const status = await screen.findByRole('combobox', {
+      name: 'Job search status',
+    });
+    const relocate = screen.getByRole('combobox', {
+      name: 'Open to relocate',
+    });
+    expect(status).toHaveTextContent('Any status');
+    expect(relocate).toHaveTextContent('Any relocation');
     const sort = screen.getByRole('combobox', { name: 'Sort' });
     expect(sort).toHaveTextContent('Sort:');
     expect(sort).toHaveTextContent('Best Match');

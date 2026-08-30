@@ -271,7 +271,7 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
         <FieldGroup className="flex flex-1 gap-6 overflow-y-auto px-6 py-2">
           <FilterSelect
             label={m.talentFilters_statusLabel()}
-            anyLabel={m.talentFilters_anyOption()}
+            anyLabel={m.talentFilters_anyStatusOption()}
             options={statusOptions}
             value={draft.jobSearchStatus}
             onValueChange={(jobSearchStatus) =>
@@ -281,7 +281,7 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
           />
           <FilterSelect
             label={m.talentFilters_relocateLabel()}
-            anyLabel={m.talentFilters_anyOption()}
+            anyLabel={m.talentFilters_anyRelocateOption()}
             options={relocateOptions}
             value={draft.openToRelocate}
             onValueChange={(openToRelocate) =>
@@ -342,7 +342,7 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
       <div className="hidden items-center gap-2 md:flex">
         <FilterSelect
           label={m.talentFilters_statusLabel()}
-          anyLabel={m.talentFilters_anyOption()}
+          anyLabel={m.talentFilters_anyStatusOption()}
           options={statusOptions}
           value={search.jobSearchStatus}
           onValueChange={(jobSearchStatus) =>
@@ -351,7 +351,7 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
         />
         <FilterSelect
           label={m.talentFilters_relocateLabel()}
-          anyLabel={m.talentFilters_anyOption()}
+          anyLabel={m.talentFilters_anyRelocateOption()}
           options={relocateOptions}
           value={search.openToRelocate}
           onValueChange={(openToRelocate) =>
