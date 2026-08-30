@@ -4,17 +4,17 @@ import {
   searchString,
   type UrlSearchInput,
   type UrlSearchValue,
-} from '@/lib/pagination';
+} from "@/lib/pagination";
 
 /** Frozen `/talent` query stored on a talent list. Matches the v1 wire. */
 export type TalentListFilters = {
   q?: string;
   skill?: string;
-  jobSearchStatus?: 'actively_looking' | 'open_to_offers' | 'not_looking';
+  jobSearchStatus?: "actively_looking" | "open_to_offers" | "not_looking";
   languages?: string[];
   openToRelocate?: boolean;
   place?: string;
-  sort?: 'relevance' | 'newest';
+  sort?: "relevance" | "newest";
   seniority?: string;
   permitCountry?: string;
   interestedRole?: string;
@@ -27,46 +27,44 @@ export interface TalentSearch {
   q?: string;
   /** Free-form skill-name filter. */
   skill?: string;
-  jobSearchStatus?: 'actively_looking' | 'open_to_offers' | 'not_looking';
+  jobSearchStatus?: "actively_looking" | "open_to_offers" | "not_looking";
   languages?: string;
-  openToRelocate?: 'true' | 'false';
+  openToRelocate?: "true" | "false";
   place?: string;
-  sort?: 'relevance' | 'newest';
+  sort?: "relevance" | "newest";
   seniority?: string;
   permitCountry?: string;
   interestedRole?: string;
   /** Desktop detail-pane selection; the canonical public profile handle. */
   selectedTalent?: string;
+  /** Active talent list id. Chrome only — not sent to GET /talent. */
+  list?: string;
+  /** Active sourced job id. Chrome only — directory rows come from the sourced GET. */
+  sourced?: string;
 }
 
-export type TalentListingSearch = Omit<TalentSearch, 'selectedTalent'>;
+export type TalentListingSearch = Omit<TalentSearch, "selectedTalent">;
 
 function stringSearchValue(value: UrlSearchValue) {
   return searchString(value)?.trim() || undefined;
 }
 
-const JOB_SEARCH_STATUSES = [
-  'actively_looking',
-  'open_to_offers',
-  'not_looking',
-] as const;
+const JOB_SEARCH_STATUSES = ["actively_looking", "open_to_offers", "not_looking"] as const;
 
-function jobSearchStatusValue(
-  value: UrlSearchValue,
-): TalentSearch['jobSearchStatus'] {
+function jobSearchStatusValue(value: UrlSearchValue): TalentSearch["jobSearchStatus"] {
   const raw = stringSearchValue(value);
   return JOB_SEARCH_STATUSES.find((status) => status === raw);
 }
 
-function relocateValue(value: UrlSearchValue): TalentSearch['openToRelocate'] {
+function relocateValue(value: UrlSearchValue): TalentSearch["openToRelocate"] {
   const raw = stringSearchValue(value);
-  if (raw === 'true' || raw === 'false') return raw;
+  if (raw === "true" || raw === "false") return raw;
   return undefined;
 }
 
-function sortValue(value: UrlSearchValue): TalentSearch['sort'] {
+function sortValue(value: UrlSearchValue): TalentSearch["sort"] {
   const raw = stringSearchValue(value);
-  if (raw === 'relevance' || raw === 'newest') return raw;
+  if (raw === "relevance" || raw === "newest") return raw;
   return undefined;
 }
 
@@ -84,13 +82,13 @@ export function parseTalentSearch(search: UrlSearchInput): TalentSearch {
     interestedRole: stringSearchValue(search.interestedRole),
     page: pageSearchValue(parsePageParam(search.page)),
     selectedTalent: stringSearchValue(search.selectedTalent),
+    list: stringSearchValue(search.list),
+    sourced: stringSearchValue(search.sourced),
   };
 }
 
-/** A detail-pane selection changes history, but never the directory request. */
-export function talentListingLoaderDeps(
-  search: TalentSearch,
-): TalentListingSearch {
+/** Listing request inputs. `list` and `sourced` are chrome, not GET /talent. */
+export function talentListingLoaderDeps(search: TalentSearch): TalentListingSearch {
   return {
     q: search.q,
     skill: search.skill,
@@ -109,16 +107,14 @@ export function talentListingLoaderDeps(
 function languageNames(value: string | undefined): string[] | undefined {
   if (!value) return undefined;
   const names = value
-    .split(',')
+    .split(",")
     .map((name) => name.trim())
     .filter(Boolean);
   return names.length > 0 ? names : undefined;
 }
 
 /** Stored list predicate. Drops pagination and the selected profile pane. */
-export function talentSearchToListFilters(
-  search: TalentSearch,
-): TalentListFilters {
+export function talentSearchToListFilters(search: TalentSearch): TalentListFilters {
   const languages = languageNames(search.languages);
   const filters: TalentListFilters = {};
   if (search.q) filters.q = search.q;
@@ -126,7 +122,7 @@ export function talentSearchToListFilters(
   if (search.jobSearchStatus) filters.jobSearchStatus = search.jobSearchStatus;
   if (languages) filters.languages = languages;
   if (search.openToRelocate) {
-    filters.openToRelocate = search.openToRelocate === 'true';
+    filters.openToRelocate = search.openToRelocate === "true";
   }
   if (search.place) filters.place = search.place;
   if (search.sort) filters.sort = search.sort;
@@ -137,24 +133,24 @@ export function talentSearchToListFilters(
 }
 
 /** Hydrate a saved list back into `/talent` search params. */
-export function listFiltersToTalentSearch(
-  filters: TalentListFilters,
-): TalentListingSearch {
+export function listFiltersToTalentSearch(filters: TalentListFilters): TalentListingSearch {
   return {
     q: filters.q,
     skill: filters.skill,
     jobSearchStatus: filters.jobSearchStatus,
-    languages: filters.languages?.join(','),
+    languages: filters.languages?.join(","),
     openToRelocate:
-      filters.openToRelocate === undefined
-        ? undefined
-        : filters.openToRelocate
-          ? 'true'
-          : 'false',
+      filters.openToRelocate === undefined ? undefined : filters.openToRelocate ? "true" : "false",
     place: filters.place,
     sort: filters.sort,
     seniority: filters.seniority,
     permitCountry: filters.permitCountry,
     interestedRole: filters.interestedRole,
   };
+}
+
+/** Seed a job-bound list from the req title. */
+export function filtersFromJob(job: { title: string }): TalentListFilters {
+  const interestedRole = job.title.trim();
+  return interestedRole ? { interestedRole } : {};
 }

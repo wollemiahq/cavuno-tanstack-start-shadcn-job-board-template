@@ -117,6 +117,7 @@ describe('TalentSearchPage — search results pattern', () => {
     expect(filterBar).not.toBeNull();
     expect(filterBar?.textContent ?? '').not.toMatch(/Name or headline/i);
     expect(filterBar?.querySelector('[type="search"]')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Lists' })).toBeNull();
     expect(
       container.querySelector("[data-slot='search-results-layout']"),
     ).not.toBeNull();
