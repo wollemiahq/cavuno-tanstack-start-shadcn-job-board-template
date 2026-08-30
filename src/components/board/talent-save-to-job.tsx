@@ -10,21 +10,26 @@ export function TalentSaveToJob({
   slug,
   jobs,
   candidateBoardUserId,
+  boundJobId,
+  alreadySaved = false,
 }: {
   slug: string;
   jobs: Array<{ id: string; title: string }>;
   candidateBoardUserId: string;
+  boundJobId?: string;
+  alreadySaved?: boolean;
 }) {
-  const [jobId, setJobId] = useState(jobs[0]?.id ?? '');
+  const [jobId, setJobId] = useState(boundJobId ?? jobs[0]?.id ?? '');
   const [pending, setPending] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(alreadySaved);
 
   useEffect(() => {
-    setSaved(false);
-  }, [jobId]);
+    setJobId(boundJobId ?? jobs[0]?.id ?? '');
+    setSaved(alreadySaved);
+  }, [alreadySaved, boundJobId, candidateBoardUserId, jobs]);
 
   if (jobs.length === 0) return null;
-  const oneClick = jobs.length === 1;
+  const oneClick = Boolean(boundJobId) || jobs.length === 1;
 
   return (
     <form
