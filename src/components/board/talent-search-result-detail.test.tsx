@@ -90,6 +90,25 @@ describe('TalentSearchResultDetail', () => {
     );
   });
 
+  it('puts Save next to Message when the employer can source', () => {
+    const { container } = render(
+      <TalentSearchResultDetail
+        vm={profileVm}
+        cta={messageCta}
+        saveSlot={<button type="button">Save to job</button>}
+      />,
+    );
+
+    const actions = container.querySelector<HTMLElement>(
+      "[data-slot='talent-detail-actions']",
+    );
+    if (!actions) throw new Error('Talent detail actions were not rendered');
+
+    expect(
+      [...actions.querySelectorAll('a, button')].map((el) => el.textContent),
+    ).toEqual(['Message', 'Save to job']);
+  });
+
   it('renders no action controls when the viewer earns no Message, keeping the name link to the profile', () => {
     const { container } = render(
       <TalentSearchResultDetail vm={profileVm} cta={noActionsCta} />,

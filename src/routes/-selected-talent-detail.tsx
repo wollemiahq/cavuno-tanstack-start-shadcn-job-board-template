@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { m } from '../paraglide/messages';
 
 import type { SelectedTalentState } from './-use-selected-talent';
@@ -21,6 +23,7 @@ export function SelectedTalentDetail({
   signInHref,
   messagingEnabled,
   profileUnlocks = false,
+  saveSlot,
   onStartConversation,
   onConversationStarted,
 }: {
@@ -34,6 +37,8 @@ export function SelectedTalentDetail({
   messagingEnabled: boolean;
   /** Directory cards link to `/p/{id}` when the board sells profile unlocks. */
   profileUnlocks?: boolean;
+  /** Employer Save, next to Message. Bound list is one-click; else pick a job. */
+  saveSlot?: ReactNode;
   onStartConversation: StartTalentConversation;
   onConversationStarted: (conversationId: string) => void;
 }) {
@@ -69,6 +74,7 @@ export function SelectedTalentDetail({
             vm={vm}
             cta={cta}
             interactive={state.status === 'ready'}
+            saveSlot={state.status === 'ready' ? saveSlot : undefined}
             onStartConversation={onStartConversation}
             onConversationStarted={onConversationStarted}
           />

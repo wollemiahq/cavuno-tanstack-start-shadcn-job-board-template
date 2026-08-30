@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import type {
   TalentDetailCta,
   TalentProfileVM,
@@ -41,28 +43,37 @@ function TalentDetailActions({
   cta,
   interactive,
   candidateName,
+  saveSlot,
   onStartConversation,
   onConversationStarted,
 }: {
   cta: TalentDetailCta;
   interactive: boolean;
   candidateName: string;
+  saveSlot?: ReactNode;
   onStartConversation?: StartTalentConversation;
   onConversationStarted?: (conversationId: string) => void;
 }) {
-  if (!interactive || !cta.message) return null;
+  if (!interactive || (!cta.message && !saveSlot)) return null;
 
   return (
     <div
       data-slot="talent-detail-actions"
       className="flex flex-wrap items-center gap-2"
     >
-      <TalentMessageAction
-        action={cta.message}
-        candidateName={candidateName}
-        onStartConversation={onStartConversation}
-        onConversationStarted={onConversationStarted}
-      />
+      {cta.message ? (
+        <TalentMessageAction
+          action={cta.message}
+          candidateName={candidateName}
+          onStartConversation={onStartConversation}
+          onConversationStarted={onConversationStarted}
+        />
+      ) : null}
+      {saveSlot ? (
+        <div data-slot="talent-detail-save-action" className="shrink-0">
+          {saveSlot}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -71,16 +82,18 @@ function ExpandedTalentDetailHeader({
   vm,
   cta,
   interactive,
+  saveSlot,
   onStartConversation,
   onConversationStarted,
 }: {
   vm: TalentProfileVM;
   cta: TalentDetailCta;
   interactive: boolean;
+  saveSlot?: ReactNode;
   onStartConversation?: StartTalentConversation;
   onConversationStarted?: (conversationId: string) => void;
 }) {
-  const hasActions = interactive && Boolean(cta.message);
+  const hasActions = interactive && Boolean(cta.message || saveSlot);
 
   return (
     <header
@@ -103,6 +116,7 @@ function ExpandedTalentDetailHeader({
             cta={cta}
             interactive
             candidateName={vm.displayName}
+            saveSlot={saveSlot}
             onStartConversation={onStartConversation}
             onConversationStarted={onConversationStarted}
           />
@@ -116,12 +130,14 @@ function CompactTalentDetailHeader({
   vm,
   cta,
   interactive,
+  saveSlot,
   onStartConversation,
   onConversationStarted,
 }: {
   vm: TalentProfileVM;
   cta: TalentDetailCta;
   interactive: boolean;
+  saveSlot?: ReactNode;
   onStartConversation?: StartTalentConversation;
   onConversationStarted?: (conversationId: string) => void;
 }) {
@@ -138,6 +154,7 @@ function CompactTalentDetailHeader({
           cta={cta}
           interactive={interactive}
           candidateName={vm.displayName}
+          saveSlot={saveSlot}
           onStartConversation={onStartConversation}
           onConversationStarted={onConversationStarted}
         />
@@ -202,12 +219,14 @@ export function TalentSearchResultDetail({
   vm,
   cta = { message: null, viewProfile: null },
   interactive = true,
+  saveSlot,
   onStartConversation,
   onConversationStarted,
 }: {
   vm: TalentProfileVM;
   cta?: TalentDetailCta;
   interactive?: boolean;
+  saveSlot?: ReactNode;
   onStartConversation?: StartTalentConversation;
   onConversationStarted?: (conversationId: string) => void;
 }) {
@@ -219,6 +238,7 @@ export function TalentSearchResultDetail({
             vm={vm}
             cta={cta}
             interactive={interactive}
+            saveSlot={saveSlot}
             onStartConversation={onStartConversation}
             onConversationStarted={onConversationStarted}
           />
@@ -228,6 +248,7 @@ export function TalentSearchResultDetail({
             vm={vm}
             cta={cta}
             interactive={interactive}
+            saveSlot={saveSlot}
             onStartConversation={onStartConversation}
             onConversationStarted={onConversationStarted}
           />

@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  cloneElement,
+  isValidElement,
+  useEffect,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 
 import { useLocation } from "@tanstack/react-router";
 import type { TalentDirectoryEntry } from "@cavuno/board";
@@ -101,6 +108,7 @@ export function TalentSearchPage({
   }>();
   const [lists, setLists] = useState<TalentListRecord[]>([]);
   const [sourcedIds, setSourcedIds] = useState<Set<string>>(new Set());
+  const [savedIds, setSavedIds] = useState<Set<string>>(() => new Set());
   const [sourcedVms, setSourcedVms] = useState<TalentCardVM[] | null>(null);
   const selectedList = lists.find((list) => list.id === search.list);
   const viewingSourced = Boolean(search.sourced);
@@ -180,6 +188,42 @@ export function TalentSearchPage({
     viewingSourced,
   );
   const candidateVms = viewingSourced ? (sourcedVms ?? []) : candidates;
+  function markSaved(id: string) {
+    setSavedIds((current) => {
+      const next = new Set(current);
+      next.add(id);
+      return next;
+    });
+  }
+  function saveControl(
+    candidateBoardUserId: string,
+    presentation: "icon" | "default",
+  ) {
+    if (!workspace || workspace.jobs.length === 0) return null;
+    return (
+      <TalentSaveToJob
+        presentation={presentation}
+        slug={workspace.slug}
+        jobs={workspace.jobs}
+        candidateBoardUserId={candidateBoardUserId}
+        boundJobId={boundJobId}
+        alreadySaved={
+          sourcedIds.has(candidateBoardUserId) || savedIds.has(candidateBoardUserId)
+        }
+        onSaved={() => markSaved(candidateBoardUserId)}
+      />
+    );
+  }
+  const selectedVm = candidateVms.find(
+    (vm) => talentCardSelectionKey(vm) === selectedTalent,
+  );
+  let detailWithSave = detail;
+  const detailSave = selectedVm ? saveControl(selectedVm.id, "default") : null;
+  if (detailSave && isValidElement(detail) && typeof detail.type !== "string") {
+    detailWithSave = cloneElement(detail as ReactElement<{ saveSlot?: ReactNode }>, {
+      saveSlot: detailSave,
+    });
+  }
   const selectableIds = candidateVms.flatMap((vm) => {
     const key = talentCardSelectionKey(vm);
     return key ? [key] : [];
@@ -299,17 +343,7 @@ export function TalentSearchPage({
                             selected={
                               selectionKey !== null && selectionKey === selection.selectedId
                             }
-                            save={
-                              workspace && workspace.jobs.length > 0 ? (
-                                <TalentSaveToJob
-                                  slug={workspace.slug}
-                                  jobs={workspace.jobs}
-                                  candidateBoardUserId={vm.id}
-                                  boundJobId={boundJobId}
-                                  alreadySaved={sourcedIds.has(vm.id)}
-                                />
-                              ) : null
-                            }
+                            saveSlot={saveControl(vm.id, "icon")}
                             onActivate={
                               selectionKey
                                 ? (event) => selection.onResultActivate(event, selectionKey)
@@ -341,7 +375,7 @@ export function TalentSearchPage({
                   label={m.talentSearch_selectedProfileRegionLabel()}
                   scrollRestorationId="talent-selected-detail"
                 >
-                  {detail}
+                  {detailWithSave}
                 </SearchResultDetail>
               }
             />

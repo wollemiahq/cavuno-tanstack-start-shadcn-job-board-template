@@ -1,9 +1,22 @@
+'use client';
+
 import { useEffect, useState } from 'react';
+
+import { Bookmark, BookmarkCheck, LoaderCircle } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { toastActionError } from '@/lib/action-toast';
+import { cn } from '@/lib/utils';
 import { saveSourcedCandidate } from '@/server/employers';
 
 export function TalentSaveToJob({
@@ -12,67 +25,118 @@ export function TalentSaveToJob({
   candidateBoardUserId,
   boundJobId,
   alreadySaved = false,
+  presentation = 'default',
+  onSaved,
 }: {
   slug: string;
   jobs: Array<{ id: string; title: string }>;
   candidateBoardUserId: string;
   boundJobId?: string;
   alreadySaved?: boolean;
+  presentation?: 'default' | 'icon';
+  onSaved?: () => void;
 }) {
-  const [jobId, setJobId] = useState(boundJobId ?? jobs[0]?.id ?? '');
   const [pending, setPending] = useState(false);
   const [saved, setSaved] = useState(alreadySaved);
+  const iconOnly = presentation === 'icon';
 
   useEffect(() => {
-    setJobId(boundJobId ?? jobs[0]?.id ?? '');
     setSaved(alreadySaved);
-  }, [alreadySaved, boundJobId, candidateBoardUserId, jobs]);
+  }, [alreadySaved, boundJobId, candidateBoardUserId]);
 
   if (jobs.length === 0) return null;
-  const oneClick = Boolean(boundJobId) || jobs.length === 1;
+
+  function saveTo(job: string) {
+    if (!job || pending || saved) return;
+    setPending(true);
+    void saveSourcedCandidate({
+      data: { slug, job, candidateBoardUserId },
+    })
+      .then((result) => {
+        if (result.ok) {
+          setSaved(true);
+          onSaved?.();
+          return;
+        }
+        void toastActionError(result.message);
+      })
+      .catch(() => {
+        void toastActionError();
+      })
+      .finally(() => setPending(false));
+  }
+
+  function controlLabel(label: string, filled: boolean) {
+    if (!iconOnly) return label;
+    const Icon = pending ? LoaderCircle : filled ? BookmarkCheck : Bookmark;
+    return (
+      <>
+        <Icon
+          aria-hidden="true"
+          className={cn(pending && 'animate-spin')}
+        />
+        <span className="sr-only">{label}</span>
+      </>
+    );
+  }
+
+  const label = saved ? m.talentSave_savedLabel() : m.talentSave_saveLabel();
+  const trigger = (
+    <Button
+      type="button"
+      variant={iconOnly ? 'ghost' : 'outline'}
+      size={iconOnly ? 'icon' : 'default'}
+      disabled={pending || saved}
+      aria-label={label}
+      className={cn(pending && 'cursor-wait')}
+    />
+  );
+
+  if (saved || boundJobId) {
+    return (
+      <div
+        className="relative z-10"
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+      >
+        <Button
+          type="button"
+          variant={iconOnly ? 'ghost' : 'outline'}
+          size={iconOnly ? 'icon' : 'default'}
+          disabled={pending || saved}
+          aria-label={label}
+          className={cn(pending && 'cursor-wait')}
+          onClick={() => {
+            if (boundJobId) saveTo(boundJobId);
+          }}
+        >
+          {controlLabel(label, saved)}
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <form
-      className="flex flex-wrap items-center gap-2"
+    <div
+      className="relative z-10"
       onClick={(event) => event.stopPropagation()}
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (!jobId) return;
-        setPending(true);
-        void saveSourcedCandidate({
-          data: { slug, job: jobId, candidateBoardUserId },
-        })
-          .then((result) => {
-            if (result.ok) {
-              setSaved(true);
-              return;
-            }
-            void toastActionError(result.message);
-          })
-          .catch(() => {
-            void toastActionError();
-          })
-          .finally(() => setPending(false));
-      }}
+      onKeyDown={(event) => event.stopPropagation()}
     >
-      {oneClick ? null : (
-        <select
-          value={jobId}
-          onChange={(event) => setJobId(event.target.value)}
-          className="border-input bg-background h-8 rounded-md border px-2 text-sm"
-          aria-label={m.talentSave_jobLabel()}
-        >
-          {jobs.map((job) => (
-            <option key={job.id} value={job.id}>
-              {job.title}
-            </option>
-          ))}
-        </select>
-      )}
-      <Button type="submit" size="sm" disabled={pending || saved}>
-        {saved ? m.talentSave_savedLabel() : m.talentSave_saveLabel()}
-      </Button>
-    </form>
+      <DropdownMenu>
+        <DropdownMenuTrigger render={trigger} aria-haspopup="menu">
+          {controlLabel(m.talentSave_saveLabel(), false)}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-56">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{m.talentSave_jobLabel()}</DropdownMenuLabel>
+            {jobs.map((job) => (
+              <DropdownMenuItem key={job.id} onClick={() => saveTo(job.id)}>
+                {job.title}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
