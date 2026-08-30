@@ -19,6 +19,7 @@ import {
   toastActionError,
   toastActionReconciliationError,
 } from '@/lib/action-toast';
+import { pickAuthConversionSearch } from '@/lib/board-datalayer-events';
 import { headTitle } from '@/lib/page-title';
 import type { UrlSearchInput } from '@/lib/pagination';
 
@@ -43,6 +44,7 @@ export function isJobMatchesDestination(returnTo: string): boolean {
 export const Route = createFileRoute('/auth/verify-email-required')({
   validateSearch: (search: UrlSearchInput) => ({
     returnTo: candidateReturnTo(search.returnTo),
+    ...pickAuthConversionSearch(search),
   }),
   loaderDeps: ({ search }) => ({
     returnTo: candidateReturnTo(search.returnTo),

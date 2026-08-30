@@ -121,7 +121,7 @@ export function createCompanyJobsLoader(
     location,
   }: {
     params: { slug: string };
-    location: { search?: UrlSearchInput };
+    location: { search?: UrlSearchInput; searchStr?: string };
   }) => {
     const loaderDependencies = dependencies ?? companyJobsLoaderDependencies;
     const noTimeseries = (): EmployerJobStatsPoint[] => [];
@@ -148,7 +148,10 @@ export function createCompanyJobsLoader(
       return await loaderDependencies.handleEmployerLoaderError(
         error,
         `/employers/companies/${params.slug}`,
-        { retried: isReauthRetry(location) },
+        {
+          retried: isReauthRetry(location),
+          incomingSearch: location.searchStr ?? location.search,
+        },
       );
     }
   };

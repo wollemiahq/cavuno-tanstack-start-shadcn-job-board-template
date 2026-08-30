@@ -38,7 +38,10 @@ export const Route = createFileRoute(
       return await handleEmployerLoaderError(
         error,
         `/employers/companies/${params.slug}/jobs/${params.jobId}/edit`,
-        { retried: isReauthRetry(location) },
+        {
+          retried: isReauthRetry(location),
+          incomingSearch: location.searchStr ?? location.search,
+        },
       );
     }
   },

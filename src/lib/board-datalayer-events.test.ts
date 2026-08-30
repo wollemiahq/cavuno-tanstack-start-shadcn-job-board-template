@@ -6,7 +6,9 @@ import {
   appendAuthConversionQuery,
   appendAuthIntentQuery,
   appendOAuthProviderHint,
+  mergeAuthConversionSearch,
   parseAuthConversionSearchParams,
+  pickAuthConversionSearch,
   pushBoardDataLayerEvent,
   resolvePostAuthConversionRedirect,
   stripAuthConversionSearchParams,
@@ -108,5 +110,63 @@ describe('board-datalayer-events', () => {
     expect(appendAuthIntentQuery('/account?tab=alerts', 'login')).toBe(
       '/account?tab=alerts&cavuno_auth_intent=login',
     );
+  });
+
+  it('picks a complete auth conversion pair from search, href, or record', () => {
+    expect(
+      pickAuthConversionSearch(
+        'cavuno_auth=login&cavuno_auth_method=password',
+      ),
+    ).toEqual({
+      cavuno_auth: 'login',
+      cavuno_auth_method: 'password',
+    });
+    expect(
+      pickAuthConversionSearch(
+        '/account?cavuno_auth=sign_up&cavuno_auth_method=google',
+      ),
+    ).toEqual({
+      cavuno_auth: 'sign_up',
+      cavuno_auth_method: 'google',
+    });
+    expect(
+      pickAuthConversionSearch({
+        cavuno_auth: 'login',
+        cavuno_auth_method: 'linkedin',
+      }),
+    ).toEqual({
+      cavuno_auth: 'login',
+      cavuno_auth_method: 'linkedin',
+    });
+  });
+
+  it('drops incomplete or invalid auth conversion pairs', () => {
+    expect(pickAuthConversionSearch({ cavuno_auth: 'login' })).toEqual({});
+    expect(
+      pickAuthConversionSearch({ cavuno_auth_method: 'password' }),
+    ).toEqual({});
+    expect(
+      pickAuthConversionSearch({
+        cavuno_auth: 'signup',
+        cavuno_auth_method: 'password',
+      }),
+    ).toEqual({});
+    expect(pickAuthConversionSearch(undefined)).toEqual({});
+  });
+
+  it('merges a valid inbound pair onto returnTo', () => {
+    expect(
+      mergeAuthConversionSearch(
+        { returnTo: '/account' },
+        '/account?cavuno_auth=login&cavuno_auth_method=password',
+      ),
+    ).toEqual({
+      returnTo: '/account',
+      cavuno_auth: 'login',
+      cavuno_auth_method: 'password',
+    });
+    expect(mergeAuthConversionSearch({ returnTo: '/account' }, {})).toEqual({
+      returnTo: '/account',
+    });
   });
 });

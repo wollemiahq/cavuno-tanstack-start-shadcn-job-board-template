@@ -20,6 +20,7 @@ import {
   CandidateRouteErrorPage,
   CandidateRoutePendingPage,
 } from '@/components/candidate-route-state';
+import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
@@ -42,7 +43,7 @@ export const Route = createFileRoute('/account_/access')({
     if (returnTo) out.returnTo = returnTo;
     return out;
   },
-  loader: async () => {
+  loader: async ({ location }) => {
     try {
       const [grant, offers, seo] = await Promise.all([
         getAccessGrant(),
@@ -58,7 +59,10 @@ export const Route = createFileRoute('/account_/access')({
       if (authFailure === 'email-unverified') {
         throw redirect({
           to: '/auth/verify-email-required',
-          search: { returnTo: RETURN_PATH },
+          search: mergeAuthConversionSearch(
+            { returnTo: RETURN_PATH },
+            location.searchStr ?? location.search,
+          ),
         });
       }
       if (authFailure === 'unauthenticated') {

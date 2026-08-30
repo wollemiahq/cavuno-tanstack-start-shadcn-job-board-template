@@ -79,7 +79,11 @@ const employerDashboardLoaderDependencies: EmployerDashboardLoaderDependencies =
 export function createEmployerDashboardLoader(
   dependencies: EmployerDashboardLoaderDependencies = employerDashboardLoaderDependencies,
 ) {
-  return async ({ location }: { location: { search?: UrlSearchInput } }) => {
+  return async ({
+    location,
+  }: {
+    location: { search?: UrlSearchInput; searchStr?: string };
+  }) => {
     try {
       const [companies, seo] = await Promise.all([
         dependencies.listCompanies(),
@@ -91,7 +95,10 @@ export function createEmployerDashboardLoader(
         dependencies.refreshSession,
         error,
         '/employers/dashboard',
-        { retried: isReauthRetry(location) },
+        {
+          retried: isReauthRetry(location),
+          incomingSearch: location.searchStr ?? location.search,
+        },
       );
     }
   };

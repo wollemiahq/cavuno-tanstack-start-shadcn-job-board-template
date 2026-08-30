@@ -124,7 +124,7 @@ export function createCompanyProfileLoader(
     location,
   }: {
     params: { slug: string };
-    location: { search?: UrlSearchInput };
+    location: { search?: UrlSearchInput; searchStr?: string };
   }) => {
     const loaderDependencies = dependencies ?? companyProfileLoaderDependencies;
     try {
@@ -172,7 +172,10 @@ export function createCompanyProfileLoader(
       return await loaderDependencies.handleEmployerLoaderError(
         error,
         `/employers/companies/${params.slug}/profile`,
-        { retried: isReauthRetry(location) },
+        {
+          retried: isReauthRetry(location),
+          incomingSearch: location.searchStr ?? location.search,
+        },
       );
     }
   };

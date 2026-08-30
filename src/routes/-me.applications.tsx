@@ -42,6 +42,7 @@ import {
 } from '@/lib/action-toast';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
+import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
 import type { Application, ApplicationsListQuery } from '@cavuno/board';
 
 const STATUS_LABEL = {
@@ -84,7 +85,7 @@ export const Route = createFileRoute('/me/applications')({
 export function createApplicationsLoader(
   dependencies: ApplicationsRouteDependencies = applicationsRouteDependencies,
 ) {
-  return async () => {
+  return async (context?: { location?: { href?: string; searchStr?: string; search?: unknown } }) => {
     // External-apply-only board (nativeApplications off): there is no
     // applications surface — the platform 422s the read. Treat it as
     // not-existing (404) rather than rendering an error state.
@@ -102,7 +103,7 @@ export function createApplicationsLoader(
       if (authFailure === 'email-unverified') {
         throw redirect({
           to: '/auth/verify-email-required',
-          search: { returnTo: '/me/applications' },
+          search: mergeAuthConversionSearch({ returnTo: '/me/applications' }, context?.location?.searchStr ?? context?.location?.href),
         });
       }
       if (authFailure === 'unauthenticated') {

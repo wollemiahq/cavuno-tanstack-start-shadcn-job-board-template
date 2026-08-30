@@ -43,7 +43,7 @@ export async function loadAcceptInvite(
     handleEmployerLoaderError: (
       error: Error,
       returnTo: string,
-      options?: { retried?: boolean },
+      options?: { retried?: boolean; incomingSearch?: string | Record<string, unknown> },
     ) => Promise<never>;
   } = { acceptCompanyInvite, getSeoBase, handleEmployerLoaderError },
 ) {
@@ -91,7 +91,10 @@ export async function loadAcceptInvite(
     return await actions.handleEmployerLoaderError(
       failure,
       acceptReturnTo(deps.token),
-      { retried: isReauthRetry(location) },
+      {
+        retried: isReauthRetry(location),
+        incomingSearch: location?.searchStr ?? location?.search,
+      },
     );
   }
 }

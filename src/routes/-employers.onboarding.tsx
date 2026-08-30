@@ -46,7 +46,7 @@ export function createEmployerOnboardingLoader(
     location,
   }: {
     params: { slug: string };
-    location: { search?: UrlSearchInput };
+    location: { search?: UrlSearchInput; searchStr?: string };
   }) => {
     let loaded;
     try {
@@ -59,7 +59,10 @@ export function createEmployerOnboardingLoader(
         dependencies.refreshSession,
         error,
         `/employers/onboarding/${params.slug}`,
-        { retried: isReauthRetry(location) },
+        {
+          retried: isReauthRetry(location),
+          incomingSearch: location.searchStr ?? location.search,
+        },
       );
     }
     const [memberships, seo] = loaded;

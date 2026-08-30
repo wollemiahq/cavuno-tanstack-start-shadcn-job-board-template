@@ -37,6 +37,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
 import { headTitle } from '@/lib/page-title';
+import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
 
 type Channel = 'messageEmails' | 'applicationEmails' | 'recommendedJobEmails';
 
@@ -85,7 +86,13 @@ export const settingsRouteDependencies: SettingsRouteDependencies = {
 export function createSettingsLoader(
   dependencies: SettingsRouteDependencies = settingsRouteDependencies,
 ) {
-  return async ({ deps }: { deps: SettingsSearch }) => {
+  return async ({
+    deps,
+    location,
+  }: {
+    deps: SettingsSearch;
+    location?: { search?: Record<string, unknown>; searchStr?: string };
+  }) => {
     const seo = await dependencies.getSeoBase();
     if (deps.token && deps.boardUserId && deps.channel) {
       try {
@@ -120,7 +127,10 @@ export function createSettingsLoader(
       if (authFailure === 'email-unverified') {
         throw redirect({
           to: '/auth/verify-email-required',
-          search: { returnTo: '/settings' },
+          search: mergeAuthConversionSearch(
+            { returnTo: '/settings' },
+            location?.searchStr ?? location?.search,
+          ),
         });
       }
       if (authFailure === 'unauthenticated') {

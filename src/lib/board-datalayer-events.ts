@@ -131,6 +131,65 @@ export function parseAuthConversionSearchParams(
   return { event, method };
 }
 
+export type AuthConversionSearch = {
+  cavuno_auth: BoardAuthEvent;
+  cavuno_auth_method: BoardAuthMethod;
+};
+
+export type AuthConversionSearchInput =
+  | URLSearchParams
+  | Record<string, unknown>
+  | string
+  | undefined;
+
+function toAuthConversionSearchParams(
+  search: AuthConversionSearchInput,
+): URLSearchParams {
+  if (!search) return new URLSearchParams();
+  if (search instanceof URLSearchParams) return search;
+  if (typeof search === 'string') {
+    if (
+      search.includes('://') ||
+      search.startsWith('/') ||
+      search.startsWith('?')
+    ) {
+      try {
+        return new URL(search, 'https://example.com').searchParams;
+      } catch {
+        return new URLSearchParams();
+      }
+    }
+    return new URLSearchParams(search);
+  }
+  const params = new URLSearchParams();
+  const event = search[CAVUNO_AUTH_PARAM];
+  const method = search[CAVUNO_AUTH_METHOD_PARAM];
+  if (typeof event === 'string') params.set(CAVUNO_AUTH_PARAM, event);
+  if (typeof method === 'string') params.set(CAVUNO_AUTH_METHOD_PARAM, method);
+  return params;
+}
+
+/** Both conversion keys, or neither. Partial pairs are dropped. */
+export function pickAuthConversionSearch(
+  search: AuthConversionSearchInput,
+): AuthConversionSearch | Record<string, never> {
+  const parsed = parseAuthConversionSearchParams(
+    toAuthConversionSearchParams(search),
+  );
+  if (!parsed) return {};
+  return {
+    cavuno_auth: parsed.event,
+    cavuno_auth_method: parsed.method,
+  };
+}
+
+export function mergeAuthConversionSearch(
+  base: { returnTo: string },
+  incoming: AuthConversionSearchInput,
+): { returnTo: string } & Partial<AuthConversionSearch> {
+  return { returnTo: base.returnTo, ...pickAuthConversionSearch(incoming) };
+}
+
 /** Resolve OAuth/magic-link completion into a destination with conversion params. */
 export function resolvePostAuthConversionRedirect(
   returnTo: string,

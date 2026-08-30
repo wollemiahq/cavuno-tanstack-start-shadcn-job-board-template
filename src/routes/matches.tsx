@@ -41,6 +41,7 @@ import {
 import { Text } from '@/components/text';
 import { buttonVariants } from '@/components/ui/button';
 import { useSearchSelection } from '@/hooks/use-search-selection';
+import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
@@ -65,7 +66,9 @@ const matchesLoaderDependencies: MatchesLoaderDependencies = {
 export function createMatchesLoader(
   dependencies: MatchesLoaderDependencies = matchesLoaderDependencies,
 ) {
-  return async (context?: { location?: { href: string } }) => {
+  return async (context?: {
+    location?: { href: string; search?: Record<string, unknown>; searchStr?: string };
+  }) => {
     const returnTo = candidateReturnTo(context?.location?.href ?? '/matches');
     // The context read gives the route a fast, clean 404 for a disabled
     // surface. If that freshness probe is transiently unavailable, continue
@@ -86,7 +89,12 @@ export function createMatchesLoader(
       if (authFailure === 'email-unverified') {
         throw redirect({
           to: '/auth/verify-email-required',
-          search: { returnTo },
+          search: mergeAuthConversionSearch(
+            { returnTo },
+            context?.location?.searchStr ??
+              context?.location?.search ??
+              context?.location?.href,
+          ),
         });
       }
       if (authFailure === 'unauthenticated') {

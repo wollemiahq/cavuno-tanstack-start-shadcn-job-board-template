@@ -45,6 +45,7 @@ import { Text } from '@/components/text';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
+import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
@@ -59,7 +60,7 @@ export const Route = createFileRoute('/saved-jobs')({
   },
   pendingComponent: CandidateRoutePendingPage,
   errorComponent: CandidateRouteErrorPage,
-  loader: async () => {
+  loader: async ({ location }) => {
     try {
       const [saved, seo] = await Promise.all([getSavedJobs(), getSeoBase()]);
       return { ...saved, seo };
@@ -69,7 +70,10 @@ export const Route = createFileRoute('/saved-jobs')({
       if (authFailure === 'email-unverified') {
         throw redirect({
           to: '/auth/verify-email-required',
-          search: { returnTo: '/saved-jobs' },
+          search: mergeAuthConversionSearch(
+            { returnTo: '/saved-jobs' },
+            location.searchStr ?? location.search,
+          ),
         });
       }
       if (authFailure === 'unauthenticated') {

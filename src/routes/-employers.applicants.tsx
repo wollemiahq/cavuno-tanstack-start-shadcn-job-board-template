@@ -56,7 +56,7 @@ export function createApplicantsLoader(
     location,
   }: {
     params: { slug: string; jobId: string };
-    location: { search?: UrlSearchInput };
+    location: { search?: UrlSearchInput; searchStr?: string };
   }) => {
     const loaderDependencies = dependencies ?? applicantsLoaderDependencies;
     const board = await loaderDependencies.getBoardContext();
@@ -85,7 +85,10 @@ export function createApplicantsLoader(
       return await loaderDependencies.handleEmployerLoaderError(
         error,
         `/employers/companies/${params.slug}/jobs/${params.jobId}/applicants`,
-        { retried: isReauthRetry(location) },
+        {
+          retried: isReauthRetry(location),
+          incomingSearch: location.searchStr ?? location.search,
+        },
       );
     }
   };

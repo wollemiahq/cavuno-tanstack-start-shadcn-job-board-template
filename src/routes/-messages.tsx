@@ -1,5 +1,7 @@
 import { isRedirect, notFound, redirect } from '@tanstack/react-router';
 
+import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
+
 import type { MessagesView } from './-messages-controller';
 import { getBlocked, getInbox } from '@/server/messaging';
 import { getBoardContext, getSeoBase } from '@/server/queries';
@@ -19,7 +21,13 @@ export function createMessagesLoader(
     getSeoBase,
   },
 ) {
-  return async ({ deps }: { deps: { view: MessagesView } }) => {
+  return async ({
+    deps,
+    location,
+  }: {
+    deps: { view: MessagesView };
+    location?: { search?: Record<string, unknown>; searchStr?: string; href?: string };
+  }) => {
     // Messaging feature off ⇒ the surface does not exist on this board.
     // The gate read and the SEO base do not depend on each other, so they
     // share one wave (the inbox read stays behind the gate — it is the call
@@ -51,7 +59,10 @@ export function createMessagesLoader(
       if (String(error).includes('EMAIL_UNVERIFIED')) {
         throw redirect({
           to: '/auth/verify-email-required',
-          search: { returnTo },
+          search: mergeAuthConversionSearch(
+            { returnTo },
+            location?.searchStr ?? location?.search ?? location?.href,
+          ),
         });
       }
       throw redirect({ to: '/auth/sign-in', search: { returnTo } });
