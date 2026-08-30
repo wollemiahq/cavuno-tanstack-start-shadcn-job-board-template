@@ -264,7 +264,7 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
               : m.jobSearch_filtersLabel()}
           </SheetTitle>
           <SheetDescription>
-            {m.jobSearch_filterSheetDescription()}
+            {m.talentFilters_filterSheetDescription()}
           </SheetDescription>
         </SheetHeader>
 
