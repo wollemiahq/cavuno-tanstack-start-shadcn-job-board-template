@@ -1983,6 +1983,7 @@
   "talentFilters_permitCountryLabel": "Work authorization",
   "talentFilters_interestedRoleLabel": "Interested role",
   "talentFilters_applyLabel": "Apply filters",
+  "talentFilters_filterSheetDescription": "Refine candidate results by status, relocation, skills, and seniority.",
   "talentSave_jobLabel": "Save to job",
   "talentSave_saveLabel": "Save to job",
   "talentSave_savedLabel": "Saved",
