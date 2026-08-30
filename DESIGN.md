@@ -412,7 +412,7 @@ Props:
 
 ### BoardJobAlertConversionTracker — `src/components/board-job-alert-conversion-tracker.tsx`
 
-Fire `job_alert_subscribe` once when double opt-in confirms a new alert.
+Confirm is a no-op. `job_alert_subscribe` fires on subscribe-form create.
 
 Props:
 

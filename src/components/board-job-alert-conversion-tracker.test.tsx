@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, waitFor } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
@@ -42,20 +42,14 @@ describe('BoardJobAlertConversionTracker', () => {
     pushes = captureDataLayer();
   });
 
-  it('fires job_alert_subscribe only when confirmation succeeds', async () => {
+  it('does not fire on confirm (create already counted the subscribe)', () => {
     render(
       <BoardConversionAnalyticsProvider boardSlug="acme" analytics={analytics}>
         <BoardJobAlertConversionTracker status="confirmed" />
       </BoardConversionAnalyticsProvider>,
     );
 
-    await waitFor(() =>
-      expect(pushes).toContainEqual({
-        event: 'job_alert_subscribe',
-        board_slug: 'acme',
-        source: 'confirm',
-      }),
-    );
+    expect(pushes).toEqual([]);
   });
 
   it('does not fire for already_confirmed or failed statuses', () => {
