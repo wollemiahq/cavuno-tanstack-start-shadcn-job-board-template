@@ -43,7 +43,10 @@ export async function loadAcceptInvite(
     handleEmployerLoaderError: (
       error: Error,
       returnTo: string,
-      options?: { retried?: boolean; incomingSearch?: string | Record<string, unknown> },
+      options?: {
+        retried?: boolean;
+        incomingSearch?: string | Record<string, unknown>;
+      },
     ) => Promise<never>;
   } = { acceptCompanyInvite, getSeoBase, handleEmployerLoaderError },
 ) {

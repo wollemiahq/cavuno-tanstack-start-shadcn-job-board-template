@@ -120,8 +120,7 @@ describe('matches route — recommendations feature gate', () => {
 
   it('re-attaches cavuno_auth params when bouncing unverified visitors to verify-email', async () => {
     getRecommendedJobs.mockRejectedValue(new Error('EMAIL_UNVERIFIED'));
-    const href =
-      '/matches?cavuno_auth=login&cavuno_auth_method=password';
+    const href = '/matches?cavuno_auth=login&cavuno_auth_method=password';
     let outcome: unknown;
     try {
       await createMatchesLoader(dependencies)({ location: { href } });

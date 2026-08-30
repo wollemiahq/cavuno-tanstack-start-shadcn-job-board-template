@@ -114,9 +114,7 @@ describe('board-datalayer-events', () => {
 
   it('picks a complete auth conversion pair from search, href, or record', () => {
     expect(
-      pickAuthConversionSearch(
-        'cavuno_auth=login&cavuno_auth_method=password',
-      ),
+      pickAuthConversionSearch('cavuno_auth=login&cavuno_auth_method=password'),
     ).toEqual({
       cavuno_auth: 'login',
       cavuno_auth_method: 'password',

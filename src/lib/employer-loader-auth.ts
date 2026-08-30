@@ -2,11 +2,11 @@ import { isUnauthorized } from '@cavuno/board';
 import { isRedirect, redirect } from '@tanstack/react-router';
 
 import { refreshSession } from '../server/auth';
-
 import {
   mergeAuthConversionSearch,
   type AuthConversionSearchInput,
 } from './board-datalayer-events';
+
 import type { UrlSearchInput } from './pagination';
 
 export type RefreshSession = () => Promise<{ ok: boolean }>;
@@ -57,10 +57,7 @@ export async function handleEmployerLoaderErrorUsing<T>(
   if (error instanceof Error && error.message.includes('EMAIL_UNVERIFIED')) {
     throw redirect({
       to: '/auth/verify-email-required',
-      search: mergeAuthConversionSearch(
-        { returnTo },
-        options?.incomingSearch,
-      ),
+      search: mergeAuthConversionSearch({ returnTo }, options?.incomingSearch),
     });
   }
 

@@ -3,10 +3,10 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { AlertSignupForm } from './alert-signup-form';
+
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
 import type { BoardDataLayerEvent } from '@/lib/board-datalayer-events';
-
-import { AlertSignupForm } from './alert-signup-form';
 
 const analytics = {
   ga4MeasurementId: null,
@@ -116,7 +116,11 @@ describe('AlertSignupForm submission', () => {
       <BoardConversionAnalyticsProvider boardSlug="acme" analytics={analytics}>
         <AlertSignupForm
           language="en"
-          context={{ source: 'job_detail', jobId: 'job-1', jobSlug: 'designer' }}
+          context={{
+            source: 'job_detail',
+            jobId: 'job-1',
+            jobSlug: 'designer',
+          }}
           onSubscribe={vi.fn().mockResolvedValue({ status: 'submitted' })}
         />
       </BoardConversionAnalyticsProvider>,

@@ -67,7 +67,11 @@ export function createMatchesLoader(
   dependencies: MatchesLoaderDependencies = matchesLoaderDependencies,
 ) {
   return async (context?: {
-    location?: { href: string; search?: Record<string, unknown>; searchStr?: string };
+    location?: {
+      href: string;
+      search?: Record<string, unknown>;
+      searchStr?: string;
+    };
   }) => {
     const returnTo = candidateReturnTo(context?.location?.href ?? '/matches');
     // The context read gives the route a fast, clean 404 for a disabled

@@ -205,7 +205,9 @@ export function resolveBoardConversionAnalytics(
     gtmId,
     metaPixelId,
     linkedInPartnerId,
-    linkedInConversionSignUpId: sanitizeConversionId(linkedInConversionSignUpId),
+    linkedInConversionSignUpId: sanitizeConversionId(
+      linkedInConversionSignUpId,
+    ),
     linkedInConversionLoginId: sanitizeConversionId(linkedInConversionLoginId),
     linkedInConversionApplyClickId: sanitizeConversionId(
       linkedInConversionApplyClickId,

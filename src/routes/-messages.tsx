@@ -1,8 +1,7 @@
 import { isRedirect, notFound, redirect } from '@tanstack/react-router';
 
-import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
-
 import type { MessagesView } from './-messages-controller';
+import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
 import { getBlocked, getInbox } from '@/server/messaging';
 import { getBoardContext, getSeoBase } from '@/server/queries';
 
@@ -26,7 +25,11 @@ export function createMessagesLoader(
     location,
   }: {
     deps: { view: MessagesView };
-    location?: { search?: Record<string, unknown>; searchStr?: string; href?: string };
+    location?: {
+      search?: Record<string, unknown>;
+      searchStr?: string;
+      href?: string;
+    };
   }) => {
     // Messaging feature off ⇒ the surface does not exist on this board.
     // The gate read and the SEO base do not depend on each other, so they

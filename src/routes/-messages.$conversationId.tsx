@@ -1,7 +1,7 @@
 import { isRedirect, notFound, redirect } from '@tanstack/react-router';
 
-import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
+import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { getInbox, getThread } from '@/server/messaging';
 import { getBoardContext, getSeoBase } from '@/server/queries';
 
@@ -27,7 +27,11 @@ export function createConversationLoader(
   }: {
     params: { conversationId: string };
     deps: { view: 'inbox' | 'archived' };
-    location?: { search?: Record<string, unknown>; searchStr?: string; href?: string };
+    location?: {
+      search?: Record<string, unknown>;
+      searchStr?: string;
+      href?: string;
+    };
   }) => {
     // Messaging feature off ⇒ the surface does not exist on this board.
     const board = await dependencies.getBoardContext();
