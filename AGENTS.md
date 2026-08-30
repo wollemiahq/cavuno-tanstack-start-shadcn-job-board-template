@@ -140,13 +140,7 @@ rendering; never parse its locale-shaped formatted strings.
 Tests protect stable behavior, not incidental markup, classes, implementation details, or prose.
 Prefer observable roles/states, navigation, permissions, data flow, and errors.
 Never test only sentence/heading presence; derive catalog expectations from messages or fixtures.
-Component tests use neutral VM fixtures. SDK goldens own exact
-salary/date/location formatting — pin those strings there, once.
-Mapper tests pin wire values and presence/absence. They do not call the
-same SDK formatter the mapper calls (that is tautological) and they do
-not re-pin `$120k`-shaped output (the doctrine gate rejects it).
-App-owned copy and numeric contracts pin independent literals
-(`'Blog'`, `50`). See `CODING_STANDARDS.md`.
+Component tests use neutral VM fixtures. SDK goldens own exact salary/date/location formatting — pin those strings there, once. Mapper tests pin wire values and presence/absence; they do not call the same SDK formatter the mapper calls (tautological) or re-pin `$120k`-shaped output. App-owned copy and numeric contracts pin independent literals (`'Blog'`, `50`). See `CODING_STANDARDS.md`.
 Update tests with behavior; loosen brittle copy/visual failures. A green structural gate proves little.
 
 ## Dependencies
