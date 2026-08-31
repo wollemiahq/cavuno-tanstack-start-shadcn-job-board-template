@@ -146,9 +146,7 @@ describe('board-datalayer-events', () => {
     ).toEqual({});
     expect(
       pickAuthConversionSearch(
-        new URLSearchParams(
-          'cavuno_auth=signup&cavuno_auth_method=password',
-        ),
+        new URLSearchParams('cavuno_auth=signup&cavuno_auth_method=password'),
       ),
     ).toEqual({});
     expect(pickAuthConversionSearch(undefined)).toEqual({});
