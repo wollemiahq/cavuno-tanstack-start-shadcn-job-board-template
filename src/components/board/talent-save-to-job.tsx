@@ -101,6 +101,17 @@ export function TalentSaveToJob({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- alreadySaved toggling after a save must not wipe other selections
   }, [boundJobId, candidateBoardUserId]);
 
+  useEffect(() => {
+    if (!boundJobId || !alreadySaved) return;
+    const bound = destinations.find((destination) => destination.jobId === boundJobId);
+    if (!bound) return;
+    setSelected((current) =>
+      current.some((destination) => destination.jobId === boundJobId)
+        ? current
+        : [...current, bound],
+    );
+  }, [alreadySaved, boundJobId, destinations]);
+
   if (destinations.length === 0) return null;
 
   function saveTo(job: string) {

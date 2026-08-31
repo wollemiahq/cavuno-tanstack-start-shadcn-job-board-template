@@ -104,6 +104,21 @@ describe('TalentFilters', () => {
     );
   });
 
+  it('keeps a job-bound interestedRole when Reset clears status', async () => {
+    const { router } = renderFilters(
+      '?interestedRole=Robotics%20Engineer&jobSearchStatus=actively_looking',
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Reset' }));
+
+    await waitFor(() =>
+      expect(router.state.location.search).toMatchObject({
+        interestedRole: 'Robotics Engineer',
+      }),
+    );
+    expect(router.state.location.search).not.toHaveProperty('jobSearchStatus');
+  });
+
   it('writes sort to the URL immediately', async () => {
     const { router } = renderFilters();
 

@@ -116,6 +116,9 @@ export function TalentSearchPage({
   const viewingSourced = Boolean(search.sourced);
   const boundJobId = selectedList?.jobId ?? search.sourced;
   useEffect(() => {
+    setSavedIds(new Set());
+  }, [boundJobId]);
+  useEffect(() => {
     const membership = (employerCompanies ?? []).find(
       (row) => row.status === "approved" && row.company.slug,
     );

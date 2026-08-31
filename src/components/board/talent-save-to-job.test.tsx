@@ -119,6 +119,34 @@ describe('TalentSaveToJob', () => {
     expect(saveSourcedCandidate).not.toHaveBeenCalled();
   });
 
+  it('fills Shortlisted when alreadySaved arrives after mount', () => {
+    const { rerender } = render(
+      <TalentSaveToJob
+        slug="acme"
+        jobs={jobs}
+        lists={lists}
+        candidateBoardUserId="bu_ada"
+        boundJobId="job_b"
+      />,
+    );
+
+    expect(saveTrigger('Shortlist')).not.toBeDisabled();
+
+    rerender(
+      <TalentSaveToJob
+        slug="acme"
+        jobs={jobs}
+        lists={lists}
+        candidateBoardUserId="bu_ada"
+        boundJobId="job_b"
+        alreadySaved
+      />,
+    );
+
+    expect(saveTrigger('Shortlisted')).not.toBeDisabled();
+    expect(saveSourcedCandidate).not.toHaveBeenCalled();
+  });
+
   it('does not one-click save on a bound list', async () => {
     vi.mocked(saveSourcedCandidate).mockResolvedValue({
       ok: true,

@@ -173,11 +173,6 @@ export function TalentFilters({ search, lists }: { search: TalentSearch; lists?:
     commit({
       jobSearchStatus: undefined,
       openToRelocate: undefined,
-      skill: undefined,
-      languages: undefined,
-      seniority: undefined,
-      permitCountry: undefined,
-      interestedRole: undefined,
     });
 
   const openSheet = () => {
