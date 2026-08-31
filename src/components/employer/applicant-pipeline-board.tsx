@@ -35,7 +35,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Dialog,
@@ -194,42 +193,9 @@ export function ApplicantPipelineBoard({
         <div
           className="grid min-h-(--detail-pane-min-h) items-stretch gap-3"
           style={{
-            gridTemplateColumns: `minmax(min(16rem, calc(100vw - 3rem)), 1fr) repeat(${Math.max(stages.length, 1)}, minmax(min(18rem, calc(100vw - 3rem)), 1fr))`,
+            gridTemplateColumns: `repeat(${Math.max(stages.length, 1)}, minmax(min(18rem, calc(100vw - 3rem)), 1fr))`,
           }}
         >
-          <section className="border-border/60 bg-muted/20 flex min-h-[24rem] flex-col rounded-2xl border">
-            <div className="flex items-center gap-2 px-3 py-2.5">
-              <h3 className="text-foreground truncate text-sm font-medium">
-                {m.employerApplicants_sourcedHeading()}
-              </h3>
-              <span className="text-muted-foreground text-sm tabular-nums">
-                {sourced.length}
-              </span>
-            </div>
-            <ul className="flex flex-1 flex-col gap-2 p-2">
-              {sourced.map((row) => (
-                <li
-                  key={row.id}
-                  draggable
-                  onDragStart={(event) => {
-                    event.dataTransfer.setData(SOURCED_DRAG_TYPE, row.id);
-                    event.dataTransfer.effectAllowed = 'move';
-                  }}
-                  className="bg-background rounded-xl border p-3 text-sm"
-                >
-                  <p className="font-medium">
-                    {row.candidate.displayName ??
-                      m.employerApplicants_unknownCandidate()}
-                  </p>
-                  {row.candidate.headline ? (
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      {row.candidate.headline}
-                    </p>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          </section>
           {stages.map((stage) => (
             <StageColumn
               key={stage.id}
@@ -429,11 +395,7 @@ function StageColumn({
         <span className="text-muted-foreground text-sm tabular-nums">
           {cards.length}
         </span>
-        {stage.isProtected ? (
-          <Badge variant="secondary" className="ms-auto">
-            {m.employerApplicants_systemBadge()}
-          </Badge>
-        ) : (
+        {stage.isProtected ? null : (
           <DropdownMenu>
             <DropdownMenuTrigger
               render={

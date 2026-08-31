@@ -7,7 +7,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦éṽéŕý {countLabel} ɱóñţĥ⟧",
         "countPlural=*": "⟦éṽéŕý {countLabel} ɱóñţĥš⟧"
@@ -21,7 +23,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦éṽéŕý {countLabel} ýéáŕ⟧",
         "countPlural=*": "⟦éṽéŕý {countLabel} ýéáŕš⟧"
@@ -77,7 +81,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦1 ĵóƀ ɱáţçĥéš ýóúŕ þŕóƒíĺé áñð þŕéƒéŕéñçéš.⟧",
         "countPlural=*": "⟦{countLabel} ĵóƀš ɱáţçĥ ýóúŕ þŕóƒíĺé áñð þŕéƒéŕéñçéš.⟧"
@@ -96,7 +102,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦Ýóú ĥáṽé šáṽéð 1 ĵóƀ.⟧",
         "countPlural=*": "⟦Ýóú ĥáṽé šáṽéð {countLabel} ĵóƀš.⟧"
@@ -476,7 +484,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} óþéñ ĵóƀ⟧",
         "countPlural=*": "⟦{countLabel} óþéñ ĵóƀš⟧"
@@ -491,7 +501,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} Óþéñ ĵóƀ⟧",
         "countPlural=*": "⟦{countLabel} Óþéñ ĵóƀš⟧"
@@ -507,7 +519,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦Ṽíéŵ áĺĺ {countLabel} ĵóƀ⟧",
         "countPlural=*": "⟦Ṽíéŵ áĺĺ {countLabel} ĵóƀš⟧"
@@ -558,7 +572,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} çóɱþáñý⟧",
         "countPlural=*": "⟦{countLabel} çóɱþáñíéš⟧"
@@ -598,7 +614,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} çáñðíðáţé⟧",
         "countPlural=*": "⟦{countLabel} çáñðíðáţéš⟧"
@@ -612,7 +630,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} çóɱþáñý⟧",
         "countPlural=*": "⟦{countLabel} çóɱþáñíéš⟧"
@@ -626,7 +646,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} ĵóƀ⟧",
         "countPlural=*": "⟦{countLabel} ĵóƀš⟧"
@@ -640,7 +662,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} þóšţ⟧",
         "countPlural=*": "⟦{countLabel} þóšţš⟧"
@@ -700,7 +724,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} áþþĺíçáñţ⟧",
         "countPlural=*": "⟦{countLabel} áþþĺíçáñţš⟧"
@@ -821,7 +847,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} óţĥéŕ ɱéɱƀéŕ⟧",
         "countPlural=*": "⟦{countLabel} óţĥéŕ ɱéɱƀéŕš⟧"
@@ -860,7 +888,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦Ýóú ĥáṽé 1 áçţíṽé ĵóƀ.⟧",
         "countPlural=*": "⟦Ýóú ĥáṽé {countLabel} áçţíṽé ĵóƀš.⟧"
@@ -899,7 +929,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} áçţíṽé ĵóƀ⟧",
         "countPlural=*": "⟦{countLabel} áçţíṽé ĵóƀš⟧"
@@ -913,7 +945,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} ƒéáţúŕéð⟧",
         "countPlural=*": "⟦{countLabel} ƒéáţúŕéð⟧"
@@ -928,7 +962,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} ɱéššáğé⟧",
         "countPlural=*": "⟦{countLabel} ɱéššáğéš⟧"
@@ -942,7 +978,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} þŕóƒíĺé úñĺóçķ⟧",
         "countPlural=*": "⟦{countLabel} þŕóƒíĺé úñĺóçķš⟧"
@@ -977,7 +1015,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦Ýóú ĥáṽé 1 ţéáɱ ɱéɱƀéŕ.⟧",
         "countPlural=*": "⟦Ýóú ĥáṽé {countLabel} ţéáɱ ɱéɱƀéŕš.⟧"
@@ -1242,7 +1282,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} ĵóƀ⟧",
         "countPlural=*": "⟦{countLabel} ĵóƀš⟧"
@@ -1432,7 +1474,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦Íñçĺúðéš 1 ƒéáţúŕéð þóšţ⟧",
         "countPlural=*": "⟦Íñçĺúðéš {countLabel} ƒéáţúŕéð þóšţš⟧"
@@ -1448,7 +1492,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦1 áçţíṽé ĵóƀ áţ á ţíɱé⟧",
         "countPlural=*": "⟦Úþ ţó {countLabel} áçţíṽé ĵóƀš⟧"
@@ -1691,7 +1737,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{skill} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñ.⟧",
         "countPlural=*": "⟦{skill} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñš.⟧"
@@ -1717,7 +1765,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{title} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñ.⟧",
         "countPlural=*": "⟦{title} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñš.⟧"
@@ -1743,7 +1793,9 @@
         "input jobCountLabel",
         "local jobCountPlural = jobCount: plural"
       ],
-      "selectors": ["jobCountPlural"],
+      "selectors": [
+        "jobCountPlural"
+      ],
       "match": {
         "jobCountPlural=one": "⟦{jobCountLabel} ĵóƀ þóšţíñğ⟧",
         "jobCountPlural=*": "⟦{jobCountLabel} ĵóƀ þóšţíñğš⟧"
@@ -1922,7 +1974,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} úñĺóçķ ŕéɱáíñíñğ.⟧",
         "countPlural=*": "⟦{countLabel} úñĺóçķš ŕéɱáíñíñğ.⟧"
@@ -1983,13 +2037,13 @@
   "talentFilters_permitCountryLabel": "⟦Ŵóŕķ áúţĥóŕížáţíóñ⟧",
   "talentFilters_interestedRoleLabel": "⟦Íñţéŕéšţéð ŕóĺé⟧",
   "talentFilters_applyLabel": "⟦Áþþĺý ƒíĺţéŕš⟧",
-  "talentFilters_filterSheetDescription": "⟦Ŕéƒíñé çáñðíðáţé ŕéšúĺţš ƀý šţáţúš, ŕéĺóçáţíóñ, šķíĺĺš, áñð šéñíóŕíţý.⟧",
-  "talentLists_triggerLabel": "⟦Ĺíšţš⟧",
+  "talentFilters_filterSheetDescription": "⟦Ŕéƒíñé çáñðíðáţé ŕéšúĺţš ƀý šţáţúš áñð ŕéĺóçáţíóñ.⟧",
+  "talentLists_triggerLabel": "⟦Šáṽéð šéáŕçĥéš⟧",
   "talentLists_allCandidates": "⟦Áĺĺ çáñðíðáţéš⟧",
   "talentLists_listsHeading": "⟦Ĺíšţš⟧",
   "talentLists_sourcedHeading": "⟦Šóúŕçéð⟧",
-  "talentLists_newList": "⟦Ñéŵ ĺíšţ…⟧",
-  "talentLists_createTitle": "⟦Çŕéáţé ĺíšţ⟧",
+  "talentLists_newList": "⟦Ñéŵ šáṽéð šéáŕçĥ…⟧",
+  "talentLists_createTitle": "⟦Çŕéáţé šáṽéð šéáŕçĥ⟧",
   "talentLists_createDescription": "⟦Šáṽé ţĥíš šéáŕçĥ, óŕ šţáŕţ ƒŕóɱ á ĵóƀ.⟧",
   "talentLists_nameLabel": "⟦Ñáɱé⟧",
   "talentLists_namePlaceholder": "⟦Ɓéŕĺíñ éñğíñééŕš…⟧",
@@ -1997,12 +2051,14 @@
   "talentLists_kindBlank": "⟦Çúŕŕéñţ ƒíĺţéŕš⟧",
   "talentLists_kindJob": "⟦Á ĵóƀ⟧",
   "talentLists_jobLabel": "⟦Ĵóƀ⟧",
-  "talentLists_createSubmit": "⟦Çŕéáţé ĺíšţ⟧",
+  "talentLists_createSubmit": "⟦Çŕéáţé šáṽéð šéáŕçĥ⟧",
   "talentLists_nameRequired": "⟦Éñţéŕ á ñáɱé.⟧",
   "talentLists_jobRequired": "⟦Çĥóóšé á ĵóƀ.⟧",
-  "talentSave_jobLabel": "⟦Šáṽé ţó ĵóƀ⟧",
-  "talentSave_saveLabel": "⟦Šáṽé ţó ĵóƀ⟧",
-  "talentSave_savedLabel": "⟦Šáṽéð⟧",
+  "talentSave_jobLabel": "⟦Šĥóŕţĺíšţ ƒóŕ⟧",
+  "talentSave_saveLabel": "⟦Šĥóŕţĺíšţ⟧",
+  "talentSave_savedLabel": "⟦Šĥóŕţĺíšţéð⟧",
   "employerApplicants_sourcedHeading": "⟦Šóúŕçéð⟧",
-  "employerApplicants_unknownCandidate": "⟦Çáñðíðáţé⟧"
+  "employerApplicants_unknownCandidate": "⟦Çáñðíðáţé⟧",
+  "talentLists_linkJobEmpty": "⟦Ĺíñķ ţó á ĵóƀ⟧",
+  "talentLists_linkJobNone": "⟦Ñóţ ĺíñķéð⟧"
 }

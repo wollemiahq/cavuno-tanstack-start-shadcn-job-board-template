@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { Bookmark, BookmarkCheck, LoaderCircle } from 'lucide-react';
+import { Bookmark, LoaderCircle } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/ui/button';
 import { reconcileCommittedAction } from '@/lib/action-toast';
@@ -59,18 +59,16 @@ export function SaveJobButton({
   ) {
     if (!iconOnly) return label;
 
-    const Icon =
-      controlState === 'saving'
-        ? LoaderCircle
-        : controlState === 'saved'
-          ? BookmarkCheck
-          : Bookmark;
+    const Icon = controlState === 'saving' ? LoaderCircle : Bookmark;
 
     return (
       <>
         <Icon
           aria-hidden="true"
-          className={cn(controlState === 'saving' && 'animate-spin')}
+          className={cn(
+            controlState === 'saving' && 'animate-spin',
+            controlState === 'saved' && 'fill-current',
+          )}
         />
         <span className="sr-only">{label}</span>
       </>

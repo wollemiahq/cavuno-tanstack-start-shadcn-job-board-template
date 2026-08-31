@@ -10,13 +10,17 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  TalentSaveToJob,
-  type TalentSaveToJobDependencies,
-} from './talent-save-to-job';
+import { TalentSaveToJob } from './talent-save-to-job';
+
+import { saveSourcedCandidate } from '@/server/employers';
+
+vi.mock('@/server/employers', () => ({
+  saveSourcedCandidate: vi.fn(),
+}));
 
 afterEach(() => {
   cleanup();
+  vi.mocked(saveSourcedCandidate).mockReset();
 });
 
 const jobs = [
@@ -24,83 +28,177 @@ const jobs = [
   { id: 'job_b', title: 'Second role' },
 ];
 
-function renderSaveToJob(
-  props: {
-    jobs?: Array<{ id: string; title: string }>;
-    boundJobId?: string;
-    alreadySaved?: boolean;
-  } = {},
-  saveSourcedCandidate = vi.fn(),
-) {
-  const dependencies: TalentSaveToJobDependencies = { saveSourcedCandidate };
-  return {
-    saveSourcedCandidate,
-    ...render(
-      <TalentSaveToJob
-        slug="acme"
-        jobs={jobs}
-        candidateBoardUserId="bu_ada"
-        dependencies={dependencies}
-        {...props}
-      />,
-    ),
-  };
+const lists = [
+  { id: 'tl_a', name: 'Backend list', jobId: 'job_a' },
+  { id: 'tl_b', name: 'Frontend list', jobId: 'job_b' },
+];
+
+function saveTrigger(name: 'Shortlist' | 'Shortlisted' = 'Shortlist') {
+  return screen.getByRole('combobox', { name });
+}
+
+async function openSavePicker(name: 'Shortlist' | 'Shortlisted' = 'Shortlist') {
+  const trigger = saveTrigger(name);
+  fireEvent.mouseDown(trigger);
+  fireEvent.click(trigger);
+}
+
+async function pickOption(name: string) {
+  const option = await screen.findByRole('option', { name });
+  fireEvent.pointerDown(option, { pointerType: 'mouse' });
+  fireEvent.click(option);
 }
 
 describe('TalentSaveToJob', () => {
-  it('asks which job when the directory is unbound', async () => {
-    const saveSourcedCandidate = vi.fn().mockResolvedValueOnce({
+  it('keeps the Shortlist button and lets you pick more than one saved search', async () => {
+    vi.mocked(saveSourcedCandidate).mockResolvedValue({
       ok: true,
       data: { id: 'src_1', object: 'sourced_candidate', created: true },
     });
 
-    renderSaveToJob({}, saveSourcedCandidate);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Save to job' }));
-    fireEvent.click(
-      await screen.findByRole('menuitem', { name: 'Second role' }),
+    render(
+      <TalentSaveToJob
+        slug="acme"
+        jobs={jobs}
+        lists={lists}
+        candidateBoardUserId="bu_ada"
+      />,
     );
+
+    expect(screen.queryByText('Shortlist for')).toBeNull();
+    await openSavePicker();
+    await pickOption('Backend');
+    await pickOption('Frontend');
 
     await waitFor(() =>
       expect(saveSourcedCandidate).toHaveBeenCalledWith({
         data: {
           slug: 'acme',
-          job: 'job_b',
+          job: 'job_a',
           candidateBoardUserId: 'bu_ada',
         },
       }),
     );
-    expect(await screen.findByRole('button', { name: 'Saved' })).toBeDisabled();
+    expect(saveSourcedCandidate).toHaveBeenCalledWith({
+      data: {
+        slug: 'acme',
+        job: 'job_b',
+        candidateBoardUserId: 'bu_ada',
+      },
+    });
+    expect(saveTrigger('Shortlisted')).not.toBeDisabled();
   });
 
-  it('asks which job when the company has only one published job', () => {
-    const { saveSourcedCandidate } = renderSaveToJob({
-      jobs: [{ id: 'job_a', title: 'First role' }],
-    });
+  it('asks which destination when the company has only one published job', async () => {
+    render(
+      <TalentSaveToJob
+        slug="acme"
+        jobs={[{ id: 'job_a', title: 'First role' }]}
+        candidateBoardUserId="bu_ada"
+      />,
+    );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save to job' }));
-    expect(
-      screen.getByRole('menuitem', { name: 'First role' }),
-    ).toBeInTheDocument();
+    await openSavePicker();
+    expect(await screen.findByRole('option', { name: 'First role' })).toBeInTheDocument();
     expect(saveSourcedCandidate).not.toHaveBeenCalled();
   });
 
-  it('saves in one click on a bound list and can start already saved', () => {
-    renderSaveToJob({ boundJobId: 'job_b', alreadySaved: true });
+  it('shows Shortlisted when already saved without locking the picker', () => {
+    render(
+      <TalentSaveToJob
+        slug="acme"
+        jobs={jobs}
+        lists={lists}
+        candidateBoardUserId="bu_ada"
+        boundJobId="job_b"
+        alreadySaved
+      />,
+    );
 
-    expect(screen.queryByRole('menuitem')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Saved' })).toBeDisabled();
+    expect(saveTrigger('Shortlisted')).not.toBeDisabled();
+    expect(saveSourcedCandidate).not.toHaveBeenCalled();
   });
 
-  it('posts sourced membership for the bound job', async () => {
-    const saveSourcedCandidate = vi.fn().mockResolvedValueOnce({
+  it('fills Shortlisted when alreadySaved arrives after mount', () => {
+    const { rerender } = render(
+      <TalentSaveToJob
+        slug="acme"
+        jobs={jobs}
+        lists={lists}
+        candidateBoardUserId="bu_ada"
+        boundJobId="job_b"
+      />,
+    );
+
+    expect(saveTrigger('Shortlist')).not.toBeDisabled();
+
+    rerender(
+      <TalentSaveToJob
+        slug="acme"
+        jobs={jobs}
+        lists={lists}
+        candidateBoardUserId="bu_ada"
+        boundJobId="job_b"
+        alreadySaved
+      />,
+    );
+
+    expect(saveTrigger('Shortlisted')).not.toBeDisabled();
+    expect(saveSourcedCandidate).not.toHaveBeenCalled();
+  });
+
+  it('does not report a save when the dest is not the bound job', async () => {
+    const onSaved = vi.fn();
+    vi.mocked(saveSourcedCandidate).mockResolvedValue({
       ok: true,
       data: { id: 'src_1', object: 'sourced_candidate', created: true },
     });
 
-    renderSaveToJob({ boundJobId: 'job_b' }, saveSourcedCandidate);
+    render(
+      <TalentSaveToJob
+        slug="acme"
+        jobs={jobs}
+        lists={lists}
+        candidateBoardUserId="bu_ada"
+        boundJobId="job_b"
+        onSaved={onSaved}
+      />,
+    );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save to job' }));
+    await openSavePicker();
+    await pickOption('Backend');
+
+    await waitFor(() =>
+      expect(saveSourcedCandidate).toHaveBeenCalledWith({
+        data: {
+          slug: 'acme',
+          job: 'job_a',
+          candidateBoardUserId: 'bu_ada',
+        },
+      }),
+    );
+    expect(onSaved).not.toHaveBeenCalled();
+  });
+
+  it('does not one-click save on a bound list', async () => {
+    vi.mocked(saveSourcedCandidate).mockResolvedValue({
+      ok: true,
+      data: { id: 'src_1', object: 'sourced_candidate', created: true },
+    });
+
+    render(
+      <TalentSaveToJob
+        slug="acme"
+        jobs={jobs}
+        lists={lists}
+        candidateBoardUserId="bu_ada"
+        boundJobId="job_b"
+      />,
+    );
+
+    await openSavePicker();
+    expect(saveSourcedCandidate).not.toHaveBeenCalled();
+    await pickOption('Frontend');
 
     await waitFor(() =>
       expect(saveSourcedCandidate).toHaveBeenCalledWith({
@@ -111,6 +209,5 @@ describe('TalentSaveToJob', () => {
         },
       }),
     );
-    expect(await screen.findByRole('button', { name: 'Saved' })).toBeDisabled();
   });
 });

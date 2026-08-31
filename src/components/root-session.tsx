@@ -10,7 +10,9 @@ import {
   type ReactNode,
 } from 'react';
 
+import { listCompanies } from '../server/employers';
 import {
+  getRootSessionEntitlements,
   getRootSessionShellData,
   resolveRootHasAccessGrant,
 } from '../server/root-shell';
@@ -21,7 +23,7 @@ import type { BoardUser, CompanyMembership } from '@cavuno/board';
 const EMPTY_TALENT_ACCESS: TalentAccessGrant = EMPTY_GRANT;
 
 type RootPreview = Awaited<
-  ReturnType<typeof getRootSessionShellData>
+  ReturnType<typeof getRootSessionEntitlements>
 >['preview'];
 
 /** Default preview shape while session shell has not resolved yet. */
@@ -44,7 +46,7 @@ export type RootSessionValue = {
   talentAccess: TalentAccessGrant;
   preview:
     | typeof EMPTY_ROOT_PREVIEW
-    | Awaited<ReturnType<typeof getRootSessionShellData>>['preview'];
+    | Awaited<ReturnType<typeof getRootSessionEntitlements>>['preview'];
   /** True after the first client session fetch settles (success or failure). */
   ready: boolean;
 };
@@ -88,21 +90,39 @@ export function RootSessionProvider({
     void getRootSessionShellData()
       .then((data) => {
         if (cancelled) return;
-        setSession({
+        setSession((current) => ({
+          ...current,
           user: data.user,
-          employerCompanies: data.employerCompanies,
+          ready: true,
+        }));
+        if (data.user?.emailVerified) {
+          void listCompanies()
+            .then((result) => {
+              if (cancelled) return;
+              setSession((current) => ({
+                ...current,
+                employerCompanies: result.data,
+              }));
+            })
+            .catch(() => undefined);
+        }
+        return getRootSessionEntitlements();
+      })
+      .then((data) => {
+        if (cancelled || !data) return;
+        setSession((current) => ({
+          ...current,
           hasAccessGrant: resolveRootHasAccessGrant(
             candidatePaywall,
             data.hasGrant,
           ),
           talentAccess: data.talentAccess,
           preview: data.preview,
-          ready: true,
-        });
+        }));
       })
       .catch(() => {
         if (cancelled) return;
-        setSession((prev) => ({ ...prev, ready: true }));
+        setSession((current) => ({ ...current, ready: true }));
       });
     return () => {
       cancelled = true;

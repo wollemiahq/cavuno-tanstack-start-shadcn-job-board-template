@@ -70,15 +70,53 @@ describe('TalentFilters', () => {
     expect(screen.queryByLabelText('Search')).toBeNull();
   });
 
-  it('describes the All-filters sheet as candidate filters, not job results', async () => {
+  it('describes the Filters sheet as candidate filters, not job results', async () => {
     renderFilters();
 
-    fireEvent.click(await screen.findByRole('button', { name: 'All filters' }));
-    const sheet = screen.getByRole('dialog', { name: 'All filters' });
+    fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
+    const sheet = screen.getByRole('dialog', { name: 'Filters' });
     expect(sheet).toHaveTextContent(
-      'Refine candidate results by status, relocation, skills, and seniority.',
+      'Refine candidate results by status and relocation.',
     );
+    expect(sheet).not.toHaveTextContent('Skill');
+    expect(sheet).not.toHaveTextContent('Languages');
+    expect(sheet).not.toHaveTextContent('Seniority');
+    expect(sheet).not.toHaveTextContent('Work authorization');
+    expect(sheet).not.toHaveTextContent('Interested role');
     expect(sheet).not.toHaveTextContent('Refine job results');
+  });
+
+  it('keeps a job-bound interestedRole when status changes', async () => {
+    const { router } = renderFilters('?interestedRole=Robotics%20Engineer');
+
+    fireEvent.click(
+      await screen.findByRole('combobox', { name: 'Job search status' }),
+    );
+    const active = screen.getByRole('option', { name: 'Actively looking' });
+    fireEvent.pointerDown(active, { pointerType: 'mouse' });
+    fireEvent.click(active);
+
+    await waitFor(() =>
+      expect(router.state.location.search).toMatchObject({
+        interestedRole: 'Robotics Engineer',
+        jobSearchStatus: 'actively_looking',
+      }),
+    );
+  });
+
+  it('keeps a job-bound interestedRole when Reset clears status', async () => {
+    const { router } = renderFilters(
+      '?interestedRole=Robotics%20Engineer&jobSearchStatus=actively_looking',
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Reset' }));
+
+    await waitFor(() =>
+      expect(router.state.location.search).toMatchObject({
+        interestedRole: 'Robotics Engineer',
+      }),
+    );
+    expect(router.state.location.search).not.toHaveProperty('jobSearchStatus');
   });
 
   it('writes sort to the URL immediately', async () => {

@@ -21,6 +21,7 @@ import { m } from '@/paraglide/messages';
 export type StartTalentConversation = (input: {
   candidateHandle: string;
   body: string;
+  job?: string;
 }) => Promise<
   | { ok: true; data: { conversationId: string } }
   | { ok: false; code: string; message: string }
