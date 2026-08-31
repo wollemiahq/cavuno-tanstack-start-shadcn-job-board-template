@@ -4,13 +4,13 @@ import { formatDate } from '@cavuno/board/format';
 import { Await, Link } from '@tanstack/react-router';
 import { MoreHorizontalIcon, PlusIcon } from 'lucide-react';
 
+import { incomingAuthSearch } from '../lib/board-datalayer-events';
 import {
   employerJobStatusBadgeVariant,
   employerJobStatusLabel,
   employerJobTypeLabel,
   isEmployerJobExpired,
 } from '../lib/employer-job-labels';
-import { incomingAuthSearch } from '../lib/board-datalayer-events';
 import {
   handleEmployerLoaderError,
   isReauthRetry,

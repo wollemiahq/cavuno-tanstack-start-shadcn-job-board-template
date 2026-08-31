@@ -71,10 +71,7 @@ export function TalentSaveToJob({
     const Icon = pending ? LoaderCircle : filled ? BookmarkCheck : Bookmark;
     return (
       <>
-        <Icon
-          aria-hidden="true"
-          className={cn(pending && 'animate-spin')}
-        />
+        <Icon aria-hidden="true" className={cn(pending && 'animate-spin')} />
         <span className="sr-only">{label}</span>
       </>
     );

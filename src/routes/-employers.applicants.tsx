@@ -5,8 +5,8 @@ import {
   ApplicantPipelineBoard,
   type PipelineActions,
 } from '../components/employer/applicant-pipeline-board';
-import { employerJobStatusLabel } from '../lib/employer-job-labels';
 import { incomingAuthSearch } from '../lib/board-datalayer-events';
+import { employerJobStatusLabel } from '../lib/employer-job-labels';
 import {
   handleEmployerLoaderError,
   isReauthRetry,

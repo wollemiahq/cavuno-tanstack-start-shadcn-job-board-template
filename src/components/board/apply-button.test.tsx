@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import type { ReactElement } from 'react';
 
+import { analytics as boardAnalytics } from '@cavuno/board/analytics';
 import {
   cleanup,
   fireEvent,
@@ -14,7 +15,6 @@ import { m } from '../../paraglide/messages';
 import { ApplyButton, type ApplyButtonDependencies } from './apply-button';
 
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
-import { analytics as boardAnalytics } from '@cavuno/board/analytics';
 import type { BoardDataLayerEvent } from '@/lib/board-datalayer-events';
 
 function captureDataLayer(): BoardDataLayerEvent[] {

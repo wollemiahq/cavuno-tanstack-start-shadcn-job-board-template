@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   cloneElement,
@@ -7,36 +7,38 @@ import {
   useState,
   type ReactElement,
   type ReactNode,
-} from "react";
+} from 'react';
 
-import { useLocation } from "@tanstack/react-router";
-import type { TalentDirectoryEntry } from "@cavuno/board";
-import { Users } from "lucide-react";
+import { useLocation } from '@tanstack/react-router';
+import { Users } from 'lucide-react';
 
-import { m } from "../../paraglide/messages";
+import { m } from '../../paraglide/messages';
 
-import { getTalentSearchLabels } from "@/board/talent-search-labels";
+import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import {
   talentCardSelectionKey,
   toTalentCardVM,
   type TalentCardVM,
-} from "@/board/talent-view-model";
-import { useListingAdRails, type AdPlacement } from "@/components/board/listing-ad-rail";
-import { ListingPagination } from "@/components/board/listing-pagination";
-import { TalentFilters } from "@/components/board/talent-filters";
-import { TalentListsPicker } from "@/components/board/talent-lists-picker";
-import { TalentSaveToJob } from "@/components/board/talent-save-to-job";
-import { TalentSearchResult } from "@/components/board/talent-search-result";
-import { Box } from "@/components/layout/box";
-import { Container } from "@/components/layout/container";
-import { Page } from "@/components/layout/page";
-import { useRootSession } from "@/components/root-session";
+} from '@/board/talent-view-model';
+import {
+  useListingAdRails,
+  type AdPlacement,
+} from '@/components/board/listing-ad-rail';
+import { ListingPagination } from '@/components/board/listing-pagination';
+import { TalentFilters } from '@/components/board/talent-filters';
+import { TalentListsPicker } from '@/components/board/talent-lists-picker';
+import { TalentSaveToJob } from '@/components/board/talent-save-to-job';
+import { TalentSearchResult } from '@/components/board/talent-search-result';
+import { Box } from '@/components/layout/box';
+import { Container } from '@/components/layout/container';
+import { Page } from '@/components/layout/page';
+import { useRootSession } from '@/components/root-session';
 import {
   SearchResultDetail,
   SearchResultsLayout,
   SearchResultsList,
-} from "@/components/search-results/search-results";
-import { buttonVariants } from "@/components/ui/button";
+} from '@/components/search-results/search-results';
+import { buttonVariants } from '@/components/ui/button';
 import {
   Empty,
   EmptyContent,
@@ -44,18 +46,19 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty";
-import { useSearchSelection } from "@/hooks/use-search-selection";
-import { ADS_OFF, type BoardAdsConfig } from "@/lib/board-ads";
-import { listingPageHref } from "@/lib/pagination";
-import type { TalentSearch } from "@/lib/talent-search";
-import { talentSearchToListFilters } from "@/lib/talent-search";
+} from '@/components/ui/empty';
+import { useSearchSelection } from '@/hooks/use-search-selection';
+import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
+import { listingPageHref } from '@/lib/pagination';
+import type { TalentSearch } from '@/lib/talent-search';
+import { talentSearchToListFilters } from '@/lib/talent-search';
 import {
   listEmployerJobs,
   listSourcedCandidates,
   listTalentLists,
   type TalentListRecord,
-} from "@/server/employers";
+} from '@/server/employers';
+import type { TalentDirectoryEntry } from '@cavuno/board';
 
 export function TalentSearchPage({
   candidates,
@@ -115,16 +118,19 @@ export function TalentSearchPage({
   const boundJobId = selectedList?.jobId ?? search.sourced;
   useEffect(() => {
     const membership = (employerCompanies ?? []).find(
-      (row) => row.status === "approved" && row.company.slug,
+      (row) => row.status === 'approved' && row.company.slug,
     );
     const slug = membership?.company.slug;
     if (!slug) return;
     let cancelled = false;
-    void Promise.all([listEmployerJobs({ data: { slug } }), listTalentLists({ data: { slug } })])
+    void Promise.all([
+      listEmployerJobs({ data: { slug } }),
+      listTalentLists({ data: { slug } }),
+    ])
       .then(([jobsResult, listsResult]) => {
         if (cancelled) return;
         const jobs = (jobsResult.data ?? [])
-          .filter((job) => job.status === "published")
+          .filter((job) => job.status === 'published')
           .map((job) => ({ id: job.id, title: job.title }));
         setWorkspace({ slug, jobs });
         setLists(listsResult.data ?? []);
@@ -197,7 +203,7 @@ export function TalentSearchPage({
   }
   function saveControl(
     candidateBoardUserId: string,
-    presentation: "icon" | "default",
+    presentation: 'icon' | 'default',
   ) {
     if (!workspace || workspace.jobs.length === 0) return null;
     return (
@@ -208,7 +214,8 @@ export function TalentSearchPage({
         candidateBoardUserId={candidateBoardUserId}
         boundJobId={boundJobId}
         alreadySaved={
-          sourcedIds.has(candidateBoardUserId) || savedIds.has(candidateBoardUserId)
+          sourcedIds.has(candidateBoardUserId) ||
+          savedIds.has(candidateBoardUserId)
         }
         onSaved={() => markSaved(candidateBoardUserId)}
       />
@@ -218,11 +225,14 @@ export function TalentSearchPage({
     (vm) => talentCardSelectionKey(vm) === selectedTalent,
   );
   let detailWithSave = detail;
-  const detailSave = selectedVm ? saveControl(selectedVm.id, "default") : null;
-  if (detailSave && isValidElement(detail) && typeof detail.type !== "string") {
-    detailWithSave = cloneElement(detail as ReactElement<{ saveSlot?: ReactNode }>, {
-      saveSlot: detailSave,
-    });
+  const detailSave = selectedVm ? saveControl(selectedVm.id, 'default') : null;
+  if (detailSave && isValidElement(detail) && typeof detail.type !== 'string') {
+    detailWithSave = cloneElement(
+      detail as ReactElement<{ saveSlot?: ReactNode }>,
+      {
+        saveSlot: detailSave,
+      },
+    );
   }
   const selectableIds = candidateVms.flatMap((vm) => {
     const key = talentCardSelectionKey(vm);
@@ -240,12 +250,18 @@ export function TalentSearchPage({
   // range — the same honest range as Jobs and the companies browse index.
   const resultCount = viewingSourced ? candidateVms.length : count;
   const resultPage = viewingSourced ? 1 : page;
-  const resultPageSize = viewingSourced ? Math.max(candidateVms.length, 1) : pageSize;
+  const resultPageSize = viewingSourced
+    ? Math.max(candidateVms.length, 1)
+    : pageSize;
   const resultDescription =
     resultCount > 0
       ? m.talentSearch_resultsShowingRange({
-          from: ((resultPage - 1) * resultPageSize + 1).toLocaleString(language),
-          to: Math.min(resultPage * resultPageSize, resultCount).toLocaleString(language),
+          from: ((resultPage - 1) * resultPageSize + 1).toLocaleString(
+            language,
+          ),
+          to: Math.min(resultPage * resultPageSize, resultCount).toLocaleString(
+            language,
+          ),
           count: resultCount.toLocaleString(language),
         })
       : null;
@@ -262,8 +278,11 @@ export function TalentSearchPage({
 
   return (
     <Page width="wide" fill>
-      <main data-layout="talent-search-page" className="md:flex md:h-full md:min-h-0 md:flex-col">
-        <Box border="bottom" paddingX={{ base: "4", md: "8" }}>
+      <main
+        data-layout="talent-search-page"
+        className="md:flex md:h-full md:min-h-0 md:flex-col"
+      >
+        <Box border="bottom" paddingX={{ base: '4', md: '8' }}>
           <Container width="wide" gutter="0">
             <div className="py-3">
               <TalentFilters
@@ -337,16 +356,24 @@ export function TalentSearchPage({
                     {candidateVms.map((vm) => {
                       const selectionKey = talentCardSelectionKey(vm);
                       return (
-                        <div key={vm.id} data-result-id={selectionKey ?? undefined}>
+                        <div
+                          key={vm.id}
+                          data-result-id={selectionKey ?? undefined}
+                        >
                           <TalentSearchResult
                             vm={vm}
                             selected={
-                              selectionKey !== null && selectionKey === selection.selectedId
+                              selectionKey !== null &&
+                              selectionKey === selection.selectedId
                             }
-                            saveSlot={saveControl(vm.id, "icon")}
+                            saveSlot={saveControl(vm.id, 'icon')}
                             onActivate={
                               selectionKey
-                                ? (event) => selection.onResultActivate(event, selectionKey)
+                                ? (event) =>
+                                    selection.onResultActivate(
+                                      event,
+                                      selectionKey,
+                                    )
                                 : undefined
                             }
                           />
@@ -362,7 +389,9 @@ export function TalentSearchPage({
                       count={count}
                       pageSize={pageSize}
                       hrefForPage={(nextPage) =>
-                        listingPageHref(currentHref, nextPage, ["selectedTalent"])
+                        listingPageHref(currentHref, nextPage, [
+                          'selectedTalent',
+                        ])
                       }
                       onPageChange={onPageChange}
                     />

@@ -40,7 +40,9 @@ describe('TalentSaveToJob', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Save to job' }));
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Second role' }));
+    fireEvent.click(
+      await screen.findByRole('menuitem', { name: 'Second role' }),
+    );
 
     await waitFor(() =>
       expect(saveSourcedCandidate).toHaveBeenCalledWith({

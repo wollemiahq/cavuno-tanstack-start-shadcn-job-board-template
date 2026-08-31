@@ -19,6 +19,8 @@
  */
 import { lazy, Suspense, useState, type FormEvent } from 'react';
 
+import { analytics } from '@cavuno/board/analytics';
+
 import { m } from '../../paraglide/messages';
 
 import {
@@ -31,7 +33,6 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { analytics } from '@cavuno/board/analytics';
 import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
 import {
   candidateSignInHref,
