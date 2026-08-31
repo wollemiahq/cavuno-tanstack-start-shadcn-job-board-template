@@ -395,6 +395,7 @@ the public board shell (same pk_ as Board API).
 
 Props:
 
+- `install?: InstallAnalytics | undefined`
 - `publishableKey: string`
 
 ### BoardAuthConversionTracker — `src/components/board-auth-conversion-tracker.tsx`
@@ -1040,7 +1041,21 @@ Props:
 
 Props:
 
+- `lists?: ReactNode`
 - `search: TalentSearch`
+
+### TalentListsPicker — `src/components/board/talent-lists-picker.tsx`
+
+Props:
+
+- `currentFilters: TalentListFilters`
+- `dependencies?: TalentListsPickerDependencies | undefined`
+- `jobs: { id: string; title: string; }[]`
+- `lists: TalentListRecord[]`
+- `onListsChange: (lists: TalentListRecord[]) => void`
+- `selectedListId?: string | undefined`
+- `selectedSourcedJobId?: string | undefined`
+- `slug: string`
 
 ### TalentMessageAction — `src/components/board/talent-message-action.tsx`
 
@@ -1088,8 +1103,13 @@ Props:
 
 Props:
 
+- `alreadySaved?: boolean | undefined`
+- `boundJobId?: string | undefined`
 - `candidateBoardUserId: string`
+- `dependencies?: TalentSaveToJobDependencies | undefined`
 - `jobs: { id: string; title: string; }[]`
+- `onSaved?: (() => void) | undefined`
+- `presentation?: "default" | "icon" | undefined`
 - `slug: string`
 
 ### TalentSearchDetailState — `src/components/board/talent-search-detail-state.tsx`
@@ -1118,6 +1138,7 @@ Props:
 - `onSelectedTalentReplace: (handle: string) => void`
 - `page: number`
 - `pageSize: number`
+- `profileUnlocks?: boolean | undefined`
 - `q?: string | undefined`
 - `search?: TalentSearch | undefined`
 - `selectedTalent?: string | undefined`
@@ -1132,6 +1153,7 @@ Props:
 - `interactive?: boolean | undefined`
 - `onConversationStarted?: ((conversationId: string) => void) | undefined`
 - `onStartConversation?: StartTalentConversation | undefined`
+- `saveSlot?: ReactNode`
 - `vm: TalentProfileVM`
 
 ### TalentSearchResultDetailSkeleton — `src/components/board/talent-search-result-detail.tsx`
@@ -1141,7 +1163,7 @@ Props:
 Props:
 
 - `onActivate?: ((event: MouseEvent<HTMLAnchorElement, MouseEvent>) => void) | undefined`
-- `save?: ReactNode`
+- `saveSlot?: ReactNode`
 - `selected?: boolean | undefined`
 - `vm: TalentCardVM`
 
