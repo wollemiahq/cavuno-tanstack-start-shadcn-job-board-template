@@ -61,9 +61,10 @@ export function TalentSaveToJob({
   function saveTo(job: string) {
     if (!job || pending || saved) return;
     setPending(true);
-    void dependencies.saveSourcedCandidate({
-      data: { slug, job, candidateBoardUserId },
-    })
+    void dependencies
+      .saveSourcedCandidate({
+        data: { slug, job, candidateBoardUserId },
+      })
       .then((result) => {
         if (result.ok) {
           setSaved(true);
