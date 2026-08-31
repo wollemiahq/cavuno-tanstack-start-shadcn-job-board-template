@@ -1,6 +1,9 @@
 import { isRedirect, redirect } from '@tanstack/react-router';
 
-import { incomingAuthSearch } from '../lib/board-datalayer-events';
+import {
+  incomingAuthSearch,
+  type AuthConversionSearchInput,
+} from '../lib/board-datalayer-events';
 import {
   handleEmployerLoaderError,
   isReauthRetry,
@@ -50,7 +53,7 @@ export async function loadAcceptInvite(
       returnTo: string,
       options?: {
         retried?: boolean;
-        incomingSearch?: string | Record<string, unknown>;
+        incomingSearch?: AuthConversionSearchInput;
       },
     ) => Promise<never>;
   } = { acceptCompanyInvite, getSeoBase, handleEmployerLoaderError },

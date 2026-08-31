@@ -18,7 +18,10 @@ vi.mock('@/server/employers', () => ({
   saveSourcedCandidate: vi.fn(),
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
 
 const jobs = [
   { id: 'job_a', title: 'First role' },
@@ -61,7 +64,9 @@ describe('TalentSaveToJob', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Save to job' }));
-    expect(screen.getByRole('menuitem', { name: 'First role' })).toBeVisible();
+    expect(
+      screen.getByRole('menuitem', { name: 'First role' }),
+    ).toBeInTheDocument();
     expect(saveSourcedCandidate).not.toHaveBeenCalled();
   });
 

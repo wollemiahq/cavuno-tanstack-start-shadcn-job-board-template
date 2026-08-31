@@ -209,6 +209,7 @@
         "src/components/board/salary-sections.tsx",
         "src/components/board/save-job-button.tsx",
         "src/components/board/talent-filters.tsx",
+        "src/components/board/talent-lists-picker.tsx",
         "src/components/board/talent-message-action.tsx",
         "src/components/board/talent-save-to-job.tsx",
         "src/components/board/talent-search-detail-state.tsx",
@@ -405,6 +406,7 @@
       "status": "used",
       "productionReferences": [
         "src/components/alert-manager.tsx",
+        "src/components/board/talent-lists-picker.tsx",
         "src/components/board/talent-message-action.tsx",
         "src/components/education-section.tsx",
         "src/components/employer/applicant-pipeline-board.tsx",
@@ -434,6 +436,8 @@
       "name": "dropdown-menu",
       "status": "used",
       "productionReferences": [
+        "src/components/board/talent-lists-picker.tsx",
+        "src/components/board/talent-save-to-job.tsx",
         "src/components/employer/applicant-pipeline-board.tsx",
         "src/components/header-account-menu.tsx",
         "src/components/language-switcher-menu.tsx",
@@ -500,6 +504,7 @@
         "src/components/board/apply-button.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
         "src/components/board/talent-filters.tsx",
+        "src/components/board/talent-lists-picker.tsx",
         "src/components/custom-fields-group.tsx",
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",
@@ -537,6 +542,7 @@
         "src/components/auth-form.tsx",
         "src/components/board/apply-button.tsx",
         "src/components/board/talent-filters.tsx",
+        "src/components/board/talent-lists-picker.tsx",
         "src/components/custom-fields-group.tsx",
         "src/components/danger-zone.tsx",
         "src/components/education-section.tsx",
@@ -607,6 +613,7 @@
       "name": "label",
       "status": "used",
       "productionReferences": [
+        "src/components/board/talent-lists-picker.tsx",
         "src/components/employer-job-form.tsx",
         "src/components/experience-section.tsx",
         "src/components/resume-upload.tsx",
@@ -679,6 +686,7 @@
       "name": "radio-group",
       "status": "used",
       "productionReferences": [
+        "src/components/board/talent-lists-picker.tsx",
         "src/components/employer-job-form.tsx",
         "src/components/post-job-form.tsx",
         "src/components/registration-page.tsx",

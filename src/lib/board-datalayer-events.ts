@@ -192,15 +192,28 @@ export function mergeAuthConversionSearch(
 
 export type LocationAuthSearch = {
   searchStr?: string;
-  search?: AuthConversionSearchInput;
+  search?: unknown;
   href?: string;
 };
+
+function asAuthConversionSearchInput(
+  value: unknown,
+): AuthConversionSearchInput {
+  if (value == null) return undefined;
+  if (typeof value === 'string' || value instanceof URLSearchParams) {
+    return value;
+  }
+  if (typeof value === 'object') return value as Record<string, unknown>;
+  return undefined;
+}
 
 export function incomingAuthSearch(
   location?: LocationAuthSearch | null,
 ): AuthConversionSearchInput {
   if (!location) return undefined;
-  return location.searchStr ?? location.search ?? location.href;
+  return asAuthConversionSearchInput(
+    location.searchStr ?? location.search ?? location.href,
+  );
 }
 
 /** Resolve OAuth/magic-link completion into a destination with conversion params. */
