@@ -86,6 +86,24 @@ describe('TalentFilters', () => {
     expect(sheet).not.toHaveTextContent('Refine job results');
   });
 
+  it('keeps a job-bound interestedRole when status changes', async () => {
+    const { router } = renderFilters('?interestedRole=Robotics%20Engineer');
+
+    fireEvent.click(
+      await screen.findByRole('combobox', { name: 'Job search status' }),
+    );
+    const active = screen.getByRole('option', { name: 'Actively looking' });
+    fireEvent.pointerDown(active, { pointerType: 'mouse' });
+    fireEvent.click(active);
+
+    await waitFor(() =>
+      expect(router.state.location.search).toMatchObject({
+        interestedRole: 'Robotics Engineer',
+        jobSearchStatus: 'actively_looking',
+      }),
+    );
+  });
+
   it('writes sort to the URL immediately', async () => {
     const { router } = renderFilters();
 

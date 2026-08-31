@@ -166,11 +166,6 @@ export function TalentFilters({ search, lists }: { search: TalentSearch; lists?:
     commit({
       jobSearchStatus: next.jobSearchStatus,
       openToRelocate: next.openToRelocate,
-      skill: undefined,
-      languages: undefined,
-      seniority: undefined,
-      permitCountry: undefined,
-      interestedRole: undefined,
     });
   };
 
