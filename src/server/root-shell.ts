@@ -2,6 +2,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
 import { failClosedJobRecommendations } from '../board/board-feature-flags';
+import { getServerEnv } from '../lib/env';
 import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
 import { getSessionUser } from './account';
 import { listCompanies } from './employers';
@@ -54,6 +55,8 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
       // This deployment's own origin — hreflang alternates and localized
       // self-canonicals reference THIS site, not the hosted board.
       origin: new URL(getRequest().url).origin,
+      // Public publishable key (pk_…) — same credential Board API + analytics.
+      publishableKey: getServerEnv().board,
       board,
       seo,
       offerGate,

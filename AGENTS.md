@@ -36,11 +36,8 @@ Where things live — content search (grep) confirms anything not listed:
 
 - Search first: find copy, markup, and identifiers with content search
   rather than reading whole directories — catalogs and routes are large.
-- Batch independent reads/searches in one response; speculatively read
-  the few probably-relevant files in one go, never one per turn.
-- One coherent change across several files lands as ONE batched
-  multi-file edit (`apply_patch` where available), never a chain of
-  single-file edits.
+- Batch independent reads/searches; speculative multi-file reads in one go.
+- One coherent change across files lands as ONE batched multi-file edit.
 - After editing generator inputs, run the matching generator; never
   hand-edit generated output.
 - Before final verification, run ONLY the co-located tests of changed
@@ -137,11 +134,14 @@ VM's RAW wire values (`salaryMin`, `publishedAt`, …) with e.g.
 `Intl.NumberFormat`. "Golden-tested" pins only the SDK's DEFAULT
 rendering; never parse its locale-shaped formatted strings.
 
-Tests protect stable behavior, not incidental markup, classes, implementation details, or prose.
-Prefer observable roles/states, navigation, permissions, data flow, and errors.
-Never test only sentence/heading presence; derive catalog expectations from messages or fixtures.
-Component tests use neutral VM fixtures. SDK goldens own exact salary/date/location formatting — pin those strings there, once. Mapper tests pin wire values and presence/absence; they do not call the same SDK formatter the mapper calls (tautological) or re-pin `$120k`-shaped output. App-owned copy and numeric contracts pin independent literals (`'Blog'`, `50`). See `CODING_STANDARDS.md`.
-Update tests with behavior; loosen brittle copy/visual failures. A green structural gate proves little.
+Tests protect stable behavior, not incidental markup, classes, implementation
+details, or prose. Prefer roles/states, navigation, permissions, data flow,
+and errors. Never test only sentence/heading presence; derive catalog
+expectations from messages or fixtures. Component tests use neutral VM
+fixtures; SDK goldens own exact salary/date/location formatting. Mapper tests
+pin wire values and presence/absence — not SDK formatter re-pins (see
+`CODING_STANDARDS.md`). Update tests with behavior; loosen brittle
+copy/visual failures. A green structural gate proves little.
 
 ## Dependencies
 

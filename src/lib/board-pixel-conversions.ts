@@ -98,22 +98,33 @@ function linkedInConversionId(
   }
 }
 
-function fireMetaConversion(event: BoardConversionEvent) {
+function metaParams(
+  payload: BoardDataLayerEvent,
+): Record<string, string | number | boolean> {
+  const { event: _event, ...params } = payload;
+  return params;
+}
+
+function fireMetaConversion(
+  event: BoardConversionEvent,
+  payload?: BoardDataLayerEvent,
+) {
+  const params = payload ? metaParams(payload) : {};
   switch (event) {
     case 'sign_up':
-      queueOrFireMeta('track', 'CompleteRegistration');
+      queueOrFireMeta('track', 'CompleteRegistration', params);
       return;
     case 'login':
-      queueOrFireMeta('trackCustom', 'Login');
+      queueOrFireMeta('trackCustom', 'Login', params);
       return;
     case 'apply_click':
-      queueOrFireMeta('trackCustom', 'ApplyClick');
+      queueOrFireMeta('trackCustom', 'ApplyClick', params);
       return;
     case 'apply_submit':
-      queueOrFireMeta('track', 'SubmitApplication');
+      queueOrFireMeta('track', 'SubmitApplication', params);
       return;
     case 'job_alert_subscribe':
-      queueOrFireMeta('track', 'Subscribe');
+      queueOrFireMeta('track', 'Subscribe', params);
   }
 }
 
@@ -130,9 +141,10 @@ function fireLinkedInConversion(
 export function fireBoardPixelConversion(
   config: BoardConversionAnalyticsConfig,
   event: BoardConversionEvent,
+  payload?: BoardDataLayerEvent,
 ): void {
   if (import.meta.env.SSR) return;
-  if (config.metaPixelId) fireMetaConversion(event);
+  if (config.metaPixelId) fireMetaConversion(event, payload);
   if (config.linkedInPartnerId) fireLinkedInConversion(config, event);
 }
 
@@ -145,7 +157,17 @@ export function pushBoardConversionEvent(
   payload: BoardDataLayerEvent,
 ): void {
   pushBoardDataLayerEvent(payload);
-  fireBoardPixelConversion(config, payload.event);
+  fireBoardPixelConversion(config, payload.event, payload);
+}
+
+/** LinkedIn Campaign Manager conversion IDs are numeric; reject obvious non-IDs. */
+export function sanitizeConversionId(
+  value: string | null | undefined,
+): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!/^\d{3,20}$/.test(trimmed)) return null;
+  return trimmed;
 }
 
 export const EMPTY_LINKEDIN_CONVERSION_IDS: BoardLinkedInConversionIds = {
@@ -183,10 +205,18 @@ export function resolveBoardConversionAnalytics(
     gtmId,
     metaPixelId,
     linkedInPartnerId,
-    linkedInConversionSignUpId,
-    linkedInConversionLoginId,
-    linkedInConversionApplyClickId,
-    linkedInConversionApplySubmitId,
-    linkedInConversionJobAlertSubscribeId,
+    linkedInConversionSignUpId: sanitizeConversionId(
+      linkedInConversionSignUpId,
+    ),
+    linkedInConversionLoginId: sanitizeConversionId(linkedInConversionLoginId),
+    linkedInConversionApplyClickId: sanitizeConversionId(
+      linkedInConversionApplyClickId,
+    ),
+    linkedInConversionApplySubmitId: sanitizeConversionId(
+      linkedInConversionApplySubmitId,
+    ),
+    linkedInConversionJobAlertSubscribeId: sanitizeConversionId(
+      linkedInConversionJobAlertSubscribeId,
+    ),
   };
 }

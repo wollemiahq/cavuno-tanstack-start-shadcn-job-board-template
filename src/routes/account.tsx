@@ -33,6 +33,10 @@ import {
   type ProfileChecklistItem,
 } from '@/components/profile-completeness-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  incomingAuthSearch,
+  mergeAuthConversionSearch,
+} from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 
@@ -150,7 +154,7 @@ export const Route = createFileRoute('/account')({
   staticData: { ownsMain: true },
   pendingComponent: CandidateProfilePendingPage,
   errorComponent: CandidateRouteErrorPage,
-  loader: async () => {
+  loader: async ({ location }) => {
     try {
       const [account, seo] = await Promise.all([getAccount(), getSeoBase()]);
       return { ...account, seo };
@@ -162,7 +166,10 @@ export const Route = createFileRoute('/account')({
       if (authFailure === 'email-unverified') {
         throw redirect({
           to: '/auth/verify-email-required',
-          search: { returnTo: '/account' },
+          search: mergeAuthConversionSearch(
+            { returnTo: '/account' },
+            incomingAuthSearch(location),
+          ),
         });
       }
       if (authFailure === 'unauthenticated') {

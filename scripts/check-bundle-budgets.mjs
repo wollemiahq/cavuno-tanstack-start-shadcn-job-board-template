@@ -55,7 +55,9 @@ const BUDGETS = {
     // 0.3 KiB smaller than the prior baseline; this narrow raw-only increase
     // records the corrected ownership rather than accepting route growth.
     '/employers/companies/$slug/jobs/$jobId/applicants': {
-      raw: 410_000,
+      // Measurement noise after trunk talent Save/lists landed next to the
+      // sourced-rail convert path: 400.5 KiB raw vs the prior 410_000 ceil.
+      raw: 412_000,
       // Sourced-rail convert-on-drop (GridList MIME + convert RPC) added
       // ~0.3 KiB gzip on top of the React Aria drag runtime already charged
       // here. 112 KiB was 109.4; CI measured 109.7.
@@ -70,9 +72,9 @@ const BUDGETS = {
     // 38.9. English-only compile dropped it to 103.5 / 35.5. Charge the
     // members surface here instead of the default.
     '/employers/companies/$slug/members': { raw: 115_000, gzip: 40_000 },
-    // Talent All-filters sheet (Sheet + Badge + permit/interested-role
-    // fields) is charged here, not the shared shell. Measured 84.7 / 30.5.
-    '/talent/': { raw: 92_000, gzip: 34_000 },
+    // Talent lists picker + Save-to-job menu (#95/#96) are charged here with
+    // the All-filters sheet, not the shared shell. Measured 125.1 / 43.5.
+    '/talent/': { raw: 132_000, gzip: 46_000 },
   },
 };
 

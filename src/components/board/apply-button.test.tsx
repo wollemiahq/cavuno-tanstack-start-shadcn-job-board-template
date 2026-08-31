@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import type { ReactElement } from 'react';
 
+import { analytics as boardAnalytics } from '@cavuno/board/analytics';
 import {
   cleanup,
   fireEvent,
@@ -186,6 +187,9 @@ describe('ApplyButton conversion tracking', () => {
   });
 
   it('fires apply_click for a direct external apply link', () => {
+    const track = vi
+      .spyOn(boardAnalytics, 'track')
+      .mockImplementation(() => undefined);
     renderWithConversion(
       <ApplyButton
         {...base}
@@ -205,6 +209,37 @@ describe('ApplyButton conversion tracking', () => {
       apply_type: 'external',
       board_slug: 'acme',
     });
+    expect(track).toHaveBeenCalledWith('job_apply_click', {
+      jobId: 'job_test_1',
+      jobSlug: 'ordinary-role',
+      companySlug: 'acme',
+    });
+  });
+
+  it('fires first-party job_apply_click when companySlug is empty', () => {
+    const track = vi
+      .spyOn(boardAnalytics, 'track')
+      .mockImplementation(() => undefined);
+    renderWithConversion(
+      <ApplyButton
+        {...base}
+        companySlug=""
+        jobSlug="ordinary-role"
+        applicationUrl="https://jobs.example/apply/ordinary"
+        applyAction="external_direct"
+        viewer={null}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('link', { name: /apply/i }));
+    expect(track).toHaveBeenCalledWith('job_apply_click', {
+      jobId: 'job_test_1',
+      jobSlug: 'ordinary-role',
+      companySlug: '',
+    });
+    expect(pushes).not.toContainEqual(
+      expect.objectContaining({ event: 'apply_click' }),
+    );
   });
 
   it('fires apply_click only after the gateway approves external apply', async () => {

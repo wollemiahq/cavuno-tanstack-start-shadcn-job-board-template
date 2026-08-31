@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 
 /**
  * Root: loads the PUBLIC board shell once (identity, features, SEO)
@@ -18,105 +18,109 @@ import {
   useNavigate,
   useRouter,
   useRouterState,
-} from "@tanstack/react-router";
+} from '@tanstack/react-router';
 
-import Header from "../components/Header";
-import { localeDirection } from "../lib/locale-direction";
-import { toPreviewBoardConfig } from "../lib/preview";
-import { requestOrigin } from "../lib/request-origin";
-import { emitRoutesReport } from "../lib/routes-report";
-import { m } from "../paraglide/messages";
-import { getLocale } from "../paraglide/runtime";
-import { getRootShellData } from "../server/root-shell";
-import { themeMeta, themeTokens } from "../theme/resolved";
-import { useBlogSuggestions } from "./-use-blog-suggestions";
-import { useCompanyMarketSuggestions } from "./-use-company-market-suggestions";
-import "../styles.css";
-import { useKeywordSuggestions } from "./-use-keyword-suggestions";
-import { useLocationSuggestions } from "./-use-location-suggestions";
+import Header from '../components/Header';
+import { localeDirection } from '../lib/locale-direction';
+import { toPreviewBoardConfig } from '../lib/preview';
+import { requestOrigin } from '../lib/request-origin';
+import { emitRoutesReport } from '../lib/routes-report';
+import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
+import { getRootShellData } from '../server/root-shell';
+import { themeMeta, themeTokens } from '../theme/resolved';
+import { useBlogSuggestions } from './-use-blog-suggestions';
+import { useCompanyMarketSuggestions } from './-use-company-market-suggestions';
+import '../styles.css';
+import { useKeywordSuggestions } from './-use-keyword-suggestions';
+import { useLocationSuggestions } from './-use-location-suggestions';
 
-import { AlternateLinks } from "@/components/alternate-links";
-import { AppRouteErrorPage } from "@/components/app-route-error";
-import { BoardAuthConversionTracker } from "@/components/board-auth-conversion-tracker";
-import { BoardConversionAnalyticsProvider } from "@/components/board-conversion-analytics";
-import { ShellBreadcrumb } from "@/components/board/breadcrumb";
-import { themeModeScript } from "@/components/cavuno/board-theme";
+import { AlternateLinks } from '@/components/alternate-links';
+import { AppRouteErrorPage } from '@/components/app-route-error';
+import { BoardAnalyticsBoot } from '@/components/board-analytics-boot';
+import { BoardAuthConversionTracker } from '@/components/board-auth-conversion-tracker';
+import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
+import { ShellBreadcrumb } from '@/components/board/breadcrumb';
+import { themeModeScript } from '@/components/cavuno/board-theme';
 import {
   CookieConsentBanner,
   CookieConsentProvider,
   CookiePreferencesFooterAction,
-} from "@/components/cookie-consent";
-import { FloatingStackProvider } from "@/components/floating-stack";
-import { Box } from "@/components/layout/box";
-import { Container } from "@/components/layout/container";
-import { NavigationProgress } from "@/components/navigation-progress";
-import { RootSessionProvider, useRootSession } from "@/components/root-session";
-import { MainContentTarget, SkipToContentLink } from "@/components/shell-accessibility";
-import { DirectionProvider } from "@/components/ui/direction";
-import { breadcrumbsCopy } from "@/copy-groups/breadcrumbs";
-import { boardHeadIconLinks } from "@/lib/board-icons";
-import { resolveBoardConversionAnalytics } from "@/lib/board-pixel-conversions";
-import { resolveJobDetailBreadcrumbAriaLabel } from "@/lib/breadcrumb-aria-label";
+} from '@/components/cookie-consent';
+import { FloatingStackProvider } from '@/components/floating-stack';
+import { Box } from '@/components/layout/box';
+import { Container } from '@/components/layout/container';
+import { NavigationProgress } from '@/components/navigation-progress';
+import { RootSessionProvider, useRootSession } from '@/components/root-session';
+import {
+  MainContentTarget,
+  SkipToContentLink,
+} from '@/components/shell-accessibility';
+import { DirectionProvider } from '@/components/ui/direction';
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { boardHeadIconLinks } from '@/lib/board-icons';
+import { resolveBoardConversionAnalytics } from '@/lib/board-pixel-conversions';
+import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
 import {
   resolveHeaderRouteLabels,
   resolveHeaderSearchState,
   type HeaderSearchSubmission,
-} from "@/lib/header-search";
-import { resolveJobsSearchTarget } from "@/lib/jobs-search-target";
-import type { UrlSearchInput } from "@/lib/pagination";
-import { googleSiteVerificationMeta } from "@/lib/seo-handlers";
+} from '@/lib/header-search';
+import { resolveJobsSearchTarget } from '@/lib/jobs-search-target';
+import type { UrlSearchInput } from '@/lib/pagination';
+import { googleSiteVerificationMeta } from '@/lib/seo-handlers';
 import {
   resolveShellBreadcrumb,
   resolveShellBreadcrumbEntities,
   resolveShellBreadcrumbTrail,
   type ShellBreadcrumbLabels,
-} from "@/lib/shell-breadcrumb";
-import { parseTalentSearch } from "@/lib/talent-search";
-import { useViewerUnreadCount } from "@/lib/use-viewer-unread-count";
+} from '@/lib/shell-breadcrumb';
+import { parseTalentSearch } from '@/lib/talent-search';
+import { useViewerUnreadCount } from '@/lib/use-viewer-unread-count';
 
 const LazyFooter = lazy(() =>
-  import("../components/Footer").then((mod) => ({ default: mod.default })),
+  import('../components/Footer').then((mod) => ({ default: mod.default })),
 );
 
 const LazyAnalyticsScripts = lazy(() =>
-  import("@/components/analytics-scripts").then(({ AnalyticsScripts }) => ({
+  import('@/components/analytics-scripts').then(({ AnalyticsScripts }) => ({
     default: AnalyticsScripts,
   })),
 );
 
 const LazyMessagesDockController = lazy(() =>
-  import("./-messages-dock-controller").then(({ MessagesDockController }) => ({
+  import('./-messages-dock-controller').then(({ MessagesDockController }) => ({
     default: MessagesDockController,
   })),
 );
 
 const LazyMessagesNavController = lazy(() =>
-  import("./-messages-nav-controller").then(({ MessagesNavController }) => ({
+  import('./-messages-nav-controller').then(({ MessagesNavController }) => ({
     default: MessagesNavController,
   })),
 );
 
 const LazyToaster = lazy(() =>
-  import("@/components/ui/sonner").then(({ Toaster }) => ({
+  import('@/components/ui/sonner').then(({ Toaster }) => ({
     default: Toaster,
   })),
 );
-const PSEUDO_LOCALES = new Set(["en-XA", "ar-XB"]);
+const PSEUDO_LOCALES = new Set(['en-XA', 'ar-XB']);
 
 function DeferredToaster() {
   const [requested, setRequested] = useState(false);
 
   useEffect(() => {
     const request = () => setRequested(true);
-    window.addEventListener("pointerdown", request, {
+    window.addEventListener('pointerdown', request, {
       once: true,
       passive: true,
       capture: true,
     });
-    window.addEventListener("keydown", request, { once: true, capture: true });
+    window.addEventListener('keydown', request, { once: true, capture: true });
     return () => {
-      window.removeEventListener("pointerdown", request, { capture: true });
-      window.removeEventListener("keydown", request, { capture: true });
+      window.removeEventListener('pointerdown', request, { capture: true });
+      window.removeEventListener('keydown', request, { capture: true });
     };
   }, []);
 
@@ -128,12 +132,12 @@ function DeferredToaster() {
 }
 
 const LazyPreviewToolbar = lazy(() =>
-  import("@/components/preview/preview-toolbar").then(({ PreviewToolbar }) => ({
+  import('@/components/preview/preview-toolbar').then(({ PreviewToolbar }) => ({
     default: PreviewToolbar,
   })),
 );
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface StaticDataRouteOption {
     /**
      * Listing routes opt out of the root wrapper so the Page family can own
@@ -170,16 +174,18 @@ export const Route = createRootRoute({
     const iconLinks = boardHeadIconLinks(board);
     return {
       meta: [
-        { charSet: "utf-8" },
-        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        { charSet: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { title: board?.name ?? m.rootFallback_title() },
-        { name: "theme-color", content: themeTokens.light["--background"] },
+        { name: 'theme-color', content: themeTokens.light['--background'] },
         ...(gsc ? [gsc] : []),
       ],
       links: [
-        ...(themeMeta.fontsImport ? [{ rel: "stylesheet", href: themeMeta.fontsImport }] : []),
+        ...(themeMeta.fontsImport
+          ? [{ rel: 'stylesheet', href: themeMeta.fontsImport }]
+          : []),
         ...iconLinks,
-        { rel: "manifest", href: "/site.webmanifest" },
+        { rel: 'manifest', href: '/site.webmanifest' },
       ],
     };
   },
@@ -196,11 +202,12 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
-  const { board, offerGate } = Route.useLoaderData();
+  const { board, offerGate, publishableKey } = Route.useLoaderData();
 
-  // Embed widget: no site chrome and no session island (third-party iframe).
+  // Embed widget: no site chrome, no session island, no BoardAnalyticsBoot
+  // (first-party analytics). Third-party iframe.
   const isEmbed = useRouterState({
-    select: (s) => s.location.pathname.startsWith("/embed"),
+    select: (s) => s.location.pathname.startsWith('/embed'),
   });
   if (isEmbed) {
     return (
@@ -214,7 +221,11 @@ function RootLayout() {
 
   return (
     <RootSessionProvider candidatePaywall={board.features.candidatePaywall}>
-      <RootChrome board={board} offerGate={offerGate} />
+      <RootChrome
+        board={board}
+        offerGate={offerGate}
+        publishableKey={publishableKey}
+      />
     </RootSessionProvider>
   );
 }
@@ -222,14 +233,16 @@ function RootLayout() {
 function RootChrome({
   board,
   offerGate,
+  publishableKey,
 }: {
-  board: Awaited<ReturnType<typeof getRootShellData>>["board"];
-  offerGate: Awaited<ReturnType<typeof getRootShellData>>["offerGate"];
+  board: Awaited<ReturnType<typeof getRootShellData>>['board'];
+  offerGate: Awaited<ReturnType<typeof getRootShellData>>['offerGate'];
+  publishableKey: string;
 }) {
-  const { user, employerCompanies, hasAccessGrant, preview, clearSession } = useRootSession();
-  const [messagingUnreadCount, publishMessagingUnreadCount] = useViewerUnreadCount(
-    user?.id ?? null,
-  );
+  const { user, employerCompanies, hasAccessGrant, preview, clearSession } =
+    useRootSession();
+  const [messagingUnreadCount, publishMessagingUnreadCount] =
+    useViewerUnreadCount(user?.id ?? null);
   const isFullBleed = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fullBleed),
   });
@@ -273,7 +286,7 @@ function RootChrome({
   // (when the board's directory is visible to them); everyone else hunts
   // jobs. Section routes (companies/talent/blog) still override.
   const isApprovedEmployer = (employerCompanies ?? []).some(
-    (membership) => membership.status === "approved",
+    (membership) => membership.status === 'approved',
   );
   const headerSearch = resolveHeaderSearchState(
     location.pathname,
@@ -282,12 +295,18 @@ function RootChrome({
     location.search as UrlSearchInput,
     resolvedHeaderLabels.location,
     resolvedHeaderLabels.query,
-    isApprovedEmployer && board.talentDirectoryVisibility !== "off" ? "talent" : "jobs",
+    isApprovedEmployer && board.talentDirectoryVisibility !== 'off'
+      ? 'talent'
+      : 'jobs',
   );
   const locationSuggestions = useLocationSuggestions(board.language);
-  const keywordSuggestions = useKeywordSuggestions(headerSearch.scope === "jobs");
-  const companyMarketSuggestions = useCompanyMarketSuggestions(headerSearch.scope === "companies");
-  const blogSuggestions = useBlogSuggestions(headerSearch.scope === "blog");
+  const keywordSuggestions = useKeywordSuggestions(
+    headerSearch.scope === 'jobs',
+  );
+  const companyMarketSuggestions = useCompanyMarketSuggestions(
+    headerSearch.scope === 'companies',
+  );
+  const blogSuggestions = useBlogSuggestions(headerSearch.scope === 'blog');
   // Breadcrumb nav aria-label only — do not import the full jobDetail copy
   // family (21 messages × locales) into the unsplittable root for one string.
   // Operator overrides ride the same jobCardLabels.breadcrumbAriaLabel key
@@ -338,25 +357,25 @@ function RootChrome({
     term,
     market,
   }: HeaderSearchSubmission) {
-    if (scope === "companies") {
+    if (scope === 'companies') {
       if (market) {
         void navigate({
-          to: "/companies/markets/$market",
+          to: '/companies/markets/$market',
           params: { market: market.slug },
         });
         return;
       }
 
-      void navigate({ to: "/companies", search: { query } });
+      void navigate({ to: '/companies', search: { query } });
       return;
     }
 
-    if (scope === "talent") {
+    if (scope === 'talent') {
       // SAFETY: TanStack route search values are URL-serializable scalars;
       // parseTalentSearch only reads known TalentSearch keys and drops the rest.
       const current = parseTalentSearch(location.search as UrlSearchInput);
       void navigate({
-        to: "/talent",
+        to: '/talent',
         search: parseTalentSearch({
           ...current,
           q: query,
@@ -368,22 +387,22 @@ function RootChrome({
       return;
     }
 
-    if (scope === "blog") {
-      if (term?.type === "post") {
+    if (scope === 'blog') {
+      if (term?.type === 'post') {
         void navigate({
-          to: "/blog/$postSlug",
+          to: '/blog/$postSlug',
           params: { postSlug: term.slug },
         });
         return;
       }
-      if (term?.type === "tag") {
+      if (term?.type === 'tag') {
         void navigate({
-          to: "/blog/tag/$tagSlug",
+          to: '/blog/tag/$tagSlug',
           params: { tagSlug: term.slug },
         });
         return;
       }
-      void navigate({ to: "/blog", search: { q: query } });
+      void navigate({ to: '/blog', search: { q: query } });
       return;
     }
 
@@ -429,7 +448,9 @@ function RootChrome({
     />
   );
   const routeContent = ownsMain ? (
-    <MainContentTarget className={fillsViewport ? "flex-1 md:h-full md:min-h-0" : "flex-1"}>
+    <MainContentTarget
+      className={fillsViewport ? 'flex-1 md:h-full md:min-h-0' : 'flex-1'}
+    >
       <Outlet />
     </MainContentTarget>
   ) : isFullBleed ? (
@@ -442,7 +463,7 @@ function RootChrome({
     <MainContentTarget className="flex flex-1 flex-col">
       <main className="flex-1">
         <Container width="wide">
-          <Box paddingY={{ base: "8", md: "10" }}>
+          <Box paddingY={{ base: '8', md: '10' }}>
             <Outlet />
           </Box>
         </Container>
@@ -452,7 +473,10 @@ function RootChrome({
 
   return (
     <CookieConsentProvider required={board.analytics.cookieConsentRequired}>
-      <BoardConversionAnalyticsProvider boardSlug={board.slug} analytics={conversionAnalytics}>
+      <BoardConversionAnalyticsProvider
+        boardSlug={board.slug}
+        analytics={conversionAnalytics}
+      >
         {/* Consent state wraps the whole chrome: the banner (floating stack),
           the footer's "Cookie preferences" reopener, the job-alert prompt's
           yield, and the analytics gate all read the same choice. The embed
@@ -462,6 +486,7 @@ function RootChrome({
         <Suspense fallback={null}>
           <LazyAnalyticsScripts analytics={board.analytics} />
         </Suspense>
+        <BoardAnalyticsBoot publishableKey={publishableKey} />
         <BoardAuthConversionTracker />
         <FloatingStackProvider>
           <NavigationProgress />
@@ -480,7 +505,10 @@ function RootChrome({
             <LazyFooter
               breadcrumb={
                 shellBreadcrumb ? (
-                  <ShellBreadcrumb items={shellBreadcrumb.items} ariaLabel={breadcrumbAriaLabel} />
+                  <ShellBreadcrumb
+                    items={shellBreadcrumb.items}
+                    ariaLabel={breadcrumbAriaLabel}
+                  />
                 ) : undefined
               }
               connected={shellBreadcrumb !== null}
@@ -502,13 +530,16 @@ function RootChrome({
           {user &&
           user.emailVerified &&
           board.features.messaging &&
-          !location.pathname.startsWith("/messages") ? (
+          !location.pathname.startsWith('/messages') ? (
             // Keyed by viewer: the dock holds polled inbox + open-thread state
             // that must unmount wholesale when the signed-in identity changes
             // (sign-out/in, persona switch) — never survive across viewers. The
             // whole messaging surface is hidden when the board flag is off.
             <Suspense fallback={null}>
-              <LazyMessagesDockController key={user.id} unreadCount={messagingUnreadCount} />
+              <LazyMessagesDockController
+                key={user.id}
+                unreadCount={messagingUnreadCount}
+              />
             </Suspense>
           ) : null}
           {preview.capability.canPreview || preview.demoConfigured ? (
@@ -543,7 +574,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const { origin } = Route.useRouteContext();
   // Theme mode is repo-canonical (theme.css → resolved module).
   const mode =
-    themeMeta.mode === "dark" || themeMeta.mode === "light" ? themeMeta.mode : ("system" as const);
+    themeMeta.mode === 'dark' || themeMeta.mode === 'light'
+      ? themeMeta.mode
+      : ('system' as const);
   const locale = getLocale();
   const direction = localeDirection(locale);
   return (
@@ -563,7 +596,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         // rather than mirroring the page after hydration. en/de/fr → ltr;
         // the ar-XB pseudo-bidi CI locale → rtl.
         dir={direction}
-        className={mode === "dark" ? "dark" : undefined}
+        className={mode === 'dark' ? 'dark' : undefined}
         data-theme-mode={mode}
         suppressHydrationWarning
       >
@@ -572,7 +605,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             humans or crawlers): noindex them. Compare as string[] so the
             branch typechecks under the prod 3-locale Locale union and the
             QA 5-locale build. */}
-          {PSEUDO_LOCALES.has(locale) && <meta name="robots" content="noindex, nofollow" />}
+          {PSEUDO_LOCALES.has(locale) && (
+            <meta name="robots" content="noindex, nofollow" />
+          )}
           {/* Chrome now translates end to end, so the locale variants are
             first-class: hreflang alternates here + localized
             self-canonicals per page (selfUrl) make /de/ and /fr/

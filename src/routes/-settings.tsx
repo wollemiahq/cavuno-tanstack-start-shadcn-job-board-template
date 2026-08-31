@@ -34,6 +34,11 @@ import { CandidateShell } from '@/components/candidate-shell';
 import { Page, PageContent } from '@/components/layout/page';
 import { Text } from '@/components/text';
 import { buttonVariants } from '@/components/ui/button';
+import {
+  incomingAuthSearch,
+  mergeAuthConversionSearch,
+  type LocationAuthSearch,
+} from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
 import { headTitle } from '@/lib/page-title';
@@ -85,7 +90,13 @@ export const settingsRouteDependencies: SettingsRouteDependencies = {
 export function createSettingsLoader(
   dependencies: SettingsRouteDependencies = settingsRouteDependencies,
 ) {
-  return async ({ deps }: { deps: SettingsSearch }) => {
+  return async ({
+    deps,
+    location,
+  }: {
+    deps: SettingsSearch;
+    location?: LocationAuthSearch;
+  }) => {
     const seo = await dependencies.getSeoBase();
     if (deps.token && deps.boardUserId && deps.channel) {
       try {
@@ -120,7 +131,10 @@ export function createSettingsLoader(
       if (authFailure === 'email-unverified') {
         throw redirect({
           to: '/auth/verify-email-required',
-          search: { returnTo: '/settings' },
+          search: mergeAuthConversionSearch(
+            { returnTo: '/settings' },
+            incomingAuthSearch(location),
+          ),
         });
       }
       if (authFailure === 'unauthenticated') {

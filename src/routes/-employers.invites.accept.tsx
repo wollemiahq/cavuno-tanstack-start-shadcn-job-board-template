@@ -1,6 +1,10 @@
 import { isRedirect, redirect } from '@tanstack/react-router';
 
 import {
+  incomingAuthSearch,
+  type AuthConversionSearchInput,
+} from '../lib/board-datalayer-events';
+import {
   handleEmployerLoaderError,
   isReauthRetry,
 } from '../lib/employer-loader-auth';
@@ -10,6 +14,7 @@ import { getSeoBase } from '../server/queries';
 
 import { Page, PageContent } from '@/components/layout/page';
 import { Text } from '@/components/text';
+import type { UrlSearchInput } from '@/lib/pagination';
 
 type AcceptState =
   | { mode: 'invalid' }
@@ -24,7 +29,10 @@ export function acceptReturnTo(token: string) {
 
 export async function loadAcceptInvite(
   deps: { token: string },
-  location: Parameters<typeof isReauthRetry>[0],
+  location: {
+    search?: UrlSearchInput;
+    searchStr?: string;
+  },
   actions: {
     acceptCompanyInvite: (input: { data: { token: string } }) => Promise<
       | { ok: true; data: { companySlug: string } }
@@ -43,7 +51,10 @@ export async function loadAcceptInvite(
     handleEmployerLoaderError: (
       error: Error,
       returnTo: string,
-      options?: { retried?: boolean },
+      options?: {
+        retried?: boolean;
+        incomingSearch?: AuthConversionSearchInput;
+      },
     ) => Promise<never>;
   } = { acceptCompanyInvite, getSeoBase, handleEmployerLoaderError },
 ) {
@@ -91,7 +102,10 @@ export async function loadAcceptInvite(
     return await actions.handleEmployerLoaderError(
       failure,
       acceptReturnTo(deps.token),
-      { retried: isReauthRetry(location) },
+      {
+        retried: isReauthRetry(location),
+        incomingSearch: incomingAuthSearch(location),
+      },
     );
   }
 }

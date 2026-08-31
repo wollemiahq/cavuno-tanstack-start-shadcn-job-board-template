@@ -2,10 +2,19 @@ import { isUnauthorized } from '@cavuno/board';
 import { isRedirect, redirect } from '@tanstack/react-router';
 
 import { refreshSession } from '../server/auth';
+import {
+  mergeAuthConversionSearch,
+  type AuthConversionSearchInput,
+} from './board-datalayer-events';
 
 import type { UrlSearchInput } from './pagination';
 
 export type RefreshSession = () => Promise<{ ok: boolean }>;
+
+export type EmployerLoaderAuthOptions = {
+  retried?: boolean;
+  incomingSearch?: AuthConversionSearchInput;
+};
 
 /** Whether the loader is already the one-shot retry after a session refresh. */
 export function isReauthRetry(location?: { search?: UrlSearchInput }): boolean {
@@ -26,7 +35,7 @@ export function isReauthRetry(location?: { search?: UrlSearchInput }): boolean {
 export async function handleEmployerLoaderError<T>(
   error: T,
   returnTo: string,
-  options?: { retried?: boolean },
+  options?: EmployerLoaderAuthOptions,
 ): Promise<never> {
   return handleEmployerLoaderErrorUsing(
     refreshSession,
@@ -41,14 +50,14 @@ export async function handleEmployerLoaderErrorUsing<T>(
   refresh: RefreshSession,
   error: T,
   returnTo: string,
-  options?: { retried?: boolean },
+  options?: EmployerLoaderAuthOptions,
 ): Promise<never> {
   if (isRedirect(error)) throw error;
 
   if (error instanceof Error && error.message.includes('EMAIL_UNVERIFIED')) {
     throw redirect({
       to: '/auth/verify-email-required',
-      search: { returnTo },
+      search: mergeAuthConversionSearch({ returnTo }, options?.incomingSearch),
     });
   }
 

@@ -211,6 +211,35 @@ describe('/auth/verify-email-required search contract', () => {
     });
   });
 
+  it('preserves cavuno_auth conversion params in validateSearch', () => {
+    const validate = Route.options.validateSearch;
+    if (!validate || 'parse' in validate || '~standard' in validate) {
+      throw new Error(
+        'The verification gate must validate its search parameters',
+      );
+    }
+
+    expect(
+      validate({
+        returnTo: '/account',
+        cavuno_auth: 'sign_up',
+        cavuno_auth_method: 'password',
+      }),
+    ).toEqual({
+      returnTo: '/account',
+      cavuno_auth: 'sign_up',
+      cavuno_auth_method: 'password',
+    });
+    expect(
+      validate({
+        returnTo: '/account',
+        cavuno_auth: 'sign_up',
+      }),
+    ).toEqual({
+      returnTo: '/account',
+    });
+  });
+
   it('returns a verified candidate to the validated destination', async () => {
     // With no resume state available, the post-verify step has nothing to
     // offer and continues straight to the destination.

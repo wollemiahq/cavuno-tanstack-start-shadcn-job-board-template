@@ -5,6 +5,7 @@ import {
   ApplicantPipelineBoard,
   type PipelineActions,
 } from '../components/employer/applicant-pipeline-board';
+import { incomingAuthSearch } from '../lib/board-datalayer-events';
 import { employerJobStatusLabel } from '../lib/employer-job-labels';
 import {
   handleEmployerLoaderError,
@@ -56,7 +57,7 @@ export function createApplicantsLoader(
     location,
   }: {
     params: { slug: string; jobId: string };
-    location: { search?: UrlSearchInput };
+    location: { search?: UrlSearchInput; searchStr?: string };
   }) => {
     const loaderDependencies = dependencies ?? applicantsLoaderDependencies;
     const board = await loaderDependencies.getBoardContext();
@@ -85,7 +86,10 @@ export function createApplicantsLoader(
       return await loaderDependencies.handleEmployerLoaderError(
         error,
         `/employers/companies/${params.slug}/jobs/${params.jobId}/applicants`,
-        { retried: isReauthRetry(location) },
+        {
+          retried: isReauthRetry(location),
+          incomingSearch: incomingAuthSearch(location),
+        },
       );
     }
   };

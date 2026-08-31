@@ -17,6 +17,10 @@ import {
   CandidateRoutePendingPage,
 } from '@/components/candidate-route-state';
 import { CandidateShell } from '@/components/candidate-shell';
+import {
+  incomingAuthSearch,
+  mergeAuthConversionSearch,
+} from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 
@@ -24,7 +28,7 @@ export const Route = createFileRoute('/me/alerts')({
   staticData: { ownsMain: true },
   pendingComponent: CandidateRoutePendingPage,
   errorComponent: CandidateRouteErrorPage,
-  loader: async () => {
+  loader: async ({ location }) => {
     try {
       const [alerts, places, seo] = await Promise.all([
         getMyAlerts(),
@@ -40,7 +44,10 @@ export const Route = createFileRoute('/me/alerts')({
       if (authFailure === 'email-unverified') {
         throw redirect({
           to: '/auth/verify-email-required',
-          search: { returnTo: '/me/alerts' },
+          search: mergeAuthConversionSearch(
+            { returnTo: '/me/alerts' },
+            incomingAuthSearch(location),
+          ),
         });
       }
       if (authFailure === 'unauthenticated') {

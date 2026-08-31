@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useId, useState } from "react";
+import { useId, useState } from 'react';
 
-import { useNavigate } from "@tanstack/react-router";
-import { List } from "lucide-react";
+import { useNavigate } from '@tanstack/react-router';
+import { List } from 'lucide-react';
 
-import { m } from "../../paraglide/messages";
+import { m } from '../../paraglide/messages';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,21 +26,44 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { boardErrorMessage } from "@/lib/board-error-message";
+} from '@/components/ui/dropdown-menu';
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { boardErrorMessage } from '@/lib/board-error-message';
 import {
   filtersFromJob,
   listFiltersToTalentSearch,
   type TalentListFilters,
-} from "@/lib/talent-search";
-import { createTalentList, type TalentListRecord } from "@/server/employers";
+} from '@/lib/talent-search';
+import { createTalentList, type TalentListRecord } from '@/server/employers';
 
-const ALL = "__all__";
-const SOURCED = "sourced:";
+const ALL = '__all__';
+const SOURCED = 'sourced:';
+
+export type TalentListsPickerDependencies = {
+  createTalentList: (input: {
+    data: {
+      slug: string;
+      name: string;
+      filters?: TalentListFilters;
+      job?: string;
+    };
+  }) => Promise<
+    { ok: true; data: TalentListRecord } | { ok: false; code: string }
+  >;
+};
+
+const talentListsPickerDependencies: TalentListsPickerDependencies = {
+  createTalentList,
+};
 
 export function TalentListsPicker({
   slug,
@@ -50,6 +73,7 @@ export function TalentListsPicker({
   selectedSourcedJobId,
   currentFilters,
   onListsChange,
+  dependencies = talentListsPickerDependencies,
 }: {
   slug: string;
   lists: TalentListRecord[];
@@ -58,11 +82,14 @@ export function TalentListsPicker({
   selectedSourcedJobId?: string;
   currentFilters: TalentListFilters;
   onListsChange: (lists: TalentListRecord[]) => void;
+  dependencies?: TalentListsPickerDependencies;
 }) {
-  const navigate = useNavigate({ from: "/talent/" });
+  const navigate = useNavigate({ from: '/talent/' });
   const [createOpen, setCreateOpen] = useState(false);
   const selected = lists.find((list) => list.id === selectedListId);
-  const selectedSourcedJob = jobs.find((job) => job.id === selectedSourcedJobId);
+  const selectedSourcedJob = jobs.find(
+    (job) => job.id === selectedSourcedJobId,
+  );
   const triggerName = selectedSourcedJob?.title ?? selected?.name;
   const radioValue = selectedSourcedJobId
     ? `${SOURCED}${selectedSourcedJobId}`
@@ -125,16 +152,23 @@ export function TalentListsPicker({
           }
         >
           <List aria-hidden="true" />
-          <span className="truncate">{triggerName ?? m.talentLists_triggerLabel()}</span>
+          <span className="truncate">
+            {triggerName ?? m.talentLists_triggerLabel()}
+          </span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-72">
-          <DropdownMenuRadioGroup value={radioValue} onValueChange={onRadioValue}>
+          <DropdownMenuRadioGroup
+            value={radioValue}
+            onValueChange={onRadioValue}
+          >
             <DropdownMenuRadioItem value={ALL}>
               {m.talentLists_allCandidates()}
             </DropdownMenuRadioItem>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuLabel>{m.talentLists_listsHeading()}</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                {m.talentLists_listsHeading()}
+              </DropdownMenuLabel>
               {lists.map((list) => (
                 <DropdownMenuRadioItem key={list.id} value={list.id}>
                   <span className="min-w-0 truncate">{list.name}</span>
@@ -148,11 +182,19 @@ export function TalentListsPicker({
           {jobs.length > 0 ? (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup value={radioValue} onValueChange={onRadioValue}>
+              <DropdownMenuRadioGroup
+                value={radioValue}
+                onValueChange={onRadioValue}
+              >
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel>{m.talentLists_sourcedHeading()}</DropdownMenuLabel>
+                  <DropdownMenuLabel>
+                    {m.talentLists_sourcedHeading()}
+                  </DropdownMenuLabel>
                   {jobs.map((job) => (
-                    <DropdownMenuRadioItem key={job.id} value={`${SOURCED}${job.id}`}>
+                    <DropdownMenuRadioItem
+                      key={job.id}
+                      value={`${SOURCED}${job.id}`}
+                    >
                       <span className="min-w-0 truncate">{job.title}</span>
                     </DropdownMenuRadioItem>
                   ))}
@@ -168,6 +210,7 @@ export function TalentListsPicker({
         currentFilters={currentFilters}
         open={createOpen}
         onOpenChange={setCreateOpen}
+        createTalentList={dependencies.createTalentList}
         onCreated={(list) => {
           onListsChange([list, ...lists]);
           selectList(list);
@@ -184,6 +227,7 @@ function CreateListDialog({
   open,
   onOpenChange,
   onCreated,
+  createTalentList: createList,
 }: {
   slug: string;
   jobs: Array<{ id: string; title: string }>;
@@ -191,22 +235,23 @@ function CreateListDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (list: TalentListRecord) => void;
+  createTalentList: TalentListsPickerDependencies['createTalentList'];
 }) {
   const nameId = useId();
   const blankKindId = useId();
   const jobKindId = useId();
-  const [name, setName] = useState("");
-  const [kind, setKind] = useState<"blank" | "job">("blank");
-  const [jobId, setJobId] = useState(jobs[0]?.id ?? "");
+  const [name, setName] = useState('');
+  const [kind, setKind] = useState<'blank' | 'job'>('blank');
+  const [jobId, setJobId] = useState(jobs[0]?.id ?? '');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   function close(nextOpen: boolean) {
     onOpenChange(nextOpen);
     if (!nextOpen) {
-      setName("");
-      setKind("blank");
-      setJobId(jobs[0]?.id ?? "");
+      setName('');
+      setKind('blank');
+      setJobId(jobs[0]?.id ?? '');
       setError(null);
       setPending(false);
     }
@@ -224,19 +269,20 @@ function CreateListDialog({
               setError(m.talentLists_nameRequired());
               return;
             }
-            if (kind === "job" && !jobId) {
+            if (kind === 'job' && !jobId) {
               setError(m.talentLists_jobRequired());
               return;
             }
             const job = jobs.find((row) => row.id === jobId);
-            const filters = kind === "job" && job ? filtersFromJob(job) : currentFilters;
+            const filters =
+              kind === 'job' && job ? filtersFromJob(job) : currentFilters;
             setPending(true);
             setError(null);
             const payload =
-              kind === "job"
+              kind === 'job'
                 ? { slug, name: nextName, filters, job: jobId }
                 : { slug, name: nextName, filters };
-            void createTalentList({ data: payload })
+            void createList({ data: payload })
               .then((result) => {
                 if (!result.ok) {
                   setError(boardErrorMessage({ code: result.code }));
@@ -246,17 +292,21 @@ function CreateListDialog({
                 close(false);
               })
               .catch(() => {
-                setError(boardErrorMessage({ code: "unknown" }));
+                setError(boardErrorMessage({ code: 'unknown' }));
               })
               .finally(() => setPending(false));
           }}
         >
           <DialogHeader>
             <DialogTitle>{m.talentLists_createTitle()}</DialogTitle>
-            <DialogDescription>{m.talentLists_createDescription()}</DialogDescription>
+            <DialogDescription>
+              {m.talentLists_createDescription()}
+            </DialogDescription>
           </DialogHeader>
           <Field data-invalid={error ? true : undefined}>
-            <FieldLabel htmlFor={nameId}>{m.talentLists_nameLabel()}</FieldLabel>
+            <FieldLabel htmlFor={nameId}>
+              {m.talentLists_nameLabel()}
+            </FieldLabel>
             <Input
               id={nameId}
               name="name"
@@ -269,11 +319,15 @@ function CreateListDialog({
             {error ? <FieldError>{error}</FieldError> : null}
           </Field>
           <FieldSet>
-            <FieldLegend variant="label">{m.talentLists_kindLabel()}</FieldLegend>
+            <FieldLegend variant="label">
+              {m.talentLists_kindLabel()}
+            </FieldLegend>
             <RadioGroup
               name="kind"
               value={kind}
-              onValueChange={(value) => setKind(value === "job" ? "job" : "blank")}
+              onValueChange={(value) =>
+                setKind(value === 'job' ? 'job' : 'blank')
+              }
               className="gap-2"
             >
               <div className="flex items-center gap-2">
@@ -283,16 +337,22 @@ function CreateListDialog({
                 </Label>
               </div>
               <div className="flex items-center gap-2">
-                <RadioGroupItem id={jobKindId} value="job" disabled={jobs.length === 0} />
+                <RadioGroupItem
+                  id={jobKindId}
+                  value="job"
+                  disabled={jobs.length === 0}
+                />
                 <Label htmlFor={jobKindId} className="font-normal">
                   {m.talentLists_kindJob()}
                 </Label>
               </div>
             </RadioGroup>
           </FieldSet>
-          {kind === "job" ? (
+          {kind === 'job' ? (
             <Field>
-              <FieldLabel htmlFor="talent-list-job">{m.talentLists_jobLabel()}</FieldLabel>
+              <FieldLabel htmlFor="talent-list-job">
+                {m.talentLists_jobLabel()}
+              </FieldLabel>
               <select
                 id="talent-list-job"
                 name="job"

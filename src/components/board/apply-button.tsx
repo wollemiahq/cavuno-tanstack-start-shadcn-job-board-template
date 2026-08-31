@@ -4,8 +4,8 @@
  * Native apply with the hosted board's fallback ladder. Pure markup and
  * interaction over `ApplyButtonVM`: the
  * decision ladder and copy are resolved by `toApplyButtonVM`
- * (src/board/apply-view-model.ts), so this file imports nothing from
- * `@cavuno/board*` or `#/copy` and the button can be restyled freely.
+ * (src/board/apply-view-model.ts), so this file imports no SDK formatters
+ * or `#/copy` and the button can be restyled freely.
  *
  * The invariant stays in the SDK's pure `resolveApplyAction`: an external
  * `applicationUrl`, when present, is the apply path for EVERYONE —
@@ -18,6 +18,8 @@
  * your app's routes and swap `<a>` for your router's Link if desired.
  */
 import { lazy, Suspense, useState, type FormEvent } from 'react';
+
+import { analytics } from '@cavuno/board/analytics';
 
 import { m } from '../../paraglide/messages';
 
@@ -146,15 +148,23 @@ export function ApplyButton({
   const conversion = useBoardConversionAnalytics();
 
   function trackApplyClick(applyType: 'external' | 'native') {
-    if (!conversion || !jobId || !jobSlug || !companySlug) return;
-    pushBoardConversionEvent(conversion.analytics, {
-      event: 'apply_click',
-      job_id: jobId,
-      job_slug: jobSlug,
-      company_slug: companySlug,
-      apply_type: applyType,
-      board_slug: conversion.boardSlug,
-    });
+    if (jobId && jobSlug) {
+      analytics.track('job_apply_click', {
+        jobId,
+        jobSlug,
+        companySlug,
+      });
+    }
+    if (conversion && jobId && jobSlug && companySlug) {
+      pushBoardConversionEvent(conversion.analytics, {
+        event: 'apply_click',
+        job_id: jobId,
+        job_slug: jobSlug,
+        company_slug: companySlug,
+        apply_type: applyType,
+        board_slug: conversion.boardSlug,
+      });
+    }
   }
 
   function trackApplySubmit(applicationId: string) {
