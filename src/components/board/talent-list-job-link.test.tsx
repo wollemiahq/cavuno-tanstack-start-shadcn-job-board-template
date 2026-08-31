@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
+import { useState } from 'react';
+
 import {
   cleanup,
   fireEvent,
@@ -74,21 +76,26 @@ describe('TalentListJobLink', () => {
     expect(onUpdated).toHaveBeenCalledWith({ ...list, jobId: 'job_b' });
   });
 
-  it('unlinks with job null', async () => {
+  it('unlinks with job null and still lists every job', async () => {
     vi.mocked(updateTalentList).mockResolvedValue({
       ok: true,
       data: { ...list, jobId: null },
     });
 
-    render(
-      <TalentListJobLink
-        slug="acme"
-        listId="list_1"
-        jobId="job_a"
-        jobs={jobs}
-        onUpdated={vi.fn()}
-      />,
-    );
+    function Harness() {
+      const [jobId, setJobId] = useState<string | null>('job_a');
+      return (
+        <TalentListJobLink
+          slug="acme"
+          listId="list_1"
+          jobId={jobId}
+          jobs={jobs}
+          onUpdated={(next) => setJobId(next.jobId)}
+        />
+      );
+    }
+
+    render(<Harness />);
 
     fireEvent.click(screen.getByRole('combobox', { name: 'First role' }));
     await pick('Not linked');
@@ -98,5 +105,10 @@ describe('TalentListJobLink', () => {
         data: { slug: 'acme', listId: 'list_1', job: null },
       }),
     );
+
+    fireEvent.click(screen.getByRole('combobox', { name: 'Link to a job' }));
+    expect(await screen.findByRole('option', { name: 'Not linked' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'First role' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Second role' })).toBeInTheDocument();
   });
 });

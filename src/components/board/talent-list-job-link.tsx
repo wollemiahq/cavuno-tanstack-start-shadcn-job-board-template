@@ -83,6 +83,8 @@ export function TalentListJobLink({
     <Combobox
       autoHighlight={false}
       items={items}
+      filteredItems={items}
+      filter={null}
       value={bound?.id ?? NONE}
       itemToStringLabel={labelFor}
       onValueChange={(next) => {
@@ -106,7 +108,7 @@ export function TalentListJobLink({
         {pending ? (
           <LoaderCircle aria-hidden="true" className="animate-spin" />
         ) : (
-          <Briefcase aria-hidden="true" className={cn(filled && 'fill-current')} />
+          <Briefcase aria-hidden="true" />
         )}
         <span className="truncate">
           {filled ? bound.title : m.talentLists_linkJobEmpty()}
