@@ -56,7 +56,9 @@ describe('analytics surface', () => {
       join(root, 'src/components/board/apply-button.tsx'),
       'utf8',
     );
+    expect(boot).toMatch(/@cavuno\/board\/analytics/);
     expect(boot).toMatch(/analytics\.install/);
+    expect(apply).toMatch(/@cavuno\/board\/analytics/);
     expect(apply).toMatch(/job_apply_click/);
   });
 });

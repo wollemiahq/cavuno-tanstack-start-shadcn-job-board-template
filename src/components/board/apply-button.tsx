@@ -4,8 +4,8 @@
  * Native apply with the hosted board's fallback ladder. Pure markup and
  * interaction over `ApplyButtonVM`: the
  * decision ladder and copy are resolved by `toApplyButtonVM`
- * (src/board/apply-view-model.ts), so this file imports nothing from
- * `@cavuno/board*` or `#/copy` and the button can be restyled freely.
+ * (src/board/apply-view-model.ts), so this file imports no SDK formatters
+ * or `#/copy` and the button can be restyled freely.
  *
  * The invariant stays in the SDK's pure `resolveApplyAction`: an external
  * `applicationUrl`, when present, is the apply path for EVERYONE —
@@ -31,7 +31,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { analytics } from '@/lib/board-analytics';
+import { analytics } from '@cavuno/board/analytics';
 import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
 import {
   candidateSignInHref,

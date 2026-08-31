@@ -14,7 +14,7 @@ import { m } from '../../paraglide/messages';
 import { ApplyButton, type ApplyButtonDependencies } from './apply-button';
 
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
-import { analytics as boardAnalytics } from '@/lib/board-analytics';
+import { analytics as boardAnalytics } from '@cavuno/board/analytics';
 import type { BoardDataLayerEvent } from '@/lib/board-datalayer-events';
 
 function captureDataLayer(): BoardDataLayerEvent[] {

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 
-import { analytics } from '@/lib/board-analytics';
+import { analytics } from '@cavuno/board/analytics';
 
 /**
  * Boots Cavuno Analytics once per document. Publishable key comes from
