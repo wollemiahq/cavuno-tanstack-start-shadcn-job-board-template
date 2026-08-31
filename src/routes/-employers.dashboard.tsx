@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactElement } from 'react';
 
 import { ChevronRight, Plus, Search, XIcon } from 'lucide-react';
 
+import { incomingAuthSearch } from '../lib/board-datalayer-events';
 import { boardErrorMessage } from '../lib/board-error-message';
 import {
   handleEmployerLoaderErrorUsing,
@@ -79,7 +80,11 @@ const employerDashboardLoaderDependencies: EmployerDashboardLoaderDependencies =
 export function createEmployerDashboardLoader(
   dependencies: EmployerDashboardLoaderDependencies = employerDashboardLoaderDependencies,
 ) {
-  return async ({ location }: { location: { search?: UrlSearchInput } }) => {
+  return async ({
+    location,
+  }: {
+    location: { search?: UrlSearchInput; searchStr?: string };
+  }) => {
     try {
       const [companies, seo] = await Promise.all([
         dependencies.listCompanies(),
@@ -91,7 +96,10 @@ export function createEmployerDashboardLoader(
         dependencies.refreshSession,
         error,
         '/employers/dashboard',
-        { retried: isReauthRetry(location) },
+        {
+          retried: isReauthRetry(location),
+          incomingSearch: incomingAuthSearch(location),
+        },
       );
     }
   };

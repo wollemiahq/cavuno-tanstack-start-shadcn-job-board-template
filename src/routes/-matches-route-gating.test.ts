@@ -118,6 +118,28 @@ describe('matches route — recommendations feature gate', () => {
     },
   );
 
+  it('re-attaches cavuno_auth params when bouncing unverified visitors to verify-email', async () => {
+    getRecommendedJobs.mockRejectedValue(new Error('EMAIL_UNVERIFIED'));
+    const href = '/matches?cavuno_auth=login&cavuno_auth_method=password';
+    let outcome: unknown;
+    try {
+      await createMatchesLoader(dependencies)({ location: { href } });
+    } catch (error) {
+      outcome = error;
+    }
+
+    expect(isRedirect(outcome)).toBe(true);
+    if (!isRedirect(outcome)) return;
+    expect(outcome.options).toMatchObject({
+      to: '/auth/verify-email-required',
+      search: {
+        returnTo: href,
+        cavuno_auth: 'login',
+        cavuno_auth_method: 'password',
+      },
+    });
+  });
+
   it('still redirects unauthenticated visitors when the context probe fails', async () => {
     getBoardContext.mockRejectedValue(new Error('context unavailable'));
     getRecommendedJobs.mockRejectedValue(new Error('UNAUTHENTICATED'));

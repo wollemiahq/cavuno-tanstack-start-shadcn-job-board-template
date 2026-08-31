@@ -131,6 +131,81 @@ export function parseAuthConversionSearchParams(
   return { event, method };
 }
 
+export type AuthConversionSearch = {
+  cavuno_auth: BoardAuthEvent;
+  cavuno_auth_method: BoardAuthMethod;
+};
+
+export type AuthConversionSearchInput =
+  | URLSearchParams
+  | AuthConversionSearch
+  | Partial<AuthConversionSearch>
+  | string
+  | undefined;
+
+function toAuthConversionSearchParams(
+  search: AuthConversionSearchInput,
+): URLSearchParams {
+  if (!search) return new URLSearchParams();
+  if (search instanceof URLSearchParams) return search;
+  if (search.constructor === Object) {
+    const params = new URLSearchParams();
+    // SAFETY: Object constructor selects the auth-object union members.
+    const auth = search as AuthConversionSearch | Partial<AuthConversionSearch>;
+    if ('cavuno_auth' in auth && auth.cavuno_auth) {
+      params.set(CAVUNO_AUTH_PARAM, auth.cavuno_auth);
+    }
+    if ('cavuno_auth_method' in auth && auth.cavuno_auth_method) {
+      params.set(CAVUNO_AUTH_METHOD_PARAM, auth.cavuno_auth_method);
+    }
+    return params;
+  }
+  // SAFETY: remaining union members are string query/href values after
+  // URLSearchParams and auth-object narrowing.
+  const raw = search as string;
+  if (raw.includes('://') || raw.startsWith('/') || raw.startsWith('?')) {
+    try {
+      return new URL(raw, 'https://example.com').searchParams;
+    } catch {
+      return new URLSearchParams();
+    }
+  }
+  return new URLSearchParams(raw);
+}
+
+/** Both conversion keys, or neither. Partial pairs are dropped. */
+export function pickAuthConversionSearch(
+  search: AuthConversionSearchInput,
+): AuthConversionSearch | Record<string, never> {
+  const parsed = parseAuthConversionSearchParams(
+    toAuthConversionSearchParams(search),
+  );
+  if (!parsed) return {};
+  return {
+    cavuno_auth: parsed.event,
+    cavuno_auth_method: parsed.method,
+  };
+}
+
+export function mergeAuthConversionSearch(
+  base: { returnTo: string },
+  incoming: AuthConversionSearchInput,
+): { returnTo: string } & Partial<AuthConversionSearch> {
+  return { returnTo: base.returnTo, ...pickAuthConversionSearch(incoming) };
+}
+
+export type LocationAuthSearch = {
+  searchStr?: string;
+  href?: string;
+};
+
+export function incomingAuthSearch(
+  location?: LocationAuthSearch | null,
+): string | undefined {
+  if (!location) return undefined;
+  return location.searchStr ?? location.href;
+}
+
 /** Resolve OAuth/magic-link completion into a destination with conversion params. */
 export function resolvePostAuthConversionRedirect(
   returnTo: string,

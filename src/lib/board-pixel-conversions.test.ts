@@ -8,6 +8,8 @@ import {
   fireBoardPixelConversion,
   flushBoardPixelQueue,
   pushBoardConversionEvent,
+  resolveBoardConversionAnalytics,
+  sanitizeConversionId,
 } from '@/lib/board-pixel-conversions';
 
 type PixelTestWindow = typeof window & {
@@ -37,7 +39,7 @@ const analytics = {
   gtmId: null,
   metaPixelId: '1234567890',
   linkedInPartnerId: '54321',
-  linkedInConversionSignUpId: 'signup-conv',
+  linkedInConversionSignUpId: '123456',
   linkedInConversionLoginId: null,
   linkedInConversionApplyClickId: null,
   linkedInConversionApplySubmitId: null,
@@ -63,7 +65,10 @@ describe('board-pixel-conversions', () => {
     pixelTestWindow().fbq = fbq;
     flushBoardPixelQueue();
 
-    expect(fbq).toHaveBeenCalledWith('track', 'CompleteRegistration');
+    expect(fbq).toHaveBeenCalledWith('track', 'CompleteRegistration', {
+      method: 'password',
+      board_slug: 'acme',
+    });
   });
 
   it('fires LinkedIn conversion ids when configured', () => {
@@ -73,7 +78,7 @@ describe('board-pixel-conversions', () => {
     fireBoardPixelConversion(analytics, 'sign_up');
 
     expect(lintrk).toHaveBeenCalledWith('track', {
-      conversion_id: 'signup-conv',
+      conversion_id: '123456',
     });
   });
 
@@ -93,7 +98,49 @@ describe('board-pixel-conversions', () => {
       method: 'magic_link',
       board_slug: 'acme',
     });
-    expect(fbq).toHaveBeenCalledWith('trackCustom', 'Login');
+    expect(fbq).toHaveBeenCalledWith('trackCustom', 'Login', {
+      method: 'magic_link',
+      board_slug: 'acme',
+    });
+  });
+
+  it('accepts trimmed 3-20 digit LinkedIn conversion ids and rejects the rest', () => {
+    expect(sanitizeConversionId('123')).toBe('123');
+    expect(sanitizeConversionId(' 9876543210 ')).toBe('9876543210');
+    expect(sanitizeConversionId('12345678901234567890')).toBe(
+      '12345678901234567890',
+    );
+    expect(sanitizeConversionId('12')).toBeNull();
+    expect(sanitizeConversionId('signup-conv')).toBeNull();
+    expect(sanitizeConversionId('123456789012345678901')).toBeNull();
+    expect(sanitizeConversionId('')).toBeNull();
+    expect(sanitizeConversionId(null)).toBeNull();
+  });
+
+  it('nulls invalid LinkedIn conversion ids when resolving analytics', () => {
+    expect(
+      resolveBoardConversionAnalytics({
+        ga4MeasurementId: null,
+        gtmId: null,
+        metaPixelId: null,
+        linkedInPartnerId: '54321',
+        linkedInConversionSignUpId: ' 14008476 ',
+        linkedInConversionLoginId: 'ab',
+        linkedInConversionApplyClickId: 'signup-conv',
+        linkedInConversionApplySubmitId: '12',
+        linkedInConversionJobAlertSubscribeId: '999',
+      }),
+    ).toEqual({
+      ga4MeasurementId: null,
+      gtmId: null,
+      metaPixelId: null,
+      linkedInPartnerId: '54321',
+      linkedInConversionSignUpId: '14008476',
+      linkedInConversionLoginId: null,
+      linkedInConversionApplyClickId: null,
+      linkedInConversionApplySubmitId: null,
+      linkedInConversionJobAlertSubscribeId: '999',
+    });
   });
 
   it('retains queued calls when vendor scripts are not ready', () => {

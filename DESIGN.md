@@ -388,6 +388,16 @@ Props:
 - `avatarUrl: string | null`
 - `displayName: string | null`
 
+### BoardAnalyticsBoot — `src/components/board-analytics-boot.tsx`
+
+Boots Cavuno Analytics once per document. Publishable key comes from
+the public board shell (same pk_ as Board API).
+
+Props:
+
+- `install?: InstallAnalytics | undefined`
+- `publishableKey: string`
+
 ### BoardAuthConversionTracker — `src/components/board-auth-conversion-tracker.tsx`
 
 Parse `cavuno_auth*` query params on any landing page, fire the matching
@@ -400,14 +410,6 @@ Props:
 - `analytics: BoardConversionAnalyticsConfig`
 - `boardSlug: string`
 - `children: ReactNode`
-
-### BoardJobAlertConversionTracker — `src/components/board-job-alert-conversion-tracker.tsx`
-
-Fire `job_alert_subscribe` once when double opt-in confirms a new alert.
-
-Props:
-
-- `status: "confirmed" | "already_confirmed" | "expired" | "not_found"`
 
 ### AlertSignupForm — `src/components/board/alert-signup-form.tsx`
 
@@ -1039,7 +1041,21 @@ Props:
 
 Props:
 
+- `lists?: ReactNode`
 - `search: TalentSearch`
+
+### TalentListsPicker — `src/components/board/talent-lists-picker.tsx`
+
+Props:
+
+- `currentFilters: TalentListFilters`
+- `dependencies?: TalentListsPickerDependencies | undefined`
+- `jobs: { id: string; title: string; }[]`
+- `lists: TalentListRecord[]`
+- `onListsChange: (lists: TalentListRecord[]) => void`
+- `selectedListId?: string | undefined`
+- `selectedSourcedJobId?: string | undefined`
+- `slug: string`
 
 ### TalentMessageAction — `src/components/board/talent-message-action.tsx`
 
@@ -1087,8 +1103,13 @@ Props:
 
 Props:
 
+- `alreadySaved?: boolean | undefined`
+- `boundJobId?: string | undefined`
 - `candidateBoardUserId: string`
+- `dependencies?: TalentSaveToJobDependencies | undefined`
 - `jobs: { id: string; title: string; }[]`
+- `onSaved?: (() => void) | undefined`
+- `presentation?: "default" | "icon" | undefined`
 - `slug: string`
 
 ### TalentSearchDetailState — `src/components/board/talent-search-detail-state.tsx`
@@ -1117,6 +1138,7 @@ Props:
 - `onSelectedTalentReplace: (handle: string) => void`
 - `page: number`
 - `pageSize: number`
+- `profileUnlocks?: boolean | undefined`
 - `q?: string | undefined`
 - `search?: TalentSearch | undefined`
 - `selectedTalent?: string | undefined`
@@ -1131,6 +1153,7 @@ Props:
 - `interactive?: boolean | undefined`
 - `onConversationStarted?: ((conversationId: string) => void) | undefined`
 - `onStartConversation?: StartTalentConversation | undefined`
+- `saveSlot?: ReactNode`
 - `vm: TalentProfileVM`
 
 ### TalentSearchResultDetailSkeleton — `src/components/board/talent-search-result-detail.tsx`
@@ -1140,7 +1163,7 @@ Props:
 Props:
 
 - `onActivate?: ((event: MouseEvent<HTMLAnchorElement, MouseEvent>) => void) | undefined`
-- `save?: ReactNode`
+- `saveSlot?: ReactNode`
 - `selected?: boolean | undefined`
 - `vm: TalentCardVM`
 
@@ -1379,7 +1402,7 @@ Props:
 
 - `billingOptions: { id: string; object: "employer_billing_option"; type: "subscription" | "order"; planId: string; planName: string; pl…`
 - `dependencies?: EmployerJobFormDependencies | undefined`
-- `job?: ({ id: string; object: "employer_job"; title: string; slug: string | null; status: "expired" | "draft" | "published" …`
+- `job?: ({ id: string; object: "employer_job"; title: string; slug: string | null; status: "draft" | "published" | "expired" …`
 - `jobForm?: JobFormSource | null | undefined`
 - `locale: string`
 - `mode: EmployerJobFormMode`

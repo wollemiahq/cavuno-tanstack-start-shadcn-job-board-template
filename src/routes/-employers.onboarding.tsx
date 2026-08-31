@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { redirect } from '@tanstack/react-router';
 
+import { incomingAuthSearch } from '../lib/board-datalayer-events';
 import { boardErrorMessage } from '../lib/board-error-message';
 import {
   handleEmployerLoaderErrorUsing,
@@ -46,7 +47,7 @@ export function createEmployerOnboardingLoader(
     location,
   }: {
     params: { slug: string };
-    location: { search?: UrlSearchInput };
+    location: { search?: UrlSearchInput; searchStr?: string };
   }) => {
     let loaded;
     try {
@@ -59,7 +60,10 @@ export function createEmployerOnboardingLoader(
         dependencies.refreshSession,
         error,
         `/employers/onboarding/${params.slug}`,
-        { retried: isReauthRetry(location) },
+        {
+          retried: isReauthRetry(location),
+          incomingSearch: incomingAuthSearch(location),
+        },
       );
     }
     const [memberships, seo] = loaded;

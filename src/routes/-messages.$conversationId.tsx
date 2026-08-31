@@ -1,5 +1,10 @@
 import { isRedirect, notFound, redirect } from '@tanstack/react-router';
 
+import {
+  incomingAuthSearch,
+  mergeAuthConversionSearch,
+  type LocationAuthSearch,
+} from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { getInbox, getThread } from '@/server/messaging';
 import { getBoardContext, getSeoBase } from '@/server/queries';
@@ -22,9 +27,11 @@ export function createConversationLoader(
   return async ({
     params,
     deps,
+    location,
   }: {
     params: { conversationId: string };
     deps: { view: 'inbox' | 'archived' };
+    location?: LocationAuthSearch;
   }) => {
     // Messaging feature off ⇒ the surface does not exist on this board.
     const board = await dependencies.getBoardContext();
@@ -39,7 +46,10 @@ export function createConversationLoader(
       if (authFailure === 'email-unverified') {
         throw redirect({
           to: '/auth/verify-email-required',
-          search: { returnTo },
+          search: mergeAuthConversionSearch(
+            { returnTo },
+            incomingAuthSearch(location),
+          ),
         });
       }
       if (authFailure === 'unauthenticated') {

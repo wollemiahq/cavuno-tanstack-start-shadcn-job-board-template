@@ -4,6 +4,7 @@ import { formatDate } from '@cavuno/board/format';
 import { Await, Link } from '@tanstack/react-router';
 import { MoreHorizontalIcon, PlusIcon } from 'lucide-react';
 
+import { incomingAuthSearch } from '../lib/board-datalayer-events';
 import {
   employerJobStatusBadgeVariant,
   employerJobStatusLabel,
@@ -121,7 +122,7 @@ export function createCompanyJobsLoader(
     location,
   }: {
     params: { slug: string };
-    location: { search?: UrlSearchInput };
+    location: { search?: UrlSearchInput; searchStr?: string };
   }) => {
     const loaderDependencies = dependencies ?? companyJobsLoaderDependencies;
     const noTimeseries = (): EmployerJobStatsPoint[] => [];
@@ -148,7 +149,10 @@ export function createCompanyJobsLoader(
       return await loaderDependencies.handleEmployerLoaderError(
         error,
         `/employers/companies/${params.slug}`,
-        { retried: isReauthRetry(location) },
+        {
+          retried: isReauthRetry(location),
+          incomingSearch: incomingAuthSearch(location),
+        },
       );
     }
   };

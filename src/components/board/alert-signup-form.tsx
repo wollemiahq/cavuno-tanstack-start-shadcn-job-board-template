@@ -25,6 +25,7 @@ import { useId, useState } from 'react';
 import { BellIcon } from 'lucide-react';
 
 import { toAlertSignupVM } from '@/board/alert-signup-view-model';
+import { useBoardConversionAnalytics } from '@/components/board-conversion-analytics';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import {
@@ -42,6 +43,8 @@ import {
 } from '@/components/ui/field';
 import { InputGroup, InputGroupInput } from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
+import type { JobAlertSubscribeDataLayerEvent } from '@/lib/board-datalayer-events';
+import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
 import { cn } from '@/lib/utils';
 import type { JobAlertSubscribeInput } from '@cavuno/board';
 type Status = 'idle' | 'pending' | 'submitted' | 'error';
@@ -75,6 +78,7 @@ export function AlertSignupForm({
   surface?: 'default' | 'card';
 }) {
   const emailInputId = useId();
+  const conversion = useBoardConversionAnalytics();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<Status>('idle');
 
@@ -114,6 +118,21 @@ export function AlertSignupForm({
                   filters,
                   context,
                 });
+                if (conversion) {
+                  const conversionEvent: JobAlertSubscribeDataLayerEvent = {
+                    event: 'job_alert_subscribe',
+                    board_slug: conversion.boardSlug,
+                    source: context?.source ?? 'form',
+                  };
+                  if (context?.jobId) conversionEvent.job_id = context.jobId;
+                  if (context?.jobSlug) {
+                    conversionEvent.job_slug = context.jobSlug;
+                  }
+                  pushBoardConversionEvent(
+                    conversion.analytics,
+                    conversionEvent,
+                  );
+                }
                 setStatus('submitted');
                 setEmail('');
               } catch {

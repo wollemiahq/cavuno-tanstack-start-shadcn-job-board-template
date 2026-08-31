@@ -13,7 +13,7 @@ const mockRefreshSession = vi.fn<RefreshSession>();
 async function thrownBy<ErrorValue>(
   error: ErrorValue,
   returnTo: string,
-  options?: { retried?: boolean },
+  options?: { retried?: boolean; incomingSearch?: string },
 ) {
   try {
     await handleEmployerLoaderErrorUsing(
@@ -44,6 +44,24 @@ describe('handleEmployerLoaderError', () => {
     expect(error.options.to).toBe('/auth/verify-email-required');
     expect(error.options.search).toEqual({
       returnTo: '/employers/companies/acme/profile',
+    });
+  });
+
+  it('re-attaches inbound cavuno_auth params on the verification redirect', async () => {
+    const error = await thrownBy(
+      new Error('EMAIL_UNVERIFIED'),
+      '/employers/dashboard',
+      {
+        incomingSearch:
+          '/employers/dashboard?cavuno_auth=login&cavuno_auth_method=password',
+      },
+    );
+
+    if (!isRedirect(error)) throw new Error('Expected a verification redirect');
+    expect(error.options.search).toEqual({
+      returnTo: '/employers/dashboard',
+      cavuno_auth: 'login',
+      cavuno_auth_method: 'password',
     });
   });
 

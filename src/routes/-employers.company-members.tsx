@@ -10,6 +10,7 @@ import { PlusIcon } from 'lucide-react';
 
 import { CompanyMembersTable } from '../components/employer/company-members-table';
 import { InviteMemberDialog } from '../components/employer/invite-member-dialog';
+import { incomingAuthSearch } from '../lib/board-datalayer-events';
 import {
   handleEmployerLoaderError,
   isReauthRetry,
@@ -85,7 +86,7 @@ export function createCompanyMembersLoader(
     location,
   }: {
     params: { slug: string };
-    location: { search?: UrlSearchInput };
+    location: { search?: UrlSearchInput; searchStr?: string };
   }) => {
     const loaderDependencies = dependencies ?? companyMembersLoaderDependencies;
     try {
@@ -108,7 +109,10 @@ export function createCompanyMembersLoader(
       return await loaderDependencies.handleEmployerLoaderError(
         error,
         `/employers/companies/${params.slug}/members`,
-        { retried: isReauthRetry(location) },
+        {
+          retried: isReauthRetry(location),
+          incomingSearch: incomingAuthSearch(location),
+        },
       );
     }
   };

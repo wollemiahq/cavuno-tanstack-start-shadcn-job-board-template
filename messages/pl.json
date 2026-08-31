@@ -2108,11 +2108,11 @@
   "talentLists_createSubmit": "Create saved search",
   "talentLists_nameRequired": "Enter a name.",
   "talentLists_jobRequired": "Choose a job.",
-  "talentLists_linkJobEmpty": "Link to a job",
-  "talentLists_linkJobNone": "Not linked",
   "talentSave_jobLabel": "Shortlist for",
   "talentSave_saveLabel": "Shortlist",
   "talentSave_savedLabel": "Shortlisted",
   "employerApplicants_sourcedHeading": "Sourced",
-  "employerApplicants_unknownCandidate": "Candidate"
+  "employerApplicants_unknownCandidate": "Candidate",
+  "talentLists_linkJobEmpty": "Link to a job",
+  "talentLists_linkJobNone": "Not linked"
 }

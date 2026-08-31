@@ -12,6 +12,7 @@
  */
 import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
+import { incomingAuthSearch } from '../lib/board-datalayer-events';
 import {
   handleEmployerLoaderError,
   isReauthRetry,
@@ -41,7 +42,10 @@ export const Route = createFileRoute('/employers/companies/$slug/jobs/new')({
       return await handleEmployerLoaderError(
         error,
         `/employers/companies/${params.slug}/jobs/new`,
-        { retried: isReauthRetry(location) },
+        {
+          retried: isReauthRetry(location),
+          incomingSearch: incomingAuthSearch(location),
+        },
       );
     }
   },
