@@ -49,6 +49,29 @@ describe('TalentSearchResult', () => {
     expect(onActivate).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps a trailing Save control above the card link without activating the candidate', () => {
+    const onActivate = vi.fn((event: React.MouseEvent<HTMLAnchorElement>) =>
+      event.preventDefault(),
+    );
+    const onSave = vi.fn();
+    render(
+      <TalentSearchResult
+        vm={vm}
+        onActivate={onActivate}
+        saveSlot={
+          <button type="button" aria-label="Save to job" onClick={onSave}>
+            Save
+          </button>
+        }
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save to job' }));
+
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onActivate).not.toHaveBeenCalled();
+  });
+
   it('keeps a candidate without a public handle visible but non-selectable', () => {
     const onActivate = vi.fn();
     const { container } = render(

@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useId, useState } from 'react';
+import { useId, useState, type ReactNode } from "react";
 
-import { useNavigate } from '@tanstack/react-router';
-import { ArrowUpDown, XIcon } from 'lucide-react';
+import { useNavigate } from "@tanstack/react-router";
+import { ArrowUpDown, XIcon } from "lucide-react";
 
-import { m } from '../../paraglide/messages';
+import { m } from "../../paraglide/messages";
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -18,7 +18,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetClose,
@@ -27,21 +27,21 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
-import type { UrlSearchInput } from '@/lib/pagination';
-import { parseTalentSearch, type TalentSearch } from '@/lib/talent-search';
+} from "@/components/ui/sheet";
+import type { UrlSearchInput } from "@/lib/pagination";
+import { parseTalentSearch, type TalentSearch } from "@/lib/talent-search";
 
-const ANY = '__any__';
-const DEFAULT_SORT = 'relevance' as const;
+const ANY = "__any__";
+const DEFAULT_SORT = "relevance" as const;
 
 const STATUS_OPTIONS = [
-  { value: 'actively_looking', label: () => m.talentFilters_statusActive() },
-  { value: 'open_to_offers', label: () => m.talentFilters_statusOpen() },
+  { value: "actively_looking", label: () => m.talentFilters_statusActive() },
+  { value: "open_to_offers", label: () => m.talentFilters_statusOpen() },
 ] as const;
 
 const RELOCATE_OPTIONS = [
-  { value: 'true', label: () => m.talentFilters_relocateYes() },
-  { value: 'false', label: () => m.talentFilters_relocateNo() },
+  { value: "true", label: () => m.talentFilters_relocateYes() },
+  { value: "false", label: () => m.talentFilters_relocateNo() },
 ] as const;
 
 type TalentToolbarFacets = {
@@ -103,19 +103,14 @@ function FilterSelect({
 
   return (
     <Field className="w-auto gap-0">
-      <FieldLabel
-        htmlFor={controlId}
-        className={showLabel ? undefined : 'sr-only'}
-      >
+      <FieldLabel htmlFor={controlId} className={showLabel ? undefined : "sr-only"}>
         {label}
       </FieldLabel>
       <Select
         items={items}
         value={value ?? ANY}
         onValueChange={(nextValue) =>
-          onValueChange(
-            nextValue === ANY || nextValue == null ? undefined : nextValue,
-          )
+          onValueChange(nextValue === ANY || nextValue == null ? undefined : nextValue)
         }
       >
         <SelectTrigger id={controlId} aria-label={label}>
@@ -154,18 +149,18 @@ function FilterText({
       <Input
         id={controlId}
         name={name}
-        value={value ?? ''}
+        value={value ?? ""}
         onChange={(event) => onValueChange(event.target.value || undefined)}
       />
     </Field>
   );
 }
 
-export function TalentFilters({ search }: { search: TalentSearch }) {
-  const navigate = useNavigate({ from: '/talent/' });
+export function TalentFilters({ search, lists }: { search: TalentSearch; lists?: ReactNode }) {
+  const navigate = useNavigate({ from: "/talent/" });
   const [sheetOpen, setSheetOpen] = useState(false);
   /** Retained while the sheet animates out so its title does not swap mid-exit. */
-  const [sheetMode, setSheetMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [sheetMode, setSheetMode] = useState<"desktop" | "mobile">("desktop");
   const [draft, setDraft] = useState<TalentToolbarFacets>({});
   const facets = facetsFromSearch(search);
   const activeCount = facetCount(facets);
@@ -178,8 +173,8 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
     label: option.label(),
   }));
   const sortItems = [
-    { value: 'relevance', label: m.talentFilters_sortBestMatch() },
-    { value: 'newest', label: m.talentFilters_sortNewest() },
+    { value: "relevance", label: m.talentFilters_sortBestMatch() },
+    { value: "newest", label: m.talentFilters_sortNewest() },
   ] as const;
 
   const commit = (patch: UrlSearchInput) => {
@@ -189,6 +184,7 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
           ...previous,
           ...patch,
           page: undefined,
+          sourced: undefined,
         }),
     });
   };
@@ -216,7 +212,7 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
       interestedRole: undefined,
     });
 
-  const openSheet = (mode: 'desktop' | 'mobile') => {
+  const openSheet = (mode: "desktop" | "mobile") => {
     setDraft({ ...facets });
     setSheetMode(mode);
     setSheetOpen(true);
@@ -247,11 +243,7 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
       <SheetContent side="right" showCloseButton={false}>
         <SheetClose
           render={
-            <Button
-              variant="ghost"
-              className="bg-secondary absolute end-4 top-4"
-              size="icon-sm"
-            />
+            <Button variant="ghost" className="bg-secondary absolute end-4 top-4" size="icon-sm" />
           }
         >
           <XIcon aria-hidden="true" />
@@ -259,13 +251,9 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
         </SheetClose>
         <SheetHeader>
           <SheetTitle>
-            {sheetMode === 'desktop'
-              ? m.jobSearch_allFiltersLabel()
-              : m.jobSearch_filtersLabel()}
+            {sheetMode === "desktop" ? m.jobSearch_allFiltersLabel() : m.jobSearch_filtersLabel()}
           </SheetTitle>
-          <SheetDescription>
-            {m.jobSearch_filterSheetDescription()}
-          </SheetDescription>
+          <SheetDescription>{m.talentFilters_filterSheetDescription()}</SheetDescription>
         </SheetHeader>
 
         <FieldGroup className="flex flex-1 gap-6 overflow-y-auto px-6 py-2">
@@ -274,9 +262,7 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
             anyLabel={m.talentFilters_anyStatusOption()}
             options={statusOptions}
             value={draft.jobSearchStatus}
-            onValueChange={(jobSearchStatus) =>
-              setDraft({ ...draft, jobSearchStatus })
-            }
+            onValueChange={(jobSearchStatus) => setDraft({ ...draft, jobSearchStatus })}
             showLabel
           />
           <FilterSelect
@@ -284,9 +270,7 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
             anyLabel={m.talentFilters_anyRelocateOption()}
             options={relocateOptions}
             value={draft.openToRelocate}
-            onValueChange={(openToRelocate) =>
-              setDraft({ ...draft, openToRelocate })
-            }
+            onValueChange={(openToRelocate) => setDraft({ ...draft, openToRelocate })}
             showLabel
           />
           <FilterText
@@ -311,17 +295,13 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
             label={m.talentFilters_permitCountryLabel()}
             name="permitCountry"
             value={draft.permitCountry}
-            onValueChange={(permitCountry) =>
-              setDraft({ ...draft, permitCountry })
-            }
+            onValueChange={(permitCountry) => setDraft({ ...draft, permitCountry })}
           />
           <FilterText
             label={m.talentFilters_interestedRoleLabel()}
             name="interestedRole"
             value={draft.interestedRole}
-            onValueChange={(interestedRole) =>
-              setDraft({ ...draft, interestedRole })
-            }
+            onValueChange={(interestedRole) => setDraft({ ...draft, interestedRole })}
           />
         </FieldGroup>
 
@@ -339,31 +319,28 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
 
   return (
     <div data-slot="talent-filter-bar" className="flex items-center gap-2">
+      {lists}
       <div className="hidden items-center gap-2 md:flex">
         <FilterSelect
           label={m.talentFilters_statusLabel()}
           anyLabel={m.talentFilters_anyStatusOption()}
           options={statusOptions}
           value={search.jobSearchStatus}
-          onValueChange={(jobSearchStatus) =>
-            commitFacets({ ...facets, jobSearchStatus })
-          }
+          onValueChange={(jobSearchStatus) => commitFacets({ ...facets, jobSearchStatus })}
         />
         <FilterSelect
           label={m.talentFilters_relocateLabel()}
           anyLabel={m.talentFilters_anyRelocateOption()}
           options={relocateOptions}
           value={search.openToRelocate}
-          onValueChange={(openToRelocate) =>
-            commitFacets({ ...facets, openToRelocate })
-          }
+          onValueChange={(openToRelocate) => commitFacets({ ...facets, openToRelocate })}
         />
         <Button
           type="button"
           variant="outline"
           aria-haspopup="dialog"
-          aria-expanded={sheetOpen && sheetMode === 'desktop'}
-          onClick={() => openSheet('desktop')}
+          aria-expanded={sheetOpen && sheetMode === "desktop"}
+          onClick={() => openSheet("desktop")}
         >
           {m.jobSearch_allFiltersLabel()}
           {activeCount > 0 && <Badge variant="secondary">{activeCount}</Badge>}
@@ -380,8 +357,8 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
         variant="outline"
         className="md:hidden"
         aria-haspopup="dialog"
-        aria-expanded={sheetOpen && sheetMode === 'mobile'}
-        onClick={() => openSheet('mobile')}
+        aria-expanded={sheetOpen && sheetMode === "mobile"}
+        onClick={() => openSheet("mobile")}
       >
         {m.jobSearch_filtersLabel()}
         {activeCount > 0 && <Badge variant="secondary">{activeCount}</Badge>}
@@ -394,10 +371,7 @@ export function TalentFilters({ search }: { search: TalentSearch }) {
         value={search.sort ?? DEFAULT_SORT}
         onValueChange={(sort) => commit({ sort })}
       >
-        <SelectTrigger
-          aria-label={m.jobSearch_sortPlaceholder()}
-          className="ms-auto"
-        >
+        <SelectTrigger aria-label={m.jobSearch_sortPlaceholder()} className="ms-auto">
           <ArrowUpDown aria-hidden="true" />
           <span>{m.jobSearch_sortPlaceholder()}:</span>
           <SelectValue />

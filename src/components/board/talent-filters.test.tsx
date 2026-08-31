@@ -70,6 +70,17 @@ describe('TalentFilters', () => {
     expect(screen.queryByLabelText('Search')).toBeNull();
   });
 
+  it('describes the All-filters sheet as candidate filters, not job results', async () => {
+    renderFilters();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'All filters' }));
+    const sheet = screen.getByRole('dialog', { name: 'All filters' });
+    expect(sheet).toHaveTextContent(
+      'Refine candidate results by status, relocation, skills, and seniority.',
+    );
+    expect(sheet).not.toHaveTextContent('Refine job results');
+  });
+
   it('writes sort to the URL immediately', async () => {
     const { router } = renderFilters();
 

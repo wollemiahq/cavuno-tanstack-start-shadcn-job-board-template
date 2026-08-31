@@ -2,11 +2,7 @@
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "accessOffer_everyMonths": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "cada {countLabel} mes",
@@ -16,11 +12,7 @@
   ],
   "accessOffer_everyYears": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "cada {countLabel} año",
@@ -72,11 +64,7 @@
   "accountHome_verifiedBadge": "Verificado",
   "accountRecommended_count": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "1 oferta coincide con tu perfil y tus preferencias.",
@@ -91,11 +79,7 @@
   "accountRecommended_noneNowTitle": "Ahora mismo no hay coincidencias",
   "accountSaved_count": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Has guardado 1 oferta.",
@@ -471,11 +455,7 @@
   "companyDetail_notFoundText": "Empresa no encontrada.",
   "companyDetail_openJobsCount": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} oferta abierta",
@@ -486,11 +466,7 @@
   "companyDetail_openJobsHeading": "Puestos abiertos",
   "companyDetail_openJobsHeadingCount": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} oferta abierta",
@@ -502,11 +478,7 @@
   "companyDetail_similarCompaniesHeading": "Empresas similares",
   "companyDetail_viewAllJobsCount": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Ver la oferta",
@@ -553,11 +525,7 @@
   "companySearch_queryLabel": "Nombre de la empresa",
   "companySearch_resultsCount": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} empresa",
@@ -593,11 +561,7 @@
   "copyLink_copyLinkLabel": "Copiar enlace",
   "count_candidates": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} candidato",
@@ -607,11 +571,7 @@
   ],
   "count_companies": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} empresa",
@@ -621,11 +581,7 @@
   ],
   "count_jobs": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} oferta",
@@ -635,11 +591,7 @@
   ],
   "count_posts": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} publicación",
@@ -695,11 +647,7 @@
   "employerApplicants_copyEmailLabel": "Copiar dirección de correo",
   "employerApplicants_count": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} candidato",
@@ -816,11 +764,7 @@
   "employerDelete_heading": "Zona de peligro",
   "employerDelete_membersCount": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} miembro más",
@@ -855,11 +799,7 @@
   "employerJobs_actionsMenuLabel": "Acciones para {title}",
   "employerJobs_activeJobs": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Tienes 1 oferta activa.",
@@ -894,11 +834,7 @@
   "employerLanding_enterpriseHeading": "Enterprise",
   "employerLanding_featureActiveJobs": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} oferta activa",
@@ -908,11 +844,7 @@
   ],
   "employerLanding_featureFeaturedSlots": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} destacada",
@@ -923,11 +855,7 @@
   "employerLanding_featureListingDuration": "Publicación de {days} días",
   "employerLanding_featureMessages": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} mensaje",
@@ -937,11 +865,7 @@
   ],
   "employerLanding_featureProfileUnlocks": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} desbloqueo de perfil",
@@ -972,11 +896,7 @@
   "employerMembers_companyHeading": "Miembros del equipo de {company}",
   "employerMembers_count": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Tienes 1 miembro en el equipo.",
@@ -1237,11 +1157,7 @@
   "jobSearch_resetLabel": "Restablecer",
   "jobSearch_resultsCount": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{countLabel} oferta",
@@ -1427,11 +1343,7 @@
   "planComposed_standardName": "Publicación de oferta",
   "planFeature_featured": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Incluye 1 oferta destacada",
@@ -1443,11 +1355,7 @@
   "planFeature_liveDays": "Publicada durante {days} días",
   "planFeature_maxActive": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "1 oferta activa a la vez",
@@ -1686,11 +1594,7 @@
   "salaryDetail_skillLocationsHeading": "Salarios de {skill} por ubicación",
   "salaryDetail_skillLocationsMetaDescription": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Salarios de {skill} en {countLabel} ubicación.",
@@ -1712,11 +1616,7 @@
   "salaryDetail_titleLocationsHeading": "Salarios de {title} por ubicación",
   "salaryDetail_titleLocationsMetaDescription": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Salarios de {title} en {countLabel} ubicación.",
@@ -1917,11 +1817,7 @@
   "talentUnlock_confirmTitle": "¿Desbloquear este perfil?",
   "talentUnlock_creditsRemaining": [
     {
-      "declarations": [
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "Te queda {countLabel} desbloqueo.",
@@ -1983,6 +1879,23 @@
   "talentFilters_permitCountryLabel": "Work authorization",
   "talentFilters_interestedRoleLabel": "Interested role",
   "talentFilters_applyLabel": "Apply filters",
+  "talentFilters_filterSheetDescription": "Refine candidate results by status, relocation, skills, and seniority.",
+  "talentLists_triggerLabel": "Lists",
+  "talentLists_allCandidates": "All candidates",
+  "talentLists_listsHeading": "Lists",
+  "talentLists_sourcedHeading": "Sourced",
+  "talentLists_newList": "New list…",
+  "talentLists_createTitle": "Create list",
+  "talentLists_createDescription": "Save this search, or start from a job.",
+  "talentLists_nameLabel": "Name",
+  "talentLists_namePlaceholder": "Berlin engineers…",
+  "talentLists_kindLabel": "Start from",
+  "talentLists_kindBlank": "Current filters",
+  "talentLists_kindJob": "A job",
+  "talentLists_jobLabel": "Job",
+  "talentLists_createSubmit": "Create list",
+  "talentLists_nameRequired": "Enter a name.",
+  "talentLists_jobRequired": "Choose a job.",
   "talentSave_jobLabel": "Save to job",
   "talentSave_saveLabel": "Save to job",
   "talentSave_savedLabel": "Saved",
