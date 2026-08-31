@@ -10,6 +10,7 @@ import { PlusIcon } from 'lucide-react';
 
 import { CompanyMembersTable } from '../components/employer/company-members-table';
 import { InviteMemberDialog } from '../components/employer/invite-member-dialog';
+import { incomingAuthSearch } from '../lib/board-datalayer-events';
 import {
   handleEmployerLoaderError,
   isReauthRetry,
@@ -110,7 +111,7 @@ export function createCompanyMembersLoader(
         `/employers/companies/${params.slug}/members`,
         {
           retried: isReauthRetry(location),
-          incomingSearch: location.searchStr ?? location.search,
+          incomingSearch: incomingAuthSearch(location),
         },
       );
     }

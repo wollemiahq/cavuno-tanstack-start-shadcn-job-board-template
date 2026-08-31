@@ -6,6 +6,7 @@ import {
   appendAuthConversionQuery,
   appendAuthIntentQuery,
   appendOAuthProviderHint,
+  incomingAuthSearch,
   mergeAuthConversionSearch,
   parseAuthConversionSearchParams,
   pickAuthConversionSearch,
@@ -166,5 +167,28 @@ describe('board-datalayer-events', () => {
     expect(mergeAuthConversionSearch({ returnTo: '/account' }, {})).toEqual({
       returnTo: '/account',
     });
+  });
+
+  it('prefers searchStr, then search, then href from a location', () => {
+    expect(
+      incomingAuthSearch({
+        searchStr: '?cavuno_auth=login&cavuno_auth_method=password',
+        search: { cavuno_auth: 'sign_up' },
+        href: '/x?cavuno_auth=login&cavuno_auth_method=google',
+      }),
+    ).toBe('?cavuno_auth=login&cavuno_auth_method=password');
+    expect(
+      incomingAuthSearch({
+        search: { cavuno_auth: 'login', cavuno_auth_method: 'google' },
+        href: '/x?ignored=1',
+      }),
+    ).toEqual({ cavuno_auth: 'login', cavuno_auth_method: 'google' });
+    expect(
+      incomingAuthSearch({
+        href: '/account?cavuno_auth=login&cavuno_auth_method=password',
+      }),
+    ).toBe('/account?cavuno_auth=login&cavuno_auth_method=password');
+    expect(incomingAuthSearch(undefined)).toBeUndefined();
+    expect(incomingAuthSearch(null)).toBeUndefined();
   });
 });

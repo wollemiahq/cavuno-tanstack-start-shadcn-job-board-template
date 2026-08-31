@@ -40,7 +40,10 @@ import {
   toastActionError,
   toastActionSuccess,
 } from '@/lib/action-toast';
-import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
+import {
+  incomingAuthSearch,
+  mergeAuthConversionSearch,
+} from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 import type { Application, ApplicationsListQuery } from '@cavuno/board';
@@ -107,7 +110,7 @@ export function createApplicationsLoader(
           to: '/auth/verify-email-required',
           search: mergeAuthConversionSearch(
             { returnTo: '/me/applications' },
-            context?.location?.searchStr ?? context?.location?.href,
+            incomingAuthSearch(context?.location),
           ),
         });
       }

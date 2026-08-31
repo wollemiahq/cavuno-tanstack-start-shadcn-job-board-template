@@ -17,7 +17,10 @@ import {
   CandidateRoutePendingPage,
 } from '@/components/candidate-route-state';
 import { CandidateShell } from '@/components/candidate-shell';
-import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
+import {
+  incomingAuthSearch,
+  mergeAuthConversionSearch,
+} from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 
@@ -43,7 +46,7 @@ export const Route = createFileRoute('/me/alerts')({
           to: '/auth/verify-email-required',
           search: mergeAuthConversionSearch(
             { returnTo: '/me/alerts' },
-            location.searchStr ?? location.search,
+            incomingAuthSearch(location),
           ),
         });
       }

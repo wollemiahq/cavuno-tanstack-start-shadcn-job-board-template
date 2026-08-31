@@ -41,7 +41,10 @@ import {
 import { Text } from '@/components/text';
 import { buttonVariants } from '@/components/ui/button';
 import { useSearchSelection } from '@/hooks/use-search-selection';
-import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
+import {
+  incomingAuthSearch,
+  mergeAuthConversionSearch,
+} from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
@@ -95,9 +98,7 @@ export function createMatchesLoader(
           to: '/auth/verify-email-required',
           search: mergeAuthConversionSearch(
             { returnTo },
-            context?.location?.searchStr ??
-              context?.location?.search ??
-              context?.location?.href,
+            incomingAuthSearch(context?.location),
           ),
         });
       }

@@ -1,7 +1,10 @@
 import { isRedirect, notFound, redirect } from '@tanstack/react-router';
 
 import type { MessagesView } from './-messages-controller';
-import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
+import {
+  incomingAuthSearch,
+  mergeAuthConversionSearch,
+} from '@/lib/board-datalayer-events';
 import { getBlocked, getInbox } from '@/server/messaging';
 import { getBoardContext, getSeoBase } from '@/server/queries';
 
@@ -64,7 +67,7 @@ export function createMessagesLoader(
           to: '/auth/verify-email-required',
           search: mergeAuthConversionSearch(
             { returnTo },
-            location?.searchStr ?? location?.search ?? location?.href,
+            incomingAuthSearch(location),
           ),
         });
       }

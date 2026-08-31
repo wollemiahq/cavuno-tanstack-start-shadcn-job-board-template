@@ -1,5 +1,6 @@
 import { isRedirect, redirect } from '@tanstack/react-router';
 
+import { incomingAuthSearch } from '../lib/board-datalayer-events';
 import {
   handleEmployerLoaderError,
   isReauthRetry,
@@ -100,7 +101,7 @@ export async function loadAcceptInvite(
       acceptReturnTo(deps.token),
       {
         retried: isReauthRetry(location),
-        incomingSearch: location?.searchStr ?? location?.search,
+        incomingSearch: incomingAuthSearch(location),
       },
     );
   }

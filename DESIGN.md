@@ -410,14 +410,6 @@ Props:
 - `boardSlug: string`
 - `children: ReactNode`
 
-### BoardJobAlertConversionTracker — `src/components/board-job-alert-conversion-tracker.tsx`
-
-Confirm is a no-op. `job_alert_subscribe` fires on subscribe-form create.
-
-Props:
-
-- `status: "confirmed" | "already_confirmed" | "expired" | "not_found"`
-
 ### AlertSignupForm — `src/components/board/alert-signup-form.tsx`
 
 Props:
@@ -1388,7 +1380,7 @@ Props:
 
 - `billingOptions: { id: string; object: "employer_billing_option"; type: "subscription" | "order"; planId: string; planName: string; pl…`
 - `dependencies?: EmployerJobFormDependencies | undefined`
-- `job?: ({ id: string; object: "employer_job"; title: string; slug: string | null; status: "expired" | "draft" | "published" …`
+- `job?: ({ id: string; object: "employer_job"; title: string; slug: string | null; status: "draft" | "published" | "expired" …`
 - `jobForm?: JobFormSource | null | undefined`
 - `locale: string`
 - `mode: EmployerJobFormMode`

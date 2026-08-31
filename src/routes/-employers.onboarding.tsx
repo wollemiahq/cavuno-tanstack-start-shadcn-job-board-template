@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { redirect } from '@tanstack/react-router';
 
+import { incomingAuthSearch } from '../lib/board-datalayer-events';
 import { boardErrorMessage } from '../lib/board-error-message';
 import {
   handleEmployerLoaderErrorUsing,
@@ -61,7 +62,7 @@ export function createEmployerOnboardingLoader(
         `/employers/onboarding/${params.slug}`,
         {
           retried: isReauthRetry(location),
-          incomingSearch: location.searchStr ?? location.search,
+          incomingSearch: incomingAuthSearch(location),
         },
       );
     }

@@ -1,6 +1,9 @@
 import { isRedirect, notFound, redirect } from '@tanstack/react-router';
 
-import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
+import {
+  incomingAuthSearch,
+  mergeAuthConversionSearch,
+} from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { getInbox, getThread } from '@/server/messaging';
 import { getBoardContext, getSeoBase } from '@/server/queries';
@@ -48,7 +51,7 @@ export function createConversationLoader(
           to: '/auth/verify-email-required',
           search: mergeAuthConversionSearch(
             { returnTo },
-            location?.searchStr ?? location?.search ?? location?.href,
+            incomingAuthSearch(location),
           ),
         });
       }

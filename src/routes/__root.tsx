@@ -204,7 +204,8 @@ export const Route = createRootRoute({
 function RootLayout() {
   const { board, offerGate, publishableKey } = Route.useLoaderData();
 
-  // Embed widget: no site chrome and no session island (third-party iframe).
+  // Embed widget: no site chrome, no session island, no BoardAnalyticsBoot
+  // (first-party analytics). Third-party iframe.
   const isEmbed = useRouterState({
     select: (s) => s.location.pathname.startsWith('/embed'),
   });

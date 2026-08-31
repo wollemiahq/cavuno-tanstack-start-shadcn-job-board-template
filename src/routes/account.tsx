@@ -33,7 +33,10 @@ import {
   type ProfileChecklistItem,
 } from '@/components/profile-completeness-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
+import {
+  incomingAuthSearch,
+  mergeAuthConversionSearch,
+} from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 
@@ -165,7 +168,7 @@ export const Route = createFileRoute('/account')({
           to: '/auth/verify-email-required',
           search: mergeAuthConversionSearch(
             { returnTo: '/account' },
-            location.searchStr ?? location.search,
+            incomingAuthSearch(location),
           ),
         });
       }

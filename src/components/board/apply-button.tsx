@@ -147,22 +147,23 @@ export function ApplyButton({
   const conversion = useBoardConversionAnalytics();
 
   function trackApplyClick(applyType: 'external' | 'native') {
-    if (jobId && jobSlug && companySlug) {
+    if (jobId && jobSlug) {
       analytics.track('job_apply_click', {
         jobId,
         jobSlug,
         companySlug,
       });
     }
-    if (!conversion || !jobId || !jobSlug || !companySlug) return;
-    pushBoardConversionEvent(conversion.analytics, {
-      event: 'apply_click',
-      job_id: jobId,
-      job_slug: jobSlug,
-      company_slug: companySlug,
-      apply_type: applyType,
-      board_slug: conversion.boardSlug,
-    });
+    if (conversion && jobId && jobSlug && companySlug) {
+      pushBoardConversionEvent(conversion.analytics, {
+        event: 'apply_click',
+        job_id: jobId,
+        job_slug: jobSlug,
+        company_slug: companySlug,
+        apply_type: applyType,
+        board_slug: conversion.boardSlug,
+      });
+    }
   }
 
   function trackApplySubmit(applicationId: string) {

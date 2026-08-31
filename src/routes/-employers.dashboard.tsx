@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactElement } from 'react';
 
 import { ChevronRight, Plus, Search, XIcon } from 'lucide-react';
 
+import { incomingAuthSearch } from '../lib/board-datalayer-events';
 import { boardErrorMessage } from '../lib/board-error-message';
 import {
   handleEmployerLoaderErrorUsing,
@@ -97,7 +98,7 @@ export function createEmployerDashboardLoader(
         '/employers/dashboard',
         {
           retried: isReauthRetry(location),
-          incomingSearch: location.searchStr ?? location.search,
+          incomingSearch: incomingAuthSearch(location),
         },
       );
     }

@@ -6,6 +6,7 @@ import {
   type PipelineActions,
 } from '../components/employer/applicant-pipeline-board';
 import { employerJobStatusLabel } from '../lib/employer-job-labels';
+import { incomingAuthSearch } from '../lib/board-datalayer-events';
 import {
   handleEmployerLoaderError,
   isReauthRetry,
@@ -87,7 +88,7 @@ export function createApplicantsLoader(
         `/employers/companies/${params.slug}/jobs/${params.jobId}/applicants`,
         {
           retried: isReauthRetry(location),
-          incomingSearch: location.searchStr ?? location.search,
+          incomingSearch: incomingAuthSearch(location),
         },
       );
     }

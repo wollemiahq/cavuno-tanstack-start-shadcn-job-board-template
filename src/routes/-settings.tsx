@@ -34,7 +34,10 @@ import { CandidateShell } from '@/components/candidate-shell';
 import { Page, PageContent } from '@/components/layout/page';
 import { Text } from '@/components/text';
 import { buttonVariants } from '@/components/ui/button';
-import { mergeAuthConversionSearch } from '@/lib/board-datalayer-events';
+import {
+  incomingAuthSearch,
+  mergeAuthConversionSearch,
+} from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
 import { headTitle } from '@/lib/page-title';
@@ -129,7 +132,7 @@ export function createSettingsLoader(
           to: '/auth/verify-email-required',
           search: mergeAuthConversionSearch(
             { returnTo: '/settings' },
-            location?.searchStr ?? location?.search,
+            incomingAuthSearch(location),
           ),
         });
       }

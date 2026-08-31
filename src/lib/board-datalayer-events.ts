@@ -190,6 +190,19 @@ export function mergeAuthConversionSearch(
   return { returnTo: base.returnTo, ...pickAuthConversionSearch(incoming) };
 }
 
+export type LocationAuthSearch = {
+  searchStr?: string;
+  search?: AuthConversionSearchInput;
+  href?: string;
+};
+
+export function incomingAuthSearch(
+  location?: LocationAuthSearch | null,
+): AuthConversionSearchInput {
+  if (!location) return undefined;
+  return location.searchStr ?? location.search ?? location.href;
+}
+
 /** Resolve OAuth/magic-link completion into a destination with conversion params. */
 export function resolvePostAuthConversionRedirect(
   returnTo: string,

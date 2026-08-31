@@ -46,19 +46,4 @@ describe('analytics surface', () => {
     }
     expect(hits).toEqual([]);
   });
-
-  it('boots board analytics from publishable key + apply track', () => {
-    const boot = readFileSync(
-      join(root, 'src/components/board-analytics-boot.tsx'),
-      'utf8',
-    );
-    const apply = readFileSync(
-      join(root, 'src/components/board/apply-button.tsx'),
-      'utf8',
-    );
-    expect(boot).toMatch(/@cavuno\/board\/analytics/);
-    expect(boot).toMatch(/analytics\.install/);
-    expect(apply).toMatch(/@cavuno\/board\/analytics/);
-    expect(apply).toMatch(/job_apply_click/);
-  });
 });

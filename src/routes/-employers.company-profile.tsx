@@ -19,6 +19,7 @@ import {
   CompanyDeleteDangerZone,
   companyDeletionEnabled,
 } from '../components/employer/company-delete-danger-zone';
+import { incomingAuthSearch } from '../lib/board-datalayer-events';
 import {
   handleEmployerLoaderError,
   isReauthRetry,
@@ -174,7 +175,7 @@ export function createCompanyProfileLoader(
         `/employers/companies/${params.slug}/profile`,
         {
           retried: isReauthRetry(location),
-          incomingSearch: location.searchStr ?? location.search,
+          incomingSearch: incomingAuthSearch(location),
         },
       );
     }
