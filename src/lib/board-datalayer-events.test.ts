@@ -169,20 +169,13 @@ describe('board-datalayer-events', () => {
     });
   });
 
-  it('prefers searchStr, then search, then href from a location', () => {
+  it('prefers searchStr, then href from a location', () => {
     expect(
       incomingAuthSearch({
         searchStr: '?cavuno_auth=login&cavuno_auth_method=password',
-        search: { cavuno_auth: 'sign_up' },
         href: '/x?cavuno_auth=login&cavuno_auth_method=google',
       }),
     ).toBe('?cavuno_auth=login&cavuno_auth_method=password');
-    expect(
-      incomingAuthSearch({
-        search: { cavuno_auth: 'login', cavuno_auth_method: 'google' },
-        href: '/x?ignored=1',
-      }),
-    ).toEqual({ cavuno_auth: 'login', cavuno_auth_method: 'google' });
     expect(
       incomingAuthSearch({
         href: '/account?cavuno_auth=login&cavuno_auth_method=password',

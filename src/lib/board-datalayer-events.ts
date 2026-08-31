@@ -138,7 +138,8 @@ export type AuthConversionSearch = {
 
 export type AuthConversionSearchInput =
   | URLSearchParams
-  | Record<string, unknown>
+  | AuthConversionSearch
+  | Partial<AuthConversionSearch>
   | string
   | undefined;
 
@@ -147,26 +148,29 @@ function toAuthConversionSearchParams(
 ): URLSearchParams {
   if (!search) return new URLSearchParams();
   if (search instanceof URLSearchParams) return search;
-  if (typeof search === 'string') {
-    if (
-      search.includes('://') ||
-      search.startsWith('/') ||
-      search.startsWith('?')
-    ) {
-      try {
-        return new URL(search, 'https://example.com').searchParams;
-      } catch {
-        return new URLSearchParams();
-      }
+  if (search.constructor === Object) {
+    const params = new URLSearchParams();
+    // SAFETY: Object constructor selects the auth-object union members.
+    const auth = search as AuthConversionSearch | Partial<AuthConversionSearch>;
+    if ('cavuno_auth' in auth && auth.cavuno_auth) {
+      params.set(CAVUNO_AUTH_PARAM, auth.cavuno_auth);
     }
-    return new URLSearchParams(search);
+    if ('cavuno_auth_method' in auth && auth.cavuno_auth_method) {
+      params.set(CAVUNO_AUTH_METHOD_PARAM, auth.cavuno_auth_method);
+    }
+    return params;
   }
-  const params = new URLSearchParams();
-  const event = search[CAVUNO_AUTH_PARAM];
-  const method = search[CAVUNO_AUTH_METHOD_PARAM];
-  if (typeof event === 'string') params.set(CAVUNO_AUTH_PARAM, event);
-  if (typeof method === 'string') params.set(CAVUNO_AUTH_METHOD_PARAM, method);
-  return params;
+  // SAFETY: remaining union members are string query/href values after
+  // URLSearchParams and auth-object narrowing.
+  const raw = search as string;
+  if (raw.includes('://') || raw.startsWith('/') || raw.startsWith('?')) {
+    try {
+      return new URL(raw, 'https://example.com').searchParams;
+    } catch {
+      return new URLSearchParams();
+    }
+  }
+  return new URLSearchParams(raw);
 }
 
 /** Both conversion keys, or neither. Partial pairs are dropped. */
@@ -192,28 +196,14 @@ export function mergeAuthConversionSearch(
 
 export type LocationAuthSearch = {
   searchStr?: string;
-  search?: unknown;
   href?: string;
 };
 
-function asAuthConversionSearchInput(
-  value: unknown,
-): AuthConversionSearchInput {
-  if (value == null) return undefined;
-  if (typeof value === 'string' || value instanceof URLSearchParams) {
-    return value;
-  }
-  if (typeof value === 'object') return value as Record<string, unknown>;
-  return undefined;
-}
-
 export function incomingAuthSearch(
   location?: LocationAuthSearch | null,
-): AuthConversionSearchInput {
+): string | undefined {
   if (!location) return undefined;
-  return asAuthConversionSearchInput(
-    location.searchStr ?? location.search ?? location.href,
-  );
+  return location.searchStr ?? location.href;
 }
 
 /** Resolve OAuth/magic-link completion into a destination with conversion params. */

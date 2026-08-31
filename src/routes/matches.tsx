@@ -44,6 +44,7 @@ import { useSearchSelection } from '@/hooks/use-search-selection';
 import {
   incomingAuthSearch,
   mergeAuthConversionSearch,
+  type LocationAuthSearch,
 } from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
@@ -70,11 +71,7 @@ export function createMatchesLoader(
   dependencies: MatchesLoaderDependencies = matchesLoaderDependencies,
 ) {
   return async (context?: {
-    location?: {
-      href: string;
-      search?: Record<string, unknown>;
-      searchStr?: string;
-    };
+    location?: LocationAuthSearch & { href: string };
   }) => {
     const returnTo = candidateReturnTo(context?.location?.href ?? '/matches');
     // The context read gives the route a fast, clean 404 for a disabled

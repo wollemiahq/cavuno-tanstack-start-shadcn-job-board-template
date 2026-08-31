@@ -17,14 +17,13 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { TalentListsPicker } from './talent-lists-picker';
+import {
+  TalentListsPicker,
+  type TalentListsPickerDependencies,
+} from './talent-lists-picker';
 
 import { parseTalentSearch } from '@/lib/talent-search';
-import { createTalentList, type TalentListRecord } from '@/server/employers';
-
-vi.mock('@/server/employers', () => ({
-  createTalentList: vi.fn(),
-}));
+import type { TalentListRecord } from '@/server/employers';
 
 afterEach(cleanup);
 
@@ -53,8 +52,10 @@ const bound: TalentListRecord = {
 function renderPicker(
   lists: TalentListRecord[] = [berlin, bound],
   selectedListId?: string,
+  createTalentList = vi.fn(),
 ) {
   const onListsChange = vi.fn();
+  const dependencies: TalentListsPickerDependencies = { createTalentList };
   const rootRoute = createRootRoute();
   const talentRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -68,6 +69,7 @@ function renderPicker(
         selectedListId={selectedListId}
         currentFilters={{ skill: 'go' }}
         onListsChange={onListsChange}
+        dependencies={dependencies}
       />
     ),
   });
@@ -84,6 +86,7 @@ function renderPicker(
     ...render(<RouterProvider router={router} />),
     router,
     onListsChange,
+    createTalentList,
   };
 }
 
@@ -142,7 +145,7 @@ describe('TalentListsPicker', () => {
   });
 
   it('creates a blank list from the current filters', async () => {
-    vi.mocked(createTalentList).mockResolvedValueOnce({
+    const createTalentList = vi.fn().mockResolvedValueOnce({
       ok: true,
       data: {
         ...berlin,
@@ -151,7 +154,11 @@ describe('TalentListsPicker', () => {
         filters: { skill: 'go' },
       },
     });
-    const { onListsChange } = renderPicker();
+    const { onListsChange } = renderPicker(
+      [berlin, bound],
+      undefined,
+      createTalentList,
+    );
 
     fireEvent.click(await screen.findByRole('button', { name: 'Lists' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'New list…' }));

@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/field';
 import { InputGroup, InputGroupInput } from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
+import type { JobAlertSubscribeDataLayerEvent } from '@/lib/board-datalayer-events';
 import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
 import { cn } from '@/lib/utils';
 import type { JobAlertSubscribeInput } from '@cavuno/board';
@@ -118,13 +119,19 @@ export function AlertSignupForm({
                   context,
                 });
                 if (conversion) {
-                  pushBoardConversionEvent(conversion.analytics, {
+                  const conversionEvent: JobAlertSubscribeDataLayerEvent = {
                     event: 'job_alert_subscribe',
                     board_slug: conversion.boardSlug,
                     source: context?.source ?? 'form',
-                    ...(context?.jobId ? { job_id: context.jobId } : {}),
-                    ...(context?.jobSlug ? { job_slug: context.jobSlug } : {}),
-                  });
+                  };
+                  if (context?.jobId) conversionEvent.job_id = context.jobId;
+                  if (context?.jobSlug) {
+                    conversionEvent.job_slug = context.jobSlug;
+                  }
+                  pushBoardConversionEvent(
+                    conversion.analytics,
+                    conversionEvent,
+                  );
                 }
                 setStatus('submitted');
                 setEmail('');

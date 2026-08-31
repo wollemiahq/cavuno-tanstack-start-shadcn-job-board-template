@@ -3,6 +3,7 @@ import { isRedirect, notFound, redirect } from '@tanstack/react-router';
 import {
   incomingAuthSearch,
   mergeAuthConversionSearch,
+  type LocationAuthSearch,
 } from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { getInbox, getThread } from '@/server/messaging';
@@ -30,11 +31,7 @@ export function createConversationLoader(
   }: {
     params: { conversationId: string };
     deps: { view: 'inbox' | 'archived' };
-    location?: {
-      search?: Record<string, unknown>;
-      searchStr?: string;
-      href?: string;
-    };
+    location?: LocationAuthSearch;
   }) => {
     // Messaging feature off ⇒ the surface does not exist on this board.
     const board = await dependencies.getBoardContext();

@@ -4,6 +4,7 @@ import type { MessagesView } from './-messages-controller';
 import {
   incomingAuthSearch,
   mergeAuthConversionSearch,
+  type LocationAuthSearch,
 } from '@/lib/board-datalayer-events';
 import { getBlocked, getInbox } from '@/server/messaging';
 import { getBoardContext, getSeoBase } from '@/server/queries';
@@ -28,11 +29,7 @@ export function createMessagesLoader(
     location,
   }: {
     deps: { view: MessagesView };
-    location?: {
-      search?: Record<string, unknown>;
-      searchStr?: string;
-      href?: string;
-    };
+    location?: LocationAuthSearch;
   }) => {
     // Messaging feature off ⇒ the surface does not exist on this board.
     // The gate read and the SEO base do not depend on each other, so they

@@ -37,6 +37,7 @@ import { buttonVariants } from '@/components/ui/button';
 import {
   incomingAuthSearch,
   mergeAuthConversionSearch,
+  type LocationAuthSearch,
 } from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
@@ -94,7 +95,7 @@ export function createSettingsLoader(
     location,
   }: {
     deps: SettingsSearch;
-    location?: { search?: Record<string, unknown>; searchStr?: string };
+    location?: LocationAuthSearch;
   }) => {
     const seo = await dependencies.getSeoBase();
     if (deps.token && deps.boardUserId && deps.channel) {

@@ -19,6 +19,16 @@ import { toastActionError } from '@/lib/action-toast';
 import { cn } from '@/lib/utils';
 import { saveSourcedCandidate } from '@/server/employers';
 
+export type TalentSaveToJobDependencies = {
+  saveSourcedCandidate: (input: {
+    data: { slug: string; job: string; candidateBoardUserId: string };
+  }) => Promise<{ ok: true } | { ok: false; message?: string }>;
+};
+
+const talentSaveToJobDependencies: TalentSaveToJobDependencies = {
+  saveSourcedCandidate,
+};
+
 export function TalentSaveToJob({
   slug,
   jobs,
@@ -27,6 +37,7 @@ export function TalentSaveToJob({
   alreadySaved = false,
   presentation = 'default',
   onSaved,
+  dependencies = talentSaveToJobDependencies,
 }: {
   slug: string;
   jobs: Array<{ id: string; title: string }>;
@@ -35,6 +46,7 @@ export function TalentSaveToJob({
   alreadySaved?: boolean;
   presentation?: 'default' | 'icon';
   onSaved?: () => void;
+  dependencies?: TalentSaveToJobDependencies;
 }) {
   const [pending, setPending] = useState(false);
   const [saved, setSaved] = useState(alreadySaved);
@@ -49,7 +61,7 @@ export function TalentSaveToJob({
   function saveTo(job: string) {
     if (!job || pending || saved) return;
     setPending(true);
-    void saveSourcedCandidate({
+    void dependencies.saveSourcedCandidate({
       data: { slug, job, candidateBoardUserId },
     })
       .then((result) => {

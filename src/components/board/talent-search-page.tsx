@@ -226,7 +226,9 @@ export function TalentSearchPage({
   );
   let detailWithSave = detail;
   const detailSave = selectedVm ? saveControl(selectedVm.id, 'default') : null;
-  if (detailSave && isValidElement(detail) && typeof detail.type !== 'string') {
+  if (detailSave && isValidElement(detail)) {
+    // SAFETY: talent detail panes accept saveSlot; host-element test stubs
+    // ignore the extra prop.
     detailWithSave = cloneElement(
       detail as ReactElement<{ saveSlot?: ReactNode }>,
       {

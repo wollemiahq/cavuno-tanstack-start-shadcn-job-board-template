@@ -48,6 +48,23 @@ import { createTalentList, type TalentListRecord } from '@/server/employers';
 const ALL = '__all__';
 const SOURCED = 'sourced:';
 
+export type TalentListsPickerDependencies = {
+  createTalentList: (input: {
+    data: {
+      slug: string;
+      name: string;
+      filters?: TalentListFilters;
+      job?: string;
+    };
+  }) => Promise<
+    { ok: true; data: TalentListRecord } | { ok: false; code: string }
+  >;
+};
+
+const talentListsPickerDependencies: TalentListsPickerDependencies = {
+  createTalentList,
+};
+
 export function TalentListsPicker({
   slug,
   lists,
@@ -56,6 +73,7 @@ export function TalentListsPicker({
   selectedSourcedJobId,
   currentFilters,
   onListsChange,
+  dependencies = talentListsPickerDependencies,
 }: {
   slug: string;
   lists: TalentListRecord[];
@@ -64,6 +82,7 @@ export function TalentListsPicker({
   selectedSourcedJobId?: string;
   currentFilters: TalentListFilters;
   onListsChange: (lists: TalentListRecord[]) => void;
+  dependencies?: TalentListsPickerDependencies;
 }) {
   const navigate = useNavigate({ from: '/talent/' });
   const [createOpen, setCreateOpen] = useState(false);
@@ -191,6 +210,7 @@ export function TalentListsPicker({
         currentFilters={currentFilters}
         open={createOpen}
         onOpenChange={setCreateOpen}
+        createTalentList={dependencies.createTalentList}
         onCreated={(list) => {
           onListsChange([list, ...lists]);
           selectList(list);
@@ -207,6 +227,7 @@ function CreateListDialog({
   open,
   onOpenChange,
   onCreated,
+  createTalentList: createList,
 }: {
   slug: string;
   jobs: Array<{ id: string; title: string }>;
@@ -214,6 +235,7 @@ function CreateListDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (list: TalentListRecord) => void;
+  createTalentList: TalentListsPickerDependencies['createTalentList'];
 }) {
   const nameId = useId();
   const blankKindId = useId();
@@ -260,7 +282,7 @@ function CreateListDialog({
               kind === 'job'
                 ? { slug, name: nextName, filters, job: jobId }
                 : { slug, name: nextName, filters };
-            void createTalentList({ data: payload })
+            void createList({ data: payload })
               .then((result) => {
                 if (!result.ok) {
                   setError(boardErrorMessage({ code: result.code }));
