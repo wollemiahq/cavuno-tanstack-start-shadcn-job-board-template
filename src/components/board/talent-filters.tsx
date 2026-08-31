@@ -10,7 +10,6 @@ import { m } from "../../paraglide/messages";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -47,40 +46,33 @@ const RELOCATE_OPTIONS = [
 type TalentToolbarFacets = {
   jobSearchStatus?: string;
   openToRelocate?: string;
-  skill?: string;
-  languages?: string;
-  seniority?: string;
-  permitCountry?: string;
-  interestedRole?: string;
 };
 
 function facetsFromSearch(search: TalentSearch): TalentToolbarFacets {
   return {
     jobSearchStatus: search.jobSearchStatus,
     openToRelocate: search.openToRelocate,
-    skill: search.skill,
-    languages: search.languages,
-    seniority: search.seniority,
-    permitCountry: search.permitCountry,
-    interestedRole: search.interestedRole,
   };
 }
 
 function facetCount(facets: TalentToolbarFacets) {
   return (
     Number(Boolean(facets.jobSearchStatus)) +
-    Number(Boolean(facets.openToRelocate)) +
-    Number(Boolean(facets.skill)) +
-    Number(Boolean(facets.languages)) +
-    Number(Boolean(facets.seniority)) +
-    Number(Boolean(facets.permitCountry)) +
-    Number(Boolean(facets.interestedRole))
+    Number(Boolean(facets.openToRelocate))
   );
 }
 
-function optionalText(value: string | undefined) {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : undefined;
+function selectString(nextValue: unknown): string | undefined {
+  if (typeof nextValue === "string") return nextValue;
+  if (
+    nextValue &&
+    typeof nextValue === "object" &&
+    "value" in nextValue &&
+    typeof nextValue.value === "string"
+  ) {
+    return nextValue.value;
+  }
+  return undefined;
 }
 
 function FilterSelect({
@@ -98,7 +90,12 @@ function FilterSelect({
   onValueChange: (value: string | undefined) => void;
   showLabel?: boolean;
 }) {
-  const items = [{ value: ANY, label: anyLabel }, ...options];
+  const values = [ANY, ...options.map((option) => option.value)];
+  const labels = Object.fromEntries([
+    [ANY, anyLabel],
+    ...options.map((option) => [option.value, option.label] as const),
+  ]);
+  const selectValue = values.includes(value ?? ANY) ? (value ?? ANY) : ANY;
   const controlId = useId();
 
   return (
@@ -107,20 +104,24 @@ function FilterSelect({
         {label}
       </FieldLabel>
       <Select
-        items={items}
-        value={value ?? ANY}
-        onValueChange={(nextValue) =>
-          onValueChange(nextValue === ANY || nextValue == null ? undefined : nextValue)
-        }
+        items={values}
+        value={selectValue}
+        itemToStringLabel={(item) => labels[item] ?? item}
+        onValueChange={(nextValue) => {
+          const raw = selectString(nextValue);
+          const next = raw === ANY || raw == null ? undefined : raw;
+          if (next === value) return;
+          onValueChange(next);
+        }}
       >
         <SelectTrigger id={controlId} aria-label={label}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent align="start">
           <SelectGroup>
-            {items.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
+            {values.map((item) => (
+              <SelectItem key={item} value={item}>
+                {labels[item]}
               </SelectItem>
             ))}
           </SelectGroup>
@@ -130,37 +131,9 @@ function FilterSelect({
   );
 }
 
-function FilterText({
-  label,
-  name,
-  value,
-  onValueChange,
-}: {
-  label: string;
-  name: string;
-  value?: string;
-  onValueChange: (value: string | undefined) => void;
-}) {
-  const controlId = useId();
-
-  return (
-    <Field className="gap-0">
-      <FieldLabel htmlFor={controlId}>{label}</FieldLabel>
-      <Input
-        id={controlId}
-        name={name}
-        value={value ?? ""}
-        onChange={(event) => onValueChange(event.target.value || undefined)}
-      />
-    </Field>
-  );
-}
-
 export function TalentFilters({ search, lists }: { search: TalentSearch; lists?: ReactNode }) {
   const navigate = useNavigate({ from: "/talent/" });
   const [sheetOpen, setSheetOpen] = useState(false);
-  /** Retained while the sheet animates out so its title does not swap mid-exit. */
-  const [sheetMode, setSheetMode] = useState<"desktop" | "mobile">("desktop");
   const [draft, setDraft] = useState<TalentToolbarFacets>({});
   const facets = facetsFromSearch(search);
   const activeCount = facetCount(facets);
@@ -193,11 +166,11 @@ export function TalentFilters({ search, lists }: { search: TalentSearch; lists?:
     commit({
       jobSearchStatus: next.jobSearchStatus,
       openToRelocate: next.openToRelocate,
-      skill: optionalText(next.skill),
-      languages: optionalText(next.languages),
-      seniority: optionalText(next.seniority),
-      permitCountry: optionalText(next.permitCountry),
-      interestedRole: optionalText(next.interestedRole),
+      skill: undefined,
+      languages: undefined,
+      seniority: undefined,
+      permitCountry: undefined,
+      interestedRole: undefined,
     });
   };
 
@@ -212,9 +185,8 @@ export function TalentFilters({ search, lists }: { search: TalentSearch; lists?:
       interestedRole: undefined,
     });
 
-  const openSheet = (mode: "desktop" | "mobile") => {
+  const openSheet = () => {
     setDraft({ ...facets });
-    setSheetMode(mode);
     setSheetOpen(true);
   };
 
@@ -224,11 +196,6 @@ export function TalentFilters({ search, lists }: { search: TalentSearch; lists?:
     commitFacets({
       jobSearchStatus: draft.jobSearchStatus,
       openToRelocate: draft.openToRelocate,
-      skill: optionalText(draft.skill),
-      languages: optionalText(draft.languages),
-      seniority: optionalText(draft.seniority),
-      permitCountry: optionalText(draft.permitCountry),
-      interestedRole: optionalText(draft.interestedRole),
     });
     closeSheet();
   };
@@ -250,9 +217,7 @@ export function TalentFilters({ search, lists }: { search: TalentSearch; lists?:
           <span className="sr-only">{m.employerCompany_closeLabel()}</span>
         </SheetClose>
         <SheetHeader>
-          <SheetTitle>
-            {sheetMode === "desktop" ? m.jobSearch_allFiltersLabel() : m.jobSearch_filtersLabel()}
-          </SheetTitle>
+          <SheetTitle>{m.jobSearch_filtersLabel()}</SheetTitle>
           <SheetDescription>{m.talentFilters_filterSheetDescription()}</SheetDescription>
         </SheetHeader>
 
@@ -272,36 +237,6 @@ export function TalentFilters({ search, lists }: { search: TalentSearch; lists?:
             value={draft.openToRelocate}
             onValueChange={(openToRelocate) => setDraft({ ...draft, openToRelocate })}
             showLabel
-          />
-          <FilterText
-            label={m.talentFilters_skillLabel()}
-            name="skill"
-            value={draft.skill}
-            onValueChange={(skill) => setDraft({ ...draft, skill })}
-          />
-          <FilterText
-            label={m.talentFilters_languagesLabel()}
-            name="languages"
-            value={draft.languages}
-            onValueChange={(languages) => setDraft({ ...draft, languages })}
-          />
-          <FilterText
-            label={m.talentFilters_seniorityLabel()}
-            name="seniority"
-            value={draft.seniority}
-            onValueChange={(seniority) => setDraft({ ...draft, seniority })}
-          />
-          <FilterText
-            label={m.talentFilters_permitCountryLabel()}
-            name="permitCountry"
-            value={draft.permitCountry}
-            onValueChange={(permitCountry) => setDraft({ ...draft, permitCountry })}
-          />
-          <FilterText
-            label={m.talentFilters_interestedRoleLabel()}
-            name="interestedRole"
-            value={draft.interestedRole}
-            onValueChange={(interestedRole) => setDraft({ ...draft, interestedRole })}
           />
         </FieldGroup>
 
@@ -335,16 +270,6 @@ export function TalentFilters({ search, lists }: { search: TalentSearch; lists?:
           value={search.openToRelocate}
           onValueChange={(openToRelocate) => commitFacets({ ...facets, openToRelocate })}
         />
-        <Button
-          type="button"
-          variant="outline"
-          aria-haspopup="dialog"
-          aria-expanded={sheetOpen && sheetMode === "desktop"}
-          onClick={() => openSheet("desktop")}
-        >
-          {m.jobSearch_allFiltersLabel()}
-          {activeCount > 0 && <Badge variant="secondary">{activeCount}</Badge>}
-        </Button>
         {activeCount > 0 && (
           <Button type="button" variant="ghost" onClick={resetFacets}>
             {m.jobSearch_resetLabel()}
@@ -357,8 +282,8 @@ export function TalentFilters({ search, lists }: { search: TalentSearch; lists?:
         variant="outline"
         className="md:hidden"
         aria-haspopup="dialog"
-        aria-expanded={sheetOpen && sheetMode === "mobile"}
-        onClick={() => openSheet("mobile")}
+        aria-expanded={sheetOpen}
+        onClick={openSheet}
       >
         {m.jobSearch_filtersLabel()}
         {activeCount > 0 && <Badge variant="secondary">{activeCount}</Badge>}
@@ -367,9 +292,19 @@ export function TalentFilters({ search, lists }: { search: TalentSearch; lists?:
       {sheet}
 
       <Select
-        items={sortItems}
+        items={["relevance", "newest"]}
         value={search.sort ?? DEFAULT_SORT}
-        onValueChange={(sort) => commit({ sort })}
+        itemToStringLabel={(item) =>
+          item === "newest" ? m.talentFilters_sortNewest() : m.talentFilters_sortBestMatch()
+        }
+        onValueChange={(sort) => {
+          const raw = selectString(sort);
+          const next = raw === "relevance" || raw === "newest" ? raw : undefined;
+          if (next === (search.sort ?? DEFAULT_SORT) || (next === DEFAULT_SORT && !search.sort)) {
+            return;
+          }
+          commit({ sort: next });
+        }}
       >
         <SelectTrigger aria-label={m.jobSearch_sortPlaceholder()} className="ms-auto">
           <ArrowUpDown aria-hidden="true" />

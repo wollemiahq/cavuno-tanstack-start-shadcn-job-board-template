@@ -18,7 +18,7 @@ import {
   useNavigate,
   useRouter,
 } from '@tanstack/react-router';
-import { Bookmark, BookmarkCheck } from 'lucide-react';
+import { Bookmark } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -236,7 +236,7 @@ function SavedJobsPage() {
                                 setPendingId(null);
                               }}
                             >
-                              <BookmarkCheck aria-hidden />
+                              <Bookmark aria-hidden className="fill-current" />
                             </Button>
                           }
                         />
@@ -283,7 +283,11 @@ function SavedJobsPage() {
                             setPendingId(null);
                           }}
                         >
-                          <BookmarkCheck aria-hidden data-icon="inline-start" />
+                          <Bookmark
+                            aria-hidden
+                            data-icon="inline-start"
+                            className="fill-current"
+                          />
                           {m.accountSaved_savedLabel()}
                         </Button>
                       ) : undefined

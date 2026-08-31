@@ -651,6 +651,23 @@ export const listTalentLists = createServerFn({ method: 'GET' })
     ),
   );
 
+/** Jobs + saved searches in one verified `/me` — talent directory chrome. */
+export const getEmployerTalentWorkspace = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string }) => input)
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(async ({ data, context }) => {
+    const headers = authedHeaders(context);
+    const [jobs, lists] = await Promise.all([
+      gatedRead(context, () =>
+        getBoard().me.companies.jobs.list(data.slug, undefined, { headers }),
+      ),
+      gatedRead(context, () =>
+        getBoard().me.companies.talentLists.list(data.slug, { headers }),
+      ),
+    ]);
+    return { jobs, lists };
+  });
+
 export const createTalentList = createServerFn({ method: 'POST' })
   .validator(
     (input: {

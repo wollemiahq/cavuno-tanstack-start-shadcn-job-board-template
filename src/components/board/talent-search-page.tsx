@@ -25,6 +25,7 @@ import { useListingAdRails, type AdPlacement } from "@/components/board/listing-
 import { ListingPagination } from "@/components/board/listing-pagination";
 import { TalentFilters } from "@/components/board/talent-filters";
 import { TalentListsPicker } from "@/components/board/talent-lists-picker";
+import type { StartTalentConversation } from "@/components/board/talent-message-action";
 import { TalentSaveToJob } from "@/components/board/talent-save-to-job";
 import { TalentSearchResult } from "@/components/board/talent-search-result";
 import { Box } from "@/components/layout/box";
@@ -49,11 +50,12 @@ import { useSearchSelection } from "@/hooks/use-search-selection";
 import { ADS_OFF, type BoardAdsConfig } from "@/lib/board-ads";
 import { listingPageHref } from "@/lib/pagination";
 import type { TalentSearch } from "@/lib/talent-search";
-import { talentSearchToListFilters } from "@/lib/talent-search";
+import { talentListFiltersEqual, talentSearchToListFilters } from "@/lib/talent-search";
 import {
-  listEmployerJobs,
+  getEmployerTalentWorkspace,
+  getPipeline,
   listSourcedCandidates,
-  listTalentLists,
+  updateTalentList,
   type TalentListRecord,
 } from "@/server/employers";
 
@@ -120,20 +122,43 @@ export function TalentSearchPage({
     const slug = membership?.company.slug;
     if (!slug) return;
     let cancelled = false;
-    void Promise.all([listEmployerJobs({ data: { slug } }), listTalentLists({ data: { slug } })])
-      .then(([jobsResult, listsResult]) => {
+    void getEmployerTalentWorkspace({ data: { slug } })
+      .then((result) => {
         if (cancelled) return;
-        const jobs = (jobsResult.data ?? [])
+        const jobs = (result.jobs.data ?? [])
           .filter((job) => job.status === "published")
           .map((job) => ({ id: job.id, title: job.title }));
         setWorkspace({ slug, jobs });
-        setLists(listsResult.data ?? []);
+        setLists(result.lists.data ?? []);
       })
       .catch(() => undefined);
     return () => {
       cancelled = true;
     };
   }, [employerCompanies]);
+  useEffect(() => {
+    if (!workspace || !selectedList) return;
+    const nextFilters = talentSearchToListFilters(search);
+    if (talentListFiltersEqual(nextFilters, selectedList.filters)) return;
+    let cancelled = false;
+    void updateTalentList({
+      data: {
+        slug: workspace.slug,
+        listId: selectedList.id,
+        filters: nextFilters,
+      },
+    })
+      .then((result) => {
+        if (cancelled || !result.ok) return;
+        setLists((current) =>
+          current.map((list) => (list.id === result.data.id ? result.data : list)),
+        );
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [search, selectedList, workspace]);
   useEffect(() => {
     const jobId = search.sourced ?? boundJobId;
     if (!workspace || !jobId) {
@@ -142,13 +167,21 @@ export function TalentSearchPage({
       return;
     }
     let cancelled = false;
-    void listSourcedCandidates({
-      data: { slug: workspace.slug, job: jobId },
-    })
-      .then((result) => {
+    void Promise.all([
+      listSourcedCandidates({
+        data: { slug: workspace.slug, job: jobId },
+      }),
+      getPipeline({ data: { slug: workspace.slug, job: jobId } }).catch(
+        () => null,
+      ),
+    ])
+      .then(([sourced, pipeline]) => {
         if (cancelled) return;
-        const rows = result.data ?? [];
-        setSourcedIds(new Set(rows.map((row) => row.candidate.id)));
+        const rows = sourced.data ?? [];
+        const pipelineIds = (pipeline?.applicants ?? []).flatMap((row) =>
+          row.candidateBoardUserId ? [row.candidateBoardUserId] : [],
+        );
+        setSourcedIds(new Set([...rows.map((row) => row.candidate.id), ...pipelineIds]));
         if (!search.sourced) {
           setSourcedVms(null);
           return;
@@ -205,6 +238,7 @@ export function TalentSearchPage({
         presentation={presentation}
         slug={workspace.slug}
         jobs={workspace.jobs}
+        lists={lists}
         candidateBoardUserId={candidateBoardUserId}
         boundJobId={boundJobId}
         alreadySaved={
@@ -219,9 +253,21 @@ export function TalentSearchPage({
   );
   let detailWithSave = detail;
   const detailSave = selectedVm ? saveControl(selectedVm.id, "default") : null;
-  if (detailSave && isValidElement(detail) && typeof detail.type !== "string") {
-    detailWithSave = cloneElement(detail as ReactElement<{ saveSlot?: ReactNode }>, {
-      saveSlot: detailSave,
+  if (isValidElement(detail) && typeof detail.type !== "string") {
+    const existing = detail as ReactElement<{
+      saveSlot?: ReactNode;
+      onStartConversation?: StartTalentConversation;
+    }>;
+    const start = existing.props.onStartConversation;
+    detailWithSave = cloneElement(existing, {
+      saveSlot: detailSave ?? existing.props.saveSlot,
+      onStartConversation: start
+        ? (input) =>
+            start({
+              ...input,
+              ...(boundJobId ? { job: boundJobId } : {}),
+            })
+        : start,
     });
   }
   const selectableIds = candidateVms.flatMap((vm) => {
@@ -275,7 +321,6 @@ export function TalentSearchPage({
                       lists={lists}
                       jobs={workspace.jobs}
                       selectedListId={search.list}
-                      selectedSourcedJobId={search.sourced}
                       currentFilters={talentSearchToListFilters(search)}
                       onListsChange={setLists}
                     />

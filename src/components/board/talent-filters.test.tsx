@@ -70,14 +70,19 @@ describe('TalentFilters', () => {
     expect(screen.queryByLabelText('Search')).toBeNull();
   });
 
-  it('describes the All-filters sheet as candidate filters, not job results', async () => {
+  it('describes the Filters sheet as candidate filters, not job results', async () => {
     renderFilters();
 
-    fireEvent.click(await screen.findByRole('button', { name: 'All filters' }));
-    const sheet = screen.getByRole('dialog', { name: 'All filters' });
+    fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
+    const sheet = screen.getByRole('dialog', { name: 'Filters' });
     expect(sheet).toHaveTextContent(
-      'Refine candidate results by status, relocation, skills, and seniority.',
+      'Refine candidate results by status and relocation.',
     );
+    expect(sheet).not.toHaveTextContent('Skill');
+    expect(sheet).not.toHaveTextContent('Languages');
+    expect(sheet).not.toHaveTextContent('Seniority');
+    expect(sheet).not.toHaveTextContent('Work authorization');
+    expect(sheet).not.toHaveTextContent('Interested role');
     expect(sheet).not.toHaveTextContent('Refine job results');
   });
 

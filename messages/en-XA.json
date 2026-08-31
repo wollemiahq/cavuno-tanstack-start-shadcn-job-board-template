@@ -2,8 +2,14 @@
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "accessOffer_everyMonths": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦éṽéŕý {countLabel} ɱóñţĥ⟧",
         "countPlural=*": "⟦éṽéŕý {countLabel} ɱóñţĥš⟧"
@@ -12,8 +18,14 @@
   ],
   "accessOffer_everyYears": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦éṽéŕý {countLabel} ýéáŕ⟧",
         "countPlural=*": "⟦éṽéŕý {countLabel} ýéáŕš⟧"
@@ -64,8 +76,14 @@
   "accountHome_verifiedBadge": "⟦Ṽéŕíƒíéð⟧",
   "accountRecommended_count": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦1 ĵóƀ ɱáţçĥéš ýóúŕ þŕóƒíĺé áñð þŕéƒéŕéñçéš.⟧",
         "countPlural=*": "⟦{countLabel} ĵóƀš ɱáţçĥ ýóúŕ þŕóƒíĺé áñð þŕéƒéŕéñçéš.⟧"
@@ -79,8 +97,14 @@
   "accountRecommended_noneNowTitle": "⟦Ñó ɱáţçĥéš ŕíğĥţ ñóŵ⟧",
   "accountSaved_count": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦Ýóú ĥáṽé šáṽéð 1 ĵóƀ.⟧",
         "countPlural=*": "⟦Ýóú ĥáṽé šáṽéð {countLabel} ĵóƀš.⟧"
@@ -455,8 +479,14 @@
   "companyDetail_notFoundText": "⟦Çóɱþáñý ñóţ ƒóúñð.⟧",
   "companyDetail_openJobsCount": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} óþéñ ĵóƀ⟧",
         "countPlural=*": "⟦{countLabel} óþéñ ĵóƀš⟧"
@@ -466,8 +496,14 @@
   "companyDetail_openJobsHeading": "⟦Óþéñ ĵóƀš⟧",
   "companyDetail_openJobsHeadingCount": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} Óþéñ ĵóƀ⟧",
         "countPlural=*": "⟦{countLabel} Óþéñ ĵóƀš⟧"
@@ -478,8 +514,14 @@
   "companyDetail_similarCompaniesHeading": "⟦Šíɱíĺáŕ çóɱþáñíéš⟧",
   "companyDetail_viewAllJobsCount": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦Ṽíéŵ áĺĺ {countLabel} ĵóƀ⟧",
         "countPlural=*": "⟦Ṽíéŵ áĺĺ {countLabel} ĵóƀš⟧"
@@ -525,8 +567,14 @@
   "companySearch_queryLabel": "⟦Çóɱþáñý ñáɱé⟧",
   "companySearch_resultsCount": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} çóɱþáñý⟧",
         "countPlural=*": "⟦{countLabel} çóɱþáñíéš⟧"
@@ -561,8 +609,14 @@
   "copyLink_copyLinkLabel": "⟦Çóþý ĺíñķ⟧",
   "count_candidates": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} çáñðíðáţé⟧",
         "countPlural=*": "⟦{countLabel} çáñðíðáţéš⟧"
@@ -571,8 +625,14 @@
   ],
   "count_companies": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} çóɱþáñý⟧",
         "countPlural=*": "⟦{countLabel} çóɱþáñíéš⟧"
@@ -581,8 +641,14 @@
   ],
   "count_jobs": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} ĵóƀ⟧",
         "countPlural=*": "⟦{countLabel} ĵóƀš⟧"
@@ -591,8 +657,14 @@
   ],
   "count_posts": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} þóšţ⟧",
         "countPlural=*": "⟦{countLabel} þóšţš⟧"
@@ -647,8 +719,14 @@
   "employerApplicants_copyEmailLabel": "⟦Çóþý éɱáíĺ áððŕéšš⟧",
   "employerApplicants_count": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} áþþĺíçáñţ⟧",
         "countPlural=*": "⟦{countLabel} áþþĺíçáñţš⟧"
@@ -764,8 +842,14 @@
   "employerDelete_heading": "⟦Ðáñğéŕ žóñé⟧",
   "employerDelete_membersCount": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} óţĥéŕ ɱéɱƀéŕ⟧",
         "countPlural=*": "⟦{countLabel} óţĥéŕ ɱéɱƀéŕš⟧"
@@ -799,8 +883,14 @@
   "employerJobs_actionsMenuLabel": "⟦Áçţíóñš ƒóŕ {title}⟧",
   "employerJobs_activeJobs": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦Ýóú ĥáṽé 1 áçţíṽé ĵóƀ.⟧",
         "countPlural=*": "⟦Ýóú ĥáṽé {countLabel} áçţíṽé ĵóƀš.⟧"
@@ -834,8 +924,14 @@
   "employerLanding_enterpriseHeading": "⟦Éñţéŕþŕíšé⟧",
   "employerLanding_featureActiveJobs": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} áçţíṽé ĵóƀ⟧",
         "countPlural=*": "⟦{countLabel} áçţíṽé ĵóƀš⟧"
@@ -844,8 +940,14 @@
   ],
   "employerLanding_featureFeaturedSlots": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} ƒéáţúŕéð⟧",
         "countPlural=*": "⟦{countLabel} ƒéáţúŕéð⟧"
@@ -855,8 +957,14 @@
   "employerLanding_featureListingDuration": "⟦{days}-ðáý ĺíšţíñğ⟧",
   "employerLanding_featureMessages": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} ɱéššáğé⟧",
         "countPlural=*": "⟦{countLabel} ɱéššáğéš⟧"
@@ -865,8 +973,14 @@
   ],
   "employerLanding_featureProfileUnlocks": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} þŕóƒíĺé úñĺóçķ⟧",
         "countPlural=*": "⟦{countLabel} þŕóƒíĺé úñĺóçķš⟧"
@@ -896,8 +1010,14 @@
   "employerMembers_companyHeading": "⟦{company} Ţéáɱ Ṁéɱƀéŕš⟧",
   "employerMembers_count": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦Ýóú ĥáṽé 1 ţéáɱ ɱéɱƀéŕ.⟧",
         "countPlural=*": "⟦Ýóú ĥáṽé {countLabel} ţéáɱ ɱéɱƀéŕš.⟧"
@@ -1157,8 +1277,14 @@
   "jobSearch_resetLabel": "⟦Ŕéšéţ⟧",
   "jobSearch_resultsCount": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} ĵóƀ⟧",
         "countPlural=*": "⟦{countLabel} ĵóƀš⟧"
@@ -1343,8 +1469,14 @@
   "planComposed_standardName": "⟦Ĵóƀ ĺíšţíñğ⟧",
   "planFeature_featured": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦Íñçĺúðéš 1 ƒéáţúŕéð þóšţ⟧",
         "countPlural=*": "⟦Íñçĺúðéš {countLabel} ƒéáţúŕéð þóšţš⟧"
@@ -1355,8 +1487,14 @@
   "planFeature_liveDays": "⟦Ĺíṽé ƒóŕ {days} ðáýš⟧",
   "planFeature_maxActive": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦1 áçţíṽé ĵóƀ áţ á ţíɱé⟧",
         "countPlural=*": "⟦Úþ ţó {countLabel} áçţíṽé ĵóƀš⟧"
@@ -1594,8 +1732,14 @@
   "salaryDetail_skillLocationsHeading": "⟦{skill} šáĺáŕíéš ƀý ĺóçáţíóñ⟧",
   "salaryDetail_skillLocationsMetaDescription": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{skill} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñ.⟧",
         "countPlural=*": "⟦{skill} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñš.⟧"
@@ -1616,8 +1760,14 @@
   "salaryDetail_titleLocationsHeading": "⟦{title} šáĺáŕíéš ƀý ĺóçáţíóñ⟧",
   "salaryDetail_titleLocationsMetaDescription": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{title} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñ.⟧",
         "countPlural=*": "⟦{title} šáĺáŕíéš áçŕóšš {countLabel} ĺóçáţíóñš.⟧"
@@ -1643,7 +1793,9 @@
         "input jobCountLabel",
         "local jobCountPlural = jobCount: plural"
       ],
-      "selectors": ["jobCountPlural"],
+      "selectors": [
+        "jobCountPlural"
+      ],
       "match": {
         "jobCountPlural=one": "⟦{jobCountLabel} ĵóƀ þóšţíñğ⟧",
         "jobCountPlural=*": "⟦{jobCountLabel} ĵóƀ þóšţíñğš⟧"
@@ -1817,8 +1969,14 @@
   "talentUnlock_confirmTitle": "⟦Úñĺóçķ ţĥíš þŕóƒíĺé?⟧",
   "talentUnlock_creditsRemaining": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "⟦{countLabel} úñĺóçķ ŕéɱáíñíñğ.⟧",
         "countPlural=*": "⟦{countLabel} úñĺóçķš ŕéɱáíñíñğ.⟧"
@@ -1879,13 +2037,13 @@
   "talentFilters_permitCountryLabel": "⟦Ŵóŕķ áúţĥóŕížáţíóñ⟧",
   "talentFilters_interestedRoleLabel": "⟦Íñţéŕéšţéð ŕóĺé⟧",
   "talentFilters_applyLabel": "⟦Áþþĺý ƒíĺţéŕš⟧",
-  "talentFilters_filterSheetDescription": "⟦Ŕéƒíñé çáñðíðáţé ŕéšúĺţš ƀý šţáţúš, ŕéĺóçáţíóñ, šķíĺĺš, áñð šéñíóŕíţý.⟧",
-  "talentLists_triggerLabel": "⟦Ĺíšţš⟧",
+  "talentFilters_filterSheetDescription": "⟦Ŕéƒíñé çáñðíðáţé ŕéšúĺţš ƀý šţáţúš áñð ŕéĺóçáţíóñ.⟧",
+  "talentLists_triggerLabel": "⟦Šáṽéð šéáŕçĥéš⟧",
   "talentLists_allCandidates": "⟦Áĺĺ çáñðíðáţéš⟧",
   "talentLists_listsHeading": "⟦Ĺíšţš⟧",
   "talentLists_sourcedHeading": "⟦Šóúŕçéð⟧",
-  "talentLists_newList": "⟦Ñéŵ ĺíšţ…⟧",
-  "talentLists_createTitle": "⟦Çŕéáţé ĺíšţ⟧",
+  "talentLists_newList": "⟦Ñéŵ šáṽéð šéáŕçĥ…⟧",
+  "talentLists_createTitle": "⟦Çŕéáţé šáṽéð šéáŕçĥ⟧",
   "talentLists_createDescription": "⟦Šáṽé ţĥíš šéáŕçĥ, óŕ šţáŕţ ƒŕóɱ á ĵóƀ.⟧",
   "talentLists_nameLabel": "⟦Ñáɱé⟧",
   "talentLists_namePlaceholder": "⟦Ɓéŕĺíñ éñğíñééŕš…⟧",
@@ -1893,12 +2051,12 @@
   "talentLists_kindBlank": "⟦Çúŕŕéñţ ƒíĺţéŕš⟧",
   "talentLists_kindJob": "⟦Á ĵóƀ⟧",
   "talentLists_jobLabel": "⟦Ĵóƀ⟧",
-  "talentLists_createSubmit": "⟦Çŕéáţé ĺíšţ⟧",
+  "talentLists_createSubmit": "⟦Çŕéáţé šáṽéð šéáŕçĥ⟧",
   "talentLists_nameRequired": "⟦Éñţéŕ á ñáɱé.⟧",
   "talentLists_jobRequired": "⟦Çĥóóšé á ĵóƀ.⟧",
-  "talentSave_jobLabel": "⟦Šáṽé ţó ĵóƀ⟧",
-  "talentSave_saveLabel": "⟦Šáṽé ţó ĵóƀ⟧",
-  "talentSave_savedLabel": "⟦Šáṽéð⟧",
+  "talentSave_jobLabel": "⟦Šĥóŕţĺíšţ ƒóŕ⟧",
+  "talentSave_saveLabel": "⟦Šĥóŕţĺíšţ⟧",
+  "talentSave_savedLabel": "⟦Šĥóŕţĺíšţéð⟧",
   "employerApplicants_sourcedHeading": "⟦Šóúŕçéð⟧",
   "employerApplicants_unknownCandidate": "⟦Çáñðíðáţé⟧"
 }

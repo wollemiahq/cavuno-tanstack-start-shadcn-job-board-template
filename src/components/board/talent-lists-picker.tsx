@@ -18,13 +18,9 @@ import {
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
@@ -35,19 +31,16 @@ import { boardErrorMessage } from "@/lib/board-error-message";
 import {
   filtersFromJob,
   listFiltersToTalentSearch,
+  talentListDisplayName,
   type TalentListFilters,
 } from "@/lib/talent-search";
 import { createTalentList, type TalentListRecord } from "@/server/employers";
-
-const ALL = "__all__";
-const SOURCED = "sourced:";
 
 export function TalentListsPicker({
   slug,
   lists,
   jobs,
   selectedListId,
-  selectedSourcedJobId,
   currentFilters,
   onListsChange,
 }: {
@@ -55,32 +48,13 @@ export function TalentListsPicker({
   lists: TalentListRecord[];
   jobs: Array<{ id: string; title: string }>;
   selectedListId?: string;
-  selectedSourcedJobId?: string;
   currentFilters: TalentListFilters;
   onListsChange: (lists: TalentListRecord[]) => void;
 }) {
   const navigate = useNavigate({ from: "/talent/" });
   const [createOpen, setCreateOpen] = useState(false);
   const selected = lists.find((list) => list.id === selectedListId);
-  const selectedSourcedJob = jobs.find((job) => job.id === selectedSourcedJobId);
-  const triggerName = selectedSourcedJob?.title ?? selected?.name;
-  const radioValue = selectedSourcedJobId
-    ? `${SOURCED}${selectedSourcedJobId}`
-    : (selectedListId ?? ALL);
-
-  function onRadioValue(value: string) {
-    if (value === ALL) {
-      selectList(null);
-      return;
-    }
-    if (value.startsWith(SOURCED)) {
-      const job = jobs.find((row) => row.id === value.slice(SOURCED.length));
-      if (job) selectSourced(job);
-      return;
-    }
-    const next = lists.find((list) => list.id === value);
-    if (next) selectList(next);
-  }
+  const triggerName = selected ? talentListDisplayName(selected.name) : undefined;
 
   function selectList(list: TalentListRecord | null) {
     if (!list) {
@@ -96,13 +70,8 @@ export function TalentListsPicker({
       search: {
         ...listFiltersToTalentSearch(list.filters),
         list: list.id,
+        selectedTalent: undefined,
       },
-    });
-  }
-
-  function selectSourced(job: { id: string }) {
-    void navigate({
-      search: { sourced: job.id },
     });
   }
 
@@ -114,7 +83,7 @@ export function TalentListsPicker({
             <Button
               type="button"
               variant="outline"
-              className="max-w-48 min-w-0"
+              className="max-w-56 min-w-0"
               aria-haspopup="menu"
               aria-label={
                 triggerName
@@ -128,38 +97,22 @@ export function TalentListsPicker({
           <span className="truncate">{triggerName ?? m.talentLists_triggerLabel()}</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-72">
-          <DropdownMenuRadioGroup value={radioValue} onValueChange={onRadioValue}>
-            <DropdownMenuRadioItem value={ALL}>
-              {m.talentLists_allCandidates()}
-            </DropdownMenuRadioItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>{m.talentLists_listsHeading()}</DropdownMenuLabel>
-              {lists.map((list) => (
-                <DropdownMenuRadioItem key={list.id} value={list.id}>
-                  <span className="min-w-0 truncate">{list.name}</span>
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuGroup>
-          </DropdownMenuRadioGroup>
+          {lists.map((list) => (
+            <DropdownMenuCheckboxItem
+              key={list.id}
+              checked={list.id === selectedListId}
+              onCheckedChange={() =>
+                selectList(list.id === selectedListId ? null : list)
+              }
+            >
+              <span className="min-w-0 truncate">
+                {talentListDisplayName(list.name)}
+              </span>
+            </DropdownMenuCheckboxItem>
+          ))}
           <DropdownMenuItem onClick={() => setCreateOpen(true)}>
             {m.talentLists_newList()}
           </DropdownMenuItem>
-          {jobs.length > 0 ? (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup value={radioValue} onValueChange={onRadioValue}>
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel>{m.talentLists_sourcedHeading()}</DropdownMenuLabel>
-                  {jobs.map((job) => (
-                    <DropdownMenuRadioItem key={job.id} value={`${SOURCED}${job.id}`}>
-                      <span className="min-w-0 truncate">{job.title}</span>
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuGroup>
-              </DropdownMenuRadioGroup>
-            </>
-          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
       <CreateListDialog
@@ -210,6 +163,23 @@ function CreateListDialog({
       setError(null);
       setPending(false);
     }
+  }
+
+  function selectKind(next: "blank" | "job") {
+    setKind(next);
+    if (next === "job") {
+      const job = jobs.find((row) => row.id === jobId) ?? jobs[0];
+      if (job) {
+        setJobId(job.id);
+        setName(job.title);
+      }
+    }
+  }
+
+  function selectJob(nextJobId: string) {
+    setJobId(nextJobId);
+    const job = jobs.find((row) => row.id === nextJobId);
+    if (job) setName(job.title);
   }
 
   return (
@@ -273,7 +243,7 @@ function CreateListDialog({
             <RadioGroup
               name="kind"
               value={kind}
-              onValueChange={(value) => setKind(value === "job" ? "job" : "blank")}
+              onValueChange={(value) => selectKind(value === "job" ? "job" : "blank")}
               className="gap-2"
             >
               <div className="flex items-center gap-2">
@@ -297,7 +267,7 @@ function CreateListDialog({
                 id="talent-list-job"
                 name="job"
                 value={jobId}
-                onChange={(event) => setJobId(event.target.value)}
+                onChange={(event) => selectJob(event.target.value)}
                 className="border-input bg-background h-8 rounded-md border px-2 text-sm"
               >
                 {jobs.map((job) => (

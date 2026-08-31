@@ -2,18 +2,22 @@ import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
 import { failClosedJobRecommendations } from '../board/board-feature-flags';
+import { getBoard } from '../lib/board';
+import { boardAccessMiddleware } from '../lib/board-access-middleware';
+import {
+  getDataSource,
+  isDemoBoardConfigured,
+  isDemoBoardPrivate,
+} from '../lib/data-source.server';
 import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
-import { getSessionUser } from './account';
-import { listCompanies } from './employers';
-import { getAccessGrant } from './paywall';
-import { getDataSourceFacts, resolvePreviewStateForViewer } from './preview';
+import { resolvePreviewStateForViewer } from './preview';
 import {
   getBoardSeo,
   getEmployerOfferGate,
   getFreshBoardContext,
   getStaleBoardContext,
 } from './queries';
-import { EMPTY_GRANT, getTalentAccessGrant } from './talent-access';
+import { EMPTY_GRANT } from './talent-access';
 
 /**
  * Public root shell only — board identity, SEO, footer gate.
@@ -61,52 +65,86 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
   },
 );
 
+function previewFallback() {
+  return {
+    capability: {
+      canPreview: false as const,
+      reason: 'not-sandbox' as const,
+    },
+    personas: [],
+    activePersonaId: null,
+    demoConfigured: isDemoBoardConfigured(),
+    demoBoardPrivate: isDemoBoardPrivate(),
+    dataSource: getDataSource(),
+  };
+}
+
 /**
- * Session-dependent shell fields. Called once from the client after hydrate;
- * not on the public SSR critical path.
+ * Viewer identity for signed-in chrome. Memberships and entitlements follow in
+ * separate RPCs so Account is not blocked on companies / paywall / preview.
  */
 export const getRootSessionShellData = createServerFn({
   method: 'GET',
-}).handler(async () => {
-  const userPromise = getSessionUser();
-  const [user, employerCompanies, preview, hasGrant, talentAccess] =
-    await Promise.all([
-      userPromise,
-      listCompanies()
-        .then((memberships) => memberships.data)
-        .catch(() => null),
-      userPromise
-        .then((user) => resolvePreviewStateForViewer(user?.email ?? null))
-        .catch(async () => {
-          const facts = await getDataSourceFacts().catch(() => ({
-            demoConfigured: false,
-            demoBoardPrivate: false,
-            dataSource: 'board' as const,
-          }));
-          return {
-            capability: {
-              canPreview: false as const,
-              reason: 'not-sandbox' as const,
-            },
-            personas: [],
-            activePersonaId: null,
-            ...facts,
-          };
-        }),
-      getAccessGrant()
-        .then((grant) => grant.hasAccess)
-        .catch(() => false),
-      getTalentAccessGrant().catch(() => EMPTY_GRANT),
+})
+  .middleware([boardAccessMiddleware])
+  .handler(async ({ context }) => {
+    const headers = context.boardAccessHeaders;
+    if (!context.session) {
+      return { user: null };
+    }
+    try {
+      return {
+        user: await getBoard().me.retrieve(undefined, { headers }),
+      };
+    } catch {
+      return { user: null };
+    }
+  });
+
+/** Preview toolbar, candidate paywall grant, and talent-access — after chrome. */
+export const getRootSessionEntitlements = createServerFn({
+  method: 'GET',
+})
+  .middleware([boardAccessMiddleware])
+  .handler(async ({ context }) => {
+    const headers = context.boardAccessHeaders;
+    if (!context.session) {
+      return {
+        preview: await resolvePreviewStateForViewer(null).catch(previewFallback),
+        hasGrant: false,
+        talentAccess: EMPTY_GRANT,
+      };
+    }
+
+    let email: string | null = null;
+    let emailVerified = false;
+    try {
+      const user = await getBoard().me.retrieve(undefined, { headers });
+      email = user.email ?? null;
+      emailVerified = user.emailVerified;
+    } catch {
+      return {
+        preview: await resolvePreviewStateForViewer(null).catch(previewFallback),
+        hasGrant: false,
+        talentAccess: EMPTY_GRANT,
+      };
+    }
+
+    const [preview, hasGrant, talentAccess] = await Promise.all([
+      resolvePreviewStateForViewer(email).catch(previewFallback),
+      emailVerified
+        ? getBoard()
+            .me.access.grant({ headers })
+            .then((grant) => grant.hasAccess)
+            .catch(() => false)
+        : Promise.resolve(false),
+      getBoard()
+        .me.talentAccess.retrieve({ headers })
+        .catch(() => EMPTY_GRANT),
     ]);
 
-  return {
-    user,
-    employerCompanies,
-    preview,
-    hasGrant,
-    talentAccess,
-  };
-});
+    return { preview, hasGrant, talentAccess };
+  });
 
 /** Combine public board flags with the session grant bit. */
 export function resolveRootHasAccessGrant(

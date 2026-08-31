@@ -4,6 +4,8 @@ import {
   filtersFromJob,
   listFiltersToTalentSearch,
   parseTalentSearch,
+  talentListDisplayName,
+  talentListFiltersEqual,
   talentListingLoaderDeps,
   talentSearchToListFilters,
 } from "./talent-search";
@@ -150,5 +152,19 @@ describe("talent list filter round-trip", () => {
     expect(filtersFromJob({ title: "  Smoke Robotics Engineer  " })).toEqual({
       interestedRole: "Smoke Robotics Engineer",
     });
+  });
+
+  it("drops a trailing list suffix from display names", () => {
+    expect(talentListDisplayName("DevOps Engineer list")).toBe("DevOps Engineer");
+    expect(talentListDisplayName("Blank reusable")).toBe("Blank reusable");
+  });
+
+  it("compares list filters by JSON identity", () => {
+    expect(
+      talentListFiltersEqual({ skill: "go" }, { skill: "go" }),
+    ).toBe(true);
+    expect(
+      talentListFiltersEqual({ skill: "go" }, { skill: "rust" }),
+    ).toBe(false);
   });
 });

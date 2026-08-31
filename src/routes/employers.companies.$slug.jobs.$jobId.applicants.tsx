@@ -5,7 +5,6 @@ import { m } from '../paraglide/messages';
 import {
   addApplicantNote,
   bulkRejectApplicants,
-  convertSourcedCandidate,
   createStage,
   moveApplicant,
   removeStage,
@@ -51,7 +50,6 @@ function ApplicantsPage() {
         createStage,
         renameStage,
         removeStage,
-        convertSourced: convertSourcedCandidate,
         invalidate: () => router.invalidate(),
         toastError: toast.error,
       }}

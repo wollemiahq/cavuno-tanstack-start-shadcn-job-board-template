@@ -154,3 +154,18 @@ export function filtersFromJob(job: { title: string }): TalentListFilters {
   const interestedRole = job.title.trim();
   return interestedRole ? { interestedRole } : {};
 }
+
+/** Drop a trailing " list" so bound lists read like the job title. */
+export function talentListDisplayName(name: string): string {
+  const trimmed = name.trim();
+  const withoutSuffix = trimmed.replace(/\s+list$/i, "").trim();
+  return withoutSuffix.length > 0 ? withoutSuffix : trimmed;
+}
+
+/** Stable compare for silent list-filter autosave. */
+export function talentListFiltersEqual(
+  left: TalentListFilters,
+  right: TalentListFilters,
+): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}

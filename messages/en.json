@@ -2,8 +2,14 @@
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "accessOffer_everyMonths": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "every {countLabel} month",
         "countPlural=*": "every {countLabel} months"
@@ -12,8 +18,14 @@
   ],
   "accessOffer_everyYears": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "every {countLabel} year",
         "countPlural=*": "every {countLabel} years"
@@ -64,8 +76,14 @@
   "accountHome_verifiedBadge": "Verified",
   "accountRecommended_count": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "1 job matches your profile and preferences.",
         "countPlural=*": "{countLabel} jobs match your profile and preferences."
@@ -79,8 +97,14 @@
   "accountRecommended_noneNowTitle": "No matches right now",
   "accountSaved_count": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "You have saved 1 job.",
         "countPlural=*": "You have saved {countLabel} jobs."
@@ -455,8 +479,14 @@
   "companyDetail_notFoundText": "Company not found.",
   "companyDetail_openJobsCount": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} open job",
         "countPlural=*": "{countLabel} open jobs"
@@ -466,8 +496,14 @@
   "companyDetail_openJobsHeading": "Open jobs",
   "companyDetail_openJobsHeadingCount": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Open job",
         "countPlural=*": "{countLabel} Open jobs"
@@ -478,8 +514,14 @@
   "companyDetail_similarCompaniesHeading": "Similar companies",
   "companyDetail_viewAllJobsCount": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "View all {countLabel} job",
         "countPlural=*": "View all {countLabel} jobs"
@@ -525,8 +567,14 @@
   "companySearch_queryLabel": "Company name",
   "companySearch_resultsCount": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} company",
         "countPlural=*": "{countLabel} companies"
@@ -561,8 +609,14 @@
   "copyLink_copyLinkLabel": "Copy link",
   "count_candidates": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} candidate",
         "countPlural=*": "{countLabel} candidates"
@@ -571,8 +625,14 @@
   ],
   "count_companies": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} company",
         "countPlural=*": "{countLabel} companies"
@@ -581,8 +641,14 @@
   ],
   "count_jobs": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} job",
         "countPlural=*": "{countLabel} jobs"
@@ -591,8 +657,14 @@
   ],
   "count_posts": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} post",
         "countPlural=*": "{countLabel} posts"
@@ -647,8 +719,14 @@
   "employerApplicants_copyEmailLabel": "Copy email address",
   "employerApplicants_count": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} applicant",
         "countPlural=*": "{countLabel} applicants"
@@ -764,8 +842,14 @@
   "employerDelete_heading": "Danger zone",
   "employerDelete_membersCount": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} other member",
         "countPlural=*": "{countLabel} other members"
@@ -799,8 +883,14 @@
   "employerJobs_actionsMenuLabel": "Actions for {title}",
   "employerJobs_activeJobs": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "You have 1 active job.",
         "countPlural=*": "You have {countLabel} active jobs."
@@ -834,8 +924,14 @@
   "employerLanding_enterpriseHeading": "Enterprise",
   "employerLanding_featureActiveJobs": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} active job",
         "countPlural=*": "{countLabel} active jobs"
@@ -844,8 +940,14 @@
   ],
   "employerLanding_featureFeaturedSlots": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} featured",
         "countPlural=*": "{countLabel} featured"
@@ -855,8 +957,14 @@
   "employerLanding_featureListingDuration": "{days}-day listing",
   "employerLanding_featureMessages": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} message",
         "countPlural=*": "{countLabel} messages"
@@ -865,8 +973,14 @@
   ],
   "employerLanding_featureProfileUnlocks": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} profile unlock",
         "countPlural=*": "{countLabel} profile unlocks"
@@ -896,8 +1010,14 @@
   "employerMembers_companyHeading": "{company} Team Members",
   "employerMembers_count": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "You have 1 team member.",
         "countPlural=*": "You have {countLabel} team members."
@@ -1157,8 +1277,14 @@
   "jobSearch_resetLabel": "Reset",
   "jobSearch_resultsCount": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} job",
         "countPlural=*": "{countLabel} jobs"
@@ -1343,8 +1469,14 @@
   "planComposed_standardName": "Job listing",
   "planFeature_featured": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Includes 1 featured post",
         "countPlural=*": "Includes {countLabel} featured posts"
@@ -1355,8 +1487,14 @@
   "planFeature_liveDays": "Live for {days} days",
   "planFeature_maxActive": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "1 active job at a time",
         "countPlural=*": "Up to {countLabel} active jobs"
@@ -1594,8 +1732,14 @@
   "salaryDetail_skillLocationsHeading": "{skill} salaries by location",
   "salaryDetail_skillLocationsMetaDescription": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{skill} salaries across {countLabel} location.",
         "countPlural=*": "{skill} salaries across {countLabel} locations."
@@ -1616,8 +1760,14 @@
   "salaryDetail_titleLocationsHeading": "{title} salaries by location",
   "salaryDetail_titleLocationsMetaDescription": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{title} salaries across {countLabel} location.",
         "countPlural=*": "{title} salaries across {countLabel} locations."
@@ -1643,7 +1793,9 @@
         "input jobCountLabel",
         "local jobCountPlural = jobCount: plural"
       ],
-      "selectors": ["jobCountPlural"],
+      "selectors": [
+        "jobCountPlural"
+      ],
       "match": {
         "jobCountPlural=one": "{jobCountLabel} job posting",
         "jobCountPlural=*": "{jobCountLabel} job postings"
@@ -1817,8 +1969,14 @@
   "talentUnlock_confirmTitle": "Unlock this profile?",
   "talentUnlock_creditsRemaining": [
     {
-      "declarations": ["input count", "input countLabel", "local countPlural = count: plural"],
-      "selectors": ["countPlural"],
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} unlock remaining.",
         "countPlural=*": "{countLabel} unlocks remaining."
@@ -1879,13 +2037,13 @@
   "talentFilters_permitCountryLabel": "Work authorization",
   "talentFilters_interestedRoleLabel": "Interested role",
   "talentFilters_applyLabel": "Apply filters",
-  "talentFilters_filterSheetDescription": "Refine candidate results by status, relocation, skills, and seniority.",
-  "talentLists_triggerLabel": "Lists",
+  "talentFilters_filterSheetDescription": "Refine candidate results by status and relocation.",
+  "talentLists_triggerLabel": "Saved searches",
   "talentLists_allCandidates": "All candidates",
   "talentLists_listsHeading": "Lists",
   "talentLists_sourcedHeading": "Sourced",
-  "talentLists_newList": "New list…",
-  "talentLists_createTitle": "Create list",
+  "talentLists_newList": "New saved search…",
+  "talentLists_createTitle": "Create saved search",
   "talentLists_createDescription": "Save this search, or start from a job.",
   "talentLists_nameLabel": "Name",
   "talentLists_namePlaceholder": "Berlin engineers…",
@@ -1893,12 +2051,12 @@
   "talentLists_kindBlank": "Current filters",
   "talentLists_kindJob": "A job",
   "talentLists_jobLabel": "Job",
-  "talentLists_createSubmit": "Create list",
+  "talentLists_createSubmit": "Create saved search",
   "talentLists_nameRequired": "Enter a name.",
   "talentLists_jobRequired": "Choose a job.",
-  "talentSave_jobLabel": "Save to job",
-  "talentSave_saveLabel": "Save to job",
-  "talentSave_savedLabel": "Saved",
+  "talentSave_jobLabel": "Shortlist for",
+  "talentSave_saveLabel": "Shortlist",
+  "talentSave_savedLabel": "Shortlisted",
   "employerApplicants_sourcedHeading": "Sourced",
   "employerApplicants_unknownCandidate": "Candidate"
 }

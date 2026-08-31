@@ -40,11 +40,13 @@ describe('getRootShellData stays viewer-anonymous', () => {
     expect(body).toContain('getEmployerOfferGate');
   });
 
-  it('defers session, employer, paywall, and preview to the client island', () => {
+  it('loads session chrome in-process instead of nested server functions', () => {
     const body = handlerBody('getRootSessionShellData');
-    expect(body).toContain('getSessionUser');
-    expect(body).toContain('listCompanies');
-    expect(body).toContain('resolvePreviewStateForViewer');
-    expect(body).toContain('getAccessGrant');
+    expect(body).toContain('me.retrieve');
+    expect(body).not.toContain('getSessionUser');
+    expect(body).not.toContain('listCompanies');
+    expect(body).not.toContain('getAccessGrant');
+    expect(body).not.toContain('resolvePreviewStateForViewer');
+    expect(body).not.toContain('companies.list');
   });
 });

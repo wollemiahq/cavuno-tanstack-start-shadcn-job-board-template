@@ -77,37 +77,37 @@ function renderPicker(lists: TalentListRecord[] = [berlin, bound], selectedListI
 }
 
 describe("TalentListsPicker", () => {
-  it("groups saved lists and sourced jobs in one menu", async () => {
+  it("lists saved searches with none checked by default", async () => {
     renderPicker();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Lists" }));
-    expect(screen.getByRole("menuitemradio", { name: "All candidates" })).toBeTruthy();
-    expect(screen.getByRole("menuitemradio", { name: "Berlin engineers" })).toBeTruthy();
-    expect(screen.getByRole("menuitemradio", { name: "Smoke Robotics" })).toBeTruthy();
-    expect(screen.getByRole("menuitem", { name: "New list…" })).toBeTruthy();
-    expect(screen.getByRole("menuitemradio", { name: "Smoke Robotics Engineer" })).toBeTruthy();
-    expect(screen.queryByRole("link", { name: /pipeline/i })).toBeNull();
+    fireEvent.click(await screen.findByRole("button", { name: "Saved searches" }));
+    expect(screen.queryByRole("menuitemcheckbox", { name: "All candidates" })).toBeNull();
+    expect(screen.queryByText("Sourced")).toBeNull();
+    expect(screen.queryByRole("menuitemcheckbox", { name: "Smoke Robotics Engineer" })).toBeNull();
+    expect(screen.getByRole("menuitemcheckbox", { name: "Berlin engineers" })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
+    expect(screen.getByRole("menuitemcheckbox", { name: "Smoke Robotics" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "New saved search…" })).toBeTruthy();
   });
 
-  it("keeps a sourced job on /talent instead of opening the pipeline", async () => {
-    const { router } = renderPicker();
+  it("clears the selected search when it is clicked again", async () => {
+    const { router } = renderPicker([berlin, bound], "list_berlin");
 
-    fireEvent.click(await screen.findByRole("button", { name: "Lists" }));
-    fireEvent.click(screen.getByRole("menuitemradio", { name: "Smoke Robotics Engineer" }));
-
-    await waitFor(() =>
-      expect(router.state.location.search).toMatchObject({
-        sourced: "job_smoke",
-      }),
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Saved searches, Berlin engineers" }),
     );
-    expect(router.state.location.pathname).toBe("/talent");
+    fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "Berlin engineers" }));
+
+    await waitFor(() => expect(router.state.location.search.list).toBeUndefined());
   });
 
   it("writes a list predicate into the talent URL", async () => {
     const { router } = renderPicker();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Lists" }));
-    fireEvent.click(screen.getByRole("menuitemradio", { name: "Berlin engineers" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Saved searches" }));
+    fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "Berlin engineers" }));
 
     await waitFor(() =>
       expect(router.state.location.search).toMatchObject({
@@ -130,14 +130,14 @@ describe("TalentListsPicker", () => {
     });
     const { onListsChange } = renderPicker();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Lists" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "New list…" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Saved searches" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "New saved search…" }));
     expect(screen.getByRole("radio", { name: "Current filters" })).toBeTruthy();
     expect(screen.getByRole("radio", { name: "A job" })).toBeTruthy();
     fireEvent.change(await screen.findByLabelText("Name"), {
       target: { value: "Platform search" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Create list" }));
+    fireEvent.click(screen.getByRole("button", { name: "Create saved search" }));
 
     await waitFor(() =>
       expect(createTalentList).toHaveBeenCalledWith({
