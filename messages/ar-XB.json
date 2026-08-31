@@ -2054,6 +2054,8 @@
   "talentLists_createSubmit": "⁧⟦Çŕéáţé šáṽéð šéáŕçĥ⟧⁩",
   "talentLists_nameRequired": "⁧⟦Éñţéŕ á ñáɱé.⟧⁩",
   "talentLists_jobRequired": "⁧⟦Çĥóóšé á ĵóƀ.⟧⁩",
+  "talentLists_linkJobEmpty": "⁧⟦Ĺíñķ ţó á ĵóƀ⟧⁩",
+  "talentLists_linkJobNone": "⁧⟦Ñóţ ĺíñķéð⟧⁩",
   "talentSave_jobLabel": "⁧⟦Šĥóŕţĺíšţ ƒóŕ⟧⁩",
   "talentSave_saveLabel": "⁧⟦Šĥóŕţĺíšţ⟧⁩",
   "talentSave_savedLabel": "⁧⟦Šĥóŕţĺíšţéð⟧⁩",

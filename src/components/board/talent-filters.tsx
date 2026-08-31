@@ -131,7 +131,15 @@ function FilterSelect({
   );
 }
 
-export function TalentFilters({ search, lists }: { search: TalentSearch; lists?: ReactNode }) {
+export function TalentFilters({
+  search,
+  lists,
+  linkJob,
+}: {
+  search: TalentSearch;
+  lists?: ReactNode;
+  linkJob?: ReactNode;
+}) {
   const navigate = useNavigate({ from: "/talent/" });
   const [sheetOpen, setSheetOpen] = useState(false);
   const [draft, setDraft] = useState<TalentToolbarFacets>({});
@@ -281,8 +289,10 @@ export function TalentFilters({ search, lists }: { search: TalentSearch; lists?:
 
       {sheet}
 
-      <Select
-        items={["relevance", "newest"]}
+      <div className="ms-auto flex min-w-0 items-center gap-2">
+        {linkJob}
+        <Select
+          items={["relevance", "newest"]}
         value={search.sort ?? DEFAULT_SORT}
         itemToStringLabel={(item) =>
           item === "newest" ? m.talentFilters_sortNewest() : m.talentFilters_sortBestMatch()
@@ -296,7 +306,7 @@ export function TalentFilters({ search, lists }: { search: TalentSearch; lists?:
           commit({ sort: next });
         }}
       >
-        <SelectTrigger aria-label={m.jobSearch_sortPlaceholder()} className="ms-auto">
+        <SelectTrigger aria-label={m.jobSearch_sortPlaceholder()}>
           <ArrowUpDown aria-hidden="true" />
           <span>{m.jobSearch_sortPlaceholder()}:</span>
           <SelectValue />
@@ -311,6 +321,7 @@ export function TalentFilters({ search, lists }: { search: TalentSearch; lists?:
           </SelectGroup>
         </SelectContent>
       </Select>
+      </div>
     </div>
   );
 }

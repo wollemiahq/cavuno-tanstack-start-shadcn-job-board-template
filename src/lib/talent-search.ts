@@ -149,10 +149,16 @@ export function listFiltersToTalentSearch(filters: TalentListFilters): TalentLis
   };
 }
 
-/** Seed a job-bound list from the req title. */
-export function filtersFromJob(job: { title: string }): TalentListFilters {
-  const interestedRole = job.title.trim();
-  return interestedRole ? { interestedRole } : {};
+/** Seed a job-bound list with the header keyword (title) and current location. */
+export function filtersFromJob(
+  job: { title: string },
+  current?: Pick<TalentListFilters, "place">,
+): TalentListFilters {
+  const q = job.title.trim();
+  const filters: TalentListFilters = {};
+  if (q) filters.q = q;
+  if (current?.place) filters.place = current.place;
+  return filters;
 }
 
 /** Drop a trailing " list" so bound lists read like the job title. */

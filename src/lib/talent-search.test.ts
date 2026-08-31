@@ -148,10 +148,13 @@ describe("talent list filter round-trip", () => {
     expect(talentSearchToListFilters(parseTalentSearch({}))).toEqual({});
   });
 
-  it("seeds a job-bound list from the req title", () => {
+  it("seeds a job-bound list from the job title keyword and current place", () => {
     expect(filtersFromJob({ title: "  Smoke Robotics Engineer  " })).toEqual({
-      interestedRole: "Smoke Robotics Engineer",
+      q: "Smoke Robotics Engineer",
     });
+    expect(
+      filtersFromJob({ title: "Backend" }, { place: "berlin" }),
+    ).toEqual({ q: "Backend", place: "berlin" });
   });
 
   it("drops a trailing list suffix from display names", () => {

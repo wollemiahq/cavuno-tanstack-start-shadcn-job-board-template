@@ -24,6 +24,7 @@ import {
 import { useListingAdRails, type AdPlacement } from "@/components/board/listing-ad-rail";
 import { ListingPagination } from "@/components/board/listing-pagination";
 import { TalentFilters } from "@/components/board/talent-filters";
+import { TalentListJobLink } from "@/components/board/talent-list-job-link";
 import { TalentListsPicker } from "@/components/board/talent-lists-picker";
 import type { StartTalentConversation } from "@/components/board/talent-message-action";
 import { TalentSaveToJob } from "@/components/board/talent-save-to-job";
@@ -109,8 +110,10 @@ export function TalentSearchPage({
     jobs: Array<{ id: string; title: string }>;
   }>();
   const [lists, setLists] = useState<TalentListRecord[]>([]);
-  const [sourcedIds, setSourcedIds] = useState<Set<string>>(new Set());
-  const [sourcedJobId, setSourcedJobId] = useState<string>();
+  const [sourcedMembership, setSourcedMembership] = useState<{
+    jobId?: string;
+    ids: Set<string>;
+  }>({ ids: new Set() });
   const [sourcedVms, setSourcedVms] = useState<TalentCardVM[] | null>(null);
   const selectedList = lists.find((list) => list.id === search.list);
   const viewingSourced = Boolean(search.sourced);
@@ -162,8 +165,7 @@ export function TalentSearchPage({
   useEffect(() => {
     const jobId = search.sourced ?? boundJobId;
     if (!workspace || !jobId) {
-      setSourcedJobId(undefined);
-      setSourcedIds(new Set());
+      setSourcedMembership({ ids: new Set() });
       setSourcedVms(null);
       return;
     }
@@ -182,8 +184,17 @@ export function TalentSearchPage({
         const pipelineIds = (pipeline?.applicants ?? []).flatMap((row) =>
           row.candidateBoardUserId ? [row.candidateBoardUserId] : [],
         );
-        setSourcedJobId(jobId);
-        setSourcedIds(new Set([...rows.map((row) => row.candidate.id), ...pipelineIds]));
+        const fetchedIds = [
+          ...rows.map((row) => row.candidate.id),
+          ...pipelineIds,
+        ];
+        setSourcedMembership((current) => {
+          const ids = new Set(fetchedIds);
+          if (current.jobId === jobId) {
+            for (const id of current.ids) ids.add(id);
+          }
+          return { jobId, ids };
+        });
         if (!search.sourced) {
           setSourcedVms(null);
           return;
@@ -201,8 +212,7 @@ export function TalentSearchPage({
       })
       .catch(() => {
         if (cancelled) return;
-        setSourcedJobId(undefined);
-        setSourcedIds(new Set());
+        setSourcedMembership({ ids: new Set() });
         setSourcedVms(search.sourced ? [] : null);
       });
     return () => {
@@ -238,16 +248,18 @@ export function TalentSearchPage({
         candidateBoardUserId={candidateBoardUserId}
         boundJobId={boundJobId}
         alreadySaved={
-          sourcedJobId === boundJobId &&
-          sourcedIds.has(candidateBoardUserId)
+          sourcedMembership.jobId === boundJobId &&
+          sourcedMembership.ids.has(candidateBoardUserId)
         }
         onSaved={() => {
           if (!boundJobId) return;
-          setSourcedJobId(boundJobId);
-          setSourcedIds((current) => {
-            const next = new Set(current);
-            next.add(candidateBoardUserId);
-            return next;
+          setSourcedMembership((current) => {
+            if (current.jobId === boundJobId) {
+              const ids = new Set(current.ids);
+              ids.add(candidateBoardUserId);
+              return { jobId: boundJobId, ids };
+            }
+            return { jobId: boundJobId, ids: new Set([candidateBoardUserId]) };
           });
         }}
       />
@@ -328,6 +340,21 @@ export function TalentSearchPage({
                       selectedListId={search.list}
                       currentFilters={talentSearchToListFilters(search)}
                       onListsChange={setLists}
+                    />
+                  ) : null
+                }
+                linkJob={
+                  workspace && selectedList ? (
+                    <TalentListJobLink
+                      slug={workspace.slug}
+                      listId={selectedList.id}
+                      jobId={selectedList.jobId}
+                      jobs={workspace.jobs}
+                      onUpdated={(list) =>
+                        setLists((current) =>
+                          current.map((row) => (row.id === list.id ? list : row)),
+                        )
+                      }
                     />
                   ) : null
                 }

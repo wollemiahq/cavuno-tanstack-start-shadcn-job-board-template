@@ -199,7 +199,8 @@ function CreateListDialog({
               return;
             }
             const job = jobs.find((row) => row.id === jobId);
-            const filters = kind === "job" && job ? filtersFromJob(job) : currentFilters;
+            const filters =
+              kind === "job" && job ? filtersFromJob(job, currentFilters) : currentFilters;
             setPending(true);
             setError(null);
             const payload =

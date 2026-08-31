@@ -150,4 +150,32 @@ describe("TalentListsPicker", () => {
     );
     expect(onListsChange).toHaveBeenCalled();
   });
+
+  it("creates a job-bound search from the job title keyword", async () => {
+    vi.mocked(createTalentList).mockResolvedValueOnce({
+      ok: true,
+      data: {
+        ...bound,
+        id: "list_job",
+        filters: { q: "Smoke Robotics Engineer" },
+      },
+    });
+    renderPicker();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Saved searches" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "New saved search…" }));
+    fireEvent.click(screen.getByRole("radio", { name: "A job" }));
+    fireEvent.click(screen.getByRole("button", { name: "Create saved search" }));
+
+    await waitFor(() =>
+      expect(createTalentList).toHaveBeenCalledWith({
+        data: {
+          slug: "tls-smoke-labs",
+          name: "Smoke Robotics Engineer",
+          filters: { q: "Smoke Robotics Engineer" },
+          job: "job_smoke",
+        },
+      }),
+    );
+  });
 });
