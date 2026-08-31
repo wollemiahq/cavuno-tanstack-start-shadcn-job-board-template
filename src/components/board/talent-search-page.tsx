@@ -110,14 +110,11 @@ export function TalentSearchPage({
   }>();
   const [lists, setLists] = useState<TalentListRecord[]>([]);
   const [sourcedIds, setSourcedIds] = useState<Set<string>>(new Set());
-  const [savedIds, setSavedIds] = useState<Set<string>>(() => new Set());
+  const [sourcedJobId, setSourcedJobId] = useState<string>();
   const [sourcedVms, setSourcedVms] = useState<TalentCardVM[] | null>(null);
   const selectedList = lists.find((list) => list.id === search.list);
   const viewingSourced = Boolean(search.sourced);
   const boundJobId = selectedList?.jobId ?? search.sourced;
-  useEffect(() => {
-    setSavedIds(new Set());
-  }, [boundJobId]);
   useEffect(() => {
     const membership = (employerCompanies ?? []).find(
       (row) => row.status === "approved" && row.company.slug,
@@ -165,6 +162,7 @@ export function TalentSearchPage({
   useEffect(() => {
     const jobId = search.sourced ?? boundJobId;
     if (!workspace || !jobId) {
+      setSourcedJobId(undefined);
       setSourcedIds(new Set());
       setSourcedVms(null);
       return;
@@ -184,6 +182,7 @@ export function TalentSearchPage({
         const pipelineIds = (pipeline?.applicants ?? []).flatMap((row) =>
           row.candidateBoardUserId ? [row.candidateBoardUserId] : [],
         );
+        setSourcedJobId(jobId);
         setSourcedIds(new Set([...rows.map((row) => row.candidate.id), ...pipelineIds]));
         if (!search.sourced) {
           setSourcedVms(null);
@@ -202,6 +201,7 @@ export function TalentSearchPage({
       })
       .catch(() => {
         if (cancelled) return;
+        setSourcedJobId(undefined);
         setSourcedIds(new Set());
         setSourcedVms(search.sourced ? [] : null);
       });
@@ -224,13 +224,6 @@ export function TalentSearchPage({
     viewingSourced,
   );
   const candidateVms = viewingSourced ? (sourcedVms ?? []) : candidates;
-  function markSaved(id: string) {
-    setSavedIds((current) => {
-      const next = new Set(current);
-      next.add(id);
-      return next;
-    });
-  }
   function saveControl(
     candidateBoardUserId: string,
     presentation: "icon" | "default",
@@ -245,9 +238,18 @@ export function TalentSearchPage({
         candidateBoardUserId={candidateBoardUserId}
         boundJobId={boundJobId}
         alreadySaved={
-          sourcedIds.has(candidateBoardUserId) || savedIds.has(candidateBoardUserId)
+          sourcedJobId === boundJobId &&
+          sourcedIds.has(candidateBoardUserId)
         }
-        onSaved={() => markSaved(candidateBoardUserId)}
+        onSaved={() => {
+          if (!boundJobId) return;
+          setSourcedJobId(boundJobId);
+          setSourcedIds((current) => {
+            const next = new Set(current);
+            next.add(candidateBoardUserId);
+            return next;
+          });
+        }}
       />
     );
   }

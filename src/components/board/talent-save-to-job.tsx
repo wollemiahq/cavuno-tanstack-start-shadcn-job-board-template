@@ -125,7 +125,7 @@ export function TalentSaveToJob({
     void request
       .then((result) => {
         if (result.ok) {
-          onSaved?.();
+          if (!boundJobId || job === boundJobId) onSaved?.();
           return;
         }
         setSelected((current) =>

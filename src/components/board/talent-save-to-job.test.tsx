@@ -147,6 +147,39 @@ describe('TalentSaveToJob', () => {
     expect(saveSourcedCandidate).not.toHaveBeenCalled();
   });
 
+  it('does not report a save when the dest is not the bound job', async () => {
+    const onSaved = vi.fn();
+    vi.mocked(saveSourcedCandidate).mockResolvedValue({
+      ok: true,
+      data: { id: 'src_1', object: 'sourced_candidate', created: true },
+    });
+
+    render(
+      <TalentSaveToJob
+        slug="acme"
+        jobs={jobs}
+        lists={lists}
+        candidateBoardUserId="bu_ada"
+        boundJobId="job_b"
+        onSaved={onSaved}
+      />,
+    );
+
+    await openSavePicker();
+    await pickOption('Backend');
+
+    await waitFor(() =>
+      expect(saveSourcedCandidate).toHaveBeenCalledWith({
+        data: {
+          slug: 'acme',
+          job: 'job_a',
+          candidateBoardUserId: 'bu_ada',
+        },
+      }),
+    );
+    expect(onSaved).not.toHaveBeenCalled();
+  });
+
   it('does not one-click save on a bound list', async () => {
     vi.mocked(saveSourcedCandidate).mockResolvedValue({
       ok: true,
