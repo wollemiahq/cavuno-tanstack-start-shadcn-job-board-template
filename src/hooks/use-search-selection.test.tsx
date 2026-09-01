@@ -63,8 +63,12 @@ function Harness({
       <section
         ref={(node) => {
           selection.listRef.current = node;
-          if (node && listScrollTo) node.scrollTo = listScrollTo;
-          else if (node && !node.scrollTo) node.scrollTo = vi.fn();
+          if (node && listScrollTo) {
+            // SAFETY: jsdom HTMLElement.scrollTo is the two-overload DOM
+            // signature; the test spy implements the options form the hook
+            // actually calls (`{ top }`).
+            node.scrollTo = listScrollTo as typeof node.scrollTo;
+          } else if (node && !node.scrollTo) node.scrollTo = vi.fn();
         }}
         data-testid="results-list"
       >

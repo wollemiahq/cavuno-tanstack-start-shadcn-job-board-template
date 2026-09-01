@@ -113,7 +113,7 @@ function FilterSelect({
         {label}
       </FieldLabel>
       <Select
-        items={values}
+        items={Object.fromEntries(values.map((item) => [item, labelFor(item)]))}
         value={selectValue}
         itemToStringLabel={labelFor}
         onValueChange={(nextValue) => {
@@ -322,7 +322,9 @@ export const TalentFilters = memo(function TalentFilters({
       <div className="ms-auto flex min-w-0 items-center gap-2">
         {linkJob}
         <Select
-          items={SORT_VALUES}
+          items={Object.fromEntries(
+            SORT_VALUES.map((item) => [item, sortLabel(item)]),
+          )}
           value={search.sort ?? DEFAULT_SORT}
           itemToStringLabel={sortLabel}
           onValueChange={(sort) => {
