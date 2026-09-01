@@ -1,4 +1,4 @@
-import { normalizeWebsiteUrl } from '@cavuno/board/format';
+import { formatMonthYear, normalizeWebsiteUrl } from '@cavuno/board/format';
 
 import type {
   TalentAccess,
@@ -65,7 +65,7 @@ export interface TalentExperienceVM {
    * component ready for the field with a single mapper change.
    */
   companyLogoUrl: string | null;
-  dateRangeLabel: string;
+  dateRangeLabel: string | null;
   location: string | null;
   employmentTypeLabel: string | null;
   locationTypeLabel: string | null;
@@ -209,13 +209,18 @@ function stableKey(...parts: Array<string | null>) {
     .replace(/^-|-$/g, '');
 }
 
-function formatMonth(value: string, language: string) {
-  const [year, month] = value.split('-').map(Number);
-  return new Intl.DateTimeFormat(language, {
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(Date.UTC(year, month - 1, 1)));
+/**
+ * Month-granular label via the SDK helper. Resume-parsed education often
+ * stores a year only (`"2024"`). `Date.parse("2024")` is engine-dependent
+ * (Node → Jan 2024, Chrome → Invalid Date), so keep the raw year instead
+ * of throwing `RangeError: Invalid time value` from the old UTC splitter.
+ */
+function monthLabel(language: string, value: string | null): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (/^\d{4}$/.test(trimmed)) return trimmed;
+  return formatMonthYear(language, trimmed);
 }
 
 function formatMonthRange(
@@ -224,12 +229,11 @@ function formatMonthRange(
   language: string,
   presentLabel: string,
 ) {
-  if (!startDate && !endDate) return null;
-  if (!startDate && endDate) return formatMonth(endDate, language);
-
-  return `${formatMonth(startDate!, language)} – ${
-    endDate ? formatMonth(endDate, language) : presentLabel
-  }`;
+  const start = monthLabel(language, startDate);
+  const end = monthLabel(language, endDate);
+  if (!start && !end) return null;
+  if (!start) return end;
+  return `${start} – ${end ?? presentLabel}`;
 }
 
 export function toTalentCardVM(
@@ -306,7 +310,7 @@ export function toTalentProfileVM(
         experience.endDate,
         language,
         labels.present,
-      )!,
+      ),
       location: experience.location,
       employmentTypeLabel: enumLabel(
         experience.employmentType,
