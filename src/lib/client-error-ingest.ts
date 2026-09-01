@@ -1,6 +1,6 @@
-import { CLIENT_ERROR_PATH } from "./client-error-report";
+import { CLIENT_ERROR_PATH } from './client-error-report';
 
-export const STARTER_OUCH_LOG_NAME = "starter_ouch";
+export const STARTER_OUCH_LOG_NAME = 'starter_ouch';
 
 const STACK_MAX = 4000;
 const RATE_WINDOW_MS = 60_000;
@@ -19,7 +19,7 @@ type ClientErrorBody = {
 
 type StarterOuchLine = {
   name: typeof STARTER_OUCH_LOG_NAME;
-  source: "board-starter";
+  source: 'board-starter';
   board: string;
   host: string;
   path: string;
@@ -33,9 +33,9 @@ type StarterOuchLine = {
 };
 
 export function clientErrorIngestUrl(apiUrl: string): string {
-  const url = new URL(apiUrl.endsWith("/") ? apiUrl : `${apiUrl}/`);
-  if (url.hostname === "api.cavuno.com") {
-    return "https://cavuno.com/api/board-client-error";
+  const url = new URL(apiUrl.endsWith('/') ? apiUrl : `${apiUrl}/`);
+  if (url.hostname === 'api.cavuno.com') {
+    return 'https://cavuno.com/api/board-client-error';
   }
   return `${url.origin}/api/board-client-error`;
 }
@@ -81,10 +81,11 @@ export function resetClientErrorIngestRateLimit() {
 }
 
 function ouchLine(body: ClientErrorBody, board: string): StarterOuchLine {
-  const preview = body.host.startsWith("preview-") || body.host.startsWith("share-");
+  const preview =
+    body.host.startsWith('preview-') || body.host.startsWith('share-');
   return {
     name: STARTER_OUCH_LOG_NAME,
-    source: "board-starter",
+    source: 'board-starter',
     board,
     host: body.host,
     path: body.path,
@@ -105,10 +106,10 @@ async function forwardToCavuno(
 ): Promise<boolean> {
   try {
     const response = await fetch(ingestUrl, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "content-type": "application/json",
-        accept: "application/json",
+        'content-type': 'application/json',
+        accept: 'application/json',
       },
       body: JSON.stringify({
         publishableKey: board,
@@ -136,10 +137,10 @@ export async function matchClientErrorIngest(
   if (path !== CLIENT_ERROR_PATH && path !== `${CLIENT_ERROR_PATH}/`) {
     return null;
   }
-  if (request.method === "OPTIONS") {
+  if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204 });
   }
-  if (request.method !== "POST") {
+  if (request.method !== 'POST') {
     return new Response(null, { status: 405 });
   }
 

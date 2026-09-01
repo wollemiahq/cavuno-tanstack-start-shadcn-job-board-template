@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 
-import { Briefcase, LoaderCircle } from "lucide-react";
+import { Briefcase, LoaderCircle } from 'lucide-react';
 
-import { m } from "../../paraglide/messages";
+import { m } from '../../paraglide/messages';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Combobox,
   ComboboxContent,
@@ -14,12 +14,16 @@ import {
   ComboboxItem,
   ComboboxList,
   ComboboxTrigger,
-} from "@/components/ui/combobox";
-import { toastActionError } from "@/lib/action-toast";
-import { cn } from "@/lib/utils";
-import { updateTalentList, type ActionResult, type TalentListRecord } from "@/server/employers";
+} from '@/components/ui/combobox';
+import { toastActionError } from '@/lib/action-toast';
+import { cn } from '@/lib/utils';
+import {
+  updateTalentList,
+  type ActionResult,
+  type TalentListRecord,
+} from '@/server/employers';
 
-const NONE = "__none__";
+const NONE = '__none__';
 
 export type UpdateTalentListFn = (input: {
   data: {
@@ -95,9 +99,9 @@ export function TalentListJobLink({
         render={
           <Button
             type="button"
-            variant={filled ? "default" : "outline"}
+            variant={filled ? 'default' : 'outline'}
             disabled={pending}
-            className={cn("max-w-56 min-w-0", pending && "cursor-wait")}
+            className={cn('max-w-56 min-w-0', pending && 'cursor-wait')}
           />
         }
       >
@@ -106,7 +110,9 @@ export function TalentListJobLink({
         ) : (
           <Briefcase aria-hidden="true" />
         )}
-        <span className="truncate">{bound ? bound.title : m.talentLists_linkJobEmpty()}</span>
+        <span className="truncate">
+          {bound ? bound.title : m.talentLists_linkJobEmpty()}
+        </span>
       </ComboboxTrigger>
       <ComboboxContent
         align="end"

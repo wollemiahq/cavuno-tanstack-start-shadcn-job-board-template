@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
-import { useClientErrorReport } from "@/lib/use-client-error-report";
+import { useClientErrorReport } from '@/lib/use-client-error-report';
 
 /**
  * Idle-installs window error listeners after first paint so the happy path
@@ -12,7 +12,7 @@ import { useClientErrorReport } from "@/lib/use-client-error-report";
 export function ClientErrorReportingBoot() {
   useEffect(() => {
     const run = () => {
-      void import("@/lib/install-client-error-reporting").then((mod) => {
+      void import('@/lib/install-client-error-reporting').then((mod) => {
         mod.installClientErrorReporting();
       });
     };
@@ -28,7 +28,11 @@ export function ClientErrorReportingBoot() {
 }
 
 /** Mount inside a route errorComponent (server or client). */
-export function ClientErrorReporter({ error }: { error: Error & { digest?: string } }) {
+export function ClientErrorReporter({
+  error,
+}: {
+  error: Error & { digest?: string };
+}) {
   useClientErrorReport(error);
   return null;
 }

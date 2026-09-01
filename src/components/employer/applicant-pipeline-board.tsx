@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 import {
   CopyIcon,
@@ -6,20 +6,24 @@ import {
   ExternalLinkIcon,
   GripVerticalIcon,
   MoreVerticalIcon,
-} from "lucide-react";
-import { Button as AriaButton } from "react-aria-components/Button";
-import { GridList, GridListItem } from "react-aria-components/GridList";
+} from 'lucide-react';
+import { Button as AriaButton } from 'react-aria-components/Button';
+import { GridList, GridListItem } from 'react-aria-components/GridList';
 import {
   DropIndicator,
   isTextDropItem,
   useDragAndDrop,
   type DropItem,
-} from "react-aria-components/useDragAndDrop";
+} from 'react-aria-components/useDragAndDrop';
 
-import { m } from "../../paraglide/messages";
+import { m } from '../../paraglide/messages';
 
-import type { PipelineBoardVM, PipelineCardVM, PipelineStageVM } from "@/board/pipeline-view-model";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import type {
+  PipelineBoardVM,
+  PipelineCardVM,
+  PipelineStageVM,
+} from '@/board/pipeline-view-model';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,9 +33,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button, buttonVariants } from "@/components/ui/button";
+} from '@/components/ui/alert-dialog';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Dialog,
   DialogClose,
@@ -39,28 +43,33 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/dropdown-menu';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/select';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
-const DRAG_TYPE = "cavuno/application";
-const SOURCED_DRAG_TYPE = "application/x-cavuno-sourced";
+const DRAG_TYPE = 'cavuno/application';
+const SOURCED_DRAG_TYPE = 'application/x-cavuno-sourced';
 
 /** The settle result every pipeline mutation resolves to. */
 type PipelineActionResult = { ok: boolean; message?: string };
@@ -86,7 +95,9 @@ export interface PipelineActions {
   renameStage: (opts: {
     data: { slug: string; stageId: string; label: string };
   }) => Promise<PipelineActionResult>;
-  removeStage: (opts: { data: { slug: string; stageId: string } }) => Promise<PipelineActionResult>;
+  removeStage: (opts: {
+    data: { slug: string; stageId: string };
+  }) => Promise<PipelineActionResult>;
   invalidate: () => Promise<void>;
   toastError: (message: string) => void;
   convertSourced?: (opts: {
@@ -95,9 +106,9 @@ export interface PipelineActions {
 }
 
 type StageDialogState =
-  | { kind: "add" }
-  | { kind: "rename"; stage: PipelineStageVM }
-  | { kind: "delete"; stage: PipelineStageVM }
+  | { kind: 'add' }
+  | { kind: 'rename'; stage: PipelineStageVM }
+  | { kind: 'delete'; stage: PipelineStageVM }
   | null;
 
 export interface ApplicantPipelineBoardProps {
@@ -143,8 +154,11 @@ export function ApplicantPipelineBoard({
   // in the target column immediately; cleared on settle (success keeps the
   // fresh server truth after invalidate, failure reverts to `columnStageId`).
   const [pendingMoves, setPendingMoves] = useState<Record<string, string>>({});
-  const [openCardId, setOpenCardId] = useState<string | null>(defaultOpenCardId ?? null);
-  const [stageDialog, setStageDialog] = useState<StageDialogState>(defaultStageDialog);
+  const [openCardId, setOpenCardId] = useState<string | null>(
+    defaultOpenCardId ?? null,
+  );
+  const [stageDialog, setStageDialog] =
+    useState<StageDialogState>(defaultStageDialog);
 
   function columnIdFor(card: PipelineCardVM) {
     return pendingMoves[card.id] ?? card.columnStageId;
@@ -154,7 +168,9 @@ export function ApplicantPipelineBoard({
     await actions.invalidate();
   }
 
-  const openCard = openCardId ? (cards.find((card) => card.id === openCardId) ?? null) : null;
+  const openCard = openCardId
+    ? (cards.find((card) => card.id === openCardId) ?? null)
+    : null;
 
   return (
     <div className="space-y-4">
@@ -166,7 +182,7 @@ export function ApplicantPipelineBoard({
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => setStageDialog({ kind: "add" })}
+          onClick={() => setStageDialog({ kind: 'add' })}
         >
           {m.employerApplicants_addStageLabel()}
         </Button>
@@ -185,8 +201,8 @@ export function ApplicantPipelineBoard({
               stage={stage}
               cards={cards.filter((card) => columnIdFor(card) === stage.id)}
               onOpenCard={(id) => setOpenCardId(id)}
-              onRename={() => setStageDialog({ kind: "rename", stage })}
-              onDelete={() => setStageDialog({ kind: "delete", stage })}
+              onRename={() => setStageDialog({ kind: 'rename', stage })}
+              onDelete={() => setStageDialog({ kind: 'delete', stage })}
               onDropCard={(cardId) => {
                 void moveCard({
                   cardId,
@@ -212,7 +228,9 @@ export function ApplicantPipelineBoard({
                   })
                   .then((result) => {
                     if (!result.ok) {
-                      actions.toastError(result.message || m.employerApplicants_moveError());
+                      actions.toastError(
+                        result.message || m.employerApplicants_moveError(),
+                      );
                       return;
                     }
                     return invalidate();
@@ -227,7 +245,7 @@ export function ApplicantPipelineBoard({
         slug={slug}
         card={openCard}
         stages={stages}
-        currentStageId={openCard ? columnIdFor(openCard) : ""}
+        currentStageId={openCard ? columnIdFor(openCard) : ''}
         open={openCard !== null}
         onOpenChange={(next) => {
           if (!next) setOpenCardId(null);
@@ -254,8 +272,8 @@ export function ApplicantPipelineBoard({
       <StageDialogs
         key={
           stageDialog
-            ? `${stageDialog.kind}:${"stage" in stageDialog ? stageDialog.stage.id : "new"}`
-            : "closed"
+            ? `${stageDialog.kind}:${'stage' in stageDialog ? stageDialog.stage.id : 'new'}`
+            : 'closed'
         }
         slug={slug}
         jobId={jobId}
@@ -287,8 +305,8 @@ async function moveCard({
   setPendingMoves: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   slug: string;
   invalidate: () => Promise<void>;
-  moveApplicant: PipelineActions["moveApplicant"];
-  toastError: PipelineActions["toastError"];
+  moveApplicant: PipelineActions['moveApplicant'];
+  toastError: PipelineActions['toastError'];
 }) {
   const card = cards.find((item) => item.id === cardId);
   const currentColumn = pendingMoves[cardId] ?? card?.columnStageId;
@@ -353,9 +371,9 @@ function StageColumn({
     getItems: (_keys, items) =>
       items.map((card) => ({
         [DRAG_TYPE]: card.id,
-        "text/plain": card.name,
+        'text/plain': card.name,
       })),
-    getDropOperation: () => "move",
+    getDropOperation: () => 'move',
     onRootDrop: (event) => moveDropped(event.items, onDropCard, onDropSourced),
     onInsert: (event) => moveDropped(event.items, onDropCard, onDropSourced),
     onItemDrop: (event) => moveDropped(event.items, onDropCard, onDropSourced),
@@ -370,8 +388,12 @@ function StageColumn({
   return (
     <section className="border-border/60 bg-muted/30 flex min-h-[24rem] flex-col rounded-2xl border">
       <div className="flex items-center gap-2 px-3 py-2.5">
-        <h3 className="text-foreground truncate text-sm font-medium">{stage.label}</h3>
-        <span className="text-muted-foreground text-sm tabular-nums">{cards.length}</span>
+        <h3 className="text-foreground truncate text-sm font-medium">
+          {stage.label}
+        </h3>
+        <span className="text-muted-foreground text-sm tabular-nums">
+          {cards.length}
+        </span>
         {stage.isProtected ? null : (
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -449,12 +471,18 @@ function ApplicantCard({ card }: { card: PipelineCardVM }) {
         <AvatarFallback className="text-xs">{card.initials}</AvatarFallback>
       </Avatar>
       <div className="min-w-0">
-        <span className="text-foreground block truncate text-sm font-medium">{card.name}</span>
+        <span className="text-foreground block truncate text-sm font-medium">
+          {card.name}
+        </span>
         {card.email ? (
-          <span className="text-muted-foreground block truncate text-xs">{card.email}</span>
+          <span className="text-muted-foreground block truncate text-xs">
+            {card.email}
+          </span>
         ) : null}
         {card.appliedLabel ? (
-          <span className="text-muted-foreground mt-2 block text-xs">{card.appliedLabel}</span>
+          <span className="text-muted-foreground mt-2 block text-xs">
+            {card.appliedLabel}
+          </span>
         ) : null}
       </div>
       <AriaButton
@@ -531,13 +559,13 @@ function ApplicantDetailBody({
   onInvalidate: () => Promise<void>;
   onRejected: () => void;
 }) {
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState('');
   const [copied, setCopied] = useState(false);
   const [action, setAction] = useState<{
     pending: boolean;
-    scope: "note" | "reject" | null;
+    scope: 'note' | 'reject' | null;
     message: string;
-  }>({ pending: false, scope: null, message: "" });
+  }>({ pending: false, scope: null, message: '' });
 
   const stageItems = Object.fromEntries(
     stages.map((stage): [string, string] => [stage.id, stage.label]),
@@ -552,11 +580,11 @@ function ApplicantDetailBody({
   }
 
   async function run(
-    scope: "note" | "reject",
+    scope: 'note' | 'reject',
     fn: () => Promise<{ ok: boolean; message?: string }>,
   ) {
     if (action.pending) return false;
-    setAction({ pending: true, scope, message: "" });
+    setAction({ pending: true, scope, message: '' });
     let result: { ok: boolean; message?: string };
     try {
       result = await fn();
@@ -576,7 +604,7 @@ function ApplicantDetailBody({
       });
       return false;
     }
-    setAction({ pending: false, scope: null, message: "" });
+    setAction({ pending: false, scope: null, message: '' });
     try {
       await onInvalidate();
     } catch {
@@ -614,7 +642,10 @@ function ApplicantDetailBody({
             href={card.resumeUrl}
             target="_blank"
             rel="noreferrer"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "w-fit")}
+            className={cn(
+              buttonVariants({ variant: 'outline', size: 'sm' }),
+              'w-fit',
+            )}
           >
             {m.employerApplicants_resumeLabel()}
             <ExternalLinkIcon data-icon="inline-end" />
@@ -626,12 +657,16 @@ function ApplicantDetailBody({
             <h3 className="text-foreground text-sm font-medium">
               {m.employerApplicants_coverNoteHeading()}
             </h3>
-            <p className="text-muted-foreground text-sm whitespace-pre-wrap">{card.coverNote}</p>
+            <p className="text-muted-foreground text-sm whitespace-pre-wrap">
+              {card.coverNote}
+            </p>
           </section>
         ) : null}
 
         <Field>
-          <FieldLabel htmlFor={`stage-${card.id}`}>{m.employerApplicants_stageLabel()}</FieldLabel>
+          <FieldLabel htmlFor={`stage-${card.id}`}>
+            {m.employerApplicants_stageLabel()}
+          </FieldLabel>
           <Select
             items={stageItems}
             value={currentStageId}
@@ -661,15 +696,17 @@ function ApplicantDetailBody({
           onSubmit={async (event) => {
             event.preventDefault();
             if (!note.trim()) return;
-            const ok = await run("note", () =>
+            const ok = await run('note', () =>
               actions.addApplicantNote({
                 data: { slug, applicationId: card.id, body: note.trim() },
               }),
             );
-            if (ok) setNote("");
+            if (ok) setNote('');
           }}
         >
-          <Field data-invalid={action.scope === "note" && Boolean(action.message)}>
+          <Field
+            data-invalid={action.scope === 'note' && Boolean(action.message)}
+          >
             <FieldLabel htmlFor={`note-${card.id}`}>
               {m.employerApplicants_notePlaceholder()}
             </FieldLabel>
@@ -681,7 +718,7 @@ function ApplicantDetailBody({
               className="min-h-24 resize-none"
               onChange={(event) => setNote(event.target.value)}
             />
-            {action.scope === "note" && action.message ? (
+            {action.scope === 'note' && action.message ? (
               <FieldError>{action.message}</FieldError>
             ) : null}
             <Button
@@ -719,7 +756,7 @@ function ApplicantDetailBody({
           size="sm"
           disabled={action.pending}
           onClick={async () => {
-            const ok = await run("reject", () =>
+            const ok = await run('reject', () =>
               actions.bulkRejectApplicants({
                 data: { slug, applicationIds: [card.id] },
               }),
@@ -729,7 +766,7 @@ function ApplicantDetailBody({
         >
           {m.employerApplicants_rejectLabel()}
         </Button>
-        {action.scope === "reject" && action.message ? (
+        {action.scope === 'reject' && action.message ? (
           <div data-applicant-action-feedback className="flex-1">
             <Alert variant="destructive">
               <AlertDescription>{action.message}</AlertDescription>
@@ -756,15 +793,17 @@ function StageDialogs({
   onClose: () => void;
   onInvalidate: () => Promise<void>;
 }) {
-  const [label, setLabel] = useState(state && state.kind === "rename" ? state.stage.label : "");
+  const [label, setLabel] = useState(
+    state && state.kind === 'rename' ? state.stage.label : '',
+  );
   const [status, setStatus] = useState<{ pending: boolean; message: string }>({
     pending: false,
-    message: "",
+    message: '',
   });
 
   async function submit(fn: () => Promise<{ ok: boolean; message?: string }>) {
     if (status.pending) return;
-    setStatus({ pending: true, message: "" });
+    setStatus({ pending: true, message: '' });
     let result: { ok: boolean; message?: string };
     try {
       result = await fn();
@@ -790,7 +829,7 @@ function StageDialogs({
     }
   }
 
-  const isForm = state?.kind === "add" || state?.kind === "rename";
+  const isForm = state?.kind === 'add' || state?.kind === 'rename';
 
   return (
     <>
@@ -805,13 +844,13 @@ function StageDialogs({
             onSubmit={(event) => {
               event.preventDefault();
               if (!label.trim()) return;
-              if (state?.kind === "add") {
+              if (state?.kind === 'add') {
                 void submit(() =>
                   actions.createStage({
                     data: { slug, jobId, label: label.trim() },
                   }),
                 );
-              } else if (state?.kind === "rename") {
+              } else if (state?.kind === 'rename') {
                 void submit(() =>
                   actions.renameStage({
                     data: {
@@ -827,13 +866,15 @@ function StageDialogs({
           >
             <DialogHeader>
               <DialogTitle>
-                {state?.kind === "rename"
+                {state?.kind === 'rename'
                   ? m.employerApplicants_renameStageTitle()
                   : m.employerApplicants_addStageTitle()}
               </DialogTitle>
             </DialogHeader>
             <Field data-invalid={Boolean(status.message)}>
-              <FieldLabel htmlFor="stage-name">{m.employerApplicants_stageNameLabel()}</FieldLabel>
+              <FieldLabel htmlFor="stage-name">
+                {m.employerApplicants_stageNameLabel()}
+              </FieldLabel>
               <Input
                 id="stage-name"
                 value={label}
@@ -841,7 +882,9 @@ function StageDialogs({
                 autoFocus
                 onChange={(event) => setLabel(event.target.value)}
               />
-              {status.message ? <FieldError>{status.message}</FieldError> : null}
+              {status.message ? (
+                <FieldError>{status.message}</FieldError>
+              ) : null}
             </Field>
             <DialogFooter>
               <DialogClose render={<Button type="button" variant="outline" />}>
@@ -856,7 +899,7 @@ function StageDialogs({
       </Dialog>
 
       <AlertDialog
-        open={state?.kind === "delete"}
+        open={state?.kind === 'delete'}
         onOpenChange={(next) => {
           if (!next) onClose();
         }}
@@ -864,11 +907,11 @@ function StageDialogs({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {state?.kind === "delete"
+              {state?.kind === 'delete'
                 ? m.employerApplicants_deleteStageTitle({
                     stage: state.stage.label,
                   })
-                : ""}
+                : ''}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {m.employerApplicants_deleteStageBody()}
@@ -880,14 +923,16 @@ function StageDialogs({
             </Alert>
           ) : null}
           <AlertDialogFooter>
-            <AlertDialogCancel>{m.employerApplicants_cancelLabel()}</AlertDialogCancel>
+            <AlertDialogCancel>
+              {m.employerApplicants_cancelLabel()}
+            </AlertDialogCancel>
             <AlertDialogAction
               type="button"
               variant="destructive"
               disabled={status.pending}
               onClick={(event) => {
                 event.preventDefault();
-                if (state?.kind === "delete") {
+                if (state?.kind === 'delete') {
                   void submit(() =>
                     actions.removeStage({
                       data: { slug, stageId: state.stage.id },

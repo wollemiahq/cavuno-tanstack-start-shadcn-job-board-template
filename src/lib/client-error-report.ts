@@ -4,7 +4,7 @@
  * cost is zero network; sendBeacon/fetch keepalive run only after a crash.
  */
 
-export const CLIENT_ERROR_PATH = "/.well-known/cavuno/client-error";
+export const CLIENT_ERROR_PATH = '/.well-known/cavuno/client-error';
 
 const STACK_MAX = 4000;
 const COMPONENT_STACK_MAX = 2000;
@@ -23,7 +23,7 @@ function clip(value: string | undefined, max: number): string | undefined {
 }
 
 function fingerprint(error: ReportableError, path: string): string {
-  return `${error.name}:${(error.message || "").slice(0, 80)}:${path}`;
+  return `${error.name}:${(error.message || '').slice(0, 80)}:${path}`;
 }
 
 export function resetClientErrorReports() {
@@ -35,18 +35,18 @@ export function resetClientErrorReports() {
  * (React #185) cannot flood the Worker.
  */
 export function reportClientError(error: ReportableError) {
-  if (!("document" in globalThis)) return;
+  if (!('document' in globalThis)) return;
 
-  const path = (window.location.pathname || "/").slice(0, 500);
+  const path = (window.location.pathname || '/').slice(0, 500);
   const key = fingerprint(error, path);
   if (reported.has(key)) return;
   reported.add(key);
 
-  const message = (error.message || "unknown").slice(0, 500).trim();
+  const message = (error.message || 'unknown').slice(0, 500).trim();
   if (!message) return;
 
   const payload = {
-    name: (error.name || "Error").slice(0, 200),
+    name: (error.name || 'Error').slice(0, 200),
     message,
     digest: error.digest ?? null,
     path,
@@ -58,7 +58,7 @@ export function reportClientError(error: ReportableError) {
   const body = JSON.stringify(payload);
   try {
     if (navigator.sendBeacon) {
-      const blob = new Blob([body], { type: "application/json" });
+      const blob = new Blob([body], { type: 'application/json' });
       if (navigator.sendBeacon(CLIENT_ERROR_PATH, blob)) return;
     }
   } catch {
@@ -66,11 +66,11 @@ export function reportClientError(error: ReportableError) {
   }
 
   void fetch(CLIENT_ERROR_PATH, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
     body,
     keepalive: true,
-    credentials: "same-origin",
+    credentials: 'same-origin',
   }).catch(() => {
     // Reporting must never take down the error page.
   });

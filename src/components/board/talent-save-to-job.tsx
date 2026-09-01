@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from 'react';
 
-import { Bookmark, LoaderCircle } from "lucide-react";
+import { Bookmark, LoaderCircle } from 'lucide-react';
 
-import { m } from "../../paraglide/messages";
+import { m } from '../../paraglide/messages';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Combobox,
   ComboboxContent,
@@ -14,11 +14,11 @@ import {
   ComboboxItem,
   ComboboxList,
   ComboboxTrigger,
-} from "@/components/ui/combobox";
-import { toastActionError } from "@/lib/action-toast";
-import { talentListDisplayName } from "@/lib/talent-search";
-import { cn } from "@/lib/utils";
-import { saveSourcedCandidate, type ActionResult } from "@/server/employers";
+} from '@/components/ui/combobox';
+import { toastActionError } from '@/lib/action-toast';
+import { talentListDisplayName } from '@/lib/talent-search';
+import { cn } from '@/lib/utils';
+import { saveSourcedCandidate, type ActionResult } from '@/server/employers';
 
 export type SaveSourcedCandidateFn = (input: {
   data: { slug: string; job: string; candidateBoardUserId: string };
@@ -64,7 +64,9 @@ function selectedForBound(
 
 function sameDestinations(left: SaveDestination[], right: SaveDestination[]) {
   if (left.length !== right.length) return false;
-  return left.every((destination, index) => destination.id === right[index]?.id);
+  return left.every(
+    (destination, index) => destination.id === right[index]?.id,
+  );
 }
 
 export function TalentSaveToJob({
@@ -74,7 +76,7 @@ export function TalentSaveToJob({
   candidateBoardUserId,
   boundJobId,
   alreadySaved = false,
-  presentation = "default",
+  presentation = 'default',
   onSaved,
   saveCandidate = saveSourcedCandidate,
 }: {
@@ -84,29 +86,36 @@ export function TalentSaveToJob({
   candidateBoardUserId: string;
   boundJobId?: string;
   alreadySaved?: boolean;
-  presentation?: "default" | "icon";
+  presentation?: 'default' | 'icon';
   onSaved?: () => void;
   saveCandidate?: SaveSourcedCandidateFn;
 }) {
-  const destinations = useMemo(() => destinationsFrom({ lists, jobs }), [lists, jobs]);
+  const destinations = useMemo(
+    () => destinationsFrom({ lists, jobs }),
+    [lists, jobs],
+  );
   const [pendingJobIds, setPendingJobIds] = useState<string[]>([]);
   const [selected, setSelected] = useState<SaveDestination[]>(() =>
     selectedForBound(destinations, boundJobId, alreadySaved),
   );
-  const iconOnly = presentation === "icon";
+  const iconOnly = presentation === 'icon';
   const pending = pendingJobIds.length > 0;
   const filled = selected.length > 0;
 
   useEffect(() => {
     const next = selectedForBound(destinations, boundJobId, alreadySaved);
-    setSelected((current) => (sameDestinations(current, next) ? current : next));
+    setSelected((current) =>
+      sameDestinations(current, next) ? current : next,
+    );
     // Re-init when the person or bound job changes, not when list records refresh.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- alreadySaved toggling after a save must not wipe other selections
   }, [boundJobId, candidateBoardUserId]);
 
   useEffect(() => {
     if (!boundJobId || !alreadySaved) return;
-    const bound = destinations.find((destination) => destination.jobId === boundJobId);
+    const bound = destinations.find(
+      (destination) => destination.jobId === boundJobId,
+    );
     if (!bound) return;
     setSelected((current) =>
       current.some((destination) => destination.jobId === boundJobId)
@@ -131,11 +140,15 @@ export function TalentSaveToJob({
           if (!boundJobId || job === boundJobId) onSaved?.();
           return;
         }
-        setSelected((current) => current.filter((destination) => destination.jobId !== job));
+        setSelected((current) =>
+          current.filter((destination) => destination.jobId !== job),
+        );
         void toastActionError(result.message);
       })
       .catch(() => {
-        setSelected((current) => current.filter((destination) => destination.jobId !== job));
+        setSelected((current) =>
+          current.filter((destination) => destination.jobId !== job),
+        );
         void toastActionError();
       })
       .finally(() => {
@@ -144,7 +157,9 @@ export function TalentSaveToJob({
   }
 
   function handleValueChange(next: SaveDestination[]) {
-    const previousJobs = new Set(selected.map((destination) => destination.jobId));
+    const previousJobs = new Set(
+      selected.map((destination) => destination.jobId),
+    );
     if (!sameDestinations(selected, next)) setSelected(next);
     for (const destination of next) {
       if (!previousJobs.has(destination.jobId)) saveTo(destination.jobId);
@@ -175,27 +190,31 @@ export function TalentSaveToJob({
           render={
             <Button
               type="button"
-              variant={iconOnly ? "ghost" : "outline"}
-              size={iconOnly ? "icon" : "default"}
+              variant={iconOnly ? 'ghost' : 'outline'}
+              size={iconOnly ? 'icon' : 'default'}
               disabled={pending}
-              className={cn(pending && "cursor-wait")}
+              className={cn(pending && 'cursor-wait')}
             />
           }
         >
           <Icon
             aria-hidden="true"
-            className={cn(pending && "animate-spin", filled && "fill-current")}
+            className={cn(pending && 'animate-spin', filled && 'fill-current')}
           />
           {iconOnly ? <span className="sr-only">{label}</span> : label}
         </ComboboxTrigger>
         <ComboboxContent
-          align={iconOnly ? "end" : "end"}
+          align={iconOnly ? 'end' : 'end'}
           className="w-max max-w-[min(24rem,var(--available-width))] min-w-56"
         >
           <ComboboxEmpty>{m.talentSave_jobLabel()}</ComboboxEmpty>
           <ComboboxList>
             {(destination: SaveDestination) => (
-              <ComboboxItem key={destination.id} value={destination} className="whitespace-nowrap">
+              <ComboboxItem
+                key={destination.id}
+                value={destination}
+                className="whitespace-nowrap"
+              >
                 {destination.name}
               </ComboboxItem>
             )}
