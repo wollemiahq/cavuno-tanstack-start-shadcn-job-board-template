@@ -22,10 +22,10 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `aspect-ratio` | Available | Installed for adoption when the product needs this behavior. |
 | `attachment` | Used (2) | `src/components/post-job-form.tsx`<br>`src/components/resume-upload.tsx` |
 | `avatar` | Used (14) | `src/components/account-shell.tsx`<br>`src/components/avatar-upload.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+11 more in the JSON ledger |
-| `badge` | Used (39) | `src/components/Footer.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+36 more in the JSON ledger |
+| `badge` | Used (38) | `src/components/Footer.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+35 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
-| `button` | Used (102) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+99 more in the JSON ledger |
+| `button` | Used (103) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+100 more in the JSON ledger |
 | `button-group` | Used (2) | `src/components/board/alert-signup-form.tsx`<br>`src/components/header-search-enhanced.tsx` |
 | `calendar` | Available | Installed for adoption when the product needs this behavior. |
 | `card` | Used (38) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>`src/components/board/company-search-result-detail.tsx`<br>+35 more in the JSON ledger |
@@ -33,17 +33,17 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `chart` | Used (2) | `src/components/employer/employer-profile-views-stat.tsx`<br>`src/components/employer/employer-stats-chart.tsx` |
 | `checkbox` | Used (10) | `src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/custom-fields-group.tsx`<br>+7 more in the JSON ledger |
 | `collapsible` | Available | Installed for adoption when the product needs this behavior. |
-| `combobox` | Used (6) | `src/components/company-search-combobox.tsx`<br>`src/components/keyword-combobox.tsx`<br>`src/components/location-combobox.tsx`<br>+3 more in the JSON ledger |
+| `combobox` | Used (8) | `src/components/board/talent-list-job-link.tsx`<br>`src/components/board/talent-save-to-job.tsx`<br>`src/components/company-search-combobox.tsx`<br>+5 more in the JSON ledger |
 | `command` | Available | Installed for adoption when the product needs this behavior. |
 | `context-menu` | Available | Installed for adoption when the product needs this behavior. |
 | `dialog` | Used (11) | `src/components/alert-manager.tsx`<br>`src/components/board/talent-lists-picker.tsx`<br>`src/components/board/talent-message-action.tsx`<br>+8 more in the JSON ledger |
 | `direction` | Used (3) | `src/components/employer/employer-profile-views-stat.tsx`<br>`src/components/employer/employer-stats-chart.tsx`<br>`src/routes/__root.tsx` |
 | `drawer` | Available | Installed for adoption when the product needs this behavior. |
-| `dropdown-menu` | Used (8) | `src/components/board/talent-lists-picker.tsx`<br>`src/components/board/talent-save-to-job.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>+5 more in the JSON ledger |
+| `dropdown-menu` | Used (7) | `src/components/board/talent-lists-picker.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>`src/components/header-account-menu.tsx`<br>+4 more in the JSON ledger |
 | `empty` | Used (42) | `src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+39 more in the JSON ledger |
 | `field` | Used (29) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+26 more in the JSON ledger |
 | `hover-card` | Available | Installed for adoption when the product needs this behavior. |
-| `input` | Used (24) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/apply-button.tsx`<br>+21 more in the JSON ledger |
+| `input` | Used (23) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/apply-button.tsx`<br>+20 more in the JSON ledger |
 | `input-group` | Used (13) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/listing-search-band.tsx`<br>`src/components/company-search-combobox.tsx`<br>+10 more in the JSON ledger |
 | `input-otp` | Used (1) | `src/routes/-auth.verify-email-required.tsx` |
 | `item` | Used (8) | `src/components/alert-manager.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+5 more in the JSON ledger |

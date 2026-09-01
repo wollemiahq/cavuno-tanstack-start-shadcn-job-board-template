@@ -20,6 +20,7 @@ import {
   EmptyHeader,
   EmptyMedia,
 } from '@/components/ui/empty';
+import { useClientErrorReport } from '@/lib/use-client-error-report';
 import type { ErrorComponentProps } from '@tanstack/react-router';
 
 /**
@@ -105,6 +106,8 @@ export function AppRouteErrorPage({
   // waiting actually fixes it, so "try again in a moment" would mislead.
   // Server-function errors cross the wire as plain Errors, so the SDK guard
   // is backed up by a message sniff.
+  useClientErrorReport(error);
+
   const rateLimited =
     isRateLimited(error) || /rate limit/i.test(error?.message ?? '');
 

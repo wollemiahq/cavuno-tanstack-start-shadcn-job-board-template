@@ -2,6 +2,7 @@ import { CircleAlert } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 
+import { ClientErrorReporter } from '@/components/client-error-reporting-boot';
 import { Page, PageContent } from '@/components/layout/page';
 import { Button } from '@/components/ui/button';
 import {
@@ -121,14 +122,17 @@ export function CandidateProfilePendingPage() {
   );
 }
 
-export function CandidateRouteErrorPage({ reset }: ErrorComponentProps) {
+export function CandidateRouteErrorPage({ error, reset }: ErrorComponentProps) {
   return (
-    <CandidateRouteError
-      title={m.candidateAccount_errorTitle()}
-      description={m.candidateAccount_errorBody()}
-      retryLabel={m.candidateAccount_retryLabel()}
-      navigationLabel={m.accountShell_candidateNavigationLabel()}
-      reset={reset}
-    />
+    <>
+      <ClientErrorReporter error={error} />
+      <CandidateRouteError
+        title={m.candidateAccount_errorTitle()}
+        description={m.candidateAccount_errorBody()}
+        retryLabel={m.candidateAccount_retryLabel()}
+        navigationLabel={m.accountShell_candidateNavigationLabel()}
+        reset={reset}
+      />
+    </>
   );
 }

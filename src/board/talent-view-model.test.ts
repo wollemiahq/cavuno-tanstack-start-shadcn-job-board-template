@@ -271,6 +271,52 @@ describe('talent view models', () => {
     );
   });
 
+  it('does not throw on resume-parsed year-only or empty education dates', () => {
+    const vm = toTalentProfileVM(
+      {
+        ...profile,
+        education: [
+          {
+            ...profile.education[0],
+            startDate: '',
+            endDate: '2024',
+          },
+        ],
+      },
+      'en',
+      labels,
+    );
+
+    expect(vm.education[0]!.dateRangeLabel).toBe('2024');
+  });
+
+  it('omits unparseable month strings instead of throwing', () => {
+    const vm = toTalentProfileVM(
+      {
+        ...profile,
+        experiences: [
+          {
+            ...profile.experiences[0],
+            startDate: 'not-a-date',
+            endDate: 'Present',
+          },
+        ],
+        education: [
+          {
+            ...profile.education[0],
+            startDate: 'n/a',
+            endDate: null,
+          },
+        ],
+      },
+      'en',
+      labels,
+    );
+
+    expect(vm.experiences[0]!.dateRangeLabel).toBeNull();
+    expect(vm.education[0]!.dateRangeLabel).toBeNull();
+  });
+
   it('routes directory cards to the opaque /p/{id} path when the board sells unlocks', () => {
     const vm = toTalentCardVM(directoryEntry, labels, { profileUnlocks: true });
 
