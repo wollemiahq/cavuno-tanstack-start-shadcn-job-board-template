@@ -107,8 +107,14 @@ describe('TalentListJobLink', () => {
     );
 
     fireEvent.click(screen.getByRole('combobox', { name: 'Link to a job' }));
-    expect(await screen.findByRole('option', { name: 'Not linked' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'First role' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'Second role' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('option', { name: 'Not linked' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('option', { name: 'First role' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('option', { name: 'Second role' }),
+    ).toBeInTheDocument();
   });
 });

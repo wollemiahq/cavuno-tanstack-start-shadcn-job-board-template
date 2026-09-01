@@ -113,7 +113,8 @@ export const getRootSessionEntitlements = createServerFn({
     const headers = context.boardAccessHeaders;
     if (!context.session) {
       return {
-        preview: await resolvePreviewStateForViewer(null).catch(previewFallback),
+        preview:
+          await resolvePreviewStateForViewer(null).catch(previewFallback),
         hasGrant: false,
         talentAccess: EMPTY_GRANT,
       };
@@ -127,7 +128,8 @@ export const getRootSessionEntitlements = createServerFn({
       emailVerified = user.emailVerified;
     } catch {
       return {
-        preview: await resolvePreviewStateForViewer(null).catch(previewFallback),
+        preview:
+          await resolvePreviewStateForViewer(null).catch(previewFallback),
         hasGrant: false,
         talentAccess: EMPTY_GRANT,
       };

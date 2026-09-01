@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useId, useState } from "react";
+import { useId, useState } from 'react';
 
-import { useNavigate } from "@tanstack/react-router";
-import { List } from "lucide-react";
+import { useNavigate } from '@tanstack/react-router';
+import { List } from 'lucide-react';
 
-import { m } from "../../paraglide/messages";
+import { m } from '../../paraglide/messages';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -15,26 +15,32 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { boardErrorMessage } from "@/lib/board-error-message";
+} from '@/components/ui/dropdown-menu';
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { boardErrorMessage } from '@/lib/board-error-message';
 import {
   filtersFromJob,
   listFiltersToTalentSearch,
   talentListDisplayName,
   type TalentListFilters,
-} from "@/lib/talent-search";
-import { createTalentList, type TalentListRecord } from "@/server/employers";
+} from '@/lib/talent-search';
+import { createTalentList, type TalentListRecord } from '@/server/employers';
 
 export function TalentListsPicker({
   slug,
@@ -51,10 +57,12 @@ export function TalentListsPicker({
   currentFilters: TalentListFilters;
   onListsChange: (lists: TalentListRecord[]) => void;
 }) {
-  const navigate = useNavigate({ from: "/talent/" });
+  const navigate = useNavigate({ from: '/talent/' });
   const [createOpen, setCreateOpen] = useState(false);
   const selected = lists.find((list) => list.id === selectedListId);
-  const triggerName = selected ? talentListDisplayName(selected.name) : undefined;
+  const triggerName = selected
+    ? talentListDisplayName(selected.name)
+    : undefined;
 
   function selectList(list: TalentListRecord | null) {
     if (!list) {
@@ -94,7 +102,9 @@ export function TalentListsPicker({
           }
         >
           <List aria-hidden="true" />
-          <span className="truncate">{triggerName ?? m.talentLists_triggerLabel()}</span>
+          <span className="truncate">
+            {triggerName ?? m.talentLists_triggerLabel()}
+          </span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-72">
           {lists.map((list) => (
@@ -148,26 +158,26 @@ function CreateListDialog({
   const nameId = useId();
   const blankKindId = useId();
   const jobKindId = useId();
-  const [name, setName] = useState("");
-  const [kind, setKind] = useState<"blank" | "job">("blank");
-  const [jobId, setJobId] = useState(jobs[0]?.id ?? "");
+  const [name, setName] = useState('');
+  const [kind, setKind] = useState<'blank' | 'job'>('blank');
+  const [jobId, setJobId] = useState(jobs[0]?.id ?? '');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   function close(nextOpen: boolean) {
     onOpenChange(nextOpen);
     if (!nextOpen) {
-      setName("");
-      setKind("blank");
-      setJobId(jobs[0]?.id ?? "");
+      setName('');
+      setKind('blank');
+      setJobId(jobs[0]?.id ?? '');
       setError(null);
       setPending(false);
     }
   }
 
-  function selectKind(next: "blank" | "job") {
+  function selectKind(next: 'blank' | 'job') {
     setKind(next);
-    if (next === "job") {
+    if (next === 'job') {
       const job = jobs.find((row) => row.id === jobId) ?? jobs[0];
       if (job) {
         setJobId(job.id);
@@ -194,17 +204,19 @@ function CreateListDialog({
               setError(m.talentLists_nameRequired());
               return;
             }
-            if (kind === "job" && !jobId) {
+            if (kind === 'job' && !jobId) {
               setError(m.talentLists_jobRequired());
               return;
             }
             const job = jobs.find((row) => row.id === jobId);
             const filters =
-              kind === "job" && job ? filtersFromJob(job, currentFilters) : currentFilters;
+              kind === 'job' && job
+                ? filtersFromJob(job, currentFilters)
+                : currentFilters;
             setPending(true);
             setError(null);
             const payload =
-              kind === "job"
+              kind === 'job'
                 ? { slug, name: nextName, filters, job: jobId }
                 : { slug, name: nextName, filters };
             void createTalentList({ data: payload })
@@ -217,17 +229,21 @@ function CreateListDialog({
                 close(false);
               })
               .catch(() => {
-                setError(boardErrorMessage({ code: "unknown" }));
+                setError(boardErrorMessage({ code: 'unknown' }));
               })
               .finally(() => setPending(false));
           }}
         >
           <DialogHeader>
             <DialogTitle>{m.talentLists_createTitle()}</DialogTitle>
-            <DialogDescription>{m.talentLists_createDescription()}</DialogDescription>
+            <DialogDescription>
+              {m.talentLists_createDescription()}
+            </DialogDescription>
           </DialogHeader>
           <Field data-invalid={error ? true : undefined}>
-            <FieldLabel htmlFor={nameId}>{m.talentLists_nameLabel()}</FieldLabel>
+            <FieldLabel htmlFor={nameId}>
+              {m.talentLists_nameLabel()}
+            </FieldLabel>
             <Input
               id={nameId}
               name="name"
@@ -240,11 +256,15 @@ function CreateListDialog({
             {error ? <FieldError>{error}</FieldError> : null}
           </Field>
           <FieldSet>
-            <FieldLegend variant="label">{m.talentLists_kindLabel()}</FieldLegend>
+            <FieldLegend variant="label">
+              {m.talentLists_kindLabel()}
+            </FieldLegend>
             <RadioGroup
               name="kind"
               value={kind}
-              onValueChange={(value) => selectKind(value === "job" ? "job" : "blank")}
+              onValueChange={(value) =>
+                selectKind(value === 'job' ? 'job' : 'blank')
+              }
               className="gap-2"
             >
               <div className="flex items-center gap-2">
@@ -254,16 +274,22 @@ function CreateListDialog({
                 </Label>
               </div>
               <div className="flex items-center gap-2">
-                <RadioGroupItem id={jobKindId} value="job" disabled={jobs.length === 0} />
+                <RadioGroupItem
+                  id={jobKindId}
+                  value="job"
+                  disabled={jobs.length === 0}
+                />
                 <Label htmlFor={jobKindId} className="font-normal">
                   {m.talentLists_kindJob()}
                 </Label>
               </div>
             </RadioGroup>
           </FieldSet>
-          {kind === "job" ? (
+          {kind === 'job' ? (
             <Field>
-              <FieldLabel htmlFor="talent-list-job">{m.talentLists_jobLabel()}</FieldLabel>
+              <FieldLabel htmlFor="talent-list-job">
+                {m.talentLists_jobLabel()}
+              </FieldLabel>
               <select
                 id="talent-list-job"
                 name="job"

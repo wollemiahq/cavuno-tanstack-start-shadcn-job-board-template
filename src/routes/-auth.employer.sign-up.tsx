@@ -93,7 +93,8 @@ export function EmployerSignUpView({
       role: 'employer';
     };
   }) => Promise<
-    { ok: true; authorizeUrl: string } | { ok: false; code?: string; message: string }
+    | { ok: true; authorizeUrl: string }
+    | { ok: false; code?: string; message: string }
   >;
   invalidate: () => Promise<void>;
   footer?: React.ReactNode;

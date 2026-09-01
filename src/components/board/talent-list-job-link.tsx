@@ -116,7 +116,7 @@ export function TalentListJobLink({
       </ComboboxTrigger>
       <ComboboxContent
         align="end"
-        className="min-w-56 w-max max-w-[min(24rem,var(--available-width))]"
+        className="w-max max-w-[min(24rem,var(--available-width))] min-w-56"
       >
         <ComboboxEmpty>{m.talentLists_linkJobEmpty()}</ComboboxEmpty>
         <ComboboxList>

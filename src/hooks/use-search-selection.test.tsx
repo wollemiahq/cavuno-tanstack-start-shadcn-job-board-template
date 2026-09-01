@@ -160,17 +160,18 @@ describe('useSearchSelection', () => {
 
     /** List viewport [0, 100]. `second-job` sits below the fold. */
     function mockClippedSecondJob() {
-      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
-        function (this: HTMLElement) {
-          const id = this.dataset.resultId;
-          if (id === 'second-job') return rect(200, 80);
-          if (id) return rect(8, 40);
-          if (this.getAttribute('data-testid') === 'results-list') {
-            return rect(0, 100);
-          }
-          return rect(0, 0);
-        },
-      );
+      vi.spyOn(
+        HTMLElement.prototype,
+        'getBoundingClientRect',
+      ).mockImplementation(function (this: HTMLElement) {
+        const id = this.dataset.resultId;
+        if (id === 'second-job') return rect(200, 80);
+        if (id) return rect(8, 40);
+        if (this.getAttribute('data-testid') === 'results-list') {
+          return rect(0, 100);
+        }
+        return rect(0, 0);
+      });
     }
 
     beforeEach(() => {

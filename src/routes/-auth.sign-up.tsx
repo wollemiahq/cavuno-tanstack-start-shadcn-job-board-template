@@ -36,7 +36,8 @@ export function SignUpView({
       returnTo: string;
     };
   }) => Promise<
-    { ok: true; authorizeUrl: string } | { ok: false; code?: string; message: string }
+    | { ok: true; authorizeUrl: string }
+    | { ok: false; code?: string; message: string }
   >;
   invalidate: () => Promise<void>;
 }) {
