@@ -20,13 +20,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { TalentListsPicker } from './talent-lists-picker';
 
 import { parseTalentSearch } from '@/lib/talent-search';
-import { createTalentList, type TalentListRecord } from '@/server/employers';
+import type { TalentListRecord } from '@/server/employers';
 
-vi.mock('@/server/employers', () => ({
-  createTalentList: vi.fn(),
-}));
+const createList = vi.fn();
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  createList.mockReset();
+});
 
 const berlin: TalentListRecord = {
   id: 'list_berlin',
@@ -68,6 +69,7 @@ function renderPicker(
         selectedListId={selectedListId}
         currentFilters={{ skill: 'go' }}
         onListsChange={onListsChange}
+        createList={createList}
       />
     ),
   });
@@ -151,7 +153,7 @@ describe('TalentListsPicker', () => {
   });
 
   it('creates a blank list from the current filters', async () => {
-    vi.mocked(createTalentList).mockResolvedValueOnce({
+    createList.mockResolvedValueOnce({
       ok: true,
       data: {
         ...berlin,
@@ -178,7 +180,7 @@ describe('TalentListsPicker', () => {
     );
 
     await waitFor(() =>
-      expect(createTalentList).toHaveBeenCalledWith({
+      expect(createList).toHaveBeenCalledWith({
         data: {
           slug: 'tls-smoke-labs',
           name: 'Platform search',
@@ -190,7 +192,7 @@ describe('TalentListsPicker', () => {
   });
 
   it('creates a job-bound search from the job title keyword', async () => {
-    vi.mocked(createTalentList).mockResolvedValueOnce({
+    createList.mockResolvedValueOnce({
       ok: true,
       data: {
         ...bound,
@@ -212,7 +214,7 @@ describe('TalentListsPicker', () => {
     );
 
     await waitFor(() =>
-      expect(createTalentList).toHaveBeenCalledWith({
+      expect(createList).toHaveBeenCalledWith({
         data: {
           slug: 'tls-smoke-labs',
           name: 'Smoke Robotics Engineer',

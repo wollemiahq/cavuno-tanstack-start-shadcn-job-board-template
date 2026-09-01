@@ -18,7 +18,11 @@ import {
 import { toastActionError } from '@/lib/action-toast';
 import { talentListDisplayName } from '@/lib/talent-search';
 import { cn } from '@/lib/utils';
-import { saveSourcedCandidate } from '@/server/employers';
+import { saveSourcedCandidate, type ActionResult } from '@/server/employers';
+
+export type SaveSourcedCandidateFn = (input: {
+  data: { slug: string; job: string; candidateBoardUserId: string };
+}) => Promise<ActionResult<{ id: string }>>;
 
 type SaveDestination = {
   id: string;
@@ -74,6 +78,7 @@ export function TalentSaveToJob({
   alreadySaved = false,
   presentation = 'default',
   onSaved,
+  saveCandidate = saveSourcedCandidate,
 }: {
   slug: string;
   jobs: Array<{ id: string; title: string }>;
@@ -83,6 +88,7 @@ export function TalentSaveToJob({
   alreadySaved?: boolean;
   presentation?: 'default' | 'icon';
   onSaved?: () => void;
+  saveCandidate?: SaveSourcedCandidateFn;
 }) {
   const destinations = useMemo(
     () => destinationsFrom({ lists, jobs }),
@@ -124,7 +130,7 @@ export function TalentSaveToJob({
     if (!job || pendingJobIds.includes(job)) return;
     setPendingJobIds((current) => [...current, job]);
     const request = Promise.resolve(
-      saveSourcedCandidate({
+      saveCandidate({
         data: { slug, job, candidateBoardUserId },
       }),
     );

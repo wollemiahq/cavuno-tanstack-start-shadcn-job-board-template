@@ -3,7 +3,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resetClientErrorReports } from './client-error-report';
-import { installClientErrorReporting } from './install-client-error-reporting';
+import {
+  installClientErrorReporting,
+  resetClientErrorReportingInstall,
+} from './install-client-error-reporting';
 
 describe('installClientErrorReporting', () => {
   const fetchMock = vi
@@ -15,8 +18,7 @@ describe('installClientErrorReporting', () => {
     resetClientErrorReports();
     vi.stubGlobal('fetch', fetchMock);
     vi.stubGlobal('navigator', { ...navigator, sendBeacon: undefined });
-    delete (window as Window & { __cavunoClientErrorReporting?: boolean })
-      .__cavunoClientErrorReporting;
+    resetClientErrorReportingInstall();
   });
 
   afterEach(() => {

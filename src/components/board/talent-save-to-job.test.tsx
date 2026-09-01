@@ -12,15 +12,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { TalentSaveToJob } from './talent-save-to-job';
 
-import { saveSourcedCandidate } from '@/server/employers';
-
-vi.mock('@/server/employers', () => ({
-  saveSourcedCandidate: vi.fn(),
-}));
+const saveCandidate = vi.fn();
 
 afterEach(() => {
   cleanup();
-  vi.mocked(saveSourcedCandidate).mockReset();
+  saveCandidate.mockReset();
 });
 
 const jobs = [
@@ -51,7 +47,7 @@ async function pickOption(name: string) {
 
 describe('TalentSaveToJob', () => {
   it('keeps the Shortlist button and lets you pick more than one saved search', async () => {
-    vi.mocked(saveSourcedCandidate).mockResolvedValue({
+    saveCandidate.mockResolvedValue({
       ok: true,
       data: { id: 'src_1', object: 'sourced_candidate', created: true },
     });
@@ -62,6 +58,7 @@ describe('TalentSaveToJob', () => {
         jobs={jobs}
         lists={lists}
         candidateBoardUserId="bu_ada"
+        saveCandidate={saveCandidate}
       />,
     );
 
@@ -71,7 +68,7 @@ describe('TalentSaveToJob', () => {
     await pickOption('Frontend');
 
     await waitFor(() =>
-      expect(saveSourcedCandidate).toHaveBeenCalledWith({
+      expect(saveCandidate).toHaveBeenCalledWith({
         data: {
           slug: 'acme',
           job: 'job_a',
@@ -79,7 +76,7 @@ describe('TalentSaveToJob', () => {
         },
       }),
     );
-    expect(saveSourcedCandidate).toHaveBeenCalledWith({
+    expect(saveCandidate).toHaveBeenCalledWith({
       data: {
         slug: 'acme',
         job: 'job_b',
@@ -95,6 +92,7 @@ describe('TalentSaveToJob', () => {
         slug="acme"
         jobs={[{ id: 'job_a', title: 'First role' }]}
         candidateBoardUserId="bu_ada"
+        saveCandidate={saveCandidate}
       />,
     );
 
@@ -102,7 +100,7 @@ describe('TalentSaveToJob', () => {
     expect(
       await screen.findByRole('option', { name: 'First role' }),
     ).toBeInTheDocument();
-    expect(saveSourcedCandidate).not.toHaveBeenCalled();
+    expect(saveCandidate).not.toHaveBeenCalled();
   });
 
   it('shows Shortlisted when already saved without locking the picker', () => {
@@ -112,13 +110,14 @@ describe('TalentSaveToJob', () => {
         jobs={jobs}
         lists={lists}
         candidateBoardUserId="bu_ada"
+        saveCandidate={saveCandidate}
         boundJobId="job_b"
         alreadySaved
       />,
     );
 
     expect(saveTrigger('Shortlisted')).not.toBeDisabled();
-    expect(saveSourcedCandidate).not.toHaveBeenCalled();
+    expect(saveCandidate).not.toHaveBeenCalled();
   });
 
   it('fills Shortlisted when alreadySaved arrives after mount', () => {
@@ -128,6 +127,7 @@ describe('TalentSaveToJob', () => {
         jobs={jobs}
         lists={lists}
         candidateBoardUserId="bu_ada"
+        saveCandidate={saveCandidate}
         boundJobId="job_b"
       />,
     );
@@ -140,18 +140,19 @@ describe('TalentSaveToJob', () => {
         jobs={jobs}
         lists={lists}
         candidateBoardUserId="bu_ada"
+        saveCandidate={saveCandidate}
         boundJobId="job_b"
         alreadySaved
       />,
     );
 
     expect(saveTrigger('Shortlisted')).not.toBeDisabled();
-    expect(saveSourcedCandidate).not.toHaveBeenCalled();
+    expect(saveCandidate).not.toHaveBeenCalled();
   });
 
   it('does not report a save when the dest is not the bound job', async () => {
     const onSaved = vi.fn();
-    vi.mocked(saveSourcedCandidate).mockResolvedValue({
+    saveCandidate.mockResolvedValue({
       ok: true,
       data: { id: 'src_1', object: 'sourced_candidate', created: true },
     });
@@ -162,6 +163,7 @@ describe('TalentSaveToJob', () => {
         jobs={jobs}
         lists={lists}
         candidateBoardUserId="bu_ada"
+        saveCandidate={saveCandidate}
         boundJobId="job_b"
         onSaved={onSaved}
       />,
@@ -171,7 +173,7 @@ describe('TalentSaveToJob', () => {
     await pickOption('Backend');
 
     await waitFor(() =>
-      expect(saveSourcedCandidate).toHaveBeenCalledWith({
+      expect(saveCandidate).toHaveBeenCalledWith({
         data: {
           slug: 'acme',
           job: 'job_a',
@@ -183,7 +185,7 @@ describe('TalentSaveToJob', () => {
   });
 
   it('does not one-click save on a bound list', async () => {
-    vi.mocked(saveSourcedCandidate).mockResolvedValue({
+    saveCandidate.mockResolvedValue({
       ok: true,
       data: { id: 'src_1', object: 'sourced_candidate', created: true },
     });
@@ -194,16 +196,17 @@ describe('TalentSaveToJob', () => {
         jobs={jobs}
         lists={lists}
         candidateBoardUserId="bu_ada"
+        saveCandidate={saveCandidate}
         boundJobId="job_b"
       />,
     );
 
     await openSavePicker();
-    expect(saveSourcedCandidate).not.toHaveBeenCalled();
+    expect(saveCandidate).not.toHaveBeenCalled();
     await pickOption('Frontend');
 
     await waitFor(() =>
-      expect(saveSourcedCandidate).toHaveBeenCalledWith({
+      expect(saveCandidate).toHaveBeenCalledWith({
         data: {
           slug: 'acme',
           job: 'job_b',

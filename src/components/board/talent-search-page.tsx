@@ -64,6 +64,7 @@ import {
   updateTalentList,
   type TalentListRecord,
 } from '@/server/employers';
+import { isReactComponent } from '@/utils/is-react-component';
 import type { TalentDirectoryEntry } from '@cavuno/board';
 
 export function TalentSearchPage({
@@ -278,7 +279,9 @@ export function TalentSearchPage({
   );
   let detailWithSave = detail;
   const detailSave = selectedVm ? saveControl(selectedVm.id, 'default') : null;
-  if (isValidElement(detail) && typeof detail.type !== 'string') {
+  if (isValidElement(detail) && isReactComponent(detail.type)) {
+    // SAFETY: employer talent detail components accept saveSlot and
+    // onStartConversation; host elements are excluded by isReactComponent.
     const existing = detail as ReactElement<{
       saveSlot?: ReactNode;
       onStartConversation?: StartTalentConversation;
@@ -287,11 +290,7 @@ export function TalentSearchPage({
     detailWithSave = cloneElement(existing, {
       saveSlot: detailSave ?? existing.props.saveSlot,
       onStartConversation: start
-        ? (input) =>
-            start({
-              ...input,
-              ...(boundJobId ? { job: boundJobId } : {}),
-            })
+        ? (input) => start(boundJobId ? { ...input, job: boundJobId } : input)
         : start,
     });
   }

@@ -17,22 +17,21 @@ import {
 } from '@/components/ui/combobox';
 import { toastActionError } from '@/lib/action-toast';
 import { cn } from '@/lib/utils';
-import { updateTalentList, type TalentListRecord } from '@/server/employers';
+import {
+  updateTalentList,
+  type ActionResult,
+  type TalentListRecord,
+} from '@/server/employers';
 
 const NONE = '__none__';
 
-function selectString(nextValue: unknown): string | undefined {
-  if (typeof nextValue === 'string') return nextValue;
-  if (
-    nextValue &&
-    typeof nextValue === 'object' &&
-    'value' in nextValue &&
-    typeof nextValue.value === 'string'
-  ) {
-    return nextValue.value;
-  }
-  return undefined;
-}
+export type UpdateTalentListFn = (input: {
+  data: {
+    slug: string;
+    listId: string;
+    job?: string | null;
+  };
+}) => Promise<ActionResult<TalentListRecord>>;
 
 export function TalentListJobLink({
   slug,
@@ -40,12 +39,14 @@ export function TalentListJobLink({
   jobId,
   jobs,
   onUpdated,
+  updateList = updateTalentList,
 }: {
   slug: string;
   listId: string;
   jobId: string | null;
   jobs: Array<{ id: string; title: string }>;
   onUpdated: (list: TalentListRecord) => void;
+  updateList?: UpdateTalentListFn;
 }) {
   const [pending, setPending] = useState(false);
   const bound = jobs.find((job) => job.id === jobId);
@@ -61,7 +62,7 @@ export function TalentListJobLink({
     if (pending) return;
     if ((nextJobId ?? null) === (jobId ?? null)) return;
     setPending(true);
-    void updateTalentList({
+    void updateList({
       data: { slug, listId, job: nextJobId },
     })
       .then((result) => {
@@ -87,14 +88,13 @@ export function TalentListJobLink({
       filter={null}
       value={bound?.id ?? NONE}
       itemToStringLabel={labelFor}
-      onValueChange={(next) => {
-        const id = selectString(next);
+      onValueChange={(id) => {
         if (!id || id === (bound?.id ?? NONE)) return;
         bind(id === NONE ? null : id);
       }}
     >
       <ComboboxTrigger
-        aria-label={filled ? bound.title : m.talentLists_linkJobEmpty()}
+        aria-label={bound ? bound.title : m.talentLists_linkJobEmpty()}
         className="[&>svg:last-child]:hidden"
         render={
           <Button
@@ -111,7 +111,7 @@ export function TalentListJobLink({
           <Briefcase aria-hidden="true" />
         )}
         <span className="truncate">
-          {filled ? bound.title : m.talentLists_linkJobEmpty()}
+          {bound ? bound.title : m.talentLists_linkJobEmpty()}
         </span>
       </ComboboxTrigger>
       <ComboboxContent

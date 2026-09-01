@@ -73,8 +73,10 @@ const BUDGETS = {
     // members surface here instead of the default.
     '/employers/companies/$slug/members': { raw: 115_000, gzip: 40_000 },
     // Talent lists picker + Save-to-job menu (#95/#96) are charged here with
-    // the All-filters sheet, not the shared shell. Measured 125.1 / 43.5.
-    '/talent/': { raw: 132_000, gzip: 46_000 },
+    // the All-filters sheet, not the shared shell. Anti-slop replaced
+    // module mocks with injected list/save seams on those controls;
+    // measured 155.7 / 54.7 after that.
+    '/talent/': { raw: 165_000, gzip: 58_000 },
   },
 };
 

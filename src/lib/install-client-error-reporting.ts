@@ -1,6 +1,6 @@
 import { reportClientError } from './client-error-report';
 
-const INSTALLED = '__cavunoClientErrorReporting';
+let installed = false;
 
 function isIgnoredErrorEvent(event: ErrorEvent): boolean {
   const source = event.filename ?? '';
@@ -14,11 +14,18 @@ function isIgnoredErrorEvent(event: ErrorEvent): boolean {
   return event.message === 'Script error.';
 }
 
-function asError(value: unknown, fallbackName: string): Error {
-  if (value instanceof Error) return value;
-  return Object.assign(new Error(String(value ?? 'unknown')), {
-    name: fallbackName,
-  });
+function reportThrown(value: Error | string, fallbackName: string) {
+  if (value instanceof Error) {
+    reportClientError(value);
+    return;
+  }
+  reportClientError(
+    Object.assign(new Error(value || 'unknown'), { name: fallbackName }),
+  );
+}
+
+export function resetClientErrorReportingInstall() {
+  installed = false;
 }
 
 /**
@@ -27,17 +34,26 @@ function asError(value: unknown, fallbackName: string): Error {
  * document, after first paint — listeners are free; the beacon is not.
  */
 export function installClientErrorReporting() {
-  if (typeof window === 'undefined') return;
-  const root = window as Window & { [INSTALLED]?: boolean };
-  if (root[INSTALLED]) return;
-  root[INSTALLED] = true;
+  if (installed) return;
+  if (!('document' in globalThis)) return;
+  installed = true;
 
   window.addEventListener('error', (event) => {
     if (isIgnoredErrorEvent(event)) return;
-    reportClientError(asError(event.error ?? event.message, 'Error'));
+    const thrown = event.error;
+    if (thrown instanceof Error) {
+      reportClientError(thrown);
+      return;
+    }
+    reportThrown(event.message, 'Error');
   });
 
   window.addEventListener('unhandledrejection', (event) => {
-    reportClientError(asError(event.reason, 'UnhandledRejection'));
+    const reason = event.reason;
+    if (reason instanceof Error) {
+      reportClientError(reason);
+      return;
+    }
+    reportThrown(String(reason ?? 'unknown'), 'UnhandledRejection');
   });
 }

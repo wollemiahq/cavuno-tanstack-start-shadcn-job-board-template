@@ -147,7 +147,6 @@ export function ApplicantPipelineBoard({
   actions,
   defaultOpenCardId,
   defaultStageDialog = null,
-  sourced = [],
 }: ApplicantPipelineBoardProps) {
   const { stages, cards } = board;
 

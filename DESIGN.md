@@ -1041,20 +1041,31 @@ Props:
 
 Props:
 
+- `linkJob?: ReactNode`
 - `lists?: ReactNode`
 - `search: TalentSearch`
+
+### TalentListJobLink — `src/components/board/talent-list-job-link.tsx`
+
+Props:
+
+- `jobId: string | null`
+- `jobs: { id: string; title: string; }[]`
+- `listId: string`
+- `onUpdated: (list: TalentListRecord) => void`
+- `slug: string`
+- `updateList?: UpdateTalentListFn | undefined`
 
 ### TalentListsPicker — `src/components/board/talent-lists-picker.tsx`
 
 Props:
 
+- `createList?: CreateTalentListFn | undefined`
 - `currentFilters: TalentListFilters`
-- `dependencies?: TalentListsPickerDependencies | undefined`
 - `jobs: { id: string; title: string; }[]`
 - `lists: TalentListRecord[]`
 - `onListsChange: (lists: TalentListRecord[]) => void`
 - `selectedListId?: string | undefined`
-- `selectedSourcedJobId?: string | undefined`
 - `slug: string`
 
 ### TalentMessageAction — `src/components/board/talent-message-action.tsx`
@@ -1106,10 +1117,11 @@ Props:
 - `alreadySaved?: boolean | undefined`
 - `boundJobId?: string | undefined`
 - `candidateBoardUserId: string`
-- `dependencies?: TalentSaveToJobDependencies | undefined`
 - `jobs: { id: string; title: string; }[]`
+- `lists?: { id: string; name: string; jobId: string | null; }[] | undefined`
 - `onSaved?: (() => void) | undefined`
 - `presentation?: "default" | "icon" | undefined`
+- `saveCandidate?: SaveSourcedCandidateFn | undefined`
 - `slug: string`
 
 ### TalentSearchDetailState — `src/components/board/talent-search-detail-state.tsx`
@@ -1282,6 +1294,20 @@ Props:
 - `children: ReactNode`
 - `description?: ReactNode`
 - `title?: ReactNode`
+
+### ClientErrorReporter — `src/components/client-error-reporting-boot.tsx`
+
+Mount inside a route errorComponent (server or client).
+
+Props:
+
+- `error: Error & { digest?: string | undefined; }`
+
+### ClientErrorReportingBoot — `src/components/client-error-reporting-boot.tsx`
+
+Idle-installs window error listeners after first paint so the happy path
+pays no network and almost no JS (this file is a few lines; the listener
+module loads idle). Route errorComponents still report immediately.
 
 ### CompanyJobsSearchBar — `src/components/company-jobs-search-bar.tsx`
 

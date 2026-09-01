@@ -40,7 +40,20 @@ import {
   talentListDisplayName,
   type TalentListFilters,
 } from '@/lib/talent-search';
-import { createTalentList, type TalentListRecord } from '@/server/employers';
+import {
+  createTalentList,
+  type ActionResult,
+  type TalentListRecord,
+} from '@/server/employers';
+
+export type CreateTalentListFn = (input: {
+  data: {
+    slug: string;
+    name: string;
+    filters?: TalentListFilters;
+    job?: string;
+  };
+}) => Promise<ActionResult<TalentListRecord>>;
 
 export function TalentListsPicker({
   slug,
@@ -49,6 +62,7 @@ export function TalentListsPicker({
   selectedListId,
   currentFilters,
   onListsChange,
+  createList = createTalentList,
 }: {
   slug: string;
   lists: TalentListRecord[];
@@ -56,6 +70,7 @@ export function TalentListsPicker({
   selectedListId?: string;
   currentFilters: TalentListFilters;
   onListsChange: (lists: TalentListRecord[]) => void;
+  createList?: CreateTalentListFn;
 }) {
   const navigate = useNavigate({ from: '/talent/' });
   const [createOpen, setCreateOpen] = useState(false);
@@ -131,6 +146,7 @@ export function TalentListsPicker({
         currentFilters={currentFilters}
         open={createOpen}
         onOpenChange={setCreateOpen}
+        createList={createList}
         onCreated={(list) => {
           onListsChange([list, ...lists]);
           selectList(list);
@@ -147,6 +163,7 @@ function CreateListDialog({
   open,
   onOpenChange,
   onCreated,
+  createList,
 }: {
   slug: string;
   jobs: Array<{ id: string; title: string }>;
@@ -154,6 +171,7 @@ function CreateListDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (list: TalentListRecord) => void;
+  createList: CreateTalentListFn;
 }) {
   const nameId = useId();
   const blankKindId = useId();
@@ -219,7 +237,7 @@ function CreateListDialog({
               kind === 'job'
                 ? { slug, name: nextName, filters, job: jobId }
                 : { slug, name: nextName, filters };
-            void createTalentList({ data: payload })
+            void createList({ data: payload })
               .then((result) => {
                 if (!result.ok) {
                   setError(boardErrorMessage({ code: result.code }));

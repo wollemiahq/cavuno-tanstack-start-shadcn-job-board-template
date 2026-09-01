@@ -40,9 +40,15 @@ describe('reportClientError', () => {
     reportClientError(error);
 
     expect(sendBeacon).toHaveBeenCalledTimes(1);
-    const [url, blob] = sendBeacon.mock.calls[0] as [string, Blob];
-    expect(url).toBe(CLIENT_ERROR_PATH);
-    expect(blob.type).toBe('application/json');
+    expect(sendBeacon).toHaveBeenCalledWith(
+      CLIENT_ERROR_PATH,
+      expect.any(Blob),
+    );
+    const blob = sendBeacon.mock.calls[0]?.[1];
+    expect(blob).toBeInstanceOf(Blob);
+    if (blob instanceof Blob) {
+      expect(blob.type).toBe('application/json');
+    }
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -54,18 +60,22 @@ describe('reportClientError', () => {
     reportClientError(error);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe(CLIENT_ERROR_PATH);
-    expect(init.method).toBe('POST');
-    expect(init.keepalive).toBe(true);
-    expect(init.credentials).toBe('same-origin');
-    const body = JSON.parse(init.body as string) as Record<string, unknown>;
-    expect(body).toMatchObject({
-      name: 'RangeError',
-      message: 'Invalid time value',
-      path: '/talent',
-      host: window.location.host,
-    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      CLIENT_ERROR_PATH,
+      expect.objectContaining({
+        method: 'POST',
+        keepalive: true,
+        credentials: 'same-origin',
+        body: expect.stringMatching(
+          /"name":"RangeError".*"message":"Invalid time value".*"path":"\/talent"/s,
+        ),
+      }),
+    );
+    expect(fetchMock.mock.calls[0]?.[1]).toEqual(
+      expect.objectContaining({
+        body: expect.stringContaining(`"host":"${window.location.host}"`),
+      }),
+    );
   });
 
   it('dedupes the same crash so a render loop cannot flood the Worker', () => {

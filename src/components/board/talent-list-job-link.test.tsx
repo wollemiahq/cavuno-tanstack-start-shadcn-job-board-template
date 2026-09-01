@@ -14,28 +14,21 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { TalentListJobLink } from './talent-list-job-link';
 
-import { updateTalentList } from '@/server/employers';
+import type { TalentListRecord } from '@/server/employers';
 
-vi.mock('@/server/employers', () => ({
-  updateTalentList: vi.fn(),
-}));
-
-afterEach(() => {
-  cleanup();
-  vi.mocked(updateTalentList).mockReset();
-});
+afterEach(cleanup);
 
 const jobs = [
   { id: 'job_a', title: 'First role' },
   { id: 'job_b', title: 'Second role' },
 ];
 
-const list = {
+const list: TalentListRecord = {
   id: 'list_1',
-  object: 'talent_list' as const,
+  object: 'talent_list',
   name: 'Berlin',
   filters: { q: 'engineer' },
-  jobId: null as string | null,
+  jobId: null,
   createdBy: 'bu_employer',
   createdAt: 1,
   updatedAt: 1,
@@ -50,7 +43,7 @@ async function pick(name: string) {
 describe('TalentListJobLink', () => {
   it('binds a job without rewriting filters', async () => {
     const onUpdated = vi.fn();
-    vi.mocked(updateTalentList).mockResolvedValue({
+    const updateList = vi.fn().mockResolvedValue({
       ok: true,
       data: { ...list, jobId: 'job_b' },
     });
@@ -62,6 +55,7 @@ describe('TalentListJobLink', () => {
         jobId={null}
         jobs={jobs}
         onUpdated={onUpdated}
+        updateList={updateList}
       />,
     );
 
@@ -69,7 +63,7 @@ describe('TalentListJobLink', () => {
     await pick('Second role');
 
     await waitFor(() =>
-      expect(updateTalentList).toHaveBeenCalledWith({
+      expect(updateList).toHaveBeenCalledWith({
         data: { slug: 'acme', listId: 'list_1', job: 'job_b' },
       }),
     );
@@ -77,7 +71,7 @@ describe('TalentListJobLink', () => {
   });
 
   it('unlinks with job null and still lists every job', async () => {
-    vi.mocked(updateTalentList).mockResolvedValue({
+    const updateList = vi.fn().mockResolvedValue({
       ok: true,
       data: { ...list, jobId: null },
     });
@@ -91,6 +85,7 @@ describe('TalentListJobLink', () => {
           jobId={jobId}
           jobs={jobs}
           onUpdated={(next) => setJobId(next.jobId)}
+          updateList={updateList}
         />
       );
     }
@@ -101,7 +96,7 @@ describe('TalentListJobLink', () => {
     await pick('Not linked');
 
     await waitFor(() =>
-      expect(updateTalentList).toHaveBeenCalledWith({
+      expect(updateList).toHaveBeenCalledWith({
         data: { slug: 'acme', listId: 'list_1', job: null },
       }),
     );

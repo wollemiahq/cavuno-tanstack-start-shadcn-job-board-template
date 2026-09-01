@@ -15,8 +15,8 @@ type ReportableError = Error & {
   componentStack?: string;
 };
 
-function truncate(value: unknown, max: number): string | undefined {
-  if (typeof value !== 'string') return undefined;
+function clip(value: string | undefined, max: number): string | undefined {
+  if (value == null) return undefined;
   const trimmed = value.trim();
   if (!trimmed) return undefined;
   return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
@@ -35,7 +35,7 @@ export function resetClientErrorReports() {
  * (React #185) cannot flood the Worker.
  */
 export function reportClientError(error: ReportableError) {
-  if (typeof window === 'undefined') return;
+  if (!('document' in globalThis)) return;
 
   const path = (window.location.pathname || '/').slice(0, 500);
   const key = fingerprint(error, path);
@@ -51,13 +51,13 @@ export function reportClientError(error: ReportableError) {
     digest: error.digest ?? null,
     path,
     host: window.location.host.slice(0, 253),
-    stack: truncate(error.stack, STACK_MAX) ?? null,
-    componentStack: truncate(error.componentStack, COMPONENT_STACK_MAX) ?? null,
+    stack: clip(error.stack, STACK_MAX) ?? null,
+    componentStack: clip(error.componentStack, COMPONENT_STACK_MAX) ?? null,
   };
 
   const body = JSON.stringify(payload);
   try {
-    if (typeof navigator.sendBeacon === 'function') {
+    if (navigator.sendBeacon) {
       const blob = new Blob([body], { type: 'application/json' });
       if (navigator.sendBeacon(CLIENT_ERROR_PATH, blob)) return;
     }

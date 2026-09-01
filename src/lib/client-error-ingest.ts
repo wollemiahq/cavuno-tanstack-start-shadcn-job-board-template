@@ -17,6 +17,21 @@ type ClientErrorBody = {
   componentStack?: string | null;
 };
 
+type StarterOuchLine = {
+  name: typeof STARTER_OUCH_LOG_NAME;
+  source: 'board-starter';
+  board: string;
+  host: string;
+  path: string;
+  errorName: string;
+  errorMessage: string;
+  digest: string | null;
+  stack: string | null;
+  componentStack: string | null;
+  preview: boolean;
+  msg: string;
+};
+
 export function clientErrorIngestUrl(apiUrl: string): string {
   const url = new URL(apiUrl.endsWith('/') ? apiUrl : `${apiUrl}/`);
   if (url.hostname === 'api.cavuno.com') {
@@ -25,36 +40,27 @@ export function clientErrorIngestUrl(apiUrl: string): string {
   return `${url.origin}/api/board-client-error`;
 }
 
-function truncate(value: unknown, max: number): string | null {
-  if (typeof value !== 'string') return null;
+function clip(value: string | null | undefined, max: number): string | null {
+  if (value == null) return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
   return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
 }
 
-function parseBody(value: unknown): ClientErrorBody | null {
-  if (!value || typeof value !== 'object') return null;
-  const record = value as Record<string, unknown>;
-  if (typeof record.name !== 'string' || typeof record.message !== 'string') {
-    return null;
-  }
-  if (typeof record.path !== 'string' || typeof record.host !== 'string') {
-    return null;
-  }
-  const name = record.name.trim().slice(0, 200);
-  const message = record.message.trim().slice(0, 500);
-  const path = record.path.trim().slice(0, 500);
-  const host = record.host.trim().slice(0, 253);
+function parseBody(record: ClientErrorBody): ClientErrorBody | null {
+  const name = clip(record.name, 200);
+  const message = clip(record.message, 500);
+  const path = clip(record.path, 500);
+  const host = clip(record.host, 253);
   if (!name || !message || !path || !host) return null;
   return {
     name,
     message,
     path,
     host,
-    digest:
-      typeof record.digest === 'string' ? record.digest.slice(0, 100) : null,
-    stack: truncate(record.stack, STACK_MAX),
-    componentStack: truncate(record.componentStack, STACK_MAX),
+    digest: clip(record.digest, 100),
+    stack: clip(record.stack, STACK_MAX),
+    componentStack: clip(record.componentStack, STACK_MAX),
   };
 }
 
@@ -74,10 +80,7 @@ export function resetClientErrorIngestRateLimit() {
   rateHits.clear();
 }
 
-function ouchLine(
-  body: ClientErrorBody,
-  board: string,
-): Record<string, unknown> {
+function ouchLine(body: ClientErrorBody, board: string): StarterOuchLine {
   const preview =
     body.host.startsWith('preview-') || body.host.startsWith('share-');
   return {
@@ -89,8 +92,8 @@ function ouchLine(
     errorName: body.name,
     errorMessage: body.message,
     digest: body.digest ?? null,
-    stack: body.stack,
-    componentStack: body.componentStack,
+    stack: body.stack ?? null,
+    componentStack: body.componentStack ?? null,
     preview,
     msg: `${STARTER_OUCH_LOG_NAME} ${body.name}: ${body.message} on ${body.host}${body.path}`,
   };
@@ -128,7 +131,7 @@ async function forwardToCavuno(
 export async function matchClientErrorIngest(
   request: Request,
   env: { apiUrl: string; board: string },
-  waitUntil?: (promise: Promise<unknown>) => void,
+  waitUntil?: (promise: Promise<void>) => void,
 ): Promise<Response | null> {
   const path = new URL(request.url).pathname;
   if (path !== CLIENT_ERROR_PATH && path !== `${CLIENT_ERROR_PATH}/`) {
@@ -141,14 +144,19 @@ export async function matchClientErrorIngest(
     return new Response(null, { status: 405 });
   }
 
-  let json: unknown;
+  let parsed: ClientErrorBody | null = null;
   try {
-    json = await request.json();
+    const json = await request.json();
+    if (json !== null && Object(json) === json) {
+      // SAFETY: POST JSON is a ClientErrorBody; missing or empty required
+      // fields fail the clip checks below and are dropped.
+      parsed = json as ClientErrorBody;
+    }
   } catch {
     return new Response(null, { status: 204 });
   }
 
-  const body = parseBody(json);
+  const body = parsed ? parseBody(parsed) : null;
   if (!body) return new Response(null, { status: 204 });
 
   const rateKey = `${body.host}:${body.path}:${body.digest || body.message.slice(0, 80)}`;

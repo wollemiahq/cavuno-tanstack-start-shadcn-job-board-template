@@ -45,13 +45,16 @@ describe('matchClientErrorIngest', () => {
   it('ignores unrelated paths', async () => {
     const response = await matchClientErrorIngest(
       new Request('https://preview.example/talent'),
-      { apiUrl: 'https://api.cavuno.com', board: 'pk_test' },
+      {
+        apiUrl: 'https://api.cavuno.com',
+        board: 'pk_test',
+      },
     );
     expect(response).toBeNull();
   });
 
   it('forwards a valid report and stays silent on success', async () => {
-    const waited: Promise<unknown>[] = [];
+    const waited: Promise<void>[] = [];
     const response = await matchClientErrorIngest(
       new Request(`https://preview-abc.cavuno.app${CLIENT_ERROR_PATH}`, {
         method: 'POST',
@@ -72,17 +75,21 @@ describe('matchClientErrorIngest', () => {
     expect(response?.status).toBe(204);
     await Promise.all(waited);
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe('https://cavuno.com/api/board-client-error');
-    const body = JSON.parse(init.body as string) as Record<string, unknown>;
-    expect(body.publishableKey).toBe('pk_test');
-    expect(body.name).toBe('RangeError');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://cavuno.com/api/board-client-error',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringMatching(
+          /"publishableKey":"pk_test".*"name":"RangeError"/s,
+        ),
+      }),
+    );
     expect(warn).not.toHaveBeenCalled();
   });
 
   it(`console.warns ${STARTER_OUCH_LOG_NAME} when the platform ingest is down`, async () => {
     fetchMock.mockRejectedValue(new Error('offline'));
-    const waited: Promise<unknown>[] = [];
+    const waited: Promise<void>[] = [];
     await matchClientErrorIngest(
       new Request(`https://preview-abc.cavuno.app${CLIENT_ERROR_PATH}`, {
         method: 'POST',
@@ -101,11 +108,11 @@ describe('matchClientErrorIngest', () => {
     );
     await Promise.all(waited);
     expect(warn).toHaveBeenCalledTimes(1);
-    const line = JSON.parse(warn.mock.calls[0]![0] as string) as {
-      name: string;
-      preview: boolean;
-    };
-    expect(line.name).toBe(STARTER_OUCH_LOG_NAME);
-    expect(line.preview).toBe(true);
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining(`"name":"${STARTER_OUCH_LOG_NAME}"`),
+    );
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('"preview":true'),
+    );
   });
 });

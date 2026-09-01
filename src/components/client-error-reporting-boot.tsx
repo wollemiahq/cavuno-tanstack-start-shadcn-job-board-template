@@ -11,23 +11,17 @@ import { useClientErrorReport } from '@/lib/use-client-error-report';
  */
 export function ClientErrorReportingBoot() {
   useEffect(() => {
-    const win = window as Window & {
-      requestIdleCallback?: (cb: () => void) => number;
-      cancelIdleCallback?: (id: number) => void;
-    };
-    const schedule = win.requestIdleCallback
-      ? (cb: () => void) => win.requestIdleCallback!(cb)
-      : (cb: () => void) => window.setTimeout(cb, 1);
-    const cancel = win.cancelIdleCallback
-      ? (id: number) => win.cancelIdleCallback!(id)
-      : (id: number) => window.clearTimeout(id);
-
-    const id = schedule(() => {
+    const run = () => {
       void import('@/lib/install-client-error-reporting').then((mod) => {
         mod.installClientErrorReporting();
       });
-    });
-    return () => cancel(id);
+    };
+    const idleId = window.requestIdleCallback?.(run);
+    if (idleId === undefined) {
+      const timeoutId = window.setTimeout(run, 1);
+      return () => window.clearTimeout(timeoutId);
+    }
+    return () => window.cancelIdleCallback(idleId);
   }, []);
 
   return null;
