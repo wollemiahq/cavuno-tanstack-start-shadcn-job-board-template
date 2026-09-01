@@ -101,6 +101,15 @@ export const myApplicationForJob = createServerFn({ method: 'GET' })
         return await getBoard().jobs.myApplication(data.jobSlug, { headers });
       } catch (error) {
         if (isNotFound(error)) return null;
+        // Native-off boards 422 this lookup. Treat as "no native
+        // application" so an external URL is not blocked behind a retry
+        // that can never succeed.
+        if (
+          isBoardApiError(error) &&
+          error.code === 'applications_native_disabled'
+        ) {
+          return null;
+        }
         throw error;
       }
     }),

@@ -101,6 +101,28 @@ describe('ApplyButton authentication return paths', () => {
     expect(onRetryApplicationState).toHaveBeenCalledOnce();
   });
 
+  it('still offers an external Apply when private application state is unknown', () => {
+    render(
+      <ApplyButton
+        {...base}
+        jobSlug="platform-engineer"
+        applicationUrl="https://example.com/cjj-starter-apply"
+        viewer={{ emailVerified: true }}
+        applicationState="unknown"
+        nativeApplications={false}
+        onRetryApplicationState={vi.fn()}
+      />,
+    );
+
+    const apply = screen.getByRole('link', { name: /^apply$/i });
+    expect(apply.getAttribute('href')).toBe(
+      'https://example.com/cjj-starter-apply',
+    );
+    expect(
+      screen.queryByRole('button', { name: 'Check application status' }),
+    ).toBeNull();
+  });
+
   it('keeps the complete job destination through candidate sign-in', () => {
     const returnTo =
       '/companies/acme/jobs/platform-engineer?source=search#apply';
