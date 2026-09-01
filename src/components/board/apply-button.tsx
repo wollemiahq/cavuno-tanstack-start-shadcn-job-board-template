@@ -201,7 +201,26 @@ export function ApplyButton({
     setState('idle');
   }
 
-  if (applicationState === 'unknown') {
+  const { action, copy } = toApplyButtonVM({
+    jobSlug,
+    applicationUrl,
+    applyAction,
+    viewer,
+    applied: applicationState === 'applied' || state === 'applied',
+    language,
+    nativeApplications,
+    registrationWall,
+    allowGuestApply: onGuestApply !== undefined,
+  });
+  // Unknown private state must not hide an employer URL (or a native-off
+  // collapse to `none`). The retry exists to stop a second *native*
+  // submission when we cannot tell if one already exists.
+  if (
+    applicationState === 'unknown' &&
+    action.kind !== 'external' &&
+    action.kind !== 'gateway-external' &&
+    action.kind !== 'none'
+  ) {
     return (
       <Alert variant="destructive">
         <AlertDescription className="flex flex-col items-start gap-3">
@@ -218,18 +237,6 @@ export function ApplyButton({
       </Alert>
     );
   }
-
-  const { action, copy } = toApplyButtonVM({
-    jobSlug,
-    applicationUrl,
-    applyAction,
-    viewer,
-    applied: applicationState === 'applied' || state === 'applied',
-    language,
-    nativeApplications,
-    registrationWall,
-    allowGuestApply: onGuestApply !== undefined,
-  });
   const locationDialog =
     state === 'location-denied' ? (
       <Suspense fallback={null}>
