@@ -34,6 +34,32 @@ afterEach(() => {
 });
 
 describe('/auth/verify-email search contract', () => {
+  it('maps a rejecting loader to the invalid card instead of throwing', async () => {
+    const loader = Route.options.loader;
+    if (!loader || typeof loader !== 'function') {
+      throw new Error('verify-email needs a loader');
+    }
+    const result = await loader({
+      deps: { token: 'tok', returnTo: '/account' },
+      abortController: new AbortController(),
+      preload: false,
+      params: {},
+      location: {
+        href: '/auth/verify-email?token=tok',
+        pathname: '/auth/verify-email',
+        search: { token: 'tok', returnTo: '/account' },
+        searchStr: '?token=tok',
+        state: { __TSR_index: 0 },
+        hash: '',
+        publicHref: '/auth/verify-email?token=tok',
+        external: false,
+      },
+      navigate: () => Promise.resolve(),
+      cause: 'enter',
+    } as never);
+    expect(result).toMatchObject({ status: 'invalid', returnTo: '/account' });
+  });
+
   it('validates a supplied candidate destination with the token', () => {
     const validate = Route.options.validateSearch;
     if (!validate) {
