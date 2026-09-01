@@ -322,9 +322,40 @@ describe('EmployerJobForm', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('keeps a saved edit committed when list reconciliation fails', async () => {
+  it('hard-reloads the company list even if route invalidation would fail', async () => {
     mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
     mocks.invalidate.mockRejectedValue(new Error('refresh failed'));
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'published' }}
+        job={{ ...draftJob, status: 'published' }}
+      />,
+    );
+
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() =>
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: '/employers/companies/$slug',
+          reloadDocument: true,
+        }),
+      ),
+    );
+    expect(mocks.updateJob).toHaveBeenCalledOnce();
+    expect(mocks.invalidate).not.toHaveBeenCalled();
+  });
+
+  it('keeps a saved edit committed when the list reload fails', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    mocks.navigate.mockRejectedValue(new Error('navigation failed'));
     const { container } = await renderWithRouter(
       <EmployerJobForm
         dependencies={dependencies}
@@ -345,7 +376,6 @@ describe('EmployerJobForm', () => {
       /change was saved/i,
     );
     expect(mocks.updateJob).toHaveBeenCalledOnce();
-    expect(mocks.navigate).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
   });
 

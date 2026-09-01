@@ -632,12 +632,13 @@ export function EmployerJobForm({
   async function goToList() {
     setStatus('committed');
     try {
-      await actions.invalidate();
+      // Soft client nav reused the list loader, so the URL changed
+      // while the post/edit form stayed on screen. A document reload
+      // re-runs the list; invalidate is not required and would skip
+      // this navigate if it rejected.
       await actions.navigate({
         to: '/employers/companies/$slug',
         params: { slug },
-        // Soft client nav reused the list loader, so the URL changed
-        // while the post/edit form content stayed on screen.
         reloadDocument: true,
       });
     } catch {
