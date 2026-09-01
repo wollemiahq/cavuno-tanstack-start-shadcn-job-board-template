@@ -394,6 +394,31 @@ describe('EmployerJobForm', () => {
     ).toHaveLength(2);
     expect(mocks.updateJob).not.toHaveBeenCalled();
   });
+
+  it('does not paint a generic failure over a missing description', async () => {
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+      />,
+    );
+
+    fireEvent.submit(container.querySelector('form')!);
+
+    expect(
+      await screen.findAllByText(m.postJob_descriptionRequiredError()),
+    ).not.toHaveLength(0);
+    expect(
+      screen.queryByText(m.employerCompany_genericError()),
+    ).not.toBeInTheDocument();
+    expect(mocks.createJob).not.toHaveBeenCalled();
+  });
 });
 
 describe('EmployerJobForm — board job-form constraints', () => {
