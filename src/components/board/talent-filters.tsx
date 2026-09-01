@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useId, useMemo, useState, type ReactNode } from 'react';
+import { memo, useId, useState, type ReactNode } from 'react';
 
 import { useNavigate } from '@tanstack/react-router';
 import { ArrowUpDown, XIcon } from 'lucide-react';
@@ -32,16 +32,37 @@ import { parseTalentSearch, type TalentSearch } from '@/lib/talent-search';
 
 const ANY = '__any__';
 const DEFAULT_SORT = 'relevance' as const;
+const STATUS_VALUES = [ANY, 'actively_looking', 'open_to_offers'];
+const RELOCATE_VALUES = [ANY, 'true', 'false'];
+const SORT_VALUES = ['relevance', 'newest'];
 
-const STATUS_OPTIONS = [
-  { value: 'actively_looking', label: () => m.talentFilters_statusActive() },
-  { value: 'open_to_offers', label: () => m.talentFilters_statusOpen() },
-] as const;
+function statusLabel(value: string): string {
+  switch (value) {
+    case 'actively_looking':
+      return m.talentFilters_statusActive();
+    case 'open_to_offers':
+      return m.talentFilters_statusOpen();
+    default:
+      return m.talentFilters_anyStatusOption();
+  }
+}
 
-const RELOCATE_OPTIONS = [
-  { value: 'true', label: () => m.talentFilters_relocateYes() },
-  { value: 'false', label: () => m.talentFilters_relocateNo() },
-] as const;
+function relocateLabel(value: string): string {
+  switch (value) {
+    case 'true':
+      return m.talentFilters_relocateYes();
+    case 'false':
+      return m.talentFilters_relocateNo();
+    default:
+      return m.talentFilters_anyRelocateOption();
+  }
+}
+
+function sortLabel(value: string): string {
+  return value === 'newest'
+    ? m.talentFilters_sortNewest()
+    : m.talentFilters_sortBestMatch();
+}
 
 type TalentToolbarFacets = {
   jobSearchStatus?: string;
@@ -62,46 +83,25 @@ function facetCount(facets: TalentToolbarFacets) {
   );
 }
 
-function selectString(nextValue: unknown): string | undefined {
-  if (typeof nextValue === 'string') return nextValue;
-  if (
-    nextValue &&
-    typeof nextValue === 'object' &&
-    'value' in nextValue &&
-    typeof nextValue.value === 'string'
-  ) {
-    return nextValue.value;
-  }
-  return undefined;
-}
-
-type FilterOption = { value: string; label: string };
-
 function FilterSelect({
   label,
-  anyLabel,
-  options,
+  values,
+  labelFor,
   value,
   onValueChange,
   showLabel = false,
 }: {
   label: string;
-  anyLabel: string;
-  options: ReadonlyArray<FilterOption>;
+  values: readonly string[];
+  labelFor: (value: string) => string;
   value?: string;
   onValueChange: (value: string | undefined) => void;
   showLabel?: boolean;
 }) {
-  // Stable items identity: Base UI writes `items` into ReactStore on every
-  // reference change. A new array each render (plus auto-select re-rendering
-  // this bar) loops SelectRoot (React #185).
-  const items = useMemo(
-    () => [{ value: ANY, label: anyLabel }, ...options],
-    [anyLabel, options],
-  );
-  const selectValue = items.some((item) => item.value === (value ?? ANY))
-    ? (value ?? ANY)
-    : ANY;
+  // Module-level `values` + `labelFor` stay referentially stable. Inline
+  // `itemToStringLabel` / new `items` arrays re-sync Base UI's ReactStore
+  // on every auto-select render and loop SelectRoot (React #185).
+  const selectValue = values.includes(value ?? ANY) ? (value ?? ANY) : ANY;
   const controlId = useId();
 
   return (
@@ -113,11 +113,12 @@ function FilterSelect({
         {label}
       </FieldLabel>
       <Select
-        items={items}
+        items={values}
         value={selectValue}
+        itemToStringLabel={labelFor}
         onValueChange={(nextValue) => {
-          const raw = selectString(nextValue);
-          const next = raw === ANY || raw == null ? undefined : raw;
+          const next =
+            nextValue === ANY || nextValue == null ? undefined : nextValue;
           if (next === value) return;
           onValueChange(next);
         }}
@@ -127,9 +128,9 @@ function FilterSelect({
         </SelectTrigger>
         <SelectContent align="start">
           <SelectGroup>
-            {items.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
+            {values.map((item) => (
+              <SelectItem key={item} value={item}>
+                {labelFor(item)}
               </SelectItem>
             ))}
           </SelectGroup>
@@ -172,29 +173,6 @@ export const TalentFilters = memo(function TalentFilters({
   const [draft, setDraft] = useState<TalentToolbarFacets>({});
   const facets = facetsFromSearch(search);
   const activeCount = facetCount(facets);
-  const statusOptions = useMemo(
-    () =>
-      STATUS_OPTIONS.map((option) => ({
-        value: option.value,
-        label: option.label(),
-      })),
-    [],
-  );
-  const relocateOptions = useMemo(
-    () =>
-      RELOCATE_OPTIONS.map((option) => ({
-        value: option.value,
-        label: option.label(),
-      })),
-    [],
-  );
-  const sortItems = useMemo(
-    () => [
-      { value: 'relevance', label: m.talentFilters_sortBestMatch() },
-      { value: 'newest', label: m.talentFilters_sortNewest() },
-    ],
-    [],
-  );
 
   const commit = (patch: UrlSearchInput) => {
     void navigate({
@@ -266,8 +244,8 @@ export const TalentFilters = memo(function TalentFilters({
         <FieldGroup className="flex flex-1 gap-6 overflow-y-auto px-6 py-2">
           <FilterSelect
             label={m.talentFilters_statusLabel()}
-            anyLabel={m.talentFilters_anyStatusOption()}
-            options={statusOptions}
+            values={STATUS_VALUES}
+            labelFor={statusLabel}
             value={draft.jobSearchStatus}
             onValueChange={(jobSearchStatus) =>
               setDraft({ ...draft, jobSearchStatus })
@@ -276,8 +254,8 @@ export const TalentFilters = memo(function TalentFilters({
           />
           <FilterSelect
             label={m.talentFilters_relocateLabel()}
-            anyLabel={m.talentFilters_anyRelocateOption()}
-            options={relocateOptions}
+            values={RELOCATE_VALUES}
+            labelFor={relocateLabel}
             value={draft.openToRelocate}
             onValueChange={(openToRelocate) =>
               setDraft({ ...draft, openToRelocate })
@@ -304,8 +282,8 @@ export const TalentFilters = memo(function TalentFilters({
       <div className="hidden items-center gap-2 md:flex">
         <FilterSelect
           label={m.talentFilters_statusLabel()}
-          anyLabel={m.talentFilters_anyStatusOption()}
-          options={statusOptions}
+          values={STATUS_VALUES}
+          labelFor={statusLabel}
           value={search.jobSearchStatus}
           onValueChange={(jobSearchStatus) =>
             commitFacets({ ...facets, jobSearchStatus })
@@ -313,8 +291,8 @@ export const TalentFilters = memo(function TalentFilters({
         />
         <FilterSelect
           label={m.talentFilters_relocateLabel()}
-          anyLabel={m.talentFilters_anyRelocateOption()}
-          options={relocateOptions}
+          values={RELOCATE_VALUES}
+          labelFor={relocateLabel}
           value={search.openToRelocate}
           onValueChange={(openToRelocate) =>
             commitFacets({ ...facets, openToRelocate })
@@ -344,12 +322,12 @@ export const TalentFilters = memo(function TalentFilters({
       <div className="ms-auto flex min-w-0 items-center gap-2">
         {linkJob}
         <Select
-          items={sortItems}
+          items={SORT_VALUES}
           value={search.sort ?? DEFAULT_SORT}
+          itemToStringLabel={sortLabel}
           onValueChange={(sort) => {
-            const raw = selectString(sort);
             const next =
-              raw === 'relevance' || raw === 'newest' ? raw : undefined;
+              sort === 'relevance' || sort === 'newest' ? sort : undefined;
             if (
               next === (search.sort ?? DEFAULT_SORT) ||
               (next === DEFAULT_SORT && !search.sort)
@@ -366,9 +344,9 @@ export const TalentFilters = memo(function TalentFilters({
           </SelectTrigger>
           <SelectContent align="start">
             <SelectGroup>
-              {sortItems.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
+              {SORT_VALUES.map((item) => (
+                <SelectItem key={item} value={item}>
+                  {sortLabel(item)}
                 </SelectItem>
               ))}
             </SelectGroup>
