@@ -180,6 +180,40 @@ describe('RegistrationPage', () => {
     expect(screen.getByLabelText('Email')).toHaveValue('alex@example.com');
   });
 
+  it('surfaces an unmapped failure code instead of a bare generic line', async () => {
+    await render(
+      <RegistrationPage
+        title="Create your account"
+        supportingText="Join the board."
+        copy={copy}
+        successHref="/account"
+        onSubmit={async () => ({
+          ok: false,
+          code: 'preview_mode_write_forbidden',
+          message: 'Preview writes are disabled',
+        })}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Name'), {
+      target: { value: 'Alex Morgan' },
+    });
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'alex@example.com' },
+    });
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'correct-horse' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Something went wrong. Please try again. (preview_mode_write_forbidden)',
+    );
+    expect(await screen.findByRole('alert')).not.toHaveTextContent(
+      'Preview writes are disabled',
+    );
+  });
+
   it('recovers when the registration request rejects unexpectedly', async () => {
     await render(
       <RegistrationPage

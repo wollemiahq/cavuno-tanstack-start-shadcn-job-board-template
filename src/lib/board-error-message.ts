@@ -85,5 +85,9 @@ export function boardErrorMessage(result: {
   message?: string | null;
 }): string {
   const resolve = result.code ? codeMessage(result.code) : undefined;
-  return resolve ? resolve() : m.boardError_genericText();
+  if (resolve) return resolve();
+  const generic = m.boardError_genericText();
+  // Keep the stable code so a preview/register miss is diagnosable. Never
+  // interpolate `message` — that is English wire text.
+  return result.code ? `${generic} (${result.code})` : generic;
 }

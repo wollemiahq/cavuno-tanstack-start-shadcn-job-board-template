@@ -67,8 +67,14 @@ describe('board error code map', () => {
     );
   });
 
-  it('unknown codes get the generic line, never the wire message', () => {
+  it('unknown codes get the generic line plus the code, never the wire message', () => {
     expect(boardErrorMessage({ code: 'space_weather', message: 'wire' })).toBe(
+      'Something went wrong. Please try again. (space_weather)',
+    );
+  });
+
+  it('a missing code stays on the generic line', () => {
+    expect(boardErrorMessage({ message: 'wire' })).toBe(
       'Something went wrong. Please try again.',
     );
   });

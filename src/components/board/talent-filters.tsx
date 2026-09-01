@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, type ReactNode } from "react";
+import { memo, useId, useMemo, useState, type ReactNode } from "react";
 
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowUpDown, XIcon } from "lucide-react";
@@ -75,6 +75,8 @@ function selectString(nextValue: unknown): string | undefined {
   return undefined;
 }
 
+type FilterOption = { value: string; label: string };
+
 function FilterSelect({
   label,
   anyLabel,
@@ -85,17 +87,21 @@ function FilterSelect({
 }: {
   label: string;
   anyLabel: string;
-  options: ReadonlyArray<{ value: string; label: string }>;
+  options: ReadonlyArray<FilterOption>;
   value?: string;
   onValueChange: (value: string | undefined) => void;
   showLabel?: boolean;
 }) {
-  const values = [ANY, ...options.map((option) => option.value)];
-  const labels = Object.fromEntries([
-    [ANY, anyLabel],
-    ...options.map((option) => [option.value, option.label] as const),
-  ]);
-  const selectValue = values.includes(value ?? ANY) ? (value ?? ANY) : ANY;
+  // Stable items identity: Base UI writes `items` into ReactStore on every
+  // reference change. A new array each render (plus auto-select re-rendering
+  // this bar) loops SelectRoot (React #185).
+  const items = useMemo(
+    () => [{ value: ANY, label: anyLabel }, ...options],
+    [anyLabel, options],
+  );
+  const selectValue = items.some((item) => item.value === (value ?? ANY))
+    ? (value ?? ANY)
+    : ANY;
   const controlId = useId();
 
   return (
@@ -104,9 +110,8 @@ function FilterSelect({
         {label}
       </FieldLabel>
       <Select
-        items={values}
+        items={items}
         value={selectValue}
-        itemToStringLabel={(item) => labels[item] ?? item}
         onValueChange={(nextValue) => {
           const raw = selectString(nextValue);
           const next = raw === ANY || raw == null ? undefined : raw;
@@ -119,9 +124,9 @@ function FilterSelect({
         </SelectTrigger>
         <SelectContent align="start">
           <SelectGroup>
-            {values.map((item) => (
-              <SelectItem key={item} value={item}>
-                {labels[item]}
+            {items.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
               </SelectItem>
             ))}
           </SelectGroup>
@@ -131,32 +136,59 @@ function FilterSelect({
   );
 }
 
-export function TalentFilters({
-  search,
-  lists,
-  linkJob,
-}: {
+type TalentFiltersProps = {
   search: TalentSearch;
   lists?: ReactNode;
   linkJob?: ReactNode;
-}) {
+};
+
+function talentFiltersAreEqual(prev: TalentFiltersProps, next: TalentFiltersProps) {
+  // Ignore `selectedTalent` (and other listing params). Desktop auto-select
+  // rewrites that param on arrival; re-rendering these Selects mid-mount is
+  // what trips React #185 in Base UI's store sync.
+  return (
+    prev.search.jobSearchStatus === next.search.jobSearchStatus &&
+    prev.search.openToRelocate === next.search.openToRelocate &&
+    prev.search.sort === next.search.sort &&
+    prev.search.list === next.search.list &&
+    prev.lists === next.lists &&
+    prev.linkJob === next.linkJob
+  );
+}
+
+export const TalentFilters = memo(function TalentFilters({
+  search,
+  lists,
+  linkJob,
+}: TalentFiltersProps) {
   const navigate = useNavigate({ from: "/talent/" });
   const [sheetOpen, setSheetOpen] = useState(false);
   const [draft, setDraft] = useState<TalentToolbarFacets>({});
   const facets = facetsFromSearch(search);
   const activeCount = facetCount(facets);
-  const statusOptions = STATUS_OPTIONS.map((option) => ({
-    value: option.value,
-    label: option.label(),
-  }));
-  const relocateOptions = RELOCATE_OPTIONS.map((option) => ({
-    value: option.value,
-    label: option.label(),
-  }));
-  const sortItems = [
-    { value: "relevance", label: m.talentFilters_sortBestMatch() },
-    { value: "newest", label: m.talentFilters_sortNewest() },
-  ] as const;
+  const statusOptions = useMemo(
+    () =>
+      STATUS_OPTIONS.map((option) => ({
+        value: option.value,
+        label: option.label(),
+      })),
+    [],
+  );
+  const relocateOptions = useMemo(
+    () =>
+      RELOCATE_OPTIONS.map((option) => ({
+        value: option.value,
+        label: option.label(),
+      })),
+    [],
+  );
+  const sortItems = useMemo(
+    () => [
+      { value: "relevance", label: m.talentFilters_sortBestMatch() },
+      { value: "newest", label: m.talentFilters_sortNewest() },
+    ],
+    [],
+  );
 
   const commit = (patch: UrlSearchInput) => {
     void navigate({
@@ -292,36 +324,33 @@ export function TalentFilters({
       <div className="ms-auto flex min-w-0 items-center gap-2">
         {linkJob}
         <Select
-          items={["relevance", "newest"]}
-        value={search.sort ?? DEFAULT_SORT}
-        itemToStringLabel={(item) =>
-          item === "newest" ? m.talentFilters_sortNewest() : m.talentFilters_sortBestMatch()
-        }
-        onValueChange={(sort) => {
-          const raw = selectString(sort);
-          const next = raw === "relevance" || raw === "newest" ? raw : undefined;
-          if (next === (search.sort ?? DEFAULT_SORT) || (next === DEFAULT_SORT && !search.sort)) {
-            return;
-          }
-          commit({ sort: next });
-        }}
-      >
-        <SelectTrigger aria-label={m.jobSearch_sortPlaceholder()}>
-          <ArrowUpDown aria-hidden="true" />
-          <span>{m.jobSearch_sortPlaceholder()}:</span>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent align="start">
-          <SelectGroup>
-            {sortItems.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+          items={sortItems}
+          value={search.sort ?? DEFAULT_SORT}
+          onValueChange={(sort) => {
+            const raw = selectString(sort);
+            const next = raw === "relevance" || raw === "newest" ? raw : undefined;
+            if (next === (search.sort ?? DEFAULT_SORT) || (next === DEFAULT_SORT && !search.sort)) {
+              return;
+            }
+            commit({ sort: next });
+          }}
+        >
+          <SelectTrigger aria-label={m.jobSearch_sortPlaceholder()}>
+            <ArrowUpDown aria-hidden="true" />
+            <span>{m.jobSearch_sortPlaceholder()}:</span>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align="start">
+            <SelectGroup>
+              {sortItems.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
-}
+}, talentFiltersAreEqual);
