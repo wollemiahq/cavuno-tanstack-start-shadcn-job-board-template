@@ -170,17 +170,18 @@ change done, fixed, or ready for review with any box empty. Unit tests, curl,
 and a single screenshot do not count.
 
 - [ ] **Smoke** — golden path boots: open the page, one happy action, see the result.
-- [ ] **Journeys** — named below. Real routes users take through this goal — not only the critical one, not every click permutation.
+- [ ] **Journeys** — every child box ticked. Real routes users take through this goal — not only the critical one, not every click permutation.
+  - [ ] … — basic flow as clicks
+  - [ ] …
 - [ ] **Edges** — limits inside those journeys (empty, max, invalid, duplicate, declined). Display-only: write `Edges: none` and tick.
-
-**Journeys I ran:**
-1.
 
 Derive journeys from the screens you touched. Name the **use case** (user goal),
 write the **basic flow** as clicks, then add the other routes already in the
 product for that goal (roles, OAuth vs email, skip vs upload, new vs returning).
 Tabs, CTAs, and alternate links on those screens are the source. Skip
-combinatorial click-paths and rare admin sequences.
+combinatorial click-paths and rare admin sequences. Replace `…` with named
+journeys, add a `- [ ]` row per extra route, tick each after you run it. The
+parent Journeys box is last.
 
 Example: visitor finds a job — home → filter → job detail → apply; also company
 profile → jobs → detail if that entry exists. Employer posts a job — new job →
