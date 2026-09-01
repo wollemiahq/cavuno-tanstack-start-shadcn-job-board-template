@@ -123,6 +123,13 @@ describe('/auth/verify-email search contract', () => {
     expect(mocks.getSessionUser).toHaveBeenCalledOnce();
   });
 
+  it('still shows the missing-token card when SEO context throws', async () => {
+    mocks.getSeoBase.mockRejectedValue(new Error('seo unavailable'));
+    await expect(verifyEmailLoader('', '/account')).resolves.toMatchObject({
+      status: 'missing-token',
+    });
+  });
+
   it('still verifies a valid token when the session profile probe throws', async () => {
     mocks.getSessionUser.mockRejectedValue(new Error('profile unavailable'));
     mocks.verifyEmail.mockResolvedValue({ ok: true });

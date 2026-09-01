@@ -62,7 +62,13 @@ export async function loadVerifyEmail(
   } = { getSeoBase, getSessionUserStrict, verifyEmail },
 ) {
   // Started before the token branch so it overlaps the verify call.
-  const seoPromise = actions.getSeoBase();
+  // A throwing SEO/context read must not become the root error boundary on
+  // this landing — the user still needs the missing/invalid/verified card.
+  const seoPromise = actions.getSeoBase().catch(() => ({
+    boardName: '',
+    language: 'en',
+    origin: '',
+  }));
   if (!deps.token)
     return { status: 'missing-token' as const, seo: await seoPromise };
   // Capture the session before consuming the public token. Its role is safe
