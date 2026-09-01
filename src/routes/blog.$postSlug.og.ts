@@ -15,7 +15,7 @@ import { ImageResponse } from 'workers-og';
 import { buildBlogOgHtml, truncate } from '../lib/blog-og';
 import { getBoard } from '../lib/board';
 import { loadOgFont } from '../lib/og-font';
-import { ogRetrieveFailureResponse } from '../lib/og-http';
+import { ogNotFoundResponse, ogUnavailableResponse } from '../lib/og-http';
 import { m } from '../paraglide/messages';
 import { isLocale } from '../paraglide/runtime';
 import { themeTokens } from '../theme/resolved';
@@ -27,8 +27,8 @@ export const Route = createFileRoute('/blog/$postSlug/og')({
         let post;
         try {
           post = await getBoard().blog.posts.retrieve(params.postSlug);
-        } catch (error) {
-          return ogRetrieveFailureResponse(error);
+        } catch {
+          return ogNotFoundResponse();
         }
 
         // Board language for date formatting — the context read is cached by
@@ -86,8 +86,8 @@ export const Route = createFileRoute('/blog/$postSlug/og')({
               ],
             },
           );
-        } catch (error) {
-          return ogRetrieveFailureResponse(error);
+        } catch {
+          return ogUnavailableResponse();
         }
       },
     },

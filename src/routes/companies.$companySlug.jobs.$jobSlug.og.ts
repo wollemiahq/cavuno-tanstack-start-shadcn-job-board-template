@@ -11,7 +11,7 @@ import { ImageResponse } from 'workers-og';
 
 import { getBoard } from '../lib/board';
 import { loadOgFont } from '../lib/og-font';
-import { ogRetrieveFailureResponse } from '../lib/og-http';
+import { ogNotFoundResponse, ogUnavailableResponse } from '../lib/og-http';
 import { themeTokens } from '../theme/resolved';
 
 import { locationLabel } from '@/lib/location-labels';
@@ -34,10 +34,10 @@ export const Route = createFileRoute(
         let job;
         try {
           job = await getBoard().jobs.retrieve(params.jobSlug);
-        } catch (error) {
+        } catch {
           // A miss must be HTTP 404 (not 200 `{isNotFound:true}` from
-          // `throw notFound()` in a server GET). Renderer/API faults 503.
-          return ogRetrieveFailureResponse(error);
+          // `throw notFound()` in a server GET).
+          return ogNotFoundResponse();
         }
 
         // Board language for the display labels — the context read is
@@ -98,8 +98,8 @@ export const Route = createFileRoute(
               },
             ],
           });
-        } catch (error) {
-          return ogRetrieveFailureResponse(error);
+        } catch {
+          return ogUnavailableResponse();
         }
       },
     },
