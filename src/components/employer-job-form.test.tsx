@@ -405,7 +405,13 @@ describe('EmployerJobForm', () => {
         plans={[]}
         billingOptions={[]}
         officeLocationSuggestions={suggestions}
-        mode={{ kind: 'create' }}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'published' }}
+        job={{
+          ...draftJob,
+          status: 'published',
+          remoteOption: 'remote',
+          description: '',
+        }}
       />,
     );
 
@@ -413,11 +419,14 @@ describe('EmployerJobForm', () => {
 
     expect(
       await screen.findAllByText(m.postJob_descriptionRequiredError()),
-    ).not.toHaveLength(0);
+    ).toHaveLength(2);
     expect(
       screen.queryByText(m.employerCompany_genericError()),
     ).not.toBeInTheDocument();
-    expect(mocks.createJob).not.toHaveBeenCalled();
+    expect(
+      screen.queryByText(m.postJob_officeLocationsRequiredError()),
+    ).not.toBeInTheDocument();
+    expect(mocks.updateJob).not.toHaveBeenCalled();
   });
 });
 
