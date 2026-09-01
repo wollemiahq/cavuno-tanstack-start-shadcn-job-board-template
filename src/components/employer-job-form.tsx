@@ -273,6 +273,7 @@ export interface EmployerJobFormDependencies {
   navigate: (options: {
     to: '/employers/companies/$slug';
     params: { slug: string };
+    reloadDocument?: boolean;
   }) => Promise<void>;
 }
 
@@ -631,10 +632,14 @@ export function EmployerJobForm({
   async function goToList() {
     setStatus('committed');
     try {
-      await actions.invalidate();
+      // Soft client nav reused the list loader, so the URL changed
+      // while the post/edit form stayed on screen. A document reload
+      // re-runs the list; invalidate is not required and would skip
+      // this navigate if it rejected.
       await actions.navigate({
         to: '/employers/companies/$slug',
         params: { slug },
+        reloadDocument: true,
       });
     } catch {
       setNotice(m.employerCompany_reconciliationError());
