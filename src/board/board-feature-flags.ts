@@ -43,18 +43,20 @@ export type TalentDirectoryVisibility = 'off' | 'public' | 'employers_only';
 
 /** Preserve the tri-state feature enum while supporting older boolean boards. */
 export function resolveTalentDirectoryVisibility(
-  explicit: TalentDirectoryVisibility | null | undefined,
+  explicit: TalentDirectoryVisibility | boolean | null | undefined,
   configured: TalentDirectoryVisibility | boolean | undefined,
 ): TalentDirectoryVisibility {
-  if (explicit !== null && explicit !== undefined) return explicit;
-  if (
-    configured === 'off' ||
-    configured === 'public' ||
-    configured === 'employers_only'
-  ) {
+  // 'off' is a truthy string — never coerce. Prefer off if either signal
+  // says so, so a boolean leftover `features.talentDirectory: true` cannot
+  // keep Talent in the chrome after the directory is turned off.
+  if (explicit === 'off' || configured === 'off') return 'off';
+  if (explicit === 'public' || explicit === 'employers_only') return explicit;
+  if (configured === 'public' || configured === 'employers_only') {
     return configured;
   }
-  return configured ? 'public' : 'off';
+  const fallback = explicit ?? configured;
+  if (fallback === true) return 'public';
+  return 'off';
 }
 
 /**
