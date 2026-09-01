@@ -19,6 +19,9 @@
  */
 import handler from '@tanstack/react-start/server-entry';
 
+import { matchClientErrorIngest } from './lib/client-error-ingest';
+import { CLIENT_ERROR_PATH } from './lib/client-error-report';
+import { getServerEnv } from './lib/env';
 import { LOCALE_HEADER } from './lib/locale-middleware';
 import {
   readPublicHtmlCache,
@@ -54,6 +57,19 @@ export default {
     _env?: WorkerEnvironment,
     executionContext?: { waitUntil(promise: Promise<unknown>): void },
   ): Promise<Response> {
+    const pathname = new URL(request.url).pathname;
+    if (
+      pathname === CLIENT_ERROR_PATH ||
+      pathname === `${CLIENT_ERROR_PATH}/`
+    ) {
+      const clientError = await matchClientErrorIngest(
+        request,
+        getServerEnv(),
+        executionContext?.waitUntil.bind(executionContext),
+      );
+      if (clientError) return withBaselineSecurityHeaders(clientError);
+    }
+
     const cached = await readPublicHtmlCache(request);
     if (cached) return cached;
 

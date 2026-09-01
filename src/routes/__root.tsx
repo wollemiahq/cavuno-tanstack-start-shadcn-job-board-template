@@ -42,6 +42,7 @@ import { BoardAuthConversionTracker } from '@/components/board-auth-conversion-t
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
 import { ShellBreadcrumb } from '@/components/board/breadcrumb';
 import { themeModeScript } from '@/components/cavuno/board-theme';
+import { ClientErrorReportingBoot } from '@/components/client-error-reporting-boot';
 import {
   CookieConsentBanner,
   CookieConsentProvider,
@@ -619,6 +620,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           {/* System-mode resolution before first paint (no theme flash). */}
           <script dangerouslySetInnerHTML={{ __html: themeModeScript(mode) }} />
           <SkipToContentLink label={m.siteHeader_skipToContentLabel()} />
+          <ClientErrorReportingBoot />
           {children}
           <DeferredToaster />
           <Scripts />
