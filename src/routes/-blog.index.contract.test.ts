@@ -1,3 +1,4 @@
+import { isNotFound } from '@tanstack/react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -109,6 +110,19 @@ describe('blog index cursor pagination contract', () => {
       cursor: 'kn7abc',
       q: undefined,
     });
+  });
+
+  it('does not serve the archive when blog is disabled', async () => {
+    try {
+      await createBlogIndexLoader(
+        getBlogIndexPage,
+        async () => false,
+      )(blogLoaderContext({}));
+      throw new Error('expected the archive not to load');
+    } catch (error) {
+      expect(isNotFound(error)).toBe(true);
+    }
+    expect(getBlogIndexPage).not.toHaveBeenCalled();
   });
 
   it('direct-loads the requested cursor page instead of page one', async () => {

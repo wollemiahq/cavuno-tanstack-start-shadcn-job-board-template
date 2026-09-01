@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getBoardContext } from '../server/queries';
 import { createBlogIndexLoader, type BlogSearch } from './-blog-index-loader';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
@@ -30,7 +31,10 @@ export const Route = createFileRoute('/blog/')({
     q: searchString(search.q),
   }),
   loaderDeps: ({ search }) => search,
-  loader: createBlogIndexLoader(),
+  loader: createBlogIndexLoader(undefined, async () => {
+    const board = await getBoardContext();
+    return board.features.blog === true;
+  }),
   head: ({ loaderData }) =>
     loaderData
       ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
