@@ -28,6 +28,7 @@ import {
   toastActionError,
   toastActionReconciliationError,
 } from '@/lib/action-toast';
+import { useVisiblePoll } from '@/lib/use-visible-poll';
 import type { Resume } from '@cavuno/board';
 
 /**
@@ -99,22 +100,25 @@ export function ResumeUpload({
   const storedFile = resume.hasResumeOnFile ? resume.file : null;
   const busy = status === 'uploading' || status === 'deleting';
 
+  const parsing = resume.parseStatus === 'parsing';
+  // Same visibility-aware, single-flight poll the messaging inbox uses: a
+  // hidden tab does not keep re-running the account loaders.
+  useVisiblePoll(
+    () => router.invalidate(),
+    PARSE_POLL_INTERVAL_MS,
+    parsing && !busy && !parsePollTimedOut,
+  );
   useEffect(() => {
-    if (resume.parseStatus !== 'parsing' || busy) return;
-    setParsePollTimedOut(false);
-    const startedAt = Date.now();
-    const timer = setInterval(() => {
-      if (Date.now() - startedAt >= PARSE_POLL_TIMEOUT_MS) {
-        clearInterval(timer);
-        setParsePollTimedOut(true);
-        return;
-      }
-      void router.invalidate();
-    }, PARSE_POLL_INTERVAL_MS);
+    if (!parsing) return;
+    const timer = setTimeout(
+      () => setParsePollTimedOut(true),
+      PARSE_POLL_TIMEOUT_MS,
+    );
     return () => {
-      clearInterval(timer);
+      clearTimeout(timer);
+      setParsePollTimedOut(false);
     };
-  }, [resume.parseStatus, router, busy]);
+  }, [parsing]);
 
   async function uploadFile(file: File) {
     setStatus('uploading');

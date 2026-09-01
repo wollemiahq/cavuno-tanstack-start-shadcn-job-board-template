@@ -127,62 +127,33 @@ async function writePersistentContext(
   }
 }
 
-function memoizeByQuery<A extends unknown[], R>(
-  fn: (...args: A) => R,
-): (...args: A) => R {
-  const inflight = new Map<string, R>();
-  return (...args: A): R => {
-    const query = args[0];
-    // Sort own keys so `{offset, limit}` and `{limit, offset}` share one promise.
-    const key = JSON.stringify(
-      query ?? null,
-      Object.keys(Object(query ?? {})).sort(),
-    );
-    const cached = inflight.get(key);
-    if (cached) return cached;
-    const pending = fn(...args);
-    inflight.set(key, pending);
-    return pending;
-  };
-}
-
 /**
  * Per-build view of the SDK. `jobs-categories`, `jobs-skills`, and
- * `jobs-details` each walk the full job catalog; `companies` walks companies
- * once. Identical `jobs.list` / `companies.list` queries within this build
- * share one promise. The cache is local to the returned view — never module
- * scoped, never reused across builds.
- *
- * The SDK client is a plain object (`jobs` / `companies` / `context` are own
- * properties; namespace methods close over the client and do not use `this`).
- * `Object.create` plus own-property overrides keeps every other member
- * (including prototype methods, if a future SDK adds them) working.
+ * `jobs-details` each walk the full job catalog with the same
+ * `jobs.list({ limit, offset })` pages, so identical queries within one build
+ * share one in-flight promise. The cache is local to the returned view —
+ * never module scoped, never reused across builds. The SDK client is a plain
+ * object whose namespace methods close over the client (no `this`).
  */
 function memoizingBoardView(board: BoardSdk): BoardSdk {
-  // SAFETY: Object.create(board) is a BoardSdk view — own jobs/companies
-  // overrides sit on the child; every other member is inherited from board.
-  const view = Object.create(board) as BoardSdk;
-  if (board.jobs) {
-    Object.defineProperty(view, 'jobs', {
-      configurable: true,
-      enumerable: true,
-      value: {
-        ...board.jobs,
-        list: memoizeByQuery(board.jobs.list.bind(board.jobs)),
+  // Test doubles stub only the namespaces a case touches.
+  if (!board.jobs) return board;
+  const inflight = new Map<string, ReturnType<BoardSdk['jobs']['list']>>();
+  const list = board.jobs.list.bind(board.jobs);
+  return {
+    ...board,
+    jobs: {
+      ...board.jobs,
+      list: (query, ...rest) => {
+        const key = JSON.stringify(query ?? null);
+        const cached = inflight.get(key);
+        if (cached) return cached;
+        const pending = list(query, ...rest);
+        inflight.set(key, pending);
+        return pending;
       },
-    });
-  }
-  if (board.companies) {
-    Object.defineProperty(view, 'companies', {
-      configurable: true,
-      enumerable: true,
-      value: {
-        ...board.companies,
-        list: memoizeByQuery(board.companies.list.bind(board.companies)),
-      },
-    });
-  }
-  return view;
+    },
+  };
 }
 
 /** 200 XML body with browser Cache-Control and the gateway edge-cache opt-in. */

@@ -169,6 +169,20 @@ describe('ResumeUpload', () => {
       expect(invalidate).not.toHaveBeenCalled();
     });
 
+    it('stops polling after 3 minutes and asks for a manual refresh', async () => {
+      const { invalidate, getByRole } = await renderWithRouter(
+        <ResumeUpload resume={parsingResume} dependencies={mocks} />,
+      );
+
+      await act(() => vi.advanceTimersByTimeAsync(3 * 60 * 1_000));
+      const calls = invalidate.mock.calls.length;
+      expect(calls).toBeGreaterThan(0);
+      expect(getByRole('status').textContent).toContain('Still parsing');
+
+      await act(() => vi.advanceTimersByTimeAsync(8_000));
+      expect(invalidate).toHaveBeenCalledTimes(calls);
+    });
+
     it('clears the timer on unmount', async () => {
       const { invalidate, unmount } = await renderWithRouter(
         <ResumeUpload resume={parsingResume} dependencies={mocks} />,
