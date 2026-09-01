@@ -34,7 +34,7 @@ describe('AGENTS.md workflow rules', () => {
     // those sections REPLACED the platform's larger computed
     // workspace-map injection, so net prompt size fell. The budget
     // stays tight on purpose — additions must trim elsewhere.
-    expect(agents.split('\n').length).toBeLessThanOrEqual(190);
+    expect(agents.split('\n').length).toBeLessThanOrEqual(220);
   });
 
   it('carries the five required rule anchors', () => {

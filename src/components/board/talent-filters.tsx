@@ -100,7 +100,7 @@ function FilterSelect({
 }) {
   // Module-level `values` + `labelFor` stay referentially stable. Inline
   // `itemToStringLabel` / new `items` arrays re-sync Base UI's ReactStore
-  // on every auto-select render and loop SelectRoot (React #185).
+  // on every auto-select render and loop SelectRoot (React 185).
   const selectValue = values.includes(value ?? ANY) ? (value ?? ANY) : ANY;
   const controlId = useId();
 
@@ -152,7 +152,7 @@ function talentFiltersAreEqual(
 ) {
   // Ignore `selectedTalent` (and other listing params). Desktop auto-select
   // rewrites that param on arrival; re-rendering these Selects mid-mount is
-  // what trips React #185 in Base UI's store sync.
+  // what trips React 185 in Base UI's store sync.
   return (
     prev.search.jobSearchStatus === next.search.jobSearchStatus &&
     prev.search.openToRelocate === next.search.openToRelocate &&
