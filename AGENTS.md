@@ -162,6 +162,30 @@ pnpm run typecheck && pnpm test && pnpm run build
 Hosted agent environments provide a `verify` tool covering this whole
 gate plus live page checks — there, call it once instead.
 
+## User testing gate
+
+If a person can exercise this change in the running app, it is not done until
+every box is ticked. Paste the filled list in the wrap-up. Do not call the
+change done, fixed, or ready for review with any box empty. Unit tests, curl,
+and a single screenshot do not count.
+
+- [ ] **Smoke** — golden path boots: open the page, one happy action, see the result.
+- [ ] **Journeys** — named below. Real routes users take through this goal — not only the critical one, not every click permutation.
+- [ ] **Edges** — limits inside those journeys (empty, max, invalid, duplicate, declined). Display-only: write `Edges: none` and tick.
+
+**Journeys I ran:**
+1.
+
+Derive journeys from the screens you touched. Name the **use case** (user goal),
+write the **basic flow** as clicks, then add the other routes already in the
+product for that goal (roles, OAuth vs email, skip vs upload, new vs returning).
+Tabs, CTAs, and alternate links on those screens are the source. Skip
+combinatorial click-paths and rare admin sequences.
+
+Example: visitor finds a job — home → filter → job detail → apply; also company
+profile → jobs → detail if that entry exists. Employer posts a job — new job →
+publish. Do not walk every programmatic SEO URL.
+
 ## Design system
 
 Visual identity, design tokens, the component inventory, and design
