@@ -369,6 +369,31 @@ describe('EmployerJobForm', () => {
     );
     expect(mocks.createJob).not.toHaveBeenCalled();
   });
+
+  it('surfaces a hybrid office miss instead of a silent no-op submit', async () => {
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
+        job={{ ...draftJob, officeLocations: [] }}
+      />,
+    );
+
+    fireEvent.submit(container.querySelector('form')!);
+
+    // Field error (below the fold) plus the submit-row banner — field
+    // flags alone used to leave status idle so Post job looked dead.
+    expect(
+      await screen.findAllByText(m.postJob_officeLocationsRequiredError()),
+    ).toHaveLength(2);
+    expect(mocks.updateJob).not.toHaveBeenCalled();
+  });
 });
 
 describe('EmployerJobForm — board job-form constraints', () => {

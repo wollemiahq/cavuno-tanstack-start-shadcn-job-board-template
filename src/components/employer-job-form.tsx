@@ -647,8 +647,17 @@ export function EmployerJobForm({
       errors.officeLocations ||
       errors.applicationTarget ||
       errors.billing
-    )
+    ) {
+      // Field flags alone leave status idle, so a below-the-fold office
+      // miss looks like a dead Post job button (live CJJ hybrid no-op).
+      setStatus('error');
+      setMessage(
+        errors.officeLocations
+          ? m.postJob_officeLocationsRequiredError()
+          : m.employerCompany_genericError(),
+      );
       return;
+    }
 
     // Board-configured requirements. The platform enforces these on save
     // (the API rejects it with a 400) with an English wire
