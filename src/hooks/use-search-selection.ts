@@ -97,14 +97,14 @@ export function useSearchSelection({
     }
   }, [page]);
 
-  // On ARRIVAL with a URL-selected row (e.g. from a homepage card), bring it
-  // to the top of the LIST's own overflow — ONCE, and only for the initial
-  // URL selection. Later in-page clicks must never yank a visible row away.
+  // On ARRIVAL with a URL-selected row that is clipped in the list (deep
+  // link to a card below the fold), align it inside the LIST's own overflow
+  // — ONCE. A row that is already fully visible must not move: header-nav
+  // auto-selects the first result, and forcing that card to the list top
+  // clips the "Candidates" / "N jobs" heading above it.
   //
   // Do not use `scrollIntoView`: with a sticky site header it walks up to
-  // the window and lands the listing mid-page (talent has no filter bar
-  // above the split, so this is visible there even when jobs/companies
-  // look fine). Instant jump, reduced-motion-safe.
+  // the window and lands the listing mid-page. Instant jump, reduced-motion-safe.
   const didArrivalScroll = useRef(false);
   useEffect(() => {
     if (didArrivalScroll.current || !isDesktop) return;
@@ -123,9 +123,14 @@ export function useSearchSelection({
       (el) => el.dataset.resultId === selectedId,
     );
     if (!row) return;
-    const delta =
-      row.getBoundingClientRect().top - list.getBoundingClientRect().top;
-    list.scrollTo({ top: list.scrollTop + delta });
+    const listRect = list.getBoundingClientRect();
+    const rowRect = row.getBoundingClientRect();
+    if (rowRect.top >= listRect.top && rowRect.bottom <= listRect.bottom) {
+      return;
+    }
+    list.scrollTo({
+      top: list.scrollTop + (rowRect.top - listRect.top),
+    });
   }, [isDesktop, selectedId, resultIds]);
 
   return {

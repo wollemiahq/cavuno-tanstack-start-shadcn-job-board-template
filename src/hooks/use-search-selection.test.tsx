@@ -150,17 +150,38 @@ describe('useSearchSelection', () => {
     expect(onPush).not.toHaveBeenCalled();
   });
 
-  describe('arrival scroll (URL-selected job aligns to list top)', () => {
+  describe('arrival scroll (clipped URL-selected job aligns in the list)', () => {
     const listScrollTo = vi.fn();
     const scrollIntoView = vi.fn();
+
+    function rect(top: number, height: number): DOMRect {
+      return DOMRect.fromRect({ x: 0, y: top, width: 320, height });
+    }
+
+    /** List viewport [0, 100]. `second-job` sits below the fold. */
+    function mockClippedSecondJob() {
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+        function (this: HTMLElement) {
+          const id = this.dataset.resultId;
+          if (id === 'second-job') return rect(200, 80);
+          if (id) return rect(8, 40);
+          if (this.getAttribute('data-testid') === 'results-list') {
+            return rect(0, 100);
+          }
+          return rect(0, 0);
+        },
+      );
+    }
+
     beforeEach(() => {
       listScrollTo.mockClear();
       scrollIntoView.mockClear();
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
-    it('scrolls the list container, not the window, on initial arrival', () => {
+    it('scrolls the list container, not the window, when the arrived row is clipped', () => {
       setDesktop(true);
+      mockClippedSecondJob();
       render(
         <Harness
           selectedJob="second-job"
@@ -170,6 +191,21 @@ describe('useSearchSelection', () => {
       );
 
       expect(listScrollTo).toHaveBeenCalledTimes(1);
+      expect(listScrollTo).toHaveBeenCalledWith({ top: 200 });
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    });
+
+    it('does not scroll when the arrived row is already fully visible', () => {
+      setDesktop(true);
+      render(
+        <Harness
+          selectedJob="first-job"
+          jobSlugs={['first-job', 'second-job']}
+          listScrollTo={listScrollTo}
+        />,
+      );
+
+      expect(listScrollTo).not.toHaveBeenCalled();
       expect(scrollIntoView).not.toHaveBeenCalled();
     });
 

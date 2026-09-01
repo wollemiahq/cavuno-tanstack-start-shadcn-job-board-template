@@ -314,12 +314,9 @@ describe('CompanySearchPage — results description line', () => {
 
 describe('CompanySearchPage — arrival scroll', () => {
   const scrollIntoView = vi.fn();
-  const scrollTo = vi.fn();
   beforeEach(() => {
     scrollIntoView.mockClear();
-    scrollTo.mockClear();
     Element.prototype.scrollIntoView = scrollIntoView;
-    HTMLElement.prototype.scrollTo = scrollTo;
   });
 
   function renderArrival(initialSelected?: string) {
@@ -358,11 +355,10 @@ describe('CompanySearchPage — arrival scroll', () => {
     return render(<RouterProvider router={router} />);
   }
 
-  it('scrolls the list container, not the window, on arrival', async () => {
+  it('does not window-scroll on arrival with the first result already visible', async () => {
     renderArrival('acme');
 
     await screen.findByRole('main');
-    expect(scrollTo).toHaveBeenCalled();
     expect(scrollIntoView).not.toHaveBeenCalled();
   });
 
