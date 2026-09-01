@@ -1,4 +1,4 @@
-import { isBoardPasswordRequired, isNotFound } from '@cavuno/board';
+import { isBoardPasswordRequired, isNotFound } from "@cavuno/board";
 
 /**
  * OG image handlers must not leak `{isNotFound:true}` JSON at HTTP 200
@@ -6,27 +6,21 @@ import { isBoardPasswordRequired, isNotFound } from '@cavuno/board';
  * not 500 when the card renderer throws after a known slug loaded.
  */
 export function ogNotFoundResponse(): Response {
-  return new Response('', { status: 404 });
+  return new Response("", { status: 404 });
 }
 
 export function ogUnavailableResponse(): Response {
-  return new Response('', { status: 503 });
+  return new Response("", { status: 503 });
 }
 
-export function isOgMiss(error: unknown): boolean {
+type OgRetrieveFailure = Error | { isNotFound?: boolean };
+
+export function isOgMiss(error: OgRetrieveFailure): boolean {
   if (isNotFound(error) || isBoardPasswordRequired(error)) return true;
-  if (
-    error !== null &&
-    typeof error === 'object' &&
-    'isNotFound' in error &&
-    (error as { isNotFound: unknown }).isNotFound === true
-  ) {
-    return true;
-  }
-  return false;
+  return Object.getOwnPropertyDescriptor(error, "isNotFound")?.value === true;
 }
 
-export function ogRetrieveFailureResponse(error: unknown): Response {
+export function ogRetrieveFailureResponse(error: OgRetrieveFailure): Response {
   if (isOgMiss(error)) return ogNotFoundResponse();
   return ogUnavailableResponse();
 }
