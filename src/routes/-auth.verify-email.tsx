@@ -31,7 +31,17 @@ export const Route = createFileRoute('/auth/verify-email')({
     returnTo: candidateReturnTo(search.returnTo),
   }),
   loaderDeps: ({ search }) => search,
-  loader: ({ deps }) => loadVerifyEmail(deps),
+  loader: async ({ deps }) => {
+    try {
+      return await loadVerifyEmail(deps);
+    } catch {
+      return {
+        status: 'invalid' as const,
+        returnTo: deps.returnTo,
+        seo: { boardName: '', language: 'en', origin: '' },
+      };
+    }
+  },
   head: ({ loaderData }) => ({
     meta: [
       {
