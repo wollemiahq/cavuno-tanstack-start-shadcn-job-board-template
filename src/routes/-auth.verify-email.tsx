@@ -69,29 +69,49 @@ export async function loadVerifyEmail(
   // to use only if this exact user transitions from unverified to verified;
   // an unrelated or already-verified browser session must not choose where
   // the token's subject continues.
-  const sessionBefore = await actions.getSessionUserStrict();
-  const [result, seo] = await Promise.all([
-    actions.verifyEmail({ data: { token: deps.token } }),
-    seoPromise,
-  ]);
-  if (!result.ok)
-    return { status: 'invalid' as const, returnTo: deps.returnTo, seo };
-  const sessionAfter =
-    sessionBefore && !sessionBefore.emailVerified
-      ? await actions.getSessionUserStrict()
-      : null;
-  const verifiedSameSession =
-    sessionAfter !== null &&
-    sessionAfter.id === sessionBefore?.id &&
-    sessionAfter.emailVerified;
-  return {
-    status: 'verified' as const,
-    returnTo:
-      verifiedSameSession && sessionAfter.role === 'employer'
-        ? '/employers/dashboard'
-        : candidateReturnTo(deps.returnTo),
-    seo,
-  };
+  // An unverified (or flaky) session probe must not turn this landing into
+  // the root "Something went wrong" boundary — the token is why the user is
+  // here. Treat a throwing probe as signed-out and still consume the token.
+  let sessionBefore: {
+    id: string;
+    role?: string;
+    emailVerified: boolean;
+  } | null = null;
+  try {
+    sessionBefore = await actions.getSessionUserStrict();
+  } catch {
+    sessionBefore = null;
+  }
+  try {
+    const [result, seo] = await Promise.all([
+      actions.verifyEmail({ data: { token: deps.token } }),
+      seoPromise,
+    ]);
+    if (!result.ok)
+      return { status: 'invalid' as const, returnTo: deps.returnTo, seo };
+    const sessionAfter =
+      sessionBefore && !sessionBefore.emailVerified
+        ? await actions.getSessionUserStrict().catch(() => null)
+        : null;
+    const verifiedSameSession =
+      sessionAfter !== null &&
+      sessionAfter.id === sessionBefore?.id &&
+      sessionAfter.emailVerified;
+    return {
+      status: 'verified' as const,
+      returnTo:
+        verifiedSameSession && sessionAfter.role === 'employer'
+          ? '/employers/dashboard'
+          : candidateReturnTo(deps.returnTo),
+      seo,
+    };
+  } catch {
+    return {
+      status: 'invalid' as const,
+      returnTo: deps.returnTo,
+      seo: await seoPromise,
+    };
+  }
 }
 
 function VerifyEmailPage() {
