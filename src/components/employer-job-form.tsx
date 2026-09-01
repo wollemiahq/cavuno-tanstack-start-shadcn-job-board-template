@@ -171,6 +171,20 @@ function jobFormConstraintError(
   return '';
 }
 
+function clientFieldErrorMessage(errors: {
+  description: boolean;
+  officeLocations: boolean;
+  applicationTarget: boolean;
+  billing: boolean;
+}): string | null {
+  if (errors.description) return m.postJob_descriptionRequiredError();
+  if (errors.officeLocations) return m.postJob_officeLocationsRequiredError();
+  if (errors.applicationTarget)
+    return m.employerPostJob_applyTargetRequiredError();
+  if (errors.billing) return m.employerPostJob_billingRequiredError();
+  return null;
+}
+
 /**
  * Keep the form's own default when the board still allows it, and only fall
  * back to the first allowed value when it does not. Taking `allowed[0]`
@@ -642,13 +656,14 @@ export function EmployerJobForm({
       billing: billingRequired && selectedBilling === null,
     };
     setFieldErrors(errors);
-    if (
-      errors.description ||
-      errors.officeLocations ||
-      errors.applicationTarget ||
-      errors.billing
-    )
+    const fieldMessage = clientFieldErrorMessage(errors);
+    if (fieldMessage) {
+      // Field flags alone leave status idle, so a below-the-fold office
+      // miss looks like a dead Post job button (live CJJ hybrid no-op).
+      setStatus('error');
+      setMessage(fieldMessage);
       return;
+    }
 
     // Board-configured requirements. The platform enforces these on save
     // (the API rejects it with a 400) with an English wire
