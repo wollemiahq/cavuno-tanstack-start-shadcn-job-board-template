@@ -138,4 +138,9 @@ describe('resolveTalentDirectoryVisibility', () => {
       'employers_only',
     );
   });
+
+  it('hides the directory when either signal is off', () => {
+    expect(resolveTalentDirectoryVisibility('off', true)).toBe('off');
+    expect(resolveTalentDirectoryVisibility(true, 'off')).toBe('off');
+  });
 });

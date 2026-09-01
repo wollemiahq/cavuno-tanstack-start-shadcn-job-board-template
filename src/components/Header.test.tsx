@@ -273,6 +273,16 @@ describe('Header — feature-gated public collections', () => {
     expect(screen.queryByRole('link', { name: m.nav_talent() })).toBeNull();
   });
 
+  it('omits Talent when the directory visibility is off even if the legacy boolean is on', async () => {
+    renderHeader({
+      features: { ...allFeatures, talentDirectory: true },
+      talentDirectoryVisibility: 'off',
+    });
+
+    await screen.findByRole('link', { name: m.nav_home() });
+    expect(screen.queryByRole('link', { name: m.nav_talent() })).toBeNull();
+  });
+
   it('links Blog and Talent to their collection pages when enabled', async () => {
     renderHeader();
 
