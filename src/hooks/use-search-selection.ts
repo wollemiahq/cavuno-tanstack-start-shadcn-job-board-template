@@ -97,10 +97,14 @@ export function useSearchSelection({
     }
   }, [page]);
 
-  // On ARRIVAL with a URL-selected job (e.g. from a homepage card), bring its
-  // row to the top of the list's own scroll container — ONCE, and only for the
-  // initial URL selection. Later in-page clicks must never yank a visible row
-  // away. Instant jump (no smooth-scroll), so it is reduced-motion-safe.
+  // On ARRIVAL with a URL-selected row that is clipped in the list (deep
+  // link to a card below the fold), align it inside the LIST's own overflow
+  // — ONCE. A row that is already fully visible must not move: header-nav
+  // auto-selects the first result, and forcing that card to the list top
+  // clips the "Candidates" / "N jobs" heading above it.
+  //
+  // Do not use `scrollIntoView`: with a sticky site header it walks up to
+  // the window and lands the listing mid-page. Instant jump, reduced-motion-safe.
   const didArrivalScroll = useRef(false);
   useEffect(() => {
     if (didArrivalScroll.current || !isDesktop) return;
@@ -109,19 +113,24 @@ export function useSearchSelection({
     // Mark the arrival window closed no matter what, so a later manual
     // selection (which sets `selectedId` after mount) never triggers a scroll.
     didArrivalScroll.current = true;
-    // The arrived job may legitimately be absent from this page (the detail
+    // The arrived row may legitimately be absent from this page (the detail
     // pane fetches it independently) — then there is no row to align, no-op.
     if (!selectedId || !resultIds.includes(selectedId)) return;
-    const rows =
-      listRef.current?.querySelectorAll<HTMLElement>('[data-result-id]');
-    const row = rows
-      ? Array.from(rows).find((el) => el.dataset.resultId === selectedId)
-      : undefined;
-    // `scrollIntoView` is absent in some non-browser runtimes (jsdom) — guard
-    // so the arrival alignment degrades to a no-op rather than throwing.
-    if (row?.scrollIntoView instanceof Function) {
-      row.scrollIntoView({ block: 'start' });
+    const list = listRef.current;
+    if (!list || !(list.scrollTo instanceof Function)) return;
+    const rows = list.querySelectorAll<HTMLElement>('[data-result-id]');
+    const row = Array.from(rows).find(
+      (el) => el.dataset.resultId === selectedId,
+    );
+    if (!row) return;
+    const listRect = list.getBoundingClientRect();
+    const rowRect = row.getBoundingClientRect();
+    if (rowRect.top >= listRect.top && rowRect.bottom <= listRect.bottom) {
+      return;
     }
+    list.scrollTo({
+      top: list.scrollTop + (rowRect.top - listRect.top),
+    });
   }, [isDesktop, selectedId, resultIds]);
 
   return {

@@ -103,7 +103,6 @@ export function ProgrammaticCompaniesView({
         navigate({
           search: (previous) => ({ ...previous, selectedCompany: companySlug }),
           replace: true,
-          resetScroll: false,
         })
       }
       onSelectedCompanyPush={(companySlug) =>

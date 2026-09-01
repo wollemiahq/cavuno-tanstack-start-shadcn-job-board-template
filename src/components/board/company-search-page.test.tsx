@@ -313,15 +313,9 @@ describe('CompanySearchPage — results description line', () => {
 });
 
 describe('CompanySearchPage — arrival scroll', () => {
-  // jsdom ships no scrollIntoView; the hook guards on its presence, so provide
-  // a spy to observe the arrival alignment.
-  const scrolledResultIds: Array<string | null> = [];
-  const scrollIntoView = vi.fn(function (this: Element) {
-    scrolledResultIds.push(this.getAttribute('data-result-id'));
-  });
+  const scrollIntoView = vi.fn();
   beforeEach(() => {
     scrollIntoView.mockClear();
-    scrolledResultIds.length = 0;
     Element.prototype.scrollIntoView = scrollIntoView;
   });
 
@@ -361,13 +355,11 @@ describe('CompanySearchPage — arrival scroll', () => {
     return render(<RouterProvider router={router} />);
   }
 
-  it('scrolls the URL-selected row to the top on arrival', async () => {
+  it('does not window-scroll on arrival with the first result already visible', async () => {
     renderArrival('acme');
 
     await screen.findByRole('main');
-    expect(scrollIntoView).toHaveBeenCalledTimes(1);
-    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
-    expect(scrolledResultIds).toEqual(['acme']);
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 
   it('does not scroll a manual selection made after arrival', async () => {

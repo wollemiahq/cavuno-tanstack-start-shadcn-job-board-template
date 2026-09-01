@@ -142,7 +142,9 @@ type RegistrationCopy = {
   successActionLabel: string;
 };
 
-type RegistrationResult = { ok: true } | { ok: false; message: string };
+type RegistrationResult =
+  | { ok: true }
+  | { ok: false; code?: string; message: string };
 type RegistrationSubmitValues = {
   displayName: string;
   email: string;
@@ -151,7 +153,7 @@ type RegistrationSubmitValues = {
 };
 type OAuthRegistrationResult =
   | { ok: true; authorizeUrl: string }
-  | { ok: false; message: string };
+  | { ok: false; code?: string; message: string };
 
 /**
  * Copy for the optional marketing checkbox. The disclosure is THIS app's

@@ -168,7 +168,7 @@ export function listFiltersToTalentSearch(
 /** Seed a job-bound list with the header keyword (title) and current location. */
 export function filtersFromJob(
   job: { title: string },
-  current?: Pick<TalentListFilters, "place">,
+  current?: Pick<TalentListFilters, 'place'>,
 ): TalentListFilters {
   const q = job.title.trim();
   const filters: TalentListFilters = {};
@@ -180,7 +180,7 @@ export function filtersFromJob(
 /** Drop a trailing " list" so bound lists read like the job title. */
 export function talentListDisplayName(name: string): string {
   const trimmed = name.trim();
-  const withoutSuffix = trimmed.replace(/\s+list$/i, "").trim();
+  const withoutSuffix = trimmed.replace(/\s+list$/i, '').trim();
   return withoutSuffix.length > 0 ? withoutSuffix : trimmed;
 }
 

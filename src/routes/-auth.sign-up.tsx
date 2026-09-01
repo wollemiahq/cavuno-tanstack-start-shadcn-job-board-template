@@ -29,14 +29,15 @@ export function SignUpView({
       displayName: string;
       marketingConsent?: boolean;
     };
-  }) => Promise<{ ok: true } | { ok: false; message: string }>;
+  }) => Promise<{ ok: true } | { ok: false; code?: string; message: string }>;
   getOAuthAuthorizationUrlAction: (input: {
     data: {
       provider: 'google' | 'linkedin';
       returnTo: string;
     };
   }) => Promise<
-    { ok: true; authorizeUrl: string } | { ok: false; message: string }
+    | { ok: true; authorizeUrl: string }
+    | { ok: false; code?: string; message: string }
   >;
   invalidate: () => Promise<void>;
 }) {

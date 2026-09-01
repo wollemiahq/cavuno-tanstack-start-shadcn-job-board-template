@@ -60,7 +60,9 @@ function selectedForBound(
 
 function sameDestinations(left: SaveDestination[], right: SaveDestination[]) {
   if (left.length !== right.length) return false;
-  return left.every((destination, index) => destination.id === right[index]?.id);
+  return left.every(
+    (destination, index) => destination.id === right[index]?.id,
+  );
 }
 
 export function TalentSaveToJob({
@@ -96,14 +98,18 @@ export function TalentSaveToJob({
 
   useEffect(() => {
     const next = selectedForBound(destinations, boundJobId, alreadySaved);
-    setSelected((current) => (sameDestinations(current, next) ? current : next));
+    setSelected((current) =>
+      sameDestinations(current, next) ? current : next,
+    );
     // Re-init when the person or bound job changes, not when list records refresh.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- alreadySaved toggling after a save must not wipe other selections
   }, [boundJobId, candidateBoardUserId]);
 
   useEffect(() => {
     if (!boundJobId || !alreadySaved) return;
-    const bound = destinations.find((destination) => destination.jobId === boundJobId);
+    const bound = destinations.find(
+      (destination) => destination.jobId === boundJobId,
+    );
     if (!bound) return;
     setSelected((current) =>
       current.some((destination) => destination.jobId === boundJobId)
@@ -145,7 +151,9 @@ export function TalentSaveToJob({
   }
 
   function handleValueChange(next: SaveDestination[]) {
-    const previousJobs = new Set(selected.map((destination) => destination.jobId));
+    const previousJobs = new Set(
+      selected.map((destination) => destination.jobId),
+    );
     if (!sameDestinations(selected, next)) setSelected(next);
     for (const destination of next) {
       if (!previousJobs.has(destination.jobId)) saveTo(destination.jobId);
@@ -191,7 +199,7 @@ export function TalentSaveToJob({
         </ComboboxTrigger>
         <ComboboxContent
           align={iconOnly ? 'end' : 'end'}
-          className="min-w-56 w-max max-w-[min(24rem,var(--available-width))]"
+          className="w-max max-w-[min(24rem,var(--available-width))] min-w-56"
         >
           <ComboboxEmpty>{m.talentSave_jobLabel()}</ComboboxEmpty>
           <ComboboxList>

@@ -127,7 +127,6 @@ function SavedJobsPage() {
       navigate({
         search: () => ({ selectedJob }),
         replace: true,
-        resetScroll: false,
       }),
     onPush: (selectedJob) =>
       navigate({ search: () => ({ selectedJob }), resetScroll: false }),

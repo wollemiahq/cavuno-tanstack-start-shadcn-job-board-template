@@ -33,12 +33,14 @@ function Harness({
   page,
   onReplace = vi.fn(),
   onPush = vi.fn(),
+  listScrollTo,
 }: {
   selectedJob?: string;
   jobSlugs?: string[];
   page?: number;
   onReplace?: (jobSlug: string) => void;
   onPush?: (jobSlug: string) => void;
+  listScrollTo?: (options?: ScrollToOptions) => void;
 }) {
   const selection = useSearchSelection({
     selectedId: selectedJob,
@@ -61,7 +63,8 @@ function Harness({
       <section
         ref={(node) => {
           selection.listRef.current = node;
-          if (node && !node.scrollTo) node.scrollTo = vi.fn();
+          if (node && listScrollTo) node.scrollTo = listScrollTo;
+          else if (node && !node.scrollTo) node.scrollTo = vi.fn();
         }}
         data-testid="results-list"
       >
@@ -147,31 +150,64 @@ describe('useSearchSelection', () => {
     expect(onPush).not.toHaveBeenCalled();
   });
 
-  describe('arrival scroll (URL-selected job aligns to list top)', () => {
-    // jsdom ships no scrollIntoView; the hook guards on its presence, so
-    // provide a spy to observe the arrival alignment.
-    const scrolledResultIds: Array<string | null> = [];
-    const scrollIntoView = vi.fn(function (this: Element) {
-      scrolledResultIds.push(this.getAttribute('data-result-id'));
-    });
+  describe('arrival scroll (clipped URL-selected job aligns in the list)', () => {
+    const listScrollTo = vi.fn();
+    const scrollIntoView = vi.fn();
+
+    function rect(top: number, height: number): DOMRect {
+      return DOMRect.fromRect({ x: 0, y: top, width: 320, height });
+    }
+
+    /** List viewport [0, 100]. `second-job` sits below the fold. */
+    function mockClippedSecondJob() {
+      vi.spyOn(
+        HTMLElement.prototype,
+        'getBoundingClientRect',
+      ).mockImplementation(function (this: HTMLElement) {
+        const id = this.dataset.resultId;
+        if (id === 'second-job') return rect(200, 80);
+        if (id) return rect(8, 40);
+        if (this.getAttribute('data-testid') === 'results-list') {
+          return rect(0, 100);
+        }
+        return rect(0, 0);
+      });
+    }
+
     beforeEach(() => {
+      listScrollTo.mockClear();
       scrollIntoView.mockClear();
-      scrolledResultIds.length = 0;
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
-    it('scrolls the URL-selected row to the top on initial arrival', () => {
+    it('scrolls the list container, not the window, when the arrived row is clipped', () => {
       setDesktop(true);
+      mockClippedSecondJob();
       render(
         <Harness
           selectedJob="second-job"
           jobSlugs={['first-job', 'second-job', 'third-job']}
+          listScrollTo={listScrollTo}
         />,
       );
 
-      expect(scrollIntoView).toHaveBeenCalledTimes(1);
-      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
-      expect(scrolledResultIds).toEqual(['second-job']);
+      expect(listScrollTo).toHaveBeenCalledTimes(1);
+      expect(listScrollTo).toHaveBeenCalledWith({ top: 200 });
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    });
+
+    it('does not scroll when the arrived row is already fully visible', () => {
+      setDesktop(true);
+      render(
+        <Harness
+          selectedJob="first-job"
+          jobSlugs={['first-job', 'second-job']}
+          listScrollTo={listScrollTo}
+        />,
+      );
+
+      expect(listScrollTo).not.toHaveBeenCalled();
+      expect(scrollIntoView).not.toHaveBeenCalled();
     });
 
     it('does not scroll a later in-page selection made after arrival', () => {
@@ -180,17 +216,19 @@ describe('useSearchSelection', () => {
         <Harness
           selectedJob={undefined}
           jobSlugs={['first-job', 'second-job']}
+          listScrollTo={listScrollTo}
         />,
       );
-      expect(scrollIntoView).not.toHaveBeenCalled();
+      expect(listScrollTo).not.toHaveBeenCalled();
 
-      // A click selects a row post-mount — the list must not jump.
       rerender(
         <Harness
           selectedJob="second-job"
           jobSlugs={['first-job', 'second-job']}
+          listScrollTo={listScrollTo}
         />,
       );
+      expect(listScrollTo).not.toHaveBeenCalled();
       expect(scrollIntoView).not.toHaveBeenCalled();
     });
 
@@ -200,9 +238,10 @@ describe('useSearchSelection', () => {
         <Harness
           selectedJob="off-page"
           jobSlugs={['first-job', 'second-job']}
+          listScrollTo={listScrollTo}
         />,
       );
-      expect(scrollIntoView).not.toHaveBeenCalled();
+      expect(listScrollTo).not.toHaveBeenCalled();
     });
 
     it('does not scroll on mobile', () => {
@@ -211,16 +250,16 @@ describe('useSearchSelection', () => {
         <Harness
           selectedJob="second-job"
           jobSlugs={['first-job', 'second-job']}
+          listScrollTo={listScrollTo}
         />,
       );
-      expect(scrollIntoView).not.toHaveBeenCalled();
+      expect(listScrollTo).not.toHaveBeenCalled();
     });
   });
 
   describe('page-change list scroll reset', () => {
     // jsdom's Element.scrollTo is incomplete; pin the list's own method so the
-    // pagination reset is observable the same way arrival scroll uses
-    // scrollIntoView.
+    // pagination reset is observable.
     it('scrolls the list to its top when the page search param changes', () => {
       setDesktop(true);
       const { rerender } = render(

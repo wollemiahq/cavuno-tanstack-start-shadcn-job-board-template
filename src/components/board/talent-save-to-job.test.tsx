@@ -99,7 +99,9 @@ describe('TalentSaveToJob', () => {
     );
 
     await openSavePicker();
-    expect(await screen.findByRole('option', { name: 'First role' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('option', { name: 'First role' }),
+    ).toBeInTheDocument();
     expect(saveSourcedCandidate).not.toHaveBeenCalled();
   });
 
