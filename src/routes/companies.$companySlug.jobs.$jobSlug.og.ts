@@ -1,4 +1,3 @@
-import { isBoardPasswordRequired, isNotFound } from '@cavuno/board';
 /**
  * Open Graph image — 1200×630 card for the job-detail page, the starter's
  * counterpart to the hosted `…/og` route (a `@takumi-rs` ImageResponse). The
@@ -7,11 +6,12 @@ import { isBoardPasswordRequired, isNotFound } from '@cavuno/board';
  * (logo · title · company · location · salary). Rendered in the Cloudflare
  * Worker runtime via `workers-og` (satori + resvg-wasm + HTMLRewriter).
  */
-import { createFileRoute, notFound } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { ImageResponse } from 'workers-og';
 
 import { getBoard } from '../lib/board';
 import { loadOgFont } from '../lib/og-font';
+import { ogRetrieveFailureResponse } from '../lib/og-http';
 import { themeTokens } from '../theme/resolved';
 
 import { locationLabel } from '@/lib/location-labels';
@@ -35,11 +35,9 @@ export const Route = createFileRoute(
         try {
           job = await getBoard().jobs.retrieve(params.jobSlug);
         } catch (error) {
-          // A password-walled board's OG image is simply absent — 404, not
-          // an unhandled 500 (the SDK read throws before any card renders).
-          if (isNotFound(error) || isBoardPasswordRequired(error))
-            throw notFound();
-          throw error;
+          // A miss must be HTTP 404 (not 200 `{isNotFound:true}` from
+          // `throw notFound()` in a server GET). Renderer/API faults 503.
+          return ogRetrieveFailureResponse(error);
         }
 
         // Board language for the display labels — the context read is
@@ -87,13 +85,22 @@ export const Route = createFileRoute(
               </div>
             </div>`;
 
-        return new ImageResponse(html, {
-          width: 1200,
-          height: 630,
-          fonts: [
-            { name: font.name, data: font.data, weight: 600, style: 'normal' },
-          ],
-        });
+        try {
+          return new ImageResponse(html, {
+            width: 1200,
+            height: 630,
+            fonts: [
+              {
+                name: font.name,
+                data: font.data,
+                weight: 600,
+                style: 'normal',
+              },
+            ],
+          });
+        } catch (error) {
+          return ogRetrieveFailureResponse(error);
+        }
       },
     },
   },

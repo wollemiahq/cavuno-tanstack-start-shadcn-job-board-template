@@ -1,4 +1,3 @@
-import { isBoardPasswordRequired, isNotFound } from '@cavuno/board';
 import { formatDate } from '@cavuno/board/format';
 /**
  * Open Graph image — 1200×630 card for a blog post, the starter's counterpart
@@ -10,12 +9,13 @@ import { formatDate } from '@cavuno/board/format';
  * The card markup lives in `lib/blog-og.ts` (unit-tested); this route only
  * fetches the data, subsets the font, and returns the image.
  */
-import { createFileRoute, notFound } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { ImageResponse } from 'workers-og';
 
 import { buildBlogOgHtml, truncate } from '../lib/blog-og';
 import { getBoard } from '../lib/board';
 import { loadOgFont } from '../lib/og-font';
+import { ogRetrieveFailureResponse } from '../lib/og-http';
 import { m } from '../paraglide/messages';
 import { isLocale } from '../paraglide/runtime';
 import { themeTokens } from '../theme/resolved';
@@ -28,9 +28,7 @@ export const Route = createFileRoute('/blog/$postSlug/og')({
         try {
           post = await getBoard().blog.posts.retrieve(params.postSlug);
         } catch (error) {
-          if (isNotFound(error) || isBoardPasswordRequired(error))
-            throw notFound();
-          throw error;
+          return ogRetrieveFailureResponse(error);
         }
 
         // Board language for date formatting — the context read is cached by
@@ -72,21 +70,25 @@ export const Route = createFileRoute('/blog/$postSlug/og')({
         ].join(' ');
         const font = await loadOgFont(text);
 
-        return new ImageResponse(
-          buildBlogOgHtml({ ...card, fontFamily: font.name }),
-          {
-            width: 1200,
-            height: 630,
-            fonts: [
-              {
-                name: font.name,
-                data: font.data,
-                weight: 600,
-                style: 'normal',
-              },
-            ],
-          },
-        );
+        try {
+          return new ImageResponse(
+            buildBlogOgHtml({ ...card, fontFamily: font.name }),
+            {
+              width: 1200,
+              height: 630,
+              fonts: [
+                {
+                  name: font.name,
+                  data: font.data,
+                  weight: 600,
+                  style: 'normal',
+                },
+              ],
+            },
+          );
+        } catch (error) {
+          return ogRetrieveFailureResponse(error);
+        }
       },
     },
   },
