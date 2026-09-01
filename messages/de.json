@@ -1636,6 +1636,7 @@
   "resumeUpload_parsingText": "Wir lesen deinen Lebenslauf, um dein Profil vorab auszufüllen.",
   "resumeUpload_refreshLabel": "Neu laden",
   "resumeUpload_replaceLabel": "Lebenslauf ersetzen",
+  "resumeUpload_stillParsingText": "Wird noch analysiert. Neu laden, um erneut zu prüfen.",
   "resumeUpload_uploadError": "Upload fehlgeschlagen — prüfe Dateityp und -größe.",
   "resumeUpload_uploadLabel": "Lebenslauf hochladen",
   "resumeUpload_uploadingLabel": "Wird hochgeladen …",

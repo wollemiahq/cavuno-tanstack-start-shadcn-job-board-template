@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
 import { FileText } from 'lucide-react';
@@ -41,6 +41,9 @@ const PARSE_STATUS_LABEL = {
   parsed: m.resumeUpload_parseStatusParsed,
   failed: m.resumeUpload_parseStatusFailed,
 } satisfies Record<string, () => string>;
+
+const PARSE_POLL_INTERVAL_MS = 4_000;
+const PARSE_POLL_TIMEOUT_MS = 3 * 60 * 1_000;
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return m.resumeUpload_fileSizeB({ value: bytes });
@@ -92,8 +95,26 @@ export function ResumeUpload({
   const [status, setStatus] = useState<
     'idle' | 'uploading' | 'deleting' | 'upload-error'
   >('idle');
+  const [parsePollTimedOut, setParsePollTimedOut] = useState(false);
   const storedFile = resume.hasResumeOnFile ? resume.file : null;
   const busy = status === 'uploading' || status === 'deleting';
+
+  useEffect(() => {
+    if (resume.parseStatus !== 'parsing' || busy) return;
+    setParsePollTimedOut(false);
+    const startedAt = Date.now();
+    const timer = setInterval(() => {
+      if (Date.now() - startedAt >= PARSE_POLL_TIMEOUT_MS) {
+        clearInterval(timer);
+        setParsePollTimedOut(true);
+        return;
+      }
+      void router.invalidate();
+    }, PARSE_POLL_INTERVAL_MS);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [resume.parseStatus, router, busy]);
 
   async function uploadFile(file: File) {
     setStatus('uploading');
@@ -163,7 +184,9 @@ export function ResumeUpload({
 
       {resume.parseStatus === 'parsing' ? (
         <p className="text-muted-foreground text-sm" role="status">
-          {m.resumeUpload_parsingText()}{' '}
+          {parsePollTimedOut
+            ? m.resumeUpload_stillParsingText()
+            : m.resumeUpload_parsingText()}{' '}
           <Button
             type="button"
             variant="link"

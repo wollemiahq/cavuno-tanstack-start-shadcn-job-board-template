@@ -8,13 +8,14 @@ import {
   createRouter,
 } from '@tanstack/react-router';
 import {
+  act,
   cleanup,
   fireEvent,
   render,
   screen,
   waitFor,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Resume } from '@cavuno/board';
 
@@ -38,8 +39,14 @@ async function renderWithRouter(node: React.ReactNode) {
     routeTree: rootRoute.addChildren([indexRoute]),
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
+  const invalidate = vi
+    .spyOn(router, 'invalidate')
+    .mockImplementation(async () => {});
   await router.load();
-  return render(<RouterProvider router={router} />);
+  return Object.assign(render(<RouterProvider router={router} />), {
+    router,
+    invalidate,
+  });
 }
 
 const resume = {
@@ -124,6 +131,52 @@ describe('ResumeUpload', () => {
     await waitFor(() => {
       expect(mocks.toastActionError).toHaveBeenCalled();
       expect(screen.getByRole('button', { name: 'Delete' })).toBeEnabled();
+    });
+  });
+
+  describe('parse-status polling', () => {
+    const parsingResume = {
+      ...resume,
+      parseStatus: 'parsing',
+    } satisfies Resume;
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('invalidates the router every 4s while parsing', async () => {
+      const { invalidate } = await renderWithRouter(
+        <ResumeUpload resume={parsingResume} dependencies={mocks} />,
+      );
+
+      expect(invalidate).not.toHaveBeenCalled();
+      await act(() => vi.advanceTimersByTimeAsync(4_000));
+      expect(invalidate).toHaveBeenCalledTimes(1);
+      await act(() => vi.advanceTimersByTimeAsync(4_000));
+      expect(invalidate).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not poll when the resume is already parsed', async () => {
+      const { invalidate } = await renderWithRouter(
+        <ResumeUpload resume={resume} dependencies={mocks} />,
+      );
+
+      await act(() => vi.advanceTimersByTimeAsync(8_000));
+      expect(invalidate).not.toHaveBeenCalled();
+    });
+
+    it('clears the timer on unmount', async () => {
+      const { invalidate, unmount } = await renderWithRouter(
+        <ResumeUpload resume={parsingResume} dependencies={mocks} />,
+      );
+
+      unmount();
+      await act(() => vi.advanceTimersByTimeAsync(8_000));
+      expect(invalidate).not.toHaveBeenCalled();
     });
   });
 });

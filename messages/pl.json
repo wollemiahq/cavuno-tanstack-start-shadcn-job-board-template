@@ -1682,6 +1682,7 @@
   "resumeUpload_parsingText": "Odczytujemy Twoje CV, aby wstępnie wypełnić profil.",
   "resumeUpload_refreshLabel": "Odśwież",
   "resumeUpload_replaceLabel": "Zastąp CV",
+  "resumeUpload_stillParsingText": "Nadal przetwarzane. Odśwież, aby sprawdzić ponownie.",
   "resumeUpload_uploadError": "Przesyłanie nie powiodło się — sprawdź typ i rozmiar pliku.",
   "resumeUpload_uploadLabel": "Prześlij CV",
   "resumeUpload_uploadingLabel": "Przesyłanie…",
