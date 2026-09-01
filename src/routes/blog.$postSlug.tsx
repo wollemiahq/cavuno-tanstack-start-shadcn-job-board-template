@@ -9,6 +9,7 @@ import {
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
+import { getBoardContext } from '../server/queries';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogArticleContent } from '@/components/board/blog-article-content';
@@ -24,6 +25,8 @@ export const Route = createFileRoute('/blog/$postSlug')({
     <PublicContentPending label={m.publicContent_loadingLabel()} />
   ),
   loader: async ({ params }) => {
+    const board = await getBoardContext();
+    if (!board.features.blog) throw notFound();
     let page;
     try {
       page = await getBlogPostPage({ data: { postSlug: params.postSlug } });
