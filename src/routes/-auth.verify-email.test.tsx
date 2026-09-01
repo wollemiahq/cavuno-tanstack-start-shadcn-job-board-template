@@ -34,6 +34,12 @@ afterEach(() => {
 });
 
 describe('/auth/verify-email search contract', () => {
+  it('maps a rejecting loader to the invalid card instead of throwing', async () => {
+    mocks.verifyEmail.mockRejectedValue(new Error('token consumed'));
+    const result = await verifyEmailLoader('tok', '/account');
+    expect(result).toMatchObject({ status: 'invalid', returnTo: '/account' });
+  });
+
   it('validates a supplied candidate destination with the token', () => {
     const validate = Route.options.validateSearch;
     if (!validate) {
@@ -123,11 +129,32 @@ describe('/auth/verify-email search contract', () => {
     expect(mocks.getSessionUser).toHaveBeenCalledOnce();
   });
 
-  it('does not consume a one-time token when the session profile is unavailable', async () => {
+  it('still shows the missing-token card when SEO context throws', async () => {
+    mocks.getSeoBase.mockRejectedValue(new Error('seo unavailable'));
+    await expect(verifyEmailLoader('', '/account')).resolves.toMatchObject({
+      status: 'missing-token',
+    });
+  });
+
+  it('still verifies a valid token when the session profile probe throws', async () => {
     mocks.getSessionUser.mockRejectedValue(new Error('profile unavailable'));
+    mocks.verifyEmail.mockResolvedValue({ ok: true });
     await expect(
       verifyEmailLoader('one-time-token', '/account'),
-    ).rejects.toThrow('profile unavailable');
-    expect(mocks.verifyEmail).not.toHaveBeenCalled();
+    ).resolves.toMatchObject({
+      status: 'verified',
+      returnTo: '/account',
+    });
+    expect(mocks.verifyEmail).toHaveBeenCalledOnce();
+  });
+
+  it('renders the verified card, not the route error title, after a successful verify', () => {
+    render(<VerifyEmailView status="verified" returnTo="/account" />);
+    expect(
+      screen.getByRole('heading', { name: 'Email verified' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Something went wrong' }),
+    ).not.toBeInTheDocument();
   });
 });
