@@ -96,4 +96,17 @@ describe('/employer singular aliases', () => {
       statusCode: 308,
     });
   });
+
+  it('keeps checkout search on the Stripe back alias', () => {
+    const result = runStripeBackBeforeLoad(
+      '/employer/acme/jobs/new',
+      '?session_id=cs_test_1',
+    );
+    expect(isRedirect(result)).toBe(true);
+    if (!isRedirect(result)) return;
+    expect(result.options).toMatchObject({
+      href: '/employers/companies/acme/jobs/new?session_id=cs_test_1',
+      statusCode: 308,
+    });
+  });
 });
