@@ -196,7 +196,10 @@ describe('EmployerJobForm', () => {
     await waitFor(() => expect(mocks.checkoutJob).toHaveBeenCalledTimes(1));
     await waitFor(() =>
       expect(mocks.navigate).toHaveBeenCalledWith(
-        expect.objectContaining({ to: '/employers/companies/$slug' }),
+        expect.objectContaining({
+          to: '/employers/companies/$slug',
+          reloadDocument: true,
+        }),
       ),
     );
   });

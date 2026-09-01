@@ -273,6 +273,7 @@ export interface EmployerJobFormDependencies {
   navigate: (options: {
     to: '/employers/companies/$slug';
     params: { slug: string };
+    reloadDocument?: boolean;
   }) => Promise<void>;
 }
 
@@ -635,6 +636,9 @@ export function EmployerJobForm({
       await actions.navigate({
         to: '/employers/companies/$slug',
         params: { slug },
+        // Soft client nav reused the list loader, so the URL changed
+        // while the post/edit form content stayed on screen.
+        reloadDocument: true,
       });
     } catch {
       setNotice(m.employerCompany_reconciliationError());
