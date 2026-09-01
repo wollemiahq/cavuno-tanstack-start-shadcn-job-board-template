@@ -104,7 +104,6 @@ export function ProgrammaticJobsView({
           navigate({
             search: (prev) => ({ ...prev, selectedJob: jobSlug }),
             replace: true,
-            resetScroll: false,
           })
         }
         onSelectedJobPush={(jobSlug) =>

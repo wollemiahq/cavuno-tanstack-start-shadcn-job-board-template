@@ -97,10 +97,14 @@ export function useSearchSelection({
     }
   }, [page]);
 
-  // On ARRIVAL with a URL-selected job (e.g. from a homepage card), bring its
-  // row to the top of the list's own scroll container — ONCE, and only for the
-  // initial URL selection. Later in-page clicks must never yank a visible row
-  // away. Instant jump (no smooth-scroll), so it is reduced-motion-safe.
+  // On ARRIVAL with a URL-selected row (e.g. from a homepage card), bring it
+  // to the top of the LIST's own overflow — ONCE, and only for the initial
+  // URL selection. Later in-page clicks must never yank a visible row away.
+  //
+  // Do not use `scrollIntoView`: with a sticky site header it walks up to
+  // the window and lands the listing mid-page (talent has no filter bar
+  // above the split, so this is visible there even when jobs/companies
+  // look fine). Instant jump, reduced-motion-safe.
   const didArrivalScroll = useRef(false);
   useEffect(() => {
     if (didArrivalScroll.current || !isDesktop) return;
@@ -109,19 +113,19 @@ export function useSearchSelection({
     // Mark the arrival window closed no matter what, so a later manual
     // selection (which sets `selectedId` after mount) never triggers a scroll.
     didArrivalScroll.current = true;
-    // The arrived job may legitimately be absent from this page (the detail
+    // The arrived row may legitimately be absent from this page (the detail
     // pane fetches it independently) — then there is no row to align, no-op.
     if (!selectedId || !resultIds.includes(selectedId)) return;
-    const rows =
-      listRef.current?.querySelectorAll<HTMLElement>('[data-result-id]');
-    const row = rows
-      ? Array.from(rows).find((el) => el.dataset.resultId === selectedId)
-      : undefined;
-    // `scrollIntoView` is absent in some non-browser runtimes (jsdom) — guard
-    // so the arrival alignment degrades to a no-op rather than throwing.
-    if (row?.scrollIntoView instanceof Function) {
-      row.scrollIntoView({ block: 'start' });
-    }
+    const list = listRef.current;
+    if (!list || !(list.scrollTo instanceof Function)) return;
+    const rows = list.querySelectorAll<HTMLElement>('[data-result-id]');
+    const row = Array.from(rows).find(
+      (el) => el.dataset.resultId === selectedId,
+    );
+    if (!row) return;
+    const delta =
+      row.getBoundingClientRect().top - list.getBoundingClientRect().top;
+    list.scrollTo({ top: list.scrollTop + delta });
   }, [isDesktop, selectedId, resultIds]);
 
   return {

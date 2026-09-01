@@ -33,12 +33,14 @@ function Harness({
   page,
   onReplace = vi.fn(),
   onPush = vi.fn(),
+  listScrollTo,
 }: {
   selectedJob?: string;
   jobSlugs?: string[];
   page?: number;
   onReplace?: (jobSlug: string) => void;
   onPush?: (jobSlug: string) => void;
+  listScrollTo?: (options?: ScrollToOptions) => void;
 }) {
   const selection = useSearchSelection({
     selectedId: selectedJob,
@@ -61,7 +63,8 @@ function Harness({
       <section
         ref={(node) => {
           selection.listRef.current = node;
-          if (node && !node.scrollTo) node.scrollTo = vi.fn();
+          if (node && listScrollTo) node.scrollTo = listScrollTo;
+          else if (node && !node.scrollTo) node.scrollTo = vi.fn();
         }}
         data-testid="results-list"
       >
@@ -148,30 +151,26 @@ describe('useSearchSelection', () => {
   });
 
   describe('arrival scroll (URL-selected job aligns to list top)', () => {
-    // jsdom ships no scrollIntoView; the hook guards on its presence, so
-    // provide a spy to observe the arrival alignment.
-    const scrolledResultIds: Array<string | null> = [];
-    const scrollIntoView = vi.fn(function (this: Element) {
-      scrolledResultIds.push(this.getAttribute('data-result-id'));
-    });
+    const listScrollTo = vi.fn();
+    const scrollIntoView = vi.fn();
     beforeEach(() => {
+      listScrollTo.mockClear();
       scrollIntoView.mockClear();
-      scrolledResultIds.length = 0;
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
-    it('scrolls the URL-selected row to the top on initial arrival', () => {
+    it('scrolls the list container, not the window, on initial arrival', () => {
       setDesktop(true);
       render(
         <Harness
           selectedJob="second-job"
           jobSlugs={['first-job', 'second-job', 'third-job']}
+          listScrollTo={listScrollTo}
         />,
       );
 
-      expect(scrollIntoView).toHaveBeenCalledTimes(1);
-      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
-      expect(scrolledResultIds).toEqual(['second-job']);
+      expect(listScrollTo).toHaveBeenCalledTimes(1);
+      expect(scrollIntoView).not.toHaveBeenCalled();
     });
 
     it('does not scroll a later in-page selection made after arrival', () => {
@@ -180,17 +179,19 @@ describe('useSearchSelection', () => {
         <Harness
           selectedJob={undefined}
           jobSlugs={['first-job', 'second-job']}
+          listScrollTo={listScrollTo}
         />,
       );
-      expect(scrollIntoView).not.toHaveBeenCalled();
+      expect(listScrollTo).not.toHaveBeenCalled();
 
-      // A click selects a row post-mount — the list must not jump.
       rerender(
         <Harness
           selectedJob="second-job"
           jobSlugs={['first-job', 'second-job']}
+          listScrollTo={listScrollTo}
         />,
       );
+      expect(listScrollTo).not.toHaveBeenCalled();
       expect(scrollIntoView).not.toHaveBeenCalled();
     });
 
@@ -200,9 +201,10 @@ describe('useSearchSelection', () => {
         <Harness
           selectedJob="off-page"
           jobSlugs={['first-job', 'second-job']}
+          listScrollTo={listScrollTo}
         />,
       );
-      expect(scrollIntoView).not.toHaveBeenCalled();
+      expect(listScrollTo).not.toHaveBeenCalled();
     });
 
     it('does not scroll on mobile', () => {
@@ -211,16 +213,16 @@ describe('useSearchSelection', () => {
         <Harness
           selectedJob="second-job"
           jobSlugs={['first-job', 'second-job']}
+          listScrollTo={listScrollTo}
         />,
       );
-      expect(scrollIntoView).not.toHaveBeenCalled();
+      expect(listScrollTo).not.toHaveBeenCalled();
     });
   });
 
   describe('page-change list scroll reset', () => {
     // jsdom's Element.scrollTo is incomplete; pin the list's own method so the
-    // pagination reset is observable the same way arrival scroll uses
-    // scrollIntoView.
+    // pagination reset is observable.
     it('scrolls the list to its top when the page search param changes', () => {
       setDesktop(true);
       const { rerender } = render(

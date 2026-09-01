@@ -161,7 +161,9 @@ function TalentDirectoryPage() {
               selectedTalent: handle,
             }),
             replace: true,
-            resetScroll: false,
+            // Default-first-result sync after a header click. `resetScroll:
+            // false` here re-applies the previous /talent window scroll and
+            // lands the listing mid-page. User row clicks use onPush below.
           })
         }
         onSelectedTalentPush={(handle) =>

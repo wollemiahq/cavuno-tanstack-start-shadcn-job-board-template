@@ -313,16 +313,13 @@ describe('CompanySearchPage — results description line', () => {
 });
 
 describe('CompanySearchPage — arrival scroll', () => {
-  // jsdom ships no scrollIntoView; the hook guards on its presence, so provide
-  // a spy to observe the arrival alignment.
-  const scrolledResultIds: Array<string | null> = [];
-  const scrollIntoView = vi.fn(function (this: Element) {
-    scrolledResultIds.push(this.getAttribute('data-result-id'));
-  });
+  const scrollIntoView = vi.fn();
+  const scrollTo = vi.fn();
   beforeEach(() => {
     scrollIntoView.mockClear();
-    scrolledResultIds.length = 0;
+    scrollTo.mockClear();
     Element.prototype.scrollIntoView = scrollIntoView;
+    HTMLElement.prototype.scrollTo = scrollTo;
   });
 
   function renderArrival(initialSelected?: string) {
@@ -361,13 +358,12 @@ describe('CompanySearchPage — arrival scroll', () => {
     return render(<RouterProvider router={router} />);
   }
 
-  it('scrolls the URL-selected row to the top on arrival', async () => {
+  it('scrolls the list container, not the window, on arrival', async () => {
     renderArrival('acme');
 
     await screen.findByRole('main');
-    expect(scrollIntoView).toHaveBeenCalledTimes(1);
-    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
-    expect(scrolledResultIds).toEqual(['acme']);
+    expect(scrollTo).toHaveBeenCalled();
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 
   it('does not scroll a manual selection made after arrival', async () => {
