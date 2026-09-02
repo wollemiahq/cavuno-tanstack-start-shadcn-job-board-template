@@ -6,15 +6,21 @@ import { useSyncExternalStore } from 'react';
 export const DESKTOP_MEDIA_QUERY = '(min-width: 48rem)' as const;
 
 function subscribeToDesktop(callback: () => void) {
-  if (typeof window.matchMedia !== 'function') return () => {};
-  const media = window.matchMedia(DESKTOP_MEDIA_QUERY);
-  media.addEventListener('change', callback);
-  return () => media.removeEventListener('change', callback);
+  try {
+    const media = window.matchMedia(DESKTOP_MEDIA_QUERY);
+    media.addEventListener('change', callback);
+    return () => media.removeEventListener('change', callback);
+  } catch {
+    return () => {};
+  }
 }
 
 function getDesktopSnapshot() {
-  if (typeof window.matchMedia !== 'function') return false;
-  return window.matchMedia(DESKTOP_MEDIA_QUERY).matches;
+  try {
+    return window.matchMedia(DESKTOP_MEDIA_QUERY).matches;
+  } catch {
+    return false;
+  }
 }
 
 function getServerDesktopSnapshot() {

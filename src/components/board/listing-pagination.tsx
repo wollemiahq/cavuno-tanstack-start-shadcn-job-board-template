@@ -11,8 +11,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { localizePath } from '@/lib/localized-path';
 import { shouldRenderPagination, totalPages } from '@/lib/pagination';
+
 
 type PaginationPage = number | 'start-ellipsis' | 'end-ellipsis';
 
@@ -88,7 +88,7 @@ export function ListingPagination({
       <PaginationContent className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
         <PaginationItem className="justify-self-start">
           <PaginationPrevious
-            href={localizePath(hrefForPage(Math.max(1, page - 1)))}
+            href={hrefForPage(Math.max(1, page - 1))}
             text={m.pagination_previousLabel()}
             aria-label={m.pagination_previousPageLabel()}
             aria-disabled={page === 1}
@@ -112,7 +112,7 @@ export function ListingPagination({
                 <PaginationItem key={item}>
                   {pageItem !== null ? (
                     <PaginationLink
-                      href={localizePath(hrefForPage(pageItem))}
+                      href={hrefForPage(pageItem)}
                       isActive={pageItem === page}
                       aria-label={`${m.pagination_ariaLabel()} ${pageItem}`}
                       onClick={navigate(pageItem)}
@@ -129,7 +129,7 @@ export function ListingPagination({
         </li>
         <PaginationItem className="justify-self-end">
           <PaginationNext
-            href={localizePath(hrefForPage(Math.min(total, page + 1)))}
+            href={hrefForPage(Math.min(total, page + 1))}
             text={m.pagination_nextLabel()}
             aria-label={m.pagination_nextPageLabel()}
             aria-disabled={page === total}

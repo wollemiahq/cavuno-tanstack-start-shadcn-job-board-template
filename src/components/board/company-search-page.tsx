@@ -1,7 +1,7 @@
 'use client';
 
 import { companyMarketPath } from '@cavuno/board/paths';
-import { useLocation } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import { Building2 } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
@@ -35,7 +35,6 @@ import {
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
 import { entityCount } from '@/lib/entity-count';
-import { localizePath } from '@/lib/localized-path';
 import { listingPageHref } from '@/lib/pagination';
 import { chromeEntity } from '@/lib/site-chrome';
 
@@ -153,12 +152,9 @@ export function CompanySearchPage({
                     </EmptyHeader>
                     {hasActiveSearch && !searchUnavailable ? (
                       <EmptyContent>
-                        <a
-                          href={localizePath('/companies')}
-                          className={buttonVariants()}
-                        >
+                        <Link to="/companies" className={buttonVariants()}>
                           {m.jobSearch_resetFiltersAction()}
-                        </a>
+                        </Link>
                       </EmptyContent>
                     ) : null}
                   </Empty>
@@ -221,11 +217,7 @@ export function CompanySearchPage({
                             key={market.slug}
                             variant="outline"
                             render={
-                              <a
-                                href={localizePath(
-                                  companyMarketPath(market.slug),
-                                )}
-                              />
+                              <Link to={companyMarketPath(market.slug)} />
                             }
                           >
                             {market.name}

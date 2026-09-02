@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import {
-  createFileRoute,
-  getRouteApi,
-  useLocation,
-  useRouter,
-} from '@tanstack/react-router';
+import { Link, createFileRoute, getRouteApi, useLocation, useRouter } from '@tanstack/react-router';
 import { UserRoundX } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
@@ -74,12 +69,12 @@ function TalentProfileNotFound() {
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <a
-              href="/talent"
+            <Link
+              to="/talent"
               className={buttonVariants({ variant: 'outline' })}
             >
               {m.talentDirectory_title()}
-            </a>
+            </Link>
           </EmptyContent>
         </Empty>
       </PageContent>

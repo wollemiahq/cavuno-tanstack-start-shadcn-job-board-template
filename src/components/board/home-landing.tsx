@@ -97,12 +97,12 @@ function CategoryBrowse({ categories }: { categories: HomeCategoryCard[] }) {
             className="relative h-full transition-shadow hover:shadow-md"
           >
             <CardContent className="flex flex-col gap-1">
-              <a
-                href={localizePath(category.href)}
+              <Link
+                to={category.href}
                 className="focus-visible:ring-ring/50 text-foreground rounded-sm text-sm font-medium outline-none after:absolute after:inset-0 after:z-(--z-card-overlay) after:rounded-[inherit] hover:underline focus-visible:ring-2"
               >
                 {category.name}
-              </a>
+              </Link>
               {category.countLabel ? (
                 <span className="text-muted-foreground text-xs">
                   {category.countLabel}

@@ -252,14 +252,13 @@ export function JobSearchPage({
                         })}
                       </AlertDescription>
                       <AlertAction className="static">
-                        <a
-                          href={localizePath(
-                            `/account/access?${new URLSearchParams({ returnTo }).toString()}`,
-                          )}
+                        <Link
+                          to="/account/access"
+                          search={{ returnTo }}
                           className={buttonVariants({ size: 'sm' })}
                         >
                           {m.jobSearch_unlockMoreLabel()}
-                        </a>
+                        </Link>
                       </AlertAction>
                     </Alert>
                   ) : null}
@@ -288,7 +287,7 @@ export function JobSearchPage({
                           <Badge
                             key={chip.key}
                             variant="outline"
-                            render={<a href={localizePath(chip.href)} />}
+                            render={<Link to={chip.href} />}
                           >
                             {chip.name}
                           </Badge>

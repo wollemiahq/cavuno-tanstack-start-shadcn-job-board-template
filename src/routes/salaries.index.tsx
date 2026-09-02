@@ -9,7 +9,7 @@ import {
   salarySkillPath,
   salaryTitlePath,
 } from '@cavuno/board/paths';
-import { createFileRoute } from '@tanstack/react-router';
+import { Link, createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -149,12 +149,12 @@ function HubSection({
     <PageSection
       title={title}
       actions={
-        <a
-          href={seeAll}
+        <Link
+          to={seeAll}
           className={buttonVariants({ variant: 'link', size: 'sm' })}
         >
           {m.salaryHub_seeAllLabel()}
-        </a>
+        </Link>
       }
     >
       <SalaryRail vm={toSalaryRailVM('', items, getLocale())} />

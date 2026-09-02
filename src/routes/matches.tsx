@@ -5,6 +5,7 @@ import {
   isRedirect,
   notFound,
   redirect,
+  Link,
   useNavigate,
   useRouter,
 } from '@tanstack/react-router';
@@ -234,12 +235,12 @@ function JobMatchesPage() {
                       title={m.accountRecommended_noneNowTitle()}
                       description={m.accountRecommended_noneNowText()}
                       action={
-                        <a
-                          href="/jobs"
+                        <Link
+                          to="/jobs"
                           className={buttonVariants({ variant: 'outline' })}
                         >
                           {m.meApplications_browseJobsLink()}
-                        </a>
+                        </Link>
                       }
                     />
                   )}

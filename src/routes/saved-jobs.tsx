@@ -14,6 +14,7 @@ import {
   createFileRoute,
   getRouteApi,
   isRedirect,
+  Link,
   redirect,
   useNavigate,
   useRouter,
@@ -182,12 +183,12 @@ function SavedJobsPage() {
                     title={m.accountShell_savedJobsNav()}
                     description={m.accountHome_savedJobsEmptyText()}
                     action={
-                      <a
-                        href="/jobs"
+                      <Link
+                        to="/jobs"
                         className={buttonVariants({ variant: 'outline' })}
                       >
                         {m.meApplications_browseJobsLink()}
-                      </a>
+                      </Link>
                     }
                   />
                 </div>

@@ -1,4 +1,5 @@
 import { ArrowRight, ChartNoAxesColumn } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 
 import type {
   OverallSalaryVM,
@@ -24,7 +25,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { localizePath } from '@/lib/localized-path';
 import { cn } from '@/lib/utils';
 
 export type { RailItem } from '@/board/salary-view-model';
@@ -179,9 +179,9 @@ export function SalaryRail({ vm }: { vm: SalaryRailVM }) {
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {vm.items.map((item) => (
-          <a
+          <Link
             key={item.href}
-            href={localizePath(item.href)}
+            to={item.href}
             className="group focus-visible:ring-ring/30 rounded-[min(var(--radius-4xl),24px)] outline-none focus-visible:ring-3"
           >
             <Card
@@ -205,7 +205,7 @@ export function SalaryRail({ vm }: { vm: SalaryRailVM }) {
                 </p>
               </CardContent>
             </Card>
-          </a>
+          </Link>
         ))}
       </div>
     </section>
@@ -231,8 +231,8 @@ export function CompanySalarySummary({
         <h2 className="font-heading text-lg font-medium tracking-tight">
           {title}
         </h2>
-        <a
-          href={localizePath(viewAllHref)}
+        <Link
+          to={viewAllHref}
           className={cn(
             buttonVariants({ variant: 'ghost', size: 'sm' }),
             'no-underline',
@@ -240,7 +240,7 @@ export function CompanySalarySummary({
         >
           {viewAllLabel}
           <ArrowRight className="rtl:rotate-180" data-icon="inline-end" />
-        </a>
+        </Link>
       </div>
       {overall ? <OverallSalaryCard vm={overall} /> : null}
       <SalaryRail vm={categories} />

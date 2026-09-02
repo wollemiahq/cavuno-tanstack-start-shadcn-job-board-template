@@ -4,7 +4,7 @@
  */
 import { isNotFound, type LocationSalaryDetail } from '@cavuno/board';
 import { BOARD_PATHS, salaryLocationPath } from '@cavuno/board/paths';
-import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
+import { Link, createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -34,7 +34,6 @@ import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
 import { buttonVariants } from '@/components/ui/button';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
-import { localizePath } from '@/lib/localized-path';
 
 type City = LocationSalaryDetail['childLocations'][number];
 
@@ -202,16 +201,14 @@ function LocationSalaryPage() {
             <PageSection
               title={m.salaryDetail_topTitles()}
               actions={
-                <a
-                  href={localizePath(
-                    salaryLocationTitlesPath(salary.canonicalSlug),
-                  )}
+                <Link
+                  to={salaryLocationTitlesPath(salary.canonicalSlug)}
                   className={buttonVariants({ variant: 'link', size: 'sm' })}
                 >
                   {m.salaryDetail_seeAllTitlesInPlaceLabel({
                     place: salary.placeName,
                   })}
-                </a>
+                </Link>
               }
             >
               <SalaryRail vm={toSalaryRailVM('', categoryItems, getLocale())} />
@@ -221,16 +218,14 @@ function LocationSalaryPage() {
             <PageSection
               title={m.salaryDetail_topSkills()}
               actions={
-                <a
-                  href={localizePath(
-                    salaryLocationSkillsPath(salary.canonicalSlug),
-                  )}
+                <Link
+                  to={salaryLocationSkillsPath(salary.canonicalSlug)}
                   className={buttonVariants({ variant: 'link', size: 'sm' })}
                 >
                   {m.salaryDetail_seeAllSkillsInPlaceLabel({
                     place: salary.placeName,
                   })}
-                </a>
+                </Link>
               }
             >
               <SalaryRail vm={toSalaryRailVM('', skillItems, getLocale())} />

@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import { useLocation } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import { Users } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
@@ -407,9 +407,9 @@ export function TalentSearchPage({
                     </EmptyHeader>
                     {hasActiveSearch ? (
                       <EmptyContent>
-                        <a href="/talent" className={buttonVariants()}>
+                        <Link to="/talent" className={buttonVariants()}>
                           {m.jobSearch_resetFiltersAction()}
-                        </a>
+                        </Link>
                       </EmptyContent>
                     ) : null}
                   </Empty>

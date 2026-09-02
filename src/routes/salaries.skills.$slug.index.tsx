@@ -9,7 +9,7 @@ import {
   salarySkillPath,
   salaryTitlePath,
 } from '@cavuno/board/paths';
-import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
+import { Link, createFileRoute, notFound, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -39,7 +39,6 @@ import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
 import { buttonVariants } from '@/components/ui/button';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
-import { localizePath } from '@/lib/localized-path';
 
 export const Route = createFileRoute('/salaries/skills/$slug/')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -195,14 +194,12 @@ function SkillSalaryPage() {
             <PageSection
               title={m.salaryDetail_topLocations()}
               actions={
-                <a
-                  href={localizePath(
-                    salarySkillLocationsPath(salary.canonicalSlug),
-                  )}
+                <Link
+                  to={salarySkillLocationsPath(salary.canonicalSlug)}
                   className={buttonVariants({ variant: 'link', size: 'sm' })}
                 >
                   {m.salaryDetail_seeAllLocationsLabel()}
-                </a>
+                </Link>
               }
             >
               <SalaryRail vm={toSalaryRailVM('', locationItems, getLocale())} />

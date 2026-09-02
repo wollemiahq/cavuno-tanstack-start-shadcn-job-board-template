@@ -1,3 +1,5 @@
+import { Link } from '@tanstack/react-router';
+
 import { m } from '../../paraglide/messages';
 
 /**
@@ -39,7 +41,6 @@ import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { localizePath } from '@/lib/localized-path';
 
 function TaxonomySection({
   heading,
@@ -135,15 +136,15 @@ export function JobDetail({
                     size="lg"
                   />
                   {vm.company?.href && vm.companyName ? (
-                    <a
-                      href={localizePath(vm.company.href)}
+                    <Link
+                      to={vm.company.href}
                       className={buttonVariants({
                         variant: 'link',
                         size: 'sm',
                       })}
                     >
                       {vm.companyName}
-                    </a>
+                    </Link>
                   ) : vm.companyName ? (
                     <span
                       className="text-foreground text-base font-semibold"

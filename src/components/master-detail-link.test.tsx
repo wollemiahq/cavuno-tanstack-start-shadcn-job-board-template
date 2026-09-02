@@ -19,6 +19,7 @@ import {
 
 import { DESKTOP_MEDIA_QUERY } from '@/hooks/use-desktop-media';
 import { jobDestination } from '@/lib/master-detail-destination';
+import { searchString } from '@/lib/pagination';
 
 afterEach(() => {
   cleanup();
@@ -65,10 +66,10 @@ function renderLink(ui: React.ReactElement) {
   const jobsRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/jobs',
-    validateSearch: (search: Record<string, unknown>) => ({
-      selectedJob:
-        typeof search.selectedJob === 'string' ? search.selectedJob : undefined,
-    }),
+    validateSearch: (search: { selectedJob?: unknown }) => {
+      const selectedJob = searchString(search.selectedJob);
+      return selectedJob ? { selectedJob } : {};
+    },
     component: () => <h1>Jobs</h1>,
   });
   const router = createRouter({
