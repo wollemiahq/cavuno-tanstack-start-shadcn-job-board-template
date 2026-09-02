@@ -10,20 +10,31 @@ import { formatDate } from '@cavuno/board/format';
  * fetches the data, subsets the font, and returns the image.
  */
 import { createFileRoute } from '@tanstack/react-router';
-import { ImageResponse } from 'workers-og';
 
+import { blogDisabledResponse, isBlogEnabled } from '../lib/blog-enabled';
 import { buildBlogOgHtml, truncate } from '../lib/blog-og';
 import { getBoard } from '../lib/board';
+import { readBoardContext } from '../lib/board-context-cache';
 import { loadOgFont } from '../lib/og-font';
 import { ogNotFoundResponse, ogUnavailableResponse } from '../lib/og-http';
+import { renderOgPng } from '../lib/og-render';
+import { ogThemeTokens } from '../lib/og-theme';
 import { m } from '../paraglide/messages';
 import { isLocale } from '../paraglide/runtime';
-import { themeTokens } from '../theme/resolved';
+
+type Post = Awaited<
+  ReturnType<ReturnType<typeof getBoard>['blog']['posts']['retrieve']>
+>;
 
 export const Route = createFileRoute('/blog/$postSlug/og')({
   server: {
     handlers: {
       GET: async ({ params }) => {
+        // A blog-off board has no post pages, so it has no post share cards.
+        if (!(await isBlogEnabled().catch(() => false))) {
+          return blogDisabledResponse();
+        }
+
         let post;
         try {
           post = await getBoard().blog.posts.retrieve(params.postSlug);
@@ -31,65 +42,59 @@ export const Route = createFileRoute('/blog/$postSlug/og')({
           return ogNotFoundResponse();
         }
 
-        // Board language for date formatting — the context read is cached by
-        // the SDK client, so this adds no extra request in steady state.
-        const [seo, { language }] = await Promise.all([
-          getBoard().seo(),
-          getBoard().context(),
-        ]);
-        const author = post.authors[0] ?? null;
-
-        const card = {
-          boardName: seo.manifest.name,
-          // Board-language "Blog" word — the eyebrow must not be English on
-          // a non-English board's share card.
-          blogLabel: m.nav_blog(
-            {},
-            isLocale(language) ? { locale: language } : undefined,
-          ),
-          // The accent comes from the repo's canonical theme
-          // (resolved tokens), not the wire manifest — one theme source.
-          themeColor: themeTokens.light['--primary'],
-          title: post.title,
-          excerpt: post.customExcerpt,
-          authorName: author?.name ?? null,
-          authorAvatarUrl: author?.avatarUrl ?? null,
-          dateLabel: post.publishedAt
-            ? formatDate(language, post.publishedAt)
-            : null,
-        };
-
-        // Subset the font to exactly the glyphs the card renders (incl. the
-        // "· Blog" eyebrow and the "…" truncation marker).
-        const text = [
-          `${card.boardName} · ${card.blogLabel}…`,
-          truncate(card.title, 70),
-          card.excerpt ? truncate(card.excerpt, 140) : '',
-          card.authorName ?? '',
-          card.dateLabel ?? '',
-        ].join(' ');
-        const font = await loadOgFont(text);
-
+        // Everything after the slug resolved is renderer plumbing (SEO name,
+        // board language, font subset, satori). Any fault there is a 503 —
+        // never an unhandled 500 — because the slug is known to exist.
         try {
-          return new ImageResponse(
-            buildBlogOgHtml({ ...card, fontFamily: font.name }),
-            {
-              width: 1200,
-              height: 630,
-              fonts: [
-                {
-                  name: font.name,
-                  data: font.data,
-                  weight: 600,
-                  style: 'normal',
-                },
-              ],
-            },
-          );
-        } catch {
+          return await renderBlogOg(post);
+        } catch (error) {
+          // Tenant Workers log to Cloudflare observability; without this line
+          // a renderer fault is invisible (see og-render.ts).
+          console.error('[og] blog card render failed', error);
           return ogUnavailableResponse();
         }
       },
     },
   },
 });
+
+async function renderBlogOg(post: Post): Promise<Response> {
+  // Board language for date formatting — served from the isolate context
+  // memo / edge cache, so this adds no extra request in steady state.
+  const [seo, { language }] = await Promise.all([
+    getBoard().seo(),
+    readBoardContext(),
+  ]);
+  const author = post.authors[0] ?? null;
+
+  const card = {
+    boardName: seo.manifest.name,
+    // Board-language "Blog" word — the eyebrow must not be English on
+    // a non-English board's share card.
+    blogLabel: m.nav_blog(
+      {},
+      isLocale(language) ? { locale: language } : undefined,
+    ),
+    // The accent comes from the repo's canonical theme (resolved tokens,
+    // converted to sRGB for Satori), not the wire manifest — one theme source.
+    themeColor: ogThemeTokens()['--primary'],
+    title: post.title,
+    excerpt: post.customExcerpt,
+    authorName: author?.name ?? null,
+    authorAvatarUrl: author?.avatarUrl ?? null,
+    dateLabel: post.publishedAt ? formatDate(language, post.publishedAt) : null,
+  };
+
+  // Subset the font to exactly the glyphs the card renders (incl. the
+  // "· Blog" eyebrow and the "…" truncation marker).
+  const text = [
+    `${card.boardName} · ${card.blogLabel}…`,
+    truncate(card.title, 70),
+    card.excerpt ? truncate(card.excerpt, 140) : '',
+    card.authorName ?? '',
+    card.dateLabel ?? '',
+  ].join(' ');
+  const font = await loadOgFont(text);
+
+  return renderOgPng(buildBlogOgHtml({ ...card, fontFamily: font.name }), font);
+}

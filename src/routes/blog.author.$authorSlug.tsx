@@ -10,6 +10,7 @@ import {
 } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getBoardContext } from '../server/queries';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { CursorPagination } from '@/components/board/cursor-pagination';
@@ -40,6 +41,8 @@ export const Route = createFileRoute('/blog/author/$authorSlug')({
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ params, deps }) => {
+    const board = await getBoardContext();
+    if (!board.features.blog) throw notFound();
     try {
       return await getBlogAuthorPage({
         data: { authorSlug: params.authorSlug, cursor: deps.cursor },

@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getBoardContext } from '../server/queries';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogTagChips } from '@/components/board/blog-tag-chips';
@@ -37,6 +38,8 @@ export const Route = createFileRoute('/blog/tag/$tagSlug')({
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ params, deps }) => {
+    const board = await getBoardContext();
+    if (!board.features.blog) throw notFound();
     try {
       return await getBlogTagPage({
         data: { tagSlug: params.tagSlug, cursor: deps.cursor },

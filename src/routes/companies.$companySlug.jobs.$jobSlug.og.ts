@@ -7,23 +7,17 @@
  * Worker runtime via `workers-og` (satori + resvg-wasm + HTMLRewriter).
  */
 import { createFileRoute } from '@tanstack/react-router';
-import { ImageResponse } from 'workers-og';
 
 import { getBoard } from '../lib/board';
+import { readBoardContext } from '../lib/board-context-cache';
 import { loadOgFont } from '../lib/og-font';
 import { ogNotFoundResponse, ogUnavailableResponse } from '../lib/og-http';
-import { themeTokens } from '../theme/resolved';
+import { renderOgPng } from '../lib/og-render';
+import { ogStyleValue, ogText, ogUrlAttr } from '../lib/og-text';
+import { ogThemeTokens } from '../lib/og-theme';
 
 import { locationLabel } from '@/lib/location-labels';
 import { formatJobSalary } from '@/lib/salary-display';
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
-}
 
 export const Route = createFileRoute(
   '/companies/$companySlug/jobs/$jobSlug/og',
@@ -40,68 +34,69 @@ export const Route = createFileRoute(
           return ogNotFoundResponse();
         }
 
-        // Board language for the display labels — the context read is
-        // cached by the SDK client, so this adds no extra request in
-        // steady state.
-        const { language } = await getBoard().context();
-
-        const title = job.title;
-        const company = job.company?.name ?? '';
-        const location = locationLabel(job, language);
-        const salary =
-          formatJobSalary(
-            language,
-            job.salaryMin,
-            job.salaryMax,
-            job.salaryTimeframe,
-            job.salaryCurrency,
-          ) ?? '';
-        const logo = job.company?.logoUrl ?? null;
-
-        // Subset the theme font to exactly the glyphs the card
-        // renders.
-        const text = [title, company, location, salary].join(' ');
-        const font = await loadOgFont(text);
-
-        const metaParts = [location, salary].filter(Boolean).map(escapeHtml);
-
-        // Satori can't read CSS variables, so
-        // the card renders from the resolved tokens module derived from
-        // the canonical src/theme.css. Light values by rule.
-        const t = themeTokens.light;
-        const html = `
-            <div style="display:flex;flex-direction:column;justify-content:space-between;width:1200px;height:630px;padding:80px;background:${t['--background']};font-family:${font.name};">
-              <div style="display:flex;align-items:center;gap:24px;">
-                ${
-                  logo
-                    ? `<img src="${escapeHtml(logo)}" width="96" height="96" style="border-radius:16px;object-fit:contain;border:1px solid ${t['--border']};" />`
-                    : ''
-                }
-                <div style="display:flex;font-size:32px;color:${t['--muted-foreground']};">${escapeHtml(company)}</div>
-              </div>
-              <div style="display:flex;font-size:72px;font-weight:600;color:${t['--foreground']};line-height:1.1;">${escapeHtml(title)}</div>
-              <div style="display:flex;gap:16px;font-size:32px;color:${t['--foreground-subtle'] ?? t['--foreground']};">
-                ${metaParts.map((part) => `<div style="display:flex;">${part}</div>`).join(`<div style="display:flex;color:${t['--border']};">·</div>`)}
-              </div>
-            </div>`;
-
+        // Everything after the slug resolved is renderer plumbing (board
+        // language, font subset, satori). Any fault there is a 503 — never
+        // an unhandled 500 — because the slug is known to exist.
         try {
-          return new ImageResponse(html, {
-            width: 1200,
-            height: 630,
-            fonts: [
-              {
-                name: font.name,
-                data: font.data,
-                weight: 600,
-                style: 'normal',
-              },
-            ],
-          });
-        } catch {
+          return await renderJobOg(job);
+        } catch (error) {
+          // Tenant Workers log to Cloudflare observability; without this line
+          // a renderer fault is invisible (see og-render.ts).
+          console.error('[og] job card render failed', error);
           return ogUnavailableResponse();
         }
       },
     },
   },
 });
+
+type Job = Awaited<ReturnType<ReturnType<typeof getBoard>['jobs']['retrieve']>>;
+
+async function renderJobOg(job: Job): Promise<Response> {
+  // Board language for the display labels — served from the isolate
+  // context memo / edge cache, so this adds no extra request in
+  // steady state.
+  const { language } = await readBoardContext();
+
+  const title = job.title;
+  const company = job.company?.name ?? '';
+  const location = locationLabel(job, language);
+  const salary =
+    formatJobSalary(
+      language,
+      job.salaryMin,
+      job.salaryMax,
+      job.salaryTimeframe,
+      job.salaryCurrency,
+    ) ?? '';
+  const logo = job.company?.logoUrl ?? null;
+
+  // Subset the theme font to exactly the glyphs the card
+  // renders.
+  const text = [title, company, location, salary].join(' ');
+  const font = await loadOgFont(text);
+
+  const metaParts = [location, salary].filter(Boolean).map(ogText);
+
+  // Satori can't read CSS variables or OKLCH colours, so the card renders
+  // from the resolved tokens module derived from the canonical src/theme.css,
+  // converted to sRGB. Light values by rule.
+  const t = ogThemeTokens();
+  const html = `
+            <div style="display:flex;flex-direction:column;justify-content:space-between;width:1200px;height:630px;padding:80px;background:${t['--background']};font-family:${ogStyleValue(font.name)};">
+              <div style="display:flex;align-items:center;gap:24px;">
+                ${
+                  logo
+                    ? `<img src="${ogUrlAttr(logo)}" width="96" height="96" style="border-radius:16px;object-fit:contain;border:1px solid ${t['--border']};" />`
+                    : ''
+                }
+                <div style="display:flex;font-size:32px;color:${t['--muted-foreground']};">${ogText(company)}</div>
+              </div>
+              <div style="display:flex;font-size:72px;font-weight:600;color:${t['--foreground']};line-height:1.1;">${ogText(title)}</div>
+              <div style="display:flex;gap:16px;font-size:32px;color:${t['--foreground-subtle'] ?? t['--foreground']};">
+                ${metaParts.map((part) => `<div style="display:flex;">${part}</div>`).join(`<div style="display:flex;color:${t['--border']};">·</div>`)}
+              </div>
+            </div>`;
+
+  return renderOgPng(html, font);
+}

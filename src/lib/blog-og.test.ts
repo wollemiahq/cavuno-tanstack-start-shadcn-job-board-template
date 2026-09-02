@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildBlogOgHtml, escapeHtml, truncate } from './blog-og';
+import { buildBlogOgHtml, truncate } from './blog-og';
 
 describe('truncate', () => {
   it('leaves short strings untouched', () => {
@@ -14,14 +14,6 @@ describe('truncate', () => {
     // the card text overflows the 1200×630 frame, the bug this guards.
     expect(out.length).toBeLessThanOrEqual(70);
     expect(out.endsWith('…')).toBe(true);
-  });
-});
-
-describe('escapeHtml', () => {
-  it('neutralises markup so a post title cannot break out of the card', () => {
-    expect(escapeHtml('<script>"x" & y')).toBe(
-      '&lt;script&gt;&quot;x&quot; &amp; y',
-    );
   });
 });
 
@@ -67,10 +59,12 @@ describe('buildBlogOgHtml', () => {
     expect(html).toContain('Ada Lovelace');
   });
 
-  it('escapes the title so markup in a post cannot inject into the card', () => {
+  it('strips tag characters from the title but keeps & raw for HTMLRewriter', () => {
     const html = buildBlogOgHtml({ ...base, title: '<b>x</b> & y' });
-    expect(html).toContain('&lt;b&gt;x&lt;/b&gt; &amp; y');
+    expect(html).toContain('bx/b & y');
     expect(html).not.toContain('<b>x</b>');
+    // An entity would paint literally on the card (text nodes are not decoded).
+    expect(html).not.toContain('&amp;');
   });
 
   it('truncates an overlong title into the frame', () => {
