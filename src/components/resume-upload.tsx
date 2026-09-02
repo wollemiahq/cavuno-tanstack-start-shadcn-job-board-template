@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
 import { FileText } from 'lucide-react';
@@ -28,6 +28,7 @@ import {
   toastActionError,
   toastActionReconciliationError,
 } from '@/lib/action-toast';
+import { useVisiblePoll } from '@/lib/use-visible-poll';
 import type { Resume } from '@cavuno/board';
 
 /**
@@ -41,6 +42,9 @@ const PARSE_STATUS_LABEL = {
   parsed: m.resumeUpload_parseStatusParsed,
   failed: m.resumeUpload_parseStatusFailed,
 } satisfies Record<string, () => string>;
+
+const PARSE_POLL_INTERVAL_MS = 4_000;
+const PARSE_POLL_TIMEOUT_MS = 3 * 60 * 1_000;
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return m.resumeUpload_fileSizeB({ value: bytes });
@@ -92,8 +96,29 @@ export function ResumeUpload({
   const [status, setStatus] = useState<
     'idle' | 'uploading' | 'deleting' | 'upload-error'
   >('idle');
+  const [parsePollTimedOut, setParsePollTimedOut] = useState(false);
   const storedFile = resume.hasResumeOnFile ? resume.file : null;
   const busy = status === 'uploading' || status === 'deleting';
+
+  const parsing = resume.parseStatus === 'parsing';
+  // Same visibility-aware, single-flight poll the messaging inbox uses: a
+  // hidden tab does not keep re-running the account loaders.
+  useVisiblePoll(
+    () => router.invalidate(),
+    PARSE_POLL_INTERVAL_MS,
+    parsing && !busy && !parsePollTimedOut,
+  );
+  useEffect(() => {
+    if (!parsing) return;
+    const timer = setTimeout(
+      () => setParsePollTimedOut(true),
+      PARSE_POLL_TIMEOUT_MS,
+    );
+    return () => {
+      clearTimeout(timer);
+      setParsePollTimedOut(false);
+    };
+  }, [parsing]);
 
   async function uploadFile(file: File) {
     setStatus('uploading');
@@ -163,7 +188,9 @@ export function ResumeUpload({
 
       {resume.parseStatus === 'parsing' ? (
         <p className="text-muted-foreground text-sm" role="status">
-          {m.resumeUpload_parsingText()}{' '}
+          {parsePollTimedOut
+            ? m.resumeUpload_stillParsingText()
+            : m.resumeUpload_parsingText()}{' '}
           <Button
             type="button"
             variant="link"

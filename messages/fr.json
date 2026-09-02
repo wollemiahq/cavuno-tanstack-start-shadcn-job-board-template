@@ -1636,6 +1636,7 @@
   "resumeUpload_parsingText": "Nous lisons votre CV pour préremplir votre profil.",
   "resumeUpload_refreshLabel": "Actualiser",
   "resumeUpload_replaceLabel": "Remplacer le CV",
+  "resumeUpload_stillParsingText": "Analyse toujours en cours. Actualisez pour vérifier.",
   "resumeUpload_uploadError": "Échec du téléversement — vérifiez le type et la taille du fichier.",
   "resumeUpload_uploadLabel": "Téléverser un CV",
   "resumeUpload_uploadingLabel": "Téléversement…",

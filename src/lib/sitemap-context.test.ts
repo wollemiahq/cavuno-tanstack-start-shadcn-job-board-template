@@ -1,4 +1,9 @@
-import { SITEMAP_CHUNK_SIZE, type SitemapBucket } from '@cavuno/board/sitemap';
+import {
+  SITEMAP_CHUNK_SIZE,
+  buildBucketUrls,
+  listedBuckets,
+  type SitemapBucket,
+} from '@cavuno/board/sitemap';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -141,5 +146,76 @@ describe('hosted-shaped sitemap context', () => {
       loadSitemapContext(board, ORIGIN, deps),
     ).resolves.toBeDefined();
     expect(deps.listedBuckets).toHaveBeenCalledTimes(2);
+  });
+
+  it('enumerates each jobs.list offset once across the three catalog buckets', async () => {
+    const PAGE = 100;
+    const TOTAL = 250;
+    const jobs = Array.from({ length: TOTAL }, (_, index) => ({
+      slug: `job-${index}`,
+      company: { slug: 'acme' },
+      categories: [{ slug: 'engineering' }],
+      skills: [{ slug: 'typescript' }],
+    }));
+    const jobsList = vi.fn(
+      async (query?: { limit?: number; offset?: number }) => {
+        const offset = query?.offset ?? 0;
+        const limit = query?.limit ?? PAGE;
+        return {
+          data: jobs.slice(offset, offset + limit),
+          count: TOTAL,
+        };
+      },
+    );
+    const emptyPage = { data: [], count: 0 };
+    // SAFETY: Catalog-walker fake — only the members `buildBucketUrls` reads.
+    const catalogBoard = {
+      context: async () => ({
+        language: 'en',
+        features: {
+          blog: false,
+          impressum: false,
+          talentDirectory: 'off',
+          employers: false,
+        },
+      }),
+      jobs: { list: jobsList },
+      companies: {
+        list: async () => emptyPage,
+        markets: async () => emptyPage,
+      },
+      salaries: {
+        companies: { list: async () => emptyPage },
+        titles: { list: async () => emptyPage },
+        skills: { list: async () => emptyPage },
+        locations: { list: async () => emptyPage },
+      },
+    } as BoardSdk;
+
+    const context = await buildSitemapContext(catalogBoard, ORIGIN, {
+      listedBuckets,
+      buildBucketUrls,
+    });
+
+    const offsets = jobsList.mock.calls.map(([query]) => query?.offset ?? 0);
+    expect(jobsList).toHaveBeenCalledTimes(3);
+    expect([...offsets].sort((a, b) => a - b)).toEqual([0, PAGE, PAGE * 2]);
+
+    const details = context.buckets.find(
+      (entry) => entry.bucket === 'jobs-details',
+    );
+    const categories = context.buckets.find(
+      (entry) => entry.bucket === 'jobs-categories',
+    );
+    const skills = context.buckets.find(
+      (entry) => entry.bucket === 'jobs-skills',
+    );
+    expect(details?.urls).toHaveLength(TOTAL);
+    expect(details?.urls).toContain(`${ORIGIN}/companies/acme/jobs/job-0`);
+    expect(details?.urls).toContain(
+      `${ORIGIN}/companies/acme/jobs/job-${TOTAL - 1}`,
+    );
+    expect(categories?.urls).toEqual([`${ORIGIN}/jobs/engineering`]);
+    expect(skills?.urls).toEqual([`${ORIGIN}/jobs/skills/typescript`]);
   });
 });

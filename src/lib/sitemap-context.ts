@@ -35,6 +35,10 @@ const DEFAULT_SOURCE: SitemapSource = { listedBuckets, buildBucketUrls };
 // responses. This template mirrors that ratio: each XML response is cached for
 // five minutes while the shared catalog snapshot lives for one hour.
 export const SITEMAP_RESPONSE_CACHE_CONTROL = 'public, max-age=300';
+// The platform gateway only edge-caches a 200 GET when this header is present.
+// It caps fresh at 300s, then serves stale while refreshing in the background
+// for up to 24h. Browser Cache-Control alone is a cold miss after 5 minutes.
+export const SITEMAP_EDGE_CACHE_CONTROL = 'public, max-age=300';
 export const SITEMAP_CONTEXT_TTL_MS = 60 * 60 * 1_000;
 const SITEMAP_CONTEXT_CACHE_VERSION = 'v1';
 
@@ -123,15 +127,56 @@ async function writePersistentContext(
   }
 }
 
+/**
+ * Per-build view of the SDK. `jobs-categories`, `jobs-skills`, and
+ * `jobs-details` each walk the full job catalog with the same
+ * `jobs.list({ limit, offset })` pages, so identical queries within one build
+ * share one in-flight promise. The cache is local to the returned view —
+ * never module scoped, never reused across builds. The SDK client is a plain
+ * object whose namespace methods close over the client (no `this`).
+ */
+function memoizingBoardView(board: BoardSdk): BoardSdk {
+  // Test doubles stub only the namespaces a case touches.
+  if (!board.jobs) return board;
+  const inflight = new Map<string, ReturnType<BoardSdk['jobs']['list']>>();
+  const list = board.jobs.list.bind(board.jobs);
+  return {
+    ...board,
+    jobs: {
+      ...board.jobs,
+      list: (query, ...rest) => {
+        const key = JSON.stringify(query ?? null);
+        const cached = inflight.get(key);
+        if (cached) return cached;
+        const pending = list(query, ...rest);
+        inflight.set(key, pending);
+        return pending;
+      },
+    },
+  };
+}
+
+/** 200 XML body with browser Cache-Control and the gateway edge-cache opt-in. */
+export function sitemapXmlResponse(xml: string): Response {
+  return new Response(xml, {
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': SITEMAP_RESPONSE_CACHE_CONTROL,
+      'Cloudflare-CDN-Cache-Control': SITEMAP_EDGE_CACHE_CONTROL,
+    },
+  });
+}
+
 export async function buildSitemapContext(
   board: BoardSdk,
   origin: string,
   source: SitemapSource = DEFAULT_SOURCE,
 ): Promise<SitemapContext> {
-  const buckets = await source.listedBuckets(board);
+  const catalog = memoizingBoardView(board);
+  const buckets = await source.listedBuckets(catalog);
   const built = await Promise.all(
     buckets.map(async (bucket): Promise<SitemapBucketContext> => {
-      const urls = await source.buildBucketUrls(board, origin, bucket);
+      const urls = await source.buildBucketUrls(catalog, origin, bucket);
       const chunks = chunk(urls, SITEMAP_CHUNK_SIZE);
 
       return {

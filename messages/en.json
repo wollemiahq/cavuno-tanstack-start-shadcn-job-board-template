@@ -1636,6 +1636,7 @@
   "resumeUpload_parsingText": "We’re reading your resume to pre-fill your profile.",
   "resumeUpload_refreshLabel": "Refresh",
   "resumeUpload_replaceLabel": "Replace resume",
+  "resumeUpload_stillParsingText": "Still parsing. Refresh to check again.",
   "resumeUpload_uploadError": "Upload failed — check the file type and size.",
   "resumeUpload_uploadLabel": "Upload resume",
   "resumeUpload_uploadingLabel": "Uploading…",

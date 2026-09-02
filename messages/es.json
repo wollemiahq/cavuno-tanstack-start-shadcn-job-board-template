@@ -1636,6 +1636,7 @@
   "resumeUpload_parsingText": "Estamos leyendo tu CV para rellenar tu perfil.",
   "resumeUpload_refreshLabel": "Actualizar",
   "resumeUpload_replaceLabel": "Sustituir CV",
+  "resumeUpload_stillParsingText": "Sigue procesándose. Actualiza para volver a comprobar.",
   "resumeUpload_uploadError": "Error al subir: comprueba el tipo y el tamaño del archivo.",
   "resumeUpload_uploadLabel": "Subir CV",
   "resumeUpload_uploadingLabel": "Subiendo…",
