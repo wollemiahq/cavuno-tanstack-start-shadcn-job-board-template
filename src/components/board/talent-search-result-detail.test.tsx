@@ -119,8 +119,8 @@ describe('TalentSearchResultDetail', () => {
     ).toBeNull();
   });
 
-  it('puts Save next to Message when the employer can source', () => {
-    const { container } = render(
+  it('puts Save next to Message when the employer can source', async () => {
+    const { container } = renderRouted(
       <TalentSearchResultDetail
         vm={profileVm}
         cta={messageCta}
@@ -128,6 +128,7 @@ describe('TalentSearchResultDetail', () => {
       />,
     );
 
+    await screen.findByRole('link', { name: 'Ada Lovelace' });
     const actions = container.querySelector<HTMLElement>(
       "[data-slot='talent-detail-actions']",
     );

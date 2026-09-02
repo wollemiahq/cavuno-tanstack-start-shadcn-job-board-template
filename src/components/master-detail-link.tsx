@@ -76,12 +76,14 @@ export function MasterDetailLink({
   openInNewTab = false,
   children,
   onClick: userOnClick,
+  preload,
   ...rest
 }: MasterDetailLinkProps): React.ReactElement {
   const preferListing = useContext(PreferListingWorkspaceContext);
   const onSelectInPlace = useContext(InPlaceListingSelectContext);
   const isDesktop = useDesktopMedia();
   const navigate = useNavigate();
+  const rewriteOnDesktop = preferListing || Boolean(onSelectInPlace);
 
   function onClick(event: ReactMouseEvent<HTMLAnchorElement>) {
     userOnClick?.(event);
@@ -109,7 +111,15 @@ export function MasterDetailLink({
     : {};
 
   return (
-    <Link {...destination.canonical} {...rest} onClick={onClick} {...newTabProps}>
+    <Link
+      {...destination.canonical}
+      {...rest}
+      // Canonical href is always rendered; desktop rewrite targets differ, so
+      // do not intent-preload the wrong route on hover.
+      preload={rewriteOnDesktop ? false : preload}
+      onClick={onClick}
+      {...newTabProps}
+    >
       {children}
     </Link>
   );

@@ -44,7 +44,8 @@ function PaginationItem({ ...props }: React.ComponentProps<'li'>) {
 
 type PaginationLinkProps = {
   isActive?: boolean;
-  href?: string;
+  /** Same-origin listing page URL; required so Link never falls back to `#`. */
+  href: string;
 } & Pick<VariantProps<typeof buttonVariants>, 'size'> &
   Omit<React.ComponentProps<typeof Link>, 'to' | 'size'>;
 
@@ -52,7 +53,7 @@ function PaginationLink({
   className,
   isActive,
   size = 'icon',
-  href = '#',
+  href,
   ...props
 }: PaginationLinkProps) {
   return (

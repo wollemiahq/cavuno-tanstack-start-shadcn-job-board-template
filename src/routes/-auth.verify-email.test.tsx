@@ -177,10 +177,10 @@ describe('/auth/verify-email search contract', () => {
     expect(mocks.verifyEmail).toHaveBeenCalledOnce();
   });
 
-  it('renders the verified card, not the route error title, after a successful verify', () => {
-    render(<VerifyEmailView status="verified" returnTo="/account" />);
+  it('renders the verified card, not the route error title, after a successful verify', async () => {
+    renderRouted(<VerifyEmailView status="verified" returnTo="/account" />);
     expect(
-      screen.getByRole('heading', { name: 'Email verified' }),
+      await screen.findByRole('heading', { name: 'Email verified' }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('heading', { name: 'Something went wrong' }),

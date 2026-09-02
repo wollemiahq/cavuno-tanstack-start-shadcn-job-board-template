@@ -163,9 +163,11 @@ describe('MasterDetailLink', () => {
 
   it('InPlaceListingSelect + desktop calls onSelect with the selection key', async () => {
     mockDesktop(true);
-    const onSelect = vi.fn((event: React.MouseEvent<HTMLAnchorElement>) => {
-      event.preventDefault();
-    });
+    const onSelect = vi.fn(
+      (event: React.MouseEvent<HTMLAnchorElement>, _resultId: string) => {
+        event.preventDefault();
+      },
+    );
     const { router } = renderLink(
       <InPlaceListingSelect onSelect={onSelect}>
         <MasterDetailLink destination={destination}>Staff</MasterDetailLink>
@@ -183,9 +185,11 @@ describe('MasterDetailLink', () => {
 
   it('InPlaceListingSelect wins over PreferListingWorkspace', async () => {
     mockDesktop(true);
-    const onSelect = vi.fn((event: React.MouseEvent<HTMLAnchorElement>) => {
-      event.preventDefault();
-    });
+    const onSelect = vi.fn(
+      (event: React.MouseEvent<HTMLAnchorElement>, _resultId: string) => {
+        event.preventDefault();
+      },
+    );
     const { router } = renderLink(
       <PreferListingWorkspace>
         <InPlaceListingSelect onSelect={onSelect}>

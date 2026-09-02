@@ -36,7 +36,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
 import {
-  candidateSignInHref,
+  candidateAuthSearch,
   candidateVerifyEmailHref,
 } from '@/lib/candidate-return-to';
 import {
@@ -313,7 +313,8 @@ export function ApplyButton({
     case 'sign-in':
       return (
         <Link
-          to={candidateSignInHref(returnTo)}
+          to="/auth/sign-in"
+          search={candidateAuthSearch(returnTo)}
           className={buttonVariants({ size: 'lg' })}
         >
           {m.applyButton_applyLabel()}
@@ -322,7 +323,8 @@ export function ApplyButton({
     case 'verify-email':
       return (
         <Link
-          to={candidateVerifyEmailHref(returnTo)}
+          to="/auth/verify-email-required"
+          search={candidateAuthSearch(returnTo)}
           className={buttonVariants({ size: 'lg' })}
         >
           {m.applyButton_applyLabel()}
@@ -426,12 +428,13 @@ export function ApplyButton({
           <Button type="submit" size="lg" disabled={state === 'applying'}>
             {state === 'applying' ? copy.applyingLabel : copy.guestSubmitLabel}
           </Button>
-          <a
-            href={candidateSignInHref(returnTo)}
+          <Link
+            to="/auth/sign-in"
+            search={candidateAuthSearch(returnTo)}
             className="text-muted-foreground text-sm underline"
           >
             {copy.guestSignInInsteadLabel}
-          </a>
+          </Link>
           {state === 'guest-not-allowed' ? (
             <p role="alert" className="text-destructive text-sm">
               {copy.guestNotAllowedError}

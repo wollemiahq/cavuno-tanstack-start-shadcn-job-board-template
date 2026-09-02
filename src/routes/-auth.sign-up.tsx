@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 
 import {
-  candidateSignInHref,
+  candidateAuthSearch,
   buildVerifyEmailRedirectPath,
   candidateOAuthReturnTo,
 } from '../lib/candidate-return-to';
@@ -84,7 +84,11 @@ export function SignUpView({
       footer={
         <p className="text-muted-foreground text-center text-sm">
           {m.authSignUp_alreadyHaveAccountText()}{' '}
-          <Link to={candidateSignInHref(returnTo)} className={textLinkClass}>
+          <Link
+            to="/auth/sign-in"
+            search={candidateAuthSearch(returnTo)}
+            className={textLinkClass}
+          >
             {m.authSignUp_signInLink()}
           </Link>
         </p>

@@ -4,7 +4,7 @@ import { AuthCard } from '../components/auth-form';
 import { resolvePostAuthConversionRedirect } from '../lib/board-datalayer-events';
 import {
   candidateReturnTo,
-  candidateSignInHref,
+  candidateAuthSearch,
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { exchangeOAuth } from '../server/auth';
@@ -93,7 +93,8 @@ export function OAuthCompleteView({
       }
     >
       <Link
-        to={candidateSignInHref(returnTo)}
+        to="/auth/sign-in"
+        search={candidateAuthSearch(returnTo)}
         className={cn(
           buttonVariants({ variant: 'outline', size: 'lg' }),
           'w-full',

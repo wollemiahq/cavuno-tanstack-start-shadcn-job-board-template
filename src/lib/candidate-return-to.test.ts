@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { candidateReturnTo } from './candidate-return-to';
+import {
+  candidateAuthSearch,
+  candidatePasswordResetSignInSearch,
+  candidateReturnTo,
+} from './candidate-return-to';
 
 describe('candidateReturnTo', () => {
   it('preserves complete internal job destinations', () => {
@@ -30,4 +34,20 @@ describe('candidateReturnTo', () => {
       expect(candidateReturnTo(returnTo)).toBe('/account');
     },
   );
+});
+
+describe('candidateAuthSearch', () => {
+  it('carries only the sanitized returnTo for Link search', () => {
+    expect(
+      candidateAuthSearch(
+        '/companies/acme/jobs/product-designer?ref=featured#apply',
+      ),
+    ).toEqual({
+      returnTo: '/companies/acme/jobs/product-designer?ref=featured#apply',
+    });
+    expect(candidatePasswordResetSignInSearch('/jobs')).toEqual({
+      returnTo: '/jobs',
+      reset: 'password',
+    });
+  });
 });

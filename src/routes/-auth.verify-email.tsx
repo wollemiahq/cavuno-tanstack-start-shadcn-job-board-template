@@ -8,7 +8,7 @@ import { Link, createFileRoute } from '@tanstack/react-router';
 import { AuthCard } from '../components/auth-form';
 import {
   candidateReturnTo,
-  candidateSignInHref,
+  candidateAuthSearch,
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { getSessionUserStrict } from '../server/account';
@@ -170,7 +170,8 @@ export function VerifyEmailView({
       }
     >
       <Link
-        to={candidateSignInHref(returnTo)}
+        to="/auth/sign-in"
+        search={candidateAuthSearch(returnTo)}
         className={cn(
           buttonVariants({ variant: 'outline', size: 'lg' }),
           'w-full',

@@ -10,8 +10,7 @@ import {
   FormError,
 } from '../components/auth-form';
 import {
-  candidateForgotPasswordHref,
-  candidateJoinHref,
+  candidateAuthSearch,
   candidateOAuthReturnTo,
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
@@ -243,7 +242,8 @@ export function SignInView({
             labelAction={
               <Link
                 className={textLinkClass}
-                to={candidateForgotPasswordHref(returnTo)}
+                to="/auth/forgot-password"
+                search={candidateAuthSearch(returnTo)}
               >
                 {m.authSignIn_forgotPasswordLink()}
               </Link>
@@ -295,7 +295,8 @@ export function SignInView({
         {m.authSignIn_noAccountText()}{' '}
         <Link
           className={cn(textLinkClass, 'inline-flex items-center gap-1')}
-          to={candidateJoinHref(returnTo)}
+          to="/auth/join"
+          search={candidateAuthSearch(returnTo)}
         >
           {m.authSignIn_getStartedLink()}
           <ArrowRight className="size-4 shrink-0" aria-hidden />

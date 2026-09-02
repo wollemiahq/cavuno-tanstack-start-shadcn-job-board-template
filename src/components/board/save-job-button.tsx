@@ -8,7 +8,7 @@ import { Bookmark, LoaderCircle } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { reconcileCommittedAction } from '@/lib/action-toast';
 import {
-  candidateSignInHref,
+  candidateAuthSearch,
   candidateVerifyEmailHref,
 } from '@/lib/candidate-return-to';
 import { cn } from '@/lib/utils';
@@ -79,7 +79,8 @@ export function SaveJobButton({
   if (!viewer) {
     return (
       <Link
-        to={candidateSignInHref(returnTo)}
+        to="/auth/sign-in"
+        search={candidateAuthSearch(returnTo)}
         data-presentation={presentation}
         className={cn(
           buttonVariants({
@@ -97,7 +98,8 @@ export function SaveJobButton({
   if (!viewer.emailVerified) {
     return (
       <Link
-        to={candidateVerifyEmailHref(returnTo)}
+        to="/auth/verify-email-required"
+        search={candidateAuthSearch(returnTo)}
         data-presentation={presentation}
         className={cn(
           buttonVariants({

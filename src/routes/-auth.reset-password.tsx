@@ -5,7 +5,7 @@ import { Link, createFileRoute } from '@tanstack/react-router';
 import { AuthCard, Field, FormError } from '../components/auth-form';
 import { boardErrorMessage } from '../lib/board-error-message';
 import {
-  candidateForgotPasswordHref,
+  candidateAuthSearch,
   candidatePasswordResetSignInHref,
   candidateReturnTo,
 } from '../lib/candidate-return-to';
@@ -74,7 +74,8 @@ export function ResetPasswordView({
         supportingText={m.authResetPassword_invalidBody()}
       >
         <Link
-          to={candidateForgotPasswordHref(returnTo)}
+          to="/auth/forgot-password"
+          search={candidateAuthSearch(returnTo)}
           className={cn(
             buttonVariants({ variant: 'outline', size: 'lg' }),
             'w-full',
