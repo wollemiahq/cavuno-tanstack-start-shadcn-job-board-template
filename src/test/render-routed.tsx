@@ -1,12 +1,12 @@
-import type { ReactElement } from "react";
+import type { ReactElement } from 'react';
 
 import {
   RouterProvider,
   createMemoryHistory,
   createRootRoute,
   createRouter,
-} from "@tanstack/react-router";
-import { act, render, type RenderResult } from "@testing-library/react";
+} from '@tanstack/react-router';
+import { act, render, type RenderResult } from '@testing-library/react';
 
 /**
  * Mount UI under a memory router so TanStack `Link` can read the router
@@ -18,7 +18,7 @@ export async function renderRouted(ui: ReactElement): Promise<RenderResult> {
   });
   const router = createRouter({
     routeTree: rootRoute,
-    history: createMemoryHistory({ initialEntries: ["/"] }),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
     defaultPendingMs: 0,
     defaultPendingMinMs: 0,
   });

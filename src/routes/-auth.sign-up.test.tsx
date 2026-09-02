@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, screen } from "@testing-library/react";
+import '@testing-library/jest-dom/vitest';
+import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { renderRouted } from "@/test/render-routed";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderRouted } from '@/test/render-routed';
 
 const mocks = {
   getOAuthAuthorizationUrl: vi.fn(),
@@ -11,10 +11,13 @@ const mocks = {
   signUp: vi.fn(),
 };
 
-import { SignUpView } from "./-auth.sign-up";
-import { Route } from "./auth.sign-up";
+import { SignUpView } from './-auth.sign-up';
+import { Route } from './auth.sign-up';
 
-import { buildVerifyEmailRedirectPath, candidateOAuthReturnTo } from "@/lib/candidate-return-to";
+import {
+  buildVerifyEmailRedirectPath,
+  candidateOAuthReturnTo,
+} from '@/lib/candidate-return-to';
 
 afterEach(() => {
   cleanup();
@@ -22,36 +25,38 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("/auth/sign-up search contract", () => {
-  it("validates a complete internal candidate destination", async () => {
+describe('/auth/sign-up search contract', () => {
+  it('validates a complete internal candidate destination', async () => {
     const validate = Route.options.validateSearch;
     if (!validate) {
-      throw new Error("The candidate sign-up route must validate search");
+      throw new Error('The candidate sign-up route must validate search');
     }
-    if ("parse" in validate) {
+    if ('parse' in validate) {
       expect(
         validate.parse({
-          returnTo: "/jobs?q=design&selectedJob=product-designer",
+          returnTo: '/jobs?q=design&selectedJob=product-designer',
         }),
       ).toEqual({
-        returnTo: "/jobs?q=design&selectedJob=product-designer",
+        returnTo: '/jobs?q=design&selectedJob=product-designer',
       });
       return;
     }
-    if ("~standard" in validate) {
-      throw new Error("The candidate sign-up route uses an unexpected schema");
+    if ('~standard' in validate) {
+      throw new Error('The candidate sign-up route uses an unexpected schema');
     }
 
-    expect(validate({ returnTo: "/jobs?q=design&selectedJob=product-designer" })).toEqual({
-      returnTo: "/jobs?q=design&selectedJob=product-designer",
+    expect(
+      validate({ returnTo: '/jobs?q=design&selectedJob=product-designer' }),
+    ).toEqual({
+      returnTo: '/jobs?q=design&selectedJob=product-designer',
     });
   });
 
-  it("offers the same Google and LinkedIn account entry points as sign-in", async () => {
-    const returnTo = "/jobs?q=design";
+  it('offers the same Google and LinkedIn account entry points as sign-in', async () => {
+    const returnTo = '/jobs?q=design';
     mocks.getOAuthAuthorizationUrl.mockResolvedValue({
       ok: false,
-      message: "OAuth unavailable in this test",
+      message: 'OAuth unavailable in this test',
     });
     await renderRouted(
       <SignUpView
@@ -63,28 +68,32 @@ describe("/auth/sign-up search contract", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
-    await screen.findByRole("alert");
-    fireEvent.click(screen.getByRole("button", { name: "Continue with LinkedIn" }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Continue with Google' }),
+    );
+    await screen.findByRole('alert');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Continue with LinkedIn' }),
+    );
 
     expect(mocks.getOAuthAuthorizationUrl).toHaveBeenNthCalledWith(1, {
       data: {
-        provider: "google",
-        returnTo: candidateOAuthReturnTo(returnTo, "sign_up", "google"),
+        provider: 'google',
+        returnTo: candidateOAuthReturnTo(returnTo, 'sign_up', 'google'),
       },
     });
     expect(mocks.getOAuthAuthorizationUrl).toHaveBeenNthCalledWith(2, {
       data: {
-        provider: "linkedin",
-        returnTo: candidateOAuthReturnTo(returnTo, "sign_up", "linkedin"),
+        provider: 'linkedin',
+        returnTo: candidateOAuthReturnTo(returnTo, 'sign_up', 'linkedin'),
       },
     });
   });
 
-  it("keeps verify-email conversion params on the post-registration fallback link", async () => {
-    const returnTo = "/jobs?q=design&selectedJob=product-designer";
+  it('keeps verify-email conversion params on the post-registration fallback link', async () => {
+    const returnTo = '/jobs?q=design&selectedJob=product-designer';
     mocks.signUp.mockResolvedValue({ ok: true });
-    mocks.invalidate.mockRejectedValue(new Error("refresh unavailable"));
+    mocks.invalidate.mockRejectedValue(new Error('refresh unavailable'));
     await renderRouted(
       <SignUpView
         boardName="Cavuno Jobs"
@@ -94,25 +103,27 @@ describe("/auth/sign-up search contract", () => {
         invalidate={mocks.invalidate}
       />,
     );
-    fireEvent.change(screen.getByLabelText("Name"), {
-      target: { value: "Ada Lovelace" },
+    fireEvent.change(screen.getByLabelText('Name'), {
+      target: { value: 'Ada Lovelace' },
     });
-    fireEvent.change(screen.getByLabelText("Email"), {
-      target: { value: "ada@example.com" },
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'ada@example.com' },
     });
-    fireEvent.change(screen.getByLabelText("Password"), {
-      target: { value: "correct-horse" },
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'correct-horse' },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
-    const action = await screen.findByRole("link", {
-      name: "Go to my account",
+    const action = await screen.findByRole('link', {
+      name: 'Go to my account',
     });
-    expect(action.getAttribute("href")).toBe(buildVerifyEmailRedirectPath(returnTo));
-    const url = new URL(action.getAttribute("href")!, "https://board.example");
-    expect(url.pathname).toBe("/auth/verify-email-required");
-    expect(url.searchParams.get("returnTo")).toBe(returnTo);
-    expect(url.searchParams.get("cavuno_auth")).toBe("sign_up");
-    expect(url.searchParams.get("cavuno_auth_method")).toBe("password");
+    expect(action.getAttribute('href')).toBe(
+      buildVerifyEmailRedirectPath(returnTo),
+    );
+    const url = new URL(action.getAttribute('href')!, 'https://board.example');
+    expect(url.pathname).toBe('/auth/verify-email-required');
+    expect(url.searchParams.get('returnTo')).toBe(returnTo);
+    expect(url.searchParams.get('cavuno_auth')).toBe('sign_up');
+    expect(url.searchParams.get('cavuno_auth_method')).toBe('password');
   });
 });
