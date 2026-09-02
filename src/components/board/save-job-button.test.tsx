@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -13,11 +20,37 @@ import { SaveJobButton } from './save-job-button';
 
 afterEach(cleanup);
 
+function renderSave(ui: React.ReactElement) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => ui,
+  });
+  const stubs = [
+    '/auth/sign-in',
+    '/auth/verify-email',
+    '/auth/verify-email-required',
+    '/saved-jobs',
+  ].map((path) =>
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path,
+      component: () => null,
+    }),
+  );
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute, ...stubs]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  return render(<RouterProvider router={router} />);
+}
+
 describe('SaveJobButton candidate continuation', () => {
-  it('keeps the complete job destination through candidate sign-in', () => {
+  it('keeps the complete job destination through candidate sign-in', async () => {
     const returnTo =
       '/jobs?q=design&location=Sydney&selectedJob=product-designer';
-    render(
+    renderSave(
       <SaveJobButton
         jobId="job-1"
         viewer={null}
@@ -32,7 +65,7 @@ describe('SaveJobButton candidate continuation', () => {
       />,
     );
 
-    const save = screen.getByRole('link', { name: 'Save' });
+    const save = await screen.findByRole('link', { name: 'Save' });
     const href = save.getAttribute('href');
     expect(href).not.toBeNull();
     const signInUrl = new URL(href!, 'https://board.example');
@@ -40,9 +73,9 @@ describe('SaveJobButton candidate continuation', () => {
     expect(signInUrl.searchParams.get('returnTo')).toBe(returnTo);
   });
 
-  it('keeps the complete job destination through email verification', () => {
+  it('keeps the complete job destination through email verification', async () => {
     const returnTo = '/companies/acme/jobs/product-designer#apply';
-    render(
+    renderSave(
       <SaveJobButton
         jobId="job-1"
         viewer={{ emailVerified: false }}
@@ -57,9 +90,9 @@ describe('SaveJobButton candidate continuation', () => {
       />,
     );
 
-    const href = screen
-      .getByRole('link', { name: 'Save' })
-      .getAttribute('href');
+    const href = (await screen.findByRole('link', { name: 'Save' })).getAttribute(
+      'href',
+    );
     expect(href).not.toBeNull();
     const verifyUrl = new URL(href!, 'https://board.example');
     expect(verifyUrl.pathname).toBe('/auth/verify-email-required');
@@ -67,7 +100,7 @@ describe('SaveJobButton candidate continuation', () => {
   });
 
   it('opens the canonical saved-jobs collection after saving', async () => {
-    render(
+    renderSave(
       <SaveJobButton
         jobId="job-1"
         viewer={{ emailVerified: true }}
@@ -82,7 +115,7 @@ describe('SaveJobButton candidate continuation', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Save' }));
 
     await waitFor(() => {
       expect(screen.getByRole('link', { name: 'Saved' })).toHaveAttribute(
@@ -94,7 +127,7 @@ describe('SaveJobButton candidate continuation', () => {
 
   it('offers the same save flow as a compact icon control for search cards', async () => {
     const onSave = vi.fn(async () => {});
-    render(
+    renderSave(
       <SaveJobButton
         jobId="job-1"
         viewer={{ emailVerified: true }}
@@ -110,7 +143,7 @@ describe('SaveJobButton candidate continuation', () => {
       />,
     );
 
-    const save = screen.getByRole('button', { name: 'Save job' });
+    const save = await screen.findByRole('button', { name: 'Save job' });
     fireEvent.click(save);
 
     await waitFor(() => {
@@ -127,7 +160,7 @@ describe('SaveJobButton candidate continuation', () => {
       .fn<() => Promise<void>>()
       .mockRejectedValueOnce(new Error('Temporary outage'))
       .mockResolvedValueOnce();
-    render(
+    renderSave(
       <SaveJobButton
         jobId="job-1"
         viewer={{ emailVerified: true }}
@@ -142,7 +175,7 @@ describe('SaveJobButton candidate continuation', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Save' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Could not save.',
     );

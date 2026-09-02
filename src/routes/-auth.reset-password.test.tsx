@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -39,8 +46,31 @@ function validateSearch(search: UrlSearchInput) {
   return validate(search);
 }
 
+
+function renderRouted(ui: React.ReactElement) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => ui,
+  });
+  const stubs = ['/auth/forgot-password', '/auth/sign-in'].map((path) =>
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path,
+      component: () => null,
+    }),
+  );
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute, ...stubs]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  return render(<RouterProvider router={router} />);
+}
+
+
 describe('/auth/reset-password continuation', () => {
-  it('retains a safe candidate destination with the reset token', () => {
+  it('retains a safe candidate destination with the reset token', async () => {
     expect(
       validateSearch({
         token: 'reset-token',
@@ -52,9 +82,9 @@ describe('/auth/reset-password continuation', () => {
     });
   });
 
-  it('keeps the destination when requesting a replacement reset link', () => {
+  it('keeps the destination when requesting a replacement reset link', async () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
-    render(
+    renderRouted(
       <ResetPasswordView
         token={undefined}
         returnTo={returnTo}
@@ -64,7 +94,7 @@ describe('/auth/reset-password continuation', () => {
     );
 
     expect(
-      screen.getByRole('link', { name: 'Request a new link' }),
+      await screen.findByRole('link', { name: 'Request a new link' }),
     ).toHaveAttribute(
       'href',
       `/auth/forgot-password?returnTo=${encodeURIComponent(returnTo)}`,
@@ -74,7 +104,7 @@ describe('/auth/reset-password continuation', () => {
   it('keeps the destination on sign-in after a successful reset', async () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
     mocks.resetPassword.mockResolvedValue({ ok: true });
-    const { container } = render(
+    const { container } = renderRouted(
       <ResetPasswordView
         token="reset-token"
         returnTo={returnTo}
@@ -82,10 +112,11 @@ describe('/auth/reset-password continuation', () => {
         redirectToSignIn={mocks.redirectToSignIn}
       />,
     );
+    await screen.findByRole('button');
     fireEvent.change(container.querySelector('input[name="password"]')!, {
       target: { value: 'strong-password' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Update password' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Update password' }));
 
     await waitFor(() =>
       expect(mocks.redirectToSignIn).toHaveBeenCalledWith(
@@ -96,7 +127,7 @@ describe('/auth/reset-password continuation', () => {
 
   it('recovers when the password update rejects unexpectedly', async () => {
     mocks.resetPassword.mockRejectedValue(new Error('network unavailable'));
-    const { container } = render(
+    const { container } = renderRouted(
       <ResetPasswordView
         token="reset-token"
         returnTo="/account"
@@ -104,16 +135,17 @@ describe('/auth/reset-password continuation', () => {
         redirectToSignIn={mocks.redirectToSignIn}
       />,
     );
+    await screen.findByRole('button');
     fireEvent.change(container.querySelector('input[name="password"]')!, {
       target: { value: 'strong-password' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Update password' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Update password' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Something went wrong. Try again.',
     );
     expect(
-      screen.getByRole('button', { name: 'Update password' }),
+      await screen.findByRole('button', { name: 'Update password' }),
     ).toBeEnabled();
   });
 
@@ -123,7 +155,7 @@ describe('/auth/reset-password continuation', () => {
       code: 'board_auth_token_expired',
       message: 'expired',
     });
-    const { container } = render(
+    const { container } = renderRouted(
       <ResetPasswordView
         token="expired-token"
         returnTo="/account"
@@ -131,10 +163,11 @@ describe('/auth/reset-password continuation', () => {
         redirectToSignIn={mocks.redirectToSignIn}
       />,
     );
+    await screen.findByRole('button');
     fireEvent.change(container.querySelector('input[name="password"]')!, {
       target: { value: 'strong-password' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Update password' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Update password' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'This link is invalid or has expired — request a new one.',

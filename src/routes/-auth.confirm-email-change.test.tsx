@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -23,9 +30,31 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+
+function renderRouted(ui: React.ReactElement) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => ui,
+  });
+  const stubs = ['/settings'].map((path) =>
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path,
+      component: () => null,
+    }),
+  );
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute, ...stubs]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  return render(<RouterProvider router={router} />);
+}
+
 describe('/auth/confirm-email-change', () => {
-  it('asks the visitor to request a new change when the token is missing', () => {
-    render(
+  it('asks the visitor to request a new change when the token is missing', async () => {
+    renderRouted(
       <ConfirmEmailChangeView
         token={undefined}
         confirmEmailChangeAction={mocks.confirmEmailChange}
@@ -33,7 +62,7 @@ describe('/auth/confirm-email-change', () => {
     );
 
     expect(
-      screen.getByRole('heading', {
+      await screen.findByRole('heading', {
         name: m.authConfirmEmailChange_invalidTitle(),
       }),
     ).toBeInTheDocument();
@@ -46,14 +75,14 @@ describe('/auth/confirm-email-change', () => {
 
   it('confirms a valid token and links back to settings', async () => {
     mocks.confirmEmailChange.mockResolvedValue({ ok: true });
-    render(
+    renderRouted(
       <ConfirmEmailChangeView
         token="tok"
         confirmEmailChangeAction={mocks.confirmEmailChange}
       />,
     );
     fireEvent.click(
-      screen.getByRole('button', {
+      await screen.findByRole('button', {
         name: m.authConfirmEmailChange_submitLabel(),
       }),
     );
@@ -81,14 +110,14 @@ describe('/auth/confirm-email-change', () => {
       code: 'invalid_token',
       message: 'expired',
     });
-    render(
+    renderRouted(
       <ConfirmEmailChangeView
         token="tok"
         confirmEmailChangeAction={mocks.confirmEmailChange}
       />,
     );
     fireEvent.click(
-      screen.getByRole('button', {
+      await screen.findByRole('button', {
         name: m.authConfirmEmailChange_submitLabel(),
       }),
     );
@@ -103,7 +132,7 @@ describe('/auth/confirm-email-change', () => {
       message: 'taken',
     });
     fireEvent.click(
-      screen.getByRole('button', {
+      await screen.findByRole('button', {
         name: m.authConfirmEmailChange_submitLabel(),
       }),
     );

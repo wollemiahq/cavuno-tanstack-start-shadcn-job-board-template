@@ -33,6 +33,40 @@ const tag = (name: string): JobCardVM['tags'][number] => ({
   href: `/jobs/skills/${name}`,
 });
 
+function renderCard(ui: React.ReactElement) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => ui,
+  });
+  const skillRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/jobs/skills/$skill',
+    component: () => null,
+  });
+  const jobRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/companies/$companySlug/jobs/$jobSlug',
+    component: () => null,
+  });
+  const jobsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/jobs',
+    component: () => null,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([
+      indexRoute,
+      skillRoute,
+      jobRoute,
+      jobsRoute,
+    ]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  return render(<RouterProvider router={router} />);
+}
+
 describe('JobCard stress invariants', () => {
   it('composes the owned shadcn Card surface', () => {
     render(<JobCard vm={baseVM} />);
@@ -42,8 +76,8 @@ describe('JobCard stress invariants', () => {
     ).not.toBeNull();
   });
 
-  it('caps skill tags at 3 and shows an overflow count for the rest', () => {
-    render(
+  it('caps skill tags at 3 and shows an overflow count for the rest', async () => {
+    renderCard(
       <JobCard
         vm={{
           ...baseVM,
@@ -51,16 +85,18 @@ describe('JobCard stress invariants', () => {
         }}
       />,
     );
-    expect(screen.getByText('React')).toBeTruthy();
+    expect(await screen.findByText('React')).toBeTruthy();
     expect(screen.getByText('Go')).toBeTruthy();
     expect(screen.getByText('Kubernetes')).toBeTruthy();
-    // The 4th and 5th collapse into a single honest overflow badge.
     expect(screen.queryByText('Postgres')).toBeNull();
     expect(screen.getByText('+2')).toBeTruthy();
   });
 
-  it('shows no overflow badge when three or fewer tags', () => {
-    render(<JobCard vm={{ ...baseVM, tags: ['React', 'Go'].map(tag) }} />);
+  it('shows no overflow badge when three or fewer tags', async () => {
+    renderCard(
+      <JobCard vm={{ ...baseVM, tags: ['React', 'Go'].map(tag) }} />,
+    );
+    await screen.findByText('React');
     expect(screen.queryByText(/^\+\d+$/)).toBeNull();
   });
 

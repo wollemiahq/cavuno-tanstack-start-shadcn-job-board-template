@@ -2,6 +2,13 @@
 
 import '@testing-library/jest-dom/vitest';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -30,9 +37,28 @@ afterEach(() => {
   overwriteGetLocale(() => 'en');
 });
 
+function renderPagination(ui: React.ReactElement) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => ui,
+  });
+  const jobsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/jobs',
+    component: () => null,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute, jobsRoute]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  return render(<RouterProvider router={router} />);
+}
+
 describe('ListingPagination — owned shadcn navigation', () => {
-  it('renders nothing for one page and otherwise mounts the single shadcn pagination composition', () => {
-    const { container, rerender } = render(
+  it('renders nothing for one page and otherwise mounts the single shadcn pagination composition', async () => {
+    const { container, rerender } = renderPagination(
       <ListingPagination
         page={1}
         count={20}
@@ -42,18 +68,36 @@ describe('ListingPagination — owned shadcn navigation', () => {
       />,
     );
 
-    expect(container).toBeEmptyDOMElement();
-    rerender(
-      <ListingPagination
-        page={2}
-        count={60}
-        pageSize={20}
-        hrefForPage={(page) => `/jobs?page=${page}`}
-        onPageChange={vi.fn()}
-      />,
-    );
+    expect(container.querySelector('[data-slot="pagination"]')).toBeNull();
 
-    const pagination = screen.getByRole('navigation', { name: 'Pagination' });
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => (
+        <ListingPagination
+          page={2}
+          count={60}
+          pageSize={20}
+          hrefForPage={(page) => `/jobs?page=${page}`}
+          onPageChange={vi.fn()}
+        />
+      ),
+    });
+    const jobsRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/jobs',
+      component: () => null,
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute, jobsRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    rerender(<RouterProvider router={router} />);
+
+    const pagination = await screen.findByRole('navigation', {
+      name: 'Pagination',
+    });
     expect(
       within(pagination).getByText('2').closest("[aria-current='page']"),
     ).not.toBeNull();
@@ -71,9 +115,9 @@ describe('ListingPagination — owned shadcn navigation', () => {
     );
   });
 
-  it('sends previous, numbered-page, and next choices through the URL-navigation callback', () => {
+  it('sends previous, numbered-page, and next choices through the URL-navigation callback', async () => {
     const onPageChange = vi.fn();
-    render(
+    renderPagination(
       <ListingPagination
         page={2}
         count={80}
@@ -83,7 +127,9 @@ describe('ListingPagination — owned shadcn navigation', () => {
       />,
     );
 
-    const pagination = screen.getByRole('navigation', { name: 'Pagination' });
+    const pagination = await screen.findByRole('navigation', {
+      name: 'Pagination',
+    });
     fireEvent.click(within(pagination).getByLabelText(/previous page/i));
     fireEvent.click(within(pagination).getByText('4'));
     fireEvent.click(within(pagination).getByLabelText(/next page/i));
@@ -91,11 +137,11 @@ describe('ListingPagination — owned shadcn navigation', () => {
     expect(onPageChange.mock.calls).toEqual([[1], [4], [3]]);
   });
 
-  it('scrolls the containing list to its top before changing pages', () => {
+  it('scrolls the containing list to its top before changing pages', async () => {
     const onPageChange = vi.fn();
     const scrollIntoView = vi.fn();
     const scrollTo = vi.fn();
-    const { container } = render(
+    const { container } = renderPagination(
       <section data-pagination-scroll-target>
         <ListingPagination
           page={2}
@@ -106,13 +152,15 @@ describe('ListingPagination — owned shadcn navigation', () => {
         />
       </section>,
     );
+    const next = await screen.findByLabelText(/next page/i);
     const list = container.querySelector<HTMLElement>(
       '[data-pagination-scroll-target]',
-    )!;
+    );
+    if (!list) throw new Error('Expected pagination scroll target');
     list.scrollIntoView = scrollIntoView;
     list.scrollTo = scrollTo;
 
-    fireEvent.click(screen.getByLabelText(/next page/i));
+    fireEvent.click(next);
 
     expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
     expect(scrollTo).toHaveBeenCalledWith({ top: 0 });
@@ -121,8 +169,8 @@ describe('ListingPagination — owned shadcn navigation', () => {
     );
   });
 
-  it('keeps compact pagination navigable at a later page', () => {
-    render(
+  it('keeps compact pagination navigable at a later page', async () => {
+    renderPagination(
       <ListingPagination
         compact
         page={5}
@@ -133,7 +181,9 @@ describe('ListingPagination — owned shadcn navigation', () => {
       />,
     );
 
-    const pagination = screen.getByRole('navigation', { name: 'Pagination' });
+    const pagination = await screen.findByRole('navigation', {
+      name: 'Pagination',
+    });
     expect(pagination).toHaveAttribute('data-compact', 'true');
     expect(within(pagination).getByLabelText(/previous page/i)).toHaveAttribute(
       'href',

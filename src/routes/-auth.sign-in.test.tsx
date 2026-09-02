@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -32,6 +39,32 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+function renderRouted(ui: React.ReactElement) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => ui,
+  });
+  const stubs = [
+    '/auth/sign-in',
+    '/auth/forgot-password',
+    '/auth/join',
+    '/auth/sign-up',
+  ].map((path) =>
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path,
+      component: () => null,
+    }),
+  );
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute, ...stubs]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  return render(<RouterProvider router={router} />);
+}
+
 function validateSearch(search: UrlSearchInput) {
   const validate = Route.options.validateSearch;
   if (!validate) {
@@ -48,7 +81,7 @@ function renderSignIn(
   returnTo: string,
   notice?: Parameters<typeof SignInView>[0]['notice'],
 ) {
-  return render(
+  return renderRouted(
     <SignInView
       returnTo={returnTo}
       notice={notice}
@@ -63,7 +96,7 @@ function renderSignIn(
 }
 
 describe('/auth/sign-in search contract', () => {
-  it('trusts a complete internal candidate destination', () => {
+  it('trusts a complete internal candidate destination', async () => {
     expect(
       validateSearch({
         returnTo: '/companies/acme/jobs/platform-engineer?q=robotics#apply',
@@ -73,7 +106,7 @@ describe('/auth/sign-in search contract', () => {
     });
   });
 
-  it('preserves only the bounded password-reset marker and renders its durable status', () => {
+  it('preserves only the bounded password-reset marker and renders its durable status', async () => {
     expect(
       validateSearch({
         returnTo: '/account',
@@ -83,7 +116,7 @@ describe('/auth/sign-in search contract', () => {
     expect(validateSearch({ reset: 'unexpected' })).toEqual({});
 
     renderSignIn('/account', 'password-reset');
-    expect(screen.getByRole('status')).toHaveTextContent(
+    expect(await screen.findByRole('status')).toHaveTextContent(
       'Your password was updated. Sign in with your new password.',
     );
   });
@@ -94,13 +127,14 @@ describe('/auth/sign-in search contract', () => {
     mocks.signIn.mockResolvedValue({ ok: true });
     mocks.invalidate.mockRejectedValue(new Error('refresh unavailable'));
     const { container } = renderSignIn(returnTo);
+    await screen.findByRole('button', { name: 'Sign in' });
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
     });
     fireEvent.change(container.querySelector('input[name="password"]')!, {
       target: { value: 'secret-password' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Sign in' }));
 
     await waitFor(() => {
       expect(mocks.assignLocation).toHaveBeenCalledWith(
@@ -114,25 +148,26 @@ describe('/auth/sign-in search contract', () => {
   it('recovers when password sign-in rejects unexpectedly', async () => {
     mocks.signIn.mockRejectedValue(new Error('network unavailable'));
     const { container } = renderSignIn('/account');
+    await screen.findByRole('button', { name: 'Sign in' });
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
     });
     fireEvent.change(container.querySelector('input[name="password"]')!, {
       target: { value: 'secret-password' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Sign in' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Something went wrong. Try again.',
     );
-    expect(screen.getByRole('button', { name: 'Sign in' })).toBeEnabled();
+    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeEnabled();
   });
 
   it('includes the validated destination in a requested magic link', async () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
     mocks.requestMagicLink.mockResolvedValue({ ok: true });
     const { container } = renderSignIn(returnTo);
-    fireEvent.click(screen.getByRole('radio', { name: 'Magic link' }));
+    fireEvent.click(await screen.findByRole('radio', { name: 'Magic link' }));
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
     });
@@ -176,7 +211,7 @@ describe('/auth/sign-in search contract', () => {
     });
     renderSignIn(returnTo);
     fireEvent.click(
-      screen.getByRole('button', { name: 'Continue with Google' }),
+      await screen.findByRole('button', { name: 'Continue with Google' }),
     );
 
     await waitFor(() => {
@@ -195,23 +230,23 @@ describe('/auth/sign-in search contract', () => {
     );
     renderSignIn('/account');
     fireEvent.click(
-      screen.getByRole('button', { name: 'Continue with Google' }),
+      await screen.findByRole('button', { name: 'Continue with Google' }),
     );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Something went wrong. Try again.',
     );
     expect(
-      screen.getByRole('button', { name: 'Continue with Google' }),
+      await screen.findByRole('button', { name: 'Continue with Google' }),
     ).toBeEnabled();
   });
 
-  it('keeps the destination on secondary auth links', () => {
+  it('keeps the destination on secondary auth links', async () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
     renderSignIn(returnTo);
 
     expect(
-      screen.getByRole('link', { name: 'Forgot password?' }),
+      await screen.findByRole('link', { name: 'Forgot password?' }),
     ).toHaveAttribute(
       'href',
       `/auth/forgot-password?returnTo=${encodeURIComponent(returnTo)}`,
@@ -219,16 +254,16 @@ describe('/auth/sign-in search contract', () => {
     // Get started goes to the join gate, not straight to the candidate form —
     // the role is unknown here, so `/auth/join` resolves it. The destination
     // still has to survive the hop.
-    expect(screen.getByRole('link', { name: 'Get started' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Get started' })).toHaveAttribute(
       'href',
       `/auth/join?returnTo=${encodeURIComponent(returnTo)}`,
     );
   });
 
-  it('uses native radio controls for keyboard-correct sign-in method selection', () => {
+  it('uses native radio controls for keyboard-correct sign-in method selection', async () => {
     const { container } = renderSignIn('/account');
-    const password = screen.getByRole('radio', { name: 'Password' });
-    const magic = screen.getByRole('radio', { name: 'Magic link' });
+    const password = await screen.findByRole('radio', { name: 'Password' });
+    const magic = await screen.findByRole('radio', { name: 'Magic link' });
     const nativeRadios = container.querySelectorAll('input[type="radio"]');
 
     expect(password).toHaveAttribute('aria-checked', 'true');

@@ -3,6 +3,13 @@ import type { ReactElement } from 'react';
 
 import { analytics as boardAnalytics } from '@cavuno/board/analytics';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -40,9 +47,31 @@ const analytics = {
 };
 
 function renderWithConversion(ui: ReactElement) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => ui,
+  });
+  const stubs = [
+    '/auth/sign-in',
+    '/auth/verify-email',
+    '/auth/verify-email-required',
+    '/account/applications',
+  ].map((path) =>
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path,
+      component: () => null,
+    }),
+  );
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute, ...stubs]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
   return render(
     <BoardConversionAnalyticsProvider boardSlug="acme" analytics={analytics}>
-      {ui}
+      <RouterProvider router={router} />
     </BoardConversionAnalyticsProvider>,
   );
 }
@@ -81,9 +110,9 @@ const base = {
 const futureExpiry = () => new Date(Date.now() + 60_000).toISOString();
 
 describe('ApplyButton authentication return paths', () => {
-  it('blocks Apply and offers a deliberate retry while private application state is unknown', () => {
+  it('blocks Apply and offers a deliberate retry while private application state is unknown', async () => {
     const onRetryApplicationState = vi.fn();
-    render(
+    renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="platform-engineer"
@@ -96,7 +125,7 @@ describe('ApplyButton authentication return paths', () => {
 
     expect(screen.queryByRole('button', { name: /^apply$/i })).toBeNull();
     fireEvent.click(
-      screen.getByRole('button', { name: 'Check application status' }),
+      await screen.findByRole('button', { name: 'Check application status' }),
     );
     expect(onRetryApplicationState).toHaveBeenCalledOnce();
   });
@@ -123,10 +152,10 @@ describe('ApplyButton authentication return paths', () => {
     ).toBeNull();
   });
 
-  it('keeps the complete job destination through candidate sign-in', () => {
+  it('keeps the complete job destination through candidate sign-in', async () => {
     const returnTo =
       '/companies/acme/jobs/platform-engineer?source=search#apply';
-    render(
+    renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="platform-engineer"
@@ -136,7 +165,7 @@ describe('ApplyButton authentication return paths', () => {
       />,
     );
 
-    const link = screen.getByRole('link', {
+    const link = await screen.findByRole('link', {
       name: m.applyButton_applyLabel(),
     });
     const href = link.getAttribute('href');
@@ -146,9 +175,9 @@ describe('ApplyButton authentication return paths', () => {
     expect(signInUrl.searchParams.get('returnTo')).toBe(returnTo);
   });
 
-  it('keeps the complete job destination through email verification', () => {
+  it('keeps the complete job destination through email verification', async () => {
     const returnTo = '/jobs?q=platform&selectedJob=platform-engineer';
-    render(
+    renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="platform-engineer"
@@ -158,7 +187,7 @@ describe('ApplyButton authentication return paths', () => {
       />,
     );
 
-    const link = screen.getByRole('link', {
+    const link = await screen.findByRole('link', {
       name: m.applyButton_applyLabel(),
     });
     const href = link.getAttribute('href');
@@ -176,7 +205,7 @@ describe('ApplyButton conversion tracking', () => {
     pushes = captureDataLayer();
   });
 
-  it('does not fire apply_click when the candidate must sign in first', () => {
+  it('does not fire apply_click when the candidate must sign in first', async () => {
     renderWithConversion(
       <ApplyButton
         {...base}
@@ -187,12 +216,12 @@ describe('ApplyButton conversion tracking', () => {
     );
 
     fireEvent.click(
-      screen.getByRole('link', { name: m.applyButton_applyLabel() }),
+      await screen.findByRole('link', { name: m.applyButton_applyLabel() }),
     );
     expect(pushes).toEqual([]);
   });
 
-  it('does not fire apply_click when the candidate must verify email first', () => {
+  it('does not fire apply_click when the candidate must verify email first', async () => {
     renderWithConversion(
       <ApplyButton
         {...base}
@@ -203,12 +232,12 @@ describe('ApplyButton conversion tracking', () => {
     );
 
     fireEvent.click(
-      screen.getByRole('link', { name: m.applyButton_applyLabel() }),
+      await screen.findByRole('link', { name: m.applyButton_applyLabel() }),
     );
     expect(pushes).toEqual([]);
   });
 
-  it('fires apply_click for a direct external apply link', () => {
+  it('fires apply_click for a direct external apply link', async () => {
     const track = vi
       .spyOn(boardAnalytics, 'track')
       .mockImplementation(() => undefined);
@@ -222,7 +251,7 @@ describe('ApplyButton conversion tracking', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('link', { name: /apply/i }));
+    fireEvent.click(await screen.findByRole('link', { name: /apply/i }));
     expect(pushes).toContainEqual({
       event: 'apply_click',
       job_id: 'job_test_1',
@@ -279,7 +308,7 @@ describe('ApplyButton conversion tracking', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
     await waitFor(() =>
       expect(navigateToExternalApply).toHaveBeenCalledWith(
         'https://employer.example/apply/42',
@@ -307,7 +336,7 @@ describe('ApplyButton conversion tracking', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
     await screen.findByRole('alertdialog');
     expect(pushes).toEqual([]);
   });
@@ -329,7 +358,7 @@ describe('ApplyButton conversion tracking', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
     await waitFor(() =>
       expect(pushes).toContainEqual({
         event: 'apply_submit',
@@ -352,9 +381,9 @@ describe('ApplyButton conversion tracking', () => {
 });
 
 describe('ApplyButton gateway external jobs', () => {
-  it('posts only the job slug to the board-local Apply route, with no provider or gateway link', () => {
+  it('posts only the job slug to the board-local Apply route, with no provider or gateway link', async () => {
     const sponsoredUrl = 'https://provider.example/raw-sponsored-destination';
-    const { container } = render(
+    const { container } = renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="sponsored-role"
@@ -364,6 +393,7 @@ describe('ApplyButton gateway external jobs', () => {
       />,
     );
 
+    await screen.findByRole('button', { name: /apply/i });
     const form = container.querySelector('form');
     expect(form?.getAttribute('method')).toBe('post');
     expect(form?.getAttribute('action')).toBe('/apply');
@@ -374,9 +404,9 @@ describe('ApplyButton gateway external jobs', () => {
     expect(container.querySelector('a')).toBeNull();
   });
 
-  it('disables the gateway Apply control after a submit to avoid a double click', () => {
+  it('disables the gateway Apply control after a submit to avoid a double click', async () => {
     requestGatewayApply.mockImplementation(() => new Promise(() => {}));
-    const { container } = render(
+    const { container } = renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="sponsored-role"
@@ -385,18 +415,22 @@ describe('ApplyButton gateway external jobs', () => {
         viewer={null}
       />,
     );
+    await screen.findByRole('button', { name: /apply/i });
     const form = container.querySelector('form');
     if (!form) throw new Error('Expected the apply control to render a form');
     fireEvent.submit(form);
     expect(
-      screen.getByRole<HTMLButtonElement>('button', { name: /applying/i })
-        .disabled,
+      (
+        await screen.findByRole<HTMLButtonElement>('button', {
+          name: /applying/i,
+        })
+      ).disabled,
     ).toBe(true);
   });
 
   it('shows a lazy location dialog when the canonical gateway returns the location code', async () => {
     requestGatewayApply.mockResolvedValue({ kind: 'location-denied' });
-    render(
+    renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="sponsored-role"
@@ -406,13 +440,13 @@ describe('ApplyButton gateway external jobs', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
 
     expect(
       await screen.findByRole('alertdialog', undefined, { timeout: 10_000 }),
     ).not.toBeNull();
     expect(
-      screen.getByRole('heading', {
+      await screen.findByRole('heading', {
         name: m.apply_locationUnavailableTitle(),
       }),
     ).not.toBeNull();
@@ -422,8 +456,8 @@ describe('ApplyButton gateway external jobs', () => {
     );
   });
 
-  it('keeps an ordinary direct external application as an employer link', () => {
-    render(
+  it('keeps an ordinary direct external application as an employer link', async () => {
+    renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="ordinary-role"
@@ -432,7 +466,7 @@ describe('ApplyButton gateway external jobs', () => {
         viewer={null}
       />,
     );
-    expect(screen.getByRole('link').getAttribute('href')).toBe(
+    expect((await screen.findByRole('link')).getAttribute('href')).toBe(
       'https://jobs.example/apply/ordinary',
     );
   });
@@ -442,7 +476,7 @@ describe('ApplyButton gateway external jobs', () => {
       kind: 'redirect',
       redirectUrl: 'https://employer.example/apply/42',
     });
-    render(
+    renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="sponsored-role"
@@ -452,7 +486,7 @@ describe('ApplyButton gateway external jobs', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
 
     await waitFor(() =>
       expect(navigateToExternalApply).toHaveBeenCalledWith(
@@ -490,7 +524,7 @@ describe('ApplyButton native approval flow', () => {
       order.push('apply');
     });
 
-    render(
+    renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="australia-role"
@@ -501,7 +535,7 @@ describe('ApplyButton native approval flow', () => {
         onApply={onApply}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
 
     await waitFor(() => expect(order).toEqual(['prepare', 'gateway', 'apply']));
     expect(onApply).toHaveBeenCalledWith(
@@ -519,7 +553,7 @@ describe('ApplyButton native approval flow', () => {
     );
     const onApply = vi.fn(async () => {});
 
-    render(
+    renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="australia-role"
@@ -536,7 +570,7 @@ describe('ApplyButton native approval flow', () => {
         onApply={onApply}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
 
     expect(await screen.findByRole('alertdialog')).not.toBeNull();
     expect(screen.getByText(m.apply_locationNotEligibleError())).not.toBeNull();
@@ -549,7 +583,7 @@ describe('ApplyButton native approval flow', () => {
     );
     const onApply = vi.fn(async () => {});
 
-    render(
+    renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="australia-role"
@@ -566,7 +600,7 @@ describe('ApplyButton native approval flow', () => {
         onApply={onApply}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
 
     await waitFor(() => expect(onApply).toHaveBeenCalledWith('australia-role'));
     expect(

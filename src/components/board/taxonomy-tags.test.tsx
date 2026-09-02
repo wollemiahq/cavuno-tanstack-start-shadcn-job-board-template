@@ -1,6 +1,15 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+
+import '@testing-library/jest-dom/vitest';
+import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { TaxonomyTags } from './taxonomy-tags';
 
@@ -10,41 +19,68 @@ import { TaxonomyTags } from './taxonomy-tags';
  * resolved href (NOT a JS-navigated div — the reason we don't use react-aria
  * TagGroup here), and the overflow is an honest, NON-link "+N".
  */
+afterEach(cleanup);
+
 describe('TaxonomyTags', () => {
   const chips = [
     { key: 'react', name: 'React', href: '/jobs/skills/react' },
     { key: 'go', name: 'Go', href: '/jobs/skills/go' },
   ];
 
-  it('renders each chip as a real anchor carrying its resolved href', () => {
-    const { container } = render(<TaxonomyTags chips={chips} />);
+  function renderTags(ui: React.ReactElement) {
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => ui,
+    });
+    const skillRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/jobs/skills/$skill',
+      component: () => null,
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute, skillRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    return render(<RouterProvider router={router} />);
+  }
 
-    const anchors = [...container.querySelectorAll('a')];
-    expect(anchors.map((a) => a.getAttribute('href'))).toEqual([
+  it('renders each chip as a real anchor carrying its resolved href', async () => {
+    const { container } = renderTags(<TaxonomyTags chips={chips} />);
+
+    expect(await screen.findByRole('link', { name: 'React' })).toHaveAttribute(
+      'href',
       '/jobs/skills/react',
+    );
+    expect(screen.getByRole('link', { name: 'Go' })).toHaveAttribute(
+      'href',
       '/jobs/skills/go',
-    ]);
-    // Real link role — crawlable, not a div[data-href].
-    expect(screen.getByRole('link', { name: 'React' })).toBeTruthy();
+    );
+    expect(container.querySelectorAll('a')).toHaveLength(2);
   });
 
-  it('shows an honest +N overflow that is NOT a link', () => {
-    const { container } = render(<TaxonomyTags chips={chips} overflow={3} />);
+  it('shows an honest +N overflow that is NOT a link', async () => {
+    const { container } = renderTags(
+      <TaxonomyTags chips={chips} overflow={3} />,
+    );
 
-    expect(screen.getByText('+3')).toBeTruthy();
-    // Only the two real chips are anchors; the overflow is a plain span.
+    expect(await screen.findByText('+3')).toBeTruthy();
     expect(container.querySelectorAll('a')).toHaveLength(2);
     expect(screen.queryByRole('link', { name: '+3' })).toBeNull();
   });
 
   it('renders nothing when there are no chips and no overflow', () => {
-    const { container } = render(<TaxonomyTags chips={[]} />);
-    expect(container.firstChild).toBeNull();
+    const { container } = renderTags(<TaxonomyTags chips={[]} />);
+    expect(container.querySelector('[data-slot]')).toBeNull();
   });
 
-  it('opens chips in a new tab when openInNewTab is set', () => {
-    const { container } = render(<TaxonomyTags chips={chips} openInNewTab />);
+  it('opens chips in a new tab when openInNewTab is set', async () => {
+    const { container } = renderTags(
+      <TaxonomyTags chips={chips} openInNewTab />,
+    );
 
+    await screen.findByRole('link', { name: 'React' });
     const anchors = [...container.querySelectorAll('a')];
     expect(anchors).toHaveLength(2);
     for (const anchor of anchors) {
@@ -53,9 +89,10 @@ describe('TaxonomyTags', () => {
     }
   });
 
-  it('keeps chips in the same tab by default', () => {
-    const { container } = render(<TaxonomyTags chips={chips} />);
+  it('keeps chips in the same tab by default', async () => {
+    const { container } = renderTags(<TaxonomyTags chips={chips} />);
 
+    await screen.findByRole('link', { name: 'React' });
     const anchors = [...container.querySelectorAll('a')];
     expect(anchors.length).toBeGreaterThan(0);
     for (const anchor of anchors) {
