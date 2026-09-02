@@ -189,7 +189,7 @@ describe('/auth/sign-in search contract', () => {
       message: 'No account exists for that email.',
     });
     const { container } = renderSignIn('/jobs');
-    fireEvent.click(screen.getByRole('radio', { name: 'Magic link' }));
+    fireEvent.click(await screen.findByRole('radio', { name: 'Magic link' }));
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'deleted@example.com' },
     });

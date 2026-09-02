@@ -267,7 +267,7 @@ describe('ApplyButton conversion tracking', () => {
     });
   });
 
-  it('fires first-party job_apply_click when companySlug is empty', () => {
+  it('fires first-party job_apply_click when companySlug is empty', async () => {
     const track = vi
       .spyOn(boardAnalytics, 'track')
       .mockImplementation(() => undefined);
@@ -282,7 +282,7 @@ describe('ApplyButton conversion tracking', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('link', { name: /apply/i }));
+    fireEvent.click(await screen.findByRole('link', { name: /apply/i }));
     expect(track).toHaveBeenCalledWith('job_apply_click', {
       jobId: 'job_test_1',
       jobSlug: 'ordinary-role',
@@ -615,8 +615,8 @@ describe('ApplyButton native approval flow', () => {
  * application outright on the 129 wall-off prod boards.
  */
 describe('ApplyButton guest apply', () => {
-  it('offers the guest form to an anonymous visitor when a submit handler is wired', () => {
-    render(
+  it('offers the guest form to an anonymous visitor when a submit handler is wired', async () => {
+    renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="platform-engineer"
@@ -629,14 +629,16 @@ describe('ApplyButton guest apply', () => {
       />,
     );
 
-    expect(screen.getByLabelText(m.apply_guestEmailLabel())).toBeTruthy();
+    expect(
+      await screen.findByLabelText(m.apply_guestEmailLabel()),
+    ).toBeTruthy();
     expect(
       screen.getByRole('button', { name: m.apply_guestSubmitLabel() }),
     ).toBeTruthy();
   });
 
-  it('falls back to the sign-in CTA when no guest handler is wired', () => {
-    render(
+  it('falls back to the sign-in CTA when no guest handler is wired', async () => {
+    renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="platform-engineer"
@@ -646,11 +648,13 @@ describe('ApplyButton guest apply', () => {
     );
 
     expect(screen.queryByLabelText(m.apply_guestEmailLabel())).toBeNull();
-    expect(screen.getByRole('link', { name: /apply/i })).toBeTruthy();
+    expect(
+      await screen.findByRole('link', { name: /apply/i }),
+    ).toBeTruthy();
   });
 
-  it('never offers the guest form once the registration wall is up', () => {
-    render(
+  it('never offers the guest form once the registration wall is up', async () => {
+    renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="platform-engineer"
@@ -665,7 +669,9 @@ describe('ApplyButton guest apply', () => {
     );
 
     expect(screen.queryByLabelText(m.apply_guestEmailLabel())).toBeNull();
-    expect(screen.getByRole('link', { name: /apply/i })).toBeTruthy();
+    expect(
+      await screen.findByRole('link', { name: /apply/i }),
+    ).toBeTruthy();
   });
 
   it('submits the guest details and confirms', async () => {
@@ -673,7 +679,7 @@ describe('ApplyButton guest apply', () => {
       ok: true as const,
       applicationId: 'app_1',
     }));
-    render(
+    renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="platform-engineer"
@@ -683,7 +689,7 @@ describe('ApplyButton guest apply', () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText(m.apply_guestNameLabel()), {
+    fireEvent.change(await screen.findByLabelText(m.apply_guestNameLabel()), {
       target: { value: '  Ada Lovelace  ' },
     });
     fireEvent.change(screen.getByLabelText(m.apply_guestEmailLabel()), {
@@ -705,7 +711,7 @@ describe('ApplyButton guest apply', () => {
   });
 
   it('surfaces the board-requires-an-account rejection distinctly', async () => {
-    render(
+    renderWithConversion(
       <ApplyButton
         {...base}
         jobSlug="platform-engineer"
@@ -718,7 +724,7 @@ describe('ApplyButton guest apply', () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText(m.apply_guestEmailLabel()), {
+    fireEvent.change(await screen.findByLabelText(m.apply_guestEmailLabel()), {
       target: { value: 'ada@example.com' },
     });
     fireEvent.click(

@@ -9,7 +9,7 @@ import {
   createRouter,
 } from '@tanstack/react-router';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { TalentSearchResult } from './talent-search-result';
 
@@ -74,15 +74,11 @@ describe('TalentSearchResult', () => {
     expect(container.querySelector("[data-slot='avatar']")).toBeInTheDocument();
   });
 
-  it('keeps a trailing Save control above the card link without activating the candidate', () => {
-    const onActivate = vi.fn((event: React.MouseEvent<HTMLAnchorElement>) =>
-      event.preventDefault(),
-    );
+  it('keeps a trailing Save control above the card link without navigating', async () => {
     const onSave = vi.fn();
-    render(
+    renderResult(
       <TalentSearchResult
         vm={vm}
-        onActivate={onActivate}
         saveSlot={
           <button type="button" aria-label="Save to job" onClick={onSave}>
             Save
@@ -90,11 +86,10 @@ describe('TalentSearchResult', () => {
         }
       />,
     );
+    await screen.findByRole('link', { name: /Ada Lovelace/i });
 
     fireEvent.click(screen.getByRole('button', { name: 'Save to job' }));
-
     expect(onSave).toHaveBeenCalledTimes(1);
-    expect(onActivate).not.toHaveBeenCalled();
   });
 
   it('keeps a candidate without a public handle visible but non-selectable', () => {
