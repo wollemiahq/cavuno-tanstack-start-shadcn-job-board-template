@@ -33,6 +33,9 @@ function publishedSitemapUnavailable(): BoardSdk['sitemap'] {
         message: 'Not Found',
       }),
     );
+  // SAFETY: the walker only ever calls `board.sitemap()` and
+  // `board.sitemap.entries()`; both reject with a 404 here, which is the
+  // full behaviour of the real client against an API without these routes.
   return Object.assign(notFound, { entries: notFound }) as BoardSdk['sitemap'];
 }
 
