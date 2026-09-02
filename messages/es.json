@@ -386,6 +386,7 @@
   "blog_searchPlaceholder": "Buscar publicaciones...",
   "blog_tagFilterAllLabel": "Todos",
   "blog_tagFilterLabel": "Temas",
+  "boardError_accountNotFoundText": "No existe una cuenta con ese correo. Crea una cuenta primero.",
   "boardError_alreadyOnPlanText": "Tu empresa ya tiene este plan.",
   "boardError_checkoutFailedText": "No se ha podido iniciar el pago. Inténtalo de nuevo en un momento.",
   "boardError_companyDeletionDisabledText": "La eliminación de empresas no está habilitada en este portal.",

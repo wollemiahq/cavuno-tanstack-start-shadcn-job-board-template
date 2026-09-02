@@ -386,6 +386,7 @@
   "blog_searchPlaceholder": "Rechercher un article...",
   "blog_tagFilterAllLabel": "Tous",
   "blog_tagFilterLabel": "Thèmes",
+  "boardError_accountNotFoundText": "Aucun compte n’existe avec cet e-mail. Créez d’abord un compte.",
   "boardError_alreadyOnPlanText": "Votre entreprise est déjà sur ce forfait.",
   "boardError_checkoutFailedText": "Le paiement n’a pas pu être lancé. Réessayez dans un instant.",
   "boardError_companyDeletionDisabledText": "La suppression d’entreprise n’est pas activée sur ce site.",

@@ -386,6 +386,7 @@
   "blog_searchPlaceholder": "Artikel suchen...",
   "blog_tagFilterAllLabel": "Alle",
   "blog_tagFilterLabel": "Themen",
+  "boardError_accountNotFoundText": "Für diese E-Mail existiert kein Konto. Erstelle zuerst ein Konto.",
   "boardError_alreadyOnPlanText": "Dein Unternehmen ist bereits auf diesem Plan.",
   "boardError_checkoutFailedText": "Der Bezahlvorgang konnte nicht gestartet werden. Versuche es gleich erneut.",
   "boardError_companyDeletionDisabledText": "Das Löschen von Unternehmen ist auf diesem Board nicht aktiviert.",

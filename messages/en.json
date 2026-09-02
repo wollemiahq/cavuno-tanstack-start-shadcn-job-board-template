@@ -386,6 +386,7 @@
   "blog_searchPlaceholder": "Search posts...",
   "blog_tagFilterAllLabel": "All",
   "blog_tagFilterLabel": "Topics",
+  "boardError_accountNotFoundText": "No account exists for that email. Create an account first.",
   "boardError_alreadyOnPlanText": "Your company is already on this plan.",
   "boardError_checkoutFailedText": "Checkout couldn’t be started. Try again in a moment.",
   "boardError_companyDeletionDisabledText": "Company deletion is not enabled on this board.",

@@ -394,6 +394,7 @@
   "blog_searchPlaceholder": "Szukaj wpisów...",
   "blog_tagFilterAllLabel": "Wszystkie",
   "blog_tagFilterLabel": "Tematy",
+  "boardError_accountNotFoundText": "Nie ma konta z tym adresem e-mail. Najpierw utwórz konto.",
   "boardError_alreadyOnPlanText": "Twoja firma ma już ten plan.",
   "boardError_checkoutFailedText": "Nie udało się rozpocząć płatności. Spróbuj ponownie za chwilę.",
   "boardError_companyDeletionDisabledText": "Usuwanie firm nie jest włączone na tym portalu.",

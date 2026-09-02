@@ -42,7 +42,7 @@ export function SignInView({
     | { ok: false; code: string; message: string }
   >;
   requestMagicLinkAction: (input: {
-    data: { email: string; returnTo?: string };
+    data: { email: string; returnTo?: string; intent?: 'sign_in' };
   }) => Promise<{ ok: true } | { ok: false; code: string; message: string }>;
   getOAuthAuthorizationUrlAction: (input: {
     data: { provider: 'google' | 'linkedin'; returnTo?: string };
@@ -100,7 +100,7 @@ export function SignInView({
               setError(null);
               try {
                 const result = await requestMagicLinkAction({
-                  data: { email: sentTo, returnTo },
+                  data: { email: sentTo, returnTo, intent: 'sign_in' },
                 });
                 if (!result.ok) setError(boardErrorMessage(result));
               } catch {
@@ -195,10 +195,14 @@ export function SignInView({
                       password: String(form.get('password')),
                     },
                   })
-                : await requestMagicLinkAction({
+                : // A sign-in form must never recreate a deleted account:
+                  // `sign_in` makes an unknown email a 404 instead of a
+                  // sign-up token.
+                  await requestMagicLinkAction({
                     data: {
                       email,
                       returnTo,
+                      intent: 'sign_in',
                     },
                   });
           } catch {
