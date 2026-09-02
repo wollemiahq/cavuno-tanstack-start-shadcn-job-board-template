@@ -31,6 +31,7 @@ function publishedSitemapUnavailable(): BoardSdk['sitemap'] {
         status: 404,
         code: 'unknown_error',
         message: 'Not Found',
+        raw: undefined,
       }),
     );
   // SAFETY: the walker only ever calls `board.sitemap()` and
