@@ -22,6 +22,7 @@ export const CODE_MESSAGES = {
   board_auth_token_expired: m.boardError_otpExpiredText,
   board_auth_email_taken: m.boardError_emailTakenText,
   board_auth_registration_disabled: m.boardError_registrationDisabledText,
+  board_auth_account_not_found: m.boardError_accountNotFoundText,
   auth_unauthenticated: m.boardError_unauthorizedText,
   auth_forbidden: m.boardError_forbiddenText,
   validation_bad_request: m.boardError_validationText,

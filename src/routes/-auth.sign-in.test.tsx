@@ -142,9 +142,30 @@ describe('/auth/sign-in search contract', () => {
 
     await waitFor(() => {
       expect(mocks.requestMagicLink).toHaveBeenCalledWith({
-        data: { email: 'candidate@example.com', returnTo },
+        data: { email: 'candidate@example.com', returnTo, intent: 'sign_in' },
       });
     });
+  });
+
+  it('tells an unknown email to create an account instead of minting a sign-up link', async () => {
+    mocks.requestMagicLink.mockResolvedValue({
+      ok: false,
+      code: 'board_auth_account_not_found',
+      message: 'No account exists for that email.',
+    });
+    const { container } = renderSignIn('/jobs');
+    fireEvent.click(screen.getByRole('radio', { name: 'Magic link' }));
+    fireEvent.change(container.querySelector('input[name="email"]')!, {
+      target: { value: 'deleted@example.com' },
+    });
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Send magic link' }),
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No account exists for that email. Create an account first.',
+    );
+    expect(screen.queryByText(/check your email/i)).not.toBeInTheDocument();
   });
 
   it('includes the validated destination in an OAuth request', async () => {

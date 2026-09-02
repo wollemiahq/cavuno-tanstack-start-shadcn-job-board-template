@@ -250,7 +250,9 @@ export const confirmEmailChange = createServerFn({ method: 'POST' })
   });
 
 export const requestMagicLink = createServerFn({ method: 'POST' })
-  .validator((input: { email: string; returnTo?: string }) => input)
+  .validator(
+    (input: { email: string; returnTo?: string; intent?: 'sign_in' }) => input,
+  )
   .handler(async ({ data }) => {
     try {
       await getBoard().auth.requestMagicLink(data);
