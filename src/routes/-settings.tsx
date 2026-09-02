@@ -220,12 +220,12 @@ export function SettingsPageView({
             <p className="text-muted-foreground text-sm">
               {m.settings_linkExpiredBody()}
             </p>
-            <a
-              href={candidateSignInHref('/settings')}
+            <Link
+              to={candidateSignInHref('/settings')}
               className={buttonVariants({ variant: 'outline' })}
             >
               {m.settings_signInLabel()}
-            </a>
+            </Link>
           </div>
         </PageContent>
       </Page>

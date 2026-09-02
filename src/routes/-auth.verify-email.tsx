@@ -3,7 +3,7 @@
  * The emailed link carries this deployment's origin when its publishable
  * key has a registered origin. Consumes ?token= on load.
  */
-import { createFileRoute } from '@tanstack/react-router';
+import { Link, createFileRoute } from '@tanstack/react-router';
 
 import { AuthCard } from '../components/auth-form';
 import {
@@ -150,12 +150,12 @@ export function VerifyEmailView({
         title={m.authVerifyEmail_verifiedTitle()}
         supportingText={m.authVerifyEmail_verifiedBody()}
       >
-        <a
-          href={returnTo}
+        <Link
+          to={returnTo}
           className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
         >
           {m.authVerifyEmail_goToAccountLabel()}
-        </a>
+        </Link>
       </AuthCard>
     );
   }
@@ -169,15 +169,15 @@ export function VerifyEmailView({
           : m.authVerifyEmail_invalidBody()
       }
     >
-      <a
-        href={candidateSignInHref(returnTo)}
+      <Link
+        to={candidateSignInHref(returnTo)}
         className={cn(
           buttonVariants({ variant: 'outline', size: 'lg' }),
           'w-full',
         )}
       >
         {m.authVerifyEmail_signInLabel()}
-      </a>
+      </Link>
     </AuthCard>
   );
 }

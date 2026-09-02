@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { Link, createFileRoute, redirect } from '@tanstack/react-router';
 
 import { AuthCard } from '../components/auth-form';
 import { resolvePostAuthConversionRedirect } from '../lib/board-datalayer-events';
@@ -92,15 +92,15 @@ export function OAuthCompleteView({
           : m.authOauthComplete_invalidBody()
       }
     >
-      <a
-        href={candidateSignInHref(returnTo)}
+      <Link
+        to={candidateSignInHref(returnTo)}
         className={cn(
           buttonVariants({ variant: 'outline', size: 'lg' }),
           'w-full',
         )}
       >
         {m.authOauthComplete_signInLabel()}
-      </a>
+      </Link>
     </AuthCard>
   );
 }

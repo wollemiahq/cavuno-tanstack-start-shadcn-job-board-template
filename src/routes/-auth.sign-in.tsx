@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { Link } from '@tanstack/react-router';
 import { ArrowRight } from 'lucide-react';
 
 import {
@@ -240,12 +241,12 @@ export function SignInView({
             type="password"
             autoComplete="current-password"
             labelAction={
-              <a
+              <Link
                 className={textLinkClass}
-                href={candidateForgotPasswordHref(returnTo)}
+                to={candidateForgotPasswordHref(returnTo)}
               >
                 {m.authSignIn_forgotPasswordLink()}
-              </a>
+              </Link>
             }
           />
         ) : null}
@@ -292,13 +293,13 @@ export function SignInView({
           points read as one pair rather than two conventions. */}
       <p className="text-muted-foreground text-center text-sm">
         {m.authSignIn_noAccountText()}{' '}
-        <a
+        <Link
           className={cn(textLinkClass, 'inline-flex items-center gap-1')}
-          href={candidateJoinHref(returnTo)}
+          to={candidateJoinHref(returnTo)}
         >
           {m.authSignIn_getStartedLink()}
           <ArrowRight className="size-4 shrink-0" aria-hidden />
-        </a>
+        </Link>
       </p>
     </AuthCard>
   );

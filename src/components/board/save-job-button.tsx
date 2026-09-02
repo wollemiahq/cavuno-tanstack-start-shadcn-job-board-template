@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { Link } from '@tanstack/react-router';
 import { Bookmark, LoaderCircle } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -77,8 +78,8 @@ export function SaveJobButton({
 
   if (!viewer) {
     return (
-      <a
-        href={candidateSignInHref(returnTo)}
+      <Link
+        to={candidateSignInHref(returnTo)}
         data-presentation={presentation}
         className={cn(
           buttonVariants({
@@ -89,14 +90,14 @@ export function SaveJobButton({
         )}
       >
         {controlLabel(labels.save, 'idle')}
-      </a>
+      </Link>
     );
   }
 
   if (!viewer.emailVerified) {
     return (
-      <a
-        href={candidateVerifyEmailHref(returnTo)}
+      <Link
+        to={candidateVerifyEmailHref(returnTo)}
         data-presentation={presentation}
         className={cn(
           buttonVariants({
@@ -107,14 +108,14 @@ export function SaveJobButton({
         )}
       >
         {controlLabel(labels.save, 'idle')}
-      </a>
+      </Link>
     );
   }
 
   if (state === 'saved') {
     return (
-      <a
-        href="/saved-jobs"
+      <Link
+        to="/saved-jobs"
         data-presentation={presentation}
         className={cn(
           buttonVariants({
@@ -125,7 +126,7 @@ export function SaveJobButton({
         )}
       >
         {controlLabel(labels.saved, 'saved')}
-      </a>
+      </Link>
     );
   }
 

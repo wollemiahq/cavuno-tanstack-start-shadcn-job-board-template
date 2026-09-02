@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { createFileRoute } from '@tanstack/react-router';
+import { Link, createFileRoute } from '@tanstack/react-router';
 
 import { AuthCard, Field, FormError } from '../components/auth-form';
 import { boardErrorMessage } from '../lib/board-error-message';
@@ -73,15 +73,15 @@ export function ResetPasswordView({
         title={m.authResetPassword_invalidTitle()}
         supportingText={m.authResetPassword_invalidBody()}
       >
-        <a
-          href={candidateForgotPasswordHref(returnTo)}
+        <Link
+          to={candidateForgotPasswordHref(returnTo)}
           className={cn(
             buttonVariants({ variant: 'outline', size: 'lg' }),
             'w-full',
           )}
         >
           {m.authResetPassword_requestNewLinkLabel()}
-        </a>
+        </Link>
       </AuthCard>
     );
   }
