@@ -1,16 +1,11 @@
 // @vitest-environment jsdom
-import '@testing-library/jest-dom/vitest';
-import {
-  act,
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import "@testing-library/jest-dom/vitest";
+import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 
-import type { AccessGrant, PaywallOffer } from '@cavuno/board';
+import { renderRouted } from "@/test/render-routed";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+import type { AccessGrant, PaywallOffer } from "@cavuno/board";
 
 interface AccessLoaderData {
   grant: AccessGrant;
@@ -36,10 +31,10 @@ const mocks = {
   useSearch: vi.fn<() => AccessSearch>(),
 };
 
-import { AccessPageView } from './-access-page';
+import { AccessPageView } from "./-access-page";
 
 const grant = {
-  object: 'access_grant',
+  object: "access_grant",
   hasAccess: false,
   status: null,
   offerType: null,
@@ -49,32 +44,32 @@ const grant = {
 } satisfies AccessGrant;
 
 const offer = {
-  object: 'paywall_offer',
-  offerKey: 'monthly',
-  label: 'Monthly access',
-  billingLabel: 'per month',
+  object: "paywall_offer",
+  offerKey: "monthly",
+  label: "Monthly access",
+  billingLabel: "per month",
   amountCents: 1200,
-  currency: 'usd',
-  offerType: 'recurring',
-  intervalUnit: 'month',
+  currency: "usd",
+  offerType: "recurring",
+  intervalUnit: "month",
   intervalCount: 1,
   isDefault: true,
 } satisfies PaywallOffer;
 
 const annualOffer = {
   ...offer,
-  offerKey: 'annual',
-  label: 'Annual access',
-  billingLabel: 'per year',
+  offerKey: "annual",
+  label: "Annual access",
+  billingLabel: "per year",
   amountCents: 12000,
-  intervalUnit: 'year',
+  intervalUnit: "year",
   isDefault: false,
 } satisfies PaywallOffer;
 
-function renderAccessPage() {
+async function renderAccessPage() {
   const loaderData = mocks.useLoaderData();
   const search = mocks.useSearch();
-  return render(
+  return await renderRouted(
     <AccessPageView
       grant={loaderData.grant}
       offers={loaderData.offers}
@@ -97,15 +92,15 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe('candidate access actions', () => {
-  it('disables every offer while checkout is starting', async () => {
+describe("candidate access actions", () => {
+  it("disables every offer while checkout is starting", async () => {
     mocks.useLoaderData.mockReturnValue({
       grant,
       offers: [offer, annualOffer],
     });
     mocks.useSearch.mockReturnValue({ session_id: undefined });
     let rejectCheckout: (reason?: Error) => void = () => {
-      throw new Error('Checkout rejection was not initialized');
+      throw new Error("Checkout rejection was not initialized");
     };
     mocks.startCheckout.mockImplementation(
       () =>
@@ -114,204 +109,190 @@ describe('candidate access actions', () => {
         }),
     );
 
-    renderAccessPage();
-    fireEvent.click(screen.getAllByRole('button', { name: 'Choose' })[0]!);
+    await renderAccessPage();
+    fireEvent.click(screen.getAllByRole("button", { name: "Choose" })[0]!);
 
-    for (const button of screen.getAllByRole('button')) {
+    for (const button of screen.getAllByRole("button")) {
       expect(button).toBeDisabled();
     }
 
     await act(async () => {
-      rejectCheckout(new Error('checkout unavailable'));
+      rejectCheckout(new Error("checkout unavailable"));
     });
   });
 
-  it('fires a recoverable error toast and re-enables checkout when session creation fails', async () => {
+  it("fires a recoverable error toast and re-enables checkout when session creation fails", async () => {
     mocks.useLoaderData.mockReturnValue({
       grant,
       offers: [offer],
     });
     mocks.useSearch.mockReturnValue({ session_id: undefined });
-    mocks.startCheckout.mockRejectedValue(new Error('checkout unavailable'));
+    mocks.startCheckout.mockRejectedValue(new Error("checkout unavailable"));
 
-    renderAccessPage();
-    fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
+    await renderAccessPage();
+    fireEvent.click(screen.getByRole("button", { name: "Choose" }));
 
     await waitFor(() => {
       expect(mocks.toastActionError).toHaveBeenCalled();
-      expect(screen.getByRole('button', { name: 'Choose' })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "Choose" })).toBeEnabled();
     });
   });
 
-  it('fires a recoverable error toast and re-enables the billing portal after failure', async () => {
+  it("fires a recoverable error toast and re-enables the billing portal after failure", async () => {
     mocks.useLoaderData.mockReturnValue({
       grant: {
         ...grant,
         hasAccess: true,
-        status: 'active',
-        offerType: 'recurring',
+        status: "active",
+        offerType: "recurring",
       },
       offers: [],
     });
     mocks.useSearch.mockReturnValue({ session_id: undefined });
-    mocks.openBillingPortal.mockRejectedValue(new Error('portal unavailable'));
+    mocks.openBillingPortal.mockRejectedValue(new Error("portal unavailable"));
 
-    renderAccessPage();
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Manage subscription' }),
-    );
+    await renderAccessPage();
+    fireEvent.click(screen.getByRole("button", { name: "Manage subscription" }));
 
     await waitFor(() => {
       expect(mocks.toastActionError).toHaveBeenCalled();
-      expect(
-        screen.getByRole('button', { name: 'Manage subscription' }),
-      ).toBeEnabled();
+      expect(screen.getByRole("button", { name: "Manage subscription" })).toBeEnabled();
     });
   });
 
-  it('renders a plan option per offer for a viewer without access', () => {
+  it("renders a plan option per offer for a viewer without access", async () => {
     mocks.useLoaderData.mockReturnValue({
       grant,
       offers: [offer, annualOffer],
     });
     mocks.useSearch.mockReturnValue({ session_id: undefined });
 
-    renderAccessPage();
+    await renderAccessPage();
 
-    expect(screen.getAllByRole('button', { name: 'Choose' })).toHaveLength(2);
-    expect(
-      screen.queryByRole('button', { name: 'Manage subscription' }),
-    ).toBeNull();
+    expect(screen.getAllByRole("button", { name: "Choose" })).toHaveLength(2);
+    expect(screen.queryByRole("button", { name: "Manage subscription" })).toBeNull();
   });
 
-  it('opens the billing portal for a recurring subscription', async () => {
+  it("opens the billing portal for a recurring subscription", async () => {
     mocks.useLoaderData.mockReturnValue({
       grant: {
         ...grant,
         hasAccess: true,
-        status: 'active',
-        offerType: 'recurring',
+        status: "active",
+        offerType: "recurring",
       },
       offers: [],
     });
     mocks.useSearch.mockReturnValue({ session_id: undefined });
     mocks.openBillingPortal.mockResolvedValue({
-      url: 'https://billing.example/session',
+      url: "https://billing.example/session",
     });
 
     const originalLocation = window.location;
-    Object.defineProperty(window, 'location', {
+    Object.defineProperty(window, "location", {
       configurable: true,
       writable: true,
-      value: { href: '' },
+      value: { href: "" },
     });
 
-    renderAccessPage();
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Manage subscription' }),
-    );
+    await renderAccessPage();
+    fireEvent.click(screen.getByRole("button", { name: "Manage subscription" }));
 
     await waitFor(() => {
       expect(mocks.openBillingPortal).toHaveBeenCalledWith({
-        data: { returnPath: '/account/access' },
+        data: { returnPath: "/account/access" },
       });
-      expect(window.location.href).toBe('https://billing.example/session');
+      expect(window.location.href).toBe("https://billing.example/session");
     });
 
-    Object.defineProperty(window, 'location', {
+    Object.defineProperty(window, "location", {
       configurable: true,
       writable: true,
       value: originalLocation,
     });
   });
 
-  it('shows the lifetime entitlement with no billing portal', () => {
+  it("shows the lifetime entitlement with no billing portal", async () => {
     mocks.useLoaderData.mockReturnValue({
       grant: {
         ...grant,
         hasAccess: true,
-        status: 'active',
-        offerType: 'lifetime',
+        status: "active",
+        offerType: "lifetime",
       },
       offers: [],
     });
     mocks.useSearch.mockReturnValue({ session_id: undefined });
 
-    renderAccessPage();
+    await renderAccessPage();
 
     // A lifetime grant cannot be managed via the portal, and it is an entitled
     // state rather than the plan picker.
-    expect(
-      screen.queryByRole('button', { name: 'Manage subscription' }),
-    ).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Choose' })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Manage subscription" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Choose" })).toBeNull();
   });
 
-  it('turns a rejected grant poll into an error toast with a refresh action', async () => {
+  it("turns a rejected grant poll into an error toast with a refresh action", async () => {
     vi.useFakeTimers();
     mocks.useLoaderData.mockReturnValue({ grant, offers: [] });
     mocks.useSearch.mockReturnValue({
-      session_id: 'checkout-session',
+      session_id: "checkout-session",
     });
-    mocks.getAccessGrant.mockRejectedValue(new Error('grant unavailable'));
+    mocks.getAccessGrant.mockRejectedValue(new Error("grant unavailable"));
 
-    renderAccessPage();
-    expect(screen.getByText('Confirming your purchase…')).toBeVisible();
+    await renderAccessPage();
+    expect(screen.getByText("Confirming your purchase…")).toBeVisible();
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2000);
     });
 
     expect(mocks.toastActionError).toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Refresh' })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Refresh" })).toBeEnabled();
   });
 
-  it('returns the buyer to the captured path once the grant is confirmed', async () => {
+  it("returns the buyer to the captured path once the grant is confirmed", async () => {
     mocks.useLoaderData.mockReturnValue({
       grant: {
         ...grant,
         hasAccess: true,
-        status: 'active',
-        offerType: 'recurring',
+        status: "active",
+        offerType: "recurring",
       },
       offers: [],
     });
     mocks.useSearch.mockReturnValue({
-      session_id: 'checkout-session',
-      returnTo: '/jobs?q=react',
+      session_id: "checkout-session",
+      returnTo: "/jobs?q=react",
     });
 
-    renderAccessPage();
+    await renderAccessPage();
 
     await waitFor(() => {
-      expect(mocks.navigate).toHaveBeenCalledWith('/jobs?q=react');
+      expect(mocks.navigate).toHaveBeenCalledWith("/jobs?q=react");
     });
     // The bridge state shows instead of parking on the entitled surface.
-    expect(
-      screen.queryByRole('button', { name: 'Manage subscription' }),
-    ).toBeNull();
+    expect(screen.queryByRole("button", { name: "Manage subscription" })).toBeNull();
   });
 
-  it('ignores an unsafe returnTo and keeps the buyer on the entitled surface', () => {
+  it("ignores an unsafe returnTo and keeps the buyer on the entitled surface", async () => {
     mocks.useLoaderData.mockReturnValue({
       grant: {
         ...grant,
         hasAccess: true,
-        status: 'active',
-        offerType: 'recurring',
+        status: "active",
+        offerType: "recurring",
       },
       offers: [],
     });
     mocks.useSearch.mockReturnValue({
-      session_id: 'checkout-session',
-      returnTo: 'https://evil.example/phish',
+      session_id: "checkout-session",
+      returnTo: "https://evil.example/phish",
     });
 
-    renderAccessPage();
+    await renderAccessPage();
 
     expect(mocks.navigate).not.toHaveBeenCalled();
-    expect(
-      screen.getByRole('button', { name: 'Manage subscription' }),
-    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Manage subscription" })).toBeVisible();
   });
 });
