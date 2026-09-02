@@ -3,9 +3,9 @@ import {
   renderSitemapIndex,
   renderUrlset,
 } from '@cavuno/board/sitemap';
-import { getRequest } from '@tanstack/react-start/server';
 
 import { getPrimaryBoard } from '../lib/board';
+import { readPublicOrigin } from '../lib/public-origin';
 import {
   LOCALIZED_BUCKETS,
   renderUrlsetWithAlternates,
@@ -26,7 +26,13 @@ const notFoundResponse = () => new Response('Not found', { status: 404 });
 
 export type SitemapHandlerDependencies = {
   getPrimaryBoard: () => BoardSdk;
-  getRequest: () => Request;
+  /**
+   * The board's published canonical origin — sitemap `<loc>`s must name the
+   * same origin the pages canonicalize to (ADR-0098), so a board served on
+   * `slug.cavuno.app` while a custom domain is active lists the custom
+   * domain, exactly as the hosted board's sitemap does.
+   */
+  readPublicOrigin: () => Promise<string>;
   loadSitemapContext: (
     board: BoardSdk,
     origin: string,
@@ -35,7 +41,7 @@ export type SitemapHandlerDependencies = {
 
 const defaultDependencies: SitemapHandlerDependencies = {
   getPrimaryBoard,
-  getRequest,
+  readPublicOrigin,
   loadSitemapContext,
 };
 
@@ -43,7 +49,7 @@ export function createSitemapIndexHandler(
   dependencies: SitemapHandlerDependencies = defaultDependencies,
 ) {
   return async () => {
-    const origin = new URL(dependencies.getRequest().url).origin;
+    const origin = await dependencies.readPublicOrigin();
     // Public discovery is deployment truth, never the preview data-source
     // cookie a signed-in operator may carry.
     const board = dependencies.getPrimaryBoard();
@@ -60,7 +66,7 @@ export function createSitemapFileHandler(
     const parsed = parseBucketFilename(params.file);
     if (!parsed) return notFoundResponse();
 
-    const origin = new URL(dependencies.getRequest().url).origin;
+    const origin = await dependencies.readPublicOrigin();
     const context = await dependencies.loadSitemapContext(
       dependencies.getPrimaryBoard(),
       origin,

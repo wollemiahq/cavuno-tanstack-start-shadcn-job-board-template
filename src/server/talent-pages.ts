@@ -4,12 +4,12 @@
 import { isNotFound } from '@cavuno/board';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { createServerFn } from '@tanstack/react-start';
-import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { headTitle } from '../lib/page-title';
+import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
 import { readTalentDirectory } from './talent-directory-read';
@@ -38,8 +38,10 @@ function asJsonObjects<T>(value: T): JsonObject[] {
 
 async function seoBase() {
   // Same isolate memo as root/company/job pages — do not re-hit board.context().
-  const boardContext = await readBoardContext();
-  const origin = new URL(getRequest().url).origin;
+  const [boardContext, origin] = await Promise.all([
+    readBoardContext(),
+    readPublicOrigin(),
+  ]);
   return {
     boardName: boardContext.name,
     language: boardContext.language,

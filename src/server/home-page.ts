@@ -12,12 +12,12 @@
  */
 import { listingJsonLd } from '@cavuno/board/seo';
 import { createServerFn } from '@tanstack/react-start';
-import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { headTitle } from '../lib/page-title';
+import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
 import { readTalentDirectory } from './talent-directory-read';
@@ -116,7 +116,7 @@ export const getHomePage = createServerFn({ method: 'GET' })
           (related): related is RelatedSearch => related.type === 'category',
         );
 
-      const origin = new URL(getRequest().url).origin;
+      const origin = await readPublicOrigin();
       const seo = {
         boardName: boardContext.name,
         language: boardContext.language,

@@ -1,13 +1,13 @@
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
-import { getRequest } from '@tanstack/react-start/server';
 
 import { resolveLegalContent, resolveLegalEntity } from '../content/legal';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { LEGAL_PAGES, type LegalPageViewModel } from '../lib/legal';
 import { headTitle } from '../lib/page-title';
+import { readPublicOrigin } from '../lib/public-origin';
 import { gatedRead } from './board-access';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
@@ -61,7 +61,7 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
         throw notFound();
       }
 
-      const origin = new URL(getRequest().url).origin;
+      const origin = await readPublicOrigin();
       const seo = {
         boardName: boardContext.name,
         language: boardContext.language,

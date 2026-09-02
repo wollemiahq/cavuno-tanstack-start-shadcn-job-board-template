@@ -13,6 +13,7 @@ const listJobs = vi.fn<JobsRssBoard['jobs']['list']>();
 const dependencies: JobsRssDependencies = {
   getRequest: () => new Request('https://board.example/jobs/rss.xml'),
   getBoard: () => ({ context, jobs: { list: listJobs } }),
+  readPublicOrigin: async () => 'https://board.example',
 };
 const getRssResponse = createJobsRssHandler(dependencies);
 

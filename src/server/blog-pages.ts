@@ -16,13 +16,13 @@ import {
 } from '@cavuno/board/seo';
 import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
-import { getRequest } from '@tanstack/react-start/server';
 
 import { BLOG_PAGE_SIZE } from '../lib/blog';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { headTitle } from '../lib/page-title';
+import { readPublicOrigin } from '../lib/public-origin';
 import { selectRelatedPosts } from '../lib/related-posts';
 import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
@@ -43,8 +43,10 @@ function asJsonObjects<T>(value: T): JsonObject[] {
 }
 
 async function seoBase() {
-  const boardContext = await readBoardContext();
-  const origin = new URL(getRequest().url).origin;
+  const [boardContext, origin] = await Promise.all([
+    readBoardContext(),
+    readPublicOrigin(),
+  ]);
   return {
     boardName: boardContext.name,
     language: boardContext.language,
