@@ -6,15 +6,11 @@
  * title, an optional excerpt, and the author + published date footer.
  *
  * satori constraint: every `<div>` with children needs `display:flex`.
+ *
+ * Text goes through `ogText`, NOT an HTML entity escaper: workers-og's
+ * HTMLRewriter hands text nodes over raw, so `&amp;` would paint literally.
  */
-
-export function escapeHtml(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
-}
+import { ogStyleValue, ogText, ogUrlAttr } from './og-text';
 
 /** Cap to `max` glyphs (ellipsis included), so text never overflows the frame. */
 export function truncate(value: string, max: number): string {
@@ -39,15 +35,15 @@ export interface BlogOgCard {
 }
 
 export function buildBlogOgHtml(card: BlogOgCard): string {
-  const fontFamily = escapeHtml(card.fontFamily ?? 'Inter');
-  const title = escapeHtml(truncate(card.title, 70));
-  const excerpt = card.excerpt ? escapeHtml(truncate(card.excerpt, 140)) : null;
-  const boardName = escapeHtml(card.boardName);
-  const blogLabel = escapeHtml(card.blogLabel);
-  const authorName = card.authorName ? escapeHtml(card.authorName) : null;
-  const dateLabel = card.dateLabel ? escapeHtml(card.dateLabel) : null;
-  const avatar = card.authorAvatarUrl ? escapeHtml(card.authorAvatarUrl) : null;
-  const themeColor = escapeHtml(card.themeColor);
+  const fontFamily = ogStyleValue(card.fontFamily ?? 'Inter');
+  const title = ogText(truncate(card.title, 70));
+  const excerpt = card.excerpt ? ogText(truncate(card.excerpt, 140)) : null;
+  const boardName = ogText(card.boardName);
+  const blogLabel = ogText(card.blogLabel);
+  const authorName = card.authorName ? ogText(card.authorName) : null;
+  const dateLabel = card.dateLabel ? ogText(card.dateLabel) : null;
+  const avatar = card.authorAvatarUrl ? ogUrlAttr(card.authorAvatarUrl) : null;
+  const themeColor = ogStyleValue(card.themeColor);
 
   const footerLines = [
     authorName

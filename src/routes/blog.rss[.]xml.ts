@@ -3,6 +3,7 @@ import { blogPostPath } from '@cavuno/board/paths';
 import { createFileRoute } from '@tanstack/react-router';
 import { getRequest } from '@tanstack/react-start/server';
 
+import { blogDisabledResponse, isBlogEnabled } from '../lib/blog-enabled';
 import { getBoard } from '../lib/board';
 import { m } from '../paraglide/messages';
 import { baseLocale, getLocale, isLocale } from '../paraglide/runtime';
@@ -57,6 +58,8 @@ export const Route = createFileRoute('/blog/rss.xml')({
         if (getLocale() !== baseLocale) {
           return Response.redirect(`${origin}/blog/rss.xml`, 308);
         }
+        // A blog-off board has no archive, so it has no feed either.
+        if (!(await isBlogEnabled())) return blogDisabledResponse();
         const board = getBoard();
         const [context, posts] = await Promise.all([
           board.context(),

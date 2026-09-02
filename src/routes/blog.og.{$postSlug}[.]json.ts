@@ -2,6 +2,7 @@ import { isNotFound } from '@cavuno/board';
 /** Blog OG JSON payload — hosted-parity data route for /blog/og/:slug.json. */
 import { createFileRoute, notFound } from '@tanstack/react-router';
 
+import { blogDisabledResponse, isBlogEnabled } from '../lib/blog-enabled';
 import { getBoard } from '../lib/board';
 import { themeTokens } from '../theme/resolved';
 
@@ -11,6 +12,9 @@ export const Route = createFileRoute('/blog/og/{$postSlug}.json')({
   server: {
     handlers: {
       GET: async ({ params }) => {
+        // A blog-off board has no post pages, so it has no OG payloads.
+        if (!(await isBlogEnabled())) return blogDisabledResponse();
+
         let post;
         try {
           post = await getBoard().blog.posts.retrieve(params.postSlug);
