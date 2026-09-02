@@ -25,7 +25,10 @@ const serverAssets = resolve(root, 'dist/server/assets');
 // route increment larger while reducing that route's total first load. Never
 // raise a budget merely to make CI green.
 const BUDGETS = {
-  shell: { raw: 730_000, gzip: 220_000 },
+  // Official `cn` package (#116): full-table engine is ~1.5 KiB raw smaller
+  // than clsx+tailwind-merge but ~1.7 KiB gzip larger in the shared shell
+  // (213.6 → 215.3). Keep raw; lift gzip to measured + small headroom.
+  shell: { raw: 730_000, gzip: 222_000 },
   styles: { raw: 260_000, gzip: 40_000 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {

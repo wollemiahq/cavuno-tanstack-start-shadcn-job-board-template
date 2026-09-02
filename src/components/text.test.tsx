@@ -147,7 +147,7 @@ describe('Text — size / bold tune body-family only', () => {
       const el = screen.getByText(`sized-${size}`);
       expect(el.className).toContain(token);
       // The size wins: the default text-base is not left dangling alongside a
-      // different size (cn/tailwind-merge dedupes the font-size group).
+      // different size (cn dedupes the font-size group).
       if (token !== 'text-base')
         expect(el.className).not.toContain('text-base');
       cleanup();
@@ -181,7 +181,7 @@ describe('Text — truncate + className escape hatch', () => {
     const el = screen.getByText('override');
     expect(el.className).toContain('mb-6');
     expect(el.className).toContain('text-destructive');
-    // cn (tailwind-merge) drops the losing default text color.
+    // cn drops the losing default text color.
     expect(el.className).not.toContain('text-foreground');
     // The locked size is untouched.
     expect(el.className).toContain('text-2xl');
