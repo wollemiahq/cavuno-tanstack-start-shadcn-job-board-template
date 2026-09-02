@@ -53,10 +53,11 @@ type MasterDetailLinkProps = {
   destination: MasterDetailDestination;
   openInNewTab?: boolean;
   children: ReactNode;
-} & Omit<
-  React.ComponentProps<typeof Link>,
-  'to' | 'params' | 'search' | 'href' | 'children'
->;
+  className?: string;
+  'aria-current'?: React.ComponentProps<'a'>['aria-current'];
+  onClick?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
+  preload?: React.ComponentProps<typeof Link>['preload'];
+};
 
 function isModifiedClick(event: ReactMouseEvent<HTMLAnchorElement>) {
   return (
@@ -78,7 +79,8 @@ export function MasterDetailLink({
   children,
   onClick: userOnClick,
   preload,
-  ...rest
+  className,
+  'aria-current': ariaCurrent,
 }: MasterDetailLinkProps): React.ReactElement {
   const preferListing = useContext(PreferListingWorkspaceContext);
   const onSelectInPlace = useContext(InPlaceListingSelectContext);
@@ -110,7 +112,8 @@ export function MasterDetailLink({
   return (
     <Link
       {...destination.canonical}
-      {...rest}
+      className={className}
+      aria-current={ariaCurrent}
       // Canonical href is always rendered; desktop rewrite targets differ, so
       // do not intent-preload the wrong route on hover.
       preload={rewriteOnDesktop ? false : preload}
