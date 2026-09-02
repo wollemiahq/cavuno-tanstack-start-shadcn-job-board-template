@@ -168,8 +168,9 @@ describe('hosted-shaped sitemap context', () => {
       },
     );
     const emptyPage = { data: [], count: 0 };
-    // SAFETY: Catalog-walker fake — only the members `buildBucketUrls` reads.
-    const catalogBoard = {
+    // SAFETY: Catalog-walker fake — only the members `buildBucketUrls` reads
+    // are assigned onto the same empty-board stub the other cases use.
+    const catalogBoard: BoardSdk = Object.assign({} as BoardSdk, {
       context: async () => ({
         language: 'en',
         features: {
@@ -190,7 +191,7 @@ describe('hosted-shaped sitemap context', () => {
         skills: { list: async () => emptyPage },
         locations: { list: async () => emptyPage },
       },
-    } as BoardSdk;
+    });
 
     const context = await buildSitemapContext(catalogBoard, ORIGIN, {
       listedBuckets,

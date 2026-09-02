@@ -48,12 +48,11 @@ beforeEach(() => {
 
 describe('sitemap XML cache headers', () => {
   it('mounts GET handlers on both sitemap routes', () => {
-    expect(SitemapIndexRoute.options.server?.handlers?.GET).toEqual(
-      expect.any(Function),
-    );
-    expect(SitemapFileRoute.options.server?.handlers?.GET).toEqual(
-      expect.any(Function),
-    );
+    // `handlers` may also be a builder function, so narrow like -go.test.ts.
+    const index = SitemapIndexRoute.options.server?.handlers;
+    const file = SitemapFileRoute.options.server?.handlers;
+    expect(index && 'GET' in index && index.GET).toEqual(expect.any(Function));
+    expect(file && 'GET' in file && file.GET).toEqual(expect.any(Function));
   });
 
   it('sends browser and gateway edge cache headers on the index 200', async () => {
