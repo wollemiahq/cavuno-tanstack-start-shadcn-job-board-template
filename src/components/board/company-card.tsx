@@ -1,6 +1,5 @@
-import { Link } from '@tanstack/react-router';
-
 import { CompanyAvatar } from '@/components/board/company-avatar';
+import { MasterDetailLink } from '@/components/master-detail-link';
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
@@ -8,6 +7,7 @@ import {
   CardDescription,
   CardTitle,
 } from '@/components/ui/card';
+import { companyDestination } from '@/lib/master-detail-destination';
 /**
  * One company as an owned shadcn card row. Pure markup: the
  * companies index, the market-scoped browse, and the similar-companies
@@ -59,13 +59,12 @@ export function CompanyCard({
         <div className="min-w-0 flex-1">
           <CardTitle>
             <h3 dir="auto">
-              <Link
-                to="/companies/$companySlug"
-                params={{ companySlug }}
+              <MasterDetailLink
+                destination={companyDestination({ companySlug })}
                 className="text-foreground hover:text-primary focus-visible:ring-ring rounded-sm transition-colors hover:no-underline focus-visible:ring-2 focus-visible:outline-none"
               >
                 {name}
-              </Link>
+              </MasterDetailLink>
             </h3>
           </CardTitle>
           {descriptionText ? (

@@ -32,6 +32,7 @@ import {
 } from '@/components/candidate-route-state';
 import { EmptyState } from '@/components/empty-state';
 import { Page } from '@/components/layout/page';
+import { InPlaceListingSelect } from '@/components/master-detail-link';
 import { useRootSession } from '@/components/root-session';
 import {
   SearchResultDetail,
@@ -258,44 +259,42 @@ function JobMatchesPage() {
                     className="space-y-4 pe-4 pt-4 pb-4"
                   >
                     {header}
-                    <div className="space-y-3">
-                      {rows.map(({ item, vm }) => (
-                        <JobSearchResult
-                          key={item.job.id}
-                          vm={vm}
-                          selected={vm.jobSlug === selection.selectedId}
-                          onActivate={
-                            vm.jobSlug
-                              ? (event) =>
-                                  selection.onResultActivate(event, vm.jobSlug!)
-                              : undefined
-                          }
-                          saveSlot={
-                            <SaveJobButton
-                              jobId={item.job.id}
-                              viewer={
-                                user
-                                  ? { emailVerified: user.emailVerified }
-                                  : null
-                              }
-                              returnTo="/matches"
-                              presentation="icon"
-                              labels={{
-                                save: m.companyJobDetail_saveJobLabel(),
-                                saving: m.companyJobDetail_savingLabel(),
-                                saved:
-                                  m.companyJobDetail_savedViewInAccountLabel(),
-                                error: m.saveJobButton_errorText(),
-                              }}
-                              onSave={async (jobId) => {
-                                await saveJob({ data: { jobId } });
-                              }}
-                              onSaved={() => router.invalidate()}
-                            />
-                          }
-                        />
-                      ))}
-                    </div>
+                    <InPlaceListingSelect
+                      onSelect={selection.onResultActivate}
+                    >
+                      <div className="space-y-3">
+                        {rows.map(({ item, vm }) => (
+                          <JobSearchResult
+                            key={item.job.id}
+                            vm={vm}
+                            selected={vm.jobSlug === selection.selectedId}
+                            saveSlot={
+                              <SaveJobButton
+                                jobId={item.job.id}
+                                viewer={
+                                  user
+                                    ? { emailVerified: user.emailVerified }
+                                    : null
+                                }
+                                returnTo="/matches"
+                                presentation="icon"
+                                labels={{
+                                  save: m.companyJobDetail_saveJobLabel(),
+                                  saving: m.companyJobDetail_savingLabel(),
+                                  saved:
+                                    m.companyJobDetail_savedViewInAccountLabel(),
+                                  error: m.saveJobButton_errorText(),
+                                }}
+                                onSave={async (jobId) => {
+                                  await saveJob({ data: { jobId } });
+                                }}
+                                onSaved={() => router.invalidate()}
+                              />
+                            }
+                          />
+                        ))}
+                      </div>
+                    </InPlaceListingSelect>
                   </div>
                 </SearchResultsList>
               }

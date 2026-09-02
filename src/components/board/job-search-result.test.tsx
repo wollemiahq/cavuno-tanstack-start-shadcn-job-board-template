@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
+import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -8,8 +15,6 @@ import { JobSearchResult } from './job-search-result';
 
 import { makeJobCardVM } from '@/test/fixtures';
 
-// Fixture values are NOT formatter-shaped (see src/test/fixtures.ts);
-// assertions reference the VM fields symbolically.
 const vm = makeJobCardVM({
   id: 'job-1',
   title: 'Product designer',
@@ -26,16 +31,37 @@ const vm = makeJobCardVM({
 
 afterEach(cleanup);
 
+function renderResult(ui: React.ReactElement) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => ui,
+  });
+  const jobRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/companies/$companySlug/jobs/$jobSlug',
+    component: () => <h1>Job</h1>,
+  });
+  const jobsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/jobs',
+    component: () => <h1>Jobs</h1>,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute, jobRoute, jobsRoute]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  return render(<RouterProvider router={router} />);
+}
+
 describe('JobSearchResult', () => {
-  it('uses an owned Card with a canonical title anchor and no taxonomy clutter', () => {
-    const onActivate = vi.fn((event: React.MouseEvent<HTMLAnchorElement>) =>
-      event.preventDefault(),
-    );
-    const { container } = render(
-      <JobSearchResult vm={vm} selected onActivate={onActivate} />,
+  it('uses an owned Card with a canonical title Link and no taxonomy clutter', async () => {
+    const { container } = renderResult(
+      <JobSearchResult vm={vm} selected />,
     );
 
-    const link = screen.getByRole('link', { name: /Product designer/i });
+    const link = await screen.findByRole('link', { name: /Product designer/i });
     expect(link).toHaveAttribute(
       'href',
       '/companies/acme/jobs/product-designer',
@@ -51,12 +77,11 @@ describe('JobSearchResult', () => {
     expect(screen.queryByRole('link', { name: 'Design' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Figma' })).toBeNull();
     expect(container.querySelector('a a')).toBeNull();
-    fireEvent.click(link);
-    expect(onActivate).toHaveBeenCalledTimes(1);
   });
 
-  it('renders honest compact metadata and a transparent paid-placement label', () => {
-    render(<JobSearchResult vm={vm} />);
+  it('renders honest compact metadata and a transparent paid-placement label', async () => {
+    renderResult(<JobSearchResult vm={vm} />);
+    await screen.findByRole('link', { name: /Product designer/i });
 
     expect(screen.getByText(vm.companyName!)).toBeVisible();
     expect(screen.getByText(vm.locationLabel)).toBeVisible();
@@ -66,8 +91,8 @@ describe('JobSearchResult', () => {
     expect(screen.getByText(vm.featuredLabel)).toBeVisible();
   });
 
-  it('keeps essential location while omitting unavailable optional metadata', () => {
-    render(
+  it('keeps essential location while omitting unavailable optional metadata', async () => {
+    renderResult(
       <JobSearchResult
         vm={{
           ...vm,
@@ -80,6 +105,7 @@ describe('JobSearchResult', () => {
         }}
       />,
     );
+    await screen.findByRole('link', { name: /Product designer/i });
 
     expect(screen.queryByText(vm.companyName!)).toBeNull();
     expect(screen.getByText(vm.locationLabel)).toBeVisible();
@@ -87,15 +113,11 @@ describe('JobSearchResult', () => {
     expect(screen.queryByText(vm.featuredLabel)).toBeNull();
   });
 
-  it('keeps a trailing Save control above the card link without activating the job', () => {
-    const onActivate = vi.fn((event: React.MouseEvent<HTMLAnchorElement>) =>
-      event.preventDefault(),
-    );
+  it('keeps a trailing Save control above the card link without navigating', async () => {
     const onSave = vi.fn();
-    render(
+    renderResult(
       <JobSearchResult
         vm={vm}
-        onActivate={onActivate}
         saveSlot={
           <button type="button" aria-label="Save job" onClick={onSave}>
             Save
@@ -103,10 +125,9 @@ describe('JobSearchResult', () => {
         }
       />,
     );
+    await screen.findByRole('link', { name: /Product designer/i });
 
     fireEvent.click(screen.getByRole('button', { name: 'Save job' }));
-
     expect(onSave).toHaveBeenCalledTimes(1);
-    expect(onActivate).not.toHaveBeenCalled();
   });
 });

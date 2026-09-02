@@ -1,24 +1,26 @@
-import type { MouseEvent as ReactMouseEvent, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import type { TalentCardVM } from '@/board/talent-view-model';
+import { talentCardSelectionKey } from '@/board/talent-view-model';
+import { MasterDetailLink } from '@/components/master-detail-link';
 import { SearchResultCard } from '@/components/search-results/search-results';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { initialsOf } from '@/lib/initials';
-import { localizePath } from '@/lib/localized-path';
+import { talentDestination } from '@/lib/master-detail-destination';
 
 export function TalentSearchResult({
   vm,
   selected = false,
-  onActivate,
   saveSlot,
 }: {
   vm: TalentCardVM;
   selected?: boolean;
-  onActivate?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
   saveSlot?: ReactNode;
 }) {
-  const selectable = Boolean(vm.detailHref);
+  const selectionKey = talentCardSelectionKey(vm);
+  const selectable = Boolean(selectionKey);
+
   return (
     <SearchResultCard
       selected={selectable && selected}
@@ -38,15 +40,14 @@ export function TalentSearchResult({
             className="text-foreground line-clamp-2 text-base font-semibold"
             dir="auto"
           >
-            {vm.detailHref ? (
-              <a
-                href={localizePath(vm.detailHref)}
+            {selectionKey ? (
+              <MasterDetailLink
+                destination={talentDestination({ handle: selectionKey })}
                 aria-current={selected ? 'true' : undefined}
-                onClick={onActivate}
                 className="outline-none after:absolute after:inset-0 after:content-['']"
               >
                 {vm.displayName}
-              </a>
+              </MasterDetailLink>
             ) : (
               vm.displayName
             )}

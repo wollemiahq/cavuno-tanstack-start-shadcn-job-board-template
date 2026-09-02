@@ -16,6 +16,7 @@ import {
 } from '@/components/board/listing-ad-rail';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { Page } from '@/components/layout/page';
+import { InPlaceListingSelect } from '@/components/master-detail-link';
 import {
   SearchResultDetail,
   SearchResultsLayout,
@@ -177,22 +178,21 @@ export function CompanySearchPage({
                 >
                   <div className="space-y-4">{resultsBar}</div>
 
-                  <div className="space-y-3">
-                    {companyVms.map((vm, index) => {
-                      const companySlug = companySlugs[index]!;
-                      return (
-                        <div key={vm.id} data-result-id={companySlug}>
-                          <CompanySearchResult
-                            vm={vm}
-                            selected={companySlug === selection.selectedId}
-                            onActivate={(event) =>
-                              selection.onResultActivate(event, companySlug)
-                            }
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <InPlaceListingSelect onSelect={selection.onResultActivate}>
+                    <div className="space-y-3">
+                      {companyVms.map((vm, index) => {
+                        const companySlug = companySlugs[index]!;
+                        return (
+                          <div key={vm.id} data-result-id={companySlug}>
+                            <CompanySearchResult
+                              vm={vm}
+                              selected={companySlug === selection.selectedId}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </InPlaceListingSelect>
 
                   <ListingPagination
                     compact

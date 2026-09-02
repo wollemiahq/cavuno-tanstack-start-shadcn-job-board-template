@@ -18,6 +18,7 @@ import {
   PageSection,
 } from '@/components/layout/page';
 import { DitherCanvas } from '@/components/marketing/dither-canvas';
+import { PreferListingWorkspace } from '@/components/master-detail-link';
 import { PostCard } from '@/components/post-card';
 import { TalentCard } from '@/components/talent-card';
 import { buttonVariants } from '@/components/ui/button';
@@ -131,22 +132,24 @@ function HiringIndex({
         <ViewAllAction label={m.home_viewAllCompaniesLabel()} to="/companies" />
       }
     >
-      <Grid as="ul" columns={{ base: 1, sm: 2, lg: 3 }} gap="4">
-        {companies.map((company) => (
-          <li key={company.id} className="h-full">
-            {/* Reuse the shared CompanyCard (the companies index card) rather
-                than a call-site pill variant — one design system. */}
-            <CompanyCard
-              companySlug={company.slug}
-              name={company.name}
-              logoUrl={company.logoUrl}
-              summary={company.summary}
-              publishedJobCount={company.publishedJobCount}
-              jobCountLabel={company.openJobsLabel}
-            />
-          </li>
-        ))}
-      </Grid>
+      <PreferListingWorkspace>
+        <Grid as="ul" columns={{ base: 1, sm: 2, lg: 3 }} gap="4">
+          {companies.map((company) => (
+            <li key={company.id} className="h-full">
+              {/* Reuse the shared CompanyCard (the companies index card) rather
+                  than a call-site pill variant — one design system. */}
+              <CompanyCard
+                companySlug={company.slug}
+                name={company.name}
+                logoUrl={company.logoUrl}
+                summary={company.summary}
+                publishedJobCount={company.publishedJobCount}
+                jobCountLabel={company.openJobsLabel}
+              />
+            </li>
+          ))}
+        </Grid>
+      </PreferListingWorkspace>
     </PageSection>
   );
 }
@@ -326,31 +329,32 @@ export function HomeLanding({
               <ViewAllAction label={m.home_viewAllJobsLabel()} to="/jobs" />
             }
           >
-            <Grid as="ul" columns={{ base: 1, md: 2 }} gap="5">
-              {latestJobs.map((vm) => (
-                <li key={vm.id}>
-                  <JobCard
-                    vm={vm}
-                    linkTo="workspace"
-                    action={
-                      <SaveJobButton
-                        jobId={vm.id}
-                        viewer={viewer}
-                        returnTo={returnTo}
-                        presentation="icon"
-                        labels={{
-                          save: m.companyJobDetail_saveJobLabel(),
-                          saving: m.companyJobDetail_savingLabel(),
-                          saved: m.companyJobDetail_savedViewInAccountLabel(),
-                          error: m.saveJobButton_errorText(),
-                        }}
-                        onSave={onSaveJob}
-                      />
-                    }
-                  />
-                </li>
-              ))}
-            </Grid>
+            <PreferListingWorkspace>
+              <Grid as="ul" columns={{ base: 1, md: 2 }} gap="5">
+                {latestJobs.map((vm) => (
+                  <li key={vm.id}>
+                    <JobCard
+                      vm={vm}
+                      action={
+                        <SaveJobButton
+                          jobId={vm.id}
+                          viewer={viewer}
+                          returnTo={returnTo}
+                          presentation="icon"
+                          labels={{
+                            save: m.companyJobDetail_saveJobLabel(),
+                            saving: m.companyJobDetail_savingLabel(),
+                            saved: m.companyJobDetail_savedViewInAccountLabel(),
+                            error: m.saveJobButton_errorText(),
+                          }}
+                          onSave={onSaveJob}
+                        />
+                      }
+                    />
+                  </li>
+                ))}
+              </Grid>
+            </PreferListingWorkspace>
           </PageSection>
         ) : (
           <PageSection ariaLabel={m.home_emptyHeading()}>
@@ -384,16 +388,18 @@ export function HomeLanding({
               <ViewAllAction label={m.home_viewAllTalentLabel()} to="/talent" />
             }
           >
-            <Grid as="ul" columns={{ base: 1, sm: 2, lg: 3 }} gap="4">
-              {featuredTalent.map((candidate) => (
-                <li key={candidate.id}>
-                  <TalentCard
-                    candidate={candidate}
-                    profileUnlocks={profileUnlocks}
-                  />
-                </li>
-              ))}
-            </Grid>
+            <PreferListingWorkspace>
+              <Grid as="ul" columns={{ base: 1, sm: 2, lg: 3 }} gap="4">
+                {featuredTalent.map((candidate) => (
+                  <li key={candidate.id}>
+                    <TalentCard
+                      candidate={candidate}
+                      profileUnlocks={profileUnlocks}
+                    />
+                  </li>
+                ))}
+              </Grid>
+            </PreferListingWorkspace>
           </PageSection>
         ) : null}
 

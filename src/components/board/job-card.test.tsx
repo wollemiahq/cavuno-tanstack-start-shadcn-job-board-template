@@ -80,7 +80,7 @@ describe('JobCard stress invariants', () => {
 
   it('orders the tile like the workspace result card: title → company → location → salary → description', () => {
     const { container } = render(
-      <JobCard vm={{ ...baseVM, postedAtLabel: '2d ago' }} linkTo="detail" />,
+      <JobCard vm={{ ...baseVM, postedAtLabel: '2d ago' }} />,
     );
     const text = (container.textContent ?? '').replace(/\s+/g, ' ');
     const order = [
@@ -121,7 +121,7 @@ describe('JobCard stress invariants', () => {
 describe('JobCard title link (URL contract)', () => {
   function renderInRouter(
     vm: JobCardVM,
-    props: { openInNewTab?: boolean; linkTo?: 'detail' | 'workspace' } = {},
+    props: { openInNewTab?: boolean } = {},
   ) {
     const rootRoute = createRootRoute();
     const indexRoute = createRoute({
@@ -176,16 +176,6 @@ describe('JobCard title link (URL contract)', () => {
     const chip = screen.getByRole('link', { name: 'React' });
     expect(chip.getAttribute('target')).toBe('_blank');
     expect(chip.getAttribute('rel')).toBe('noopener noreferrer');
-  });
-
-  it('opens the workspace title link in a new tab when openInNewTab is set', async () => {
-    renderInRouter(linkedVM, { openInNewTab: true, linkTo: 'workspace' });
-
-    const title = await screen.findByRole('link', {
-      name: 'Staff Platform Engineer',
-    });
-    expect(title.getAttribute('target')).toBe('_blank');
-    expect(title.getAttribute('rel')).toBe('noopener noreferrer');
   });
 
   it('keeps title and taxonomy chips in the same tab by default', async () => {

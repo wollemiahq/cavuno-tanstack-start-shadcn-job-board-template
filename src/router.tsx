@@ -9,11 +9,17 @@ export function getRouter() {
   const router = createTanStackRouter({
     routeTree,
     scrollRestoration: true,
-    // Master–detail panes keep their own overflow scroll. Without this,
-    // TanStack copies the previous location's element scroll onto the next
-    // page — landing mid-list on page N, or mid-profile in the detail pane.
-    // Selection-only navigations pass `resetScroll: false` and skip this
-    // path, so the list keeps its place when picking a result.
+    // Master–detail panes keep their own overflow scroll from md up. Below md
+    // the window is the scroller. Restoration only records positions for
+    // client navigations. Listing result rows MUST use MasterDetailLink
+    // (TanStack Link), not a plain <a>: a full document load with
+    // history.scrollRestoration='manual' leaves a window-cache miss, and Back
+    // falls back to scrollTo(0).
+    // Without scrollToTopSelectors, TanStack copies the previous location's
+    // element scroll onto the next page — landing mid-list on page N, or
+    // mid-profile in the detail pane. Selection-only navigations pass
+    // `resetScroll: false` and skip this path, so the list keeps its place
+    // when picking a result.
     scrollToTopSelectors: [
       '[data-slot="search-results-list"]',
       '[data-slot="search-result-detail"]',

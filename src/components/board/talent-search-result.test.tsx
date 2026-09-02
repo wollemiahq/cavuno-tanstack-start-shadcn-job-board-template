@@ -1,8 +1,15 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
+import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { TalentSearchResult } from './talent-search-result';
 
@@ -24,16 +31,37 @@ const vm: TalentCardVM = {
 
 afterEach(cleanup);
 
+function renderResult(ui: React.ReactElement) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => ui,
+  });
+  const profileRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/p/$handle',
+    component: () => <h1>Profile</h1>,
+  });
+  const talentRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/talent',
+    component: () => <h1>Talent</h1>,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute, profileRoute, talentRoute]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  return render(<RouterProvider router={router} />);
+}
+
 describe('TalentSearchResult', () => {
-  it('uses one canonical profile anchor with visible selected state and real candidate facts', () => {
-    const onActivate = vi.fn((event: React.MouseEvent<HTMLAnchorElement>) =>
-      event.preventDefault(),
-    );
-    const { container } = render(
-      <TalentSearchResult vm={vm} selected onActivate={onActivate} />,
+  it('uses one canonical profile Link with visible selected state and real candidate facts', async () => {
+    const { container } = renderResult(
+      <TalentSearchResult vm={vm} selected />,
     );
 
-    const link = screen.getByRole('link', { name: /Ada Lovelace/i });
+    const link = await screen.findByRole('link', { name: /Ada Lovelace/i });
     expect(link).toHaveAttribute('href', '/p/ada-lovelace');
     expect(link).toHaveAttribute('aria-current', 'true');
     expect(
@@ -44,9 +72,6 @@ describe('TalentSearchResult', () => {
     expect(screen.getByText('Open to offers')).toBeVisible();
     expect(screen.getByText('Analytical engines')).toBeVisible();
     expect(container.querySelector("[data-slot='avatar']")).toBeInTheDocument();
-
-    fireEvent.click(link);
-    expect(onActivate).toHaveBeenCalledTimes(1);
   });
 
   it('keeps a trailing Save control above the card link without activating the candidate', () => {
@@ -73,7 +98,6 @@ describe('TalentSearchResult', () => {
   });
 
   it('keeps a candidate without a public handle visible but non-selectable', () => {
-    const onActivate = vi.fn();
     const { container } = render(
       <TalentSearchResult
         vm={{
@@ -83,7 +107,6 @@ describe('TalentSearchResult', () => {
           avatarUrl: null,
         }}
         selected
-        onActivate={onActivate}
       />,
     );
 
@@ -97,11 +120,10 @@ describe('TalentSearchResult', () => {
     fireEvent.click(
       container.querySelector("[data-slot='search-result-card']")!,
     );
-    expect(onActivate).not.toHaveBeenCalled();
   });
 
-  it('renders a redacted card with the initials fallback and the name the API sent', () => {
-    const { container } = render(
+  it('renders a redacted card with the initials fallback and the name the API sent', async () => {
+    const { container } = renderResult(
       <TalentSearchResult
         vm={{
           ...vm,
@@ -118,7 +140,7 @@ describe('TalentSearchResult', () => {
       />,
     );
 
-    expect(screen.getByRole('link', { name: /Ada L/i })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: /Ada L/i })).toHaveAttribute(
       'href',
       '/p/bu_ada-lovelace',
     );
@@ -130,8 +152,8 @@ describe('TalentSearchResult', () => {
     ).toHaveAttribute('data-redacted', 'true');
   });
 
-  it('omits optional candidate facts rather than inventing placeholders', () => {
-    render(
+  it('omits optional candidate facts rather than inventing placeholders', async () => {
+    renderResult(
       <TalentSearchResult
         vm={{
           ...vm,
@@ -142,6 +164,7 @@ describe('TalentSearchResult', () => {
         }}
       />,
     );
+    await screen.findByRole('link', { name: /Ada Lovelace/i });
 
     expect(screen.queryByText('Computing pioneer')).toBeNull();
     expect(screen.queryByText('London, United Kingdom')).toBeNull();

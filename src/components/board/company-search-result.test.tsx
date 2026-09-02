@@ -1,8 +1,15 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { CompanySearchResult } from './company-search-result';
 
@@ -22,16 +29,37 @@ const vm: CompanyCardVM = {
 
 afterEach(cleanup);
 
+function renderResult(ui: React.ReactElement) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => ui,
+  });
+  const companyRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/companies/$companySlug',
+    component: () => <h1>Company</h1>,
+  });
+  const companiesRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/companies',
+    component: () => <h1>Companies</h1>,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute, companyRoute, companiesRoute]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  return render(<RouterProvider router={router} />);
+}
+
 describe('CompanySearchResult', () => {
-  it('uses one canonical anchor with visible selected state and real company facts', () => {
-    const onActivate = vi.fn((event: React.MouseEvent<HTMLAnchorElement>) =>
-      event.preventDefault(),
-    );
-    const { container } = render(
-      <CompanySearchResult vm={vm} selected onActivate={onActivate} />,
+  it('uses one canonical Link with visible selected state and real company facts', async () => {
+    const { container } = renderResult(
+      <CompanySearchResult vm={vm} selected />,
     );
 
-    const link = screen.getByRole('link', { name: /Acme Research/i });
+    const link = await screen.findByRole('link', { name: /Acme Research/i });
     expect(link).toHaveAttribute('href', '/companies/acme-research');
     expect(link).toHaveAttribute('aria-current', 'true');
     expect(
@@ -42,13 +70,10 @@ describe('CompanySearchResult', () => {
     ).toBeVisible();
     expect(screen.getByText('3 open jobs')).toBeVisible();
     expect(container.querySelector("[data-slot='avatar']")).toBeInTheDocument();
-
-    fireEvent.click(link);
-    expect(onActivate).toHaveBeenCalledTimes(1);
   });
 
-  it('falls back to initials and omits missing description and zero-job noise', () => {
-    render(
+  it('falls back to initials and omits missing description and zero-job noise', async () => {
+    renderResult(
       <CompanySearchResult
         vm={{
           ...vm,
@@ -59,6 +84,7 @@ describe('CompanySearchResult', () => {
         }}
       />,
     );
+    await screen.findByRole('link', { name: /Acme Research/i });
 
     expect(screen.getByText('AR')).toBeVisible();
     expect(

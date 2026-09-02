@@ -1,23 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useRef } from 'react';
 import type { MouseEvent as ReactMouseEvent, RefObject } from 'react';
 
-const DESKTOP_QUERY = '(min-width: 48rem)';
-
-function subscribeToDesktop(callback: () => void) {
-  const media = window.matchMedia(DESKTOP_QUERY);
-  media.addEventListener('change', callback);
-  return () => media.removeEventListener('change', callback);
-}
-
-function getDesktopSnapshot() {
-  return window.matchMedia(DESKTOP_QUERY).matches;
-}
-
-function getServerDesktopSnapshot() {
-  return false;
-}
+import { useDesktopMedia } from '@/hooks/use-desktop-media';
 
 export interface SearchSelectionController {
   isDesktop: boolean;
@@ -50,11 +36,7 @@ export function useSearchSelection({
   onReplace: (resultId: string) => void;
   onPush: (resultId: string) => void;
 }): SearchSelectionController {
-  const isDesktop = useSyncExternalStore(
-    subscribeToDesktop,
-    getDesktopSnapshot,
-    getServerDesktopSnapshot,
-  );
+  const isDesktop = useDesktopMedia();
   const detailRef = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLElement>(null);
   const selectedIsVisible = selectedId ? resultIds.includes(selectedId) : false;
