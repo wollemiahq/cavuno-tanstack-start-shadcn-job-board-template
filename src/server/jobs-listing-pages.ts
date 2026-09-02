@@ -22,12 +22,12 @@ import { isNotFound } from '@cavuno/board';
 import { jobsCategoryPath, jobsSkillPath } from '@cavuno/board/paths';
 import { listingHead, listingJsonLd } from '@cavuno/board/seo';
 import { createServerFn } from '@tanstack/react-start';
-import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { localizePath } from '../lib/localized-path';
+import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
 
@@ -121,8 +121,10 @@ function listFilters(
 async function seoBase() {
   // Board context is an OPEN read (password wall does not gate it), matching
   // getSeoBase / getJobDetailPage.
-  const boardContext = await readBoardContext();
-  const origin = new URL(getRequest().url).origin;
+  const [boardContext, origin] = await Promise.all([
+    readBoardContext(),
+    readPublicOrigin(),
+  ]);
   return {
     boardName: boardContext.name,
     language: boardContext.language,

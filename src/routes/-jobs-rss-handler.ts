@@ -4,6 +4,7 @@ import { getRequest } from '@tanstack/react-start/server';
 import { getBoard } from '@/lib/board';
 import { enumLabel } from '@/lib/enum-labels';
 import { jobTitleAtCompany } from '@/lib/page-title';
+import { readPublicOrigin } from '@/lib/public-origin';
 import { m } from '@/paraglide/messages';
 import { baseLocale, getLocale, isLocale } from '@/paraglide/runtime';
 
@@ -39,18 +40,31 @@ export type JobsRssBoard = {
 export type JobsRssDependencies = {
   getBoard: () => JobsRssBoard;
   getRequest: () => Request;
+  /**
+   * Board-published origin for the feed's own address and every item link
+   * (ADR-0098) — a feed reached on `slug.cavuno.app` while a custom domain
+   * is active still points at the custom domain. The locale redirect below
+   * deliberately keeps the REQUEST origin: it sends the caller back to the
+   * host they asked, it is not a canonical.
+   */
+  readPublicOrigin: () => Promise<string>;
 };
 
-const defaultDependencies: JobsRssDependencies = { getBoard, getRequest };
+const defaultDependencies: JobsRssDependencies = {
+  getBoard,
+  getRequest,
+  readPublicOrigin,
+};
 
 export function createJobsRssHandler(
   dependencies: JobsRssDependencies = defaultDependencies,
 ) {
   return async () => {
-    const origin = new URL(dependencies.getRequest().url).origin;
     if (getLocale() !== baseLocale) {
-      return Response.redirect(`${origin}/jobs/rss.xml`, 308);
+      const requestOrigin = new URL(dependencies.getRequest().url).origin;
+      return Response.redirect(`${requestOrigin}/jobs/rss.xml`, 308);
     }
+    const origin = await dependencies.readPublicOrigin();
     const board = dependencies.getBoard();
     const [context, list] = await Promise.all([
       board.context(),

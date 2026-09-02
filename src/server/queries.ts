@@ -15,7 +15,6 @@ import { isNotFound } from '@cavuno/board';
  */
 import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
-import { getRequest } from '@tanstack/react-start/server';
 
 import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
 import { getBoard } from '../lib/board';
@@ -28,6 +27,7 @@ import {
   refreshBoardContext,
   readEmployerOfferGate,
 } from '../lib/board-context-cache';
+import { readPublicOrigin } from '../lib/public-origin';
 import { boardGlobalReadCache } from '../lib/read-cache';
 import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
@@ -157,22 +157,28 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
 
 /**
  * SEO base for a listing page's `head` — the board name + language + the
- * request origin (for absolute `<link rel=canonical>` / `og:url`). A server fn
- * so `getRequest` resolves on both SSR and client navigation; the board
- * context read is memoized per isolate (src/lib/board-context-cache.ts) —
- * the SDK client does NOT cache it, and this value is read again by the
- * root shell on the same document. The language feeds the
+ * board's PUBLISHED origin (for absolute `<link rel=canonical>` / `og:url`).
+ * The origin is `board.seo().canonicalBase`, not the request host, so a board
+ * reached on `slug.cavuno.app` while a custom domain is active still
+ * canonicalizes to the custom domain (ADR-0098); `readPublicOrigin` falls back
+ * to the request origin when the board publishes no usable base. Both reads
+ * are memoized per isolate (src/lib/board-context-cache.ts,
+ * src/lib/public-origin.ts) — the SDK client does NOT cache them, and both are
+ * read again by other page fns on the same document. The language feeds the
  * board-language-required `@cavuno/board/seo` helpers.
  */
 export const getSeoBase = createServerFn({ method: 'GET' }).handler(
   async () => {
-    const board = await readBoardContext();
+    const [board, origin] = await Promise.all([
+      readBoardContext(),
+      readPublicOrigin(),
+    ]);
     return {
       boardName: board.name,
       language: board.language,
       // Operator label overrides — head/meta copy resolves through the same
       // route-owned copy families as the rendered blocks.
-      origin: new URL(getRequest().url).origin,
+      origin,
     };
   },
 );

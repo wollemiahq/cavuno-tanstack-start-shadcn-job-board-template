@@ -22,7 +22,6 @@ import {
   formatSalaryStatRange,
 } from '@cavuno/board/seo';
 import { createServerFn } from '@tanstack/react-start';
-import { getRequest } from '@tanstack/react-start/server';
 
 import {
   companyCategorySalaryPath,
@@ -33,6 +32,7 @@ import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { headTitle } from '../lib/page-title';
+import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
@@ -84,8 +84,10 @@ function companySalarySampleCount<T>(company: T): number {
 }
 
 async function seoBase() {
-  const boardContext = await readBoardContext();
-  const origin = new URL(getRequest().url).origin;
+  const [boardContext, origin] = await Promise.all([
+    readBoardContext(),
+    readPublicOrigin(),
+  ]);
   return {
     boardName: boardContext.name,
     language: boardContext.language,

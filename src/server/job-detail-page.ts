@@ -13,12 +13,12 @@
 import { jobDetailPath } from '@cavuno/board/paths';
 import { createJobPostingJsonLd, listingJsonLd } from '@cavuno/board/seo';
 import { createServerFn } from '@tanstack/react-start';
-import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard, withApplyGatewayCapability } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { headTitle, jobTitleAtCompany } from '../lib/page-title';
+import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { isLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
@@ -52,7 +52,7 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
         }),
         readBoardContext(),
       ]);
-      const origin = new URL(getRequest().url).origin;
+      const origin = await readPublicOrigin();
       const seo = {
         boardName: boardContext.name,
         language: boardContext.language,

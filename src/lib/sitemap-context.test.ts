@@ -1,3 +1,4 @@
+import { BoardApiError } from '@cavuno/board';
 import {
   SITEMAP_CHUNK_SIZE,
   buildBucketUrls,
@@ -17,6 +18,28 @@ import {
 import type { BoardSdk } from '@cavuno/board';
 
 const ORIGIN = 'https://jobs.example';
+
+/**
+ * `board.sitemap` fake for an API that predates the published-sitemap routes:
+ * both calls 404 like the real client would, so the walker falls back to
+ * catalog enumeration.
+ */
+function publishedSitemapUnavailable(): BoardSdk['sitemap'] {
+  const notFound = () =>
+    Promise.reject(
+      new BoardApiError({
+        status: 404,
+        code: 'unknown_error',
+        message: 'Not Found',
+        raw: undefined,
+      }),
+    );
+  // SAFETY: the walker only ever calls `board.sitemap()` and
+  // `board.sitemap.entries()`; both reject with a 404 here, which is the
+  // full behaviour of the real client against an API without these routes.
+  return Object.assign(notFound, { entries: notFound }) as BoardSdk['sitemap'];
+}
+
 // SAFETY: Source fakes own every BoardSdk interaction in these unit tests;
 // the board value is used only as an opaque WeakMap identity.
 const board = {} as BoardSdk;
@@ -191,6 +214,9 @@ describe('hosted-shaped sitemap context', () => {
         skills: { list: async () => emptyPage },
         locations: { list: async () => emptyPage },
       },
+      // An API without the published-sitemap routes answers 404, which is
+      // what sends the walker down this legacy catalog enumeration.
+      sitemap: publishedSitemapUnavailable(),
     });
 
     const context = await buildSitemapContext(catalogBoard, ORIGIN, {
@@ -218,5 +244,63 @@ describe('hosted-shaped sitemap context', () => {
     );
     expect(categories?.urls).toEqual([`${ORIGIN}/jobs/engineering`]);
     expect(skills?.urls).toEqual([`${ORIGIN}/jobs/skills/typescript`]);
+  });
+  it('mirrors the published sitemap when the API serves it, without enumerating the catalog', async () => {
+    const jobsList = vi.fn(async () => ({ data: [], count: 0 }));
+    const entries = vi.fn(
+      async (bucket: string, query?: { cursor?: string | null }) => {
+        if (bucket !== 'jobs-details')
+          return { data: [], hasMore: false, nextCursor: null };
+        return query?.cursor
+          ? {
+              data: [{ path: '/companies/acme/jobs/job-2' }],
+              hasMore: false,
+              nextCursor: null,
+            }
+          : {
+              data: [
+                { path: '/companies/acme/jobs/job-1' },
+                { path: '/jobs/locations/adelaide-sa-australia/skills/a320' },
+              ],
+              hasMore: true,
+              nextCursor: 'offset:2',
+            };
+      },
+    );
+    // SAFETY: mirror-path fake — `sitemap` is the only member the walker
+    // reads when the API publishes its sitemap; `jobs.list` proves it is
+    // never consulted.
+    const mirrorBoard: BoardSdk = Object.assign({} as BoardSdk, {
+      jobs: { list: jobsList },
+      sitemap: Object.assign(
+        async () => ({
+          object: 'board_sitemap',
+          buckets: [
+            { bucket: 'jobs-details', count: 3 },
+            { bucket: 'marketing', count: 0 },
+          ],
+        }),
+        { entries },
+      ),
+    });
+
+    const context = await buildSitemapContext(mirrorBoard, ORIGIN, {
+      listedBuckets,
+      buildBucketUrls,
+    });
+
+    expect(jobsList).not.toHaveBeenCalled();
+    expect(context.buckets.map((entry) => entry.bucket)).toEqual([
+      'marketing',
+      'jobs-details',
+    ]);
+    const details = context.buckets.find(
+      (entry) => entry.bucket === 'jobs-details',
+    );
+    expect(details?.urls).toEqual([
+      `${ORIGIN}/companies/acme/jobs/job-1`,
+      `${ORIGIN}/jobs/locations/adelaide-sa-australia/skills/a320`,
+      `${ORIGIN}/companies/acme/jobs/job-2`,
+    ]);
   });
 });

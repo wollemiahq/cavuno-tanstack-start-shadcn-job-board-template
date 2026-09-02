@@ -34,7 +34,8 @@ const dependencies = {
     // SAFETY: Handler tests never call the SDK; loadSitemapContext is faked.
     return {} as BoardSdk;
   },
-  getRequest: () => new Request('https://jobs.example/sitemap.xml'),
+  // The board publishes this origin; the sitemap lists URLs on it.
+  readPublicOrigin: async () => 'https://jobs.example',
   loadSitemapContext,
 };
 
