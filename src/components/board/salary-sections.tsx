@@ -1,5 +1,5 @@
-import { ArrowRight, ChartNoAxesColumn } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
+import { ArrowRight, ChartNoAxesColumn } from 'lucide-react';
 
 import type {
   OverallSalaryVM,

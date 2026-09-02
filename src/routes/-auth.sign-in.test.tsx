@@ -160,7 +160,9 @@ describe('/auth/sign-in search contract', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Something went wrong. Try again.',
     );
-    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeEnabled();
+    expect(
+      await screen.findByRole('button', { name: 'Sign in' }),
+    ).toBeEnabled();
   });
 
   it('includes the validated destination in a requested magic link', async () => {
@@ -254,7 +256,9 @@ describe('/auth/sign-in search contract', () => {
     // Get started goes to the join gate, not straight to the candidate form —
     // the role is unknown here, so `/auth/join` resolves it. The destination
     // still has to survive the hop.
-    expect(await screen.findByRole('link', { name: 'Get started' })).toHaveAttribute(
+    expect(
+      await screen.findByRole('link', { name: 'Get started' }),
+    ).toHaveAttribute(
       'href',
       `/auth/join?returnTo=${encodeURIComponent(returnTo)}`,
     );

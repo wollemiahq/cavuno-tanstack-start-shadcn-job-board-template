@@ -47,7 +47,11 @@ function renderResult(ui: React.ReactElement) {
     component: () => <h1>Companies</h1>,
   });
   const router = createRouter({
-    routeTree: rootRoute.addChildren([indexRoute, companyRoute, companiesRoute]),
+    routeTree: rootRoute.addChildren([
+      indexRoute,
+      companyRoute,
+      companiesRoute,
+    ]),
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
   return render(<RouterProvider router={router} />);

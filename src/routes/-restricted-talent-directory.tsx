@@ -58,7 +58,10 @@ export function RestrictedTalentDirectory({
                 </Link>
               ) : (
                 <>
-                  <Link to="/auth/employer/sign-up" className={buttonVariants()}>
+                  <Link
+                    to="/auth/employer/sign-up"
+                    className={buttonVariants()}
+                  >
                     {m.siteHeader_signUpLabel()}
                   </Link>
                   <Link

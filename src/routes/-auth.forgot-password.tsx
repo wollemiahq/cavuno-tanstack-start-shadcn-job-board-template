@@ -61,7 +61,11 @@ export function ForgotPasswordView({
         supportingText={m.authForgotPassword_checkEmailBody()}
       >
         <div className="text-center text-sm">
-          <Link to="/auth/sign-in" search={candidateAuthSearch(returnTo)} className={textLinkClass}>
+          <Link
+            to="/auth/sign-in"
+            search={candidateAuthSearch(returnTo)}
+            className={textLinkClass}
+          >
             {m.authForgotPassword_backToSignInLabel()}
           </Link>
         </div>

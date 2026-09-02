@@ -40,7 +40,6 @@ function validateSearch(
   return validate(search);
 }
 
-
 function renderRouted(ui: React.ReactElement) {
   const rootRoute = createRootRoute();
   const indexRoute = createRoute({
@@ -62,7 +61,6 @@ function renderRouted(ui: React.ReactElement) {
   return render(<RouterProvider router={router} />);
 }
 
-
 describe('auth callback continuation', () => {
   it.each([
     ['magic-link', MagicLinkRoute],
@@ -82,21 +80,24 @@ describe('auth callback continuation', () => {
   it.each([
     ['magic-link', MagicLinkRoute],
     ['oauth-complete', OAuthCompleteRoute],
-  ] as const)('keeps returnTo on the %s recovery link', async (_name, route) => {
-    const returnTo = '/jobs?q=design&selectedJob=product-designer';
-    renderRouted(
-      route === MagicLinkRoute ? (
-        <MagicLinkView status="invalid" returnTo={returnTo} />
-      ) : (
-        <OAuthCompleteView status="invalid" returnTo={returnTo} />
-      ),
-    );
+  ] as const)(
+    'keeps returnTo on the %s recovery link',
+    async (_name, route) => {
+      const returnTo = '/jobs?q=design&selectedJob=product-designer';
+      renderRouted(
+        route === MagicLinkRoute ? (
+          <MagicLinkView status="invalid" returnTo={returnTo} />
+        ) : (
+          <OAuthCompleteView status="invalid" returnTo={returnTo} />
+        ),
+      );
 
-    expect(
-      await screen.findByRole('link', { name: 'Sign in' }),
-    ).toHaveAttribute(
-      'href',
-      `/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}`,
-    );
-  });
+      expect(
+        await screen.findByRole('link', { name: 'Sign in' }),
+      ).toHaveAttribute(
+        'href',
+        `/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}`,
+      );
+    },
+  );
 });

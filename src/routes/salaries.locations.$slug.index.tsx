@@ -4,7 +4,12 @@
  */
 import { isNotFound, type LocationSalaryDetail } from '@cavuno/board';
 import { BOARD_PATHS, salaryLocationPath } from '@cavuno/board/paths';
-import { Link, createFileRoute, notFound, redirect } from '@tanstack/react-router';
+import {
+  Link,
+  createFileRoute,
+  notFound,
+  redirect,
+} from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';

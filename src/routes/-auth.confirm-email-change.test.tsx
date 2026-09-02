@@ -30,7 +30,6 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-
 function renderRouted(ui: React.ReactElement) {
   const rootRoute = createRootRoute();
   const indexRoute = createRoute({

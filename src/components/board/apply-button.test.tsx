@@ -648,9 +648,7 @@ describe('ApplyButton guest apply', () => {
     );
 
     expect(screen.queryByLabelText(m.apply_guestEmailLabel())).toBeNull();
-    expect(
-      await screen.findByRole('link', { name: /apply/i }),
-    ).toBeTruthy();
+    expect(await screen.findByRole('link', { name: /apply/i })).toBeTruthy();
   });
 
   it('never offers the guest form once the registration wall is up', async () => {
@@ -669,9 +667,7 @@ describe('ApplyButton guest apply', () => {
     );
 
     expect(screen.queryByLabelText(m.apply_guestEmailLabel())).toBeNull();
-    expect(
-      await screen.findByRole('link', { name: /apply/i }),
-    ).toBeTruthy();
+    expect(await screen.findByRole('link', { name: /apply/i })).toBeTruthy();
   });
 
   it('submits the guest details and confirms', async () => {

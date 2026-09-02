@@ -93,9 +93,7 @@ describe('JobCard stress invariants', () => {
   });
 
   it('shows no overflow badge when three or fewer tags', async () => {
-    renderCard(
-      <JobCard vm={{ ...baseVM, tags: ['React', 'Go'].map(tag) }} />,
-    );
+    renderCard(<JobCard vm={{ ...baseVM, tags: ['React', 'Go'].map(tag) }} />);
     await screen.findByText('React');
     expect(screen.queryByText(/^\+\d+$/)).toBeNull();
   });

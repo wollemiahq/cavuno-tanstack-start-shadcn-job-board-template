@@ -203,11 +203,11 @@ describe('JobSearchResultDetail', () => {
   });
 
   it('states when the API omitted the description', async () => {
-    renderDetail(<JobSearchResultDetail vm={{ ...vm, descriptionHtml: null }} />);
+    renderDetail(
+      <JobSearchResultDetail vm={{ ...vm, descriptionHtml: null }} />,
+    );
 
-    expect(
-      await screen.findByText('No description provided.'),
-    ).toBeVisible();
+    expect(await screen.findByText('No description provided.')).toBeVisible();
   });
 
   it('uses the loaded detail slots and skeleton-only actions while a job changes', async () => {

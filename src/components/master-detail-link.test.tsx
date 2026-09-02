@@ -90,10 +90,7 @@ describe('MasterDetailLink', () => {
       <MasterDetailLink destination={destination}>Staff</MasterDetailLink>,
     );
     const link = await screen.findByRole('link', { name: 'Staff' });
-    expect(link).toHaveAttribute(
-      'href',
-      '/companies/acme/jobs/staff-engineer',
-    );
+    expect(link).toHaveAttribute('href', '/companies/acme/jobs/staff-engineer');
   });
 
   it('does not rewrite desktop clicks without a provider', async () => {
@@ -136,10 +133,7 @@ describe('MasterDetailLink', () => {
     );
     const navigateSpy = vi.spyOn(router, 'navigate');
     const link = await screen.findByRole('link', { name: 'Staff' });
-    expect(link).toHaveAttribute(
-      'href',
-      '/companies/acme/jobs/staff-engineer',
-    );
+    expect(link).toHaveAttribute('href', '/companies/acme/jobs/staff-engineer');
     fireEvent.click(link);
     expect(navigateSpy).not.toHaveBeenCalledWith(
       expect.objectContaining({ to: '/jobs' }),

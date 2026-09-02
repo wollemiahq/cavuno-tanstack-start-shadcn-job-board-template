@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/pagination';
 import { shouldRenderPagination, totalPages } from '@/lib/pagination';
 
-
 type PaginationPage = number | 'start-ellipsis' | 'end-ellipsis';
 
 const paginationScrollTarget =

@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 
-import { Link, createFileRoute, getRouteApi, useLocation, useRouter } from '@tanstack/react-router';
+import {
+  Link,
+  createFileRoute,
+  getRouteApi,
+  useLocation,
+  useRouter,
+} from '@tanstack/react-router';
 import { UserRoundX } from 'lucide-react';
 
 import { m } from '../paraglide/messages';

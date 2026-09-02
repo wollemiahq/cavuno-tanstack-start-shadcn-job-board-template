@@ -46,7 +46,6 @@ function validateSearch(search: UrlSearchInput) {
   return validate(search);
 }
 
-
 function renderRouted(ui: React.ReactElement) {
   const rootRoute = createRootRoute();
   const indexRoute = createRoute({
@@ -67,7 +66,6 @@ function renderRouted(ui: React.ReactElement) {
   });
   return render(<RouterProvider router={router} />);
 }
-
 
 describe('/auth/reset-password continuation', () => {
   it('retains a safe candidate destination with the reset token', async () => {
@@ -116,7 +114,9 @@ describe('/auth/reset-password continuation', () => {
     fireEvent.change(container.querySelector('input[name="password"]')!, {
       target: { value: 'strong-password' },
     });
-    fireEvent.click(await screen.findByRole('button', { name: 'Update password' }));
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Update password' }),
+    );
 
     await waitFor(() =>
       expect(mocks.redirectToSignIn).toHaveBeenCalledWith(
@@ -139,7 +139,9 @@ describe('/auth/reset-password continuation', () => {
     fireEvent.change(container.querySelector('input[name="password"]')!, {
       target: { value: 'strong-password' },
     });
-    fireEvent.click(await screen.findByRole('button', { name: 'Update password' }));
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Update password' }),
+    );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Something went wrong. Try again.',
@@ -167,7 +169,9 @@ describe('/auth/reset-password continuation', () => {
     fireEvent.change(container.querySelector('input[name="password"]')!, {
       target: { value: 'strong-password' },
     });
-    fireEvent.click(await screen.findByRole('button', { name: 'Update password' }));
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Update password' }),
+    );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'This link is invalid or has expired — request a new one.',

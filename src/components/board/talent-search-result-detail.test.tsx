@@ -47,8 +47,6 @@ function renderRouted(ui: React.ReactElement) {
   return render(<RouterProvider router={router} />);
 }
 
-
-
 // Anonymous/without-access: the Message CTA points at sign-in/pricing. The
 // route no longer offers a separate "View profile" button — the NAME is the
 // link to the canonical profile — so `viewProfile` is always null here.
@@ -173,10 +171,15 @@ describe('TalentSearchResultDetail', () => {
     expect(
       await screen.findByRole('heading', { name: 'Message Ada Lovelace' }),
     ).toBeVisible();
-    fireEvent.change(await screen.findByRole('textbox', { name: 'Send a message' }), {
-      target: { value: '  Your work looks like a great fit.  ' },
-    });
-    fireEvent.click(await screen.findByRole('button', { name: 'Send message' }));
+    fireEvent.change(
+      await screen.findByRole('textbox', { name: 'Send a message' }),
+      {
+        target: { value: '  Your work looks like a great fit.  ' },
+      },
+    );
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Send message' }),
+    );
 
     await waitFor(() =>
       expect(onStartConversation).toHaveBeenCalledWith({
@@ -215,7 +218,9 @@ describe('TalentSearchResultDetail', () => {
         <TalentSearchResultDetail vm={profileVm} cta={messageCta} />
       </SearchResultDetail>,
     );
-    const detail = await screen.findByRole('region', { name: 'Selected profile' });
+    const detail = await screen.findByRole('region', {
+      name: 'Selected profile',
+    });
     const expanded = container.querySelector<HTMLElement>(
       '[data-slot="detail-expanded-header"]',
     );

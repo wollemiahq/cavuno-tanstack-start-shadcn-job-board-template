@@ -57,9 +57,7 @@ function renderResult(ui: React.ReactElement) {
 
 describe('TalentSearchResult', () => {
   it('uses one canonical profile Link with visible selected state and real candidate facts', async () => {
-    const { container } = renderResult(
-      <TalentSearchResult vm={vm} selected />,
-    );
+    const { container } = renderResult(<TalentSearchResult vm={vm} selected />);
 
     const link = await screen.findByRole('link', { name: /Ada Lovelace/i });
     expect(link).toHaveAttribute('href', '/p/ada-lovelace');

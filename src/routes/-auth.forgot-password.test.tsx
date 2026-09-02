@@ -45,7 +45,6 @@ function validateSearch(search: UrlSearchInput) {
   return validate(search);
 }
 
-
 function renderRouted(ui: React.ReactElement) {
   const rootRoute = createRootRoute();
   const indexRoute = createRoute({

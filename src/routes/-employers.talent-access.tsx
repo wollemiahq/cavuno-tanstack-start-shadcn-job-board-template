@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router';
 /**
  * Employer talent-access checkout on `/employers`. Mirrors the candidate
  * paywall state machine in `-access-page.tsx`: pick a plan, mount connected
@@ -8,6 +7,7 @@ import { Link } from '@tanstack/react-router';
  */
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
+import { Link } from '@tanstack/react-router';
 import { Clock } from 'lucide-react';
 
 import { EmbeddedCheckout } from '../components/paywall/embedded-checkout';
@@ -310,7 +310,11 @@ export function EmployersTalentAccessView({
     }
     return (
       pageDependencies?.joinLink({ className, children }) ?? (
-        <Link to="/auth/join" search={{ returnTo: '/employers' }} className={className}>
+        <Link
+          to="/auth/join"
+          search={{ returnTo: '/employers' }}
+          className={className}
+        >
           {children}
         </Link>
       )
@@ -342,18 +346,18 @@ export function EmployersTalentAccessView({
         postingPlanLink:
           pageDependencies?.postingPlanLink ??
           (({ planId, className, children }) => (
-            <Link
-              to="/post"
-              search={{ plan: planId }}
-              className={className}
-            >
+            <Link to="/post" search={{ plan: planId }} className={className}>
               {children}
             </Link>
           )),
         joinLink:
           pageDependencies?.joinLink ??
           (({ className, children }) => (
-            <Link to="/auth/join" search={{ returnTo: '/employers' }} className={className}>
+            <Link
+              to="/auth/join"
+              search={{ returnTo: '/employers' }}
+              className={className}
+            >
               {children}
             </Link>
           )),

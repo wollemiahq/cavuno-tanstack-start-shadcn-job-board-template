@@ -1,12 +1,13 @@
 'use client';
 
-import { Link, useNavigate } from '@tanstack/react-router';
 import {
   createContext,
   useContext,
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from 'react';
+
+import { Link, useNavigate } from '@tanstack/react-router';
 
 import { useDesktopMedia } from '@/hooks/use-desktop-media';
 import type { MasterDetailDestination } from '@/lib/master-detail-destination';
@@ -87,11 +88,7 @@ export function MasterDetailLink({
 
   function onClick(event: ReactMouseEvent<HTMLAnchorElement>) {
     userOnClick?.(event);
-    if (
-      event.defaultPrevented ||
-      openInNewTab ||
-      isModifiedClick(event)
-    ) {
+    if (event.defaultPrevented || openInNewTab || isModifiedClick(event)) {
       return;
     }
 

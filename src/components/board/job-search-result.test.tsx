@@ -57,9 +57,7 @@ function renderResult(ui: React.ReactElement) {
 
 describe('JobSearchResult', () => {
   it('uses an owned Card with a canonical title Link and no taxonomy clutter', async () => {
-    const { container } = renderResult(
-      <JobSearchResult vm={vm} selected />,
-    );
+    const { container } = renderResult(<JobSearchResult vm={vm} selected />);
 
     const link = await screen.findByRole('link', { name: /Product designer/i });
     expect(link).toHaveAttribute(

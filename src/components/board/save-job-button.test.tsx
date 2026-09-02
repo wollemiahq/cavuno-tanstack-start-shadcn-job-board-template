@@ -90,9 +90,9 @@ describe('SaveJobButton candidate continuation', () => {
       />,
     );
 
-    const href = (await screen.findByRole('link', { name: 'Save' })).getAttribute(
-      'href',
-    );
+    const href = (
+      await screen.findByRole('link', { name: 'Save' })
+    ).getAttribute('href');
     expect(href).not.toBeNull();
     const verifyUrl = new URL(href!, 'https://board.example');
     expect(verifyUrl.pathname).toBe('/auth/verify-email-required');

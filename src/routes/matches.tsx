@@ -260,9 +260,7 @@ function JobMatchesPage() {
                     className="space-y-4 pe-4 pt-4 pb-4"
                   >
                     {header}
-                    <InPlaceListingSelect
-                      onSelect={selection.onResultActivate}
-                    >
+                    <InPlaceListingSelect onSelect={selection.onResultActivate}>
                       <div className="space-y-3">
                         {rows.map(({ item, vm }) => (
                           <JobSearchResult

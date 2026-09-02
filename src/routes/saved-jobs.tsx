@@ -207,9 +207,7 @@ function SavedJobsPage() {
                     className="space-y-4 pe-4 pt-4 pb-4"
                   >
                     {header}
-                    <InPlaceListingSelect
-                      onSelect={selection.onResultActivate}
-                    >
+                    <InPlaceListingSelect onSelect={selection.onResultActivate}>
                       <div className="space-y-3">
                         {rows.map(({ saved, vm }) => (
                           <JobSearchResult
@@ -241,7 +239,10 @@ function SavedJobsPage() {
                                   setPendingId(null);
                                 }}
                               >
-                                <Bookmark aria-hidden className="fill-current" />
+                                <Bookmark
+                                  aria-hidden
+                                  className="fill-current"
+                                />
                               </Button>
                             }
                           />
