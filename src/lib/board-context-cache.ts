@@ -9,8 +9,18 @@
  * already had. `queries.ts` claimed the SDK client cached this; it does not.
  *
  * Board config changes when an operator edits settings, not per request, so
- * it is safe to hold across requests in the same isolate. The edge already
- * assumes the same: `READ_CACHE_TTL.boardGlobal` is 300s.
+ * it is safe to hold across requests in the same isolate for a short TTL.
+ *
+ * THE UPSTREAM READ IS `no-store`, NOT EDGE-CACHED. The context carries the
+ * operator kill switches (blog, talent directory, native applications,
+ * messaging, password wall). `/v1/boards/:id` leaves the API edge with
+ * `Cache-Control: max-age=14400` (the route asks for 60s; the zone rewrites
+ * it), and a Worker fetch's `cf.cacheTtl` cannot shorten an entry that is
+ * already sitting in the colo cache — so with the shared edge cache in the
+ * path, `blogEnabled: false` kept serving `/blog` for HOURS while the API
+ * itself said `features.blog: false` (CJJ live gate, 2026-09-02). One
+ * upstream round trip per isolate per 30s is the price of flags that flip
+ * when the operator flips them.
  *
  * KEYED BY DATA SOURCE. A deployment normally serves one board, so this map
  * holds a single entry — but the preview/demo switch (`getDataSource()`,
@@ -24,19 +34,25 @@
 import { getBoard } from './board';
 import { createBoardContextCache } from './board-context-cache-core';
 import { getDataSource } from './data-source.server';
-import { boardGlobalReadCache } from './read-cache';
 
 import type { DataSource } from './data-source';
 
 type BoardContext = Awaited<ReturnType<ReturnType<typeof getBoard>['context']>>;
 
-/** Shorter than the 300s edge TTL, so an isolate is never the stalest layer. */
+/** Upper bound on how long an isolate may serve a flipped operator flag. */
 const CONTEXT_TTL_MS = 30_000;
+
+/**
+ * Both readers bypass the shared edge cache — see the module comment.
+ * Exported so a test can pin it; `applyReadCache` strips any `cf` directive
+ * when it sees `cache: 'no-store'`.
+ */
+export const BOARD_CONTEXT_FETCH_OPTIONS = { cache: 'no-store' } as const;
 
 const cache = createBoardContextCache<BoardContext>(
   {
-    getBoardContext: () => getBoard().context(boardGlobalReadCache()),
-    getFreshBoardContext: () => getBoard().context({ cache: 'no-store' }),
+    getBoardContext: () => getBoard().context(BOARD_CONTEXT_FETCH_OPTIONS),
+    getFreshBoardContext: () => getBoard().context(BOARD_CONTEXT_FETCH_OPTIONS),
     getDataSource,
     now: Date.now,
   },
