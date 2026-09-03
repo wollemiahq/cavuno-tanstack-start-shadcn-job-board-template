@@ -8,7 +8,7 @@
  * form owns the create/update + checkout orchestration so the two surfaces
  * never drift.
  */
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 
 import { countryOptions } from '@cavuno/board/format';
 import { useRouter } from '@tanstack/react-router';
@@ -59,6 +59,7 @@ import {
 } from '@/components/ui/select';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
+import { isMembershipRequiredCode } from '@/lib/membership-required';
 import type {
   CreateEmployerJobBody,
   EmployerBillingOption,
@@ -256,6 +257,12 @@ export type EmployerJobFormProps = {
   jobForm?: JobFormSource | null;
   /** Prefill for edit mode. */
   job?: EmployerJob;
+  /**
+   * Stands in for the whole form once the board answers `membership_required`
+   * — the company cannot post here until it holds a membership, so there is
+   * nothing useful left to fill in.
+   */
+  membershipGate?: ReactNode;
   dependencies?: EmployerJobFormDependencies;
 };
 
@@ -389,6 +396,7 @@ export function EmployerJobForm({
   mode,
   job,
   jobForm: jobFormSource,
+  membershipGate,
   dependencies,
 }: EmployerJobFormProps) {
   const jobForm = resolveJobFormConstraints(jobFormSource);
@@ -451,6 +459,10 @@ export function EmployerJobForm({
   >('idle');
   const [message, setMessage] = useState('');
   const [notice, setNotice] = useState('');
+  // The board refuses the write on a members-only board. Entitlement is not on
+  // the wire (billing options carry no `canPost`/`reason`), so this is set from
+  // the refusal itself rather than pre-checked.
+  const [membershipRequired, setMembershipRequired] = useState(false);
   const [committedCheckoutJobId, setCommittedCheckoutJobId] = useState<
     string | null
   >(null);
@@ -603,6 +615,10 @@ export function EmployerJobForm({
       return;
     }
     if (!checkout.ok) {
+      if (isMembershipRequiredCode(checkout.code)) {
+        setMembershipRequired(true);
+        return;
+      }
       setStatus('committed');
       setMessage(boardErrorMessage(checkout));
       return;
@@ -706,6 +722,10 @@ export function EmployerJobForm({
         return;
       }
       if (!result.ok) {
+        if (isMembershipRequiredCode(result.code)) {
+          setMembershipRequired(true);
+          return;
+        }
         setStatus('error');
         setMessage(boardErrorMessage(result));
         return;
@@ -736,6 +756,10 @@ export function EmployerJobForm({
       return;
     }
     if (!result.ok) {
+      if (isMembershipRequiredCode(result.code)) {
+        setMembershipRequired(true);
+        return;
+      }
       setStatus('error');
       setMessage(boardErrorMessage(result));
       return;
@@ -760,6 +784,8 @@ export function EmployerJobForm({
         : isDraftEdit && selectedBilling
           ? m.employerEditJob_publishSaveLabel()
           : m.employerEditJob_saveLabel();
+
+  if (membershipRequired && membershipGate) return membershipGate;
 
   return (
     <form

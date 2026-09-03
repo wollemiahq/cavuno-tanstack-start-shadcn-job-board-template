@@ -946,6 +946,25 @@ Props:
 - `className?: string | undefined`
 - `planName: string | null | undefined`
 
+### MembershipPostGate — `src/components/board/membership-post-gate.tsx`
+
+The join gate that stands in for the posting form on a members-only board —
+both the anonymous `/post` route (`context.posting.requiresMembership`) and
+the signed-in employer flow, where the board refuses the write with
+`membership_required`.
+
+Signed out, the visitor gets both roads: become a member, or sign in (a
+member's account already carries the company's membership). Signed in, the
+only useful road left is becoming a member. When the board publishes a
+contact address, a line invites the visitor to ask for access.
+
+Props:
+
+- `boardName: string`
+- `contactEmail?: string | null | undefined`
+- `returnTo?: string | undefined`
+- `signedIn?: boolean | undefined`
+
 ### PublicContentPending — `src/components/board/public-content-pending.tsx`
 
 Props:
@@ -1447,6 +1466,7 @@ Props:
 - `job?: ({ id: string; object: "employer_job"; title: string; slug: string | null; status: "draft" | "published" | "expired" …`
 - `jobForm?: JobFormSource | null | undefined`
 - `locale: string`
+- `membershipGate?: ReactNode`
 - `mode: EmployerJobFormMode`
 - `officeLocationSuggestions: LocationSuggestionState`
 - `plans: { object: "job_posting_plan"; id: string; name: string; description: string | null; kind: string; billingInterval: "m…`

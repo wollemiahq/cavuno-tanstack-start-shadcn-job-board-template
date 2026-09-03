@@ -52,6 +52,7 @@ export function PostJobPageView({
   jobForm,
   locale,
   officeLocationSuggestions,
+  gate,
   dependencies = postRouteDependencies,
 }: {
   plans: Awaited<ReturnType<typeof getPostPlans>>;
@@ -63,6 +64,12 @@ export function PostJobPageView({
   officeLocationSuggestions: Parameters<
     typeof PostJobForm
   >[0]['officeLocationSuggestions'];
+  /**
+   * Stands in for the form on a members-only board. Rendered INSTEAD of the
+   * form: a visitor who cannot post must not be walked through a wizard that
+   * the board will refuse.
+   */
+  gate?: ReactNode;
   dependencies?: PostRouteDependencies;
 }) {
   return (
@@ -76,22 +83,24 @@ export function PostJobPageView({
         }
       >
         <div>
-          {dependencies.renderForm({
-            locale,
-            plans: plans.data,
-            officeLocationSuggestions,
-            customFields,
-            jobForm,
-            remotePermits: remotePermits?.data ?? null,
-            initialPlanId,
-            onSubmit: (input) => dependencies.submitJobPosting({ data: input }),
-            onLogoFetch: (domain) =>
-              dependencies.fetchLogoByDomain({ data: { domain } }),
-            onLogoUpload: (data) => dependencies.uploadLogo({ data }),
-            onCheckout: (url) => {
-              window.location.href = url;
-            },
-          })}
+          {gate ??
+            dependencies.renderForm({
+              locale,
+              plans: plans.data,
+              officeLocationSuggestions,
+              customFields,
+              jobForm,
+              remotePermits: remotePermits?.data ?? null,
+              initialPlanId,
+              onSubmit: (input) =>
+                dependencies.submitJobPosting({ data: input }),
+              onLogoFetch: (domain) =>
+                dependencies.fetchLogoByDomain({ data: { domain } }),
+              onLogoUpload: (data) => dependencies.uploadLogo({ data }),
+              onCheckout: (url) => {
+                window.location.href = url;
+              },
+            })}
         </div>
       </PageContent>
     </Page>

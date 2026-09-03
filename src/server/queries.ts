@@ -79,6 +79,9 @@ function resolveBoardContext(
       facebookUrl: context.contact?.facebookUrl ?? null,
       linkedinUrl: context.contact?.linkedinUrl ?? null,
     } satisfies BoardContextFooter,
+    // `posting` arrived with memberships; an API deployment predating it omits
+    // the block. Default to "anyone may post" rather than gating the form.
+    posting: context.posting ?? { requiresMembership: false },
     // 4.0.0: talent directory is features.talentDirectory enum ('off' is truthy!).
     talentDirectoryVisibility: context.features.talentDirectory,
     // The `analytics` group is in the published SDK types, but an API

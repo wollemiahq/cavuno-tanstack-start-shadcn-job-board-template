@@ -790,3 +790,63 @@ describe('EmployerJobForm — office-location country lock', () => {
     await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
   });
 });
+
+describe('EmployerJobForm — members-only board', () => {
+  it('replaces the form with the join gate when the board refuses the write', async () => {
+    // Entitlement is not on the wire — billing options carry no `canPost` —
+    // so the gate comes from the refusal itself.
+    mocks.updateJob.mockResolvedValue({
+      ok: false,
+      code: 'membership_required',
+      message: 'Membership required.',
+    });
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
+        job={draftJob}
+        membershipGate={<div data-testid="membership-gate">Members only</div>}
+      />,
+    );
+
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() =>
+      expect(screen.getByTestId('membership-gate')).toBeVisible(),
+    );
+    expect(container.querySelector('form')).toBeNull();
+  });
+
+  it('keeps the form up for any other refusal', async () => {
+    mocks.updateJob.mockResolvedValue({
+      ok: false,
+      code: 'employer_jobs_quota_exceeded',
+      message: 'Quota exceeded.',
+    });
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
+        job={draftJob}
+        membershipGate={<div data-testid="membership-gate">Members only</div>}
+      />,
+    );
+
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    expect(screen.queryByTestId('membership-gate')).toBeNull();
+  });
+});
