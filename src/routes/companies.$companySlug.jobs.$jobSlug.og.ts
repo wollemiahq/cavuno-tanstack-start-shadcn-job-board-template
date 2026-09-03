@@ -12,6 +12,7 @@ import { getBoard } from '../lib/board';
 import { readBoardContext } from '../lib/board-context-cache';
 import { loadOgFont } from '../lib/og-font';
 import { ogNotFoundResponse, ogUnavailableResponse } from '../lib/og-http';
+import { ogImageSrc } from '../lib/og-image';
 import { renderOgPng } from '../lib/og-render';
 import { ogStyleValue, ogText, ogUrlAttr } from '../lib/og-text';
 import { ogThemeTokens } from '../lib/og-theme';
@@ -69,12 +70,15 @@ async function renderJobOg(job: Job): Promise<Response> {
       job.salaryTimeframe,
       job.salaryCurrency,
     ) ?? '';
-  const logo = job.company?.logoUrl ?? null;
 
-  // Subset the theme font to exactly the glyphs the card
-  // renders.
+  // Subset the theme font to exactly the glyphs the card renders. The logo
+  // is resolved in parallel — `null` when Satori could not be given something
+  // it decodes, which drops the frame with it (see og-image.ts).
   const text = [title, company, location, salary].join(' ');
-  const font = await loadOgFont(text);
+  const [font, logo] = await Promise.all([
+    loadOgFont(text),
+    ogImageSrc(job.company?.logoUrl),
+  ]);
 
   const metaParts = [location, salary].filter(Boolean).map(ogText);
 

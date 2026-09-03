@@ -17,6 +17,7 @@ import { getBoard } from '../lib/board';
 import { readBoardContext } from '../lib/board-context-cache';
 import { loadOgFont } from '../lib/og-font';
 import { ogNotFoundResponse, ogUnavailableResponse } from '../lib/og-http';
+import { ogImageSrc } from '../lib/og-image';
 import { renderOgPng } from '../lib/og-render';
 import { ogThemeTokens } from '../lib/og-theme';
 import { m } from '../paraglide/messages';
@@ -81,7 +82,9 @@ async function renderBlogOg(post: Post): Promise<Response> {
     title: post.title,
     excerpt: post.customExcerpt,
     authorName: author?.name ?? null,
-    authorAvatarUrl: author?.avatarUrl ?? null,
+    // `null` when Satori cannot decode it, which drops the avatar frame
+    // with it (see og-image.ts).
+    authorAvatarUrl: await ogImageSrc(author?.avatarUrl),
     dateLabel: post.publishedAt ? formatDate(language, post.publishedAt) : null,
   };
 
