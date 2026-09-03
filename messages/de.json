@@ -453,6 +453,10 @@
   "candidateAction_errorText": "Etwas ist schiefgelaufen. Versuche es erneut.",
   "candidateAction_reconciliationError": "Deine Änderung wurde gespeichert, aber diese Seite konnte nicht aktualisiert werden. Lade sie neu, um den neuesten Stand zu sehen.",
   "candidateAction_successText": "Änderungen gespeichert.",
+  "candidatePaywallLock_alertsTitle": "Job-Alerts erfordern einen kostenpflichtigen Tarif",
+  "candidatePaywallLock_ctaLabel": "Zugang freischalten",
+  "candidatePaywallLock_description": "Wählen Sie einen Tarif, um diesen Teil Ihres Kontos freizuschalten.",
+  "candidatePaywallLock_matchesTitle": "Job-Matches erfordern einen kostenpflichtigen Tarif",
   "categoryPage_jobsHeading": "{category}-Jobs",
   "categoryPage_notFoundText": "Kategorie nicht gefunden.",
   "commandDialog_searchPlaceholder": "Befehl suchen…",
@@ -1345,6 +1349,93 @@
   "meApplications_subheading": "Jobs, auf die du dich auf diesem Board beworben hast.",
   "meApplications_title": "Meine Bewerbungen",
   "meApplications_withdrawLabel": "Zurückziehen",
+  "membershipBenefit_postingDiscount": "{percent}% Rabatt auf weitere Anzeigen",
+  "membershipBenefit_talentMessagesUnlimited": "Unbegrenzte Nachrichten",
+  "membershipBenefit_talentUnlocksUnlimited": "Unbegrenzte Profilfreischaltungen",
+  "membershipCapacity_featuredAll": "Alle davon können hervorgehoben werden.",
+  "membershipCapacity_featuredCredits": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} davon kann hervorgehoben werden.",
+        "countPlural=*": "{countLabel} davon können hervorgehoben werden."
+      }
+    }
+  ],
+  "membershipCapacity_featuredEveryPost": "Jede Anzeige kann hervorgehoben werden.",
+  "membershipCapacity_featuredNone": "Keine hervorgehobenen Anzeigen",
+  "membershipCapacity_featuredNoneOfThem": "Keine davon kann hervorgehoben werden.",
+  "membershipCapacity_featuredSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} davon kann gleichzeitig hervorgehoben werden.",
+        "countPlural=*": "{countLabel} davon können gleichzeitig hervorgehoben werden."
+      }
+    }
+  ],
+  "membershipCapacity_postsCredits": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} einmalige Anzeige",
+        "countPlural=*": "{countLabel} einmalige Anzeigen"
+      }
+    }
+  ],
+  "membershipCapacity_postsSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Anzeige gleichzeitig online",
+        "countPlural=*": "{countLabel} Anzeigen gleichzeitig online"
+      }
+    }
+  ],
+  "membershipCapacity_postsUnlimited": "Unbegrenzte Anzeigen",
+  "memberships_contactCtaFallback": "Kontakt aufnehmen",
+  "memberships_contactPriceFallback": "Individuelle Preise",
+  "memberships_joinDashboardText": "Mitgliedschaften vergibt das Board-Team. Öffnen Sie Ihr Arbeitgeber-Dashboard, um fortzufahren.",
+  "memberships_joinLabel": "Mitglied werden",
+  "memberships_loadMoreLabel": "Mehr Mitglieder anzeigen",
+  "memberships_memberCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Mitglied",
+        "countPlural=*": "{countLabel} Mitglieder"
+      }
+    }
+  ],
+  "memberships_membersHeading": "Mitglieder",
+  "memberships_metaDescription": "Mitgliedschaften bei {boardName}: was jede enthält und welche Unternehmen sie haben.",
+  "memberships_subtitle": "Werden Sie Mitglied bei {boardName}. Mitglieder schalten Stellen und erscheinen im Mitgliederverzeichnis.",
+  "memberships_title": "Mitgliedschaften",
   "messageBubble_cancelLabel": "Abbrechen",
   "messageBubble_editLabel": "Bearbeiten",
   "messageBubble_editedText": "· Bearbeitet",
@@ -1395,6 +1486,7 @@
   "nav_blog": "Blog",
   "nav_companies": "Unternehmen",
   "nav_home": "Jobs",
+  "nav_memberships": "Mitgliedschaften",
   "nav_post": "Job veröffentlichen",
   "nav_pricing": "Preise",
   "nav_talent": "Talente",
@@ -1426,6 +1518,7 @@
   "planComposed_maxActiveJobs": "Bis zu {count} aktive Anzeigen",
   "planComposed_standardListing": "Eine Standard-Anzeige für {days} Tage",
   "planComposed_standardName": "Stellenanzeige",
+  "planFeature_countedValue": "{value} {name}",
   "planFeature_featured": [
     {
       "declarations": [
@@ -1457,6 +1550,7 @@
     }
   ],
   "planFeature_unlimitedActive": "Unbegrenzt aktive Jobs",
+  "planFeature_unlimitedValue": "Unbegrenzt {name}",
   "plan_featuredListing_description": "Eine hervorgehobene Anzeige für 30 Tage — oben auf dem Board angepinnt und in der wöchentlichen Job-Alert-Zusammenfassung hervorgehoben.",
   "plan_featuredListing_name": "Hervorgehobene Anzeige",
   "plan_free_description": "Eine Standard-Anzeige für 30 Tage",
@@ -1464,6 +1558,11 @@
   "plan_talentAccessMonthly_description": "Durchsuche das Talent-Verzeichnis und schalte Kandidatenprofile frei. 25 Profil-Freischaltungen und 10 Nachrichten zum Erstkontakt pro Monat.",
   "plan_talentAccessMonthly_name": "Talent-Zugang — monatlich",
   "postCard_minReadSuffix": "Min.",
+  "postGate_becomeMemberLabel": "Mitglied werden",
+  "postGate_postAsCompanyLabel": "Über Ihr Unternehmens-Dashboard veröffentlichen",
+  "postGate_bodyText": "Anzeigen auf diesem Board können nur Mitglieder schalten.",
+  "postGate_contactText": "Zugang nötig? Schreiben Sie an {email}.",
+  "postGate_signInLabel": "Anmelden",
   "postJob_applicationUrlLabel": "Bewerbungs-URL",
   "postJob_applicationUrlPlaceholder": "https://firma.de/bewerben oder jobs@firma.de",
   "postJob_checkoutButtonLabel": "Weiter zur sicheren Kaufabwicklung",

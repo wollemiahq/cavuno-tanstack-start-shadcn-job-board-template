@@ -35,6 +35,7 @@ import { getBoard } from './board';
 import { createBoardContextCache } from './board-context-cache-core';
 import { getDataSource } from './data-source.server';
 
+import type { EmployerOfferGate } from './board-context-cache-core';
 import type { DataSource } from './data-source';
 
 type BoardContext = Awaited<ReturnType<ReturnType<typeof getBoard>['context']>>;
@@ -75,12 +76,12 @@ export function resetBoardContextCache(source?: DataSource): void {
 /**
  * Per-isolate memo for the footer/nav "has employer offer page" gate.
  * Root shell reads this on every document; without a memo, soft navigations
- * that re-run the root loader re-hit plans.list + salesLed even though the
+ * that re-run the root loader re-hit the two plans.list reads even though the
  * answer is board-global and stable for the same TTL window as context.
  */
 export function readEmployerOfferGate(
-  load: () => Promise<{ hasEmployerOfferPage: boolean }>,
-): Promise<{ hasEmployerOfferPage: boolean }> {
+  load: () => Promise<EmployerOfferGate>,
+): Promise<EmployerOfferGate> {
   return cache.readEmployerOfferGate(load);
 }
 

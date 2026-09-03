@@ -6,6 +6,7 @@ import { Check } from 'lucide-react';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 
+import { planBenefitLines } from '@/board/plan-benefits';
 import { planDescription, planName } from '@/board/plan-labels';
 import {
   Page,
@@ -31,7 +32,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
-import type { Plan, SalesLedPlan } from '@cavuno/board';
+import type { Plan } from '@cavuno/board';
 
 export type EmployersPageViewDependencies = {
   postingPlanLink: (input: {
@@ -125,6 +126,33 @@ function FeatureList({ features }: { features: string[] }) {
   );
 }
 
+/**
+ * The price block. `pricingMode` is the authority, never `price` — a quote-only
+ * plan can still carry a zeroed price row, so reading `price` would advertise
+ * "Free" for an enterprise tier.
+ */
+function PlanPrice({ plan }: { plan: Plan }) {
+  if (plan.pricingMode === 'contact') {
+    return (
+      <p className="font-heading text-foreground text-3xl font-semibold tracking-tight">
+        {plan.priceText?.trim() || m.memberships_contactPriceFallback()}
+      </p>
+    );
+  }
+  return (
+    <p className="font-heading text-foreground text-3xl font-semibold tracking-tight">
+      {plan.kind === 'free'
+        ? m.employerLanding_freeLabel()
+        : formatPrice(plan.price)}
+      {plan.kind !== 'free' && plan.price ? (
+        <span className="text-muted-foreground ms-1 text-sm font-normal">
+          {intervalSuffix(plan.billingInterval)}
+        </span>
+      ) : null}
+    </p>
+  );
+}
+
 function PlanCard({
   plan,
   dependencies,
@@ -132,6 +160,7 @@ function PlanCard({
   plan: Plan;
   dependencies: EmployersPageViewDependencies;
 }) {
+  const contact = plan.pricingMode === 'contact';
   const actionLabel = plan.invoiceOnly
     ? m.employerLanding_requestInvoiceLabel()
     : plan.purpose === 'job_posting'
@@ -159,62 +188,42 @@ function PlanCard({
         ) : null}
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-5">
-        <p className="font-heading text-foreground text-3xl font-semibold tracking-tight">
-          {plan.kind === 'free'
-            ? m.employerLanding_freeLabel()
-            : formatPrice(plan.price)}
-          {plan.kind !== 'free' && plan.price ? (
-            <span className="text-muted-foreground ms-1 text-sm font-normal">
-              {intervalSuffix(plan.billingInterval)}
-            </span>
-          ) : null}
-        </p>
-        <FeatureList features={planFeatures(plan)} />
+        <PlanPrice plan={plan} />
+        <FeatureList
+          features={contact ? planBenefitLines(plan) : planFeatures(plan)}
+        />
       </CardContent>
       <CardFooter>
-        {plan.purpose === 'job_posting'
-          ? dependencies.postingPlanLink({
-              planId: plan.id,
-              className: actionClassName,
-              children: actionLabel,
-            })
-          : plan.purpose === 'talent_access' && dependencies.talentPlanAction
-            ? dependencies.talentPlanAction({
-                planId: plan.id,
-                className: actionClassName,
-                children: actionLabel,
-              })
-            : dependencies.joinLink({
-                className: actionClassName,
-                children: actionLabel,
-              })}
-      </CardFooter>
-    </Card>
-  );
-}
-
-function SalesLedCard({ plan }: { plan: SalesLedPlan }) {
-  return (
-    <Card className="h-full">
-      <CardHeader>
-        <CardTitle>{planName(plan)}</CardTitle>
-        {planDescription(plan) ? (
-          <CardDescription>{planDescription(plan)}</CardDescription>
-        ) : null}
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-5">
-        <p className="font-heading text-foreground text-3xl font-semibold tracking-tight">
-          {plan.priceText}
-        </p>
-        <FeatureList features={plan.featuredBullets} />
-      </CardContent>
-      <CardFooter>
-        <a
-          href={plan.ctaDestination}
-          className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
-        >
-          {plan.ctaText}
-        </a>
+        {contact ? (
+          // A contact plan whose operator left the destination unset renders no
+          // CTA rather than a dead control.
+          plan.ctaDestination ? (
+            <a
+              href={plan.ctaDestination}
+              className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
+            >
+              {plan.ctaText?.trim() || m.memberships_contactCtaFallback()}
+            </a>
+          ) : null
+        ) : plan.purpose === 'job_posting' ? (
+          dependencies.postingPlanLink({
+            planId: plan.id,
+            className: actionClassName,
+            children: actionLabel,
+          })
+        ) : plan.purpose === 'talent_access' &&
+          dependencies.talentPlanAction ? (
+          dependencies.talentPlanAction({
+            planId: plan.id,
+            className: actionClassName,
+            children: actionLabel,
+          })
+        ) : (
+          dependencies.joinLink({
+            className: actionClassName,
+            children: actionLabel,
+          })
+        )}
       </CardFooter>
     </Card>
   );
@@ -245,23 +254,31 @@ function PlanGroup({
 
 export function EmployersPageView({
   plans,
-  salesLed,
+  contactPlans,
   seo,
   dependencies = employersPageViewDependencies,
   talentSectionAction,
 }: {
   plans: Plan[];
-  salesLed: SalesLedPlan[];
+  /**
+   * Quote-only employer-service tiers: `plans.list({ purpose:
+   * 'employer_service' })` kept to `pricingMode === 'contact'`. The deprecated
+   * `plans.salesLed()` read is gone — these are ordinary plans now.
+   */
+  contactPlans: Plan[];
   seo: { boardName: string };
   dependencies?: EmployersPageViewDependencies;
   talentSectionAction?: ReactNode;
 }) {
   const jobPosting = plans.filter((plan) => plan.purpose === 'job_posting');
   const talentAccess = plans.filter((plan) => plan.purpose === 'talent_access');
+  // Membership tiers get their own page (roster included); this surface only
+  // points at it, and only when the board actually publishes one.
+  const hasMemberships = plans.some((plan) => plan.purpose === 'membership');
   const empty =
     jobPosting.length === 0 &&
     talentAccess.length === 0 &&
-    salesLed.length === 0;
+    contactPlans.length === 0;
 
   return (
     <Page width="wide">
@@ -297,12 +314,25 @@ export function EmployersPageView({
               dependencies={dependencies}
               action={talentSectionAction}
             />
-            {salesLed.length > 0 ? (
-              <PageSection title={m.employerLanding_enterpriseHeading()}>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {salesLed.map((plan) => (
-                    <SalesLedCard key={plan.id} plan={plan} />
-                  ))}
+            <PlanGroup
+              title={m.employerLanding_enterpriseHeading()}
+              plans={contactPlans}
+              dependencies={dependencies}
+            />
+            {hasMemberships ? (
+              <PageSection
+                title={m.memberships_title()}
+                description={m.memberships_subtitle({
+                  boardName: seo.boardName,
+                })}
+              >
+                <div>
+                  <Link
+                    to="/memberships"
+                    className={buttonVariants({ variant: 'outline' })}
+                  >
+                    {m.nav_memberships()}
+                  </Link>
                 </div>
               </PageSection>
             ) : null}

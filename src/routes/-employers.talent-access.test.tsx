@@ -32,6 +32,11 @@ const talentPlan = {
   invoiceOnly: false,
   publishTiming: 'on_payment',
   netTermsDays: null,
+  billingIntervalCount: null,
+  pricingMode: 'priced',
+  priceText: null,
+  ctaText: null,
+  ctaDestination: null,
   price: {
     currency: 'usd',
     amountCents: 4900,
@@ -43,6 +48,7 @@ const talentPlan = {
     featuredSlots: 0,
     featureSelectionMode: 'manual',
   },
+  features: {},
 } satisfies Plan;
 
 const emptyGrant = {
@@ -84,7 +90,7 @@ async function renderEmployers(options?: {
   return await renderRouted(
     <EmployersTalentAccessView
       plans={[talentPlan]}
-      salesLed={[]}
+      contactPlans={[]}
       seo={{ boardName: 'Example Jobs' }}
       sessionId={options?.sessionId}
       viewer={

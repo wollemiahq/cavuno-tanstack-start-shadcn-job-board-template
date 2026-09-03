@@ -79,6 +79,9 @@ function resolveBoardContext(
       facebookUrl: context.contact?.facebookUrl ?? null,
       linkedinUrl: context.contact?.linkedinUrl ?? null,
     } satisfies BoardContextFooter,
+    // `posting` arrived with memberships; an API deployment predating it omits
+    // the block. Default to "anyone may post" rather than gating the form.
+    posting: context.posting ?? { requiresMembership: false },
     // 4.0.0: talent directory is features.talentDirectory enum ('off' is truthy!).
     talentDirectoryVisibility: context.features.talentDirectory,
     // The `analytics` group is in the published SDK types, but an API
@@ -124,8 +127,9 @@ export const getStaleBoardContext = createServerFn({ method: 'GET' }).handler(
 
 /**
  * Whether /employers has anything to sell — self-service plans, talent
- * plans, or sales-led plans — the hosted `hasEmployerOfferPage` gate the
- * footer/nav Pricing links key on. OPEN read on an open board; a
+ * plans, or quote-only employer-service tiers — the hosted
+ * `hasEmployerOfferPage` gate the footer/nav Pricing links key on, plus
+ * whether the board publishes a membership plan (the Memberships link). OPEN read on an open board; a
  * password-protected board refuses ungated plan reads, so the links hide
  * until the wall is passed (the wall page renders no footer nav anyway).
  */
@@ -135,22 +139,30 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
       // Board-global, always-anonymous reads on the root loader's critical
       // path — edge-cache them with the longer board-global TTL, and memo
       // the boolean gate per isolate so soft root re-runs do not re-hit
-      // plans.list + salesLed.
+      // the two plans.list reads.
       return await readEmployerOfferGate(async () => {
-        const [plans, salesLed] = await Promise.all([
+        const [plans, employerServicePlans] = await Promise.all([
           getBoard().plans.list({}, boardGlobalReadCache()),
-          getBoard().plans.salesLed(boardGlobalReadCache()),
+          getBoard().plans.list(
+            { purpose: 'employer_service' },
+            boardGlobalReadCache(),
+          ),
         ]);
         return {
           hasEmployerOfferPage:
-            plans.data.length > 0 || salesLed.data.length > 0,
+            plans.data.length > 0 || employerServicePlans.data.length > 0,
+          // The Memberships link is loader-driven off the same read, so it
+          // never flashes in on a board that publishes no membership plan.
+          hasMembershipPage: plans.data.some(
+            (plan) => plan.purpose === 'membership',
+          ),
         };
       });
     } catch {
       // Fail closed: this gate runs on the root loader for every route, so a
       // transient plan-read failure (or a password-gated board) must only
       // hide the footer/nav Pricing links, never fault the whole page.
-      return { hasEmployerOfferPage: false };
+      return { hasEmployerOfferPage: false, hasMembershipPage: false };
     }
   },
 );
@@ -443,10 +455,22 @@ export const listPlans = createServerFn({ method: 'GET' })
     gatedRead(context, (h) => getBoard().plans.list(data, { headers: h })),
   );
 
-export const listSalesLedPlans = createServerFn({ method: 'GET' })
+/**
+ * Quote-only employer-service tiers. Replaces the deprecated
+ * `plans.salesLed()` read: the same rows come back from the plan list under
+ * the `employer_service` purpose, and `pricingMode` is what marks one
+ * quote-only.
+ */
+export const listContactPlans = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
-    gatedRead(context, (h) => getBoard().plans.salesLed({ headers: h })),
+    gatedRead(context, async (h) => {
+      const plans = await getBoard().plans.list(
+        { purpose: 'employer_service' },
+        { headers: h },
+      );
+      return plans.data.filter((plan) => plan.pricingMode === 'contact');
+    }),
   );
 
 export const listCompanyJobs = createServerFn({ method: 'GET' })

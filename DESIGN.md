@@ -546,6 +546,22 @@ Props:
 - `description?: ReactNode`
 - `title?: ReactNode`
 
+### CandidatePaywallLock — `src/components/board/candidate-paywall-lock.tsx`
+
+Stands in for a candidate feature the viewer's job-seeker plan does not
+unlock. Entitlements are per plan and are not on the wire, so this is
+rendered from the board's 403, never pre-computed from a context flag.
+
+The CTA is the one gated job listings already use — `/account/access` with
+the originating path as `returnTo` — so a buyer lands back where they were.
+`title` names the feature; the offers come from `board.paywall.offers()`.
+
+Props:
+
+- `offers: { object: "paywall_offer"; offerKey: string; label: string; billingLabel: string; amountCents: number; currency: stri…`
+- `returnTo: string`
+- `title: string`
+
 ### CompanyAvatar — `src/components/board/company-avatar.tsx`
 
 Company mark — the one shared way a company logo renders across every
@@ -589,6 +605,7 @@ Props:
 - `companySlug: string`
 - `jobCountLabel: string`
 - `logoUrl: string | null`
+- `membershipPlanName?: string | null | undefined`
 - `name: string`
 - `publishedJobCount: number`
 - `summary: string | null`
@@ -926,6 +943,42 @@ Props:
 - `searchAriaLabel?: string | undefined`
 - `searchLabel: string`
 - `value: string`
+
+### MembershipBadge — `src/components/board/membership-badge.tsx`
+
+A company's membership, rendered as public identity wherever that company
+appears. The badge text is the plan's CURRENT display name off the wire
+(`company.membership.planName`) — operators rename plans, and `planId` is the
+stable key, so nothing here is keyed on the wording.
+
+Renders nothing when the company holds no membership, so every call site can
+mount it unconditionally.
+
+Props:
+
+- `className?: string | undefined`
+- `planName: string | null | undefined`
+
+### MembershipPostGate — `src/components/board/membership-post-gate.tsx`
+
+The join gate that stands in for the posting form on a members-only board —
+both the anonymous `/post` route (`context.posting.requiresMembership`) and
+the signed-in employer flow, where the board refuses the write with
+`membership_required`.
+
+Signed out, the visitor gets both roads: become a member, or sign in (a
+member's account already carries the company's membership). Signed in, the
+anonymous form is the wrong surface either way: a member posts from their
+company dashboard, where the employer flow knows the membership, and a
+non-member can still become one. When the board publishes a
+contact address, a line invites the visitor to ask for access.
+
+Props:
+
+- `boardName: string`
+- `contactEmail?: string | null | undefined`
+- `returnTo?: string | undefined`
+- `signedIn?: boolean | undefined`
 
 ### PublicContentPending — `src/components/board/public-content-pending.tsx`
 
@@ -1422,11 +1475,12 @@ Props:
 
 Props:
 
-- `billingOptions: { id: string; object: "employer_billing_option"; type: "subscription" | "order"; planId: string; planName: string; pl…`
+- `billingOptions: { id: string; object: "employer_billing_option"; type: "subscription" | "order" | "plan_assignment"; kind?: "member_p…`
 - `dependencies?: EmployerJobFormDependencies | undefined`
 - `job?: ({ id: string; object: "employer_job"; title: string; slug: string | null; status: "draft" | "published" | "expired" …`
 - `jobForm?: JobFormSource | null | undefined`
 - `locale: string`
+- `membershipGate?: ReactNode`
 - `mode: EmployerJobFormMode`
 - `officeLocationSuggestions: LocationSuggestionState`
 - `plans: { object: "job_posting_plan"; id: string; name: string; description: string | null; kind: string; billingInterval: "m…`

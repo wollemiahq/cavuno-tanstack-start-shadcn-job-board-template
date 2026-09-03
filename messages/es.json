@@ -453,6 +453,10 @@
   "candidateAction_errorText": "Se ha producido un error. Inténtalo de nuevo.",
   "candidateAction_reconciliationError": "El cambio se ha guardado, pero esta página no se ha podido recargar. Vuelve a cargarla para ver la información más reciente.",
   "candidateAction_successText": "Cambios guardados.",
+  "candidatePaywallLock_alertsTitle": "Las alertas de empleo requieren un plan de pago",
+  "candidatePaywallLock_ctaLabel": "Desbloquear acceso",
+  "candidatePaywallLock_description": "Elige un plan para desbloquear esta parte de tu cuenta.",
+  "candidatePaywallLock_matchesTitle": "Las recomendaciones requieren un plan de pago",
   "categoryPage_jobsHeading": "Ofertas de {category}",
   "categoryPage_notFoundText": "Categoría no encontrada.",
   "commandDialog_searchPlaceholder": "Busca un comando para ejecutar...",
@@ -1345,6 +1349,93 @@
   "meApplications_subheading": "Ofertas a las que te has inscrito en este portal.",
   "meApplications_title": "Mis candidaturas",
   "meApplications_withdrawLabel": "Retirar",
+  "membershipBenefit_postingDiscount": "{percent}% de descuento en publicaciones adicionales",
+  "membershipBenefit_talentMessagesUnlimited": "Mensajes ilimitados",
+  "membershipBenefit_talentUnlocksUnlimited": "Desbloqueos de perfil ilimitados",
+  "membershipCapacity_featuredAll": "Todas ellas pueden destacarse.",
+  "membershipCapacity_featuredCredits": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} de ellas puede destacarse.",
+        "countPlural=*": "{countLabel} de ellas pueden destacarse."
+      }
+    }
+  ],
+  "membershipCapacity_featuredEveryPost": "Cada publicación puede destacarse.",
+  "membershipCapacity_featuredNone": "Sin ofertas destacadas",
+  "membershipCapacity_featuredNoneOfThem": "Ninguna de ellas puede destacarse.",
+  "membershipCapacity_featuredSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} de ellas puede destacarse a la vez.",
+        "countPlural=*": "{countLabel} de ellas pueden destacarse a la vez."
+      }
+    }
+  ],
+  "membershipCapacity_postsCredits": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} publicación puntual",
+        "countPlural=*": "{countLabel} publicaciones puntuales"
+      }
+    }
+  ],
+  "membershipCapacity_postsSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta publicada a la vez",
+        "countPlural=*": "{countLabel} ofertas publicadas a la vez"
+      }
+    }
+  ],
+  "membershipCapacity_postsUnlimited": "Publicaciones ilimitadas",
+  "memberships_contactCtaFallback": "Contactar",
+  "memberships_contactPriceFallback": "Precio personalizado",
+  "memberships_joinDashboardText": "Las membresías las concede el equipo del portal. Abre tu panel de empleador para continuar.",
+  "memberships_joinLabel": "Unirse",
+  "memberships_loadMoreLabel": "Ver más miembros",
+  "memberships_memberCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} miembro",
+        "countPlural=*": "{countLabel} miembros"
+      }
+    }
+  ],
+  "memberships_membersHeading": "Miembros",
+  "memberships_metaDescription": "Planes de membresía en {boardName}: qué incluye cada uno y qué empresas lo tienen.",
+  "memberships_subtitle": "Hazte miembro de {boardName}. Los miembros publican ofertas y aparecen en el directorio de miembros.",
+  "memberships_title": "Membresías",
   "messageBubble_cancelLabel": "Cancelar",
   "messageBubble_editLabel": "Editar",
   "messageBubble_editedText": "· Editado",
@@ -1395,6 +1486,7 @@
   "nav_blog": "Blog",
   "nav_companies": "Empresas",
   "nav_home": "Ofertas",
+  "nav_memberships": "Membresías",
   "nav_post": "Publicar una oferta",
   "nav_pricing": "Precios",
   "nav_talent": "Talento",
@@ -1426,6 +1518,7 @@
   "planComposed_maxActiveJobs": "Hasta {count} ofertas activas",
   "planComposed_standardListing": "Una oferta estándar durante {days} días",
   "planComposed_standardName": "Publicación de oferta",
+  "planFeature_countedValue": "{value} {name}",
   "planFeature_featured": [
     {
       "declarations": [
@@ -1457,6 +1550,7 @@
     }
   ],
   "planFeature_unlimitedActive": "Ofertas activas ilimitadas",
+  "planFeature_unlimitedValue": "{name} ilimitados",
   "plan_featuredListing_description": "Una oferta destacada durante 30 días: fijada en la parte superior del portal y resaltada en el resumen semanal de alertas.",
   "plan_featuredListing_name": "Oferta destacada",
   "plan_free_description": "Una oferta estándar durante 30 días",
@@ -1464,6 +1558,11 @@
   "plan_talentAccessMonthly_description": "Busca en el directorio de talento y desbloquea perfiles de candidatos. 25 desbloqueos de perfil y 10 mensajes al mes.",
   "plan_talentAccessMonthly_name": "Acceso al talento: mensual",
   "postCard_minReadSuffix": "min",
+  "postGate_becomeMemberLabel": "Hazte miembro",
+  "postGate_postAsCompanyLabel": "Publicar desde el panel de tu empresa",
+  "postGate_bodyText": "Publicar en este portal está reservado a los miembros.",
+  "postGate_contactText": "¿Necesitas acceso? Escribe a {email}.",
+  "postGate_signInLabel": "Iniciar sesión",
   "postJob_applicationUrlLabel": "URL de candidatura",
   "postJob_applicationUrlPlaceholder": "https://empresa.com/empleo o empleo@empresa.com",
   "postJob_checkoutButtonLabel": "Ir al pago seguro",

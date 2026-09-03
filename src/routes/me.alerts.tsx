@@ -10,8 +10,10 @@ import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router';
 import { AlertManager } from '../components/alert-manager';
 import { m } from '../paraglide/messages';
 import { getMyAlerts } from '../server/account';
+import { getPaywallOffers } from '../server/paywall';
 import { getSeoBase, searchPlaces } from '../server/queries';
 
+import { CandidatePaywallLock } from '@/components/board/candidate-paywall-lock';
 import {
   CandidateRouteErrorPage,
   CandidateRoutePendingPage,
@@ -37,10 +39,19 @@ export const Route = createFileRoute('/me/alerts')({
         searchPlaces({ data: {} }).catch(() => ({ data: [] })),
         getSeoBase(),
       ]);
-      return { alerts, places, seo };
+      return { locked: false as const, alerts, places, seo };
     } catch (error) {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
+      if (authFailure === 'paywall-locked') {
+        // Alert entitlement rides the viewer's job-seeker plan and is not on
+        // the wire — the lock comes from the board's refusal, not a flag.
+        const [offers, seo] = await Promise.all([
+          getPaywallOffers().catch(() => ({ data: [] })),
+          getSeoBase(),
+        ]);
+        return { locked: true as const, offers: offers.data, seo };
+      }
       if (authFailure === 'email-unverified') {
         throw redirect({
           to: '/auth/verify-email-required',
@@ -69,7 +80,19 @@ export const Route = createFileRoute('/me/alerts')({
 });
 
 function AlertsPage() {
-  const { alerts, places } = Route.useLoaderData();
+  const data = Route.useLoaderData();
+  if (data.locked) {
+    return (
+      <CandidateShell>
+        <CandidatePaywallLock
+          title={m.candidatePaywallLock_alertsTitle()}
+          offers={data.offers}
+          returnTo="/me/alerts"
+        />
+      </CandidateShell>
+    );
+  }
+  const { alerts, places } = data;
   // With no alerts the Empty composition IS the page — repeating the page
   // header above it reads the same thing twice.
   const hasAlerts = alerts.data.length > 0;

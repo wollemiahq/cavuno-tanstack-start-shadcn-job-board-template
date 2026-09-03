@@ -20,11 +20,13 @@ import { candidateReturnTo } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getRecommendedJobs, saveJob } from '../server/account';
+import { getPaywallOffers } from '../server/paywall';
 import { getFreshBoardContext, getSeoBase } from '../server/queries';
 import { SelectedJobDetail } from './-selected-job-detail';
 import { useSelectedJob } from './-use-selected-job';
 
 import { toSavedJobCardVM } from '@/board/job-view-model';
+import { CandidatePaywallLock } from '@/components/board/candidate-paywall-lock';
 import { JobSearchResult } from '@/components/board/job-search-result';
 import { SaveJobButton } from '@/components/board/save-job-button';
 import {
@@ -61,12 +63,15 @@ export type MatchesLoaderDependencies = {
   }>;
   getRecommendedJobs: () => ReturnType<typeof getRecommendedJobs>;
   getSeoBase: () => Promise<{ boardName: string }>;
+  /** Offers for the lock UI — only read once the board has refused. */
+  getPaywallOffers: () => ReturnType<typeof getPaywallOffers>;
 };
 
 const matchesLoaderDependencies: MatchesLoaderDependencies = {
   getBoardContext: getFreshBoardContext,
   getRecommendedJobs,
   getSeoBase,
+  getPaywallOffers,
 };
 
 export function createMatchesLoader(
@@ -87,11 +92,20 @@ export function createMatchesLoader(
         dependencies.getRecommendedJobs(),
         dependencies.getSeoBase(),
       ]);
-      return { ...recommended, seo };
+      return { locked: false as const, ...recommended, seo };
     } catch (error) {
       if (isRedirect(error)) throw error;
       if (isApiNotFound(error)) throw notFound();
       const authFailure = candidateLoaderError(error);
+      if (authFailure === 'paywall-locked') {
+        // Entitlement is per job-seeker plan and is not on the wire, so the
+        // lock is rendered from the refusal, not pre-computed from context.
+        const [offers, seo] = await Promise.all([
+          dependencies.getPaywallOffers().catch(() => ({ data: [] })),
+          dependencies.getSeoBase(),
+        ]);
+        return { locked: true as const, offers: offers.data, seo };
+      }
       if (authFailure === 'email-unverified') {
         throw redirect({
           to: '/auth/verify-email-required',
@@ -111,6 +125,10 @@ export function createMatchesLoader(
     }
   };
 }
+
+/** The loader's two shapes: the recommendations, or the plan lock. */
+type MatchesData = Awaited<ReturnType<ReturnType<typeof createMatchesLoader>>>;
+type MatchesResults = Extract<MatchesData, { locked: false }>;
 
 export const Route = createFileRoute('/matches')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
@@ -136,7 +154,26 @@ export const Route = createFileRoute('/matches')({
 });
 
 function JobMatchesPage() {
-  const recommendedJobs = Route.useLoaderData();
+  const loaderData = Route.useLoaderData();
+  if (loaderData.locked) {
+    return (
+      <Page width="wide">
+        <CandidatePaywallLock
+          title={m.candidatePaywallLock_matchesTitle()}
+          offers={loaderData.offers}
+          returnTo="/matches"
+        />
+      </Page>
+    );
+  }
+  return <JobMatchesResults recommendedJobs={loaderData} />;
+}
+
+function JobMatchesResults({
+  recommendedJobs,
+}: {
+  recommendedJobs: MatchesResults;
+}) {
   const search = Route.useSearch();
   const { board } = rootApi.useLoaderData();
   const { user } = useRootSession();

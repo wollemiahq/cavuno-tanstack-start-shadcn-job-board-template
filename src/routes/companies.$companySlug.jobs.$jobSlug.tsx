@@ -76,8 +76,14 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
 const rootApi = getRouteApi('__root__');
 
 function JobDetailPage() {
-  const { job, user, similar, companySummary, applicationState } =
-    Route.useLoaderData();
+  const {
+    job,
+    user,
+    similar,
+    companySummary,
+    companyMembershipPlanName,
+    applicationState,
+  } = Route.useLoaderData();
   const { companySlug } = Route.useParams();
   const { board } = rootApi.useLoaderData();
   const defaults = jobAlertDefaultsFromJob(job);
@@ -95,6 +101,7 @@ function JobDetailPage() {
     board.language,
     getLocale(),
     board,
+    companyMembershipPlanName,
   );
 
   return (

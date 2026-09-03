@@ -34,7 +34,6 @@ import type { TalentAccessResult } from '@/server/talent-access';
 import type {
   CompanyBillingPortalSession,
   Plan,
-  SalesLedPlan,
   TalentAccessCheckoutSession,
   TalentAccessUpgrade,
 } from '@cavuno/board';
@@ -53,7 +52,7 @@ export type EmployersTalentViewer =
 
 export function EmployersTalentAccessView({
   plans,
-  salesLed,
+  contactPlans,
   seo,
   sessionId,
   viewer,
@@ -66,7 +65,7 @@ export function EmployersTalentAccessView({
   reportActionError,
 }: {
   plans: Plan[];
-  salesLed: SalesLedPlan[];
+  contactPlans: Plan[];
   seo: { boardName: string };
   sessionId?: string;
   viewer: EmployersTalentViewer;
@@ -339,7 +338,7 @@ export function EmployersTalentAccessView({
   return (
     <EmployersPageView
       plans={plans}
-      salesLed={salesLed}
+      contactPlans={contactPlans}
       seo={seo}
       talentSectionAction={talentSectionAction}
       dependencies={{

@@ -9,7 +9,12 @@ import { cn } from '@/lib/utils';
 const mobileNavItemClassName =
   'flex items-center rounded-xl px-4 py-3 text-lg font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50';
 
-type MobileNavDestination = '/jobs' | '/companies' | '/talent' | '/blog';
+type MobileNavDestination =
+  | '/jobs'
+  | '/companies'
+  | '/talent'
+  | '/blog'
+  | '/memberships';
 
 /**
  * Mobile nav disclosure — a plain non-modal panel pinned from the header's

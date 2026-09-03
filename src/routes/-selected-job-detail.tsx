@@ -63,6 +63,7 @@ export function SelectedJobDetail({
         board.language,
         getLocale(),
         board,
+        state.companyMembershipPlanName,
       )
     : undefined;
 

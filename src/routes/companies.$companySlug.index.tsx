@@ -316,6 +316,7 @@ function CompanyPage() {
                         summary={c.summary}
                         publishedJobCount={c.publishedJobCount}
                         jobCountLabel={jobCountLabel(c.publishedJobCount)}
+                        membershipPlanName={c.membership?.planName ?? null}
                       />
                     ))}
                   </div>

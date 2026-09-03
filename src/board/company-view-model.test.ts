@@ -26,6 +26,7 @@ const company: PublicCompany = {
   jobCount: 3,
   publishedJobCount: 3,
   salarySampleCount: 0,
+  membership: null,
   links: { public: 'https://jobs.example/companies/acme-research' },
 };
 
@@ -41,6 +42,7 @@ describe('company view models', () => {
       detailHref: '/companies/acme-research',
       publishedJobCount: 3,
       openJobsLabel: '3 open jobs',
+      membershipPlanName: null,
     });
   });
 
@@ -95,5 +97,23 @@ describe('company view models', () => {
     expect(vm.viewSalariesLabel).toBe('View salaries');
     expect(vm).not.toHaveProperty('jobsHref');
     expect(vm).not.toHaveProperty('visitWebsiteLabel');
+  });
+});
+
+describe('company membership is public identity', () => {
+  it('carries the plan name from the wire onto the card view-model', () => {
+    expect(
+      toCompanyCardVM(
+        {
+          ...company,
+          membership: { planId: 'plan-founding', planName: 'Founding member' },
+        },
+        labels,
+      ).membershipPlanName,
+    ).toBe('Founding member');
+  });
+
+  it('carries null for a company with no membership', () => {
+    expect(toCompanyCardVM(company, labels).membershipPlanName).toBeNull();
   });
 });

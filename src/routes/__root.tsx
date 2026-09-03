@@ -427,6 +427,7 @@ function RootChrome({
       employerCompanies={employerCompanies}
       onSignOut={clearSession}
       talentDirectoryVisibility={board.talentDirectoryVisibility}
+      hasMembershipPage={offerGate.hasMembershipPage}
       messagesNav={
         user && board.features.messaging ? (
           <Suspense fallback={null}>
@@ -524,6 +525,7 @@ function RootChrome({
               footer={board.footer}
               talentDirectoryVisibility={board.talentDirectoryVisibility}
               hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
+              hasMembershipPage={offerGate.hasMembershipPage}
               cookiePreferencesAction={<CookiePreferencesFooterAction />}
             />
           </Suspense>

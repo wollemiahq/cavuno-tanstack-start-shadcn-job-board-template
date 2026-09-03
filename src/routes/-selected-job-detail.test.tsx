@@ -137,6 +137,7 @@ const board = {
   },
   talentDirectoryVisibility: 'public',
   talentAccessModel: null,
+  posting: { requiresMembership: false },
   // The full jobForm group as 4.12.0 types it: an unrestricted board, which
   // is what this fixture is exercising.
   jobForm: {
@@ -177,6 +178,7 @@ function renderSelectedJob(status: SelectedJobState['status']) {
     status,
     job,
     companySummary: null,
+    companyMembershipPlanName: null,
     applicationState: 'not-applied',
     retry: vi.fn(),
   };

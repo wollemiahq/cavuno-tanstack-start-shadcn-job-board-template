@@ -7,6 +7,7 @@ import type { JobCardVM } from '@/board/job-view-model';
 import type { OverallSalaryVM } from '@/board/salary-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
 import { JobCard } from '@/components/board/job-card';
+import { MembershipBadge } from '@/components/board/membership-badge';
 import { SearchDetailHeader } from '@/components/board/search-detail-header';
 import { Prose } from '@/components/prose';
 import { SearchResultDetailHeader } from '@/components/search-results/search-results';
@@ -97,9 +98,12 @@ function ExpandedCompanyDetailHeader({
                 vm.name
               )}
             </Text>
-            {vm.openJobsLabel ? (
-              <Badge variant="secondary">{vm.openJobsLabel}</Badge>
-            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              <MembershipBadge planName={vm.membershipPlanName} />
+              {vm.openJobsLabel ? (
+                <Badge variant="secondary">{vm.openJobsLabel}</Badge>
+              ) : null}
+            </div>
           </div>
         </div>
 

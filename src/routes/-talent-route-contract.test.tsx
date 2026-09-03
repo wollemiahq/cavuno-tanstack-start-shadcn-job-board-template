@@ -630,6 +630,11 @@ describe('opaque talent profile unlock gate', () => {
             invoiceOnly: false,
             publishTiming: 'on_payment',
             netTermsDays: null,
+            billingIntervalCount: null,
+            pricingMode: 'priced',
+            priceText: null,
+            ctaText: null,
+            ctaDestination: null,
             price: {
               currency: 'usd',
               amountCents: 4900,
@@ -641,6 +646,7 @@ describe('opaque talent profile unlock gate', () => {
               featuredSlots: 0,
               featureSelectionMode: 'manual',
             },
+            features: {},
           },
         ]}
         busy={null}

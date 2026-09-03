@@ -63,6 +63,7 @@ export function createJobDetailLoader(
         user,
         similar,
         companySummary: company?.summary ?? null,
+        companyMembershipPlanName: company?.membership?.planName ?? null,
         seo: page.seo,
         head: page.head,
         jsonLd: page.jsonLd,

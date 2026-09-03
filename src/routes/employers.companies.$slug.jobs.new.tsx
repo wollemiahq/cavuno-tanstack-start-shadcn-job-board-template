@@ -23,6 +23,7 @@ import { getCompanyWorkspace } from '../server/employers';
 import { getRemotePermits, getSeoBase } from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
+import { MembershipPostGate } from '@/components/board/membership-post-gate';
 import { EmployerJobForm } from '@/components/employer-job-form';
 import { Page, PageContent } from '@/components/layout/page';
 import { Text } from '@/components/text';
@@ -93,6 +94,14 @@ function NewJobPage() {
             officeLocationSuggestions={officeLocationSuggestions}
             jobForm={board}
             mode={{ kind: 'create' }}
+            membershipGate={
+              <MembershipPostGate
+                boardName={board.name}
+                contactEmail={board.footer.contactEmail}
+                signedIn
+                returnTo={`/employers/companies/${workspace.slug}/jobs/new`}
+              />
+            }
           />
         </div>
       </PageContent>

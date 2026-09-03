@@ -19,6 +19,7 @@ import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PostRouteImport } from './routes/post'
 import { Route as PasswordRouteImport } from './routes/password'
 import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as MembershipsRouteImport } from './routes/memberships'
 import { Route as MatchesRouteImport } from './routes/matches'
 import { Route as IndexnowKeyDottxtRouteImport } from './routes/indexnow-key[.]txt'
 import { Route as ImpressumRouteImport } from './routes/impressum'
@@ -151,6 +152,11 @@ const PasswordRoute = PasswordRouteImport.update({
 const MessagesRoute = MessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MembershipsRoute = MembershipsRouteImport.update({
+  id: '/memberships',
+  path: '/memberships',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MatchesRoute = MatchesRouteImport.update({
@@ -604,6 +610,7 @@ export interface FileRoutesByFullPath {
   '/impressum': typeof ImpressumRoute
   '/indexnow-key.txt': typeof IndexnowKeyDottxtRoute
   '/matches': typeof MatchesRoute
+  '/memberships': typeof MembershipsRoute
   '/messages': typeof MessagesRouteWithChildren
   '/password': typeof PasswordRoute
   '/post': typeof PostRoute
@@ -699,6 +706,7 @@ export interface FileRoutesByTo {
   '/impressum': typeof ImpressumRoute
   '/indexnow-key.txt': typeof IndexnowKeyDottxtRoute
   '/matches': typeof MatchesRoute
+  '/memberships': typeof MembershipsRoute
   '/messages': typeof MessagesRouteWithChildren
   '/password': typeof PasswordRoute
   '/post': typeof PostRoute
@@ -795,6 +803,7 @@ export interface FileRoutesById {
   '/impressum': typeof ImpressumRoute
   '/indexnow-key.txt': typeof IndexnowKeyDottxtRoute
   '/matches': typeof MatchesRoute
+  '/memberships': typeof MembershipsRoute
   '/messages': typeof MessagesRouteWithChildren
   '/password': typeof PasswordRoute
   '/post': typeof PostRoute
@@ -892,6 +901,7 @@ export interface FileRouteTypes {
     | '/impressum'
     | '/indexnow-key.txt'
     | '/matches'
+    | '/memberships'
     | '/messages'
     | '/password'
     | '/post'
@@ -987,6 +997,7 @@ export interface FileRouteTypes {
     | '/impressum'
     | '/indexnow-key.txt'
     | '/matches'
+    | '/memberships'
     | '/messages'
     | '/password'
     | '/post'
@@ -1082,6 +1093,7 @@ export interface FileRouteTypes {
     | '/impressum'
     | '/indexnow-key.txt'
     | '/matches'
+    | '/memberships'
     | '/messages'
     | '/password'
     | '/post'
@@ -1178,6 +1190,7 @@ export interface RootRouteChildren {
   ImpressumRoute: typeof ImpressumRoute
   IndexnowKeyDottxtRoute: typeof IndexnowKeyDottxtRoute
   MatchesRoute: typeof MatchesRoute
+  MembershipsRoute: typeof MembershipsRoute
   MessagesRoute: typeof MessagesRouteWithChildren
   PasswordRoute: typeof PasswordRoute
   PostRoute: typeof PostRoute
@@ -1330,6 +1343,13 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/messages'
       preLoaderRoute: typeof MessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/memberships': {
+      id: '/memberships'
+      path: '/memberships'
+      fullPath: '/memberships'
+      preLoaderRoute: typeof MembershipsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/matches': {
@@ -1966,6 +1986,7 @@ const rootRouteChildren: RootRouteChildren = {
   ImpressumRoute: ImpressumRoute,
   IndexnowKeyDottxtRoute: IndexnowKeyDottxtRoute,
   MatchesRoute: MatchesRoute,
+  MembershipsRoute: MembershipsRoute,
   MessagesRoute: MessagesRouteWithChildren,
   PasswordRoute: PasswordRoute,
   PostRoute: PostRoute,

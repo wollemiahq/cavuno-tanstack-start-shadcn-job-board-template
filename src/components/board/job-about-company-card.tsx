@@ -4,6 +4,7 @@ import { m } from '../../paraglide/messages';
 
 import type { JobDetailCompanyVM } from '@/board/job-detail-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
+import { MembershipBadge } from '@/components/board/membership-badge';
 import { buttonVariants } from '@/components/ui/button';
 import {
   Card,
@@ -34,9 +35,15 @@ export function JobAboutCompanyCard({
                 logoUrl={company.logoUrl}
                 size="lg"
               />
-              <p className="min-w-0 truncate font-medium" dir="auto">
-                {company.name}
-              </p>
+              <div className="min-w-0">
+                <p className="truncate font-medium" dir="auto">
+                  {company.name}
+                </p>
+                <MembershipBadge
+                  planName={company.membershipPlanName}
+                  className="mt-1"
+                />
+              </div>
             </div>
           ) : null}
         </div>

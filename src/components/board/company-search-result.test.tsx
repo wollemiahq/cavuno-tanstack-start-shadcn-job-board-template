@@ -25,6 +25,7 @@ const vm: CompanyCardVM = {
   detailHref: '/companies/acme-research',
   publishedJobCount: 3,
   openJobsLabel: '3 open jobs',
+  membershipPlanName: null,
 };
 
 afterEach(cleanup);
@@ -85,6 +86,7 @@ describe('CompanySearchResult', () => {
           descriptionText: null,
           publishedJobCount: 0,
           openJobsLabel: null,
+          membershipPlanName: null,
         }}
       />,
     );
@@ -95,5 +97,22 @@ describe('CompanySearchResult', () => {
       screen.queryByText('Research tools for ambitious engineering teams.'),
     ).toBeNull();
     expect(screen.queryByText(/open jobs/i)).toBeNull();
+  });
+
+  it('shows the membership plan name as the company badge', async () => {
+    renderResult(
+      <CompanySearchResult
+        vm={{ ...vm, membershipPlanName: 'Founding member' }}
+      />,
+    );
+
+    expect(await screen.findByText('Founding member')).toBeVisible();
+  });
+
+  it('shows no membership badge for a company that holds none', async () => {
+    renderResult(<CompanySearchResult vm={vm} />);
+
+    await screen.findByRole('link', { name: /Acme Research/i });
+    expect(screen.queryByText('Founding member')).toBeNull();
   });
 });

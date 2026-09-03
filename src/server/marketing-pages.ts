@@ -42,9 +42,12 @@ export const getEmployersPage = createServerFn({ method: 'GET' })
   .handler(({ context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
-      const [plans, salesLed, seo] = await Promise.all([
+      const [plans, employerServicePlans, seo] = await Promise.all([
         board.plans.list({}, { headers }),
-        board.plans.salesLed({ headers }),
+        // `plans.salesLed()` is deprecated: the same tiers come back from the
+        // plan list under the `employer_service` purpose, and `pricingMode`
+        // (never `price`) is what makes one quote-only.
+        board.plans.list({ purpose: 'employer_service' }, { headers }),
         seoBase(),
       ]);
       const head = {
@@ -72,7 +75,9 @@ export const getEmployersPage = createServerFn({ method: 'GET' })
       );
       return {
         plans: plans.data,
-        salesLed: salesLed.data,
+        contactPlans: employerServicePlans.data.filter(
+          (plan) => plan.pricingMode === 'contact',
+        ),
         seo,
         head,
         jsonLd,

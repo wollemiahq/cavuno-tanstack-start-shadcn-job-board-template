@@ -33,7 +33,7 @@ export const Route = createFileRoute('/employers/')({
 });
 
 function EmployersPage() {
-  const { plans, salesLed, seo } = Route.useLoaderData();
+  const { plans, contactPlans, seo } = Route.useLoaderData();
   const { session_id } = Route.useSearch();
   const router = useRouter();
   const { user, talentAccess, employerCompanies, ready } = useRootSession();
@@ -63,7 +63,7 @@ function EmployersPage() {
   return (
     <EmployersTalentAccessView
       plans={plans}
-      salesLed={salesLed}
+      contactPlans={contactPlans}
       seo={seo}
       sessionId={session_id}
       viewer={viewer}

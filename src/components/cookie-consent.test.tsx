@@ -18,7 +18,13 @@ import {
   createRoute,
   createRouter,
 } from '@tanstack/react-router';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { m } from '../paraglide/messages';
@@ -207,7 +213,11 @@ describe('CookieConsentBanner', () => {
       name: m.cookieConsent_preferencesLabel(),
     });
     expect(bannerRegion()).not.toBeInTheDocument();
-    expect(document.getElementById('cavuno-analytics-ga4')).not.toBeNull();
+    // The GA4 tag is injected from an effect once consent resolves; on a slow
+    // runner it lands a tick after the preferences button, so wait for it.
+    await waitFor(() =>
+      expect(document.getElementById('cavuno-analytics-ga4')).not.toBeNull(),
+    );
   });
 
   it('never opens when the board does not require consent', async () => {

@@ -14,6 +14,7 @@ import {
   boardAccessMiddleware,
   type BoardAccessContext,
 } from '../lib/board-access-middleware';
+import { throwCandidatePaywallSignal } from '../lib/candidate-paywall-error';
 import {
   requireSessionMiddleware,
   sessionMiddleware,
@@ -153,8 +154,13 @@ export const getRecommendedJobs = createServerFn({ method: 'GET' })
       const headers = authedHeaders(context);
       await requireVerifiedBoardUser(headers);
       const board = getBoard();
+      // Job-seeker plan entitlements are per plan and are NOT on the wire, so
+      // there is nothing to pre-gate on: make the call, and translate the
+      // board's 403 into a signal that survives this function's boundary.
       const [recommended, skills, resume] = await Promise.all([
-        board.me.recommendedJobs.list({ limit: 20 }, { headers }),
+        board.me.recommendedJobs
+          .list({ limit: 20 }, { headers })
+          .catch(throwCandidatePaywallSignal),
         board.me.profile.listSkills({ headers }),
         board.me.resume.retrieve({ headers }),
       ]);
@@ -381,7 +387,9 @@ export const getMyAlerts = createServerFn({ method: 'GET' })
     gatedRead(context, async () => {
       const headers = authedHeaders(context);
       await requireVerifiedBoardUser(headers);
-      return getBoard().me.alerts.list({ headers });
+      return getBoard()
+        .me.alerts.list({ headers })
+        .catch(throwCandidatePaywallSignal);
     }),
   );
 
@@ -391,7 +399,9 @@ export const createMyAlert = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }) => {
     const headers = authedHeaders(context);
     await requireVerifiedBoardUser(headers);
-    return getBoard().me.alerts.create(data, { headers });
+    return getBoard()
+      .me.alerts.create(data, { headers })
+      .catch(throwCandidatePaywallSignal);
   });
 
 /** Alerts are replaced in full (whole-object PUT). */
@@ -401,7 +411,9 @@ export const updateMyAlert = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }) => {
     const headers = authedHeaders(context);
     await requireVerifiedBoardUser(headers);
-    return getBoard().me.alerts.update(data.id, data.body, { headers });
+    return getBoard()
+      .me.alerts.update(data.id, data.body, { headers })
+      .catch(throwCandidatePaywallSignal);
   });
 
 export const deleteMyAlert = createServerFn({ method: 'POST' })

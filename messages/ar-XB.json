@@ -453,6 +453,10 @@
   "candidateAction_errorText": "⁧⟦Šóɱéţĥíñğ ŵéñţ ŵŕóñğ. Ţŕý áğáíñ.⟧⁩",
   "candidateAction_reconciliationError": "⁧⟦Ýóúŕ çĥáñğé ŵáš šáṽéð, ƀúţ ţĥíš þáğé çóúĺð ñóţ ŕéƒŕéšĥ. Ŕéĺóáð ţó šéé ţĥé ĺáţéšţ íñƒóŕɱáţíóñ.⟧⁩",
   "candidateAction_successText": "⁧⟦Çĥáñğéš šáṽéð.⟧⁩",
+  "candidatePaywallLock_alertsTitle": "⁧⟦Ĵóƀ áĺéŕţš ñééð á þáíð þĺáñ⟧⁩",
+  "candidatePaywallLock_ctaLabel": "⁧⟦Úñĺóçķ áççéšš⟧⁩",
+  "candidatePaywallLock_description": "⁧⟦Çĥóóšé á þĺáñ ţó úñĺóçķ ţĥíš þáŕţ óƒ ýóúŕ áççóúñţ.⟧⁩",
+  "candidatePaywallLock_matchesTitle": "⁧⟦Ĵóƀ ɱáţçĥéš ñééð á þáíð þĺáñ⟧⁩",
   "categoryPage_jobsHeading": "⁧⟦{category} ĵóƀš⟧⁩",
   "categoryPage_notFoundText": "⁧⟦Çáţéğóŕý ñóţ ƒóúñð.⟧⁩",
   "commandDialog_searchPlaceholder": "⁧⟦Šéáŕçĥ ƒóŕ á çóɱɱáñð ţó ŕúñ...⟧⁩",
@@ -1345,6 +1349,93 @@
   "meApplications_subheading": "⁧⟦Ĵóƀš ýóú’ṽé áþþĺíéð ţó óñ ţĥíš ƀóáŕð.⟧⁩",
   "meApplications_title": "⁧⟦Ṁý áþþĺíçáţíóñš⟧⁩",
   "meApplications_withdrawLabel": "⁧⟦Ŵíţĥðŕáŵ⟧⁩",
+  "membershipBenefit_postingDiscount": "⁧⟦{percent}% óƒƒ ƒúŕţĥéŕ ĵóƀ þóšţš⟧⁩",
+  "membershipBenefit_talentMessagesUnlimited": "⁧⟦Úñĺíɱíţéð ɱéššáğéš⟧⁩",
+  "membershipBenefit_talentUnlocksUnlimited": "⁧⟦Úñĺíɱíţéð þŕóƒíĺé úñĺóçķš⟧⁩",
+  "membershipCapacity_featuredAll": "⁧⟦Áĺĺ óƒ ţĥéɱ çáñ ƀé ƒéáţúŕéð.⟧⁩",
+  "membershipCapacity_featuredCredits": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} óƒ ţĥéɱ çáñ ƀé ƒéáţúŕéð.⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} óƒ ţĥéɱ çáñ ƀé ƒéáţúŕéð.⟧⁩"
+      }
+    }
+  ],
+  "membershipCapacity_featuredEveryPost": "⁧⟦Éṽéŕý þóšţ çáñ ƀé ƒéáţúŕéð.⟧⁩",
+  "membershipCapacity_featuredNone": "⁧⟦Ñó ƒéáţúŕéð ĵóƀš⟧⁩",
+  "membershipCapacity_featuredNoneOfThem": "⁧⟦Ñóñé óƒ ţĥéɱ çáñ ƀé ƒéáţúŕéð.⟧⁩",
+  "membershipCapacity_featuredSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} óƒ ţĥéɱ çáñ ƀé ƒéáţúŕéð áţ á ţíɱé.⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} óƒ ţĥéɱ çáñ ƀé ƒéáţúŕéð áţ á ţíɱé.⟧⁩"
+      }
+    }
+  ],
+  "membershipCapacity_postsCredits": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} óñé-ţíɱé þóšţ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} óñé-ţíɱé þóšţš⟧⁩"
+      }
+    }
+  ],
+  "membershipCapacity_postsSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} ĵóƀ ĺíṽé áţ óñçé⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} ĵóƀš ĺíṽé áţ óñçé⟧⁩"
+      }
+    }
+  ],
+  "membershipCapacity_postsUnlimited": "⁧⟦Úñĺíɱíţéð þóšţš⟧⁩",
+  "memberships_contactCtaFallback": "⁧⟦Ğéţ íñ ţóúçĥ⟧⁩",
+  "memberships_contactPriceFallback": "⁧⟦Çúšţóɱ þŕíçíñğ⟧⁩",
+  "memberships_joinDashboardText": "⁧⟦Ṁéɱƀéŕšĥíþš áŕé ğŕáñţéð ƀý ţĥé ƀóáŕð ţéáɱ. Óþéñ ýóúŕ éɱþĺóýéŕ ðášĥƀóáŕð ţó çóñţíñúé.⟧⁩",
+  "memberships_joinLabel": "⁧⟦Ĵóíñ⟧⁩",
+  "memberships_loadMoreLabel": "⁧⟦Šĥóŵ ɱóŕé ɱéɱƀéŕš⟧⁩",
+  "memberships_memberCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦{countLabel} ɱéɱƀéŕ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} ɱéɱƀéŕš⟧⁩"
+      }
+    }
+  ],
+  "memberships_membersHeading": "⁧⟦Ṁéɱƀéŕš⟧⁩",
+  "memberships_metaDescription": "⁧⟦Ṁéɱƀéŕšĥíþ þĺáñš óñ {boardName}: ŵĥáţ éáçĥ óñé íñçĺúðéš, áñð ţĥé çóɱþáñíéš ţĥáţ ĥóĺð óñé.⟧⁩",
+  "memberships_subtitle": "⁧⟦Ĵóíñ {boardName} áš á ɱéɱƀéŕ. Ṁéɱƀéŕš þóšţ ŕóĺéš óñ ţĥé ƀóáŕð áñð áþþéáŕ íñ ţĥé ɱéɱƀéŕ ðíŕéçţóŕý.⟧⁩",
+  "memberships_title": "⁧⟦Ṁéɱƀéŕšĥíþš⟧⁩",
   "messageBubble_cancelLabel": "⁧⟦Çáñçéĺ⟧⁩",
   "messageBubble_editLabel": "⁧⟦Éðíţ⟧⁩",
   "messageBubble_editedText": "⁧⟦· Éðíţéð⟧⁩",
@@ -1395,6 +1486,7 @@
   "nav_blog": "⁧⟦Ɓĺóğ⟧⁩",
   "nav_companies": "⁧⟦Çóɱþáñíéš⟧⁩",
   "nav_home": "⁧⟦Ĵóƀš⟧⁩",
+  "nav_memberships": "⁧⟦Ṁéɱƀéŕšĥíþš⟧⁩",
   "nav_post": "⁧⟦Þóšţ á ĵóƀ⟧⁩",
   "nav_pricing": "⁧⟦Þŕíçíñğ⟧⁩",
   "nav_talent": "⁧⟦Ţáĺéñţ⟧⁩",
@@ -1426,6 +1518,7 @@
   "planComposed_maxActiveJobs": "⁧⟦Úþ ţó {count} áçţíṽé ĵóƀš⟧⁩",
   "planComposed_standardListing": "⁧⟦Á {days} ðáý šţáñðáŕð ĺíšţíñğ⟧⁩",
   "planComposed_standardName": "⁧⟦Ĵóƀ ĺíšţíñğ⟧⁩",
+  "planFeature_countedValue": "⁧⟦{value} {name}⟧⁩",
   "planFeature_featured": [
     {
       "declarations": [
@@ -1457,6 +1550,7 @@
     }
   ],
   "planFeature_unlimitedActive": "⁧⟦Úñĺíɱíţéð áçţíṽé ĵóƀš⟧⁩",
+  "planFeature_unlimitedValue": "⁧⟦Úñĺíɱíţéð {name}⟧⁩",
   "plan_featuredListing_description": "⁧⟦Á 30 ðáý ƒéáţúŕéð ĺíšţíñğ — þíññéð ţó ţĥé ţóþ óƒ ţĥé ƀóáŕð áñð ĥíğĥĺíğĥţéð íñ ţĥé ŵééķĺý áĺéŕţ ðíğéšţ.⟧⁩",
   "plan_featuredListing_name": "⁧⟦Ƒéáţúŕéð ĺíšţíñğ⟧⁩",
   "plan_free_description": "⁧⟦Á 30 ðáý šţáñðáŕð ĺíšţíñğ⟧⁩",
@@ -1464,6 +1558,11 @@
   "plan_talentAccessMonthly_description": "⁧⟦Šéáŕçĥ ţĥé ţáĺéñţ ðíŕéçţóŕý áñð úñĺóçķ çáñðíðáţé þŕóƒíĺéš. 25 þŕóƒíĺé úñĺóçķš áñð 10 óúţŕéáçĥ ɱéššáğéš éṽéŕý ɱóñţĥ.⟧⁩",
   "plan_talentAccessMonthly_name": "⁧⟦Ţáĺéñţ áççéšš — ɱóñţĥĺý⟧⁩",
   "postCard_minReadSuffix": "⁧⟦ɱíñ⟧⁩",
+  "postGate_becomeMemberLabel": "⁧⟦Ɓéçóɱé á ɱéɱƀéŕ⟧⁩",
+  "postGate_postAsCompanyLabel": "⁧⟦Þóšţ ƒŕóɱ ýóúŕ çóɱþáñý ðášĥƀóáŕð⟧⁩",
+  "postGate_bodyText": "⁧⟦Þóšţíñğ óñ ţĥíš ƀóáŕð íš óþéñ ţó ɱéɱƀéŕš óñĺý.⟧⁩",
+  "postGate_contactText": "⁧⟦Ñééð áççéšš? Éɱáíĺ {email}.⟧⁩",
+  "postGate_signInLabel": "⁧⟦Šíğñ íñ⟧⁩",
   "postJob_applicationUrlLabel": "⁧⟦Áþþĺíçáţíóñ ÚŔĹ⟧⁩",
   "postJob_applicationUrlPlaceholder": "⁧⟦ĥţţþš://çóɱþáñý.çóɱ/áþþĺý óŕ ĵóƀš@çóɱþáñý.çóɱ⟧⁩",
   "postJob_checkoutButtonLabel": "⁧⟦Þŕóçééð ţó šéçúŕé çĥéçķóúţ⟧⁩",

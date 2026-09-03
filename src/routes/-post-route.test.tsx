@@ -148,3 +148,27 @@ describe('/post route composition', () => {
     );
   });
 });
+
+describe('/post membership gate', () => {
+  it('renders the gate instead of the posting form on a members-only board', () => {
+    render(
+      <PostJobPageView
+        plans={plans}
+        remotePermits={null}
+        customFields={[]}
+        locale="en"
+        officeLocationSuggestions={{
+          suggestions: [],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
+        gate={<div data-testid="membership-gate">Members only</div>}
+        dependencies={dependencies}
+      />,
+    );
+
+    expect(screen.getByTestId('membership-gate')).toBeVisible();
+    // A visitor who cannot post must not be walked through the wizard.
+    expect(screen.queryByTestId('post-job-form')).toBeNull();
+  });
+});

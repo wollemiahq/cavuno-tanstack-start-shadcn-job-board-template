@@ -137,6 +137,7 @@ const company: LandingProps['companies'][number] = {
   summary: 'We build robotics tooling for warehouses.',
   publishedJobCount: 3,
   openJobsLabel: '3 open jobs',
+  membershipPlanName: null,
 };
 
 const hiringCompanies: LandingProps['companies'] = [
@@ -148,6 +149,7 @@ const hiringCompanies: LandingProps['companies'] = [
     summary: 'Autonomous field robots for agriculture.',
     publishedJobCount: 3,
     openJobsLabel: '3 open jobs',
+    membershipPlanName: null,
   },
   {
     id: 'c3',
@@ -157,6 +159,7 @@ const hiringCompanies: LandingProps['companies'] = [
     summary: null,
     publishedJobCount: 3,
     openJobsLabel: '3 open jobs',
+    membershipPlanName: null,
   },
   company,
   {
@@ -167,6 +170,7 @@ const hiringCompanies: LandingProps['companies'] = [
     summary: null,
     publishedJobCount: 3,
     openJobsLabel: '3 open jobs',
+    membershipPlanName: null,
   },
 ];
 

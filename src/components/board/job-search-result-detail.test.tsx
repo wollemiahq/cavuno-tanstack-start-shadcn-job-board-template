@@ -60,6 +60,7 @@ const vm: JobDetailVM = {
     href: '/companies/acme',
     intro: 'Acme builds tools for modern product teams.',
     viewProfileLabel: 'View company profile',
+    membershipPlanName: null,
   },
   similar: [],
   similarJobsHeading: 'Similar jobs',

@@ -49,6 +49,10 @@ import {
   toastActionReconciliationError,
   toastActionSuccess,
 } from '@/lib/action-toast';
+import {
+  candidateLoaderError,
+  type CandidateLoaderError,
+} from '@/lib/candidate-loader-error';
 import type { Alert, AlertBody } from '@cavuno/board';
 
 const REMOTE_OPTIONS = ['on_site', 'hybrid', 'remote'] as const;
@@ -135,7 +139,7 @@ function AlertForm({
   submitLabel: string;
   onSubmit: (body: AlertBody) => Promise<void>;
   onCancel?: () => void;
-  onError: () => void;
+  onError: (failure: CandidateLoaderError | null) => void;
 }) {
   const id = useId();
   const [form, setForm] = useState<FormState>(() =>
@@ -180,9 +184,9 @@ function AlertForm({
         try {
           await onSubmit(toBody(form, initial));
           setStatus('idle');
-        } catch {
+        } catch (error) {
           setStatus('error');
-          onError();
+          onError(candidateLoaderError(error));
         }
       }}
     >
@@ -322,7 +326,7 @@ export interface AlertManagerDependencies {
   ) => ReturnType<typeof updateMyAlert>;
   invalidate: () => Promise<void>;
   notifySuccess: () => void;
-  notifyError: () => void;
+  notifyError: (failure: CandidateLoaderError | null) => void;
   notifyReconciliationError: () => void;
 }
 
@@ -433,8 +437,8 @@ export function AlertManagerView({
                           await dependencies.deleteAlert({
                             data: { id: alert.id },
                           });
-                        } catch {
-                          dependencies.notifyError();
+                        } catch (error) {
+                          dependencies.notifyError(candidateLoaderError(error));
                           setPendingDeleteId(null);
                           return;
                         }
@@ -541,7 +545,16 @@ export function AlertManager({
         updateAlert: updateMyAlert,
         invalidate: () => router.invalidate(),
         notifySuccess: () => void toastActionSuccess(),
-        notifyError: () => void toastActionError(),
+        // A write the board refuses because the viewer's job-seeker plan
+        // does not unlock alerts is not a transient failure: re-run the
+        // loader so the route renders the plan lock instead of the form.
+        notifyError: (failure) => {
+          if (failure === 'paywall-locked') {
+            void router.invalidate();
+            return;
+          }
+          void toastActionError();
+        },
         notifyReconciliationError: () => void toastActionReconciliationError(),
       }}
     />

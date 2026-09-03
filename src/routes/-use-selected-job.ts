@@ -10,6 +10,8 @@ export type SelectedJobState = {
   job?: PublicJob;
   /** Platform company `summary` for the about-card intro (never HTML body). */
   companySummary: string | null;
+  /** The company's membership plan name — public identity on the about card. */
+  companyMembershipPlanName: string | null;
   /**
    * The private candidate read is independent from the public job. `unknown`
    * keeps the detail readable without turning a failed lookup into permission
@@ -50,6 +52,7 @@ export function useSelectedJob(
   const [state, setState] = useState<Omit<SelectedJobState, 'retry'>>({
     status: 'idle',
     companySummary: null,
+    companyMembershipPlanName: null,
     applicationState: 'not-requested',
   });
 
@@ -58,6 +61,7 @@ export function useSelectedJob(
       setState({
         status: 'idle',
         companySummary: null,
+        companyMembershipPlanName: null,
         applicationState: 'not-requested',
       });
       return;
@@ -68,6 +72,7 @@ export function useSelectedJob(
       status: 'loading',
       job: previous.job,
       companySummary: previous.companySummary,
+      companyMembershipPlanName: previous.companyMembershipPlanName,
       applicationState: includeApplicationState ? 'unknown' : 'not-requested',
     }));
 
@@ -99,6 +104,7 @@ export function useSelectedJob(
             status: 'ready',
             job,
             companySummary: company?.summary ?? null,
+            companyMembershipPlanName: company?.membership?.planName ?? null,
             applicationState: application.status,
           });
           return;
@@ -121,6 +127,7 @@ export function useSelectedJob(
           status: 'ready',
           job,
           companySummary: company?.summary ?? null,
+          companyMembershipPlanName: company?.membership?.planName ?? null,
           applicationState: application.status,
         });
       } catch (cause: unknown) {
@@ -129,6 +136,7 @@ export function useSelectedJob(
           status: 'error',
           job: previous.job,
           companySummary: previous.companySummary,
+          companyMembershipPlanName: previous.companyMembershipPlanName,
           applicationState: previous.applicationState,
           error: cause instanceof Error ? cause : new Error(String(cause)),
         }));
