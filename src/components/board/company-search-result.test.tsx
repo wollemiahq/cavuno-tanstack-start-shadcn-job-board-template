@@ -99,19 +99,20 @@ describe('CompanySearchResult', () => {
     expect(screen.queryByText(/open jobs/i)).toBeNull();
   });
 
-  it('shows the membership plan name as the company badge', () => {
-    render(
+  it('shows the membership plan name as the company badge', async () => {
+    renderResult(
       <CompanySearchResult
         vm={{ ...vm, membershipPlanName: 'Founding member' }}
       />,
     );
 
-    expect(screen.getByText('Founding member')).toBeVisible();
+    expect(await screen.findByText('Founding member')).toBeVisible();
   });
 
-  it('shows no membership badge for a company that holds none', () => {
-    render(<CompanySearchResult vm={vm} />);
+  it('shows no membership badge for a company that holds none', async () => {
+    renderResult(<CompanySearchResult vm={vm} />);
 
+    await screen.findByRole('link', { name: /Acme Research/i });
     expect(screen.queryByText('Founding member')).toBeNull();
   });
 });
