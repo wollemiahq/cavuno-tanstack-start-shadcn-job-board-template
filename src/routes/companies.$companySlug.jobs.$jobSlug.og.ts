@@ -72,8 +72,7 @@ async function renderJobOg(job: Job): Promise<Response> {
     ) ?? '';
 
   // Subset the theme font to exactly the glyphs the card renders. The logo
-  // is resolved in parallel — `null` when Satori could not be given something
-  // it decodes, which drops the frame with it (see og-image.ts).
+  // resolves alongside it; `null` drops the frame (see og-image.ts).
   const text = [title, company, location, salary].join(' ');
   const [font, logo] = await Promise.all([
     loadOgFont(text),

@@ -82,9 +82,6 @@ async function renderBlogOg(post: Post): Promise<Response> {
     title: post.title,
     excerpt: post.customExcerpt,
     authorName: author?.name ?? null,
-    // `null` when Satori cannot decode it, which drops the avatar frame
-    // with it (see og-image.ts).
-    authorAvatarUrl: await ogImageSrc(author?.avatarUrl),
     dateLabel: post.publishedAt ? formatDate(language, post.publishedAt) : null,
   };
 
@@ -97,7 +94,15 @@ async function renderBlogOg(post: Post): Promise<Response> {
     card.authorName ?? '',
     card.dateLabel ?? '',
   ].join(' ');
-  const font = await loadOgFont(text);
+  // The avatar contributes no glyphs, so it resolves alongside the font
+  // rather than delaying it. `null` drops the avatar frame (see og-image.ts).
+  const [font, authorAvatarUrl] = await Promise.all([
+    loadOgFont(text),
+    ogImageSrc(author?.avatarUrl),
+  ]);
 
-  return renderOgPng(buildBlogOgHtml({ ...card, fontFamily: font.name }), font);
+  return renderOgPng(
+    buildBlogOgHtml({ ...card, authorAvatarUrl, fontFamily: font.name }),
+    font,
+  );
 }
