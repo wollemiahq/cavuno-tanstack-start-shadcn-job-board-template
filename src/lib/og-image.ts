@@ -20,8 +20,6 @@ const FETCH_TIMEOUT_MS = 2000;
 /** Edge TTL for the sniff and the transform (seconds). */
 const IMAGE_EDGE_TTL = 86400;
 
-const PNG_MAGIC = '\x89PNG';
-
 type WorkersRequestInit = RequestInit & {
   cf?: {
     cacheTtl?: number;
@@ -41,34 +39,23 @@ function head(bytes: Uint8Array): string {
 }
 
 /**
- * The formats on workers-og's supported list. Everything else — WebP and
- * AVIF included — paints the empty frame, so it has to go through the
- * transform. `<svg`/`<?xml` are matched anywhere in the window because an
- * SVG may open with a BOM or whitespace.
+ * What Satori decodes. It takes the SVG text path only when the response
+ * says `image/svg+xml`; otherwise it sniffs bytes, and its own SVG test
+ * requires an `<?xml` prolog — a bare `<svg …>` is not detected. Everything
+ * else, WebP and AVIF included, paints the empty frame.
  */
-function isSatoriReadable(bytes: Uint8Array): boolean {
+function isSatoriReadable(
+  bytes: Uint8Array,
+  contentType: string | null,
+): boolean {
+  if (contentType?.startsWith('image/svg+xml')) return true;
   const start = head(bytes);
   return (
-    start.startsWith(PNG_MAGIC) ||
+    start.startsWith('\x89PNG') ||
     start.startsWith('\xff\xd8\xff') ||
     start.startsWith('GIF8') ||
-    start.includes('<svg') ||
-    start.includes('<?xml')
+    start.startsWith('<?xml')
   );
-}
-
-/** The leading bytes, without pulling the whole file where `Range` is honoured. */
-async function sniff(
-  url: string,
-  fetchImpl: ImageFetch,
-): Promise<Uint8Array | null> {
-  const response = await fetchImpl(url, {
-    headers: { Range: 'bytes=0-15' },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    cf: { cacheTtl: IMAGE_EDGE_TTL, cacheEverything: true },
-  });
-  if (!response.ok) return null;
-  return new Uint8Array(await response.arrayBuffer());
 }
 
 function toDataUri(bytes: Uint8Array): string {
@@ -100,7 +87,7 @@ async function transformToPng(
   });
   if (!response.ok) return null;
   const bytes = new Uint8Array(await response.arrayBuffer());
-  return head(bytes).startsWith(PNG_MAGIC) ? toDataUri(bytes) : null;
+  return head(bytes).startsWith('\x89PNG') ? toDataUri(bytes) : null;
 }
 
 /**
@@ -114,10 +101,21 @@ export async function ogImageSrc(
 ): Promise<string | null> {
   if (!url) return null;
   try {
-    const bytes = await sniff(url, fetchImpl);
-    if (!bytes) return null;
+    // Only the leading bytes decide anything, so `Range` keeps the rest of
+    // the file off the wire wherever the origin honours it.
+    const response = await fetchImpl(url, {
+      headers: { Range: 'bytes=0-15' },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      cf: { cacheTtl: IMAGE_EDGE_TTL, cacheEverything: true },
+    });
+    if (!response.ok) return null;
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    // Too short to identify anything — don't pay for a transform of it.
+    if (bytes.length < 8) return null;
     // Satori refetches the URL itself, exactly as before this existed.
-    if (isSatoriReadable(bytes)) return url;
+    if (isSatoriReadable(bytes, response.headers.get('content-type'))) {
+      return url;
+    }
     return await transformToPng(url, fetchImpl);
   } catch {
     return null;
