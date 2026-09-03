@@ -1,3 +1,5 @@
+import { Link } from '@tanstack/react-router';
+
 import { m } from '../../paraglide/messages';
 
 import type { JobDetailCompanyVM } from '@/board/job-detail-view-model';
@@ -11,7 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { localizePath } from '@/lib/localized-path';
 
 export function JobAboutCompanyCard({
   company,
@@ -54,15 +55,15 @@ export function JobAboutCompanyCard({
         ) : null}
       </CardContent>
       <CardFooter>
-        <a
-          href={localizePath(company.href)}
+        <Link
+          to={company.href}
           className={buttonVariants({
             variant: 'outline',
             className: 'w-full',
           })}
         >
           {company.viewProfileLabel}
-        </a>
+        </Link>
       </CardFooter>
     </Card>
   );

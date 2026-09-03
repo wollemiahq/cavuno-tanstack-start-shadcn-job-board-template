@@ -1,27 +1,23 @@
-import type { MouseEvent as ReactMouseEvent } from 'react';
-
 import type { CompanyCardVM } from '@/board/company-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
 import { MembershipBadge } from '@/components/board/membership-badge';
+import { MasterDetailLink } from '@/components/master-detail-link';
 import { SearchResultCard } from '@/components/search-results/search-results';
 import { Badge } from '@/components/ui/badge';
-import { localizePath } from '@/lib/localized-path';
+import { companyDestination } from '@/lib/master-detail-destination';
 
 export function CompanySearchResult({
   vm,
   selected = false,
-  onActivate,
 }: {
   vm: CompanyCardVM;
   selected?: boolean;
-  onActivate?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
 }) {
   return (
     <SearchResultCard selected={selected} className="p-0">
-      <a
-        href={vm.detailHref ? localizePath(vm.detailHref) : undefined}
+      <MasterDetailLink
+        destination={companyDestination({ companySlug: vm.slug })}
         aria-current={selected ? 'true' : undefined}
-        onClick={onActivate}
         className="block rounded-[inherit] p-4 outline-none"
       >
         <div className="flex items-start gap-3">
@@ -50,7 +46,7 @@ export function CompanySearchResult({
             </div>
           </div>
         </div>
-      </a>
+      </MasterDetailLink>
     </SearchResultCard>
   );
 }

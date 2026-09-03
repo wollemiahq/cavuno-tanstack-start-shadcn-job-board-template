@@ -13,10 +13,10 @@ import '@testing-library/jest-dom/vitest';
  *    (the loader passes `null` and the section does not render);
  *  - the latest-jobs grid reuses the shared `JobCard` (one design system: the
  *    featured pill is a real Badge, the featured tile earns the primary ring)
- *    and links each job into the `/jobs` two-pane workspace with that job
- *    PRESELECTED (the `selectedJob` search param), not the standalone detail
- *    page — the canonical job URL for crawlers stays on the `/jobs` listing and
- *    in the homepage JSON-LD (emitted by the route from `links.public`);
+ *    and links each job to the canonical detail href (hydration-stable). Desktop
+ *    PreferListingWorkspace rewrites unmodified clicks to the `/jobs` workspace
+ *    with `selectedJob`; mobile follows the canonical Link. SEO/JSON-LD stay on
+ *    the detail route / `links.public`;
  *  - the dual-path sign-up band mirrors `resolveSignupDestination`: the
  *    candidate card points at /auth/sign-up and the employer card at
  *    /auth/employer/sign-up, each shows ONLY when its role is enabled, and the
@@ -353,18 +353,15 @@ describe('HomeLanding — pure landing hero', () => {
   });
 });
 
-describe('HomeLanding — latest jobs reuse the shared card into the workspace', () => {
-  it('links each job into the /jobs workspace with that job preselected, not the standalone detail page', async () => {
+describe('HomeLanding — latest jobs reuse the shared card with canonical hrefs', () => {
+  it('exposes the canonical job-detail href on each card (not the workspace search URL)', async () => {
     renderLanding(baseProps);
     const link = await screen.findByRole('link', {
       name: 'Senior Backend Engineer',
     });
-    const href = link.getAttribute('href') ?? '';
-    // Opens the two-pane workspace with the job in the detail pane, NOT the
-    // standalone /companies/{c}/jobs/{s} page.
-    expect(href).toMatch(/^\/jobs\?/);
-    expect(href).toContain('selectedJob=senior-backend-engineer');
-    expect(href).not.toContain('/companies/');
+    expect(link.getAttribute('href')).toBe(
+      '/companies/technova-labs/jobs/senior-backend-engineer',
+    );
   });
 
   it('gives a signed-in candidate a save control on every job card, like the /jobs cards', async () => {

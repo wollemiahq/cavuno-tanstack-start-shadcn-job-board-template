@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { renderRouted } from '@/test/render-routed';
 
 const mocks = {
   getOAuthAuthorizationUrl: vi.fn(),
@@ -24,7 +26,7 @@ afterEach(() => {
 });
 
 describe('/auth/sign-up search contract', () => {
-  it('validates a complete internal candidate destination', () => {
+  it('validates a complete internal candidate destination', async () => {
     const validate = Route.options.validateSearch;
     if (!validate) {
       throw new Error('The candidate sign-up route must validate search');
@@ -56,7 +58,7 @@ describe('/auth/sign-up search contract', () => {
       ok: false,
       message: 'OAuth unavailable in this test',
     });
-    render(
+    await renderRouted(
       <SignUpView
         boardName="Cavuno Jobs"
         returnTo={returnTo}
@@ -92,7 +94,7 @@ describe('/auth/sign-up search contract', () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
     mocks.signUp.mockResolvedValue({ ok: true });
     mocks.invalidate.mockRejectedValue(new Error('refresh unavailable'));
-    render(
+    await renderRouted(
       <SignUpView
         boardName="Cavuno Jobs"
         returnTo={returnTo}

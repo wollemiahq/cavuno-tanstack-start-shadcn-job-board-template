@@ -33,6 +33,40 @@ const tag = (name: string): JobCardVM['tags'][number] => ({
   href: `/jobs/skills/${name}`,
 });
 
+function renderCard(ui: React.ReactElement) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => ui,
+  });
+  const skillRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/jobs/skills/$skill',
+    component: () => null,
+  });
+  const jobRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/companies/$companySlug/jobs/$jobSlug',
+    component: () => null,
+  });
+  const jobsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/jobs',
+    component: () => null,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([
+      indexRoute,
+      skillRoute,
+      jobRoute,
+      jobsRoute,
+    ]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  return render(<RouterProvider router={router} />);
+}
+
 describe('JobCard stress invariants', () => {
   it('composes the owned shadcn Card surface', () => {
     render(<JobCard vm={baseVM} />);
@@ -42,8 +76,8 @@ describe('JobCard stress invariants', () => {
     ).not.toBeNull();
   });
 
-  it('caps skill tags at 3 and shows an overflow count for the rest', () => {
-    render(
+  it('caps skill tags at 3 and shows an overflow count for the rest', async () => {
+    renderCard(
       <JobCard
         vm={{
           ...baseVM,
@@ -51,16 +85,16 @@ describe('JobCard stress invariants', () => {
         }}
       />,
     );
-    expect(screen.getByText('React')).toBeTruthy();
+    expect(await screen.findByText('React')).toBeTruthy();
     expect(screen.getByText('Go')).toBeTruthy();
     expect(screen.getByText('Kubernetes')).toBeTruthy();
-    // The 4th and 5th collapse into a single honest overflow badge.
     expect(screen.queryByText('Postgres')).toBeNull();
     expect(screen.getByText('+2')).toBeTruthy();
   });
 
-  it('shows no overflow badge when three or fewer tags', () => {
-    render(<JobCard vm={{ ...baseVM, tags: ['React', 'Go'].map(tag) }} />);
+  it('shows no overflow badge when three or fewer tags', async () => {
+    renderCard(<JobCard vm={{ ...baseVM, tags: ['React', 'Go'].map(tag) }} />);
+    await screen.findByText('React');
     expect(screen.queryByText(/^\+\d+$/)).toBeNull();
   });
 
@@ -80,7 +114,7 @@ describe('JobCard stress invariants', () => {
 
   it('orders the tile like the workspace result card: title → company → location → salary → description', () => {
     const { container } = render(
-      <JobCard vm={{ ...baseVM, postedAtLabel: '2d ago' }} linkTo="detail" />,
+      <JobCard vm={{ ...baseVM, postedAtLabel: '2d ago' }} />,
     );
     const text = (container.textContent ?? '').replace(/\s+/g, ' ');
     const order = [
@@ -121,7 +155,7 @@ describe('JobCard stress invariants', () => {
 describe('JobCard title link (URL contract)', () => {
   function renderInRouter(
     vm: JobCardVM,
-    props: { openInNewTab?: boolean; linkTo?: 'detail' | 'workspace' } = {},
+    props: { openInNewTab?: boolean } = {},
   ) {
     const rootRoute = createRootRoute();
     const indexRoute = createRoute({
@@ -176,16 +210,6 @@ describe('JobCard title link (URL contract)', () => {
     const chip = screen.getByRole('link', { name: 'React' });
     expect(chip.getAttribute('target')).toBe('_blank');
     expect(chip.getAttribute('rel')).toBe('noopener noreferrer');
-  });
-
-  it('opens the workspace title link in a new tab when openInNewTab is set', async () => {
-    renderInRouter(linkedVM, { openInNewTab: true, linkTo: 'workspace' });
-
-    const title = await screen.findByRole('link', {
-      name: 'Staff Platform Engineer',
-    });
-    expect(title.getAttribute('target')).toBe('_blank');
-    expect(title.getAttribute('rel')).toBe('noopener noreferrer');
   });
 
   it('keeps title and taxonomy chips in the same tab by default', async () => {

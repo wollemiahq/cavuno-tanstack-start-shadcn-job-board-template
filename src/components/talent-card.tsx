@@ -1,9 +1,8 @@
-import { Link } from '@tanstack/react-router';
-
 import { initialsOf } from '../lib/initials';
 import { m } from '../paraglide/messages';
 
 import { isRedactedTalentDirectoryEntry } from '@/board/talent-view-model';
+import { MasterDetailLink } from '@/components/master-detail-link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,6 +14,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { clampList } from '@/lib/clamp-list';
+import { talentDestination } from '@/lib/master-detail-destination';
 import type { TalentDirectoryEntry } from '@cavuno/board';
 
 /**
@@ -48,13 +48,12 @@ export function TalentCard({
   const opaque = profileUnlocks || isRedactedTalentDirectoryEntry(candidate);
   const profileParam = opaque ? candidate.id : candidate.handle;
   const name = profileParam ? (
-    <Link
-      to="/p/$handle"
-      params={{ handle: profileParam }}
+    <MasterDetailLink
+      destination={talentDestination({ handle: profileParam })}
       className="focus-visible:ring-ring/50 rounded-sm outline-none after:absolute after:inset-0 after:z-(--z-card-overlay) after:rounded-[inherit] hover:underline focus-visible:ring-2"
     >
       {displayName}
-    </Link>
+    </MasterDetailLink>
   ) : (
     displayName
   );

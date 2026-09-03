@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { Link } from '@tanstack/react-router';
+
 import { AuthCard, FormError } from '../components/auth-form';
 import { m } from '../paraglide/messages';
 
@@ -25,15 +27,15 @@ export function ConfirmEmailChangeView({
         title={m.authConfirmEmailChange_invalidTitle()}
         supportingText={m.authConfirmEmailChange_missingTokenBody()}
       >
-        <a
-          href="/settings"
+        <Link
+          to="/settings"
           className={cn(
             buttonVariants({ variant: 'outline', size: 'lg' }),
             'w-full',
           )}
         >
           {m.authConfirmEmailChange_backToSettingsLabel()}
-        </a>
+        </Link>
       </AuthCard>
     );
   }
@@ -44,12 +46,12 @@ export function ConfirmEmailChangeView({
         title={m.authConfirmEmailChange_successTitle()}
         supportingText={m.authConfirmEmailChange_successBody()}
       >
-        <a
-          href="/settings"
+        <Link
+          to="/settings"
           className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
         >
           {m.authConfirmEmailChange_backToSettingsLabel()}
-        </a>
+        </Link>
       </AuthCard>
     );
   }
@@ -89,15 +91,15 @@ export function ConfirmEmailChangeView({
             ? m.authConfirmEmailChange_confirmingLabel()
             : m.authConfirmEmailChange_submitLabel()}
         </Button>
-        <a
-          href="/settings"
+        <Link
+          to="/settings"
           className={cn(
             buttonVariants({ variant: 'outline', size: 'lg' }),
             'w-full',
           )}
         >
           {m.authConfirmEmailChange_backToSettingsLabel()}
-        </a>
+        </Link>
       </form>
     </AuthCard>
   );

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { UpdateMarketingConsent } from './marketing-consent-settings';
@@ -25,6 +25,8 @@ const mocks = {
 
 import { MarketingConsentSettingsView } from './marketing-consent-settings';
 import { RegistrationPage } from './registration-page';
+
+import { renderRouted } from '@/test/render-routed';
 
 afterEach(() => {
   cleanup();
@@ -58,7 +60,7 @@ function fillRequiredFields() {
 describe('sign-up marketing checkbox', () => {
   it('renders nothing and sends no flag when the surface is off', async () => {
     const onSubmit = vi.fn().mockResolvedValue({ ok: true });
-    render(
+    await renderRouted(
       <RegistrationPage
         title="Sign up"
         supportingText="Welcome"
@@ -87,7 +89,7 @@ describe('sign-up marketing checkbox', () => {
 
   it('defaults unticked and submits marketingConsent: false untouched', async () => {
     const onSubmit = vi.fn().mockResolvedValue({ ok: true });
-    render(
+    await renderRouted(
       <RegistrationPage
         title="Sign up"
         supportingText="Welcome"
@@ -115,7 +117,7 @@ describe('sign-up marketing checkbox', () => {
 
   it('submits marketingConsent: true after an affirmative tick', async () => {
     const onSubmit = vi.fn().mockResolvedValue({ ok: true });
-    render(
+    await renderRouted(
       <RegistrationPage
         title="Sign up"
         supportingText="Welcome"
@@ -157,14 +159,14 @@ describe('settings marketing consent row', () => {
     />
   );
 
-  it('renders unticked for null (never decided) and withdrawn alike', () => {
-    const { unmount } = render(settings(null));
+  it('renders unticked for null (never decided) and withdrawn alike', async () => {
+    const { unmount } = await renderRouted(settings(null));
     expect(
       document.querySelector('[data-test="marketing-consent-toggle"]'),
     ).toHaveAttribute('aria-checked', 'false');
     unmount();
 
-    render(
+    await renderRouted(
       settings({
         id: 'boardUsers_1',
         object: 'marketing_consent',
@@ -182,7 +184,7 @@ describe('settings marketing consent row', () => {
   });
 
   it('grants on tick and withdraws on untick', async () => {
-    const { unmount } = render(settings(null));
+    const { unmount } = await renderRouted(settings(null));
     fireEvent.click(
       document.querySelector('[data-test="marketing-consent-toggle"]')!,
     );
@@ -194,7 +196,7 @@ describe('settings marketing consent row', () => {
     unmount();
     mocks.setMarketingConsent.mockClear();
 
-    render(
+    await renderRouted(
       settings({
         id: 'boardUsers_1',
         object: 'marketing_consent',

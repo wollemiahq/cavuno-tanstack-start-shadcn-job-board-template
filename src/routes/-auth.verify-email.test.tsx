@@ -1,5 +1,12 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
+import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -33,6 +40,27 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+function renderRouted(ui: React.ReactElement) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => ui,
+  });
+  const stubs = ['/auth/sign-in', '/jobs', '/account'].map((path) =>
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path,
+      component: () => null,
+    }),
+  );
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute, ...stubs]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  return render(<RouterProvider router={router} />);
+}
+
 describe('/auth/verify-email search contract', () => {
   it('maps a rejecting loader to the invalid card instead of throwing', async () => {
     mocks.verifyEmail.mockRejectedValue(new Error('token consumed'));
@@ -40,7 +68,7 @@ describe('/auth/verify-email search contract', () => {
     expect(result).toMatchObject({ status: 'invalid', returnTo: '/account' });
   });
 
-  it('validates a supplied candidate destination with the token', () => {
+  it('validates a supplied candidate destination with the token', async () => {
     const validate = Route.options.validateSearch;
     if (!validate) {
       throw new Error('The email verification route must validate search');
@@ -72,12 +100,12 @@ describe('/auth/verify-email search contract', () => {
     });
   });
 
-  it('offers the validated destination after successful verification', () => {
+  it('offers the validated destination after successful verification', async () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
-    render(<VerifyEmailView status="verified" returnTo={returnTo} />);
+    renderRouted(<VerifyEmailView status="verified" returnTo={returnTo} />);
 
     expect(
-      screen.getByRole('link', { name: 'Go to my account' }),
+      await screen.findByRole('link', { name: 'Go to my account' }),
     ).toHaveAttribute('href', returnTo);
   });
 
@@ -148,10 +176,10 @@ describe('/auth/verify-email search contract', () => {
     expect(mocks.verifyEmail).toHaveBeenCalledOnce();
   });
 
-  it('renders the verified card, not the route error title, after a successful verify', () => {
-    render(<VerifyEmailView status="verified" returnTo="/account" />);
+  it('renders the verified card, not the route error title, after a successful verify', async () => {
+    renderRouted(<VerifyEmailView status="verified" returnTo="/account" />);
     expect(
-      screen.getByRole('heading', { name: 'Email verified' }),
+      await screen.findByRole('heading', { name: 'Email verified' }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('heading', { name: 'Something went wrong' }),

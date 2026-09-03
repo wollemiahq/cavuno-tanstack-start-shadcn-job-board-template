@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import { useLocation } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import { Users } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
@@ -34,6 +34,7 @@ import { TalentSearchResult } from '@/components/board/talent-search-result';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { Page } from '@/components/layout/page';
+import { InPlaceListingSelect } from '@/components/master-detail-link';
 import { useRootSession } from '@/components/root-session';
 import {
   SearchResultDetail,
@@ -406,9 +407,9 @@ export function TalentSearchPage({
                     </EmptyHeader>
                     {hasActiveSearch ? (
                       <EmptyContent>
-                        <a href="/talent" className={buttonVariants()}>
+                        <Link to="/talent" className={buttonVariants()}>
                           {m.jobSearch_resetFiltersAction()}
-                        </a>
+                        </Link>
                       </EmptyContent>
                     ) : null}
                   </Empty>
@@ -428,35 +429,28 @@ export function TalentSearchPage({
                 >
                   {resultsBar}
 
-                  <div className="space-y-3">
-                    {candidateVms.map((vm) => {
-                      const selectionKey = talentCardSelectionKey(vm);
-                      return (
-                        <div
-                          key={vm.id}
-                          data-result-id={selectionKey ?? undefined}
-                        >
-                          <TalentSearchResult
-                            vm={vm}
-                            selected={
-                              selectionKey !== null &&
-                              selectionKey === selection.selectedId
-                            }
-                            saveSlot={saveControl(vm.id, 'icon')}
-                            onActivate={
-                              selectionKey
-                                ? (event) =>
-                                    selection.onResultActivate(
-                                      event,
-                                      selectionKey,
-                                    )
-                                : undefined
-                            }
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <InPlaceListingSelect onSelect={selection.onResultActivate}>
+                    <div className="space-y-3">
+                      {candidateVms.map((vm) => {
+                        const selectionKey = talentCardSelectionKey(vm);
+                        return (
+                          <div
+                            key={vm.id}
+                            data-result-id={selectionKey ?? undefined}
+                          >
+                            <TalentSearchResult
+                              vm={vm}
+                              selected={
+                                selectionKey !== null &&
+                                selectionKey === selection.selectedId
+                              }
+                              saveSlot={saveControl(vm.id, 'icon')}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </InPlaceListingSelect>
 
                   {viewingSourced ? null : (
                     <ListingPagination

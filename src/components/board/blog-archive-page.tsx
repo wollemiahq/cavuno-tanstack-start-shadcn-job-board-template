@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { Link } from '@tanstack/react-router';
 import { FileText } from 'lucide-react';
 
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
@@ -19,7 +20,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { localizePath } from '@/lib/localized-path';
 import type { PublicBlogPostSummary } from '@cavuno/board';
 
 export interface BlogArchiveEmptyState {
@@ -105,12 +105,12 @@ export function BlogArchivePage({
               </EmptyHeader>
               {empty.action ? (
                 <EmptyContent>
-                  <a
-                    href={localizePath(empty.action.href)}
+                  <Link
+                    to={empty.action.href}
                     className={buttonVariants({ variant: 'outline' })}
                   >
                     {empty.action.label}
-                  </a>
+                  </Link>
                 </EmptyContent>
               ) : null}
             </Empty>

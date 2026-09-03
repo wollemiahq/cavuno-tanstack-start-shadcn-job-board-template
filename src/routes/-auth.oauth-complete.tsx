@@ -1,10 +1,10 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { Link, createFileRoute, redirect } from '@tanstack/react-router';
 
 import { AuthCard } from '../components/auth-form';
 import { resolvePostAuthConversionRedirect } from '../lib/board-datalayer-events';
 import {
   candidateReturnTo,
-  candidateSignInHref,
+  candidateAuthSearch,
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { exchangeOAuth } from '../server/auth';
@@ -92,15 +92,16 @@ export function OAuthCompleteView({
           : m.authOauthComplete_invalidBody()
       }
     >
-      <a
-        href={candidateSignInHref(returnTo)}
+      <Link
+        to="/auth/sign-in"
+        search={candidateAuthSearch(returnTo)}
         className={cn(
           buttonVariants({ variant: 'outline', size: 'lg' }),
           'w-full',
         )}
       >
         {m.authOauthComplete_signInLabel()}
-      </a>
+      </Link>
     </AuthCard>
   );
 }

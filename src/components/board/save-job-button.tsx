@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 
+import { Link } from '@tanstack/react-router';
 import { Bookmark, LoaderCircle } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/ui/button';
 import { reconcileCommittedAction } from '@/lib/action-toast';
 import {
-  candidateSignInHref,
+  candidateAuthSearch,
   candidateVerifyEmailHref,
 } from '@/lib/candidate-return-to';
 import { cn } from '@/lib/utils';
@@ -77,8 +78,9 @@ export function SaveJobButton({
 
   if (!viewer) {
     return (
-      <a
-        href={candidateSignInHref(returnTo)}
+      <Link
+        to="/auth/sign-in"
+        search={candidateAuthSearch(returnTo)}
         data-presentation={presentation}
         className={cn(
           buttonVariants({
@@ -89,14 +91,15 @@ export function SaveJobButton({
         )}
       >
         {controlLabel(labels.save, 'idle')}
-      </a>
+      </Link>
     );
   }
 
   if (!viewer.emailVerified) {
     return (
-      <a
-        href={candidateVerifyEmailHref(returnTo)}
+      <Link
+        to="/auth/verify-email-required"
+        search={candidateAuthSearch(returnTo)}
         data-presentation={presentation}
         className={cn(
           buttonVariants({
@@ -107,14 +110,14 @@ export function SaveJobButton({
         )}
       >
         {controlLabel(labels.save, 'idle')}
-      </a>
+      </Link>
     );
   }
 
   if (state === 'saved') {
     return (
-      <a
-        href="/saved-jobs"
+      <Link
+        to="/saved-jobs"
         data-presentation={presentation}
         className={cn(
           buttonVariants({
@@ -125,7 +128,7 @@ export function SaveJobButton({
         )}
       >
         {controlLabel(labels.saved, 'saved')}
-      </a>
+      </Link>
     );
   }
 

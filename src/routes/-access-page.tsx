@@ -14,7 +14,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { safeRedirectPath } from '@cavuno/board/server';
-import { getRouteApi, useRouter } from '@tanstack/react-router';
+import { Link, getRouteApi, useRouter } from '@tanstack/react-router';
 import { Clock, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 
 import { EmbeddedCheckout } from '../components/paywall/embedded-checkout';
@@ -114,9 +114,9 @@ function BrowseJobsLink({
   variant?: 'default' | 'outline';
 }) {
   return (
-    <a href="/" className={buttonVariants({ variant })}>
+    <Link to="/" className={buttonVariants({ variant })}>
       {m.accountAccess_browseJobsLink()}
-    </a>
+    </Link>
   );
 }
 

@@ -1,7 +1,8 @@
 'use client';
 
+import { Link } from '@tanstack/react-router';
+
 import { Badge } from '@/components/ui/badge';
-import { localizePath } from '@/lib/localized-path';
 import { cn } from '@/lib/utils';
 
 export interface TaxonomyChip {
@@ -41,7 +42,7 @@ export function TaxonomyTags({
       {chips.map((chip) => (
         <Badge
           key={chip.key}
-          render={<a href={localizePath(chip.href)} {...newTabProps} />}
+          render={<Link to={chip.href} {...newTabProps} />}
           variant="outline"
           className={cn(chipSize[size], 'hover:no-underline')}
         >

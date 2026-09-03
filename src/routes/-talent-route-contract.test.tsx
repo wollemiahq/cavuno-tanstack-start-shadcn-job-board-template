@@ -6,7 +6,6 @@ import { isNotFound as isRouteNotFound } from '@tanstack/react-router';
 import {
   cleanup,
   fireEvent,
-  render,
   screen,
   waitFor,
   within,
@@ -24,6 +23,8 @@ import { TalentProfilePageView } from './-talent-profile-view';
 import { TalentUnlockGate } from './-talent-unlock-gate';
 import { Route as ProfileRoute } from './p.$handle';
 import { Route as TalentRoute } from './talent.index';
+
+import { renderRouted } from '@/test/render-routed';
 
 const getTalentIndexPage =
   vi.fn<TalentDirectoryRouteDependencies['getTalentIndexPage']>();
@@ -169,7 +170,7 @@ beforeEach(() => {
   });
 });
 
-function renderProfile({
+async function renderProfile({
   user = null,
   hasTalentAccess = false,
   canStartMessage,
@@ -180,7 +181,7 @@ function renderProfile({
   canStartMessage?: boolean;
   messagingEnabled?: boolean;
 } = {}) {
-  return render(
+  return await renderRouted(
     <TalentProfilePageView
       profile={profile}
       user={user}
@@ -233,8 +234,8 @@ describe('talent directory route — query and capability contracts', () => {
     });
   });
 
-  it('presents employer-only access as the shared empty state with both auth paths', () => {
-    const { container } = render(
+  it('presents employer-only access as the shared empty state with both auth paths', async () => {
+    const { container } = await renderRouted(
       <RestrictedTalentDirectory boardName="Acme Careers" />,
     );
 
@@ -253,8 +254,10 @@ describe('talent directory route — query and capability contracts', () => {
     expect(screen.queryByRole('heading', { name: 'Talent' })).toBeNull();
   });
 
-  it('offers a signed-in candidate the add-company path instead of another sign-in', () => {
-    render(<RestrictedTalentDirectory boardName="Acme Careers" signedIn />);
+  it('offers a signed-in candidate the add-company path instead of another sign-in', async () => {
+    await renderRouted(
+      <RestrictedTalentDirectory boardName="Acme Careers" signedIn />,
+    );
 
     const addCompany = screen.getByRole('link', { name: 'Add company' });
     expect(addCompany).toHaveAttribute('href', '/employers/dashboard?add=true');
@@ -349,7 +352,7 @@ describe('canonical talent profile route', () => {
   });
 
   it('retains ProfilePage and Person structured data for the canonical profile', async () => {
-    const { container } = renderProfile();
+    const { container } = await renderProfile();
     // The profile opens on the shared entity hero band (avatar + name H1),
     // then drops into the profile article beneath it.
     expect(
@@ -416,8 +419,8 @@ describe('canonical talent profile route', () => {
     );
   });
 
-  it('routes an employer without talent access to pricing', () => {
-    renderProfile({ user: { role: 'employer' }, hasTalentAccess: false });
+  it('routes an employer without talent access to pricing', async () => {
+    await renderProfile({ user: { role: 'employer' }, hasTalentAccess: false });
 
     expect(screen.getByRole('link', { name: 'Message' })).toHaveAttribute(
       'href',
@@ -426,7 +429,7 @@ describe('canonical talent profile route', () => {
   });
 
   it('lets an eligible employer message the candidate by public handle', async () => {
-    renderProfile({ user: { role: 'employer' }, hasTalentAccess: true });
+    await renderProfile({ user: { role: 'employer' }, hasTalentAccess: true });
 
     fireEvent.click(screen.getByRole('button', { name: 'Message' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Send a message' }), {
@@ -443,8 +446,8 @@ describe('canonical talent profile route', () => {
     expect(onConversationStarted).toHaveBeenCalledWith('conversation-1');
   });
 
-  it('routes an anonymous viewer’s Message action to sign-in', () => {
-    renderProfile();
+  it('routes an anonymous viewer’s Message action to sign-in', async () => {
+    await renderProfile();
 
     const message = screen.getByRole('link', { name: 'Message' });
     const href = message.getAttribute('href') ?? '';
@@ -452,8 +455,8 @@ describe('canonical talent profile route', () => {
     expect(href).toContain('returnTo');
   });
 
-  it('hides the Message action from a candidate viewer (no cold-messaging) ', () => {
-    const { container } = renderProfile({ user: { role: 'candidate' } });
+  it('hides the Message action from a candidate viewer (no cold-messaging) ', async () => {
+    const { container } = await renderProfile({ user: { role: 'candidate' } });
 
     expect(
       container.querySelector("[data-slot='talent-profile-actions']"),
@@ -461,8 +464,8 @@ describe('canonical talent profile route', () => {
     expect(screen.queryByRole('link', { name: 'Message' })).toBeNull();
   });
 
-  it('hides the Message action when board messaging is disabled', () => {
-    renderProfile({
+  it('hides the Message action when board messaging is disabled', async () => {
+    await renderProfile({
       user: { role: 'employer' },
       messagingEnabled: false,
     });
@@ -470,8 +473,8 @@ describe('canonical talent profile route', () => {
     expect(screen.queryByRole('link', { name: 'Message' })).toBeNull();
   });
 
-  it('offers an upgrade link when an employer has access but no message credits', () => {
-    renderProfile({
+  it('offers an upgrade link when an employer has access but no message credits', async () => {
+    await renderProfile({
       user: { role: 'employer' },
       hasTalentAccess: true,
       canStartMessage: false,
@@ -483,8 +486,8 @@ describe('canonical talent profile route', () => {
     expect(screen.queryByRole('button', { name: 'Message' })).toBeNull();
   });
 
-  it('renders the named profile without an unlock gate', () => {
-    renderProfile();
+  it('renders the named profile without an unlock gate', async () => {
+    await renderProfile();
 
     expect(
       screen.getByRole('heading', { level: 1, name: 'Ada Lovelace' }),
@@ -549,7 +552,7 @@ const redactedProfile: GateProfile = {
 };
 
 describe('opaque talent profile unlock gate', () => {
-  it('shows how full the profile is behind every gate state', () => {
+  it('shows how full the profile is behind every gate state', async () => {
     // The reason an employer spends a credit is that they can see there are
     // three roles and a degree behind the blur. A padlock over an unknown
     // quantity converts nothing, so each state renders the silhouette.
@@ -558,7 +561,7 @@ describe('opaque talent profile unlock gate', () => {
       'out_of_unlocks',
       'no_plan',
     ] as const) {
-      const { unmount } = render(
+      const { unmount } = await renderRouted(
         <TalentUnlockGate
           surface={surface}
           creditsRemaining={surface === 'unlock_needed' ? 2 : 0}
@@ -584,7 +587,7 @@ describe('opaque talent profile unlock gate', () => {
 
   it('confirms an unlock when the employer still has credits', async () => {
     const onUnlock = vi.fn().mockResolvedValue(undefined);
-    render(
+    await renderRouted(
       <TalentUnlockGate
         surface="unlock_needed"
         creditsRemaining={2}
@@ -606,9 +609,9 @@ describe('opaque talent profile unlock gate', () => {
     await waitFor(() => expect(onUnlock).toHaveBeenCalledOnce());
   });
 
-  it('offers in-place plan upgrades when unlock credits are exhausted', () => {
+  it('offers in-place plan upgrades when unlock credits are exhausted', async () => {
     const onUpgrade = vi.fn();
-    render(
+    await renderRouted(
       <TalentUnlockGate
         surface="out_of_unlocks"
         profile={redactedProfile}
@@ -656,8 +659,8 @@ describe('opaque talent profile unlock gate', () => {
     expect(onUpgrade).toHaveBeenCalledWith('plan-pro');
   });
 
-  it('sends viewers without a talent plan to /employers', () => {
-    render(
+  it('sends viewers without a talent plan to /employers', async () => {
+    await renderRouted(
       <TalentUnlockGate
         surface="no_plan"
         profile={redactedProfile}

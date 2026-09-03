@@ -1,5 +1,7 @@
 import type { ElementType } from 'react';
 
+import { Link } from '@tanstack/react-router';
+
 import type { TalentProfileVM } from '@/board/talent-view-model';
 
 type TalentProfileHeading = ElementType;
@@ -77,12 +79,12 @@ export function TalentProfileIdentity({
                 dir="auto"
               >
                 {nameHref ? (
-                  <a
-                    href={nameHref}
+                  <Link
+                    to={nameHref}
                     className="outline-none hover:underline focus-visible:underline"
                   >
                     {vm.displayName}
-                  </a>
+                  </Link>
                 ) : (
                   vm.displayName
                 )}

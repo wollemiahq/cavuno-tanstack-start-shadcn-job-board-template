@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
@@ -18,6 +18,7 @@ import type {
   SalaryRailVM,
   SeniorityTableVM,
 } from '@/board/salary-view-model';
+import { renderRouted } from '@/test/render-routed';
 
 afterEach(cleanup);
 
@@ -90,8 +91,8 @@ const faq: SalaryFaqVM = {
 };
 
 describe('salary sections', () => {
-  it('renders every resolved salary metric', () => {
-    render(<OverallSalaryCard vm={overall} />);
+  it('renders every resolved salary metric', async () => {
+    await renderRouted(<OverallSalaryCard vm={overall} />);
 
     expect(screen.getByText(overall.headlineLabel)).toBeVisible();
     expect(screen.getByText(overall.headlineValue)).toBeVisible();
@@ -104,8 +105,8 @@ describe('salary sections', () => {
     expect(screen.getByText('12 jobs')).toBeVisible();
   });
 
-  it('uses a semantic table while preserving honest missing comparisons', () => {
-    render(<SenioritySalaryTable vm={seniority} />);
+  it('uses a semantic table while preserving honest missing comparisons', async () => {
+    await renderRouted(<SenioritySalaryTable vm={seniority} />);
 
     const table = screen.getByRole('table');
     expect(
@@ -120,8 +121,8 @@ describe('salary sections', () => {
     expect(principalRow).toHaveTextContent('—');
   });
 
-  it('keeps every salary rail item a real crawlable anchor', () => {
-    render(<SalaryRail vm={rail} />);
+  it('keeps every salary rail item a real crawlable anchor', async () => {
+    await renderRouted(<SalaryRail vm={rail} />);
 
     const links = screen.getAllByRole('link');
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
@@ -137,8 +138,8 @@ describe('salary sections', () => {
     expect(screen.getByText('AR')).toBeVisible();
   });
 
-  it('renders FAQs as semantic question-answer pairs', () => {
-    render(<SalaryFaq vm={faq} />);
+  it('renders FAQs as semantic question-answer pairs', async () => {
+    await renderRouted(<SalaryFaq vm={faq} />);
 
     const question = screen.getByText('What affects the salary range?');
     expect(question.tagName).toBe('DT');
@@ -148,8 +149,8 @@ describe('salary sections', () => {
     ).toBe('DD');
   });
 
-  it('explains missing salary data without inventing a value', () => {
-    render(
+  it('explains missing salary data without inventing a value', async () => {
+    await renderRouted(
       <SalaryEmptyState
         title="No salary data yet"
         description="Salary figures appear after matching jobs are published."

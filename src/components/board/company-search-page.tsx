@@ -1,7 +1,7 @@
 'use client';
 
 import { companyMarketPath } from '@cavuno/board/paths';
-import { useLocation } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import { Building2 } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
@@ -16,6 +16,7 @@ import {
 } from '@/components/board/listing-ad-rail';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { Page } from '@/components/layout/page';
+import { InPlaceListingSelect } from '@/components/master-detail-link';
 import {
   SearchResultDetail,
   SearchResultsLayout,
@@ -34,7 +35,6 @@ import {
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
 import { entityCount } from '@/lib/entity-count';
-import { localizePath } from '@/lib/localized-path';
 import { listingPageHref } from '@/lib/pagination';
 import { chromeEntity } from '@/lib/site-chrome';
 
@@ -152,12 +152,9 @@ export function CompanySearchPage({
                     </EmptyHeader>
                     {hasActiveSearch && !searchUnavailable ? (
                       <EmptyContent>
-                        <a
-                          href={localizePath('/companies')}
-                          className={buttonVariants()}
-                        >
+                        <Link to="/companies" className={buttonVariants()}>
                           {m.jobSearch_resetFiltersAction()}
-                        </a>
+                        </Link>
                       </EmptyContent>
                     ) : null}
                   </Empty>
@@ -177,22 +174,21 @@ export function CompanySearchPage({
                 >
                   <div className="space-y-4">{resultsBar}</div>
 
-                  <div className="space-y-3">
-                    {companyVms.map((vm, index) => {
-                      const companySlug = companySlugs[index]!;
-                      return (
-                        <div key={vm.id} data-result-id={companySlug}>
-                          <CompanySearchResult
-                            vm={vm}
-                            selected={companySlug === selection.selectedId}
-                            onActivate={(event) =>
-                              selection.onResultActivate(event, companySlug)
-                            }
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <InPlaceListingSelect onSelect={selection.onResultActivate}>
+                    <div className="space-y-3">
+                      {companyVms.map((vm, index) => {
+                        const companySlug = companySlugs[index]!;
+                        return (
+                          <div key={vm.id} data-result-id={companySlug}>
+                            <CompanySearchResult
+                              vm={vm}
+                              selected={companySlug === selection.selectedId}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </InPlaceListingSelect>
 
                   <ListingPagination
                     compact
@@ -221,11 +217,7 @@ export function CompanySearchPage({
                             key={market.slug}
                             variant="outline"
                             render={
-                              <a
-                                href={localizePath(
-                                  companyMarketPath(market.slug),
-                                )}
-                              />
+                              <Link to={companyMarketPath(market.slug)} />
                             }
                           >
                             {market.name}

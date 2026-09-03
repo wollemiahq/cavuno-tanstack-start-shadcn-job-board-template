@@ -7,7 +7,6 @@ import {
   act,
   cleanup,
   fireEvent,
-  render,
   screen,
   waitFor,
 } from '@testing-library/react';
@@ -17,6 +16,7 @@ import { EmployersTalentAccessView } from './-employers.talent-access';
 
 import { m } from '@/paraglide/messages';
 import type { TalentAccessGrant } from '@/server/talent-access';
+import { renderRouted } from '@/test/render-routed';
 import type { Plan, TalentAccessCheckoutSession } from '@cavuno/board';
 
 const talentPlan = {
@@ -82,12 +82,12 @@ const mocks = {
   reportActionError: vi.fn(),
 };
 
-function renderEmployers(options?: {
+async function renderEmployers(options?: {
   sessionId?: string;
   viewer?: ComponentProps<typeof EmployersTalentAccessView>['viewer'];
   hasTalentAccess?: boolean;
 }) {
-  return render(
+  return await renderRouted(
     <EmployersTalentAccessView
       plans={[talentPlan]}
       contactPlans={[]}
@@ -121,7 +121,7 @@ describe('employer talent-access checkout', () => {
   it('starts embedded checkout for a signed-in employer without access', async () => {
     mocks.startCheckout.mockResolvedValue({ ok: true, data: kit });
 
-    renderEmployers();
+    await renderEmployers();
     fireEvent.click(screen.getByRole('button', { name: 'Subscribe' }));
 
     await waitFor(() => {
@@ -147,7 +147,7 @@ describe('employer talent-access checkout', () => {
       message: 'Choose a company before buying talent access.',
     });
 
-    renderEmployers();
+    await renderEmployers();
     fireEvent.click(screen.getByRole('button', { name: 'Subscribe' }));
 
     await waitFor(() => {
@@ -167,7 +167,7 @@ describe('employer talent-access checkout', () => {
       .mockResolvedValueOnce({ ...emptyGrant, hasTalentAccess: true });
     mocks.invalidate.mockResolvedValue(undefined);
 
-    renderEmployers({ sessionId: 'cs_talent' });
+    await renderEmployers({ sessionId: 'cs_talent' });
     expect(screen.getByText('Confirming your purchase…')).toBeVisible();
 
     await act(async () => {
@@ -187,7 +187,7 @@ describe('employer talent-access checkout', () => {
     });
     mocks.invalidate.mockResolvedValue(undefined);
 
-    renderEmployers({ hasTalentAccess: true });
+    await renderEmployers({ hasTalentAccess: true });
     fireEvent.click(screen.getByRole('button', { name: 'Upgrade' }));
 
     await waitFor(() => {
@@ -213,7 +213,7 @@ describe('employer talent-access checkout', () => {
       value: { href: '' },
     });
 
-    renderEmployers({ hasTalentAccess: true });
+    await renderEmployers({ hasTalentAccess: true });
     fireEvent.click(screen.getByRole('button', { name: 'Manage billing' }));
 
     await waitFor(() => {
@@ -233,12 +233,12 @@ describe('employer talent-access checkout', () => {
     });
   });
 
-  it('keeps anonymous viewers on the join path', () => {
-    renderEmployers({ viewer: { kind: 'anonymous' } });
+  it('keeps anonymous viewers on the join path', async () => {
+    await renderEmployers({ viewer: { kind: 'anonymous' } });
 
     expect(screen.getByRole('link', { name: 'Subscribe' })).toHaveAttribute(
       'href',
-      '/auth/join?returnTo=/employers',
+      '/auth/join?returnTo=%2Femployers',
     );
     expect(screen.queryByRole('button', { name: 'Subscribe' })).toBeNull();
   });

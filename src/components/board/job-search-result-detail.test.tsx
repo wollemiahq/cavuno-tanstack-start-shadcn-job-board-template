@@ -2,6 +2,13 @@
 
 import '@testing-library/jest-dom/vitest';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -61,9 +68,35 @@ const vm: JobDetailVM = {
 
 afterEach(cleanup);
 
+function renderDetail(ui: React.ReactElement) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => ui,
+  });
+  const stubs = [
+    '/companies/$companySlug',
+    '/companies/$companySlug/jobs/$jobSlug',
+    '/jobs/skills/$skill',
+    '/jobs/$keyword',
+  ].map((path) =>
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path,
+      component: () => null,
+    }),
+  );
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute, ...stubs]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  return render(<RouterProvider router={router} />);
+}
+
 describe('JobSearchResultDetail', () => {
-  it('is decision-complete without importing full-page SEO composition', () => {
-    render(
+  it('is decision-complete without importing full-page SEO composition', async () => {
+    renderDetail(
       <JobSearchResultDetail
         vm={vm}
         applySlot={<button>Apply</button>}
@@ -72,7 +105,10 @@ describe('JobSearchResultDetail', () => {
     );
 
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Product designer' }),
+      await screen.findByRole('heading', {
+        level: 2,
+        name: 'Product designer',
+      }),
     ).toBeVisible();
     expect(screen.getByText(vm.salaryLabel!)).toBeVisible();
     expect(
@@ -167,14 +203,16 @@ describe('JobSearchResultDetail', () => {
     ).not.toBeNull();
   });
 
-  it('states when the API omitted the description', () => {
-    render(<JobSearchResultDetail vm={{ ...vm, descriptionHtml: null }} />);
+  it('states when the API omitted the description', async () => {
+    renderDetail(
+      <JobSearchResultDetail vm={{ ...vm, descriptionHtml: null }} />,
+    );
 
-    expect(screen.getByText('No description provided.')).toBeVisible();
+    expect(await screen.findByText('No description provided.')).toBeVisible();
   });
 
-  it('uses the loaded detail slots and skeleton-only actions while a job changes', () => {
-    const { container, rerender } = render(
+  it('uses the loaded detail slots and skeleton-only actions while a job changes', async () => {
+    const { container, unmount } = renderDetail(
       <JobSearchResultDetail
         vm={vm}
         loading
@@ -183,6 +221,7 @@ describe('JobSearchResultDetail', () => {
       />,
     );
 
+    expect(await screen.findByRole('status')).toHaveTextContent('Loading');
     expect(
       container.querySelector('[data-slot="job-detail-header-loading"]'),
     ).toBeInTheDocument();
@@ -217,24 +256,30 @@ describe('JobSearchResultDetail', () => {
       'aria-busy',
       'true',
     );
-    expect(screen.getByRole('status')).toHaveTextContent('Loading');
 
-    rerender(
+    unmount();
+    const loaded = renderDetail(
       <JobSearchResultDetail
         vm={vm}
         applySlot={<button>Apply</button>}
         saveSlot={<button>Save</button>}
       />,
     );
+    expect(
+      await screen.findByRole('heading', {
+        level: 2,
+        name: 'Product designer',
+      }),
+    ).toBeVisible();
     for (const slot of structuralSlots) {
       expect(
-        container.querySelector(`[data-slot="${slot}"]`),
+        loaded.container.querySelector(`[data-slot="${slot}"]`),
       ).toBeInTheDocument();
     }
   });
 
   it('replaces the expanded hero once its boundary leaves the detail viewport', async () => {
-    const { container } = render(
+    const { container } = renderDetail(
       <SearchResultDetail label="Selected job">
         <JobSearchResultDetail
           vm={vm}
@@ -243,7 +288,7 @@ describe('JobSearchResultDetail', () => {
         />
       </SearchResultDetail>,
     );
-    const detail = screen.getByRole('region', { name: 'Selected job' });
+    const detail = await screen.findByRole('region', { name: 'Selected job' });
     const expanded = container.querySelector<HTMLElement>(
       '[data-slot="detail-expanded-header"]',
     );
