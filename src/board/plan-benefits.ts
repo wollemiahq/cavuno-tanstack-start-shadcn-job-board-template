@@ -109,8 +109,8 @@ const NAMED_FEATURE_KEYS = new Set([
   'jobs.included_featured',
   'jobs.featured_slots',
   'jobs.posting_discount_percent',
-  'talent.unlocks_per_period',
-  'talent.messages_per_period',
+  'talent.profile_unlocks',
+  'talent.messages_sent',
 ]);
 
 /** Values that mean "the plan does not carry this", so no line is rendered. */

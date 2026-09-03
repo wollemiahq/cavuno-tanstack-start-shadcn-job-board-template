@@ -146,8 +146,8 @@ describe('membership extras', () => {
 
   it('reads talent allowances, keeping the unlimited sentinel', () => {
     const result = capacity({
-      'talent.unlocks_per_period': 'unlimited',
-      'talent.messages_per_period': '50',
+      'talent.profile_unlocks': 'unlimited',
+      'talent.messages_sent': '50',
     });
 
     expect(result.talentUnlocks).toEqual({ kind: 'unlimited' });

@@ -67,8 +67,8 @@ describe('plan benefit lines', () => {
       planBenefitLines(
         plan({
           'jobs.posting_discount_percent': '20',
-          'talent.unlocks_per_period': '5',
-          'talent.messages_per_period': 'unlimited',
+          'talent.profile_unlocks': '5',
+          'talent.messages_sent': 'unlimited',
         }),
       ),
     ).toEqual([

@@ -12,6 +12,13 @@
  *
  * Pure and locale-free on purpose: the sentences live in
  * `membership-view-model.ts`, this file owns the arithmetic.
+ *
+ * Every key string here must be one the API actually sends. `Plan['features']`
+ * is a self-describing record with no key union, so a misspelling type-checks,
+ * reads `undefined`, and silently drops the benefit — it reached production
+ * once as `talent.unlocks_per_period` / `talent.messages_per_period`, which the
+ * API has never sent. The authority is the `PUT /v1/plans/{id}/features`
+ * capability enum; check a key against it before adding one.
  */
 import type { Plan } from '@cavuno/board';
 
@@ -142,7 +149,7 @@ export function readMembershipCapacity(
     featured: readFeatured(features),
     postingDiscountPercent:
       discount?.kind === 'count' && discount.count > 0 ? discount.count : null,
-    talentUnlocks: readAllowance(features, 'talent.unlocks_per_period'),
-    talentMessages: readAllowance(features, 'talent.messages_per_period'),
+    talentUnlocks: readAllowance(features, 'talent.profile_unlocks'),
+    talentMessages: readAllowance(features, 'talent.messages_sent'),
   };
 }
