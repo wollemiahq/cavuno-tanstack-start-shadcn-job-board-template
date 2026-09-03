@@ -25,6 +25,11 @@ export interface CompanyCardVM {
   detailHref: string;
   publishedJobCount: number;
   openJobsLabel: string | null;
+  /**
+   * The company's membership plan name — public identity, shown as a badge
+   * wherever the company renders. `null` when it holds no membership.
+   */
+  membershipPlanName: string | null;
 }
 
 export interface CompanyDetailMarketVM {
@@ -68,6 +73,7 @@ export function toCompanyCardVM(
       company.publishedJobCount > 0
         ? labels.openJobs(company.publishedJobCount)
         : null,
+    membershipPlanName: company.membership?.planName ?? null,
   };
 }
 

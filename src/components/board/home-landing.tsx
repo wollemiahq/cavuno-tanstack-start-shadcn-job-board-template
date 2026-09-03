@@ -56,6 +56,8 @@ export interface HomeCompanyCard {
   publishedJobCount: number;
   /** Pre-resolved, pluralized "N open job(s)" label from the route. */
   openJobsLabel: string;
+  /** Membership plan name from the wire, or `null` when it holds none. */
+  membershipPlanName: string | null;
 }
 
 export interface HomeCategoryCard {
@@ -143,6 +145,7 @@ function HiringIndex({
               summary={company.summary}
               publishedJobCount={company.publishedJobCount}
               jobCountLabel={company.openJobsLabel}
+              membershipPlanName={company.membershipPlanName}
             />
           </li>
         ))}

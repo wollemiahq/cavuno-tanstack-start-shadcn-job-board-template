@@ -57,6 +57,7 @@ export function HomePage() {
         count: company.publishedJobCount,
         countLabel: company.publishedJobCount.toLocaleString(getLocale()),
       }),
+      membershipPlanName: company.membership?.planName ?? null,
     }));
   const categoryCards = [...topCategories]
     .sort((a, b) => b.count - a.count)

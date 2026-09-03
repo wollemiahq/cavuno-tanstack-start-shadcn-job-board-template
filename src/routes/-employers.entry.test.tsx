@@ -338,7 +338,7 @@ describe('employer entry surfaces', () => {
             name: 'Concierge hiring',
             purpose: 'employer_service',
             pricingMode: 'contact',
-            priceText: 'From $2,000',
+            priceText: 'Priced per engagement',
             ctaText: 'Talk to sales',
             ctaDestination: 'mailto:sales@example.com',
             price: { currency: 'usd', amountCents: 0, stripePriceId: null },
@@ -355,7 +355,7 @@ describe('employer entry surfaces', () => {
     if (!(card instanceof HTMLElement)) {
       throw new Error('The Concierge hiring plan must render in a card');
     }
-    expect(within(card).getByText('From $2,000')).toBeVisible();
+    expect(within(card).getByText('Priced per engagement')).toBeVisible();
     expect(within(card).queryByText('Free')).toBeNull();
     expect(
       within(card).getByRole('link', { name: 'Talk to sales' }),

@@ -2,6 +2,7 @@ import type { MouseEvent as ReactMouseEvent } from 'react';
 
 import type { CompanyCardVM } from '@/board/company-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
+import { MembershipBadge } from '@/components/board/membership-badge';
 import { SearchResultCard } from '@/components/search-results/search-results';
 import { Badge } from '@/components/ui/badge';
 import { localizePath } from '@/lib/localized-path';
@@ -41,11 +42,12 @@ export function CompanySearchResult({
                 {vm.descriptionText}
               </p>
             ) : null}
-            {vm.publishedJobCount > 0 && vm.openJobsLabel ? (
-              <Badge variant="secondary" className="mt-3">
-                {vm.openJobsLabel}
-              </Badge>
-            ) : null}
+            <div className="mt-3 flex flex-wrap items-center gap-2 empty:mt-0">
+              <MembershipBadge planName={vm.membershipPlanName} />
+              {vm.publishedJobCount > 0 && vm.openJobsLabel ? (
+                <Badge variant="secondary">{vm.openJobsLabel}</Badge>
+              ) : null}
+            </div>
           </div>
         </div>
       </a>

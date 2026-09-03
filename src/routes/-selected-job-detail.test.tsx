@@ -178,6 +178,7 @@ function renderSelectedJob(status: SelectedJobState['status']) {
     status,
     job,
     companySummary: null,
+    companyMembershipPlanName: null,
     applicationState: 'not-applied',
     retry: vi.fn(),
   };

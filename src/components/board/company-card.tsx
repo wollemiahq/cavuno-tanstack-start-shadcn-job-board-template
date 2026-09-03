@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 
 import { CompanyAvatar } from '@/components/board/company-avatar';
+import { MembershipBadge } from '@/components/board/membership-badge';
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
@@ -33,6 +34,7 @@ export function CompanyCard({
   summary,
   publishedJobCount,
   jobCountLabel,
+  membershipPlanName = null,
 }: {
   companySlug: string;
   name: string;
@@ -46,6 +48,8 @@ export function CompanyCard({
   publishedJobCount: number;
   /** Pre-resolved, pluralized "N open job(s)" label from the route. */
   jobCountLabel: string;
+  /** Membership plan name from the wire, or `null` when the company has none. */
+  membershipPlanName?: string | null;
 }) {
   const descriptionText = summary?.trim() ?? '';
 
@@ -73,6 +77,7 @@ export function CompanyCard({
               {descriptionText}
             </CardDescription>
           ) : null}
+          <MembershipBadge planName={membershipPlanName} className="mt-2" />
         </div>
         {/* The count stays at the top-right while the flexible identity column
             keeps the name beside the logo even when there is no description. */}

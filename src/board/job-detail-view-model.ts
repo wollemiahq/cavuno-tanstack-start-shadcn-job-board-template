@@ -63,6 +63,12 @@ export interface JobDetailCompanyVM {
   href: string;
   intro: string | null;
   viewProfileLabel: string;
+  /**
+   * The company's membership plan name. The embedded `job.company` does NOT
+   * carry `membership` — this comes from the company read the detail loader
+   * already makes for the intro.
+   */
+  membershipPlanName: string | null;
 }
 
 export interface JobDetailSimilarVM {
@@ -132,6 +138,11 @@ export function toJobDetailVM(
    */
   displayLocale: string = language,
   jobForm?: JobFormSource | null,
+  /**
+   * The company's membership plan name from the separate company read; the
+   * embedded `job.company` has no membership field.
+   */
+  companyMembershipPlanName: string | null = null,
 ): JobDetailVM {
   const copy = jobDetailCopy();
   const company = job.company;
@@ -319,6 +330,7 @@ export function toJobDetailVM(
         href: companyPath(company.slug),
         intro: companyIntro,
         viewProfileLabel: copy.viewCompanyProfileLabel,
+        membershipPlanName: companyMembershipPlanName,
       }
     : null;
 

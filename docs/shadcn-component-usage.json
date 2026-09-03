@@ -139,6 +139,7 @@
         "src/components/board/job-search-page.tsx",
         "src/components/board/job-search-result-detail.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
+        "src/components/board/membership-badge.tsx",
         "src/components/board/talent-filters.tsx",
         "src/components/board/talent-profile-content.tsx",
         "src/components/board/talent-search-result.tsx",

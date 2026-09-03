@@ -589,6 +589,7 @@ Props:
 - `companySlug: string`
 - `jobCountLabel: string`
 - `logoUrl: string | null`
+- `membershipPlanName?: string | null | undefined`
 - `name: string`
 - `publishedJobCount: number`
 - `summary: string | null`
@@ -929,6 +930,21 @@ Props:
 - `searchAriaLabel?: string | undefined`
 - `searchLabel: string`
 - `value: string`
+
+### MembershipBadge — `src/components/board/membership-badge.tsx`
+
+A company's membership, rendered as public identity wherever that company
+appears. The badge text is the plan's CURRENT display name off the wire
+(`company.membership.planName`) — operators rename plans, and `planId` is the
+stable key, so nothing here is keyed on the wording.
+
+Renders nothing when the company holds no membership, so every call site can
+mount it unconditionally.
+
+Props:
+
+- `className?: string | undefined`
+- `planName: string | null | undefined`
 
 ### PublicContentPending — `src/components/board/public-content-pending.tsx`
 
@@ -1426,7 +1442,7 @@ Props:
 
 Props:
 
-- `billingOptions: { id: string; object: "employer_billing_option"; type: "subscription" | "order"; planId: string; planName: string; pl…`
+- `billingOptions: { id: string; object: "employer_billing_option"; type: "subscription" | "order" | "plan_assignment"; kind?: "member_p…`
 - `dependencies?: EmployerJobFormDependencies | undefined`
 - `job?: ({ id: string; object: "employer_job"; title: string; slug: string | null; status: "draft" | "published" | "expired" …`
 - `jobForm?: JobFormSource | null | undefined`

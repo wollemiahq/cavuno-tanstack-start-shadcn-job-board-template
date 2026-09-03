@@ -36,6 +36,7 @@ const vm: CompanyDetailVM = {
   companySlug: 'acme-research',
   publishedJobCount: 3,
   openJobsLabel: '3 open jobs',
+  membershipPlanName: null,
   descriptionHtml:
     '<h3>About Acme</h3><p>Research tools for engineering teams.</p>',
   noDescriptionText: 'No company description provided.',
