@@ -41,9 +41,19 @@ import type {
 } from '@/server/membership-pages';
 import type { Plan, PublicCompany } from '@cavuno/board';
 
+/** What the loader hands the page — the server fn's resolved payload. */
+export type MembershipsPageData = Awaited<
+  ReturnType<typeof getMembershipsPage>
+>;
+
 export type MembershipsLoaderDependencies = {
-  getMembershipsPage: typeof getMembershipsPage;
+  getMembershipsPage: () => Promise<MembershipsPageData>;
 };
+
+/** The "show more members" read, as the view consumes it. */
+export type LoadMoreMembers = (input: {
+  data: { planId: string; offset: number };
+}) => Promise<Awaited<ReturnType<typeof listMembershipCompanies>>>;
 
 export type MembershipsViewer =
   | { kind: 'anonymous' }
@@ -278,7 +288,7 @@ export function MembershipsPageView({
   rosters: MembershipRoster[];
   seo: { boardName: string };
   viewer: MembershipsViewer;
-  loadMoreMembers: typeof listMembershipCompanies;
+  loadMoreMembers: LoadMoreMembers;
 }): ReactNode {
   return (
     <Page width="wide">

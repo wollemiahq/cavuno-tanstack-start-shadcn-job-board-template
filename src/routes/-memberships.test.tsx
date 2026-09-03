@@ -21,6 +21,8 @@ import {
   createMembershipsLoader,
   MembershipsPageView,
   type MembershipsLoaderDependencies,
+  type MembershipsPageData,
+  type LoadMoreMembers,
 } from './-memberships';
 
 import type { MembershipRoster } from '@/server/membership-pages';
@@ -89,14 +91,14 @@ const roster: MembershipRoster = {
   companies: [company('acme'), company('globex')],
 };
 
-const page = {
+const page: MembershipsPageData = {
   plans: [plan],
   rosters: [roster],
   seo: { boardName: 'Example Jobs', contactEmail: null },
   head: { meta: [{ title: 'Memberships' }], links: [] },
 };
 
-const loadMoreMembers = vi.fn();
+const loadMoreMembers = vi.fn<LoadMoreMembers>();
 
 /**
  * The page renders typed `Link`s (Join, and every roster company card), so
@@ -148,13 +150,15 @@ afterEach(() => {
 
 describe('memberships loader', () => {
   it('returns the published plans and their rosters', async () => {
-    const getMembershipsPage = vi.fn().mockResolvedValue(page);
+    const getMembershipsPage =
+      vi.fn<MembershipsLoaderDependencies['getMembershipsPage']>();
+    getMembershipsPage.mockResolvedValue(page);
     const onEmpty = vi.fn(() => {
       throw new Error('should not be called');
     });
 
     const data = await createMembershipsLoader(
-      { getMembershipsPage } as unknown as MembershipsLoaderDependencies,
+      { getMembershipsPage },
       onEmpty,
     )();
 
@@ -163,19 +167,21 @@ describe('memberships loader', () => {
   });
 
   it('is not found on a board that publishes no membership plan', async () => {
-    const getMembershipsPage = vi
-      .fn()
-      .mockResolvedValue({ ...page, plans: [], rosters: [], head: null });
+    const getMembershipsPage =
+      vi.fn<MembershipsLoaderDependencies['getMembershipsPage']>();
+    getMembershipsPage.mockResolvedValue({
+      ...page,
+      plans: [],
+      rosters: [],
+      head: null,
+    });
     const notFound = new Error('not found');
     const onEmpty = vi.fn(() => {
       throw notFound;
     });
 
     await expect(
-      createMembershipsLoader(
-        { getMembershipsPage } as unknown as MembershipsLoaderDependencies,
-        onEmpty,
-      )(),
+      createMembershipsLoader({ getMembershipsPage }, onEmpty)(),
     ).rejects.toBe(notFound);
   });
 });
