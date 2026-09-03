@@ -61,7 +61,9 @@ export function MembershipPostGate({
         <Link
           to="/memberships"
           className={cn(
-            signedIn ? buttonVariants({ variant: 'outline' }) : buttonVariants(),
+            signedIn
+              ? buttonVariants({ variant: 'outline' })
+              : buttonVariants(),
           )}
         >
           {m.postGate_becomeMemberLabel()}
