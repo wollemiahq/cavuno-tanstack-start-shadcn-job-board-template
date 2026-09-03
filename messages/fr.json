@@ -453,6 +453,10 @@
   "candidateAction_errorText": "Une erreur s’est produite. Réessayez.",
   "candidateAction_reconciliationError": "Votre modification a été enregistrée, mais cette page n’a pas pu être actualisée. Rechargez-la pour afficher les informations à jour.",
   "candidateAction_successText": "Modifications enregistrées.",
+  "candidatePaywallLock_alertsTitle": "Les alertes emploi nécessitent une formule payante",
+  "candidatePaywallLock_ctaLabel": "Débloquer l’accès",
+  "candidatePaywallLock_description": "Choisissez une formule pour débloquer cette partie de votre compte.",
+  "candidatePaywallLock_matchesTitle": "Les offres recommandées nécessitent une formule payante",
   "categoryPage_jobsHeading": "Offres {category}",
   "categoryPage_notFoundText": "Catégorie introuvable.",
   "commandDialog_searchPlaceholder": "Rechercher une commande…",
@@ -1345,6 +1349,93 @@
   "meApplications_subheading": "Les offres auxquelles vous avez postulé sur ce site.",
   "meApplications_title": "Mes candidatures",
   "meApplications_withdrawLabel": "Retirer",
+  "membershipBenefit_postingDiscount": "{percent}% de remise sur les annonces suivantes",
+  "membershipBenefit_talentMessagesUnlimited": "Messages illimités",
+  "membershipBenefit_talentUnlocksUnlimited": "Déblocages de profils illimités",
+  "membershipCapacity_featuredAll": "Toutes peuvent être mises en avant.",
+  "membershipCapacity_featuredCredits": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} d’entre elles peut être mise en avant.",
+        "countPlural=*": "{countLabel} d’entre elles peuvent être mises en avant."
+      }
+    }
+  ],
+  "membershipCapacity_featuredEveryPost": "Chaque annonce peut être mise en avant.",
+  "membershipCapacity_featuredNone": "Aucune annonce mise en avant",
+  "membershipCapacity_featuredNoneOfThem": "Aucune ne peut être mise en avant.",
+  "membershipCapacity_featuredSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} d’entre elles peut être mise en avant à la fois.",
+        "countPlural=*": "{countLabel} d’entre elles peuvent être mises en avant à la fois."
+      }
+    }
+  ],
+  "membershipCapacity_postsCredits": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} annonce ponctuelle",
+        "countPlural=*": "{countLabel} annonces ponctuelles"
+      }
+    }
+  ],
+  "membershipCapacity_postsSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} annonce en ligne à la fois",
+        "countPlural=*": "{countLabel} annonces en ligne à la fois"
+      }
+    }
+  ],
+  "membershipCapacity_postsUnlimited": "Annonces illimitées",
+  "memberships_contactCtaFallback": "Nous contacter",
+  "memberships_contactPriceFallback": "Tarif sur mesure",
+  "memberships_joinDashboardText": "Les adhésions sont accordées par l’équipe du site. Ouvrez votre tableau de bord employeur pour continuer.",
+  "memberships_joinLabel": "Adhérer",
+  "memberships_loadMoreLabel": "Afficher plus de membres",
+  "memberships_memberCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} membre",
+        "countPlural=*": "{countLabel} membres"
+      }
+    }
+  ],
+  "memberships_membersHeading": "Membres",
+  "memberships_metaDescription": "Formules d’adhésion sur {boardName} : ce que chacune inclut et les entreprises qui en disposent.",
+  "memberships_subtitle": "Devenez membre de {boardName}. Les membres publient des offres et figurent dans l’annuaire des membres.",
+  "memberships_title": "Adhésions",
   "messageBubble_cancelLabel": "Annuler",
   "messageBubble_editLabel": "Modifier",
   "messageBubble_editedText": "· Modifié",
@@ -1464,6 +1555,10 @@
   "plan_talentAccessMonthly_description": "Parcourez le répertoire de talents et débloquez des profils de candidats. 25 déblocages de profils et 10 messages de prise de contact par mois.",
   "plan_talentAccessMonthly_name": "Accès aux talents — mensuel",
   "postCard_minReadSuffix": "min",
+  "postGate_becomeMemberLabel": "Devenir membre",
+  "postGate_bodyText": "La publication sur ce site est réservée aux membres.",
+  "postGate_contactText": "Besoin d’un accès ? Écrivez à {email}.",
+  "postGate_signInLabel": "Se connecter",
   "postJob_applicationUrlLabel": "URL de candidature",
   "postJob_applicationUrlPlaceholder": "https://entreprise.com/postuler ou jobs@entreprise.com",
   "postJob_checkoutButtonLabel": "Procéder au paiement sécurisé",

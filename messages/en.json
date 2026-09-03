@@ -453,6 +453,10 @@
   "candidateAction_errorText": "Something went wrong. Try again.",
   "candidateAction_reconciliationError": "Your change was saved, but this page could not refresh. Reload to see the latest information.",
   "candidateAction_successText": "Changes saved.",
+  "candidatePaywallLock_alertsTitle": "Job alerts need a paid plan",
+  "candidatePaywallLock_ctaLabel": "Unlock access",
+  "candidatePaywallLock_description": "Choose a plan to unlock this part of your account.",
+  "candidatePaywallLock_matchesTitle": "Job matches need a paid plan",
   "categoryPage_jobsHeading": "{category} jobs",
   "categoryPage_notFoundText": "Category not found.",
   "commandDialog_searchPlaceholder": "Search for a command to run...",
@@ -1345,6 +1349,93 @@
   "meApplications_subheading": "Jobs you’ve applied to on this board.",
   "meApplications_title": "My applications",
   "meApplications_withdrawLabel": "Withdraw",
+  "membershipBenefit_postingDiscount": "{percent}% off further job posts",
+  "membershipBenefit_talentMessagesUnlimited": "Unlimited messages",
+  "membershipBenefit_talentUnlocksUnlimited": "Unlimited profile unlocks",
+  "membershipCapacity_featuredAll": "All of them can be featured.",
+  "membershipCapacity_featuredCredits": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} of them can be featured.",
+        "countPlural=*": "{countLabel} of them can be featured."
+      }
+    }
+  ],
+  "membershipCapacity_featuredEveryPost": "Every post can be featured.",
+  "membershipCapacity_featuredNone": "No featured jobs",
+  "membershipCapacity_featuredNoneOfThem": "None of them can be featured.",
+  "membershipCapacity_featuredSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} of them can be featured at a time.",
+        "countPlural=*": "{countLabel} of them can be featured at a time."
+      }
+    }
+  ],
+  "membershipCapacity_postsCredits": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} one-time post",
+        "countPlural=*": "{countLabel} one-time posts"
+      }
+    }
+  ],
+  "membershipCapacity_postsSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} job live at once",
+        "countPlural=*": "{countLabel} jobs live at once"
+      }
+    }
+  ],
+  "membershipCapacity_postsUnlimited": "Unlimited posts",
+  "memberships_contactCtaFallback": "Get in touch",
+  "memberships_contactPriceFallback": "Custom pricing",
+  "memberships_joinDashboardText": "Memberships are granted by the board team. Open your employer dashboard to continue.",
+  "memberships_joinLabel": "Join",
+  "memberships_loadMoreLabel": "Show more members",
+  "memberships_memberCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} member",
+        "countPlural=*": "{countLabel} members"
+      }
+    }
+  ],
+  "memberships_membersHeading": "Members",
+  "memberships_metaDescription": "Membership plans on {boardName}: what each one includes, and the companies that hold one.",
+  "memberships_subtitle": "Join {boardName} as a member. Members post roles on the board and appear in the member directory.",
+  "memberships_title": "Memberships",
   "messageBubble_cancelLabel": "Cancel",
   "messageBubble_editLabel": "Edit",
   "messageBubble_editedText": "· Edited",
@@ -1464,6 +1555,10 @@
   "plan_talentAccessMonthly_description": "Search the talent directory and unlock candidate profiles. 25 profile unlocks and 10 outreach messages every month.",
   "plan_talentAccessMonthly_name": "Talent access — monthly",
   "postCard_minReadSuffix": "min",
+  "postGate_becomeMemberLabel": "Become a member",
+  "postGate_bodyText": "Posting on this board is open to members only.",
+  "postGate_contactText": "Need access? Email {email}.",
+  "postGate_signInLabel": "Sign in",
   "postJob_applicationUrlLabel": "Application URL",
   "postJob_applicationUrlPlaceholder": "https://company.com/apply or jobs@company.com",
   "postJob_checkoutButtonLabel": "Proceed to secure checkout",

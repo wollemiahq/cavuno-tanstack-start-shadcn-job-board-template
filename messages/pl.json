@@ -461,6 +461,10 @@
   "candidateAction_errorText": "Coś poszło nie tak. Spróbuj ponownie.",
   "candidateAction_reconciliationError": "Zmiana została zapisana, ale ta strona nie mogła się odświeżyć. Odśwież ją, aby zobaczyć najnowsze informacje.",
   "candidateAction_successText": "Zmiany zapisane.",
+  "candidatePaywallLock_alertsTitle": "Alerty o ofertach wymagają płatnego planu",
+  "candidatePaywallLock_ctaLabel": "Odblokuj dostęp",
+  "candidatePaywallLock_description": "Wybierz plan, aby odblokować tę część konta.",
+  "candidatePaywallLock_matchesTitle": "Dopasowane oferty wymagają płatnego planu",
   "categoryPage_jobsHeading": "Oferty: {category}",
   "categoryPage_notFoundText": "Nie znaleziono kategorii.",
   "commandDialog_searchPlaceholder": "Wyszukaj polecenie do uruchomienia...",
@@ -1387,6 +1391,103 @@
   "meApplications_subheading": "Oferty, na które aplikowano na tym portalu.",
   "meApplications_title": "Moje aplikacje",
   "meApplications_withdrawLabel": "Wycofaj",
+  "membershipBenefit_postingDiscount": "{percent}% zniżki na kolejne ogłoszenia",
+  "membershipBenefit_talentMessagesUnlimited": "Nielimitowane wiadomości",
+  "membershipBenefit_talentUnlocksUnlimited": "Nielimitowane odblokowania profili",
+  "membershipCapacity_featuredAll": "Wszystkie z nich mogą być wyróżnione.",
+  "membershipCapacity_featuredCredits": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} z nich może być wyróżnione.",
+        "countPlural=few": "{countLabel} z nich mogą być wyróżnione.",
+        "countPlural=many": "{countLabel} z nich może być wyróżnionych.",
+        "countPlural=*": "{countLabel} z nich może być wyróżnione."
+      }
+    }
+  ],
+  "membershipCapacity_featuredEveryPost": "Każde ogłoszenie może być wyróżnione.",
+  "membershipCapacity_featuredNone": "Brak wyróżnionych ogłoszeń",
+  "membershipCapacity_featuredNoneOfThem": "Żadne z nich nie może być wyróżnione.",
+  "membershipCapacity_featuredSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} z nich może być wyróżnione naraz.",
+        "countPlural=few": "{countLabel} z nich mogą być wyróżnione naraz.",
+        "countPlural=many": "{countLabel} z nich może być wyróżnionych naraz.",
+        "countPlural=*": "{countLabel} z nich może być wyróżnione naraz."
+      }
+    }
+  ],
+  "membershipCapacity_postsCredits": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} jednorazowe ogłoszenie",
+        "countPlural=few": "{countLabel} jednorazowe ogłoszenia",
+        "countPlural=many": "{countLabel} jednorazowych ogłoszeń",
+        "countPlural=*": "{countLabel} jednorazowego ogłoszenia"
+      }
+    }
+  ],
+  "membershipCapacity_postsSlots": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} ogłoszenie online naraz",
+        "countPlural=few": "{countLabel} ogłoszenia online naraz",
+        "countPlural=many": "{countLabel} ogłoszeń online naraz",
+        "countPlural=*": "{countLabel} ogłoszenia online naraz"
+      }
+    }
+  ],
+  "membershipCapacity_postsUnlimited": "Nielimitowane ogłoszenia",
+  "memberships_contactCtaFallback": "Skontaktuj się",
+  "memberships_contactPriceFallback": "Wycena indywidualna",
+  "memberships_joinDashboardText": "Członkostwa przyznaje zespół portalu. Otwórz panel pracodawcy, aby kontynuować.",
+  "memberships_joinLabel": "Dołącz",
+  "memberships_loadMoreLabel": "Pokaż więcej członków",
+  "memberships_memberCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} członek",
+        "countPlural=few": "{countLabel} członkowie",
+        "countPlural=many": "{countLabel} członków",
+        "countPlural=*": "{countLabel} członka"
+      }
+    }
+  ],
+  "memberships_membersHeading": "Członkowie",
+  "memberships_metaDescription": "Plany członkostwa w {boardName}: co obejmuje każdy z nich i które firmy je mają.",
+  "memberships_subtitle": "Dołącz do {boardName} jako członek. Członkowie publikują oferty i są widoczni w katalogu członków.",
+  "memberships_title": "Członkostwa",
   "messageBubble_cancelLabel": "Anuluj",
   "messageBubble_editLabel": "Edytuj",
   "messageBubble_editedText": "· Edytowano",
@@ -1510,6 +1611,10 @@
   "plan_talentAccessMonthly_description": "Przeszukuj katalog kandydatów i odblokowuj ich profile. 25 odblokowań profili i 10 wiadomości miesięcznie.",
   "plan_talentAccessMonthly_name": "Dostęp do kandydatów — miesięcznie",
   "postCard_minReadSuffix": "min",
+  "postGate_becomeMemberLabel": "Zostań członkiem",
+  "postGate_bodyText": "Publikowanie na tym portalu jest dostępne tylko dla członków.",
+  "postGate_contactText": "Potrzebujesz dostępu? Napisz na {email}.",
+  "postGate_signInLabel": "Zaloguj się",
   "postJob_applicationUrlLabel": "Adres URL aplikowania",
   "postJob_applicationUrlPlaceholder": "https://firma.pl/praca lub praca@firma.pl",
   "postJob_checkoutButtonLabel": "Przejdź do bezpiecznej płatności",
