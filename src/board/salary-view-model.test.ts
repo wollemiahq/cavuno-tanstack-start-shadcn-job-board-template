@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   companyCategorySalaryPath,
+  salaryCompanyMetaDescription,
   salaryCompanyTitle,
   salaryLocationSkillsPath,
   salaryLocationTitlesPath,
@@ -364,5 +365,71 @@ describe('salary title frames', () => {
     const bare = salaryCompanyTitle('en', 'Acme', null);
     expect(bare).toContain('Acme');
     expect(bare).not.toContain('()');
+  });
+});
+
+describe('salaryCompanyMetaDescription', () => {
+  // `range` arrives pre-formatted from the SDK, so the fixture uses a
+  // neutral token: this suite asserts sentence structure, never formatter
+  // output (src/test-doctrine.test.ts).
+  const RANGE = 'pay range';
+  const base = {
+    company: 'Acme',
+    range: RANGE,
+    jobCount: 1240,
+    categoryCount: 18,
+    year: 2026,
+  };
+
+  it('leads with a self-contained answer naming the pay, the sample and the source', () => {
+    expect(salaryCompanyMetaDescription('en', base)).toBe(
+      `Acme pays ${RANGE} per year on average across 1240 job postings. Breakdown across 18 job categories. Updated 2026.`,
+    );
+  });
+
+  it('stays inside the length search engines render', () => {
+    expect(salaryCompanyMetaDescription('en', base).length).toBeLessThanOrEqual(
+      160,
+    );
+  });
+
+  it('drops the category sentence rather than claiming zero categories', () => {
+    const description = salaryCompanyMetaDescription('en', {
+      ...base,
+      categoryCount: 0,
+    });
+    expect(description).not.toContain('Breakdown');
+    expect(description).toContain('job postings');
+    expect(description).toContain('2026');
+  });
+
+  it('reads correctly for a company with a single posting in a single category', () => {
+    const description = salaryCompanyMetaDescription('en', {
+      ...base,
+      jobCount: 1,
+      categoryCount: 1,
+    });
+    expect(description).toContain('1 job posting.');
+    expect(description).not.toContain('1 job postings');
+    expect(description).toContain('1 job category.');
+    expect(description).not.toContain('1 job categories');
+  });
+
+  it('never invents a salary when the company has no aggregate', () => {
+    for (const missing of [
+      { ...base, range: null },
+      { ...base, jobCount: null },
+    ]) {
+      const description = salaryCompanyMetaDescription('en', missing);
+      expect(description).toContain('Acme');
+      expect(description).not.toContain(RANGE);
+      expect(description).not.toContain('1240');
+    }
+  });
+
+  it('carries the year it was rendered', () => {
+    expect(
+      salaryCompanyMetaDescription('en', { ...base, year: 2027 }),
+    ).toContain('2027');
   });
 });

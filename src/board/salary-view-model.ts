@@ -25,6 +25,7 @@ import {
 import { enumLabel } from '@/lib/enum-labels';
 import {
   salaryCompanyCategoryTitleFrame,
+  salaryCompanyMetaDescriptionFrame,
   salaryCompanyTitleFrame,
   salaryEntityInPlaceTitleFrame,
   salaryEntityTitleFrame,
@@ -144,6 +145,24 @@ export function salaryCompanyTitle(
   range: string | null,
 ): string {
   return salaryCompanyTitleFrame(company, range);
+}
+
+/**
+ * Meta description for a company salary overview, derived from the same
+ * aggregate the page renders. Returns the no-data sentence when the company
+ * has no salary aggregate at all.
+ */
+export function salaryCompanyMetaDescription(
+  _language: string,
+  args: {
+    company: string;
+    range: string | null;
+    jobCount: number | null;
+    categoryCount: number;
+    year: number;
+  },
+): string {
+  return salaryCompanyMetaDescriptionFrame(args);
 }
 
 export function salaryCompanyCategoryTitle(

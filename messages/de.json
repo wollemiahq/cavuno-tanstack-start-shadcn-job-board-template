@@ -540,8 +540,36 @@
   "companySalaries_categoryMetaDescriptionEmpty": "Gehaltsdaten für {category} bei {company}.",
   "companySalaries_categoryMetaDescriptionWithData": "Gehälter für {category} bei {company}: {range}/Jahr aus {jobCount} Jobs.",
   "companySalaries_heading": "Gehälter bei {company}",
-  "companySalaries_metaDescriptionEmpty": "Gehaltsdaten für {company}.",
-  "companySalaries_metaDescriptionWithData": "Gehälter bei {company}: {range}/Jahr aus {jobCount} Jobs.",
+  "companySalaries_metaDescriptionCategories": [
+    {
+      "declarations": [
+        "input categoryCount",
+        "local categoryCountPlural = categoryCount: plural"
+      ],
+      "selectors": ["categoryCountPlural"],
+      "match": {
+        "categoryCountPlural=one": "Aufschlüsselung nach {categoryCount} Jobkategorie.",
+        "categoryCountPlural=*": "Aufschlüsselung nach {categoryCount} Jobkategorien."
+      }
+    }
+  ],
+  "companySalaries_metaDescriptionEmpty": "Noch keine Gehaltsdaten für {company}. Sieh dir offene Stellen und Gehälter ähnlicher Arbeitgeber an.",
+  "companySalaries_metaDescriptionUpdated": "Stand {year}.",
+  "companySalaries_metaDescriptionWithData": [
+    {
+      "declarations": [
+        "input company",
+        "input range",
+        "input jobCount",
+        "local jobCountPlural = jobCount: plural"
+      ],
+      "selectors": ["jobCountPlural"],
+      "match": {
+        "jobCountPlural=one": "{company} zahlt im Schnitt {range} pro Jahr, basierend auf {jobCount} Stellenanzeige.",
+        "jobCountPlural=*": "{company} zahlt im Schnitt {range} pro Jahr, basierend auf {jobCount} Stellenanzeigen."
+      }
+    }
+  ],
   "companySalaries_notFoundCompany": "Keine Gehaltsdaten für dieses Unternehmen.",
   "companySalaries_notFoundCompanyCategory": "Keine Gehaltsdaten für dieses Unternehmen und diese Kategorie.",
   "companySalaries_otherCompaniesHiringLabel": "Weitere Unternehmen, die {category} einstellen",

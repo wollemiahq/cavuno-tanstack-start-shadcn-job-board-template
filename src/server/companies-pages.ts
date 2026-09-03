@@ -26,6 +26,7 @@ import { createServerFn } from '@tanstack/react-start';
 import {
   companyCategorySalaryPath,
   salaryCompanyCategoryTitle,
+  salaryCompanyMetaDescription,
   salaryCompanyTitle,
 } from '../board/salary-view-model';
 import { getBoard } from '../lib/board';
@@ -572,15 +573,13 @@ export const getCompanySalariesPage = createServerFn({ method: 'GET' })
           },
           {
             name: 'description',
-            content: salary.overallSalary
-              ? m.companySalaries_metaDescriptionWithData({
-                  company: salary.companyName,
-                  range: range!,
-                  jobCount: salary.overallSalary.jobCount,
-                })
-              : m.companySalaries_metaDescriptionEmpty({
-                  company: salary.companyName,
-                }),
+            content: salaryCompanyMetaDescription(locale, {
+              company: salary.companyName,
+              range,
+              jobCount: salary.overallSalary?.jobCount ?? null,
+              categoryCount: salary.byCategory.length,
+              year: new Date().getFullYear(),
+            }),
           },
         ],
         links: [
