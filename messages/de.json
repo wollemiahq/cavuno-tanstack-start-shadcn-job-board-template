@@ -1517,6 +1517,7 @@
   "planComposed_maxActiveJobs": "Bis zu {count} aktive Anzeigen",
   "planComposed_standardListing": "Eine Standard-Anzeige für {days} Tage",
   "planComposed_standardName": "Stellenanzeige",
+  "planFeature_countedValue": "{value} {name}",
   "planFeature_featured": [
     {
       "declarations": [
@@ -1548,6 +1549,7 @@
     }
   ],
   "planFeature_unlimitedActive": "Unbegrenzt aktive Jobs",
+  "planFeature_unlimitedValue": "Unbegrenzt {name}",
   "plan_featuredListing_description": "Eine hervorgehobene Anzeige für 30 Tage — oben auf dem Board angepinnt und in der wöchentlichen Job-Alert-Zusammenfassung hervorgehoben.",
   "plan_featuredListing_name": "Hervorgehobene Anzeige",
   "plan_free_description": "Eine Standard-Anzeige für 30 Tage",

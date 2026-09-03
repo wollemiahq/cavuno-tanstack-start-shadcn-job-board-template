@@ -1517,6 +1517,7 @@
   "planComposed_maxActiveJobs": "Jusqu'à {count} offres actives",
   "planComposed_standardListing": "Une offre standard de {days} jours",
   "planComposed_standardName": "Offre d'emploi",
+  "planFeature_countedValue": "{value} {name}",
   "planFeature_featured": [
     {
       "declarations": [
@@ -1548,6 +1549,7 @@
     }
   ],
   "planFeature_unlimitedActive": "Offres actives illimitées",
+  "planFeature_unlimitedValue": "{name} illimités",
   "plan_featuredListing_description": "Une offre mise en avant pendant 30 jours — épinglée en haut du site et mise en avant dans le récapitulatif hebdomadaire des alertes.",
   "plan_featuredListing_name": "Offre mise en avant",
   "plan_free_description": "Une offre standard de 30 jours",

@@ -21,6 +21,7 @@ export function publicCompanyFixture(
     jobCount: 1,
     publishedJobCount: 1,
     salarySampleCount: 0,
+    membership: null,
     markets: [],
     links: { public: `https://jobs.example/companies/${slug}` },
   };

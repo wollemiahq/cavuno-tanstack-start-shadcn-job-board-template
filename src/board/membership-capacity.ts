@@ -50,37 +50,42 @@ export type MembershipAllowance =
 /** Plan features are keyed by capability key; only the value matters here. */
 export type MembershipFeatureMap = Plan['features'];
 
-/** `unlimited`, a finite non-negative number, or `null` when absent/malformed. */
-type Limit = 'unlimited' | number | null;
+/**
+ * One capacity key, parsed at this I/O boundary into a domain value:
+ * the `unlimited` sentinel, a finite non-negative count, or `null` when the
+ * key is absent or its value is not a number the board can honour.
+ */
+type Limit = MembershipAllowance | null;
 
 function readLimit(features: MembershipFeatureMap, key: string): Limit {
   const raw = features?.[key]?.value;
   if (raw === undefined || raw === null) return null;
   const trimmed = String(raw).trim();
-  if (trimmed === UNLIMITED) return UNLIMITED;
+  if (trimmed === UNLIMITED) return { kind: 'unlimited' };
   if (trimmed === '') return null;
   const parsed = Number(trimmed);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return { kind: 'count', count: parsed };
+}
+
+/** A limit's finite value, treating both `unlimited` and absent as zero. */
+function finite(limit: Limit): number {
+  return limit?.kind === 'count' ? limit.count : 0;
 }
 
 function readPosts(features: MembershipFeatureMap): MembershipPostsCapacity {
   const allowance = readLimit(features, 'jobs.included_posts');
   const cap = readLimit(features, 'jobs.max_active');
-  // An absent cap is no cap — the allowance is the only limit.
-  const capped = cap !== null && cap !== UNLIMITED;
-  const unlimitedAllowance = allowance === UNLIMITED;
+  // An absent cap is no cap — the allowance is then the only limit.
+  const capped = cap?.kind === 'count';
 
-  if (unlimitedAllowance && !capped) return { kind: 'unlimited' };
-  if (unlimitedAllowance && capped) return slotsOrNone(cap as number);
-  // A finite (or absent) allowance beyond this point.
-  const included = allowance === null ? 0 : (allowance as number);
-  if (!capped)
-    return included > 0
-      ? { kind: 'credits', count: included }
-      : { kind: 'none' };
+  if (allowance?.kind === 'unlimited') {
+    return capped ? slotsOrNone(cap.count) : { kind: 'unlimited' };
+  }
+  const included = finite(allowance);
   // Both sides finite: a non-zero allowance is what the member spends.
   if (included > 0) return { kind: 'credits', count: included };
-  return slotsOrNone(cap as number);
+  return capped ? slotsOrNone(cap.count) : { kind: 'none' };
 }
 
 function slotsOrNone(count: number): MembershipPostsCapacity {
@@ -92,13 +97,13 @@ function readFeatured(
 ): MembershipFeaturedCapacity {
   const allowance = readLimit(features, 'jobs.included_featured');
   const slots = readLimit(features, 'jobs.featured_slots');
-  const allowanceUnlimited = allowance === UNLIMITED;
-  const slotsUnlimited = slots === UNLIMITED;
+  const allowanceUnlimited = allowance?.kind === 'unlimited';
+  const slotsUnlimited = slots?.kind === 'unlimited';
   if (allowanceUnlimited && slotsUnlimited) return { kind: 'all' };
 
   // An absent featured limit reads as zero, not as "no cap".
-  const included = allowanceUnlimited || allowance === null ? 0 : allowance;
-  const concurrent = slotsUnlimited || slots === null ? 0 : slots;
+  const included = finite(allowance);
+  const concurrent = finite(slots);
 
   if (allowanceUnlimited) {
     return concurrent > 0
@@ -115,14 +120,15 @@ function readFeatured(
   return { kind: 'none' };
 }
 
+/** An allowance is only worth a line when it is unlimited or a real count. */
 function readAllowance(
   features: MembershipFeatureMap,
   key: string,
 ): MembershipAllowance | null {
   const limit = readLimit(features, key);
   if (limit === null) return null;
-  if (limit === UNLIMITED) return { kind: 'unlimited' };
-  return limit > 0 ? { kind: 'count', count: limit } : null;
+  if (limit.kind === 'unlimited') return limit;
+  return limit.count > 0 ? limit : null;
 }
 
 /** Collapse a membership plan's feature map into its capacity facts. */
@@ -135,7 +141,7 @@ export function readMembershipCapacity(
     posts: readPosts(features),
     featured: readFeatured(features),
     postingDiscountPercent:
-      typeof discount === 'number' && discount > 0 ? discount : null,
+      discount?.kind === 'count' && discount.count > 0 ? discount.count : null,
     talentUnlocks: readAllowance(features, 'talent.unlocks_per_period'),
     talentMessages: readAllowance(features, 'talent.messages_per_period'),
   };

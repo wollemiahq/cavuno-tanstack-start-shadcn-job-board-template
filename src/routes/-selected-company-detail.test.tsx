@@ -27,6 +27,7 @@ const company = {
   jobCount: 3,
   publishedJobCount: 3,
   salarySampleCount: 12,
+  membership: null,
   markets: [{ slug: 'technology', name: 'Technology' }],
   links: { public: 'https://jobs.example/companies/acme' },
 } satisfies PublicCompanyDetail;

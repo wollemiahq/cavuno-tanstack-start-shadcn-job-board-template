@@ -117,6 +117,11 @@ const plan = {
   invoiceOnly: false,
   publishTiming: 'on_payment',
   netTermsDays: null,
+  billingIntervalCount: null,
+  pricingMode: 'priced',
+  priceText: null,
+  ctaText: null,
+  ctaDestination: null,
   price: { currency: 'usd', amountCents: 9900, stripePriceId: 'price_growth' },
   featureSummary: {
     durationDays: 30,
@@ -124,6 +129,7 @@ const plan = {
     featuredSlots: 1,
     featureSelectionMode: 'manual',
   },
+  features: {},
 } satisfies Plan;
 
 const membership = {
@@ -268,7 +274,7 @@ describe('employer entry surfaces', () => {
     render(
       <EmployersPageView
         plans={[plan]}
-        salesLed={[]}
+        contactPlans={[]}
         seo={{ boardName: 'Example Jobs' }}
         dependencies={employersPageViewDependencies}
       />,
@@ -299,7 +305,7 @@ describe('employer entry surfaces', () => {
             purpose: 'talent_access',
           },
         ]}
-        salesLed={[]}
+        contactPlans={[]}
         seo={{ boardName: 'Example Jobs' }}
         dependencies={employersPageViewDependencies}
       />,
@@ -317,6 +323,72 @@ describe('employer entry surfaces', () => {
         name: 'Subscribe',
       }),
     ).toHaveAttribute('href', '/auth/join?returnTo=/employers');
+  });
+
+  it('renders a quote-only tier as its price text and CTA, never as a price', () => {
+    // `pricingMode` is the authority: a contact plan can still carry a zeroed
+    // price row, and reading `price` would advertise that tier as free.
+    render(
+      <EmployersPageView
+        plans={[]}
+        contactPlans={[
+          {
+            ...plan,
+            id: 'plan-enterprise',
+            name: 'Concierge hiring',
+            purpose: 'employer_service',
+            pricingMode: 'contact',
+            priceText: 'From $2,000',
+            ctaText: 'Talk to sales',
+            ctaDestination: 'mailto:sales@example.com',
+            price: { currency: 'usd', amountCents: 0, stripePriceId: null },
+          },
+        ]}
+        seo={{ boardName: 'Example Jobs' }}
+        dependencies={employersPageViewDependencies}
+      />,
+    );
+
+    const card = screen
+      .getByText('Concierge hiring')
+      .closest('[data-slot="card"]');
+    if (!(card instanceof HTMLElement)) {
+      throw new Error('The Concierge hiring plan must render in a card');
+    }
+    expect(within(card).getByText('From $2,000')).toBeVisible();
+    expect(within(card).queryByText('Free')).toBeNull();
+    expect(
+      within(card).getByRole('link', { name: 'Talk to sales' }),
+    ).toHaveAttribute('href', 'mailto:sales@example.com');
+  });
+
+  it('renders no CTA for a quote-only tier whose destination is unset', () => {
+    render(
+      <EmployersPageView
+        plans={[]}
+        contactPlans={[
+          {
+            ...plan,
+            id: 'plan-bespoke',
+            name: 'Bespoke',
+            purpose: 'employer_service',
+            pricingMode: 'contact',
+            priceText: null,
+            ctaText: null,
+            ctaDestination: null,
+          },
+        ]}
+        seo={{ boardName: 'Example Jobs' }}
+        dependencies={employersPageViewDependencies}
+      />,
+    );
+
+    const card = screen.getByText('Bespoke').closest('[data-slot="card"]');
+    if (!(card instanceof HTMLElement)) {
+      throw new Error('The Bespoke plan must render in a card');
+    }
+    expect(within(card).getByText('Custom pricing')).toBeVisible();
+    expect(within(card).queryByRole('link')).toBeNull();
   });
 
   it('presents approved memberships as an authenticated company workspace list', () => {

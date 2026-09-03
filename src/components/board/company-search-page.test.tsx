@@ -38,6 +38,7 @@ const company: PublicCompany = {
   jobCount: 3,
   publishedJobCount: 3,
   salarySampleCount: 0,
+  membership: null,
   links: { public: 'https://jobs.example/companies/acme' },
 };
 

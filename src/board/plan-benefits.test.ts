@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  membershipBenefitLines,
-  membershipCapacitySentence,
-} from './membership-view-model';
+import { membershipCapacitySentence, planBenefitLines } from './plan-benefits';
 
 import type { Plan } from '@cavuno/board';
 
@@ -64,10 +61,10 @@ describe('membership capacity sentence', () => {
   });
 });
 
-describe('membership benefit lines', () => {
+describe('plan benefit lines', () => {
   it('renders the member discount and talent allowances', () => {
     expect(
-      membershipBenefitLines(
+      planBenefitLines(
         plan({
           'jobs.posting_discount_percent': '20',
           'talent.unlocks_per_period': '5',
@@ -82,8 +79,45 @@ describe('membership benefit lines', () => {
   });
 
   it('renders nothing for a membership that only carries posting capacity', () => {
-    expect(membershipBenefitLines(plan({ 'jobs.included_posts': '2' }))).toEqual(
-      [],
-    );
+    expect(planBenefitLines(plan({ 'jobs.included_posts': '2' }))).toEqual([]);
+  });
+
+  it('renders an operator-defined feature the starter has never heard of', () => {
+    // The features map is self-describing: a benefit the starter does not know
+    // must still render, in the operator's display order, from its own name.
+    expect(
+      planBenefitLines({
+        features: {
+          'events.tickets': {
+            value: '2',
+            name: 'conference tickets',
+            dataType: 'number',
+            displayOrder: 2,
+          },
+          'directory.spotlight': {
+            value: 'true',
+            name: 'Directory spotlight',
+            dataType: 'boolean',
+            displayOrder: 1,
+          },
+          'support.hours': {
+            value: 'unlimited',
+            name: 'support hours',
+            dataType: 'number',
+            displayOrder: 3,
+          },
+          'events.badges': {
+            value: '0',
+            name: 'event badges',
+            dataType: 'number',
+            displayOrder: 4,
+          },
+        },
+      }),
+    ).toEqual([
+      'Directory spotlight',
+      '2 conference tickets',
+      'Unlimited support hours',
+    ]);
   });
 });

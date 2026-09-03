@@ -1569,6 +1569,7 @@
   "planComposed_maxActiveJobs": "Do {count} aktywnych ofert",
   "planComposed_standardListing": "Standardowa oferta na {days} dni",
   "planComposed_standardName": "Publikacja oferty",
+  "planFeature_countedValue": "{value} {name}",
   "planFeature_featured": [
     {
       "declarations": [
@@ -1604,6 +1605,7 @@
     }
   ],
   "planFeature_unlimitedActive": "Nieograniczona liczba aktywnych ofert",
+  "planFeature_unlimitedValue": "{name} bez limitu",
   "plan_featuredListing_description": "Wyróżniona oferta na 30 dni — przypięta na górze portalu i wyeksponowana w cotygodniowym podsumowaniu alertów.",
   "plan_featuredListing_name": "Wyróżniona oferta",
   "plan_free_description": "Standardowa oferta na 30 dni",

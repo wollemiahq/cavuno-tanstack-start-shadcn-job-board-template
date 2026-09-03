@@ -89,6 +89,7 @@ function company(summary: string): PublicCompanyDetail {
     jobCount: 1,
     publishedJobCount: 1,
     salarySampleCount: 0,
+    membership: null,
     markets: [],
     links: { public: 'https://jobs.example/companies/acme' },
   };

@@ -98,10 +98,62 @@ function allowanceLine(
 }
 
 /**
- * Everything the membership carries BESIDES its posting capacity — the member
- * discount on further posts and any talent-access allowances.
+ * The keys `membershipCapacitySentence` and the named lines below already
+ * speak for. Anything else in `features` is operator-defined and gets a
+ * generic line, so a board that adds a custom attribute renders it without a
+ * code change.
  */
-export function membershipBenefitLines(plan: Pick<Plan, 'features'>): string[] {
+const NAMED_FEATURE_KEYS = new Set([
+  'jobs.included_posts',
+  'jobs.max_active',
+  'jobs.included_featured',
+  'jobs.featured_slots',
+  'jobs.posting_discount_percent',
+  'talent.unlocks_per_period',
+  'talent.messages_per_period',
+]);
+
+/** Values that mean "the plan does not carry this", so no line is rendered. */
+const EMPTY_VALUES = new Set(['', '0', 'false', 'no', 'none']);
+
+/**
+ * Every remaining benefit as a line, in the operator's display order. The API
+ * returns no display copy, so the feature's own `name` carries the wording and
+ * the catalog supplies only the count/unlimited framing around it.
+ */
+function genericFeatureLines(plan: Pick<Plan, 'features'>): string[] {
+  return Object.entries(plan.features ?? {})
+    .filter(([key]) => !NAMED_FEATURE_KEYS.has(key))
+    .map(([, feature]) => ({
+      name: feature.name,
+      value: String(feature.value ?? '').trim(),
+      order: feature.displayOrder ?? Number.MAX_SAFE_INTEGER,
+    }))
+    .filter(
+      (entry) => entry.name && !EMPTY_VALUES.has(entry.value.toLowerCase()),
+    )
+    .sort((a, b) => a.order - b.order)
+    .map((entry) => {
+      if (entry.value === 'unlimited') {
+        return m.planFeature_unlimitedValue({ name: entry.name });
+      }
+      if (entry.value.toLowerCase() === 'true') return entry.name;
+      const numeric = Number(entry.value);
+      return m.planFeature_countedValue({
+        name: entry.name,
+        value: Number.isFinite(numeric)
+          ? numeric.toLocaleString(getLocale())
+          : entry.value,
+      });
+    });
+}
+
+/**
+ * Everything a plan carries BESIDES its posting capacity — the member discount
+ * on further posts, any talent-access allowances, then whatever else the
+ * operator put on the plan.
+ */
+export function planBenefitLines(plan: Pick<Plan, 'features'>): string[] {
   const capacity = readMembershipCapacity(plan);
   return [
     capacity.postingDiscountPercent === null
@@ -119,5 +171,6 @@ export function membershipBenefitLines(plan: Pick<Plan, 'features'>): string[] {
       m.membershipBenefit_talentMessagesUnlimited,
       m.employerLanding_featureMessages,
     ),
+    ...genericFeatureLines(plan),
   ].filter((line) => line !== null);
 }

@@ -137,13 +137,16 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
       // the boolean gate per isolate so soft root re-runs do not re-hit
       // plans.list + salesLed.
       return await readEmployerOfferGate(async () => {
-        const [plans, salesLed] = await Promise.all([
+        const [plans, employerServicePlans] = await Promise.all([
           getBoard().plans.list({}, boardGlobalReadCache()),
-          getBoard().plans.salesLed(boardGlobalReadCache()),
+          getBoard().plans.list(
+            { purpose: 'employer_service' },
+            boardGlobalReadCache(),
+          ),
         ]);
         return {
           hasEmployerOfferPage:
-            plans.data.length > 0 || salesLed.data.length > 0,
+            plans.data.length > 0 || employerServicePlans.data.length > 0,
         };
       });
     } catch {
@@ -443,10 +446,22 @@ export const listPlans = createServerFn({ method: 'GET' })
     gatedRead(context, (h) => getBoard().plans.list(data, { headers: h })),
   );
 
-export const listSalesLedPlans = createServerFn({ method: 'GET' })
+/**
+ * Quote-only employer-service tiers. Replaces the deprecated
+ * `plans.salesLed()` read: the same rows come back from the plan list under
+ * the `employer_service` purpose, and `pricingMode` is what marks one
+ * quote-only.
+ */
+export const listContactPlans = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
-    gatedRead(context, (h) => getBoard().plans.salesLed({ headers: h })),
+    gatedRead(context, async (h) => {
+      const plans = await getBoard().plans.list(
+        { purpose: 'employer_service' },
+        { headers: h },
+      );
+      return plans.data.filter((plan) => plan.pricingMode === 'contact');
+    }),
   );
 
 export const listCompanyJobs = createServerFn({ method: 'GET' })

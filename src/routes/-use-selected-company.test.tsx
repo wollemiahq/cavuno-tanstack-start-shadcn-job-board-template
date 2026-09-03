@@ -35,6 +35,7 @@ function company(slug: string): PublicCompanyDetail {
     jobCount: 1,
     publishedJobCount: 1,
     salarySampleCount: 1,
+    membership: null,
     markets: [],
     links: { public: `https://jobs.example/companies/${slug}` },
   };

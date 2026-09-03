@@ -1517,6 +1517,7 @@
   "planComposed_maxActiveJobs": "Up to {count} active jobs",
   "planComposed_standardListing": "A {days} day standard listing",
   "planComposed_standardName": "Job listing",
+  "planFeature_countedValue": "{value} {name}",
   "planFeature_featured": [
     {
       "declarations": [
@@ -1548,6 +1549,7 @@
     }
   ],
   "planFeature_unlimitedActive": "Unlimited active jobs",
+  "planFeature_unlimitedValue": "Unlimited {name}",
   "plan_featuredListing_description": "A 30 day featured listing — pinned to the top of the board and highlighted in the weekly alert digest.",
   "plan_featuredListing_name": "Featured listing",
   "plan_free_description": "A 30 day standard listing",
