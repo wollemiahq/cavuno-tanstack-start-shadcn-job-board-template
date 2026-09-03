@@ -22,6 +22,7 @@ import { SaveJobButton } from '@/components/board/save-job-button';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { Page } from '@/components/layout/page';
+import { InPlaceListingSelect } from '@/components/master-detail-link';
 import {
   SearchResultDetail,
   SearchResultsLayout,
@@ -208,38 +209,37 @@ export function JobSearchPage({
                 >
                   <div className="space-y-4">{resultsBar}</div>
 
-                  <div className="space-y-3">
-                    {jobVms.map((vm) => (
-                      <div key={vm.id} data-result-id={vm.jobSlug ?? undefined}>
-                        <JobSearchResult
-                          vm={vm}
-                          selected={vm.jobSlug === selection.selectedId}
-                          onActivate={
-                            vm.jobSlug
-                              ? (event) =>
-                                  selection.onResultActivate(event, vm.jobSlug!)
-                              : undefined
-                          }
-                          saveSlot={
-                            <SaveJobButton
-                              jobId={vm.id}
-                              viewer={viewer}
-                              returnTo={returnTo}
-                              presentation="icon"
-                              labels={{
-                                save: m.companyJobDetail_saveJobLabel(),
-                                saving: m.companyJobDetail_savingLabel(),
-                                saved:
-                                  m.companyJobDetail_savedViewInAccountLabel(),
-                                error: m.saveJobButton_errorText(),
-                              }}
-                              onSave={onSaveJob}
-                            />
-                          }
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  <InPlaceListingSelect onSelect={selection.onResultActivate}>
+                    <div className="space-y-3">
+                      {jobVms.map((vm) => (
+                        <div
+                          key={vm.id}
+                          data-result-id={vm.jobSlug ?? undefined}
+                        >
+                          <JobSearchResult
+                            vm={vm}
+                            selected={vm.jobSlug === selection.selectedId}
+                            saveSlot={
+                              <SaveJobButton
+                                jobId={vm.id}
+                                viewer={viewer}
+                                returnTo={returnTo}
+                                presentation="icon"
+                                labels={{
+                                  save: m.companyJobDetail_saveJobLabel(),
+                                  saving: m.companyJobDetail_savingLabel(),
+                                  saved:
+                                    m.companyJobDetail_savedViewInAccountLabel(),
+                                  error: m.saveJobButton_errorText(),
+                                }}
+                                onSave={onSaveJob}
+                              />
+                            }
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </InPlaceListingSelect>
 
                   {gatedCount && gatedCount > 0 ? (
                     <Alert
@@ -252,14 +252,13 @@ export function JobSearchPage({
                         })}
                       </AlertDescription>
                       <AlertAction className="static">
-                        <a
-                          href={localizePath(
-                            `/account/access?${new URLSearchParams({ returnTo }).toString()}`,
-                          )}
+                        <Link
+                          to="/account/access"
+                          search={{ returnTo }}
                           className={buttonVariants({ size: 'sm' })}
                         >
                           {m.jobSearch_unlockMoreLabel()}
-                        </a>
+                        </Link>
                       </AlertAction>
                     </Alert>
                   ) : null}
@@ -288,7 +287,7 @@ export function JobSearchPage({
                           <Badge
                             key={chip.key}
                             variant="outline"
-                            render={<a href={localizePath(chip.href)} />}
+                            render={<Link to={chip.href} />}
                           >
                             {chip.name}
                           </Badge>

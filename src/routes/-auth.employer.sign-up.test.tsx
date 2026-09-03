@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { isRedirect } from '@tanstack/react-router';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -10,6 +10,7 @@ import {
 } from './-auth.employer.sign-up';
 
 import { buildVerifyEmailRedirectPath } from '@/lib/candidate-return-to';
+import { renderRouted } from '@/test/render-routed';
 
 const mocks = {
   getBoardContext: vi.fn(),
@@ -30,7 +31,7 @@ describe('/auth/employer/sign-up continuation', () => {
       ok: false,
       message: 'OAuth unavailable in this test',
     });
-    render(
+    await renderRouted(
       <EmployerSignUpView
         boardName="Cavuno Jobs"
         signUpEmployerAction={mocks.signUpEmployer}
@@ -63,7 +64,7 @@ describe('/auth/employer/sign-up continuation', () => {
   it('sends successful employer signup to the verification gate for the dashboard', async () => {
     mocks.signUpEmployer.mockResolvedValue({ ok: true });
     mocks.invalidate.mockRejectedValue(new Error('refresh unavailable'));
-    render(
+    await renderRouted(
       <EmployerSignUpView
         boardName="Cavuno Jobs"
         signUpEmployerAction={mocks.signUpEmployer}

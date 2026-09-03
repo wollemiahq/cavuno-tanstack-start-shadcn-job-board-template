@@ -1,5 +1,3 @@
-import { Link } from '@tanstack/react-router';
-
 /**
  * One job as owned shadcn markup over `JobCardVM`. Every value is pre-resolved
  * by `toJobCardVM`; this file imports nothing from `@cavuno/board*`, so the
@@ -27,9 +25,11 @@ import type { JobCardVM } from '@/board/job-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
 import { RelativeTimestamp } from '@/components/board/relative-timestamp';
 import { TaxonomyTags } from '@/components/board/taxonomy-tags';
+import { MasterDetailLink } from '@/components/master-detail-link';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { clampList } from '@/lib/clamp-list';
+import { jobDestination } from '@/lib/master-detail-destination';
 import { cn } from '@/lib/utils';
 
 const MAX_TAG_BADGES = 3;
@@ -70,7 +70,6 @@ export function JobCard({
   action,
   layout = 'card',
   compact = false,
-  linkTo = 'detail',
   openInNewTab = false,
 }: {
   vm: JobCardVM;
@@ -85,15 +84,6 @@ export function JobCard({
    */
   compact?: boolean;
   /**
-   * Where the card's title links. `detail` (default) opens the standalone
-   * job page; `workspace` opens the `/jobs` two-pane listing with this job
-   * preselected in the detail pane (via the `selectedJob` search param) — so
-   * a homepage rail lands the visitor in the browsing context. Both are typed
-   * TanStack routes; the canonical job URL for SEO/JSON-LD is emitted by the
-   * route, never derived from this anchor.
-   */
-  linkTo?: 'detail' | 'workspace';
-  /**
    * Embed widgets pass true so title + taxonomy chips leave the iframe
    * instead of loading the board inside it.
    */
@@ -103,30 +93,18 @@ export function JobCard({
     // The `after` overlay stretches the title anchor over the whole card,
     // making the full surface clickable with a single accessible link.
     'text-foreground hover:text-primary focus-visible:ring-ring/50 rounded-sm outline-none transition-colors hover:no-underline focus-visible:ring-2 after:absolute after:inset-0';
-  const newTabProps = openInNewTab
-    ? { target: '_blank' as const, rel: 'noopener noreferrer' }
-    : {};
   const title =
     vm.companySlug && vm.jobSlug ? (
-      linkTo === 'workspace' ? (
-        <Link
-          to="/jobs"
-          search={{ selectedJob: vm.jobSlug }}
-          className={linkClassName}
-          {...newTabProps}
-        >
-          {vm.title}
-        </Link>
-      ) : (
-        <Link
-          to="/companies/$companySlug/jobs/$jobSlug"
-          params={{ companySlug: vm.companySlug, jobSlug: vm.jobSlug }}
-          className={linkClassName}
-          {...newTabProps}
-        >
-          {vm.title}
-        </Link>
-      )
+      <MasterDetailLink
+        destination={jobDestination({
+          companySlug: vm.companySlug,
+          jobSlug: vm.jobSlug,
+        })}
+        className={linkClassName}
+        openInNewTab={openInNewTab}
+      >
+        {vm.title}
+      </MasterDetailLink>
     ) : (
       <span className="text-foreground" dir="auto">
         {vm.title}

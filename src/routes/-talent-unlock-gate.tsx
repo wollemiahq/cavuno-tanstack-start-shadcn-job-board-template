@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { Link } from '@tanstack/react-router';
 import { Lock } from 'lucide-react';
 
 import { planName } from '@/board/plan-labels';
@@ -75,12 +76,12 @@ export function TalentUnlockGate({
             title={m.talentUnlock_noPlanTitle()}
             description={m.talentUnlock_noPlanBody()}
             action={
-              <a
-                href="/employers"
+              <Link
+                to="/employers"
                 className={buttonVariants({ variant: 'outline' })}
               >
                 {m.talentUnlock_viewPlansLabel()}
-              </a>
+              </Link>
             }
           />
           <TalentProfileSilhouette profile={profile} />
@@ -121,12 +122,12 @@ export function TalentUnlockGate({
                 ))}
               </div>
             ) : (
-              <a
-                href="/employers"
+              <Link
+                to="/employers"
                 className={buttonVariants({ variant: 'outline' })}
               >
                 {m.talentUnlock_viewPlansLabel()}
-              </a>
+              </Link>
             )}
             <TalentProfileSilhouette profile={profile} />
           </div>

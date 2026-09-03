@@ -1,3 +1,5 @@
+import { Link } from '@tanstack/react-router';
+
 import { m } from '../../paraglide/messages';
 
 import type {
@@ -15,7 +17,6 @@ import { SearchResultDetailHeader } from '@/components/search-results/search-res
 import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { localizePath } from '@/lib/localized-path';
 
 function DefinitionList({
   rows,
@@ -57,7 +58,7 @@ function TaxonomySection({
           <Badge
             key={chip.key}
             variant="outline"
-            render={<a href={localizePath(chip.href)} />}
+            render={<Link to={chip.href} />}
           >
             {chip.name}
           </Badge>
@@ -221,12 +222,12 @@ function ExpandedJobDetailHeader({
             {vm.companyName ? (
               <div className="flex min-w-0 items-center gap-1 truncate">
                 {vm.company ? (
-                  <a
-                    href={localizePath(vm.company.href)}
+                  <Link
+                    to={vm.company.href}
                     className="text-foreground truncate font-medium outline-none hover:underline focus-visible:underline"
                   >
                     {vm.companyName}
-                  </a>
+                  </Link>
                 ) : (
                   <span className="text-foreground truncate font-medium">
                     {vm.companyName}
@@ -239,12 +240,12 @@ function ExpandedJobDetailHeader({
           <div data-slot="job-detail-title-row" className="flex items-start">
             <Text as="h2" variant="heading2" className="min-w-0">
               {vm.detailHref ? (
-                <a
-                  href={localizePath(vm.detailHref)}
+                <Link
+                  to={vm.detailHref}
                   className="outline-none hover:underline focus-visible:underline"
                 >
                   {vm.title}
-                </a>
+                </Link>
               ) : (
                 vm.title
               )}

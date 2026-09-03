@@ -14,12 +14,13 @@
  * native-apply job with no external URL routes an unverified candidate to
  * the verify gate.
  *
- * The auth/verify/applications paths are plain hrefs — point them at
- * your app's routes and swap `<a>` for your router's Link if desired.
+ * Auth/verify/applications CTAs use TanStack Link for same-origin SPA
+ * navigation; external apply stays a plain `<a target="_blank">`.
  */
 import { lazy, Suspense, useState, type FormEvent } from 'react';
 
 import { analytics } from '@cavuno/board/analytics';
+import { Link } from '@tanstack/react-router';
 
 import { m } from '../../paraglide/messages';
 
@@ -35,7 +36,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
 import {
-  candidateSignInHref,
+  candidateAuthSearch,
   candidateVerifyEmailHref,
 } from '@/lib/candidate-return-to';
 import {
@@ -311,30 +312,32 @@ export function ApplyButton({
       );
     case 'sign-in':
       return (
-        <a
-          href={candidateSignInHref(returnTo)}
+        <Link
+          to="/auth/sign-in"
+          search={candidateAuthSearch(returnTo)}
           className={buttonVariants({ size: 'lg' })}
         >
           {m.applyButton_applyLabel()}
-        </a>
+        </Link>
       );
     case 'verify-email':
       return (
-        <a
-          href={candidateVerifyEmailHref(returnTo)}
+        <Link
+          to="/auth/verify-email-required"
+          search={candidateAuthSearch(returnTo)}
           className={buttonVariants({ size: 'lg' })}
         >
           {m.applyButton_applyLabel()}
-        </a>
+        </Link>
       );
     case 'applied':
       return (
-        <a
-          href={applicationsHref}
+        <Link
+          to={applicationsHref}
           className={buttonVariants({ variant: 'secondary', size: 'lg' })}
         >
           {copy.appliedViewApplicationsLabel}
-        </a>
+        </Link>
       );
     case 'guest':
       // Wall off ⇒ the platform accepts an anonymous apply. Collect the
@@ -425,12 +428,13 @@ export function ApplyButton({
           <Button type="submit" size="lg" disabled={state === 'applying'}>
             {state === 'applying' ? copy.applyingLabel : copy.guestSubmitLabel}
           </Button>
-          <a
-            href={candidateSignInHref(returnTo)}
+          <Link
+            to="/auth/sign-in"
+            search={candidateAuthSearch(returnTo)}
             className="text-muted-foreground text-sm underline"
           >
             {copy.guestSignInInsteadLabel}
-          </a>
+          </Link>
           {state === 'guest-not-allowed' ? (
             <p role="alert" className="text-destructive text-sm">
               {copy.guestNotAllowedError}

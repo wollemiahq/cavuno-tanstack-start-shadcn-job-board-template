@@ -4,7 +4,7 @@
  */
 import { type SalaryLocation } from '@cavuno/board';
 import { BOARD_PATHS, salaryLocationPath } from '@cavuno/board/paths';
-import { createFileRoute } from '@tanstack/react-router';
+import { Link, createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -20,7 +20,6 @@ import { SalaryEmptyState } from '@/components/board/salary-sections';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { entityCount } from '@/lib/entity-count';
-import { localizePath } from '@/lib/localized-path';
 import { chromeEntity } from '@/lib/site-chrome';
 
 export const Route = createFileRoute('/salaries/locations/')({
@@ -60,12 +59,12 @@ function LocationTree({
     <ul className="space-y-1.5">
       {nodes.map((n) => (
         <li key={n.placeSlug}>
-          <a
-            href={localizePath(salaryLocationPath(n.placeSlug))}
+          <Link
+            to={salaryLocationPath(n.placeSlug)}
             className="text-foreground outline-ring hover:text-foreground/80 rounded-xs font-medium transition-colors hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             {n.placeName}
-          </a>
+          </Link>
           <span className="text-muted-foreground text-sm tabular-nums">
             {' · '}
             {formatSalaryRange(locale, n.avgSalaryMin, n.avgSalaryMax, null) ??

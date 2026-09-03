@@ -640,7 +640,6 @@ Props:
 
 Props:
 
-- `onActivate?: ((event: MouseEvent<HTMLAnchorElement, MouseEvent>) => void) | undefined`
 - `selected?: boolean | undefined`
 - `vm: CompanyCardVM`
 
@@ -756,7 +755,6 @@ Props:
 - `action?: ReactNode`
 - `compact?: boolean | undefined`
 - `layout?: "card" | "row" | undefined`
-- `linkTo?: "detail" | "workspace" | undefined`
 - `openInNewTab?: boolean | undefined`
 - `vm: JobCardVM`
 
@@ -843,7 +841,6 @@ Props:
 
 Props:
 
-- `onActivate?: ((event: MouseEvent<HTMLAnchorElement, MouseEvent>) => void) | undefined`
 - `saveSlot?: ReactNode`
 - `selected?: boolean | undefined`
 - `vm: JobCardVM`
@@ -1174,7 +1171,6 @@ Props:
 
 Props:
 
-- `onActivate?: ((event: MouseEvent<HTMLAnchorElement, MouseEvent>) => void) | undefined`
 - `saveSlot?: ReactNode`
 - `selected?: boolean | undefined`
 - `vm: TalentCardVM`
@@ -1915,6 +1911,38 @@ consumer is a drop-in.
 Props:
 
 - `className?: string | undefined`
+
+### InPlaceListingSelect — `src/components/master-detail-link.tsx`
+
+Listing compositions: unmodified desktop clicks select in place via `onSelect`.
+
+Props:
+
+- `children: ReactNode`
+- `onSelect: InPlaceSelect`
+
+### MasterDetailLink — `src/components/master-detail-link.tsx`
+
+Always renders a TanStack `Link` to `destination.canonical`. Providers only
+rewrite unmodified desktop primary clicks (in-place select wins over prefer-listing).
+
+Props:
+
+- `aria-current?: boolean | "true" | "false" | "time" | "page" | "step" | "location" | "date" | undefined`
+- `children: ReactNode`
+- `className?: string | undefined`
+- `destination: MasterDetailDestination`
+- `onClick?: ((event: MouseEvent<HTMLAnchorElement, MouseEvent>) => void) | undefined`
+- `openInNewTab?: boolean | undefined`
+- `preload?: false | "intent" | "viewport" | "render" | undefined`
+
+### PreferListingWorkspace — `src/components/master-detail-link.tsx`
+
+Homepage rails: unmodified desktop clicks open the family's listing workspace.
+
+Props:
+
+- `children: ReactNode`
 
 ### MessagesNavLink — `src/components/messages-nav-link.tsx`
 
@@ -3306,6 +3334,7 @@ Props:
 
 Props:
 
+- `href: string`
 - `isActive?: boolean | undefined`
 - `size?: "default" | "sm" | "lg" | "icon" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
 
@@ -3313,6 +3342,7 @@ Props:
 
 Props:
 
+- `href: string`
 - `isActive?: boolean | undefined`
 - `showText?: boolean | undefined`
 - `size?: "default" | "sm" | "lg" | "icon" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`
@@ -3322,6 +3352,7 @@ Props:
 
 Props:
 
+- `href: string`
 - `isActive?: boolean | undefined`
 - `showText?: boolean | undefined`
 - `size?: "default" | "sm" | "lg" | "icon" | "xs" | "icon-xs" | "icon-sm" | "icon-lg" | null | undefined`

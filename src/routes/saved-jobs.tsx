@@ -14,6 +14,7 @@ import {
   createFileRoute,
   getRouteApi,
   isRedirect,
+  Link,
   redirect,
   useNavigate,
   useRouter,
@@ -35,6 +36,7 @@ import {
 } from '@/components/candidate-route-state';
 import { EmptyState } from '@/components/empty-state';
 import { Page } from '@/components/layout/page';
+import { InPlaceListingSelect } from '@/components/master-detail-link';
 import { useRootSession } from '@/components/root-session';
 import {
   SearchResultDetail,
@@ -181,12 +183,12 @@ function SavedJobsPage() {
                     title={m.accountShell_savedJobsNav()}
                     description={m.accountHome_savedJobsEmptyText()}
                     action={
-                      <a
-                        href="/jobs"
+                      <Link
+                        to="/jobs"
                         className={buttonVariants({ variant: 'outline' })}
                       >
                         {m.meApplications_browseJobsLink()}
-                      </a>
+                      </Link>
                     }
                   />
                 </div>
@@ -205,49 +207,48 @@ function SavedJobsPage() {
                     className="space-y-4 pe-4 pt-4 pb-4"
                   >
                     {header}
-                    <div className="space-y-3">
-                      {rows.map(({ saved, vm }) => (
-                        <JobSearchResult
-                          key={saved.id}
-                          vm={vm}
-                          selected={vm.jobSlug === selection.selectedId}
-                          onActivate={
-                            vm.jobSlug
-                              ? (event) =>
-                                  selection.onResultActivate(event, vm.jobSlug!)
-                              : undefined
-                          }
-                          saveSlot={
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              aria-label={m.accountHome_unsaveLabel()}
-                              title={m.accountHome_unsaveLabel()}
-                              disabled={pendingId === saved.id}
-                              onClick={async () => {
-                                setPendingId(saved.id);
-                                try {
-                                  await unsaveJob({
-                                    data: { jobId: saved.jobId },
-                                  });
-                                } catch {
-                                  void toastActionError();
+                    <InPlaceListingSelect onSelect={selection.onResultActivate}>
+                      <div className="space-y-3">
+                        {rows.map(({ saved, vm }) => (
+                          <JobSearchResult
+                            key={saved.id}
+                            vm={vm}
+                            selected={vm.jobSlug === selection.selectedId}
+                            saveSlot={
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                aria-label={m.accountHome_unsaveLabel()}
+                                title={m.accountHome_unsaveLabel()}
+                                disabled={pendingId === saved.id}
+                                onClick={async () => {
+                                  setPendingId(saved.id);
+                                  try {
+                                    await unsaveJob({
+                                      data: { jobId: saved.jobId },
+                                    });
+                                  } catch {
+                                    void toastActionError();
+                                    setPendingId(null);
+                                    return;
+                                  }
+                                  await reconcileCommittedAction(() =>
+                                    router.invalidate(),
+                                  );
                                   setPendingId(null);
-                                  return;
-                                }
-                                await reconcileCommittedAction(() =>
-                                  router.invalidate(),
-                                );
-                                setPendingId(null);
-                              }}
-                            >
-                              <Bookmark aria-hidden className="fill-current" />
-                            </Button>
-                          }
-                        />
-                      ))}
-                    </div>
+                                }}
+                              >
+                                <Bookmark
+                                  aria-hidden
+                                  className="fill-current"
+                                />
+                              </Button>
+                            }
+                          />
+                        ))}
+                      </div>
+                    </InPlaceListingSelect>
                   </div>
                 </SearchResultsList>
               }

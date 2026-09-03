@@ -40,7 +40,7 @@ import {
   type LocationAuthSearch,
 } from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
-import { candidateSignInHref } from '@/lib/candidate-return-to';
+import { candidateAuthSearch } from '@/lib/candidate-return-to';
 import { headTitle } from '@/lib/page-title';
 
 type Channel = 'messageEmails' | 'applicationEmails' | 'recommendedJobEmails';
@@ -220,12 +220,13 @@ export function SettingsPageView({
             <p className="text-muted-foreground text-sm">
               {m.settings_linkExpiredBody()}
             </p>
-            <a
-              href={candidateSignInHref('/settings')}
+            <Link
+              to="/auth/sign-in"
+              search={candidateAuthSearch('/settings')}
               className={buttonVariants({ variant: 'outline' })}
             >
               {m.settings_signInLabel()}
-            </a>
+            </Link>
           </div>
         </PageContent>
       </Page>

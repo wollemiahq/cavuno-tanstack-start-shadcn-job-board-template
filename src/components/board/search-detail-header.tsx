@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { localizePath } from '@/lib/localized-path';
+import { Link } from '@tanstack/react-router';
 
 /**
  * The condensed (sticky) detail header shared by ALL three master/detail
@@ -48,12 +48,12 @@ export function SearchDetailHeader({
       <div className="min-w-0 flex-1">
         <p className="truncate text-base font-semibold" dir="auto">
           {nameHref ? (
-            <a
-              href={localizePath(nameHref)}
+            <Link
+              to={nameHref}
               className="outline-none hover:underline focus-visible:underline"
             >
               {name}
-            </a>
+            </Link>
           ) : (
             name
           )}

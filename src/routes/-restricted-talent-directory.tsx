@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 /**
  * The employers-only talent-directory upsell surface, colocated with the
  * `/talent` route as a non-route module (leading `-`) so the route file
@@ -48,23 +49,27 @@ export function RestrictedTalentDirectory({
             </EmptyHeader>
             <EmptyContent className="flex-row justify-center gap-2">
               {signedIn ? (
-                <a
-                  href="/employers/dashboard?add=true"
+                <Link
+                  to="/employers/dashboard"
+                  search={{ add: true }}
                   className={buttonVariants()}
                 >
                   {m.employerOnboarding_addCompanyLabel()}
-                </a>
+                </Link>
               ) : (
                 <>
-                  <a href="/auth/employer/sign-up" className={buttonVariants()}>
+                  <Link
+                    to="/auth/employer/sign-up"
+                    className={buttonVariants()}
+                  >
                     {m.siteHeader_signUpLabel()}
-                  </a>
-                  <a
-                    href="/auth/sign-in"
+                  </Link>
+                  <Link
+                    to="/auth/sign-in"
                     className={buttonVariants({ variant: 'outline' })}
                   >
                     {m.talentDirectory_signInLabel()}
-                  </a>
+                  </Link>
                 </>
               )}
             </EmptyContent>

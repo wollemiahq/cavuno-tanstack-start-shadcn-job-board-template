@@ -1,4 +1,5 @@
 import {
+  Link,
   createFileRoute,
   getRouteApi,
   useLocation,
@@ -73,9 +74,9 @@ function TalentDirectoryNotFound() {
           title={m.talentDirectory_notFoundText()}
           description={m.talentDirectory_emptyText()}
           action={
-            <a href="/jobs" className={buttonVariants({ variant: 'outline' })}>
+            <Link to="/jobs" className={buttonVariants({ variant: 'outline' })}>
               {m.meApplications_browseJobsLink()}
-            </a>
+            </Link>
           }
         />
       </PageContent>

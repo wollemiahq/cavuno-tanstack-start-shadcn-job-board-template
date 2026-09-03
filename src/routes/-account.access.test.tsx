@@ -4,12 +4,12 @@ import {
   act,
   cleanup,
   fireEvent,
-  render,
   screen,
   waitFor,
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { renderRouted } from '@/test/render-routed';
 import type { AccessGrant, PaywallOffer } from '@cavuno/board';
 
 interface AccessLoaderData {
@@ -71,10 +71,10 @@ const annualOffer = {
   isDefault: false,
 } satisfies PaywallOffer;
 
-function renderAccessPage() {
+async function renderAccessPage() {
   const loaderData = mocks.useLoaderData();
   const search = mocks.useSearch();
-  return render(
+  return await renderRouted(
     <AccessPageView
       grant={loaderData.grant}
       offers={loaderData.offers}
@@ -114,7 +114,7 @@ describe('candidate access actions', () => {
         }),
     );
 
-    renderAccessPage();
+    await renderAccessPage();
     fireEvent.click(screen.getAllByRole('button', { name: 'Choose' })[0]!);
 
     for (const button of screen.getAllByRole('button')) {
@@ -134,7 +134,7 @@ describe('candidate access actions', () => {
     mocks.useSearch.mockReturnValue({ session_id: undefined });
     mocks.startCheckout.mockRejectedValue(new Error('checkout unavailable'));
 
-    renderAccessPage();
+    await renderAccessPage();
     fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
 
     await waitFor(() => {
@@ -156,7 +156,7 @@ describe('candidate access actions', () => {
     mocks.useSearch.mockReturnValue({ session_id: undefined });
     mocks.openBillingPortal.mockRejectedValue(new Error('portal unavailable'));
 
-    renderAccessPage();
+    await renderAccessPage();
     fireEvent.click(
       screen.getByRole('button', { name: 'Manage subscription' }),
     );
@@ -169,14 +169,14 @@ describe('candidate access actions', () => {
     });
   });
 
-  it('renders a plan option per offer for a viewer without access', () => {
+  it('renders a plan option per offer for a viewer without access', async () => {
     mocks.useLoaderData.mockReturnValue({
       grant,
       offers: [offer, annualOffer],
     });
     mocks.useSearch.mockReturnValue({ session_id: undefined });
 
-    renderAccessPage();
+    await renderAccessPage();
 
     expect(screen.getAllByRole('button', { name: 'Choose' })).toHaveLength(2);
     expect(
@@ -206,7 +206,7 @@ describe('candidate access actions', () => {
       value: { href: '' },
     });
 
-    renderAccessPage();
+    await renderAccessPage();
     fireEvent.click(
       screen.getByRole('button', { name: 'Manage subscription' }),
     );
@@ -225,7 +225,7 @@ describe('candidate access actions', () => {
     });
   });
 
-  it('shows the lifetime entitlement with no billing portal', () => {
+  it('shows the lifetime entitlement with no billing portal', async () => {
     mocks.useLoaderData.mockReturnValue({
       grant: {
         ...grant,
@@ -237,7 +237,7 @@ describe('candidate access actions', () => {
     });
     mocks.useSearch.mockReturnValue({ session_id: undefined });
 
-    renderAccessPage();
+    await renderAccessPage();
 
     // A lifetime grant cannot be managed via the portal, and it is an entitled
     // state rather than the plan picker.
@@ -255,7 +255,7 @@ describe('candidate access actions', () => {
     });
     mocks.getAccessGrant.mockRejectedValue(new Error('grant unavailable'));
 
-    renderAccessPage();
+    await renderAccessPage();
     expect(screen.getByText('Confirming your purchase…')).toBeVisible();
 
     await act(async () => {
@@ -281,7 +281,7 @@ describe('candidate access actions', () => {
       returnTo: '/jobs?q=react',
     });
 
-    renderAccessPage();
+    await renderAccessPage();
 
     await waitFor(() => {
       expect(mocks.navigate).toHaveBeenCalledWith('/jobs?q=react');
@@ -292,7 +292,7 @@ describe('candidate access actions', () => {
     ).toBeNull();
   });
 
-  it('ignores an unsafe returnTo and keeps the buyer on the entitled surface', () => {
+  it('ignores an unsafe returnTo and keeps the buyer on the entitled surface', async () => {
     mocks.useLoaderData.mockReturnValue({
       grant: {
         ...grant,
@@ -307,7 +307,7 @@ describe('candidate access actions', () => {
       returnTo: 'https://evil.example/phish',
     });
 
-    renderAccessPage();
+    await renderAccessPage();
 
     expect(mocks.navigate).not.toHaveBeenCalled();
     expect(

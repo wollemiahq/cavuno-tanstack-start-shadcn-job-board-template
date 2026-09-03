@@ -2,6 +2,13 @@
 
 import '@testing-library/jest-dom/vitest';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -18,6 +25,27 @@ import type { TalentDetailCta } from '@/board/talent-view-model';
 import { SearchResultDetail } from '@/components/search-results/search-results';
 
 afterEach(cleanup);
+
+function renderRouted(ui: React.ReactElement) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => ui,
+  });
+  const stubs = ['/p/$handle', '/auth/sign-in', '/employers'].map((path) =>
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path,
+      component: () => null,
+    }),
+  );
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute, ...stubs]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  return render(<RouterProvider router={router} />);
+}
 
 // Anonymous/without-access: the Message CTA points at sign-in/pricing. The
 // route no longer offers a separate "View profile" button — the NAME is the
@@ -48,11 +76,11 @@ const noActionsCta: TalentDetailCta = {
 };
 
 describe('TalentSearchResultDetail', () => {
-  it('shows decision-complete public facts', () => {
-    render(<TalentSearchResultDetail vm={profileVm} cta={messageCta} />);
+  it('shows decision-complete public facts', async () => {
+    renderRouted(<TalentSearchResultDetail vm={profileVm} cta={messageCta} />);
 
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Ada Lovelace' }),
+      await screen.findByRole('heading', { level: 2, name: 'Ada Lovelace' }),
     ).toBeVisible();
     expect(
       screen.getByText('I translate ambitious ideas into working systems.'),
@@ -63,10 +91,14 @@ describe('TalentSearchResultDetail', () => {
     expect(screen.getAllByText('Ada Lovelace')).toHaveLength(1);
   });
 
-  it('renders the Message action and links the candidate name to their profile', () => {
-    const { container } = render(
+  it('renders the Message action and links the candidate name to their profile', async () => {
+    const { container } = renderRouted(
       <TalentSearchResultDetail vm={profileVm} cta={messageCta} />,
     );
+
+    expect(
+      await screen.findByRole('link', { name: 'Ada Lovelace' }),
+    ).toHaveAttribute('href', '/p/ada-lovelace');
 
     const actions = container.querySelector<HTMLElement>(
       "[data-slot='talent-detail-actions']",
@@ -83,15 +115,10 @@ describe('TalentSearchResultDetail', () => {
     expect(
       within(actions).queryByRole('link', { name: 'View profile' }),
     ).toBeNull();
-    // The candidate's NAME is now the accessible route to their profile.
-    expect(screen.getByRole('link', { name: 'Ada Lovelace' })).toHaveAttribute(
-      'href',
-      '/p/ada-lovelace',
-    );
   });
 
-  it('puts Save next to Message when the employer can source', () => {
-    const { container } = render(
+  it('puts Save next to Message when the employer can source', async () => {
+    const { container } = renderRouted(
       <TalentSearchResultDetail
         vm={profileVm}
         cta={messageCta}
@@ -99,6 +126,7 @@ describe('TalentSearchResultDetail', () => {
       />,
     );
 
+    await screen.findByRole('link', { name: 'Ada Lovelace' });
     const actions = container.querySelector<HTMLElement>(
       "[data-slot='talent-detail-actions']",
     );
@@ -109,20 +137,19 @@ describe('TalentSearchResultDetail', () => {
     ).toEqual(['Message', 'Save to job']);
   });
 
-  it('renders no action controls when the viewer earns no Message, keeping the name link to the profile', () => {
-    const { container } = render(
+  it('renders no action controls when the viewer earns no Message, keeping the name link to the profile', async () => {
+    const { container } = renderRouted(
       <TalentSearchResultDetail vm={profileVm} cta={noActionsCta} />,
     );
 
+    expect(
+      await screen.findByRole('link', { name: 'Ada Lovelace' }),
+    ).toHaveAttribute('href', '/p/ada-lovelace');
     expect(
       container.querySelector("[data-slot='talent-detail-actions']"),
     ).toBeNull();
     expect(screen.queryByRole('link', { name: 'Message' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'View profile' })).toBeNull();
-    expect(screen.getByRole('link', { name: 'Ada Lovelace' })).toHaveAttribute(
-      'href',
-      '/p/ada-lovelace',
-    );
   });
 
   it('starts a conversation by handle and hands off to the returned thread', async () => {
@@ -131,7 +158,7 @@ describe('TalentSearchResultDetail', () => {
       data: { conversationId: 'conversation-1' },
     });
     const onConversationStarted = vi.fn();
-    render(
+    renderRouted(
       <TalentSearchResultDetail
         vm={profileVm}
         cta={composerCta}
@@ -140,14 +167,19 @@ describe('TalentSearchResultDetail', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Message' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Message' }));
     expect(
-      screen.getByRole('heading', { name: 'Message Ada Lovelace' }),
+      await screen.findByRole('heading', { name: 'Message Ada Lovelace' }),
     ).toBeVisible();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Send a message' }), {
-      target: { value: '  Your work looks like a great fit.  ' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
+    fireEvent.change(
+      await screen.findByRole('textbox', { name: 'Send a message' }),
+      {
+        target: { value: '  Your work looks like a great fit.  ' },
+      },
+    );
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Send message' }),
+    );
 
     await waitFor(() =>
       expect(onStartConversation).toHaveBeenCalledWith({
@@ -158,8 +190,8 @@ describe('TalentSearchResultDetail', () => {
     expect(onConversationStarted).toHaveBeenCalledWith('conversation-1');
   });
 
-  it('removes every profile action while preserved detail is read-only', () => {
-    const { container } = render(
+  it('removes every profile action while preserved detail is read-only', async () => {
+    const { container } = renderRouted(
       <TalentSearchResultDetail
         vm={profileVm}
         cta={messageCta}
@@ -168,7 +200,7 @@ describe('TalentSearchResultDetail', () => {
     );
 
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Ada Lovelace' }),
+      await screen.findByRole('heading', { level: 2, name: 'Ada Lovelace' }),
     ).toBeVisible();
     expect(screen.getByText('Analytical engineer')).toBeVisible();
     expect(
@@ -181,12 +213,14 @@ describe('TalentSearchResultDetail', () => {
   });
 
   it('replaces the expanded identity with a compact identity and action at the hero boundary', async () => {
-    const { container } = render(
+    const { container } = renderRouted(
       <SearchResultDetail label="Selected profile">
         <TalentSearchResultDetail vm={profileVm} cta={messageCta} />
       </SearchResultDetail>,
     );
-    const detail = screen.getByRole('region', { name: 'Selected profile' });
+    const detail = await screen.findByRole('region', {
+      name: 'Selected profile',
+    });
     const expanded = container.querySelector<HTMLElement>(
       '[data-slot="detail-expanded-header"]',
     );

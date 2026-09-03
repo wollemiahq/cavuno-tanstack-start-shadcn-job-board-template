@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import { Link } from '@tanstack/react-router';
+
 import type {
   TalentDetailCtaComposer,
   TalentDetailCtaLink,
@@ -42,9 +44,9 @@ export function TalentMessageAction({
 
   if (action.kind === 'link') {
     return (
-      <a href={action.href} className={buttonVariants()}>
+      <Link to={action.href} className={buttonVariants()}>
         {action.label}
-      </a>
+      </Link>
     );
   }
 

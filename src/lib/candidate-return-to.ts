@@ -28,6 +28,15 @@ export function candidateSignInHref<T>(value: T) {
   return candidateAuthHref('/auth/sign-in', value);
 }
 
+/**
+ * Search bag for TanStack `Link` auth CTAs. Pathnames stay unlocalized — the
+ * router `rewrite.output` localizes the rendered href. `returnTo` stays a
+ * localized absolute path so post-auth redirects survive a document load.
+ */
+export function candidateAuthSearch<T>(value: T) {
+  return { returnTo: localizePath(candidateReturnTo(value)) };
+}
+
 /** Durable password-reset completion destination. The bounded marker is
  * display-only and contains no account or token data. */
 export function candidatePasswordResetSignInHref<T>(value: T) {
@@ -36,6 +45,13 @@ export function candidatePasswordResetSignInHref<T>(value: T) {
     reset: 'password',
   });
   return `${localizePath('/auth/sign-in')}?${search}`;
+}
+
+export function candidatePasswordResetSignInSearch<T>(value: T) {
+  return {
+    ...candidateAuthSearch(value),
+    reset: 'password' as const,
+  };
 }
 
 export function candidateVerifyEmailHref<T>(value: T) {

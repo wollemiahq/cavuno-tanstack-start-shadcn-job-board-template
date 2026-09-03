@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { Link } from '@tanstack/react-router';
 import { BriefcaseBusiness } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
@@ -210,12 +211,12 @@ export function RegistrationPage({
       announceTitle={succeeded}
     >
       {succeeded ? (
-        <a
-          href={successHref}
+        <Link
+          to={successHref}
           className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
         >
           {copy.successActionLabel}
-        </a>
+        </Link>
       ) : (
         <>
           <RegistrationForm

@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -38,8 +45,29 @@ function validateSearch(search: UrlSearchInput) {
   return validate(search);
 }
 
+function renderRouted(ui: React.ReactElement) {
+  const rootRoute = createRootRoute();
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => ui,
+  });
+  const stubs = ['/auth/sign-in'].map((path) =>
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path,
+      component: () => null,
+    }),
+  );
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([indexRoute, ...stubs]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  return render(<RouterProvider router={router} />);
+}
+
 describe('/auth/forgot-password continuation', () => {
-  it('sanitizes and retains an internal candidate destination', () => {
+  it('sanitizes and retains an internal candidate destination', async () => {
     expect(
       validateSearch({
         returnTo: '/jobs?q=design&selectedJob=product-designer',
@@ -55,12 +83,13 @@ describe('/auth/forgot-password continuation', () => {
   it('keeps the destination on the confirmation link back to sign in', async () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
     forgotPassword.mockResolvedValue({ ok: true });
-    const { container } = render(
+    const { container } = renderRouted(
       <ForgotPasswordView
         returnTo={returnTo}
         forgotPasswordAction={forgotPassword}
       />,
     );
+    await screen.findByRole('button', { name: 'Send reset link' });
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
     });
@@ -78,12 +107,13 @@ describe('/auth/forgot-password continuation', () => {
 
   it('recovers when the reset-link request rejects unexpectedly', async () => {
     forgotPassword.mockRejectedValue(new Error('network unavailable'));
-    const { container } = render(
+    const { container } = renderRouted(
       <ForgotPasswordView
         returnTo="/account"
         forgotPasswordAction={forgotPassword}
       />,
     );
+    await screen.findByRole('button');
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
     });

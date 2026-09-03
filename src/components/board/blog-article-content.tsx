@@ -35,7 +35,6 @@ import {
 import type { BoardAdsConfig } from '@/lib/board-ads';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { initialsOf } from '@/lib/initials';
-import { localizePath } from '@/lib/localized-path';
 import { cn } from '@/lib/utils';
 import type {
   PublicBlogAdjacentPosts,
@@ -345,12 +344,12 @@ export function BlogArticleContent({
                     </EmptyDescription>
                   </EmptyHeader>
                   <EmptyContent>
-                    <a
-                      href={localizePath(missingBody.action.href)}
+                    <Link
+                      to={missingBody.action.href}
                       className={buttonVariants({ variant: 'outline' })}
                     >
                       {missingBody.action.label}
-                    </a>
+                    </Link>
                   </EmptyContent>
                 </Empty>
               )}

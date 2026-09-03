@@ -1,20 +1,19 @@
-import type { MouseEvent as ReactMouseEvent, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import type { JobCardVM } from '@/board/job-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
 import { RelativeTimestamp } from '@/components/board/relative-timestamp';
+import { MasterDetailLink } from '@/components/master-detail-link';
 import { SearchResultCard } from '@/components/search-results/search-results';
-import { localizePath } from '@/lib/localized-path';
+import { jobDestination } from '@/lib/master-detail-destination';
 
 export function JobSearchResult({
   vm,
   selected = false,
-  onActivate,
   saveSlot,
 }: {
   vm: JobCardVM;
   selected?: boolean;
-  onActivate?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
   saveSlot?: ReactNode;
 }) {
   return (
@@ -33,17 +32,17 @@ export function JobSearchResult({
                 className="text-foreground line-clamp-2 text-base font-semibold"
                 dir="auto"
               >
-                {vm.detailHref ? (
-                  <a
-                    href={
-                      vm.detailHref ? localizePath(vm.detailHref) : undefined
-                    }
+                {vm.companySlug && vm.jobSlug ? (
+                  <MasterDetailLink
+                    destination={jobDestination({
+                      companySlug: vm.companySlug,
+                      jobSlug: vm.jobSlug,
+                    })}
                     aria-current={selected ? 'true' : undefined}
-                    onClick={onActivate}
                     className="outline-none after:absolute after:inset-0 after:content-['']"
                   >
                     {vm.title}
-                  </a>
+                  </MasterDetailLink>
                 ) : (
                   vm.title
                 )}

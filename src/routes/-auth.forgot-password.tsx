@@ -1,11 +1,11 @@
 import { useState } from 'react';
 
-import { createFileRoute } from '@tanstack/react-router';
+import { Link, createFileRoute } from '@tanstack/react-router';
 
 import { AuthCard, Field, FormError } from '../components/auth-form';
 import {
   candidateReturnTo,
-  candidateSignInHref,
+  candidateAuthSearch,
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { forgotPassword } from '../server/auth';
@@ -61,9 +61,13 @@ export function ForgotPasswordView({
         supportingText={m.authForgotPassword_checkEmailBody()}
       >
         <div className="text-center text-sm">
-          <a href={candidateSignInHref(returnTo)} className={textLinkClass}>
+          <Link
+            to="/auth/sign-in"
+            search={candidateAuthSearch(returnTo)}
+            className={textLinkClass}
+          >
             {m.authForgotPassword_backToSignInLabel()}
-          </a>
+          </Link>
         </div>
         <AuthMailAppLinks />
       </AuthCard>

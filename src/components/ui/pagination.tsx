@@ -1,5 +1,6 @@
 import * as React from 'react';
 
+import { Link } from '@tanstack/react-router';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -43,17 +44,21 @@ function PaginationItem({ ...props }: React.ComponentProps<'li'>) {
 
 type PaginationLinkProps = {
   isActive?: boolean;
+  /** Same-origin listing page URL; required so Link never falls back to `#`. */
+  href: string;
 } & Pick<VariantProps<typeof buttonVariants>, 'size'> &
-  React.ComponentProps<'a'>;
+  Omit<React.ComponentProps<typeof Link>, 'to' | 'size'>;
 
 function PaginationLink({
   className,
   isActive,
   size = 'icon',
+  href,
   ...props
 }: PaginationLinkProps) {
   return (
-    <a
+    <Link
+      to={href}
       aria-current={isActive ? 'page' : undefined}
       data-slot="pagination-link"
       data-active={isActive}

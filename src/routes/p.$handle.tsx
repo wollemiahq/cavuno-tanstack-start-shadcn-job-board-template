@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import {
+  Link,
   createFileRoute,
   getRouteApi,
   useLocation,
@@ -74,12 +75,12 @@ function TalentProfileNotFound() {
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <a
-              href="/talent"
+            <Link
+              to="/talent"
               className={buttonVariants({ variant: 'outline' })}
             >
               {m.talentDirectory_title()}
-            </a>
+            </Link>
           </EmptyContent>
         </Empty>
       </PageContent>
