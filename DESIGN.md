@@ -546,6 +546,22 @@ Props:
 - `description?: ReactNode`
 - `title?: ReactNode`
 
+### CandidatePaywallLock — `src/components/board/candidate-paywall-lock.tsx`
+
+Stands in for a candidate feature the viewer's job-seeker plan does not
+unlock. Entitlements are per plan and are not on the wire, so this is
+rendered from the board's 403, never pre-computed from a context flag.
+
+The CTA is the one gated job listings already use — `/account/access` with
+the originating path as `returnTo` — so a buyer lands back where they were.
+`title` names the feature; the offers come from `board.paywall.offers()`.
+
+Props:
+
+- `offers: { object: "paywall_offer"; offerKey: string; label: string; billingLabel: string; amountCents: number; currency: stri…`
+- `returnTo: string`
+- `title: string`
+
 ### CompanyAvatar — `src/components/board/company-avatar.tsx`
 
 Company mark — the one shared way a company logo renders across every
