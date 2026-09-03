@@ -554,8 +554,40 @@
   "companySalaries_categoryMetaDescriptionEmpty": "Dane o wynagrodzeniach: {category} w firmie {company}.",
   "companySalaries_categoryMetaDescriptionWithData": "Wynagrodzenia: {category} w firmie {company} — {range}/rok. Liczba ofert: {jobCount}.",
   "companySalaries_heading": "Wynagrodzenia w firmie {company}",
-  "companySalaries_metaDescriptionEmpty": "Dane o wynagrodzeniach w firmie {company}.",
-  "companySalaries_metaDescriptionWithData": "Wynagrodzenia w firmie {company}: {range}/rok. Liczba ofert: {jobCount}.",
+  "companySalaries_metaDescriptionCategories": [
+    {
+      "declarations": [
+        "input categoryCount",
+        "local categoryCountPlural = categoryCount: plural"
+      ],
+      "selectors": ["categoryCountPlural"],
+      "match": {
+        "categoryCountPlural=one": "Podział na {categoryCount} kategorię stanowisk.",
+        "categoryCountPlural=few": "Podział na {categoryCount} kategorie stanowisk.",
+        "categoryCountPlural=many": "Podział na {categoryCount} kategorii stanowisk.",
+        "categoryCountPlural=*": "Podział na {categoryCount} kategorii stanowisk."
+      }
+    }
+  ],
+  "companySalaries_metaDescriptionEmpty": "Brak jeszcze danych o wynagrodzeniach w firmie {company}. Zobacz otwarte oferty i płace u podobnych pracodawców.",
+  "companySalaries_metaDescriptionUpdated": "Stan na {year}.",
+  "companySalaries_metaDescriptionWithData": [
+    {
+      "declarations": [
+        "input company",
+        "input range",
+        "input jobCount",
+        "local jobCountPlural = jobCount: plural"
+      ],
+      "selectors": ["jobCountPlural"],
+      "match": {
+        "jobCountPlural=one": "{company} płaci średnio {range} rocznie na podstawie {jobCount} oferty pracy.",
+        "jobCountPlural=few": "{company} płaci średnio {range} rocznie na podstawie {jobCount} ofert pracy.",
+        "jobCountPlural=many": "{company} płaci średnio {range} rocznie na podstawie {jobCount} ofert pracy.",
+        "jobCountPlural=*": "{company} płaci średnio {range} rocznie na podstawie {jobCount} ofert pracy."
+      }
+    }
+  ],
   "companySalaries_notFoundCompany": "Brak danych o wynagrodzeniach dla tej firmy.",
   "companySalaries_notFoundCompanyCategory": "Brak danych o wynagrodzeniach dla tej firmy i kategorii.",
   "companySalaries_otherCompaniesHiringLabel": "Inne firmy rekrutujące: {category}",

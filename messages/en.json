@@ -540,8 +540,36 @@
   "companySalaries_categoryMetaDescriptionEmpty": "{category} salary data at {company}.",
   "companySalaries_categoryMetaDescriptionWithData": "{category} salaries at {company}: {range}/year across {jobCount} jobs.",
   "companySalaries_heading": "{company} salaries",
-  "companySalaries_metaDescriptionEmpty": "{company} salary data.",
-  "companySalaries_metaDescriptionWithData": "{company} salaries: {range}/year across {jobCount} jobs.",
+  "companySalaries_metaDescriptionCategories": [
+    {
+      "declarations": [
+        "input categoryCount",
+        "local categoryCountPlural = categoryCount: plural"
+      ],
+      "selectors": ["categoryCountPlural"],
+      "match": {
+        "categoryCountPlural=one": "Breakdown across {categoryCount} job category.",
+        "categoryCountPlural=*": "Breakdown across {categoryCount} job categories."
+      }
+    }
+  ],
+  "companySalaries_metaDescriptionEmpty": "No salary data yet for {company}. Browse open roles and pay at similar employers.",
+  "companySalaries_metaDescriptionUpdated": "Updated {year}.",
+  "companySalaries_metaDescriptionWithData": [
+    {
+      "declarations": [
+        "input company",
+        "input range",
+        "input jobCount",
+        "local jobCountPlural = jobCount: plural"
+      ],
+      "selectors": ["jobCountPlural"],
+      "match": {
+        "jobCountPlural=one": "{company} pays {range} per year on average across {jobCount} job posting.",
+        "jobCountPlural=*": "{company} pays {range} per year on average across {jobCount} job postings."
+      }
+    }
+  ],
   "companySalaries_notFoundCompany": "No salary data for this company.",
   "companySalaries_notFoundCompanyCategory": "No salary data for this company and category.",
   "companySalaries_otherCompaniesHiringLabel": "Other companies hiring {category}",

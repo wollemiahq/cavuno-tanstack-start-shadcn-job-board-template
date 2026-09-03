@@ -540,8 +540,36 @@
   "companySalaries_categoryMetaDescriptionEmpty": "Datos salariales de {category} en {company}.",
   "companySalaries_categoryMetaDescriptionWithData": "Salarios de {category} en {company}: {range}/año en {jobCount} ofertas.",
   "companySalaries_heading": "Salarios en {company}",
-  "companySalaries_metaDescriptionEmpty": "Datos salariales de {company}.",
-  "companySalaries_metaDescriptionWithData": "Salarios en {company}: {range}/año en {jobCount} ofertas.",
+  "companySalaries_metaDescriptionCategories": [
+    {
+      "declarations": [
+        "input categoryCount",
+        "local categoryCountPlural = categoryCount: plural"
+      ],
+      "selectors": ["categoryCountPlural"],
+      "match": {
+        "categoryCountPlural=one": "Desglose por {categoryCount} categoría de empleo.",
+        "categoryCountPlural=*": "Desglose por {categoryCount} categorías de empleo."
+      }
+    }
+  ],
+  "companySalaries_metaDescriptionEmpty": "Todavía no hay datos salariales de {company}. Consulta las vacantes y los salarios de empleadores similares.",
+  "companySalaries_metaDescriptionUpdated": "Actualizado en {year}.",
+  "companySalaries_metaDescriptionWithData": [
+    {
+      "declarations": [
+        "input company",
+        "input range",
+        "input jobCount",
+        "local jobCountPlural = jobCount: plural"
+      ],
+      "selectors": ["jobCountPlural"],
+      "match": {
+        "jobCountPlural=one": "{company} paga de media {range} al año, según {jobCount} oferta de empleo.",
+        "jobCountPlural=*": "{company} paga de media {range} al año, según {jobCount} ofertas de empleo."
+      }
+    }
+  ],
   "companySalaries_notFoundCompany": "No hay datos salariales para esta empresa.",
   "companySalaries_notFoundCompanyCategory": "No hay datos salariales para esta empresa y categoría.",
   "companySalaries_otherCompaniesHiringLabel": "Otras empresas que contratan perfiles de {category}",
