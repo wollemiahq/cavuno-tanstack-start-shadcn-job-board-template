@@ -63,12 +63,12 @@ async function renderBlogOg(post: Post): Promise<Response> {
   // Board language for date formatting — served from the isolate context
   // memo / edge cache, so this adds no extra request in steady state.
   const author = post.authors[0] ?? null;
-  // The avatar contributes no glyphs and no copy, so it resolves with the
-  // reads rather than behind them. `null` drops the frame (see og-image.ts).
-  const [seo, { language }, authorAvatarUrl] = await Promise.all([
+  // Nothing below needs the avatar, so start it here and await it last.
+  // `null` drops the frame with it (see og-image.ts).
+  const avatarSrc = ogImageSrc(author?.avatarUrl);
+  const [seo, { language }] = await Promise.all([
     getBoard().seo(),
     readBoardContext(),
-    ogImageSrc(author?.avatarUrl),
   ]);
 
   const card = {
@@ -100,7 +100,11 @@ async function renderBlogOg(post: Post): Promise<Response> {
   const font = await loadOgFont(text);
 
   return renderOgPng(
-    buildBlogOgHtml({ ...card, authorAvatarUrl, fontFamily: font.name }),
+    buildBlogOgHtml({
+      ...card,
+      authorAvatarUrl: await avatarSrc,
+      fontFamily: font.name,
+    }),
     font,
   );
 }

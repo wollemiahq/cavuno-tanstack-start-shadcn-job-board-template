@@ -10,6 +10,8 @@ const EMPTY: number[] = [];
 
 const ascii = (text: string) => [...text].map((c) => c.charCodeAt(0));
 
+const PROLOG = '<?xml version="1.0"';
+
 const URL_ = 'https://files.example/logo';
 
 type Init = Parameters<ImageFetch>[1];
@@ -57,8 +59,6 @@ describe('ogImageSrc', () => {
     expect(calls[0]?.cf?.cacheTtl).toBe(86400);
   });
 
-  // Satori reaches its SVG renderer only on an exact content-type match, so
-  // that is the one case an SVG may be handed to it as a URL.
   it('passes an SVG through on an exact svg content-type', async () => {
     const { fetchImpl } = fakeFetch(
       svgResponse('<!DOCTYPE svg PUBLIC', 'image/svg+xml'),
@@ -66,21 +66,17 @@ describe('ogImageSrc', () => {
     expect(await ogImageSrc(URL_, fetchImpl)).toBe(URL_);
   });
 
-  // A charset parameter fails Satori's `===`, dropping it onto the byte path
-  // whose switch has no SVG branch — so it has to be rasterised instead.
-  it('transforms an SVG whose content-type carries a charset', async () => {
-    const { fetchImpl, calls } = fakeFetch(
-      svgResponse('<?xml version="1.0"', 'image/svg+xml; charset=utf-8'),
-      PNG,
-    );
-    await ogImageSrc(URL_, fetchImpl);
-    expect(calls).toHaveLength(2);
-  });
-
-  // An `<?xml` prolog is what Satori's byte detector recognises, but its
-  // decoder then throws on the SVG branch it does not have.
-  it('transforms an SVG that only its bytes identify', async () => {
-    const { fetchImpl, calls } = fakeFetch(ascii('<?xml version="1.0"'), PNG);
+  // A charset parameter fails Satori's `===`, and its byte detector reaches a
+  // switch with no SVG branch. Either way it cannot draw one, so both have to
+  // be rasterised rather than handed over as a URL.
+  it.each([
+    [
+      'a charset on its content-type',
+      svgResponse(PROLOG, 'image/svg+xml; charset=utf-8'),
+    ],
+    ['its bytes alone', svgResponse(PROLOG, 'application/octet-stream')],
+  ])('transforms an SVG identified by %s', async (_name, first) => {
+    const { fetchImpl, calls } = fakeFetch(first, PNG);
     await ogImageSrc(URL_, fetchImpl);
     expect(calls).toHaveLength(2);
   });
@@ -104,6 +100,16 @@ describe('ogImageSrc', () => {
 
   it('drops the image when transformations are off and WebP comes back', async () => {
     const { fetchImpl } = fakeFetch(WEBP, WEBP);
+    expect(await ogImageSrc(URL_, fetchImpl)).toBeNull();
+  });
+
+  // The sniff already proved Satori cannot draw it, so a transform that
+  // throws must still drop the element rather than hand the URL back.
+  it('drops the image when the transform throws', async () => {
+    const fetchImpl: ImageFetch = async (_url, init) => {
+      if (init?.cf?.image) throw new Error('timed out');
+      return new Response(new Uint8Array(WEBP));
+    };
     expect(await ogImageSrc(URL_, fetchImpl)).toBeNull();
   });
 

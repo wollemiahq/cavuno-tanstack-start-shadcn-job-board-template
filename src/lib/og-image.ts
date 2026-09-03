@@ -75,7 +75,8 @@ function toDataUri(bytes: Uint8Array): string {
 /**
  * Re-fetch through Cloudflare image transformations. When the zone has them
  * disabled the hint is ignored and the original comes back, so the result is
- * sniffed too: no PNG, no logo.
+ * sniffed too: no PNG, no logo. A failure here is `null`, never the original
+ * URL — the sniff already proved Satori cannot draw that.
  */
 async function transformToPng(
   url: string,
@@ -95,38 +96,44 @@ async function transformToPng(
 }
 
 /**
- * The `src` to render for `url`, or `null` when the element must be dropped.
- * Never throws: a slow, missing, or undecodable image degrades the card to
- * its no-logo layout rather than failing the render.
+ * The leading bytes and their content-type, or `null` when the origin would
+ * not say. Only the first bytes decide anything, so `Range` keeps the rest
+ * of the file off the wire wherever the origin honours it.
+ */
+async function sniff(
+  url: string,
+  fetchImpl: ImageFetch,
+): Promise<{ bytes: Uint8Array; contentType: string | null } | null> {
+  try {
+    const response = await fetchImpl(url, {
+      headers: { Range: 'bytes=0-15' },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      cf: { cacheTtl: IMAGE_EDGE_TTL, cacheEverything: true },
+    });
+    if (!response.ok) return null;
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    return bytes.length === 0
+      ? null
+      : { bytes, contentType: response.headers.get('content-type') };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The `src` to render for `url`. `null` — omit the whole element — when
+ * there is nothing to draw: no url, or an image the sniff proved Satori
+ * cannot draw and the transform could not convert. Never throws, and never
+ * drops an image on a guess: a sniff that fails to identify anything hands
+ * back the URL Satori fetched for itself before this module existed.
  */
 export async function ogImageSrc(
   url: string | null | undefined,
   fetchImpl: ImageFetch = fetch,
 ): Promise<string | null> {
   if (!url) return null;
-  try {
-    // Only the leading bytes decide anything, so `Range` keeps the rest of
-    // the file off the wire wherever the origin honours it.
-    const response = await fetchImpl(url, {
-      headers: { Range: 'bytes=0-15' },
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      cf: { cacheTtl: IMAGE_EDGE_TTL, cacheEverything: true },
-    });
-    const bytes = response.ok
-      ? new Uint8Array(await response.arrayBuffer())
-      : new Uint8Array();
-    // Intervene only when the bytes positively identify something Satori
-    // cannot draw. An origin that refuses the range request, or answers it
-    // with nothing, tells us nothing — hand back the URL Satori fetched for
-    // itself before this existed rather than drop a logo that may be fine.
-    if (
-      bytes.length === 0 ||
-      isSatoriReadable(bytes, response.headers.get('content-type'))
-    ) {
-      return url;
-    }
-    return await transformToPng(url, fetchImpl);
-  } catch {
-    return url;
-  }
+  const sniffed = await sniff(url, fetchImpl);
+  if (!sniffed) return url;
+  if (isSatoriReadable(sniffed.bytes, sniffed.contentType)) return url;
+  return transformToPng(url, fetchImpl).catch(() => null);
 }
