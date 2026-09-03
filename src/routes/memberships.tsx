@@ -1,11 +1,8 @@
 import { createFileRoute, notFound } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import {
-  createMembershipsLoader,
-  MembershipsPageView,
-  type MembershipsViewer,
-} from './-memberships';
+import { MembershipsPageView, type MembershipsViewer } from './-memberships';
+import { createMembershipsLoader } from './-memberships-loader';
 
 import { useRootSession } from '@/components/root-session';
 import {

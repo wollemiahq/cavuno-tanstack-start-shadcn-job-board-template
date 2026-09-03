@@ -17,13 +17,12 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { MembershipsPageView, type LoadMoreMembers } from './-memberships';
 import {
   createMembershipsLoader,
-  MembershipsPageView,
   type MembershipsLoaderDependencies,
   type MembershipsPageData,
-  type LoadMoreMembers,
-} from './-memberships';
+} from './-memberships-loader';
 
 import type { MembershipRoster } from '@/server/membership-pages';
 import type { Plan, PublicCompany } from '@cavuno/board';

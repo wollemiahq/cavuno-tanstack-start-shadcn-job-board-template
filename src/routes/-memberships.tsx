@@ -3,8 +3,10 @@
  * that hold one. A membership is public identity, so the roster is part of the
  * page rather than a signed-in view.
  *
- * The loader factory is exported separately from the view so both can be
- * exercised without a router: the route file below stays a thin `Route`.
+ * View only. The loader lives in `-memberships-loader.ts`: TanStack splits the
+ * route COMPONENT but keeps loaders in the critical graph, so a route file that
+ * imported its loader from here would drag this whole UI graph into the shared
+ * shell.
  */
 import { useState, type ReactNode } from 'react';
 
@@ -35,46 +37,20 @@ import {
 } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type {
-  getMembershipsPage,
   listMembershipCompanies,
   MembershipRoster,
 } from '@/server/membership-pages';
 import type { Plan, PublicCompany } from '@cavuno/board';
-
-/** What the loader hands the page — the server fn's resolved payload. */
-export type MembershipsPageData = Awaited<
-  ReturnType<typeof getMembershipsPage>
->;
-
-export type MembershipsLoaderDependencies = {
-  getMembershipsPage: () => Promise<MembershipsPageData>;
-};
-
-/** The "show more members" read, as the view consumes it. */
-export type LoadMoreMembers = (input: {
-  data: { planId: string; offset: number };
-}) => Promise<Awaited<ReturnType<typeof listMembershipCompanies>>>;
 
 export type MembershipsViewer =
   | { kind: 'anonymous' }
   /** Any signed-in viewer — a membership is granted to a company, not a person. */
   | { kind: 'signed-in' };
 
-/**
- * The loader. A board with no published membership plan has no memberships
- * page at all, so the caller turns an empty plan list into the starter's
- * standard not-found rather than rendering an empty shell.
- */
-export function createMembershipsLoader(
-  dependencies: MembershipsLoaderDependencies,
-  onEmpty: () => never,
-) {
-  return async () => {
-    const page = await dependencies.getMembershipsPage();
-    if (page.plans.length === 0 || page.head === null) onEmpty();
-    return page;
-  };
-}
+/** The "show more members" read, as the view consumes it. */
+export type LoadMoreMembers = (input: {
+  data: { planId: string; offset: number };
+}) => Promise<Awaited<ReturnType<typeof listMembershipCompanies>>>;
 
 function priceLabel(plan: Plan): string {
   if (plan.pricingMode === 'contact') {
