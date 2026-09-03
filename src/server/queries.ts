@@ -124,8 +124,9 @@ export const getStaleBoardContext = createServerFn({ method: 'GET' }).handler(
 
 /**
  * Whether /employers has anything to sell — self-service plans, talent
- * plans, or sales-led plans — the hosted `hasEmployerOfferPage` gate the
- * footer/nav Pricing links key on. OPEN read on an open board; a
+ * plans, or quote-only employer-service tiers — the hosted
+ * `hasEmployerOfferPage` gate the footer/nav Pricing links key on, plus
+ * whether the board publishes a membership plan (the Memberships link). OPEN read on an open board; a
  * password-protected board refuses ungated plan reads, so the links hide
  * until the wall is passed (the wall page renders no footer nav anyway).
  */
@@ -135,7 +136,7 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
       // Board-global, always-anonymous reads on the root loader's critical
       // path — edge-cache them with the longer board-global TTL, and memo
       // the boolean gate per isolate so soft root re-runs do not re-hit
-      // plans.list + salesLed.
+      // the two plans.list reads.
       return await readEmployerOfferGate(async () => {
         const [plans, employerServicePlans] = await Promise.all([
           getBoard().plans.list({}, boardGlobalReadCache()),
@@ -147,13 +148,18 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
         return {
           hasEmployerOfferPage:
             plans.data.length > 0 || employerServicePlans.data.length > 0,
+          // The Memberships link is loader-driven off the same read, so it
+          // never flashes in on a board that publishes no membership plan.
+          hasMembershipPage: plans.data.some(
+            (plan) => plan.purpose === 'membership',
+          ),
         };
       });
     } catch {
       // Fail closed: this gate runs on the root loader for every route, so a
       // transient plan-read failure (or a password-gated board) must only
       // hide the footer/nav Pricing links, never fault the whole page.
-      return { hasEmployerOfferPage: false };
+      return { hasEmployerOfferPage: false, hasMembershipPage: false };
     }
   },
 );

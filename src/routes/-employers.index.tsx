@@ -272,6 +272,9 @@ export function EmployersPageView({
 }) {
   const jobPosting = plans.filter((plan) => plan.purpose === 'job_posting');
   const talentAccess = plans.filter((plan) => plan.purpose === 'talent_access');
+  // Membership tiers get their own page (roster included); this surface only
+  // points at it, and only when the board actually publishes one.
+  const hasMemberships = plans.some((plan) => plan.purpose === 'membership');
   const empty =
     jobPosting.length === 0 &&
     talentAccess.length === 0 &&
@@ -316,6 +319,23 @@ export function EmployersPageView({
               plans={contactPlans}
               dependencies={dependencies}
             />
+            {hasMemberships ? (
+              <PageSection
+                title={m.memberships_title()}
+                description={m.memberships_subtitle({
+                  boardName: seo.boardName,
+                })}
+              >
+                <div>
+                  <Link
+                    to="/memberships"
+                    className={buttonVariants({ variant: 'outline' })}
+                  >
+                    {m.nav_memberships()}
+                  </Link>
+                </div>
+              </PageSection>
+            ) : null}
           </>
         )}
       </PageContent>

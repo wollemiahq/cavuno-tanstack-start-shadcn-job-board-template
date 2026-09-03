@@ -165,6 +165,7 @@ export default function Footer({
   connected = false,
   talentDirectoryVisibility,
   hasEmployerOfferPage,
+  hasMembershipPage = false,
   flush = false,
   breadcrumb,
   cookiePreferencesAction,
@@ -205,6 +206,12 @@ export default function Footer({
    * `hasEnabledPlans` gate on "Post a job" (same public-plan query).
    */
   hasEmployerOfferPage: boolean;
+  /**
+   * Whether the board publishes a membership plan. Loader-driven like
+   * `hasEmployerOfferPage`, so the link never appears on a board where
+   * `/memberships` 404s.
+   */
+  hasMembershipPage?: boolean;
   /** Remove the outer gap when the preceding route already fills a viewport. */
   flush?: boolean;
   /** Optional compact navigation trail rendered as the footer's first row. */
@@ -258,6 +265,9 @@ export default function Footer({
       : []),
     ...(hasEmployerOfferPage && !removedNav.has('pricing')
       ? [{ href: '/employers', label: copy.nav.pricing }]
+      : []),
+    ...(hasMembershipPage && !removedNav.has('memberships')
+      ? [{ href: '/memberships', label: copy.nav.memberships }]
       : []),
     ...(talentLinked && !removedNav.has('talent')
       ? [{ href: '/talent', label: copy.nav.talent }]

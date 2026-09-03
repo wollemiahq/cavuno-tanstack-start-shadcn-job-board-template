@@ -12,6 +12,15 @@ export interface BoardContextCacheDependencies<Context> {
   now: () => number;
 }
 
+/**
+ * Which operator-facing pages the board actually has. Both gates ride the same
+ * plan read, so they are memoized together.
+ */
+export type EmployerOfferGate = {
+  hasEmployerOfferPage: boolean;
+  hasMembershipPage: boolean;
+};
+
 /** Per-source memo provider shared by board context and employer gates. */
 export function createBoardContextCache<Context>(
   dependencies: BoardContextCacheDependencies<Context>,
@@ -19,10 +28,7 @@ export function createBoardContextCache<Context>(
 ) {
   const contextCache = new Map<DataSource, CacheEntry<Context>>();
   const contextRefreshes = new Map<DataSource, Promise<Context>>();
-  const offerGateCache = new Map<
-    DataSource,
-    CacheEntry<{ hasEmployerOfferPage: boolean }>
-  >();
+  const offerGateCache = new Map<DataSource, CacheEntry<EmployerOfferGate>>();
 
   function readBoardContext(): Promise<Context> {
     const source = dependencies.getDataSource();
@@ -86,8 +92,8 @@ export function createBoardContextCache<Context>(
   }
 
   function readEmployerOfferGate(
-    load: () => Promise<{ hasEmployerOfferPage: boolean }>,
-  ): Promise<{ hasEmployerOfferPage: boolean }> {
+    load: () => Promise<EmployerOfferGate>,
+  ): Promise<EmployerOfferGate> {
     const source = dependencies.getDataSource();
     const hit = offerGateCache.get(source);
     const now = dependencies.now();

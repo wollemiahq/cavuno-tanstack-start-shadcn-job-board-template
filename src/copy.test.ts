@@ -90,6 +90,7 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
       blog: 'Blog',
       companies: 'Companies',
       home: 'Jobs',
+      memberships: 'Memberships',
       post: 'Post a job',
       pricing: 'Pricing',
       talent: 'Talent',

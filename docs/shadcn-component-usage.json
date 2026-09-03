@@ -161,6 +161,7 @@
         "src/routes/-employers.dashboard.tsx",
         "src/routes/-employers.index.tsx",
         "src/routes/-me.applications.tsx",
+        "src/routes/-memberships.tsx",
         "src/routes/companies.$companySlug.index.tsx",
         "src/routes/embed.jobs.tsx",
         "src/routes/jobs.locations.index.tsx"
@@ -270,6 +271,7 @@
         "src/routes/-employers.onboarding.tsx",
         "src/routes/-employers.talent-access.tsx",
         "src/routes/-me.applications.tsx",
+        "src/routes/-memberships.tsx",
         "src/routes/-messages-dock-controller.tsx",
         "src/routes/-restricted-talent-directory.tsx",
         "src/routes/-settings.tsx",
@@ -341,6 +343,7 @@
         "src/routes/-employers.company-profile.tsx",
         "src/routes/-employers.index.tsx",
         "src/routes/-employers.onboarding.tsx",
+        "src/routes/-memberships.tsx",
         "src/routes/-talent-unlock-gate.tsx",
         "src/routes/account.tsx",
         "src/routes/companies.$companySlug.index.tsx"

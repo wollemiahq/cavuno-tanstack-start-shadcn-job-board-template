@@ -35,6 +35,7 @@ import { getBoard } from './board';
 import { createBoardContextCache } from './board-context-cache-core';
 import { getDataSource } from './data-source.server';
 
+import type { EmployerOfferGate } from './board-context-cache-core';
 import type { DataSource } from './data-source';
 
 type BoardContext = Awaited<ReturnType<ReturnType<typeof getBoard>['context']>>;
@@ -79,8 +80,8 @@ export function resetBoardContextCache(source?: DataSource): void {
  * answer is board-global and stable for the same TTL window as context.
  */
 export function readEmployerOfferGate(
-  load: () => Promise<{ hasEmployerOfferPage: boolean }>,
-): Promise<{ hasEmployerOfferPage: boolean }> {
+  load: () => Promise<EmployerOfferGate>,
+): Promise<EmployerOfferGate> {
   return cache.readEmployerOfferGate(load);
 }
 

@@ -6,6 +6,7 @@ import { MENU_COLOR } from '#/starter-config';
 
 import { Link } from '@tanstack/react-router';
 import {
+  BadgeCheck,
   BookOpenText,
   BriefcaseBusiness,
   Building2,
@@ -101,6 +102,7 @@ export default function Header({
   onSignOut,
   signOutAction,
   talentDirectoryVisibility,
+  hasMembershipPage = false,
   search,
   messagesNav,
 }: {
@@ -122,6 +124,8 @@ export default function Header({
   onSignOut: () => void;
   signOutAction?: SignOutAction;
   talentDirectoryVisibility: 'off' | 'public' | 'employers_only' | null;
+  /** Whether the board publishes a membership plan (the Memberships link). */
+  hasMembershipPage?: boolean;
   messagesNav?: ReactNode;
   search: HeaderSearchState & {
     onSubmit: (submission: HeaderSearchSubmission) => void;
@@ -211,6 +215,15 @@ export default function Header({
       label: copy.nav.blog,
       icon: BookOpenText,
       enabled: features.blog,
+    },
+    {
+      id: 'memberships',
+      to: '/memberships',
+      label: copy.nav.memberships,
+      icon: BadgeCheck,
+      // Loader-driven, so the link never flashes in on a board that
+      // publishes no membership plan (and /memberships 404s there).
+      enabled: hasMembershipPage,
     },
   ] as const;
   const enabledNavLinks = navLinks.filter(
