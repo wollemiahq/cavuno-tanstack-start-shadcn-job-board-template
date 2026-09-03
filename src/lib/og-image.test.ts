@@ -2,27 +2,23 @@ import { describe, expect, it } from 'vitest';
 
 import { ogImageSrc, type ImageFetch } from './og-image';
 
-const PNG = [0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 0, 0, 0, 0, 0];
+const PNG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0];
 const JPEG = [0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0];
 const GIF = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0, 0, 0, 0, 0, 0];
 const WEBP = [0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50];
+const EMPTY: number[] = [];
 
 const ascii = (text: string) => [...text].map((c) => c.charCodeAt(0));
 
 const URL_ = 'https://files.example/logo';
 
-interface Call {
-  init?: {
-    headers?: HeadersInit;
-    cf?: { image?: unknown; cacheTtl?: number };
-  };
-}
+type Init = Parameters<ImageFetch>[1];
 
 /** Answers the sniff with `first`, the transform re-fetch with `second`. */
 function fakeFetch(first: number[] | Response, second?: number[]) {
-  const calls: Call[] = [];
+  const calls: Init[] = [];
   const fetchImpl: ImageFetch = async (_url, init) => {
-    calls.push({ init });
+    calls.push(init);
     const body = calls.length === 1 ? first : second;
     if (body instanceof Response) return body;
     if (!body) throw new Error('unexpected fetch');
@@ -30,6 +26,11 @@ function fakeFetch(first: number[] | Response, second?: number[]) {
   };
   return { fetchImpl, calls };
 }
+
+const svgResponse = (body: string, contentType: string) =>
+  new Response(new Uint8Array(ascii(body)), {
+    headers: { 'content-type': contentType },
+  });
 
 describe('ogImageSrc', () => {
   it('returns null without fetching when there is no url', async () => {
@@ -43,7 +44,6 @@ describe('ogImageSrc', () => {
     ['PNG', PNG],
     ['JPEG', JPEG],
     ['GIF', GIF],
-    ['an SVG behind an XML prolog', ascii('<?xml version="1.0"')],
   ])('passes %s through untouched', async (_name, bytes) => {
     const { fetchImpl, calls } = fakeFetch(bytes);
     expect(await ogImageSrc(URL_, fetchImpl)).toBe(URL_);
@@ -53,24 +53,34 @@ describe('ogImageSrc', () => {
   it('sniffs with a Range header and an edge TTL', async () => {
     const { fetchImpl, calls } = fakeFetch(PNG);
     await ogImageSrc(URL_, fetchImpl);
-    expect(new Headers(calls[0].init?.headers).get('Range')).toBe('bytes=0-15');
-    expect(calls[0].init?.cf?.cacheTtl).toBe(86400);
+    expect(new Headers(calls[0]?.headers).get('Range')).toBe('bytes=0-15');
+    expect(calls[0]?.cf?.cacheTtl).toBe(86400);
   });
 
-  // Satori takes its SVG text path off the content-type, so a `<!DOCTYPE` or
-  // comment-led SVG renders fine and must not be rewritten.
-  it('passes an SVG through on its content-type alone', async () => {
-    const svg = new Response(new Uint8Array(ascii('<!DOCTYPE svg PUBLIC')), {
-      headers: { 'content-type': 'image/svg+xml' },
-    });
-    const { fetchImpl } = fakeFetch(svg);
+  // Satori reaches its SVG renderer only on an exact content-type match, so
+  // that is the one case an SVG may be handed to it as a URL.
+  it('passes an SVG through on an exact svg content-type', async () => {
+    const { fetchImpl } = fakeFetch(
+      svgResponse('<!DOCTYPE svg PUBLIC', 'image/svg+xml'),
+    );
     expect(await ogImageSrc(URL_, fetchImpl)).toBe(URL_);
   });
 
-  // A bare `<svg …>` served as octet-stream is what Satori's own byte sniffer
-  // misses, so it has to go through the transform rather than be trusted.
-  it('transforms a bare <svg> that Satori would not detect', async () => {
-    const { fetchImpl, calls } = fakeFetch(ascii('<svg xmlns="http'), PNG);
+  // A charset parameter fails Satori's `===`, dropping it onto the byte path
+  // whose switch has no SVG branch — so it has to be rasterised instead.
+  it('transforms an SVG whose content-type carries a charset', async () => {
+    const { fetchImpl, calls } = fakeFetch(
+      svgResponse('<?xml version="1.0"', 'image/svg+xml; charset=utf-8'),
+      PNG,
+    );
+    await ogImageSrc(URL_, fetchImpl);
+    expect(calls).toHaveLength(2);
+  });
+
+  // An `<?xml` prolog is what Satori's byte detector recognises, but its
+  // decoder then throws on the SVG branch it does not have.
+  it('transforms an SVG that only its bytes identify', async () => {
+    const { fetchImpl, calls } = fakeFetch(ascii('<?xml version="1.0"'), PNG);
     await ogImageSrc(URL_, fetchImpl);
     expect(calls).toHaveLength(2);
   });
@@ -78,9 +88,9 @@ describe('ogImageSrc', () => {
   it('transforms WebP to an inline PNG', async () => {
     const { fetchImpl, calls } = fakeFetch(WEBP, PNG);
     expect(await ogImageSrc(URL_, fetchImpl)).toBe(
-      'data:image/png;base64,iVBORwAAAAAAAAAA',
+      'data:image/png;base64,iVBORw0KGgoAAAAA',
     );
-    expect(calls[1].init?.cf?.image).toEqual({ format: 'png', width: 256 });
+    expect(calls[1]?.cf?.image).toEqual({ format: 'png', width: 256 });
   });
 
   it('encodes a PNG past the fromCharCode argument limit', async () => {
@@ -97,21 +107,21 @@ describe('ogImageSrc', () => {
     expect(await ogImageSrc(URL_, fetchImpl)).toBeNull();
   });
 
-  it('drops a body too short to identify without paying for a transform', async () => {
-    const { fetchImpl, calls } = fakeFetch([]);
-    expect(await ogImageSrc(URL_, fetchImpl)).toBeNull();
+  // A sniff that fails identifies nothing, so the URL goes to Satori exactly
+  // as it did before this module existed — never dropped on a guess.
+  it.each([
+    ['a non-ok response', new Response('', { status: 416 })],
+    ['an empty body', EMPTY],
+  ])('leaves the url untouched on %s', async (_name, first) => {
+    const { fetchImpl, calls } = fakeFetch(first);
+    expect(await ogImageSrc(URL_, fetchImpl)).toBe(URL_);
     expect(calls).toHaveLength(1);
   });
 
-  it('drops the image on a non-ok response', async () => {
-    const { fetchImpl } = fakeFetch(new Response('', { status: 404 }));
-    expect(await ogImageSrc(URL_, fetchImpl)).toBeNull();
-  });
-
-  it('never throws when the fetch does', async () => {
+  it('leaves the url untouched when the fetch throws', async () => {
     const fetchImpl: ImageFetch = async () => {
       throw new Error('timed out');
     };
-    expect(await ogImageSrc(URL_, fetchImpl)).toBeNull();
+    expect(await ogImageSrc(URL_, fetchImpl)).toBe(URL_);
   });
 });

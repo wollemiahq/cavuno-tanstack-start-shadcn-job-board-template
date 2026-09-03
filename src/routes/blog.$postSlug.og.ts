@@ -62,11 +62,14 @@ export const Route = createFileRoute('/blog/$postSlug/og')({
 async function renderBlogOg(post: Post): Promise<Response> {
   // Board language for date formatting — served from the isolate context
   // memo / edge cache, so this adds no extra request in steady state.
-  const [seo, { language }] = await Promise.all([
+  const author = post.authors[0] ?? null;
+  // The avatar contributes no glyphs and no copy, so it resolves with the
+  // reads rather than behind them. `null` drops the frame (see og-image.ts).
+  const [seo, { language }, authorAvatarUrl] = await Promise.all([
     getBoard().seo(),
     readBoardContext(),
+    ogImageSrc(author?.avatarUrl),
   ]);
-  const author = post.authors[0] ?? null;
 
   const card = {
     boardName: seo.manifest.name,
@@ -94,12 +97,7 @@ async function renderBlogOg(post: Post): Promise<Response> {
     card.authorName ?? '',
     card.dateLabel ?? '',
   ].join(' ');
-  // The avatar contributes no glyphs, so it resolves alongside the font
-  // rather than delaying it. `null` drops the avatar frame (see og-image.ts).
-  const [font, authorAvatarUrl] = await Promise.all([
-    loadOgFont(text),
-    ogImageSrc(author?.avatarUrl),
-  ]);
+  const font = await loadOgFont(text);
 
   return renderOgPng(
     buildBlogOgHtml({ ...card, authorAvatarUrl, fontFamily: font.name }),

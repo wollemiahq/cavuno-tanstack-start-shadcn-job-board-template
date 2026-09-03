@@ -9,9 +9,10 @@
  *
  * `ogImageSrc` sniffs the real bytes (an R2 key carries no extension, so the
  * URL cannot be trusted), leaves anything Satori already handles alone, and
- * asks Cloudflare to transform everything else to PNG. A `null` result means
- * the caller must omit the whole element, not just the `src` — an empty
- * `<img>` is exactly the blank frame this exists to prevent.
+ * asks Cloudflare to transform everything else to PNG. `null` comes back
+ * only for an image known to be undrawable and impossible to convert, and
+ * means the caller must omit the whole element, not just the `src` — an
+ * empty `<img>` is exactly the blank frame this exists to prevent.
  */
 
 /** Both fetches are on the render path of a crawler request; fail fast. */
@@ -19,6 +20,9 @@ const FETCH_TIMEOUT_MS = 2000;
 
 /** Edge TTL for the sniff and the transform (seconds). */
 const IMAGE_EDGE_TTL = 86400;
+
+/** The full 8 bytes Satori's own detector requires, not just `\x89PNG`. */
+const PNG_SIGNATURE = '\x89PNG\r\n\x1a\n';
 
 type WorkersRequestInit = RequestInit & {
   cf?: {
@@ -39,22 +43,22 @@ function head(bytes: Uint8Array): string {
 }
 
 /**
- * What Satori decodes. It takes the SVG text path only when the response
- * says `image/svg+xml`; otherwise it sniffs bytes, and its own SVG test
- * requires an `<?xml` prolog — a bare `<svg …>` is not detected. Everything
- * else, WebP and AVIF included, paints the empty frame.
+ * What Satori decodes. SVG reaches its renderer only down the text path,
+ * which it takes on an exact content-type match — its byte path has no SVG
+ * branch at all and throws part-way through. So an SVG identified by bytes
+ * alone is *not* readable; it has to be rasterised like a WebP.
  */
 function isSatoriReadable(
   bytes: Uint8Array,
   contentType: string | null,
 ): boolean {
-  if (contentType?.startsWith('image/svg+xml')) return true;
+  if (contentType === 'image/svg+xml' || contentType === 'application/svg+xml')
+    return true;
   const start = head(bytes);
   return (
-    start.startsWith('\x89PNG') ||
+    start.startsWith(PNG_SIGNATURE) ||
     start.startsWith('\xff\xd8\xff') ||
-    start.startsWith('GIF8') ||
-    start.startsWith('<?xml')
+    start.startsWith('GIF8')
   );
 }
 
@@ -87,7 +91,7 @@ async function transformToPng(
   });
   if (!response.ok) return null;
   const bytes = new Uint8Array(await response.arrayBuffer());
-  return head(bytes).startsWith('\x89PNG') ? toDataUri(bytes) : null;
+  return head(bytes).startsWith(PNG_SIGNATURE) ? toDataUri(bytes) : null;
 }
 
 /**
@@ -108,16 +112,21 @@ export async function ogImageSrc(
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       cf: { cacheTtl: IMAGE_EDGE_TTL, cacheEverything: true },
     });
-    if (!response.ok) return null;
-    const bytes = new Uint8Array(await response.arrayBuffer());
-    // Too short to identify anything — don't pay for a transform of it.
-    if (bytes.length < 8) return null;
-    // Satori refetches the URL itself, exactly as before this existed.
-    if (isSatoriReadable(bytes, response.headers.get('content-type'))) {
+    const bytes = response.ok
+      ? new Uint8Array(await response.arrayBuffer())
+      : new Uint8Array();
+    // Intervene only when the bytes positively identify something Satori
+    // cannot draw. An origin that refuses the range request, or answers it
+    // with nothing, tells us nothing — hand back the URL Satori fetched for
+    // itself before this existed rather than drop a logo that may be fine.
+    if (
+      bytes.length === 0 ||
+      isSatoriReadable(bytes, response.headers.get('content-type'))
+    ) {
       return url;
     }
     return await transformToPng(url, fetchImpl);
   } catch {
-    return null;
+    return url;
   }
 }

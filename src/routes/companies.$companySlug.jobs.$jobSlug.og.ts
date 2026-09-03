@@ -57,7 +57,12 @@ async function renderJobOg(job: Job): Promise<Response> {
   // Board language for the display labels — served from the isolate
   // context memo / edge cache, so this adds no extra request in
   // steady state.
-  const { language } = await readBoardContext();
+  // The logo contributes no glyphs, so it resolves with the context read
+  // rather than behind it. `null` drops the frame (see og-image.ts).
+  const [{ language }, logo] = await Promise.all([
+    readBoardContext(),
+    ogImageSrc(job.company?.logoUrl),
+  ]);
 
   const title = job.title;
   const company = job.company?.name ?? '';
@@ -71,13 +76,9 @@ async function renderJobOg(job: Job): Promise<Response> {
       job.salaryCurrency,
     ) ?? '';
 
-  // Subset the theme font to exactly the glyphs the card renders. The logo
-  // resolves alongside it; `null` drops the frame (see og-image.ts).
+  // Subset the theme font to exactly the glyphs the card renders.
   const text = [title, company, location, salary].join(' ');
-  const [font, logo] = await Promise.all([
-    loadOgFont(text),
-    ogImageSrc(job.company?.logoUrl),
-  ]);
+  const font = await loadOgFont(text);
 
   const metaParts = [location, salary].filter(Boolean).map(ogText);
 
