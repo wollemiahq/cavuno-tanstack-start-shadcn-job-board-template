@@ -36,6 +36,11 @@ async function renderGate(props: GateProps) {
       path: '/auth/sign-in',
       component: () => <h1>Sign in</h1>,
     }),
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/employers',
+      component: () => <h1>Employers</h1>,
+    }),
   ];
   const router = createRouter({
     routeTree: rootRoute.addChildren(children),
@@ -59,9 +64,12 @@ describe('MembershipPostGate', () => {
     );
   });
 
-  it('leaves a signed-in viewer only the membership road', async () => {
+  it('sends a signed-in viewer to their company dashboard, keeping the membership road', async () => {
     await renderGate({ boardName: 'Example Jobs', signedIn: true });
 
+    expect(
+      screen.getByRole('link', { name: 'Post from your company dashboard' }),
+    ).toHaveAttribute('href', '/employers');
     expect(screen.getByRole('link', { name: 'Become a member' })).toBeVisible();
     expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
   });

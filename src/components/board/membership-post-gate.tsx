@@ -20,7 +20,9 @@ import { cn } from '@/lib/utils';
  *
  * Signed out, the visitor gets both roads: become a member, or sign in (a
  * member's account already carries the company's membership). Signed in, the
- * only useful road left is becoming a member. When the board publishes a
+ * anonymous form is the wrong surface either way: a member posts from their
+ * company dashboard, where the employer flow knows the membership, and a
+ * non-member can still become one. When the board publishes a
  * contact address, a line invites the visitor to ask for access.
  */
 export function MembershipPostGate({
@@ -51,7 +53,17 @@ export function MembershipPostGate({
         ) : null}
       </CardContent>
       <CardFooter className="flex flex-wrap gap-3">
-        <Link to="/memberships" className={cn(buttonVariants())}>
+        {signedIn ? (
+          <Link to="/employers" className={cn(buttonVariants())}>
+            {m.postGate_postAsCompanyLabel()}
+          </Link>
+        ) : null}
+        <Link
+          to="/memberships"
+          className={cn(
+            signedIn ? buttonVariants({ variant: 'outline' }) : buttonVariants(),
+          )}
+        >
           {m.postGate_becomeMemberLabel()}
         </Link>
         {signedIn ? null : (

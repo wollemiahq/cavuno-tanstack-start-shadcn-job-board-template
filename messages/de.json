@@ -7,7 +7,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "jeden Monat",
         "countPlural=*": "alle {countLabel} Monate"
@@ -21,7 +23,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "jedes Jahr",
         "countPlural=*": "alle {countLabel} Jahre"
@@ -77,7 +81,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "1 Job passt zu deinem Profil und deinen Präferenzen.",
         "countPlural=*": "{countLabel} Jobs passen zu deinem Profil und deinen Präferenzen."
@@ -96,7 +102,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Du hast 1 Job gespeichert.",
         "countPlural=*": "Du hast {countLabel} Jobs gespeichert."
@@ -481,7 +489,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} offene Stelle",
         "countPlural=*": "{countLabel} offene Stellen"
@@ -496,7 +506,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} offene Stelle",
         "countPlural=*": "{countLabel} offene Stellen"
@@ -512,7 +524,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Stelle ansehen",
         "countPlural=*": "Alle {countLabel} Stellen ansehen"
@@ -563,7 +577,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Unternehmen",
         "countPlural=*": "{countLabel} Unternehmen"
@@ -603,7 +619,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Kandidat",
         "countPlural=*": "{countLabel} Kandidaten"
@@ -617,7 +635,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Unternehmen",
         "countPlural=*": "{countLabel} Unternehmen"
@@ -631,7 +651,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Job",
         "countPlural=*": "{countLabel} Jobs"
@@ -645,7 +667,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Beitrag",
         "countPlural=*": "{countLabel} Beiträge"
@@ -705,7 +729,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Bewerber",
         "countPlural=*": "{countLabel} Bewerber"
@@ -826,7 +852,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} anderes Mitglied",
         "countPlural=*": "{countLabel} andere Mitglieder"
@@ -865,7 +893,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Du hast 1 aktive Stelle.",
         "countPlural=*": "Du hast {countLabel} aktive Stellen."
@@ -904,7 +934,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} aktive Stellenanzeige",
         "countPlural=*": "{countLabel} aktive Stellenanzeigen"
@@ -918,7 +950,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} hervorgehobene Anzeige",
         "countPlural=*": "{countLabel} hervorgehobene Anzeigen"
@@ -933,7 +967,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Nachricht",
         "countPlural=*": "{countLabel} Nachrichten"
@@ -947,7 +983,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Profilfreischaltung",
         "countPlural=*": "{countLabel} Profilfreischaltungen"
@@ -982,7 +1020,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Du hast 1 Teammitglied.",
         "countPlural=*": "Du hast {countLabel} Teammitglieder."
@@ -1247,7 +1287,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Job",
         "countPlural=*": "{countLabel} Jobs"
@@ -1360,7 +1402,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} davon kann hervorgehoben werden.",
         "countPlural=*": "{countLabel} davon können hervorgehoben werden."
@@ -1377,7 +1421,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} davon kann gleichzeitig hervorgehoben werden.",
         "countPlural=*": "{countLabel} davon können gleichzeitig hervorgehoben werden."
@@ -1391,7 +1437,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} einmalige Anzeige",
         "countPlural=*": "{countLabel} einmalige Anzeigen"
@@ -1405,7 +1453,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Anzeige gleichzeitig online",
         "countPlural=*": "{countLabel} Anzeigen gleichzeitig online"
@@ -1425,7 +1475,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Mitglied",
         "countPlural=*": "{countLabel} Mitglieder"
@@ -1526,7 +1578,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Enthält 1 hervorgehobenen Job",
         "countPlural=*": "Enthält {countLabel} hervorgehobene Jobs"
@@ -1542,7 +1596,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "1 aktiver Job gleichzeitig",
         "countPlural=*": "Bis zu {countLabel} aktive Jobs"
@@ -1559,6 +1615,7 @@
   "plan_talentAccessMonthly_name": "Talent-Zugang — monatlich",
   "postCard_minReadSuffix": "Min.",
   "postGate_becomeMemberLabel": "Mitglied werden",
+  "postGate_postAsCompanyLabel": "Über Ihr Unternehmens-Dashboard veröffentlichen",
   "postGate_bodyText": "Anzeigen auf diesem Board können nur Mitglieder schalten.",
   "postGate_contactText": "Zugang nötig? Schreiben Sie an {email}.",
   "postGate_signInLabel": "Anmelden",
@@ -1791,7 +1848,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Gehälter für {skill} an {countLabel} Standort.",
         "countPlural=*": "Gehälter für {skill} an {countLabel} Standorten."
@@ -1817,7 +1876,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "Gehälter für {title} an {countLabel} Standort.",
         "countPlural=*": "Gehälter für {title} an {countLabel} Standorten."
@@ -1843,7 +1904,9 @@
         "input jobCountLabel",
         "local jobCountPlural = jobCount: plural"
       ],
-      "selectors": ["jobCountPlural"],
+      "selectors": [
+        "jobCountPlural"
+      ],
       "match": {
         "jobCountPlural=one": "{jobCountLabel} Stellenanzeige",
         "jobCountPlural=*": "{jobCountLabel} Stellenanzeigen"
@@ -2022,7 +2085,9 @@
         "input countLabel",
         "local countPlural = count: plural"
       ],
-      "selectors": ["countPlural"],
+      "selectors": [
+        "countPlural"
+      ],
       "match": {
         "countPlural=one": "{countLabel} Freischaltung übrig.",
         "countPlural=*": "{countLabel} Freischaltungen übrig."
