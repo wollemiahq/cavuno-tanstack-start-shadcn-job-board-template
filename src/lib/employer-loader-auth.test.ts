@@ -165,3 +165,58 @@ describe('isReauthRetry', () => {
     expect(isReauthRetry(undefined)).toBe(false);
   });
 });
+
+describe('handleEmployerLoaderError — unapproved company claim', () => {
+  /** A `BoardApiError`-shaped refusal, matching what the SDK throws. */
+  function notApprovedMember() {
+    return Object.assign(
+      new Error('You are not an approved member of this company'),
+      {
+        name: 'BoardApiError',
+        status: 403,
+        code: 'employer_not_member',
+        requestId: 'req_test',
+        raw: {},
+      },
+    );
+  }
+
+  it('sends an employer whose claim is not approved back to the dashboard', async () => {
+    const error = await thrownBy(
+      notApprovedMember(),
+      '/employers/companies/acme/jobs/new',
+    );
+
+    expect(mockRefreshSession).not.toHaveBeenCalled();
+    if (!isRedirect(error)) throw new Error('Expected a dashboard redirect');
+    expect(error.options.to).toBe('/employers/dashboard');
+  });
+
+  it('rethrows rather than redirecting the dashboard onto itself', async () => {
+    const error = await thrownBy(notApprovedMember(), '/employers/dashboard');
+
+    expect(isRedirect(error)).toBe(false);
+  });
+
+  it('still recognises the refusal after it crosses a server-function boundary', async () => {
+    // Serialization drops the BoardApiError shape: name, status and code are
+    // gone and only the message survives. This is the form the live console
+    // showed on cybersecurityjobslist.com.
+    const error = await thrownBy(
+      new Error('You are not an approved member of this company'),
+      '/employers/companies/acme/jobs/new',
+    );
+
+    if (!isRedirect(error)) throw new Error('Expected a dashboard redirect');
+    expect(error.options.to).toBe('/employers/dashboard');
+  });
+
+  it('leaves an unrelated failure on the error boundary', async () => {
+    const error = await thrownBy(
+      new Error('upstream exploded'),
+      '/employers/companies/acme/jobs/new',
+    );
+
+    expect(isRedirect(error)).toBe(false);
+  });
+});
