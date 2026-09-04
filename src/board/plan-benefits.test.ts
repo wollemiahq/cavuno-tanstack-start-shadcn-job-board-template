@@ -117,6 +117,17 @@ describe('plan benefit lines', () => {
     ).toEqual([]);
   });
 
+  it('keeps the duration when no cap row was written at all', () => {
+    // `PUT /v1/plans/{id}/features` REPLACES the set, so a plan can end up with
+    // no `jobs.max_active` row. The platform reads that as no cap, not zero
+    // slots, so the member can post and the duration is a real benefit.
+    expect(
+      planBenefitLines(
+        plan({ 'jobs.included_posts': '0', 'jobs.duration_days': '30' }),
+      ),
+    ).toEqual(['Live for 30 days']);
+  });
+
   it('renders nothing for a membership that only carries posting capacity', () => {
     expect(planBenefitLines(plan({ 'jobs.included_posts': '2' }))).toEqual([]);
   });

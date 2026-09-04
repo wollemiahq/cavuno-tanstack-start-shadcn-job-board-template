@@ -153,6 +153,12 @@ function genericFeatureLines(plan: Pick<Plan, 'features'>): string[] {
     });
 }
 
+/** Whether the operator explicitly set this plan's concurrency cap to zero. */
+function zeroesPosting(plan: Pick<Plan, 'features'>): boolean {
+  const cap = plan.features?.['jobs.max_active']?.value;
+  return cap !== undefined && Number(String(cap).trim()) === 0;
+}
+
 /**
  * Everything a plan carries BESIDES its posting capacity — the member discount
  * on further posts, any talent-access allowances, then whatever else the
@@ -164,11 +170,15 @@ export function planBenefitLines(plan: Pick<Plan, 'features'>): string[] {
   // Every membership carries `jobs.duration_days` — the platform seeds it at 30
   // for every account — so a talent-access-only membership would otherwise
   // promise a listing duration for listings it does not include.
+  //
+  // Suppressed only when the operator EXPLICITLY zeroed the cap. An absent
+  // `jobs.max_active` means no cap, not no capacity (`planAssignments.ts`:
+  // "a missing value must never read as zero free slots"), and
+  // `PUT /v1/plans/{id}/features` replaces rather than merges, so a plan can
+  // easily end up with no cap row at all.
   const durationDays = Number(plan.features?.['jobs.duration_days']?.value);
   return [
-    capacity.posts.kind !== 'none' &&
-    Number.isFinite(durationDays) &&
-    durationDays > 0
+    !zeroesPosting(plan) && Number.isFinite(durationDays) && durationDays > 0
       ? m.planFeature_liveDays({
           days: durationDays.toLocaleString(getLocale()),
         })
