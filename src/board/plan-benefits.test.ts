@@ -98,7 +98,13 @@ describe('plan benefit lines', () => {
     // listings the plan does not include.
     expect(
       planBenefitLines(
-        plan({ 'jobs.duration_days': '30', 'talent.profile_unlocks': '50' }),
+        plan({
+          // Seeded `jobs.max_active` is '1', so the gate only bites once an
+          // operator zeroes the cap — which is what a talent-only plan does.
+          'jobs.max_active': '0',
+          'jobs.duration_days': '30',
+          'talent.profile_unlocks': '50',
+        }),
       ),
     ).toEqual(['50 profile unlocks']);
   });

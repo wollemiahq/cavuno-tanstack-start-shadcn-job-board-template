@@ -92,7 +92,10 @@ function readPosts(features: MembershipFeatureMap): MembershipPostsCapacity {
   const included = finite(allowance);
   // Both sides finite: a non-zero allowance is what the member spends.
   if (included > 0) return { kind: 'credits', count: included };
-  return capped ? slotsOrNone(cap.count) : { kind: 'none' };
+  if (capped) return slotsOrNone(cap.count);
+  // An unlimited CAP with no allowance is unlimited concurrent listings, not
+  // an absence of capacity — `capped` only covers a finite cap.
+  return cap?.kind === 'unlimited' ? { kind: 'unlimited' } : { kind: 'none' };
 }
 
 function slotsOrNone(count: number): MembershipPostsCapacity {

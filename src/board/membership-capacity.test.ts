@@ -154,6 +154,15 @@ describe('membership extras', () => {
     expect(result.talentMessages).toEqual({ kind: 'count', count: 50 });
   });
 
+  it('reads an unlimited cap with no allowance as unlimited, not absent', () => {
+    // `capped` only covers a FINITE cap, so an unlimited one used to fall
+    // through to `none` — the plan with the most posting capacity read as the
+    // one with none, dropping the posts phrase from the capacity sentence.
+    expect(capacity({ 'jobs.max_active': 'unlimited' }).posts).toEqual({
+      kind: 'unlimited',
+    });
+  });
+
   it('has no talent allowances on a plain posting membership', () => {
     const result = capacity({ 'jobs.included_posts': '1' });
 
