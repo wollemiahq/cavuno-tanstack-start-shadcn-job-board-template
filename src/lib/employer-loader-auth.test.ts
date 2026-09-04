@@ -167,19 +167,8 @@ describe('isReauthRetry', () => {
 });
 
 describe('handleEmployerLoaderError — unapproved company claim', () => {
-  /** A `BoardApiError`-shaped refusal, matching what the SDK throws. */
-  function notApprovedMember() {
-    return Object.assign(
-      new Error('You are not an approved member of this company'),
-      {
-        name: 'BoardApiError',
-        status: 403,
-        code: 'employer_not_member',
-        requestId: 'req_test',
-        raw: {},
-      },
-    );
-  }
+  /** The sentinel `gatedRead` throws once it has seen `employer_not_member`. */
+  const notApprovedMember = () => new Error('EMPLOYER_NOT_MEMBER');
 
   it('sends an employer whose claim is not approved back to the dashboard', async () => {
     const error = await thrownBy(
@@ -198,22 +187,20 @@ describe('handleEmployerLoaderError — unapproved company claim', () => {
     expect(isRedirect(error)).toBe(false);
   });
 
-  it('still recognises the refusal after it crosses a server-function boundary', async () => {
-    // Serialization drops the BoardApiError shape: name, status and code are
-    // gone and only the message survives. This is the form the live console
-    // showed on cybersecurityjobslist.com.
-    const error = await thrownBy(
-      new Error('You are not an approved member of this company'),
-      '/employers/companies/acme/jobs/new',
-    );
-
-    if (!isRedirect(error)) throw new Error('Expected a dashboard redirect');
-    expect(error.options.to).toBe('/employers/dashboard');
-  });
-
   it('leaves an unrelated failure on the error boundary', async () => {
     const error = await thrownBy(
       new Error('upstream exploded'),
+      '/employers/companies/acme/jobs/new',
+    );
+
+    expect(isRedirect(error)).toBe(false);
+  });
+
+  it('does not match the API English message, only the sentinel', async () => {
+    // The API phrasing is a default parameter another repo owns. If this ever
+    // starts redirecting, the coupling has crept back in.
+    const error = await thrownBy(
+      new Error('You are not an approved member of this company'),
       '/employers/companies/acme/jobs/new',
     );
 

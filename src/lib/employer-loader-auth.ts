@@ -1,7 +1,8 @@
-import { isBoardApiError, isUnauthorized } from '@cavuno/board';
+import { isUnauthorized } from '@cavuno/board';
 import { isRedirect, redirect } from '@tanstack/react-router';
 
 import { refreshSession } from '../server/auth';
+import { EMPLOYER_NOT_MEMBER } from '../server/board-access';
 import {
   mergeAuthConversionSearch,
   type AuthConversionSearchInput,
@@ -22,26 +23,16 @@ const EMPLOYER_DASHBOARD = '/employers/dashboard';
 /**
  * The caller is signed in but holds no approved membership of `:slug` — the
  * company claim is still awaiting work-email verification or operator
- * approval (`employer_not_member`, 403). Not an auth failure, so sign-in is
- * the wrong destination, and not a fault, so the root error boundary is the
- * wrong surface.
+ * approval. Not an auth failure, so sign-in is the wrong destination, and not
+ * a fault, so the root error boundary is the wrong surface.
  *
- * Matched two ways for the same reason the unauthorized branch below carries
- * a string fallback: these errors are raised inside a server function, and the
- * structured `BoardApiError` shape `isBoardApiError` duck-types on does not
- * reliably survive that boundary. The message is the API's English wire text,
- * used only to recognise the error — never rendered.
+ * `gatedRead` translates the API's `employer_not_member` into this sentinel
+ * server-side, where the structured error still exists. Matching the API's
+ * English message here instead would couple this repo to a default parameter
+ * another repo is free to reword, with nothing to catch the break.
  */
-const NOT_APPROVED_MEMBER_MESSAGE = 'not an approved member';
-
 function isNotApprovedMember<T>(error: T): boolean {
-  if (isBoardApiError(error) && error.code === 'employer_not_member') {
-    return true;
-  }
-  return (
-    error instanceof Error &&
-    error.message.includes(NOT_APPROVED_MEMBER_MESSAGE)
-  );
+  return error instanceof Error && error.message.includes(EMPLOYER_NOT_MEMBER);
 }
 
 /** Whether the loader is already the one-shot retry after a session refresh. */
