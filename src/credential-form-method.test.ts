@@ -43,13 +43,18 @@ const SECRET_INPUT =
 const FORM_OPENING = /<form[\s>]/g;
 
 /**
- * Comments are stripped before counting forms. The repo's idiom for explaining
- * this bug class writes `<form>` inside a comment — `embed-jobs-header.tsx`
- * does exactly that — and documenting the decision beside a guarded form would
- * otherwise report a second form that does not exist.
+ * Comments are stripped before anything is counted or matched. The repo's idiom
+ * for explaining this bug class writes `<form>` and `method="post"` inside a
+ * comment — `embed-jobs-header.tsx` does exactly that — so prose beside a
+ * guarded form would otherwise both report a form that does not exist and
+ * satisfy the method check for one that does.
+ *
+ * The line-comment rule is anchored so it cannot eat a `https://…` URL.
  */
 function withoutComments(source: string): string {
-  return source.replace(/\{\/\*[\s\S]*?\*\/\}/g, '').replace(/\/\/.*$/gm, '');
+  return source
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+    .replace(/(^|\s)\/\/.*$/gm, '$1');
 }
 
 /**
@@ -86,11 +91,14 @@ describe('credential forms declare method="post"', () => {
     const paths = guarded.map((file) => file.path);
     expect(paths, paths.join('\n')).toHaveLength(GUARDED_FILE_COUNT);
 
-    const counted = guarded.map((file) => ({
-      ...file,
-      formCount: (withoutComments(file.source).match(FORM_OPENING) ?? [])
-        .length,
-    }));
+    const counted = guarded.map((file) => {
+      const code = withoutComments(file.source);
+      return {
+        ...file,
+        code,
+        formCount: (code.match(FORM_OPENING) ?? []).length,
+      };
+    });
 
     // A credential file with no form of its own has had its form moved into a
     // wrapper this scan cannot see. The file count does not notice — the
@@ -112,7 +120,7 @@ describe('credential forms declare method="post"', () => {
     );
 
     const offenders = counted
-      .filter((file) => !/\bmethod="post"/.test(file.source))
+      .filter((file) => !/\bmethod="post"/.test(file.code))
       .map((file) => file.path);
     expect(
       offenders,
