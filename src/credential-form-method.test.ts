@@ -28,6 +28,11 @@ import { join } from 'node:path';
  * ends. File scope is only equivalent to per-form scope while each file holds
  * exactly one form, so that is asserted rather than assumed — counting `<form`
  * openings needs no tag parsing.
+ *
+ * Known gap: a password input written with a computed type
+ * (`type={visible ? 'text' : 'password'}`) and no `autoComplete` does not match
+ * `SECRET_INPUT`, so a NEW file using that shape would never enter the scan.
+ * On an existing guarded file the count assertion catches it.
  */
 
 /** Inputs whose value must never reach a URL. */
@@ -36,6 +41,16 @@ const SECRET_INPUT =
 
 /** An opening `<form` tag, counted without parsing its attributes. */
 const FORM_OPENING = /<form[\s>]/g;
+
+/**
+ * Comments are stripped before counting forms. The repo's idiom for explaining
+ * this bug class writes `<form>` inside a comment — `embed-jobs-header.tsx`
+ * does exactly that — and documenting the decision beside a guarded form would
+ * otherwise report a second form that does not exist.
+ */
+function withoutComments(source: string): string {
+  return source.replace(/\{\/\*[\s\S]*?\*\/\}/g, '').replace(/\/\/.*$/gm, '');
+}
 
 /**
  * Files carrying a credential form today. A change here is the thing to review.
@@ -66,30 +81,42 @@ describe('credential forms declare method="post"', () => {
       .filter((file) => SECRET_INPUT.test(file.source));
 
     // A change here means a credential surface entered or left the scan — a
-    // new auth page, or a form moved into a wrapper this file cannot see.
-    // Review the new file and update the count; do not just lower it.
-    expect(guarded.map((file) => file.path)).toHaveLength(GUARDED_FILE_COUNT);
+    // new auth page, most likely. Review it and update the count; do not just
+    // lower it.
+    const paths = guarded.map((file) => file.path);
+    expect(paths, paths.join('\n')).toHaveLength(GUARDED_FILE_COUNT);
 
-    const withForm = guarded
-      .map((file) => ({
-        ...file,
-        formCount: (file.source.match(FORM_OPENING) ?? []).length,
-      }))
-      .filter((file) => file.formCount > 0);
+    const counted = guarded.map((file) => ({
+      ...file,
+      formCount: (withoutComments(file.source).match(FORM_OPENING) ?? [])
+        .length,
+    }));
+
+    // A credential file with no form of its own has had its form moved into a
+    // wrapper this scan cannot see. The file count does not notice — the
+    // secret input stays behind — so it is asserted directly.
+    const noForm = counted.filter((file) => file.formCount === 0);
+    expect(
+      noForm.map((file) => file.path),
+      `credential input with no <form> of its own — the form moved to a wrapper. Guard the wrapper and list it here:\n${noForm.map((file) => file.path).join('\n')}`,
+    ).toEqual([]);
 
     // File scope only stands in for per-form scope while each file holds one
     // form. With two, `method="post"` on either satisfies a file-level search
     // while the other silently keeps the GET default.
-    const multiForm = withForm
-      .filter((file) => file.formCount !== 1)
+    const multiForm = counted
+      .filter((file) => file.formCount > 1)
       .map((file) => file.path);
-    expect(multiForm, multiForm.join('\n')).toEqual([]);
+    expect(multiForm, `more than one <form>:\n${multiForm.join('\n')}`).toEqual(
+      [],
+    );
 
-    // Only files that actually hold a form can declare a method; one reduced to
-    // inputs alone is caught by the count assertion above instead.
-    const offenders = withForm
+    const offenders = counted
       .filter((file) => !/\bmethod="post"/.test(file.source))
       .map((file) => file.path);
-    expect(offenders, offenders.join('\n')).toEqual([]);
+    expect(
+      offenders,
+      `<form> without method="post":\n${offenders.join('\n')}`,
+    ).toEqual([]);
   });
 });
