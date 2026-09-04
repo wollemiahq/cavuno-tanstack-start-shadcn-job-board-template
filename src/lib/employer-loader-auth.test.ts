@@ -165,3 +165,45 @@ describe('isReauthRetry', () => {
     expect(isReauthRetry(undefined)).toBe(false);
   });
 });
+
+describe('handleEmployerLoaderError — unapproved company claim', () => {
+  /** The sentinel `gatedRead` throws once it has seen `employer_not_member`. */
+  const notApprovedMember = () => new Error('EMPLOYER_NOT_MEMBER');
+
+  it('sends an employer whose claim is not approved back to the dashboard', async () => {
+    const error = await thrownBy(
+      notApprovedMember(),
+      '/employers/companies/acme/jobs/new',
+    );
+
+    expect(mockRefreshSession).not.toHaveBeenCalled();
+    if (!isRedirect(error)) throw new Error('Expected a dashboard redirect');
+    expect(error.options.to).toBe('/employers/dashboard');
+  });
+
+  it('rethrows rather than redirecting the dashboard onto itself', async () => {
+    const error = await thrownBy(notApprovedMember(), '/employers/dashboard');
+
+    expect(isRedirect(error)).toBe(false);
+  });
+
+  it('leaves an unrelated failure on the error boundary', async () => {
+    const error = await thrownBy(
+      new Error('upstream exploded'),
+      '/employers/companies/acme/jobs/new',
+    );
+
+    expect(isRedirect(error)).toBe(false);
+  });
+
+  it('does not match the API English message, only the sentinel', async () => {
+    // The API phrasing is a default parameter another repo owns. If this ever
+    // starts redirecting, the coupling has crept back in.
+    const error = await thrownBy(
+      new Error('You are not an approved member of this company'),
+      '/employers/companies/acme/jobs/new',
+    );
+
+    expect(isRedirect(error)).toBe(false);
+  });
+});

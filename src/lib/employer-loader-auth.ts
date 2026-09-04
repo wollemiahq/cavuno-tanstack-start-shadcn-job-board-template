@@ -6,6 +6,7 @@ import {
   mergeAuthConversionSearch,
   type AuthConversionSearchInput,
 } from './board-datalayer-events';
+import { EMPLOYER_NOT_MEMBER } from './employer-not-member';
 
 import type { UrlSearchInput } from './pagination';
 
@@ -15,6 +16,20 @@ export type EmployerLoaderAuthOptions = {
   retried?: boolean;
   incomingSearch?: AuthConversionSearchInput;
 };
+
+/** The employer dashboard, which lists the caller's companies and their state. */
+const EMPLOYER_DASHBOARD = '/employers/dashboard';
+
+/**
+ * The company claim is still awaiting work-email verification or operator
+ * approval. Not an auth failure, so sign-in is the wrong destination, and not a
+ * fault, so the root error boundary is the wrong surface. See
+ * `lib/employer-not-member.ts` for why this is a sentinel and not the API's
+ * message.
+ */
+function isNotApprovedMember<T>(error: T): boolean {
+  return error instanceof Error && error.message.includes(EMPLOYER_NOT_MEMBER);
+}
 
 /** Whether the loader is already the one-shot retry after a session refresh. */
 export function isReauthRetry(location?: { search?: UrlSearchInput }): boolean {
@@ -53,6 +68,13 @@ export async function handleEmployerLoaderErrorUsing<T>(
   options?: EmployerLoaderAuthOptions,
 ): Promise<never> {
   if (isRedirect(error)) throw error;
+
+  // The dashboard is the one company-scoped surface that cannot raise this,
+  // and it already shows each company's claim state ("Verify work email"), so
+  // it is both a safe and a useful destination.
+  if (isNotApprovedMember(error) && returnTo !== EMPLOYER_DASHBOARD) {
+    throw redirect({ to: EMPLOYER_DASHBOARD });
+  }
 
   if (error instanceof Error && error.message.includes('EMAIL_UNVERIFIED')) {
     throw redirect({

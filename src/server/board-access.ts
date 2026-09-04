@@ -13,6 +13,10 @@ import {
   getDataSource,
   serializeGrantForSource,
 } from '../lib/data-source.server';
+import {
+  EMPLOYER_NOT_MEMBER,
+  EMPLOYER_NOT_MEMBER_CODE,
+} from '../lib/employer-not-member';
 
 import type { BoardAccessContext } from '../lib/board-access-middleware';
 
@@ -59,6 +63,11 @@ export async function gatedRead<T>(
         to: '/password',
         search: { redirect: context.currentPath },
       });
+    }
+    // Same boundary problem; a sentinel rather than a redirect because the
+    // destination depends on which route asked.
+    if (isBoardApiError(error) && error.code === EMPLOYER_NOT_MEMBER_CODE) {
+      throw new Error(EMPLOYER_NOT_MEMBER);
     }
     throw error;
   }
