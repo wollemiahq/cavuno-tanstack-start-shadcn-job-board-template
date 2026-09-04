@@ -146,12 +146,21 @@ describe('membership extras', () => {
 
   it('reads talent allowances, keeping the unlimited sentinel', () => {
     const result = capacity({
-      'talent.unlocks_per_period': 'unlimited',
-      'talent.messages_per_period': '50',
+      'talent.profile_unlocks': 'unlimited',
+      'talent.messages_sent': '50',
     });
 
     expect(result.talentUnlocks).toEqual({ kind: 'unlimited' });
     expect(result.talentMessages).toEqual({ kind: 'count', count: 50 });
+  });
+
+  it('reads an unlimited cap with no allowance as unlimited, not absent', () => {
+    // `capped` only covers a FINITE cap, so an unlimited one used to fall
+    // through to `none` — the plan with the most posting capacity read as the
+    // one with none, dropping the posts phrase from the capacity sentence.
+    expect(capacity({ 'jobs.max_active': 'unlimited' }).posts).toEqual({
+      kind: 'unlimited',
+    });
   });
 
   it('has no talent allowances on a plain posting membership', () => {

@@ -109,8 +109,13 @@ const NAMED_FEATURE_KEYS = new Set([
   'jobs.included_featured',
   'jobs.featured_slots',
   'jobs.posting_discount_percent',
-  'talent.unlocks_per_period',
-  'talent.messages_per_period',
+  'talent.profile_unlocks',
+  'talent.messages_sent',
+  'jobs.duration_days',
+  // A mechanism, not a benefit: it decides HOW featured jobs are picked, and
+  // its value is a word (`auto` / `manual`), so the generic line rendered
+  // "auto Feature Selection Mode".
+  'jobs.feature_selection_mode',
 ]);
 
 /** Values that mean "the plan does not carry this", so no line is rendered. */
@@ -148,6 +153,12 @@ function genericFeatureLines(plan: Pick<Plan, 'features'>): string[] {
     });
 }
 
+/** Whether the operator explicitly set this plan's concurrency cap to zero. */
+function zeroesPosting(plan: Pick<Plan, 'features'>): boolean {
+  const cap = plan.features?.['jobs.max_active']?.value;
+  return cap !== undefined && Number(String(cap).trim()) === 0;
+}
+
 /**
  * Everything a plan carries BESIDES its posting capacity — the member discount
  * on further posts, any talent-access allowances, then whatever else the
@@ -155,7 +166,23 @@ function genericFeatureLines(plan: Pick<Plan, 'features'>): string[] {
  */
 export function planBenefitLines(plan: Pick<Plan, 'features'>): string[] {
   const capacity = readMembershipCapacity(plan);
+  // How long a listing runs is only a benefit to a plan that grants listings.
+  // Every membership carries `jobs.duration_days` — the platform seeds it at 30
+  // for every account — so a talent-access-only membership would otherwise
+  // promise a listing duration for listings it does not include.
+  //
+  // Suppressed only when the operator EXPLICITLY zeroed the cap. An absent
+  // `jobs.max_active` means no cap, not no capacity (`planAssignments.ts`:
+  // "a missing value must never read as zero free slots"), and
+  // `PUT /v1/plans/{id}/features` replaces rather than merges, so a plan can
+  // easily end up with no cap row at all.
+  const durationDays = Number(plan.features?.['jobs.duration_days']?.value);
   return [
+    !zeroesPosting(plan) && Number.isFinite(durationDays) && durationDays > 0
+      ? m.planFeature_liveDays({
+          days: durationDays.toLocaleString(getLocale()),
+        })
+      : null,
     capacity.postingDiscountPercent === null
       ? null
       : m.membershipBenefit_postingDiscount({

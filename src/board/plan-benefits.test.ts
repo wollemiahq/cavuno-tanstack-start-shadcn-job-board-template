@@ -62,20 +62,70 @@ describe('membership capacity sentence', () => {
 });
 
 describe('plan benefit lines', () => {
-  it('renders the member discount and talent allowances', () => {
+  it('renders duration, the member discount and talent allowances in order', () => {
     expect(
       planBenefitLines(
         plan({
+          'jobs.included_posts': '3',
+          'jobs.duration_days': '60',
           'jobs.posting_discount_percent': '20',
-          'talent.unlocks_per_period': '5',
-          'talent.messages_per_period': 'unlimited',
+          'talent.profile_unlocks': '5',
+          'talent.messages_sent': 'unlimited',
         }),
       ),
     ).toEqual([
+      'Live for 60 days',
       '20% off further job posts',
       '5 profile unlocks',
       'Unlimited messages',
     ]);
+  });
+
+  it('names the listing duration instead of echoing its dashboard label', () => {
+    // Every membership plan carries `jobs.duration_days` (seeded default 30),
+    // so without a named line every /memberships page read
+    // "30 Job Duration (Days)".
+    expect(
+      planBenefitLines(
+        plan({ 'jobs.included_posts': '1', 'jobs.duration_days': '60' }),
+      ),
+    ).toEqual(['Live for 60 days']);
+  });
+
+  it('promises no listing duration to a plan that grants no listings', () => {
+    // A talent-access-only membership still carries the seeded
+    // `jobs.duration_days`. Naming it would advertise a listing length for
+    // listings the plan does not include.
+    expect(
+      planBenefitLines(
+        plan({
+          // Seeded `jobs.max_active` is '1', so the gate only bites once an
+          // operator zeroes the cap — which is what a talent-only plan does.
+          'jobs.max_active': '0',
+          'jobs.duration_days': '30',
+          'talent.profile_unlocks': '50',
+        }),
+      ),
+    ).toEqual(['50 profile unlocks']);
+  });
+
+  it('renders no line for the featured-selection mechanism', () => {
+    // `auto` is not a number, so the generic line read "auto Feature Selection
+    // Mode". It decides how featured jobs are picked; it is not a benefit.
+    expect(
+      planBenefitLines(plan({ 'jobs.feature_selection_mode': 'auto' })),
+    ).toEqual([]);
+  });
+
+  it('keeps the duration when no cap row was written at all', () => {
+    // `PUT /v1/plans/{id}/features` REPLACES the set, so a plan can end up with
+    // no `jobs.max_active` row. The platform reads that as no cap, not zero
+    // slots, so the member can post and the duration is a real benefit.
+    expect(
+      planBenefitLines(
+        plan({ 'jobs.included_posts': '0', 'jobs.duration_days': '30' }),
+      ),
+    ).toEqual(['Live for 30 days']);
   });
 
   it('renders nothing for a membership that only carries posting capacity', () => {
