@@ -395,6 +395,7 @@
   "boardError_companyRequiredText": "Choose a company before continuing.",
   "boardError_emailTakenText": "An account with that email already exists.",
   "boardError_forbiddenText": "You don’t have permission to do that.",
+  "boardError_freeEmailWebsiteText": "You can’t use free email domains as your company website.",
   "boardError_genericText": "Something went wrong. Please try again.",
   "boardError_invalidCredentialsText": "Wrong email or password.",
   "boardError_invalidCurrentPasswordText": "Current password is incorrect.",

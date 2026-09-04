@@ -395,6 +395,7 @@
   "boardError_companyRequiredText": "Choisissez une entreprise avant de continuer.",
   "boardError_emailTakenText": "Un compte avec cet e-mail existe déjà.",
   "boardError_forbiddenText": "Vous n’avez pas l’autorisation d’effectuer cette action.",
+  "boardError_freeEmailWebsiteText": "Vous ne pouvez pas utiliser un domaine de messagerie gratuit comme site web de votre entreprise.",
   "boardError_genericText": "Une erreur est survenue. Veuillez réessayer.",
   "boardError_invalidCredentialsText": "E-mail ou mot de passe incorrect.",
   "boardError_invalidCurrentPasswordText": "Le mot de passe actuel est incorrect.",
