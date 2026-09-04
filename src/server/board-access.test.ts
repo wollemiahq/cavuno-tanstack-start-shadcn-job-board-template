@@ -1,14 +1,10 @@
 import { isRedirect } from '@tanstack/react-router';
 import { describe, expect, it } from 'vitest';
 
-import { EMPLOYER_NOT_MEMBER, gatedRead } from './board-access';
+import { EMPLOYER_NOT_MEMBER } from '../lib/employer-not-member';
+import { gatedRead } from './board-access';
 
-/**
- * `gatedRead` is where a `BoardApiError` is still structured. Past this point
- * it crosses the server-function boundary and arrives as a plain `Error`
- * carrying only a message, so any code the loader needs to act on has to be
- * recognised here and re-thrown in a form that survives.
- */
+/** `gatedRead` is the last point at which a `BoardApiError` is still structured. */
 const context = {
   boardAccessHeaders: {},
   currentPath: '/companies/acme/jobs/new',
@@ -55,8 +51,6 @@ describe('gatedRead', () => {
   });
 
   it('turns an unapproved company claim into the loader sentinel', async () => {
-    // Matched on the CODE while it still exists. The API's message is a
-    // default parameter another repo owns, so the loader must never read it.
     const error = await thrownBy(
       boardApiError(
         'employer_not_member',

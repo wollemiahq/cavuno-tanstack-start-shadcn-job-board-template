@@ -2,11 +2,11 @@ import { isUnauthorized } from '@cavuno/board';
 import { isRedirect, redirect } from '@tanstack/react-router';
 
 import { refreshSession } from '../server/auth';
-import { EMPLOYER_NOT_MEMBER } from '../server/board-access';
 import {
   mergeAuthConversionSearch,
   type AuthConversionSearchInput,
 } from './board-datalayer-events';
+import { EMPLOYER_NOT_MEMBER } from './employer-not-member';
 
 import type { UrlSearchInput } from './pagination';
 
@@ -21,15 +21,11 @@ export type EmployerLoaderAuthOptions = {
 const EMPLOYER_DASHBOARD = '/employers/dashboard';
 
 /**
- * The caller is signed in but holds no approved membership of `:slug` — the
- * company claim is still awaiting work-email verification or operator
- * approval. Not an auth failure, so sign-in is the wrong destination, and not
- * a fault, so the root error boundary is the wrong surface.
- *
- * `gatedRead` translates the API's `employer_not_member` into this sentinel
- * server-side, where the structured error still exists. Matching the API's
- * English message here instead would couple this repo to a default parameter
- * another repo is free to reword, with nothing to catch the break.
+ * The company claim is still awaiting work-email verification or operator
+ * approval. Not an auth failure, so sign-in is the wrong destination, and not a
+ * fault, so the root error boundary is the wrong surface. See
+ * `lib/employer-not-member.ts` for why this is a sentinel and not the API's
+ * message.
  */
 function isNotApprovedMember<T>(error: T): boolean {
   return error instanceof Error && error.message.includes(EMPLOYER_NOT_MEMBER);

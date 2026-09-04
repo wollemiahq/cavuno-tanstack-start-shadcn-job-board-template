@@ -13,6 +13,10 @@ import {
   getDataSource,
   serializeGrantForSource,
 } from '../lib/data-source.server';
+import {
+  EMPLOYER_NOT_MEMBER,
+  EMPLOYER_NOT_MEMBER_CODE,
+} from '../lib/employer-not-member';
 
 import type { BoardAccessContext } from '../lib/board-access-middleware';
 
@@ -41,15 +45,6 @@ export const verifyBoardPassword = createServerFn({ method: 'POST' })
   });
 
 /**
- * The caller holds no approved membership of the company they asked for —
- * `employer_not_member` (403). Re-thrown as an app-owned sentinel because the
- * `BoardApiError` shape does not survive the RPC boundary and the API's message
- * is a default parameter another repo is free to reword. Read by
- * `employer-loader-auth.ts`, same as `EMAIL_UNVERIFIED`.
- */
-export const EMPLOYER_NOT_MEMBER = 'EMPLOYER_NOT_MEMBER';
-
-/**
  * Run a gated content read with the grant header, converting the password wall
  * (401 `board_password_required`) into a redirect to the /password challenge.
  * The BoardApiError does NOT survive the server-fn RPC boundary, so the wall
@@ -69,9 +64,9 @@ export async function gatedRead<T>(
         search: { redirect: context.currentPath },
       });
     }
-    // Same boundary problem, different answer: the destination depends on the
-    // route that asked, so this becomes a sentinel here and a redirect there.
-    if (isBoardApiError(error) && error.code === 'employer_not_member') {
+    // Same boundary problem; a sentinel rather than a redirect because the
+    // destination depends on which route asked.
+    if (isBoardApiError(error) && error.code === EMPLOYER_NOT_MEMBER_CODE) {
       throw new Error(EMPLOYER_NOT_MEMBER);
     }
     throw error;
