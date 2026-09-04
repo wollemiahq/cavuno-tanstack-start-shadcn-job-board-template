@@ -13,18 +13,36 @@ import { join } from 'node:path';
  * session history, the `Referer` of every later request, and any access or CDN
  * log that records query strings.
  *
- * Observed live on cybersecurityjobslist.com: sign-in navigated to
+ * Observed live in production: sign-in navigated to
  * `/auth/sign-in?email=…&password=…`.
  *
  * `method="post"` with no `action` re-posts to the same URL, so behaviour is
  * unchanged when JS works and the fields ride in the body when it does not.
  * This gate is source-level because the defect is a missing source attribute:
  * rendering the tree cannot tell a declared GET from the HTML default.
+ *
+ * Whole-file granularity, deliberately. Pairing each `<form>` with the inputs
+ * inside it means parsing the opening tag, and these tags carry an `onSubmit`
+ * arrow whose body holds both `=>` and TypeScript generics
+ * (`Awaited<ReturnType<…>>`) — a regex cannot find where the tag ends. Every
+ * credential file here holds exactly one form, so file scope is exact for
+ * them; a second, non-credential form in the same file would weaken it, and
+ * the count assertion below is what would notice that drift.
  */
 
 /** Inputs whose value must never reach a URL. */
 const SECRET_INPUT =
   /type=['"]password['"]|autoComplete=['"](?:current-password|new-password|one-time-code)['"]/;
+
+/**
+ * Files carrying a credential form today. A change here is the thing to review.
+ *
+ * `-auth.confirm-email-change.tsx` also declares `method="post"` but is not in
+ * this set: it renders no secret input, and its reason is different — a native
+ * GET there submits zero fields, which replaces `?token=…` with an empty query
+ * and loses the token.
+ */
+const GUARDED_FILE_COUNT = 6;
 
 function sourceFilesUnder(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -35,43 +53,21 @@ function sourceFilesUnder(dir: string): string[] {
   });
 }
 
-/**
- * Files that render a secret-bearing input but whose form does not declare
- * `method="post"`. Whole-file granularity on purpose: a file with a credential
- * input and a GET-defaulted form is the thing to look at, and pairing each
- * `<form>` to the inputs inside it would need a parser this gate does not want.
- */
-function offenders(path: string): string[] {
-  const source = readFileSync(path, 'utf8');
-  if (!SECRET_INPUT.test(source)) return [];
-  if (!/<form\b/.test(source)) return [];
-  const forms = source.match(/<form\b[^>]*>/gs) ?? [];
-  return forms.some((form) => !/\bmethod="post"/.test(form)) ? [path] : [];
-}
-
 describe('credential forms declare method="post"', () => {
-  it('no form rendering a password or one-time code defaults to GET', () => {
-    const files = [
+  it('every file rendering a password or one-time code declares a POST form', () => {
+    const guarded = [
       ...sourceFilesUnder(join(import.meta.dirname, 'components')),
       ...sourceFilesUnder(join(import.meta.dirname, 'routes')),
-    ];
-    expect(files.length).toBeGreaterThan(0);
-    const found = files.flatMap(offenders);
-    expect(found, found.join('\n')).toEqual([]);
-  });
+    ].filter((path) => SECRET_INPUT.test(readFileSync(path, 'utf8')));
 
-  it('finds the forms it is meant to be guarding', () => {
-    const files = [
-      ...sourceFilesUnder(join(import.meta.dirname, 'components')),
-      ...sourceFilesUnder(join(import.meta.dirname, 'routes')),
-    ];
-    // A gate that matches nothing passes forever. Pin that the scan still
-    // reaches real credential forms, without pinning which ones.
-    const guarded = files.filter(
-      (path) =>
-        SECRET_INPUT.test(readFileSync(path, 'utf8')) &&
-        /<form\b/.test(readFileSync(path, 'utf8')),
+    // A drop here means a credential form moved somewhere this scan cannot
+    // see — a wrapper component, say — and the surface silently stopped being
+    // guarded. Update the count with the new home, do not just lower it.
+    expect(guarded).toHaveLength(GUARDED_FILE_COUNT);
+
+    const offenders = guarded.filter(
+      (path) => !/\bmethod="post"/.test(readFileSync(path, 'utf8')),
     );
-    expect(guarded.length).toBeGreaterThanOrEqual(5);
+    expect(offenders, offenders.join('\n')).toEqual([]);
   });
 });
