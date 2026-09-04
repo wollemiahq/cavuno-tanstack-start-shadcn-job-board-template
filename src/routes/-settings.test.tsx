@@ -420,7 +420,7 @@ describe('signed-in settings account cards', () => {
       });
     });
     expect(
-      screen.getByText(m.settingsPassword_checkInbox()),
+      await screen.findByText(m.settingsPassword_checkInbox()),
     ).toBeInTheDocument();
   });
 });

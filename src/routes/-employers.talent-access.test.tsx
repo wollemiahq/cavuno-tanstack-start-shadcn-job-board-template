@@ -134,7 +134,7 @@ describe('employer talent-access checkout', () => {
       });
     });
     expect(
-      screen.getByRole('heading', { name: 'Complete your purchase' }),
+      await screen.findByRole('heading', { name: 'Complete your purchase' }),
     ).toBeVisible();
   });
 
