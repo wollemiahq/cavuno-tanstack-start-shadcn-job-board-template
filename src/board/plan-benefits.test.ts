@@ -4,12 +4,39 @@ import { membershipCapacitySentence, planBenefitLines } from './plan-benefits';
 
 import type { Plan } from '@cavuno/board';
 
+/**
+ * The `name` the platform actually seeds for each capability key
+ * (`convex/billing/plansMutations.ts` `DEFAULT_FEATURES`). These are
+ * operator-facing dashboard labels, and they are what `genericFeatureLines`
+ * renders verbatim for any key the copy layer does not claim.
+ *
+ * Using them rather than the key itself is what stops these fixtures being
+ * tautological: if a key here stops matching the one the code reads, the
+ * expected array below has to be rewritten to the raw dashboard label, so the
+ * bug shows up in the diff instead of the suite staying green.
+ */
+const SEEDED_FEATURE_NAMES = new Map([
+  ['jobs.max_active', 'Max Active Jobs'],
+  ['jobs.included_posts', 'Included job posts'],
+  ['jobs.duration_days', 'Job Duration (Days)'],
+  ['jobs.featured_slots', 'Featured Slots'],
+  ['jobs.included_featured', 'Included featured jobs'],
+  ['jobs.feature_selection_mode', 'Feature Selection Mode'],
+  ['jobs.posting_discount_percent', 'Posting discount (%)'],
+  ['talent.profile_unlocks', 'Profile unlocks per period'],
+  ['talent.messages_sent', 'Messages per period'],
+]);
+
 function plan(values: Record<string, string>): Pick<Plan, 'features'> {
   return {
     features: Object.fromEntries(
       Object.entries(values).map(([key, value]) => [
         key,
-        { value, name: key, dataType: 'string' },
+        {
+          value,
+          name: SEEDED_FEATURE_NAMES.get(key) ?? key,
+          dataType: 'string',
+        },
       ]),
     ),
   };
@@ -76,6 +103,23 @@ describe('plan benefit lines', () => {
       '5 profile unlocks',
       'Unlimited messages',
     ]);
+  });
+
+  it('names the listing duration instead of echoing its dashboard label', () => {
+    // Every membership plan carries `jobs.duration_days` (seeded default 30),
+    // so without a named line every /memberships page read
+    // "30 Job Duration (Days)". The job-posting path has always named it.
+    expect(planBenefitLines(plan({ 'jobs.duration_days': '60' }))).toEqual([
+      'Live for 60 days',
+    ]);
+  });
+
+  it('renders no line for the featured-selection mechanism', () => {
+    // `auto` is not a number, so the generic line read "auto Feature Selection
+    // Mode". It decides how featured jobs are picked; it is not a benefit.
+    expect(
+      planBenefitLines(plan({ 'jobs.feature_selection_mode': 'auto' })),
+    ).toEqual([]);
   });
 
   it('renders nothing for a membership that only carries posting capacity', () => {

@@ -111,6 +111,11 @@ const NAMED_FEATURE_KEYS = new Set([
   'jobs.posting_discount_percent',
   'talent.profile_unlocks',
   'talent.messages_sent',
+  'jobs.duration_days',
+  // A mechanism, not a benefit: it decides HOW featured jobs are picked, and
+  // its value is a word (`auto` / `manual`), so the generic line rendered
+  // "auto Feature Selection Mode".
+  'jobs.feature_selection_mode',
 ]);
 
 /** Values that mean "the plan does not carry this", so no line is rendered. */
@@ -155,7 +160,13 @@ function genericFeatureLines(plan: Pick<Plan, 'features'>): string[] {
  */
 export function planBenefitLines(plan: Pick<Plan, 'features'>): string[] {
   const capacity = readMembershipCapacity(plan);
+  const durationDays = Number(plan.features?.['jobs.duration_days']?.value);
   return [
+    Number.isFinite(durationDays) && durationDays > 0
+      ? m.planFeature_liveDays({
+          days: durationDays.toLocaleString(getLocale()),
+        })
+      : null,
     capacity.postingDiscountPercent === null
       ? null
       : m.membershipBenefit_postingDiscount({
