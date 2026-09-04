@@ -81,11 +81,15 @@ describe('ogImageSrc', () => {
     expect(calls).toHaveLength(2);
   });
 
-  it('transforms WebP to an inline PNG', async () => {
-    const { fetchImpl, calls } = fakeFetch(WEBP, PNG);
-    expect(await ogImageSrc(URL_, fetchImpl)).toBe(
-      'data:image/png;base64,iVBORw0KGgoAAAAA',
-    );
+  // `format` is a request, not a guarantee: the live serving zone answers
+  // `image/jpeg` for a WebP source whatever format is asked for. Demanding
+  // PNG back would drop the very logos this exists to restore.
+  it.each([
+    ['a PNG', PNG, 'data:image/png;base64,iVBORw0KGgoAAAAA'],
+    ['a JPEG', JPEG, 'data:image/jpeg;base64,/9j/4AAAAAAAAAAA'],
+  ])('inlines %s the transform returns', async (_name, transformed, uri) => {
+    const { fetchImpl, calls } = fakeFetch(WEBP, transformed);
+    expect(await ogImageSrc(URL_, fetchImpl)).toBe(uri);
     expect(calls[1]?.cf?.image).toEqual({ format: 'png', width: 256 });
   });
 

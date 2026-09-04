@@ -9,7 +9,7 @@
  *
  * `ogImageSrc` sniffs the real bytes (an R2 key carries no extension, so the
  * URL cannot be trusted), leaves anything Satori already handles alone, and
- * asks Cloudflare to transform everything else to PNG. `null` comes back
+ * asks Cloudflare to rasterise everything else. `null` comes back
  * only for an image known to be undrawable and impossible to convert, and
  * means the caller must omit the whole element, not just the `src` — an
  * empty `<img>` is exactly the blank frame this exists to prevent.
@@ -42,6 +42,15 @@ function head(bytes: Uint8Array): string {
   return String.fromCharCode(...bytes.subarray(0, 16));
 }
 
+/** The mime Satori would decode these bytes as, or `null` if it cannot. */
+function drawableMime(bytes: Uint8Array): string | null {
+  const start = head(bytes);
+  if (start.startsWith(PNG_SIGNATURE)) return 'image/png';
+  if (start.startsWith('\xff\xd8\xff')) return 'image/jpeg';
+  if (start.startsWith('GIF8')) return 'image/gif';
+  return null;
+}
+
 /**
  * What Satori decodes. SVG reaches its renderer only down the text path,
  * which it takes on an exact content-type match — its byte path has no SVG
@@ -54,31 +63,34 @@ function isSatoriReadable(
 ): boolean {
   if (contentType === 'image/svg+xml' || contentType === 'application/svg+xml')
     return true;
-  const start = head(bytes);
-  return (
-    start.startsWith(PNG_SIGNATURE) ||
-    start.startsWith('\xff\xd8\xff') ||
-    start.startsWith('GIF8')
-  );
+  return drawableMime(bytes) !== null;
 }
 
-function toDataUri(bytes: Uint8Array): string {
+function toDataUri(bytes: Uint8Array, mime: string): string {
   let binary = '';
-  // Chunked because a 256px PNG runs to tens of KB, and spreading that many
+  // Chunked because a 256px image runs to tens of KB, and spreading that many
   // arguments into `fromCharCode` at once overflows the call stack.
   for (let i = 0; i < bytes.length; i += 0x8000) {
     binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
   }
-  return `data:image/png;base64,${btoa(binary)}`;
+  return `data:${mime};base64,${btoa(binary)}`;
 }
 
 /**
- * Re-fetch through Cloudflare image transformations. When the zone has them
- * disabled the hint is ignored and the original comes back, so the result is
- * sniffed too: no PNG, no logo. A failure here is `null`, never the original
- * URL — the sniff already proved Satori cannot draw that.
+ * Re-fetch through Cloudflare image transformations, and take whatever comes
+ * back that Satori can draw.
+ *
+ * `format` is a request, not a guarantee: measured against the live serving
+ * zone, a WebP source answers `image/jpeg` for `format=png` — and for every
+ * other format asked — while a PNG source honours it. Demanding PNG here
+ * would drop exactly the logos this module exists to restore.
+ *
+ * When a zone has transformations disabled the whole hint is ignored and the
+ * original comes back, so the result is sniffed either way. A failure is
+ * `null`, never the original URL — the sniff already proved Satori cannot
+ * draw that.
  */
-async function transformToPng(
+async function transformToDrawable(
   url: string,
   fetchImpl: ImageFetch,
 ): Promise<string | null> {
@@ -92,7 +104,8 @@ async function transformToPng(
   });
   if (!response.ok) return null;
   const bytes = new Uint8Array(await response.arrayBuffer());
-  return head(bytes).startsWith(PNG_SIGNATURE) ? toDataUri(bytes) : null;
+  const mime = drawableMime(bytes);
+  return mime ? toDataUri(bytes, mime) : null;
 }
 
 /**
@@ -135,5 +148,5 @@ export async function ogImageSrc(
   const sniffed = await sniff(url, fetchImpl);
   if (!sniffed) return url;
   if (isSatoriReadable(sniffed.bytes, sniffed.contentType)) return url;
-  return transformToPng(url, fetchImpl).catch(() => null);
+  return transformToDrawable(url, fetchImpl).catch(() => null);
 }
