@@ -9,8 +9,11 @@
  * to catch the break.
  *
  * Same shape as `CANDIDATE_PAYWALL_SIGNAL`, and it lives in `lib/` for the same
- * reason: the loader helper that reads it ships to the client, so the constant
- * must not drag a `server/` module into the shared shell.
+ * reason: the loader helper that reads it ships to the client, so importing the
+ * constant must not pull `server/board-access.ts` into the shared shell. (A
+ * `lib/ → server/` import is not banned outright — `employer-loader-auth.ts`
+ * imports `refreshSession`, which compiles to an RPC stub. This module is
+ * heavier than a stub.)
  */
 
 /** The wire code, exactly as the API sends it. */
