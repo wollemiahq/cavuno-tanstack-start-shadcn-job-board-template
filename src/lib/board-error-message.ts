@@ -51,6 +51,7 @@ export const CODE_MESSAGES = {
   employer_company_name_taken: m.boardError_companyNameTakenText,
   employer_company_exists: m.boardError_companyNameTakenText,
   employer_company_not_found: m.boardError_companyNotFoundText,
+  employer_free_email_website: m.boardError_freeEmailWebsiteText,
   employer_job_not_found: m.boardError_jobNotFoundText,
   employer_not_member: m.boardError_notMemberText,
   job_posting_rejected: m.boardError_jobRejectedText,

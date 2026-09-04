@@ -32,6 +32,7 @@ describe('board error code map', () => {
       'employer_company_name_taken',
       'employer_company_exists',
       'employer_company_not_found',
+      'employer_free_email_website',
       'employer_job_not_found',
       'employer_not_member',
       'job_posting_rejected',
@@ -64,6 +65,12 @@ describe('board error code map', () => {
   it('resolves a real auth failure to its specific copy', () => {
     expect(boardErrorMessage({ code: 'board_auth_invalid_credentials' })).toBe(
       'Wrong email or password.',
+    );
+  });
+
+  it('resolves a free-email company website to its specific copy', () => {
+    expect(boardErrorMessage({ code: 'employer_free_email_website' })).toBe(
+      'You can’t use free email domains as your company website.',
     );
   });
 
