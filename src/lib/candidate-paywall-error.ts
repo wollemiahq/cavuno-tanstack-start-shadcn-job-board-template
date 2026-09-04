@@ -5,10 +5,7 @@
  *
  * Entitlements are per plan and are NOT on the wire, so there is nothing in
  * `board.context()` to pre-gate on: the call is made and the refusal is
- * handled. `BOARD_API_ERROR_CODES` does not carry this code yet (4.21.0 adds
- * it), which is why the comparison widens `code` to `string` rather than
- * narrowing against the published union — a literal outside the union would
- * otherwise be rejected as an unintentional comparison.
+ * handled.
  */
 import { isBoardApiError, type BoardApiError } from '@cavuno/board';
 
@@ -31,8 +28,7 @@ export function isCandidatePaywallAccessError<T>(
   error: T,
 ): error is T & CandidatePaywallAccessError {
   if (!isBoardApiError(error) || error.status !== 403) return false;
-  const code: string = error.code;
-  return code === CANDIDATE_PAYWALL_ACCESS_REQUIRED;
+  return error.code === CANDIDATE_PAYWALL_ACCESS_REQUIRED;
 }
 
 /**

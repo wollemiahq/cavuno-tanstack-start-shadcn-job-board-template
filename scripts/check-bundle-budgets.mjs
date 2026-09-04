@@ -25,8 +25,8 @@ const serverAssets = resolve(root, 'dist/server/assets');
 // route increment larger while reducing that route's total first load. Never
 // raise a budget merely to make CI green.
 const BUDGETS = {
-  // @cavuno/board 4.21.1 adds `employer_free_email_website` (and
-  // `isFreeEmailWebsiteError`) to the SDK graph already in the shell:
+  // @cavuno/board 4.21.1 adds `employer_free_email_website` to
+  // BOARD_API_ERROR_CODES, which already rides the shared shell:
   // 222_000 → 222_042 gzip. Keep raw; lift gzip to measured + small headroom.
   shell: { raw: 730_000, gzip: 224_000 },
   styles: { raw: 260_000, gzip: 40_000 },
