@@ -160,9 +160,15 @@ function genericFeatureLines(plan: Pick<Plan, 'features'>): string[] {
  */
 export function planBenefitLines(plan: Pick<Plan, 'features'>): string[] {
   const capacity = readMembershipCapacity(plan);
+  // How long a listing runs is only a benefit to a plan that grants listings.
+  // Every membership carries `jobs.duration_days` — the platform seeds it at 30
+  // for every account — so a talent-access-only membership would otherwise
+  // promise a listing duration for listings it does not include.
   const durationDays = Number(plan.features?.['jobs.duration_days']?.value);
   return [
-    Number.isFinite(durationDays) && durationDays > 0
+    capacity.posts.kind !== 'none' &&
+    Number.isFinite(durationDays) &&
+    durationDays > 0
       ? m.planFeature_liveDays({
           days: durationDays.toLocaleString(getLocale()),
         })

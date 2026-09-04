@@ -4,39 +4,12 @@ import { membershipCapacitySentence, planBenefitLines } from './plan-benefits';
 
 import type { Plan } from '@cavuno/board';
 
-/**
- * The `name` the platform actually seeds for each capability key
- * (`convex/billing/plansMutations.ts` `DEFAULT_FEATURES`). These are
- * operator-facing dashboard labels, and they are what `genericFeatureLines`
- * renders verbatim for any key the copy layer does not claim.
- *
- * Using them rather than the key itself is what stops these fixtures being
- * tautological: if a key here stops matching the one the code reads, the
- * expected array below has to be rewritten to the raw dashboard label, so the
- * bug shows up in the diff instead of the suite staying green.
- */
-const SEEDED_FEATURE_NAMES = new Map([
-  ['jobs.max_active', 'Max Active Jobs'],
-  ['jobs.included_posts', 'Included job posts'],
-  ['jobs.duration_days', 'Job Duration (Days)'],
-  ['jobs.featured_slots', 'Featured Slots'],
-  ['jobs.included_featured', 'Included featured jobs'],
-  ['jobs.feature_selection_mode', 'Feature Selection Mode'],
-  ['jobs.posting_discount_percent', 'Posting discount (%)'],
-  ['talent.profile_unlocks', 'Profile unlocks per period'],
-  ['talent.messages_sent', 'Messages per period'],
-]);
-
 function plan(values: Record<string, string>): Pick<Plan, 'features'> {
   return {
     features: Object.fromEntries(
       Object.entries(values).map(([key, value]) => [
         key,
-        {
-          value,
-          name: SEEDED_FEATURE_NAMES.get(key) ?? key,
-          dataType: 'string',
-        },
+        { value, name: key, dataType: 'string' },
       ]),
     ),
   };
@@ -89,16 +62,19 @@ describe('membership capacity sentence', () => {
 });
 
 describe('plan benefit lines', () => {
-  it('renders the member discount and talent allowances', () => {
+  it('renders duration, the member discount and talent allowances in order', () => {
     expect(
       planBenefitLines(
         plan({
+          'jobs.included_posts': '3',
+          'jobs.duration_days': '60',
           'jobs.posting_discount_percent': '20',
           'talent.profile_unlocks': '5',
           'talent.messages_sent': 'unlimited',
         }),
       ),
     ).toEqual([
+      'Live for 60 days',
       '20% off further job posts',
       '5 profile unlocks',
       'Unlimited messages',
@@ -108,10 +84,23 @@ describe('plan benefit lines', () => {
   it('names the listing duration instead of echoing its dashboard label', () => {
     // Every membership plan carries `jobs.duration_days` (seeded default 30),
     // so without a named line every /memberships page read
-    // "30 Job Duration (Days)". The job-posting path has always named it.
-    expect(planBenefitLines(plan({ 'jobs.duration_days': '60' }))).toEqual([
-      'Live for 60 days',
-    ]);
+    // "30 Job Duration (Days)".
+    expect(
+      planBenefitLines(
+        plan({ 'jobs.included_posts': '1', 'jobs.duration_days': '60' }),
+      ),
+    ).toEqual(['Live for 60 days']);
+  });
+
+  it('promises no listing duration to a plan that grants no listings', () => {
+    // A talent-access-only membership still carries the seeded
+    // `jobs.duration_days`. Naming it would advertise a listing length for
+    // listings the plan does not include.
+    expect(
+      planBenefitLines(
+        plan({ 'jobs.duration_days': '30', 'talent.profile_unlocks': '50' }),
+      ),
+    ).toEqual(['50 profile unlocks']);
   });
 
   it('renders no line for the featured-selection mechanism', () => {
