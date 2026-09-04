@@ -25,10 +25,23 @@ const serverAssets = resolve(root, 'dist/server/assets');
 // route increment larger while reducing that route's total first load. Never
 // raise a budget merely to make CI green.
 const BUDGETS = {
-  // @cavuno/board 4.21.1 adds `employer_free_email_website` to
-  // BOARD_API_ERROR_CODES, which already rides the shared shell:
-  // 222_000 → 222_042 gzip. Keep raw; lift gzip to measured + small headroom.
-  shell: { raw: 730_000, gzip: 224_000 },
+  // Rebaselined 2026-09-04, after three consecutive reactive raises: 222_000
+  // was itself "measured + small headroom", #125 lifted it to 224_000 because
+  // @cavuno/board 4.21.1 added one error code (222_000 → 222_042), and three
+  // open PRs failed on the 24 bytes left before that. Each raise was just
+  // enough, so the next small change broke the gate again — and the message
+  // ("shared shell gzip is 216.8 KiB; budget 216.8 KiB", both sides rounded to
+  // the same figure) named nothing, so every author suspected their own diff.
+  //
+  // Nothing is misplaced, which is why this is a rebaseline and not a cleanup:
+  // attributing the shell by emitted bytes gives 33% react-dom, ~12% TanStack
+  // router and start, and the rest spread over ~550 of our own modules, none
+  // above 9.3 KiB. There is no import to lift out.
+  //
+  // 4 KiB (~1.8%) over the measurement rather than the ~2 KiB #125 left:
+  // enough that a dependency bump or an ordinary change does not trip the
+  // gate, tight enough to still catch a stray heavy import.
+  shell: { raw: 730_000, gzip: 226_000 },
   styles: { raw: 260_000, gzip: 40_000 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {
