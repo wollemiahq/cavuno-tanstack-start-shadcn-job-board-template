@@ -41,6 +41,7 @@ function PasswordPage() {
   return (
     <AuthCard title={m.passwordPage_cardTitle()}>
       <form
+        method="post"
         className="space-y-4"
         onSubmit={async (event) => {
           event.preventDefault();

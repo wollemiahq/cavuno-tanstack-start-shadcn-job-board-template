@@ -62,6 +62,7 @@ export function ConfirmEmailChangeView({
       supportingText={m.authConfirmEmailChange_subtitle()}
     >
       <form
+        method="post"
         className="grid gap-4"
         onSubmit={async (event) => {
           event.preventDefault();

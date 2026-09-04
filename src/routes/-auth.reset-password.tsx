@@ -90,6 +90,7 @@ export function ResetPasswordView({
   return (
     <AuthCard title={m.authResetPassword_title()}>
       <form
+        method="post"
         className="grid gap-4"
         onSubmit={async (event) => {
           event.preventDefault();

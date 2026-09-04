@@ -321,6 +321,7 @@ function RegistrationForm({
 
   return (
     <form
+      method="post"
       className="grid gap-4"
       onSubmit={async (event) => {
         event.preventDefault();
