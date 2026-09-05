@@ -18,6 +18,7 @@ import {
   useNavigate,
   useRouter,
   useRouterState,
+  type ErrorComponentProps,
 } from '@tanstack/react-router';
 
 import Header from '../components/Header';
@@ -192,15 +193,21 @@ export const Route = createRootRoute({
   },
   shellComponent: RootDocument,
   component: RootLayout,
-  // The tree-wide backstop for a rejecting loader: a `Failed to fetch` inside
-  // a public route's loader escaped every boundary and left the page blank.
-  // Only the candidate routes carry their own errorComponent; a route without
-  // one surfaces its error here, so this covers every public,
-  // SEO-load-bearing page. Deliberately at the root rather than the router's
-  // `defaultErrorComponent` — that option would give EVERY route its own
-  // boundary, so an error would never reach the root at all.
-  errorComponent: AppRouteErrorPage,
+  // The backstop for the ROOT loader failing (board context, offer gate):
+  // nothing else is mounted, so this supplies the page's `<main>`. A rejecting
+  // loader in a child route is rendered at that match by the router's
+  // `defaultErrorComponent` (see src/router.tsx) inside the chrome — it does
+  // not bubble here on the server.
+  errorComponent: RootErrorPage,
 });
+
+function RootErrorPage(props: ErrorComponentProps) {
+  return (
+    <main>
+      <AppRouteErrorPage {...props} />
+    </main>
+  );
+}
 
 function RootLayout() {
   const { board, offerGate, publishableKey } = Route.useLoaderData();
@@ -247,6 +254,8 @@ function RootChrome({
   const isFullBleed = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fullBleed),
   });
+  // Only while its component renders; the router-default error page supplies
+  // the landmark itself when it stands in for one of these routes.
   const ownsMain = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.ownsMain),
   });

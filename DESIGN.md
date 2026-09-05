@@ -313,18 +313,22 @@ Props:
 
 ### AppRouteError — `src/components/app-route-error.tsx`
 
-The public-facing route error state — the root route's backstop for a
-loader rejection anywhere in the tree (a Board API 500/timeout, a failed
-`serverFnFetcher`). Without it TanStack has no error boundary above the
-six candidate routes, so a rejecting public loader left the page blank.
+The public-facing route error state for a loader rejection anywhere in the
+tree (a Board API 500/timeout, a failed `serverFnFetcher`). It is the
+router's `defaultErrorComponent` — TanStack renders a rejected loader IN
+PLACE at the failing match, and on the server it never rethrows, so without
+a default the built-in "Something went wrong!" component ships in the HTML —
+and the root route's own `errorComponent` for a failing ROOT loader.
 
-Two constraints shape this surface:
- - It stands in for `RootLayout`, so it renders its own `<main>` and its
-   own `Page` (which owns the design-token scope) — the header/footer chrome
-   is NOT mounted around it.
- - It reads NO loader data. The root loader is one of the things that can
-   fail, so board context may never have resolved; copy comes from the
-   Paraglide seam and the recovery link is a static typed route.
+Landmark: when it stands in for a route that owns `<main>` (`staticData.ownsMain`,
+where the chrome renders only a `div#main-content`), it supplies the `<main>`
+that route's component would have; otherwise the chrome's `<main>` is already
+around it. The root wraps it in one when the chrome never mounted. It always
+renders `Page`, which owns the design-token scope.
+
+It reads NO loader data. The root loader is one of the things that can
+fail, so board context may never have resolved; copy comes from the
+Paraglide seam and the recovery link is a static typed route.
 
 Dual-source sticky-demo: when the active data source is a dead demo tenant,
 retry re-hits the same dead tenant. This surface probes

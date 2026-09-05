@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { isRateLimited } from '@cavuno/board';
-import { Link } from '@tanstack/react-router';
+import { Link, useMatch, useRouter } from '@tanstack/react-router';
 import { CircleAlert } from 'lucide-react';
 
 import { serializeDataSourceCookie } from '../lib/data-source';
@@ -24,18 +24,22 @@ import { useClientErrorReport } from '@/lib/use-client-error-report';
 import type { ErrorComponentProps } from '@tanstack/react-router';
 
 /**
- * The public-facing route error state — the root route's backstop for a
- * loader rejection anywhere in the tree (a Board API 500/timeout, a failed
- * `serverFnFetcher`). Without it TanStack has no error boundary above the
- * six candidate routes, so a rejecting public loader left the page blank.
+ * The public-facing route error state for a loader rejection anywhere in the
+ * tree (a Board API 500/timeout, a failed `serverFnFetcher`). It is the
+ * router's `defaultErrorComponent` — TanStack renders a rejected loader IN
+ * PLACE at the failing match, and on the server it never rethrows, so without
+ * a default the built-in "Something went wrong!" component ships in the HTML —
+ * and the root route's own `errorComponent` for a failing ROOT loader.
  *
- * Two constraints shape this surface:
- *  - It stands in for `RootLayout`, so it renders its own `<main>` and its
- *    own `Page` (which owns the design-token scope) — the header/footer chrome
- *    is NOT mounted around it.
- *  - It reads NO loader data. The root loader is one of the things that can
- *    fail, so board context may never have resolved; copy comes from the
- *    Paraglide seam and the recovery link is a static typed route.
+ * Landmark: when it stands in for a route that owns `<main>` (`staticData.ownsMain`,
+ * where the chrome renders only a `div#main-content`), it supplies the `<main>`
+ * that route's component would have; otherwise the chrome's `<main>` is already
+ * around it. The root wraps it in one when the chrome never mounted. It always
+ * renders `Page`, which owns the design-token scope.
+ *
+ * It reads NO loader data. The root loader is one of the things that can
+ * fail, so board context may never have resolved; copy comes from the
+ * Paraglide seam and the recovery link is a static typed route.
  *
  * Dual-source sticky-demo: when the active data source is a dead demo tenant,
  * retry re-hits the same dead tenant. This surface probes
@@ -60,7 +64,7 @@ export function AppRouteError({
 }) {
   return (
     <Page width="wide">
-      <main data-layout="app-route-error">
+      <div data-layout="app-route-error">
         <Empty className="min-h-[calc(100dvh-8rem)] border-0 p-6">
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -89,19 +93,25 @@ export function AppRouteError({
             </Link>
           </EmptyContent>
         </Empty>
-      </main>
+      </div>
     </Page>
   );
 }
 
 export function AppRouteErrorPage({
   error,
-  reset,
   loadDataSourceFacts = getDataSourceFacts,
 }: ErrorComponentProps & {
   /** Injectable environment probe for isolated boundary tests. */
   loadDataSourceFacts?: () => Promise<PreviewDataSourceFacts>;
 }) {
+  const router = useRouter();
+  // The match this page replaced. Read here rather than in the chrome so the
+  // landmark travels with the page — including through the pending window of
+  // a retry, when the match is no longer in its error state.
+  const ownsMain = Boolean(
+    useMatch({ strict: false, select: (match) => match.staticData?.ownsMain }),
+  );
   // The one distinction worth surfacing: rate limiting is transient and
   // waiting actually fixes it, so "try again in a moment" would mislead.
   // Server-function errors cross the wire as plain Errors, so the SDK guard
@@ -136,7 +146,7 @@ export function AppRouteErrorPage({
     window.location.reload();
   }
 
-  return (
+  const page = (
     <AppRouteError
       title={m.appError_heading()}
       description={
@@ -144,7 +154,13 @@ export function AppRouteErrorPage({
       }
       retryLabel={m.appError_retryAction()}
       homeLabel={m.appError_homeLink()}
-      reset={reset}
+      // TanStack's `reset` only clears the boundary: the match is still in
+      // its error state and rethrows immediately. Invalidating re-runs the
+      // loader, which is what "try again" promises, and the boundary resets
+      // itself once the load lands (its reset key is the router's loadedAt).
+      // Calling `reset` as well would re-render the now-pending match with no
+      // Suspense boundary above it on a hydrated client.
+      reset={() => void router.invalidate()}
       switchToYourBoard={
         stuckOnDemo
           ? {
@@ -155,4 +171,5 @@ export function AppRouteErrorPage({
       }
     />
   );
+  return ownsMain ? <main>{page}</main> : page;
 }
