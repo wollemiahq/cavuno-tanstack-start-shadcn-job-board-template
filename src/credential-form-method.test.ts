@@ -129,28 +129,48 @@ describe('credential forms declare method="post"', () => {
   });
 
   /**
-   * Two signed-in forms carry no secret, so the scan above never sees them —
-   * but a native submit still writes their fields into the URL, history and
-   * referrer. Seen live 2026-09-05: forcing the degraded path on `/settings`
-   * produced `/settings?email=leak-probe%40example.com`.
+   * Forms that carry no secret but do carry personal data — an email address,
+   * an applicant's name — so the scan above never sees them, yet a native
+   * submit still writes their fields into the URL, history and referrer.
+   * Seen live 2026-09-05: forcing the degraded path on `/settings` produced
+   * `/settings?email=leak-probe%40example.com`.
    *
    * Listed by path rather than widening the scan to every email input: the
-   * board's public alert and search forms take an address too, and putting a
-   * GET query in the URL is the whole point of those.
+   * board's public alert-signup and listing-search forms take an address
+   * too, and a GET query in the URL is the whole point of those.
+   *
+   * Every `<form>` in a listed file must declare POST, not just one of them.
+   * `apply-button.tsx` holds two forms and only one was POST before this
+   * list covered it — a file-level `method="post"` search would have been
+   * satisfied by the wrong form.
    */
   const PII_FORM_FILES = [
+    // Signed-in account forms.
     'components/settings-email-card.tsx',
     'components/profile-form.tsx',
+    // Guest apply on the public board: applicant name, email, cover text.
+    'components/board/apply-button.tsx',
+    // Auth form with an email but no password, so the secret scan skips it.
+    'routes/-auth.forgot-password.tsx',
+    // Employer surfaces that take an email address.
+    'components/employer/invite-member-dialog.tsx',
+    'routes/-employers.onboarding.tsx',
+    'components/post-job-form.tsx',
   ];
 
-  it('signed-in email and profile forms declare method="post"', () => {
-    const offenders = PII_FORM_FILES.filter((relative) => {
-      const source = readFileSync(join(import.meta.dirname, relative), 'utf8');
-      return !/\bmethod="post"/.test(withoutComments(source));
+  it('every form in a PII-carrying file declares method="post"', () => {
+    const offenders = PII_FORM_FILES.flatMap((relative) => {
+      const code = withoutComments(
+        readFileSync(join(import.meta.dirname, relative), 'utf8'),
+      );
+      const forms = (code.match(FORM_OPENING) ?? []).length;
+      const posts = (code.match(/\bmethod="post"/g) ?? []).length;
+      if (forms === 0) return [`${relative}: no <form> — guard its wrapper`];
+      if (posts < forms) {
+        return [`${relative}: ${forms} <form>, ${posts} method="post"`];
+      }
+      return [];
     });
-    expect(
-      offenders,
-      `<form> without method="post":\n${offenders.join('\n')}`,
-    ).toEqual([]);
+    expect(offenders, offenders.join('\n')).toEqual([]);
   });
 });
