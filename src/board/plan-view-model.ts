@@ -12,18 +12,29 @@ function featureMap(plan: Pick<JobPostingPlan, 'features'>) {
 }
 
 /**
- * Whether buying this plan lets the employer choose to feature THIS post.
- * False when there is no choice to make: the plan sells no featured slots,
- * or it features every post automatically — `jobs.feature_selection_mode`
- * is `auto` unless the operator explicitly set `manual` (the platform reads
- * a missing row the same way).
+ * Whether the employer picks which posts to feature on this plan.
+ * `jobs.feature_selection_mode` is `auto` (every post featured, nothing to
+ * choose) unless the operator explicitly set `manual` — the platform reads
+ * a missing row the same way.
+ */
+export function planFeaturesManually(
+  plan: Pick<JobPostingPlan, 'features'>,
+): boolean {
+  return featureMap(plan).get('jobs.feature_selection_mode') === 'manual';
+}
+
+/**
+ * Whether buying this plan lets the employer choose to feature THIS post:
+ * it selects manually and sells at least one featured slot (`unlimited` is
+ * the same literal the platform uses for `jobs.max_active`).
  */
 export function planOffersFeaturedChoice(
   plan: Pick<JobPostingPlan, 'features'>,
 ): boolean {
-  const byKey = featureMap(plan);
-  if (byKey.get('jobs.feature_selection_mode') !== 'manual') return false;
-  const slots = Number(byKey.get('jobs.featured_slots'));
+  if (!planFeaturesManually(plan)) return false;
+  const raw = featureMap(plan).get('jobs.featured_slots');
+  if (raw === 'unlimited') return true;
+  const slots = Number(raw);
   return Number.isFinite(slots) && slots > 0;
 }
 

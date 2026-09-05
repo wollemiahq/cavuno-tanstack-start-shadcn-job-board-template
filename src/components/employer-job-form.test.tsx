@@ -441,6 +441,9 @@ describe('EmployerJobForm', () => {
         name: /Feature this listing/,
       });
       expect(box).not.toBeChecked();
+      // The plan card already says what the purchase includes; no "left"
+      // hint on a plan not yet bought.
+      expect(screen.queryByText(/featured slot/i)).not.toBeInTheDocument();
       fireEvent.click(box);
       fireEvent.submit(container.querySelector('form')!);
 
@@ -533,6 +536,55 @@ describe('EmployerJobForm', () => {
 
       await waitFor(() => expect(mocks.checkoutJob).toHaveBeenCalledTimes(1));
       expect('isFeatured' in checkoutBody()).toBe(false);
+    });
+
+    it('offers the choice on an unlimited-featured credit, and not on a credit of an auto plan', async () => {
+      const credit: EmployerBillingOption = {
+        id: 'sub-2',
+        object: 'employer_billing_option',
+        type: 'subscription',
+        planId: 'plan-x',
+        planName: 'Unlimited credits',
+        planKind: 'subscription',
+        jobsRemaining: 4,
+        jobsTotal: 5,
+        featuredRemaining: 0,
+        featuredTotal: 0,
+        featuredUnlimited: true,
+        renewsAt: null,
+      };
+      const autoPlan: JobPostingPlan = {
+        ...plan,
+        id: 'plan-auto',
+        name: 'Auto',
+        features: [
+          { key: 'jobs.featured_slots', value: '3' },
+          { key: 'jobs.feature_selection_mode', value: 'auto' },
+        ],
+      };
+      await renderDraftEdit(
+        [autoPlan],
+        [
+          credit,
+          {
+            ...credit,
+            id: 'sub-3',
+            planId: 'plan-auto',
+            planName: 'Auto credits',
+          },
+        ],
+      );
+
+      fireEvent.click(screen.getByRole('radio', { name: /Unlimited credits/ }));
+      expect(
+        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Unlimited featured/)).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('radio', { name: /Auto credits/ }));
+      expect(
+        screen.queryByRole('checkbox', { name: /Feature this listing/ }),
+      ).not.toBeInTheDocument();
     });
 
     it('offers the choice on a reusable credit that still holds featured slots', async () => {
