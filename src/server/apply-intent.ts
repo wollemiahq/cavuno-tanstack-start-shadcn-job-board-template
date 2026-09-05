@@ -1,14 +1,16 @@
-/**
- * The board-local Apply POST seam. This module deliberately accepts only a
- * job slug from the browser: destination, country, and candidate profile all
- * remain Cavuno-owned server-side data.
- */
 import {
   isSafeApplicationUrl,
   type ApplyIntent,
   type BoardSdk,
   type PublicJob,
 } from '@cavuno/board';
+
+/**
+ * The board-local Apply POST seam. This module deliberately accepts only a
+ * job slug from the browser: destination, country, and candidate profile all
+ * remain Cavuno-owned server-side data.
+ */
+import { localizePath } from '../lib/localized-path';
 
 import { isTrustedApplyGatewayUrl } from '@/lib/apply-gateway-url';
 import { withApplyGatewayCapability } from '@/lib/board';
@@ -221,20 +223,20 @@ export function ordinaryFallbackRedirect({
 }
 
 /**
- * `/apply` is an action, not a page. A GET still reaches it — the back
- * button after the gateway hop lands here, and crawlers follow the form
- * action — and a route with only a POST handler fell through to the SPA
- * shell: an indexable, blank 200 on every board. Send the visitor to the
- * listing instead, keeping any locale prefix (`/de/apply` → `/de/jobs`).
+ * `/apply` is an action, not a page. A GET still reaches it — crawlers follow
+ * the form action, and the route matches case-insensitively — and a route
+ * with only a POST handler fell through to the SPA shell: an indexable, blank
+ * 200 on every board. Send the visitor to the listing. The target is built
+ * from the request locale, never derived from the request path, so nothing
+ * the client sent is echoed into `Location`.
  */
-export function applyGetRedirect(request: Request): Response {
-  const url = new URL(request.url);
-  const location = url.pathname.replace(/\/apply\/?$/, '/jobs');
+export function applyGetRedirect(): Response {
   return new Response(null, {
     status: 302,
     headers: {
-      location: location.startsWith('/') ? location : '/jobs',
+      location: localizePath('/jobs'),
       'cache-control': 'no-store',
+      'referrer-policy': 'strict-origin',
       'x-robots-tag': 'noindex, nofollow',
     },
   });

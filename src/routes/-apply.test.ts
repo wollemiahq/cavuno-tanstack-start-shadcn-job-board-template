@@ -47,8 +47,10 @@ describe('/apply GET', () => {
     expect(res.headers.get('x-robots-tag')).toBe('noindex, nofollow');
   });
 
-  it('keeps the locale prefix so a German visitor lands on /de/jobs', async () => {
-    const res = await getApply('/de/apply');
-    expect(res.headers.get('location')).toBe('/de/jobs');
+  it('never echoes the request path: a case variant still lands on /jobs', async () => {
+    // The router matches /Apply case-insensitively; deriving the target from
+    // the pathname redirected /Apply to itself forever.
+    const res = await getApply('/Apply');
+    expect(res.headers.get('location')).toBe('/jobs');
   });
 });
