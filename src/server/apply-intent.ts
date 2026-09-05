@@ -5,15 +5,14 @@ import {
   type PublicJob,
 } from '@cavuno/board';
 
+import { isTrustedApplyGatewayUrl } from '@/lib/apply-gateway-url';
+import { withApplyGatewayCapability } from '@/lib/board';
 /**
  * The board-local Apply POST seam. This module deliberately accepts only a
  * job slug from the browser: destination, country, and candidate profile all
  * remain Cavuno-owned server-side data.
  */
-import { localizePath } from '../lib/localized-path';
-
-import { isTrustedApplyGatewayUrl } from '@/lib/apply-gateway-url';
-import { withApplyGatewayCapability } from '@/lib/board';
+import { localizePath } from '@/lib/localized-path';
 import { searchString } from '@/lib/pagination';
 
 export const APPLY_SESSION_COOKIE = '__Host-cavuno_apply_session';
