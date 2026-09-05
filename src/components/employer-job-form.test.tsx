@@ -538,6 +538,32 @@ describe('EmployerJobForm', () => {
       expect('isFeatured' in checkoutBody()).toBe(false);
     });
 
+    it('pre-ticks a one-time credit whose remaining posts can all be featured', async () => {
+      const credit: EmployerBillingOption = {
+        id: 'order-1',
+        object: 'employer_billing_option',
+        type: 'order',
+        planId: plan.id,
+        planName: 'Single post',
+        planKind: 'one_time',
+        jobsRemaining: 1,
+        jobsTotal: 1,
+        featuredRemaining: 1,
+        featuredTotal: 1,
+        renewsAt: null,
+      };
+      const { container } = await renderDraftEdit([], [credit]);
+
+      fireEvent.click(screen.getByRole('radio', { name: /Single post/ }));
+      expect(
+        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+      ).toBeChecked();
+      fireEvent.submit(container.querySelector('form')!);
+
+      await waitFor(() => expect(mocks.checkoutJob).toHaveBeenCalledTimes(1));
+      expect(checkoutBody()).toMatchObject({ isFeatured: true });
+    });
+
     it('offers the choice on an unlimited-featured credit', async () => {
       const credit: EmployerBillingOption = {
         id: 'sub-2',

@@ -503,7 +503,12 @@ export function EmployerJobForm({
               count: option.featuredRemaining,
               countLabel: option.featuredRemaining.toLocaleString(locale),
             }),
-            defaultOn: false,
+            // A single-post purchase left as a draft comes back as a credit;
+            // pre-tick it like the plan itself when every remaining post on
+            // the credit can be featured, so no later post loses a slot.
+            defaultOn:
+              option.planKind === 'one_time' &&
+              option.featuredRemaining >= option.jobsRemaining,
           }
         : null;
     }
