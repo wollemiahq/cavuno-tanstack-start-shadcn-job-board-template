@@ -43,9 +43,10 @@ export function getRouter() {
     // `(route.errorComponent ?? defaultErrorComponent) || ErrorComponent`, so
     // without this default a Board API failure on any public page ships
     // TanStack's unstyled "Something went wrong!" in the HTML until the client
-    // hydrates and swaps the whole chrome for the root boundary's page. The client path does rethrow, which is why the root
-    // `errorComponent` alone looked sufficient in jsdom tests. The candidate
-    // routes keep their own `CandidateRouteErrorPage`.
+    // hydrates and swaps the whole chrome for the root boundary's page. The
+    // client path does rethrow, which is why the root `errorComponent` alone
+    // looked sufficient in jsdom tests. The candidate routes keep their own
+    // `CandidateRouteErrorPage`.
     defaultErrorComponent: AppRouteErrorPage,
     // Paraglide locale routing: route matching sees the
     // delocalized path (/de/jobs → /jobs), rendered hrefs re-localize for

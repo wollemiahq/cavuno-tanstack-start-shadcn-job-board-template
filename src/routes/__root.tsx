@@ -18,6 +18,7 @@ import {
   useNavigate,
   useRouter,
   useRouterState,
+  type ErrorComponentProps,
 } from '@tanstack/react-router';
 
 import Header from '../components/Header';
@@ -31,8 +32,8 @@ import { getRootShellData } from '../server/root-shell';
 import { themeMeta, themeTokens } from '../theme/resolved';
 import { useBlogSuggestions } from './-use-blog-suggestions';
 import { useCompanyMarketSuggestions } from './-use-company-market-suggestions';
-import { useKeywordSuggestions } from './-use-keyword-suggestions';
 import '../styles.css';
+import { useKeywordSuggestions } from './-use-keyword-suggestions';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { AlternateLinks } from '@/components/alternate-links';
@@ -78,7 +79,6 @@ import {
 } from '@/lib/shell-breadcrumb';
 import { parseTalentSearch } from '@/lib/talent-search';
 import { useViewerUnreadCount } from '@/lib/use-viewer-unread-count';
-import type { ErrorComponentProps } from '@tanstack/react-router';
 
 const LazyFooter = lazy(() =>
   import('../components/Footer').then((mod) => ({ default: mod.default })),
@@ -254,13 +254,20 @@ function RootChrome({
   const isFullBleed = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fullBleed),
   });
-  // A route that owns `<main>` only does so while its component renders. When
-  // its loader failed the error page renders in its place, so the chrome
-  // supplies the landmark.
+  const router = useRouter();
+  // A route that owns `<main>` only does so while something of its own
+  // renders. When its loader failed and it has no errorComponent, the
+  // router-default error page (which owns no landmark) renders in its place,
+  // so the chrome supplies `<main>`. Routes with their own errorComponent
+  // (the candidate pages) keep rendering their own landmark on error.
   const ownsMain = useRouterState({
     select: (s) =>
-      s.matches.some((match) => match.staticData?.ownsMain) &&
-      !s.matches.some((match) => match.status === 'error'),
+      s.matches.some(
+        (match) =>
+          match.staticData?.ownsMain &&
+          (match.status !== 'error' ||
+            router.routesById[match.routeId]?.options.errorComponent),
+      ),
   });
   const fillsViewport = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fillsViewport),
@@ -276,7 +283,6 @@ function RootChrome({
     select: (state) => resolveShellBreadcrumbTrail(state.matches),
   });
   const navigate = useNavigate();
-  const router = useRouter();
   const conversionAnalytics = useMemo(
     () => resolveBoardConversionAnalytics(board.analytics),
     [board.analytics],

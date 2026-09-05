@@ -99,7 +99,6 @@ export function AppRouteError({
 
 export function AppRouteErrorPage({
   error,
-  reset,
   loadDataSourceFacts = getDataSourceFacts,
 }: ErrorComponentProps & {
   /** Injectable environment probe for isolated boundary tests. */
@@ -148,14 +147,13 @@ export function AppRouteErrorPage({
       }
       retryLabel={m.appError_retryAction()}
       homeLabel={m.appError_homeLink()}
-      // `reset` alone only clears the boundary: the match is still in its
-      // error state and rethrows immediately. Invalidating re-runs the loader,
-      // which is what "try again" promises. (`reset` is undefined on the
-      // server render; the client boundary supplies the real one.)
-      reset={() => {
-        void router.invalidate();
-        reset?.();
-      }}
+      // TanStack's `reset` only clears the boundary: the match is still in
+      // its error state and rethrows immediately. Invalidating re-runs the
+      // loader, which is what "try again" promises, and the boundary resets
+      // itself once the load lands (its reset key is the router's loadedAt).
+      // Calling `reset` as well would re-render the now-pending match with no
+      // Suspense boundary above it on a hydrated client.
+      reset={() => void router.invalidate()}
       switchToYourBoard={
         stuckOnDemo
           ? {
