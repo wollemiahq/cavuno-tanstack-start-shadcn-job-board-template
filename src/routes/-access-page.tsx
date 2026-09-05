@@ -1,7 +1,7 @@
 /**
  * The candidate job-access paywall page component, colocated with the
  * `/account/access` route as a non-route module (leading `-`) so the route file
- * exports only `Route` and stays cleanly code-split. Reads its route data via
+ * exports only `Route` and its loader factory, and stays cleanly code-split. Reads its route data via
  * `getRouteApi` (repo convention) rather than importing the route back.
  *
  * Return path: viewers arrive from a gated jobs listing via the "Unlock more
@@ -82,6 +82,8 @@ export function safeReturnTo(value: string | undefined): string | null {
  * here. Stripe's `session_id` is appended by the API, which joins with `&`
  * when the path already carries a query.
  */
+const RETURN_PATH_MAX_LENGTH = 400;
+
 export function accessReturnPath(returnTo: string | null): string {
   if (returnTo === null) return RETURN_PATH;
   const nested = `${RETURN_PATH}?returnTo=${encodeURIComponent(returnTo)}`;
@@ -90,8 +92,6 @@ export function accessReturnPath(returnTo: string | null): string {
   // outright; falling back to the bare page is the pre-existing behaviour.
   return nested.length > RETURN_PATH_MAX_LENGTH ? RETURN_PATH : nested;
 }
-
-const RETURN_PATH_MAX_LENGTH = 400;
 
 /**
  * Billing cadence beside the price, worded from THIS catalog. The wire

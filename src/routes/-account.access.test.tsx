@@ -250,7 +250,12 @@ describe('candidate access actions', () => {
       },
       offers: [],
     });
-    mocks.useSearch.mockReturnValue({ session_id: undefined });
+    // A captured destination must NOT ride the portal return: nothing on the
+    // page consumes it without a session id.
+    mocks.useSearch.mockReturnValue({
+      session_id: undefined,
+      returnTo: '/jobs',
+    });
     mocks.openBillingPortal.mockResolvedValue({
       url: 'https://billing.example/session',
     });

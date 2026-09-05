@@ -99,7 +99,8 @@ export const Route = createFileRoute('/account_/access')({
   // Keys are omitted rather than set to `undefined` when absent, so plain
   // `<Link to="/account/access">` (the header avatar menu) needs no search
   // prop and renders without a trailing `?`. `returnTo` is kept raw here and
-  // sanitized with `safeRedirectPath` at the point of navigation.
+  // sanitized with `safeRedirectPath` at the point of navigation and, in the
+  // loader, before it is nested into an auth bounce.
   validateSearch: (search: UrlSearchInput): AccessSearch => {
     const out: AccessSearch = {};
     const sessionId = searchString(search.session_id);
