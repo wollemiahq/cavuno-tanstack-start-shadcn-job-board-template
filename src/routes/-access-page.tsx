@@ -83,10 +83,15 @@ export function safeReturnTo(value: string | undefined): string | null {
  * when the path already carries a query.
  */
 export function accessReturnPath(returnTo: string | null): string {
-  return returnTo === null
-    ? RETURN_PATH
-    : `${RETURN_PATH}?returnTo=${encodeURIComponent(returnTo)}`;
+  if (returnTo === null) return RETURN_PATH;
+  const nested = `${RETURN_PATH}?returnTo=${encodeURIComponent(returnTo)}`;
+  // The API copies the return path into Stripe session metadata, which caps
+  // a value at 500 characters. A long search URL would fail checkout
+  // outright; falling back to the bare page is the pre-existing behaviour.
+  return nested.length > RETURN_PATH_MAX_LENGTH ? RETURN_PATH : nested;
 }
+
+const RETURN_PATH_MAX_LENGTH = 400;
 
 /**
  * Billing cadence beside the price, worded from THIS catalog. The wire
@@ -198,7 +203,9 @@ export function AccessPage() {
         await router.invalidate();
       }}
       navigate={async (href) => {
-        await router.navigate({ href });
+        // Replace, so Back from the destination does not land on this page
+        // and get bounced forward again by the same effect.
+        await router.navigate({ href, replace: true });
       }}
       reportActionError={toastActionError}
     />
@@ -324,7 +331,9 @@ export function AccessPageView({
     setBusy('portal');
     try {
       const { url } = await openBillingPortalAction({
-        data: { returnPath },
+        // The portal return carries no session id, so nothing on this page
+        // would consume a nested destination — keep it bare.
+        data: { returnPath: RETURN_PATH },
       });
       window.location.href = url;
     } catch {

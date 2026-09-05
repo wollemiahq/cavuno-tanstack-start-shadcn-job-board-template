@@ -224,44 +224,20 @@ describe('candidate access actions', () => {
     });
   });
 
-  it('carries the captured destination into the billing-portal return path', async () => {
+  it('bounces the buyer to the destination once Stripe returns with a session id', async () => {
+    // The redirect-based return: `?returnTo=…&session_id=…` with the grant
+    // already active. This is the combination the nested return path makes
+    // reachable, so it is pinned here.
     mocks.useLoaderData.mockReturnValue({
-      grant: {
-        ...grant,
-        hasAccess: true,
-        status: 'active',
-        offerType: 'recurring',
-      },
-      offers: [],
+      grant: { ...grant, hasAccess: true },
+      offers: [offer],
     });
-    mocks.useSearch.mockReturnValue({ returnTo: '/jobs?q=react' });
-    mocks.openBillingPortal.mockResolvedValue({
-      url: 'https://billing.example/session',
-    });
-
-    const originalLocation = window.location;
-    Object.defineProperty(window, 'location', {
-      configurable: true,
-      writable: true,
-      value: { href: '' },
-    });
+    mocks.useSearch.mockReturnValue({ returnTo: '/jobs', session_id: 'cs_x' });
 
     await renderAccessPage();
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Manage subscription' }),
-    );
 
-    await waitFor(() => {
-      expect(mocks.openBillingPortal).toHaveBeenCalledWith({
-        data: { returnPath: '/account/access?returnTo=%2Fjobs%3Fq%3Dreact' },
-      });
-    });
-
-    Object.defineProperty(window, 'location', {
-      configurable: true,
-      writable: true,
-      value: originalLocation,
-    });
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/jobs'));
+    expect(mocks.navigate).toHaveBeenCalledTimes(1);
   });
 
   it('opens the billing portal for a recurring subscription', async () => {
@@ -403,6 +379,11 @@ describe('accessReturnPath', () => {
 
   it('nests the captured destination so a hop away and back preserves it', () => {
     expect(accessReturnPath('/jobs')).toBe('/account/access?returnTo=%2Fjobs');
+  });
+
+  it('falls back to the bare page when the nested path would exceed the Stripe metadata cap', () => {
+    const long = `/jobs?q=${'a'.repeat(500)}`;
+    expect(accessReturnPath(long)).toBe('/account/access');
   });
 
   it.each([
