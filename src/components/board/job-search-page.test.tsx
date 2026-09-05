@@ -151,7 +151,7 @@ describe('JobSearchPage — search results pattern', () => {
           onSaveJob={vi.fn(async () => {})}
           onFiltersChange={vi.fn()}
           onPageChange={vi.fn()}
-          selectedJob={null}
+          selectedJob={undefined}
           onSelectedJobReplace={vi.fn()}
           onSelectedJobPush={vi.fn()}
           detail={null}
