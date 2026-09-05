@@ -37,6 +37,8 @@ import { Route as EmployersIndexRouteImport } from './routes/employers.index'
 import { Route as CompaniesIndexRouteImport } from './routes/companies.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as SitemapFileRouteImport } from './routes/sitemap.$file'
+import { Route as PostSuccessRouteImport } from './routes/post_.success'
+import { Route as PostCheckoutCanceledRouteImport } from './routes/post_.checkout-canceled'
 import { Route as PHandleRouteImport } from './routes/p.$handle'
 import { Route as MessagesConversationIdRouteImport } from './routes/messages.$conversationId'
 import { Route as MeApplicationsRouteImport } from './routes/me.applications'
@@ -84,6 +86,7 @@ import { Route as SalariesSkillsSlugIndexRouteImport } from './routes/salaries.s
 import { Route as SalariesLocationsSlugIndexRouteImport } from './routes/salaries.locations.$slug.index'
 import { Route as JobsLocationsLocationIndexRouteImport } from './routes/jobs.locations.$location.index'
 import { Route as EmployersCompaniesSlugIndexRouteImport } from './routes/employers.companies.$slug.index'
+import { Route as EmployerSlugJobsIndexRouteImport } from './routes/employer.$slug.jobs.index'
 import { Route as CompaniesCompanySlugSalariesIndexRouteImport } from './routes/companies.$companySlug.salaries.index'
 import { Route as CompaniesCompanySlugJobsIndexRouteImport } from './routes/companies.$companySlug.jobs.index'
 import { Route as SalariesTitlesSlugLocationsRouteImport } from './routes/salaries.titles.$slug.locations'
@@ -242,6 +245,16 @@ const BlogIndexRoute = BlogIndexRouteImport.update({
 const SitemapFileRoute = SitemapFileRouteImport.update({
   id: '/sitemap/$file',
   path: '/sitemap/$file',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostSuccessRoute = PostSuccessRouteImport.update({
+  id: '/post_/success',
+  path: '/post/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostCheckoutCanceledRoute = PostCheckoutCanceledRouteImport.update({
+  id: '/post_/checkout-canceled',
+  path: '/post/checkout-canceled',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PHandleRoute = PHandleRouteImport.update({
@@ -485,6 +498,11 @@ const EmployersCompaniesSlugIndexRoute =
     path: '/employers/companies/$slug/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const EmployerSlugJobsIndexRoute = EmployerSlugJobsIndexRouteImport.update({
+  id: '/employer/$slug/jobs/',
+  path: '/employer/$slug/jobs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CompaniesCompanySlugSalariesIndexRoute =
   CompaniesCompanySlugSalariesIndexRouteImport.update({
     id: '/companies/$companySlug/salaries/',
@@ -647,6 +665,8 @@ export interface FileRoutesByFullPath {
   '/me/applications': typeof MeApplicationsRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
   '/p/$handle': typeof PHandleRoute
+  '/post/checkout-canceled': typeof PostCheckoutCanceledRoute
+  '/post/success': typeof PostSuccessRoute
   '/sitemap/$file': typeof SitemapFileRoute
   '/blog/': typeof BlogIndexRoute
   '/companies/': typeof CompaniesIndexRoute
@@ -684,6 +704,7 @@ export interface FileRoutesByFullPath {
   '/salaries/titles/$slug/locations': typeof SalariesTitlesSlugLocationsRoute
   '/companies/$companySlug/jobs/': typeof CompaniesCompanySlugJobsIndexRoute
   '/companies/$companySlug/salaries/': typeof CompaniesCompanySlugSalariesIndexRoute
+  '/employer/$slug/jobs/': typeof EmployerSlugJobsIndexRoute
   '/employers/companies/$slug/': typeof EmployersCompaniesSlugIndexRoute
   '/jobs/locations/$location/': typeof JobsLocationsLocationIndexRoute
   '/salaries/locations/$slug/': typeof SalariesLocationsSlugIndexRoute
@@ -743,6 +764,8 @@ export interface FileRoutesByTo {
   '/me/applications': typeof MeApplicationsRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
   '/p/$handle': typeof PHandleRoute
+  '/post/checkout-canceled': typeof PostCheckoutCanceledRoute
+  '/post/success': typeof PostSuccessRoute
   '/sitemap/$file': typeof SitemapFileRoute
   '/blog': typeof BlogIndexRoute
   '/companies': typeof CompaniesIndexRoute
@@ -780,6 +803,7 @@ export interface FileRoutesByTo {
   '/salaries/titles/$slug/locations': typeof SalariesTitlesSlugLocationsRoute
   '/companies/$companySlug/jobs': typeof CompaniesCompanySlugJobsIndexRoute
   '/companies/$companySlug/salaries': typeof CompaniesCompanySlugSalariesIndexRoute
+  '/employer/$slug/jobs': typeof EmployerSlugJobsIndexRoute
   '/employers/companies/$slug': typeof EmployersCompaniesSlugIndexRoute
   '/jobs/locations/$location': typeof JobsLocationsLocationIndexRoute
   '/salaries/locations/$slug': typeof SalariesLocationsSlugIndexRoute
@@ -840,6 +864,8 @@ export interface FileRoutesById {
   '/me/applications': typeof MeApplicationsRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
   '/p/$handle': typeof PHandleRoute
+  '/post_/checkout-canceled': typeof PostCheckoutCanceledRoute
+  '/post_/success': typeof PostSuccessRoute
   '/sitemap/$file': typeof SitemapFileRoute
   '/blog/': typeof BlogIndexRoute
   '/companies/': typeof CompaniesIndexRoute
@@ -877,6 +903,7 @@ export interface FileRoutesById {
   '/salaries/titles/$slug/locations': typeof SalariesTitlesSlugLocationsRoute
   '/companies/$companySlug/jobs/': typeof CompaniesCompanySlugJobsIndexRoute
   '/companies/$companySlug/salaries/': typeof CompaniesCompanySlugSalariesIndexRoute
+  '/employer/$slug/jobs/': typeof EmployerSlugJobsIndexRoute
   '/employers/companies/$slug/': typeof EmployersCompaniesSlugIndexRoute
   '/jobs/locations/$location/': typeof JobsLocationsLocationIndexRoute
   '/salaries/locations/$slug/': typeof SalariesLocationsSlugIndexRoute
@@ -938,6 +965,8 @@ export interface FileRouteTypes {
     | '/me/applications'
     | '/messages/$conversationId'
     | '/p/$handle'
+    | '/post/checkout-canceled'
+    | '/post/success'
     | '/sitemap/$file'
     | '/blog/'
     | '/companies/'
@@ -975,6 +1004,7 @@ export interface FileRouteTypes {
     | '/salaries/titles/$slug/locations'
     | '/companies/$companySlug/jobs/'
     | '/companies/$companySlug/salaries/'
+    | '/employer/$slug/jobs/'
     | '/employers/companies/$slug/'
     | '/jobs/locations/$location/'
     | '/salaries/locations/$slug/'
@@ -1034,6 +1064,8 @@ export interface FileRouteTypes {
     | '/me/applications'
     | '/messages/$conversationId'
     | '/p/$handle'
+    | '/post/checkout-canceled'
+    | '/post/success'
     | '/sitemap/$file'
     | '/blog'
     | '/companies'
@@ -1071,6 +1103,7 @@ export interface FileRouteTypes {
     | '/salaries/titles/$slug/locations'
     | '/companies/$companySlug/jobs'
     | '/companies/$companySlug/salaries'
+    | '/employer/$slug/jobs'
     | '/employers/companies/$slug'
     | '/jobs/locations/$location'
     | '/salaries/locations/$slug'
@@ -1130,6 +1163,8 @@ export interface FileRouteTypes {
     | '/me/applications'
     | '/messages/$conversationId'
     | '/p/$handle'
+    | '/post_/checkout-canceled'
+    | '/post_/success'
     | '/sitemap/$file'
     | '/blog/'
     | '/companies/'
@@ -1167,6 +1202,7 @@ export interface FileRouteTypes {
     | '/salaries/titles/$slug/locations'
     | '/companies/$companySlug/jobs/'
     | '/companies/$companySlug/salaries/'
+    | '/employer/$slug/jobs/'
     | '/employers/companies/$slug/'
     | '/jobs/locations/$location/'
     | '/salaries/locations/$slug/'
@@ -1226,6 +1262,8 @@ export interface RootRouteChildren {
   MeAlertsRoute: typeof MeAlertsRoute
   MeApplicationsRoute: typeof MeApplicationsRoute
   PHandleRoute: typeof PHandleRoute
+  PostCheckoutCanceledRoute: typeof PostCheckoutCanceledRoute
+  PostSuccessRoute: typeof PostSuccessRoute
   SitemapFileRoute: typeof SitemapFileRoute
   BlogIndexRoute: typeof BlogIndexRoute
   CompaniesIndexRoute: typeof CompaniesIndexRoute
@@ -1262,6 +1300,7 @@ export interface RootRouteChildren {
   SalariesTitlesSlugLocationsRoute: typeof SalariesTitlesSlugLocationsRoute
   CompaniesCompanySlugJobsIndexRoute: typeof CompaniesCompanySlugJobsIndexRoute
   CompaniesCompanySlugSalariesIndexRoute: typeof CompaniesCompanySlugSalariesIndexRoute
+  EmployerSlugJobsIndexRoute: typeof EmployerSlugJobsIndexRoute
   EmployersCompaniesSlugIndexRoute: typeof EmployersCompaniesSlugIndexRoute
   JobsLocationsLocationIndexRoute: typeof JobsLocationsLocationIndexRoute
   SalariesLocationsSlugIndexRoute: typeof SalariesLocationsSlugIndexRoute
@@ -1469,6 +1508,20 @@ declare module '@tanstack/react-router' {
       path: '/sitemap/$file'
       fullPath: '/sitemap/$file'
       preLoaderRoute: typeof SitemapFileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post_/success': {
+      id: '/post_/success'
+      path: '/post/success'
+      fullPath: '/post/success'
+      preLoaderRoute: typeof PostSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post_/checkout-canceled': {
+      id: '/post_/checkout-canceled'
+      path: '/post/checkout-canceled'
+      fullPath: '/post/checkout-canceled'
+      preLoaderRoute: typeof PostCheckoutCanceledRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/p/$handle': {
@@ -1800,6 +1853,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmployersCompaniesSlugIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/employer/$slug/jobs/': {
+      id: '/employer/$slug/jobs/'
+      path: '/employer/$slug/jobs'
+      fullPath: '/employer/$slug/jobs/'
+      preLoaderRoute: typeof EmployerSlugJobsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/companies/$companySlug/salaries/': {
       id: '/companies/$companySlug/salaries/'
       path: '/companies/$companySlug/salaries'
@@ -2022,6 +2082,8 @@ const rootRouteChildren: RootRouteChildren = {
   MeAlertsRoute: MeAlertsRoute,
   MeApplicationsRoute: MeApplicationsRoute,
   PHandleRoute: PHandleRoute,
+  PostCheckoutCanceledRoute: PostCheckoutCanceledRoute,
+  PostSuccessRoute: PostSuccessRoute,
   SitemapFileRoute: SitemapFileRoute,
   BlogIndexRoute: BlogIndexRoute,
   CompaniesIndexRoute: CompaniesIndexRoute,
@@ -2062,6 +2124,7 @@ const rootRouteChildren: RootRouteChildren = {
   CompaniesCompanySlugJobsIndexRoute: CompaniesCompanySlugJobsIndexRoute,
   CompaniesCompanySlugSalariesIndexRoute:
     CompaniesCompanySlugSalariesIndexRoute,
+  EmployerSlugJobsIndexRoute: EmployerSlugJobsIndexRoute,
   EmployersCompaniesSlugIndexRoute: EmployersCompaniesSlugIndexRoute,
   JobsLocationsLocationIndexRoute: JobsLocationsLocationIndexRoute,
   SalariesLocationsSlugIndexRoute: SalariesLocationsSlugIndexRoute,

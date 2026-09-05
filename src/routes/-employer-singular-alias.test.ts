@@ -1,6 +1,7 @@
 import { isRedirect } from '@tanstack/react-router';
 import { describe, expect, it } from 'vitest';
 
+import { Route as StripeSuccessRoute } from './employer.$slug.jobs.index';
 import { Route as StripeBackRoute } from './employer.$slug.jobs.new';
 import { Route as InviteAliasRoute } from './employer.invites.accept';
 
@@ -70,6 +71,33 @@ function runStripeBackBeforeLoad(pathname: string, searchStr: string) {
   }
 }
 
+function runStripeSuccessBeforeLoad(pathname: string, searchStr: string) {
+  const beforeLoad = StripeSuccessRoute.options.beforeLoad;
+  if (!beforeLoad) throw new Error('stripe-success alias needs beforeLoad');
+  const slug = pathname.split('/')[2] ?? '';
+  try {
+    return beforeLoad({
+      abortController: new AbortController(),
+      preload: false,
+      params: { slug },
+      search: {},
+      context: { origin: 'https://careers.acme.test' },
+      location: location(pathname, searchStr),
+      navigate: () => {
+        throw new Error('alias beforeLoad must redirect declaratively');
+      },
+      buildLocation: () => {
+        throw new Error('alias beforeLoad must not build a location');
+      },
+      cause: 'enter',
+      matches: [],
+      routeId: '/employer/$slug/jobs/',
+    });
+  } catch (error) {
+    return error;
+  }
+}
+
 describe('/employer singular aliases', () => {
   it('308s invite accept onto /employers/invites/accept with the token', () => {
     const result = runInviteBeforeLoad(
@@ -108,5 +136,26 @@ describe('/employer singular aliases', () => {
       href: '/employers/companies/acme/jobs/new?session_id=cs_test_1',
       statusCode: 308,
     });
+  });
+  it('308s the Stripe SUCCESS return onto the company workspace', () => {
+    const result = runStripeSuccessBeforeLoad(
+      '/employer/acme/jobs',
+      '?checkout_success=1&job_id=job-1',
+    );
+    expect(isRedirect(result)).toBe(true);
+    if (!isRedirect(result)) return;
+    expect(result.options).toMatchObject({
+      href: '/employers/companies/acme?checkout_success=1&job_id=job-1',
+      statusCode: 308,
+    });
+  });
+
+  it('keeps the success alias distinct from the /jobs/new cancel alias', () => {
+    const success = runStripeSuccessBeforeLoad('/employer/acme/jobs', '');
+    const cancel = runStripeBackBeforeLoad('/employer/acme/jobs/new', '');
+    expect(isRedirect(success) && isRedirect(cancel)).toBe(true);
+    if (!isRedirect(success) || !isRedirect(cancel)) return;
+    expect(success.options.href).toBe('/employers/companies/acme');
+    expect(cancel.options.href).toBe('/employers/companies/acme/jobs/new');
   });
 });
