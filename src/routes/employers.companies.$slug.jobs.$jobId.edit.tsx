@@ -1,9 +1,14 @@
 /**
  * Company workspace — Edit a job. Shares `EmployerJobForm` with "Post a job",
- * prefilled from the job's full detail. A DRAFT owns the plan picker + payment
- * step here (the same billing choice as posting), so a held draft is published
- * from its own edit page rather than an inline popover on the jobs list. A
- * published/expired job edits its details only.
+ * prefilled from the job's full detail. Any job that is not live (a held
+ * draft, an expired or archived job) owns the plan picker + payment step here
+ * (the same billing choice as posting), so it is published or renewed from
+ * its own edit page rather than an inline popover on the jobs list. A live
+ * published job edits its details only.
+ *
+ * Expiry is derived in the loader — server-side on a document load — so the
+ * first client render agrees with the server about whether the billing card
+ * exists. It is the same rule the jobs list applies to offer Republish.
  */
 import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
@@ -21,6 +26,7 @@ import { useLocationSuggestions } from './-use-location-suggestions';
 import { EmployerJobForm } from '@/components/employer-job-form';
 import { Page, PageContent } from '@/components/layout/page';
 import { Text } from '@/components/text';
+import { isEmployerJobExpired } from '@/lib/employer-job-labels';
 import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute(
@@ -34,7 +40,13 @@ export const Route = createFileRoute(
         getRemotePermits().catch(() => null),
         getSeoBase(),
       ]);
-      return { workspace, job, remotePermits, seo };
+      return {
+        workspace,
+        job,
+        remotePermits,
+        seo,
+        status: isEmployerJobExpired(job) ? ('expired' as const) : job.status,
+      };
     } catch (error) {
       return await handleEmployerLoaderError(
         error,
@@ -63,7 +75,7 @@ export const Route = createFileRoute(
 const rootApi = getRouteApi('__root__');
 
 function EditJobPage() {
-  const { workspace, job, remotePermits } = Route.useLoaderData();
+  const { workspace, job, remotePermits, status } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const locale = getLocale();
   const officeLocationSuggestions = useLocationSuggestions(locale);
@@ -92,7 +104,7 @@ function EditJobPage() {
             billingOptions={workspace.billingOptions.data}
             officeLocationSuggestions={officeLocationSuggestions}
             jobForm={board}
-            mode={{ kind: 'edit', jobId: job.id, status: job.status }}
+            mode={{ kind: 'edit', jobId: job.id, status }}
             job={job}
           />
         </div>

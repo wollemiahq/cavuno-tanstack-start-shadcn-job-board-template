@@ -302,6 +302,91 @@ describe('EmployerJobForm', () => {
     expect('salaryMax' in body).toBe(false);
   });
 
+  it('renews an expired job: shows the plan picker and checks out on save', async () => {
+    // "Republish" on the jobs list lands an expired job here after the board
+    // answers 402. If the picker stayed hidden there was no way to pay for a
+    // renewal at all — recurring revenue was unreachable.
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    mocks.checkoutJob.mockResolvedValue({
+      ok: true,
+      data: { status: 'published', checkoutUrl: null },
+    });
+
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'expired' }}
+        job={{ ...draftJob, status: 'expired' }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(mocks.checkoutJob).toHaveBeenCalledTimes(1));
+    expect(mocks.checkoutJob).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          slug: 'acme',
+          id: 'job-1',
+          body: expect.objectContaining({
+            billing: { type: 'new', planId: plan.id },
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('saves an expired job without a billing choice as a plain edit', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'expired' }}
+        job={{ ...draftJob, status: 'expired' }}
+      />,
+    );
+
+    expect(screen.getByRole('radio', { name: /Growth/ })).toBeInTheDocument();
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    expect(mocks.checkoutJob).not.toHaveBeenCalled();
+  });
+
+  it('shows the plan picker when editing an archived job', async () => {
+    // The jobs list offers "Republish" for an archived job too, and routes
+    // here after a 402 — so it needs the picker as well.
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'archived' }}
+        job={{ ...draftJob, status: 'archived' }}
+      />,
+    );
+    expect(screen.getByRole('radio', { name: /Growth/ })).toBeInTheDocument();
+  });
+
   it('hides the plan picker when editing a published job', async () => {
     await renderWithRouter(
       <EmployerJobForm
