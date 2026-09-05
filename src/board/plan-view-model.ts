@@ -17,9 +17,7 @@ function featureMap(plan: Pick<JobPostingPlan, 'features'>) {
  * choose) unless the operator explicitly set `manual` — the platform reads
  * a missing row the same way.
  */
-export function planFeaturesManually(
-  plan: Pick<JobPostingPlan, 'features'>,
-): boolean {
+function planFeaturesManually(plan: Pick<JobPostingPlan, 'features'>): boolean {
   return featureMap(plan).get('jobs.feature_selection_mode') === 'manual';
 }
 

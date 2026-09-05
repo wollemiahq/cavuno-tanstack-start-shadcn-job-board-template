@@ -34,7 +34,6 @@ import {
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import {
   planFeatureLines,
-  planFeaturesManually,
   planOffersFeaturedChoice,
 } from '@/board/plan-view-model';
 import type { LocationSuggestionState } from '@/components/location-combobox';
@@ -488,11 +487,10 @@ export function EmployerJobForm({
         (candidate) => `option:${candidate.id}` === value,
       );
       if (!option) return null;
-      // A credit on a plan that auto-features needs no choice either. The
-      // credit names its plan; when that plan is not in the purchasable
-      // list its mode is unknown, so the choice stays.
-      const source = plans.find((candidate) => candidate.id === option.planId);
-      if (source && !planFeaturesManually(source)) return null;
+      // The credit's selection mode comes from its purchase snapshot, which
+      // the wire does not carry — the live plan may differ — so a credit
+      // with slots always offers the choice (ticking on an auto-featuring
+      // credit is harmless; hiding it could forfeit a paid slot).
       if (option.featuredUnlimited) {
         return {
           hint: m.employerCompany_featuredUnlimitedText(),
