@@ -8,7 +8,7 @@
  *
  * Expiry is derived in the loader — server-side on a document load — so the
  * first client render agrees with the server about whether the billing card
- * exists. The jobs list derives it the same way for its Republish action.
+ * exists. It is the same rule the jobs list applies to offer Republish.
  */
 import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
