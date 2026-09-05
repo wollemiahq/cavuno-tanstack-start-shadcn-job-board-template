@@ -536,7 +536,7 @@ export function ApplyButton({
         >
           <Field>
             <FieldLabel htmlFor="native-apply-cover-note">
-              {m.applyButton_coverNoteLabel()}
+              {copy.guestCoverNoteLabel}
             </FieldLabel>
             <Textarea
               id="native-apply-cover-note"
@@ -552,6 +552,10 @@ export function ApplyButton({
                 {m.applyButton_resumeLabel()}
               </FieldLabel>
               <Input
+                // Uncontrolled: re-key per job so a file picked for the
+                // previous job cannot linger in the DOM after a same-route
+                // navigation (the similar-jobs rail) while state says none.
+                key={jobSlug}
                 id="native-apply-resume"
                 name="resume"
                 type="file"

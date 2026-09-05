@@ -783,7 +783,7 @@ describe('ApplyButton native apply extras', () => {
     });
 
     fireEvent.change(
-      await screen.findByLabelText(m.applyButton_coverNoteLabel()),
+      await screen.findByLabelText(m.apply_guestCoverNoteLabel()),
       { target: { value: '  I ship boards.  ' } },
     );
     fireEvent.click(screen.getByRole('button', { name: /apply/i }));
@@ -841,7 +841,7 @@ describe('ApplyButton native apply extras', () => {
   it('omits the resume field when no upload handler is wired', async () => {
     renderNative({ onApply: vi.fn(async () => ({ id: 'app_1' })) });
 
-    await screen.findByLabelText(m.applyButton_coverNoteLabel());
+    await screen.findByLabelText(m.apply_guestCoverNoteLabel());
     expect(screen.queryByLabelText(m.applyButton_resumeLabel())).toBeNull();
   });
 
