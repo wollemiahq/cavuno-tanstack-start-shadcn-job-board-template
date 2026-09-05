@@ -17,7 +17,12 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { EmployerJob, JobPostingPlan } from '@cavuno/board';
+import type {
+  EmployerBillingOption,
+  EmployerCheckoutBody,
+  EmployerJob,
+  JobPostingPlan,
+} from '@cavuno/board';
 
 const mocks = {
   createJob: vi.fn(),
@@ -385,6 +390,233 @@ describe('EmployerJobForm', () => {
       />,
     );
     expect(screen.getByRole('radio', { name: /Growth/ })).toBeInTheDocument();
+  });
+
+  describe('featured listings', () => {
+    // Featured slots are sold by the plan, but the platform only features a
+    // post when the checkout body says `isFeatured` (unless the board
+    // auto-features). Without the choice, a buyer on a manual-selection board
+    // paid the featured price and got a standard listing.
+    const featuredPlan: JobPostingPlan = {
+      ...plan,
+      features: [
+        { key: 'jobs.featured_slots', value: '2' },
+        { key: 'jobs.feature_selection_mode', value: 'manual' },
+      ],
+    };
+
+    async function renderDraftEdit(
+      plans: JobPostingPlan[],
+      billingOptions: EmployerBillingOption[] = [],
+    ) {
+      mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+      mocks.checkoutJob.mockResolvedValue({
+        ok: true,
+        data: { status: 'published', checkoutUrl: null },
+      });
+      return renderWithRouter(
+        <EmployerJobForm
+          dependencies={dependencies}
+          slug="acme"
+          locale="en-AU"
+          remotePermits={null}
+          plans={plans}
+          billingOptions={billingOptions}
+          officeLocationSuggestions={suggestions}
+          mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
+          job={draftJob}
+        />,
+      );
+    }
+
+    function checkoutBody(): EmployerCheckoutBody {
+      return mocks.checkoutJob.mock.calls[0]![0].data.body;
+    }
+
+    it('sends isFeatured when the buyer ticks the featured slot on a plan', async () => {
+      const { container } = await renderDraftEdit([featuredPlan]);
+
+      fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+      const box = screen.getByRole('checkbox', {
+        name: /Feature this listing/,
+      });
+      expect(box).not.toBeChecked();
+      // The plan card already says what the purchase includes; no "left"
+      // hint on a plan not yet bought.
+      expect(screen.queryByText(/featured slot/i)).not.toBeInTheDocument();
+      fireEvent.click(box);
+      fireEvent.submit(container.querySelector('form')!);
+
+      await waitFor(() => expect(mocks.checkoutJob).toHaveBeenCalledTimes(1));
+      expect(checkoutBody()).toEqual({
+        billing: { type: 'new', planId: plan.id },
+        isFeatured: true,
+      });
+    });
+
+    it('omits isFeatured when the box stays unticked', async () => {
+      const { container } = await renderDraftEdit([featuredPlan]);
+
+      fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+      fireEvent.submit(container.querySelector('form')!);
+
+      await waitFor(() => expect(mocks.checkoutJob).toHaveBeenCalledTimes(1));
+      expect('isFeatured' in checkoutBody()).toBe(false);
+    });
+
+    it('pre-ticks a single-post purchase that includes a featured slot', async () => {
+      // A one-time plan with a featured slot is buying that slot for THIS
+      // job — leaving it unticked would forfeit what was paid for.
+      const oneTime: JobPostingPlan = {
+        ...featuredPlan,
+        kind: 'one_time',
+        features: [
+          { key: 'jobs.featured_slots', value: '1' },
+          { key: 'jobs.feature_selection_mode', value: 'manual' },
+        ],
+      };
+      const { container } = await renderDraftEdit([oneTime]);
+
+      fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+      expect(
+        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+      ).toBeChecked();
+      fireEvent.submit(container.querySelector('form')!);
+
+      await waitFor(() => expect(mocks.checkoutJob).toHaveBeenCalledTimes(1));
+      expect(checkoutBody()).toMatchObject({ isFeatured: true });
+    });
+
+    it('offers no choice on a plan without featured slots or one that auto-features', async () => {
+      // A plan with slots but no explicit selection mode auto-features too —
+      // the platform treats a missing mode as `auto`, so a checkbox there
+      // would be a control that lies.
+      const auto: JobPostingPlan = {
+        ...featuredPlan,
+        id: 'plan-auto',
+        name: 'Auto',
+        features: [
+          { key: 'jobs.featured_slots', value: '3' },
+          { key: 'jobs.feature_selection_mode', value: 'auto' },
+        ],
+      };
+      const unset: JobPostingPlan = {
+        ...featuredPlan,
+        id: 'plan-unset',
+        name: 'Unset',
+        features: [{ key: 'jobs.featured_slots', value: '3' }],
+      };
+      await renderDraftEdit([plan, auto, unset]);
+
+      for (const name of [/Growth/, /Auto/, /Unset/]) {
+        fireEvent.click(screen.getByRole('radio', { name }));
+        expect(
+          screen.queryByRole('checkbox', { name: /Feature this listing/ }),
+        ).not.toBeInTheDocument();
+      }
+    });
+
+    it('drops the tick when the buyer switches to another plan', async () => {
+      const other: JobPostingPlan = {
+        ...featuredPlan,
+        id: 'plan-other',
+        name: 'Other',
+      };
+      const { container } = await renderDraftEdit([featuredPlan, other]);
+
+      fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+      fireEvent.click(
+        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+      );
+      fireEvent.click(screen.getByRole('radio', { name: /Other/ }));
+      expect(
+        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+      ).not.toBeChecked();
+      fireEvent.submit(container.querySelector('form')!);
+
+      await waitFor(() => expect(mocks.checkoutJob).toHaveBeenCalledTimes(1));
+      expect('isFeatured' in checkoutBody()).toBe(false);
+    });
+
+    it('pre-ticks a one-time credit whose remaining posts can all be featured', async () => {
+      const credit: EmployerBillingOption = {
+        id: 'order-1',
+        object: 'employer_billing_option',
+        type: 'order',
+        planId: plan.id,
+        planName: 'Single post',
+        planKind: 'one_time',
+        jobsRemaining: 1,
+        jobsTotal: 1,
+        featuredRemaining: 1,
+        featuredTotal: 1,
+        renewsAt: null,
+      };
+      const { container } = await renderDraftEdit([], [credit]);
+
+      fireEvent.click(screen.getByRole('radio', { name: /Single post/ }));
+      expect(
+        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+      ).toBeChecked();
+      fireEvent.submit(container.querySelector('form')!);
+
+      await waitFor(() => expect(mocks.checkoutJob).toHaveBeenCalledTimes(1));
+      expect(checkoutBody()).toMatchObject({ isFeatured: true });
+    });
+
+    it('offers the choice on an unlimited-featured credit', async () => {
+      const credit: EmployerBillingOption = {
+        id: 'sub-2',
+        object: 'employer_billing_option',
+        type: 'subscription',
+        planId: plan.id,
+        planName: 'Unlimited credits',
+        planKind: 'subscription',
+        jobsRemaining: 4,
+        jobsTotal: 5,
+        featuredRemaining: 0,
+        featuredTotal: 0,
+        featuredUnlimited: true,
+        renewsAt: null,
+      };
+      await renderDraftEdit([], [credit]);
+
+      fireEvent.click(screen.getByRole('radio', { name: /Unlimited credits/ }));
+      expect(
+        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Unlimited featured/)).toBeInTheDocument();
+    });
+
+    it('offers the choice on a reusable credit that still holds featured slots', async () => {
+      const option: EmployerBillingOption = {
+        id: 'sub-1',
+        object: 'employer_billing_option',
+        type: 'subscription',
+        planId: plan.id,
+        planName: 'Growth credits',
+        planKind: 'subscription',
+        jobsRemaining: 4,
+        jobsTotal: 5,
+        featuredRemaining: 1,
+        featuredTotal: 2,
+        renewsAt: '2026-08-01T00:00:00.000Z',
+      };
+      const { container } = await renderDraftEdit([], [option]);
+
+      fireEvent.click(screen.getByRole('radio', { name: /Growth credits/ }));
+      expect(screen.getByText(/1 featured slot left/)).toBeInTheDocument();
+      fireEvent.click(
+        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+      );
+      fireEvent.submit(container.querySelector('form')!);
+
+      await waitFor(() => expect(mocks.checkoutJob).toHaveBeenCalledTimes(1));
+      expect(checkoutBody()).toEqual({
+        billing: { type: 'subscription', planId: plan.id, id: 'sub-1' },
+        isFeatured: true,
+      });
+    });
   });
 
   it('hides the plan picker when editing a published job', async () => {

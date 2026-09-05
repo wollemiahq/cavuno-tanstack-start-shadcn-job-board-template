@@ -788,6 +788,22 @@
   "employerCompany_deleteLabel": "Löschen",
   "employerCompany_descriptionLabel": "Beschreibung",
   "employerCompany_draftNoticeText": "Neue Jobs bleiben zunächst Entwürfe — unten veröffentlichen & bezahlen.",
+  "employerCompany_featureListingLabel": "Diese Anzeige hervorheben",
+  "employerCompany_featuredSlotsRemaining": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 hervorgehobener Platz in diesem Plan übrig",
+        "countPlural=*": "{countLabel} hervorgehobene Plätze in diesem Plan übrig"
+      }
+    }
+  ],
+  "employerCompany_featuredUnlimitedText": "Unbegrenzt hervorgehobene Anzeigen in diesem Plan",
   "employerCompany_freeLabel": "Kostenlos",
   "employerCompany_genericError": "Etwas ist schiefgelaufen.",
   "employerCompany_invoiceSentText": "Eine Rechnung wurde dir per E-Mail geschickt.",

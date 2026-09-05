@@ -788,6 +788,22 @@
   "employerCompany_deleteLabel": "Delete",
   "employerCompany_descriptionLabel": "Description",
   "employerCompany_draftNoticeText": "New jobs are held drafts — publish & pay below.",
+  "employerCompany_featureListingLabel": "Feature this listing",
+  "employerCompany_featuredSlotsRemaining": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 featured slot left on this plan",
+        "countPlural=*": "{countLabel} featured slots left on this plan"
+      }
+    }
+  ],
+  "employerCompany_featuredUnlimitedText": "Unlimited featured listings on this plan",
   "employerCompany_freeLabel": "Free",
   "employerCompany_genericError": "Something went wrong.",
   "employerCompany_invoiceSentText": "An invoice was emailed to you.",

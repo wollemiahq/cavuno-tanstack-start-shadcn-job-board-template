@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { planFeatureLines } from './plan-view-model';
+import { planFeatureLines, planOffersFeaturedChoice } from './plan-view-model';
 
 const plan = (features: { key: string | null; value: string | null }[]) => ({
   features,
@@ -60,5 +60,56 @@ describe('planFeatureLines', () => {
         ]),
       ),
     ).toEqual([]);
+  });
+});
+
+describe('planOffersFeaturedChoice', () => {
+  it('needs an explicit manual mode and at least one slot', () => {
+    expect(
+      planOffersFeaturedChoice(
+        plan([
+          { key: 'jobs.featured_slots', value: '2' },
+          { key: 'jobs.feature_selection_mode', value: 'manual' },
+        ]),
+      ),
+    ).toBe(true);
+    expect(
+      planOffersFeaturedChoice(
+        plan([
+          { key: 'jobs.featured_slots', value: 'unlimited' },
+          { key: 'jobs.feature_selection_mode', value: 'manual' },
+        ]),
+      ),
+    ).toBe(true);
+  });
+
+  it('offers nothing when the plan auto-features or sells no slot', () => {
+    // A missing mode reads as `auto`, the platform's default.
+    expect(
+      planOffersFeaturedChoice(
+        plan([{ key: 'jobs.featured_slots', value: '2' }]),
+      ),
+    ).toBe(false);
+    expect(
+      planOffersFeaturedChoice(
+        plan([
+          { key: 'jobs.featured_slots', value: '2' },
+          { key: 'jobs.feature_selection_mode', value: 'auto' },
+        ]),
+      ),
+    ).toBe(false);
+    expect(
+      planOffersFeaturedChoice(
+        plan([
+          { key: 'jobs.featured_slots', value: '0' },
+          { key: 'jobs.feature_selection_mode', value: 'manual' },
+        ]),
+      ),
+    ).toBe(false);
+    expect(
+      planOffersFeaturedChoice(
+        plan([{ key: 'jobs.feature_selection_mode', value: 'manual' }]),
+      ),
+    ).toBe(false);
   });
 });

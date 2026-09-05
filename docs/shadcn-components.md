@@ -31,7 +31,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `card` | Used (40) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>`src/components/board/company-search-result-detail.tsx`<br>+37 more in the JSON ledger |
 | `carousel` | Available | Installed for adoption when the product needs this behavior. |
 | `chart` | Used (2) | `src/components/employer/employer-profile-views-stat.tsx`<br>`src/components/employer/employer-stats-chart.tsx` |
-| `checkbox` | Used (10) | `src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/custom-fields-group.tsx`<br>+7 more in the JSON ledger |
+| `checkbox` | Used (11) | `src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/custom-fields-group.tsx`<br>+8 more in the JSON ledger |
 | `collapsible` | Available | Installed for adoption when the product needs this behavior. |
 | `combobox` | Used (8) | `src/components/board/talent-list-job-link.tsx`<br>`src/components/board/talent-save-to-job.tsx`<br>`src/components/company-search-combobox.tsx`<br>+5 more in the JSON ledger |
 | `command` | Available | Installed for adoption when the product needs this behavior. |

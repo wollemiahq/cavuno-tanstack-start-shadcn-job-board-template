@@ -788,6 +788,22 @@
   "employerCompany_deleteLabel": "Eliminar",
   "employerCompany_descriptionLabel": "Descripción",
   "employerCompany_draftNoticeText": "Las ofertas nuevas quedan como borrador: publica y paga abajo.",
+  "employerCompany_featureListingLabel": "Destacar esta oferta",
+  "employerCompany_featuredSlotsRemaining": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Queda 1 destacado en este plan",
+        "countPlural=*": "Quedan {countLabel} destacados en este plan"
+      }
+    }
+  ],
+  "employerCompany_featuredUnlimitedText": "Destacados ilimitados en este plan",
   "employerCompany_freeLabel": "Gratis",
   "employerCompany_genericError": "Se ha producido un error.",
   "employerCompany_invoiceSentText": "Te hemos enviado una factura por correo.",
